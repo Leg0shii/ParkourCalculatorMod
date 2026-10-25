@@ -24,6 +24,7 @@ public final class SolveRunRecord {
     public static final String STATUS_STOPPED_BEST = "STOPPED_BEST";
     public static final String STATUS_CANCELLED = "CANCELLED";
     public static final String STATUS_FAILED = "FAILED";
+    public static final String STATUS_INFEASIBLE = "INFEASIBLE";
 
     public static final class Metric {
         public String type;
@@ -62,6 +63,8 @@ public final class SolveRunRecord {
         public String axis;
         public String sense;
         public int objectiveTick;
+        public Double customYaw;
+        public String objectiveType;
         public boolean freeStart;
     }
 
@@ -174,6 +177,8 @@ public final class SolveRunRecord {
         p.axis = spec.objective.axis.name();
         p.sense = spec.objective.sense.name();
         p.objectiveTick = spec.objective.tick;
+        p.customYaw = spec.objective.customYaw;
+        p.objectiveType = spec.objective.type.name();
         p.freeStart = sc.startBox != null && sc.startBox.startFree();
         return p;
     }
@@ -267,6 +272,10 @@ public final class SolveRunRecord {
         StringBuilder sb = new StringBuilder();
         sb.append("obj:").append(spec.objective.axis.name()).append(':')
                 .append(spec.objective.sense.name()).append(':').append(spec.objective.tick).append('\n');
+        if (spec.objective.isCustomAngle()) {
+            sb.append("objAngle:").append(bits(spec.objective.customYaw)).append(':')
+                    .append(spec.objective.type.name()).append('\n');
+        }
         sb.append("n:").append(sc.numTicks).append('\n');
         sb.append("start:").append(bits(sc.startPos.x)).append(',').append(bits(sc.startPos.z))
                 .append(',').append(Float.floatToIntBits(sc.startYaw))
@@ -279,7 +288,7 @@ public final class SolveRunRecord {
                     .append(',').append(bits(box.vzLo)).append(',').append(bits(box.vzHi)).append('\n');
         }
         sb.append("jumpTick:").append(sc.jumpTick).append('\n');
-        sb.append("incoming:").append(sc.incomingSprint).append(',').append(sc.incomingAmp).append('\n');
+        sb.append("incoming:").append(sc.incomingSprint).append(',').append(sc.incomingAmp).append(',').append(sc.incomingSlowness).append('\n');
         for (int t = 0; t < sc.numTicks; t++) {
             sb.append("t").append(t).append(':')
                     .append(sc.jumpAt(t) ? 1 : 0)
@@ -287,6 +296,7 @@ public final class SolveRunRecord {
                     .append(sc.sprintAt(t) ? 1 : 0)
                     .append(sc.yawLockedPerTick != null && t < sc.yawLockedPerTick.length && sc.yawLockedPerTick[t] ? 1 : 0)
                     .append(',').append(sc.speedAmplifierAt(t))
+                    .append(',').append(sc.slownessAmplifierAt(t))
                     .append(',').append(bits(sc.slipAt(t)))
                     .append(',').append(Float.floatToIntBits(sc.forwardAt(t)))
                     .append(',').append(Float.floatToIntBits(sc.strafeInputAt(t)))

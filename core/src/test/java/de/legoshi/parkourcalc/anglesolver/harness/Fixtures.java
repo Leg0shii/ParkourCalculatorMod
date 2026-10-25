@@ -1,6 +1,8 @@
 package de.legoshi.parkourcalc.anglesolver.harness;
 
 import de.legoshi.parkourcalc.core.save.SaveFile;
+import de.legoshi.parkourcalc.core.save.SaveIO;
+import de.legoshi.parkourcalc.core.sim.ServerTickSample;
 import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.BoxController;
@@ -43,6 +45,7 @@ public final class Fixtures {
             boolean sprinting = false;
             float moveForward = Float.NaN;
             float moveStrafe = Float.NaN;
+            ServerTickSample server = null;
             SaveFile.DebugTick d = debug != null && i < debug.size() ? debug.get(i) : null;
             if (d != null) {
                 if (d.pos != null && d.pos.length >= 3) pos = new Vec3dCore(d.pos[0], d.pos[1], d.pos[2]);
@@ -56,6 +59,12 @@ public final class Fixtures {
                 sprinting = d.sprinting;
                 moveForward = d.moveForward != null ? d.moveForward : Float.NaN;
                 moveStrafe = d.moveStrafe != null ? d.moveStrafe : Float.NaN;
+                if (d.serverVel != null && d.serverVel.length >= 3) {
+                    Vec3dCore packet = d.serverPacket != null && d.serverPacket.length >= 3
+                            ? new Vec3dCore(d.serverPacket[0], d.serverPacket[1], d.serverPacket[2]) : null;
+                    server = new ServerTickSample(new Vec3dCore(d.serverVel[0], d.serverVel[1], d.serverVel[2]),
+                            d.serverJump, packet);
+                }
             }
             if (i == seedTick) {
                 if (seed.pos != null && seed.pos.length >= 3) pos = new Vec3dCore(seed.pos[0], seed.pos[1], seed.pos[2]);
@@ -64,21 +73,55 @@ public final class Fixtures {
             }
             boxes.add(new TickState(pos, onGround, sneaking, wallCollision, yaw,
                     Collections.<Vec3dCore>emptyList(), vel, softCollision, collisionAngle,
-                    sprinting, moveForward, moveStrafe));
+                    sprinting, moveForward, moveStrafe, null, Double.NaN, 0, server));
         }
         return boxes;
     }
 
     public static String rawPool(String name) {
-        try (InputStream in = Fixtures.class.getResourceAsStream("/captures/" + name + ".json")) {
-            if (in == null) throw new IllegalStateException("missing capture: " + name);
+        return rawResource(name.startsWith("/") ? name + ".json" : "/captures/" + name + ".json");
+    }
+
+    public static String rawResource(String path) {
+        try (InputStream in = Fixtures.class.getResourceAsStream(path)) {
+            if (in == null) throw new IllegalStateException("missing resource: " + path);
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             byte[] buf = new byte[8192];
             int n;
             while ((n = in.read(buf)) != -1) out.write(buf, 0, n);
             return out.toString("UTF-8");
         } catch (Exception e) {
-            throw new RuntimeException("failed to read pool fixture " + name, e);
+            throw new RuntimeException("failed to read " + path, e);
+        }
+    }
+
+    public static BoxController buildSeedBoxes(SaveFile file) {
+        int seedTick = file.angleSolver.startTick;
+        SaveFile.Start seed = file.angleSolver.seed;
+        BoxController boxes = new BoxController();
+        for (int i = 0; i < file.rows.size(); i++) {
+            Vec3dCore pos = i == seedTick ? new Vec3dCore(seed.pos[0], seed.pos[1], seed.pos[2]) : Vec3dCore.ZERO;
+            Vec3dCore vel = i == seedTick ? new Vec3dCore(seed.vel[0], seed.vel[1], seed.vel[2]) : Vec3dCore.ZERO;
+            float yaw = i == seedTick ? seed.yaw : 0f;
+            boxes.add(new TickState(pos, false, false, false, yaw,
+                    Collections.<Vec3dCore>emptyList(), vel, false, Double.NaN));
+        }
+        return boxes;
+    }
+
+    public static SaveFile hpkHuman(String dir, String resource) {
+        String path = "/hpk_human/" + dir + "/" + resource + ".json";
+        try (InputStream in = Fixtures.class.getResourceAsStream(path)) {
+            if (in == null) throw new IllegalStateException("missing resource " + path);
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            byte[] buf = new byte[8192];
+            int n;
+            while ((n = in.read(buf)) != -1) out.write(buf, 0, n);
+            SaveFile file = SaveIO.parseSafe(out.toString("UTF-8"));
+            if (file == null) throw new IllegalStateException("parse failed: " + path);
+            return file;
+        } catch (Exception e) {
+            throw new RuntimeException("load failed: " + path, e);
         }
     }
 

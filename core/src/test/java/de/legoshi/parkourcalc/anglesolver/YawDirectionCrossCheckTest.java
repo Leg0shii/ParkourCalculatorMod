@@ -4,6 +4,7 @@ import de.legoshi.parkourcalc.SlowSolverTests;
 import de.legoshi.parkourcalc.anglesolver.harness.Fixtures;
 import de.legoshi.parkourcalc.anglesolver.harness.ProblemCatalog;
 import de.legoshi.parkourcalc.anglesolver.harness.ProblemFixture;
+import de.legoshi.parkourcalc.anglesolver.harness.ShardParts;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.SolveResult;
@@ -43,11 +44,13 @@ public class YawDirectionCrossCheckTest {
     @Parameters(name = "{0}")
     public static Collection<Object[]> captures() {
         Collection<Object[]> out = new ArrayList<>();
+        ShardParts parts = ShardParts.of(YawDirectionCrossCheckTest.class);
+        int index = 0;
         for (String name : ProblemCatalog.problemNames("solve")) {
             ProblemFixture pf = ProblemFixture.load("solve", name);
             if (pf.expect.effort() != AngleSolverState.Effort.FAST || !pf.expect.shouldSolve(pf.file)) continue;
             if (pf.expect.maxSolveMs != null && pf.expect.maxSolveMs >= SKIP_BUDGET_MS) continue;
-            out.add(new Object[]{name});
+            if (parts.keeps(index++)) out.add(new Object[]{name});
         }
         return out;
     }

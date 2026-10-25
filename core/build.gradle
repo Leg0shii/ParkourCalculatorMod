@@ -46,6 +46,18 @@ dependencies {
 	testImplementation 'io.github.spair:imgui-java-binding:1.86.12'
 }
 
+sourceSets {
+	research {
+		compileClasspath += sourceSets.main.output + sourceSets.test.output
+		runtimeClasspath += sourceSets.main.output + sourceSets.test.output
+	}
+}
+
+configurations {
+	researchImplementation.extendsFrom testImplementation
+	researchRuntimeOnly.extendsFrom testRuntimeOnly
+}
+
 def problemCases() {
 	def out = []
 	file('src/test/resources/problems').listFiles().findAll { it.directory }.sort { it.name }.each { d ->
@@ -59,9 +71,7 @@ def problemCases() {
 	out
 }
 
-def testShardPlan(int shardCount) {
-	def slow = project.hasProperty('slowTests')
-	def verySlow = project.hasProperty('verySlowTests')
+def loadTestWeights() {
 	def weights = [:]
 	def weightsFile = file('test-weights.properties')
 	if (weightsFile.exists()) {
@@ -72,25 +82,79 @@ def testShardPlan(int shardCount) {
 			weights[s.substring(0, i)] = s.substring(i + 1).toDouble()
 		}
 	}
-	def items = []
+	weights
+}
+
+def testClasses() {
+	def out = []
 	def srcRoot = file('src/test/java')
 	fileTree(srcRoot).matching { include '**/*.java' }.each { f ->
 		def text = f.text
 		if (!text.contains('@Test')) return
-		if (!verySlow && text.contains('VerySlowSolverTests.class')) return
-		if (!slow && (text =~ /(?<!Very)SlowSolverTests\.class/).find()) return
 		def cls = srcRoot.toPath().relativize(f.toPath()).toString().replace(File.separatorChar, '.' as char)
-		cls = cls[0..-6]
-		def unmeasured = text.contains('VerySlowSolverTests.class') ? 600.0d : 1.0d
-		if (cls.endsWith('.ProblemsTest')) {
-			problemCases().each { items << [name: cls + '#' + it, weight: weights.get(cls + '#' + it, 1.0d)] }
+		out << [name: cls[0..-6], verySlow: text.contains('VerySlowSolverTests.class'), slow: (text =~ /(?<!Very)SlowSolverTests\.class/).find()]
+	}
+	out
+}
+
+def splitClasses() {
+	['de.legoshi.parkourcalc.anglesolver.YawDirectionCrossCheckTest': 8]
+}
+
+def testGroups() {
+	[
+		'problems': [parts: 3, match: /\.ProblemsTest$/],
+		'engine-acceptance': [parts: 2, match: null],
+		'yaw-order': [parts: 2, match: /\.(YawDirectionCrossCheck|YawOrder|DeltaFacingConstraint|FirstTickDeltaFacing)Test$/],
+		'no-turn': [parts: 2, match: /\.(NoTurn\w*|WallHomotopy\w*|Fold\w*Driver\w*)Test$/],
+		'onejump': [parts: 1, match: /\.(AttemptTracker|AttemptSampler|TurnProfile\w*|TurnTiming|LandingForecast|DeepCheck|OnejumpCheck|HumanRecorder)Test$/],
+		'physics': [parts: 1, match: /\.(sim\.\w+|AirborneStartJump|MovementMultiplier|SprintJumpBoostEra|SprintSneak|SlipperinessFallback|SurfaceRegime|WallHitSprintHeal|CrossJvmDeterminism|TeleportTickSim|TickTeleport|SliceResimulationByteIdentity|SimulatorPitch|SupportOverlap|SpeedAmplifierRange|ForMcVersionModel|UnloadedChunks|SurfaceCapture|DuplicateTickState)Test$/],
+		'app': [parts: 1, match: /\.(ConstraintShapes|ConstraintVisualization|LivePathVisualization|PlaybackPause|RowEditShift)Test$/],
+		'solver': [parts: 1, match: /\.anglesolver\./],
+	]
+}
+
+def testGroupOf(String className) {
+	def entry = testGroups().find { k, v -> v.match != null && className =~ v.match }
+	entry == null ? 'app' : entry.key
+}
+
+def testShardIds() {
+	def ids = []
+	testGroups().each { name, g ->
+		if (g.parts == 1) ids << name
+		else (1..g.parts).each { ids << name + '-' + it }
+	}
+	ids
+}
+
+def testItems() {
+	def slow = project.hasProperty('slowTests')
+	def verySlow = project.hasProperty('verySlowTests')
+	def weights = loadTestWeights()
+	def split = splitClasses()
+	def items = []
+	testClasses().each { c ->
+		if (!verySlow && c.verySlow) return
+		if (!slow && c.slow) return
+		def unmeasured = c.verySlow ? 600.0d : 1.0d
+		def group = c.verySlow ? 'engine-acceptance' : testGroupOf(c.name)
+		if (c.name.endsWith('.ProblemsTest')) {
+			problemCases().each { items << [name: c.name + '#' + it, group: group, weight: weights.get(c.name + '#' + it, 1.0d)] }
+		} else if (split.containsKey(c.name)) {
+			int parts = split[c.name]
+			(0..<parts).each { items << [name: c.name + '@' + it, group: group, weight: weights.get(c.name, unmeasured) / parts] }
 		} else {
-			items << [name: cls, weight: weights.get(cls, unmeasured)]
+			items << [name: c.name, group: group, weight: weights.get(c.name, unmeasured)]
 		}
 	}
 	items.sort { a, b -> b.weight <=> a.weight ?: a.name <=> b.name }
-	def shards = (0..<shardCount).collect { [items: [], weight: 0.0d] }
-	items.each { item ->
+}
+
+def testShardPlan(String group) {
+	int count = testGroups()[group].parts
+	def shards = (0..<count).collect { [items: [], weight: 0.0d] }
+	testItems().findAll { it.group == group }.each { item ->
 		def target = shards.min { it.weight }
 		target.items << item
 		target.weight += item.weight
@@ -98,16 +162,50 @@ def testShardPlan(int shardCount) {
 	shards
 }
 
+def selectTestShard(String spec) {
+	def m = spec =~ /^(.+?)(?:-(\d+))?$/
+	m.find()
+	def group = m.group(1)
+	def groups = testGroups()
+	if (!groups.containsKey(group)) {
+		throw new GradleException("Unknown test shard '${spec}', expected one of ${testShardIds()} or a group name ${groups.keySet()}")
+	}
+	def plan = testShardPlan(group)
+	if (m.group(2) == null) return plan.collectMany { it.items }
+	int part = m.group(2) as int
+	if (part < 1 || part > plan.size()) throw new GradleException("Test shard '${spec}' is out of range, ${group} has ${plan.size()} parts")
+	plan[part - 1].items
+}
+
+def checkWorkflowShards() {
+	def workflow = rootProject.file('.github/workflows/build.yml')
+	if (!workflow.exists()) return
+	def line = workflow.readLines().find { it.trim().startsWith('shard: [') }
+	if (line == null) throw new GradleException("${workflow} has no 'shard: [' matrix line")
+	def listed = line.substring(line.indexOf('[') + 1, line.lastIndexOf(']')).split(',').collect { it.trim() }.findAll { !it.isEmpty() } as Set
+	def expected = testShardIds() as Set
+	if (listed != expected) {
+		throw new GradleException("The core-tests shard matrix in ${workflow} must list exactly ${testShardIds()}; missing ${expected - listed}, unknown ${listed - expected}")
+	}
+}
+
 def configureTestShard(Test t) {
 	def spec = project.findProperty('pkcShard')
 	if (spec == null) return
-	def parts = spec.toString().split('/')
-	def shard = testShardPlan(parts[1] as int)[parts[0] as int]
+	checkWorkflowShards()
+	def items = selectTestShard(spec.toString())
 	def classes = new HashSet<String>()
 	def problems = []
-	shard.items.each {
+	def splitParts = [:]
+	items.each {
 		def hash = it.name.indexOf('#')
-		if (hash < 0) {
+		def at = it.name.indexOf('@')
+		if (at >= 0) {
+			def cls = it.name.substring(0, at)
+			classes << cls
+			if (!splitParts.containsKey(cls)) splitParts[cls] = []
+			splitParts[cls] << it.name.substring(at + 1)
+		} else if (hash < 0) {
 			classes << it.name
 		} else {
 			classes << it.name.substring(0, hash)
@@ -118,39 +216,70 @@ def configureTestShard(Test t) {
 		e.directory || classes.contains(e.path.replace('/', '.').replaceAll(/\.class$/, '').replaceAll(/\$.*/, ''))
 	}
 	if (!problems.isEmpty()) t.systemProperty 'pkc.problems', problems.join(',')
+	def split = splitClasses()
+	splitParts.each { cls, list ->
+		t.systemProperty 'pkc.parts.' + cls.substring(cls.lastIndexOf('.') + 1), list.join(',') + '/' + split[cls]
+	}
 }
 
 tasks.register('testShardPlan') {
 	group = 'verification'
-	description = 'Prints how -PpkcShard=i/n splits the core tests across CI jobs (weights from test-weights.properties).'
+	description = 'Prints the named CI test shards (-PpkcShard=<group> or <group>-<part>) and what each runs (weights from test-weights.properties).'
 	doLast {
-		def spec = (project.findProperty('pkcShard') ?: '0/8').toString()
-		def count = spec.split('/')[1] as int
-		testShardPlan(count).eachWithIndex { s, i ->
-			println "shard ${i}/${count}: ${Math.round(s.weight)} s, ${s.items.size()} items"
-			s.items.findAll { it.weight >= 5 }.each { println "    ${Math.round(it.weight)} s  ${it.name}" }
+		checkWorkflowShards()
+		testGroups().each { name, g ->
+			def plan = testShardPlan(name)
+			plan.eachWithIndex { s, i ->
+				def id = plan.size() == 1 ? name : name + '-' + (i + 1)
+				println "${id}: ${Math.round(s.weight)} s, ${s.items.size()} items"
+				s.items.findAll { it.weight >= 5 }.each { println "    ${Math.round(it.weight)} s  ${it.name}" }
+			}
 		}
 	}
 }
 
 tasks.register('testWeights') {
 	group = 'verification'
-	description = 'Rewrites test-weights.properties from the latest build/test-results/test run.'
+	description = 'Updates test-weights.properties from the test results under -PpkcResults (default build/test-results/test); entries the run did not measure are kept, entries for removed tests are dropped.'
 	doLast {
-		def rows = [:]
-		fileTree('build/test-results/test').matching { include '*.xml' }.each { f ->
+		def known = new HashSet<String>()
+		def verySlowClasses = new HashSet<String>()
+		testClasses().each { c ->
+			if (c.verySlow) verySlowClasses << c.name
+			if (c.name.endsWith('.ProblemsTest')) {
+				problemCases().each { known << c.name + '#' + it }
+			} else {
+				known << c.name
+			}
+		}
+		def rows = loadTestWeights().findAll { k, v -> known.contains(k) }
+		def split = splitClasses()
+		def splitTimes = [:]
+		def measured = { String key, double t, boolean keepShort ->
+			if (!known.contains(key)) return
+			if (keepShort) {
+				rows[key] = Math.max(t, 1.0d)
+			} else if (t >= 0.5) {
+				rows[key] = t
+			} else {
+				rows.remove(key)
+			}
+		}
+		def results = project.findProperty('pkcResults') ?: 'build/test-results/test'
+		fileTree(results).matching { include '**/*.xml' }.each { f ->
 			def suite = new groovy.xml.XmlSlurper().parse(f)
 			def name = suite.@name.text()
 			if (name.endsWith('.ProblemsTest')) {
 				suite.testcase.each { c ->
-					def t = c.@time.text().toDouble()
-					if (t >= 0.5) rows[name + '#' + c.@name.text()[6..-2]] = t
+					measured(name + '#' + c.@name.text()[6..-2], c.@time.text().toDouble(), false)
 				}
+			} else if (split.containsKey(name)) {
+				splitTimes[name] = (splitTimes[name] ?: 0.0d) + suite.@time.text().toDouble()
 			} else {
-				def t = suite.@time.text().toDouble()
-				if (t >= 0.5) rows[name] = t
+				measured(name, suite.@time.text().toDouble(), verySlowClasses.contains(name))
 			}
 		}
+		splitTimes.each { name, t -> measured(name, t, verySlowClasses.contains(name)) }
 		def sorted = rows.sort { a, b -> b.value <=> a.value ?: a.key <=> b.key }
 		file('test-weights.properties').text = sorted.collect { k, v -> "${k}=${Math.round(v)}" }.join('\n') + '\n'
 	}
@@ -195,6 +324,31 @@ tasks.register('testJava8', Test) {
 	}
 	if (project.hasProperty('testCpus')) {
 		jvmArgs "-XX:ActiveProcessorCount=${project.property('testCpus')}"
+	}
+}
+
+tasks.register('research', Test) {
+	group = 'verification'
+	description = 'Runs the env-gated research tools (probes, dumps, screens, benches) from src/research; pick one with --tests.'
+	testClassesDirs = sourceSets.research.output.classesDirs
+	classpath = sourceSets.research.runtimeClasspath
+	systemProperties providers.systemPropertiesPrefixedBy('pkc.').get()
+	useJUnit()
+	outputs.upToDateWhen { false }
+	if (project.hasProperty('testCpus')) {
+		jvmArgs "-XX:ActiveProcessorCount=${project.property('testCpus')}"
+	}
+	if (project.hasProperty('pkcJfr')) {
+		jvmArgs "-XX:StartFlightRecording=filename=${project.property('pkcJfr')},settings=profile,dumponexit=true", "-XX:FlightRecorderOptions=stackdepth=512"
+	}
+}
+
+tasks.register('printResearchClasspath') {
+	group = 'help'
+	description = 'Prints the research runtime classpath for a direct java -cp run.'
+	dependsOn 'researchClasses'
+	doLast {
+		println sourceSets.research.runtimeClasspath.asPath
 	}
 }
 
@@ -261,4 +415,4 @@ tasks.register('tableStyleCheck') {
 	}
 }
 
-tasks.named('check') { dependsOn 'tableStyleCheck' }
+tasks.named('check') { dependsOn 'tableStyleCheck', 'researchClasses' }

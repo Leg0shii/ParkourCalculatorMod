@@ -1,6 +1,7 @@
 package de.legoshi.parkourcalc.core.anglesolver.solver;
 
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
+import de.legoshi.parkourcalc.core.ui.MovementEffect;
 
 /** Byte-exact MC sprint-jump forward: a direct port of the real movement float chain (hard
  *  thresholds + exact MathHelper sine table + per-axis momentum cancellation). Reproduces the live
@@ -30,6 +31,10 @@ public final class ExactJumpModel implements ForwardModel {
     private static final double WATER_SPRINT_DRAG = (double) 0.9F;
     private static final double MODERN_FLUID_GRAVITY = Constants.GRAVITY / 16.0;
     private static final double WEB_Y_SCALE = (double) 0.05F;
+    private static final double WEAVING_WEB_XZ_SCALE = 0.5;
+    private static final double WEAVING_WEB_Y_SCALE = 0.25;
+    private static final double DOLPHINS_GRACE_DRAG = (double) 0.96F;
+    private static final double COLLIDE_EPSILON = 1.0E-7;
 
     private static final float SQUARE_DIAG_INPUT = squareDiagInput();
 
@@ -54,6 +59,8 @@ public final class ExactJumpModel implements ForwardModel {
     private final boolean sine262;
     private final boolean foldedInputRad;
     private final boolean floatSprintBoost;
+    private final boolean byteAmplifier;
+    private final VelocityPacketCodec velocityCodec;
 
     public ExactJumpModel(double inertiaThreshold, boolean perAxisInertia, boolean modern) {
         this(inertiaThreshold, perAxisInertia, modern, false);
@@ -70,12 +77,44 @@ public final class ExactJumpModel implements ForwardModel {
 
     public ExactJumpModel(double inertiaThreshold, boolean perAxisInertia, boolean modern, boolean sine262,
                           boolean foldedInputRad, boolean floatSprintBoost) {
+        this(inertiaThreshold, perAxisInertia, modern, sine262, foldedInputRad, floatSprintBoost, false);
+    }
+
+    public ExactJumpModel(double inertiaThreshold, boolean perAxisInertia, boolean modern, boolean sine262,
+                          boolean foldedInputRad, boolean floatSprintBoost, boolean byteAmplifier) {
+        this(inertiaThreshold, perAxisInertia, modern, sine262, foldedInputRad, floatSprintBoost, byteAmplifier,
+                VelocityPacketCodec.FIXED_POINT);
+    }
+
+    public ExactJumpModel(double inertiaThreshold, boolean perAxisInertia, boolean modern, boolean sine262,
+                          boolean foldedInputRad, boolean floatSprintBoost, boolean byteAmplifier,
+                          VelocityPacketCodec velocityCodec) {
         this.inertiaThreshold = inertiaThreshold;
         this.perAxisInertia = perAxisInertia;
         this.modern = modern;
         this.sine262 = sine262;
         this.foldedInputRad = foldedInputRad;
         this.floatSprintBoost = floatSprintBoost;
+        this.byteAmplifier = byteAmplifier;
+        this.velocityCodec = velocityCodec == null ? VelocityPacketCodec.FIXED_POINT : velocityCodec;
+    }
+
+    public ExactJumpModel withByteAmplifier(boolean byteAmplifier) {
+        return new ExactJumpModel(inertiaThreshold, perAxisInertia, modern, sine262, foldedInputRad, floatSprintBoost,
+                byteAmplifier, velocityCodec);
+    }
+
+    public ExactJumpModel withVelocityCodec(VelocityPacketCodec codec) {
+        return new ExactJumpModel(inertiaThreshold, perAxisInertia, modern, sine262, foldedInputRad, floatSprintBoost,
+                byteAmplifier, codec);
+    }
+
+    public boolean byteAmplifier() {
+        return byteAmplifier;
+    }
+
+    public VelocityPacketCodec velocityCodec() {
+        return velocityCodec;
     }
 
     private float tableSin(float rad) {
@@ -130,6 +169,11 @@ public final class ExactJumpModel implements ForwardModel {
      *  players (the modern default here): combined-XZ |v|^2 &lt; 9.0E-6. Year-versioned MC (26.x
      *  onward) additionally runs the rewritten double-indexed sine lookup. */
     public static ExactJumpModel forMcVersion(String mcVersion) {
+        return eraModel(mcVersion).withByteAmplifier(MovementEffect.wrapsAmplifier(mcVersion))
+                .withVelocityCodec(VelocityPacketCodec.forMcVersion(mcVersion));
+    }
+
+    private static ExactJumpModel eraModel(String mcVersion) {
         if (mcVersion != null && mcVersion.startsWith("1.8")) return new ExactJumpModel(0.005, true, false);
         if (mcVersion != null && mcVersion.startsWith("1.12")) return new ExactJumpModel(0.003, true, false, false, true);
         if (isPerAxisModernEra(mcVersion)) {
@@ -197,6 +241,8 @@ public final class ExactJumpModel implements ForwardModel {
         double[] posX = path.posX, posY = path.posY, posZ = path.posZ;
         double[] velX = path.velX, velY = path.velY, velZ = path.velZ;
         double thr = inertiaThreshold;
+        int lastDamage = scenario.lastDamageTick();
+        double[] server = lastDamage >= from ? serverCarry(scenario, yawAbsDeg, from) : null;
 
         for (int t = from; t < n; t++) {
             double vx = velX[t];
@@ -218,6 +264,7 @@ public final class ExactJumpModel implements ForwardModel {
             // (2) ground/air + jump, authored per tick (see class doc). jump() uses (float)(Math.PI/180.0)
             // for its rad cast (distinct from moveFlying's in step (4)).
             int amp = scenario.factorAmpAt(t);
+            int slow = scenario.factorSlownessAt(t);
             double slipOv = scenario.slipAt(t);
             boolean contact = !Double.isNaN(slipOv);
             SurfaceKind kind = scenario.surfaceAt(t);
@@ -269,7 +316,7 @@ public final class ExactJumpModel implements ForwardModel {
             } else if (contact) {
                 f4 = slipF * 0.91F;
                 float ground = modern ? 0.21600002F / (slipF * slipF * slipF) : 0.16277136F / (f4 * f4 * f4);
-                accelSpeed = Constants.attrValueF(amp, sprint) * ground;
+                accelSpeed = Constants.attrValueF(amp, slow, sprint) * ground;
             } else {
                 f4 = 0.91F;
                 accelSpeed = airSprint ? Constants.AIR_SPEED_F : Constants.AIR_SPEED_NO_SPRINT_F;
@@ -282,9 +329,9 @@ public final class ExactJumpModel implements ForwardModel {
             if (scenario.strafeAt(t) && !isJumpTick) {
                 if (sine262) {
                     forward = Math.signum(forward) * SQUARE_DIAG_INPUT;
-                    strafe = scenario.strafeSign * SQUARE_DIAG_INPUT;
+                    strafe = scenario.strafeSignAt(t) * SQUARE_DIAG_INPUT;
                 } else {
-                    strafe = scenario.strafeSign * 1.0F * 0.98F;
+                    strafe = scenario.strafeSignAt(t) * 1.0F * 0.98F;
                 }
             } else {
                 strafe = scenario.strafeInputAt(t);
@@ -339,16 +386,19 @@ public final class ExactJumpModel implements ForwardModel {
 
             // (5) move (collision-free): position uses pre-gravity velocity.
             if (kind == SurfaceKind.COBWEB) {
-                posX[t + 1] = posX[t] + vx * 0.25;
-                posY[t + 1] = posY[t] + vy * WEB_Y_SCALE;
-                posZ[t + 1] = posZ[t] + vz * 0.25;
+                boolean weaving = scenario.weavingAt(t);
+                double webXz = weaving ? WEAVING_WEB_XZ_SCALE : 0.25;
+                posX[t + 1] = posX[t] + vx * webXz;
+                posY[t + 1] = posY[t] + vy * (weaving ? WEAVING_WEB_Y_SCALE : WEB_Y_SCALE);
+                posZ[t + 1] = posZ[t] + vz * webXz;
                 vx = 0.0;
                 vy = 0.0;
                 vz = 0.0;
             } else {
-                posX[t + 1] = posX[t] + vx;
+                boolean shapesBelow = modern && contact && !fluid && !isJumpTick;
+                posX[t + 1] = posX[t] + (shapesBelow && Math.abs(vx) < COLLIDE_EPSILON ? 0.0 : vx);
                 posY[t + 1] = posY[t] + vy;
-                posZ[t + 1] = posZ[t] + vz;
+                posZ[t + 1] = posZ[t] + (shapesBelow && Math.abs(vz) < COLLIDE_EPSILON ? 0.0 : vz);
             }
 
             if (modern && kind == SurfaceKind.LADDER && scenario.jumpAt(t)) {
@@ -377,7 +427,7 @@ public final class ExactJumpModel implements ForwardModel {
                     velZ[t + 1] = vz * fluidDrag;
                     velY[t + 1] = vy * fluidDrag - 0.02;
                 } else if (water) {
-                    double hDrag = sprint ? WATER_SPRINT_DRAG : WATER_DRAG;
+                    double hDrag = scenario.dolphinsGraceAt(t) ? DOLPHINS_GRACE_DRAG : sprint ? WATER_SPRINT_DRAG : WATER_DRAG;
                     double yd = vy * WATER_DRAG;
                     if (!sprint) {
                         yd -= MODERN_FLUID_GRAVITY;
@@ -403,6 +453,54 @@ public final class ExactJumpModel implements ForwardModel {
                 velZ[t + 1] = vz * (double) f4;
                 velY[t + 1] = (vy - Constants.GRAVITY) * (double) Constants.Y_DRAG_F;
             }
+
+            if (server != null && t <= lastDamage) {
+                serverImpulse(scenario, yawAbsDeg, t, server);
+                if (scenario.damageAt(t)) {
+                    Vec3dCore packet = velocityCodec.quantize(new Vec3dCore(server[0], scenario.packetYOrRestAt(t), server[1]));
+                    velX[t + 1] = packet.x;
+                    velY[t + 1] = packet.y;
+                    velZ[t + 1] = packet.z;
+                }
+                serverTravel(scenario, t, server);
+            }
         }
+    }
+
+    public double[] serverCarry(JumpPhysicsInputs scenario, double[] yawAbsDeg, int upTo) {
+        double[] server = {scenario.incomingServerX(), scenario.incomingServerZ()};
+        for (int t = 0; t < upTo; t++) {
+            serverImpulse(scenario, yawAbsDeg, t, server);
+            serverTravel(scenario, t, server);
+        }
+        return server;
+    }
+
+    private void serverImpulse(JumpPhysicsInputs scenario, double[] yawAbsDeg, int t, double[] server) {
+        if (!scenario.serverBoostAt(t)) return;
+        float yawPrev = t > 0 ? (float) yawAbsDeg[t - 1] : scenario.startYaw;
+        float fj = yawPrev * (float) (Math.PI / 180.0);
+        if (modern && !floatSprintBoost) {
+            server[0] += -tableSin(fj) * 0.2;
+            server[1] += tableCos(fj) * 0.2;
+        } else {
+            server[0] -= tableSin(fj) * 0.2F;
+            server[1] += tableCos(fj) * 0.2F;
+        }
+    }
+
+    private void serverTravel(JumpPhysicsInputs scenario, int t, double[] server) {
+        double sx = server[0];
+        double sz = server[1];
+        if (perAxisInertia) {
+            if (Math.abs(sx) < inertiaThreshold) sx = 0.0;
+            if (Math.abs(sz) < inertiaThreshold) sz = 0.0;
+        } else if (sx * sx + sz * sz < COMBINED_INERTIA_SQ) {
+            sx = 0.0;
+            sz = 0.0;
+        }
+        float f = scenario.serverFrictionAt(t);
+        server[0] = sx * (double) f;
+        server[1] = sz * (double) f;
     }
 }

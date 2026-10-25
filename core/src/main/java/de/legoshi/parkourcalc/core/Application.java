@@ -64,6 +64,7 @@ import imgui.ImGui;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -112,6 +113,7 @@ public final class Application {
     private de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel forwardModel;
     private de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverWindow angleSolverWindow;
     private NoTurnSearchController noTurnSearch;
+    private SenseSearchController senseSearch;
 
     public Application(Simulator simulator, MinecraftAccess mc) {
         this.mc = mc;
@@ -218,7 +220,8 @@ public final class Application {
         angleSolverState = new AngleSolverState();
         FileSystemSaveStore saveStore = saveController.getSaveStore();
         String mcVersion = saveStore != null ? saveStore.getMcVersion() : null;
-        forwardModel = ExactJumpModel.forMcVersion(mcVersion);
+        forwardModel = ExactJumpModel.forMcVersion(mcVersion).withVelocityCodec(mc.velocityPacketCodec());
+        inputOverlay.setMcVersion(mcVersion);
         constraintKeyController = new ConstraintKeyController(
                 mc, angleSolverState, selection, constraintSelection, saveController::markDirty,
                 forwardModel.modern(), inputData::size, settings, this::pushHudMessage);
@@ -226,6 +229,8 @@ public final class Application {
         saveController.setDebugSource(boxController, settings);
         AngleSolverTable angleSolverTable = new AngleSolverTable(angleSolverState, settings, selection, constraintSelection, inputData::size);
         inputOverlay.setAngleSolver(angleSolverTable);
+        inputOverlay.setConstraintDeleteHandlers(this::countSelectedConstraints, this::removeSelectedConstraints);
+        angleSolverTable.setConstraintDeleteHandlers(this::countSelectedConstraints, this::removeSelectedConstraints);
         StartStateTable startStateTable = new StartStateTable(runner, () -> onUserChange(-1), this::copyStartTeleportCommand,
                 this::setStartToPlayer);
         inputOverlay.setStartState(startStateTable);
@@ -263,7 +268,10 @@ public final class Application {
                 hudMessages, this::runSimulation, saveController::markDirty, this::pushHudMessage);
         angleSolverWindow.setRunTicksControls(runTicks);
         noTurnSearch = new NoTurnSearchController(inputData, runner, boxController, saveController, angleSolverState,
-                angleSolverEngine, forwardModel, mc, this::onUserChange, this::pushHudMessage, runTicks::isRunning);
+                angleSolverEngine, forwardModel, mc, this::onUserChange, this::pushHudMessage, runTicks::isRunning,
+                settings, this::saveSettings);
+        senseSearch = new SenseSearchController(inputData, saveController, angleSolverState, angleSolverEngine,
+                forwardModel, this::onUserChange, mc::getMouseSensitivity, mc::setMouseSensitivity);
         de.legoshi.parkourcalc.core.ui.anglesolver.StratfinderWindow stratfinderWindow =
                 new de.legoshi.parkourcalc.core.ui.anglesolver.StratfinderWindow(noTurnSearch);
         turnProfile = new TurnProfileController(angleSolverEngine, angleSolverState, inputData,
@@ -378,6 +386,8 @@ public final class Application {
         overlayManager.register(graphEditorWindow);
         overlayManager.register(stratfinderWindow);
         overlayManager.register(turnProfileWindow);
+        overlayManager.register(new de.legoshi.parkourcalc.core.ui.anglesolver.SenseFinderWindow(senseSearch, settings,
+                this::saveSettings));
         overlayManager.register(onejumpKeysWindow);
         overlayManager.register(onejumpSetupWindow);
         overlayManager.register(new de.legoshi.parkourcalc.core.ui.RecorderWindow(recorder, settings, this::toggleRecording,
@@ -422,6 +432,7 @@ public final class Application {
     public void initSettingsStorage(Path path) {
         this.settingsPath = path;
         SettingsIO.load(path, settings);
+        de.legoshi.parkourcalc.core.anglesolver.noturn.PoolScreenAccelerator.setEnabled(settings.stratfinderGpu);
         ConstraintText.statsPrecision = settings.solverStatsPrecision;
         if (!simulator.supportsPairedSimulation()) {
             settings.pairedSimulation = false;
@@ -472,6 +483,7 @@ public final class Application {
     }
 
     private void runSimulation(int dirtyTick) {
+        if (senseSearch != null) senseSearch.invalidate();
         if (!mc.isReady()) return;
         if (!saveController.isSessionActive()) return;
         long t0 = Perf.now();
@@ -670,6 +682,7 @@ public final class Application {
         }
         pollSolver();
         if (noTurnSearch != null) noTurnSearch.poll();
+        if (senseSearch != null) senseSearch.poll();
         boolean pathInert = isControlPanelOpen() || !settings.showPath;
         dragController.tick(
                 mc.getEyePosition(),
@@ -683,7 +696,7 @@ public final class Application {
         selectController.tick(
                 mc.getEyePosition(),
                 mc.getLookDirection(),
-                mc.isMousePressedLeft(),
+                mc.isSelectTickPressed(),
                 mc.getCursorScreenX(),
                 mc.getCursorScreenY(),
                 pathInert
@@ -705,6 +718,10 @@ public final class Application {
 
     public void removeSelectedConstraints() {
         if (constraintKeyController != null) constraintKeyController.removeSelected();
+    }
+
+    public int countSelectedConstraints() {
+        return constraintKeyController != null ? constraintKeyController.countSelected() : 0;
     }
 
     public void captureAngleSolverBlock(BlockSelection.Kind kind) {
@@ -749,7 +766,7 @@ public final class Application {
                 pushHudMessage("Solved · applied", HudMessageStyle.COLOR_OK);
             }
         } else {
-            pushHudMessage("No solution · " + done.getMet() + "/" + done.getTotal() + " constraints met",
+            pushHudMessage(done.headline() + " · " + done.getMet() + "/" + done.getTotal() + " constraints met",
                     HudMessageStyle.COLOR_DANGER);
         }
     }
@@ -854,6 +871,10 @@ public final class Application {
             return;
         }
         boolean changed = false;
+        Set<Integer> damageTicks = new HashSet<>();
+        for (de.legoshi.parkourcalc.core.sim.ServerSimEvent ev : runner.getServerEvents()) {
+            if (ev.kind == de.legoshi.parkourcalc.core.sim.ServerSimEvent.Kind.DAMAGE_RULED) damageTicks.add(ev.tick);
+        }
         for (int t = start; t < end; t++) {
             TickState s = boxController.getState(t + 1);
             if (s == null || !s.hasSurfaceSample()) continue;
@@ -862,9 +883,11 @@ public final class Application {
             Medium medium = s.medium;
             boolean slipDefault = slip == angleSolverState.getDefaultSlipperiness();
             boolean mediumNone = medium == Medium.NONE;
+            boolean damage = damageTicks.contains(t);
             TickConstraints tc = angleSolverState.tickConstraintsOrNull(t);
-            if (tc == null && slipDefault && mediumNone) continue;
+            if (tc == null && slipDefault && mediumNone && !damage) continue;
             StateOverride ov = angleSolverState.tickConstraints(t).getOverride();
+            ov.setDamage(damage);
             if (slipDefault) ov.clearSlipperiness();
             else ov.setSlipperiness(slip);
             if (mediumNone) {

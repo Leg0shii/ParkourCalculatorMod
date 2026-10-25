@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.core.ports;
 
+import de.legoshi.parkourcalc.core.anglesolver.solver.VelocityPacketCodec;
 import de.legoshi.parkourcalc.core.sim.AABB;
 import de.legoshi.parkourcalc.core.sim.BlockHit;
 import de.legoshi.parkourcalc.core.sim.CollisionRayTrace;
@@ -53,11 +54,32 @@ public interface MinecraftAccess {
         return null;
     }
 
+    default boolean isCobweb(int x, int y, int z) {
+        return false;
+    }
+
+    double getInsideBlockInset();
+
+    default VelocityPacketCodec velocityPacketCodec() {
+        return VelocityPacketCodec.FIXED_POINT;
+    }
+
+    default AABB getCobwebContactBox(int x, int y, int z) {
+        if (!isCobweb(x, y, z)) return null;
+        double inset = getInsideBlockInset();
+        return new AABB(
+                new Vec3dCore(x + inset, y + inset, z + inset),
+                new Vec3dCore(x + 1.0 - inset, y + 1.0 - inset, z + 1.0 - inset));
+    }
+
     default BlockHit getLookedAtHit() {
         CollisionRayTrace.World world = new CollisionRayTrace.World() {
             @Override
             public List<AABB> collisionBoxes(int x, int y, int z) {
-                return getBlockCollisionBoxes(x, y, z);
+                List<AABB> boxes = getBlockCollisionBoxes(x, y, z);
+                if (boxes != null && !boxes.isEmpty()) return boxes;
+                AABB cobweb = getCobwebContactBox(x, y, z);
+                return cobweb == null ? boxes : Collections.singletonList(cobweb);
             }
 
             @Override
@@ -97,6 +119,10 @@ public interface MinecraftAccess {
 
     /** Current state of the left mouse button (true while held). */
     boolean isMousePressedLeft();
+
+    default boolean isSelectTickPressed() {
+        return isMousePressedLeft();
+    }
 
     /** Current state of the right mouse button (true while held). */
     boolean isMousePressedRight();
@@ -145,6 +171,9 @@ public interface MinecraftAccess {
 
     default float getMouseSensitivity() {
         return 0.5f;
+    }
+
+    default void setMouseSensitivity(float sensitivity) {
     }
 
     /** True when the client owns the integrated server (singleplayer or LAN host). */

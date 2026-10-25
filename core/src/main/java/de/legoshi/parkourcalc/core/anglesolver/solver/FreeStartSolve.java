@@ -793,14 +793,12 @@ public final class FreeStartSolve {
             }
         }
         Objective obj = spec.objective;
-        int objAxis = obj.axis == JumpPhysicsInputs.Axis.X ? 0 : 1;
-        boolean max = obj.sense == Objective.Sense.MAX;
-        double dx = pickBest(loX, hiX, box.pxLo - path.posX[0], box.pxHi - path.posX[0], objAxis == 0, max);
-        double dz = pickBest(loZ, hiZ, box.pzLo - path.posZ[0], box.pzHi - path.posZ[0], objAxis == 1, max);
+        double dx = pickBest(loX, hiX, box.pxLo - path.posX[0], box.pxHi - path.posX[0], obj.translationGradX());
+        double dz = pickBest(loZ, hiZ, box.pzLo - path.posZ[0], box.pzHi - path.posZ[0], obj.translationGradZ());
         return new double[] {dx, dz};
     }
 
-    private static double pickBest(double lo, double hi, double bLo, double bHi, boolean objectiveAxis, boolean max) {
+    private static double pickBest(double lo, double hi, double bLo, double bHi, double grad) {
         double flo = Math.max(lo, bLo);
         double fhi = Math.min(hi, bHi);
         if (flo <= fhi) return 0.5 * (flo + fhi);
@@ -877,16 +875,15 @@ public final class FreeStartSolve {
         if (loX > hiX + EMPTY_TOL || loZ > hiZ + EMPTY_TOL) return null;
 
         Objective obj = spec.objective;
-        int objAxis = obj.axis == JumpPhysicsInputs.Axis.X ? 0 : 1;
-        boolean max = obj.sense == Objective.Sense.MAX;
-        double dx = pickDelta(loX, hiX, objAxis == 0, max);
-        double dz = pickDelta(loZ, hiZ, objAxis == 1, max);
+        double dx = pickDelta(loX, hiX, obj.translationGradX());
+        double dz = pickDelta(loZ, hiZ, obj.translationGradZ());
         return new double[] {dx, dz};
     }
 
-    private static double pickDelta(double lo, double hi, boolean objectiveAxis, boolean max) {
+    private static double pickDelta(double lo, double hi, double grad) {
         if (lo > hi) return 0.0;
-        if (objectiveAxis) return max ? hi : lo;
+        if (grad > 0.0) return hi;
+        if (grad < 0.0) return lo;
         return clamp(0.0, lo, hi);
     }
 
@@ -903,17 +900,26 @@ public final class FreeStartSolve {
         a.jumpTick = b.jumpTick;
         a.jumpPerTick = b.jumpPerTick;
         a.strafeSign = b.strafeSign;
+        a.strafeSignPerTick = b.strafeSignPerTick;
         a.strafePerTick = b.strafePerTick;
         a.speedAmplifier = b.speedAmplifier;
+        a.slownessAmplifier = b.slownessAmplifier;
         a.slipPerTick = b.slipPerTick;
         a.surfacePerTick = b.surfacePerTick;
         a.soulsandCellsPerTick = b.soulsandCellsPerTick;
         a.sneakPerTick = b.sneakPerTick;
+        a.dolphinsGracePerTick = b.dolphinsGracePerTick;
+        a.weavingPerTick = b.weavingPerTick;
         a.yawLockedPerTick = b.yawLockedPerTick;
         a.sprintPerTick = b.sprintPerTick;
+        a.damagePerTick = b.damagePerTick;
+        a.serverJumpPerTick = b.serverJumpPerTick;
+        a.packetYPerTick = b.packetYPerTick;
+        a.incomingServerVelocity = b.incomingServerVelocity;
         a.incomingSprint = b.incomingSprint;
         a.incomingAmp = b.incomingAmp;
-        a.liveAirSprintFactor = b.liveAirSprintFactor;
+        a.incomingSlowness = b.incomingSlowness;
+        a.liveMovementFactor = b.liveMovementFactor;
         a.forwardInputPerTick = b.forwardInputPerTick;
         a.strafeInputPerTick = b.strafeInputPerTick;
         return a;

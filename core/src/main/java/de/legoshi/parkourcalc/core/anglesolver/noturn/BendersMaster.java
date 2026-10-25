@@ -35,6 +35,7 @@ public final class BendersMaster {
         public boolean ja = true;
 
         public boolean parallelContinuations = false;
+        public boolean openingTaps = false;
         public int continuationThreads = 0;
         public int parallelWidth = 6;
 
@@ -75,6 +76,9 @@ public final class BendersMaster {
         public long certifies;
         public long continuations;
         public long fatFeasible;
+        public long openingTapCertifies;
+        public long openingTapFeasible;
+        public long tapContinuations;
         public long screenSkipped;
         public int noGoodCuts;
         public int smallestSurvivorEdges = Integer.MAX_VALUE;
@@ -156,7 +160,8 @@ public final class BendersMaster {
         log("master start: structures=" + raw.size() + " diskFeasible=" + trace.diskFeasibleCount
                 + " mode=" + cfg.mode + " alphabet=" + cfg.alphabet.length
                 + " minDwell=" + cfg.minDwell + " maxEdges=" + cfg.maxEdges + " ja=" + cfg.ja
-                + " parCont=" + cfg.parallelContinuations + " parWidth=" + cfg.parallelWidth);
+                + " parCont=" + cfg.parallelContinuations + " parWidth=" + cfg.parallelWidth
+                + " openingTaps=" + cfg.openingTaps);
 
         if (cfg.deepPairRepair) {
             return polishResult(problem,
@@ -358,6 +363,7 @@ public final class BendersMaster {
         final int edges;
         final double objective;
         final boolean isV6Anc;
+        final List<FatFeasible> taps = new ArrayList<>();
 
         FatFeasible(int[] combos, int edges, double objective, boolean isV6Anc) {
             this.combos = combos;
@@ -412,7 +418,8 @@ public final class BendersMaster {
                 NoTurnCertifier.Result rf = fatCertifyOrCut(problem, wpFat, fatGraph, master, iis, sigma, sprint, null);
                 if (rf == null) continue;
                 trace.fatFeasible++;
-                pool.add(new FatFeasible(sigma.clone(), edges, rf.objective, isV6Anc));
+                FatFeasible ff = new FatFeasible(sigma.clone(), edges, rf.objective, isV6Anc);
+                pool.add(ff);
                 if (isV6Anc) {
                     trace.v6AncestorCertifiedFat = true;
                     log("  *** V6 ancestor FAT-FEASIBLE #" + trace.fatFeasible + " obj=" + fmt(rf.objective));
@@ -420,6 +427,7 @@ public final class BendersMaster {
                     log("  fat-feasible#" + trace.fatFeasible + " edges=" + edges + " obj=" + fmt(rf.objective)
                             + " [" + NoTurnKeys.describe(sigma) + "]");
                 }
+                if (cfg.openingTaps) expandOpeningTaps(problem, wpFat, fatGraph, master, iis, ff, engage, deadline);
             }
 
             boolean canRefill = !exhausted && trace.certifies < cfg.maxCertifies;
@@ -433,7 +441,7 @@ public final class BendersMaster {
                 continue;
             }
 
-            int room = cfg.continuationCap - (int) trace.continuations;
+            int room = cfg.continuationCap - baseContinuations();
             if (room > 0) {
                 int width = Math.min(ranked.size(),
                         cfg.parallelContinuations ? Math.min(room, Math.max(1, cfg.parallelWidth)) : room);
@@ -443,7 +451,7 @@ public final class BendersMaster {
                         : runContinuationSequential(problem, finalGraph, batch, continued, deadline);
                 if (res != null) return res;
             }
-            if (trace.continuations >= cfg.continuationCap) break;
+            if (baseContinuations() >= cfg.continuationCap) break;
 
             if (!canRefill && unContinued(pool, continued) == 0) break;
         }
@@ -451,6 +459,7 @@ public final class BendersMaster {
         progress.update("benders: no byte-exact survivor in budget (iters=" + trace.masterIterations
                 + " fatFeasible=" + trace.fatFeasible + " continuations=" + trace.continuations + ")", 1.0);
         log("no incumbent. fatFeasible=" + trace.fatFeasible + " continuations=" + trace.continuations
+                + " openingTapCertifies=" + trace.openingTapCertifies + " openingTapFeasible=" + trace.openingTapFeasible
                 + " v6AncestorProposed=" + trace.v6AncestorProposed
                 + " v6AncestorCertifiedFat=" + trace.v6AncestorCertifiedFat
                 + " v6AncestorContinued=" + trace.v6AncestorContinued
@@ -494,6 +503,41 @@ public final class BendersMaster {
         return o.result;
     }
 
+    private int baseContinuations() {
+        return (int) (trace.continuations - trace.tapContinuations);
+    }
+
+    private void expandOpeningTaps(NoTurnProblem problem, NoTurnProblem wpFat, SolverGraph fatGraph,
+                                   MinTvMaster master, IisExtractor iis, FatFeasible base, int engage, long deadline) {
+        for (int c : cfg.alphabet) {
+            if (c == base.combos[0] || cancelled() || System.nanoTime() >= deadline || trace.certifies >= cfg.maxCertifies) continue;
+            int[] sigma = base.combos.clone();
+            sigma[0] = c;
+            boolean isAnc = isV6AncestorTap(sigma, problem.setupEnd);
+            trace.openingTapCertifies++;
+            NoTurnCertifier.Result rf = fatCertifyOrCut(problem, wpFat, fatGraph, master, iis, sigma,
+                    NoTurnKeys.latchSprint(sigma, engage), null);
+            if (rf == null) continue;
+            trace.openingTapFeasible++;
+            base.taps.add(new FatFeasible(sigma, base.edges, rf.objective, isAnc));
+            if (isAnc) trace.v6AncestorCertifiedFat = true;
+            log("    tap fat-feasible obj=" + fmt(rf.objective) + (isAnc ? " <== V6 ANCESTOR TAP" : "")
+                    + " [" + NoTurnKeys.describe(sigma) + "]");
+        }
+        base.taps.sort(Comparator.comparingDouble((FatFeasible f) ->
+                problem.objective.sense == Objective.Sense.MAX ? -f.objective : f.objective));
+    }
+
+    private NoTurnResult continueTaps(NoTurnProblem problem, SolverGraph finalGraph, FatFeasible base,
+                                      java.util.Set<String> continued, long deadline) {
+        if (base.taps.isEmpty() || cancelled() || System.nanoTime() >= deadline) return null;
+        log("  continuing " + base.taps.size() + " tap variants of [" + NoTurnKeys.describe(base.combos) + "]");
+        long before = trace.continuations;
+        NoTurnResult r = runContinuationBatch(problem, finalGraph, base.taps, continued, deadline);
+        trace.tapContinuations += trace.continuations - before;
+        return r;
+    }
+
     private NoTurnResult runContinuationSequential(NoTurnProblem problem, SolverGraph finalGraph,
                                                    List<FatFeasible> batch, java.util.Set<String> continued,
                                                    long deadline) {
@@ -520,6 +564,8 @@ public final class BendersMaster {
                 return res;
             }
             log("  continuation#" + idx + " did not close");
+            NoTurnResult tr = continueTaps(problem, finalGraph, ff, continued, deadline);
+            if (tr != null) return tr;
         }
         return null;
     }
@@ -837,6 +883,14 @@ public final class BendersMaster {
     private static boolean better(Objective obj, NoTurnResult a, NoTurnResult b) {
         boolean max = obj.sense == Objective.Sense.MAX;
         return max ? a.objective > b.objective : a.objective < b.objective;
+    }
+
+    private static boolean isV6AncestorTap(int[] combos, int setupEnd) {
+        if (setupEnd != 28 || combos.length != 29) return false;
+        for (int t = 1; t <= 5; t++) if (combos[t] != NoTurnKeys.SD) return false;
+        for (int t = 6; t <= 14; t++) if (combos[t] != NoTurnKeys.S) return false;
+        for (int t = 15; t <= 27; t++) if (combos[t] != NoTurnKeys.WA) return false;
+        return combos[28] == NoTurnKeys.W;
     }
 
     private static boolean isV6Ancestor(int[] combos, int setupEnd) {

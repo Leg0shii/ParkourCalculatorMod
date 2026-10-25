@@ -4,6 +4,7 @@ import de.legoshi.parkourcalc.core.anglesolver.Medium;
 import de.legoshi.parkourcalc.core.sim.Checkpoint;
 import de.legoshi.parkourcalc.core.sim.ServerSimEvent;
 import de.legoshi.parkourcalc.core.sim.StartResumeState;
+import de.legoshi.parkourcalc.core.sim.ServerTickSample;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 
@@ -52,6 +53,10 @@ public interface Simulator {
 
     default int getCurrentTickSoulsandCells() {
         return 0;
+    }
+
+    default ServerTickSample getCurrentServerSample() {
+        return null;
     }
 
     float getCurrentYaw();

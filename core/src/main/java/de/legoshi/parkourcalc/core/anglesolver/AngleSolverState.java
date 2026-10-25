@@ -50,6 +50,18 @@ public final class AngleSolverState {
         }
     }
 
+    public enum StrafeSide {
+        A("A"),
+        D("D"),
+        BOTH("Both");
+
+        public final String label;
+
+        StrafeSide(String label) {
+            this.label = label;
+        }
+    }
+
     /** Solve effort. FAST returns the first byte-exact feasible solution (lowest latency). THOROUGH
      *  ("Optimize" in the UI; the constant keeps its name so old saves load) spends a time budget on the
      *  best objective it can find. CUSTOM exposes every knob. */
@@ -133,6 +145,7 @@ public final class AngleSolverState {
 
     private int startTick;
     private int landingTick;
+    private int objectiveTick = -1;
     private Axis axis = Axis.X;
     private Goal goal = Goal.MAX;
     private boolean customAngle = false;
@@ -150,6 +163,7 @@ public final class AngleSolverState {
     private SolverGraph customGraph;
 
     private InputMode defaultInputs = InputMode.FORCE_45;
+    private StrafeSide strafeSide = StrafeSide.A;
     private SprintMode defaultSprint = SprintMode.ALWAYS;
     private Slipperiness defaultSlipperiness = Slipperiness.AIR;
 
@@ -181,6 +195,26 @@ public final class AngleSolverState {
 
     public void setLandingTick(int tick) {
         landingTick = tick;
+    }
+
+    public boolean hasObjectiveTick() {
+        return objectiveTick >= 0;
+    }
+
+    public int getObjectiveTick() {
+        return objectiveTick;
+    }
+
+    public int effectiveObjectiveTick() {
+        return hasObjectiveTick() ? objectiveTick : landingTick;
+    }
+
+    public void setObjectiveTick(int tick) {
+        objectiveTick = tick < 0 ? -1 : tick;
+    }
+
+    public void clearObjectiveTick() {
+        objectiveTick = -1;
     }
 
     public Axis getAxis() {
@@ -354,6 +388,7 @@ public final class AngleSolverState {
         if (rowCount <= 0) return;
         startTick = clamp(startTick, rowCount);
         landingTick = clamp(landingTick, rowCount);
+        if (hasObjectiveTick()) objectiveTick = clamp(objectiveTick, rowCount);
     }
 
     private static int clamp(int tick, int rowCount) {
@@ -364,6 +399,14 @@ public final class AngleSolverState {
 
     public InputMode getDefaultInputs() {
         return defaultInputs;
+    }
+
+    public StrafeSide getStrafeSide() {
+        return strafeSide;
+    }
+
+    public void setStrafeSide(StrafeSide side) {
+        this.strafeSide = side;
     }
 
     public void setDefaultInputs(InputMode mode) {
@@ -406,6 +449,7 @@ public final class AngleSolverState {
         remapTicks(t -> t >= index ? t + count : t);
         if (startTick >= index) startTick += count;
         if (landingTick >= index) landingTick += count;
+        if (objectiveTick >= index) objectiveTick += count;
     }
 
     /** Rows removed at {@code descendingIndices} (the shape InputData.removeRows consumes): their
@@ -418,6 +462,7 @@ public final class AngleSolverState {
         remapTicks(t -> Collections.binarySearch(asc, t) >= 0 ? -1 : t - countBelow(asc, t));
         startTick -= countBelow(asc, startTick);
         landingTick -= countBelow(asc, landingTick);
+        if (hasObjectiveTick()) objectiveTick -= countBelow(asc, objectiveTick);
     }
 
     /** The row at {@code sourceIndex} was duplicated onto {@code sourceIndex + 1}: slide everything
@@ -440,6 +485,7 @@ public final class AngleSolverState {
         remapTicks(t -> mapMove(t, from, dest));
         startTick = mapMove(startTick, from, dest);
         landingTick = mapMove(landingTick, from, dest);
+        if (hasObjectiveTick()) objectiveTick = mapMove(objectiveTick, from, dest);
     }
 
     /** {@link #onRowMoved}'s index mapping for a single row-keyed value (same drop-line no-op semantics). */
@@ -729,6 +775,7 @@ public final class AngleSolverState {
     public void reset() {
         startTick = 0;
         landingTick = 0;
+        objectiveTick = -1;
         axis = Axis.X;
         goal = Goal.MAX;
         customAngle = false;
@@ -742,6 +789,7 @@ public final class AngleSolverState {
         graphPresetName = null;
         customGraph = null;
         defaultInputs = InputMode.FORCE_45;
+        strafeSide = StrafeSide.A;
         defaultSprint = SprintMode.ALWAYS;
         defaultSlipperiness = Slipperiness.AIR;
         ticks.clear();

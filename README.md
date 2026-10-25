@@ -34,7 +34,7 @@ Every jar ships the same core: the input table, the simulation, the angle solver
 ## Features
 
 ### Planning and simulation
-- **Tick-by-tick inputs**: W/A/S/D, jump, sneak, sprint, left/right click, close inventory, hotbar slot, yaw and pitch per tick, plus Speed and Jump Boost amplifiers (up to 255) and per-tick teleport destinations. Hide the columns you do not use.
+- **Tick-by-tick inputs**: W/A/S/D, jump, sneak, sprint, left/right click, close inventory, hotbar slot, yaw and pitch per tick, plus Speed, Jump Boost and Slowness amplifiers (up to 255) and per-tick teleport destinations. Hide the columns you do not use.
 - **Real Minecraft physics**: the path is produced by a real player entity running the game's own movement code, so what you see is what the game does. No approximation, no drift.
 - **Live path in the world**: every tick is a box; edit an input and the path updates immediately. Yaw arrows, hitboxes, sub-tick positions, hit distance lines and constraint plates can each be toggled and recolored.
 - **In-world editing**: drag the start box to move the setup, Shift+drag to move it rigidly along collision-free ground, right-drag a box to set that tick's yaw, Ctrl+right-drag to set its pitch. Tapping a box selects the tick.
@@ -101,10 +101,11 @@ Click and drag the first box in the world. Hold Shift to move the whole path rig
 | `G` | Toggle UI |
 | `P` | Start/stop playback |
 | `B` | Add the targeted block's footprint (top face) or wall (side face) as a constraint on the selected tick |
+| `B` on a cobweb | Wall constraint on the web's contact box, which sits inside the block by the game version's epsilon (0.001 on 1.8.9 and 1.12.2, 1e-7 on 1.20.4, 1e-5 from 1.21.2) |
 | `Shift+B` | Wall constraint for entering the block's side instead of stopping at it |
 | `Alt+B` | Merge the new footprint or wall with the existing constraint |
 | `Ctrl+B` | Remove that constraint; on a pressure plate, ladder, vine, slime or ice block it adds the cell constraint instead |
-| `X` | Remove the selected constraints |
+| `X` | Remove the selected constraints (also `Delete constraints` in the tick right-click menu while the Angle Solver is open) |
 | `V` | Solve and apply (Angle Solver) |
 | `I` / `O` | Set the solver start / goal tick to the selected tick |
 | `Z` | Set the solver goal to the axis you are looking along (+X, -X, +Z or -Z) |
@@ -164,7 +165,7 @@ The Gradle daemon runs on JDK 21. The Fabric targets use auto-provisioned JDK 25
 ./gradlew :loader-forge:1.12.2:build      # one target (also :loader-forge:1.8.9)
 ```
 
-Modules: `core/` is the Minecraft-free UI, data and solver code (Java 8), `forge-core/` holds the parts shared by the Forge targets, and the two `loader-*/` Stonecutter trees contain the Minecraft-touching simulation, rendering and entry point, written once per loader with version regions for the API differences between targets. See [`AGENTS.md`](AGENTS.md) for the architecture and [`CONTEXT.md`](CONTEXT.md) for the parkour and movement vocabulary.
+Modules: `core/` is the Minecraft-free UI, data and solver code (Java 8), `forge-core/` holds the parts shared by the Forge targets, `gpu/` is the OpenCL implementation of the stratfinder's schedule screen that every loader bundles, and the two `loader-*/` Stonecutter trees contain the Minecraft-touching simulation, rendering and entry point, written once per loader with version regions for the API differences between targets. See [`AGENTS.md`](AGENTS.md) for the architecture and [`CONTEXT.md`](CONTEXT.md) for the parkour and movement vocabulary.
 
 ## Contributing
 

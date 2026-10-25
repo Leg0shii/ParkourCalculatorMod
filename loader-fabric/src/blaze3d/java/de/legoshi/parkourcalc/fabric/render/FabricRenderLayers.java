@@ -2,8 +2,11 @@ package de.legoshi.parkourcalc.fabric.render;
 
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import de.legoshi.parkourcalc.core.ui.BoxStyle;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
+
+import java.util.OptionalDouble;
 
 public final class FabricRenderLayers {
 
@@ -17,8 +20,24 @@ public final class FabricRenderLayers {
             RenderType.SMALL_BUFFER_SIZE,
             RenderType.CompositeState.builder()
                     .setShaderState(RenderStateShard.RENDERTYPE_LINES_SHADER)
+                    .setLineState(new RenderStateShard.LineStateShard(OptionalDouble.of(BoxStyle.LINE_WIDTH)))
                     .setLayeringState(RenderStateShard.VIEW_OFFSET_Z_LAYERING)
                     .setTransparencyState(RenderStateShard.TRANSLUCENT_TRANSPARENCY)
+                    .setCullState(RenderStateShard.NO_CULL)
+                    .createCompositeState(false)
+    );
+
+    public static final RenderType LINE_DEPTH = RenderType.create(
+            "parkourcalc_line_depth",
+            DefaultVertexFormat.POSITION_COLOR_NORMAL,
+            VertexFormat.Mode.LINES,
+            RenderType.SMALL_BUFFER_SIZE,
+            RenderType.CompositeState.builder()
+                    .setShaderState(RenderStateShard.RENDERTYPE_LINES_SHADER)
+                    .setLineState(new RenderStateShard.LineStateShard(OptionalDouble.of(BoxStyle.LINE_WIDTH)))
+                    .setLayeringState(RenderStateShard.VIEW_OFFSET_Z_LAYERING)
+                    .setTransparencyState(RenderStateShard.TRANSLUCENT_TRANSPARENCY)
+                    .setWriteMaskState(new RenderStateShard.WriteMaskStateShard(false, true))
                     .setCullState(RenderStateShard.NO_CULL)
                     .createCompositeState(false)
     );
@@ -30,10 +49,27 @@ public final class FabricRenderLayers {
             RenderType.SMALL_BUFFER_SIZE,
             RenderType.CompositeState.builder()
                     .setShaderState(RenderStateShard.POSITION_COLOR_SHADER)
+                    .setLayeringState(RenderStateShard.POLYGON_OFFSET_LAYERING)
                     .setTransparencyState(RenderStateShard.TRANSLUCENT_TRANSPARENCY)
                     .setDepthTestState(RenderStateShard.LEQUAL_DEPTH_TEST)
                     .setWriteMaskState(RenderStateShard.COLOR_WRITE)
                     .setCullState(RenderStateShard.NO_CULL)
                     .createCompositeState(false)
     );
+
+    public static final RenderType FACE_DEPTH = RenderType.create(
+            "parkourcalc_face_depth",
+            DefaultVertexFormat.POSITION_COLOR,
+            VertexFormat.Mode.QUADS,
+            RenderType.SMALL_BUFFER_SIZE,
+            RenderType.CompositeState.builder()
+                    .setShaderState(RenderStateShard.POSITION_COLOR_SHADER)
+                    .setLayeringState(RenderStateShard.POLYGON_OFFSET_LAYERING)
+                    .setTransparencyState(RenderStateShard.TRANSLUCENT_TRANSPARENCY)
+                    .setDepthTestState(RenderStateShard.LEQUAL_DEPTH_TEST)
+                    .setWriteMaskState(new RenderStateShard.WriteMaskStateShard(false, true))
+                    .setCullState(RenderStateShard.NO_CULL)
+                    .createCompositeState(false)
+    );
+
 }

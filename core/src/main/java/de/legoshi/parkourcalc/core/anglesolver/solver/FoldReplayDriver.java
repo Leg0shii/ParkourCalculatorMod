@@ -197,7 +197,7 @@ public final class FoldReplayDriver {
             JumpPhysicsInputs scRep = pinnedCopy(sc, px, pz);
             double[] gf = scRep.toGameFacings(yaws);
             ForwardPath path = exact.forward(scRep, gf);
-            double obj = path.getPos(spec.objective.tick, spec.objective.axis);
+            double obj = spec.objective.evaluate(path);
             double viol = compiled.maxViolation(gf, path);
 
             boolean[] newZeroX = new boolean[n];
@@ -390,7 +390,7 @@ public final class FoldReplayDriver {
         boolean[] zx = new boolean[n];
         boolean[] zz = new boolean[n];
         extractPattern(exact, path, n, zx, zz);
-        Round anchor = new Round(0, Double.NaN, path.getPos(spec.objective.tick, spec.objective.axis),
+        Round anchor = new Round(0, Double.NaN, spec.objective.evaluate(path),
                 viol, yaws.clone(), px, pz, zx.clone(), zz.clone(), countEvents(zx, zz), false);
         rounds.add(anchor);
         Round best = anchor;
@@ -544,7 +544,7 @@ public final class FoldReplayDriver {
             JumpPhysicsInputs scRep = pinnedCopy(sc, px, pz);
             double[] gf = scRep.toGameFacings(yaws);
             ForwardPath path = exact.forward(scRep, gf);
-            double obj = path.getPos(spec.objective.tick, spec.objective.axis);
+            double obj = spec.objective.evaluate(path);
             double viol = compiled.maxViolation(gf, path);
             boolean[] rzx = new boolean[n];
             boolean[] rzz = new boolean[n];
@@ -814,7 +814,7 @@ public final class FoldReplayDriver {
         ForwardPath path2 = exact.forward(scRep, gf2);
         double viol = compiled.maxViolation(gf2, path2);
         if (viol != 0.0) return null;
-        double obj = path2.getPos(spec.objective.tick, spec.objective.axis);
+        double obj = spec.objective.evaluate(path2);
         if (DEBUG) {
             System.out.printf("  FOLD[%d] translate dpx=%.3e dpz=%.3e obj=%.9f%n", index, dpx, dpz, obj);
         }

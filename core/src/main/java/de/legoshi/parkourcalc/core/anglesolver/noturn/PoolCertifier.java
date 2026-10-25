@@ -20,7 +20,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 final class PoolCertifier {
 
     private static final int CERTIFY_THREAD_CAP = 8;
+    private static final int GPU_CERTIFY_THREAD_CAP = Integer.getInteger("pkc.pool.gpuCertifyThreads", 16);
     private static final long WARM_BUDGET_NANOS = 300_000_000L;
+    private static final long SHORT_PASS_NANOS = Long.getLong("pkc.pool.shortPassMs", 500L) * 1_000_000L;
     private static final int MULTI_MAX_CERTIFY = 6000;
     private static final long MULTI_NEAR_SEARCH_NANOS = 300_000_000L;
 
@@ -38,8 +40,10 @@ final class PoolCertifier {
 
     private final Set<String> found = new HashSet<>();
     private final List<Candidate> queue = new ArrayList<>();
+    private final List<Candidate> retryQueue = new ArrayList<>();
     private final List<Candidate> everything = new ArrayList<>();
     private boolean queueDirty;
+    private boolean retryDirty;
     private final Set<String> warmTried = new HashSet<>();
     private NoTurnResult best;
     private int certs;
@@ -55,7 +59,8 @@ final class PoolCertifier {
         this.progress = progress;
         this.problem = problem;
         this.cert = new NoTurnCertifier(model, cfg.playable);
-        this.threads = Math.min(CERTIFY_THREAD_CAP, NoTurnParallel.resolveThreads(cfg.threads));
+        int cap = PoolScreenAccelerator.get() != null ? GPU_CERTIFY_THREAD_CAP : CERTIFY_THREAD_CAP;
+        this.threads = Math.min(cap, NoTurnParallel.resolveThreads(cfg.threads));
         this.exec = Executors.newFixedThreadPool(threads);
         this.deadline = deadline;
         this.maximize = problem.objective.sense == Objective.Sense.MAX;
@@ -106,6 +111,7 @@ final class PoolCertifier {
         queue.clear();
         queue.addAll(everything);
         queueDirty = true;
+        retryQueue.clear();
     }
 
     boolean certifyNext(boolean ja, boolean goodOnly) {
@@ -114,33 +120,49 @@ final class PoolCertifier {
             queue.sort(StructurePoolDriver.rankOrder(cfg));
             queueDirty = false;
         }
+        if (takeBatch(queue, ja, goodOnly, false)) return true;
+        if (retryDirty) {
+            retryQueue.sort(StructurePoolDriver.rankOrder(cfg));
+            retryDirty = false;
+        }
+        return takeBatch(retryQueue, ja, goodOnly, true);
+    }
+
+    private boolean takeBatch(List<Candidate> from, boolean ja, boolean goodOnly, boolean longPass) {
         int room = Math.min(cfg.perEdgeCertify, maxCertify - certs);
         List<Candidate> batch = new ArrayList<>(room);
         int tier = -1;
         int i = 0;
         int firstTaken = -1;
-        while (i < queue.size() && batch.size() < room) {
-            Candidate c = queue.get(i);
+        boolean flash = false;
+        while (i < from.size() && batch.size() < room) {
+            Candidate c = from.get(i);
             int t = StructurePoolDriver.certifyTier(cfg, c);
             if (goodOnly && t >= StructurePoolDriver.SCREEN_MISS_TIER) break;
-            if (tier < 0) tier = t;
-            else if (t != tier) break;
+            if (tier < 0) {
+                tier = t;
+                flash = c.flash && !longPass && cfg.repairFlashNanos > 0;
+            } else if (t != tier || (c.flash && !longPass && cfg.repairFlashNanos > 0) != flash) break;
             if (firstTaken < 0) firstTaken = i;
             String key = scheduleKey(c.combos, c.engage, ja);
             if (!found.contains(key) && !tried.contains(key)) batch.add(c);
             i++;
         }
-        if (firstTaken >= 0) queue.subList(firstTaken, i).clear();
+        if (firstTaken >= 0) from.subList(firstTaken, i).clear();
         if (batch.isEmpty()) return i > 0;
         boolean exact = tier == StructurePoolDriver.SCREEN_EXACT_TIER;
-        long budget = exact ? cfg.searchBudgetNanos : nearBudgetNanos;
+        boolean shortPass = flash || (exact && !longPass && SHORT_PASS_NANOS < cfg.searchBudgetNanos);
+        long budget = flash ? cfg.repairFlashNanos
+                : exact ? (shortPass ? SHORT_PASS_NANOS : cfg.searchBudgetNanos) : nearBudgetNanos;
         String label = (tier >= StructurePoolDriver.SCREEN_MISS_TIER ? "screen-miss"
-                : exact ? "screen-exact" : "screen-near") + (ja ? "+ja" : "");
-        certifyBatch(batch, ja, budget, label, queue.size() + batch.size());
+                : exact ? (shortPass ? "screen-exact short" : longPass ? "screen-exact retry" : "screen-exact")
+                : "screen-near") + (flash ? " flash" : "") + (ja ? "+ja" : "");
+        certifyBatch(batch, ja, budget, label, from.size() + batch.size(), shortPass);
         return true;
     }
 
-    private void certifyBatch(List<Candidate> batch, boolean ja, long budget, String label, int tierSize) {
+    private void certifyBatch(List<Candidate> batch, boolean ja, long budget, String label, int tierSize,
+                              boolean shortPass) {
         final int certsBefore = certs;
         final AtomicInteger done = new AtomicInteger();
         progress.update("certify " + label + " batch of " + batch.size() + " from " + tierSize
@@ -154,7 +176,15 @@ final class PoolCertifier {
             return rr;
         });
         certs += batch.size();
-        for (Candidate c : batch) tried.add(scheduleKey(c.combos, c.engage, ja));
+        for (int bi = 0; bi < batch.size(); bi++) {
+            Candidate c = batch.get(bi);
+            if (shortPass && res.get(bi) == null) {
+                retryQueue.add(c);
+                retryDirty = true;
+            } else {
+                tried.add(scheduleKey(c.combos, c.engage, ja));
+            }
+        }
         if (best != null) extraCerts += batch.size();
         boolean hadBest = best != null;
         List<NoTurnResult> hits = new ArrayList<>();
@@ -277,7 +307,7 @@ final class PoolCertifier {
                 if (stopped()) return;
                 int take = Math.min(threads, nbrs.size() - from);
                 final int base = from;
-                progress.update("explore neighbours: " + lines + " lines from " + tried + " warm certifies (parallel "
+                progress.update("explore neighbours: " + lines + " strats from " + tried + " warm certifies (parallel "
                         + threads + ")", fraction());
                 List<NoTurnResult> res = NoTurnParallel.collectAll(exec, take, cancel, (idx, tc) -> {
                     long budget = Math.min(WARM_BUDGET_NANOS, extraDeadline - System.nanoTime());

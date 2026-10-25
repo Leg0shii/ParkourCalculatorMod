@@ -461,23 +461,7 @@ public final class BoundPrunedRecovery {
         CostateDualSolver.Result r = new CostateDualSolver(n, cx, cz, lin.mMagAll(), walls).solve(0.0, null);
         if (r == null) return null;
         boolean max = spec.objective.sense == Objective.Sense.MAX;
-        double cp;
-        if (spec.objective.isCustomAngle()) {
-            double rad = Angles.rad(spec.objective.customYaw);
-            double dx = -StrictMath.sin(rad);
-            double dz = StrictMath.cos(rad);
-            if (spec.objective.isMotion()) {
-                int t = spec.objective.tick;
-                double c0 = lin.constPos(t, 0) - (t > 0 ? lin.constPos(t - 1, 0) : 0.0);
-                double c1 = lin.constPos(t, 1) - (t > 0 ? lin.constPos(t - 1, 1) : 0.0);
-                cp = dx * c0 + dz * c1;
-            } else {
-                cp = dx * lin.constPos(spec.objective.tick, 0) + dz * lin.constPos(spec.objective.tick, 1);
-            }
-        } else {
-            int axisIdx = spec.objective.axis == JumpPhysicsInputs.Axis.X ? 0 : 1;
-            cp = lin.constPos(spec.objective.tick, axisIdx);
-        }
+        double cp = lin.objectiveConst(spec.objective);
         double bound = r.value + (max ? cp : -cp);
         return Double.isNaN(bound) ? null : bound;
     }
@@ -613,23 +597,7 @@ public final class BoundPrunedRecovery {
             this.cz = cz;
             this.mMag = lin.mMagAll();
             this.max = spec.objective.sense == Objective.Sense.MAX;
-            double cp;
-            if (spec.objective.isCustomAngle()) {
-                double rad = Angles.rad(spec.objective.customYaw);
-                double dx = -StrictMath.sin(rad);
-                double dz = StrictMath.cos(rad);
-                if (spec.objective.isMotion()) {
-                    int t = spec.objective.tick;
-                    double c0 = lin.constPos(t, 0) - (t > 0 ? lin.constPos(t - 1, 0) : 0.0);
-                    double c1 = lin.constPos(t, 1) - (t > 0 ? lin.constPos(t - 1, 1) : 0.0);
-                    cp = dx * c0 + dz * c1;
-                } else {
-                    cp = dx * lin.constPos(spec.objective.tick, 0) + dz * lin.constPos(spec.objective.tick, 1);
-                }
-            } else {
-                int axisIdx = spec.objective.axis == JumpPhysicsInputs.Axis.X ? 0 : 1;
-                cp = lin.constPos(spec.objective.tick, axisIdx);
-            }
+            double cp = lin.objectiveConst(spec.objective);
             this.normConst = max ? cp : -cp;
             this.canonical = canonical;
             this.baseWalls = baseWalls;

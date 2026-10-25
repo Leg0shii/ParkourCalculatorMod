@@ -4,9 +4,14 @@ import com.mojang.renderpearl.api.pipeline.PrimitiveTopology;
 import com.mojang.renderpearl.api.pipeline.DepthStencilState;
 import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import com.mojang.renderpearl.api.pipeline.CompareOp;
+import com.mojang.renderpearl.api.pipeline.BlendFunction;
+import com.mojang.renderpearl.api.pipeline.ColorTargetState;
+import com.mojang.renderpearl.api.GpuFormat;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.rendertype.RenderSetup;
 import net.minecraft.client.renderer.rendertype.RenderType;
+
+import java.util.Optional;
 
 /**
  * Custom render pipelines for ParkourCalculator's path-box visualization.
@@ -32,12 +37,35 @@ public final class FabricRenderLayers {
                     .withDepthStencilState(new DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, false, 1.0F, 10.0F))
                     .build();
 
+    private static final RenderPipeline BOX_DEPTH_PIPELINE =
+            RenderPipeline.builder(RenderPipelines.DEBUG_FILLED_SNIPPET)
+                    .withLocation("pipeline/parkourcalc_box_depth")
+                    .withPrimitiveTopology(PrimitiveTopology.TRIANGLES)
+                    .withCull(false)
+                    .withColorTargetState(new ColorTargetState(Optional.of(BlendFunction.TRANSLUCENT), GpuFormat.RGBA8_UNORM, ColorTargetState.WRITE_NONE))
+                    .withDepthStencilState(new DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, true, 1.0F, 10.0F))
+                    .build();
+
     private static final RenderPipeline THIN_LINES_PIPELINE =
             RenderPipeline.builder(RenderPipelines.DEBUG_FILLED_SNIPPET)
                     .withLocation("pipeline/parkourcalc_thin_lines")
                     .withPrimitiveTopology(PrimitiveTopology.DEBUG_LINES)
                     .withCull(false)
                     .withDepthStencilState(new DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, false))
+                    .build();
+
+    private static final RenderPipeline WIDE_LINES_PIPELINE =
+            RenderPipeline.builder(RenderPipelines.LINES_SNIPPET)
+                    .withLocation("pipeline/parkourcalc_wide_lines")
+                    .withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT))
+                    .withDepthStencilState(new DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, false))
+                    .build();
+
+    private static final RenderPipeline LINE_DEPTH_PIPELINE =
+            RenderPipeline.builder(RenderPipelines.LINES_SNIPPET)
+                    .withLocation("pipeline/parkourcalc_line_depth")
+                    .withColorTargetState(new ColorTargetState(Optional.of(BlendFunction.TRANSLUCENT), GpuFormat.RGBA8_UNORM, ColorTargetState.WRITE_NONE))
+                    .withDepthStencilState(new DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, true))
                     .build();
 
     /** Thin 1px wireframe lines for the yaw gizmo's submitCustomGeometry path. */
@@ -56,8 +84,20 @@ public final class FabricRenderLayers {
         return TRANSLUCENT_BOX_PIPELINE;
     }
 
+    public static RenderPipeline boxDepthPipeline() {
+        return BOX_DEPTH_PIPELINE;
+    }
+
     public static RenderPipeline thinLinesPipeline() {
         return THIN_LINES_PIPELINE;
+    }
+
+    public static RenderPipeline wideLinesPipeline() {
+        return WIDE_LINES_PIPELINE;
+    }
+
+    public static RenderPipeline lineDepthPipeline() {
+        return LINE_DEPTH_PIPELINE;
     }
 
     private static final RenderPipeline CONSTRAINT_FILL_PIPELINE =
@@ -68,8 +108,21 @@ public final class FabricRenderLayers {
                     .withDepthStencilState(new DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, false, 1.0F, 10.0F))
                     .build();
 
+    private static final RenderPipeline CONSTRAINT_DEPTH_PIPELINE =
+            RenderPipeline.builder(RenderPipelines.DEBUG_FILLED_SNIPPET)
+                    .withLocation("pipeline/parkourcalc_constraint_depth")
+                    .withPrimitiveTopology(PrimitiveTopology.TRIANGLES)
+                    .withCull(true)
+                    .withColorTargetState(new ColorTargetState(Optional.of(BlendFunction.TRANSLUCENT), GpuFormat.RGBA8_UNORM, ColorTargetState.WRITE_NONE))
+                    .withDepthStencilState(new DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, true, 1.0F, 10.0F))
+                    .build();
+
     public static RenderPipeline constraintFillPipeline() {
         return CONSTRAINT_FILL_PIPELINE;
+    }
+
+    public static RenderPipeline constraintDepthPipeline() {
+        return CONSTRAINT_DEPTH_PIPELINE;
     }
 
 }

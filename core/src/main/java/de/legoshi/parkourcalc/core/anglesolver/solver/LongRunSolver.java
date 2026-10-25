@@ -218,11 +218,17 @@ public final class LongRunSolver {
                 boolean last = (we == jumps);
                 int a = bounds[i], c = bounds[we];
                 JumpPhysicsInputs win = sliceScenario(sc, a, c, seedPos, seedVel, seedYaw);
+                if (sc.lastDamageTick() >= a) {
+                    double[] server = exact.serverCarry(sc, gf, a);
+                    win.incomingServerVelocity = new Vec3dCore(server[0], 0.0, server[1]);
+                }
                 List<JumpConstraint> cons = sliceConstraints(spec, a, c, seedYaw);
-                Objective obj = last
-                        ? new Objective(spec.objective.axis, spec.objective.sense, c - a)   // last window: real objective
-                        : new Objective(JumpPhysicsInputs.Axis.Z, Objective.Sense.MAX, c - a); // lead-in: any feasible
-                String winKey = windowKey(a, c, last, seedPos, seedVel, seedYaw);
+                int objTick = spec.objective.tick;
+                boolean objectiveWindow = objTick > a && objTick <= c;
+                Objective obj = objectiveWindow
+                        ? spec.objective.withTick(objTick - a)
+                        : new Objective(JumpPhysicsInputs.Axis.Z, Objective.Sense.MAX, c - a);
+                String winKey = windowKey(a, c, objectiveWindow, seedPos, seedVel, seedYaw);
                 double[] cachedWin = windows.map.get(winKey);
                 double[] yaws;
                 if (cachedWin != null) {
@@ -233,7 +239,7 @@ public final class LongRunSolver {
                     }
                 } else {
                     long winT0 = SolverTrace.on() ? System.nanoTime() : 0L;
-                    yaws = solveWindow(exact, win, cons, obj, last, cancel, deadlineNanos);
+                    yaws = solveWindow(exact, win, cons, obj, objectiveWindow, cancel, deadlineNanos);
                     if (cancel == null || !cancel.get()) {
                         windows.map.put(winKey, yaws == null ? WINDOW_MISS : yaws.clone());
                     }
@@ -259,7 +265,7 @@ public final class LongRunSolver {
                             int lim = jc.mode == JumpConstraint.Mode.F ? hiTick - 1 : hiTick;
                             if (jc.t1 <= lim && (jc.t2 == null || jc.t2 <= lim)) upTo.add(jc);
                         }
-                        Objective freeObj = last ? spec.objective
+                        Objective freeObj = spec.objective.tick <= c ? spec.objective
                                 : new Objective(JumpPhysicsInputs.Axis.Z, Objective.Sense.MAX, c);
                         fr = FreeStartSolve.solveJoint(exact, new JumpSpec(freeSc, upTo, freeObj), 0.0, cancel,
                                 deadlineNanos);
@@ -366,7 +372,7 @@ public final class LongRunSolver {
         double[] gf = win.toGameFacings(yaws);
         ForwardPath path = exact.forward(win, gf);
         if (compiled.maxViolation(gf, path) > 0.0) return Double.NaN;
-        return path.getPos(first.tick, first.axis);
+        return first.evaluate(path);
     }
 
     private static List<Objective> alternates(Objective first, int len) {
@@ -407,8 +413,11 @@ public final class LongRunSolver {
         JumpPhysicsInputs win = sliceScenario(sc, from, sc.numTicks, pos, vel, yaw);
         win.incomingSprint = from == 0 ? sc.incomingSprint : sc.sprintAt(from - 1);
         win.incomingAmp = from == 0 ? sc.incomingAmp : sc.speedAmplifierAt(from - 1);
+        win.incomingSlowness = from == 0 ? sc.incomingSlowness : Integer.valueOf(sc.slownessAmplifierAt(from - 1));
         List<JumpConstraint> cons = sliceConstraints(full, from, sc.numTicks, yaw);
-        Objective obj = new Objective(full.objective.axis, full.objective.sense, full.objective.tick - from);
+        Objective obj = full.objective.tick > from
+                ? full.objective.withTick(full.objective.tick - from)
+                : new Objective(JumpPhysicsInputs.Axis.Z, Objective.Sense.MAX, win.numTicks);
         return new JumpSpec(win, cons, obj);
     }
 
@@ -421,19 +430,27 @@ public final class LongRunSolver {
         p.initialVelocity = vel;
         p.startYaw = yaw;
         p.strafeSign = sc.strafeSign;
+        p.strafeSignPerTick = sliceInt(sc.strafeSignPerTick, a, len);
         p.jumpPerTick = sliceBool(sc.jumpPerTick, a, len);
         p.strafePerTick = sliceBool(sc.strafePerTick, a, len);
         p.yawLockedPerTick = sliceBool(sc.yawLockedPerTick, a, len);
         p.speedAmplifier = sliceInt(sc.speedAmplifier, a, len);
+        p.slownessAmplifier = sliceInt(sc.slownessAmplifier, a, len);
         p.slipPerTick = sliceDouble(sc.slipPerTick, a, len);
         p.surfacePerTick = sliceKind(sc.surfacePerTick, a, len);
         p.soulsandCellsPerTick = sliceInt(sc.soulsandCellsPerTick, a, len);
         p.sneakPerTick = sliceBool(sc.sneakPerTick, a, len);
+        p.dolphinsGracePerTick = sliceBool(sc.dolphinsGracePerTick, a, len);
+        p.weavingPerTick = sliceBool(sc.weavingPerTick, a, len);
         // null arrays stay null so the slice keeps the source's legacy fallbacks (always-sprint, W held).
         p.sprintPerTick = sliceBool(sc.sprintPerTick, a, len);
-        p.liveAirSprintFactor = sc.liveAirSprintFactor;
+        p.liveMovementFactor = sc.liveMovementFactor;
         p.forwardInputPerTick = sliceFloat(sc.forwardInputPerTick, a, len, 1.0F * 0.98F);
         p.strafeInputPerTick = sliceFloat(sc.strafeInputPerTick, a, len, 0.0F);
+        p.damagePerTick = sliceBool(sc.damagePerTick, a, len);
+        p.serverJumpPerTick = sliceBool(sc.serverJumpPerTick, a, len);
+        p.packetYPerTick = sliceDouble(sc.packetYPerTick, a, len);
+        p.incomingServerVelocity = a == 0 ? sc.incomingServerVelocity : null;
         return p;
     }
 

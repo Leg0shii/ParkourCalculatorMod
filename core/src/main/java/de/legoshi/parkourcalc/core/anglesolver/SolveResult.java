@@ -52,7 +52,29 @@ public final class SolveResult {
         }
     }
 
+    public enum Verdict {
+        FEASIBLE("Solved"),
+        UNDETERMINED("No solution"),
+        INFEASIBLE("Infeasible");
+
+        public final String headline;
+
+        Verdict(String headline) {
+            this.headline = headline;
+        }
+
+        public static Verdict parse(String name, boolean success) {
+            if (name != null) {
+                for (Verdict v : values()) {
+                    if (v.name().equals(name)) return v == FEASIBLE && !success ? UNDETERMINED : v;
+                }
+            }
+            return success ? FEASIBLE : UNDETERMINED;
+        }
+    }
+
     private final boolean success;
+    private Verdict verdict;
     private final int met;
     private final int total;
     private final int startTick;   // 1-based for display
@@ -75,6 +97,7 @@ public final class SolveResult {
     private boolean hasObjective;
     private String smoothStop;
     private long smoothNanos;
+    private int[] strafeSides;
 
     public SolveResult(boolean success, int met, int total, int startTick, int landingTick) {
         this.success = success;
@@ -82,10 +105,27 @@ public final class SolveResult {
         this.total = total;
         this.startTick = startTick;
         this.landingTick = landingTick;
+        this.verdict = success ? Verdict.FEASIBLE : Verdict.UNDETERMINED;
     }
 
     public boolean isSuccess() {
         return success;
+    }
+
+    public Verdict getVerdict() {
+        return verdict;
+    }
+
+    public boolean isCertifiedInfeasible() {
+        return verdict == Verdict.INFEASIBLE;
+    }
+
+    public void markCertifiedInfeasible() {
+        if (!success) verdict = Verdict.INFEASIBLE;
+    }
+
+    public String headline() {
+        return verdict.headline;
     }
 
     public int getMet() {
@@ -204,5 +244,13 @@ public final class SolveResult {
     public void setObjective(double value) {
         this.objectiveValue = value;
         this.hasObjective = true;
+    }
+
+    public int[] getStrafeSides() {
+        return strafeSides;
+    }
+
+    public void setStrafeSides(int[] strafeSides) {
+        this.strafeSides = strafeSides;
     }
 }

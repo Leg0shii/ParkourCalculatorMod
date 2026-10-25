@@ -2,6 +2,7 @@ package de.legoshi.parkourcalc.core.save;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public final class SaveFile {
 
@@ -52,6 +53,8 @@ public final class SaveFile {
         public boolean pitchLocked;
         public int speedAmplifier;
         public int jumpBoostAmplifier;
+        public int slownessAmplifier;
+        public Map<String, Integer> effects;
         public int hotbarSlot;
         public boolean teleport;
         public double teleportX;
@@ -67,6 +70,7 @@ public final class SaveFile {
     public static final class AngleSolver {
         public int startTick;
         public int landingTick;
+        public Integer objectiveTick;
         public String axis;
         public String goal;
         public Boolean customAngle;
@@ -81,6 +85,7 @@ public final class SaveFile {
         public SolveBudget customBudget;
         public String graphPreset;
         public String defaultInputs;
+        public String strafeSide;
         public String defaultSprint;                     // absent in old files -> ALWAYS
         public String defaultSlipperiness;
         public List<Tick> ticks = new ArrayList<Tick>();
@@ -144,6 +149,7 @@ public final class SaveFile {
         public String slipperiness;                      // null = inherit
         public String medium;                            // null = inherit
         public Integer soulsandCells;                    // null = 1
+        public Boolean damage;
         public List<Dose> added = new ArrayList<Dose>();
         public List<String> removed = new ArrayList<String>(); // Potion enum names
     }
@@ -165,6 +171,7 @@ public final class SaveFile {
         public String solver;                            // algorithm label, null = legacy save
         public String notice;
         public String noticeLabel;
+        public String verdict;
         public double objectiveValue;
         public boolean hasObjective;
         public String smoothStop;
@@ -208,5 +215,8 @@ public final class SaveFile {
         public Double collisionAngle;                    // degrees; null = not modelled / NaN
         public Float moveForward;                        // moveFlying inputs the tick ran with; null = unsampled
         public Float moveStrafe;
+        public double[] serverVel;
+        public Boolean serverJump;
+        public double[] serverPacket;
     }
 }

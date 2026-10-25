@@ -6,7 +6,6 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardPath;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
-import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.save.SaveFile;
@@ -18,9 +17,6 @@ import java.util.List;
 
 public final class RazorFixtures {
 
-    public static final double PROOF_OBJX = 212.7001641;
-    public static final double WEIRDPANE_OBJX = -8.864771846396799;
-    public static final double WEIRDPANE_VIOL = 2.271846e-3;
     public static final double RUNG_RHS = -1.487500011921;
     public static final double RUNG_RAISE = 0.0625;
     public static final int RUNG_COUNT = 3;
@@ -93,48 +89,6 @@ public final class RazorFixtures {
         return l.model.forward(l.scenario, warmGameFacings(l));
     }
 
-    public static final class Precheck {
-        public final double posDiff;
-        public final double viol;
-        public final double objX;
-
-        Precheck(double posDiff, double viol, double objX) {
-            this.posDiff = posDiff;
-            this.viol = viol;
-            this.objX = objX;
-        }
-    }
-
-    private static Precheck measure(Loaded l) {
-        double[] gf = warmGameFacings(l);
-        ForwardPath p = l.model.forward(l.scenario, gf);
-        double posDiff = 0.0;
-        for (int k = 0; k <= l.n; k++) {
-            SaveFile.DebugTick d = l.file.debug.get(l.startTick + k);
-            posDiff = Math.max(posDiff, Math.abs(p.posX[k] - d.pos[0]));
-            posDiff = Math.max(posDiff, Math.abs(p.posZ[k] - d.pos[2]));
-        }
-        double viol = JumpConstraintCompiler.compile(l.spec).maxViolation(gf, p);
-        double objX = p.getPos(l.objTick, l.spec.objective.axis);
-        return new Precheck(posDiff, viol, objX);
-    }
-
-    public static Precheck proofPrecheck(Loaded l) {
-        Precheck r = measure(l);
-        require(r.viol <= 0.0, "proof replay not feasible, viol=" + r.viol);
-        require(Math.abs(r.objX - PROOF_OBJX) <= 1e-6, "proof objX off, got " + r.objX);
-        require(r.posDiff < 1e-12, "proof posDiff too large, got " + r.posDiff);
-        return r;
-    }
-
-    public static Precheck weirdpanePrecheck(Loaded l) {
-        Precheck r = measure(l);
-        require(Math.abs(r.objX - WEIRDPANE_OBJX) <= 1e-6, "weirdpane objX off, got " + r.objX);
-        require(Math.abs(r.viol - WEIRDPANE_VIOL) <= 1e-6, "weirdpane viol off, got " + r.viol);
-        require(r.posDiff < 1e-12, "weirdpane posDiff too large, got " + r.posDiff);
-        return r;
-    }
-
     public static final class RaisedWall {
         public final String name;
         public final int tick;
@@ -176,9 +130,5 @@ public final class RazorFixtures {
             throw new IllegalStateException("rung 5.375 patch raised " + raised.size() + " walls, expected " + RUNG_COUNT);
         }
         return new RungPatch(new JumpSpec(spec.asScenario(), out, spec.objective), raised);
-    }
-
-    private static void require(boolean cond, String msg) {
-        if (!cond) throw new AssertionError(msg);
     }
 }

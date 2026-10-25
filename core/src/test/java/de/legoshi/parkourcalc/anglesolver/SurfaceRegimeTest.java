@@ -86,6 +86,30 @@ public class SurfaceRegimeTest {
     }
 
     @Test
+    public void weavingDoublesTheCobwebStepAndRaisesTheVerticalFactor() {
+        JumpPhysicsInputs plain = scenario(1, 0.6, SurfaceKind.COBWEB, true, Vec3dCore.ZERO);
+        JumpPhysicsInputs woven = scenario(1, 0.6, SurfaceKind.COBWEB, true, Vec3dCore.ZERO);
+        woven.weavingPerTick = new boolean[]{true};
+        ForwardPath p = run(MODERN, plain);
+        ForwardPath w = run(MODERN, woven);
+        assertEquals(2.0 * (p.posZ[1] - p.posZ[0]), w.posZ[1] - w.posZ[0], 1e-15);
+        double vy = (p.posY[1] - p.posY[0]) / (double) 0.05F;
+        assertEquals(vy * 0.25, w.posY[1] - w.posY[0], 1e-12);
+        assertEquals(0.0, w.velZ[1], 0.0);
+    }
+
+    @Test
+    public void dolphinsGraceSetsModernWaterDrag() {
+        JumpPhysicsInputs sc = scenario(1, Double.NaN, SurfaceKind.WATER, false, new Vec3dCore(0.0, 0.0, 0.1));
+        sc.dolphinsGracePerTick = new boolean[]{true};
+        ForwardPath p = run(MODERN, sc);
+        assertEquals((p.posZ[1] - p.posZ[0]) * (double) 0.96F, p.velZ[1], 0.0);
+        JumpPhysicsInputs plain = scenario(1, Double.NaN, SurfaceKind.WATER, false, new Vec3dCore(0.0, 0.0, 0.1));
+        ForwardPath q = run(MODERN, plain);
+        assertTrue(q.velZ[1] < p.velZ[1]);
+    }
+
+    @Test
     public void ladderCapsHorizontalSpeed() {
         JumpPhysicsInputs fast = scenario(1, Double.NaN, SurfaceKind.LADDER, false, new Vec3dCore(0.0, 0.0, 0.5));
         ForwardPath p = run(LEGACY, fast);

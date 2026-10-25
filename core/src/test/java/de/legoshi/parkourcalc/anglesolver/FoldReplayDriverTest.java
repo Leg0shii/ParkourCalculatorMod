@@ -41,7 +41,7 @@ public class FoldReplayDriverTest {
         for (int k = 0; k < n; k++) warm[k] = file.debug.get(startTick + k + 1).yaw;
         double[] gf = sc.toGameFacings(Angles.wrapAll(warm));
         ForwardPath fp = l.model.forward(sc, gf);
-        double obj = fp.getPos(l.spec.objective.tick, l.spec.objective.axis);
+        double obj = l.spec.objective.evaluate(fp);
         double viol = JumpConstraintCompiler.compile(l.spec).maxViolation(gf, fp);
         assertEquals("warm objective must reproduce the recorded strat bit-exactly", WARM_OBJ, obj, 0.0);
         assertEquals("warm replay must be clean", 0.0, viol, 0.0);

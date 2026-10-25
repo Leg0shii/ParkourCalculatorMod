@@ -497,12 +497,11 @@ public final class WrapWindowIls {
                 transDomain[0], transDomain[1], transDomain[2], transDomain[3]);
         if (tf.viol > 0.0) return LEGAL_HARD_INFEASIBLE + tf.viol;
         Objective obj = cfg.legalObjective;
-        boolean objX = obj.axis == JumpPhysicsInputs.Axis.X;
         boolean max = obj.sense == Objective.Sense.MAX;
         PathTranslation.Trans to = PathTranslation.bestTranslationObj(compiled, eff, p,
-                transDomain[0], transDomain[1], transDomain[2], transDomain[3], objX ? 0 : 1, max);
+                transDomain[0], transDomain[1], transDomain[2], transDomain[3], obj);
         if (to.viol > 0.0) return LEGAL_HARD_INFEASIBLE + to.viol;
-        double achieved = p.getPos(obj.tick, obj.axis) + (objX ? to.tx : to.tz);
+        double achieved = obj.evaluate(p, to.tx, to.tz);
         return max ? cfg.legalGoalRhs - achieved : achieved - cfg.legalGoalRhs;
     }
 }

@@ -26,18 +26,24 @@ public final class PathTranslation {
 
     public static Trans bestTranslation(JumpConstraintCompiler.Compiled compiled, double[] gf, ForwardPath path,
                                         double loX, double hiX, double loZ, double hiZ) {
-        return translationCore(compiled, gf, path, loX, hiX, loZ, hiZ, -1, false);
+        return translationCore(compiled, gf, path, loX, hiX, loZ, hiZ, PICK_MID, PICK_MID);
     }
 
     public static Trans bestTranslationObj(JumpConstraintCompiler.Compiled compiled, double[] gf, ForwardPath path,
-                                           double loX, double hiX, double loZ, double hiZ,
-                                           int objAxisIdx, boolean objMax) {
-        return translationCore(compiled, gf, path, loX, hiX, loZ, hiZ, objAxisIdx, objMax);
+                                           double loX, double hiX, double loZ, double hiZ, Objective obj) {
+        return translationCore(compiled, gf, path, loX, hiX, loZ, hiZ,
+                pickFor(obj.translationGradX()), pickFor(obj.translationGradZ()));
+    }
+
+    private static int pickFor(double grad) {
+        if (grad > 0.0) return PICK_HI;
+        if (grad < 0.0) return PICK_LO;
+        return PICK_MID;
     }
 
     private static Trans translationCore(JumpConstraintCompiler.Compiled compiled, double[] gf, ForwardPath path,
                                          double loX, double hiX, double loZ, double hiZ,
-                                         int objAxisIdx, boolean objMax) {
+                                         int pickX, int pickZ) {
         int ni = compiled.ineq.size();
         int ne = compiled.eq.size();
         int cap = Math.max(ni + 2 * ne, 1);
@@ -96,15 +102,10 @@ public final class PathTranslation {
         }
         double[] ox = new double[2];
         double[] oz = new double[2];
-        solveAxis(ax, bx, nx, loX, hiX, pickFor(0, objAxisIdx, objMax), ox);
-        solveAxis(az, bz, nz, loZ, hiZ, pickFor(1, objAxisIdx, objMax), oz);
+        solveAxis(ax, bx, nx, loX, hiX, pickX, ox);
+        solveAxis(az, bz, nz, loZ, hiZ, pickZ, oz);
         double viol = Math.max(Math.max(ox[1], oz[1]), floor);
         return new Trans(ox[0], oz[0], viol);
-    }
-
-    private static int pickFor(int axis, int objAxisIdx, boolean objMax) {
-        if (axis != objAxisIdx) return PICK_MID;
-        return objMax ? PICK_HI : PICK_LO;
     }
 
     static void solveAxis(double[] a, double[] b, int cnt, double lo, double hi, int pick, double[] out) {

@@ -34,8 +34,7 @@ public final class SettingsModal {
     private static final String TT_HITBOX = "Draws the player's hitbox at the currently selected tick.";
     private static final String TT_FULL_HITBOX = "Draws hitboxes for every tick in the TAS, not just the active one. Heavy on long TASes.";
     private static final String TT_SUBTICK = "Renders the interpolated path between adjacent ticks, exposing collision moments inside a tick.";
-    private static final String TT_COL_SPEED_AMP = "Adds a per-tick Speed potion amplifier column to the input table.";
-    private static final String TT_COL_JUMP_BOOST_AMP = "Adds a per-tick Jump Boost potion amplifier column to the input table.";
+    private static final String TT_COL_EFFECTS = "Adds a per-tick Effects column to the input table (Speed, Slowness, Jump Boost and the other movement effects this version has). Click a cell to edit it.";
     private static final String TT_COL_HOTBAR = "Adds a per-tick hotbar slot column (1-9). During playback the held slot switches on ticks that set one; empty keeps the previous slot.";
     private static final String TT_COL_TELEPORT = "Adds a per-tick teleport column. When enabled on a tick, the player teleports to the given X/Y/Z at the start of that tick, before its inputs, in both the simulation and the replay.";
     private static final String TT_CONSTRAINTS = "Draws Angle Solver position constraints (X/Z) as translucent plates at the tick they apply to. The front plate sits on the constraint; the back fades out toward the open/free direction. Only visible while the Angle Solver is open.";
@@ -583,8 +582,7 @@ public final class SettingsModal {
             checkboxRow("Left click (LMB)", "##col_lmb", settings.showColLeftClick, TT_COL_LMB, v -> settings.showColLeftClick = v);
             checkboxRow("Right click (RMB)", "##col_rmb", settings.showColRightClick, TT_COL_RMB, v -> settings.showColRightClick = v);
             checkboxRow("Close inventory", "##col_close_inv", settings.showColCloseInventory, TT_COL_CLOSE_INVENTORY, v -> settings.showColCloseInventory = v);
-            checkboxRow("Speed", "##show_speed", settings.showColSpeed, TT_COL_SPEED_AMP, v -> settings.showColSpeed = v);
-            checkboxRow("Jump Boost", "##show_jump_boost", settings.showColJumpBoost, TT_COL_JUMP_BOOST_AMP, v -> settings.showColJumpBoost = v);
+            checkboxRow("Effects", "##show_effects", settings.showColEffects, TT_COL_EFFECTS, v -> settings.showColEffects = v);
             checkboxRow("Hotbar slot", "##show_hotbar", settings.showColHotbar, TT_COL_HOTBAR, v -> settings.showColHotbar = v);
             checkboxRow("Teleport", "##show_teleport", settings.showColTeleport, TT_COL_TELEPORT, v -> settings.showColTeleport = v);
             checkboxRow("Highlight on-ground ticks", "##highlight_on_ground", settings.highlightOnGroundRows, TT_GROUND_HIGHLIGHT, v -> settings.highlightOnGroundRows = v);

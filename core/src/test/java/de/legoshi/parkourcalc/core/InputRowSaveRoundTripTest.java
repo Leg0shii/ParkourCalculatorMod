@@ -7,6 +7,7 @@ import de.legoshi.parkourcalc.core.save.SaveIO;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputData;
 import de.legoshi.parkourcalc.core.ui.InputRow;
+import de.legoshi.parkourcalc.core.ui.MovementEffect;
 import org.junit.Test;
 
 import java.nio.file.Files;
@@ -145,6 +146,30 @@ public class InputRowSaveRoundTripTest {
     }
 
     @Test
+    public void slownessAmplifierRoundTripsAndDefaultsToZero() throws Exception {
+        FileSystemSaveStore store = store(Files.createTempDirectory("pkc-rt-slowness"));
+        InputData in = new InputData();
+        InputRow r0 = new InputRow();
+        r0.setSlownessAmplifier(5);
+        in.getRows().add(r0);
+        InputData out = saveAndReload(store, in);
+        assertEquals(5, out.get(0).getSlownessAmplifier());
+
+        String json = "{\n" +
+                "  \"version\": 1,\n" +
+                "  \"start\": { \"pos\": [0.0, 0.0, 0.0], \"vel\": [0.0, 0.0, 0.0], \"yaw\": 0.0 },\n" +
+                "  \"rows\": [\n" +
+                "    { \"keys\": [\"W\"], \"speedAmplifier\": 1, \"jumpBoostAmplifier\": 0 }\n" +
+                "  ]\n" +
+                "}";
+        SaveFile file = SaveIO.parseSafe(json);
+        assertNotNull(file);
+        InputData old = new InputData();
+        SaveIO.applyRowsTo(file, old);
+        assertEquals("a save without the field loads as no slowness", 0, old.get(0).getSlownessAmplifier());
+    }
+
+    @Test
     public void oldFormatRowWithoutPitchOrMouseLoadsWithDefaults() {
         String json = "{\n" +
                 "  \"version\": 1,\n" +
@@ -212,5 +237,30 @@ public class InputRowSaveRoundTripTest {
         assertTrue(out.get(1).copy().isOnejumpOptional(InputRow.Key.A));
         assertFalse(out.get(2).isOnejumpFlagged());
         assertTrue(out.get(0).copy().isOnejumpFlagged());
+    }
+
+    @Test
+    public void movementEffectsRoundTrip() throws Exception {
+        FileSystemSaveStore store = store(Files.createTempDirectory("pkc-rt-effects"));
+
+        InputData in = new InputData();
+        InputRow r0 = new InputRow();
+        r0.setEffectLevel(MovementEffect.SPEED, 3);
+        r0.setEffectLevel(MovementEffect.LEVITATION, 2);
+        r0.setEffectLevel(MovementEffect.SLOW_FALLING, 1);
+        r0.setEffectLevel(MovementEffect.WEAVING, 1);
+        in.getRows().add(r0);
+        in.getRows().add(new InputRow());
+
+        InputData out = saveAndReload(store, in);
+        assertEquals(2, out.size());
+        InputRow o0 = out.get(0);
+        assertEquals(3, o0.getSpeedAmplifier());
+        assertEquals(2, o0.getEffectLevel(MovementEffect.LEVITATION));
+        assertEquals(1, o0.getEffectLevel(MovementEffect.SLOW_FALLING));
+        assertEquals(1, o0.getEffectLevel(MovementEffect.WEAVING));
+        assertEquals(0, o0.getEffectLevel(MovementEffect.BLINDNESS));
+        assertTrue(o0.sameEffects(r0));
+        assertFalse(out.get(1).hasEffects());
     }
 }

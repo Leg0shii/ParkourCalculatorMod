@@ -9,6 +9,7 @@ import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputData;
 import de.legoshi.parkourcalc.core.ui.InputRow;
+import de.legoshi.parkourcalc.core.ui.MovementEffect;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.BlockSelection;
 import de.legoshi.parkourcalc.core.anglesolver.Constraint;
@@ -26,6 +27,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -186,6 +188,7 @@ public final class SaveIO {
 
         state.setStartTick(a.startTick);
         state.setLandingTick(a.landingTick);
+        if (a.objectiveTick != null) state.setObjectiveTick(a.objectiveTick);
         state.setAxis(parseEnum(AngleSolverState.Axis.class, a.axis, AngleSolverState.Axis.X));
         state.setGoal(parseEnum(AngleSolverState.Goal.class, a.goal, AngleSolverState.Goal.MAX));
         state.setCustomAngle(a.customAngle != null && a.customAngle);
@@ -201,6 +204,7 @@ public final class SaveIO {
         applyCustomBudget(a.customBudget, state.getSolveBudget());
         state.setGraphPresetName(a.graphPreset);
         state.setDefaultInputs(parseEnum(AngleSolverState.InputMode.class, a.defaultInputs, AngleSolverState.InputMode.FORCE_45));
+        state.setStrafeSide(parseEnum(AngleSolverState.StrafeSide.class, a.strafeSide, AngleSolverState.StrafeSide.A));
         state.setDefaultSprint(parseEnum(AngleSolverState.SprintMode.class, a.defaultSprint, AngleSolverState.SprintMode.ALWAYS));
         state.setDefaultSlipperiness(parseEnum(Slipperiness.class, a.defaultSlipperiness, Slipperiness.AIR));
 
@@ -272,6 +276,8 @@ public final class SaveIO {
         Integer landing = remap.get(a.landingTick);
         a.startTick = start != null ? start : 0;
         a.landingTick = start != null && landing != null ? landing : 0;
+        Integer objective = a.objectiveTick != null ? remap.get(a.objectiveTick) : null;
+        a.objectiveTick = start != null && objective != null ? objective : null;
         a.result = null;
         a.deviation = null;
         a.deviationKind = null;
@@ -451,6 +457,13 @@ public final class SaveIO {
             d.moveForward = s.moveForward;
             d.moveStrafe = s.moveStrafe;
         }
+        if (s.server != null) {
+            d.serverVel = new double[] { s.server.velocity.x, s.server.velocity.y, s.server.velocity.z };
+            d.serverJump = s.server.jumpedOnPreviousMove;
+            if (s.server.packet != null) {
+                d.serverPacket = new double[] { s.server.packet.x, s.server.packet.y, s.server.packet.z };
+            }
+        }
         return d;
     }
 
@@ -476,6 +489,8 @@ public final class SaveIO {
         r.pitchLocked = row.isPitchLocked();
         r.speedAmplifier = row.getSpeedAmplifier();
         r.jumpBoostAmplifier = row.getJumpBoostAmplifier();
+        r.slownessAmplifier = row.getSlownessAmplifier();
+        r.effects = extraEffects(row);
         r.hotbarSlot = row.getHotbarSlot();
         r.teleport = row.isTeleportEnabled();
         r.teleportX = row.getTeleportX();
@@ -492,6 +507,21 @@ public final class SaveIO {
         return r;
     }
 
+    private static Map<String, Integer> extraEffects(InputRow row) {
+        Map<String, Integer> out = null;
+        for (MovementEffect effect : MovementEffect.all()) {
+            int level = row.getEffectLevel(effect);
+            if (isLegacyEffect(effect) || level <= 0) continue;
+            if (out == null) out = new LinkedHashMap<String, Integer>();
+            out.put(effect.id, level);
+        }
+        return out;
+    }
+
+    private static boolean isLegacyEffect(MovementEffect effect) {
+        return effect == MovementEffect.SPEED || effect == MovementEffect.JUMP_BOOST || effect == MovementEffect.SLOWNESS;
+    }
+
     public static boolean rowMatches(SaveFile.Row r, InputRow row) {
         if (r == null) return false;
         for (InputRow.Key k : InputRow.Key.values()) {
@@ -504,6 +534,8 @@ public final class SaveIO {
                 && r.pitchLocked == row.isPitchLocked()
                 && r.speedAmplifier == row.getSpeedAmplifier()
                 && r.jumpBoostAmplifier == row.getJumpBoostAmplifier()
+                && r.slownessAmplifier == row.getSlownessAmplifier()
+                && Objects.equals(r.effects, extraEffects(row))
                 && r.hotbarSlot == row.getHotbarSlot()
                 && r.teleport == row.isTeleportEnabled()
                 && r.teleportX == row.getTeleportX()
@@ -540,6 +572,15 @@ public final class SaveIO {
         if (r != null) {
             row.setSpeedAmplifier(r.speedAmplifier);
             row.setJumpBoostAmplifier(r.jumpBoostAmplifier);
+            row.setSlownessAmplifier(r.slownessAmplifier);
+            if (r.effects != null) {
+                for (Map.Entry<String, Integer> entry : r.effects.entrySet()) {
+                    MovementEffect effect = MovementEffect.byId(entry.getKey());
+                    if (effect != null && !isLegacyEffect(effect) && entry.getValue() != null) {
+                        row.setEffectLevel(effect, entry.getValue());
+                    }
+                }
+            }
             row.setHotbarSlot(r.hotbarSlot);
             row.setTeleportDestination(r.teleportX, r.teleportY, r.teleportZ);
             row.setTeleportEnabled(r.teleport);
@@ -563,6 +604,7 @@ public final class SaveIO {
         SaveFile.AngleSolver a = new SaveFile.AngleSolver();
         a.startTick = s.getStartTick();
         a.landingTick = s.getLandingTick();
+        a.objectiveTick = s.hasObjectiveTick() ? s.getObjectiveTick() : null;
         a.axis = s.getAxis().name();
         a.goal = s.getGoal().name();
         a.customAngle = s.isCustomAngle();
@@ -577,6 +619,7 @@ public final class SaveIO {
         a.customBudget = toSaveCustomBudget(s.getSolveBudget());
         a.graphPreset = s.getGraphPresetName();
         a.defaultInputs = s.getDefaultInputs().name();
+        a.strafeSide = s.getStrafeSide() != AngleSolverState.StrafeSide.A ? s.getStrafeSide().name() : null;
         a.defaultSprint = s.getDefaultSprint().name();
         a.defaultSlipperiness = s.getDefaultSlipperiness().name();
         for (Integer tick : s.populatedTicks()) {
@@ -723,6 +766,7 @@ public final class SaveIO {
         out.slipperiness = ov.overridesSlipperiness() ? ov.getSlipperiness().name() : null;
         out.medium = ov.overridesMedium() ? ov.getMedium().name() : null;
         out.soulsandCells = ov.getMedium() == Medium.SOULSAND && ov.getSoulsandCells() > 1 ? ov.getSoulsandCells() : null;
+        out.damage = ov.overridesDamage() ? Boolean.TRUE : null;
         for (PotionDose d : ov.getAdded()) {
             out.added.add(toSaveDose(d));
         }
@@ -744,6 +788,7 @@ public final class SaveIO {
         Medium medium = parseEnumOrNull(Medium.class, src.medium);
         if (medium != null && medium != Medium.NONE) dst.setMedium(medium);
         if (src.soulsandCells != null && dst.getMedium() == Medium.SOULSAND) dst.setSoulsandCells(src.soulsandCells);
+        if (src.damage != null && src.damage) dst.setDamage(true);
         if (src.added != null) {
             for (SaveFile.Dose d : src.added) {
                 PotionDose dose = toDose(d);
@@ -829,6 +874,7 @@ public final class SaveIO {
         out.solver = r.getSolver();
         out.notice = r.getNotice();
         out.noticeLabel = r.getNoticeLabel();
+        out.verdict = r.getVerdict().name();
         out.objectiveValue = r.getObjectiveValue();
         out.hasObjective = r.hasObjective();
         out.smoothStop = r.getSmoothStop();
@@ -868,6 +914,9 @@ public final class SaveIO {
         r.setSolver(rd.solver);
         r.setNotice(rd.notice);
         r.setNoticeLabel(rd.noticeLabel);
+        if (SolveResult.Verdict.parse(rd.verdict, rd.success) == SolveResult.Verdict.INFEASIBLE) {
+            r.markCertifiedInfeasible();
+        }
         if (rd.hasObjective) r.setObjective(rd.objectiveValue);
         if (rd.smoothStop != null) r.setSmoothing(rd.smoothStop, rd.smoothNanos);
         if (rd.outcomes != null) {

@@ -27,7 +27,7 @@ def mixins = [
 		'RestartSettleMixin',
 		'WorldJournalMixin',
 ]
-mixins += (modern ? ['LevelRendererSolidPassMixin'] : ['ClientLanguageMixin', 'LevelRendererMixin', 'OptionsAccessor', 'ServerStoppingMixin'])
+mixins += (modern ? ['LevelRendererSolidPassMixin'] : ['ClientLanguageMixin', 'LevelRendererMixin', 'LevelRendererTranslucentMixin', 'OptionsAccessor', 'ServerStoppingMixin'])
 mixins.sort()
 def depends = [
 		"\"fabricloader\": \">=${project.loader_version}\"",
@@ -88,6 +88,8 @@ dependencies {
 	}
 
 	include implementation(project(':core'))
+	include implementation(project(':gpu'))
+	include implementation('org.jocl:jocl:2.0.5')
 
 	include implementation("io.github.spair:imgui-java-binding:${project.imgui_version}")
 	include implementation("io.github.spair:imgui-java-lwjgl3:${project.imgui_version}")

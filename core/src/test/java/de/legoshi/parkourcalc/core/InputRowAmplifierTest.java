@@ -17,6 +17,8 @@ public class InputRowAmplifierTest {
         assertEquals(255, row.getSpeedAmplifier());
         row.setJumpBoostAmplifier(255);
         assertEquals(255, row.getJumpBoostAmplifier());
+        row.setSlownessAmplifier(255);
+        assertEquals(255, row.getSlownessAmplifier());
     }
 
     @Test
@@ -32,6 +34,18 @@ public class InputRowAmplifierTest {
         assertEquals(255, row.getJumpBoostAmplifier());
         row.setJumpBoostAmplifier(-5);
         assertEquals(0, row.getJumpBoostAmplifier());
+
+        row.setSlownessAmplifier(300);
+        assertEquals(255, row.getSlownessAmplifier());
+        row.setSlownessAmplifier(-2);
+        assertEquals(0, row.getSlownessAmplifier());
+    }
+
+    @Test
+    public void copyCarriesSlowness() {
+        InputRow row = new InputRow();
+        row.setSlownessAmplifier(3);
+        assertEquals(3, row.copy().getSlownessAmplifier());
     }
 
     @Test

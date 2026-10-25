@@ -14,6 +14,7 @@ import de.legoshi.parkourcalc.core.ui.SelectionManager;
 import de.legoshi.parkourcalc.core.ui.Settings;
 import de.legoshi.parkourcalc.core.ui.YawGizmoController;
 import com.mojang.renderpearl.api.commands.RenderPass;
+import net.minecraft.client.Minecraft;
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
@@ -37,6 +38,7 @@ public final class FabricWorldOverlayRenderer {
     private final YawGizmoController yawGizmo;
     private final Supplier<AngleSolverState> angleSolver;
     private final CachedBoxGeometry cached = new CachedBoxGeometry();
+    private boolean platesAfterTranslucent;
 
     public FabricWorldOverlayRenderer(BoxController boxController, Settings settings, SelectionManager selection,
                                       YawGizmoController yawGizmo, Supplier<AngleSolverState> angleSolver) {
@@ -65,7 +67,8 @@ public final class FabricWorldOverlayRenderer {
                 (float) (cached.anchorZ() - cameraPos.z)
         );
         int[] runs = boxController.inRangeRuns(cameraPos.x, cameraPos.y, cameraPos.z, BoxStyle.pathMaxDistanceSq(settings));
-        cached.prepareFrame(modelView, runs);
+        platesAfterTranslucent = !Minecraft.getInstance().gameRenderer.useImprovedTransparency();
+        cached.prepareFrame(modelView, runs, platesAfterTranslucent ? BoxStyle.constraintFillLayerAlphaScale(settings) : 1.0f);
         Perf.stop("worldOverlayPrepare", buildStart);
     }
 
@@ -75,12 +78,27 @@ public final class FabricWorldOverlayRenderer {
         }
 
         long renderStart = Perf.now();
-        cached.drawLines(pass);
+        cached.drawPathLines(pass);
         cached.drawFaces(pass);
-        cached.finishFrame();
+        cached.drawFaceDepth(pass);
+        cached.drawLineDepth(pass);
+        cached.drawConstraintFill(pass);
+        cached.drawConstraintLines(pass);
+        if (!platesAfterTranslucent) {
+            cached.finishFrame();
+        }
 
         Perf.stop("worldOverlay", renderStart);
         Perf.addBoxes(boxController.size());
+    }
+
+    public void drawAfterTranslucent(RenderPass pass) {
+        if (!platesAfterTranslucent || !cached.frameReady()) {
+            return;
+        }
+        cached.drawConstraintFill(pass);
+        cached.drawConstraintDepth(pass);
+        cached.finishFrame();
     }
 
     public void submitGizmo(LevelRenderContext context) {

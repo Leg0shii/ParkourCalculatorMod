@@ -7,6 +7,7 @@ import de.legoshi.parkourcalc.core.sim.ChunkRange;
 import de.legoshi.parkourcalc.core.sim.LazyEntitySimulator;
 import de.legoshi.parkourcalc.core.sim.ServerSimEvent;
 import de.legoshi.parkourcalc.core.sim.StartResumeState;
+import de.legoshi.parkourcalc.core.sim.ServerTickSample;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 import de.legoshi.parkourcalc.forge.McClient;
@@ -89,6 +90,11 @@ public final class ForgeSimulator extends LazyEntitySimulator<SimulatorEntity> {
     @Override
     public List<ServerSimEvent> takeServerSimEvents() {
         return pair == null ? java.util.Collections.<ServerSimEvent>emptyList() : pair.drainEvents();
+    }
+
+    @Override
+    public ServerTickSample getCurrentServerSample() {
+        return pair == null ? null : pair.serverSample();
     }
 
     @Override
@@ -263,26 +269,11 @@ public final class ForgeSimulator extends LazyEntitySimulator<SimulatorEntity> {
     @Override protected void setYawAbsolute(SimulatorEntity e, float yaw) { e.rotationYaw = yaw; }
 
     @Override
-    protected void applyTickEffects(SimulatorEntity e, int speedAmplifier, int jumpBoostAmplifier) {
+    protected void applyTickEffects(SimulatorEntity e, int[] effectLevels) {
         e.clearActivePotions();
-        if (speedAmplifier > 0) {
-            //? if >=1.12 {
-            e.addPotionEffect(new PotionEffect(MobEffects.SPEED, 2, clientAmplifier(speedAmplifier)));
-            //?} else {
-            /*e.addPotionEffect(new PotionEffect(Potion.moveSpeed.id, 2, clientAmplifier(speedAmplifier)));
-            *///?}
+        for (PotionEffect effect : MovementEffects.instances(effectLevels, 2)) {
+            e.addPotionEffect(effect);
         }
-        if (jumpBoostAmplifier > 0) {
-            //? if >=1.12 {
-            e.addPotionEffect(new PotionEffect(MobEffects.JUMP_BOOST, 2, clientAmplifier(jumpBoostAmplifier)));
-            //?} else {
-            /*e.addPotionEffect(new PotionEffect(Potion.jump.id, 2, clientAmplifier(jumpBoostAmplifier)));
-            *///?}
-        }
-    }
-
-    static int clientAmplifier(int level) {
-        return (byte) (level - 1);
     }
 
     @Override

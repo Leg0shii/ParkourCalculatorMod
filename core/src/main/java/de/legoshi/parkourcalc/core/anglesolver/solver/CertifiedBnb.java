@@ -30,6 +30,7 @@ public final class CertifiedBnb {
     private static final int FULL = Integer.MIN_VALUE;
     private static final int HALF_TURN_IDX = McSineTable.SIZE / 2;
     private static final int ORDER_PASSES = 4;
+    private static final double EMPTY_ROUNDING_REL = 1.0e-13;
 
     private CertifiedBnb() {
     }
@@ -80,10 +81,15 @@ public final class CertifiedBnb {
         public final long kernelNanos;
         public final double[] bestInfeasYaws;
         public final double bestInfeasViol;
+        public final boolean certifiedInfeasible;
+        public final int unresolved;
 
         Result(boolean declined, double[] yawsDeg, double px, double pz, double objective, boolean feasible,
                double boundObjective, double gap, boolean certified, int nodes, int kernelSolves,
-               long kernelNanos, double[] bestInfeasYaws, double bestInfeasViol) {
+               long kernelNanos, double[] bestInfeasYaws, double bestInfeasViol, boolean certifiedInfeasible,
+               int unresolved) {
+            this.certifiedInfeasible = certifiedInfeasible;
+            this.unresolved = unresolved;
             this.declined = declined;
             this.yawsDeg = yawsDeg;
             this.px = px;
@@ -133,7 +139,6 @@ public final class CertifiedBnb {
         final Config cfg;
         final int n;
         final boolean max;
-        final int axisIdx;
         final boolean perAxis;
         final double thr;
         final StartBox box;
@@ -157,6 +162,7 @@ public final class CertifiedBnb {
         double[] bestInfeasYaws;
         double bestInfeasViol = Double.POSITIVE_INFINITY;
         boolean trivialInfeasible;
+        int unresolved;
         double stuckScore = Double.NEGATIVE_INFINITY;
         long incVersion;
         long sweptVersion = -1L;
@@ -172,7 +178,6 @@ public final class CertifiedBnb {
             this.cfg = cfg;
             this.n = sc.numTicks;
             this.max = spec.objective.sense == Objective.Sense.MAX;
-            this.axisIdx = spec.objective.axis == JumpPhysicsInputs.Axis.X ? 0 : 1;
             this.perAxis = exact.perAxisInertia();
             this.thr = exact.inertiaThreshold();
             this.box = sc.startBox;
@@ -218,16 +223,10 @@ public final class CertifiedBnb {
         if (JumpLinearModel.hasFacingWall(spec.constraints)) {
             ties = YawTies.of(spec.constraints, sc.numTicks);
             order = YawOrder.carry(spec.constraints, ties, sc.numTicks);
-            if (order == null) {
-                return new Result(true, null, 0, 0, Double.NaN, false, Double.NaN, Double.NaN, false,
-                        0, 0, 0L, null, Double.POSITIVE_INFINITY);
-            }
+            if (order == null) return declined();
             if (order.isEmpty()) order = null;
         }
-        if (!SineTableGeometry.supported(sc)) {
-            return new Result(true, null, 0, 0, Double.NaN, false, Double.NaN, Double.NaN, false,
-                    0, 0, 0L, null, Double.POSITIVE_INFINITY);
-        }
+        if (!SineTableGeometry.supported(sc)) return declined();
         Search s = new Search(exact, spec, cfg, ties, order);
         if (cfg.seedYaws != null && cfg.seedYaws.length == s.n) {
             double px = cfg.seedPx != null ? cfg.seedPx : s.refPx;
@@ -333,9 +332,15 @@ public final class CertifiedBnb {
         if (certified) gap = Math.min(gap, CERT_EPS);
         if (s.cfg.gapSink != null) reportGap(s, open);
         double boundObj = s.max ? bestOpenScore : -bestOpenScore;
+        boolean certifiedInfeasible = exhausted && s.incYaws == null && s.unresolved == 0;
         return new Result(false, s.incYaws, s.incPx, s.incPz, s.incObj, s.incYaws != null,
                 boundObj, s.incYaws == null ? Double.NaN : gap, certified, s.nodes, s.kernelSolves,
-                s.kernelNanos, s.bestInfeasYaws, s.bestInfeasViol);
+                s.kernelNanos, s.bestInfeasYaws, s.bestInfeasViol, certifiedInfeasible, s.unresolved);
+    }
+
+    private static Result declined() {
+        return new Result(true, null, 0, 0, Double.NaN, false, Double.NaN, Double.NaN, false,
+                0, 0, 0L, null, Double.POSITIVE_INFINITY, false, 0);
     }
 
     private static void reportGap(Search s, PriorityQueue<Node> open) {
@@ -591,17 +596,20 @@ public final class CertifiedBnb {
         double[] ux = null;
         double[] uz = null;
         int chordCount = chords.size();
-        if (oc.result != null && oc.failCode != DiskSocpKernel.FAIL_UNBOUNDED) {
+        boolean unbounded = oc.failCode == DiskSocpKernel.FAIL_UNBOUNDED;
+        if (unbounded && s.incYaws != null) return null;
+        if (oc.result != null) {
             gxv = oc.result.gx;
             gzv = oc.result.gz;
             lambda = oc.result.lambda;
             ux = oc.result.ux;
             uz = oc.result.uz;
-        } else if (oc.failCode == DiskSocpKernel.FAIL_UNBOUNDED) {
-            return null;
         } else {
             CostateDualSolver.Result dr = new CostateDualSolver(s.n, cx, cz, mMagB, rows, s.freeP0).solve(0.0, null);
-            if (dr == null) return null;
+            if (dr == null) {
+                s.unresolved++;
+                return null;
+            }
             gxv = dr.gx;
             gzv = dr.gz;
             lambda = dr.lambda;
@@ -610,17 +618,22 @@ public final class CertifiedBnb {
         }
 
         double val = 0.0;
+        double magnitude = 0.0;
         for (int t = 0; t < s.n; t++) {
-            val += s.geom.support(t, gxv[t], gzv[t], loDeg(nd, t), hiDeg(nd, t));
+            double sup = s.geom.support(t, gxv[t], gzv[t], loDeg(nd, t), hiDeg(nd, t));
+            val += sup;
+            magnitude += Math.abs(sup);
         }
         for (int j = 0; j < rows.size() && j < lambda.length; j++) {
             JumpLinearModel.Wall w = rows.get(j);
             double lj = w.eq ? lambda[j] : Math.max(lambda[j], 0.0);
             val += lj * w.bPrime;
+            magnitude += Math.abs(lj * w.bPrime);
         }
         for (int q = 0; q < chordCount && rows.size() + q < lambda.length; q++) {
             double lj = Math.max(lambda[rows.size() + q], 0.0);
             val += lj * (-chords.get(q).rhs);
+            magnitude += Math.abs(lj * chords.get(q).rhs);
         }
         if (s.freeP0 != null) {
             double hx = s.freeP0.objDevX;
@@ -631,14 +644,17 @@ public final class CertifiedBnb {
                 if (w.axis == 0) hx += lj * w.p0coef;
                 else hz += lj * w.p0coef;
             }
-            val += hx >= 0.0 ? hx * s.freeP0.dvHiX : hx * s.freeP0.dvLoX;
-            val += hz >= 0.0 ? hz * s.freeP0.dvHiZ : hz * s.freeP0.dvLoZ;
+            double startX = hx >= 0.0 ? hx * s.freeP0.dvHiX : hx * s.freeP0.dvLoX;
+            double startZ = hz >= 0.0 ? hz * s.freeP0.dvHiZ : hz * s.freeP0.dvLoZ;
+            val += startX + startZ;
+            magnitude += Math.abs(startX) + Math.abs(startZ);
         }
+        boolean empty = relaxationEmpty(s, cx, cz, mMagB, val, magnitude);
         for (int t = 0; t < s.n; t++) {
             if (iv.freeX[t]) val += iv.injX[t] * Math.abs(cx[t]);
             if (iv.freeZ[t]) val += iv.injZ[t] * Math.abs(cz[t]);
         }
-        double cp = lin.constPos(s.spec.objective.tick, s.axisIdx);
+        double cp = lin.objectiveConst(s.spec.objective);
         double score = val + (s.max ? cp : -cp);
         if (score > nd.score) score = nd.score;
         nd.score = score;
@@ -655,6 +671,11 @@ public final class CertifiedBnb {
                     score, s.incScore, open.size());
         }
         if (score <= s.incScore + CERT_EPS) return null;
+        if (empty) return null;
+        if (unbounded) {
+            s.unresolved++;
+            return null;
+        }
 
         double leafPx = s.refPx;
         double leafPz = s.refPz;
@@ -689,6 +710,7 @@ public final class CertifiedBnb {
         List<Node> children = branch(s, nd, iv, lin, gxv, gzv, ux, uz, decoded, decPath, decZx, decZz);
         if (children == null || children.isEmpty()) {
             s.stuckScore = Math.max(s.stuckScore, nd.score);
+            s.unresolved++;
             if (SolverTrace.on()) {
                 StringBuilder sb = new StringBuilder();
                 for (int t = 0; t < s.n; t++) {
@@ -700,6 +722,20 @@ public final class CertifiedBnb {
             return null;
         }
         return children;
+    }
+
+    private static boolean relaxationEmpty(Search s, double[] cx, double[] cz, double[] mMagB, double dualValue,
+                                           double magnitude) {
+        double floor = 0.0;
+        for (int t = 0; t < s.n; t++) floor -= mMagB[t] * StrictMath.hypot(cx[t], cz[t]);
+        if (s.freeP0 != null) {
+            double hx = s.freeP0.objDevX;
+            double hz = s.freeP0.objDevZ;
+            floor += hx >= 0.0 ? hx * s.freeP0.dvLoX : hx * s.freeP0.dvHiX;
+            floor += hz >= 0.0 ? hz * s.freeP0.dvLoZ : hz * s.freeP0.dvHiZ;
+        }
+        double margin = CERT_EPS * (1.0 + Math.abs(floor)) + EMPTY_ROUNDING_REL * magnitude;
+        return dualValue < floor - margin;
     }
 
     private static JumpLinearModel.Wall boxRow(int n, int axis, int t, double sign, double bound, String name) {
@@ -855,7 +891,7 @@ public final class CertifiedBnb {
         double[] gf = scRep.toGameFacings(yaws);
         ForwardPath path = s.exact.forward(scRep, gf);
         double viol = s.compiled.maxViolation(gf, path);
-        double obj = path.getPos(s.spec.objective.tick, s.spec.objective.axis);
+        double obj = s.spec.objective.evaluate(path);
         if (viol == 0.0) {
             acceptIncumbent(s, yaws, px, pz, obj);
         } else if (viol < s.bestInfeasViol) {
@@ -902,7 +938,7 @@ public final class CertifiedBnb {
         JumpPhysicsInputs scRep = FoldReplayDriver.pinnedCopy(s.sc, s.incPx, s.incPz);
         double[] gf = scRep.toGameFacings(yaws);
         ForwardPath path = s.exact.forward(scRep, gf);
-        double bestObj = path.getPos(s.spec.objective.tick, s.spec.objective.axis);
+        double bestObj = s.spec.objective.evaluate(path);
         double sense = s.max ? 1.0 : -1.0;
         boolean any = false;
         for (int pass = 0; pass < 3 && !s.stopped(); pass++) {
@@ -925,7 +961,7 @@ public final class CertifiedBnb {
                     scRep.toGameFacingsInto(yaws, t, s.n, gf, seedEnt, seedPrev);
                     s.exact.stepRange(scRep, gf, t, path);
                     double v = s.compiled.maxViolation(gf, path);
-                    double o = path.getPos(s.spec.objective.tick, s.spec.objective.axis);
+                    double o = s.spec.objective.evaluate(path);
                     if (v == 0.0 && sense * (o - tickBest) > 0.0) {
                         tickBest = o;
                         bestCand = cand;
@@ -1052,7 +1088,7 @@ public final class CertifiedBnb {
         }
         leafDfs(s, st, 0, 0.0, new double[n + 1][mw]);
         if (st.steps >= LEAF_DFS_CAP) return false;
-        double cp = lin.constPos(s.spec.objective.tick, s.axisIdx);
+        double cp = lin.objectiveConst(s.spec.objective);
         double latticeBound = st.bestVal + (s.max ? cp : -cp) + LEAF_REARRANGE;
         if (st.bestVal > Double.NEGATIVE_INFINITY) {
             double[] yaws = realizeCombo(s, cands, st.bestPick);
@@ -1061,9 +1097,9 @@ public final class CertifiedBnb {
                 double[] gf = scRep.toGameFacings(yaws);
                 ForwardPath rp = s.exact.forward(scRep, gf);
                 double rv = s.compiled.maxViolation(gf, rp);
-                double ro = rp.getPos(s.spec.objective.tick, s.spec.objective.axis);
+                double ro = s.spec.objective.evaluate(rp);
                 if (SolverTrace.on()) {
-                    double cpv = lin.constPos(s.spec.objective.tick, s.axisIdx);
+                    double cpv = lin.objectiveConst(s.spec.objective);
                     SolverTrace.log("CERT", "leaf argmax lin=%.12f replayObj=%.12f viol=%.3e",
                             st.bestVal + (s.max ? cpv : -cpv), ro, rv);
                 }
@@ -1075,6 +1111,7 @@ public final class CertifiedBnb {
         if (!closeBound) return false;
         double closed = Math.min(nd.score, latticeBound);
         if (closed <= s.incScore + CERT_EPS) return true;
+        if (s.incYaws == null) s.unresolved++;
         nd.score = closed;
         s.stuckScore = Math.max(s.stuckScore, closed);
         if (SolverTrace.on()) {

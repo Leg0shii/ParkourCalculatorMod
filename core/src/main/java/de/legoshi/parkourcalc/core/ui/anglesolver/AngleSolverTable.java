@@ -12,6 +12,7 @@ import de.legoshi.parkourcalc.core.anglesolver.TickConstraints;
 import de.legoshi.parkourcalc.core.ui.ConstraintSelection;
 import de.legoshi.parkourcalc.core.ui.SelectionManager;
 import de.legoshi.parkourcalc.core.ui.Settings;
+import de.legoshi.parkourcalc.core.ui.theme.ChipFlow;
 import de.legoshi.parkourcalc.core.ui.theme.Controls;
 import de.legoshi.parkourcalc.core.ui.theme.Fonts;
 import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
@@ -58,6 +59,8 @@ public final class AngleSolverTable {
     private final SelectionManager selection;
     private final ConstraintSelection constraintSelection;
     private final IntSupplier rowCount;
+    private IntSupplier countSelectedConstraints;
+    private Runnable deleteSelectedConstraints;
 
     private int expandedRow = -1;
 
@@ -75,7 +78,10 @@ public final class AngleSolverTable {
 
     // Chip drag (manual): tracked across frames while a chip is held. A dragged chip is either a
     // constraint (dragIndex into the tick's list) or one facet of the tick's state override.
-    private enum DragKind { CONSTRAINT, STATE_INPUTS, STATE_SPRINT, STATE_SLIP, STATE_MEDIUM, STATE_ADD, STATE_REMOVE }
+    private enum DragKind { CONSTRAINT, STATE_INPUTS, STATE_SPRINT, STATE_SLIP, STATE_MEDIUM, STATE_DAMAGE, STATE_ADD, STATE_REMOVE }
+
+    private static final String DAMAGE_TIP = "Fall damage is ruled on this tick's landing: the server's velocity packet"
+            + " replaces the motion of the next tick in the solver model. Apply state fills this from the paired simulation.";
 
     private boolean dragging;
     private DragKind dragKind = DragKind.CONSTRAINT;
@@ -105,6 +111,7 @@ public final class AngleSolverTable {
     private final ImInt fieldCombo = new ImInt();
     private final ImInt opCombo = new ImInt();
     private final ImInt refBuf = new ImInt();
+    private final ImInt wholeBuf = new ImInt();
     private final String[] slipItems = Slipperiness.comboItems();
     private final String[] mediumItems = Medium.comboItems();
     private static final String[] FIELD_ITEMS = buildFieldItems();
@@ -174,6 +181,25 @@ public final class AngleSolverTable {
 
     public boolean isActive() {
         return settings.viewAngleSolver;
+    }
+
+    public boolean offersObjectiveTick() {
+        return isActive() && state.isCustomAngle();
+    }
+
+    public boolean isObjectiveTick(int tick) {
+        return state.hasObjectiveTick() && state.getObjectiveTick() == tick;
+    }
+
+    public void setObjectiveTick(int tick) {
+        if (tick >= rowCount.getAsInt()) return;
+        if (tick < 0 || tick == state.getLandingTick()) state.clearObjectiveTick();
+        else state.setObjectiveTick(tick);
+    }
+
+    public void setConstraintDeleteHandlers(IntSupplier count, Runnable delete) {
+        this.countSelectedConstraints = count;
+        this.deleteSelectedConstraints = delete;
     }
 
     public void setYawDirection(Collection<Integer> rows, Constraint.Op op) {
@@ -347,6 +373,10 @@ public final class AngleSolverTable {
                 dst.setSoulsandCells(src.getSoulsandCells());
                 if (!dragAlt) src.clearMedium();
                 break;
+            case STATE_DAMAGE:
+                dst.setDamage(true);
+                if (!dragAlt) src.clearDamage();
+                break;
             case STATE_ADD: {
                 PotionDose srcDose = src.findAdded(dragPotion);
                 int lvl = srcDose != null ? srcDose.level : 1;
@@ -500,7 +530,7 @@ public final class AngleSolverTable {
         int n = list.size();
         float[] chipW = new float[n];
         for (int i = 0; i < n; i++) chipW[i] = constraintChipWidth(list.get(i));
-        ChipLayout layout = computeChipLayout(cellW, baseRowH, chipW);
+        ChipFlow.Layout layout = computeChipLayout(cellW, baseRowH, chipW);
 
         constraintCellRects.put(rowIndex, cellRect(origin, cellW, grownRowH));
         rowContentH.put(rowIndex, layout.cellH);
@@ -526,7 +556,7 @@ public final class AngleSolverTable {
         int n = specs.size();
         float[] chipW = new float[n];
         for (int i = 0; i < n; i++) chipW[i] = stateChipWidth(specs.get(i).key, specs.get(i).value);
-        ChipLayout layout = computeChipLayout(cellW, baseRowH, chipW);
+        ChipFlow.Layout layout = computeChipLayout(cellW, baseRowH, chipW);
 
         stateCellRects.put(rowIndex, cellRect(origin, cellW, grownRowH));
         mergeRowContentHeight(rowIndex, layout.cellH);
@@ -570,62 +600,12 @@ public final class AngleSolverTable {
         void render(int index);
     }
 
-    private static final class ChipLayout {
-        int[] lineOf;
-        float[] lineW;
-        float cellH;
-        int lines;
+    private ChipFlow.Layout computeChipLayout(float cellW, float rowH, float[] chipW) {
+        return ChipFlow.compute(cellW, rowH, chipW);
     }
 
-    private ChipLayout computeChipLayout(float cellW, float rowH, float[] chipW) {
-        float s = ThemeManager.uiScale();
-        float gap = 5f * s;
-        float lineH = ImGui.getFrameHeight();
-        float spacingY = ImGui.getStyle().getItemSpacing().y;
-        float cellPadY = ImGui.getStyle().getCellPadding().y;
-        int n = chipW.length;
-
-        ChipLayout layout = new ChipLayout();
-        layout.lineOf = new int[n];
-        layout.lineW = new float[Math.max(1, n)];
-        int lines = 1;
-        float usedX = 0f;
-        for (int i = 0; i < n; i++) {
-            if (i == 0) usedX = chipW[i];
-            else if (usedX + gap + chipW[i] <= cellW) usedX += gap + chipW[i];
-            else { lines++; usedX = chipW[i]; }
-            layout.lineOf[i] = lines - 1;
-            layout.lineW[lines - 1] = usedX;
-        }
-        layout.lines = lines;
-        // Row height = the chip block plus the cell's top+bottom padding, matching baseRowH (frameHeight + 2*cellPadY).
-        // Without the padding term, multi-line rows render 2*cellPadY taller than rowH and the accent falls short.
-        layout.cellH = Math.max(rowH, lines * lineH + (lines - 1) * spacingY + 2f * cellPadY);
-        return layout;
-    }
-
-    private void placeChips(ImVec2 origin, float cellW, float grownRowH, ChipLayout layout, ChipRenderer renderer) {
-        float s = ThemeManager.uiScale();
-        float gap = 5f * s;
-        float lineH = ImGui.getFrameHeight();
-        float spacingY = ImGui.getStyle().getItemSpacing().y;
-        // Center this cell's chip block within the (possibly taller) row, so a short column doesn't cling to the top.
-        float blockH = layout.lines * lineH + (layout.lines - 1) * spacingY;
-        float cellPadY = ImGui.getStyle().getCellPadding().y;
-        float yOff = Math.max(0f, (grownRowH - 2f * cellPadY - blockH) * 0.5f);
-        int curLine = -1;
-        for (int i = 0; i < layout.lineOf.length; i++) {
-            int line = layout.lineOf[i];
-            if (line != curLine) {
-                curLine = line;
-                float lx = origin.x + Math.max(0f, (cellW - layout.lineW[line]) * 0.5f);
-                float ly = origin.y + yOff + line * (lineH + spacingY);
-                ImGui.setCursorScreenPos(lx, ly);
-            } else {
-                ImGui.sameLine(0, gap);
-            }
-            renderer.render(i);
-        }
+    private void placeChips(ImVec2 origin, float cellW, float grownRowH, ChipFlow.Layout layout, ChipRenderer renderer) {
+        ChipFlow.place(origin, cellW, grownRowH, layout, renderer::render);
     }
 
     private float constraintChipWidth(Constraint c) {
@@ -645,10 +625,7 @@ public final class AngleSolverTable {
     }
 
     private void chipDropShadow(ImDrawList dl, ImVec2 mn, ImVec2 mx, float s) {
-        for (int k = 1; k <= 3; k++) {
-            float o = k * s;
-            dl.addRectFilled(mn.x + o, mn.y + o, mx.x + o, mx.y + o, ThemeManager.shadowColor(0.10f), 3f * s + o);
-        }
+        ChipFlow.dropShadow(dl, mn, mx);
     }
 
     private void renderConstraintChip(int tick, int index, Constraint c) {
@@ -736,24 +713,37 @@ public final class AngleSolverTable {
 
     private void renderChipMenu(int tick, int index) {
         Constraint c = state.tickConstraints(tick).getConstraints().get(index);
-        if (ImGui.menuItem(c.isEnabled() ? "Disable" : "Enable")) {
+        int bulk = selectedConstraintCountIncluding(tick, index);
+        String toggleLabel = c.isEnabled() ? "Disable" : "Enable";
+        String duplicateLabel = "Duplicate here";
+        String deleteLabel = bulk > 1 ? "Delete " + bulk + " constraints (X)" : "Delete";
+        float width = Math.max(Controls.buttonWidth(toggleLabel),
+                Math.max(Controls.buttonWidth(duplicateLabel), Controls.buttonWidth(deleteLabel)));
+        width = Math.max(width, ImGui.getContentRegionAvail().x);
+        if (Controls.secondaryButton(toggleLabel, width)) {
             c.setEnabled(!c.isEnabled());
             ImGui.closeCurrentPopup();
         }
-        ThemeManager.paddedSeparator();
-        if (ImGui.menuItem("Duplicate here")) {
+        if (Controls.secondaryButton(duplicateLabel, width)) {
             state.duplicateConstraint(tick, index);
             ImGui.closeCurrentPopup();
         }
         ThemeManager.paddedSeparator();
-        ThemeManager.pushTextColor(ThemeManager.dangerColor());
-        boolean del = ImGui.menuItem("Delete");
-        ThemeManager.popTextColor();
-        if (del) {
-            state.deleteConstraint(tick, index);
+        if (Controls.dangerButton(deleteLabel, width)) {
+            if (bulk > 1) {
+                deleteSelectedConstraints.run();
+            } else {
+                state.deleteConstraint(tick, index);
+            }
             clearConstraintSelection();
             ImGui.closeCurrentPopup();
         }
+    }
+
+    private int selectedConstraintCountIncluding(int tick, int index) {
+        if (countSelectedConstraints == null || deleteSelectedConstraints == null) return 0;
+        if (!constraintSelection.highlights(tick, index, selection)) return 0;
+        return countSelectedConstraints.getAsInt();
     }
 
     private static final class StateChipSpec {
@@ -788,6 +778,9 @@ public final class AngleSolverTable {
                     ? ov.getMedium().label + " x" + ov.getSoulsandCells()
                     : ov.getMedium().label;
             specs.add(new StateChipSpec(DragKind.STATE_MEDIUM, null, "Medium", mediumLabel, false));
+        }
+        if (ov.overridesDamage()) {
+            specs.add(new StateChipSpec(DragKind.STATE_DAMAGE, null, "Damage", "Fall", false));
         }
         for (PotionDose d : ov.getAdded()) {
             specs.add(new StateChipSpec(DragKind.STATE_ADD, d.potion, "Potion", "+" + d.potion.label + amp(d.level), false));
@@ -877,6 +870,7 @@ public final class AngleSolverTable {
                         case STATE_SPRINT: ov.clearSprint(); break;
                         case STATE_SLIP: ov.clearSlipperiness(); break;
                         case STATE_MEDIUM: ov.clearMedium(); break;
+                        case STATE_DAMAGE: ov.clearDamage(); break;
                         case STATE_ADD: ov.removeAdded(potion); break;
                         case STATE_REMOVE: ov.getRemoved().remove(potion); break;
                         default: break;
@@ -914,7 +908,7 @@ public final class AngleSolverTable {
         int potions = tc == null ? 0 : tc.getOverride().getAdded().size();
         int sandRow = tc != null && tc.getOverride().getMedium() == Medium.SOULSAND ? 1 : 0;
         float pad = 2f * ThemeManager.LG * s; // child top + bottom window padding
-        float stateRows = (4f + sandRow + potions + 1f) * inputRow;  // Inputs, Sprint, Slipperiness, Medium, doses, + add
+        float stateRows = (5f + sandRow + potions + 1f) * inputRow;  // Inputs, Sprint, Slipperiness, Medium, Damage, doses, + add
         float constraintRows = (cn + 1f) * inputRow;        // constraint rows + add button
         return pad
                 + sectionHead + stateRows
@@ -1092,7 +1086,7 @@ public final class AngleSolverTable {
         }
         if (c.isRange()) {
             ImGui.setNextItemWidth(numW);
-            numberField("##lo", c.getLo(), c::setLo);
+            valueField(c, "##lo", c.getLo(), c::setLo);
             ImGui.sameLine();
             ThemeManager.pushTextColor(ThemeManager.textMutedColor());
             ImGui.alignTextToFramePadding();
@@ -1100,11 +1094,24 @@ public final class AngleSolverTable {
             ThemeManager.popTextColor();
             ImGui.sameLine();
             ImGui.setNextItemWidth(numW);
-            numberField("##hi", c.getHi(), c::setHi);
+            valueField(c, "##hi", c.getHi(), c::setHi);
         } else {
             ImGui.setNextItemWidth(numW);
-            numberField("##v", c.getValue(), c::setValue);
+            valueField(c, "##v", c.getValue(), c::setValue);
         }
+    }
+
+    private void valueField(Constraint c, String id, double value, DoubleConsumer apply) {
+        if (c.isWholeNumber()) {
+            wholeField(id, value, apply);
+        } else {
+            numberField(id, value, apply);
+        }
+    }
+
+    private void wholeField(String id, double value, DoubleConsumer apply) {
+        wholeBuf.set((int) Math.max(Integer.MIN_VALUE, Math.min(Integer.MAX_VALUE, Math.round(value))));
+        if (ImGui.inputInt(id, wholeBuf, 0)) apply.accept(wholeBuf.get());
     }
 
     /** Locale-independent replacement for inputDouble, whose native printf renders comma decimals under some C locales (gh-124). */
@@ -1223,6 +1230,16 @@ public final class AngleSolverTable {
             }
             ImGui.tableNextColumn();
         }
+
+        ovRowStart("Damage", isStateSelected(tick, DragKind.STATE_DAMAGE, null));
+        if (Controls.checkbox("##ovdamage", ov.isDamage())) {
+            ov.setDamage(!ov.isDamage());
+        }
+        if (ImGui.isItemHovered()) {
+            ImGui.setTooltip(DAMAGE_TIP);
+        }
+        ImGui.tableNextColumn();
+        overrideTrailing(ov.overridesDamage(), "inherits default (none)", "ovdmr", ov::clearDamage);
 
         renderPotionRows(tick, ov);
 

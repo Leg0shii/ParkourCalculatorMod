@@ -175,7 +175,10 @@ public final class RunTicksController implements RunTicksControls {
         }
         engine.poll();
         if (engine.isSolving()) {
-            if (elapsedMs(stepStartMs) <= stepTimeoutMs) return;
+            if (elapsedMs(stepStartMs) <= stepTimeoutMs) {
+                publishProgress();
+                return;
+            }
             engine.cancel();
         }
 
@@ -473,21 +476,15 @@ public final class RunTicksController implements RunTicksControls {
             for (InputRow row : rows) inputs.insertRow(inputs.size(), row.copy());
 
             state.clearConstraintsInRange(0, Integer.MAX_VALUE);
+            StateOverride none = new StateOverride();
             for (Integer tick : state.populatedTicks()) {
                 TickConstraints tc = state.tickConstraintsOrNull(tick);
-                if (tc == null) continue;
-                tc.getOverride().clearSlipperiness();
-                tc.getOverride().clearMedium();
+                if (tc != null) tc.getOverride().copyFrom(none);
             }
             for (Map.Entry<Integer, TickConstraints> e : ticks.entrySet()) {
                 TickConstraints target = state.tickConstraints(e.getKey());
                 for (Constraint c : e.getValue().getConstraints()) target.getConstraints().add(c.copy());
-                StateOverride source = e.getValue().getOverride();
-                if (source.overridesSlipperiness()) target.getOverride().setSlipperiness(source.getSlipperiness());
-                if (source.overridesMedium()) {
-                    target.getOverride().setMedium(source.getMedium());
-                    target.getOverride().setSoulsandCells(source.getSoulsandCells());
-                }
+                target.getOverride().copyFrom(e.getValue().getOverride());
             }
             state.setStartTick(startTick);
             state.setLandingTick(landingTick);

@@ -1,6 +1,8 @@
 package de.legoshi.parkourcalc.forge;
 
 import de.legoshi.parkourcalc.core.Application;
+import de.legoshi.parkourcalc.core.anglesolver.noturn.PoolScreenAccelerator;
+import de.legoshi.parkourcalc.gpu.OpenClPoolScreen;
 import de.legoshi.parkourcalc.core.PlaybackController;
 import de.legoshi.parkourcalc.core.anglesolver.BlockSelection;
 import de.legoshi.parkourcalc.core.save.FileSystemSaveStore;
@@ -32,6 +34,7 @@ import net.minecraftforge.fml.common.network.FMLNetworkEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -98,6 +101,7 @@ public class ForgeParkourCalculator {
     private KeyBinding captureCollisionBlockKeyBinding;
     private KeyBinding captureLandBlockKeyBinding;
     private KeyBinding clearBlocksKeyBinding;
+    private static KeyBinding selectTickKeyBinding;
     private boolean blockCaptureEnabled;
     private Path configPath;
     private Path saveDir;
@@ -131,6 +135,7 @@ public class ForgeParkourCalculator {
         application.setPlaybackBridge(playbackBridge);
         application.getRecorder().setKeyCodes("lwjgl2");
         application.setBlockPicker(new ForgeBlockPicker());
+        PoolScreenAccelerator.register(new OpenClPoolScreen.Factory());
         application.initSettingsStorage(configPath);
         blockCaptureEnabled = application.getSettings().experimentalBlockCapture;
         application.setupUi();
@@ -165,6 +170,8 @@ public class ForgeParkourCalculator {
         ClientRegistry.registerKeyBinding(togglePathKeyBinding);
         copyTeleportKeyBinding = new KeyBinding("key.parkourcalculator.copy_teleport", Keyboard.KEY_K, "key.categories.parkourcalculator");
         ClientRegistry.registerKeyBinding(copyTeleportKeyBinding);
+        selectTickKeyBinding = new KeyBinding("key.parkourcalculator.select_tick", Keyboard.KEY_NONE, "key.categories.parkourcalculator");
+        ClientRegistry.registerKeyBinding(selectTickKeyBinding);
         if (blockCaptureEnabled) {
             captureMomentumBlockKeyBinding = new KeyBinding("key.parkourcalculator.capture_momentum_block", Keyboard.KEY_M, "key.categories.parkourcalculator");
             ClientRegistry.registerKeyBinding(captureMomentumBlockKeyBinding);
@@ -664,6 +671,17 @@ public class ForgeParkourCalculator {
         *///?}
             event.setCanceled(true);
         }
+    }
+
+    public static boolean isSelectTickDown() {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (selectTickKeyBinding == null || mc.currentScreen != null) return false;
+        int code = selectTickKeyBinding.getKeyCode();
+        if (code == Keyboard.KEY_NONE) {
+            code = mc.gameSettings.keyBindAttack.getKeyCode();
+        }
+        if (code < 0) return Mouse.isButtonDown(code + 100);
+        return code != Keyboard.KEY_NONE && Keyboard.isKeyDown(code);
     }
 
     public static String rerunSimulationKeyName() {

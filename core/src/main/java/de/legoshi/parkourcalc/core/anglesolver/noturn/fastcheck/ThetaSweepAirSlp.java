@@ -40,7 +40,7 @@ public final class ThetaSweepAirSlp implements FastCheck {
     @Override
     public FastCheckVerdict check(NoTurnProblem problem, JumpSpec spec, ExactJumpModel model, long budgetNanos,
                                   AtomicBoolean cancel) {
-        WorkDeadline deadline = WorkDeadline.in(WorkDeadline.Clock.WALL, budgetNanos);
+        WorkDeadline deadline = WorkDeadline.in(WorkDeadline.Clock.THREAD_CPU, budgetNanos);
         JumpPhysicsInputs scFree = spec.asScenario();
         int n = scFree.numTicks;
         StartBox freeBox = (scFree.startBox != null && scFree.startBox.startFree()) ? scFree.startBox : null;
@@ -55,14 +55,7 @@ public final class ThetaSweepAirSlp implements FastCheck {
         JumpPhysicsInputs runScenario = runSpec.asScenario();
 
         double[] singleAim = new double[n];
-        double[] viols = new double[SWEEP_STEPS];
-        for (int i = 0; i < SWEEP_STEPS; i++) {
-            double theta = -180.0 + i * (360.0 / SWEEP_STEPS);
-            for (int t = 0; t < n; t++) singleAim[t] = theta;
-            double[] gf = runScenario.toGameFacings(Angles.wrapAll(singleAim));
-            ForwardPath fp = model.forward(runScenario, gf);
-            viols[i] = compiled.maxViolation(gf, fp);
-        }
+        double[] viols = sweepViolations(compiled, runScenario, model);
 
         List<double[]> cand = new ArrayList<double[]>();
         boolean[] used = new boolean[SWEEP_STEPS];
@@ -112,6 +105,29 @@ public final class ThetaSweepAirSlp implements FastCheck {
             }
         }
         return FastCheckVerdict.unknown("thetaSweepAirSlp no feasible in " + tried + " thetas");
+    }
+
+    public static double[] sweepViolations(JumpSpec spec, ExactJumpModel model) {
+        return sweepViolations(JumpConstraintCompiler.compile(spec), NoTurnProblem.pinnedAtRef(spec).asScenario(), model);
+    }
+
+    static double[] sweepViolations(JumpConstraintCompiler.Compiled compiled, JumpPhysicsInputs runScenario,
+                                    ExactJumpModel model) {
+        int n = runScenario.numTicks;
+        double[] singleAim = new double[n];
+        double[] viols = new double[SWEEP_STEPS];
+        for (int i = 0; i < SWEEP_STEPS; i++) {
+            double theta = -180.0 + i * (360.0 / SWEEP_STEPS);
+            for (int t = 0; t < n; t++) singleAim[t] = theta;
+            double[] gf = runScenario.toGameFacings(Angles.wrapAll(singleAim));
+            ForwardPath fp = model.forward(runScenario, gf);
+            viols[i] = compiled.maxViolation(gf, fp);
+        }
+        return viols;
+    }
+
+    public static double thetaOf(int index) {
+        return -180.0 + index * (360.0 / SWEEP_STEPS);
     }
 
     @Override

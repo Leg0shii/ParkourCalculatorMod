@@ -31,11 +31,11 @@ public class PipelineShapeTest {
 
     private static final List<String> FAST_PIPELINE = Arrays.asList(
             "seed", "horizon", "wrap0", "cap1", "freeRescue", "peel", "freeImprove", "sweep",
-            "fold", "ladder", "cert", "bnb", "ils", "cap2", "wrap", "translate");
+            "fold", "ladder", "cert", "bnb", "ils", "cap2", "wrap", "translate", "certify");
 
     private static final List<String> THOROUGH_PIPELINE = Arrays.asList(
             "horizon", "wrap0", "seed", "cap1", "freeRescue", "peel", "freeImprove", "sweep",
-            "fold", "ladder", "cert", "bnb", "ils", "cap2", "wrap", "translate", "snap");
+            "fold", "ladder", "cert", "bnb", "ils", "cap2", "wrap", "translate", "snap", "certify");
 
     private static final long TIMEOUT_MS = 4000;
 
@@ -123,7 +123,8 @@ public class PipelineShapeTest {
         List<String> raw = new ArrayList<>();
         for (GraphRunState.Step s : rs.steps()) raw.add(s.nodeId);
         List<String> seq = collapseLoop(raw);
-        if (!timedOut && seq.size() != pipeline.size()) {
+        boolean certifiedInfeasible = state.getResult() != null && state.getResult().isCertifiedInfeasible();
+        if (!timedOut && !certifiedInfeasible && seq.size() != pipeline.size()) {
             fail("incomplete sequence without timeout at " + name + " tier=" + (thorough ? "THOROUGH" : "FAST")
                     + ": " + seq);
         }

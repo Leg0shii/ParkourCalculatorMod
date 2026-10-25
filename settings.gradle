@@ -25,6 +25,7 @@ plugins {
 rootProject.name = 'parkourcalculator'
 include 'core'
 include 'forge-core'
+include 'gpu'
 
 stonecutter {
 	create('loader-fabric') {

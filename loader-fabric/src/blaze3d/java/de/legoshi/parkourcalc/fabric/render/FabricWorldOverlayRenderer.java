@@ -14,6 +14,7 @@ import de.legoshi.parkourcalc.core.ui.SelectionManager;
 import de.legoshi.parkourcalc.core.ui.Settings;
 import de.legoshi.parkourcalc.core.ui.YawGizmoController;
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
@@ -33,6 +34,7 @@ public final class FabricWorldOverlayRenderer {
     private final SelectionManager selection;
     private final YawGizmoController yawGizmo;
     private final Supplier<AngleSolverState> angleSolver;
+    private final CachedBoxGeometry cached = new CachedBoxGeometry();
 
     public FabricWorldOverlayRenderer(BoxController boxController, Settings settings, SelectionManager selection,
                                       YawGizmoController yawGizmo, Supplier<AngleSolverState> angleSolver) {
@@ -43,30 +45,34 @@ public final class FabricWorldOverlayRenderer {
         this.angleSolver = angleSolver;
     }
 
+    public void drawAfterTranslucent() {
+        cached.drawAfterTranslucent();
+    }
+
     public void render(PoseStack poseStack, MultiBufferSource.BufferSource buffers, Vec3 camPos) {
         long renderStart = Perf.now();
+
+        if (boxController.isEmpty()) {
+            cached.close();
+        } else {
+            boxController.setBoxSize(BoxStyle.tickBoxSize(settings));
+            cached.ensureBuilt(boxController, PathRenderPlan.build(boxController, settings, selection), settings);
+            boolean platesAfterTranslucent = !Minecraft.useShaderTransparency();
+            cached.draw(poseStack.last().pose(), camPos.x, camPos.y, camPos.z, BoxStyle.pathMaxDistanceSq(settings),
+                    platesAfterTranslucent, platesAfterTranslucent ? BoxStyle.constraintFillLayerAlphaScale(settings) : 1.0f);
+            Perf.addBoxes(boxController.size());
+        }
 
         poseStack.pushPose();
         poseStack.translate(-camPos.x, -camPos.y, -camPos.z);
         Matrix4f pose = poseStack.last().pose();
 
-        PathRenderPlan plan = null;
-        if (!boxController.isEmpty()) {
-            boxController.setBoxSize(BoxStyle.tickBoxSize(settings));
-            plan = PathRenderPlan.build(boxController, settings, selection);
-            Perf.addBoxes(boxController.size());
-        }
-
         FabricBoxRenderer faces = new FabricBoxRenderer(pose, buffers.getBuffer(FabricRenderLayers.TRANSLUCENT_FACES), BoxRenderer.Mode.FACES);
         emitSelectionFaces(faces);
-        if (plan != null) {
-            plan.faceEmitter.accept(faces);
-        }
 
         FabricBoxRenderer lines = new FabricBoxRenderer(pose, buffers.getBuffer(FabricRenderLayers.LINES), BoxRenderer.Mode.LINES);
         emitSelectionLines(lines);
-        if (plan != null) {
-            plan.lineEmitter.accept(lines);
+        if (!boxController.isEmpty()) {
             emitGizmo(lines, camPos);
             emitSelectedHitDistance(lines);
         }

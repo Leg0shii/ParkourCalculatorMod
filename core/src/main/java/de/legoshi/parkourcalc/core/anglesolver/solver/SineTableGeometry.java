@@ -72,7 +72,7 @@ public final class SineTableGeometry {
         if (contact) {
             float f4 = slipF * 0.91F;
             float ground = modern ? 0.21600002F / (slipF * slipF * slipF) : 0.16277136F / (f4 * f4 * f4);
-            accelSpeed = Constants.attrValueF(sc.factorAmpAt(t), sprint) * ground;
+            accelSpeed = Constants.attrValueF(sc.factorAmpAt(t), sc.factorSlownessAt(t), sprint) * ground;
         } else {
             accelSpeed = airSprint ? Constants.AIR_SPEED_F : Constants.AIR_SPEED_NO_SPRINT_F;
         }
@@ -82,9 +82,9 @@ public final class SineTableGeometry {
             if (sine262) {
                 float sq = squareDiagInput();
                 forward = Math.signum(forward) * sq;
-                strafe = sc.strafeSign * sq;
+                strafe = sc.strafeSignAt(t) * sq;
             } else {
-                strafe = sc.strafeSign * 1.0F * 0.98F;
+                strafe = sc.strafeSignAt(t) * 1.0F * 0.98F;
             }
         } else {
             strafe = sc.strafeInputAt(t);

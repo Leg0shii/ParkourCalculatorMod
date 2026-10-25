@@ -1,9 +1,11 @@
 package de.legoshi.parkourcalc.fabric;
 
+import de.legoshi.parkourcalc.core.anglesolver.solver.VelocityPacketCodec;
 import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
 import de.legoshi.parkourcalc.core.sim.AABB;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.fabric.input.FabricInput;
+import de.legoshi.parkourcalc.fabric.sim.paired.PairedServerSim;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Camera;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -108,6 +110,30 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
     }
 
     @Override
+    public boolean isCobweb(int x, int y, int z) {
+        ClientLevel world = Minecraft.getInstance().level;
+        if (world == null) return false;
+        return world.getBlockState(new BlockPos(x, y, z)).is(Blocks.COBWEB);
+    }
+
+    @Override
+    public VelocityPacketCodec velocityPacketCodec() {
+        return v -> {
+            Vec3 q = PairedServerSim.quantizeVelocity(new Vec3(v.x, v.y, v.z));
+            return new Vec3dCore(q.x, q.y, q.z);
+        };
+    }
+
+    @Override
+    public double getInsideBlockInset() {
+        //? if >=1.21.2 {
+        return 1.0E-5F;
+        //?} else {
+        /*return 1.0E-7;
+        *///?}
+    }
+
+    @Override
     public double[] getPressurePlateFootprint(int x, int y, int z) {
         ClientLevel world = Minecraft.getInstance().level;
         if (world == null) return null;
@@ -191,6 +217,11 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
     }
 
     @Override
+    public boolean isSelectTickPressed() {
+        return FabricParkourCalculator.isSelectTickDown();
+    }
+
+    @Override
     public boolean isMousePressedRight() {
         return FabricInput.isMouseDown(InputConstants.MOUSE_BUTTON_RIGHT);
     }
@@ -267,6 +298,13 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
     @Override
     public float getMouseSensitivity() {
         return Minecraft.getInstance().options.sensitivity().get().floatValue();
+    }
+
+    @Override
+    public void setMouseSensitivity(float sensitivity) {
+        Minecraft client = Minecraft.getInstance();
+        client.options.sensitivity().set((double) sensitivity);
+        client.options.save();
     }
 
     @Override
