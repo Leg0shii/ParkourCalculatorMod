@@ -780,7 +780,7 @@ public final class AngleSolverTable {
             specs.add(new StateChipSpec(DragKind.STATE_MEDIUM, null, "Medium", mediumLabel, false));
         }
         if (ov.overridesDamage()) {
-            specs.add(new StateChipSpec(DragKind.STATE_DAMAGE, null, "Damage", "fall", false));
+            specs.add(new StateChipSpec(DragKind.STATE_DAMAGE, null, "", "Damage", false));
         }
         for (PotionDose d : ov.getAdded()) {
             specs.add(new StateChipSpec(DragKind.STATE_ADD, d.potion, "Potion", "+" + d.potion.label + amp(d.level), false));
@@ -796,11 +796,11 @@ public final class AngleSolverTable {
         float pad = 5f * s;
         float gap = 4f * s;
         float grip = SolverWidgets.gripWidth();
-        float keyW = ImGui.calcTextSize(key).x;
+        float keyW = key.isEmpty() ? 0f : ImGui.calcTextSize(key).x + gap;
         Fonts.pushBold();
         float valW = ImGui.calcTextSize(value).x;
         Fonts.popBold();
-        return pad + grip + gap + keyW + gap + valW + pad;
+        return pad + grip + gap + keyW + valW + pad;
     }
 
     /** Peach state-override chip: a grip + key + value, draggable to move/copy the facet onto another tick (Alt copies). */
@@ -811,11 +811,11 @@ public final class AngleSolverTable {
         float pad = 5f * s;
         float gap = 4f * s;
         float grip = SolverWidgets.gripWidth();
-        float keyW = ImGui.calcTextSize(key).x;
+        float keyW = key.isEmpty() ? 0f : ImGui.calcTextSize(key).x + gap;
         Fonts.pushBold();
         float valW = ImGui.calcTextSize(value).x;
         Fonts.popBold();
-        float w = pad + grip + gap + keyW + gap + valW + pad;
+        float w = pad + grip + gap + keyW + valW + pad;
 
         String id = "schip" + tick + "_" + kind.name() + (potion == null ? "" : potion.name());
         ImGui.invisibleButton(id, w, h);
@@ -834,8 +834,8 @@ public final class AngleSolverTable {
         float x = mn.x + pad;
         SolverWidgets.gripDots(dl, x + s, cy, ThemeManager.textDimColor());
         x += grip + gap;
-        dl.addText(x, ty, ThemeManager.textMutedColor(), key);
-        x += keyW + gap;
+        if (!key.isEmpty()) dl.addText(x, ty, ThemeManager.textMutedColor(), key);
+        x += keyW;
         Fonts.pushBold();
         dl.addText(x, ty, struck ? ThemeManager.textDimColor() : ThemeManager.peachColor(), value);
         Fonts.popBold();
@@ -850,7 +850,7 @@ public final class AngleSolverTable {
             dragTick = tick;
             dragIndex = -1;
             dragPotion = potion;
-            dragLabel = key + " " + value;
+            dragLabel = key.isEmpty() ? value : key + " " + value;
         }
 
         if (!dragging && ImGui.isItemDeactivated()) {
