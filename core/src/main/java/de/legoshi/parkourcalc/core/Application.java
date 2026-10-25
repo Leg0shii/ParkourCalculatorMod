@@ -687,7 +687,7 @@ public final class Application {
         selectController.tick(
                 mc.getEyePosition(),
                 mc.getLookDirection(),
-                mc.isMousePressedLeft(),
+                mc.isSelectTickPressed(),
                 mc.getCursorScreenX(),
                 mc.getCursorScreenY(),
                 pathInert
@@ -757,7 +757,7 @@ public final class Application {
                 pushHudMessage("Solved · applied", HudMessageStyle.COLOR_OK);
             }
         } else {
-            pushHudMessage("No solution · " + done.getMet() + "/" + done.getTotal() + " constraints met",
+            pushHudMessage(done.headline() + " · " + done.getMet() + "/" + done.getTotal() + " constraints met",
                     HudMessageStyle.COLOR_DANGER);
         }
     }

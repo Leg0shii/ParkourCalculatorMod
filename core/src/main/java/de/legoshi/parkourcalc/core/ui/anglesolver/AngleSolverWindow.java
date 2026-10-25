@@ -575,15 +575,19 @@ public final class AngleSolverWindow implements RenderInterface {
     private static final String SMOOTH_TIP =
             "Smooths the turn of the solved path: fewer direction changes and a steadier turn rate. The jump"
             + " keeps landing; the smoothing may give back the share of the offset past the goal wall set"
-            + " under More options. Stops early once nothing improves.";
+            + " under More options. Every press starts again from the unsmoothed solve, so the share always"
+            + " refers to the solve's offset and pressing again only changes the result when the give-back"
+            + " changed. Stops early once nothing improves.";
 
     private static final String SMOOTH_DISABLED_TIP =
             "Smooths the turn of the solved path. Solve the range first.";
 
     private static final String SMOOTH_GIVE_BACK_TIP =
             "How much of the landing offset the Smooth button may trade for a smoother turn. The offset is"
-            + " the margin past the goal wall at the goal tick, the + value in the result table. 100 %"
-            + " lets it land anywhere past the wall, 0 % keeps the objective where it is.";
+            + " the margin past the goal wall at the goal tick, the + value in the result table of the"
+            + " unsmoothed solve. 100 % lets it land anywhere past the wall, 0 % keeps the objective value at"
+            + " the goal tick. Every other tick may still move within the constraints, at any percentage: a"
+            + " ladder grab, a wall hit or anything else the solver cannot see needs a constraint on its tick.";
 
     private static final String LEGAL_MODE_TIP =
             "Record hunting: drops the single tightest goal wall on the objective axis at the goal tick and"
@@ -972,12 +976,12 @@ public final class AngleSolverWindow implements RenderInterface {
         ImGui.pushStyleColor(ImGuiCol.Border, border);
         ImGui.pushStyleVar(ImGuiStyleVar.WindowPadding, pad, pad);
         ImGui.beginChild("##solve_result", ImGui.getContentRegionAvail().x, h, true);
+        ImGui.popStyleVar();
+        ImGui.popStyleColor(2);
     }
 
     private static void endResultChild() {
         ImGui.endChild();
-        ImGui.popStyleVar();
-        ImGui.popStyleColor(2);
     }
 
     private void drawPanelHeader(String text, int textColor, float fill, float fillAlpha, boolean spinner,
@@ -1140,8 +1144,9 @@ public final class AngleSolverWindow implements RenderInterface {
             String tip = deviationTip(state.getApplyDeviationKind());
             if (tip != null) TooltipUtil.onHover(tip);
         }
+        int noticeColor = r.isSuccess() ? ThemeManager.warningColor() : ThemeManager.dangerColor();
         if (notice != null && noticeLabel != null) {
-            ThemeManager.pushTextColor(ThemeManager.warningColor());
+            ThemeManager.pushTextColor(noticeColor);
             ImGui.text(noticeLabel);
             ThemeManager.popTextColor();
             ImGui.sameLine();
@@ -1150,7 +1155,7 @@ public final class AngleSolverWindow implements RenderInterface {
             ThemeManager.popTextColor();
             TooltipUtil.onHover(notice);
         } else if (notice != null) {
-            ThemeManager.pushTextColor(ThemeManager.warningColor());
+            ThemeManager.pushTextColor(noticeColor);
             ImGui.textWrapped(notice);
             ThemeManager.popTextColor();
         }
@@ -1181,7 +1186,7 @@ public final class AngleSolverWindow implements RenderInterface {
     }
 
     private String resultHeader(SolveResult r) {
-        if (!r.isSuccess()) return "No solution · " + r.getMet() + "/" + r.getTotal() + " constraints met";
+        if (!r.isSuccess()) return r.headline() + " · " + r.getMet() + "/" + r.getTotal() + " constraints met";
         String verb = r.isSmoothed() ? "Smoothed" : "Solved";
         if (state.getApplyDeviation() != null) return verb + " · sim diverged";
         if (r.isSmoothed()) return verb + " · " + smoothSeconds(r.getSmoothNanos()) + " · " + r.getSmoothStop();

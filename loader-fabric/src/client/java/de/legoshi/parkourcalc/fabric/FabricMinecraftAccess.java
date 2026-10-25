@@ -207,6 +207,11 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
     }
 
     @Override
+    public boolean isSelectTickPressed() {
+        return FabricParkourCalculator.isSelectTickDown();
+    }
+
+    @Override
     public boolean isMousePressedRight() {
         return FabricInput.isMouseDown(InputConstants.MOUSE_BUTTON_RIGHT);
     }

@@ -152,6 +152,7 @@ public final class AngleSolverEngine {
     private final boolean modernCollision;
 
     private Plan lastPlan;
+    private Plan smoothBase;
 
     // Background-solve handoff. `pending` is the single volatile publish point: the worker fully
     // builds the Outcome, then assigns it here; poll() reads it on the main thread.
@@ -414,6 +415,7 @@ public final class AngleSolverEngine {
         String conflict = firstConflict(uiCons);
         if (conflict != null) {
             SolveResult r = new SolveResult(false, 0, total, startTick + 1, landingTick + 1);
+            r.markCertifiedInfeasible();
             r.setNoticeLabel(INFEASIBLE_LABEL);
             r.setNotice(conflict);
             state.setResult(r);
@@ -576,27 +578,32 @@ public final class AngleSolverEngine {
         if (solving) return;
         Job job = buildJob(effort, graphOverride);
         if (job == null) return; // invalid range: buildJob already published the failure result
-        offerIncumbent(job, effort, false);
+        offerIncumbent(job, effort);
         start(job, effort);
     }
 
     public boolean canSmooth() {
-        Plan prev = lastPlan;
-        SolveResult prevResult = state.getResult();
+        Plan base = smoothBase;
         if (solving || !(model instanceof ExactJumpModel)) return false;
-        if (prev == null || prevResult == null || !prevResult.isSuccess() || prev.lockYaws) return false;
-        return prev.startTick == state.getStartTick()
-                && prev.yaws.length == state.getLandingTick() - state.getStartTick();
+        if (base == null || base.lockYaws) return false;
+        return base.startTick == state.getStartTick()
+                && base.yaws.length == state.getLandingTick() - state.getStartTick();
     }
 
     public void smooth() {
         if (!canSmooth()) return;
+        Plan base = smoothBase;
         AngleSolverState.Effort effort = state.getEffort();
         Job job = buildJob(effort, BuiltinGraphs.smooth(state.getSmoothGiveBack()));
         if (job == null) return;
         if (job.deadlineNanos <= 0) job = job.withDeadline(SMOOTH_BUTTON_BUDGET_NANOS);
-        offerIncumbent(job, effort, true);
+        job.incumbentYaws = base.yaws.clone();
+        job.incumbentStart = base.start;
         start(job, effort);
+    }
+
+    private static boolean isSmoothJob(Job job) {
+        return job != null && job.graph != null && BuiltinGraphs.SMOOTH_PRESET.equals(job.graph.name);
     }
 
     public long smoothBudgetNanos() {
@@ -611,6 +618,7 @@ public final class AngleSolverEngine {
         // Show the spinner instead of a stale result.
         state.clearResult();
         lastPlan = null;
+        if (!isSmoothJob(job)) smoothBase = null;
         pending = null;
         startNanos = t0;
         AtomicBoolean token = new AtomicBoolean(false);
@@ -653,8 +661,8 @@ public final class AngleSolverEngine {
         worker.start();
     }
 
-    private void offerIncumbent(Job job, AngleSolverState.Effort effort, boolean always) {
-        if (!always && (effort == AngleSolverState.Effort.FAST || BuiltinGraphs.FAST_PRESET.equals(job.graph.name))) return;
+    private void offerIncumbent(Job job, AngleSolverState.Effort effort) {
+        if (effort == AngleSolverState.Effort.FAST || BuiltinGraphs.FAST_PRESET.equals(job.graph.name)) return;
         Plan prev = lastPlan;
         SolveResult prevResult = state.getResult();
         if (prev == null || prevResult == null || !prevResult.isSuccess() || prev.lockYaws) return;
@@ -962,6 +970,7 @@ public final class AngleSolverEngine {
     public void onProblemReplaced() {
         cancel();
         lastPlan = null;
+        smoothBase = null;
     }
 
     /** Publish a finished background solve. Call every frame on the main thread. */
@@ -971,6 +980,7 @@ public final class AngleSolverEngine {
         pending = null;
         state.setResult(o.result);
         lastPlan = o.plan;
+        if (!isSmoothJob(currentJob) && o.plan != null && o.result.isSuccess()) smoothBase = o.plan;
         solving = false;
         currentProgress = null;
         currentJob = null;
@@ -1102,12 +1112,23 @@ public final class AngleSolverEngine {
             currentGraphContext = null;
         }
         if (cancel.get()) return null;
-        if (cand == null || cand.yaws == null) {
-            finishRecord(rec, SolveRunRecord.STATUS_FAILED, null, null, null, ctx.chain(), null);
+        String proof = ctx.infeasibilityProof();
+        if (proof != null && cand != null && cand.yaws != null && cand.feasible) {
+            if (SolverTrace.on()) SolverTrace.log("ENGINE", "byte-exact witness overrules the certificate: %s", proof);
+            proof = null;
+        }
+        if (cand == null || cand.yaws == null || proof != null) {
+            finishRecord(rec, proof != null ? SolveRunRecord.STATUS_INFEASIBLE : SolveRunRecord.STATUS_FAILED,
+                    null, null, null, ctx.chain(), null);
             SolveResult fail = failureResult(job, sc, ctx, System.nanoTime() - solveStart);
             if (ctx.chain() != null) fail.setSolver(ctx.chain());
-            if (hasUnsupportedDf(job)) fail.setNotice(DF_UNSUPPORTED_NOTICE);
-            else if (pinnedYaws != null) {
+            if (proof != null) {
+                fail.markCertifiedInfeasible();
+                fail.setNoticeLabel(CERTIFIED_INFEASIBLE_LABEL);
+                fail.setNotice(proof);
+            } else if (hasUnsupportedDf(job)) {
+                fail.setNotice(DF_UNSUPPORTED_NOTICE);
+            } else if (pinnedYaws != null) {
                 fail.setNoticeLabel(OVERCONSTRAINED_LABEL);
                 fail.setNotice(pinnedChainNotice(sc, ctx.violationOf(pinnedYaws), freeBox != null));
             } else if (singleHeading) {
@@ -1239,6 +1260,11 @@ public final class AngleSolverEngine {
         return pre;
     }
 
+    public static boolean overconstrainedChain(JumpSpec spec, JumpPhysicsInputs sc) {
+        FacingPrefold pre = chainPrefold(spec, sc);
+        return (pre != null && pre.pinnedYaws() != null) || singleHeadingChain(spec, sc, pre);
+    }
+
     private static boolean singleHeadingChain(JumpSpec spec, JumpPhysicsInputs sc, FacingPrefold pre) {
         if (!JumpLinearModel.hasFacingWall(spec.constraints)) return false;
         if (pre != null) return pre.varCount() == 1 && pre.pinnedTicks() == 0;
@@ -1248,6 +1274,7 @@ public final class AngleSolverEngine {
 
     public static final String OVERCONSTRAINED_LABEL = "Overconstrained";
     public static final String INFEASIBLE_LABEL = "Infeasible constraints";
+    public static final String CERTIFIED_INFEASIBLE_LABEL = "Certified infeasible";
 
     private static String singleHeadingNotice(JumpPhysicsInputs sc, double violation, boolean freeStart) {
         String head = "dF = 0 on every tick ties all " + sc.numTicks + " ticks to one heading, so only that"
@@ -1873,10 +1900,10 @@ public final class AngleSolverEngine {
         }
     }
 
-    private boolean satisfied(Constraint c, double found) {
+    public static boolean satisfied(Constraint c, double found) {
         if (c.isRange()) {
-            boolean lo = c.isLoInclusive() ? found >= c.getLo() - MET_TOL : found > c.getLo() - MET_TOL;
-            boolean hi = c.isHiInclusive() ? found <= c.getHi() + MET_TOL : found < c.getHi() + MET_TOL;
+            boolean lo = c.isLoInclusive() ? found >= c.getLo() - FEAS_TOL : found > c.getLo() - FEAS_TOL;
+            boolean hi = c.isHiInclusive() ? found <= c.getHi() + FEAS_TOL : found < c.getHi() + FEAS_TOL;
             return lo && hi;
         }
         double v = c.getValue();

@@ -26,6 +26,7 @@ public final class Expect {
     public Boolean allDirections;
     public String noticeLabel;
     public List<String> noticeContains;
+    public String verdict;
     public Double maxRecomputeDivergence;
     public Double reproducibleWithin;
     public Boolean boxSeeds;
@@ -76,6 +77,8 @@ public final class Expect {
     public Double minGain;
     public Boolean seedMayMiss;
     public Double cap;
+
+    public Boolean resmooth;
 
     private static final Gson GSON = new Gson();
 

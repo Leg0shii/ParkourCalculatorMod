@@ -81,6 +81,7 @@ public final class GraphRunner {
             }
             if (TRACE) traceNode(ctx, cur, taken, cand);
             reportIncumbent(ctx, cand);
+            if (ctx.infeasibilityProof() != null) return cand;
             cur = next(graph, cur, taken);
         }
     }

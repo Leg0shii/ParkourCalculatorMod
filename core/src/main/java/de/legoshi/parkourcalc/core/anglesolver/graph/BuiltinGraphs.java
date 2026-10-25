@@ -149,6 +149,12 @@ public final class BuiltinGraphs {
             g.add("snap", "leafSnap")
                     .set("snap", "pairPass", fastTier ? 0 : 1);
         }
+        g.add("certify", "certBnb")
+                .set("certify", "budgetSec", fastTier ? 0 : t)
+                .set("certify", "ffSec", 0)
+                .set("certify", "ffNodeCap", 0)
+                .set("certify", "tickCap", IMPROVE_TICK_CAP)
+                .set("certify", "exhaust", true);
         g.add("emit", "emit");
 
         String first = sweep ? "seeds" : "entry";
@@ -188,10 +194,11 @@ public final class BuiltinGraphs {
         chain(g, "wrap", "translate");
         if (leafSnap) {
             chain(g, "translate", "snap");
-            chain(g, "snap", "emit");
+            chain(g, "snap", "certify");
         } else {
-            chain(g, "translate", "emit");
+            chain(g, "translate", "certify");
         }
+        chain(g, "certify", "emit");
         return g.build();
     }
 

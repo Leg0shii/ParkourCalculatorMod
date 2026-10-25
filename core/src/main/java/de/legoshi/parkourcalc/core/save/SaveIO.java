@@ -863,6 +863,7 @@ public final class SaveIO {
         out.solver = r.getSolver();
         out.notice = r.getNotice();
         out.noticeLabel = r.getNoticeLabel();
+        out.verdict = r.getVerdict().name();
         out.objectiveValue = r.getObjectiveValue();
         out.hasObjective = r.hasObjective();
         out.smoothStop = r.getSmoothStop();
@@ -902,6 +903,9 @@ public final class SaveIO {
         r.setSolver(rd.solver);
         r.setNotice(rd.notice);
         r.setNoticeLabel(rd.noticeLabel);
+        if (SolveResult.Verdict.parse(rd.verdict, rd.success) == SolveResult.Verdict.INFEASIBLE) {
+            r.markCertifiedInfeasible();
+        }
         if (rd.hasObjective) r.setObjective(rd.objectiveValue);
         if (rd.smoothStop != null) r.setSmoothing(rd.smoothStop, rd.smoothNanos);
         if (rd.outcomes != null) {
