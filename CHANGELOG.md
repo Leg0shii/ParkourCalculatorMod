@@ -1,5 +1,47 @@
 # Changelog
 
+## [1.17.0](https://github.com/Leg0shii/ParkourCalculatorMod/compare/v1.16.1...v1.17.0) (2026-10-25)
+
+
+### Features
+
+* **anglesolver:** certified infeasible verdict for a solve the certified search rules out ([#601](https://github.com/Leg0shii/ParkourCalculatorMod/issues/601)) ([0fc4b3d](https://github.com/Leg0shii/ParkourCalculatorMod/commit/0fc4b3db9c7d2b0bab23efa361672ffbf9337f01)), closes [#462](https://github.com/Leg0shii/ParkourCalculatorMod/issues/462)
+* B on a cobweb side sets a wall on its contact box, inset by the game version's epsilon ([#584](https://github.com/Leg0shii/ParkourCalculatorMod/issues/584)) ([7ac2e57](https://github.com/Leg0shii/ParkourCalculatorMod/commit/7ac2e5712b2b914426ff05c32cdf268b7d240a92))
+* Delete constraints button in the tick right-click menu for the selected ticks ([#588](https://github.com/Leg0shii/ParkourCalculatorMod/issues/588)) ([1bf50a6](https://github.com/Leg0shii/ParkourCalculatorMod/commit/1bf50a65e561593a8fd8d7d0ea50773625764d27))
+* **input:** add a rebindable Select tick key ([#597](https://github.com/Leg0shii/ParkourCalculatorMod/issues/597)) ([7308a40](https://github.com/Leg0shii/ParkourCalculatorMod/commit/7308a40e5fa2c49c5c2efc24bad61be8213b5f29)), closes [#177](https://github.com/Leg0shii/ParkourCalculatorMod/issues/177)
+* per-tick movement effects for every version ([#589](https://github.com/Leg0shii/ParkourCalculatorMod/issues/589)) ([d0d255a](https://github.com/Leg0shii/ParkourCalculatorMod/commit/d0d255ac324c91a610ed1c2ac417f1bcad6d7b23))
+* **sensefinder:** Sense Finder window for solved jumps ([#521](https://github.com/Leg0shii/ParkourCalculatorMod/issues/521)) ([8d71e92](https://github.com/Leg0shii/ParkourCalculatorMod/commit/8d71e920e1239839d56f307a670e976159e6c7de)), closes [#593](https://github.com/Leg0shii/ParkourCalculatorMod/issues/593)
+* Slowness amplifier per tick, in the simulation, the replay and the solver ([#574](https://github.com/Leg0shii/ParkourCalculatorMod/issues/574)) ([7a6dc07](https://github.com/Leg0shii/ParkourCalculatorMod/commit/7a6dc070aec298ae299a3d487d4a5cdb514e3103))
+* **solver:** Angle goal Mot objective in every stage and an objective tick inside the span ([#587](https://github.com/Leg0shii/ParkourCalculatorMod/issues/587)) ([e94e434](https://github.com/Leg0shii/ParkourCalculatorMod/commit/e94e434736daa062ba7657261a605c2cac7163cf))
+* **solver:** per-tick Damage state so a solve across fall damage does not desync ([#602](https://github.com/Leg0shii/ParkourCalculatorMod/issues/602)) ([3d9b169](https://github.com/Leg0shii/ParkourCalculatorMod/commit/3d9b16928eafacc2b497962c07414ef17ac72365)), closes [#344](https://github.com/Leg0shii/ParkourCalculatorMod/issues/344)
+* **solver:** per-tick strafe side pass and an A / D / Both strafe side for Force 45 ([#603](https://github.com/Leg0shii/ParkourCalculatorMod/issues/603)) ([4451669](https://github.com/Leg0shii/ParkourCalculatorMod/commit/4451669b81409d7afc7a815f04e369c843c745be)), closes [#338](https://github.com/Leg0shii/ParkourCalculatorMod/issues/338)
+* **stratfinder:** deep search mode runs the Benders master after an empty search ([#605](https://github.com/Leg0shii/ParkourCalculatorMod/issues/605)) ([b90c841](https://github.com/Leg0shii/ParkourCalculatorMod/commit/b90c84194e33598579a2f11e4e4be11849eaf920))
+* **stratfinder:** screen the key schedules on the graphics card through OpenCL ([#568](https://github.com/Leg0shii/ParkourCalculatorMod/issues/568)) ([8820ec1](https://github.com/Leg0shii/ParkourCalculatorMod/commit/8820ec10a009bd459efb31c53415084a51674d3b))
+
+
+### Bug Fixes
+
+* **anglesolver:** smooth from the unsmoothed solve on every press ([#566](https://github.com/Leg0shii/ParkourCalculatorMod/issues/566)) ([d0ae18c](https://github.com/Leg0shii/ParkourCalculatorMod/commit/d0ae18c73ed1936305dfeb1b75ccbb5aacfaa899))
+* **fabric:** cache the path geometry and apply the render distance on 1.20.4 and 1.21.3 ([#583](https://github.com/Leg0shii/ParkourCalculatorMod/issues/583)) ([5d2db2e](https://github.com/Leg0shii/ParkourCalculatorMod/commit/5d2db2e1495138a3d755e3bab79543e09c27f153))
+* **render:** sort constraint plates against boxes, glass and clouds on Fabric, 3 px wireframe on 26.3 ([#592](https://github.com/Leg0shii/ParkourCalculatorMod/issues/592)) ([c939233](https://github.com/Leg0shii/ParkourCalculatorMod/commit/c939233c0055dddce7506162bdf41022626f3e4e))
+* **runticks:** keep every tick override in place while the run-ticks search rebuilds the path ([#595](https://github.com/Leg0shii/ParkourCalculatorMod/issues/595)) ([b1cad64](https://github.com/Leg0shii/ParkourCalculatorMod/commit/b1cad64398678b9beae260eb6252d95fc9f598a5)), closes [#479](https://github.com/Leg0shii/ParkourCalculatorMod/issues/479)
+* **runticks:** keep the run ticks timer counting during each angle solve ([#594](https://github.com/Leg0shii/ParkourCalculatorMod/issues/594)) ([ef9318b](https://github.com/Leg0shii/ParkourCalculatorMod/commit/ef9318b555b326bf04775722aa14531ecce5132b)), closes [#481](https://github.com/Leg0shii/ParkourCalculatorMod/issues/481)
+* **solver:** count a range constraint as met only when the solve lands inside it ([#596](https://github.com/Leg0shii/ParkourCalculatorMod/issues/596)) ([b1399a1](https://github.com/Leg0shii/ParkourCalculatorMod/commit/b1399a1d916c22f552e984a1ceb36cd38a71731a)), closes [#485](https://github.com/Leg0shii/ParkourCalculatorMod/issues/485)
+* **solver:** make RT constraint values whole numbers ([#599](https://github.com/Leg0shii/ParkourCalculatorMod/issues/599)) ([515ad84](https://github.com/Leg0shii/ParkourCalculatorMod/commit/515ad84ccb94351518a0ebdffb890cb2788d6299)), closes [#482](https://github.com/Leg0shii/ParkourCalculatorMod/issues/482)
+* **stratfinder:** fall back to the CPU cleanly when the GPU screen fails mid-search ([#609](https://github.com/Leg0shii/ParkourCalculatorMod/issues/609)) ([a95d37a](https://github.com/Leg0shii/ParkourCalculatorMod/commit/a95d37a773f9a99c2c28b9df035d9241bf83fd52))
+* the client-sided replay camera and head no longer shake in multiplayer and the replay entity is no longer pushed ([#590](https://github.com/Leg0shii/ParkourCalculatorMod/issues/590)) ([66b7783](https://github.com/Leg0shii/ParkourCalculatorMod/commit/66b77834c44b689712fe7db897f97250e9f2bc01))
+* **ui:** say what the Smooth give-back 0 % really keeps ([#563](https://github.com/Leg0shii/ParkourCalculatorMod/issues/563)) ([a1922db](https://github.com/Leg0shii/ParkourCalculatorMod/commit/a1922db975d67eb16cf8a07d3e09499974259f0e))
+
+
+### Performance Improvements
+
+* **stratfinder:** kind-sorted wall ranges and an exact early exit in the unit screen ([#604](https://github.com/Leg0shii/ParkourCalculatorMod/issues/604)) ([6f1fa5c](https://github.com/Leg0shii/ParkourCalculatorMod/commit/6f1fa5cd07581aac3f6816739385c9d65cccc230))
+
+
+### Miscellaneous Chores
+
+* weekly release train ([1de7550](https://github.com/Leg0shii/ParkourCalculatorMod/commit/1de755064e682d2edd9c6fa0dc177beb726f44ff))
+
 ## [1.16.1](https://github.com/Leg0shii/ParkourCalculatorMod/compare/v1.16.0...v1.16.1) (2026-10-20)
 
 
