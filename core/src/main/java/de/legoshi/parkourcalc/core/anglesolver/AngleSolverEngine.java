@@ -597,7 +597,7 @@ public final class AngleSolverEngine {
         Job job = buildJob(effort, BuiltinGraphs.smooth(state.getSmoothGiveBack()));
         if (job == null) return;
         if (job.deadlineNanos <= 0) job = job.withDeadline(SMOOTH_BUTTON_BUDGET_NANOS);
-        job.incumbentYaws = base.yaws.clone();
+        job.incumbentYaws = base.solverYaws.clone();
         job.incumbentStart = base.start;
         start(job, effort);
     }
