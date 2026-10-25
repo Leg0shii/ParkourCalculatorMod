@@ -570,7 +570,13 @@ public final class StructurePoolDriver {
     void closeGpu() {
         if (gpu == null) return;
         flushGpu();
-        gpu.close();
+        if (gpu != null) {
+            try {
+                gpu.close();
+            } catch (RuntimeException | LinkageError e) {
+                PoolScreenAccelerator.fail(e);
+            }
+        }
         gpu = null;
         gpuBatch = null;
     }
