@@ -57,6 +57,7 @@ import de.legoshi.parkourcalc.core.ui.anglesolver.GraphEditorWindow;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphPresetIO;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolveRunLog;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
+import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.undo.UndoController;
 import imgui.ImGui;
 
@@ -218,6 +219,7 @@ public final class Application {
         FileSystemSaveStore saveStore = saveController.getSaveStore();
         String mcVersion = saveStore != null ? saveStore.getMcVersion() : null;
         forwardModel = ExactJumpModel.forMcVersion(mcVersion);
+        inputOverlay.setMcVersion(mcVersion);
         constraintKeyController = new ConstraintKeyController(
                 mc, angleSolverState, selection, constraintSelection, saveController::markDirty,
                 forwardModel.modern(), inputData::size, settings, this::pushHudMessage);
@@ -225,6 +227,8 @@ public final class Application {
         saveController.setDebugSource(boxController, settings);
         AngleSolverTable angleSolverTable = new AngleSolverTable(angleSolverState, settings, selection, constraintSelection, inputData::size);
         inputOverlay.setAngleSolver(angleSolverTable);
+        inputOverlay.setConstraintDeleteHandlers(this::countSelectedConstraints, this::removeSelectedConstraints);
+        angleSolverTable.setConstraintDeleteHandlers(this::countSelectedConstraints, this::removeSelectedConstraints);
         StartStateTable startStateTable = new StartStateTable(runner, () -> onUserChange(-1), this::copyStartTeleportCommand,
                 this::setStartToPlayer);
         inputOverlay.setStartState(startStateTable);
@@ -421,6 +425,7 @@ public final class Application {
     public void initSettingsStorage(Path path) {
         this.settingsPath = path;
         SettingsIO.load(path, settings);
+        de.legoshi.parkourcalc.core.anglesolver.noturn.PoolScreenAccelerator.setEnabled(settings.stratfinderGpu);
         ConstraintText.statsPrecision = settings.solverStatsPrecision;
         if (!simulator.supportsPairedSimulation()) {
             settings.pairedSimulation = false;
@@ -706,6 +711,10 @@ public final class Application {
         if (constraintKeyController != null) constraintKeyController.removeSelected();
     }
 
+    public int countSelectedConstraints() {
+        return constraintKeyController != null ? constraintKeyController.countSelected() : 0;
+    }
+
     public void captureAngleSolverBlock(BlockSelection.Kind kind) {
         if (blockPicker == null || angleSolverState == null || kind == null) return;
         BlockHit look = mc.getLookedAtHit();
@@ -805,6 +814,23 @@ public final class Application {
         angleSolverState.setLandingTick(tick);
         saveController.markDirty();
         pushHudMessage("Solver goal · T" + (tick + 1));
+    }
+
+    public void setSolverGoalFromLook(boolean customAngle) {
+        if (angleSolverState == null) return;
+        if (!mc.isReady()) {
+            pushHudMessage("No player", HudMessageStyle.COLOR_WARN);
+            return;
+        }
+        double yaw = Angles.wrap(mc.getPlayerYaw());
+        if (customAngle) {
+            angleSolverState.setCustomAngle(true);
+            angleSolverState.setCustomAngleDeg(yaw);
+        } else {
+            angleSolverState.setGoalFromYaw(yaw);
+        }
+        saveController.markDirty();
+        pushHudMessage("Solver goal · " + angleSolverState.goalLabel());
     }
 
     private int firstSelectedRow() {

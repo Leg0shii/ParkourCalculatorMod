@@ -139,7 +139,7 @@ public final class JumpLinearModel {
             double accelSpeed;
             if (contact) {
                 f4[t] = floatFriction ? (double) ((float) slipOv * 0.91F) : slip * 0.91;
-                accelSpeed = Constants.attrValueF(sc.factorAmpAt(t), sprint) * (0.16277136 / (f4[t] * f4[t] * f4[t]));
+                accelSpeed = Constants.attrValueF(sc.factorAmpAt(t), sc.factorSlownessAt(t), sprint) * (0.16277136 / (f4[t] * f4[t] * f4[t]));
             } else {
                 f4[t] = floatFriction ? (double) 0.91F : 0.91;
                 accelSpeed = sc.airFactorSprintAt(t) ? Constants.AIR_SPEED_F : Constants.AIR_SPEED_NO_SPRINT_F;
@@ -226,6 +226,17 @@ public final class JumpLinearModel {
         return p0 + v0 * sPre[end];
     }
 
+    public double objectiveConst(Objective obj) {
+        int t = obj.tick;
+        double c0 = constPos(t, 0);
+        double c1 = constPos(t, 1);
+        if (obj.isMotion() && t > 0) {
+            c0 -= constPos(t - 1, 0);
+            c1 -= constPos(t - 1, 1);
+        }
+        return obj.dirX() * c0 + obj.dirZ() * c1;
+    }
+
     /** Per-tick objective gradient {@code c_t}: the 2D vector whose dot with {@code u_t} is the tick's
      *  contribution to {@code objDir·pos_objTick}. objDir is the direction to MAXIMIZE (MIN is negated). */
     public void objectiveVectors(Objective obj, double[] cx, double[] cz) {
@@ -259,30 +270,59 @@ public final class JumpLinearModel {
         }
     }
 
-    /** Compile a position wall into the linear {@code a·Σ coef·u ≤ bPrime} form, tightened inward by
-     *  {@code margin} (so the sine-table quantization keeps the exact model on the feasible side). Returns
-     *  {@code null} for a constraint with no decision dependence (tick 0, or t1==t2): such a constraint is a
-     *  constant, reported via {@code trivialInfeasible} when the constant itself violates it. F-mode (facing)
-     *  and DXZ (cross-axis magnitude) walls are not linear in the inputs and are rejected (caller falls back). */
-    public static boolean hasCrossAxis(List<JumpConstraint> constraints) {
-        for (JumpConstraint c : constraints) {
-            if (c.mode == JumpConstraint.Mode.DXZ || c.mode == JumpConstraint.Mode.DZX) return true;
-        }
-        return false;
+    public static boolean isCrossAxis(JumpConstraint c) {
+        return c.mode == JumpConstraint.Mode.DXZ || c.mode == JumpConstraint.Mode.DZX;
+    }
+
+    public static int crossAxisCount(List<JumpConstraint> constraints) {
+        int k = 0;
+        for (JumpConstraint c : constraints) if (isCrossAxis(c)) k++;
+        return k;
+    }
+
+    public static boolean wantZDominant(JumpConstraint c) {
+        return (c.mode == JumpConstraint.Mode.DZX && c.cmp == JumpConstraint.Cmp.GE)
+                || (c.mode == JumpConstraint.Mode.DXZ && c.cmp == JumpConstraint.Cmp.LE);
+    }
+
+    public static double crossAxisRhs(JumpConstraint c) {
+        return c.cmp == JumpConstraint.Cmp.LE ? -c.rhs : c.rhs;
+    }
+
+    public static int dominantSignOnPath(JumpConstraint c, ForwardPath path) {
+        double d = wantZDominant(c)
+                ? path.posZ[c.t1] - path.posZ[c.t2]
+                : path.posX[c.t1] - path.posX[c.t2];
+        return d < 0.0 ? -1 : 1;
+    }
+
+    public static int[] crossSignsAll(List<JumpConstraint> constraints, int sign) {
+        int[] signs = new int[crossAxisCount(constraints)];
+        java.util.Arrays.fill(signs, sign);
+        return signs;
     }
 
     public void addCrossAxisWalls(List<Wall> out, JumpConstraint c, int dominantSign, double margin) {
         if (c.t2 == null) return;
-        boolean wantZDominant = (c.mode == JumpConstraint.Mode.DZX && c.cmp == JumpConstraint.Cmp.GE)
-                || (c.mode == JumpConstraint.Mode.DXZ && c.cmp == JumpConstraint.Cmp.LE);
         double s = dominantSign >= 0 ? 1.0 : -1.0;
-        if (wantZDominant) {
-            out.add(compileCrossAxisWall(c.t1, c.t2, -1.0, s, c.rhs, margin, c.name + ".1"));
-            out.add(compileCrossAxisWall(c.t1, c.t2, 1.0, s, c.rhs, margin, c.name + ".2"));
-        } else {
-            out.add(compileCrossAxisWall(c.t1, c.t2, s, -1.0, c.rhs, margin, c.name + ".1"));
-            out.add(compileCrossAxisWall(c.t1, c.t2, s, 1.0, c.rhs, margin, c.name + ".2"));
-        }
+        out.add(crossAxisHalfWall(c, s, -1.0, margin));
+        out.add(crossAxisHalfWall(c, s, 1.0, margin));
+    }
+
+    public Wall crossAxisHalfWall(JumpConstraint c, double dominantSign, double otherSign, double margin) {
+        String name = c.name + (otherSign < 0 ? ".1" : ".2");
+        double rhs = crossAxisRhs(c);
+        return wantZDominant(c)
+                ? compileCrossAxisWall(c.t1, c.t2, otherSign, dominantSign, rhs, margin, name)
+                : compileCrossAxisWall(c.t1, c.t2, dominantSign, otherSign, rhs, margin, name);
+    }
+
+    public static double crossAxisHalfSlack(JumpConstraint c, double otherSign, ForwardPath path) {
+        double dx = path.posX[c.t1] - path.posX[c.t2];
+        double dz = path.posZ[c.t1] - path.posZ[c.t2];
+        double dominant = wantZDominant(c) ? Math.abs(dz) : Math.abs(dx);
+        double other = wantZDominant(c) ? dx : dz;
+        return -(dominant + otherSign * other - crossAxisRhs(c));
     }
 
     public Wall compileCrossAxisWall(int t1, Integer t2, double signX, double signZ, double rhs,
@@ -304,6 +344,11 @@ public final class JumpLinearModel {
         return new Wall(cx, cz, bPrime, false, name, 0.0, 0.0);
     }
 
+    /** Compile a position wall into the linear {@code a·Σ coef·u ≤ bPrime} form, tightened inward by
+     *  {@code margin} (so the sine-table quantization keeps the exact model on the feasible side). Returns
+     *  {@code null} for a constraint with no decision dependence (tick 0, or t1==t2): such a constraint is a
+     *  constant, reported via {@code trivialInfeasible} when the constant itself violates it. F-mode (facing)
+     *  and DXZ (cross-axis magnitude) walls are not linear in the inputs and are rejected (caller falls back). */
     public Wall compileWall(JumpConstraint c, double margin, boolean[] trivialInfeasible) {
         if (c.mode != JumpConstraint.Mode.X && c.mode != JumpConstraint.Mode.Z) return null;
         int axis = (c.mode == JumpConstraint.Mode.X) ? 0 : 1;
@@ -353,14 +398,17 @@ public final class JumpLinearModel {
 
     /** Compile all walls of a spec; sets {@code trivialInfeasible[0]} if a constant constraint is violated. */
     public List<Wall> compileWalls(List<JumpConstraint> constraints, double margin, boolean[] trivialInfeasible) {
-        return compileWalls(constraints, margin, trivialInfeasible, 1);
+        return compileWalls(constraints, margin, trivialInfeasible, crossSignsAll(constraints, 1));
     }
 
-    public List<Wall> compileWalls(List<JumpConstraint> constraints, double margin, boolean[] trivialInfeasible, int dominantSign) {
+    public List<Wall> compileWalls(List<JumpConstraint> constraints, double margin, boolean[] trivialInfeasible, int[] crossSigns) {
         List<Wall> walls = new ArrayList<>();
+        int j = 0;
         for (JumpConstraint c : constraints) {
-            if (c.mode == JumpConstraint.Mode.DXZ || c.mode == JumpConstraint.Mode.DZX) {
-                addCrossAxisWalls(walls, c, dominantSign, margin);
+            if (isCrossAxis(c)) {
+                int sign = crossSigns != null && j < crossSigns.length ? crossSigns[j] : 1;
+                j++;
+                addCrossAxisWalls(walls, c, sign, margin);
                 continue;
             }
             Wall w = compileWall(c, margin, trivialInfeasible);

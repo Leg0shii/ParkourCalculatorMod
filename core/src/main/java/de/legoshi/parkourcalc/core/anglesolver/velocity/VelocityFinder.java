@@ -411,13 +411,16 @@ public final class VelocityFinder {
         c.strafeSign = s.strafeSign;
         c.strafePerTick = s.strafePerTick;
         c.speedAmplifier = s.speedAmplifier;
+        c.slownessAmplifier = s.slownessAmplifier;
         c.slipPerTick = s.slipPerTick;
         c.surfacePerTick = s.surfacePerTick;
         c.soulsandCellsPerTick = s.soulsandCellsPerTick;
         c.sneakPerTick = s.sneakPerTick;
+        c.dolphinsGracePerTick = s.dolphinsGracePerTick;
+        c.weavingPerTick = s.weavingPerTick;
         c.yawLockedPerTick = s.yawLockedPerTick;
         c.sprintPerTick = s.sprintPerTick;
-        c.liveAirSprintFactor = s.liveAirSprintFactor;
+        c.liveMovementFactor = s.liveMovementFactor;
         c.forwardInputPerTick = s.forwardInputPerTick;
         c.strafeInputPerTick = s.strafeInputPerTick;
         return c;

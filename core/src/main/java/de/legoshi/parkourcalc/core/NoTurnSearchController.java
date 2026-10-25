@@ -228,6 +228,7 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
         SolverGraph graph = BuiltinGraphs.optimize(6);
         StructurePoolDriver.Config poolCfg = new StructurePoolDriver.Config();
         poolCfg.allowJa = true;
+        poolCfg.jaAllPass = true;
         poolCfg.certifyBudgetNanos = 0L;
         poolCfg.extraCertify = 1000;
         poolCfg.extraCertifyNanos = 45_000_000_000L;
@@ -461,7 +462,8 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
     }
 
     private static boolean sameKeys(NoTurnResult a, NoTurnResult b) {
-        return a.ja == b.ja && a.warm == b.warm && Arrays.equals(a.combos, b.combos) && Arrays.equals(a.sprint, b.sprint);
+        return a.ja == b.ja && a.jaAll == b.jaAll && a.warm == b.warm && Arrays.equals(a.combos, b.combos)
+                && Arrays.equals(a.sprint, b.sprint);
     }
 
     private void apply(NoTurnResult r) {

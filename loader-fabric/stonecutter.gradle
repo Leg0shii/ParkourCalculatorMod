@@ -1,0 +1,12 @@
+plugins {
+	id 'dev.kikugie.stonecutter'
+	id 'net.fabricmc.fabric-loom' version "${loom_version}" apply false
+	id 'net.fabricmc.fabric-loom-remap' version "${loom_version}" apply false
+}
+stonecutter.active '26.3'
+
+tasks.register('chiseledBuild') {
+	group = 'project'
+	description = 'Builds every Fabric target jar.'
+	dependsOn subprojects.collect { it.path + ':build' }
+}

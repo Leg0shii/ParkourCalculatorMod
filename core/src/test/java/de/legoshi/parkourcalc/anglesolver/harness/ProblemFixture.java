@@ -3,17 +3,16 @@ package de.legoshi.parkourcalc.anglesolver.harness;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.SolveResult;
+import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
+import de.legoshi.parkourcalc.core.anglesolver.solver.Objective;
 import de.legoshi.parkourcalc.core.save.SaveFile;
 import de.legoshi.parkourcalc.core.save.SaveIO;
-import de.legoshi.parkourcalc.core.sim.TickState;
-import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.BoxController;
 import de.legoshi.parkourcalc.core.ui.InputData;
 
 import java.io.File;
-import java.util.Collections;
 
 /** One loaded problem: the parsed {@link SaveFile}, its {@link Expect} sidecar, and the byte-exact model for
  *  its MC version. The solver needs only the launch state ({@code angleSolver.seed}) and the per-tick footing
@@ -58,9 +57,62 @@ public final class ProblemFixture {
         }
     }
 
+    /** A live engine over this capture's rows and solver state, the way the tool wires it in game. One rig
+     *  runs any number of solves in sequence, so a second solve on the same rig sees the first as its
+     *  incumbent; a fresh rig starts cold. */
+    public final class Rig {
+        public final InputData inputs = new InputData();
+        public final AngleSolverState state = new AngleSolverState();
+        public final AngleSolverEngine engine;
+
+        Rig(BoxController boxes) {
+            SaveIO.applyRowsTo(file, inputs);
+            SaveIO.applyAngleSolverTo(file, state);
+            state.setEffort(expect.effort());
+            if (expect.optimizeSeconds != null) state.setOptimizeSeconds(expect.optimizeSeconds);
+            state.clearResult();
+            engine = new AngleSolverEngine(state, boxes, inputs, t -> { }, model);
+        }
+
+        public JumpSpec spec() {
+            return engine.debugBuildSpec();
+        }
+
+        public Run solve(long timeoutMs) {
+            long t0 = System.nanoTime();
+            engine.solve();
+            return await(timeoutMs, t0);
+        }
+
+        public Run solve(AngleSolverState.Effort effort, SolverGraph graph, long timeoutMs) {
+            long t0 = System.nanoTime();
+            engine.solve(effort, graph);
+            return await(timeoutMs, t0);
+        }
+
+        private Run await(long timeoutMs, long t0) {
+            long deadline = System.currentTimeMillis() + timeoutMs;
+            while (engine.isSolving() && System.currentTimeMillis() < deadline) {
+                engine.poll();
+                sleep(2);
+            }
+            engine.poll();
+            long ms = (System.nanoTime() - t0) / 1_000_000L;
+            return new Run(state.getResult(), ms, engine);
+        }
+    }
+
+    public Rig rig() {
+        return new Rig(buildBoxes());
+    }
+
+    public Rig rigWithSeedBoxes() {
+        return new Rig(Fixtures.buildSeedBoxes(file));
+    }
+
     /** Drives the live engine's Solve, polling until done or {@code timeoutMs}. */
     public Run solve(long timeoutMs) {
-        return run(timeoutMs, null, null);
+        return run(timeoutMs, null, null, false);
     }
 
     /** Solve for a specific axis/goal direction (a fresh engine, nothing leaks between directions). */
@@ -72,46 +124,26 @@ public final class ProblemFixture {
         return run(timeoutMs, axis, goal, true);
     }
 
-    private Run run(long timeoutMs, AngleSolverState.Axis axis, AngleSolverState.Goal goal) {
-        return run(timeoutMs, axis, goal, false);
-    }
-
     private Run run(long timeoutMs, AngleSolverState.Axis axis, AngleSolverState.Goal goal, boolean stopOnFeasible) {
-        InputData inputs = new InputData();
-        SaveIO.applyRowsTo(file, inputs);
-        AngleSolverState state = new AngleSolverState();
-        SaveIO.applyAngleSolverTo(file, state);
-        state.setEffort(expect.effort());
-        if (expect.optimizeSeconds != null) state.setOptimizeSeconds(expect.optimizeSeconds);
-        if (axis != null) state.setAxis(axis);
-        if (goal != null) state.setGoal(goal);
-        if (stopOnFeasible) state.setStopOnFeasible(true);
-        state.clearResult();
-        AngleSolverEngine engine = new AngleSolverEngine(state, buildBoxes(), inputs, t -> { }, model);
-
-        long t0 = System.nanoTime();
-        engine.solve();
-        long deadline = System.currentTimeMillis() + timeoutMs;
-        while (engine.isSolving() && System.currentTimeMillis() < deadline) {
-            engine.poll();
-            sleep(2);
-        }
-        engine.poll();
-        long ms = (System.nanoTime() - t0) / 1_000_000L;
-        return new Run(state.getResult(), ms, engine);
+        Rig rig = rig();
+        if (axis != null) rig.state.setAxis(axis);
+        if (goal != null) rig.state.setGoal(goal);
+        if (stopOnFeasible) rig.state.setStopOnFeasible(true);
+        rig.state.clearResult();
+        return rig.solve(timeoutMs);
     }
 
     public JumpSpec specFor(AngleSolverState.Axis axis, AngleSolverState.Goal goal) {
-        InputData inputs = new InputData();
-        SaveIO.applyRowsTo(file, inputs);
-        AngleSolverState state = new AngleSolverState();
-        SaveIO.applyAngleSolverTo(file, state);
-        state.setEffort(expect.effort());
-        if (axis != null) state.setAxis(axis);
-        if (goal != null) state.setGoal(goal);
-        state.clearResult();
-        AngleSolverEngine engine = new AngleSolverEngine(state, buildBoxes(), inputs, t -> { }, model);
-        return engine.debugBuildSpec();
+        Rig rig = rig();
+        if (axis != null) rig.state.setAxis(axis);
+        if (goal != null) rig.state.setGoal(goal);
+        rig.state.clearResult();
+        return rig.spec();
+    }
+
+    /** Whether the capture's saved Solve For maximizes its objective. */
+    public boolean maximizes() {
+        return specFor(null, null).objective.sense == Objective.Sense.MAX;
     }
 
     /** The engine's boxes: the recorded debug sim states when present (Sprint: Derive and Inputs: Keep

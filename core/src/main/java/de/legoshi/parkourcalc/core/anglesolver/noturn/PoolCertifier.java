@@ -11,9 +11,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -22,7 +20,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 final class PoolCertifier {
 
     private static final int CERTIFY_THREAD_CAP = 8;
+    private static final int GPU_CERTIFY_THREAD_CAP = Integer.getInteger("pkc.pool.gpuCertifyThreads", 16);
     private static final long WARM_BUDGET_NANOS = 300_000_000L;
+    private static final long SHORT_PASS_NANOS = Long.getLong("pkc.pool.shortPassMs", 500L) * 1_000_000L;
     private static final int MULTI_MAX_CERTIFY = 6000;
     private static final long MULTI_NEAR_SEARCH_NANOS = 300_000_000L;
 
@@ -35,15 +35,22 @@ final class PoolCertifier {
     private final int threads;
     private final long deadline;
     private final boolean maximize;
-    private final int maxCertify;
+    private int maxCertify;
     private final long nearBudgetNanos;
 
     private final Set<String> found = new HashSet<>();
+    private final List<Candidate> queue = new ArrayList<>();
+    private final List<Candidate> retryQueue = new ArrayList<>();
+    private final List<Candidate> everything = new ArrayList<>();
+    private boolean queueDirty;
+    private boolean retryDirty;
     private final Set<String> warmTried = new HashSet<>();
     private NoTurnResult best;
     private int certs;
     private int extraCerts;
     private long extraDeadline = Long.MAX_VALUE;
+
+    private final Set<String> tried = new HashSet<>();
 
     PoolCertifier(ExactJumpModel model, StructurePoolDriver.Config cfg, AtomicBoolean cancel,
                   StructurePoolDriver.Progress progress, NoTurnProblem problem, long deadline, boolean multi) {
@@ -52,7 +59,8 @@ final class PoolCertifier {
         this.progress = progress;
         this.problem = problem;
         this.cert = new NoTurnCertifier(model, cfg.playable);
-        this.threads = Math.min(CERTIFY_THREAD_CAP, NoTurnParallel.resolveThreads(cfg.threads));
+        int cap = PoolScreenAccelerator.get() != null ? GPU_CERTIFY_THREAD_CAP : CERTIFY_THREAD_CAP;
+        this.threads = Math.min(cap, NoTurnParallel.resolveThreads(cfg.threads));
         this.exec = Executors.newFixedThreadPool(threads);
         this.deadline = deadline;
         this.maximize = problem.objective.sense == Objective.Sense.MAX;
@@ -69,6 +77,11 @@ final class PoolCertifier {
         certs = 0;
     }
 
+    void liftCertifyCap() {
+        certs = 0;
+        maxCertify = Integer.MAX_VALUE;
+    }
+
     boolean variationsOver() {
         return best != null && (extraCerts >= cfg.extraCertify || System.nanoTime() > extraDeadline);
     }
@@ -82,41 +95,74 @@ final class PoolCertifier {
     }
 
     private double fraction() {
-        if (best == null) return 0.4 + 0.55 * certs / Math.max(1, maxCertify);
+        if (best == null) return Math.min(0.95, 0.4 + 0.55 * certs / Math.max(1.0, Math.min(maxCertify, cfg.maxCertify)));
         double window = Math.max(1L, cfg.extraCertifyNanos);
         double elapsed = (System.nanoTime() - (extraDeadline - cfg.extraCertifyNanos)) / window;
         return 0.4 + 0.59 * Math.max(0.0, Math.min(1.0, elapsed));
     }
 
-    void certifyLevel(List<Candidate> ranked, boolean ja, boolean goodOnly) {
-        TreeMap<Integer, List<Candidate>> byTier = new TreeMap<>();
-        for (Candidate c : ranked) {
-            byTier.computeIfAbsent(StructurePoolDriver.certifyTier(cfg, c), k -> new ArrayList<>()).add(c);
-        }
-        for (Map.Entry<Integer, List<Candidate>> e : byTier.entrySet()) {
-            int tier = e.getKey();
-            if (goodOnly && tier >= StructurePoolDriver.SCREEN_MISS_TIER) continue;
-            boolean exact = tier == StructurePoolDriver.SCREEN_EXACT_TIER;
-            long budget = exact ? cfg.searchBudgetNanos : nearBudgetNanos;
-            String label = (tier >= StructurePoolDriver.SCREEN_MISS_TIER ? "screen-miss"
-                    : exact ? "screen-exact" : "screen-near") + (ja ? "+ja" : "");
-            List<Candidate> list = e.getValue();
-            int from = 0;
-            while (from < list.size()) {
-                if (stopped() || certs >= maxCertify) break;
-                int room = Math.min(cfg.perEdgeCertify, maxCertify - certs);
-                List<Candidate> batch = new ArrayList<>(room);
-                while (from < list.size() && batch.size() < room) {
-                    Candidate c = list.get(from++);
-                    if (!found.contains(scheduleKey(c.combos, c.engage, ja))) batch.add(c);
-                }
-                if (batch.isEmpty()) break;
-                certifyBatch(batch, ja, budget, label, list.size());
-            }
-        }
+    void offer(List<Candidate> ranked) {
+        queue.addAll(ranked);
+        everything.addAll(ranked);
+        queueDirty = true;
     }
 
-    private void certifyBatch(List<Candidate> batch, boolean ja, long budget, String label, int tierSize) {
+    void reofferAll() {
+        queue.clear();
+        queue.addAll(everything);
+        queueDirty = true;
+        retryQueue.clear();
+    }
+
+    boolean certifyNext(boolean ja, boolean goodOnly) {
+        if (stopped() || certs >= maxCertify) return false;
+        if (queueDirty) {
+            queue.sort(StructurePoolDriver.rankOrder(cfg));
+            queueDirty = false;
+        }
+        if (takeBatch(queue, ja, goodOnly, false)) return true;
+        if (retryDirty) {
+            retryQueue.sort(StructurePoolDriver.rankOrder(cfg));
+            retryDirty = false;
+        }
+        return takeBatch(retryQueue, ja, goodOnly, true);
+    }
+
+    private boolean takeBatch(List<Candidate> from, boolean ja, boolean goodOnly, boolean longPass) {
+        int room = Math.min(cfg.perEdgeCertify, maxCertify - certs);
+        List<Candidate> batch = new ArrayList<>(room);
+        int tier = -1;
+        int i = 0;
+        int firstTaken = -1;
+        boolean flash = false;
+        while (i < from.size() && batch.size() < room) {
+            Candidate c = from.get(i);
+            int t = StructurePoolDriver.certifyTier(cfg, c);
+            if (goodOnly && t >= StructurePoolDriver.SCREEN_MISS_TIER) break;
+            if (tier < 0) {
+                tier = t;
+                flash = c.flash && !longPass && cfg.repairFlashNanos > 0;
+            } else if (t != tier || (c.flash && !longPass && cfg.repairFlashNanos > 0) != flash) break;
+            if (firstTaken < 0) firstTaken = i;
+            String key = scheduleKey(c.combos, c.engage, ja);
+            if (!found.contains(key) && !tried.contains(key)) batch.add(c);
+            i++;
+        }
+        if (firstTaken >= 0) from.subList(firstTaken, i).clear();
+        if (batch.isEmpty()) return i > 0;
+        boolean exact = tier == StructurePoolDriver.SCREEN_EXACT_TIER;
+        boolean shortPass = flash || (exact && !longPass && SHORT_PASS_NANOS < cfg.searchBudgetNanos);
+        long budget = flash ? cfg.repairFlashNanos
+                : exact ? (shortPass ? SHORT_PASS_NANOS : cfg.searchBudgetNanos) : nearBudgetNanos;
+        String label = (tier >= StructurePoolDriver.SCREEN_MISS_TIER ? "screen-miss"
+                : exact ? (shortPass ? "screen-exact short" : longPass ? "screen-exact retry" : "screen-exact")
+                : "screen-near") + (flash ? " flash" : "") + (ja ? "+ja" : "");
+        certifyBatch(batch, ja, budget, label, from.size() + batch.size(), shortPass);
+        return true;
+    }
+
+    private void certifyBatch(List<Candidate> batch, boolean ja, long budget, String label, int tierSize,
+                              boolean shortPass) {
         final int certsBefore = certs;
         final AtomicInteger done = new AtomicInteger();
         progress.update("certify " + label + " batch of " + batch.size() + " from " + tierSize
@@ -130,6 +176,15 @@ final class PoolCertifier {
             return rr;
         });
         certs += batch.size();
+        for (int bi = 0; bi < batch.size(); bi++) {
+            Candidate c = batch.get(bi);
+            if (shortPass && res.get(bi) == null) {
+                retryQueue.add(c);
+                retryDirty = true;
+            } else {
+                tried.add(scheduleKey(c.combos, c.engage, ja));
+            }
+        }
         if (best != null) extraCerts += batch.size();
         boolean hadBest = best != null;
         List<NoTurnResult> hits = new ArrayList<>();
@@ -157,10 +212,11 @@ final class PoolCertifier {
     }
 
     private NoTurnResult bind(int[] combos, boolean[] sprint, int engage, boolean ja, NoTurnCertifier.Result cr) {
-        NoTurnResult out = new NoTurnResult(combos.clone(), sprint.clone(), cfg.turnCombo, ja,
+        NoTurnResult out = new NoTurnResult(combos.clone(), sprint.clone(), cfg.turnCombo, ja || problem.jaLast,
                 StructurePoolDriver.countEdges(cfg, problem, combos), engage, cr.objective, cr.violation, cr.startX,
                 cr.startZ, cr.yaws);
         out.pressCount = StructurePoolDriver.countPresses(cfg, problem, combos);
+        out.jaAll = problem.jaAll;
         return out;
     }
 

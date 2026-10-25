@@ -28,4 +28,25 @@ public class SpeedAmplifierRangeTest {
         float expected = (float) (base * (1.0 + (double) 0.2F * 255));
         assertEquals(expected, Constants.attrValueF(255, true), 0.0f);
     }
+
+    @Test
+    public void slownessScalesDownAndStopsFromLevelSeven() {
+        float prev = Constants.attrValueF(0, 0, true);
+        for (int slow = 1; slow <= 6; slow++) {
+            float v = Constants.attrValueF(0, slow, true);
+            assertTrue("slowness " + slow + " must slow the ground attribute", v < prev && v > 0.0f);
+            prev = v;
+        }
+        for (int slow : new int[]{7, 8, 128, 255}) {
+            assertEquals("slowness " + slow + " zeroes the clamped attribute", 0.0f, Constants.attrValueF(0, slow, true), 0.0f);
+        }
+    }
+
+    @Test
+    public void speedAndSlownessMultiply() {
+        double base = (double) 0.1F * (1.0 + (double) 0.3F);
+        float expected = (float) (base * (1.0 + (double) 0.2F * 3) * (1.0 + (double) -0.15F * 4));
+        assertEquals(expected, Constants.attrValueF(3, 4, true), 0.0f);
+        assertEquals("no slowness is the two-argument value", Constants.attrValueF(5, true), Constants.attrValueF(5, 0, true), 0.0f);
+    }
 }

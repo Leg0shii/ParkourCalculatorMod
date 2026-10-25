@@ -53,11 +53,28 @@ public interface MinecraftAccess {
         return null;
     }
 
+    default boolean isCobweb(int x, int y, int z) {
+        return false;
+    }
+
+    double getInsideBlockInset();
+
+    default AABB getCobwebContactBox(int x, int y, int z) {
+        if (!isCobweb(x, y, z)) return null;
+        double inset = getInsideBlockInset();
+        return new AABB(
+                new Vec3dCore(x + inset, y + inset, z + inset),
+                new Vec3dCore(x + 1.0 - inset, y + 1.0 - inset, z + 1.0 - inset));
+    }
+
     default BlockHit getLookedAtHit() {
         CollisionRayTrace.World world = new CollisionRayTrace.World() {
             @Override
             public List<AABB> collisionBoxes(int x, int y, int z) {
-                return getBlockCollisionBoxes(x, y, z);
+                List<AABB> boxes = getBlockCollisionBoxes(x, y, z);
+                if (boxes != null && !boxes.isEmpty()) return boxes;
+                AABB cobweb = getCobwebContactBox(x, y, z);
+                return cobweb == null ? boxes : Collections.singletonList(cobweb);
             }
 
             @Override

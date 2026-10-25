@@ -107,12 +107,12 @@ public class SolveFailureDiagnosticsTest {
         Ctx ctx = build(state -> {
             at[0] = state.getStartTick() + 2;
             state.tickConstraints(at[0]).getConstraints()
-                    .add(Constraint.scalar(Constraint.Field.DF, Constraint.Op.LE, 0.0));
+                    .add(Constraint.range(Constraint.Field.DF, -1.0, 1.0, true, true));
         });
         SolveResult r = solve(ctx);
 
         assertNotNull("engine returned no result", r);
-        assertFalse("a retired dF inequality must not solve", r.isSuccess());
+        assertFalse("a dF band is unsupported and must not solve", r.isSuccess());
         assertEquals("failed solve must name the unsupported dF as the cause",
                 AngleSolverEngine.DF_UNSUPPORTED_NOTICE, r.getNotice());
         assertFalse("a declined solve must still report the current path's values", r.getOutcomes().isEmpty());

@@ -35,6 +35,8 @@ public final class JumpPhysicsInputs {
      *  scales GROUND ticks. null or absent index = 0 (vanilla). */
     public int[] speedAmplifier = null;
 
+    public int[] slownessAmplifier = null;
+
     /** Per-tick slipperiness factor for ground-contact ticks (0.6 normal, 0.8 slime, 0.98 ice, ...).
      *  A value &lt; 1.0 forces that tick to be a ground-contact tick at that slip; 1.0 (air) keeps the
      *  default ground/air split. null = all default. */
@@ -45,6 +47,10 @@ public final class JumpPhysicsInputs {
     public int[] soulsandCellsPerTick = null;
 
     public boolean[] sneakPerTick = null;
+
+    public boolean[] dolphinsGracePerTick = null;
+
+    public boolean[] weavingPerTick = null;
 
     /** Per-tick yaw lock state (unlocked = float delta the game accumulates; locked = absolute facing). */
     public boolean[] yawLockedPerTick = null;
@@ -61,13 +67,15 @@ public final class JumpPhysicsInputs {
      *  single-tick model callers' behavior. */
     public Boolean incomingSprint = null;
 
-    public boolean liveAirSprintFactor = false;
+    public boolean liveMovementFactor = false;
 
     /** Speed-effect amplifier in force on the tick before this window's first tick. The ground attribute
      *  (getAIMoveSpeed = the movementSpeed snapshot) carries both the sprint and the speed-effect modifier,
      *  so the speed amplifier lags by the same one tick as sprint (see {@link #factorAmpAt}). Air is
      *  unaffected by speed effects. null = no seed: tick 0 falls back to its own amplifier. */
     public Integer incomingAmp = null;
+
+    public Integer incomingSlowness = null;
 
     /** Per-tick moveFlying inputs read from the user's rows (gh-102), already at the game's 0.98
      *  scale: forward from W/S, strafe from A/D (positive = A, matching {@link #strafeSign}). Null =
@@ -94,15 +102,19 @@ public final class JumpPhysicsInputs {
         c.strafeSign = strafeSign;
         c.strafePerTick = strafePerTick;
         c.speedAmplifier = speedAmplifier;
+        c.slownessAmplifier = slownessAmplifier;
         c.slipPerTick = slipPerTick;
         c.surfacePerTick = surfacePerTick;
         c.soulsandCellsPerTick = soulsandCellsPerTick;
         c.sneakPerTick = sneakPerTick;
+        c.dolphinsGracePerTick = dolphinsGracePerTick;
+        c.weavingPerTick = weavingPerTick;
         c.yawLockedPerTick = yawLockedPerTick;
         c.sprintPerTick = sprintPerTick;
         c.incomingSprint = incomingSprint;
-        c.liveAirSprintFactor = liveAirSprintFactor;
+        c.liveMovementFactor = liveMovementFactor;
         c.incomingAmp = incomingAmp;
+        c.incomingSlowness = incomingSlowness;
         c.forwardInputPerTick = forwardInputPerTick;
         c.strafeInputPerTick = strafeInputPerTick;
         return c;
@@ -117,16 +129,20 @@ public final class JumpPhysicsInputs {
         c.startBox = null;
         c.jumpTick = jumpTick < from ? -1 : jumpTick - from;
         c.strafeSign = strafeSign;
-        c.liveAirSprintFactor = liveAirSprintFactor;
+        c.liveMovementFactor = liveMovementFactor;
         c.incomingSprint = from == 0 ? incomingSprint : Boolean.valueOf(sprintAt(from - 1));
         c.incomingAmp = from == 0 ? incomingAmp : Integer.valueOf(speedAmplifierAt(from - 1));
+        c.incomingSlowness = from == 0 ? incomingSlowness : Integer.valueOf(slownessAmplifierAt(from - 1));
         boolean[] jump = new boolean[m];
         boolean[] strafe = new boolean[m];
         int[] amp = new int[m];
+        int[] slow = new int[m];
         double[] slip = new double[m];
         SurfaceKind[] surface = new SurfaceKind[m];
         int[] soulsand = new int[m];
         boolean[] sneak = new boolean[m];
+        boolean[] dolphin = new boolean[m];
+        boolean[] weaving = new boolean[m];
         boolean[] locked = new boolean[m];
         boolean[] sprint = new boolean[m];
         float[] fwd = new float[m];
@@ -136,10 +152,13 @@ public final class JumpPhysicsInputs {
             jump[k] = jumpAt(i);
             strafe[k] = strafeAt(i);
             amp[k] = speedAmplifierAt(i);
+            slow[k] = slownessAmplifierAt(i);
             slip[k] = slipAt(i);
             surface[k] = surfaceAt(i);
             soulsand[k] = soulsandCellsAt(i);
             sneak[k] = sneakAt(i);
+            dolphin[k] = dolphinsGraceAt(i);
+            weaving[k] = weavingAt(i);
             locked[k] = yawLockedPerTick != null && i < yawLockedPerTick.length && yawLockedPerTick[i];
             sprint[k] = sprintAt(i);
             fwd[k] = forwardAt(i);
@@ -148,10 +167,13 @@ public final class JumpPhysicsInputs {
         c.jumpPerTick = jump;
         c.strafePerTick = strafe;
         c.speedAmplifier = amp;
+        c.slownessAmplifier = slow;
         c.slipPerTick = slip;
         c.surfacePerTick = surface;
         c.soulsandCellsPerTick = soulsand;
         c.sneakPerTick = sneak;
+        c.dolphinsGracePerTick = dolphin;
+        c.weavingPerTick = weaving;
         c.yawLockedPerTick = locked;
         c.sprintPerTick = sprint;
         c.forwardInputPerTick = fwd;
@@ -162,6 +184,17 @@ public final class JumpPhysicsInputs {
     public int speedAmplifierAt(int tick) {
         if (speedAmplifier == null || tick < 0 || tick >= speedAmplifier.length) return 0;
         return speedAmplifier[tick];
+    }
+
+    public int slownessAmplifierAt(int tick) {
+        if (slownessAmplifier == null || tick < 0 || tick >= slownessAmplifier.length) return 0;
+        return slownessAmplifier[tick];
+    }
+
+    public int factorSlownessAt(int tick) {
+        if (liveMovementFactor) return slownessAmplifierAt(tick);
+        if (tick == 0) return incomingSlowness != null ? incomingSlowness : slownessAmplifierAt(0);
+        return slownessAmplifierAt(tick - 1);
     }
 
     public boolean strafeAt(int tick) {
@@ -196,13 +229,14 @@ public final class JumpPhysicsInputs {
     }
 
     public boolean airFactorSprintAt(int tick) {
-        return liveAirSprintFactor ? sprintAt(tick) : factorSprintAt(tick);
+        return liveMovementFactor ? sprintAt(tick) : factorSprintAt(tick);
     }
 
     /** Speed amplifier that drives this tick's ground movement factor, lagged one tick like the sprint
      *  factor (same snapshotted attribute). {@link #incomingAmp} seeds the pre-window tick; a null seed
      *  falls back to this tick's own amplifier. */
     public int factorAmpAt(int tick) {
+        if (liveMovementFactor) return speedAmplifierAt(tick);
         if (tick == 0) return incomingAmp != null ? incomingAmp : speedAmplifierAt(0);
         return speedAmplifierAt(tick - 1);
     }
@@ -233,6 +267,14 @@ public final class JumpPhysicsInputs {
 
     public boolean sneakAt(int tick) {
         return sneakPerTick != null && tick >= 0 && tick < sneakPerTick.length && sneakPerTick[tick];
+    }
+
+    public boolean dolphinsGraceAt(int tick) {
+        return dolphinsGracePerTick != null && tick >= 0 && tick < dolphinsGracePerTick.length && dolphinsGracePerTick[tick];
+    }
+
+    public boolean weavingAt(int tick) {
+        return weavingPerTick != null && tick >= 0 && tick < weavingPerTick.length && weavingPerTick[tick];
     }
 
     /** Exact float32 facings the game runs: mirrors Apply's float deltas + the sim's float accumulation,

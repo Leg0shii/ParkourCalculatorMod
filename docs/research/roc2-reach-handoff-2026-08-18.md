@@ -73,7 +73,7 @@ not converged.
 ## 4. Tooling: `EngineFileScreen` env hooks
 
 `core/src/test/.../anglesolver/EngineFileScreen.java`, run with
-`gradlew :core:test --tests "*EngineFileScreen*" --no-daemon -x tableStyleCheck --rerun`.
+`gradlew :core:research --tests "*EngineFileScreen*" --no-daemon -x tableStyleCheck --rerun`.
 Clear stale `PKC_*` env between runs (they leak); read output from
 `core/build/test-results/test/TEST-*EngineFileScreen.xml` and traces from
 `core/build/reports/solver-trace-<tag>.txt`.

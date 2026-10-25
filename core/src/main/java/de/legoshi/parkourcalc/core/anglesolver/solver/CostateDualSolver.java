@@ -128,6 +128,10 @@ public final class CostateDualSolver {
             int last = -1;
             int lim = Math.min(w.coef.length, n);
             for (int t = 0; t < lim; t++) if (w.coef[t] != 0.0) last = t;
+            if (w.axis == 2 && w.coefX != null && w.coefZ != null) {
+                int limZ = Math.min(w.coefZ.length, n);
+                for (int t = 0; t < limZ; t++) if (w.coefZ[t] != 0.0 && t > last) last = t;
+            }
             lastCoupled[j] = last;
         }
         this.gx = new double[n];
@@ -194,12 +198,8 @@ public final class CostateDualSolver {
         }
 
         public static FreeP0 forObjective(StartBox box, Objective obj, double smooth) {
-            boolean max = obj.sense == Objective.Sense.MAX;
-            boolean axisX = obj.axis == JumpPhysicsInputs.Axis.X;
-            double objDevX = axisX ? (max ? 1.0 : -1.0) : 0.0;
-            double objDevZ = axisX ? 0.0 : (max ? 1.0 : -1.0);
             return new FreeP0(box.pxLo - box.px, box.pxHi - box.px,
-                    box.pzLo - box.pz, box.pzHi - box.pz, objDevX, objDevZ, smooth);
+                    box.pzLo - box.pz, box.pzHi - box.pz, obj.translationGradX(), obj.translationGradZ(), smooth);
         }
     }
 

@@ -133,6 +133,7 @@ public final class AngleSolverState {
 
     private int startTick;
     private int landingTick;
+    private int objectiveTick = -1;
     private Axis axis = Axis.X;
     private Goal goal = Goal.MAX;
     private boolean customAngle = false;
@@ -183,6 +184,26 @@ public final class AngleSolverState {
         landingTick = tick;
     }
 
+    public boolean hasObjectiveTick() {
+        return objectiveTick >= 0;
+    }
+
+    public int getObjectiveTick() {
+        return objectiveTick;
+    }
+
+    public int effectiveObjectiveTick() {
+        return hasObjectiveTick() ? objectiveTick : landingTick;
+    }
+
+    public void setObjectiveTick(int tick) {
+        objectiveTick = tick < 0 ? -1 : tick;
+    }
+
+    public void clearObjectiveTick() {
+        objectiveTick = -1;
+    }
+
     public Axis getAxis() {
         return axis;
     }
@@ -197,6 +218,29 @@ public final class AngleSolverState {
 
     public void setGoal(Goal goal) {
         this.goal = goal;
+    }
+
+    public void setGoalFromYaw(double yaw) {
+        double facing = Angles.wrap(yaw);
+        customAngle = false;
+        if (facing > -45.0 && facing <= 45.0) {
+            axis = Axis.Z;
+            goal = Goal.MAX;
+        } else if (facing > 45.0 && facing <= 135.0) {
+            axis = Axis.X;
+            goal = Goal.MIN;
+        } else if (facing > -135.0 && facing <= -45.0) {
+            axis = Axis.X;
+            goal = Goal.MAX;
+        } else {
+            axis = Axis.Z;
+            goal = Goal.MIN;
+        }
+    }
+
+    public String goalLabel() {
+        if (customAngle) return String.format(java.util.Locale.ROOT, "angle %.2f", customAngleDeg);
+        return (goal == Goal.MAX ? "+" : "-") + axis.name();
     }
 
     public boolean isCustomAngle() {
@@ -331,6 +375,7 @@ public final class AngleSolverState {
         if (rowCount <= 0) return;
         startTick = clamp(startTick, rowCount);
         landingTick = clamp(landingTick, rowCount);
+        if (hasObjectiveTick()) objectiveTick = clamp(objectiveTick, rowCount);
     }
 
     private static int clamp(int tick, int rowCount) {
@@ -383,6 +428,7 @@ public final class AngleSolverState {
         remapTicks(t -> t >= index ? t + count : t);
         if (startTick >= index) startTick += count;
         if (landingTick >= index) landingTick += count;
+        if (objectiveTick >= index) objectiveTick += count;
     }
 
     /** Rows removed at {@code descendingIndices} (the shape InputData.removeRows consumes): their
@@ -395,6 +441,7 @@ public final class AngleSolverState {
         remapTicks(t -> Collections.binarySearch(asc, t) >= 0 ? -1 : t - countBelow(asc, t));
         startTick -= countBelow(asc, startTick);
         landingTick -= countBelow(asc, landingTick);
+        if (hasObjectiveTick()) objectiveTick -= countBelow(asc, objectiveTick);
     }
 
     /** The row at {@code sourceIndex} was duplicated onto {@code sourceIndex + 1}: slide everything
@@ -417,6 +464,7 @@ public final class AngleSolverState {
         remapTicks(t -> mapMove(t, from, dest));
         startTick = mapMove(startTick, from, dest);
         landingTick = mapMove(landingTick, from, dest);
+        if (hasObjectiveTick()) objectiveTick = mapMove(objectiveTick, from, dest);
     }
 
     /** {@link #onRowMoved}'s index mapping for a single row-keyed value (same drop-line no-op semantics). */
@@ -706,6 +754,7 @@ public final class AngleSolverState {
     public void reset() {
         startTick = 0;
         landingTick = 0;
+        objectiveTick = -1;
         axis = Axis.X;
         goal = Goal.MAX;
         customAngle = false;

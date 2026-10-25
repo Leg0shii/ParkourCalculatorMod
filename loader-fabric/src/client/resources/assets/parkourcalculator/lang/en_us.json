@@ -9,6 +9,7 @@
     "key.parkourcalculator.solve": "Solve and apply (Angle Solver)",
     "key.parkourcalculator.set_solver_start": "Set solver start tick",
     "key.parkourcalculator.set_solver_end": "Set solver goal tick",
+    "key.parkourcalculator.set_solver_goal_from_look": "Set solver goal from look",
     "key.parkourcalculator.rerun_simulation": "Rerun simulation",
     "key.parkourcalculator.toggle_path": "Toggle path rendering",
     "key.parkourcalculator.copy_teleport": "Copy teleport command",

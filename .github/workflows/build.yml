@@ -1,7 +1,12 @@
 # Builds the loader jars and runs the core test suite on every push to main/dev
-# and every pull request. The core suite is split into balanced shards that run
-# as parallel jobs (see core/build.gradle testShardPlan), one set per JDK, so
-# the wall-clock time is the longest shard, not the whole suite.
+# and every pull request. The core suite is split into named shards by topic
+# (core/build.gradle testGroups), a big topic into balanced numbered parts, that
+# run as parallel jobs (testShardPlan prints them), so the wall-clock time is the
+# longest shard, not the whole suite, and a red job's name says what broke. The
+# engine-acceptance shards only run with the very slow tier on pull requests to
+# main. The full suite runs on JDK 21
+# everywhere and again on Java 8 only for pull requests to main; every other run
+# gets the java8-smoke job (fast suite plus the closedform/ cases on Java 8).
 
 name: build
 on:
@@ -11,9 +16,6 @@ on:
     branches:
       - main
       - dev
-
-env:
-  SHARDS: 8
 
 jobs:
   loaders:
@@ -41,29 +43,28 @@ jobs:
           path: |
             .gradle/loom-cache
             .gradle/unimined
-          key: mc-${{ runner.os }}-${{ hashFiles('loader-*/build.gradle', 'loader-*/gradle.properties', 'gradle.properties', 'settings.gradle') }}
+          key: mc-${{ runner.os }}-${{ hashFiles('loader-*/build.gradle', 'loader-*/stonecutter.gradle', 'loader-*/gradle.properties', 'loader-*/versions/*/gradle.properties', 'gradle.properties', 'settings.gradle') }}
           restore-keys: |
             mc-${{ runner.os }}-
       - name: build loaders
-        run: ./gradlew build -x :core:test -x tableStyleCheck -Dorg.gradle.java.home="$JAVA_HOME"
+        run: ./gradlew chiseledBuild -x :core:test -x tableStyleCheck -Dorg.gradle.java.home="$JAVA_HOME"
       - name: capture build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: Artifacts
           path: |
-            loader-fabric/build/libs/*.jar
-            loader-fabric-1.21.3/build/libs/*.jar
-            loader-forge-1.8.9/build/libs/*.jar
-            loader-forge-1.12.2/build/libs/*.jar
+            loader-fabric/versions/*/build/libs/*.jar
+            loader-forge/versions/*/build/libs/*.jar
 
   core-tests:
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
-        jdk: [21, 8]
-        shard: [0, 1, 2, 3, 4, 5, 6, 7]
-    name: core tests (jdk ${{ matrix.jdk }}, shard ${{ matrix.shard }})
+        jdk: ${{ fromJSON(github.base_ref == 'main' && '[21, 8]' || '[21]') }}
+        shard: [problems-1, problems-2, problems-3, engine-acceptance-1, engine-acceptance-2, yaw-order-1, yaw-order-2, no-turn-1, no-turn-2, onejump, physics, app, solver]
+        exclude: ${{ fromJSON(github.base_ref == 'main' && '[]' || '[{"shard":"engine-acceptance-1"},{"shard":"engine-acceptance-2"}]') }}
+    name: core tests (jdk ${{ matrix.jdk }}, ${{ matrix.shard }})
     steps:
       - name: checkout repository
         uses: actions/checkout@v4
@@ -85,11 +86,62 @@ jobs:
           if [ "${{ github.base_ref }}" = "main" ]; then EXTRA="-PverySlowTests"; fi
           TASK=test
           if [ "${{ matrix.jdk }}" = "8" ]; then TASK=testJava8; fi
-          ./gradlew :core:$TASK -PslowTests $EXTRA -PpkcShard=${{ matrix.shard }}/$SHARDS \
+          ./gradlew :core:$TASK -PslowTests $EXTRA -PpkcShard=${{ matrix.shard }} \
             -Dorg.gradle.configureondemand=true -Dorg.gradle.java.home="$JAVA_HOME"
+      - name: report test times
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import glob
+          import xml.etree.ElementTree as ET
+          for f in sorted(glob.glob('core/build/test-results/**/*.xml', recursive=True)):
+              suite = ET.parse(f).getroot()
+              name = suite.get('name')
+              if name.endswith('.ProblemsTest'):
+                  for c in suite.iter('testcase'):
+                      print('test-time %s#%s=%.1f' % (name, c.get('name')[6:-1], float(c.get('time'))))
+              else:
+                  print('test-time %s=%.1f' % (name, float(suite.get('time'))))
+          PY
       - name: upload test results
-        if: failure()
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-results-jdk${{ matrix.jdk }}-shard${{ matrix.shard }}
+          name: test-results-jdk${{ matrix.jdk }}-${{ matrix.shard }}
           path: core/build/test-results/**/*.xml
+
+  java8-smoke:
+    if: github.base_ref != 'main'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v4
+      - name: setup jdks
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: |
+            8
+            21
+      - name: setup gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          validate-wrappers: true
+          cache-read-only: ${{ github.ref != 'refs/heads/dev' && github.ref != 'refs/heads/main' }}
+      - name: fast suite on java 8
+        run: ./gradlew :core:testJava8 -Dorg.gradle.configureondemand=true -Dorg.gradle.java.home="$JAVA_HOME"
+      - name: closedform cases on java 8
+        run: |
+          ./gradlew :core:testJava8 -PslowTests --tests 'de.legoshi.parkourcalc.anglesolver.ProblemsTest' \
+            -Dpkc.problems='closedform/*' -Dorg.gradle.configureondemand=true -Dorg.gradle.java.home="$JAVA_HOME"
+      - name: check the closedform cases ran
+        run: |
+          python3 - <<'PY'
+          import glob
+          import xml.etree.ElementTree as ET
+          n = 0
+          for f in glob.glob('core/build/test-results/testJava8/*ProblemsTest.xml'):
+              n += sum(1 for c in ET.parse(f).getroot().iter('testcase') if c.find('skipped') is None)
+          print('closedform cases run on java 8: %d' % n)
+          assert n > 0
+          PY

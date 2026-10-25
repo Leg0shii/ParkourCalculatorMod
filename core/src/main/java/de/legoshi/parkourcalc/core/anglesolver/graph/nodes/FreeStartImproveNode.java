@@ -61,32 +61,33 @@ public final class FreeStartImproveNode implements NodeRuntime {
         double seedX = sc.startPos.x;
         double seedZ = sc.startPos.z;
         sc.startBox = ctx.freeBox;
-        FreeStartSolve.Result conv = FreeStartSolve.solveJointBest(ctx.exactModel, ctx.spec, ctx.feasTol, cancel, cfg);
         double[] adoptYaws = null;
         double adoptX = seedX;
         double adoptZ = seedZ;
-        if (conv != null && conv.feasible
-                && FreeStartSolve.violationAt(ctx.exactModel, ctx.spec, conv.yaws, conv.startX, conv.startZ) <= ctx.feasTol) {
-            adoptYaws = conv.yaws;
-            adoptX = conv.startX;
-            adoptZ = conv.startZ;
-        }
-        if (adoptYaws == null && (cancel == null || !cancel.get())) {
-            double centerX = 0.5 * (ctx.freeBox.pxLo + ctx.freeBox.pxHi);
-            double centerZ = 0.5 * (ctx.freeBox.pzLo + ctx.freeBox.pzHi);
-            JumpPhysicsInputs pinned = Scoring.pinnedScenario(sc, centerX, centerZ);
-            JumpSpec pinnedSpec = new JumpSpec(pinned, ctx.spec.constraints, ctx.spec.objective);
-            String[] via = new String[1];
-            double[] chainYaws = de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine.dualChain(
-                    ctx.exactModel, pinnedSpec, pinned, cancel, via);
-            if (chainYaws != null
-                    && FreeStartSolve.violationAt(ctx.exactModel, ctx.spec, chainYaws, centerX, centerZ) <= ctx.feasTol) {
-                adoptYaws = chainYaws;
+        double centerX = 0.5 * (ctx.freeBox.pxLo + ctx.freeBox.pxHi);
+        double centerZ = 0.5 * (ctx.freeBox.pzLo + ctx.freeBox.pzHi);
+        boolean centerFirst = de.legoshi.parkourcalc.core.anglesolver.solver.CertifiedBnb.carriesOrder(ctx.spec);
+        if (centerFirst) {
+            adoptYaws = centerChain(ctx, sc, centerX, centerZ, cancel);
+            if (adoptYaws != null) {
                 adoptX = centerX;
                 adoptZ = centerZ;
-                if (SolverTrace.on()) {
-                    SolverTrace.log("ENGINE", "free rescue center chain via=%s", via[0]);
-                }
+            }
+        }
+        if (adoptYaws == null && (cancel == null || !cancel.get())) {
+            FreeStartSolve.Result conv = FreeStartSolve.solveJointBest(ctx.exactModel, ctx.spec, ctx.feasTol, cancel, cfg);
+            if (conv != null && conv.feasible
+                    && FreeStartSolve.violationAt(ctx.exactModel, ctx.spec, conv.yaws, conv.startX, conv.startZ) <= ctx.feasTol) {
+                adoptYaws = conv.yaws;
+                adoptX = conv.startX;
+                adoptZ = conv.startZ;
+            }
+        }
+        if (adoptYaws == null && !centerFirst && (cancel == null || !cancel.get())) {
+            adoptYaws = centerChain(ctx, sc, centerX, centerZ, cancel);
+            if (adoptYaws != null) {
+                adoptX = centerX;
+                adoptZ = centerZ;
             }
         }
         if (adoptYaws != null) {
@@ -100,6 +101,21 @@ public final class FreeStartImproveNode implements NodeRuntime {
         sc.startPos = new Vec3dCore(seedX, sc.startPos.y, seedZ);
         sc.startBox = StartBox.pinned(seedX, seedZ, sc.initialVelocity.x, sc.initialVelocity.z);
         return null;
+    }
+
+    private static double[] centerChain(GraphContext ctx, JumpPhysicsInputs sc, double centerX, double centerZ,
+                                        AtomicBoolean cancel) {
+        JumpPhysicsInputs pinned = Scoring.pinnedScenario(sc, centerX, centerZ);
+        JumpSpec pinnedSpec = new JumpSpec(pinned, ctx.spec.constraints, ctx.spec.objective);
+        String[] via = new String[1];
+        double[] chainYaws = de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine.dualChain(
+                ctx.exactModel, pinnedSpec, pinned, cancel, via);
+        if (chainYaws == null
+                || FreeStartSolve.violationAt(ctx.exactModel, ctx.spec, chainYaws, centerX, centerZ) > ctx.feasTol) {
+            return null;
+        }
+        if (SolverTrace.on()) SolverTrace.log("ENGINE", "free rescue center chain via=%s", via[0]);
+        return chainYaws;
     }
 
     private double[] improve(GraphContext ctx, double[] seedYaws, AtomicBoolean cancel) {

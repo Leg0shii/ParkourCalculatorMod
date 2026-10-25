@@ -9,12 +9,13 @@ How code is split across modules and how to decide where a new file goes. `CLAUD
 core/                  Java 8. ImGui-only UI, input data, the angle solver, value types, ports.
                        No Minecraft, Fabric, Forge, or LWJGL imports.
 forge-core/            Java 8. Shared by both Forge loaders. No Minecraft or Forge imports.
-loader-fabric/         Java 25. Fabric (Loom, LWJGL 3), tracks the latest MC. MC-touching code. Source under src/client/java.
-loader-forge-1.8.9/    Java 8.  Forge (Unimined, LWJGL 2). MC-touching code.
-loader-forge-1.12.2/   Java 8.  Forge (Unimined, LWJGL 2). MC-touching code.
+gpu/                   Java 8. OpenCL implementation of core's SchedulePoolScreen port (JOCL). No Minecraft, Forge, Fabric or LWJGL imports.
+loader-fabric/         Stonecutter tree for every Fabric target (26.3 on Java 25, 1.21.3 on Java 21, 1.20.4 on Java 17).
+                       Loom, LWJGL 3. MC-touching code. Shared source under src/client/java, variants under src/<variant>/java.
+loader-forge/          Stonecutter tree for both Forge targets (1.12.2, 1.8.9). Java 8, Unimined, LWJGL 2. MC-touching code.
 ```
 
-One root Gradle build covers all five subprojects; each pins its own toolchain. Build tasks and JDK requirements are in `CLAUDE.md` § Build & Run.
+One root Gradle build covers `core`, `forge-core`, and one Gradle subproject per loader target (`:loader-fabric:26.3`, `:loader-fabric:1.21.3`, `:loader-fabric:1.20.4`, `:loader-forge:1.12.2`, `:loader-forge:1.8.9`); each target pins its own toolchain in `loader-<x>/versions/<mc>/gradle.properties`. Build tasks and JDK requirements are in `CLAUDE.md` § Build & Run.
 
 
 ## Where does X go?
@@ -43,14 +44,17 @@ If none fit, you probably do not need the file. Re-check.
 
 ### `loader-fabric/`
 
-- **Java 25** (auto-provisioned toolchain). Use modern features where they help. Source lives under `src/client/java` (not `src/main`).
+- **One source set, three targets.** The raw source is the active version (26.3); 1.21.3 and 1.20.4 compile Stonecutter's processed copy. Put an MC API difference in a `//? if` region right where it occurs; keep the surrounding code shared. Version regions use the MC version that introduced the change (`>=26.1`, `>=1.21.2`, `>=1.20.5`, `>=1.21`), not a loader name.
+- **Variant source sets for subsystems that differ by more than about a third:** `src/renderpearl` (26.x render pipeline and its mixins) vs `src/blaze3d` (1.21.3 and 1.20.4), and `src/sdl` (26.3 input) vs `src/glfw` (older). The central `build.gradle` picks one of each per target and folds it into the client source set. A class name must exist in exactly one variant of a pair so the shared code can reference it.
+- **Java language level is the lowest target's** for shared code: 1.20.4 compiles with `--release 17`, so no features newer than Java 17 in `src/client` or `src/blaze3d`/`src/glfw`; `src/renderpearl` and `src/sdl` may use Java 25.
+- Source lives under `src/client/java` (not `src/main`).
 - **All MC-touching code lives here:** `SimulatorEntity`, `FabricSimulator` (implements the `Simulator` port), the world/HUD overlay renderers (implement `BoxRenderer`), `FabricPlaybackBridge`, `ImGuiImpl`, every Mixin, and the `FabricParkourCalculator` entry point. (`BoxController` is core, not here.)
 - **Bundles imgui-java 1.86.12** (binding + LWJGL 3 backend + natives) via Loom `include`. Only loader on LWJGL 3.
-- **Mixins** are declared in `parkourcalculator.client.mixins.json`. A new mixin must be added there or it silently will not apply.
+- **Mixins** are listed in the `mixins` array of `loader-fabric/build.gradle`, which expands them into `parkourcalculator.client.mixins.json` for each target (the render and input mixins only for the targets whose variant set holds them). A new mixin must be added to that list or it silently will not apply.
 
-### `loader-forge-1.8.9/` and `loader-forge-1.12.2/`
+### `loader-forge/`
 
-The two are intentional duplicates: 1.8.9 and 1.12.2 have incompatible MC APIs. Only MC-free code is shared, in `forge-core/`.
+One Stonecutter tree for 1.12.2 (active, the raw source) and 1.8.9 (processed copy). The MC APIs differ (`Vec3d` vs `Vec3`, `world` vs `worldObj`, `move` vs `moveEntity`, packet class names), so those lines sit in `//? if >=1.12 {` ... `//?} else {` ... `//?}` regions; everything else is shared once. `McClient.player()` / `McClient.world()` hide the `player`/`thePlayer` and `world`/`theWorld` renames. MC-free code shared with other loaders lives in `forge-core/`. Each target has its own access transformer (`META-INF/parkourcalculator_<mc>_at.cfg`); `processResources` renames the matching one to `parkourcalculator_at.cfg`.
 
 - **Java 8**, required by the MC runtime.
 - **Log4j 2 for logging** (`org.apache.logging.log4j`), not SLF4J.
@@ -63,12 +67,21 @@ The two are intentional duplicates: 1.8.9 and 1.12.2 have incompatible MC APIs. 
 Shared by both Forge loaders, **no Minecraft or Forge imports** (it only knows ImGui, the shim, and core's `OverlayManager` / `Settings`). Packages:
 
 - `lwjgl2/`: the ImGui-on-LWJGL 2 host (`Lwjgl2ImGuiHost`, `ImGuiGl3Compat`, `Lwjgl2InputState`); exposes a per-frame `renderFrame(...)` and applies `Settings.SCALE` at init.
-- `sim/`: `PlayerSprintMachine` (the pure-Java sprint state machine both Forge `SimulatorEntity`s share) and `PlaybackMoveState`. Lives here, not in `core/`, because its input field set is shaped after `EntityPlayerSP`'s 1.8/1.12 read set.
+- `sim/`: `PlayerSprintMachine` (the pure-Java sprint state machine both Forge `SimulatorEntity`s share) and `PlaybackMoveState`. Lives here, not in `core/`, because its input field set is shaped after `EntityPlayerSP`'s 1.8/1.12 read set. Tested under `forge-core/src/test/` (`:forge-core:test`), including `SprintMachineCaptureParityTest`, which replays the Forge captures' recorded sprint and move state through the machine.
 - `render/`: `CountingBoxRenderer` (shared box-draw counting).
 - `io/`: `OsFilePicker` (the `FilePickerPort` impl both Forge loaders use).
 - **Java 8 toolchain, no `--release`.** JDK 8's javac has no `--release`, so this module uses an actual JDK 8 toolchain. Core can use `--release 8` only because it builds on the JDK 21 daemon.
 
 A symmetrical `fabric-lwjgl3-common/` is not worth it until a second LWJGL 3 loader exists. Today the Fabric bootstrap stays inline.
+
+### `gpu/`
+
+The graphics-card implementation of core's `SchedulePoolScreen` port (the stratfinder's disk prefilter and affine screen, gh-554). Depends on `core` and on JOCL (`org.jocl:jocl`, pure OpenCL bindings with the natives inside the jar), **no Minecraft, Forge, Fabric or LWJGL imports**, so one jar serves every loader: Forge shades it, Fabric includes it next to `core`. Rules:
+
+- The CPU path is the default and the fallback. The loader only registers `OpenClPoolScreen.Factory` with `PoolScreenAccelerator`; nothing touches OpenCL until a search runs with `Settings.stratfinderGpu` on, and any failure (no runtime, no device, a kernel build error) is caught in `PoolScreenAccelerator.tryOpen`, shown in the Stratfinder window and the search continues on the CPU.
+- The GPU is a ranker, never the certificate. The kernels are float32 and the screen is the pure linear model without the byte-exact linearisation, so `StructurePoolDriver` re-screens the kept pool with the CPU `UnitScreen` at the end of every level and the certify stays byte-exact on the CPU.
+- The kernel source `pool_screen.cl` reads the problem shape at runtime; `OpenClPoolScreen` compiles one program per size bucket (walls 12/24/36, facing groups 6/12, `MAX_W` / `MAX_G`), warms them up on a background thread when the setting is turned on and sends a problem wider than the largest bucket back to the CPU. `global` is a reserved word in OpenCL C. The tuning constants at the top of the kernel can be overridden per run with `-Dpkc.gpu.def.<NAME>=<value>` for experiments.
+- No tests need a GPU: the fast suite never loads this module, the pool-as-set comparison against the CPU driver is a bench run (`NoTurnColdBench` with `-Dpkc.pool.gpu=true` and `-Dpkc.bench.dumpPool=true`).
 
 
 ## Ports (port-and-adapter pattern)

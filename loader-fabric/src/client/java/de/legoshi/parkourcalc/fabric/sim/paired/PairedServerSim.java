@@ -1,15 +1,21 @@
 package de.legoshi.parkourcalc.fabric.sim.paired;
 
 import com.mojang.authlib.GameProfile;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import de.legoshi.parkourcalc.core.DebugFlags;
 import de.legoshi.parkourcalc.core.PlaybackController;
 import de.legoshi.parkourcalc.core.sim.ServerSimEvent;
 import de.legoshi.parkourcalc.core.sim.StartResumeState;
 import de.legoshi.parkourcalc.core.ui.InputRow;
+import de.legoshi.parkourcalc.fabric.sim.FabricSimulator;
+//? if <1.21.2
+//import de.legoshi.parkourcalc.fabric.sim.Input;
 import de.legoshi.parkourcalc.fabric.sim.SimulatorEntity;
+//? if >=26.1 {
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+//?}
 import net.minecraft.core.BlockPos;
+//? if >=26.1
 import net.minecraft.network.LpVec3;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.common.ClientboundKeepAlivePacket;
@@ -17,10 +23,13 @@ import net.minecraft.network.protocol.common.ServerboundKeepAlivePacket;
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
 import net.minecraft.network.protocol.game.ServerboundAcceptTeleportationPacket;
+//? if >=1.21.2
 import net.minecraft.network.protocol.game.ServerboundClientTickEndPacket;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
+//? if >=1.21.2
 import net.minecraft.network.protocol.game.ServerboundPlayerInputPacket;
+//? if >=1.21.4
 import net.minecraft.network.protocol.game.ServerboundPlayerLoadedPacket;
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket;
 import net.minecraft.server.MinecraftServer;
@@ -29,8 +38,12 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
+//? if >=1.21.2 {
 import net.minecraft.world.entity.PositionMoveRotation;
 import net.minecraft.world.entity.player.Input;
+//?} else {
+/*import net.minecraft.world.entity.RelativeMovement;
+*///?}
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
@@ -42,6 +55,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+//? if <1.21.2
+//import java.util.Set;
 import java.util.UUID;
 
 public final class PairedServerSim {
@@ -73,6 +88,8 @@ public final class PairedServerSim {
     private boolean lastOnGround;
     private boolean lastHorizontalCollision;
     private Input lastSentInput = Input.EMPTY;
+    //? if <26.1
+    //private boolean lastShiftKeyDown;
     private boolean lastSprinting;
     private boolean prevRightClick;
     private int rightClickDelay;
@@ -100,6 +117,7 @@ public final class PairedServerSim {
         sp.setDamageSink(sim::onDamageRuled);
         sp.setFallRulingSink(sim::onLandingRuled);
         sp.setDamageGate(sim::isDamageEnabled);
+        //? if >=1.21.4
         handler.handleAcceptPlayerLoad(new ServerboundPlayerLoadedPacket());
         return sim;
     }
@@ -137,30 +155,48 @@ public final class PairedServerSim {
 
     private void resetServerSide(SimulatorEntity e) {
         ServerPlayer real = level.getServer().getPlayerList().getPlayer(e.getUUID());
-        if (real != null) sp.getAttributes().assignBaseValues(real.getAttributes());
+        if (real != null) FabricSimulator.copyBaseAttributes(sp.getAttributes(), real.getAttributes());
         sp.setAirSupply(real != null ? real.getAirSupply() : sp.getMaxAirSupply());
-        sp.absSnapTo(e.getX(), e.getY(), e.getZ(), e.getYRot(), 0.0F);
+        snapServerPlayer(e.getX(), e.getY(), e.getZ(), e.getYRot(), 0.0F);
         sp.setDeltaMovement(e.getDeltaMovement());
-        sp.fallDistance = 0.0;
+        sp.fallDistance = 0;
         sp.setOnGround(false);
         sp.verticalCollisionBelow = false;
+        //? if >=26.1 {
         sp.damageCooldownTime = 0;
         sp.hurtTime = 0;
         sp.syncVelocity = false;
+        //?} else {
+        /*sp.invulnerableTime = 0;
+        sp.spawnInvulnerableTime = 0;
+        sp.hurtTime = 0;
+        sp.hurtMarked = false;
+        *///?}
         sp.clearFire();
         sp.setShiftKeyDown(false);
         sp.setSprinting(false);
         handler.resetPosition();
         handler.handleMovePlayer(new ServerboundMovePlayerPacket.PosRot(
+        //? if >=1.21.2 {
                 e.getX(), e.getY(), e.getZ(), e.getYRot(), e.getXRot(), false, false));
         handler.handleClientTickEnd(ServerboundClientTickEndPacket.INSTANCE);
+        //?} else {
+                /*e.getX(), e.getY(), e.getZ(), e.getYRot(), e.getXRot(), false));
+        *///?}
         for (int i = 0; i < WARMUP_SERVER_TICKS; i++) {
             sp.tick();
             tickHandler();
         }
+        //? if >=26.1 {
         sp.syncVelocity = false;
         handler.resetPosition();
         handler.resetFlyingTicks();
+        //?} else {
+        /*sp.hurtMarked = false;
+        handler.resetPosition();
+        handler.aboveGroundTickCount = 0;
+        handler.aboveGroundVehicleTickCount = 0;
+        *///?}
         handler.awaitingPositionFromClient = null;
         handler.awaitingTeleport = 0;
         handler.awaitingTeleportTime = 0;
@@ -177,10 +213,20 @@ public final class PairedServerSim {
         lastOnGround = e.onGround();
         lastHorizontalCollision = false;
         lastSentInput = Input.EMPTY;
+        //? if <26.1
+        //lastShiftKeyDown = false;
         lastSprinting = false;
         prevRightClick = false;
         rightClickDelay = 0;
         useSequence = 0;
+    }
+
+    private void snapServerPlayer(double x, double y, double z, float yRot, float xRot) {
+        //? if >=26.1 {
+        sp.absSnapTo(x, y, z, yRot, xRot);
+        //?} else {
+        /*sp.absMoveTo(x, y, z, yRot, xRot);
+        *///?}
     }
 
     public void abortTick() {
@@ -196,8 +242,8 @@ public final class PairedServerSim {
             pendingClientbound.clear();
             for (Packet<?> packet : toApply) {
                 if (packet instanceof ClientboundSetEntityMotionPacket motion) {
-                    if (motion.id() != sp.getId()) continue;
-                    Vec3 applied = quantizeVelocity(motion.movement());
+                    if (motionEntityId(motion) != sp.getId()) continue;
+                    Vec3 applied = motionVelocity(motion);
                     e.setDeltaMovement(applied);
                     addEvent(ServerSimEvent.Kind.VELOCITY_SET, formatVec(applied));
                     if (DebugFlags.PAIRED_DIAGNOSTICS) {
@@ -216,30 +262,80 @@ public final class PairedServerSim {
         synthesizeUseItem(e, row);
     }
 
+    static int motionEntityId(ClientboundSetEntityMotionPacket motion) {
+        //? if >=26.1 {
+        return motion.id();
+        //?} else {
+        /*return motion.getId();
+        *///?}
+    }
+
+    static Vec3 motionVelocity(ClientboundSetEntityMotionPacket motion) {
+        //? if >=26.1 {
+        return quantizeVelocity(motion.movement());
+        //?} elif >=1.21 {
+        /*return new Vec3(motion.getXa(), motion.getYa(), motion.getZa());
+        *///?} else {
+        /*return new Vec3(motion.getXa() / 8000.0, motion.getYa() / 8000.0, motion.getZa() / 8000.0);
+        *///?}
+    }
+
     private void applyPositionCorrection(SimulatorEntity e, ClientboundPlayerPositionPacket packet) {
+        //? if >=1.21.2 {
         PositionMoveRotation current = PositionMoveRotation.of(e);
         PositionMoveRotation next = PositionMoveRotation.calculateAbsolute(current, packet.change(), packet.relatives());
+        Vec3 currentPosition = current.position();
+        Vec3 currentVelocity = current.deltaMovement();
+        Vec3 nextPosition = next.position();
+        Vec3 nextVelocity = next.deltaMovement();
+        //?} else {
+        /*Set<RelativeMovement> relatives = packet.getRelativeArguments();
+        Vec3 currentPosition = e.position();
+        Vec3 currentVelocity = e.getDeltaMovement();
+        Vec3 nextPosition = new Vec3(
+                relatives.contains(RelativeMovement.X) ? currentPosition.x + packet.getX() : packet.getX(),
+                relatives.contains(RelativeMovement.Y) ? currentPosition.y + packet.getY() : packet.getY(),
+                relatives.contains(RelativeMovement.Z) ? currentPosition.z + packet.getZ() : packet.getZ());
+        Vec3 nextVelocity = new Vec3(
+                relatives.contains(RelativeMovement.X) ? currentVelocity.x : 0.0,
+                relatives.contains(RelativeMovement.Y) ? currentVelocity.y : 0.0,
+                relatives.contains(RelativeMovement.Z) ? currentVelocity.z : 0.0);
+        *///?}
         if (DebugFlags.PAIRED_DIAGNOSTICS) {
-            System.out.println("[PC-PAIR] T" + (tickIndex + 1) + " lagback from " + formatVec(current.position())
-                    + " vel " + formatVec(current.deltaMovement()) + " onGround=" + e.onGround()
+            System.out.println("[PC-PAIR] T" + (tickIndex + 1) + " lagback from " + formatVec(currentPosition)
+                    + " vel " + formatVec(currentVelocity) + " onGround=" + e.onGround()
                     + " sneaking=" + e.isShiftKeyDown() + " sprinting=" + e.isSprinting());
         }
-        e.setPos(next.position());
-        e.setDeltaMovement(next.deltaMovement());
+        e.setPos(nextPosition);
+        e.setDeltaMovement(nextVelocity);
         e.setOldPosAndRot();
-        addEvent(ServerSimEvent.Kind.POSITION_CORRECTION, "to " + formatVec(next.position()));
+        addEvent(ServerSimEvent.Kind.POSITION_CORRECTION, "to " + formatVec(nextPosition));
         if (DebugFlags.PAIRED_DIAGNOSTICS) {
-            System.out.println("[PC-PAIR] T" + (tickIndex + 1) + " lagback applied to " + formatVec(next.position()));
+            System.out.println("[PC-PAIR] T" + (tickIndex + 1) + " lagback applied to " + formatVec(nextPosition));
         }
+        //? if >=26.1 {
         serverbound.add(new ServerboundAcceptTeleportationPacket(
                 packet.id(), e.getX(), e.getY(), e.getZ(), e.getYRot(), e.getXRot()));
+        //?} elif >=1.21.2 {
+        /*serverbound.add(new ServerboundAcceptTeleportationPacket(packet.id()));
+        serverbound.add(new ServerboundMovePlayerPacket.PosRot(
+                e.getX(), e.getY(), e.getZ(), e.getYRot(), e.getXRot(), false, false));
+        *///?} else {
+        /*serverbound.add(new ServerboundAcceptTeleportationPacket(packet.getId()));
+        serverbound.add(new ServerboundMovePlayerPacket.PosRot(
+                e.getX(), e.getY(), e.getZ(), e.getYRot(), e.getXRot(), false));
+        *///?}
     }
 
     public void afterClientTick(SimulatorEntity e) {
         try {
+            //? if <26.1
+            //synthesizeShiftCommand(e);
+            //? if >=1.21.2
             synthesizeInputPacket(e);
             synthesizeSprintCommand(e);
             synthesizeMovePacket(e);
+            //? if >=1.21.2
             serverbound.add(ServerboundClientTickEndPacket.INSTANCE);
             drainServerbound();
             reportReplayMismatch(e);
@@ -253,6 +349,19 @@ public final class PairedServerSim {
         }
     }
 
+    //? if <26.1 {
+    /*private void synthesizeShiftCommand(SimulatorEntity e) {
+        boolean shift = e.isShiftKeyDown();
+        if (shift != lastShiftKeyDown) {
+            serverbound.add(new ServerboundPlayerCommandPacket(sp, shift
+                    ? ServerboundPlayerCommandPacket.Action.PRESS_SHIFT_KEY
+                    : ServerboundPlayerCommandPacket.Action.RELEASE_SHIFT_KEY));
+            lastShiftKeyDown = shift;
+        }
+    }
+    *///?}
+
+    //? if >=1.21.2 {
     private void synthesizeInputPacket(SimulatorEntity e) {
         Input current = e.input.keyPresses;
         if (!current.equals(lastSentInput)) {
@@ -260,6 +369,7 @@ public final class PairedServerSim {
             lastSentInput = current;
         }
     }
+    //?}
 
     private void synthesizeSprintCommand(SimulatorEntity e) {
         boolean sprinting = e.isSprinting();
@@ -284,6 +394,7 @@ public final class PairedServerSim {
         boolean horizontalCollision = e.horizontalCollision;
         if (move && rot) {
             serverbound.add(new ServerboundMovePlayerPacket.PosRot(
+        //? if >=26.1 {
                     e.position(), e.getYRot(), e.getXRot(), onGround, horizontalCollision));
         } else if (move) {
             serverbound.add(new ServerboundMovePlayerPacket.Pos(e.position(), onGround, horizontalCollision));
@@ -293,6 +404,27 @@ public final class PairedServerSim {
         } else if (lastOnGround != onGround || lastHorizontalCollision != horizontalCollision) {
             serverbound.add(new ServerboundMovePlayerPacket.StatusOnly(onGround, horizontalCollision));
         }
+        //?} elif >=1.21.2 {
+                    /*e.getX(), e.getY(), e.getZ(), e.getYRot(), e.getXRot(), onGround, horizontalCollision));
+        } else if (move) {
+            serverbound.add(new ServerboundMovePlayerPacket.Pos(
+                    e.getX(), e.getY(), e.getZ(), onGround, horizontalCollision));
+        } else if (rot) {
+            serverbound.add(new ServerboundMovePlayerPacket.Rot(
+                    e.getYRot(), e.getXRot(), onGround, horizontalCollision));
+        } else if (lastOnGround != onGround || lastHorizontalCollision != horizontalCollision) {
+            serverbound.add(new ServerboundMovePlayerPacket.StatusOnly(onGround, horizontalCollision));
+        }
+        *///?} else {
+                    /*e.getX(), e.getY(), e.getZ(), e.getYRot(), e.getXRot(), onGround));
+        } else if (move) {
+            serverbound.add(new ServerboundMovePlayerPacket.Pos(e.getX(), e.getY(), e.getZ(), onGround));
+        } else if (rot) {
+            serverbound.add(new ServerboundMovePlayerPacket.Rot(e.getYRot(), e.getXRot(), onGround));
+        } else if (lastOnGround != onGround) {
+            serverbound.add(new ServerboundMovePlayerPacket.StatusOnly(onGround));
+        }
+        *///?}
         if (move) {
             xLast = e.getX();
             yLast = e.getY();
@@ -316,7 +448,11 @@ public final class PairedServerSim {
         rightClickDelay = RIGHT_CLICK_DELAY_TICKS;
         Vec3 eye = new Vec3(e.getX(), e.getEyeY(), e.getZ());
         Vec3 dir = pickViewVector(pitch, e.getYRot());
+        //? if >=1.20.5 {
         double range = e.blockInteractionRange();
+        //?} else {
+        /*double range = 4.5;
+        *///?}
         HitResult hit = level.clip(new ClipContext(eye, eye.add(dir.scale(range)),
                 ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, e));
         if (hit.getType() != HitResult.Type.BLOCK || !(hit instanceof BlockHitResult blockHit)) {
@@ -358,7 +494,7 @@ public final class PairedServerSim {
             sp.yo = sp.getY();
             sp.zo = sp.getZ();
             sp.doTick();
-            sp.absSnapTo(handler.firstGoodX, handler.firstGoodY, handler.firstGoodZ, sp.getYRot(), sp.getXRot());
+            snapServerPlayer(handler.firstGoodX, handler.firstGoodY, handler.firstGoodZ, sp.getYRot(), sp.getXRot());
             handler.tickCount = before + 1;
             handler.knownMovePacketCount = handler.receivedMovePacketCount;
         }
@@ -388,8 +524,14 @@ public final class PairedServerSim {
     }
 
     private void flushHurtMarked() {
-        if (sp.syncVelocity) {
-            sp.syncVelocity = false;
+        //? if >=26.1 {
+        boolean pendingVelocity = sp.syncVelocity;
+        sp.syncVelocity = false;
+        //?} else {
+        /*boolean pendingVelocity = sp.hurtMarked;
+        sp.hurtMarked = false;
+        *///?}
+        if (pendingVelocity) {
             pendingClientbound.add(new ClientboundSetEntityMotionPacket(sp));
             if (DebugFlags.PAIRED_DIAGNOSTICS) {
                 Vec3 raw = sp.getDeltaMovement();
@@ -401,6 +543,7 @@ public final class PairedServerSim {
     }
 
     static Vec3 quantizeVelocity(Vec3 velocity) {
+        //? if >=26.1 {
         ByteBuf buf = Unpooled.buffer();
         try {
             LpVec3.write(buf, velocity);
@@ -408,7 +551,16 @@ public final class PairedServerSim {
         } finally {
             buf.release();
         }
+        //?} else {
+        /*return new Vec3(quantizeAxis(velocity.x), quantizeAxis(velocity.y), quantizeAxis(velocity.z));
+        *///?}
     }
+
+    //? if <26.1 {
+    /*private static double quantizeAxis(double value) {
+        return (double) (int) (Mth.clamp(value, -3.9, 3.9) * 8000.0) / 8000.0;
+    }
+    *///?}
 
     private void onLandingRuled(double fallDistance, BlockState sampledState, BlockPos sampledPos) {
         if (!DebugFlags.PAIRED_DIAGNOSTICS) return;
@@ -492,9 +644,14 @@ public final class PairedServerSim {
         c.fallDistance = sp.fallDistance;
         c.onGround = sp.onGround();
         c.verticalCollisionBelow = sp.verticalCollisionBelow;
+        //? if >=26.1 {
         c.damageCooldownTime = sp.damageCooldownTime;
-        c.hurtTime = sp.hurtTime;
         c.syncVelocity = sp.syncVelocity;
+        //?} else {
+        /*c.damageCooldownTime = sp.invulnerableTime;
+        c.syncVelocity = sp.hurtMarked;
+        *///?}
+        c.hurtTime = sp.hurtTime;
         c.remainingFireTicks = sp.getRemainingFireTicks();
         c.airSupply = sp.getAirSupply();
         c.shiftKeyDown = sp.isShiftKeyDown();
@@ -523,7 +680,10 @@ public final class PairedServerSim {
         c.lastOnGround = lastOnGround;
         c.lastHorizontalCollision = lastHorizontalCollision;
         c.lastSentInput = lastSentInput;
+        //? if >=1.21.2
         c.serverLastClientInput = sp.getLastClientInput();
+        //? if <26.1
+        //c.lastShiftKeyDown = lastShiftKeyDown;
         c.lastSprinting = lastSprinting;
         c.prevRightClick = prevRightClick;
         c.rightClickDelay = rightClickDelay;
@@ -543,14 +703,19 @@ public final class PairedServerSim {
         } finally {
             journal.endWindow();
         }
-        sp.absSnapTo(c.posX, c.posY, c.posZ, c.yRot, c.xRot);
+        snapServerPlayer(c.posX, c.posY, c.posZ, c.yRot, c.xRot);
         sp.setDeltaMovement(c.velX, c.velY, c.velZ);
         sp.fallDistance = c.fallDistance;
         sp.setOnGround(c.onGround);
         sp.verticalCollisionBelow = c.verticalCollisionBelow;
+        //? if >=26.1 {
         sp.damageCooldownTime = c.damageCooldownTime;
-        sp.hurtTime = c.hurtTime;
         sp.syncVelocity = c.syncVelocity;
+        //?} else {
+        /*sp.invulnerableTime = c.damageCooldownTime;
+        sp.hurtMarked = c.syncVelocity;
+        *///?}
+        sp.hurtTime = c.hurtTime;
         sp.setRemainingFireTicks(c.remainingFireTicks);
         sp.setAirSupply(c.airSupply);
         sp.setShiftKeyDown(c.shiftKeyDown);
@@ -581,7 +746,10 @@ public final class PairedServerSim {
         lastOnGround = c.lastOnGround;
         lastHorizontalCollision = c.lastHorizontalCollision;
         lastSentInput = c.lastSentInput;
+        //? if >=1.21.2
         sp.setLastClientInput(c.serverLastClientInput);
+        //? if <26.1
+        //lastShiftKeyDown = c.lastShiftKeyDown;
         lastSprinting = c.lastSprinting;
         prevRightClick = c.prevRightClick;
         rightClickDelay = c.rightClickDelay;
@@ -603,7 +771,11 @@ public final class PairedServerSim {
         double velX;
         double velY;
         double velZ;
+        //? if >=26.1 {
         double fallDistance;
+        //?} else {
+        /*float fallDistance;
+        *///?}
         boolean onGround;
         boolean verticalCollisionBelow;
         int damageCooldownTime;
@@ -637,7 +809,10 @@ public final class PairedServerSim {
         boolean lastOnGround;
         boolean lastHorizontalCollision;
         Input lastSentInput;
+        //? if >=1.21.2
         Input serverLastClientInput;
+        //? if <26.1
+        //boolean lastShiftKeyDown;
         boolean lastSprinting;
         boolean prevRightClick;
         int rightClickDelay;

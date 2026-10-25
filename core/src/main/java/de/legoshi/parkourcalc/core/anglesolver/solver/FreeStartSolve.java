@@ -2,6 +2,7 @@ package de.legoshi.parkourcalc.core.anglesolver.solver;
 
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -128,11 +129,106 @@ public final class FreeStartSolve {
         return deadlineNanos > 0L && System.nanoTime() >= deadlineNanos;
     }
 
+    private static final int ORDER_ROUNDS = 16;
+
     public static Result solveJointBest(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
                                         Config cfg, long deadlineNanos) {
         JumpPhysicsInputs base = spec.asScenario();
         StartBox box = base.startBox;
         if (box == null || !box.startFree()) return null;
+        if (JumpLinearModel.hasFacingWall(spec.constraints)) {
+            YawOrder order = YawOrder.carry(spec.constraints, YawTies.of(spec.constraints, base.numTicks), base.numTicks);
+            if (order == null) return null;
+            if (!order.isEmpty()) return solveJointOrdered(exact, spec, feasTol, cancel, cfg, deadlineNanos, order);
+        }
+        return solveJointUnordered(exact, spec, feasTol, cancel, cfg, deadlineNanos);
+    }
+
+    private static Result solveJointOrdered(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
+                                            Config cfg, long deadlineNanos, YawOrder order) {
+        JumpPhysicsInputs base = spec.asScenario();
+        JumpLinearModel lin = new JumpLinearModel(base);
+        List<JumpConstraint> stripped = order.stripped(spec.constraints);
+        boolean[] tie = new boolean[order.links().size()];
+        boolean[] pinLo = new boolean[order.bounds().size()];
+        boolean[] pinHi = new boolean[order.bounds().size()];
+        Result least = null;
+        double leastViol = Double.POSITIVE_INFINITY;
+        for (int round = 0; round < ORDER_ROUNDS; round++) {
+            if (cancel != null && cancel.get()) break;
+            if (past(deadlineNanos)) break;
+            JumpSpec work = new JumpSpec(base, order.withTies(stripped, tie, pinLo, pinHi), spec.objective);
+            Result r = solveJointUnordered(exact, work, feasTol, cancel, cfg, deadlineNanos);
+            if (r == null) break;
+            r = new Result(YawOrder.carryFreeTicks(lin, base.startYaw, r.yaws), r.startX, r.startZ, r.feasible);
+            double viol = violationAt(exact, spec, r.yaws, r.startX, r.startZ);
+            if (viol < leastViol) {
+                leastViol = viol;
+                least = new Result(r.yaws, r.startX, r.startZ, false);
+            }
+            if (SolverTrace.on()) {
+                SolverTrace.log("FREE", "joint ordered round=%d ties=%s viol=%.3e feasible=%s worst=%s n=%d yaws=%d", round,
+                        flags(tie), viol, r.feasible, worstConstraint(exact, spec, r.yaws, r.startX, r.startZ),
+                        base.numTicks, r.yaws.length);
+            }
+            if (viol <= feasTol) return new Result(r.yaws, r.startX, r.startZ, true);
+            JumpSpec pinned = specAtStart(base, spec, r.startX, r.startZ);
+            double[] cf = ClosedFormSolve.optimize(exact, pinned, feasTol, cancel);
+            if (cf != null && violationAt(exact, spec, cf, r.startX, r.startZ) <= feasTol) {
+                if (SolverTrace.on()) SolverTrace.log("FREE", "joint ordered round=%d pinned closed form landed", round);
+                return new Result(Angles.wrapAll(cf), r.startX, r.startZ, true);
+            }
+            if (cancel != null && cancel.get()) break;
+            double[] slp = SlpSolve.optimize(exact, pinned, feasTol, cancel, order.project(Angles.wrapAll(r.yaws)));
+            if (slp != null && violationAt(exact, spec, slp, r.startX, r.startZ) <= feasTol) {
+                if (SolverTrace.on()) SolverTrace.log("FREE", "joint ordered round=%d pinned SLP landed", round);
+                return new Result(Angles.wrapAll(slp), r.startX, r.startZ, true);
+            }
+            boolean[] nextTie = tie.clone();
+            boolean[] nextLo = pinLo.clone();
+            boolean[] nextHi = pinHi.clone();
+            order.structureOf(r.yaws, nextTie, nextLo, nextHi);
+            for (int l = 0; l < tie.length; l++) nextTie[l] |= tie[l];
+            for (int b = 0; b < pinLo.length; b++) {
+                nextLo[b] |= pinLo[b];
+                nextHi[b] |= pinHi[b];
+            }
+            if (Arrays.equals(nextTie, tie) && Arrays.equals(nextLo, pinLo) && Arrays.equals(nextHi, pinHi)) break;
+            tie = nextTie;
+            pinLo = nextLo;
+            pinHi = nextHi;
+        }
+        return least;
+    }
+
+    private static String worstConstraint(ExactJumpModel exact, JumpSpec spec, double[] yaws, double p0x, double p0z) {
+        JumpSpec at = specAtStart(spec.asScenario(), spec, p0x, p0z);
+        JumpPhysicsInputs atSc = at.asScenario();
+        double[] gf = atSc.toGameFacings(Angles.wrapAll(yaws));
+        ForwardPath path = exact.forward(atSc, gf);
+        String name = "-";
+        double worst = Double.NEGATIVE_INFINITY;
+        for (JumpConstraint c : at.constraints) {
+            double e = JumpConstraintCompiler.evaluate(c, gf, path);
+            double v = c.cmp == JumpConstraint.Cmp.GE ? -e : (c.cmp == JumpConstraint.Cmp.LE ? e : Math.abs(e));
+            if (v > worst) {
+                worst = v;
+                name = c.name + "(" + c.mode + " t1=" + c.t1 + " t2=" + c.t2 + " e=" + SolverTrace.fmt("%.3e", e) + ")";
+            }
+        }
+        return name;
+    }
+
+    private static String flags(boolean[] f) {
+        StringBuilder sb = new StringBuilder();
+        for (boolean b : f) sb.append(b ? '1' : '0');
+        return sb.toString();
+    }
+
+    private static Result solveJointUnordered(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
+                                              Config cfg, long deadlineNanos) {
+        JumpPhysicsInputs base = spec.asScenario();
+        StartBox box = base.startBox;
 
         double refX = 0.5 * (box.pxLo + box.pxHi);
         double refZ = 0.5 * (box.pzLo + box.pzHi);
@@ -697,14 +793,12 @@ public final class FreeStartSolve {
             }
         }
         Objective obj = spec.objective;
-        int objAxis = obj.axis == JumpPhysicsInputs.Axis.X ? 0 : 1;
-        boolean max = obj.sense == Objective.Sense.MAX;
-        double dx = pickBest(loX, hiX, box.pxLo - path.posX[0], box.pxHi - path.posX[0], objAxis == 0, max);
-        double dz = pickBest(loZ, hiZ, box.pzLo - path.posZ[0], box.pzHi - path.posZ[0], objAxis == 1, max);
+        double dx = pickBest(loX, hiX, box.pxLo - path.posX[0], box.pxHi - path.posX[0], obj.translationGradX());
+        double dz = pickBest(loZ, hiZ, box.pzLo - path.posZ[0], box.pzHi - path.posZ[0], obj.translationGradZ());
         return new double[] {dx, dz};
     }
 
-    private static double pickBest(double lo, double hi, double bLo, double bHi, boolean objectiveAxis, boolean max) {
+    private static double pickBest(double lo, double hi, double bLo, double bHi, double grad) {
         double flo = Math.max(lo, bLo);
         double fhi = Math.min(hi, bHi);
         if (flo <= fhi) return 0.5 * (flo + fhi);
@@ -781,16 +875,15 @@ public final class FreeStartSolve {
         if (loX > hiX + EMPTY_TOL || loZ > hiZ + EMPTY_TOL) return null;
 
         Objective obj = spec.objective;
-        int objAxis = obj.axis == JumpPhysicsInputs.Axis.X ? 0 : 1;
-        boolean max = obj.sense == Objective.Sense.MAX;
-        double dx = pickDelta(loX, hiX, objAxis == 0, max);
-        double dz = pickDelta(loZ, hiZ, objAxis == 1, max);
+        double dx = pickDelta(loX, hiX, obj.translationGradX());
+        double dz = pickDelta(loZ, hiZ, obj.translationGradZ());
         return new double[] {dx, dz};
     }
 
-    private static double pickDelta(double lo, double hi, boolean objectiveAxis, boolean max) {
+    private static double pickDelta(double lo, double hi, double grad) {
         if (lo > hi) return 0.0;
-        if (objectiveAxis) return max ? hi : lo;
+        if (grad > 0.0) return hi;
+        if (grad < 0.0) return lo;
         return clamp(0.0, lo, hi);
     }
 
@@ -809,15 +902,19 @@ public final class FreeStartSolve {
         a.strafeSign = b.strafeSign;
         a.strafePerTick = b.strafePerTick;
         a.speedAmplifier = b.speedAmplifier;
+        a.slownessAmplifier = b.slownessAmplifier;
         a.slipPerTick = b.slipPerTick;
         a.surfacePerTick = b.surfacePerTick;
         a.soulsandCellsPerTick = b.soulsandCellsPerTick;
         a.sneakPerTick = b.sneakPerTick;
+        a.dolphinsGracePerTick = b.dolphinsGracePerTick;
+        a.weavingPerTick = b.weavingPerTick;
         a.yawLockedPerTick = b.yawLockedPerTick;
         a.sprintPerTick = b.sprintPerTick;
         a.incomingSprint = b.incomingSprint;
         a.incomingAmp = b.incomingAmp;
-        a.liveAirSprintFactor = b.liveAirSprintFactor;
+        a.incomingSlowness = b.incomingSlowness;
+        a.liveMovementFactor = b.liveMovementFactor;
         a.forwardInputPerTick = b.forwardInputPerTick;
         a.strafeInputPerTick = b.strafeInputPerTick;
         return a;

@@ -1,7 +1,10 @@
 package de.legoshi.parkourcalc.fabric.sim.paired;
 
 import de.legoshi.parkourcalc.core.sim.Checkpoint;
+import de.legoshi.parkourcalc.fabric.mixin.LocalPlayerAccessor;
 import de.legoshi.parkourcalc.fabric.sim.SimulatorEntity;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.server.level.ServerPlayer;
 
 public final class PairedCheckpoint implements Checkpoint {
@@ -26,7 +29,7 @@ public final class PairedCheckpoint implements Checkpoint {
         if (pending == null) return null;
         for (net.minecraft.network.protocol.Packet<?> p : pending) {
             if (p instanceof net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket motion) {
-                return PairedServerSim.quantizeVelocity(motion.movement());
+                return PairedServerSim.motionVelocity(motion);
             }
         }
         return null;
@@ -50,7 +53,11 @@ public final class PairedCheckpoint implements Checkpoint {
                 + " cooldown=" + s.damageCooldownTime
                 + " hurtTime=" + s.hurtTime
                 + " fire=" + s.remainingFireTicks
+                //? if >=1.21.2 {
                 + " in=" + PairedServerSim.describeInput(s.serverLastClientInput)
+                //?} else {
+                /*+ " in=" + PairedServerSim.describeInput(s.lastSentInput)
+                *///?}
                 + " tp=" + (s.awaitingPositionFromClient != null)
                 + " tpId=" + s.awaitingTeleport
                 + " recv=" + s.receivedMovePacketCount + "/" + s.knownMovePacketCount
@@ -59,12 +66,21 @@ public final class PairedCheckpoint implements Checkpoint {
     }
 
     public static void applyRestartState(ServerPlayer sp, Checkpoint checkpoint) {
+        //? if >=26.1 {
         sp.syncVelocity = false;
+        //?} else {
+        /*sp.hurtMarked = false;
+        sp.spawnInvulnerableTime = 0;
+        *///?}
         net.minecraft.world.phys.Vec3 beforeMotion = sp.getDeltaMovement();
         if (checkpoint instanceof PairedCheckpoint paired) {
             sp.setRemainingFireTicks(paired.server.remainingFireTicks);
             sp.setAirSupply(paired.server.airSupply);
+            //? if >=26.1 {
             sp.damageCooldownTime = paired.server.damageCooldownTime;
+            //?} else {
+            /*sp.invulnerableTime = paired.server.damageCooldownTime;
+            *///?}
             sp.hurtTime = paired.server.hurtTime;
             sp.fallDistance = paired.server.fallDistance;
             sp.setOnGround(paired.server.onGround);
@@ -72,22 +88,45 @@ public final class PairedCheckpoint implements Checkpoint {
             sp.setDeltaMovement(paired.server.velX, paired.server.velY, paired.server.velZ);
             sp.setSprinting(paired.server.sprinting);
             sp.setShiftKeyDown(paired.server.shiftKeyDown);
+            syncClientSentState(paired.server.sprinting, paired.server.shiftKeyDown);
+            //? if >=1.21.2 {
             if (paired.server.serverLastClientInput != null) {
                 sp.setLastClientInput(paired.server.serverLastClientInput);
             }
+            //?}
         } else {
             sp.clearFire();
+            //? if >=26.1 {
             sp.damageCooldownTime = 0;
+            //?} else {
+            /*sp.invulnerableTime = 0;
+            *///?}
             sp.hurtTime = 0;
-            sp.fallDistance = 0.0;
+            sp.fallDistance = 0;
         }
         if (de.legoshi.parkourcalc.core.DebugFlags.PAIRED_DIAGNOSTICS) {
             System.out.println("[PC-NET] restart state fire=" + sp.getRemainingFireTicks()
+                    //? if >=26.1 {
                     + " cooldown=" + sp.damageCooldownTime
+                    //?} else {
+                    /*+ " cooldown=" + sp.invulnerableTime
+                    *///?}
                     + " fallDistance=" + sp.fallDistance
                     + " serverMotion=" + sp.getDeltaMovement()
                     + " wasServerMotion=" + beforeMotion
                     + " paired=" + (checkpoint instanceof PairedCheckpoint));
         }
+    }
+
+    public static void syncClientSentState(boolean sprinting, Boolean shiftKeyDown) {
+        Minecraft mc = Minecraft.getInstance();
+        mc.execute(() -> {
+            LocalPlayer p = mc.player;
+            if (p == null) return;
+            LocalPlayerAccessor acc = (LocalPlayerAccessor) p;
+            acc.pkc$setWasSprinting(sprinting);
+            //? if <26.1
+            //if (shiftKeyDown != null) acc.pkc$setWasShiftKeyDown(shiftKeyDown);
+        });
     }
 }

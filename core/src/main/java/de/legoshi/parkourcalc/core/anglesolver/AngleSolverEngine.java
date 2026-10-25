@@ -5,6 +5,7 @@ import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.BoxController;
 import de.legoshi.parkourcalc.core.ui.InputData;
 import de.legoshi.parkourcalc.core.ui.InputRow;
+import de.legoshi.parkourcalc.core.ui.MovementEffect;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Candidate;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphContext;
 import de.legoshi.parkourcalc.core.anglesolver.graph.BuiltinGraphs;
@@ -13,6 +14,7 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.GraphRunState;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphRunner;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Scoring;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolveRunLog;
+import de.legoshi.parkourcalc.core.anglesolver.graph.SmoothOutcome;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolveRunRecord;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
@@ -418,12 +420,13 @@ public final class AngleSolverEngine {
         if (freeStartYaw) ph.inputs.yawLockedPerTick[0] = true;
 
         List<JumpConstraint> constraints = new ArrayList<>();
+        int objectiveTick = objectiveSegTick(startTick, numTicks);
         Objective objective = state.isCustomAngle()
                 ? new Objective(state.getCustomAngleDeg(),
                 state.getCustomAngleType() == AngleSolverState.CustomAngleType.MOTION
                         ? Objective.Type.MOTION : Objective.Type.POSITION,
-                numTicks, state.getSmoothLambda())
-                : new Objective(axis(state.getAxis()), sense(state.getGoal()), numTicks,
+                objectiveTick, state.getSmoothLambda())
+                : new Objective(axis(state.getAxis()), sense(state.getGoal()), objectiveTick,
                 state.getSmoothLambda());
         for (ConstraintAt ca : uiCons) {
             if (consumed.contains(ca.c)) continue;
@@ -468,6 +471,7 @@ public final class AngleSolverEngine {
     }
 
     public String legalGoalWallLabel() {
+        if (state.isCustomAngle()) return null;
         int startTick = state.getStartTick();
         int landingTick = state.getLandingTick();
         int numTicks = landingTick - startTick;
@@ -482,10 +486,16 @@ public final class AngleSolverEngine {
             if (consumed.contains(ca.c)) continue;
             addMapped(constraints, ca.c, ca.absTick, ca.segTick, numTicks, seamSeedYaw, null);
         }
-        Objective objective = new Objective(axis(state.getAxis()), sense(state.getGoal()), numTicks);
+        Objective objective = new Objective(axis(state.getAxis()), sense(state.getGoal()),
+                objectiveSegTick(startTick, numTicks));
         String[] whyNot = new String[1];
         JumpConstraint goal = selectLegalGoalWall(constraints, objective, whyNot);
         return goal != null ? goal.name : null;
+    }
+
+    private int objectiveSegTick(int startTick, int numTicks) {
+        int seg = state.effectiveObjectiveTick() - startTick;
+        return Math.max(1, Math.min(numTicks, seg));
     }
 
     public static JumpConstraint tightestGoalWall(List<JumpConstraint> constraints, Objective objective) {
@@ -498,6 +508,10 @@ public final class AngleSolverEngine {
 
     private static JumpConstraint selectLegalGoalWall(List<JumpConstraint> constraints, Objective objective,
                                                       String[] whyNot, boolean allowTies) {
+        if (objective.isCustomAngle()) {
+            whyNot[0] = "the Angle goal has no goal wall on an axis";
+            return null;
+        }
         boolean max = objective.sense == Objective.Sense.MAX;
         JumpConstraint.Cmp want = max ? JumpConstraint.Cmp.GE : JumpConstraint.Cmp.LE;
         JumpConstraint.Mode wantMode = objective.axis == JumpPhysicsInputs.Axis.X
@@ -694,10 +708,13 @@ public final class AngleSolverEngine {
         boolean[] jumpMask = new boolean[numTicks];
         boolean[] yawLocked = new boolean[numTicks];
         int[] speedAmp = new int[numTicks];
+        int[] slowAmp = new int[numTicks];
         double[] slipPerTick = new double[numTicks];
         SurfaceKind[] surfacePerTick = new SurfaceKind[numTicks];
         int[] soulsandCellsPerTick = new int[numTicks];
         boolean[] sneakPerTick = new boolean[numTicks];
+        boolean[] dolphinsGrace = new boolean[numTicks];
+        boolean[] weaving = new boolean[numTicks];
         float[] forwardIn = new float[numTicks];
         float[] strafeIn = new float[numTicks];
         boolean[] sprintArr = new boolean[numTicks];
@@ -716,6 +733,8 @@ public final class AngleSolverEngine {
             surfacePerTick[k] = effMedium(t).kind;
             soulsandCellsPerTick[k] = effSoulsandCells(t);
             sneakPerTick[k] = row.isKeyActive(InputRow.Key.SNEAK);
+            dolphinsGrace[k] = row.getEffectLevel(MovementEffect.DOLPHINS_GRACE) > 0;
+            weaving[k] = row.getEffectLevel(MovementEffect.WEAVING) > 0;
             jumpMask[k] = jumpRow;
             force45Mask[k] = effInputs(t) == AngleSolverState.InputMode.FORCE_45;
             // W-only only on a real (grounded) jump, so the 0.2 sprintjump boost stays aligned with travel.
@@ -743,6 +762,7 @@ public final class AngleSolverEngine {
             }
             yawLocked[k] = row.isYawLocked();
             speedAmp[k] = effSpeedLevel(t, rows);
+            slowAmp[k] = effSlownessLevel(t, rows);
         }
         if (deriveAny) healWallHitSprint(startTick, numTicks, sprintArr, forwardIn);
         JumpPhysicsInputs phys = new JumpPhysicsInputs(numTicks);
@@ -755,19 +775,23 @@ public final class AngleSolverEngine {
         phys.jumpPerTick = jumpMask;
         phys.strafePerTick = strafeMask;
         phys.speedAmplifier = speedAmp;
+        phys.slownessAmplifier = slowAmp;
         phys.slipPerTick = slipPerTick;
         phys.surfacePerTick = surfacePerTick;
         phys.soulsandCellsPerTick = soulsandCellsPerTick;
         phys.sneakPerTick = sneakPerTick;
+        phys.dolphinsGracePerTick = dolphinsGrace;
+        phys.weavingPerTick = weaving;
         phys.yawLockedPerTick = yawLocked;
         phys.forwardInputPerTick = forwardIn;
         phys.strafeInputPerTick = strafeIn;
         phys.sprintPerTick = sprintArr;
-        phys.liveAirSprintFactor = modernCollision;
+        phys.liveMovementFactor = modernCollision;
         phys.incomingSprint = effSprint(startTick) == AngleSolverState.SprintMode.DERIVE
                 ? (seed.hasMovementSample() ? seed.sprinting : Boolean.TRUE)
                 : Boolean.TRUE;
         phys.incomingAmp = startTick > 0 ? effSpeedLevel(startTick - 1, rows) : effSpeedLevel(startTick, rows);
+        phys.incomingSlowness = startTick > 0 ? effSlownessLevel(startTick - 1, rows) : effSlownessLevel(startTick, rows);
         return new Phys(phys, strafeMask, force45Mask, jumpTickRel);
     }
 
@@ -793,7 +817,8 @@ public final class AngleSolverEngine {
     private static boolean consumeFirstTickZeroTurn(List<ConstraintAt> uiCons, Set<Constraint> consumed) {
         boolean any = false;
         for (ConstraintAt ca : uiCons) {
-            if (ca.absTick != 0 || ca.c.getField() != Constraint.Field.DF || ca.c.isUnsupportedDf()) continue;
+            if (ca.absTick != 0 || ca.c.getField() != Constraint.Field.DF || ca.c.isUnsupportedDf()
+                    || ca.c.getOp() != Constraint.Op.EQ) continue;
             consumed.add(ca.c);
             any = true;
         }
@@ -1114,8 +1139,9 @@ public final class AngleSolverEngine {
         double[] gameFacings = sc.toGameFacings(yaws);
         ForwardPath path = model.forward(sc, gameFacings);
         SolveResult result = assembleResult(job, yaws, gameFacings, path, solverName, solveNanos, dualGap);
+        addSmoothingDetails(result, job, ctx.smoothOutcome());
         if (job.legalGoal != null) {
-            double achieved = path.getPos(spec.objective.tick, spec.objective.axis);
+            double achieved = spec.objective.evaluate(path);
             double shortfall = spec.objective.sense == Objective.Sense.MAX
                     ? job.legalGoal.rhs - achieved : achieved - job.legalGoal.rhs;
             result.addDetail("Legal shortfall", String.format(java.util.Locale.ROOT,
@@ -1131,6 +1157,24 @@ public final class AngleSolverEngine {
         finishRecord(rec, SolveRunRecord.STATUS_SOLVED, finalObjective, finalViolation,
                 finalViolation <= FEAS_TOL, solverName, yaws);
         return new Outcome(result, planOf(job, yaws, path, sc, stageLocked));
+    }
+
+    private static void addSmoothingDetails(SolveResult result, Job job, SmoothOutcome smooth) {
+        if (smooth == null) return;
+        String stop = smooth.stop.label;
+        result.addDetail("Smoothing", ConstraintText.duration(smooth.nanos) + " · " + stop
+                + (smooth.changed() ? "" : " · nothing to improve"));
+        if (smooth.changed()) {
+            SolveRunRecord.Outcome before = new SolveRunRecord.Outcome();
+            SolveRunRecord.smoothnessOf(before, smooth.before);
+            if (before.yawTravelDeg != null) {
+                result.addDetail("Yaw travel before", Math.round(before.yawTravelDeg) + " deg");
+                result.addDetail("Yaw reversals before", Integer.toString(before.yawDirChanges));
+            }
+        }
+        if (job.graph != null && BuiltinGraphs.SMOOTH_PRESET.equals(job.graph.name)) {
+            result.setSmoothing(stop, smooth.nanos);
+        }
     }
 
     private static Plan planOf(Job job, double[] yaws, ForwardPath path, JumpPhysicsInputs sc, boolean lockYaws) {
@@ -1196,11 +1240,11 @@ public final class AngleSolverEngine {
     }
 
     public static final String DF_UNSUPPORTED_NOTICE =
-            "This jump carries a delta-facing (dF) constraint that is not dF = 0. Only dF = 0 is"
-            + " supported: the inequality and band shapes were retired, so every solver stage"
-            + " declines the problem before searching and the solve cannot succeed while one is"
-            + " present. Re-select the dF field on that constraint to reset it to dF = 0, or delete"
-            + " the constraint.";
+            "This jump carries a delta-facing (dF) band constraint. dF supports = 0 (hold the facing),"
+            + " >= (turn one way, at least the given degrees per tick) and <= (the other way); a band"
+            + " is not supported, so every solver stage declines the problem before searching and the"
+            + " solve cannot succeed while one is present. Re-select the dF field on that constraint"
+            + " to reset it to dF = 0, or delete the constraint.";
 
     public static final String DF_DIRECTION_LABEL = "Direction unverified";
 
@@ -1208,8 +1252,9 @@ public final class AngleSolverEngine {
             "This jump has a delta-facing (dF) constraint. Landing does not depend on the Solve For"
             + " direction, but optimizing toward it is not guaranteed here: the deterministic"
             + " direction-optimizer only runs without dF constraints, so this result comes from the"
-            + " general search and may not be the exact directional optimum. Ordinary keep-out walls"
-            + " are position constraints and are not affected.";
+            + " general search (the SLP and the certified B&B carry dF >= and dF <= exactly) and may"
+            + " not be the exact directional optimum. Ordinary keep-out walls are position"
+            + " constraints and are not affected.";
 
     /** The byte-exact objective value the given facings realize (for comparing two feasible candidates). */
     private double exactObjective(JumpPhysicsInputs sc, JumpSpec spec, double[] yawsAbsWrapped) {
@@ -1301,7 +1346,7 @@ public final class AngleSolverEngine {
             String field = o.isMotion() ? "dAngle" : "Angle";
             return new SolveResult.Outcome(field, "T" + (startTick + o.tick + 1),
                     String.format(java.util.Locale.ROOT, "%.1f°", o.customYaw),
-                    ConstraintText.fixedStat(r.getObjectiveValue()), "");
+                    ConstraintText.fixedStat(r.getObjectiveValue()), o.isMotion() ? "b/t" : "");
         }
         String field = o.axis == JumpPhysicsInputs.Axis.X ? "X" : "Z";
         String sense = o.sense == Objective.Sense.MAX ? "max" : "min";
@@ -1570,13 +1615,26 @@ public final class AngleSolverEngine {
 
     /** Effective Speed amplifier at a tick: override added/removed over the TAS row's own amplifier. */
     private int effSpeedLevel(int tick, List<InputRow> rows) {
+        return clientLevel(effPotionLevel(tick, Potion.SPEED, tick >= 0 && tick < rows.size() ? rows.get(tick).getSpeedAmplifier() : 0));
+    }
+
+    private int effSlownessLevel(int tick, List<InputRow> rows) {
+        return clientLevel(effPotionLevel(tick, Potion.SLOWNESS, tick >= 0 && tick < rows.size() ? rows.get(tick).getSlownessAmplifier() : 0));
+    }
+
+    private int clientLevel(int level) {
+        ExactJumpModel exact = exactModel();
+        return MovementEffect.clientLevel(level, exact != null && exact.byteAmplifier());
+    }
+
+    private int effPotionLevel(int tick, Potion potion, int rowLevel) {
         StateOverride ov = overrideAt(tick);
         if (ov != null) {
-            PotionDose added = ov.findAdded(Potion.SPEED);
+            PotionDose added = ov.findAdded(potion);
             if (added != null) return added.level;
-            if (ov.getRemoved().contains(Potion.SPEED)) return 0;
+            if (ov.getRemoved().contains(potion)) return 0;
         }
-        return tick >= 0 && tick < rows.size() ? rows.get(tick).getSpeedAmplifier() : 0;
+        return rowLevel;
     }
 
     private StateOverride overrideAt(int tick) {
@@ -1779,10 +1837,10 @@ public final class AngleSolverEngine {
         }
     }
 
-    private boolean satisfied(Constraint c, double found) {
+    public static boolean satisfied(Constraint c, double found) {
         if (c.isRange()) {
-            boolean lo = c.isLoInclusive() ? found >= c.getLo() - MET_TOL : found > c.getLo() - MET_TOL;
-            boolean hi = c.isHiInclusive() ? found <= c.getHi() + MET_TOL : found < c.getHi() + MET_TOL;
+            boolean lo = c.isLoInclusive() ? found >= c.getLo() - FEAS_TOL : found > c.getLo() - FEAS_TOL;
+            boolean hi = c.isHiInclusive() ? found <= c.getHi() + FEAS_TOL : found < c.getHi() + FEAS_TOL;
             return lo && hi;
         }
         double v = c.getValue();

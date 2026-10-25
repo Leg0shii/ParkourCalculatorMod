@@ -7,6 +7,7 @@ import de.legoshi.parkourcalc.core.anglesolver.TickConstraints;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
+import de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnProblem;
 import de.legoshi.parkourcalc.core.save.SaveFile;
 import de.legoshi.parkourcalc.core.save.SaveIO;
 import de.legoshi.parkourcalc.core.ui.InputData;
@@ -44,6 +45,11 @@ public final class NoTurnCapture {
 
     public JumpSpec buildSpec() {
         return new AngleSolverEngine(state, Fixtures.buildBoxes(file), inputs, t -> { }, model).debugBuildSpec();
+    }
+
+    public static NoTurnProblem problem(String capture) throws IOException {
+        NoTurnCapture c = load(capture);
+        return NoTurnProblem.from(c.buildSpec(), c.model);
     }
 
     public static boolean hasFreeBox(JumpSpec spec) {

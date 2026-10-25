@@ -33,7 +33,12 @@ public final class PairedServerPlayer extends ServerPlayer {
     public PairedServerPlayer(MinecraftServer server, ServerLevel level, GameProfile profile) {
         super(server, level, profile, ClientInformation.createDefault());
         gameMode.setGameModeForPlayer(GameType.DEFAULT_MODE, null);
+        //? if >=26.1 {
         getAdvancements().clearTriggers();
+        //?} else {
+        /*getAdvancements().stopListening();
+        spawnInvulnerableTime = 0;
+        *///?}
     }
 
     public void setDamageSink(DamageSink sink) {
@@ -57,11 +62,19 @@ public final class PairedServerPlayer extends ServerPlayer {
     }
 
     @Override
+    //? if >=1.21.2 {
     public boolean hurtServer(ServerLevel level, DamageSource source, float amount) {
+    //?} else {
+    /*public boolean hurt(DamageSource source, float amount) {
+    *///?}
         if (!damageGate.getAsBoolean()) {
             return false;
         }
+        //? if >=1.21.2 {
         boolean applied = super.hurtServer(level, source, amount);
+        //?} else {
+        /*boolean applied = super.hurt(source, amount);
+        *///?}
         if (applied && damageSink != null) {
             damageSink.onDamageRuled(source, amount);
         }
@@ -106,10 +119,16 @@ public final class PairedServerPlayer extends ServerPlayer {
     public void resetStat(Stat<?> stat) {
     }
 
+    //? if >=26.1 {
     @Override
     public boolean startSleeping(BlockPos bedPosition) {
         return false;
     }
+    //?} else {
+    /*@Override
+    public void startSleeping(BlockPos bedPosition) {
+    }
+    *///?}
 
     @Override
     public OptionalInt openMenu(MenuProvider provider) {

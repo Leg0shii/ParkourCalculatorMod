@@ -9,6 +9,7 @@ import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputData;
 import de.legoshi.parkourcalc.core.ui.InputRow;
+import de.legoshi.parkourcalc.core.ui.MovementEffect;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.BlockSelection;
 import de.legoshi.parkourcalc.core.anglesolver.Constraint;
@@ -26,6 +27,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -186,6 +188,7 @@ public final class SaveIO {
 
         state.setStartTick(a.startTick);
         state.setLandingTick(a.landingTick);
+        if (a.objectiveTick != null) state.setObjectiveTick(a.objectiveTick);
         state.setAxis(parseEnum(AngleSolverState.Axis.class, a.axis, AngleSolverState.Axis.X));
         state.setGoal(parseEnum(AngleSolverState.Goal.class, a.goal, AngleSolverState.Goal.MAX));
         state.setCustomAngle(a.customAngle != null && a.customAngle);
@@ -272,6 +275,8 @@ public final class SaveIO {
         Integer landing = remap.get(a.landingTick);
         a.startTick = start != null ? start : 0;
         a.landingTick = start != null && landing != null ? landing : 0;
+        Integer objective = a.objectiveTick != null ? remap.get(a.objectiveTick) : null;
+        a.objectiveTick = start != null && objective != null ? objective : null;
         a.result = null;
         a.deviation = null;
         a.deviationKind = null;
@@ -476,6 +481,8 @@ public final class SaveIO {
         r.pitchLocked = row.isPitchLocked();
         r.speedAmplifier = row.getSpeedAmplifier();
         r.jumpBoostAmplifier = row.getJumpBoostAmplifier();
+        r.slownessAmplifier = row.getSlownessAmplifier();
+        r.effects = extraEffects(row);
         r.hotbarSlot = row.getHotbarSlot();
         r.teleport = row.isTeleportEnabled();
         r.teleportX = row.getTeleportX();
@@ -492,6 +499,21 @@ public final class SaveIO {
         return r;
     }
 
+    private static Map<String, Integer> extraEffects(InputRow row) {
+        Map<String, Integer> out = null;
+        for (MovementEffect effect : MovementEffect.all()) {
+            int level = row.getEffectLevel(effect);
+            if (isLegacyEffect(effect) || level <= 0) continue;
+            if (out == null) out = new LinkedHashMap<String, Integer>();
+            out.put(effect.id, level);
+        }
+        return out;
+    }
+
+    private static boolean isLegacyEffect(MovementEffect effect) {
+        return effect == MovementEffect.SPEED || effect == MovementEffect.JUMP_BOOST || effect == MovementEffect.SLOWNESS;
+    }
+
     public static boolean rowMatches(SaveFile.Row r, InputRow row) {
         if (r == null) return false;
         for (InputRow.Key k : InputRow.Key.values()) {
@@ -504,6 +526,8 @@ public final class SaveIO {
                 && r.pitchLocked == row.isPitchLocked()
                 && r.speedAmplifier == row.getSpeedAmplifier()
                 && r.jumpBoostAmplifier == row.getJumpBoostAmplifier()
+                && r.slownessAmplifier == row.getSlownessAmplifier()
+                && Objects.equals(r.effects, extraEffects(row))
                 && r.hotbarSlot == row.getHotbarSlot()
                 && r.teleport == row.isTeleportEnabled()
                 && r.teleportX == row.getTeleportX()
@@ -540,6 +564,15 @@ public final class SaveIO {
         if (r != null) {
             row.setSpeedAmplifier(r.speedAmplifier);
             row.setJumpBoostAmplifier(r.jumpBoostAmplifier);
+            row.setSlownessAmplifier(r.slownessAmplifier);
+            if (r.effects != null) {
+                for (Map.Entry<String, Integer> entry : r.effects.entrySet()) {
+                    MovementEffect effect = MovementEffect.byId(entry.getKey());
+                    if (effect != null && !isLegacyEffect(effect) && entry.getValue() != null) {
+                        row.setEffectLevel(effect, entry.getValue());
+                    }
+                }
+            }
             row.setHotbarSlot(r.hotbarSlot);
             row.setTeleportDestination(r.teleportX, r.teleportY, r.teleportZ);
             row.setTeleportEnabled(r.teleport);
@@ -563,6 +596,7 @@ public final class SaveIO {
         SaveFile.AngleSolver a = new SaveFile.AngleSolver();
         a.startTick = s.getStartTick();
         a.landingTick = s.getLandingTick();
+        a.objectiveTick = s.hasObjectiveTick() ? s.getObjectiveTick() : null;
         a.axis = s.getAxis().name();
         a.goal = s.getGoal().name();
         a.customAngle = s.isCustomAngle();
@@ -831,6 +865,8 @@ public final class SaveIO {
         out.noticeLabel = r.getNoticeLabel();
         out.objectiveValue = r.getObjectiveValue();
         out.hasObjective = r.hasObjective();
+        out.smoothStop = r.getSmoothStop();
+        out.smoothNanos = r.getSmoothNanos();
         for (SolveResult.Outcome o : r.getOutcomes()) {
             SaveFile.Outcome so = new SaveFile.Outcome();
             so.field = o.field;
@@ -867,6 +903,7 @@ public final class SaveIO {
         r.setNotice(rd.notice);
         r.setNoticeLabel(rd.noticeLabel);
         if (rd.hasObjective) r.setObjective(rd.objectiveValue);
+        if (rd.smoothStop != null) r.setSmoothing(rd.smoothStop, rd.smoothNanos);
         if (rd.outcomes != null) {
             for (SaveFile.Outcome o : rd.outcomes) {
                 r.getOutcomes().add(new SolveResult.Outcome(o.field, o.tick, o.relation, o.found, o.margin, o.met == null || o.met));

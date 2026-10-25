@@ -1,40 +1,71 @@
 package de.legoshi.parkourcalc.fabric;
 
+//? if >=26.1
+import com.mojang.blaze3d.Blaze3D;
+import com.mojang.blaze3d.platform.InputConstants;
+//? if >=26.1 {
+import com.mojang.renderpearl.api.commands.RenderPass;
+//?} else {
+/*import com.mojang.blaze3d.vertex.PoseStack;
+*///?}
 import de.legoshi.parkourcalc.core.Application;
+import de.legoshi.parkourcalc.core.anglesolver.noturn.PoolScreenAccelerator;
+import de.legoshi.parkourcalc.gpu.OpenClPoolScreen;
 import de.legoshi.parkourcalc.core.PlaybackController;
 import de.legoshi.parkourcalc.core.anglesolver.BlockSelection;
 import de.legoshi.parkourcalc.core.io.OsSystemBridge;
 import de.legoshi.parkourcalc.core.save.FileSystemSaveStore;
 import de.legoshi.parkourcalc.core.ui.Settings;
 import de.legoshi.parkourcalc.fabric.imgui.ImGuiImpl;
+import de.legoshi.parkourcalc.fabric.input.FabricInput;
+//? if <26.1
+//import de.legoshi.parkourcalc.fabric.mixin.KeyMappingAccessor;
 import de.legoshi.parkourcalc.fabric.render.FabricHudOverlayRenderer;
 import de.legoshi.parkourcalc.fabric.render.FabricWorldOverlayRenderer;
 import de.legoshi.parkourcalc.fabric.sim.FabricSimulator;
 import imgui.ImGui;
 import imgui.ImGuiIO;
 import net.fabricmc.api.ClientModInitializer;
+//? if >=26.1 {
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+//?}
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.SharedConstants;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+//? if <26.1
+//import net.minecraft.Util;
 import net.minecraft.client.KeyMapping;
-import com.mojang.blaze3d.Blaze3D;
-import com.mojang.blaze3d.platform.InputConstants;
-import com.mojang.renderpearl.api.commands.RenderPass;
-import net.minecraft.client.renderer.state.level.LevelRenderState;
+import net.minecraft.client.Minecraft;
+//? if >=26.1 {
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+//?} else {
+/*import net.minecraft.client.gui.GuiGraphics;
+*///?}
+import net.minecraft.client.gui.screens.Screen;
+//? if >=26.1 {
 import net.minecraft.resources.Identifier;
+//?} else {
+/*import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.phys.Vec3;
+*///?}
 
+//? if >=26.1 {
 import java.net.URI;
+//?} else {
+/*import java.util.ArrayList;
+import java.util.List;
+*///?}
 
 public class FabricParkourCalculator implements ClientModInitializer {
 
     public static final String MOD_ID = "parkourcalculator";
+    //? if <26.1
+    //private static final String KEY_CATEGORY = "key.category.parkourcalculator.general";
 
     public static KeyMapping toggleKeyBinding;
     public static KeyMapping deselectKeyBinding;
@@ -46,6 +77,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
     private static KeyMapping solveKeyBinding;
     private static KeyMapping solverStartTickKeyBinding;
     private static KeyMapping solverEndTickKeyBinding;
+    private static KeyMapping solverGoalFromLookKeyBinding;
     private static KeyMapping rerunSimulationKeyBinding;
     private static KeyMapping togglePathKeyBinding;
     private static KeyMapping copyTeleportKeyBinding;
@@ -54,6 +86,11 @@ public class FabricParkourCalculator implements ClientModInitializer {
     private static KeyMapping captureLandBlockKeyBinding;
     private static KeyMapping clearBlocksKeyBinding;
     private static boolean blockCaptureEnabled;
+
+    //? if <26.1 {
+    /*private static final List<KeyMapping> MOD_KEYS = new ArrayList<>();
+    private static boolean keysCreated = false;
+    *///?}
 
     private static final FabricSimulator simulator = new FabricSimulator();
     private static final Application application = new Application(
@@ -70,113 +107,103 @@ public class FabricParkourCalculator implements ClientModInitializer {
             );
     private static final FabricHudOverlayRenderer hudRenderer = new FabricHudOverlayRenderer();
 
+    //? if >=26.1 {
+    private static KeyMapping register(String name, int key, KeyMapping.Category category) {
+        return KeyMappingHelper.registerKeyMapping(new KeyMapping(name, InputConstants.Type.KEYBOARD, key, category));
+    }
+    //?} else {
+    /*private static KeyMapping key(String name, int key) {
+        KeyMapping km = new KeyMapping(name, InputConstants.Type.KEYSYM, key, KEY_CATEGORY);
+        MOD_KEYS.add(km);
+        return km;
+    }
+
+    private static void createKeyBindings() {
+        if (keysCreated) return;
+        keysCreated = true;
+        toggleKeyBinding = key("key.parkourcalculator.toggle_ui", InputConstants.KEY_G);
+        deselectKeyBinding = key("key.parkourcalculator.deselect_all", InputConstants.KEY_L);
+        playbackKeyBinding = key("key.parkourcalculator.toggle_playback", InputConstants.KEY_P);
+        landingConstraintsKeyBinding = key("key.parkourcalculator.add_landing_constraints", InputConstants.KEY_B);
+        removeConstraintsKeyBinding = key("key.parkourcalculator.remove_selected_constraints", InputConstants.KEY_X);
+        extendPathAndSolveKeyBinding = key("key.parkourcalculator.extend_path_and_solve_to_block", InputConstants.KEY_U);
+        applySurfaceStateKeyBinding = key("key.parkourcalculator.apply_surface_state", InputConstants.KEY_H);
+        solveKeyBinding = key("key.parkourcalculator.solve", InputConstants.KEY_V);
+        solverStartTickKeyBinding = key("key.parkourcalculator.set_solver_start", InputConstants.KEY_I);
+        solverEndTickKeyBinding = key("key.parkourcalculator.set_solver_end", InputConstants.KEY_O);
+        solverGoalFromLookKeyBinding = key("key.parkourcalculator.set_solver_goal_from_look", InputConstants.KEY_Z);
+        rerunSimulationKeyBinding = key("key.parkourcalculator.rerun_simulation", InputConstants.KEY_J);
+        togglePathKeyBinding = key("key.parkourcalculator.toggle_path", InputConstants.KEY_Y);
+        copyTeleportKeyBinding = key("key.parkourcalculator.copy_teleport", InputConstants.KEY_K);
+        if (blockCaptureEnabled) {
+            captureMomentumBlockKeyBinding = key("key.parkourcalculator.capture_momentum_block", InputConstants.KEY_M);
+            captureCollisionBlockKeyBinding = key("key.parkourcalculator.capture_collision_block", InputConstants.KEY_N);
+            captureLandBlockKeyBinding = key("key.parkourcalculator.capture_land_block", InputConstants.KEY_K);
+            clearBlocksKeyBinding = key("key.parkourcalculator.clear_blocks", InputConstants.KEY_DELETE);
+        }
+    }
+
+    public static List<KeyMapping> collectKeyMappings() {
+        createKeyBindings();
+        return MOD_KEYS;
+    }
+    *///?}
+
     @Override
     public void onInitializeClient() {
+        //? if >=26.1 {
         KeyMapping.Category category = KeyMapping.Category.register(Identifier.fromNamespaceAndPath(MOD_ID, "general"));
-        toggleKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
-                "key.parkourcalculator.toggle_ui",
-                InputConstants.Type.KEYBOARD,
-                InputConstants.KEY_G,
-                category
-        ));
-        deselectKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
-                "key.parkourcalculator.deselect_all",
-                InputConstants.Type.KEYBOARD,
-                InputConstants.KEY_L,
-                category
-        ));
-        playbackKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
-                "key.parkourcalculator.toggle_playback",
-                InputConstants.Type.KEYBOARD,
-                InputConstants.KEY_P,
-                category
-        ));
-        landingConstraintsKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
-                "key.parkourcalculator.add_landing_constraints",
-                InputConstants.Type.KEYBOARD,
-                InputConstants.KEY_B,
-                category
-        ));
-        removeConstraintsKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
-                "key.parkourcalculator.remove_selected_constraints",
-                InputConstants.Type.KEYBOARD,
-                InputConstants.KEY_X,
-                category
-        ));
-        extendPathAndSolveKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
-                "key.parkourcalculator.extend_path_and_solve_to_block",
-                InputConstants.Type.KEYBOARD,
-                InputConstants.KEY_U,
-                category
-        ));
-        applySurfaceStateKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
-                "key.parkourcalculator.apply_surface_state",
-                InputConstants.Type.KEYBOARD,
-                InputConstants.KEY_H,
-                category
-        ));
-        solveKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
-                "key.parkourcalculator.solve",
-                InputConstants.Type.KEYBOARD,
-                InputConstants.KEY_V,
-                category
-        ));
-        solverStartTickKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
-                "key.parkourcalculator.set_solver_start",
-                InputConstants.Type.KEYBOARD,
-                InputConstants.KEY_I,
-                category
-        ));
-        solverEndTickKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
-                "key.parkourcalculator.set_solver_end",
-                InputConstants.Type.KEYBOARD,
-                InputConstants.KEY_O,
-                category
-        ));
-        rerunSimulationKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
-                "key.parkourcalculator.rerun_simulation",
-                InputConstants.Type.KEYBOARD,
-                InputConstants.KEY_J,
-                category
-        ));
-        togglePathKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
-                "key.parkourcalculator.toggle_path",
-                InputConstants.Type.KEYBOARD,
-                InputConstants.KEY_Y,
-                category
-        ));
-        copyTeleportKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
-                "key.parkourcalculator.copy_teleport",
-                InputConstants.Type.KEYBOARD,
-                InputConstants.KEY_K,
-                category
-        ));
+        toggleKeyBinding = register("key.parkourcalculator.toggle_ui", InputConstants.KEY_G, category);
+        deselectKeyBinding = register("key.parkourcalculator.deselect_all", InputConstants.KEY_L, category);
+        playbackKeyBinding = register("key.parkourcalculator.toggle_playback", InputConstants.KEY_P, category);
+        landingConstraintsKeyBinding = register("key.parkourcalculator.add_landing_constraints", InputConstants.KEY_B, category);
+        removeConstraintsKeyBinding = register("key.parkourcalculator.remove_selected_constraints", InputConstants.KEY_X, category);
+        extendPathAndSolveKeyBinding = register("key.parkourcalculator.extend_path_and_solve_to_block", InputConstants.KEY_U, category);
+        applySurfaceStateKeyBinding = register("key.parkourcalculator.apply_surface_state", InputConstants.KEY_H, category);
+        solveKeyBinding = register("key.parkourcalculator.solve", InputConstants.KEY_V, category);
+        solverStartTickKeyBinding = register("key.parkourcalculator.set_solver_start", InputConstants.KEY_I, category);
+        solverEndTickKeyBinding = register("key.parkourcalculator.set_solver_end", InputConstants.KEY_O, category);
+        solverGoalFromLookKeyBinding = register("key.parkourcalculator.set_solver_goal_from_look", InputConstants.KEY_Z, category);
+        rerunSimulationKeyBinding = register("key.parkourcalculator.rerun_simulation", InputConstants.KEY_J, category);
+        togglePathKeyBinding = register("key.parkourcalculator.toggle_path", InputConstants.KEY_Y, category);
+        copyTeleportKeyBinding = register("key.parkourcalculator.copy_teleport", InputConstants.KEY_K, category);
+        //?}
 
+        PoolScreenAccelerator.register(new OpenClPoolScreen.Factory());
         application.initSettingsStorage(
                 FabricLoader.getInstance().getConfigDir().resolve("parkourcalculator.json")
         );
         blockCaptureEnabled = application.getSettings().experimentalBlockCapture;
+        //? if >=26.1 {
         if (blockCaptureEnabled) {
-            captureMomentumBlockKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
-                    "key.parkourcalculator.capture_momentum_block", InputConstants.Type.KEYBOARD, InputConstants.KEY_M, category));
-            captureCollisionBlockKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
-                    "key.parkourcalculator.capture_collision_block", InputConstants.Type.KEYBOARD, InputConstants.KEY_N, category));
-            captureLandBlockKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
-                    "key.parkourcalculator.capture_land_block", InputConstants.Type.KEYBOARD, InputConstants.KEY_K, category));
-            clearBlocksKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
-                    "key.parkourcalculator.clear_blocks", InputConstants.Type.KEYBOARD, InputConstants.KEY_DELETE, category));
+            captureMomentumBlockKeyBinding = register("key.parkourcalculator.capture_momentum_block", InputConstants.KEY_M, category);
+            captureCollisionBlockKeyBinding = register("key.parkourcalculator.capture_collision_block", InputConstants.KEY_N, category);
+            captureLandBlockKeyBinding = register("key.parkourcalculator.capture_land_block", InputConstants.KEY_K, category);
+            clearBlocksKeyBinding = register("key.parkourcalculator.clear_blocks", InputConstants.KEY_DELETE, category);
         }
+        //?} else {
+        /*createKeyBindings();
+        *///?}
 
         application.setModVersion(modVersion());
         OsSystemBridge.setPlatformOpeners(
+                //? if >=26.1 {
                 Blaze3D::openPath,
                 u -> Blaze3D.openUri(URI.create(u))
+                //?} else {
+                /*p -> Util.getPlatform().openFile(p.toFile()),
+                u -> Util.getPlatform().openUri(u)
+                *///?}
         );
         application.setFilePicker(new FabricFilePicker());
         application.setSaveStore(new FileSystemSaveStore(
                 FabricLoader.getInstance().getGameDir().resolve("parkourcalculator"),
                 modVersion(),
+                //? if >=26.1 {
                 SharedConstants.getCurrentVersion().name(),
+                //?} else {
+                /*SharedConstants.getCurrentVersion().getName(),
+                *///?}
                 FabricWorldDescriptors::current
         ));
         application.setPlaybackBridge(playbackBridge);
@@ -184,14 +211,21 @@ public class FabricParkourCalculator implements ClientModInitializer {
         application.setBlockPicker(new FabricBlockPicker());
         application.setupUi();
 
-        ClientTickEvents.END_CLIENT_TICK.register(FabricParkourCalculator::handleInput);
-        ClientTickEvents.START_CLIENT_TICK.register(FabricParkourCalculator::onStartTick);
-        ClientTickEvents.END_CLIENT_TICK.register(FabricParkourCalculator::onEndTick);
-        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> application.onWorldChange());
-        ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> application.onWorldChange());
+        //? if >=26.1 {
+        ClientTickEvents.END_CLIENT_TICK.register(client -> handleInput());
+        ClientTickEvents.START_CLIENT_TICK.register(client -> onStartTick());
+        ClientTickEvents.END_CLIENT_TICK.register(client -> onEndTick());
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> onWorldChange());
+        ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> onWorldChange());
         ServerLifecycleEvents.SERVER_STOPPING.register(simulator::onServerStopping);
 
         LevelRenderEvents.COLLECT_SUBMITS.register(FabricParkourCalculator::onCollectSubmits);
+        //?} else {
+        /*Minecraft client = Minecraft.getInstance();
+        if (client != null && client.options != null) {
+            client.options.load();
+        }
+        *///?}
     }
 
     private static boolean wasPlaybackRunning = false;
@@ -200,11 +234,19 @@ public class FabricParkourCalculator implements ClientModInitializer {
         return rerunSimulationKeyBinding == null ? null : rerunSimulationKeyBinding.getTranslatedKeyMessage().getString();
     }
 
-    private static void onStartTick(Minecraft client) {
+    private static Screen currentScreen(Minecraft client) {
+        //? if >=26.1 {
+        return client.gui.screen();
+        //?} else {
+        /*return client.screen;
+        *///?}
+    }
+
+    public static void onStartTick() {
         ReplayLockstep.clientBarrierPreTick();
         manageInputLifecycle();
         application.tickPlayback();
-        recordTickStart(client);
+        recordTickStart(Minecraft.getInstance());
     }
 
     private static void manageInputLifecycle() {
@@ -241,6 +283,16 @@ public class FabricParkourCalculator implements ClientModInitializer {
             ReplayLockstep.engage(server);
         }
     }
+
+    public static void onWorldChange() {
+        application.onWorldChange();
+    }
+
+    //? if <26.1 {
+    /*public static void onServerStopping(MinecraftServer server) {
+        simulator.onServerStopping(server);
+    }
+    *///?}
 
     public static boolean isGhostPlaybackActive() {
         return playbackBridge.ghostEntity() != null && !playbackBridge.replicaMouseFree();
@@ -295,12 +347,12 @@ public class FabricParkourCalculator implements ClientModInitializer {
         return local != null && self.getUUID().equals(local.getUUID());
     }
 
-    private static void onEndTick(Minecraft client) {
+    public static void onEndTick() {
         // Restore visual yaw after MC physics so render frames don't briefly show
         // the snap value the physics tick used.
         application.postTickPlayback();
         ReplayLockstep.clientBarrierPostTick();
-        recordTickEnd(client);
+        recordTickEnd(Minecraft.getInstance());
     }
 
     private static void recordTickStart(Minecraft client) {
@@ -325,16 +377,23 @@ public class FabricParkourCalculator implements ClientModInitializer {
     private static void recordTickEnd(Minecraft client) {
         net.minecraft.client.player.LocalPlayer p = client.player;
         if (p == null) return;
+        //? if >=1.21.2 {
         var k = p.input.keyPresses;
+        boolean forward = k.forward(), left = k.left(), backward = k.backward(), right = k.right();
+        boolean jump = k.jump(), shift = k.shift(), sprint = k.sprint();
+        //?} else {
+        /*boolean forward = p.input.up, left = p.input.left, backward = p.input.down, right = p.input.right;
+        boolean jump = p.input.jumping, shift = p.input.shiftKeyDown, sprint = client.options.keySprint.isDown();
+        *///?}
         if (playbackBridge.replicaActive()) {
             application.getAttemptTracker().tickEnd(playbackBridge.getCurrentRow());
         } else {
-            application.getAttemptTracker().tickEnd(k.forward(), k.left(), k.backward(), k.right(), k.jump(), k.shift(),
-                    k.sprint() || p.isSprinting());
+            application.getAttemptTracker().tickEnd(forward, left, backward, right, jump, shift,
+                    sprint || p.isSprinting());
         }
         de.legoshi.parkourcalc.core.record.HumanRecorder r = application.getRecorder();
         if (!r.isRecording()) return;
-        r.tickEnd(k.forward(), k.left(), k.backward(), k.right(), k.jump(), k.shift(), k.sprint(), p.isSprinting());
+        r.tickEnd(forward, left, backward, right, jump, shift, sprint, p.isSprinting());
     }
 
     public static void recordMouse(double dx, double dy) {
@@ -358,20 +417,20 @@ public class FabricParkourCalculator implements ClientModInitializer {
 
     public static void recordButton(int button, int action) {
         if (action != InputConstants.PRESS && action != InputConstants.RELEASE) return;
-        if (isUiFocused() || Minecraft.getInstance().gui.screen() != null) return;
+        if (isUiFocused() || currentScreen(Minecraft.getInstance()) != null) return;
         application.getAttemptTracker().mouseButton(button, action == InputConstants.PRESS);
         de.legoshi.parkourcalc.core.record.HumanRecorder r = application.getRecorder();
         if (r.isRecording()) r.button(0L, button, action == InputConstants.PRESS);
     }
 
     public static boolean swallowsEditChord(int key) {
-        return Minecraft.getInstance().gui.screen() == null && getSettings().undoRedoWithoutUi
+        return currentScreen(Minecraft.getInstance()) == null && getSettings().undoRedoWithoutUi
                 && FabricMinecraftAccess.isEditChordPress(key);
     }
 
     public static void recordKey(int key, int action) {
         if (action != InputConstants.PRESS && action != InputConstants.RELEASE) return;
-        if (isUiFocused() || Minecraft.getInstance().gui.screen() != null) return;
+        if (isUiFocused() || currentScreen(Minecraft.getInstance()) != null) return;
         de.legoshi.parkourcalc.core.record.HumanRecorder r = application.getRecorder();
         if (r.isRecording()) r.key(0L, key, action == InputConstants.PRESS);
     }
@@ -388,7 +447,8 @@ public class FabricParkourCalculator implements ClientModInitializer {
         return application.getCheckpoint(index);
     }
 
-    private static void handleInput(Minecraft client) {
+    public static void handleInput() {
+        Minecraft client = Minecraft.getInstance();
         if (client.getWindow() == null) return;
 
         // Drain queued presses; only act when no MC screen owns input. Prevents
@@ -433,6 +493,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
         while (solverEndTickKeyBinding.consumeClick()) {
             solverEndPressed = true;
         }
+        boolean solverGoalFromLookPressed = false;
+        while (solverGoalFromLookKeyBinding.consumeClick()) {
+            solverGoalFromLookPressed = true;
+        }
         boolean rerunSimulationPressed = false;
         while (rerunSimulationKeyBinding.consumeClick()) {
             rerunSimulationPressed = true;
@@ -465,8 +529,8 @@ public class FabricParkourCalculator implements ClientModInitializer {
         }
 
         boolean imguiWantsKeys = application.isControlPanelOpen() && ImGui.getIO().getWantTextInput();
-        boolean canDispatch = client.gui.screen() == null && !imguiWantsKeys;
-        boolean chordFree = canDispatch && !isCtrlHeld(client);
+        boolean canDispatch = currentScreen(client) == null && !imguiWantsKeys;
+        boolean chordFree = canDispatch && !FabricInput.isCtrlDown();
 
         if (toggled && chordFree) {
             setOverlayOpen(!application.isControlPanelOpen());
@@ -478,8 +542,8 @@ public class FabricParkourCalculator implements ClientModInitializer {
             togglePlayback();
         }
         if (landingConstraintsPressed && canDispatch) {
-            boolean enter = isShiftHeld();
-            boolean remove = isCtrlHeld(client);
+            boolean enter = FabricInput.isShiftDown();
+            boolean remove = FabricInput.isCtrlDown();
             application.onConstraintKey(enter, remove);
         }
         if (removeConstraintsPressed && chordFree) {
@@ -499,6 +563,9 @@ public class FabricParkourCalculator implements ClientModInitializer {
         }
         if (solverEndPressed && chordFree) {
             application.setSolverLandingTickFromSelection();
+        }
+        if (solverGoalFromLookPressed && chordFree) {
+            application.setSolverGoalFromLook(FabricInput.isShiftDown());
         }
         if (rerunSimulationPressed && chordFree) {
             application.runSimulation();
@@ -535,7 +602,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
     public static boolean dispatchOverlayHotkey(int key) {
         Minecraft client = Minecraft.getInstance();
         if (client.getWindow() == null) return false;
-        if (isCtrlHeld(client) && key != boundKey(landingConstraintsKeyBinding)) return false;
+        if (FabricInput.isCtrlDown() && key != boundKey(landingConstraintsKeyBinding)) return false;
         if (key == boundKey(deselectKeyBinding)) {
             application.getSelection().clear();
             return true;
@@ -545,8 +612,8 @@ public class FabricParkourCalculator implements ClientModInitializer {
             return true;
         }
         if (key == boundKey(landingConstraintsKeyBinding)) {
-            boolean enter = isShiftHeld();
-            boolean remove = isCtrlHeld(client);
+            boolean enter = FabricInput.isShiftDown();
+            boolean remove = FabricInput.isCtrlDown();
             application.onConstraintKey(enter, remove);
             return true;
         }
@@ -574,6 +641,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
             application.setSolverLandingTickFromSelection();
             return true;
         }
+        if (key == boundKey(solverGoalFromLookKeyBinding)) {
+            application.setSolverGoalFromLook(FabricInput.isShiftDown());
+            return true;
+        }
         if (key == boundKey(togglePathKeyBinding)) {
             application.toggleShowPath();
             return true;
@@ -586,15 +657,11 @@ public class FabricParkourCalculator implements ClientModInitializer {
     }
 
     private static int boundKey(KeyMapping mapping) {
+        //? if >=26.1 {
         return KeyMappingHelper.getBoundKeyOf(mapping).getValue();
-    }
-
-    private static boolean isCtrlHeld(Minecraft client) {
-        return InputConstants.isKeyDown(InputConstants.KEY_LCONTROL) || InputConstants.isKeyDown(InputConstants.KEY_RCONTROL);
-    }
-
-    private static boolean isShiftHeld() {
-        return InputConstants.isKeyDown(InputConstants.KEY_LSHIFT) || InputConstants.isKeyDown(InputConstants.KEY_RSHIFT);
+        //?} else {
+        /*return ((KeyMappingAccessor) (Object) mapping).pkc$getKey().getValue();
+        *///?}
     }
 
     public static void closeOverlay() {
@@ -629,14 +696,23 @@ public class FabricParkourCalculator implements ClientModInitializer {
         }
     }
 
+    //? if >=26.1 {
     /**
-     * Fires after solid features, before translucent terrain draws, so boxes depth-test
-     * only against opaque geometry and stay visible through water, lava, and stained/tinted glass.
+     * Fires after opaque terrain and before the solid features draw, while vanilla still needs the
+     * pass itself, so boxes depth-test only against opaque geometry and stay visible through water,
+     * lava, and stained/tinted glass.
      */
-    public static void renderWorldOverlayBeforeTranslucent(LevelRenderState levelState, RenderPass pass) {
-        if (levelState == null || pass == null) return;
+    public static void renderWorldOverlayBeforeTranslucent(RenderPass pass) {
+        if (pass == null) return;
         if (shouldDrawPath()) {
-            worldRenderer.draw(levelState, pass);
+            worldRenderer.draw(pass);
+        }
+    }
+
+    public static void renderWorldOverlayAfterTranslucent(RenderPass pass) {
+        if (pass == null) return;
+        if (shouldDrawPath()) {
+            worldRenderer.drawAfterTranslucent(pass);
         }
     }
 
@@ -648,9 +724,27 @@ public class FabricParkourCalculator implements ClientModInitializer {
         if (!shouldDrawPath()) {
             return;
         }
-        worldRenderer.prepare();
+        worldRenderer.prepare(context);
         worldRenderer.submitGizmo(context);
     }
+    //?} else {
+    /*public static void onWorldRenderClassic(PoseStack poseStack, Vec3 camPos) {
+        application.tickDrag();
+        MultiBufferSource.BufferSource buffers = Minecraft.getInstance().renderBuffers().bufferSource();
+        if (application.isPlaybackRunning()) {
+            application.renderPlayback();
+        }
+        if (shouldDrawPath()) {
+            worldRenderer.render(poseStack, buffers, camPos);
+        }
+    }
+
+    public static void onTranslucentTerrainDrawn() {
+        if (shouldDrawPath()) {
+            worldRenderer.drawAfterTranslucent();
+        }
+    }
+    *///?}
 
     private static boolean shouldDrawPath() {
         if (!application.getSettings().showPath) return false;
@@ -658,7 +752,11 @@ public class FabricParkourCalculator implements ClientModInitializer {
     }
 
     /** Called from InGameHudMixin to queue the MACRO badge into the GUI state. */
+    //? if >=26.1 {
     public static void onHudRender(GuiGraphicsExtractor context) {
+    //?} else {
+    /*public static void onHudRender(GuiGraphics context) {
+    *///?}
         if (!application.isReady()) return;
         String label = application.hudBadgeLabel();
         if (label != null) hudRenderer.render(context, label, application.hudBadgeAlpha());
@@ -668,7 +766,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
     public static void onGuiRendered() {
         if (!application.isReady()) return;
         // Pinned panels are hidden while any blocking screen (pause, inventory, chat) is open.
-        boolean allowDetached = Minecraft.getInstance().gui.screen() == null;
+        boolean allowDetached = currentScreen(Minecraft.getInstance()) == null;
         ImGuiImpl.beginImGuiRendering();
         application.getOverlayManager().render(ImGui.getIO(), allowDetached);
         ImGuiImpl.endImGuiRendering();
@@ -684,7 +782,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
 
     public static boolean isUiFocused() {
         // A vanilla screen (e.g. pause on tab-out) must take input precedence over ImGui.
-        return application.isControlPanelOpen() && Minecraft.getInstance().gui.screen() == null;
+        return application.isControlPanelOpen() && currentScreen(Minecraft.getInstance()) == null;
     }
 
     public static boolean isControlPanelOpen() {

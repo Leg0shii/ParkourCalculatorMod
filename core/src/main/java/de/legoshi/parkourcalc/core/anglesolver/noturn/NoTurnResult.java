@@ -14,6 +14,7 @@ public final class NoTurnResult {
     public final double startZ;
     public final double[] yaws;
     public boolean warm = false;
+    public boolean jaAll = false;
     public int pressCount = -1;
     public volatile boolean optimized = false;
 
@@ -41,13 +42,14 @@ public final class NoTurnResult {
         NoTurnResult out = new NoTurnResult(combos.clone(), sprint.clone(), turnCombo, ja, edges, sprintEngage,
                 cr.objective, cr.violation, cr.startX, cr.startZ, cr.yaws);
         out.warm = warm;
+        out.jaAll = jaAll;
         out.pressCount = pressCount;
         out.optimized = optimized;
         return out;
     }
 
     public String describe() {
-        return (ja ? "no-turn+ja" : "no-turn") + (warm ? " (from current inputs)" : " (cold)")
+        return (jaAll ? "no-turn+ja(all jumps)" : ja ? "no-turn+ja" : "no-turn") + (warm ? " (from current inputs)" : " (cold)")
                 + " | edges=" + edges + " | keys " + NoTurnKeys.describe(combos)
                 + " | sprint@" + (sprintEngage >= 0 ? sprintEngage : "-")
                 + " | obj=" + String.format(java.util.Locale.ROOT, "%.6f", objective);

@@ -152,7 +152,7 @@ public final class DegenerateTickAscent {
         double[] gf = sc.toGameFacings(yaws);
         ForwardPath path = exact.forward(sc, gf);
         double viol = compiled.maxViolation(gf, path);
-        double obj = path.getPos(spec.objective.tick, spec.objective.axis);
+        double obj = spec.objective.evaluate(path);
         return new Cand(yaws, obj, viol <= feasTol, viol, Angles.wrap(theta));
     }
 
@@ -167,7 +167,7 @@ public final class DegenerateTickAscent {
 
     private static double objectiveOf(ExactJumpModel exact, JumpPhysicsInputs sc, JumpSpec spec, double[] yaws) {
         double[] gf = sc.toGameFacings(yaws);
-        return exact.forward(sc, gf).getPos(spec.objective.tick, spec.objective.axis);
+        return spec.objective.evaluate(exact.forward(sc, gf));
     }
 
     private static boolean better(double a, double b, boolean max) {

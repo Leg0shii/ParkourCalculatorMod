@@ -1,26 +1,57 @@
-plugins {
-	id 'net.fabricmc.fabric-loom' version "${loom_version}"
-	id 'maven-publish'
-}
+def mc = stonecutter.current.version
+def modern = stonecutter.eval(mc, '>=26.1')
+def javaRelease = project.java_release as int
+def toolchainVersion = Math.max(javaRelease, 21)
+def renderSet = modern ? 'renderpearl' : 'blaze3d'
+def inputSet = stonecutter.eval(mc, '>=26.3') ? 'sdl' : 'glfw'
+def mixins = [
+		'AttackSuppressMixin',
+		'FallDamageSuppressMixin',
+		'GameRendererMixin',
+		'HealthPinMixin',
+		'HudMixin',
+		'KeyMappingAccessor',
+		'KeyboardHandlerMixin',
+		'LandingParticleSuppressMixin',
+		'LocalPlayerAccessor',
+		'LocalPlayerTickMixin',
+		'LockstepPongMixin',
+		'LockstepServerMixin',
+		'MinecraftMixin',
+		'MouseHandlerAccessor',
+		'MouseHandlerMixin',
+		'PacketDiagnosticsMixin',
+		'PairedChunkTrackingMixin',
+		'PairedSimSuppressMixin',
+		'PlayerAccessor',
+		'RestartSettleMixin',
+		'WorldJournalMixin',
+]
+mixins += (modern ? ['LevelRendererSolidPassMixin'] : ['ClientLanguageMixin', 'LevelRendererMixin', 'LevelRendererTranslucentMixin', 'OptionsAccessor', 'ServerStoppingMixin'])
+mixins.sort()
+def depends = [
+		"\"fabricloader\": \">=${project.loader_version}\"",
+		"\"minecraft\": \"${project.minecraft_range}\"",
+		"\"java\": \">=${javaRelease}\"",
+]
+if (modern) depends << '"fabric-api": "*"'
+
+apply plugin: modern ? 'net.fabricmc.fabric-loom' : 'net.fabricmc.fabric-loom-remap'
+apply plugin: 'maven-publish'
 
 base {
-	archivesName = project.archives_base_name
+	archivesName = "${project.archives_base_name}-${mc}"
 }
 
-repositories {
-	maven {
-		name = "Modrinth"
-		url = "https://api.modrinth.com/maven"
-		content {
-			includeGroup "maven.modrinth"
-		}
-	}
+sourceSets {
+	create(renderSet)
+	create(inputSet)
 }
 
 loom {
 	splitEnvironmentSourceSets()
 
-	accessWidenerPath = file("src/client/resources/parkourcalculator.accesswidener")
+	accessWidenerPath = file("../../src/client/resources/${project.accesswidener}")
 
 	mods {
 		"parkourcalculator" {
@@ -28,20 +59,37 @@ loom {
 			sourceSet sourceSets.client
 		}
 	}
+}
 
+afterEvaluate {
+	[renderSet, inputSet].each { name ->
+		def variant = sourceSets.getByName(name)
+		sourceSets.client.java.srcDirs(variant.java.srcDirs)
+		tasks.named('compileClientJava') { dependsOn "stonecutterGenerate${name.capitalize()}" }
+		tasks.named('sourcesJar') { dependsOn "stonecutterGenerate${name.capitalize()}" }
+		tasks.named(variant.compileJavaTaskName) { enabled = false }
+		tasks.named(variant.processResourcesTaskName) { enabled = false }
+		tasks.named(variant.classesTaskName) { enabled = false }
+	}
 }
 
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	if (!modern) {
+		mappings loom.officialMojangMappings()
+	}
+	if (modern) {
+		implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+		implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+		clientImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+	} else {
+		modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+		compileOnly "com.google.code.findbugs:jsr305:3.0.2"
+	}
 
-	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-
-	// This line should be added:
-	clientImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-
-	// Shared core module (Java 8, no MC). Bundle into the final mod JAR.
 	include implementation(project(':core'))
+	include implementation(project(':gpu'))
+	include implementation('org.jocl:jocl:2.0.5')
 
 	include implementation("io.github.spair:imgui-java-binding:${project.imgui_version}")
 	include implementation("io.github.spair:imgui-java-lwjgl3:${project.imgui_version}")
@@ -49,39 +97,50 @@ dependencies {
 	include implementation("io.github.spair:imgui-java-natives-linux:${project.imgui_version}")
 	include implementation("io.github.spair:imgui-java-natives-macos:${project.imgui_version}")
 
-	include implementation("org.lwjgl:lwjgl-tinyfd:${project.lwjgl_version}")
-	include runtimeOnly("org.lwjgl:lwjgl-tinyfd:${project.lwjgl_version}:natives-windows")
-	include runtimeOnly("org.lwjgl:lwjgl-tinyfd:${project.lwjgl_version}:natives-windows-arm64")
-	include runtimeOnly("org.lwjgl:lwjgl-tinyfd:${project.lwjgl_version}:natives-linux")
-	include runtimeOnly("org.lwjgl:lwjgl-tinyfd:${project.lwjgl_version}:natives-linux-arm64")
-	include runtimeOnly("org.lwjgl:lwjgl-tinyfd:${project.lwjgl_version}:natives-macos")
-	include runtimeOnly("org.lwjgl:lwjgl-tinyfd:${project.lwjgl_version}:natives-macos-arm64")
+	if (project.hasProperty('lwjgl_version')) {
+		include implementation("org.lwjgl:lwjgl-tinyfd:${project.lwjgl_version}")
+		include runtimeOnly("org.lwjgl:lwjgl-tinyfd:${project.lwjgl_version}:natives-windows")
+		include runtimeOnly("org.lwjgl:lwjgl-tinyfd:${project.lwjgl_version}:natives-windows-arm64")
+		include runtimeOnly("org.lwjgl:lwjgl-tinyfd:${project.lwjgl_version}:natives-linux")
+		include runtimeOnly("org.lwjgl:lwjgl-tinyfd:${project.lwjgl_version}:natives-linux-arm64")
+		include runtimeOnly("org.lwjgl:lwjgl-tinyfd:${project.lwjgl_version}:natives-macos")
+		include runtimeOnly("org.lwjgl:lwjgl-tinyfd:${project.lwjgl_version}:natives-macos-arm64")
+	}
 }
 
 processClientResources {
 	inputs.property "version", project.version
+	inputs.property "mixins", mixins.join(',')
+	inputs.property "depends", depends.join(',')
+	inputs.property "mixin_java", project.mixin_java
+	inputs.property "accesswidener", project.accesswidener
 
 	filesMatching("fabric.mod.json") {
-		expand "version": inputs.properties.version
+		expand "version": inputs.properties.version,
+				"depends": depends.join(',\n\t\t'),
+				"accesswidener": project.accesswidener
 	}
+	filesMatching("parkourcalculator.client.mixins.json") {
+		expand "mixin_java": project.mixin_java,
+				"mixins": mixins.collect { "\"${it}\"" }.join(',\n    ')
+	}
+	exclude { it.name.endsWith('.accesswidener') && it.name != project.accesswidener }
 }
 
 tasks.withType(JavaCompile).configureEach {
-	it.options.release = 25
+	it.options.release = javaRelease
+	it.options.encoding = 'UTF-8'
 }
 
 java {
-	// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
-	// if it is present.
-	// If you remove this line, sources will not be generated.
 	withSourcesJar()
 
 	toolchain {
-		languageVersion = JavaLanguageVersion.of(25)
+		languageVersion = JavaLanguageVersion.of(toolchainVersion)
 	}
 
-	sourceCompatibility = JavaVersion.VERSION_25
-	targetCompatibility = JavaVersion.VERSION_25
+	sourceCompatibility = JavaVersion.toVersion(javaRelease)
+	targetCompatibility = JavaVersion.toVersion(javaRelease)
 }
 
 jar {
@@ -92,20 +151,11 @@ jar {
 	}
 }
 
-// configure the maven publication
 publishing {
 	publications {
 		create("mavenJava", MavenPublication) {
-			artifactId = project.archives_base_name
+			artifactId = project.base.archivesName.get()
 			from components.java
 		}
-	}
-
-	// See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
-	repositories {
-		// Add repositories to publish to here.
-		// Notice: This block does NOT have the same function as the block in the top level.
-		// The repositories here will be used for publishing your artifact, not for
-		// retrieving dependencies.
 	}
 }

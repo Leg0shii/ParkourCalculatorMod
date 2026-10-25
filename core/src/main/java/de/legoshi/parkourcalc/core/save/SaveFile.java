@@ -2,6 +2,7 @@ package de.legoshi.parkourcalc.core.save;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public final class SaveFile {
 
@@ -52,6 +53,8 @@ public final class SaveFile {
         public boolean pitchLocked;
         public int speedAmplifier;
         public int jumpBoostAmplifier;
+        public int slownessAmplifier;
+        public Map<String, Integer> effects;
         public int hotbarSlot;
         public boolean teleport;
         public double teleportX;
@@ -67,6 +70,7 @@ public final class SaveFile {
     public static final class AngleSolver {
         public int startTick;
         public int landingTick;
+        public Integer objectiveTick;
         public String axis;
         public String goal;
         public Boolean customAngle;
@@ -167,6 +171,8 @@ public final class SaveFile {
         public String noticeLabel;
         public double objectiveValue;
         public boolean hasObjective;
+        public String smoothStop;
+        public long smoothNanos;
         public List<Outcome> outcomes = new ArrayList<Outcome>();
         public List<Yaw> yaws = new ArrayList<Yaw>();
         public List<Detail> details = new ArrayList<Detail>();

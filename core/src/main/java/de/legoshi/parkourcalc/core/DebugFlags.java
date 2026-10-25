@@ -8,9 +8,9 @@ import java.util.List;
 /** Static debug flags. Flip in code to enable verbose state dumps. */
 public final class DebugFlags {
 
-    public static boolean DUMP_TICK_STATE = false;
+    public static boolean DUMP_TICK_STATE = Boolean.getBoolean("pkc.dumpTickState");
     public static boolean COMPARE_PARTIAL_SIM = false;
-    public static boolean PAIRED_DIAGNOSTICS = false;
+    public static boolean PAIRED_DIAGNOSTICS = Boolean.getBoolean("pkc.pairedDiagnostics");
 
     public static List<String> simTickSink = null;
 

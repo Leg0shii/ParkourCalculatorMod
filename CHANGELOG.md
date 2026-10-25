@@ -1,5 +1,67 @@
 # Changelog
 
+## [1.16.1](https://github.com/Leg0shii/ParkourCalculatorMod/compare/v1.16.0...v1.16.1) (2026-10-20)
+
+
+### Bug Fixes
+
+* **fabric:** paired simulation on 1.20.4 crashed when enabled, launched the player on fall damage and lost the sprint jump on replay ([1bcdc5c](https://github.com/Leg0shii/ParkourCalculatorMod/commit/1bcdc5caf0ffc3af6f40af5a41c7e896278fa716))
+
+## [1.16.0](https://github.com/Leg0shii/ParkourCalculatorMod/compare/v1.15.0...v1.16.0) (2026-10-19)
+
+
+### Features
+
+* **anglesolver:** dF &gt;= 0 / dF &lt;= 0 yaw direction constraint over a tick range ([#555](https://github.com/Leg0shii/ParkourCalculatorMod/issues/555)) ([26d39d6](https://github.com/Leg0shii/ParkourCalculatorMod/commit/26d39d63575a2040c8d3e36dde6e18400fdb9cd8))
+* **anglesolver:** say in the result header how long the smoothing ran and why it stopped ([#565](https://github.com/Leg0shii/ParkourCalculatorMod/issues/565)) ([87e67b8](https://github.com/Leg0shii/ParkourCalculatorMod/commit/87e67b84d995b78a5fd7f85961a6f35cb05ceac4))
+* **build:** one Stonecutter tree per loader for every Fabric and Forge target ([#544](https://github.com/Leg0shii/ParkourCalculatorMod/issues/544)) ([3861e2d](https://github.com/Leg0shii/ParkourCalculatorMod/commit/3861e2d9d140101f18d2ea81306ae2d0822d9ed3))
+* **hotkeys:** set the solver goal from the look direction ([#564](https://github.com/Leg0shii/ParkourCalculatorMod/issues/564)) ([d9f603e](https://github.com/Leg0shii/ParkourCalculatorMod/commit/d9f603ef77ce8ee29dbeea604900eca3de9e1e68))
+* **stratfinder:** find no-turn lines cold on the wiped human recordings faster and in more structures ([#558](https://github.com/Leg0shii/ParkourCalculatorMod/issues/558)) ([3085f01](https://github.com/Leg0shii/ParkourCalculatorMod/commit/3085f011ae78e618ddcb0f980e43917aa516424b))
+
+
+### Bug Fixes
+
+* **anglesolver:** pick the dX vs dZ dominant sign per constraint ([#556](https://github.com/Leg0shii/ParkourCalculatorMod/issues/556)) ([5e2a164](https://github.com/Leg0shii/ParkourCalculatorMod/commit/5e2a1645daba6bf8849ca883a4dc5c0ca16ed809))
+* **anglesolver:** scan the chain anchor again when the exact fold lands infeasible ([#561](https://github.com/Leg0shii/ParkourCalculatorMod/issues/561)) ([ef2c8e9](https://github.com/Leg0shii/ParkourCalculatorMod/commit/ef2c8e90469bd7864ce65d318ecc28757bb1e336))
+* **anglesolver:** the closed form sweeps an open facing chain again when the fold's descent misses ([#562](https://github.com/Leg0shii/ParkourCalculatorMod/issues/562)) ([1765ac1](https://github.com/Leg0shii/ParkourCalculatorMod/commit/1765ac11e0d744b5a49b09d8500b635d23e284bc))
+* **fabric:** draw the path before the solid features, while vanilla still owns the pass ([#557](https://github.com/Leg0shii/ParkourCalculatorMod/issues/557)) ([ff9b909](https://github.com/Leg0shii/ParkourCalculatorMod/commit/ff9b909203f15bf302041d466f02db039ab20421))
+
+
+### Miscellaneous Chores
+
+* weekly release train ([09e3f52](https://github.com/Leg0shii/ParkourCalculatorMod/commit/09e3f5224e4006d896548d9b0836f6384043cf63))
+
+## [1.15.0](https://github.com/Leg0shii/ParkourCalculatorMod/compare/v1.14.0...v1.15.0) (2026-10-11)
+
+
+### Features
+
+* **anglesolver:** run the final smoothing as a graph node with a declared time reserve, and a Smooth preset ([#539](https://github.com/Leg0shii/ParkourCalculatorMod/issues/539)) ([f388bba](https://github.com/Leg0shii/ParkourCalculatorMod/commit/f388bba2afe53e0ffc97255a7839b55d174fd227))
+* **onejump:** Check TAS gates the live offset, help tab, reference follows constraint edits ([#523](https://github.com/Leg0shii/ParkourCalculatorMod/issues/523)) ([471f652](https://github.com/Leg0shii/ParkourCalculatorMod/commit/471f65208fa6f3a578227dd5e64732d64d6551ef))
+* **save:** a new TAS starts from the player's yaw and pitch ([#534](https://github.com/Leg0shii/ParkourCalculatorMod/issues/534)) ([ffb61ed](https://github.com/Leg0shii/ParkourCalculatorMod/commit/ffb61edcaffbe083487312166b01fc80f8ba4d25))
+* **solver-ui:** compact Angle Solver window with a single time budget ([#516](https://github.com/Leg0shii/ParkourCalculatorMod/issues/516)) ([18e9aed](https://github.com/Leg0shii/ParkourCalculatorMod/commit/18e9aed6f438045ff45d16d8eae5956e10e82417))
+* **solver-ui:** hide met dF=0 rows from the solved values panel ([3239abb](https://github.com/Leg0shii/ParkourCalculatorMod/commit/3239abbe0f54a7827d4c62be4d1c03703a6aa0c4))
+* **ui:** drag over the tick column to multi-select rows ([#533](https://github.com/Leg0shii/ParkourCalculatorMod/issues/533)) ([ba3d617](https://github.com/Leg0shii/ParkourCalculatorMod/commit/ba3d61781be2d84de9faccfb5814d6ebe4bd0bc7))
+* **ui:** live solve progress in the result panel with a bar header and Stop in place ([#536](https://github.com/Leg0shii/ParkourCalculatorMod/issues/536)) ([12469d7](https://github.com/Leg0shii/ParkourCalculatorMod/commit/12469d78f6f20b7c945d8a9d1a9fe9c34e392b2f))
+* **ui:** regroup the Preferences tabs and put the overlay toggles in the Settings menu ([#518](https://github.com/Leg0shii/ParkourCalculatorMod/issues/518)) ([a687d66](https://github.com/Leg0shii/ParkourCalculatorMod/commit/a687d66ff6b264ab0a38dbdc068801923ae7b4c7))
+* **ui:** selected row tint is a colour setting ([#530](https://github.com/Leg0shii/ParkourCalculatorMod/issues/530)) ([63d9bd3](https://github.com/Leg0shii/ParkourCalculatorMod/commit/63d9bd374c9f599fd76ceaf26424b0ccb30473b7))
+
+
+### Bug Fixes
+
+* **anglesolver:** label solver notices and reject contradicting constraints before solving ([#517](https://github.com/Leg0shii/ParkourCalculatorMod/issues/517)) ([d4efe89](https://github.com/Leg0shii/ParkourCalculatorMod/commit/d4efe89eab34a55f632d9d9aed4610c3be38a77c))
+* **input:** keep Ctrl+Z and Ctrl+Y from opening the chat when the UI is closed ([#520](https://github.com/Leg0shii/ParkourCalculatorMod/issues/520)) ([0cb5c05](https://github.com/Leg0shii/ParkourCalculatorMod/commit/0cb5c05314157f99494db9b300f869f697779b43))
+* **onejump:** start the attempt on the first key and judge it on the landing ([#522](https://github.com/Leg0shii/ParkourCalculatorMod/issues/522)) ([2371620](https://github.com/Leg0shii/ParkourCalculatorMod/commit/2371620a589a2fa74b03f4fd18274ef0ce102216))
+* **sim:** warn when a TAS ran through unloaded chunks on a server, rebind after a world switch ([#532](https://github.com/Leg0shii/ParkourCalculatorMod/issues/532)) ([f4943a2](https://github.com/Leg0shii/ParkourCalculatorMod/commit/f4943a259fefc7c03d158b7ddb8a534f903b9946))
+* **ui:** constraints and block capture target collision boxes, so grass, panes and other non-colliding shapes no longer catch the pick ([#535](https://github.com/Leg0shii/ParkourCalculatorMod/issues/535)) ([68b0ca7](https://github.com/Leg0shii/ParkourCalculatorMod/commit/68b0ca70f4bfc6c6341dcf75a416ec158af84cdb))
+* **ui:** remove a teleport with a middle click on its chip ([#519](https://github.com/Leg0shii/ParkourCalculatorMod/issues/519)) ([4808a71](https://github.com/Leg0shii/ParkourCalculatorMod/commit/4808a7160f023637eb30bdf0f2493e038b3f45a7))
+* **ui:** tapping a box in the world always selects that tick alone ([#531](https://github.com/Leg0shii/ParkourCalculatorMod/issues/531)) ([2a07b96](https://github.com/Leg0shii/ParkourCalculatorMod/commit/2a07b9674808c4a49e56cc750f44a83050c82c1a))
+
+
+### Miscellaneous Chores
+
+* weekly release train ([fcc6bca](https://github.com/Leg0shii/ParkourCalculatorMod/commit/fcc6bcab7535e58f070f5f45304a50a03925579e))
+
 ## [1.14.0](https://github.com/Leg0shii/ParkourCalculatorMod/compare/v1.13.0...v1.14.0) (2026-10-04)
 
 

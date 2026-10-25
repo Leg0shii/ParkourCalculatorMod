@@ -75,9 +75,13 @@ public final class AngleSolverWindow implements RenderInterface {
                     + "sprint from that tick on, and the solve inherits it, so a broken path can\n"
                     + "make a solvable segment report no solution until the route is re-recorded."};
     private static final String[] ANGLE_TYPES = {"Pos", "Mot"};
+    private static final String OBJECTIVE_TICK_LABEL = "at tick";
+    private static final String OBJECTIVE_TICK_TIP = "Objective tick: the tick whose position (Pos) or velocity"
+            + " (Mot) along the angle is optimized. Defaults to the goal tick. Set it earlier, e.g. the jump tick,"
+            + " to go fast there while every constraint up to the goal tick still has to hold.";
     private static final String[] ANGLE_TYPE_TIPS = {
             "Position: maximize horizontal displacement along the target angle.",
-            "Motion: maximize horizontal velocity along the target angle at the goal tick."};
+            "Motion: maximize horizontal velocity along the target angle at the objective tick, in b/t."};
     private static final String FAST_PRESET_ITEM = BuiltinGraphs.FAST_PRESET;
     private static final String OPTIMIZE_PRESET_ITEM = BuiltinGraphs.OPTIMIZE_PRESET;
     private static final String MULTI_START_PRESET_ITEM = BuiltinGraphs.MULTI_START_PRESET;
@@ -131,6 +135,7 @@ public final class AngleSolverWindow implements RenderInterface {
     private boolean budgetFieldActive;
     private final ImInt presetBuf = new ImInt();
     private final ImString customAngleBuf = new ImString(32);
+    private final ImInt objectiveTickBuf = new ImInt();
     private double lastSyncedCustomAngle = Double.NaN;
     private String[] presetNames;
     private String presetError;
@@ -256,7 +261,7 @@ public final class AngleSolverWindow implements RenderInterface {
         if (span > LONG_SPAN_WARN_TICKS) longSpanWarning(span, scale);
 
         goalRow(labelW);
-        if (state.isCustomAngle()) angleRow(labelW, scale);
+        if (state.isCustomAngle()) angleRow(rowCount, labelW, scale);
 
         int im = segmentedRow("Inputs", "inputs", INPUTS, state.getDefaultInputs().ordinal(), labelW);
         if (im >= 0) state.setDefaultInputs(AngleSolverState.InputMode.values()[im]);
@@ -428,7 +433,8 @@ public final class AngleSolverWindow implements RenderInterface {
         if (Controls.inputInt("##goalTick", goalTickBuf, fieldW)) {
             state.setLandingTick(Math.max(0, Math.min(rowCount - 1, goalTickBuf.get() - 1)));
         }
-        TooltipUtil.onHover("Goal tick: the tick whose position the objective and the landing constraints judge.");
+        TooltipUtil.onHover("Goal tick: the last tick of the solve span. The landing constraints are judged up to it,"
+                + " and the objective sits here unless the Angle row names another tick.");
         Controls.popInputFrameHeight();
     }
 
@@ -442,11 +448,12 @@ public final class AngleSolverWindow implements RenderInterface {
             return;
         }
         state.setCustomAngle(false);
+        state.clearObjectiveTick();
         state.setAxis(AngleSolverState.Axis.values()[pick / 2]);
         state.setGoal(AngleSolverState.Goal.values()[pick % 2]);
     }
 
-    private void angleRow(float labelW, float scale) {
+    private void angleRow(int rowCount, float labelW, float scale) {
         Controls.pushInputFrameHeight();
         ImGui.beginGroup();
         SolverWidgets.rowLabel("Angle", labelW);
@@ -454,7 +461,9 @@ public final class AngleSolverWindow implements RenderInterface {
         float btnW = ImGui.getFrameHeight();
         float spacing = ImGui.getStyle().getItemInnerSpacing().x;
         float segW = SolverWidgets.segmentedMinWidth(ANGLE_TYPES);
-        float inputW = Math.max(30f, ImGui.getContentRegionAvail().x - btnW - segW - 2f * spacing);
+        float atW = ImGui.calcTextSize(OBJECTIVE_TICK_LABEL).x;
+        float tickW = Math.max(40f * scale, ImGui.calcTextSize("00000").x + 2f * ImGui.getStyle().getFramePaddingX());
+        float inputW = Math.max(30f, ImGui.getContentRegionAvail().x - btnW - segW - atW - tickW - 4f * spacing);
 
         if (state.getCustomAngleDeg() != lastSyncedCustomAngle && !ImGui.isItemActive()) {
             customAngleBuf.set(formatAngle(state.getCustomAngleDeg()));
@@ -487,6 +496,20 @@ public final class AngleSolverWindow implements RenderInterface {
         int typePick = SolverWidgets.segmented("##customType", ANGLE_TYPES, ANGLE_TYPE_TIPS,
                 state.getCustomAngleType().ordinal(), segW);
         if (typePick >= 0) state.setCustomAngleType(AngleSolverState.CustomAngleType.values()[typePick]);
+
+        ImGui.sameLine(0, spacing);
+        ThemeManager.pushTextColor(ThemeManager.textDimColor());
+        ImGui.alignTextToFramePadding();
+        ImGui.text(OBJECTIVE_TICK_LABEL);
+        ThemeManager.popTextColor();
+        ImGui.sameLine(0, spacing);
+        objectiveTickBuf.set(state.effectiveObjectiveTick() + 1);
+        if (Controls.inputInt("##objectiveTick", objectiveTickBuf, tickW)) {
+            int tick = Math.max(0, Math.min(rowCount - 1, objectiveTickBuf.get() - 1));
+            if (tick == state.getLandingTick()) state.clearObjectiveTick();
+            else state.setObjectiveTick(tick);
+        }
+        TooltipUtil.onHover(OBJECTIVE_TICK_TIP);
 
         ImGui.endGroup();
         Controls.popInputFrameHeight();
@@ -562,8 +585,9 @@ public final class AngleSolverWindow implements RenderInterface {
     private static final String SMOOTH_GIVE_BACK_TIP =
             "How much of the landing offset the Smooth button may trade for a smoother turn. The offset is"
             + " the margin past the goal wall at the goal tick, the + value in the result table of the"
-            + " unsmoothed solve. 100 % lets it land anywhere past the wall, 0 % keeps the objective where"
-            + " it is.";
+            + " unsmoothed solve. 100 % lets it land anywhere past the wall, 0 % keeps the objective value at"
+            + " the goal tick. Every other tick may still move within the constraints, at any percentage: a"
+            + " ladder grab, a wall hit or anything else the solver cannot see needs a constraint on its tick.";
 
     private static final String LEGAL_MODE_TIP =
             "Record hunting: drops the single tightest goal wall on the objective axis at the goal tick and"
@@ -1087,7 +1111,7 @@ public final class AngleSolverWindow implements RenderInterface {
         }
         String header = runningLook ? RUNNING + " · " + lastStage : resultHeader(r);
         String clock = running ? rv.clock : null;
-        String headerTip = running ? rv.chain : null;
+        String headerTip = running ? rv.chain : smoothStopTip(r);
 
         float pad = ThemeManager.SM * scale;
         int devLines = deviation == null ? 0
@@ -1162,8 +1186,26 @@ public final class AngleSolverWindow implements RenderInterface {
 
     private String resultHeader(SolveResult r) {
         if (!r.isSuccess()) return "No solution · " + r.getMet() + "/" + r.getTotal() + " constraints met";
-        if (state.getApplyDeviation() != null) return "Solved · sim diverged";
-        return "Solved · " + r.getMet() + "/" + r.getTotal() + " constraints met";
+        String verb = r.isSmoothed() ? "Smoothed" : "Solved";
+        if (state.getApplyDeviation() != null) return verb + " · sim diverged";
+        if (r.isSmoothed()) return verb + " · " + smoothSeconds(r.getSmoothNanos()) + " · " + r.getSmoothStop();
+        return verb + " · " + r.getMet() + "/" + r.getTotal() + " constraints met";
+    }
+
+    private static String smoothSeconds(long nanos) {
+        double s = nanos / 1.0e9;
+        if (s < 0.05) return "<0.1 s";
+        return String.format(Locale.ROOT, "%.1f s", s);
+    }
+
+    private static String smoothStopTip(SolveResult r) {
+        if (r == null || !r.isSmoothed()) return null;
+        String stop = r.getSmoothStop();
+        if ("converged".equals(stop)) return "The smoothing stopped on its own: a full pass found nothing left to improve.";
+        if ("budget".equals(stop)) return "The smoothing stopped because its time budget ran out; more time might smooth further.";
+        if ("pass limit".equals(stop)) return "The smoothing ran without a time budget and stopped at its pass limit while a pass was still improving the turn.";
+        if ("cancelled".equals(stop)) return "The smoothing was stopped by hand and kept the best turn found so far.";
+        return null;
     }
 
     /** Engine-filled details, or rows synthesized from the flat stats fields for results from older saves.

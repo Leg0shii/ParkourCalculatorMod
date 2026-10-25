@@ -1,6 +1,7 @@
 package de.legoshi.parkourcalc.anglesolver.harness;
 
 import de.legoshi.parkourcalc.core.save.SaveFile;
+import de.legoshi.parkourcalc.core.save.SaveIO;
 import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.BoxController;
@@ -70,15 +71,49 @@ public final class Fixtures {
     }
 
     public static String rawPool(String name) {
-        try (InputStream in = Fixtures.class.getResourceAsStream("/captures/" + name + ".json")) {
-            if (in == null) throw new IllegalStateException("missing capture: " + name);
+        return rawResource(name.startsWith("/") ? name + ".json" : "/captures/" + name + ".json");
+    }
+
+    public static String rawResource(String path) {
+        try (InputStream in = Fixtures.class.getResourceAsStream(path)) {
+            if (in == null) throw new IllegalStateException("missing resource: " + path);
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             byte[] buf = new byte[8192];
             int n;
             while ((n = in.read(buf)) != -1) out.write(buf, 0, n);
             return out.toString("UTF-8");
         } catch (Exception e) {
-            throw new RuntimeException("failed to read pool fixture " + name, e);
+            throw new RuntimeException("failed to read " + path, e);
+        }
+    }
+
+    public static BoxController buildSeedBoxes(SaveFile file) {
+        int seedTick = file.angleSolver.startTick;
+        SaveFile.Start seed = file.angleSolver.seed;
+        BoxController boxes = new BoxController();
+        for (int i = 0; i < file.rows.size(); i++) {
+            Vec3dCore pos = i == seedTick ? new Vec3dCore(seed.pos[0], seed.pos[1], seed.pos[2]) : Vec3dCore.ZERO;
+            Vec3dCore vel = i == seedTick ? new Vec3dCore(seed.vel[0], seed.vel[1], seed.vel[2]) : Vec3dCore.ZERO;
+            float yaw = i == seedTick ? seed.yaw : 0f;
+            boxes.add(new TickState(pos, false, false, false, yaw,
+                    Collections.<Vec3dCore>emptyList(), vel, false, Double.NaN));
+        }
+        return boxes;
+    }
+
+    public static SaveFile hpkHuman(String dir, String resource) {
+        String path = "/hpk_human/" + dir + "/" + resource + ".json";
+        try (InputStream in = Fixtures.class.getResourceAsStream(path)) {
+            if (in == null) throw new IllegalStateException("missing resource " + path);
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            byte[] buf = new byte[8192];
+            int n;
+            while ((n = in.read(buf)) != -1) out.write(buf, 0, n);
+            SaveFile file = SaveIO.parseSafe(out.toString("UTF-8"));
+            if (file == null) throw new IllegalStateException("parse failed: " + path);
+            return file;
+        } catch (Exception e) {
+            throw new RuntimeException("load failed: " + path, e);
         }
     }
 

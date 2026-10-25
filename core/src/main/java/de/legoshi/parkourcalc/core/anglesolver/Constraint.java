@@ -56,17 +56,23 @@ public final class Constraint {
     private Constraint(Field field, Op op, double value) {
         this.field = field;
         this.op = op;
-        this.value = value;
+        this.value = whole(field, value);
     }
 
     public static Constraint scalar(Field field, Op op, double value) {
-        return new Constraint(field, op, value);
+        return new Constraint(field, field == Field.DF ? dfOp(op) : op, value);
+    }
+
+    private static Op dfOp(Op op) {
+        if (op == Op.GT) return Op.GE;
+        if (op == Op.LT) return Op.LE;
+        return op;
     }
 
     public static Constraint range(Field field, double lo, double hi, boolean loInclusive, boolean hiInclusive) {
         Constraint c = new Constraint(field, Op.IN, 0);
-        c.lo = lo;
-        c.hi = hi;
+        c.lo = whole(field, lo);
+        c.hi = whole(field, hi);
         c.loInclusive = loInclusive;
         c.hiInclusive = hiInclusive;
         return c;
@@ -84,6 +90,18 @@ public final class Constraint {
             op = Op.EQ;
             value = 0.0;
         }
+        value = whole(next, value);
+        lo = whole(next, lo);
+        hi = whole(next, hi);
+    }
+
+    public boolean isWholeNumber() {
+        return field == Field.RT;
+    }
+
+    private static double whole(Field field, double v) {
+        if (field != Field.RT || Double.isNaN(v) || Double.isInfinite(v)) return v;
+        return Math.floor(v + 0.5);
     }
 
     public Integer getRefTick() {
@@ -119,6 +137,10 @@ public final class Constraint {
     }
 
     public void setOp(Op op) {
+        if (field == Field.DF) {
+            op = dfOp(op);
+            if (op == Op.EQ) value = 0.0;
+        }
         if (op == Op.IN && this.op != Op.IN) {
             lo = value;
             hi = value;
@@ -135,7 +157,7 @@ public final class Constraint {
     }
 
     public void setValue(double value) {
-        this.value = value;
+        this.value = whole(field, value);
     }
 
     public double getLo() {
@@ -143,7 +165,7 @@ public final class Constraint {
     }
 
     public void setLo(double lo) {
-        this.lo = lo;
+        this.lo = whole(field, lo);
     }
 
     public double getHi() {
@@ -151,7 +173,7 @@ public final class Constraint {
     }
 
     public void setHi(double hi) {
-        this.hi = hi;
+        this.hi = whole(field, hi);
     }
 
     public boolean isLoInclusive() {
@@ -172,7 +194,11 @@ public final class Constraint {
     }
 
     public boolean isUnsupportedDf() {
-        return field == Field.DF && (isRange() || op != Op.EQ || value != 0.0);
+        return field == Field.DF && (isRange() || (op == Op.EQ && value != 0.0));
+    }
+
+    public boolean isDirectionalDf() {
+        return field == Field.DF && !isRange() && (op == Op.GE || op == Op.LE);
     }
 
     public boolean isEnabled() {

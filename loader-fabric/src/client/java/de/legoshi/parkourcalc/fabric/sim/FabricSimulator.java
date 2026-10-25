@@ -2,27 +2,39 @@ package de.legoshi.parkourcalc.fabric.sim;
 
 import de.legoshi.parkourcalc.core.PlaybackController;
 import de.legoshi.parkourcalc.core.anglesolver.Medium;
-import de.legoshi.parkourcalc.core.sim.ChunkRange;
 import de.legoshi.parkourcalc.core.sim.Checkpoint;
+import de.legoshi.parkourcalc.core.sim.ChunkRange;
 import de.legoshi.parkourcalc.core.sim.LazyEntitySimulator;
 import de.legoshi.parkourcalc.core.sim.ServerSimEvent;
 import de.legoshi.parkourcalc.core.sim.StartResumeState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
+import de.legoshi.parkourcalc.core.ui.MovementEffect;
 import de.legoshi.parkourcalc.fabric.sim.paired.PairedCheckpoint;
 import de.legoshi.parkourcalc.fabric.sim.paired.PairedServerSim;
-import net.minecraft.world.entity.player.Input;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.entity.player.Player;
+//? if <1.21
+//import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.effect.MobEffectInstance;
+//? if <1.21 {
+/*import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+*///?}
+import net.minecraft.world.entity.ai.attributes.AttributeMap;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+//? if >=1.21.2
+import net.minecraft.world.entity.player.Input;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+//? if >=1.21 {
 import net.minecraft.world.level.chunk.status.ChunkStatus;
+//?} else {
+/*import net.minecraft.world.level.chunk.ChunkStatus;
+*///?}
+import net.minecraft.world.phys.Vec3;
 
 import java.util.List;
 
@@ -151,7 +163,7 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
 
     @Override protected void resetEntity(SimulatorEntity e, StartResumeState resume) {
         Player player = Minecraft.getInstance().player;
-        if (player != null) e.getAttributes().assignBaseValues(player.getAttributes());
+        if (player != null) copyBaseAttributes(e.getAttributes(), player.getAttributes());
         ensurePair(e);
         if (pair != null) {
             pair.resetForFullRun(e, resume);
@@ -214,13 +226,10 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
     }
 
     @Override
-    protected void applyTickEffects(SimulatorEntity e, int speedAmplifier, int jumpBoostAmplifier) {
+    protected void applyTickEffects(SimulatorEntity e, int[] effectLevels) {
         e.removeAllEffects();
-        if (speedAmplifier > 0) {
-            e.addEffect(new MobEffectInstance(MobEffects.SPEED, 2, speedAmplifier - 1));
-        }
-        if (jumpBoostAmplifier > 0) {
-            e.addEffect(new MobEffectInstance(MobEffects.JUMP_BOOST, 2, jumpBoostAmplifier - 1));
+        for (MobEffectInstance instance : MovementEffects.instances(effectLevels, 2, true)) {
+            e.addEffect(instance);
         }
     }
 
@@ -266,8 +275,6 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
 
     @Override
     protected String formatDebugState(SimulatorEntity e, int tickIndex) {
-        MobEffectInstance spd = e.getEffect(MobEffects.SPEED);
-        MobEffectInstance jmp = e.getEffect(MobEffects.JUMP_BOOST);
         double mvSp = e.getAttributeValue(Attributes.MOVEMENT_SPEED);
         Vec3 pos = e.position();
         Vec3 vel = e.getDeltaMovement();
@@ -281,8 +288,9 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
                 + " colH=" + e.horizontalCollision
                 + " mvF=" + e.zza
                 + " mvS=" + e.xxa
-                + " spdAmp=" + (spd == null ? -1 : spd.getAmplifier())
-                + " jmpAmp=" + (jmp == null ? -1 : jmp.getAmplifier())
+                + " spdAmp=" + MovementEffects.amplifier(e, MovementEffect.SPEED)
+                + " jmpAmp=" + MovementEffects.amplifier(e, MovementEffect.JUMP_BOOST)
+                + " fx=" + MovementEffects.describe(e)
                 + " pose=" + e.getPose()
                 + " inW=" + e.isInWater()
                 + " underW=" + e.isUnderWater()
@@ -419,5 +427,17 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
         if (client != null) {
             e.restoreCheckpoint(client);
         }
+    }
+
+    public static void copyBaseAttributes(AttributeMap to, AttributeMap from) {
+        //? if >=1.21 {
+        to.assignBaseValues(from);
+        //?} else {
+        /*for (Attribute attribute : BuiltInRegistries.ATTRIBUTE) {
+            if (!from.hasAttribute(attribute)) continue;
+            AttributeInstance target = to.getInstance(attribute);
+            if (target != null) target.setBaseValue(from.getBaseValue(attribute));
+        }
+        *///?}
     }
 }
