@@ -976,12 +976,12 @@ public final class AngleSolverWindow implements RenderInterface {
         ImGui.pushStyleColor(ImGuiCol.Border, border);
         ImGui.pushStyleVar(ImGuiStyleVar.WindowPadding, pad, pad);
         ImGui.beginChild("##solve_result", ImGui.getContentRegionAvail().x, h, true);
+        ImGui.popStyleVar();
         ImGui.popStyleColor(2);
     }
 
     private static void endResultChild() {
         ImGui.endChild();
-        ImGui.popStyleVar();
     }
 
     private void drawPanelHeader(String text, int textColor, float fill, float fillAlpha, boolean spinner,
