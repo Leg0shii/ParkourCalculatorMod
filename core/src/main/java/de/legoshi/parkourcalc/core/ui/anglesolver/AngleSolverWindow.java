@@ -1144,8 +1144,9 @@ public final class AngleSolverWindow implements RenderInterface {
             String tip = deviationTip(state.getApplyDeviationKind());
             if (tip != null) TooltipUtil.onHover(tip);
         }
+        int noticeColor = r.isSuccess() ? ThemeManager.warningColor() : ThemeManager.dangerColor();
         if (notice != null && noticeLabel != null) {
-            ThemeManager.pushTextColor(ThemeManager.warningColor());
+            ThemeManager.pushTextColor(noticeColor);
             ImGui.text(noticeLabel);
             ThemeManager.popTextColor();
             ImGui.sameLine();
@@ -1154,7 +1155,7 @@ public final class AngleSolverWindow implements RenderInterface {
             ThemeManager.popTextColor();
             TooltipUtil.onHover(notice);
         } else if (notice != null) {
-            ThemeManager.pushTextColor(ThemeManager.warningColor());
+            ThemeManager.pushTextColor(noticeColor);
             ImGui.textWrapped(notice);
             ThemeManager.popTextColor();
         }
