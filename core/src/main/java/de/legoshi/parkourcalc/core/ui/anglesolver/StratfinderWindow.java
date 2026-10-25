@@ -71,6 +71,10 @@ public final class StratfinderWindow implements RenderInterface {
 
         void setDeepMinutes(int minutes);
 
+        boolean gpuScreening();
+
+        void setGpuScreening(boolean value);
+
         double offsetOf(NoTurnResult result);
 
         String goalWallLabel();
@@ -112,6 +116,10 @@ public final class StratfinderWindow implements RenderInterface {
             + " key changes (the butterfly and winged neos). Slow; off, the search ends as before.";
     private static final String DEEP_BUDGET_TIP = "Minutes the deep search may run after the ordinary search."
             + " Cancel stops it early and keeps what was found.";
+    public static final String GPU_TIP = "Screens the Stratfinder's key schedules on the graphics card through"
+            + " OpenCL instead of the CPU. Needs an OpenCL runtime (any NVIDIA or AMD driver on Windows). The CPU still"
+            + " certifies every line byte-exactly; when the GPU cannot be used the search falls back to the CPU and the"
+            + " Stratfinder window says so.";
     private static final String INPUTS_TIP = "Input changes a player makes: key presses and releases across the"
             + " run-up (including the first press and the air hold) plus sprint toggles. A key change on a jump"
             + " tick is free: space is the cue to release the strafe (WAD). Lower is easier.\n\nClick to sort easiest"
@@ -202,6 +210,11 @@ public final class StratfinderWindow implements RenderInterface {
         if (Controls.checkbox("Deep search", host.deepSearch())) host.setDeepSearch(!host.deepSearch());
         if (busy) ImGui.endDisabled();
         TooltipUtil.onHover(DEEP_SEARCH_TIP);
+        ImGui.sameLine();
+        if (busy) ImGui.beginDisabled(true);
+        if (Controls.checkbox("GPU", host.gpuScreening())) host.setGpuScreening(!host.gpuScreening());
+        if (busy) ImGui.endDisabled();
+        TooltipUtil.onHover(GPU_TIP);
         ImGui.sameLine();
         boolean any = !host.results().isEmpty();
         int todo = host.unoptimizedCount();
@@ -398,9 +411,11 @@ public final class StratfinderWindow implements RenderInterface {
 
     private static float footerHeight() {
         float spacing = ImGui.getStyle().getItemSpacingY();
+        float gpuLine = PoolScreenAccelerator.status() != null ? ImGui.getTextLineHeight() + spacing : 0f;
         return ThemeManager.sectionSpacingHeight() + spacing
                 + ImGui.getFrameHeight() + spacing
                 + ImGui.getTextLineHeight() + spacing
+                + gpuLine
                 + Controls.buttonHeight() + spacing;
     }
 

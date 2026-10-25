@@ -146,7 +146,7 @@ public final class JumpLinearModel {
             }
             // Same per-tick input authoring as ExactJumpModel step (4) (gh-102).
             double forward0 = sc.forwardAt(t);
-            double strafe0 = (sc.strafeAt(t) && !isJump) ? sc.strafeSign * 0.98 : sc.strafeInputAt(t);
+            double strafe0 = (sc.strafeAt(t) && !isJump) ? sc.strafeSignAt(t) * 0.98 : sc.strafeInputAt(t);
             double fm = strafe0 * strafe0 + forward0 * forward0;
             double fF = 0.0, sF = 0.0;
             if (fm >= 1.0e-4) {

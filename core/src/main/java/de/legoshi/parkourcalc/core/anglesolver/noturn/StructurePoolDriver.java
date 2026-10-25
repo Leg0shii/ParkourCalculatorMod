@@ -109,6 +109,10 @@ public final class StructurePoolDriver {
     double loShiftX, hiShiftX, loShiftZ, hiShiftZ;
 
     private Group[] groups;
+    private int[] loXGroups;
+    private int[] hiXGroups;
+    private int[] loZGroups;
+    private int[] hiZGroups;
     private double objConst;
     private double[] objCoefMain;
     private double[] objCoefOther;
@@ -187,6 +191,16 @@ public final class StructurePoolDriver {
 
     public List<Candidate> pool() {
         return pool;
+    }
+
+    public List<Candidate> rankedPool() {
+        List<Candidate> out = new ArrayList<>(pool);
+        out.sort(rankOrder(cfg));
+        return out;
+    }
+
+    public int tierOf(Candidate c) {
+        return certifyTier(cfg, c);
     }
 
     public long scoredCount() {
@@ -280,6 +294,10 @@ public final class StructurePoolDriver {
         }
         this.groups = byKey.values().toArray(new Group[0]);
         java.util.Arrays.sort(this.groups, (x, y) -> Integer.compare(x.tick, y.tick));
+        this.loXGroups = groupIndices(true, true);
+        this.hiXGroups = groupIndices(true, false);
+        this.loZGroups = groupIndices(false, true);
+        this.hiZGroups = groupIndices(false, false);
 
         this.objConst = lm.constPos(objTick, objAxis);
         this.objCoefMain = new double[n];
@@ -366,6 +384,44 @@ public final class StructurePoolDriver {
         this.gpuTables = PoolScreenAccelerator.get() != null ? buildTables(lm) : null;
     }
 
+    private int[] groupIndices(boolean axisX, boolean lo) {
+        List<Integer> out = new ArrayList<>();
+        for (int gi = 0; gi < groups.length; gi++) {
+            Group g = groups[gi];
+            if ((g.axis == 0) != axisX) continue;
+            if (lo ? g.hasLo : g.hasHi) out.add(gi);
+        }
+        int[] arr = new int[out.size()];
+        for (int i = 0; i < arr.length; i++) arr[i] = out.get(i);
+        return arr;
+    }
+
+    private double needLo(int[] idx, int active, double a, double b, double init) {
+        double need = init;
+        for (int k = 0; k < idx.length; k++) {
+            int gi = idx[k];
+            if (gi >= active) break;
+            Group g = groups[gi];
+            double setupLin = g.aCoef * a + g.bCoef * b;
+            double lo = g.loBound - setupLin - g.slack;
+            if (lo > need) need = lo;
+        }
+        return need;
+    }
+
+    private double needHi(int[] idx, int active, double a, double b, double init) {
+        double need = init;
+        for (int k = 0; k < idx.length; k++) {
+            int gi = idx[k];
+            if (gi >= active) break;
+            Group g = groups[gi];
+            double setupLin = g.aCoef * a + g.bCoef * b;
+            double hi = g.hiBound - setupLin + g.slack;
+            if (hi < need) need = hi;
+        }
+        return need;
+    }
+
     private PoolScreenTables buildTables(JumpLinearModel lm) {
         if (screen.mainGroup() < 0) return null;
         int walls = byteWalls.size();
@@ -412,6 +468,10 @@ public final class StructurePoolDriver {
     }
 
     private void gpuAppend(int[] combos) {
+        if (userCancelled()) {
+            gpuBatchCount = 0;
+            return;
+        }
         int o = gpuBatchCount * n;
         for (int t = 0; t < n; t++) gpuBatch[o + t] = (byte) combos[t];
         gpuBatchCount++;
@@ -420,12 +480,16 @@ public final class StructurePoolDriver {
 
     void flushGpu() {
         if (gpu == null || gpuBatchCount == 0) return;
+        if (userCancelled()) {
+            gpuBatchCount = 0;
+            return;
+        }
         int count = gpuBatchCount;
         gpuBatchCount = 0;
         int[] combos = new int[n];
         float[] r;
         try {
-            r = gpu.evaluate(gpuBatch, count);
+            r = gpu.evaluate(gpuBatch, count, this::userCancelled);
         } catch (RuntimeException | LinkageError e) {
             PoolScreenAccelerator.fail(e);
             try {
@@ -440,6 +504,7 @@ public final class StructurePoolDriver {
             gpuBatch = null;
             return;
         }
+        if (r == null) return;
         int per = SchedulePoolScreen.FLOATS_PER_VARIANT;
         boolean[] sprint = new boolean[n];
         for (int i = 0; i < count; i++) {
@@ -738,27 +803,11 @@ public final class StructurePoolDriver {
     }
 
     private double evalTheta(double a, double b, double objA, double objB) {
-        double needLoX = loShiftX, needHiX = hiShiftX;
-        double needLoZ = loShiftZ, needHiZ = hiShiftZ;
-        for (Group g : groups) {
-            double setupLin = g.aCoef * a + g.bCoef * b;
-            if (g.hasLo) {
-                double lo = g.loBound - setupLin - g.slack;
-                if (g.axis == 0) {
-                    if (lo > needLoX) needLoX = lo;
-                } else {
-                    if (lo > needLoZ) needLoZ = lo;
-                }
-            }
-            if (g.hasHi) {
-                double hi = g.hiBound - setupLin + g.slack;
-                if (g.axis == 0) {
-                    if (hi < needHiX) needHiX = hi;
-                } else {
-                    if (hi < needHiZ) needHiZ = hi;
-                }
-            }
-        }
+        int all = groups.length;
+        double needLoX = needLo(loXGroups, all, a, b, loShiftX);
+        double needHiX = needHi(hiXGroups, all, a, b, hiShiftX);
+        double needLoZ = needLo(loZGroups, all, a, b, loShiftZ);
+        double needHiZ = needHi(hiZGroups, all, a, b, hiShiftZ);
         double vx = needLoX - needHiX;
         double vz = needLoZ - needHiZ;
         double viol = Math.max(vx, vz);
@@ -1023,28 +1072,10 @@ public final class StructurePoolDriver {
     }
 
     private double prefixViolAt(double a, double b, int active) {
-        double needLoX = loShiftX, needHiX = hiShiftX;
-        double needLoZ = loShiftZ, needHiZ = hiShiftZ;
-        for (int gi = 0; gi < active; gi++) {
-            Group g = groups[gi];
-            double setupLin = g.aCoef * a + g.bCoef * b;
-            if (g.hasLo) {
-                double lo = g.loBound - setupLin - g.slack;
-                if (g.axis == 0) {
-                    if (lo > needLoX) needLoX = lo;
-                } else {
-                    if (lo > needLoZ) needLoZ = lo;
-                }
-            }
-            if (g.hasHi) {
-                double hi = g.hiBound - setupLin + g.slack;
-                if (g.axis == 0) {
-                    if (hi < needHiX) needHiX = hi;
-                } else {
-                    if (hi < needHiZ) needHiZ = hi;
-                }
-            }
-        }
+        double needLoX = needLo(loXGroups, active, a, b, loShiftX);
+        double needHiX = needHi(hiXGroups, active, a, b, hiShiftX);
+        double needLoZ = needLo(loZGroups, active, a, b, loShiftZ);
+        double needHiZ = needHi(hiZGroups, active, a, b, hiShiftZ);
         return Math.max(needLoX - needHiX, needLoZ - needHiZ);
     }
 
@@ -1250,6 +1281,10 @@ public final class StructurePoolDriver {
 
     private boolean cancelled() {
         return (cancel != null && cancel.get()) || (stop != null && stop.get()) || System.nanoTime() > deadlineNanos;
+    }
+
+    private boolean userCancelled() {
+        return cancel != null && cancel.get();
     }
 
     private static final class LevelResult {
@@ -1823,6 +1858,7 @@ public final class StructurePoolDriver {
             exec.shutdownNow();
         }
     }
+
 
     private static Config copyConfig(Config c) {
         Config o = new Config();

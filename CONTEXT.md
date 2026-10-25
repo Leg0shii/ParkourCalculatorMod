@@ -85,6 +85,18 @@ The standard unit of distance in Minecraft (visual block count). 1 block = 16 pi
 **Meter** (m):
 A distance unit that accounts for the player's 0.6-wide bounding box, so it reflects the physical gap rather than the visual block count. A "4 block" jump is ~3.4 meters of actual air travel.
 
+**Sense** (sensitivity):
+The mouse sensitivity, shown by the options screen as a percent from 0% to 200% (`mouseSensitivity` 0.0 to 1.0 in `options.txt`, percent = value x 200; any float in between is legal, 198.753623% included). It sets the size of a mouse pixel and nothing else.
+
+**Mouse pixel**:
+The facing change of one count of mouse movement, `0.15 * 8 * (0.6 * s + 0.2)^3` degrees for sensitivity `s`: 0.6144 degrees at 200%, 0.15 degrees at 100%. A human can only turn by whole mouse pixels, so an angle is hittable at a sense when some whole pixel count lands inside its facing window. Distinct from the distance pixel above.
+
+**Jump facing window**:
+The range of facings at the jump (first turn) tick from which the rest of the jump can still be solved to land, in degrees. Not the range that lands with the later facings merely carried along: a human adapts the later angles, and on j703 that makes the window four times wider (about 0.29 instead of 0.065 degrees). The margin is how far the chosen facing (a whole pixel count at the player's sense) sits inside it. Measured human flick error is a few degrees whatever the sense, so a coarser pixel grid (higher sense) snaps more attempts onto the one landing count; a lower sense only makes a pixel smaller.
+
+**Turn range**:
+At one turn tick and one sense, the whole pixel counts the player can turn and still make the jump (the rest of the jump adapting), shown as a pixel range such as [-48, -41]; its width is the number of those counts times the pixel size, in degrees. A coarse sense can widen it: one pixel at 200% is a 0.61 degree turn range even when the facing window is 0.3 degrees wide. The Sense Finder's Margin column sums the turn range widths over the chosen tick range and ranks rows by that sum. Formerly called landing target; "landing" is the offset to the block.
+
 ## Velocity and speed
 
 The project's own precise taxonomy. The one true quantity is velocity; speed and direction are its polar components.
@@ -220,6 +232,10 @@ _Avoid_: bit-exact (same thing; prefer byte-exact)
 
 **Margin**:
 How much room to spare a jump succeeds by. The tool's goal is to certify routes down to a 1e-4 block margin or tighter, the regime where human stratfinding breaks down.
+
+**Verdict**:
+The solver's three-valued answer to a solve. Feasible: a byte-exact witness path meets every constraint (shown as Solved). Undetermined: the search ran out of budget without a witness and without ruling one out (shown as No solution, like any failure without a certificate). Certified infeasible: no path exists, backed by a certificate, either two constraints on one tick that exclude each other or the certified search exhausting the whole facing lattice of the span (shown as Infeasible). A search that merely converged or timed out is never infeasible.
+_Avoid_: infeasible for a search that ran out of budget
 
 **Run-up**:
 The movement before takeoff that builds the entry velocity a jump needs. The tool can find the run-up that produces a required velocity.

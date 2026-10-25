@@ -260,6 +260,11 @@ public final class ForgeMinecraftAccess implements MinecraftAccess {
     }
 
     @Override
+    public boolean isSelectTickPressed() {
+        return ForgeParkourCalculator.isSelectTickDown();
+    }
+
+    @Override
     public boolean isMousePressedRight() {
         return Lwjgl2InputState.isMousePressedRight();
     }
@@ -318,6 +323,12 @@ public final class ForgeMinecraftAccess implements MinecraftAccess {
     @Override
     public float getMouseSensitivity() {
         return Minecraft.getMinecraft().gameSettings.mouseSensitivity;
+    }
+
+    @Override
+    public void setMouseSensitivity(float sensitivity) {
+        Minecraft.getMinecraft().gameSettings.mouseSensitivity = sensitivity;
+        Minecraft.getMinecraft().gameSettings.saveOptions();
     }
 
     @Override

@@ -68,6 +68,8 @@ public final class AngleSolverWindow implements RenderInterface {
             "Optimize toward a custom facing angle instead of an axis. Best with a time budget above zero."};
     private static final int GOAL_ANGLE = 4;
     private static final String[] INPUTS = {"Keep", "Force 45"};
+    private static final String[] INPUTS_WIDEST = {"Keep", "Force 45 (Both)"};
+    private static final String STRAFE_SIDE_POPUP = "##strafe_side";
     private static final String[] SPRINTS = {"Always", "Derive"};
     private static final String[] SPRINT_TIPS = {null,
             "WARNING: derives each tick's sprint state from the current recorded path.\n"
@@ -263,8 +265,7 @@ public final class AngleSolverWindow implements RenderInterface {
         goalRow(labelW);
         if (state.isCustomAngle()) angleRow(rowCount, labelW, scale);
 
-        int im = segmentedRow("Inputs", "inputs", INPUTS, state.getDefaultInputs().ordinal(), labelW);
-        if (im >= 0) state.setDefaultInputs(AngleSolverState.InputMode.values()[im]);
+        inputsRow(labelW);
 
         int sp = segmentedRow("Sprint", "sprint", SPRINTS, SPRINT_TIPS, state.getDefaultSprint().ordinal(), labelW);
         if (sp >= 0) state.setDefaultSprint(AngleSolverState.SprintMode.values()[sp]);
@@ -344,7 +345,7 @@ public final class AngleSolverWindow implements RenderInterface {
 
     private float formInner(float labelW, float scale) {
         float w = segmentedRowWidth("Goal", GOALS, labelW);
-        w = Math.max(w, segmentedRowWidth("Inputs", INPUTS, labelW));
+        w = Math.max(w, segmentedRowWidth("Inputs", INPUTS_WIDEST, labelW) + SolverWidgets.dropdownArrowWidth());
         w = Math.max(w, segmentedRowWidth("Sprint", SPRINTS, labelW));
         w = Math.max(w, labelW + 150f * scale + budgetFieldWidth(scale));
         if (moreExpanded && state.getRunTicks().isEnabled()) {
@@ -519,6 +520,28 @@ public final class AngleSolverWindow implements RenderInterface {
         return String.format(Locale.ROOT, "%.4f", deg).replaceAll("0+$", "").replaceAll("\\.$", "");
     }
 
+    private void inputsRow(float labelW) {
+        String[] items = {INPUTS[0], INPUTS[1] + " (" + state.getStrafeSide().label + ")"};
+        Controls.pushInputFrameHeight();
+        SolverWidgets.rowLabel("Inputs", labelW);
+        int clicked = SolverWidgets.segmented("inputs", items, null, state.getDefaultInputs().ordinal(),
+                ImGui.getContentRegionAvail().x, AngleSolverState.InputMode.FORCE_45.ordinal(),
+                ImGui.isPopupOpen(STRAFE_SIDE_POPUP));
+        Controls.popInputFrameHeight();
+        if (clicked == SolverWidgets.DROPDOWN_CLICKED) {
+            ImGui.setNextWindowPos(SolverWidgets.dropdownLeft(), SolverWidgets.dropdownBottom());
+            ImGui.openPopup(STRAFE_SIDE_POPUP);
+        } else if (clicked >= 0) {
+            state.setDefaultInputs(AngleSolverState.InputMode.values()[clicked]);
+        }
+        if (ImGui.beginPopup(STRAFE_SIDE_POPUP)) {
+            for (AngleSolverState.StrafeSide side : AngleSolverState.StrafeSide.values()) {
+                if (ImGui.menuItem(side.label, "", side == state.getStrafeSide())) state.setStrafeSide(side);
+            }
+            ImGui.endPopup();
+        }
+    }
+
     private int segmentedRow(String label, String id, String[] items, int selected, float labelW) {
         return segmentedRow(label, id, items, null, selected, labelW);
     }
@@ -575,15 +598,19 @@ public final class AngleSolverWindow implements RenderInterface {
     private static final String SMOOTH_TIP =
             "Smooths the turn of the solved path: fewer direction changes and a steadier turn rate. The jump"
             + " keeps landing; the smoothing may give back the share of the offset past the goal wall set"
-            + " under More options. Stops early once nothing improves.";
+            + " under More options. Every press starts again from the unsmoothed solve, so the share always"
+            + " refers to the solve's offset and pressing again only changes the result when the give-back"
+            + " changed. Stops early once nothing improves.";
 
     private static final String SMOOTH_DISABLED_TIP =
             "Smooths the turn of the solved path. Solve the range first.";
 
     private static final String SMOOTH_GIVE_BACK_TIP =
             "How much of the landing offset the Smooth button may trade for a smoother turn. The offset is"
-            + " the margin past the goal wall at the goal tick, the + value in the result table. 100 %"
-            + " lets it land anywhere past the wall, 0 % keeps the objective where it is.";
+            + " the margin past the goal wall at the goal tick, the + value in the result table of the"
+            + " unsmoothed solve. 100 % lets it land anywhere past the wall, 0 % keeps the objective value at"
+            + " the goal tick. Every other tick may still move within the constraints, at any percentage: a"
+            + " ladder grab, a wall hit or anything else the solver cannot see needs a constraint on its tick.";
 
     private static final String LEGAL_MODE_TIP =
             "Record hunting: drops the single tightest goal wall on the objective axis at the goal tick and"
@@ -972,12 +999,12 @@ public final class AngleSolverWindow implements RenderInterface {
         ImGui.pushStyleColor(ImGuiCol.Border, border);
         ImGui.pushStyleVar(ImGuiStyleVar.WindowPadding, pad, pad);
         ImGui.beginChild("##solve_result", ImGui.getContentRegionAvail().x, h, true);
+        ImGui.popStyleVar();
+        ImGui.popStyleColor(2);
     }
 
     private static void endResultChild() {
         ImGui.endChild();
-        ImGui.popStyleVar();
-        ImGui.popStyleColor(2);
     }
 
     private void drawPanelHeader(String text, int textColor, float fill, float fillAlpha, boolean spinner,
@@ -1140,8 +1167,9 @@ public final class AngleSolverWindow implements RenderInterface {
             String tip = deviationTip(state.getApplyDeviationKind());
             if (tip != null) TooltipUtil.onHover(tip);
         }
+        int noticeColor = r.isSuccess() ? ThemeManager.warningColor() : ThemeManager.dangerColor();
         if (notice != null && noticeLabel != null) {
-            ThemeManager.pushTextColor(ThemeManager.warningColor());
+            ThemeManager.pushTextColor(noticeColor);
             ImGui.text(noticeLabel);
             ThemeManager.popTextColor();
             ImGui.sameLine();
@@ -1150,7 +1178,7 @@ public final class AngleSolverWindow implements RenderInterface {
             ThemeManager.popTextColor();
             TooltipUtil.onHover(notice);
         } else if (notice != null) {
-            ThemeManager.pushTextColor(ThemeManager.warningColor());
+            ThemeManager.pushTextColor(noticeColor);
             ImGui.textWrapped(notice);
             ThemeManager.popTextColor();
         }
@@ -1181,7 +1209,7 @@ public final class AngleSolverWindow implements RenderInterface {
     }
 
     private String resultHeader(SolveResult r) {
-        if (!r.isSuccess()) return "No solution · " + r.getMet() + "/" + r.getTotal() + " constraints met";
+        if (!r.isSuccess()) return r.headline() + " · " + r.getMet() + "/" + r.getTotal() + " constraints met";
         String verb = r.isSmoothed() ? "Smoothed" : "Solved";
         if (state.getApplyDeviation() != null) return verb + " · sim diverged";
         if (r.isSmoothed()) return verb + " · " + smoothSeconds(r.getSmoothNanos()) + " · " + r.getSmoothStop();
