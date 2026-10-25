@@ -4,6 +4,7 @@ import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.graph.BuiltinGraphs;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
+import de.legoshi.parkourcalc.core.anglesolver.noturn.BendersMaster;
 import de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnFinder;
 import de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnKeys;
 import de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnOptimizePass;
@@ -43,6 +44,9 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
     public static final int MIN_BUDGET_SECONDS = 1;
     public static final int MAX_BUDGET_SECONDS = 120;
     public static final int DEFAULT_BUDGET_SECONDS = 10;
+    public static final int MIN_DEEP_MINUTES = 1;
+    public static final int MAX_DEEP_MINUTES = 180;
+    public static final int DEFAULT_DEEP_MINUTES = 60;
 
     private final InputData inputData;
     private final SimulationRunner runner;
@@ -78,6 +82,8 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
     private volatile int budgetSeconds = DEFAULT_BUDGET_SECONDS;
     private volatile int optimizedInPass;
     private volatile boolean playable = true;
+    private volatile boolean deepSearch;
+    private volatile int deepMinutes = DEFAULT_DEEP_MINUTES;
     private long startNanos;
     private long endNanos;
     private int startTick;
@@ -190,6 +196,26 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
     }
 
     @Override
+    public boolean deepSearch() {
+        return deepSearch;
+    }
+
+    @Override
+    public void setDeepSearch(boolean value) {
+        deepSearch = value;
+    }
+
+    @Override
+    public int deepMinutes() {
+        return deepMinutes;
+    }
+
+    @Override
+    public void setDeepMinutes(int minutes) {
+        deepMinutes = Math.max(MIN_DEEP_MINUTES, Math.min(MAX_DEEP_MINUTES, minutes));
+    }
+
+    @Override
     public boolean gpuScreening() {
         return settings.stratfinderGpu;
     }
@@ -278,9 +304,12 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
                 onFound(r);
             }
         });
+        boolean deep = deepSearch;
+        long deepNanos = deepMinutes * 60_000_000_000L;
         launch(() -> {
             NoTurnResult r = driver.run(p, graph);
-            if (r == null && !cancel.get()) finder.run(p, graph);
+            if (r == null && !cancel.get()) r = finder.run(p, graph);
+            if (r == null && deep && !cancel.get() && ranked.isEmpty()) runDeep(p, deepNanos);
             if (optimizeQueued && !ranked.isEmpty()) {
                 cancel.set(false);
                 runOptimizePass();
@@ -297,13 +326,13 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
             optimizeQueued = true;
             cancel.set(true);
             stage = "stopping the search";
-            pushMessage.accept("No-turn: optimizing the lines found so far", HudMessages.COLOR_DEFAULT);
+            pushMessage.accept("No-turn: optimizing the strats found so far", HudMessages.COLOR_DEFAULT);
             return;
         }
         if (!canRun()) return;
         beginRun(Phase.OPTIMIZE, "starting");
         launch(this::runOptimizePass);
-        pushMessage.accept("No-turn: optimizing " + unoptimizedCount() + " lines", HudMessages.COLOR_DEFAULT);
+        pushMessage.accept("No-turn: optimizing " + unoptimizedCount() + " strats", HudMessages.COLOR_DEFAULT);
     }
 
     @Override
@@ -340,20 +369,20 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
         if (cancel.get()) {
             ending = list.isEmpty() ? Ending.EMPTY : Ending.CANCELLED;
             outcome = list.isEmpty() ? "cancelled, nothing found"
-                    : "cancelled, " + list.size() + (list.size() == 1 ? " line" : " lines") + " kept";
+                    : "cancelled, " + list.size() + (list.size() == 1 ? " strat" : " strats") + " kept";
             return;
         }
         if (list.isEmpty()) {
             ending = Ending.EMPTY;
-            outcome = "no line found";
+            outcome = "no strat found";
             pushMessage.accept("No-turn: none found", HudMessageStyle.COLOR_DANGER);
             return;
         }
         ending = Ending.FOUND;
         if (finished == Phase.OPTIMIZE) {
-            outcome = optimizedInPass + " of " + list.size() + " lines improved";
+            outcome = optimizedInPass + " of " + list.size() + " strats improved";
         } else {
-            outcome = list.size() + (list.size() == 1 ? " line" : " lines") + " found";
+            outcome = list.size() + (list.size() == 1 ? " strat" : " strats") + " found";
         }
         if (selected == null) {
             select(list.get(0));
@@ -396,6 +425,45 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
         }, "noturn-finder");
         thread.setDaemon(true);
         thread.start();
+    }
+
+    private void runDeep(NoTurnProblem p, long budgetNanos) {
+        long deepStart = System.nanoTime();
+        stage = "deep search: starting";
+        fraction = 0.0;
+        pushMessage.accept("No-turn: deep search for " + budgetNanos / 60_000_000_000L + " min",
+                HudMessages.COLOR_DEFAULT);
+        BendersMaster.Config cfg = deepConfig(p, budgetNanos);
+        BendersMaster master = new BendersMaster(model, cfg, cancel, (s, f) -> {
+            int cut = s.indexOf(" (");
+            stage = "deep search: " + (cut > 0 ? s.substring(0, cut) : s);
+            fraction = Math.min(1.0, (System.nanoTime() - deepStart) / (double) budgetNanos);
+        });
+        NoTurnResult r = master.solve(p, BuiltinGraphs.optimize(8));
+        if (r != null) onFound(r);
+    }
+
+    static BendersMaster.Config deepConfig(NoTurnProblem p, long budgetNanos) {
+        BendersMaster.Config cfg = new BendersMaster.Config();
+        cfg.alphabet = new int[]{NoTurnKeys.SD, NoTurnKeys.S, NoTurnKeys.WA, NoTurnKeys.W,
+                NoTurnKeys.WD, NoTurnKeys.SA, NoTurnKeys.A, NoTurnKeys.D};
+        cfg.minDwell = 6;
+        cfg.maxEdges = 3;
+        cfg.ja = p.jaAllowed();
+        cfg.mode = BendersMaster.SlaveMode.FAT_CONTINUATION;
+        cfg.coarseEdgeSorted = false;
+        cfg.screenOrder = false;
+        cfg.screenSkip = false;
+        cfg.useCuts = false;
+        cfg.fatOptimizeSec = 4;
+        cfg.fatCertifyNanos = 6_000_000_000L;
+        cfg.continuationLead = 25;
+        cfg.continuationCap = 12;
+        cfg.openingTaps = true;
+        cfg.continuationBudgetNanos = Math.min(600_000_000_000L, budgetNanos);
+        cfg.maxCertifies = 1_000_000;
+        cfg.deadlineNanos = budgetNanos;
+        return cfg;
     }
 
     private void runOptimizePass() {
