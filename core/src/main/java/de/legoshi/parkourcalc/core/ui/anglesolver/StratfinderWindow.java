@@ -366,9 +366,11 @@ public final class StratfinderWindow implements RenderInterface {
 
     private static float footerHeight() {
         float spacing = ImGui.getStyle().getItemSpacingY();
+        float gpuLine = PoolScreenAccelerator.status() != null ? ImGui.getTextLineHeight() + spacing : 0f;
         return ThemeManager.sectionSpacingHeight() + spacing
                 + ImGui.getFrameHeight() + spacing
                 + ImGui.getTextLineHeight() + spacing
+                + gpuLine
                 + Controls.buttonHeight() + spacing;
     }
 
