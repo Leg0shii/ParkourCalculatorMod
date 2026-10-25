@@ -267,7 +267,8 @@ public final class Application {
                 hudMessages, this::runSimulation, saveController::markDirty, this::pushHudMessage);
         angleSolverWindow.setRunTicksControls(runTicks);
         noTurnSearch = new NoTurnSearchController(inputData, runner, boxController, saveController, angleSolverState,
-                angleSolverEngine, forwardModel, mc, this::onUserChange, this::pushHudMessage, runTicks::isRunning);
+                angleSolverEngine, forwardModel, mc, this::onUserChange, this::pushHudMessage, runTicks::isRunning,
+                settings, this::saveSettings);
         senseSearch = new SenseSearchController(inputData, saveController, angleSolverState, angleSolverEngine,
                 forwardModel, this::onUserChange, mc::getMouseSensitivity, mc::setMouseSensitivity);
         de.legoshi.parkourcalc.core.ui.anglesolver.StratfinderWindow stratfinderWindow =

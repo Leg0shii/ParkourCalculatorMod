@@ -10,6 +10,7 @@ import de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnOptimizePass;
 import de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnProblem;
 import de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnRanking;
 import de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnResult;
+import de.legoshi.parkourcalc.core.anglesolver.noturn.PoolScreenAccelerator;
 import de.legoshi.parkourcalc.core.anglesolver.noturn.StructurePoolDriver;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
@@ -21,6 +22,7 @@ import de.legoshi.parkourcalc.core.ui.BoxController;
 import de.legoshi.parkourcalc.core.ui.HudMessages;
 import de.legoshi.parkourcalc.core.ui.InputData;
 import de.legoshi.parkourcalc.core.ui.InputRow;
+import de.legoshi.parkourcalc.core.ui.Settings;
 import de.legoshi.parkourcalc.core.ui.anglesolver.StratfinderWindow;
 import de.legoshi.parkourcalc.core.ui.anglesolver.StratfinderWindow.Ending;
 import de.legoshi.parkourcalc.core.ui.anglesolver.StratfinderWindow.Phase;
@@ -53,6 +55,8 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
     private final IntConsumer onUserChange;
     private final ObjIntConsumer<String> pushMessage;
     private final BooleanSupplier otherSolveRunning;
+    private final Settings settings;
+    private final Runnable saveSettings;
 
     private final AtomicBoolean cancel = new AtomicBoolean(false);
     private final List<NoTurnResult> results = new ArrayList<>();
@@ -82,7 +86,8 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
     public NoTurnSearchController(InputData inputData, SimulationRunner runner, BoxController boxController,
                                   SaveController saveController, AngleSolverState state, AngleSolverEngine engine,
                                   ExactJumpModel model, MinecraftAccess mc, IntConsumer onUserChange,
-                                  ObjIntConsumer<String> pushMessage, BooleanSupplier otherSolveRunning) {
+                                  ObjIntConsumer<String> pushMessage, BooleanSupplier otherSolveRunning,
+                                  Settings settings, Runnable saveSettings) {
         this.inputData = inputData;
         this.runner = runner;
         this.boxController = boxController;
@@ -94,6 +99,8 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
         this.onUserChange = onUserChange;
         this.pushMessage = pushMessage;
         this.otherSolveRunning = otherSolveRunning;
+        this.settings = settings;
+        this.saveSettings = saveSettings;
     }
 
     @Override
@@ -180,6 +187,18 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
     @Override
     public void setPlayable(boolean value) {
         playable = value;
+    }
+
+    @Override
+    public boolean gpuScreening() {
+        return settings.stratfinderGpu;
+    }
+
+    @Override
+    public void setGpuScreening(boolean value) {
+        settings.stratfinderGpu = value;
+        PoolScreenAccelerator.setEnabled(value);
+        saveSettings.run();
     }
 
     @Override
