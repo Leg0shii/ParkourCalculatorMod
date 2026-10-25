@@ -43,6 +43,11 @@ public final class NoTurnCapture {
         return new NoTurnCapture(file);
     }
 
+    public AngleSolverEngine.PathSnapshot snapshot() {
+        return new AngleSolverEngine(state, Fixtures.buildBoxes(file), inputs, t -> { }, model)
+                .snapshotPath(state.getStartTick(), state.getLandingTick());
+    }
+
     public JumpSpec buildSpec() {
         return new AngleSolverEngine(state, Fixtures.buildBoxes(file), inputs, t -> { }, model).debugBuildSpec();
     }

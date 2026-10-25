@@ -207,6 +207,11 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
     }
 
     @Override
+    public boolean isSelectTickPressed() {
+        return FabricParkourCalculator.isSelectTickDown();
+    }
+
+    @Override
     public boolean isMousePressedRight() {
         return FabricInput.isMouseDown(InputConstants.MOUSE_BUTTON_RIGHT);
     }
@@ -283,6 +288,13 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
     @Override
     public float getMouseSensitivity() {
         return Minecraft.getInstance().options.sensitivity().get().floatValue();
+    }
+
+    @Override
+    public void setMouseSensitivity(float sensitivity) {
+        Minecraft client = Minecraft.getInstance();
+        client.options.sensitivity().set((double) sensitivity);
+        client.options.save();
     }
 
     @Override

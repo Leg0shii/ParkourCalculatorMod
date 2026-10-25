@@ -185,6 +185,10 @@ public final class NodeHelp {
         param("certBnb", "ffSec", "Seconds allowed for the land-it phase. Only matters while the jump does"
                 + " not land yet; on a foldable no-turn chain it can be raised up to 30 s within the"
                 + " overall solve time.");
+        param("certBnb", "exhaust", "Run the land-it phase without a branch cap for the whole stage budget"
+                + " while the jump does not land yet, so the search can rule a landing out for certain."
+                + " Does nothing once a landing exists or without a time budget. Meant for a stage at the"
+                + " end of the pipeline, after every other stage has had its turn.");
 
         node("foldDriver", "Another angle solver that repeatedly replays and adjusts the jump. It can try"
                 + " several different starting guesses and finish with a fine nudge pass.");
@@ -240,8 +244,9 @@ public final class NodeHelp {
                 + " landing; it may give back part of the offset past the goal wall for a smoother turn."
                 + " Returns the path unchanged when nothing improves.");
         param("smooth", "giveBack", "How much of the offset past the goal wall the smoothing may trade,"
-                + " 0 to 1. 1 lets it land anywhere past the wall, 0 keeps the objective where it is."
-                + " Without a goal wall on the objective axis the hard constraints alone bound it.");
+                + " 0 to 1. 1 lets it land anywhere past the wall, 0 keeps the objective value at the goal"
+                + " tick; every other tick may still move within the constraints. Without a goal wall on"
+                + " the objective axis the hard constraints alone bound it.");
         param("smooth", "reserveFraction", "The share of the whole solve time held back for the smoothing,"
                 + " which is also how long it may run. With no overall solve time it gets a fixed 0.4 s.");
         param("smooth", "reserveCapSec", "The most seconds the smoothing may take. 0 means no cap.");

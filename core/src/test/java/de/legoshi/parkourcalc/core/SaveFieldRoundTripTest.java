@@ -82,6 +82,49 @@ public class SaveFieldRoundTripTest {
     }
 
     @Test
+    public void certifiedInfeasibleVerdictSurvivesSaveRoundTrip() throws Exception {
+        AngleSolverState in = new AngleSolverState();
+        SolveResult r = new SolveResult(false, 2, 3, 1, 10);
+        r.markCertifiedInfeasible();
+        in.setResult(r);
+        AngleSolverState out = saveAndReload(in);
+        assertNotNull(out.getResult());
+        assertEquals(SolveResult.Verdict.INFEASIBLE, out.getResult().getVerdict());
+        assertTrue(out.getResult().isCertifiedInfeasible());
+    }
+
+    @Test
+    public void undeterminedVerdictSurvivesSaveRoundTrip() throws Exception {
+        AngleSolverState in = new AngleSolverState();
+        in.setResult(new SolveResult(false, 2, 3, 1, 10));
+        AngleSolverState out = saveAndReload(in);
+        assertEquals(SolveResult.Verdict.UNDETERMINED, out.getResult().getVerdict());
+        in.setResult(new SolveResult(true, 3, 3, 1, 10));
+        assertEquals(SolveResult.Verdict.FEASIBLE, saveAndReload(in).getResult().getVerdict());
+    }
+
+    @Test
+    public void legacyFailedResultLoadsAsUndetermined() {
+        AngleSolverState state = load("{\"version\":1,\"angleSolver\":{\"result\":{"
+                + "\"success\":false,\"met\":1,\"total\":3,\"startTick\":1,\"landingTick\":10}}}");
+        assertNotNull(state.getResult());
+        assertEquals("a save from before the verdict never certified anything",
+                SolveResult.Verdict.UNDETERMINED, state.getResult().getVerdict());
+        AngleSolverState solved = load("{\"version\":1,\"angleSolver\":{\"result\":{"
+                + "\"success\":true,\"met\":3,\"total\":3,\"startTick\":1,\"landingTick\":10}}}");
+        assertEquals(SolveResult.Verdict.FEASIBLE, solved.getResult().getVerdict());
+    }
+
+    @Test
+    public void aSuccessfulResultCannotBeMarkedInfeasible() {
+        SolveResult r = new SolveResult(true, 3, 3, 1, 10);
+        r.markCertifiedInfeasible();
+        assertEquals(SolveResult.Verdict.FEASIBLE, r.getVerdict());
+        assertEquals(SolveResult.Verdict.UNDETERMINED, SolveResult.Verdict.parse("FEASIBLE", false));
+        assertEquals(SolveResult.Verdict.UNDETERMINED, SolveResult.Verdict.parse("garbage", false));
+    }
+
+    @Test
     public void legacyResultLoadsWithoutNotice() {
         AngleSolverState state = load("{\"version\":1,\"angleSolver\":{\"result\":{"
                 + "\"success\":true,\"met\":1,\"total\":1,\"startTick\":1,\"landingTick\":5}}}");

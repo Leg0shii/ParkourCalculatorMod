@@ -25,6 +25,7 @@ public final class Checks {
         BY_NAME.put("ils", new IlsCheck());
         BY_NAME.put("translation", new TranslationCheck());
         BY_NAME.put("gapattribution", new GapAttributionCheck());
+        BY_NAME.put("strafeside", new StrafeSideCheck());
     }
 
     private Checks() {

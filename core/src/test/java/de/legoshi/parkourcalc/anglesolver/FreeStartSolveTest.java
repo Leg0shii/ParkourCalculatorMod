@@ -204,6 +204,7 @@ public class FreeStartSolveTest {
         a.jumpTick = b.jumpTick;
         a.jumpPerTick = b.jumpPerTick;
         a.strafeSign = b.strafeSign;
+        a.strafeSignPerTick = b.strafeSignPerTick;
         a.strafePerTick = b.strafePerTick;
         a.speedAmplifier = b.speedAmplifier;
         a.slipPerTick = b.slipPerTick;

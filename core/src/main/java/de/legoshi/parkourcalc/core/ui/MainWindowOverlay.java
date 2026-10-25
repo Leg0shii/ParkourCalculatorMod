@@ -346,6 +346,10 @@ public final class MainWindowOverlay implements RenderInterface {
             onSettingsChanged.run();
         }
         if (ImGui.menuItem("Stratfinder", null, stratfinderOpen.getAsBoolean())) toggleStratfinder.run();
+        if (ImGui.menuItem("Sense Finder", null, settings.viewSenseFinder)) {
+            settings.viewSenseFinder = !settings.viewSenseFinder;
+            onSettingsChanged.run();
+        }
         if (ImGui.menuItem("Velocity Map", null, settings.viewVelocityMap)) {
             settings.viewVelocityMap = !settings.viewVelocityMap;
             onSettingsChanged.run();

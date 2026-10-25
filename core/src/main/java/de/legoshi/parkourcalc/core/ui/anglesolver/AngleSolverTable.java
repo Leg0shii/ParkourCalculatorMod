@@ -108,6 +108,7 @@ public final class AngleSolverTable {
     private final ImInt fieldCombo = new ImInt();
     private final ImInt opCombo = new ImInt();
     private final ImInt refBuf = new ImInt();
+    private final ImInt wholeBuf = new ImInt();
     private final String[] slipItems = Slipperiness.comboItems();
     private final String[] mediumItems = Medium.comboItems();
     private static final String[] FIELD_ITEMS = buildFieldItems();
@@ -1074,7 +1075,7 @@ public final class AngleSolverTable {
         }
         if (c.isRange()) {
             ImGui.setNextItemWidth(numW);
-            numberField("##lo", c.getLo(), c::setLo);
+            valueField(c, "##lo", c.getLo(), c::setLo);
             ImGui.sameLine();
             ThemeManager.pushTextColor(ThemeManager.textMutedColor());
             ImGui.alignTextToFramePadding();
@@ -1082,11 +1083,24 @@ public final class AngleSolverTable {
             ThemeManager.popTextColor();
             ImGui.sameLine();
             ImGui.setNextItemWidth(numW);
-            numberField("##hi", c.getHi(), c::setHi);
+            valueField(c, "##hi", c.getHi(), c::setHi);
         } else {
             ImGui.setNextItemWidth(numW);
-            numberField("##v", c.getValue(), c::setValue);
+            valueField(c, "##v", c.getValue(), c::setValue);
         }
+    }
+
+    private void valueField(Constraint c, String id, double value, DoubleConsumer apply) {
+        if (c.isWholeNumber()) {
+            wholeField(id, value, apply);
+        } else {
+            numberField(id, value, apply);
+        }
+    }
+
+    private void wholeField(String id, double value, DoubleConsumer apply) {
+        wholeBuf.set((int) Math.max(Integer.MIN_VALUE, Math.min(Integer.MAX_VALUE, Math.round(value))));
+        if (ImGui.inputInt(id, wholeBuf, 0)) apply.accept(wholeBuf.get());
     }
 
     /** Locale-independent replacement for inputDouble, whose native printf renders comma decimals under some C locales (gh-124). */

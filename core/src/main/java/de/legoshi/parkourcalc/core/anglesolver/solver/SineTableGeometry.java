@@ -82,9 +82,9 @@ public final class SineTableGeometry {
             if (sine262) {
                 float sq = squareDiagInput();
                 forward = Math.signum(forward) * sq;
-                strafe = sc.strafeSign * sq;
+                strafe = sc.strafeSignAt(t) * sq;
             } else {
-                strafe = sc.strafeSign * 1.0F * 0.98F;
+                strafe = sc.strafeSignAt(t) * 1.0F * 0.98F;
             }
         } else {
             strafe = sc.strafeInputAt(t);
