@@ -583,7 +583,9 @@ public final class AngleSolverWindow implements RenderInterface {
     private static final String SMOOTH_GIVE_BACK_TIP =
             "How much of the landing offset the Smooth button may trade for a smoother turn. The offset is"
             + " the margin past the goal wall at the goal tick, the + value in the result table. 100 %"
-            + " lets it land anywhere past the wall, 0 % keeps the objective where it is.";
+            + " lets it land anywhere past the wall, 0 % keeps the objective value at the goal tick."
+            + " Every other tick may still move within the constraints, at any percentage: a ladder grab,"
+            + " a wall hit or anything else the solver cannot see needs a constraint on its tick.";
 
     private static final String LEGAL_MODE_TIP =
             "Record hunting: drops the single tightest goal wall on the objective axis at the goal tick and"
