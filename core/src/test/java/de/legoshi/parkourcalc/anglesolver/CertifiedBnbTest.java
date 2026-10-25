@@ -177,6 +177,71 @@ public class CertifiedBnbTest {
                 res.objective, verified, CertifiedBnb.CERT_EPS);
     }
 
+    private static JumpSpec withWallPastTheOptimum(JumpPhysicsInputs sc, double optimum, double past) {
+        JumpSpec spec = tinySpec(sc);
+        List<JumpConstraint> cons = new ArrayList<JumpConstraint>(spec.constraints);
+        cons.add(new JumpConstraint(JumpConstraint.Mode.X, sc.numTicks, null,
+                JumpConstraint.Op.PLUS, JumpConstraint.Cmp.GE, optimum + past, "xwall"));
+        return new JumpSpec(sc, cons, spec.objective);
+    }
+
+    @Test
+    public void exhaustedSearchWithoutAWitnessCertifiesInfeasibility() {
+        ExactJumpModel model = ExactJumpModel.forMcVersion("1.8.9");
+        JumpPhysicsInputs sc = scenario(2, false, 0.25, 0.05);
+        CertifiedBnb.Config opt = new CertifiedBnb.Config();
+        opt.mode = CertifiedBnb.Mode.OPTIMIZE;
+        opt.nodeCap = 300000;
+        opt.polishCap = 6;
+        CertifiedBnb.Result best = CertifiedBnb.solve(model, tinySpec(sc), opt);
+        assertTrue("the tiny instance must certify its optimum first", best.certified);
+
+        for (double past : new double[]{0.5, 1.0e-3}) {
+            CertifiedBnb.Config cfg = new CertifiedBnb.Config();
+            cfg.mode = CertifiedBnb.Mode.FIRST_FEASIBLE;
+            cfg.nodeCap = 300000;
+            cfg.polishCap = 2;
+            CertifiedBnb.Result res = CertifiedBnb.solve(model, withWallPastTheOptimum(sc, best.objective, past), cfg);
+            assertFalse("a wall " + past + " past the certified optimum must not decline", res.declined);
+            assertFalse("a wall " + past + " past the certified optimum has no witness", res.feasible);
+            assertTrue("a wall " + past + " past the certified optimum must be certified infeasible, unresolved="
+                    + res.unresolved + " nodes=" + res.nodes, res.certifiedInfeasible);
+        }
+    }
+
+    @Test
+    public void aFeasibleInstanceNeverCarriesAnInfeasibilityCertificate() {
+        ExactJumpModel model = ExactJumpModel.forMcVersion("1.8.9");
+        JumpPhysicsInputs sc = scenario(2, false, 0.25, 0.05);
+        CertifiedBnb.Config cfg = new CertifiedBnb.Config();
+        cfg.mode = CertifiedBnb.Mode.FIRST_FEASIBLE;
+        cfg.nodeCap = 300000;
+        CertifiedBnb.Result res = CertifiedBnb.solve(model, tinySpec(sc), cfg);
+        assertTrue(res.feasible);
+        assertFalse(res.certifiedInfeasible);
+    }
+
+    @Test
+    public void anExhaustedBudgetLeavesInfeasibilityUncertified() {
+        ExactJumpModel model = ExactJumpModel.forMcVersion("1.8.9");
+        JumpPhysicsInputs sc = scenario(2, false, 0.25, 0.05);
+        JumpSpec spec = withWallPastTheOptimum(sc, 10.0, 0.0);
+        CertifiedBnb.Config byDeadline = new CertifiedBnb.Config();
+        byDeadline.mode = CertifiedBnb.Mode.FIRST_FEASIBLE;
+        byDeadline.nodeCap = 300000;
+        byDeadline.deadlineNanos = System.nanoTime() - 1L;
+        CertifiedBnb.Result stopped = CertifiedBnb.solve(model, spec, byDeadline);
+        assertFalse(stopped.feasible);
+        assertFalse("a search stopped by its deadline has not exhausted anything", stopped.certifiedInfeasible);
+
+        CertifiedBnb.Config byNodes = new CertifiedBnb.Config();
+        byNodes.mode = CertifiedBnb.Mode.FIRST_FEASIBLE;
+        byNodes.nodeCap = 0;
+        CertifiedBnb.Result capped = CertifiedBnb.solve(model, spec, byNodes);
+        assertFalse(capped.feasible);
+        assertFalse("a search stopped by its node cap has not exhausted anything", capped.certifiedInfeasible);
+    }
+
     @Test
     public void gateResolutionMatchesBruteForceOnANearThresholdCarry() {
         ExactJumpModel model = ExactJumpModel.forMcVersion("1.8.9");

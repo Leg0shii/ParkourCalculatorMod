@@ -15,7 +15,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /** The live engine reaches the expected verdict (optionally every Solve-For direction) within a time budget.
- *  Sidecar extras: {@code noticeLabel} / {@code noticeContains} pin the failure notice of a capture that must
+ *  Sidecar extras: {@code verdict} pins the three-valued verdict (FEASIBLE, UNDETERMINED or INFEASIBLE),
+ *  {@code noticeLabel} / {@code noticeContains} pin the failure notice of a capture that must
  *  not solve, {@code maxRecomputeDivergence} bounds how far a naive re-simulation of the result yaws may sit
  *  from the shipped objective, {@code reproducibleWithin} solves twice and bounds the objective drift, and
  *  {@code boxSeeds} re-solves from the corners, the centre and an off-centre point of the start box. */
@@ -55,6 +56,9 @@ final class SolveCheck implements ProblemCheck {
         if (e.maxSolveMs != null) {
             assertTrue(name + ": solve took " + run.elapsedMs + " ms > budget " + e.maxSolveMs + " ms",
                     run.elapsedMs <= e.maxSolveMs);
+        }
+        if (e.verdict != null) {
+            assertEquals(name + ": verdict", SolveResult.Verdict.valueOf(e.verdict), r.getVerdict());
         }
         if (e.noticeLabel != null) {
             assertNotNull(name + ": failure carries no notice", r.getNotice());

@@ -15,6 +15,7 @@ import java.util.function.Consumer;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class SolveFailureDiagnosticsTest {
@@ -99,6 +100,33 @@ public class SolveFailureDiagnosticsTest {
         assertEquals("the search reached a near-miss, so it must be reported instead of the current path",
                 "closest attempt", detail(r, "Values from"));
         assertNotNull("a near-miss must report how far off it was", detail(r, "Worst violation"));
+        assertEquals("half a block past the certified optimum of a small jump is provably out of reach",
+                SolveResult.Verdict.INFEASIBLE, r.getVerdict());
+        assertEquals(AngleSolverEngine.CERTIFIED_INFEASIBLE_LABEL, r.getNoticeLabel());
+        assertTrue("the certificate must say what it exhausted: " + r.getNotice(),
+                r.getNotice().contains("exhausted"));
+    }
+
+    @Test
+    public void aSearchThatRunsOutOfBudgetIsUndeterminedNotInfeasible() {
+        Ctx base = build(state -> { });
+        SolveResult baseline = solve(base);
+        assertTrue("baseline j004 must solve", baseline.isSuccess());
+        boolean max = base.state.getGoal() == AngleSolverState.Goal.MAX;
+        Constraint.Field axis = base.state.getAxis() == AngleSolverState.Axis.X
+                ? Constraint.Field.X : Constraint.Field.Z;
+        double target = baseline.getObjectiveValue() + (max ? 1.0e-3 : -1.0e-3);
+
+        Ctx ctx = build(state -> state.tickConstraints(state.getLandingTick()).getConstraints().add(
+                Constraint.scalar(axis, max ? Constraint.Op.GE : Constraint.Op.LE, target)));
+        SolveResult r = solve(ctx);
+
+        assertNotNull("engine returned no result", r);
+        assertFalse("a wall a hair past the optimum must not solve on FAST", r.isSuccess());
+        assertEquals("a hair past the optimum is too close for the capped FAST search to decide, so the honest"
+                + " verdict is undetermined, never infeasible", SolveResult.Verdict.UNDETERMINED, r.getVerdict());
+        assertNull("an uncertified failure carries no verdict notice", r.getNoticeLabel());
+        assertEquals("No solution", r.headline());
     }
 
     @Test
@@ -113,6 +141,8 @@ public class SolveFailureDiagnosticsTest {
 
         assertNotNull("engine returned no result", r);
         assertFalse("a dF band is unsupported and must not solve", r.isSuccess());
+        assertEquals("a declined problem was never searched, so nothing is ruled out",
+                SolveResult.Verdict.UNDETERMINED, r.getVerdict());
         assertEquals("failed solve must name the unsupported dF as the cause",
                 AngleSolverEngine.DF_UNSUPPORTED_NOTICE, r.getNotice());
         assertFalse("a declined solve must still report the current path's values", r.getOutcomes().isEmpty());
@@ -134,6 +164,9 @@ public class SolveFailureDiagnosticsTest {
 
         assertNotNull("engine returned no result", r);
         assertFalse("contradicting walls must not solve", r.isSuccess());
+        assertEquals("two walls that exclude each other on one tick are a certificate",
+                SolveResult.Verdict.INFEASIBLE, r.getVerdict());
+        assertEquals("Infeasible", r.headline());
         assertEquals(AngleSolverEngine.INFEASIBLE_LABEL, r.getNoticeLabel());
         assertNotNull(r.getNotice());
         assertTrue("notice must name the tick: " + r.getNotice(), r.getNotice().startsWith("T" + (at[0] + 1) + ": "));
@@ -147,6 +180,8 @@ public class SolveFailureDiagnosticsTest {
         assertNotNull("engine returned no result", r);
         assertTrue("baseline j004 must still solve", r.isSuccess());
         assertEquals(r.getTotal(), r.getMet());
+        assertEquals(SolveResult.Verdict.FEASIBLE, r.getVerdict());
+        assertEquals("Solved", r.headline());
     }
 
     private static String detail(SolveResult r, String label) {

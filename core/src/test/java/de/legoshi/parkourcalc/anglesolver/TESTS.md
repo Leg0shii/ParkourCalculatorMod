@@ -90,7 +90,18 @@ anglesolver/
   CertifiedBnbTest.java    #422 M2a certified B&B fast units: SineTableGeometry containment (realized
                            inputs inside boxes/chords/supports across all four eras incl. the legacy
                            jump-tick double cast), a tiny 2-tick instance certifying at the enumerated
-                           optimum with gap <= CERT_EPS, near-threshold gate behavior, determinism
+                           optimum with gap <= CERT_EPS, near-threshold gate behavior, determinism;
+                           #462 the infeasibility certificate: a wall 0.5 and 1e-3 past the tiny
+                           instance's certified optimum is certified infeasible (exhausted tree, no
+                           unresolved drop), a feasible instance never carries one, an expired
+                           deadline or a zero node cap leaves infeasibility uncertified
+  SolveFailureDiagnosticsTest.java  what a failed j004 solve reports: every constraint and the missed tick, the
+                           closest attempt's values, the dF-band decline, the same-tick conflict; #462
+                           the verdict end to end through the engine: the conflict and a wall half a
+                           block past the optimum are INFEASIBLE (the latter certified by the B&B in a
+                           handful of nodes), a wall 1e-3 past it is UNDETERMINED with no notice and
+                           the "No solution" headline, the dF decline is UNDETERMINED, a solve
+                           is FEASIBLE
   CertifiedBnbEngineTest.java  #422 M2a certified-search gates (VerySlowSolverTests, -PverySlowTests; PRs to main only): all 5 small
                            captures reach certified gap <= 1.5e-4 with dominating bounds and
                            feasible incumbents (per-capture numbers printed; the 1e-9 plateau
@@ -99,7 +110,8 @@ anglesolver/
   PipelineShapeTest.java   #422 M2b G3 enforcement (VerySlowSolverTests, -PverySlowTests; PRs to main only):
                            every corpus capture visits the one linear
                            pipeline stage sequence at BOTH built-in tiers (THOROUGH probed at 1 s);
-                           deadline-truncated runs must be a prefix of it
+                           deadline-truncated runs must be a prefix of it, and so must a run the
+                           certified B&B ends early with an infeasibility certificate (#462)
   NoTurnDriversTest.java   #424 the no-turn drivers on the two hpk_precise structures (slow):
                            the certifier drives the inner engine as the byte-exact oracle on j1150
                            with a dF=0 chain and lands a clean no-turn (viol 0, obj near the
@@ -164,6 +176,7 @@ resources/
 - solve/thousand-1-dup2: #422 M1 acceptance; free-start multi-jump MAX X, THOROUGH 30 s, byte-exact at objective >= 6523.307 (reliably 6523.3080, beats both releases); the 10 s budget was timing-flaky on this floor, 30 s is the honest budget; sole canonical thousand gate, the FoldDriver/CertifiedBnb engine-test duplicates were removed
 - solve/j1150-noturn-inner: #422 M1 acceptance on the PRECISE inputs_gone spec with the p2 no-turn schedule, THOROUGH 10 s, byte-exact at objective >= -2805.2990460856336, the p2 witness; FAST is deliberately not gated here, 3.3e-4 short, an M2a item
 - solve/j154-noturn-ja-inner: #422 M1 acceptance on the corrected t34-plate spec, FAST, feasibility only (FAST has no objective bar; the in-game-verified F3 witness X@39 = -1599.7001161289918 is the capture's own result)
+- solve/gh462-j004-pastwall: gh-462; j004 with an extra X >= wall at the landing tick half a block past its certified optimum, FAST; must not solve within 20 s and must carry the INFEASIBLE verdict with the "Certified infeasible" notice label (the certified B&B exhausts its tree in a handful of nodes and the graph walk ends on the certificate instead of running the 40 s pattern B&B), the end-to-end gate that a certificate reaches the result and that a mere miss never would
 - solve/gh454-p2s-overconstrained: gh-454; a segment whose dF = 0 constraints tie every tick to one heading, THOROUGH; must fail within 20 s and carry the "Overconstrained" notice label with the "one heading ... misses by" explanation
 - solve/j021-rinav1-01: the Optimize graph (THOROUGH 12 s) must reach the deterministic optimum 1067.8637 (the degenerate-tick ascent in the fold stage carries it) and reproduce it within 1e-2 on a second solve
 - solve/loopmm-3jump-lands: the Optimize graph (THOROUGH 60 s) lands at the -279.3 block edge through the pattern B&B stage; the leaf snap can adopt loopmm as a fully yaw-locked stage, so a naive re-simulation of the result yaws through the non-yaw-locked scenario may re-round short, the divergence is bounded at 1e-3 and the landing is yaw-lock-dependent, VERIFY IN-GAME

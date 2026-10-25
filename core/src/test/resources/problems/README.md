@@ -50,6 +50,8 @@ Every fixture JSON is one line, no BOM, no trailing newline.
   "maxSolveMs":      4000,      // wall-clock budget; omit for no timing assertion
   "minMet":          12,        // require >= this many constraints met; omit to require full success
   "allDirections":   false,     // require every Solve-For (axis x goal) to solve, not just the saved one
+  "verdict":         "INFEASIBLE", // the three-valued verdict: FEASIBLE, UNDETERMINED (not found, nothing ruled
+                                // out) or INFEASIBLE (certified: a constraint conflict or an exhausted certified search)
   "noticeLabel":     "Overconstrained",     // the result's notice label (a failing solve)
   "noticeContains":  ["one heading"],       // substrings the notice text must carry
   "maxRecomputeDivergence": 1e-3,           // replay the result's yaws through the model, max position gap

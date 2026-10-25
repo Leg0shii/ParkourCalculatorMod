@@ -316,7 +316,8 @@ public final class DiskSocpKernel {
             failMu = Double.NaN;
         }
         if (aborted) {
-            if (failCode == FAIL_UNBOUNDED || bestLambda == null) return null;
+            if (failCode == FAIL_UNBOUNDED) return emit(lambda, tau, gx, gz, false, iters, mu * nu);
+            if (bestLambda == null) return null;
             lambda = bestLambda;
             tau = bestTau;
             mu = bestMu;

@@ -976,12 +976,12 @@ public final class AngleSolverWindow implements RenderInterface {
         ImGui.pushStyleColor(ImGuiCol.Border, border);
         ImGui.pushStyleVar(ImGuiStyleVar.WindowPadding, pad, pad);
         ImGui.beginChild("##solve_result", ImGui.getContentRegionAvail().x, h, true);
+        ImGui.popStyleVar();
+        ImGui.popStyleColor(2);
     }
 
     private static void endResultChild() {
         ImGui.endChild();
-        ImGui.popStyleVar();
-        ImGui.popStyleColor(2);
     }
 
     private void drawPanelHeader(String text, int textColor, float fill, float fillAlpha, boolean spinner,
@@ -1144,8 +1144,9 @@ public final class AngleSolverWindow implements RenderInterface {
             String tip = deviationTip(state.getApplyDeviationKind());
             if (tip != null) TooltipUtil.onHover(tip);
         }
+        int noticeColor = r.isSuccess() ? ThemeManager.warningColor() : ThemeManager.dangerColor();
         if (notice != null && noticeLabel != null) {
-            ThemeManager.pushTextColor(ThemeManager.warningColor());
+            ThemeManager.pushTextColor(noticeColor);
             ImGui.text(noticeLabel);
             ThemeManager.popTextColor();
             ImGui.sameLine();
@@ -1154,7 +1155,7 @@ public final class AngleSolverWindow implements RenderInterface {
             ThemeManager.popTextColor();
             TooltipUtil.onHover(notice);
         } else if (notice != null) {
-            ThemeManager.pushTextColor(ThemeManager.warningColor());
+            ThemeManager.pushTextColor(noticeColor);
             ImGui.textWrapped(notice);
             ThemeManager.popTextColor();
         }
@@ -1185,7 +1186,7 @@ public final class AngleSolverWindow implements RenderInterface {
     }
 
     private String resultHeader(SolveResult r) {
-        if (!r.isSuccess()) return "No solution · " + r.getMet() + "/" + r.getTotal() + " constraints met";
+        if (!r.isSuccess()) return r.headline() + " · " + r.getMet() + "/" + r.getTotal() + " constraints met";
         String verb = r.isSmoothed() ? "Smoothed" : "Solved";
         if (state.getApplyDeviation() != null) return verb + " · sim diverged";
         if (r.isSmoothed()) return verb + " · " + smoothSeconds(r.getSmoothNanos()) + " · " + r.getSmoothStop();

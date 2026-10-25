@@ -26,6 +26,7 @@ public final class Expect {
     public Boolean allDirections;
     public String noticeLabel;
     public List<String> noticeContains;
+    public String verdict;
     public Double maxRecomputeDivergence;
     public Double reproducibleWithin;
     public Boolean boxSeeds;
