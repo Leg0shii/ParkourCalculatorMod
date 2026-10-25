@@ -70,6 +70,7 @@ public final class ProblemFixture {
             SaveIO.applyAngleSolverTo(file, state);
             state.setEffort(expect.effort());
             if (expect.optimizeSeconds != null) state.setOptimizeSeconds(expect.optimizeSeconds);
+            if (expect.strafeSide != null) state.setStrafeSide(AngleSolverState.StrafeSide.valueOf(expect.strafeSide));
             state.clearResult();
             engine = new AngleSolverEngine(state, boxes, inputs, t -> { }, model);
         }

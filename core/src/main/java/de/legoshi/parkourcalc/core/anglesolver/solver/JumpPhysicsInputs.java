@@ -27,6 +27,8 @@ public final class JumpPhysicsInputs {
 
     public int strafeSign = 1;
 
+    public int[] strafeSignPerTick = null;
+
     /** Per-tick 45-strafe mask; null = no strafe. The jump tick must be false
      *  (it stays W-only so the 0.2 sprintjump boost aligns with travel). */
     public boolean[] strafePerTick = null;
@@ -104,6 +106,7 @@ public final class JumpPhysicsInputs {
         c.jumpTick = jumpTick;
         c.jumpPerTick = jumpPerTick;
         c.strafeSign = strafeSign;
+        c.strafeSignPerTick = strafeSignPerTick;
         c.strafePerTick = strafePerTick;
         c.speedAmplifier = speedAmplifier;
         c.slownessAmplifier = slownessAmplifier;
@@ -142,6 +145,7 @@ public final class JumpPhysicsInputs {
         c.incomingServerVelocity = from == 0 ? incomingServerVelocity : null;
         boolean[] jump = new boolean[m];
         boolean[] strafe = new boolean[m];
+        int[] sides = new int[m];
         int[] amp = new int[m];
         int[] slow = new int[m];
         double[] slip = new double[m];
@@ -159,6 +163,7 @@ public final class JumpPhysicsInputs {
             int i = from + k;
             jump[k] = jumpAt(i);
             strafe[k] = strafeAt(i);
+            sides[k] = strafeSignAt(i);
             amp[k] = speedAmplifierAt(i);
             slow[k] = slownessAmplifierAt(i);
             slip[k] = slipAt(i);
@@ -175,6 +180,7 @@ public final class JumpPhysicsInputs {
         }
         c.jumpPerTick = jump;
         c.strafePerTick = strafe;
+        c.strafeSignPerTick = sides;
         c.speedAmplifier = amp;
         c.slownessAmplifier = slow;
         c.slipPerTick = slip;
@@ -243,6 +249,11 @@ public final class JumpPhysicsInputs {
 
     public boolean strafeAt(int tick) {
         return strafePerTick != null && tick >= 0 && tick < strafePerTick.length && strafePerTick[tick];
+    }
+
+    public int strafeSignAt(int tick) {
+        if (strafeSignPerTick == null || tick < 0 || tick >= strafeSignPerTick.length) return strafeSign;
+        return strafeSignPerTick[tick];
     }
 
     /** moveFlying forward input at a tick (W/S at the 0.98 scale); the legacy W-held assumption when unset. */

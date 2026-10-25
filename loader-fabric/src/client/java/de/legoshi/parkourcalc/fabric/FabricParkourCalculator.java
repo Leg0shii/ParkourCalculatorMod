@@ -85,6 +85,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
     private static KeyMapping captureCollisionBlockKeyBinding;
     private static KeyMapping captureLandBlockKeyBinding;
     private static KeyMapping clearBlocksKeyBinding;
+    private static KeyMapping selectTickKeyBinding;
     private static boolean blockCaptureEnabled;
 
     //? if <26.1 {
@@ -135,6 +136,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
         rerunSimulationKeyBinding = key("key.parkourcalculator.rerun_simulation", InputConstants.KEY_J);
         togglePathKeyBinding = key("key.parkourcalculator.toggle_path", InputConstants.KEY_Y);
         copyTeleportKeyBinding = key("key.parkourcalculator.copy_teleport", InputConstants.KEY_K);
+        selectTickKeyBinding = key("key.parkourcalculator.select_tick", InputConstants.UNKNOWN.getValue());
         if (blockCaptureEnabled) {
             captureMomentumBlockKeyBinding = key("key.parkourcalculator.capture_momentum_block", InputConstants.KEY_M);
             captureCollisionBlockKeyBinding = key("key.parkourcalculator.capture_collision_block", InputConstants.KEY_N);
@@ -167,6 +169,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
         rerunSimulationKeyBinding = register("key.parkourcalculator.rerun_simulation", InputConstants.KEY_J, category);
         togglePathKeyBinding = register("key.parkourcalculator.toggle_path", InputConstants.KEY_Y, category);
         copyTeleportKeyBinding = register("key.parkourcalculator.copy_teleport", InputConstants.KEY_K, category);
+        selectTickKeyBinding = register("key.parkourcalculator.select_tick", InputConstants.UNKNOWN.getValue(), category);
         //?}
 
         PoolScreenAccelerator.register(new OpenClPoolScreen.Factory());
@@ -657,11 +660,32 @@ public class FabricParkourCalculator implements ClientModInitializer {
     }
 
     private static int boundKey(KeyMapping mapping) {
+        return boundKeyOf(mapping).getValue();
+    }
+
+    private static InputConstants.Key boundKeyOf(KeyMapping mapping) {
         //? if >=26.1 {
-        return KeyMappingHelper.getBoundKeyOf(mapping).getValue();
+        return KeyMappingHelper.getBoundKeyOf(mapping);
         //?} else {
-        /*return ((KeyMappingAccessor) (Object) mapping).pkc$getKey().getValue();
+        /*return ((KeyMappingAccessor) (Object) mapping).pkc$getKey();
         *///?}
+    }
+
+    public static boolean isSelectTickDown() {
+        Minecraft client = Minecraft.getInstance();
+        if (selectTickKeyBinding == null || currentScreen(client) != null) return false;
+        InputConstants.Key key = boundKeyOf(selectTickKeyBinding);
+        if (key.getValue() == InputConstants.UNKNOWN.getValue()) {
+            key = boundKeyOf(client.options.keyAttack);
+        }
+        //? if >=26.1 {
+        InputConstants.Type keyboard = InputConstants.Type.KEYBOARD;
+        //?} else {
+        /*InputConstants.Type keyboard = InputConstants.Type.KEYSYM;
+        *///?}
+        if (key.getType() == InputConstants.Type.MOUSE) return FabricInput.isMouseDown(key.getValue());
+        if (key.getType() == keyboard) return FabricInput.isKeyDown(key.getValue());
+        return false;
     }
 
     public static void closeOverlay() {

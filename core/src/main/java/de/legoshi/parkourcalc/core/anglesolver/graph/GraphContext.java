@@ -49,6 +49,7 @@ public final class GraphContext {
     private double headroomBound = Double.NaN;
     private volatile long overallDeadlineNanos;
     private volatile SmoothOutcome smoothOutcome;
+    private volatile String infeasibilityProof;
 
     public GraphContext(JumpSpec spec, ForwardModel model, StartBox freeBox, JumpConstraint legalGoal,
                         double feasTol, AtomicBoolean cancel, SolveProgress progress, boolean sequential,
@@ -123,6 +124,14 @@ public final class GraphContext {
 
     public synchronized String chainWith(String name) {
         return Scoring.chain(chain, name);
+    }
+
+    public String infeasibilityProof() {
+        return infeasibilityProof;
+    }
+
+    public void certifyInfeasible(String proof) {
+        if (infeasibilityProof == null) infeasibilityProof = proof;
     }
 
     public SmoothOutcome smoothOutcome() {

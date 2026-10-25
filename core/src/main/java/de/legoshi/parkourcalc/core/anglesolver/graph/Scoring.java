@@ -109,6 +109,7 @@ public final class Scoring {
         a.jumpTick = b.jumpTick;
         a.jumpPerTick = b.jumpPerTick;
         a.strafeSign = b.strafeSign;
+        a.strafeSignPerTick = b.strafeSignPerTick;
         a.strafePerTick = b.strafePerTick;
         a.speedAmplifier = b.speedAmplifier;
         a.slownessAmplifier = b.slownessAmplifier;

@@ -38,6 +38,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolveProgress;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolverTrace;
 import de.legoshi.parkourcalc.core.anglesolver.solver.StartBox;
+import de.legoshi.parkourcalc.core.anglesolver.solver.StrafeSideRealization;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SurfaceKind;
 
 import java.util.ArrayList;
@@ -151,6 +152,7 @@ public final class AngleSolverEngine {
     private final boolean modernCollision;
 
     private Plan lastPlan;
+    private Plan smoothBase;
 
     // Background-solve handoff. `pending` is the single volatile publish point: the worker fully
     // builds the Outcome, then assigns it here; poll() reads it on the main thread.
@@ -267,27 +269,36 @@ public final class AngleSolverEngine {
     private static final class Plan {
         final int startTick;
         final double[] yaws;
+        final double[] solverYaws;
         final boolean[] strafeMask;
         // Ticks solved under Force 45, snapshotted at solve time (not re-read at Apply time).
         final boolean[] force45Mask;
         final int strafeSign;
+        final int[] strafeSigns;
         // The model's predicted trajectory; Apply checks the resim against it (see checkApplyDeviation).
         final ForwardPath path;
         final Vec3dCore start;
         final boolean lockYaws;
         final boolean freeStartYaw;
 
-        Plan(int startTick, double[] yaws, boolean[] strafeMask, boolean[] force45Mask, int strafeSign,
-             ForwardPath path, Vec3dCore start, boolean lockYaws, boolean freeStartYaw) {
+        Plan(int startTick, double[] yaws, double[] solverYaws, boolean[] strafeMask, boolean[] force45Mask,
+             int strafeSign, int[] strafeSigns, ForwardPath path, Vec3dCore start, boolean lockYaws,
+             boolean freeStartYaw) {
             this.startTick = startTick;
             this.yaws = yaws;
+            this.solverYaws = solverYaws;
             this.strafeMask = strafeMask;
             this.force45Mask = force45Mask;
             this.strafeSign = strafeSign;
+            this.strafeSigns = strafeSigns;
             this.path = path;
             this.start = start;
             this.lockYaws = lockYaws;
             this.freeStartYaw = freeStartYaw;
+        }
+
+        int strafeSignAt(int k) {
+            return strafeSigns == null || k >= strafeSigns.length ? strafeSign : strafeSigns[k];
         }
     }
 
@@ -322,6 +333,7 @@ public final class AngleSolverEngine {
         final JumpConstraint legalGoal;
         final SolverGraph graph;
         final boolean freeStartYaw;
+        final boolean bothStrafeSides;
         double[] incumbentYaws;
         Vec3dCore incumbentStart;
         Job legalFallback;
@@ -329,14 +341,14 @@ public final class AngleSolverEngine {
         Job withDeadline(long deadlineNanos) {
             return new Job(spec, sense, startTick, landingTick, numTicks, strafeMask, force45Mask, uiConstraints,
                     deadlineNanos, longRun, useWindowSolver, stopOnFeasible, ilsExhaustive, legalGoal, graph,
-                    freeStartYaw);
+                    freeStartYaw, bothStrafeSides);
         }
 
         Job(JumpSpec spec, Objective.Sense sense, int startTick, int landingTick,
             int numTicks, boolean[] strafeMask, boolean[] force45Mask, List<ConstraintAt> uiConstraints,
             long deadlineNanos, LongRunSolver.LongRunConfig longRun, boolean useWindowSolver,
             boolean stopOnFeasible, boolean ilsExhaustive, JumpConstraint legalGoal, SolverGraph graph,
-            boolean freeStartYaw
+            boolean freeStartYaw, boolean bothStrafeSides
         ) {
             this.spec = spec;
             this.sense = sense;
@@ -354,6 +366,7 @@ public final class AngleSolverEngine {
             this.legalGoal = legalGoal;
             this.graph = graph;
             this.freeStartYaw = freeStartYaw;
+            this.bothStrafeSides = bothStrafeSides;
         }
     }
 
@@ -404,6 +417,7 @@ public final class AngleSolverEngine {
         String conflict = firstConflict(uiCons);
         if (conflict != null) {
             SolveResult r = new SolveResult(false, 0, total, startTick + 1, landingTick + 1);
+            r.markCertifiedInfeasible();
             r.setNoticeLabel(INFEASIBLE_LABEL);
             r.setNotice(conflict);
             state.setResult(r);
@@ -452,10 +466,11 @@ public final class AngleSolverEngine {
         if (legalGoal != null && !legalWallHard) constraints.remove(legalGoal);
         SolverGraph graph = graphOverride != null ? graphOverride : GraphFactory.forState(state, effort);
         JumpSpec spec = new JumpSpec(ph.inputs, constraints, objective);
+        boolean bothStrafeSides = state.getStrafeSide() == AngleSolverState.StrafeSide.BOTH;
         Job job = new Job(spec, objective.sense, startTick, landingTick, numTicks, ph.strafeMask,
                 ph.force45Mask, uiCons,
                 deadlineNanosFor(state, effort), longRunConfigFor(state, effort), useWindowSolverFor(state, effort),
-                stopOnFeasible, ilsExhaustiveFor(state, effort), legalGoal, graph, freeStartYaw);
+                stopOnFeasible, ilsExhaustiveFor(state, effort), legalGoal, graph, freeStartYaw, bothStrafeSides);
         if (legalWallHard) {
             List<JumpConstraint> reduced = new ArrayList<>(constraints);
             reduced.remove(legalGoal);
@@ -464,7 +479,7 @@ public final class AngleSolverEngine {
                     ph.strafeMask, ph.force45Mask, uiCons,
                     deadlineNanosFor(state, effort), longRunConfigFor(state, effort),
                     useWindowSolverFor(state, effort), stopOnFeasible, ilsExhaustiveFor(state, effort),
-                    legalGoal, graph, freeStartYaw);
+                    legalGoal, graph, freeStartYaw, bothStrafeSides);
         }
         return job;
     }
@@ -566,27 +581,37 @@ public final class AngleSolverEngine {
         if (solving) return;
         Job job = buildJob(effort, graphOverride);
         if (job == null) return; // invalid range: buildJob already published the failure result
-        offerIncumbent(job, effort, false);
+        offerIncumbent(job, effort);
         start(job, effort);
     }
 
     public boolean canSmooth() {
-        Plan prev = lastPlan;
-        SolveResult prevResult = state.getResult();
+        Plan base = smoothBase;
         if (solving || !(model instanceof ExactJumpModel)) return false;
-        if (prev == null || prevResult == null || !prevResult.isSuccess() || prev.lockYaws) return false;
-        return prev.startTick == state.getStartTick()
-                && prev.yaws.length == state.getLandingTick() - state.getStartTick();
+        if (base == null || base.lockYaws) return false;
+        return base.startTick == state.getStartTick()
+                && base.yaws.length == state.getLandingTick() - state.getStartTick();
     }
 
     public void smooth() {
         if (!canSmooth()) return;
+        Plan base = smoothBase;
         AngleSolverState.Effort effort = state.getEffort();
         Job job = buildJob(effort, BuiltinGraphs.smooth(state.getSmoothGiveBack()));
         if (job == null) return;
         if (job.deadlineNanos <= 0) job = job.withDeadline(SMOOTH_BUTTON_BUDGET_NANOS);
-        offerIncumbent(job, effort, true);
+        if (base.strafeSigns != null) {
+            job.spec.asScenario().strafeSignPerTick = base.strafeSigns.clone();
+            job.incumbentYaws = base.yaws.clone();
+        } else {
+            job.incumbentYaws = base.solverYaws.clone();
+        }
+        job.incumbentStart = base.start;
         start(job, effort);
+    }
+
+    private static boolean isSmoothJob(Job job) {
+        return job != null && job.graph != null && BuiltinGraphs.SMOOTH_PRESET.equals(job.graph.name);
     }
 
     public long smoothBudgetNanos() {
@@ -601,6 +626,7 @@ public final class AngleSolverEngine {
         // Show the spinner instead of a stale result.
         state.clearResult();
         lastPlan = null;
+        if (!isSmoothJob(job)) smoothBase = null;
         pending = null;
         startNanos = t0;
         AtomicBoolean token = new AtomicBoolean(false);
@@ -643,13 +669,13 @@ public final class AngleSolverEngine {
         worker.start();
     }
 
-    private void offerIncumbent(Job job, AngleSolverState.Effort effort, boolean always) {
-        if (!always && (effort == AngleSolverState.Effort.FAST || BuiltinGraphs.FAST_PRESET.equals(job.graph.name))) return;
+    private void offerIncumbent(Job job, AngleSolverState.Effort effort) {
+        if (effort == AngleSolverState.Effort.FAST || BuiltinGraphs.FAST_PRESET.equals(job.graph.name)) return;
         Plan prev = lastPlan;
         SolveResult prevResult = state.getResult();
         if (prev == null || prevResult == null || !prevResult.isSuccess() || prev.lockYaws) return;
         if (prev.startTick != job.startTick || prev.yaws.length != job.numTicks) return;
-        job.incumbentYaws = prev.yaws.clone();
+        job.incumbentYaws = prev.solverYaws.clone();
         job.incumbentStart = prev.start;
     }
 
@@ -771,6 +797,7 @@ public final class AngleSolverEngine {
         phys.jumpTick = jumpTickRel;
         phys.jumpPerTick = jumpMask;
         phys.strafePerTick = strafeMask;
+        phys.strafeSign = state.getStrafeSide() == AngleSolverState.StrafeSide.D ? -1 : 1;
         phys.speedAmplifier = speedAmp;
         phys.slownessAmplifier = slowAmp;
         phys.slipPerTick = slipPerTick;
@@ -958,6 +985,7 @@ public final class AngleSolverEngine {
     public void onProblemReplaced() {
         cancel();
         lastPlan = null;
+        smoothBase = null;
     }
 
     /** Publish a finished background solve. Call every frame on the main thread. */
@@ -967,6 +995,7 @@ public final class AngleSolverEngine {
         pending = null;
         state.setResult(o.result);
         lastPlan = o.plan;
+        if (!isSmoothJob(currentJob) && o.plan != null && o.result.isSuccess()) smoothBase = o.plan;
         solving = false;
         currentProgress = null;
         currentJob = null;
@@ -1098,12 +1127,23 @@ public final class AngleSolverEngine {
             currentGraphContext = null;
         }
         if (cancel.get()) return null;
-        if (cand == null || cand.yaws == null) {
-            finishRecord(rec, SolveRunRecord.STATUS_FAILED, null, null, null, ctx.chain(), null);
+        String proof = ctx.infeasibilityProof();
+        if (proof != null && cand != null && cand.yaws != null && cand.feasible) {
+            if (SolverTrace.on()) SolverTrace.log("ENGINE", "byte-exact witness overrules the certificate: %s", proof);
+            proof = null;
+        }
+        if (cand == null || cand.yaws == null || proof != null) {
+            finishRecord(rec, proof != null ? SolveRunRecord.STATUS_INFEASIBLE : SolveRunRecord.STATUS_FAILED,
+                    null, null, null, ctx.chain(), null);
             SolveResult fail = failureResult(job, sc, ctx, System.nanoTime() - solveStart);
             if (ctx.chain() != null) fail.setSolver(ctx.chain());
-            if (hasUnsupportedDf(job)) fail.setNotice(DF_UNSUPPORTED_NOTICE);
-            else if (pinnedYaws != null) {
+            if (proof != null) {
+                fail.markCertifiedInfeasible();
+                fail.setNoticeLabel(CERTIFIED_INFEASIBLE_LABEL);
+                fail.setNotice(proof);
+            } else if (hasUnsupportedDf(job)) {
+                fail.setNotice(DF_UNSUPPORTED_NOTICE);
+            } else if (pinnedYaws != null) {
                 fail.setNoticeLabel(OVERCONSTRAINED_LABEL);
                 fail.setNotice(pinnedChainNotice(sc, ctx.violationOf(pinnedYaws), freeBox != null));
             } else if (singleHeading) {
@@ -1133,10 +1173,15 @@ public final class AngleSolverEngine {
         if (job.legalGoal != null) {
             solverName = solverName == null ? "legal mode" : solverName + " (legal)";
         }
-        double[] gameFacings = sc.toGameFacings(yaws);
-        ForwardPath path = model.forward(sc, gameFacings);
+        double[] solverFacings = sc.toGameFacings(yaws);
+        ForwardPath solverPath = model.forward(sc, solverFacings);
+        StrafeSideRealization sides = realizeStrafeSides(job, spec, yaws, solverFacings, solverPath);
+        boolean realized = sides != null && sides.verified;
+        double[] gameFacings = realized ? sides.gameFacings : solverFacings;
+        ForwardPath path = realized ? sides.path : solverPath;
         SolveResult result = assembleResult(job, yaws, gameFacings, path, solverName, solveNanos, dualGap);
         addSmoothingDetails(result, job, ctx.smoothOutcome());
+        addStrafeSideDetails(result, sides, sc);
         if (job.legalGoal != null) {
             double achieved = spec.objective.evaluate(path);
             double shortfall = spec.objective.sense == Objective.Sense.MAX
@@ -1153,7 +1198,44 @@ public final class AngleSolverEngine {
         }
         finishRecord(rec, SolveRunRecord.STATUS_SOLVED, finalObjective, finalViolation,
                 finalViolation <= FEAS_TOL, solverName, yaws);
-        return new Outcome(result, planOf(job, yaws, path, sc, stageLocked));
+        return new Outcome(result, planOf(job, yaws, sides, path, sc, stageLocked));
+    }
+
+    private StrafeSideRealization realizeStrafeSides(Job job, JumpSpec spec, double[] yaws, double[] gameFacings,
+                                                     ForwardPath path) {
+        if (!job.bothStrafeSides || isSmoothJob(job)) return null;
+        if (JumpConstraintCompiler.compile(spec).maxViolation(gameFacings, path) > FEAS_TOL) return null;
+        return StrafeSideRealization.realize(model, spec, yaws, path, job.freeStartYaw, FEAS_TOL, !job.stopOnFeasible);
+    }
+
+    private static void addStrafeSideDetails(SolveResult result, StrafeSideRealization sides, JumpPhysicsInputs sc) {
+        int[] framed = sc.strafeSignPerTick;
+        if (sides == null && framed != null) {
+            int other = 0;
+            for (int side : framed) {
+                if (side != sc.strafeSign) other++;
+            }
+            String baseKey = sc.strafeSign > 0 ? "A" : "D";
+            String otherKey = sc.strafeSign > 0 ? "D" : "A";
+            result.setStrafeSides(framed.clone());
+            result.addDetail("Strafe sides", otherKey + " on " + other + " of " + framed.length + " ticks, "
+                    + baseKey + " on " + (framed.length - other) + " (kept from the solve)");
+            return;
+        }
+        if (sides == null) return;
+        if (!sides.verified) {
+            result.addDetail("Strafe sides", "one side (the other side missed the byte-exact check)");
+            return;
+        }
+        int total = sides.sides.length;
+        String baseKey = sides.base > 0 ? "A" : "D";
+        String otherKey = sides.base > 0 ? "D" : "A";
+        result.setStrafeSides(sides.sides);
+        result.addDetail("Strafe sides", otherKey + " on " + sides.flipped + " of " + total + " ticks, "
+                + baseKey + " on " + (total - sides.flipped)
+                + (sides.dropped > 0 ? " (" + sides.dropped + " kept on " + baseKey + " to stay byte-exact)" : ""));
+        result.addDetail("Yaw jerk realized", Math.round(sides.wiggleAfter) + " deg (one side: "
+                + Math.round(sides.wiggleBefore) + " deg)");
     }
 
     private static void addSmoothingDetails(SolveResult result, Job job, SmoothOutcome smooth) {
@@ -1174,8 +1256,17 @@ public final class AngleSolverEngine {
         }
     }
 
-    private static Plan planOf(Job job, double[] yaws, ForwardPath path, JumpPhysicsInputs sc, boolean lockYaws) {
-        return new Plan(job.startTick, yaws, job.strafeMask, job.force45Mask, 1, path, sc.startPos, lockYaws,
+    private static Plan planOf(Job job, double[] yaws, StrafeSideRealization sides, ForwardPath path,
+                               JumpPhysicsInputs sc, boolean lockYaws) {
+        boolean realized = sides != null && sides.verified;
+        int[] framed = sc.strafeSignPerTick;
+        if (!realized && framed != null) {
+            return new Plan(job.startTick, yaws, StrafeSideRealization.solverYaws(yaws, framed, sc.strafeSign),
+                    job.strafeMask, job.force45Mask, sc.strafeSign, framed, path, sc.startPos, lockYaws,
+                    job.freeStartYaw);
+        }
+        return new Plan(job.startTick, realized ? sides.yaws : yaws, yaws, job.strafeMask, job.force45Mask,
+                sc.strafeSign, realized ? sides.sides : null, realized ? sides.path : path, sc.startPos, lockYaws,
                 job.freeStartYaw);
     }
 
@@ -1204,6 +1295,11 @@ public final class AngleSolverEngine {
         return pre;
     }
 
+    public static boolean overconstrainedChain(JumpSpec spec, JumpPhysicsInputs sc) {
+        FacingPrefold pre = chainPrefold(spec, sc);
+        return (pre != null && pre.pinnedYaws() != null) || singleHeadingChain(spec, sc, pre);
+    }
+
     private static boolean singleHeadingChain(JumpSpec spec, JumpPhysicsInputs sc, FacingPrefold pre) {
         if (!JumpLinearModel.hasFacingWall(spec.constraints)) return false;
         if (pre != null) return pre.varCount() == 1 && pre.pinnedTicks() == 0;
@@ -1213,6 +1309,7 @@ public final class AngleSolverEngine {
 
     public static final String OVERCONSTRAINED_LABEL = "Overconstrained";
     public static final String INFEASIBLE_LABEL = "Infeasible constraints";
+    public static final String CERTIFIED_INFEASIBLE_LABEL = "Certified infeasible";
 
     private static String singleHeadingNotice(JumpPhysicsInputs sc, double violation, boolean freeStart) {
         String head = "dF = 0 on every tick ties all " + sc.numTicks + " ticks to one heading, so only that"
@@ -1285,9 +1382,13 @@ public final class AngleSolverEngine {
         double[] gameFacings = sc.toGameFacings(yaws);
         ForwardPath path = model.forward(sc, gameFacings);
         String name = solver == null || solver.isEmpty() ? "stopped early" : solver;
-        SolveResult result = assembleResult(job, yaws, gameFacings, path, name, System.nanoTime() - startNanos, Double.NaN);
+        StrafeSideRealization sides = realizeStrafeSides(job, job.spec, yaws, gameFacings, path);
+        boolean realized = sides != null && sides.verified;
+        SolveResult result = assembleResult(job, yaws, realized ? sides.gameFacings : gameFacings,
+                realized ? sides.path : path, name, System.nanoTime() - startNanos, Double.NaN);
         result.addDetail("Stopped early", "kept best found");
-        return new Outcome(result, planOf(job, yaws, path, sc, false));
+        addStrafeSideDetails(result, sides, sc);
+        return new Outcome(result, planOf(job, yaws, sides, path, sc, false));
     }
 
     private SolveResult buildResultWithObjective(Job job, double[] yaws, double[] gameFacings, ForwardPath path) {
@@ -1381,10 +1482,14 @@ public final class AngleSolverEngine {
     public static final class PathSnapshot {
         public final JumpSpec spec;
         public final double[] yaws;
+        public final int startTick;
+        public final boolean freeStartYaw;
 
-        PathSnapshot(JumpSpec spec, double[] yaws) {
+        PathSnapshot(JumpSpec spec, double[] yaws, int startTick, boolean freeStartYaw) {
             this.spec = spec;
             this.yaws = yaws;
+            this.startTick = startTick;
+            this.freeStartYaw = freeStartYaw;
         }
     }
 
@@ -1407,7 +1512,7 @@ public final class AngleSolverEngine {
             judged.add(job.legalGoal);
             spec = new JumpSpec(spec.asScenario(), judged, spec.objective);
         }
-        return new PathSnapshot(spec, yaws);
+        return new PathSnapshot(spec, yaws, job.startTick, job.freeStartYaw);
     }
 
     public ExactJumpModel exactModel() {
@@ -1478,7 +1583,7 @@ public final class AngleSolverEngine {
                 // A Force-45 tick realizes its solve assumption in the rows (gh-104): W + sprint held
                 // on every tick, strafe per the mask (the grounded jump tick stays W-only). Keep ticks
                 // are left alone; their keys ARE what the solve ran.
-                rows.get(p.startTick + k).applyForce45(p.strafeMask[k], p.strafeSign);
+                rows.get(p.startTick + k).applyForce45(p.strafeMask[k], p.strafeSignAt(k));
             }
         }
         onApplied.accept(p.startTick);
@@ -1839,10 +1944,10 @@ public final class AngleSolverEngine {
         }
     }
 
-    private boolean satisfied(Constraint c, double found) {
+    public static boolean satisfied(Constraint c, double found) {
         if (c.isRange()) {
-            boolean lo = c.isLoInclusive() ? found >= c.getLo() - MET_TOL : found > c.getLo() - MET_TOL;
-            boolean hi = c.isHiInclusive() ? found <= c.getHi() + MET_TOL : found < c.getHi() + MET_TOL;
+            boolean lo = c.isLoInclusive() ? found >= c.getLo() - FEAS_TOL : found > c.getLo() - FEAS_TOL;
+            boolean hi = c.isHiInclusive() ? found <= c.getHi() + FEAS_TOL : found < c.getHi() + FEAS_TOL;
             return lo && hi;
         }
         double v = c.getValue();

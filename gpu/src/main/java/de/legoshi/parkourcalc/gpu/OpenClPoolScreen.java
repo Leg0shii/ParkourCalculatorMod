@@ -14,6 +14,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.BooleanSupplier;
 
 public final class OpenClPoolScreen implements SchedulePoolScreen {
 
@@ -289,10 +290,11 @@ public final class OpenClPoolScreen implements SchedulePoolScreen {
     }
 
     @Override
-    public float[] evaluate(byte[] combos, int count) {
+    public float[] evaluate(byte[] combos, int count, BooleanSupplier stop) {
         if (closed) throw new IllegalStateException("closed");
         float[] out = new float[count * VARIANTS * FLOATS_PER_VARIANT];
         synchronized (LOCK) {
+            if (stop.getAsBoolean()) return null;
             long t0 = System.nanoTime();
             ensureCapacity(count);
             int items = count * VARIANTS;
@@ -312,7 +314,7 @@ public final class OpenClPoolScreen implements SchedulePoolScreen {
             CL.clSetKernelArg(diskKernel, a++, Sizeof.cl_mem, Pointer.to(sinBuf));
             CL.clSetKernelArg(diskKernel, a++, Sizeof.cl_mem, Pointer.to(diskViolBuf));
             CL.clSetKernelArg(diskKernel, a++, Sizeof.cl_mem, Pointer.to(diskThetaBuf));
-            enqueueChunked(diskKernel, items, DISK_CHUNK);
+            if (!enqueueChunked(diskKernel, items, DISK_CHUNK, stop)) return null;
             CL.clEnqueueReadBuffer(context.queue(), diskViolBuf, CL.CL_TRUE, 0, (long) items * Sizeof.cl_float, Pointer.to(diskViol), 0, null, null);
             CL.clEnqueueReadBuffer(context.queue(), diskThetaBuf, CL.CL_TRUE, 0, (long) items * Sizeof.cl_float, Pointer.to(diskTheta), 0, null, null);
             long t1 = System.nanoTime();
@@ -340,7 +342,7 @@ public final class OpenClPoolScreen implements SchedulePoolScreen {
                 CL.clSetKernelArg(screenKernel, a++, Sizeof.cl_mem, Pointer.to(sViolBuf));
                 CL.clSetKernelArg(screenKernel, a++, Sizeof.cl_mem, Pointer.to(sThetaBuf));
                 CL.clSetKernelArg(screenKernel, a++, Sizeof.cl_mem, Pointer.to(sObjBuf));
-                enqueueChunked(screenKernel, m, SCREEN_CHUNK);
+                if (!enqueueChunked(screenKernel, m, SCREEN_CHUNK, stop)) return null;
                 CL.clEnqueueReadBuffer(context.queue(), sViolBuf, CL.CL_TRUE, 0, (long) m * Sizeof.cl_float, Pointer.to(sViol), 0, null, null);
                 CL.clEnqueueReadBuffer(context.queue(), sThetaBuf, CL.CL_TRUE, 0, (long) m * Sizeof.cl_float, Pointer.to(sTheta), 0, null, null);
                 CL.clEnqueueReadBuffer(context.queue(), sObjBuf, CL.CL_TRUE, 0, (long) m * Sizeof.cl_float, Pointer.to(sObj), 0, null, null);
@@ -371,12 +373,14 @@ public final class OpenClPoolScreen implements SchedulePoolScreen {
         return out;
     }
 
-    private static void enqueueChunked(cl_kernel kernel, int items, int chunk) {
+    private static boolean enqueueChunked(cl_kernel kernel, int items, int chunk, BooleanSupplier stop) {
         for (int off = 0; off < items; off += chunk) {
+            if (stop.getAsBoolean()) return false;
             long size = roundUp(Math.min(chunk, items - off), 64);
             CL.clEnqueueNDRangeKernel(context.queue(), kernel, 1, new long[]{off}, new long[]{size}, null, 0, null, null);
             CL.clFinish(context.queue());
         }
+        return true;
     }
 
     private static long roundUp(long v, long m) {

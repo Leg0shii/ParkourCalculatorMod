@@ -120,6 +120,10 @@ public interface MinecraftAccess {
     /** Current state of the left mouse button (true while held). */
     boolean isMousePressedLeft();
 
+    default boolean isSelectTickPressed() {
+        return isMousePressedLeft();
+    }
+
     /** Current state of the right mouse button (true while held). */
     boolean isMousePressedRight();
 
@@ -167,6 +171,9 @@ public interface MinecraftAccess {
 
     default float getMouseSensitivity() {
         return 0.5f;
+    }
+
+    default void setMouseSensitivity(float sensitivity) {
     }
 
     /** True when the client owns the integrated server (singleplayer or LAN host). */

@@ -307,7 +307,7 @@ final class PoolCertifier {
                 if (stopped()) return;
                 int take = Math.min(threads, nbrs.size() - from);
                 final int base = from;
-                progress.update("explore neighbours: " + lines + " lines from " + tried + " warm certifies (parallel "
+                progress.update("explore neighbours: " + lines + " strats from " + tried + " warm certifies (parallel "
                         + threads + ")", fraction());
                 List<NoTurnResult> res = NoTurnParallel.collectAll(exec, take, cancel, (idx, tc) -> {
                     long budget = Math.min(WARM_BUDGET_NANOS, extraDeadline - System.nanoTime());

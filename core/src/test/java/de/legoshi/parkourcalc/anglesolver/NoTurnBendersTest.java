@@ -90,6 +90,7 @@ public class NoTurnBendersTest {
         cfg.fatCertifyNanos = 6_000_000_000L;
         cfg.continuationLead = 25;
         cfg.continuationCap = 12;
+        cfg.openingTaps = true;
         cfg.continuationBudgetNanos = 600_000_000_000L;
         cfg.maxCertifies = 1_000_000;
         cfg.deadlineNanos = 4_500_000_000_000L;
@@ -123,7 +124,7 @@ public class NoTurnBendersTest {
         assertNotNull("benders master cracks j154 cold", best);
         assertTrue("byte-exact clean (FEAS_TOL=0)", best.violation <= 0.0);
         assertTrue("jump-angle engaged on the last setup tick", best.ja);
-        assertTrue("min-edge ja family (V6 is six edges)", best.edges <= 6);
+        assertTrue("min-edge ja family (the tied A-first line is seven edges)", best.edges <= 7);
         assertTrue("objective near the byte-exact ja optimum (X MIN, ref -1599.7001161289918)",
                 best.objective >= -1599.71 && best.objective <= -1599.69);
         assertTrue("free start interior to the box", interior(p, best));

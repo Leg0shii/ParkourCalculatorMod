@@ -328,9 +328,9 @@ public final class ExactJumpModel implements ForwardModel {
             if (scenario.strafeAt(t) && !isJumpTick) {
                 if (sine262) {
                     forward = Math.signum(forward) * SQUARE_DIAG_INPUT;
-                    strafe = scenario.strafeSign * SQUARE_DIAG_INPUT;
+                    strafe = scenario.strafeSignAt(t) * SQUARE_DIAG_INPUT;
                 } else {
-                    strafe = scenario.strafeSign * 1.0F * 0.98F;
+                    strafe = scenario.strafeSignAt(t) * 1.0F * 0.98F;
                 }
             } else {
                 strafe = scenario.strafeInputAt(t);

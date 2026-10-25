@@ -85,6 +85,7 @@ public final class SaveFile {
         public SolveBudget customBudget;
         public String graphPreset;
         public String defaultInputs;
+        public String strafeSide;
         public String defaultSprint;                     // absent in old files -> ALWAYS
         public String defaultSlipperiness;
         public List<Tick> ticks = new ArrayList<Tick>();
@@ -170,6 +171,7 @@ public final class SaveFile {
         public String solver;                            // algorithm label, null = legacy save
         public String notice;
         public String noticeLabel;
+        public String verdict;
         public double objectiveValue;
         public boolean hasObjective;
         public String smoothStop;
