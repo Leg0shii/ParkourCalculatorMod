@@ -92,48 +92,6 @@ final class StrafeSideCheck implements ProblemCheck {
         }
         oneSide(pf, AngleSolverState.StrafeSide.A);
         oneSide(pf, AngleSolverState.StrafeSide.D);
-
-        double onA = smoothedCameraJerk(pf, AngleSolverState.StrafeSide.A);
-        double onBoth = smoothedCameraJerk(pf, AngleSolverState.StrafeSide.BOTH);
-        System.out.printf("STRAFESIDE %-22s smoothed camera jerk A %.1f | Both %.1f deg%n", name, onA, onBoth);
-        assertTrue(name + ": Smooth on Both turns the camera " + onBoth + " deg, more than on A (" + onA + ")",
-                onBoth <= onA + 1e-6);
-    }
-
-    private static double smoothedCameraJerk(ProblemFixture pf, AngleSolverState.StrafeSide side) {
-        String name = pf.name + " smoothed on " + side.label;
-        ProblemFixture.Rig rig = pf.rig();
-        rig.state.setStrafeSide(side);
-        SolveResult solved = rig.solve(SolveCheck.timeout(pf)).result;
-        assertNotNull(name + ": no result after solve", solved);
-        assertTrue(name + ": the solve did not land", solved.isSuccess());
-        assertTrue(name + ": nothing to smooth", rig.engine.canSmooth());
-        rig.engine.smooth();
-        long deadline = System.currentTimeMillis() + SolveCheck.timeout(pf);
-        while (rig.state.getResult() == null && System.currentTimeMillis() < deadline) {
-            rig.engine.poll();
-            try {
-                Thread.sleep(10);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        }
-        rig.engine.poll();
-        SolveResult smoothed = rig.state.getResult();
-        assertNotNull(name + ": no smoothed result", smoothed);
-        assertTrue(name + ": smoothing lost the landing", smoothed.isSuccess());
-        JumpPhysicsInputs sc = rig.engine.lastSpecDebug().asScenario();
-        rig.engine.apply();
-        List<InputRow> rows = rig.inputs.getRows();
-        int startTick = smoothed.getStartTick() - 1;
-        double[] camera = new double[sc.numTicks];
-        double prev = sc.startYaw;
-        for (int k = 0; k < camera.length; k++) {
-            InputRow row = rows.get(startTick + k);
-            prev = row.isYawLocked() ? row.getYaw() : prev + row.getYaw();
-            camera[k] = Angles.wrap(prev);
-        }
-        return StrafeSideRealization.wiggle(camera, sc.startYaw, false);
     }
 
     private static void oneSide(ProblemFixture pf, AngleSolverState.StrafeSide side) {
