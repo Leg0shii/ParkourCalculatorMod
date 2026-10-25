@@ -291,6 +291,13 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
     }
 
     @Override
+    public void setMouseSensitivity(float sensitivity) {
+        Minecraft client = Minecraft.getInstance();
+        client.options.sensitivity().set((double) sensitivity);
+        client.options.save();
+    }
+
+    @Override
     public boolean isReady() {
         Minecraft client = Minecraft.getInstance();
         return client.player != null && client.level != null;

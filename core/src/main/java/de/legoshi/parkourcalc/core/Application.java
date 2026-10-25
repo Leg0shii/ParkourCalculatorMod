@@ -112,6 +112,7 @@ public final class Application {
     private de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel forwardModel;
     private de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverWindow angleSolverWindow;
     private NoTurnSearchController noTurnSearch;
+    private SenseSearchController senseSearch;
 
     public Application(Simulator simulator, MinecraftAccess mc) {
         this.mc = mc;
@@ -267,6 +268,8 @@ public final class Application {
         angleSolverWindow.setRunTicksControls(runTicks);
         noTurnSearch = new NoTurnSearchController(inputData, runner, boxController, saveController, angleSolverState,
                 angleSolverEngine, forwardModel, mc, this::onUserChange, this::pushHudMessage, runTicks::isRunning);
+        senseSearch = new SenseSearchController(inputData, saveController, angleSolverState, angleSolverEngine,
+                forwardModel, this::onUserChange, mc::getMouseSensitivity, mc::setMouseSensitivity);
         de.legoshi.parkourcalc.core.ui.anglesolver.StratfinderWindow stratfinderWindow =
                 new de.legoshi.parkourcalc.core.ui.anglesolver.StratfinderWindow(noTurnSearch);
         turnProfile = new TurnProfileController(angleSolverEngine, angleSolverState, inputData,
@@ -381,6 +384,8 @@ public final class Application {
         overlayManager.register(graphEditorWindow);
         overlayManager.register(stratfinderWindow);
         overlayManager.register(turnProfileWindow);
+        overlayManager.register(new de.legoshi.parkourcalc.core.ui.anglesolver.SenseFinderWindow(senseSearch, settings,
+                this::saveSettings));
         overlayManager.register(onejumpKeysWindow);
         overlayManager.register(onejumpSetupWindow);
         overlayManager.register(new de.legoshi.parkourcalc.core.ui.RecorderWindow(recorder, settings, this::toggleRecording,
@@ -476,6 +481,7 @@ public final class Application {
     }
 
     private void runSimulation(int dirtyTick) {
+        if (senseSearch != null) senseSearch.invalidate();
         if (!mc.isReady()) return;
         if (!saveController.isSessionActive()) return;
         long t0 = Perf.now();
@@ -674,6 +680,7 @@ public final class Application {
         }
         pollSolver();
         if (noTurnSearch != null) noTurnSearch.poll();
+        if (senseSearch != null) senseSearch.poll();
         boolean pathInert = isControlPanelOpen() || !settings.showPath;
         dragController.tick(
                 mc.getEyePosition(),

@@ -168,6 +168,9 @@ public interface MinecraftAccess {
         return 0.5f;
     }
 
+    default void setMouseSensitivity(float sensitivity) {
+    }
+
     /** True when the client owns the integrated server (singleplayer or LAN host). */
     boolean isSinglePlayer();
 
