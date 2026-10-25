@@ -352,7 +352,6 @@ public final class SenseFinderWindow implements RenderInterface {
                 ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowItemOverlap, 0f, rowH)) {
             host.select(c);
         }
-        boolean rowHovered = ImGui.isItemHovered();
         ImGui.tableSetColumnIndex(1);
         ThemeManager.textRight(senseText(c.sens) + "%");
         ImGui.tableSetColumnIndex(2);
@@ -361,20 +360,18 @@ public final class SenseFinderWindow implements RenderInterface {
         ThemeManager.textRight(c.weakestTick() < 0 ? "-" : c.marginsComplete() ? marginText(c.totalTarget()) : "...");
         if (game) ThemeManager.popTextColor();
         int weakest = c.weakestTick();
-        boolean cellTip = false;
         for (int k = 0; k < c.pixels.length; k++) {
             ImGui.tableSetColumnIndex(4 + k);
-            cellTip |= cell(c, k, k == weakest && c.marginsComplete(), settings.senseFinderCountView);
+            cell(c, k, k == weakest && c.marginsComplete(), settings.senseFinderCountView);
         }
-        if (rowHovered && !cellTip) TooltipUtil.wrappedTooltip(rowTip(c));
     }
 
-    private static boolean cell(SenseFinder.Candidate c, int k, boolean weakest, boolean count) {
+    private static void cell(SenseFinder.Candidate c, int k, boolean weakest, boolean count) {
         if (weakest) ThemeManager.pushTextColor(ThemeManager.warningColor());
         String shown = count ? Integer.toString(c.landingPixels(k)) : rangeText(c.landingRange(k));
         ImGui.text(!c.scoped[k] ? " " : c.hasMargin(k) ? shown : "...");
         if (weakest) ThemeManager.popTextColor();
-        if (!ImGui.isItemHovered()) return false;
+        if (!ImGui.isItemHovered()) return;
         ImGui.beginTooltip();
         if (ImGui.beginTable("##cell_tip", 2)) {
             if (c.hasMargin(k)) {
@@ -388,7 +385,6 @@ public final class SenseFinderWindow implements RenderInterface {
             ImGui.endTable();
         }
         ImGui.endTooltip();
-        return true;
     }
 
     private static void tipHeading(String label) {
@@ -418,11 +414,6 @@ public final class SenseFinderWindow implements RenderInterface {
 
     private static String marginText(double target) {
         return String.format(Locale.ROOT, "%.3f°", target);
-    }
-
-    private static String rowTip(SenseFinder.Candidate c) {
-        return String.format(Locale.ROOT, "Lands from %s%% to %s%%, %.5f° per pixel. Click to write these facings into"
-                + " the TAS.", senseText(c.sensLo), senseText(c.sensHi), c.pixelDeg);
     }
 
     private static float parse(String text, float fallback) {
