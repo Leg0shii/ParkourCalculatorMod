@@ -1,8 +1,6 @@
 package de.legoshi.parkourcalc.core.ui;
 
 import de.legoshi.parkourcalc.core.anglesolver.ConstraintText;
-import de.legoshi.parkourcalc.core.anglesolver.noturn.PoolScreenAccelerator;
-import de.legoshi.parkourcalc.core.ui.anglesolver.StratfinderWindow;
 import de.legoshi.parkourcalc.core.ui.theme.Controls;
 import de.legoshi.parkourcalc.core.ui.theme.Modal;
 import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
@@ -78,7 +76,6 @@ public final class SettingsModal {
     private static final String TT_PAIRED_SIMULATION_UNSUPPORTED = "Paired simulation is not available on this loader yet.";
     private static final String TT_PAIRED_DAMAGE = "When checked, the server rules damage as vanilla does: fall and bounce damage hit the paired entity and the real player during replay, including slime damage boosts. Uncheck to model a server that cancels all damage: no damage rulings or damage velocity boosts anywhere, while movement corrections (lagbacks) still apply. Changing this resimulates the file.";
     private static final String TT_PAIRED_DAMAGE_DISABLED = "Only applies while the paired client-server sim is enabled.";
-    private static final String TT_STRATFINDER_GPU = StratfinderWindow.GPU_TIP;
 
     private static final String PAIRED_CONFIRM_POPUP_ID = "###paired_sim_confirm";
     private static final String PAIRED_CONFIRM_TITLE = "Paired simulation";
@@ -359,15 +356,6 @@ public final class SettingsModal {
             ThemeManager.endStandardFormTable();
         }
 
-        ThemeManager.sectionSpacing();
-        sectionHeader("Stratfinder");
-        if (beginLayoutTable("##settings_stratfinder")) {
-            checkboxRow("GPU screening", "##stratfinder_gpu", settings.stratfinderGpu, TT_STRATFINDER_GPU, v -> {
-                settings.stratfinderGpu = v;
-                PoolScreenAccelerator.setEnabled(v);
-            });
-            ThemeManager.endStandardFormTable();
-        }
         ThemeManager.sectionSpacing();
         sectionHeader("Replay");
         if (beginLayoutTable("##settings_replay")) {
