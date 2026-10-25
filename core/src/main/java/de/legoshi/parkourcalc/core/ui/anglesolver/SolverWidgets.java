@@ -130,7 +130,7 @@ public final class SolverWidgets {
 
     /** Segmented control with an optional per-segment hover tooltip; null array or null entries show none. */
     public static int segmented(String id, String[] labels, String[] tooltips, int selected, float fillWidth) {
-        return segmented(id, labels, tooltips, selected, fillWidth, -1);
+        return segmented(id, labels, tooltips, selected, fillWidth, -1, false);
     }
 
     public static final int DROPDOWN_CLICKED = -2;
@@ -150,7 +150,7 @@ public final class SolverWidgets {
     }
 
     public static int segmented(String id, String[] labels, String[] tooltips, int selected, float fillWidth,
-                                int dropdownIndex) {
+                                int dropdownIndex, boolean dropdownOpen) {
         float scale = s();
         float h = ImGui.getFrameHeight();
         ImDrawList dl = ImGui.getWindowDrawList();
@@ -186,7 +186,11 @@ public final class SolverWidgets {
                 int arrowFill = on ? onBg : (arrowHover ? ThemeManager.accentTintColor(0.18f) : offBg);
                 dl.addRectFilled(amn.x, amn.y, amx.x, amx.y, arrowFill, 0f);
                 dl.addLine(amn.x, amn.y, amn.x, amx.y, border, 1f);
-                triangleDown(dl, (amn.x + amx.x) * 0.5f, (amn.y + amx.y) * 0.5f, 4f * scale, on ? onText : offText);
+                float cx = (amn.x + amx.x) * 0.5f;
+                float cy = (amn.y + amx.y) * 0.5f;
+                int arrowCol = on ? onText : offText;
+                if (dropdownOpen) triangleDown(dl, cx, cy, 3.3f * scale, arrowCol);
+                else triangleRight(dl, cx, cy, 3.3f * scale, arrowCol);
             }
             if (i == 0) { left = mn.x; top = mn.y; bottom = mx.y; }
             right = mx.x + arrowW;

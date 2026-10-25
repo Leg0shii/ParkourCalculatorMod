@@ -525,7 +525,8 @@ public final class AngleSolverWindow implements RenderInterface {
         Controls.pushInputFrameHeight();
         SolverWidgets.rowLabel("Inputs", labelW);
         int clicked = SolverWidgets.segmented("inputs", items, null, state.getDefaultInputs().ordinal(),
-                ImGui.getContentRegionAvail().x, AngleSolverState.InputMode.FORCE_45.ordinal());
+                ImGui.getContentRegionAvail().x, AngleSolverState.InputMode.FORCE_45.ordinal(),
+                ImGui.isPopupOpen(STRAFE_SIDE_POPUP));
         Controls.popInputFrameHeight();
         if (clicked == SolverWidgets.DROPDOWN_CLICKED) {
             ImGui.setNextWindowPos(SolverWidgets.dropdownLeft(), SolverWidgets.dropdownBottom());
