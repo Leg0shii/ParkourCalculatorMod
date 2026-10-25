@@ -193,6 +193,35 @@ public final class StratfinderWindow implements RenderInterface {
 
     private void renderActions() {
         boolean busy = host.isBusy();
+        float spacing = ImGui.getStyle().getItemSpacingX();
+        float sliderEndX = ImGui.getCursorPosX() + ImGui.getContentRegionAvail().x
+                - Controls.buttonWidth("Close") - spacing;
+        float rowH = Controls.buttonHeight();
+        if (busy) ImGui.beginDisabled(true);
+        float rowY = ImGui.getCursorPosY();
+        ImGui.setCursorPosY(rowY + (rowH - ImGui.getFrameHeight()) * 0.5f);
+        if (Controls.checkbox("Human yaws", host.playable())) host.setPlayable(!host.playable());
+        TooltipUtil.onHover(HUMAN_YAWS_TIP);
+        ImGui.sameLine();
+        if (Controls.checkbox("GPU", host.gpuScreening())) host.setGpuScreening(!host.gpuScreening());
+        TooltipUtil.onHover(GPU_TIP);
+        ImGui.sameLine();
+        if (Controls.checkbox("Deep search", host.deepSearch())) host.setDeepSearch(!host.deepSearch());
+        TooltipUtil.onHover(DEEP_SEARCH_TIP);
+        Controls.pushInputFrameHeight();
+        if (host.deepSearch()) {
+            ImGui.sameLine();
+            ImGui.setCursorPosY(rowY);
+            deepBuf[0] = host.deepMinutes();
+            ImGui.setNextItemWidth(Math.max(1f, sliderEndX - ImGui.getCursorPosX()));
+            boolean deepChanged = Controls.sliderInt("##strat_deep", deepBuf, 1, 180, "%d min deep search");
+            TooltipUtil.onHover(DEEP_BUDGET_TIP);
+            if (deepChanged) host.setDeepMinutes(deepBuf[0]);
+        }
+        Controls.popInputFrameHeight();
+        if (busy) ImGui.endDisabled();
+        ImGui.setCursorPosY(rowY + rowH + ImGui.getStyle().getItemSpacingY());
+        ImGui.separator();
         if (busy) {
             if (Controls.secondaryButton("Cancel")) host.cancel();
             TooltipUtil.onHover(CANCEL_TIP);
@@ -200,21 +229,6 @@ public final class StratfinderWindow implements RenderInterface {
             if (Controls.primaryButton("Search")) host.start();
             TooltipUtil.onHover(SEARCH_TIP);
         }
-        ImGui.sameLine();
-        if (busy) ImGui.beginDisabled(true);
-        if (Controls.checkbox("Human yaws", host.playable())) host.setPlayable(!host.playable());
-        if (busy) ImGui.endDisabled();
-        TooltipUtil.onHover(HUMAN_YAWS_TIP);
-        ImGui.sameLine();
-        if (busy) ImGui.beginDisabled(true);
-        if (Controls.checkbox("Deep search", host.deepSearch())) host.setDeepSearch(!host.deepSearch());
-        if (busy) ImGui.endDisabled();
-        TooltipUtil.onHover(DEEP_SEARCH_TIP);
-        ImGui.sameLine();
-        if (busy) ImGui.beginDisabled(true);
-        if (Controls.checkbox("GPU", host.gpuScreening())) host.setGpuScreening(!host.gpuScreening());
-        if (busy) ImGui.endDisabled();
-        TooltipUtil.onHover(GPU_TIP);
         ImGui.sameLine();
         boolean any = !host.results().isEmpty();
         int todo = host.unoptimizedCount();
@@ -224,24 +238,10 @@ public final class StratfinderWindow implements RenderInterface {
         if (!canOptimize) ImGui.endDisabled();
         TooltipUtil.onHover(OPTIMIZE_TIP);
         ImGui.sameLine();
-        float spacing = ImGui.getStyle().getItemSpacingX();
-        float sliderW = ImGui.getContentRegionAvail().x - Controls.buttonWidth("Close") - spacing;
-        boolean deep = host.deepSearch();
-        if (deep) sliderW = (sliderW - spacing) * 0.5f;
         Controls.pushInputFrameHeight();
-        if (deep) {
-            deepBuf[0] = host.deepMinutes();
-            ImGui.setNextItemWidth(sliderW);
-            if (busy) ImGui.beginDisabled(true);
-            boolean deepChanged = Controls.sliderInt("##strat_deep", deepBuf, 1, 180, "%d min deep");
-            if (busy) ImGui.endDisabled();
-            TooltipUtil.onHover(DEEP_BUDGET_TIP);
-            if (deepChanged) host.setDeepMinutes(deepBuf[0]);
-            ImGui.sameLine();
-        }
         boolean lockBudget = !any || (busy && host.phase() == Phase.OPTIMIZE);
         budgetBuf[0] = host.budgetSeconds();
-        ImGui.setNextItemWidth(sliderW);
+        ImGui.setNextItemWidth(Math.max(1f, sliderEndX - ImGui.getCursorPosX()));
         if (lockBudget) ImGui.beginDisabled(true);
         boolean changed = Controls.sliderInt("##strat_budget", budgetBuf, 1, 120, "%d s per line");
         if (lockBudget) ImGui.endDisabled();
@@ -416,6 +416,8 @@ public final class StratfinderWindow implements RenderInterface {
                 + ImGui.getFrameHeight() + spacing
                 + ImGui.getTextLineHeight() + spacing
                 + gpuLine
+                + Controls.buttonHeight() + spacing
+                + 1f + spacing
                 + Controls.buttonHeight() + spacing;
     }
 
