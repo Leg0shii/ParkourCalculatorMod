@@ -43,6 +43,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.SurfaceKind;
 import de.legoshi.parkourcalc.core.anglesolver.solver.TurnShape;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -595,6 +596,8 @@ public final class AngleSolverEngine {
                 && base.yaws.length == state.getLandingTick() - state.getStartTick();
     }
 
+    private static final int SIDE_FRAME_ROUNDS = 4;
+
     public void smooth() {
         if (!canSmooth()) return;
         Plan base = smoothBase;
@@ -662,7 +665,7 @@ public final class AngleSolverEngine {
                     }
                 }
                 if (o != null && !token.get() && job.otherSideFrame != null) {
-                    o = smootherOf(o, runOtherSideFrame(job.otherSideFrame, token, progress, rec), job);
+                    o = smootherOf(o, smoothOverSides(job.otherSideFrame, token, progress, rec), job);
                 }
                 if (o != null && !token.get()) pending = o;
             } catch (Throwable t) {
@@ -1076,6 +1079,44 @@ public final class AngleSolverEngine {
         currentJob = framed;
         recording = framedRec;
         return runJob(framed, cancel, progress, framedRec);
+    }
+
+    private Outcome smoothOverSides(Job framed, AtomicBoolean cancel, SolveProgress progress, RunRecording rec) {
+        JumpPhysicsInputs sc = framed.spec.asScenario();
+        List<int[]> tried = new ArrayList<>();
+        int[] oneSide = new int[sc.numTicks];
+        Arrays.fill(oneSide, sc.strafeSign);
+        tried.add(oneSide);
+        Outcome best = null;
+        Job round = framed;
+        for (int r = 0; r < SIDE_FRAME_ROUNDS && round != null && !cancel.get(); r++) {
+            tried.add(round.spec.asScenario().strafeSignPerTick);
+            Outcome o = runOtherSideFrame(round, cancel, progress, rec);
+            best = smootherOf(best, o, framed);
+            round = nextSideFrame(round, o, tried);
+        }
+        return best;
+    }
+
+    private static Job nextSideFrame(Job round, Outcome o, List<int[]> tried) {
+        if (o == null || o.plan == null || !o.result.isSuccess()) return null;
+        JumpPhysicsInputs sc = round.spec.asScenario();
+        double[] solverYaws = o.plan.solverYaws;
+        double anchor = round.freeStartYaw ? solverYaws[0] : (double) sc.startYaw;
+        int[] sides = StrafeSideRealization.chooseSides(solverYaws,
+                StrafeSideRealization.flippable(round.spec, sc.numTicks), sc.strafeSign, anchor, round.freeStartYaw);
+        for (int[] t : tried) {
+            if (Arrays.equals(t, sides)) return null;
+        }
+        JumpPhysicsInputs next = sc.copy();
+        next.strafeSignPerTick = sides;
+        Job j = new Job(new JumpSpec(next, round.spec.constraints, round.spec.objective), round.sense,
+                round.startTick, round.landingTick, round.numTicks, round.strafeMask, round.force45Mask,
+                round.uiConstraints, round.deadlineNanos, round.longRun, round.useWindowSolver, round.stopOnFeasible,
+                round.ilsExhaustive, round.legalGoal, round.graph, round.freeStartYaw, round.bothStrafeSides);
+        j.incumbentYaws = StrafeSideRealization.realizedYaws(solverYaws, sides, sc.strafeSign);
+        j.incumbentStart = o.plan.start;
+        return j;
     }
 
     private static Outcome smootherOf(Outcome a, Outcome b, Job job) {
