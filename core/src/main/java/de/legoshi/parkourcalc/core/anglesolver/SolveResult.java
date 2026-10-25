@@ -97,6 +97,7 @@ public final class SolveResult {
     private boolean hasObjective;
     private String smoothStop;
     private long smoothNanos;
+    private int[] strafeSides;
 
     public SolveResult(boolean success, int met, int total, int startTick, int landingTick) {
         this.success = success;
@@ -243,5 +244,13 @@ public final class SolveResult {
     public void setObjective(double value) {
         this.objectiveValue = value;
         this.hasObjective = true;
+    }
+
+    public int[] getStrafeSides() {
+        return strafeSides;
+    }
+
+    public void setStrafeSides(int[] strafeSides) {
+        this.strafeSides = strafeSides;
     }
 }

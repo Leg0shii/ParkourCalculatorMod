@@ -68,6 +68,8 @@ public final class AngleSolverWindow implements RenderInterface {
             "Optimize toward a custom facing angle instead of an axis. Best with a time budget above zero."};
     private static final int GOAL_ANGLE = 4;
     private static final String[] INPUTS = {"Keep", "Force 45"};
+    private static final String[] INPUTS_WIDEST = {"Keep", "Force 45 (Both)"};
+    private static final String STRAFE_SIDE_POPUP = "##strafe_side";
     private static final String[] SPRINTS = {"Always", "Derive"};
     private static final String[] SPRINT_TIPS = {null,
             "WARNING: derives each tick's sprint state from the current recorded path.\n"
@@ -263,8 +265,7 @@ public final class AngleSolverWindow implements RenderInterface {
         goalRow(labelW);
         if (state.isCustomAngle()) angleRow(rowCount, labelW, scale);
 
-        int im = segmentedRow("Inputs", "inputs", INPUTS, state.getDefaultInputs().ordinal(), labelW);
-        if (im >= 0) state.setDefaultInputs(AngleSolverState.InputMode.values()[im]);
+        inputsRow(labelW);
 
         int sp = segmentedRow("Sprint", "sprint", SPRINTS, SPRINT_TIPS, state.getDefaultSprint().ordinal(), labelW);
         if (sp >= 0) state.setDefaultSprint(AngleSolverState.SprintMode.values()[sp]);
@@ -344,7 +345,7 @@ public final class AngleSolverWindow implements RenderInterface {
 
     private float formInner(float labelW, float scale) {
         float w = segmentedRowWidth("Goal", GOALS, labelW);
-        w = Math.max(w, segmentedRowWidth("Inputs", INPUTS, labelW));
+        w = Math.max(w, segmentedRowWidth("Inputs", INPUTS_WIDEST, labelW) + SolverWidgets.dropdownArrowWidth());
         w = Math.max(w, segmentedRowWidth("Sprint", SPRINTS, labelW));
         w = Math.max(w, labelW + 150f * scale + budgetFieldWidth(scale));
         if (moreExpanded && state.getRunTicks().isEnabled()) {
@@ -517,6 +518,28 @@ public final class AngleSolverWindow implements RenderInterface {
 
     private static String formatAngle(double deg) {
         return String.format(Locale.ROOT, "%.4f", deg).replaceAll("0+$", "").replaceAll("\\.$", "");
+    }
+
+    private void inputsRow(float labelW) {
+        String[] items = {INPUTS[0], INPUTS[1] + " (" + state.getStrafeSide().label + ")"};
+        Controls.pushInputFrameHeight();
+        SolverWidgets.rowLabel("Inputs", labelW);
+        int clicked = SolverWidgets.segmented("inputs", items, null, state.getDefaultInputs().ordinal(),
+                ImGui.getContentRegionAvail().x, AngleSolverState.InputMode.FORCE_45.ordinal(),
+                ImGui.isPopupOpen(STRAFE_SIDE_POPUP));
+        Controls.popInputFrameHeight();
+        if (clicked == SolverWidgets.DROPDOWN_CLICKED) {
+            ImGui.setNextWindowPos(SolverWidgets.dropdownLeft(), SolverWidgets.dropdownBottom());
+            ImGui.openPopup(STRAFE_SIDE_POPUP);
+        } else if (clicked >= 0) {
+            state.setDefaultInputs(AngleSolverState.InputMode.values()[clicked]);
+        }
+        if (ImGui.beginPopup(STRAFE_SIDE_POPUP)) {
+            for (AngleSolverState.StrafeSide side : AngleSolverState.StrafeSide.values()) {
+                if (ImGui.menuItem(side.label, "", side == state.getStrafeSide())) state.setStrafeSide(side);
+            }
+            ImGui.endPopup();
+        }
     }
 
     private int segmentedRow(String label, String id, String[] items, int selected, float labelW) {

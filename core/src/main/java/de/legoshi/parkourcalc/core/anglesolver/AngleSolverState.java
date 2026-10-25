@@ -50,6 +50,18 @@ public final class AngleSolverState {
         }
     }
 
+    public enum StrafeSide {
+        A("A"),
+        D("D"),
+        BOTH("Both");
+
+        public final String label;
+
+        StrafeSide(String label) {
+            this.label = label;
+        }
+    }
+
     /** Solve effort. FAST returns the first byte-exact feasible solution (lowest latency). THOROUGH
      *  ("Optimize" in the UI; the constant keeps its name so old saves load) spends a time budget on the
      *  best objective it can find. CUSTOM exposes every knob. */
@@ -151,6 +163,7 @@ public final class AngleSolverState {
     private SolverGraph customGraph;
 
     private InputMode defaultInputs = InputMode.FORCE_45;
+    private StrafeSide strafeSide = StrafeSide.A;
     private SprintMode defaultSprint = SprintMode.ALWAYS;
     private Slipperiness defaultSlipperiness = Slipperiness.AIR;
 
@@ -386,6 +399,14 @@ public final class AngleSolverState {
 
     public InputMode getDefaultInputs() {
         return defaultInputs;
+    }
+
+    public StrafeSide getStrafeSide() {
+        return strafeSide;
+    }
+
+    public void setStrafeSide(StrafeSide side) {
+        this.strafeSide = side;
     }
 
     public void setDefaultInputs(InputMode mode) {
@@ -768,6 +789,7 @@ public final class AngleSolverState {
         graphPresetName = null;
         customGraph = null;
         defaultInputs = InputMode.FORCE_45;
+        strafeSide = StrafeSide.A;
         defaultSprint = SprintMode.ALWAYS;
         defaultSlipperiness = Slipperiness.AIR;
         ticks.clear();

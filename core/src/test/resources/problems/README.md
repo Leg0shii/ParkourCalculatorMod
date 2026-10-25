@@ -22,6 +22,7 @@ class that names the capture.
 | `ils/`            | is polished by the ILS from the closed form's byte-exact feasible seed without losing feasibility or objective, and an infeasible seed comes back untouched |
 | `translation/`    | scores translation-aware: the zero-width translated score byte-equals the pinned score, and with `cap` the best translation over the [-cap, cap] box matches a brute-force grid |
 | `gapattribution/` | reaches `refObjective` in THOROUGH mode and attributes the gap between the dual bound and the achieved objective |
+| `strafeside/`     | solves FAST with the strafe side pass flipping at least `minFlipped` Force 45 ticks onto the other A/D side (gh-338): less anchored yaw jerk, realized path feasible byte-exact at the shipped objective, Apply writes the key and the shifted yaw per tick; the check sets the strafe side to Both, then solves on A only and on D only and checks no pass ran and Apply writes that key on every strafe tick, and Smooth on Both keeps the A/D keys of the solve |
 
 ## Adding a capture
 
@@ -124,7 +125,8 @@ Every fixture JSON is one line, no BOM, no trailing newline.
   "cap":             0.05,      // also brute-force the best translation over the [-cap, cap] box and compare
 
   // smooth/
-  "resmooth":        true       // also smooth at 50 % twice and then at 0 % on a fresh solve: each press starts from the unsmoothed solve
+  "resmooth":        true,      // also smooth at 50 % twice and then at 0 % on a fresh solve: each press starts from the unsmoothed solve
+  "strafeSide":      "BOTH"     // any check: the Force 45 strafe side the rig solves with (A, D or BOTH; the save's own when absent)
 }
 ```
 

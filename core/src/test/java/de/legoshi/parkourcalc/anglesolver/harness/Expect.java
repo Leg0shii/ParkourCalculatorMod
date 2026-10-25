@@ -51,6 +51,7 @@ public final class Expect {
     public List<Integer> feasibleTicks;
 
     public Integer minCompared;
+    public Integer minFlipped;
     public Integer minJumps;
     public Double groundSlip;
 
@@ -78,6 +79,7 @@ public final class Expect {
     public Double cap;
 
     public Boolean resmooth;
+    public String strafeSide;
 
     private static final Gson GSON = new Gson();
 

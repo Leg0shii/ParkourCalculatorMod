@@ -85,6 +85,7 @@ public final class SaveFile {
         public SolveBudget customBudget;
         public String graphPreset;
         public String defaultInputs;
+        public String strafeSide;
         public String defaultSprint;                     // absent in old files -> ALWAYS
         public String defaultSlipperiness;
         public List<Tick> ticks = new ArrayList<Tick>();

@@ -426,6 +426,7 @@ public final class LongRunSolver {
         p.initialVelocity = vel;
         p.startYaw = yaw;
         p.strafeSign = sc.strafeSign;
+        p.strafeSignPerTick = sliceInt(sc.strafeSignPerTick, a, len);
         p.jumpPerTick = sliceBool(sc.jumpPerTick, a, len);
         p.strafePerTick = sliceBool(sc.strafePerTick, a, len);
         p.yawLockedPerTick = sliceBool(sc.yawLockedPerTick, a, len);
