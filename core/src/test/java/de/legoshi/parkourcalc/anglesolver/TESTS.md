@@ -107,7 +107,8 @@ anglesolver/
   PipelineShapeTest.java   #422 M2b G3 enforcement (VerySlowSolverTests, -PverySlowTests; PRs to main only):
                            every corpus capture visits the one linear
                            pipeline stage sequence at BOTH built-in tiers (THOROUGH probed at 1 s);
-                           deadline-truncated runs must be a prefix of it
+                           deadline-truncated runs must be a prefix of it, and so must a run the
+                           certified B&B ends early with an infeasibility certificate (#462)
   NoTurnDriversTest.java   #424 the no-turn drivers on the two hpk_precise structures (slow):
                            the certifier drives the inner engine as the byte-exact oracle on j1150
                            with a dF=0 chain and lands a clean no-turn (viol 0, obj near the
