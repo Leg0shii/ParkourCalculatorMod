@@ -468,6 +468,10 @@ public final class StructurePoolDriver {
     }
 
     private void gpuAppend(int[] combos) {
+        if (userCancelled()) {
+            gpuBatchCount = 0;
+            return;
+        }
         int o = gpuBatchCount * n;
         for (int t = 0; t < n; t++) gpuBatch[o + t] = (byte) combos[t];
         gpuBatchCount++;
@@ -476,12 +480,16 @@ public final class StructurePoolDriver {
 
     void flushGpu() {
         if (gpu == null || gpuBatchCount == 0) return;
+        if (userCancelled()) {
+            gpuBatchCount = 0;
+            return;
+        }
         int count = gpuBatchCount;
         gpuBatchCount = 0;
         int[] combos = new int[n];
         float[] r;
         try {
-            r = gpu.evaluate(gpuBatch, count);
+            r = gpu.evaluate(gpuBatch, count, this::userCancelled);
         } catch (RuntimeException | LinkageError e) {
             PoolScreenAccelerator.fail(e);
             try {
@@ -496,6 +504,7 @@ public final class StructurePoolDriver {
             gpuBatch = null;
             return;
         }
+        if (r == null) return;
         int per = SchedulePoolScreen.FLOATS_PER_VARIANT;
         boolean[] sprint = new boolean[n];
         for (int i = 0; i < count; i++) {
@@ -1272,6 +1281,10 @@ public final class StructurePoolDriver {
 
     private boolean cancelled() {
         return (cancel != null && cancel.get()) || (stop != null && stop.get()) || System.nanoTime() > deadlineNanos;
+    }
+
+    private boolean userCancelled() {
+        return cancel != null && cancel.get();
     }
 
     private static final class LevelResult {
