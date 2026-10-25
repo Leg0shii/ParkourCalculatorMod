@@ -218,6 +218,10 @@ public final class LongRunSolver {
                 boolean last = (we == jumps);
                 int a = bounds[i], c = bounds[we];
                 JumpPhysicsInputs win = sliceScenario(sc, a, c, seedPos, seedVel, seedYaw);
+                if (sc.lastDamageTick() >= a) {
+                    double[] server = exact.serverCarry(sc, gf, a);
+                    win.incomingServerVelocity = new Vec3dCore(server[0], 0.0, server[1]);
+                }
                 List<JumpConstraint> cons = sliceConstraints(spec, a, c, seedYaw);
                 int objTick = spec.objective.tick;
                 boolean objectiveWindow = objTick > a && objTick <= c;
@@ -443,6 +447,10 @@ public final class LongRunSolver {
         p.liveMovementFactor = sc.liveMovementFactor;
         p.forwardInputPerTick = sliceFloat(sc.forwardInputPerTick, a, len, 1.0F * 0.98F);
         p.strafeInputPerTick = sliceFloat(sc.strafeInputPerTick, a, len, 0.0F);
+        p.damagePerTick = sliceBool(sc.damagePerTick, a, len);
+        p.serverJumpPerTick = sliceBool(sc.serverJumpPerTick, a, len);
+        p.packetYPerTick = sliceDouble(sc.packetYPerTick, a, len);
+        p.incomingServerVelocity = a == 0 ? sc.incomingServerVelocity : null;
         return p;
     }
 

@@ -2,6 +2,7 @@ package de.legoshi.parkourcalc.anglesolver.harness;
 
 import de.legoshi.parkourcalc.core.save.SaveFile;
 import de.legoshi.parkourcalc.core.save.SaveIO;
+import de.legoshi.parkourcalc.core.sim.ServerTickSample;
 import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.BoxController;
@@ -44,6 +45,7 @@ public final class Fixtures {
             boolean sprinting = false;
             float moveForward = Float.NaN;
             float moveStrafe = Float.NaN;
+            ServerTickSample server = null;
             SaveFile.DebugTick d = debug != null && i < debug.size() ? debug.get(i) : null;
             if (d != null) {
                 if (d.pos != null && d.pos.length >= 3) pos = new Vec3dCore(d.pos[0], d.pos[1], d.pos[2]);
@@ -57,6 +59,12 @@ public final class Fixtures {
                 sprinting = d.sprinting;
                 moveForward = d.moveForward != null ? d.moveForward : Float.NaN;
                 moveStrafe = d.moveStrafe != null ? d.moveStrafe : Float.NaN;
+                if (d.serverVel != null && d.serverVel.length >= 3) {
+                    Vec3dCore packet = d.serverPacket != null && d.serverPacket.length >= 3
+                            ? new Vec3dCore(d.serverPacket[0], d.serverPacket[1], d.serverPacket[2]) : null;
+                    server = new ServerTickSample(new Vec3dCore(d.serverVel[0], d.serverVel[1], d.serverVel[2]),
+                            d.serverJump, packet);
+                }
             }
             if (i == seedTick) {
                 if (seed.pos != null && seed.pos.length >= 3) pos = new Vec3dCore(seed.pos[0], seed.pos[1], seed.pos[2]);
@@ -65,7 +73,7 @@ public final class Fixtures {
             }
             boxes.add(new TickState(pos, onGround, sneaking, wallCollision, yaw,
                     Collections.<Vec3dCore>emptyList(), vel, softCollision, collisionAngle,
-                    sprinting, moveForward, moveStrafe));
+                    sprinting, moveForward, moveStrafe, null, Double.NaN, 0, server));
         }
         return boxes;
     }

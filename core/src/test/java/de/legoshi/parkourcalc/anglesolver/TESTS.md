@@ -89,6 +89,18 @@ anglesolver/
                            full polishFromAnchor ladder (perturb 50 reaches the deep basin), the
                            engine-seeded polish beats the j154 witness and holds j1150 feasible,
                            polishFromAnchor bit-identical, center snapping sub-half-bucket across eras
+  DamageTickTest.java      gh-344 per-tick Damage state: the velocity packet after a fall-damage ruling
+                           replaces the carry into the next tick (server x/z replica: the incoming server
+                           velocity plus the server's own sprint-jump boost along the previous tick's facing,
+                           decayed by the server's friction; the packet y and whether the server jumped
+                           come from the paired sim's per-tick ServerTickSample when the boxes carry one
+                           (the sim's server copy can miss a jump or bounce off slime where the client
+                           lands, j344 test1 on 26.3), the jump and sprint inference and the rest y
+                           otherwise; 1/8000 fixed point with the 3.9 clamp up to 1.21.x, the LpVec3
+                           codec from 26.1 on), the tail recompute, the linear model's cut plus packet
+                           constant, the save round trip incl. the debug serverJump / serverPacket fields,
+                           the engine's mask and server seed, the slices; the synthetic capture
+                           synth-damage-reset solves in problems/solve/ and problems/dualrecovery/
   DiskSocpKernelChordTest.java  fast-suite kernel coverage: two-axis ChordRow solves, the hardened
                            IPM jitter ladder, and the weak-duality infeasibility certificate
                            (FAIL_UNBOUNDED) that replaced the old fake-convergence

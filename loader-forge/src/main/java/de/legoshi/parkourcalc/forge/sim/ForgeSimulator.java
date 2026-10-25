@@ -7,6 +7,7 @@ import de.legoshi.parkourcalc.core.sim.ChunkRange;
 import de.legoshi.parkourcalc.core.sim.LazyEntitySimulator;
 import de.legoshi.parkourcalc.core.sim.ServerSimEvent;
 import de.legoshi.parkourcalc.core.sim.StartResumeState;
+import de.legoshi.parkourcalc.core.sim.ServerTickSample;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 import de.legoshi.parkourcalc.forge.McClient;
@@ -89,6 +90,11 @@ public final class ForgeSimulator extends LazyEntitySimulator<SimulatorEntity> {
     @Override
     public List<ServerSimEvent> takeServerSimEvents() {
         return pair == null ? java.util.Collections.<ServerSimEvent>emptyList() : pair.drainEvents();
+    }
+
+    @Override
+    public ServerTickSample getCurrentServerSample() {
+        return pair == null ? null : pair.serverSample();
     }
 
     @Override

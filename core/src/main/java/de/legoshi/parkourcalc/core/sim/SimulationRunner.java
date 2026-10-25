@@ -118,7 +118,8 @@ public final class SimulationRunner {
                 simulator.getCurrentMoveStrafe(),
                 simulator.getCurrentTickMedium(),
                 simulator.getCurrentTickGroundFriction(),
-                simulator.getCurrentTickSoulsandCells()
+                simulator.getCurrentTickSoulsandCells(),
+                simulator.getCurrentServerSample()
         );
     }
 

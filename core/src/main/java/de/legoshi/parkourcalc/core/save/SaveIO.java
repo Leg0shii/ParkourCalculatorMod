@@ -457,6 +457,13 @@ public final class SaveIO {
             d.moveForward = s.moveForward;
             d.moveStrafe = s.moveStrafe;
         }
+        if (s.server != null) {
+            d.serverVel = new double[] { s.server.velocity.x, s.server.velocity.y, s.server.velocity.z };
+            d.serverJump = s.server.jumpedOnPreviousMove;
+            if (s.server.packet != null) {
+                d.serverPacket = new double[] { s.server.packet.x, s.server.packet.y, s.server.packet.z };
+            }
+        }
         return d;
     }
 
@@ -759,6 +766,7 @@ public final class SaveIO {
         out.slipperiness = ov.overridesSlipperiness() ? ov.getSlipperiness().name() : null;
         out.medium = ov.overridesMedium() ? ov.getMedium().name() : null;
         out.soulsandCells = ov.getMedium() == Medium.SOULSAND && ov.getSoulsandCells() > 1 ? ov.getSoulsandCells() : null;
+        out.damage = ov.overridesDamage() ? Boolean.TRUE : null;
         for (PotionDose d : ov.getAdded()) {
             out.added.add(toSaveDose(d));
         }
@@ -780,6 +788,7 @@ public final class SaveIO {
         Medium medium = parseEnumOrNull(Medium.class, src.medium);
         if (medium != null && medium != Medium.NONE) dst.setMedium(medium);
         if (src.soulsandCells != null && dst.getMedium() == Medium.SOULSAND) dst.setSoulsandCells(src.soulsandCells);
+        if (src.damage != null && src.damage) dst.setDamage(true);
         if (src.added != null) {
             for (SaveFile.Dose d : src.added) {
                 PotionDose dose = toDose(d);

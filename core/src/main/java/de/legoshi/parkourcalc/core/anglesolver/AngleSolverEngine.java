@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.core.anglesolver;
 
+import de.legoshi.parkourcalc.core.sim.ServerTickSample;
 import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.BoxController;
@@ -737,10 +738,22 @@ public final class AngleSolverEngine {
         float[] forwardIn = new float[numTicks];
         float[] strafeIn = new float[numTicks];
         boolean[] sprintArr = new boolean[numTicks];
+        boolean[] damage = new boolean[numTicks];
+        boolean[] serverJump = new boolean[numTicks];
+        double[] packetY = new double[numTicks];
+        boolean anyDamage = false;
+        boolean anyServerJumpFlag = false;
         boolean deriveAny = false;
         for (int k = 0; k < numTicks; k++) {
             int t = startTick + k;
             InputRow row = rows.get(t);
+            damage[k] = effDamage(t);
+            anyDamage |= damage[k];
+            TickState next = boxes.getState(t + 1);
+            ServerTickSample server = next != null ? next.server : null;
+            anyServerJumpFlag |= server != null && server.hasJumpFlag();
+            serverJump[k] = server != null && server.jumped();
+            packetY[k] = server != null && server.packet != null ? server.packet.y : Double.NaN;
             boolean deriveSprint = effSprint(t) == AngleSolverState.SprintMode.DERIVE;
             deriveAny |= deriveSprint;
             boolean jumpRow = row.isKeyActive(InputRow.Key.JUMP);
@@ -806,6 +819,10 @@ public final class AngleSolverEngine {
         phys.forwardInputPerTick = forwardIn;
         phys.strafeInputPerTick = strafeIn;
         phys.sprintPerTick = sprintArr;
+        phys.damagePerTick = anyDamage ? damage : null;
+        phys.incomingServerVelocity = seed.server != null ? seed.server.velocity : null;
+        phys.serverJumpPerTick = anyServerJumpFlag ? serverJump : null;
+        phys.packetYPerTick = anyServerJumpFlag ? packetY : null;
         phys.liveMovementFactor = modernCollision;
         phys.incomingSprint = effSprint(startTick) == AngleSolverState.SprintMode.DERIVE
                 ? (seed.hasMovementSample() ? seed.sprinting : Boolean.TRUE)
@@ -1701,6 +1718,11 @@ public final class AngleSolverEngine {
         StateOverride ov = overrideAt(tick);
         if (ov != null && ov.overridesMedium()) return ov.getMedium();
         return Medium.NONE;
+    }
+
+    private boolean effDamage(int tick) {
+        StateOverride ov = overrideAt(tick);
+        return ov != null && ov.isDamage();
     }
 
     private int effSoulsandCells(int tick) {

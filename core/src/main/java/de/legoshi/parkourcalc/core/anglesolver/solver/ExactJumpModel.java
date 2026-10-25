@@ -60,6 +60,7 @@ public final class ExactJumpModel implements ForwardModel {
     private final boolean foldedInputRad;
     private final boolean floatSprintBoost;
     private final boolean byteAmplifier;
+    private final VelocityPacketCodec velocityCodec;
 
     public ExactJumpModel(double inertiaThreshold, boolean perAxisInertia, boolean modern) {
         this(inertiaThreshold, perAxisInertia, modern, false);
@@ -81,6 +82,13 @@ public final class ExactJumpModel implements ForwardModel {
 
     public ExactJumpModel(double inertiaThreshold, boolean perAxisInertia, boolean modern, boolean sine262,
                           boolean foldedInputRad, boolean floatSprintBoost, boolean byteAmplifier) {
+        this(inertiaThreshold, perAxisInertia, modern, sine262, foldedInputRad, floatSprintBoost, byteAmplifier,
+                VelocityPacketCodec.FIXED_POINT);
+    }
+
+    public ExactJumpModel(double inertiaThreshold, boolean perAxisInertia, boolean modern, boolean sine262,
+                          boolean foldedInputRad, boolean floatSprintBoost, boolean byteAmplifier,
+                          VelocityPacketCodec velocityCodec) {
         this.inertiaThreshold = inertiaThreshold;
         this.perAxisInertia = perAxisInertia;
         this.modern = modern;
@@ -88,15 +96,25 @@ public final class ExactJumpModel implements ForwardModel {
         this.foldedInputRad = foldedInputRad;
         this.floatSprintBoost = floatSprintBoost;
         this.byteAmplifier = byteAmplifier;
+        this.velocityCodec = velocityCodec == null ? VelocityPacketCodec.FIXED_POINT : velocityCodec;
     }
 
     public ExactJumpModel withByteAmplifier(boolean byteAmplifier) {
         return new ExactJumpModel(inertiaThreshold, perAxisInertia, modern, sine262, foldedInputRad, floatSprintBoost,
-                byteAmplifier);
+                byteAmplifier, velocityCodec);
+    }
+
+    public ExactJumpModel withVelocityCodec(VelocityPacketCodec codec) {
+        return new ExactJumpModel(inertiaThreshold, perAxisInertia, modern, sine262, foldedInputRad, floatSprintBoost,
+                byteAmplifier, codec);
     }
 
     public boolean byteAmplifier() {
         return byteAmplifier;
+    }
+
+    public VelocityPacketCodec velocityCodec() {
+        return velocityCodec;
     }
 
     private float tableSin(float rad) {
@@ -151,7 +169,8 @@ public final class ExactJumpModel implements ForwardModel {
      *  players (the modern default here): combined-XZ |v|^2 &lt; 9.0E-6. Year-versioned MC (26.x
      *  onward) additionally runs the rewritten double-indexed sine lookup. */
     public static ExactJumpModel forMcVersion(String mcVersion) {
-        return eraModel(mcVersion).withByteAmplifier(MovementEffect.wrapsAmplifier(mcVersion));
+        return eraModel(mcVersion).withByteAmplifier(MovementEffect.wrapsAmplifier(mcVersion))
+                .withVelocityCodec(VelocityPacketCodec.forMcVersion(mcVersion));
     }
 
     private static ExactJumpModel eraModel(String mcVersion) {
@@ -222,6 +241,8 @@ public final class ExactJumpModel implements ForwardModel {
         double[] posX = path.posX, posY = path.posY, posZ = path.posZ;
         double[] velX = path.velX, velY = path.velY, velZ = path.velZ;
         double thr = inertiaThreshold;
+        int lastDamage = scenario.lastDamageTick();
+        double[] server = lastDamage >= from ? serverCarry(scenario, yawAbsDeg, from) : null;
 
         for (int t = from; t < n; t++) {
             double vx = velX[t];
@@ -432,6 +453,54 @@ public final class ExactJumpModel implements ForwardModel {
                 velZ[t + 1] = vz * (double) f4;
                 velY[t + 1] = (vy - Constants.GRAVITY) * (double) Constants.Y_DRAG_F;
             }
+
+            if (server != null && t <= lastDamage) {
+                serverImpulse(scenario, yawAbsDeg, t, server);
+                if (scenario.damageAt(t)) {
+                    Vec3dCore packet = velocityCodec.quantize(new Vec3dCore(server[0], scenario.packetYOrRestAt(t), server[1]));
+                    velX[t + 1] = packet.x;
+                    velY[t + 1] = packet.y;
+                    velZ[t + 1] = packet.z;
+                }
+                serverTravel(scenario, t, server);
+            }
         }
+    }
+
+    public double[] serverCarry(JumpPhysicsInputs scenario, double[] yawAbsDeg, int upTo) {
+        double[] server = {scenario.incomingServerX(), scenario.incomingServerZ()};
+        for (int t = 0; t < upTo; t++) {
+            serverImpulse(scenario, yawAbsDeg, t, server);
+            serverTravel(scenario, t, server);
+        }
+        return server;
+    }
+
+    private void serverImpulse(JumpPhysicsInputs scenario, double[] yawAbsDeg, int t, double[] server) {
+        if (!scenario.serverBoostAt(t)) return;
+        float yawPrev = t > 0 ? (float) yawAbsDeg[t - 1] : scenario.startYaw;
+        float fj = yawPrev * (float) (Math.PI / 180.0);
+        if (modern && !floatSprintBoost) {
+            server[0] += -tableSin(fj) * 0.2;
+            server[1] += tableCos(fj) * 0.2;
+        } else {
+            server[0] -= tableSin(fj) * 0.2F;
+            server[1] += tableCos(fj) * 0.2F;
+        }
+    }
+
+    private void serverTravel(JumpPhysicsInputs scenario, int t, double[] server) {
+        double sx = server[0];
+        double sz = server[1];
+        if (perAxisInertia) {
+            if (Math.abs(sx) < inertiaThreshold) sx = 0.0;
+            if (Math.abs(sz) < inertiaThreshold) sz = 0.0;
+        } else if (sx * sx + sz * sz < COMBINED_INERTIA_SQ) {
+            sx = 0.0;
+            sz = 0.0;
+        }
+        float f = scenario.serverFrictionAt(t);
+        server[0] = sx * (double) f;
+        server[1] = sz * (double) f;
     }
 }

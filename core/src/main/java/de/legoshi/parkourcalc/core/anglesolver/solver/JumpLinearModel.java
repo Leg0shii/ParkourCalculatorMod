@@ -46,6 +46,13 @@ public final class JumpLinearModel {
     private final int[][] zNext;
     private final int[] zFirst;
 
+    private final int[] dmgTicks;
+    private final int[] dmgCut;
+    private final double[] fsPre;
+    private final double[][] packetConst;
+    private final int[] boostFrom;
+    private final double[] boostGain;
+
     /** One wall compiled to {@code a·(Σ_s coef[s]·u_s) ≤ bPrime}, normalized so feasible == satisfied.
      *  {@code a} is the unit axis (X or Z); {@code coef[s]} is the friction coupling C(s,τ) with the
      *  GE/LE sign folded in. An equality keeps a free (sign-unconstrained) multiplier. */
@@ -125,6 +132,87 @@ public final class JumpLinearModel {
             zNext[a] = nx;
             zFirst[a] = next;
         }
+        int lastDamage = scenario.lastDamageTick();
+        int count = 0;
+        for (int d = 0; d <= lastDamage; d++) if (scenario.damageAt(d) && d + 1 < n) count++;
+        this.dmgTicks = new int[count];
+        int di = 0;
+        for (int d = 0; d <= lastDamage; d++) if (scenario.damageAt(d) && d + 1 < n) dmgTicks[di++] = d;
+        this.dmgCut = new int[n + 1];
+        int cut = n + 1;
+        for (int t = n; t >= 0; t--) {
+            dmgCut[t] = cut;
+            if (t > 0 && scenario.damageAt(t - 1)) cut = t;
+        }
+        this.fsPre = new double[n + 1];
+        fsPre[0] = 1.0;
+        for (int t = 0; t < n; t++) fsPre[t + 1] = fsPre[t] * (double) scenario.serverFrictionAt(t);
+        this.packetConst = new double[2][count];
+        double seedX = scenario.incomingServerX();
+        double seedZ = scenario.incomingServerZ();
+        double boost0X = 0.0;
+        double boost0Z = 0.0;
+        if (count > 0 && scenario.serverBoostAt(0)) {
+            float fj = scenario.startYaw * (float) (Math.PI / 180.0);
+            boost0X = -StrictMath.sin((double) fj) * 0.2;
+            boost0Z = StrictMath.cos((double) fj) * 0.2;
+        }
+        for (int i = 0; i < count; i++) {
+            int d = dmgTicks[i];
+            packetConst[0][i] = (seedX + boost0X) * fsPre[d];
+            packetConst[1][i] = (seedZ + boost0Z) * fsPre[d];
+        }
+        this.boostFrom = new int[n];
+        this.boostGain = new double[n];
+        for (int t = 0; t < n; t++) {
+            boostFrom[t] = -1;
+            int tau = t + 1;
+            if (count == 0 || tau > lastDamage || !scenario.serverBoostAt(tau) || mMag[t] <= 0.0) continue;
+            boostFrom[t] = tau;
+            boostGain[t] = 0.2 * pConst[t] / (mMag[t] * mMag[t]);
+        }
+    }
+
+    private int zeroAtOrAfter(int axis, int t) {
+        if (t >= n) return n + 1;
+        return zero[axis] != null && zero[axis][t] ? t : zNext[axis][t];
+    }
+
+    private int packetEnd(int axis, int d, int k) {
+        int end = dmgCut[d + 1];
+        if (axis >= 0) {
+            int z = zeroAtOrAfter(axis, d + 1);
+            if (z < end) end = z;
+        }
+        return k < end ? k : end;
+    }
+
+    private double boostCoupling(int axis, int s, int k) {
+        int tau = boostFrom[s];
+        double c = 0.0;
+        for (int i = 0; i < dmgTicks.length; i++) {
+            int d = dmgTicks[i];
+            if (d < tau) continue;
+            if (d + 1 >= k) break;
+            int end = packetEnd(axis, d, k);
+            c += boostGain[s] * (fsPre[d] / fsPre[tau]) * (sPre[end] - sPre[d + 1]) / fPre[d + 1];
+        }
+        return c;
+    }
+
+    private double packetConstPos(int axis, int k) {
+        double p = 0.0;
+        for (int i = 0; i < dmgTicks.length; i++) {
+            int d = dmgTicks[i];
+            if (d + 1 >= k) break;
+            int end = packetEnd(axis, d, k);
+            p += packetConst[axis][i] * (sPre[end] - sPre[d + 1]) / fPre[d + 1];
+        }
+        return p;
+    }
+
+    public boolean hasDamage() {
+        return dmgTicks.length > 0;
     }
 
     private void precompute() {
@@ -207,14 +295,21 @@ public final class JumpLinearModel {
     /** Friction coupling C(s,k): the coefficient of input {@code u_s} in {@code pos_k} (0 for s &gt;= k). */
     public double coef(int s, int k) {
         if (s >= k) return 0.0;
-        return (sPre[k] - sPre[s]) / fPre[s];
+        int stop = dmgCut[s];
+        int end = k < stop ? k : stop;
+        double c = (sPre[end] - sPre[s]) / fPre[s];
+        if (boostFrom[s] >= 0) c += boostCoupling(-1, s, k);
+        return c;
     }
 
     public double coefAxis(int axis, int s, int k) {
         if (s >= k) return 0.0;
         int stop = zNext[axis][s];
+        if (dmgCut[s] < stop) stop = dmgCut[s];
         int end = k < stop ? k : stop;
-        return (sPre[end] - sPre[s]) / fPre[s];
+        double c = (sPre[end] - sPre[s]) / fPre[s];
+        if (boostFrom[s] >= 0) c += boostCoupling(axis, s, k);
+        return c;
     }
 
     /** Constant part of {@code pos_k} on the given axis: start position plus decayed initial velocity. */
@@ -223,7 +318,10 @@ public final class JumpLinearModel {
         double p0 = box != null ? (axis == 0 ? box.px : box.pz) : (axis == 0 ? sc.startPos.x : sc.startPos.z);
         double v0 = box != null ? (axis == 0 ? box.vx : box.vz) : (axis == 0 ? sc.initialVelocity.x : sc.initialVelocity.z);
         int end = k < zFirst[axis] ? k : zFirst[axis];
-        return p0 + v0 * sPre[end];
+        if (dmgCut[0] < end) end = dmgCut[0];
+        double p = p0 + v0 * sPre[end];
+        if (dmgTicks.length > 0) p += packetConstPos(axis, k);
+        return p;
     }
 
     public double objectiveConst(Objective obj) {

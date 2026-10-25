@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.core.ports;
 
+import de.legoshi.parkourcalc.core.anglesolver.solver.VelocityPacketCodec;
 import de.legoshi.parkourcalc.core.sim.AABB;
 import de.legoshi.parkourcalc.core.sim.BlockHit;
 import de.legoshi.parkourcalc.core.sim.CollisionRayTrace;
@@ -58,6 +59,10 @@ public interface MinecraftAccess {
     }
 
     double getInsideBlockInset();
+
+    default VelocityPacketCodec velocityPacketCodec() {
+        return VelocityPacketCodec.FIXED_POINT;
+    }
 
     default AABB getCobwebContactBox(int x, int y, int z) {
         if (!isCobweb(x, y, z)) return null;

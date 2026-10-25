@@ -1,9 +1,11 @@
 package de.legoshi.parkourcalc.fabric;
 
+import de.legoshi.parkourcalc.core.anglesolver.solver.VelocityPacketCodec;
 import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
 import de.legoshi.parkourcalc.core.sim.AABB;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.fabric.input.FabricInput;
+import de.legoshi.parkourcalc.fabric.sim.paired.PairedServerSim;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Camera;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -112,6 +114,14 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
         ClientLevel world = Minecraft.getInstance().level;
         if (world == null) return false;
         return world.getBlockState(new BlockPos(x, y, z)).is(Blocks.COBWEB);
+    }
+
+    @Override
+    public VelocityPacketCodec velocityPacketCodec() {
+        return v -> {
+            Vec3 q = PairedServerSim.quantizeVelocity(new Vec3(v.x, v.y, v.z));
+            return new Vec3dCore(q.x, q.y, q.z);
+        };
     }
 
     @Override
