@@ -244,8 +244,9 @@ public final class NodeHelp {
                 + " landing; it may give back part of the offset past the goal wall for a smoother turn."
                 + " Returns the path unchanged when nothing improves.");
         param("smooth", "giveBack", "How much of the offset past the goal wall the smoothing may trade,"
-                + " 0 to 1. 1 lets it land anywhere past the wall, 0 keeps the objective where it is."
-                + " Without a goal wall on the objective axis the hard constraints alone bound it.");
+                + " 0 to 1. 1 lets it land anywhere past the wall, 0 keeps the objective value at the goal"
+                + " tick; every other tick may still move within the constraints. Without a goal wall on"
+                + " the objective axis the hard constraints alone bound it.");
         param("smooth", "reserveFraction", "The share of the whole solve time held back for the smoothing,"
                 + " which is also how long it may run. With no overall solve time it gets a fixed 0.4 s.");
         param("smooth", "reserveCapSec", "The most seconds the smoothing may take. 0 means no cap.");

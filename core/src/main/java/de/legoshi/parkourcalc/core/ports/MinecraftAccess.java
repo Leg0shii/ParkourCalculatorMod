@@ -115,6 +115,10 @@ public interface MinecraftAccess {
     /** Current state of the left mouse button (true while held). */
     boolean isMousePressedLeft();
 
+    default boolean isSelectTickPressed() {
+        return isMousePressedLeft();
+    }
+
     /** Current state of the right mouse button (true while held). */
     boolean isMousePressedRight();
 

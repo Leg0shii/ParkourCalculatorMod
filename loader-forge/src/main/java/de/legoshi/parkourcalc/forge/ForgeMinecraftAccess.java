@@ -260,6 +260,11 @@ public final class ForgeMinecraftAccess implements MinecraftAccess {
     }
 
     @Override
+    public boolean isSelectTickPressed() {
+        return ForgeParkourCalculator.isSelectTickDown();
+    }
+
+    @Override
     public boolean isMousePressedRight() {
         return Lwjgl2InputState.isMousePressedRight();
     }

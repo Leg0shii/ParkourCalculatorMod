@@ -687,7 +687,7 @@ public final class Application {
         selectController.tick(
                 mc.getEyePosition(),
                 mc.getLookDirection(),
-                mc.isMousePressedLeft(),
+                mc.isSelectTickPressed(),
                 mc.getCursorScreenX(),
                 mc.getCursorScreenY(),
                 pathInert
