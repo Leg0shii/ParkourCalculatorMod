@@ -94,15 +94,16 @@ public final class SenseFinderWindow implements RenderInterface {
     private static final float MIN_H = 300f;
     private static final String SEARCH_TIP = "Round the solved turn to whole mouse pixels at every sense in the range"
             + " and list the pixel counts that still land.";
-    private static final String TICKS_TIP = "Turn ticks whose landing target is measured. The Margin column sums"
-            + " their targets; leave out the last ticks when they are nearly free.";
+    private static final String TICKS_TIP = "Turn ticks whose turn range is measured. The Margin column sums"
+            + " their turn ranges; leave out the last ticks when they are nearly free.";
     private static final String APPLY = "Apply";
     private static final String APPLY_TIP = "Set your game sense to the selected row's sense.";
     private static final String COL_SENSE = "Sense";
     private static final String COL_OFFSET = "Offset";
     private static final String COL_MARGIN = "Margin";
-    private static final String MARGIN_TIP = "The pixel counts that still land at this tick while the rest of the jump"
-            + " adapts. Hover a cell for the turn and the landing target. Orange is the row's smallest target.";
+    private static final String MARGIN_TIP = "The turn range: the pixel counts you can turn at this tick and still make"
+            + " the jump while the rest adapts. Hover a cell for its width in degrees and the row's own turn. Orange is"
+            + " the row's narrowest turn range.";
 
     private final Host host;
     private final Settings settings;
@@ -368,13 +369,25 @@ public final class SenseFinderWindow implements RenderInterface {
         ImGui.text(!c.scoped[k] ? " " : c.hasMargin(k) ? rangeText(c.landingRange(k)) : "...");
         if (weakest) ThemeManager.popTextColor();
         if (!ImGui.isItemHovered()) return;
-        String turn = String.format(Locale.ROOT, "Turn: %d px, %.2f°", c.pixels[k], c.turnDeg(k));
-        if (!c.hasMargin(k)) {
-            TooltipUtil.wrappedTooltip(turn);
-            return;
+        ImGui.beginTooltip();
+        if (ImGui.beginTable("##cell_tip", 3)) {
+            if (c.hasMargin(k)) tipRow("Turn range", rangeText(c.landingRange(k)) + " px", marginText(c.target(k)));
+            tipRow("Turn", c.pixels[k] + " px", String.format(Locale.ROOT, "%.2f°", c.turnDeg(k)));
+            ImGui.endTable();
         }
-        TooltipUtil.wrappedTooltip(String.format(Locale.ROOT, "Landing pixels: %s (%d)\n%s\nLanding target: %s",
-                rangeText(c.landingRange(k)), c.landingPixels(k), turn, marginText(c.target(k))));
+        ImGui.endTooltip();
+    }
+
+    private static void tipRow(String label, String pixels, String degrees) {
+        ImGui.tableNextRow();
+        ImGui.tableSetColumnIndex(0);
+        ThemeManager.pushTextColor(ThemeManager.textMutedColor());
+        ImGui.text(label);
+        ThemeManager.popTextColor();
+        ImGui.tableSetColumnIndex(1);
+        ImGui.text(pixels);
+        ImGui.tableSetColumnIndex(2);
+        ImGui.text(degrees);
     }
 
     private static String rangeText(long[] range) {

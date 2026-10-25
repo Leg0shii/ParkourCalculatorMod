@@ -30,8 +30,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 public final class SenseFinder {
 
     public enum Mode {
-        MARGIN("Margin", "Sum of the row's landing targets over the tick range in degrees (landing pixel counts times"
-                + " the pixel size), widest first"),
+        MARGIN("Margin", "Sum of the row's turn ranges over the tick range in degrees (the pixel counts that still"
+                + " make the jump times the pixel size), widest first"),
         SENSE("Sense", "Highest sense first"),
         FURTHEST("Offset", "Largest landing offset first");
 
