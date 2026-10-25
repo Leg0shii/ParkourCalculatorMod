@@ -63,6 +63,10 @@ public final class StratfinderWindow implements RenderInterface {
 
         void setPlayable(boolean value);
 
+        boolean gpuScreening();
+
+        void setGpuScreening(boolean value);
+
         double offsetOf(NoTurnResult result);
 
         String goalWallLabel();
@@ -98,6 +102,10 @@ public final class StratfinderWindow implements RenderInterface {
     private static final String HUMAN_YAWS_TIP = "Solve the yaws for a human: aim for clearance instead of the last"
             + " fraction of distance, then straighten the turn so it never flicks out and back. Lines stay byte-exact and"
             + " still land; results with fewer turn reversals rank first. Off: hug the objective like the angle solver.";
+    public static final String GPU_TIP = "Screens the Stratfinder's key schedules on the graphics card through"
+            + " OpenCL instead of the CPU. Needs an OpenCL runtime (any NVIDIA or AMD driver on Windows). The CPU still"
+            + " certifies every line byte-exactly; when the GPU cannot be used the search falls back to the CPU and the"
+            + " Stratfinder window says so.";
     private static final String INPUTS_TIP = "Input changes a player makes: key presses and releases across the"
             + " run-up (including the first press and the air hold) plus sprint toggles. A key change on a jump"
             + " tick is free: space is the cue to release the strafe (WAD). Lower is easier.\n\nClick to sort easiest"
@@ -182,6 +190,11 @@ public final class StratfinderWindow implements RenderInterface {
         if (Controls.checkbox("Human yaws", host.playable())) host.setPlayable(!host.playable());
         if (busy) ImGui.endDisabled();
         TooltipUtil.onHover(HUMAN_YAWS_TIP);
+        ImGui.sameLine();
+        if (busy) ImGui.beginDisabled(true);
+        if (Controls.checkbox("GPU", host.gpuScreening())) host.setGpuScreening(!host.gpuScreening());
+        if (busy) ImGui.endDisabled();
+        TooltipUtil.onHover(GPU_TIP);
         ImGui.sameLine();
         boolean any = !host.results().isEmpty();
         int todo = host.unoptimizedCount();
