@@ -1,6 +1,7 @@
 package de.legoshi.parkourcalc.anglesolver.checks;
 
 import de.legoshi.parkourcalc.anglesolver.harness.ProblemFixture;
+import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.SolveResult;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardPath;
@@ -27,6 +28,7 @@ final class StrafeSideCheck implements ProblemCheck {
     public void run(ProblemFixture pf) {
         String name = pf.name;
         ProblemFixture.Rig rig = pf.rig();
+        rig.state.setStrafeSide(AngleSolverState.StrafeSide.BOTH);
         ProblemFixture.Run run = rig.solve(SolveCheck.timeout(pf));
         SolveResult r = run.result;
         assertNotNull(name + ": no result after solve", r);
@@ -87,6 +89,32 @@ final class StrafeSideCheck implements ProblemCheck {
                         Angles.wrapDelta(abs - realized[k]), 1e-3);
             }
             prev = abs;
+        }
+        oneSide(pf, AngleSolverState.StrafeSide.A);
+        oneSide(pf, AngleSolverState.StrafeSide.D);
+    }
+
+    private static void oneSide(ProblemFixture pf, AngleSolverState.StrafeSide side) {
+        String name = pf.name + " on " + side.label;
+        ProblemFixture.Rig rig = pf.rig();
+        rig.state.setStrafeSide(side);
+        ProblemFixture.Run run = rig.solve(SolveCheck.timeout(pf));
+        SolveResult r = run.result;
+        assertNotNull(name + ": no result after solve", r);
+        assertTrue(name + ": solver met " + r.getMet() + "/" + r.getTotal() + " constraints", r.isSuccess());
+        assertEquals(name + ": no strafe side pass on one side", null, r.getStrafeSides());
+        JumpPhysicsInputs sc = run.engine.lastSpecDebug().asScenario();
+        assertEquals(name + ": scenario side", side == AngleSolverState.StrafeSide.D ? -1 : 1, sc.strafeSign);
+        rig.engine.apply();
+        List<InputRow> rows = rig.inputs.getRows();
+        int startTick = r.getStartTick() - 1;
+        for (int k = 0; k < sc.numTicks; k++) {
+            if (!sc.strafeAt(k)) continue;
+            InputRow row = rows.get(startTick + k);
+            assertEquals(name + ": A at T" + (startTick + k + 1), side == AngleSolverState.StrafeSide.A,
+                    row.isKeyActive(InputRow.Key.A));
+            assertEquals(name + ": D at T" + (startTick + k + 1), side == AngleSolverState.StrafeSide.D,
+                    row.isKeyActive(InputRow.Key.D));
         }
     }
 }

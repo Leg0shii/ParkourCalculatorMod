@@ -333,6 +333,7 @@ public final class AngleSolverEngine {
         final JumpConstraint legalGoal;
         final SolverGraph graph;
         final boolean freeStartYaw;
+        final boolean bothStrafeSides;
         double[] incumbentYaws;
         Vec3dCore incumbentStart;
         Job legalFallback;
@@ -340,14 +341,14 @@ public final class AngleSolverEngine {
         Job withDeadline(long deadlineNanos) {
             return new Job(spec, sense, startTick, landingTick, numTicks, strafeMask, force45Mask, uiConstraints,
                     deadlineNanos, longRun, useWindowSolver, stopOnFeasible, ilsExhaustive, legalGoal, graph,
-                    freeStartYaw);
+                    freeStartYaw, bothStrafeSides);
         }
 
         Job(JumpSpec spec, Objective.Sense sense, int startTick, int landingTick,
             int numTicks, boolean[] strafeMask, boolean[] force45Mask, List<ConstraintAt> uiConstraints,
             long deadlineNanos, LongRunSolver.LongRunConfig longRun, boolean useWindowSolver,
             boolean stopOnFeasible, boolean ilsExhaustive, JumpConstraint legalGoal, SolverGraph graph,
-            boolean freeStartYaw
+            boolean freeStartYaw, boolean bothStrafeSides
         ) {
             this.spec = spec;
             this.sense = sense;
@@ -365,6 +366,7 @@ public final class AngleSolverEngine {
             this.legalGoal = legalGoal;
             this.graph = graph;
             this.freeStartYaw = freeStartYaw;
+            this.bothStrafeSides = bothStrafeSides;
         }
     }
 
@@ -464,10 +466,11 @@ public final class AngleSolverEngine {
         if (legalGoal != null && !legalWallHard) constraints.remove(legalGoal);
         SolverGraph graph = graphOverride != null ? graphOverride : GraphFactory.forState(state, effort);
         JumpSpec spec = new JumpSpec(ph.inputs, constraints, objective);
+        boolean bothStrafeSides = state.getStrafeSide() == AngleSolverState.StrafeSide.BOTH;
         Job job = new Job(spec, objective.sense, startTick, landingTick, numTicks, ph.strafeMask,
                 ph.force45Mask, uiCons,
                 deadlineNanosFor(state, effort), longRunConfigFor(state, effort), useWindowSolverFor(state, effort),
-                stopOnFeasible, ilsExhaustiveFor(state, effort), legalGoal, graph, freeStartYaw);
+                stopOnFeasible, ilsExhaustiveFor(state, effort), legalGoal, graph, freeStartYaw, bothStrafeSides);
         if (legalWallHard) {
             List<JumpConstraint> reduced = new ArrayList<>(constraints);
             reduced.remove(legalGoal);
@@ -476,7 +479,7 @@ public final class AngleSolverEngine {
                     ph.strafeMask, ph.force45Mask, uiCons,
                     deadlineNanosFor(state, effort), longRunConfigFor(state, effort),
                     useWindowSolverFor(state, effort), stopOnFeasible, ilsExhaustiveFor(state, effort),
-                    legalGoal, graph, freeStartYaw);
+                    legalGoal, graph, freeStartYaw, bothStrafeSides);
         }
         return job;
     }
@@ -785,6 +788,7 @@ public final class AngleSolverEngine {
         phys.jumpTick = jumpTickRel;
         phys.jumpPerTick = jumpMask;
         phys.strafePerTick = strafeMask;
+        phys.strafeSign = state.getStrafeSide() == AngleSolverState.StrafeSide.D ? -1 : 1;
         phys.speedAmplifier = speedAmp;
         phys.slownessAmplifier = slowAmp;
         phys.slipPerTick = slipPerTick;
@@ -1188,6 +1192,7 @@ public final class AngleSolverEngine {
 
     private StrafeSideRealization realizeStrafeSides(Job job, JumpSpec spec, double[] yaws, double[] gameFacings,
                                                      ForwardPath path) {
+        if (!job.bothStrafeSides) return null;
         if (JumpConstraintCompiler.compile(spec).maxViolation(gameFacings, path) > FEAS_TOL) return null;
         return StrafeSideRealization.realize(model, spec, yaws, path, job.freeStartYaw, FEAS_TOL, !job.stopOnFeasible);
     }

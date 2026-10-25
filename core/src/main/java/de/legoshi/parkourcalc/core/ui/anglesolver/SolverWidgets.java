@@ -130,6 +130,27 @@ public final class SolverWidgets {
 
     /** Segmented control with an optional per-segment hover tooltip; null array or null entries show none. */
     public static int segmented(String id, String[] labels, String[] tooltips, int selected, float fillWidth) {
+        return segmented(id, labels, tooltips, selected, fillWidth, -1);
+    }
+
+    public static final int DROPDOWN_CLICKED = -2;
+    private static float dropdownLeft;
+    private static float dropdownBottom;
+
+    public static float dropdownLeft() {
+        return dropdownLeft;
+    }
+
+    public static float dropdownBottom() {
+        return dropdownBottom;
+    }
+
+    public static float dropdownArrowWidth() {
+        return ImGui.getFrameHeight();
+    }
+
+    public static int segmented(String id, String[] labels, String[] tooltips, int selected, float fillWidth,
+                                int dropdownIndex) {
         float scale = s();
         float h = ImGui.getFrameHeight();
         ImDrawList dl = ImGui.getWindowDrawList();
@@ -145,14 +166,30 @@ public final class SolverWidgets {
         ImGui.pushID(id);
         for (int i = 0; i < labels.length; i++) {
             float w = segW > 0f ? segW : ImGui.calcTextSize(labels[i]).x + 2f * SEG_PAD_X * scale;
+            boolean dropdown = i == dropdownIndex;
+            float arrowW = dropdown ? dropdownArrowWidth() : 0f;
+            if (segW <= 0f) w += arrowW;
             if (i > 0) ImGui.sameLine(0, 0);
-            if (ImGui.invisibleButton("seg" + i, w, h)) clicked = i;
+            if (ImGui.invisibleButton("seg" + i, w - arrowW, h)) clicked = i;
             ImVec2 mn = ImGui.getItemRectMin();
             ImVec2 mx = ImGui.getItemRectMax();
-            if (i == 0) { left = mn.x; top = mn.y; bottom = mx.y; }
-            right = mx.x;
             boolean on = i == selected;
             boolean hover = ImGui.isItemHovered();
+            if (dropdown) {
+                ImGui.sameLine(0, 0);
+                if (ImGui.invisibleButton("seg" + i + "arrow", arrowW, h)) clicked = DROPDOWN_CLICKED;
+                ImVec2 amn = ImGui.getItemRectMin();
+                ImVec2 amx = ImGui.getItemRectMax();
+                boolean arrowHover = ImGui.isItemHovered();
+                dropdownLeft = amn.x;
+                dropdownBottom = amx.y;
+                int arrowFill = on ? onBg : (arrowHover ? ThemeManager.accentTintColor(0.18f) : offBg);
+                dl.addRectFilled(amn.x, amn.y, amx.x, amx.y, arrowFill, 0f);
+                dl.addLine(amn.x, amn.y, amn.x, amx.y, border, 1f);
+                triangleDown(dl, (amn.x + amx.x) * 0.5f, (amn.y + amx.y) * 0.5f, 4f * scale, on ? onText : offText);
+            }
+            if (i == 0) { left = mn.x; top = mn.y; bottom = mx.y; }
+            right = mx.x + arrowW;
             if (hover && tooltips != null && i < tooltips.length && tooltips[i] != null) {
                 ImGui.setTooltip(tooltips[i]);
             }

@@ -204,6 +204,7 @@ public final class SaveIO {
         applyCustomBudget(a.customBudget, state.getSolveBudget());
         state.setGraphPresetName(a.graphPreset);
         state.setDefaultInputs(parseEnum(AngleSolverState.InputMode.class, a.defaultInputs, AngleSolverState.InputMode.FORCE_45));
+        state.setStrafeSide(parseEnum(AngleSolverState.StrafeSide.class, a.strafeSide, AngleSolverState.StrafeSide.A));
         state.setDefaultSprint(parseEnum(AngleSolverState.SprintMode.class, a.defaultSprint, AngleSolverState.SprintMode.ALWAYS));
         state.setDefaultSlipperiness(parseEnum(Slipperiness.class, a.defaultSlipperiness, Slipperiness.AIR));
 
@@ -611,6 +612,7 @@ public final class SaveIO {
         a.customBudget = toSaveCustomBudget(s.getSolveBudget());
         a.graphPreset = s.getGraphPresetName();
         a.defaultInputs = s.getDefaultInputs().name();
+        a.strafeSide = s.getStrafeSide() != AngleSolverState.StrafeSide.A ? s.getStrafeSide().name() : null;
         a.defaultSprint = s.getDefaultSprint().name();
         a.defaultSlipperiness = s.getDefaultSlipperiness().name();
         for (Integer tick : s.populatedTicks()) {
