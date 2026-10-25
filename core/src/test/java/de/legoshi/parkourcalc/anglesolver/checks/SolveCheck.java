@@ -35,6 +35,7 @@ final class SolveCheck implements ProblemCheck {
         System.out.printf("SOLVE %-22s success=%s met=%d/%d  %d ms%s%n",
                 name, r.isSuccess(), r.getMet(), r.getTotal(), run.elapsedMs,
                 r.hasObjective() ? String.format("  obj=%.7f", r.getObjectiveValue()) : "");
+        assertMetMatchesSuccess(name, r);
 
         if (e.shouldSolve(pf.file)) {
             assertTrue(name + ": solver met " + r.getMet() + "/" + r.getTotal() + " constraints", r.isSuccess());
@@ -171,5 +172,11 @@ final class SolveCheck implements ProblemCheck {
             throw new IllegalStateException("no tick-" + startTick + " X/Z range box in fixture");
         }
         return new double[]{xLo, xHi, zLo, zHi};
+    }
+
+    private static void assertMetMatchesSuccess(String name, SolveResult r) {
+        if (r.getTotal() > 0 && r.getMet() == r.getTotal()) {
+            assertTrue(name + ": panel shows " + r.getMet() + "/" + r.getTotal() + " met next to No solution", r.isSuccess());
+        }
     }
 }

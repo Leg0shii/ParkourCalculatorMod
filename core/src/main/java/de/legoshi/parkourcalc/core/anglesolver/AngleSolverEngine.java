@@ -1828,10 +1828,10 @@ public final class AngleSolverEngine {
         }
     }
 
-    private boolean satisfied(Constraint c, double found) {
+    public static boolean satisfied(Constraint c, double found) {
         if (c.isRange()) {
-            boolean lo = c.isLoInclusive() ? found >= c.getLo() - MET_TOL : found > c.getLo() - MET_TOL;
-            boolean hi = c.isHiInclusive() ? found <= c.getHi() + MET_TOL : found < c.getHi() + MET_TOL;
+            boolean lo = c.isLoInclusive() ? found >= c.getLo() - FEAS_TOL : found > c.getLo() - FEAS_TOL;
+            boolean hi = c.isHiInclusive() ? found <= c.getHi() + FEAS_TOL : found < c.getHi() + FEAS_TOL;
             return lo && hi;
         }
         double v = c.getValue();
