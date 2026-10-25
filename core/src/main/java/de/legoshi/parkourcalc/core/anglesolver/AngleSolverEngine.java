@@ -1213,6 +1213,11 @@ public final class AngleSolverEngine {
         return pre;
     }
 
+    public static boolean overconstrainedChain(JumpSpec spec, JumpPhysicsInputs sc) {
+        FacingPrefold pre = chainPrefold(spec, sc);
+        return (pre != null && pre.pinnedYaws() != null) || singleHeadingChain(spec, sc, pre);
+    }
+
     private static boolean singleHeadingChain(JumpSpec spec, JumpPhysicsInputs sc, FacingPrefold pre) {
         if (!JumpLinearModel.hasFacingWall(spec.constraints)) return false;
         if (pre != null) return pre.varCount() == 1 && pre.pinnedTicks() == 0;

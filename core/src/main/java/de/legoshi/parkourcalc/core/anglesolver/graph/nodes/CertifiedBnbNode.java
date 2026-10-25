@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.core.anglesolver.graph.nodes;
 
+import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.ConstraintText;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Candidate;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphContext;
@@ -51,6 +52,7 @@ public final class CertifiedBnbNode implements NodeRuntime {
         AtomicBoolean cancelToken = nodeToken;
         if (exhaust) {
             if (optimize || deadlineNanos <= 0 || now >= deadlineNanos) return NodeOutcome.of(miss, in);
+            if (AngleSolverEngine.overconstrainedChain(ctx.spec, ctx.scenario)) return NodeOutcome.of(miss, in);
             cap = OPT_SAFETY_NODE_CAP;
             solveDeadline = deadlineNanos;
         } else if (optimize) {
