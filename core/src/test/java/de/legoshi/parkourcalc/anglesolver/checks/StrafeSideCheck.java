@@ -9,6 +9,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.StrafeSideRealization;
+import de.legoshi.parkourcalc.core.anglesolver.solver.TurnShape;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 
 import java.util.List;
@@ -92,6 +93,48 @@ final class StrafeSideCheck implements ProblemCheck {
         }
         oneSide(pf, AngleSolverState.StrafeSide.A);
         oneSide(pf, AngleSolverState.StrafeSide.D);
+
+        TurnShape onA = smoothedCamera(pf, AngleSolverState.StrafeSide.A);
+        TurnShape onBoth = smoothedCamera(pf, AngleSolverState.StrafeSide.BOTH);
+        System.out.printf("STRAFESIDE %-22s smooth A %s | Both %s%n", name, onA, onBoth);
+        assertFalse(name + ": Smooth on Both (" + onBoth + ") is less smooth than on A (" + onA + ")",
+                onA.betterThan(onBoth));
+    }
+
+    private static TurnShape smoothedCamera(ProblemFixture pf, AngleSolverState.StrafeSide side) {
+        String name = pf.name + " smoothed on " + side.label;
+        ProblemFixture.Rig rig = pf.rig();
+        rig.state.setStrafeSide(side);
+        SolveResult solved = rig.solve(SolveCheck.timeout(pf)).result;
+        assertNotNull(name + ": no result after solve", solved);
+        assertTrue(name + ": the solve did not land", solved.isSuccess());
+        assertTrue(name + ": nothing to smooth", rig.engine.canSmooth());
+        rig.engine.smooth();
+        long deadline = System.currentTimeMillis() + SolveCheck.timeout(pf);
+        while (rig.state.getResult() == null && System.currentTimeMillis() < deadline) {
+            rig.engine.poll();
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+        rig.engine.poll();
+        SolveResult smoothed = rig.state.getResult();
+        assertNotNull(name + ": no smoothed result", smoothed);
+        assertTrue(name + ": smoothing lost the landing", smoothed.isSuccess());
+        JumpPhysicsInputs sc = rig.engine.lastSpecDebug().asScenario();
+        rig.engine.apply();
+        List<InputRow> rows = rig.inputs.getRows();
+        int startTick = smoothed.getStartTick() - 1;
+        double[] camera = new double[sc.numTicks];
+        double prev = sc.startYaw;
+        for (int k = 0; k < camera.length; k++) {
+            InputRow row = rows.get(startTick + k);
+            prev = row.isYawLocked() ? row.getYaw() : prev + row.getYaw();
+            camera[k] = Angles.wrap(prev);
+        }
+        return TurnShape.of(sc.startYaw, camera);
     }
 
     private static void oneSide(ProblemFixture pf, AngleSolverState.StrafeSide side) {
