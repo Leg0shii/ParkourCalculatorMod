@@ -36,7 +36,7 @@ public final class TickState {
     public final double groundFriction;
     public final int soulsandCells;
 
-    public final Vec3dCore serverVelocity;
+    public final ServerTickSample server;
 
     public TickState(Vec3dCore position, boolean onGround, boolean sneaking, boolean wallCollision, float yaw, List<Vec3dCore> subtickPath, Vec3dCore velocity, boolean softCollision, double collisionAngleDegrees) {
         this(position, onGround, sneaking, wallCollision, yaw, subtickPath, velocity, softCollision, collisionAngleDegrees,
@@ -57,7 +57,7 @@ public final class TickState {
 
     public TickState(Vec3dCore position, boolean onGround, boolean sneaking, boolean wallCollision, float yaw, List<Vec3dCore> subtickPath, Vec3dCore velocity, boolean softCollision, double collisionAngleDegrees,
                      boolean sprinting, float moveForward, float moveStrafe, Medium medium, double groundFriction, int soulsandCells,
-                     Vec3dCore serverVelocity) {
+                     ServerTickSample server) {
         this.position = position;
         this.onGround = onGround;
         this.sneaking = sneaking;
@@ -73,7 +73,7 @@ public final class TickState {
         this.medium = medium;
         this.groundFriction = groundFriction;
         this.soulsandCells = soulsandCells;
-        this.serverVelocity = serverVelocity;
+        this.server = server;
     }
 
     /** Whether this state carries the post-tick movement sample (sprint + moveFlying inputs). */

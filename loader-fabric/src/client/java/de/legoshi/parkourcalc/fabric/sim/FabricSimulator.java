@@ -7,6 +7,7 @@ import de.legoshi.parkourcalc.core.sim.ChunkRange;
 import de.legoshi.parkourcalc.core.sim.LazyEntitySimulator;
 import de.legoshi.parkourcalc.core.sim.ServerSimEvent;
 import de.legoshi.parkourcalc.core.sim.StartResumeState;
+import de.legoshi.parkourcalc.core.sim.ServerTickSample;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 import de.legoshi.parkourcalc.core.ui.MovementEffect;
@@ -78,8 +79,8 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
     }
 
     @Override
-    public Vec3dCore getCurrentServerVelocity() {
-        return pair == null ? null : pair.serverVelocity();
+    public ServerTickSample getCurrentServerSample() {
+        return pair == null ? null : pair.serverSample();
     }
 
     @Override

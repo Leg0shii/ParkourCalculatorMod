@@ -457,8 +457,12 @@ public final class SaveIO {
             d.moveForward = s.moveForward;
             d.moveStrafe = s.moveStrafe;
         }
-        if (s.serverVelocity != null) {
-            d.serverVel = new double[] { s.serverVelocity.x, s.serverVelocity.y, s.serverVelocity.z };
+        if (s.server != null) {
+            d.serverVel = new double[] { s.server.velocity.x, s.server.velocity.y, s.server.velocity.z };
+            d.serverJump = s.server.jumpedOnPreviousMove;
+            if (s.server.packet != null) {
+                d.serverPacket = new double[] { s.server.packet.x, s.server.packet.y, s.server.packet.z };
+            }
         }
         return d;
     }

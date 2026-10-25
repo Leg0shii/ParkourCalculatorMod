@@ -448,6 +448,8 @@ public final class LongRunSolver {
         p.forwardInputPerTick = sliceFloat(sc.forwardInputPerTick, a, len, 1.0F * 0.98F);
         p.strafeInputPerTick = sliceFloat(sc.strafeInputPerTick, a, len, 0.0F);
         p.damagePerTick = sliceBool(sc.damagePerTick, a, len);
+        p.serverJumpPerTick = sliceBool(sc.serverJumpPerTick, a, len);
+        p.packetYPerTick = sliceDouble(sc.packetYPerTick, a, len);
         p.incomingServerVelocity = a == 0 ? sc.incomingServerVelocity : null;
         return p;
     }

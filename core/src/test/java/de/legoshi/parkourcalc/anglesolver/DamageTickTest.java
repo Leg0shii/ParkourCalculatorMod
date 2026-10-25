@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.anglesolver;
 
+import de.legoshi.parkourcalc.anglesolver.harness.Fixtures;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.Slipperiness;
@@ -14,6 +15,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.McSineTable;
 import de.legoshi.parkourcalc.core.anglesolver.solver.VelocityPacketCodec;
 import de.legoshi.parkourcalc.core.save.SaveFile;
 import de.legoshi.parkourcalc.core.save.SaveIO;
+import de.legoshi.parkourcalc.core.sim.ServerTickSample;
 import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.BoxController;
@@ -222,7 +224,7 @@ public class DamageTickTest {
             }
             boxes.add(new TickState(new Vec3dCore(0.5, 70.0, 0.5 + 0.2 * t), t <= JUMP || t >= LANDING + 1, false, false, 0f,
                     Collections.<Vec3dCore>emptyList(), Vec3dCore.GROUND_REST_VELOCITY, false, Double.NaN,
-                    true, 0.98F, 0.0F, null, Double.NaN, 0, t == 0 ? serverVel : null));
+                    true, 0.98F, 0.0F, null, Double.NaN, 0, t == 0 ? new ServerTickSample(serverVel, false, null) : null));
         }
         AngleSolverState state = new AngleSolverState();
         state.setStartTick(0);
@@ -259,5 +261,187 @@ public class DamageTickTest {
         JumpPhysicsInputs whole = sc.slice(0, 0.5, 70.0, 0.5, 0.0, 0.0, 0.0, 0f);
         assertNotNull(whole.incomingServerVelocity);
         assertTrue(sc.copy().damageAt(LANDING));
+    }
+    @Test
+    public void recordedServerJumpsReplaceTheInference() {
+        JumpPhysicsInputs inferred = scenario(true);
+        assertTrue(inferred.serverBoostAt(JUMP));
+        JumpPhysicsInputs recorded = scenario(true);
+        recorded.serverJumpPerTick = new boolean[TICKS];
+        recorded.packetYPerTick = new double[TICKS];
+        Arrays.fill(recorded.packetYPerTick, Double.NaN);
+        assertFalse("the sim's server never jumped, so no boost", recorded.serverBoostAt(JUMP));
+        ExactJumpModel model = ExactJumpModel.forMcVersion("1.8.9");
+        ForwardPath noJump = model.forward(recorded, yaws(YAW));
+        assertEquals(0.0, noJump.velX[LANDING + 1], 0.0);
+        assertEquals(0.0, noJump.velZ[LANDING + 1], 0.0);
+        assertEquals(-0.078375, noJump.velY[LANDING + 1], 0.0);
+        recorded.serverJumpPerTick[JUMP] = true;
+        ForwardPath jumped = model.forward(recorded, yaws(YAW));
+        ForwardPath base = model.forward(inferred, yaws(YAW));
+        assertEquals(base.velX[LANDING + 1], jumped.velX[LANDING + 1], 0.0);
+        assertEquals(base.velZ[LANDING + 1], jumped.velZ[LANDING + 1], 0.0);
+        recorded.serverJumpPerTick[JUMP] = false;
+        recorded.serverJumpPerTick[JUMP + 3] = true;
+        assertTrue("a recorded server jump boosts even where the client did not jump", recorded.serverBoostAt(JUMP + 3));
+        recorded.sprintPerTick = new boolean[TICKS];
+        assertFalse("no sprint, no boost", recorded.serverBoostAt(JUMP + 3));
+    }
+
+    @Test
+    public void recordedPacketYRidesTheVersionCodec() {
+        JumpPhysicsInputs sc = scenario(true);
+        sc.serverJumpPerTick = new boolean[TICKS];
+        sc.serverJumpPerTick[JUMP] = true;
+        sc.packetYPerTick = new double[TICKS];
+        Arrays.fill(sc.packetYPerTick, Double.NaN);
+        sc.packetYPerTick[LANDING] = 1.1126;
+        assertEquals(1.1126, sc.packetYAt(LANDING), 0.0);
+        assertTrue(Double.isNaN(sc.packetYAt(LANDING - 1)));
+        assertEquals(Vec3dCore.GROUND_REST_VELOCITY.y, sc.packetYOrRestAt(LANDING - 1), 0.0);
+
+        ForwardPath modern = ExactJumpModel.forMcVersion("26.3").forward(sc, yaws(YAW));
+        assertEquals(VelocityPacketCodec.lpAxis(1.1126, 2L), modern.velY[LANDING + 1], 0.0);
+        assertEquals(1.1126167368613809, modern.velY[LANDING + 1], 1.0e-12);
+        double sx = ExactJumpModel.forMcVersion("26.3").serverCarry(sc, yaws(YAW), LANDING)[0];
+        assertEquals(VelocityPacketCodec.lpAxis(sx, 2L), modern.velX[LANDING + 1], 0.0);
+        assertTrue("the bounce carries the player up", modern.posY[LANDING + 2] > modern.posY[LANDING + 1] + 1.0);
+
+        ForwardPath legacy = ExactJumpModel.forMcVersion("1.8.9").forward(sc, yaws(YAW));
+        assertEquals(VelocityPacketCodec.fixedPointAxis(1.1126), legacy.velY[LANDING + 1], 0.0);
+        assertEquals(8900.0 / 8000.0, legacy.velY[LANDING + 1], 0.0);
+    }
+
+    @Test
+    public void lpVec3CodecMatchesTheModernVelocityPacket() {
+        assertEquals(-0.0783739241897089, VelocityPacketCodec.lpAxis(-0.0784000015258789, 1L), 1.0e-15);
+        assertEquals(0.42000854544344746, VelocityPacketCodec.lpAxis(0.42, 1L), 1.0e-15);
+        Vec3dCore q = VelocityPacketCodec.LP_VEC3.quantize(new Vec3dCore(0.0103, 1.1126, -0.0013));
+        assertEquals(0.01025453213697114, q.x, 1.0e-15);
+        assertEquals(1.1126167368613809, q.y, 1.0e-15);
+        assertEquals(-0.001342855398889009, q.z, 1.0e-15);
+        Vec3dCore twice = VelocityPacketCodec.LP_VEC3.quantize(q);
+        assertEquals(q.x, twice.x, 0.0);
+        assertEquals(q.y, twice.y, 0.0);
+        assertEquals(q.z, twice.z, 0.0);
+        assertEquals(Vec3dCore.ZERO, VelocityPacketCodec.LP_VEC3.quantize(new Vec3dCore(1.0e-5, -2.0e-5, 3.0e-5)));
+        Vec3dCore nan = VelocityPacketCodec.LP_VEC3.quantize(new Vec3dCore(Double.NaN, 0.5, 0.0));
+        assertEquals(0.0, nan.x, 0.0);
+        assertEquals(VelocityPacketCodec.lpAxis(0.5, 1L), nan.y, 0.0);
+        assertEquals(VelocityPacketCodec.LP_ABS_MAX, VelocityPacketCodec.LP_VEC3.quantize(new Vec3dCore(1.0e12, 0.0, 0.0)).x, 0.0);
+        assertEquals(VelocityPacketCodec.FIXED_POINT, VelocityPacketCodec.forMcVersion("1.21.3"));
+        assertEquals(VelocityPacketCodec.FIXED_POINT, VelocityPacketCodec.forMcVersion("1.8.9"));
+        assertEquals(VelocityPacketCodec.FIXED_POINT, VelocityPacketCodec.forMcVersion(null));
+        assertEquals(VelocityPacketCodec.LP_VEC3, VelocityPacketCodec.forMcVersion("26.3"));
+        assertEquals(VelocityPacketCodec.LP_VEC3, ExactJumpModel.forMcVersion("26.3").velocityCodec());
+        assertEquals(VelocityPacketCodec.FIXED_POINT, ExactJumpModel.forMcVersion("1.21.3").velocityCodec());
+    }
+
+    @Test
+    public void engineAuthorsTheRecordedServerSamples() {
+        InputData inputs = new InputData();
+        BoxController boxes = new BoxController();
+        for (int t = 0; t <= TICKS; t++) {
+            if (t < TICKS) {
+                InputRow row = new InputRow();
+                row.setKeyActive(InputRow.Key.W, true);
+                row.setKeyActive(InputRow.Key.SPRINT, true);
+                if (t == JUMP) row.setKeyActive(InputRow.Key.JUMP, true);
+                inputs.getRows().add(row);
+            }
+            Vec3dCore packet = t == LANDING + 1 ? new Vec3dCore(0.0103, 1.1126, -0.0013) : null;
+            ServerTickSample sample = new ServerTickSample(new Vec3dCore(0.01, -0.0784, 0.12), t == JUMP + 2, packet);
+            boxes.add(new TickState(new Vec3dCore(0.5, 70.0, 0.5 + 0.2 * t), t <= JUMP || t >= LANDING + 1, false, false, 0f,
+                    Collections.<Vec3dCore>emptyList(), Vec3dCore.GROUND_REST_VELOCITY, false, Double.NaN,
+                    true, 0.98F, 0.0F, null, Double.NaN, 0, sample));
+        }
+        AngleSolverState state = new AngleSolverState();
+        state.setStartTick(0);
+        state.setLandingTick(TICKS);
+        for (int t = 0; t < TICKS; t++) {
+            if (t <= JUMP || t >= LANDING) state.tickConstraints(t).getOverride().setSlipperiness(Slipperiness.DEFAULT);
+        }
+        state.tickConstraints(LANDING).getOverride().setDamage(true);
+        AngleSolverEngine engine = new AngleSolverEngine(state, boxes, inputs, t -> { }, ExactJumpModel.forMcVersion("26.3"));
+        JumpPhysicsInputs sc = engine.debugBuildSpec().asScenario();
+        assertNotNull(sc.serverJumpPerTick);
+        assertNotNull(sc.packetYPerTick);
+        assertFalse("the client jumped but the sim's server did not", sc.serverBoostAt(JUMP));
+        assertTrue(sc.serverJumpAt(JUMP + 1));
+        assertTrue(sc.serverBoostAt(JUMP + 1));
+        assertEquals(1.1126, sc.packetYAt(LANDING), 0.0);
+        assertTrue(Double.isNaN(sc.packetYAt(LANDING - 1)));
+        assertEquals(0.12, sc.incomingServerZ(), 0.0);
+    }
+
+    @Test
+    public void samplesWithoutAJumpFlagKeepTheInference() {
+        InputData inputs = new InputData();
+        BoxController boxes = new BoxController();
+        for (int t = 0; t <= TICKS; t++) {
+            if (t < TICKS) {
+                InputRow row = new InputRow();
+                row.setKeyActive(InputRow.Key.W, true);
+                row.setKeyActive(InputRow.Key.SPRINT, true);
+                if (t == JUMP) row.setKeyActive(InputRow.Key.JUMP, true);
+                inputs.getRows().add(row);
+            }
+            boxes.add(new TickState(new Vec3dCore(0.5, 70.0, 0.5 + 0.2 * t), t <= JUMP || t >= LANDING + 1, false, false, 0f,
+                    Collections.<Vec3dCore>emptyList(), Vec3dCore.GROUND_REST_VELOCITY, false, Double.NaN,
+                    true, 0.98F, 0.0F, null, Double.NaN, 0, new ServerTickSample(new Vec3dCore(0.01, -0.0784, 0.12), null, null)));
+        }
+        AngleSolverState state = new AngleSolverState();
+        state.setStartTick(0);
+        state.setLandingTick(TICKS);
+        for (int t = 0; t < TICKS; t++) {
+            if (t <= JUMP || t >= LANDING) state.tickConstraints(t).getOverride().setSlipperiness(Slipperiness.DEFAULT);
+        }
+        state.tickConstraints(LANDING).getOverride().setDamage(true);
+        AngleSolverEngine engine = new AngleSolverEngine(state, boxes, inputs, t -> { }, ExactJumpModel.forMcVersion("1.8.9"));
+        JumpPhysicsInputs sc = engine.debugBuildSpec().asScenario();
+        assertNull(sc.serverJumpPerTick);
+        assertNull(sc.packetYPerTick);
+        assertTrue(sc.serverBoostAt(JUMP));
+        assertEquals(0.12, sc.incomingServerZ(), 0.0);
+    }
+
+    @Test
+    public void slicesKeepTheRecordedSamples() {
+        JumpPhysicsInputs sc = scenario(true);
+        sc.serverJumpPerTick = new boolean[TICKS];
+        sc.serverJumpPerTick[JUMP] = true;
+        sc.serverJumpPerTick[12] = true;
+        sc.packetYPerTick = new double[TICKS];
+        Arrays.fill(sc.packetYPerTick, Double.NaN);
+        sc.packetYPerTick[LANDING] = 0.9;
+        JumpPhysicsInputs tail = sc.slice(10, 1.0, 70.0, 3.0, 0.1, 0.0, 0.2, 5f);
+        assertTrue(tail.serverJumpAt(2));
+        assertFalse(tail.serverJumpAt(0));
+        assertEquals(0.9, tail.packetYAt(LANDING - 10), 0.0);
+        assertTrue(Double.isNaN(tail.packetYAt(0)));
+        JumpPhysicsInputs copy = sc.copy();
+        assertTrue(copy.serverJumpAt(JUMP));
+        assertEquals(0.9, copy.packetYAt(LANDING), 0.0);
+    }
+
+    @Test
+    public void debugSamplesLoadFromTheSave() {
+        String json = "{\"mcVersion\":\"26.3\",\"rows\":[{\"keys\":[\"W\"]},{\"keys\":[\"W\"]},{\"keys\":[\"W\"]}],"
+                + "\"angleSolver\":{\"startTick\":0,\"landingTick\":2,\"seed\":{\"pos\":[0,70,0],\"vel\":[0,-0.0784,0],\"yaw\":0}},"
+                + "\"debug\":["
+                + "{\"pos\":[0,70,0],\"vel\":[0,-0.0784,0],\"serverVel\":[0.1,-0.0784,0.2]},"
+                + "{\"pos\":[0,70,0],\"vel\":[0,-0.0784,0],\"serverVel\":[0.1,-0.0784,0.2],\"serverJump\":true},"
+                + "{\"pos\":[0,70,0],\"vel\":[0,-0.0784,0],\"serverVel\":[0.1,1.1,0.2],\"serverJump\":false,\"serverPacket\":[0.01,1.1126,-0.001]}"
+                + "]}";
+        SaveFile file = SaveIO.parseSafe(json);
+        assertNotNull(file);
+        BoxController boxes = Fixtures.buildBoxes(file);
+        assertFalse(boxes.getState(0).server.hasJumpFlag());
+        assertEquals(0.2, boxes.getState(0).server.velocity.z, 0.0);
+        assertTrue(boxes.getState(1).server.jumped());
+        assertNull(boxes.getState(1).server.packet);
+        assertFalse(boxes.getState(2).server.jumped());
+        assertTrue(boxes.getState(2).server.hasJumpFlag());
+        assertEquals(1.1126, boxes.getState(2).server.packet.y, 0.0);
     }
 }

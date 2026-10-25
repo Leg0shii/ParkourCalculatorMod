@@ -88,6 +88,8 @@ public final class JumpPhysicsInputs {
     public float[] strafeInputPerTick = null;
 
     public boolean[] damagePerTick = null;
+    public boolean[] serverJumpPerTick = null;
+    public double[] packetYPerTick = null;
 
     public Vec3dCore incomingServerVelocity = null;
 
@@ -125,6 +127,8 @@ public final class JumpPhysicsInputs {
         c.forwardInputPerTick = forwardInputPerTick;
         c.strafeInputPerTick = strafeInputPerTick;
         c.damagePerTick = damagePerTick;
+        c.serverJumpPerTick = serverJumpPerTick;
+        c.packetYPerTick = packetYPerTick;
         c.incomingServerVelocity = incomingServerVelocity;
         return c;
     }
@@ -159,6 +163,8 @@ public final class JumpPhysicsInputs {
         float[] fwd = new float[m];
         float[] str = new float[m];
         boolean[] damage = damagePerTick == null ? null : new boolean[m];
+        boolean[] serverJump = serverJumpPerTick == null ? null : new boolean[m];
+        double[] packetY = packetYPerTick == null ? null : new double[m];
         for (int k = 0; k < m; k++) {
             int i = from + k;
             jump[k] = jumpAt(i);
@@ -177,6 +183,8 @@ public final class JumpPhysicsInputs {
             fwd[k] = forwardAt(i);
             str[k] = strafeInputAt(i);
             if (damage != null) damage[k] = damageAt(i);
+            if (serverJump != null) serverJump[k] = serverJumpAt(i);
+            if (packetY != null) packetY[k] = packetYAt(i);
         }
         c.jumpPerTick = jump;
         c.strafePerTick = strafe;
@@ -194,6 +202,8 @@ public final class JumpPhysicsInputs {
         c.forwardInputPerTick = fwd;
         c.strafeInputPerTick = str;
         c.damagePerTick = damage;
+        c.serverJumpPerTick = serverJump;
+        c.packetYPerTick = packetY;
         return c;
     }
 
@@ -214,9 +224,24 @@ public final class JumpPhysicsInputs {
     }
 
     public boolean serverBoostAt(int tick) {
+        if (serverJumpPerTick != null) return serverJumpAt(tick) && sprintAt(tick);
         if (!jumpAt(tick) || !contactAt(tick) || contactAt(tick + 1) || !sprintAt(tick)) return false;
         SurfaceKind kind = surfaceAt(tick);
         return kind != SurfaceKind.WATER && kind != SurfaceKind.LAVA;
+    }
+
+    public boolean serverJumpAt(int tick) {
+        return serverJumpPerTick != null && tick >= 0 && tick < serverJumpPerTick.length && serverJumpPerTick[tick];
+    }
+
+    public double packetYAt(int tick) {
+        if (packetYPerTick == null || tick < 0 || tick >= packetYPerTick.length) return Double.NaN;
+        return packetYPerTick[tick];
+    }
+
+    public double packetYOrRestAt(int tick) {
+        double y = packetYAt(tick);
+        return Double.isNaN(y) ? Vec3dCore.GROUND_REST_VELOCITY.y : y;
     }
 
     public float serverFrictionAt(int tick) {

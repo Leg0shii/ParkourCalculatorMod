@@ -169,7 +169,8 @@ public final class ExactJumpModel implements ForwardModel {
      *  players (the modern default here): combined-XZ |v|^2 &lt; 9.0E-6. Year-versioned MC (26.x
      *  onward) additionally runs the rewritten double-indexed sine lookup. */
     public static ExactJumpModel forMcVersion(String mcVersion) {
-        return eraModel(mcVersion).withByteAmplifier(MovementEffect.wrapsAmplifier(mcVersion));
+        return eraModel(mcVersion).withByteAmplifier(MovementEffect.wrapsAmplifier(mcVersion))
+                .withVelocityCodec(VelocityPacketCodec.forMcVersion(mcVersion));
     }
 
     private static ExactJumpModel eraModel(String mcVersion) {
@@ -456,7 +457,7 @@ public final class ExactJumpModel implements ForwardModel {
             if (server != null && t <= lastDamage) {
                 serverImpulse(scenario, yawAbsDeg, t, server);
                 if (scenario.damageAt(t)) {
-                    Vec3dCore packet = velocityCodec.quantize(new Vec3dCore(server[0], Vec3dCore.GROUND_REST_VELOCITY.y, server[1]));
+                    Vec3dCore packet = velocityCodec.quantize(new Vec3dCore(server[0], scenario.packetYOrRestAt(t), server[1]));
                     velX[t + 1] = packet.x;
                     velY[t + 1] = packet.y;
                     velZ[t + 1] = packet.z;

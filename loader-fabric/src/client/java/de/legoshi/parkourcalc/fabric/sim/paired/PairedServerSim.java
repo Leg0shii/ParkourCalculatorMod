@@ -5,6 +5,7 @@ import de.legoshi.parkourcalc.core.DebugFlags;
 import de.legoshi.parkourcalc.core.PlaybackController;
 import de.legoshi.parkourcalc.core.sim.ServerSimEvent;
 import de.legoshi.parkourcalc.core.sim.StartResumeState;
+import de.legoshi.parkourcalc.core.sim.ServerTickSample;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 import de.legoshi.parkourcalc.fabric.sim.FabricSimulator;
@@ -96,6 +97,7 @@ public final class PairedServerSim {
     private int rightClickDelay;
     private int useSequence;
     private int journalSizeAtTickStart;
+    private boolean lastMoveJumped;
     private boolean shutdownDone;
     private boolean damageEnabled = true;
 
@@ -338,6 +340,7 @@ public final class PairedServerSim {
             synthesizeMovePacket(e);
             //? if >=1.21.2
             serverbound.add(ServerboundClientTickEndPacket.INSTANCE);
+            lastMoveJumped = handler.awaitingPositionFromClient == null && sp.onGround() && !e.onGround() && e.getY() > sp.getY();
             drainServerbound();
             reportReplayMismatch(e);
             sp.tick();
@@ -602,9 +605,16 @@ public final class PairedServerSim {
         events.add(new ServerSimEvent(tickIndex, kind, detail));
     }
 
-    public Vec3dCore serverVelocity() {
+    public ServerTickSample serverSample() {
         Vec3 v = sp.getDeltaMovement();
-        return new Vec3dCore(v.x, v.y, v.z);
+        Vec3dCore packet = null;
+        for (Packet<?> pending : pendingClientbound) {
+            if (pending instanceof ClientboundSetEntityMotionPacket motion && motionEntityId(motion) == sp.getId()) {
+                Vec3 q = motionVelocity(motion);
+                packet = new Vec3dCore(q.x, q.y, q.z);
+            }
+        }
+        return new ServerTickSample(new Vec3dCore(v.x, v.y, v.z), lastMoveJumped, packet);
     }
 
     public List<ServerSimEvent> drainEvents() {

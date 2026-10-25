@@ -5,6 +5,7 @@ import de.legoshi.parkourcalc.core.DebugFlags;
 import de.legoshi.parkourcalc.core.PlaybackController;
 import de.legoshi.parkourcalc.core.sim.ServerSimEvent;
 import de.legoshi.parkourcalc.core.sim.StartResumeState;
+import de.legoshi.parkourcalc.core.sim.ServerTickSample;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 import de.legoshi.parkourcalc.forge.sim.SimulatorEntity;
@@ -91,6 +92,7 @@ public final class PairedServerSim {
     private boolean prevRightClick;
     private int rightClickDelay;
     private int journalSizeAtTickStart;
+    private boolean lastMoveJumped;
     private boolean shutdownDone;
     private boolean damageEnabled = true;
 
@@ -355,6 +357,7 @@ public final class PairedServerSim {
             synthesizeSprintCommand(e);
             synthesizeSneakCommand(e);
             synthesizeMovePacket(e);
+            lastMoveJumped = sp.onGround && !e.onGround && e.getEntityBoundingBox().minY > sp.posY;
             sp.managedPosX = sp.posX;
             sp.managedPosZ = sp.posZ;
             drainServerbound();
@@ -622,8 +625,21 @@ public final class PairedServerSim {
         events.add(new ServerSimEvent(tickIndex, kind, detail));
     }
 
-    public Vec3dCore serverVelocity() {
-        return new Vec3dCore(sp.motionX, sp.motionY, sp.motionZ);
+    public ServerTickSample serverSample() {
+        Vec3dCore packet = null;
+        for (Packet pending : pendingClientbound) {
+            //? if >=1.12 {
+            if (pending instanceof SPacketEntityVelocity) {
+                SPacketEntityVelocity motion = (SPacketEntityVelocity) pending;
+            //?} else {
+            /*if (pending instanceof S12PacketEntityVelocity) {
+                S12PacketEntityVelocity motion = (S12PacketEntityVelocity) pending;
+            *///?}
+                if (motion.getEntityID() != sp.getEntityId()) continue;
+                packet = new Vec3dCore(motion.getMotionX() / 8000.0, motion.getMotionY() / 8000.0, motion.getMotionZ() / 8000.0);
+            }
+        }
+        return new ServerTickSample(new Vec3dCore(sp.motionX, sp.motionY, sp.motionZ), lastMoveJumped, packet);
     }
 
     public List<ServerSimEvent> drainEvents() {

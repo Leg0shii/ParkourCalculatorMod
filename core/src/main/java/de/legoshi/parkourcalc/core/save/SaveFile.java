@@ -216,5 +216,7 @@ public final class SaveFile {
         public Float moveForward;                        // moveFlying inputs the tick ran with; null = unsampled
         public Float moveStrafe;
         public double[] serverVel;
+        public Boolean serverJump;
+        public double[] serverPacket;
     }
 }

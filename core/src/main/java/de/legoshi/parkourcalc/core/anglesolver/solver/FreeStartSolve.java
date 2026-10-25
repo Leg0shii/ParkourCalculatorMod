@@ -913,6 +913,8 @@ public final class FreeStartSolve {
         a.yawLockedPerTick = b.yawLockedPerTick;
         a.sprintPerTick = b.sprintPerTick;
         a.damagePerTick = b.damagePerTick;
+        a.serverJumpPerTick = b.serverJumpPerTick;
+        a.packetYPerTick = b.packetYPerTick;
         a.incomingServerVelocity = b.incomingServerVelocity;
         a.incomingSprint = b.incomingSprint;
         a.incomingAmp = b.incomingAmp;
