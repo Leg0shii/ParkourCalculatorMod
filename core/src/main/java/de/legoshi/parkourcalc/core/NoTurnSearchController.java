@@ -440,6 +440,7 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
         cfg.fatCertifyNanos = 6_000_000_000L;
         cfg.continuationLead = 25;
         cfg.continuationCap = 12;
+        cfg.openingTaps = true;
         cfg.continuationBudgetNanos = Math.min(600_000_000_000L, budgetNanos);
         cfg.maxCertifies = 1_000_000;
         cfg.deadlineNanos = budgetNanos;
