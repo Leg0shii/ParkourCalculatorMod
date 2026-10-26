@@ -88,7 +88,7 @@ Press `G` to open the calculator. Every hotkey below is rebindable in Minecraft'
 
 - Click to select, Ctrl+Click to toggle, Shift+Click for a range
 - `Delete` removes the selected rows, `Insert` adds rows at the selection
-- Drag rows to reorder; right-click for duplicate, lock yaw/pitch, teleport and copy options
+- Drag rows to reorder; right-click for duplicate, lock yaw/pitch, teleport and copy options; with the Angle Solver open it also sets dF >= 0, dF <= 0 or dF = 0 on the selected rows
 
 ### Moving the start position
 

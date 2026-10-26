@@ -122,6 +122,7 @@ public final class InputOverlay {
     private static final String MENU_LOCK_YAW = "Lock yaw value";
     private static final String MENU_YAW_INCREASING = "Yaw may only increase on %d row(s) (dF >= 0)";
     private static final String MENU_YAW_DECREASING = "Yaw may only decrease on %d row(s) (dF <= 0)";
+    private static final String MENU_YAW_CONSTANT = "Keep yaw constant on %d row(s) (dF = 0)";
     private static final String MENU_YAW_ANY = "Remove dF on %d row(s)";
     private static final String MENU_UNLOCK_YAW = "Unlock yaw value";
 
@@ -2269,6 +2270,9 @@ public final class InputOverlay {
         }
         if (contextButton(String.format(MENU_YAW_DECREASING, n))) {
             angleSolver.setYawDirection(rows, Constraint.Op.LE);
+        }
+        if (contextButton(String.format(MENU_YAW_CONSTANT, n))) {
+            angleSolver.setYawDirection(rows, Constraint.Op.EQ);
         }
         if (angleSolver.anyYawDirection(rows) && contextButton(String.format(MENU_YAW_ANY, n))) {
             angleSolver.setYawDirection(rows, null);
