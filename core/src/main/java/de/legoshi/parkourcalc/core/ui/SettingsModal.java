@@ -91,6 +91,8 @@ public final class SettingsModal {
 
     private static final String[] ARROW_MODE_LABELS = {"Yaw", "Combined"};
     private static final String[] HUD_MESSAGE_ORDER_LABELS = {"Downwards", "Upwards"};
+    private static final String[] REPLAY_KEYSTROKES_LABELS = {"Off", "Client-sided replay", "Every replay"};
+    private static final String TT_REPLAY_KEYSTROKES = "Shows the keys the replay presses (W A S D, sprint, sneak, jump and the mouse buttons) in a small panel. Keystroke mods cannot see the keys of a client-sided replay, so it is on for those by default; Every replay also shows it in singleplayer. While the main UI is open the panel stays visible so it can be dragged.";
 
     private static final String TT_REPLAY_START_DELAY = "Waits this many ticks after playback starts before the macro's inputs begin. The player holds at the start while the delay counts down; 0 starts immediately.";
     private final ImInt scaleIndexBuf = new ImInt();
@@ -105,6 +107,7 @@ public final class SettingsModal {
     private final int[] hudMessageCountBuf = new int[1];
     private final float[] hudMessageScaleBuf = new float[1];
     private final ImInt hudMessageOrderBuf = new ImInt();
+    private final ImInt replayKeystrokesBuf = new ImInt();
     private final String[] scaleLabels;
 
     private boolean openRequested;
@@ -376,6 +379,15 @@ public final class SettingsModal {
                 }
                 if (ImGui.isItemDeactivatedAfterEdit()) onChanged.run();
                 tooltipForLastItem(TT_REPLAY_START_DELAY);
+            });
+            replayKeystrokesBuf.set(settings.replayKeystrokes);
+            row("Keystrokes", () -> {
+                ImGui.setNextItemWidth(-1);
+                if (Controls.combo("##replay_keystrokes", replayKeystrokesBuf, REPLAY_KEYSTROKES_LABELS)) {
+                    settings.replayKeystrokes = replayKeystrokesBuf.get();
+                    onChanged.run();
+                }
+                tooltipForLastItem(TT_REPLAY_KEYSTROKES);
             });
             checkboxRow("Lockstep replay", "##lockstep_replay", settings.lockstepReplay, TT_LOCKSTEP_REPLAY, v -> settings.lockstepReplay = v);
             checkboxRow("Disable creative flight", "##disable_flight_playback", settings.disableFlightDuringPlayback, TT_DISABLE_FLIGHT_PLAYBACK, v -> settings.disableFlightDuringPlayback = v);

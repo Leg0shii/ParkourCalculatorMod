@@ -57,6 +57,7 @@ public final class MainWindowOverlay implements RenderInterface {
     private final HudMessagesPanel hudMessagesPanel;
 
     private ServerEventLogPanel serverEventLogPanel;
+    private ReplayKeystrokesPanel replayKeystrokesPanel;
 
     private boolean saveChordWasDown;
     private boolean undoChordWasDown;
@@ -103,6 +104,10 @@ public final class MainWindowOverlay implements RenderInterface {
         this.serverEventLogPanel = panel;
     }
 
+    public void setReplayKeystrokesPanel(ReplayKeystrokesPanel panel) {
+        this.replayKeystrokesPanel = panel;
+    }
+
     public void setStratfinderMenu(java.util.function.BooleanSupplier isOpen, Runnable toggle) {
         this.stratfinderOpen = isOpen;
         this.toggleStratfinder = toggle;
@@ -121,6 +126,7 @@ public final class MainWindowOverlay implements RenderInterface {
             serverEventLogPanel.render(io);
         }
         hudMessagesPanel.render(io, true);
+        if (replayKeystrokesPanel != null) replayKeystrokesPanel.render(io, true);
     }
 
     /** Edge-triggered Ctrl+S while the panel is open: the loader reports the raw chord (gh-107). */
@@ -168,6 +174,7 @@ public final class MainWindowOverlay implements RenderInterface {
         }
         if (settings.keepTickInfoOpen) tickInfoPanel.render(io);
         hudMessagesPanel.render(io, false);
+        if (replayKeystrokesPanel != null) replayKeystrokesPanel.render(io, false);
     }
 
     /** Closes any modal/popup left open when the main UI is closed; they'd otherwise freeze on screen with no input to dismiss them. */

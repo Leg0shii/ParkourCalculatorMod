@@ -23,6 +23,7 @@ import de.legoshi.parkourcalc.core.ui.ConstraintSelection;
 import de.legoshi.parkourcalc.core.ui.FileMenu;
 import de.legoshi.parkourcalc.core.ui.HudMessages;
 import de.legoshi.parkourcalc.core.ui.HudMessagesPanel;
+import de.legoshi.parkourcalc.core.ui.ReplayKeystrokesPanel;
 import de.legoshi.parkourcalc.core.ui.InputData;
 import de.legoshi.parkourcalc.core.ui.InputOverlay;
 import de.legoshi.parkourcalc.core.ui.InputRow;
@@ -370,6 +371,7 @@ public final class Application {
                 hudMessagesPanel
         );
         mainWindow.setServerEventLogPanel(serverEventLogPanel);
+        mainWindow.setReplayKeystrokesPanel(new ReplayKeystrokesPanel(playback, settings));
         mainWindow.setStratfinderMenu(stratfinderWindow::isOpen, () -> {
             if (stratfinderWindow.isOpen()) {
                 stratfinderWindow.close();
