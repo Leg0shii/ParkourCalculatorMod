@@ -4,6 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
 import de.legoshi.parkourcalc.core.sim.AABB;
+import de.legoshi.parkourcalc.core.sim.BlockOverride;
+import de.legoshi.parkourcalc.core.sim.BlockOverrides;
 import de.legoshi.parkourcalc.core.sim.StartResumeState;
 import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
@@ -103,6 +105,7 @@ public final class SaveIO {
             rows.add(toSaveRow(row));
         }
         file.rows = rows;
+        file.blockOverrides = toSaveBlockOverrides(inputData.getBlockOverrides());
         file.angleSolver = toSaveAngleSolver(angleSolver);
         return file;
     }
@@ -127,6 +130,9 @@ public final class SaveIO {
                 .append('#').append(startYaw).append('#').append(startPitch).append('#');
         SaveFile.Resume res = toSaveResume(resume);
         if (res != null) sb.append(COMPACT_GSON.toJson(res));
+        sb.append('#');
+        List<SaveFile.BlockOverride> overrides = toSaveBlockOverrides(inputData.getBlockOverrides());
+        if (overrides != null) sb.append(COMPACT_GSON.toJson(overrides));
         sb.append('#');
         SaveFile.AngleSolver solver = toSaveAngleSolver(angleSolver);
         if (solver != null) sb.append(COMPACT_GSON.toJson(solver));
@@ -173,6 +179,40 @@ public final class SaveIO {
                 rows.add(toInputRow(r));
             }
         }
+    }
+
+    public static void applyBlockOverridesTo(SaveFile file, InputData inputData) {
+        inputData.getBlockOverrides().replaceAll(blockOverridesOf(file));
+    }
+
+    public static boolean blockOverridesMatch(SaveFile file, InputData inputData) {
+        return blockOverridesOf(file).equals(inputData.getBlockOverrides().all());
+    }
+
+    public static List<BlockOverride> blockOverridesOf(SaveFile file) {
+        List<BlockOverride> out = new ArrayList<>();
+        if (file == null || file.blockOverrides == null) return out;
+        for (SaveFile.BlockOverride g : file.blockOverrides) {
+            if (g == null) continue;
+            out.add(new BlockOverride(g.startTick, g.endTick, g.x, g.y, g.z, g.block));
+        }
+        return out;
+    }
+
+    private static List<SaveFile.BlockOverride> toSaveBlockOverrides(BlockOverrides blocks) {
+        if (blocks == null || blocks.isEmpty()) return null;
+        List<SaveFile.BlockOverride> out = new ArrayList<>(blocks.size());
+        for (BlockOverride b : blocks.all()) {
+            SaveFile.BlockOverride g = new SaveFile.BlockOverride();
+            g.startTick = b.startTick;
+            g.endTick = b.endTick;
+            g.x = b.x;
+            g.y = b.y;
+            g.z = b.z;
+            g.block = b.block;
+            out.add(g);
+        }
+        return out;
     }
 
     /** Rebuilds the Angle Solver problem from the save. Always resets first, so a pre-feature save yields an empty solver. */
@@ -417,6 +457,7 @@ public final class SaveIO {
             rows.add(toSaveRow(row));
         }
         file.rows = rows;
+        file.blockOverrides = toSaveBlockOverrides(inputData.getBlockOverrides());
 
         file.angleSolver = toSaveAngleSolver(angleSolver);
 

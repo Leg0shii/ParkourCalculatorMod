@@ -15,6 +15,7 @@ public final class SaveFile {
     public World world;
     public Start start;
     public List<Row> rows = new ArrayList<Row>();
+    public List<BlockOverride> blockOverrides;
     public AngleSolver angleSolver;
     public List<DebugTick> debug;
 
@@ -64,6 +65,15 @@ public final class SaveFile {
         public int onejumpFace;
         public boolean onejumpLand;
         public List<String> onejumpOptional;
+    }
+
+    public static final class BlockOverride {
+        public int startTick;
+        public int endTick;
+        public int x;
+        public int y;
+        public int z;
+        public String block;
     }
 
     /** Angle Solver problem: defaults, per-tick constraints/overrides, and last solve result. */

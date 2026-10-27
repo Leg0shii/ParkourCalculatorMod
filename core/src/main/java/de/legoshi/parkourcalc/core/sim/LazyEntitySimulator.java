@@ -22,6 +22,7 @@ public abstract class LazyEntitySimulator<E> implements Simulator {
     private Float pendingYaw;
     private StartResumeState startResume;
     private int debugTickIndex;
+    private List<BlockOverride> blockOverrides = Collections.emptyList();
 
     @Override
     public final void resetToStart() {
@@ -50,9 +51,19 @@ public abstract class LazyEntitySimulator<E> implements Simulator {
     }
 
     @Override
+    public final void setBlockOverrides(List<BlockOverride> active) {
+        blockOverrides = active == null ? Collections.<BlockOverride>emptyList() : active;
+    }
+
+    @Override
     public final void tick() {
         E e = ensureEntity();
-        tickEntity(e);
+        Runnable restore = blockOverrides.isEmpty() ? null : placeBlockOverrides(e, blockOverrides);
+        try {
+            tickEntity(e);
+        } finally {
+            if (restore != null) restore.run();
+        }
         if (DebugFlags.DUMP_TICK_STATE && DebugFlags.simTickSink != null) {
             String dump = formatDebugState(e, debugTickIndex);
             if (dump != null) {
@@ -63,6 +74,10 @@ public abstract class LazyEntitySimulator<E> implements Simulator {
     }
 
     protected String formatDebugState(E entity, int tickIndex) {
+        return null;
+    }
+
+    protected Runnable placeBlockOverrides(E entity, List<BlockOverride> active) {
         return null;
     }
 

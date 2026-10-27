@@ -6,6 +6,7 @@ import de.legoshi.parkourcalc.core.ui.InputData;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public final class SimulationRunner {
@@ -38,7 +39,7 @@ public final class SimulationRunner {
         path.add(snapshot());
         checkpoints.add(simulator.saveCheckpoint());
 
-        replayFrom(0, inputData.getRows());
+        replayFrom(0, inputData.getRows(), inputData.getBlockOverrides());
         simulator.onPassEnd();
         return path;
     }
@@ -66,14 +67,23 @@ public final class SimulationRunner {
         }
         simulator.takeServerSimEvents();
 
-        replayFrom(dirtyTick, inputData.getRows());
+        replayFrom(dirtyTick, inputData.getRows(), inputData.getBlockOverrides());
         simulator.onPassEnd();
         return path;
     }
 
-    private void replayFrom(int startRow, List<InputRow> rows) {
+    private void replayFrom(int startRow, List<InputRow> rows, BlockOverrides blockOverrides) {
+        try {
+            replayRows(startRow, rows, blockOverrides);
+        } finally {
+            simulator.setBlockOverrides(Collections.<BlockOverride>emptyList());
+        }
+    }
+
+    private void replayRows(int startRow, List<InputRow> rows, BlockOverrides blockOverrides) {
         for (int i = startRow; i < rows.size(); i++) {
             InputRow row = rows.get(i);
+            simulator.setBlockOverrides(blockOverrides.activeAtRow(i));
             if (row.isTeleportEnabled()) {
                 simulator.teleport(
                         new Vec3dCore(row.getTeleportX(), row.getTeleportY(), row.getTeleportZ()),

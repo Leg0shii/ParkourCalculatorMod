@@ -5,6 +5,7 @@ import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
 import de.legoshi.parkourcalc.core.sim.AABB;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.fabric.input.FabricInput;
+import de.legoshi.parkourcalc.fabric.sim.BlockOverridePlacer;
 import de.legoshi.parkourcalc.fabric.sim.paired.PairedServerSim;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Camera;
@@ -114,6 +115,20 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
         ClientLevel world = Minecraft.getInstance().level;
         if (world == null) return false;
         return world.getBlockState(new BlockPos(x, y, z)).is(Blocks.COBWEB);
+    }
+
+    @Override
+    public String describeBlockState(int x, int y, int z) {
+        ClientLevel world = Minecraft.getInstance().level;
+        if (world == null) return null;
+        BlockPos pos = new BlockPos(x, y, z);
+        if (!world.hasChunk(x >> 4, z >> 4)) return null;
+        return BlockOverridePlacer.describe(world.getBlockState(pos));
+    }
+
+    @Override
+    public String blockOverrideError(String spec) {
+        return BlockOverridePlacer.error(spec);
     }
 
     @Override

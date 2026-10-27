@@ -1,8 +1,11 @@
 package de.legoshi.parkourcalc.core.ports;
 
 import de.legoshi.parkourcalc.core.sim.Checkpoint;
+import de.legoshi.parkourcalc.core.sim.BlockOverride;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
+
+import java.util.List;
 
 /**
  * Loader-side driver for "real-player input playback". Core holds the schedule
@@ -51,6 +54,8 @@ public interface PlaybackBridge {
     void closeUI();
 
     void applyEffects(int[] effectLevels);
+
+    default void setBlockOverrides(List<BlockOverride> active) {}
 
     /** Switch the held hotbar slot (0-8) so playback places from the right slot. No-op if unsupported. */
     default void setHotbarSlot(int slotZeroBased) {}

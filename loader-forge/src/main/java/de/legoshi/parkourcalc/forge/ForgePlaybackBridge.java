@@ -1,6 +1,7 @@
 package de.legoshi.parkourcalc.forge;
 
 import de.legoshi.parkourcalc.core.ports.PlaybackBridge;
+import de.legoshi.parkourcalc.core.sim.BlockOverride;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 import de.legoshi.parkourcalc.forge.sim.GhostPlayerEntity;
@@ -42,6 +43,7 @@ public final class ForgePlaybackBridge implements PlaybackBridge {
     private MovementInput originalInput;
     private boolean ghostMode;
     private GhostPlayerEntity ghost;
+    private java.util.List<BlockOverride> blockOverrides = java.util.Collections.emptyList();
     private MouseHelper originalMouseHelper;
 
     InputRow getCurrentRow() {
@@ -68,6 +70,12 @@ public final class ForgePlaybackBridge implements PlaybackBridge {
 
     void resetInputOverride() {
         originalInput = null;
+    }
+
+    @Override
+    public void setBlockOverrides(java.util.List<BlockOverride> active) {
+        blockOverrides = active;
+        if (ghost != null) ghost.setBlockOverrides(active);
     }
 
     @Override
@@ -106,6 +114,7 @@ public final class ForgePlaybackBridge implements PlaybackBridge {
         removeGhostEntity();
         GhostPlayerEntity g = new GhostPlayerEntity(world, client.getGameProfile());
         g.setInput(currentRow);
+        g.setBlockOverrides(blockOverrides);
         g.setLocationAndAngles(pos.x, pos.y, pos.z, yaw, client.rotationPitch);
         g.renderYawOffset = yaw;
         g.prevRenderYawOffset = yaw;
