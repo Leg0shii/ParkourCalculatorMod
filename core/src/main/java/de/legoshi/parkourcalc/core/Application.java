@@ -390,7 +390,7 @@ public final class Application {
                 this::saveSettings));
         overlayManager.register(onejumpKeysWindow);
         overlayManager.register(onejumpSetupWindow);
-        overlayManager.register(new de.legoshi.parkourcalc.core.ui.GhostBlocksWindow(inputData, mc, settings,
+        overlayManager.register(new de.legoshi.parkourcalc.core.ui.BlockOverridesWindow(inputData, mc, settings,
                 this::saveSettings, this::onUserChange));
         overlayManager.register(new de.legoshi.parkourcalc.core.ui.RecorderWindow(recorder, settings, this::toggleRecording,
                 this::saveSettings, systemBridge));
@@ -543,7 +543,7 @@ public final class Application {
         runner.invalidate();
         boxController.clearAll();
         inputData.clear();
-        inputData.getGhostBlocks().clear();
+        inputData.getBlockOverrides().clear();
         saveController.endSession();
         if (undoController != null) undoController.onDocumentReplaced(null);
         if (runTicks != null) runTicks.reset();

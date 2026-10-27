@@ -5,7 +5,7 @@ import de.legoshi.parkourcalc.core.sim.AABB;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.forge.core.lwjgl2.Lwjgl2InputState;
 import de.legoshi.parkourcalc.forge.sim.ForgeSimulator;
-import de.legoshi.parkourcalc.forge.sim.GhostBlockPlacer;
+import de.legoshi.parkourcalc.forge.sim.BlockOverridePlacer;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockBasePressurePlate;
 //? if <1.12
@@ -156,12 +156,12 @@ public final class ForgeMinecraftAccess implements MinecraftAccess {
         //?} else {
         /*if (world.getChunkFromChunkCoords(x >> 4, z >> 4).isEmpty()) return null;
         *///?}
-        return GhostBlockPlacer.describe(world.getBlockState(new BlockPos(x, y, z)));
+        return BlockOverridePlacer.describe(world.getBlockState(new BlockPos(x, y, z)));
     }
 
     @Override
-    public String ghostBlockError(String spec) {
-        return GhostBlockPlacer.error(spec);
+    public String blockOverrideError(String spec) {
+        return BlockOverridePlacer.error(spec);
     }
 
     @Override

@@ -3,8 +3,8 @@ package de.legoshi.parkourcalc.core.ui;
 import de.legoshi.parkourcalc.core.imgui.RenderInterface;
 import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
 import de.legoshi.parkourcalc.core.sim.BlockHit;
-import de.legoshi.parkourcalc.core.sim.GhostBlock;
-import de.legoshi.parkourcalc.core.sim.GhostBlocks;
+import de.legoshi.parkourcalc.core.sim.BlockOverride;
+import de.legoshi.parkourcalc.core.sim.BlockOverrides;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.theme.Controls;
 import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
@@ -22,15 +22,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.IntConsumer;
 
-public final class GhostBlocksWindow implements RenderInterface {
+public final class BlockOverridesWindow implements RenderInterface {
 
-    private static final String WINDOW_ID = "Ghost Blocks";
-    private static final String TABLE_ID = "##ghostBlocks";
+    private static final String WINDOW_ID = "Block Overrides";
+    private static final String TABLE_ID = "##blockOverrides";
     private static final float WIN_W = 640f;
     private static final float WIN_H = 260f;
     private static final int BLOCK_CHARS = 256;
     private static final String[] HEADERS = {"Start", "End", "X", "Y", "Z", "Block", ""};
-    private static final String HELP = "Each row puts a block at X Y Z for the simulator and the multiplayer replay "
+    private static final String HELP = "Each row puts a block at X Y Z for the simulator and the client-sided replay "
             + "from the start tick to the end tick (input table ticks, both included). The world itself is not changed. "
             + "Use it for redstone doors, trapdoors and pistons: air or an opened door while the redstone would be on.";
 
@@ -44,7 +44,7 @@ public final class GhostBlocksWindow implements RenderInterface {
     private final List<ImString> blockBuffers = new ArrayList<ImString>();
     private int editingRow = -1;
 
-    public GhostBlocksWindow(InputData inputData, MinecraftAccess mc, Settings settings, Runnable onSettingsChanged,
+    public BlockOverridesWindow(InputData inputData, MinecraftAccess mc, Settings settings, Runnable onSettingsChanged,
                              IntConsumer onChanged) {
         this.inputData = inputData;
         this.mc = mc;
@@ -55,7 +55,7 @@ public final class GhostBlocksWindow implements RenderInterface {
 
     @Override
     public void render(ImGuiIO io) {
-        open.set(settings.viewGhostBlocks);
+        open.set(settings.viewBlockOverrides);
         if (!open.get()) return;
         float scale = ThemeManager.uiScale();
         ImGui.setNextWindowSize(WIN_W * scale, WIN_H * scale, ImGuiCond.FirstUseEver);
@@ -63,14 +63,14 @@ public final class GhostBlocksWindow implements RenderInterface {
             body();
         }
         ImGui.end();
-        if (settings.viewGhostBlocks != open.get()) {
-            settings.viewGhostBlocks = open.get();
+        if (settings.viewBlockOverrides != open.get()) {
+            settings.viewBlockOverrides = open.get();
             onSettingsChanged.run();
         }
     }
 
     private void body() {
-        GhostBlocks blocks = inputData.getGhostBlocks();
+        BlockOverrides blocks = inputData.getBlockOverrides();
         if (Controls.primaryButton("Add block")) addBlock(blocks);
         TooltipUtil.onHover("Adds the block you look at, or the block at your feet, for every tick of the TAS.");
         ImGui.sameLine();
@@ -78,16 +78,16 @@ public final class GhostBlocksWindow implements RenderInterface {
         TooltipUtil.onHover(HELP);
         ImGui.spacing();
         if (blocks.isEmpty()) {
-            ImGui.textDisabled("No ghost blocks.");
+            ImGui.textDisabled("No block overrides.");
             return;
         }
         table(blocks);
     }
 
-    private void addBlock(GhostBlocks blocks) {
+    private void addBlock(BlockOverrides blocks) {
         int[] pos = targetBlock();
         int end = Math.max(1, inputData.size());
-        blocks.add(new GhostBlock(1, end, pos[0], pos[1], pos[2], GhostBlock.DEFAULT_BLOCK));
+        blocks.add(new BlockOverride(1, end, pos[0], pos[1], pos[2], BlockOverride.DEFAULT_BLOCK));
         changed(0);
     }
 
@@ -98,7 +98,7 @@ public final class GhostBlocksWindow implements RenderInterface {
         return new int[] {(int) Math.floor(p.x), (int) Math.floor(p.y), (int) Math.floor(p.z)};
     }
 
-    private void table(GhostBlocks blocks) {
+    private void table(BlockOverrides blocks) {
         syncBuffers(blocks);
         if (!ThemeManager.beginStandardTable(TABLE_ID, HEADERS.length)) return;
         int fixed = ImGuiTableColumnFlags.WidthFixed;
@@ -135,8 +135,8 @@ public final class GhostBlocksWindow implements RenderInterface {
         }
     }
 
-    private boolean row(GhostBlocks blocks, int i) {
-        GhostBlock b = blocks.get(i);
+    private boolean row(BlockOverrides blocks, int i) {
+        BlockOverride b = blocks.get(i);
         ImGui.tableSetColumnIndex(0);
         Integer start = intCell("##start", b.startTick);
         ImGui.tableSetColumnIndex(1);
@@ -163,18 +163,22 @@ public final class GhostBlocksWindow implements RenderInterface {
     private Integer intCell(String id, int value) {
         intHolder.set(value);
         ImGui.setNextItemWidth(-1f);
+        Controls.pushInputFrameHeight();
         boolean changed = ImGui.inputInt(id, intHolder, 0, 0);
+        Controls.popInputFrameHeight();
         return changed && intHolder.get() != value ? intHolder.get() : null;
     }
 
-    private void blockCell(GhostBlocks blocks, int i) {
-        GhostBlock b = blocks.get(i);
+    private void blockCell(BlockOverrides blocks, int i) {
+        BlockOverride b = blocks.get(i);
         ImString buf = blockBuffers.get(i);
         if (editingRow != i) buf.set(b.block);
         String error = errorOf(b.block);
         if (error != null) ThemeManager.pushTextColor(ThemeManager.dangerColor());
         ImGui.setNextItemWidth(-1f);
-        ImGui.inputTextWithHint("##block", GhostBlock.DEFAULT_BLOCK, buf);
+        Controls.pushInputFrameHeight();
+        ImGui.inputTextWithHint("##block", BlockOverride.DEFAULT_BLOCK, buf);
+        Controls.popInputFrameHeight();
         if (error != null) ThemeManager.popTextColor();
         if (ImGui.isItemActivated()) editingRow = i;
         if (ImGui.isItemDeactivatedAfterEdit()) {
@@ -187,8 +191,8 @@ public final class GhostBlocksWindow implements RenderInterface {
                 : "Block id with optional states, like minecraft:oak_door[open=true]. A missing state keeps the block's default.");
     }
 
-    private boolean actions(GhostBlocks blocks, int i) {
-        GhostBlock b = blocks.get(i);
+    private boolean actions(BlockOverrides blocks, int i) {
+        BlockOverride b = blocks.get(i);
         if (Controls.secondaryButton("Pick")) {
             int[] pos = targetBlock();
             update(blocks, i, b.withPos(pos[0], pos[1], pos[2]), b);
@@ -215,12 +219,12 @@ public final class GhostBlocksWindow implements RenderInterface {
     }
 
     private String errorOf(String spec) {
-        GhostBlock.Spec parsed = GhostBlock.Spec.parse(spec);
+        BlockOverride.Spec parsed = BlockOverride.Spec.parse(spec);
         if (!parsed.valid()) return parsed.error;
-        return mc.ghostBlockError(spec);
+        return mc.blockOverrideError(spec);
     }
 
-    private void update(GhostBlocks blocks, int i, GhostBlock next, GhostBlock prev) {
+    private void update(BlockOverrides blocks, int i, BlockOverride next, BlockOverride prev) {
         if (next.equals(prev)) return;
         blocks.set(i, next);
         changed(Math.min(next.startTick, prev.startTick) - 1);
@@ -230,7 +234,7 @@ public final class GhostBlocksWindow implements RenderInterface {
         onChanged.accept(Math.max(0, dirtyRow));
     }
 
-    private void syncBuffers(GhostBlocks blocks) {
+    private void syncBuffers(BlockOverrides blocks) {
         while (blockBuffers.size() < blocks.size()) blockBuffers.add(new ImString(BLOCK_CHARS));
         while (blockBuffers.size() > blocks.size()) blockBuffers.remove(blockBuffers.size() - 1);
         if (editingRow >= blocks.size()) editingRow = -1;

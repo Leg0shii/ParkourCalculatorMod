@@ -4,7 +4,7 @@ import de.legoshi.parkourcalc.core.save.FileSystemSaveStore;
 import de.legoshi.parkourcalc.core.save.Result;
 import de.legoshi.parkourcalc.core.save.SaveFile;
 import de.legoshi.parkourcalc.core.save.SaveIO;
-import de.legoshi.parkourcalc.core.sim.GhostBlock;
+import de.legoshi.parkourcalc.core.sim.BlockOverride;
 import de.legoshi.parkourcalc.core.sim.SimulationRunner;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputData;
@@ -23,7 +23,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-public class GhostBlocksTest {
+public class BlockOverridesTest {
 
     private static InputData rows(int n) {
         InputData data = new InputData();
@@ -33,21 +33,21 @@ public class GhostBlocksTest {
 
     @Test
     public void specParsesIdAndStates() {
-        GhostBlock.Spec s = GhostBlock.Spec.parse(" Oak_Door[open=true, half=lower] ");
+        BlockOverride.Spec s = BlockOverride.Spec.parse(" Oak_Door[open=true, half=lower] ");
         assertTrue(s.valid());
         assertEquals("minecraft:oak_door", s.id);
         assertEquals("true", s.properties.get("open"));
         assertEquals("lower", s.properties.get("half"));
-        assertEquals("minecraft:oak_door[open=true,half=lower]", GhostBlock.Spec.format(s.id, s.properties));
-        assertEquals("minecraft:air", GhostBlock.Spec.parse("air").id);
-        assertFalse(GhostBlock.Spec.parse("").valid());
-        assertFalse(GhostBlock.Spec.parse("oak_door[open=true").valid());
-        assertFalse(GhostBlock.Spec.parse("oak_door[open]").valid());
+        assertEquals("minecraft:oak_door[open=true,half=lower]", BlockOverride.Spec.format(s.id, s.properties));
+        assertEquals("minecraft:air", BlockOverride.Spec.parse("air").id);
+        assertFalse(BlockOverride.Spec.parse("").valid());
+        assertFalse(BlockOverride.Spec.parse("oak_door[open=true").valid());
+        assertFalse(BlockOverride.Spec.parse("oak_door[open]").valid());
     }
 
     @Test
     public void activeTicksAreOneBasedAndInclusive() {
-        GhostBlock b = new GhostBlock(3, 5, 0, 64, 0, "air");
+        BlockOverride b = new BlockOverride(3, 5, 0, 64, 0, "air");
         assertFalse(b.activeAtRow(1));
         assertTrue(b.activeAtRow(2));
         assertTrue(b.activeAtRow(4));
@@ -57,15 +57,15 @@ public class GhostBlocksTest {
     @Test
     public void simulatorSeesOnlyTheBlocksActiveOnEachTickAndNoneAfterThePass() {
         InputData data = rows(6);
-        GhostBlock door = new GhostBlock(2, 3, 1, 64, 1, "air");
-        GhostBlock bad = new GhostBlock(1, 6, 2, 64, 2, "[");
-        data.getGhostBlocks().add(door);
-        data.getGhostBlocks().add(bad);
+        BlockOverride door = new BlockOverride(2, 3, 1, 64, 1, "air");
+        BlockOverride bad = new BlockOverride(1, 6, 2, 64, 2, "[");
+        data.getBlockOverrides().add(door);
+        data.getBlockOverrides().add(bad);
         final List<Integer> perTick = new ArrayList<Integer>();
-        final List<GhostBlock>[] current = new List[] {Collections.emptyList()};
+        final List<BlockOverride>[] current = new List[] {Collections.emptyList()};
         FakeSimulator sim = new FakeSimulator() {
             @Override
-            public void setGhostBlocks(List<GhostBlock> active) {
+            public void setBlockOverrides(List<BlockOverride> active) {
                 current[0] = active;
             }
 
@@ -89,8 +89,8 @@ public class GhostBlocksTest {
     @Test
     public void playbackHandsTheReplicaEachTicksBlocksAndClearsThemOnStop() {
         InputData data = rows(4);
-        GhostBlock door = new GhostBlock(2, 2, 1, 64, 1, "air");
-        data.getGhostBlocks().add(door);
+        BlockOverride door = new BlockOverride(2, 2, 1, 64, 1, "air");
+        data.getBlockOverrides().add(door);
         FakePlaybackBridge bridge = new FakePlaybackBridge();
         Settings settings = new Settings();
         settings.replayStartDelayTicks = 0;
@@ -99,22 +99,22 @@ public class GhostBlocksTest {
         pc.start(0, data.size(), Vec3dCore.ZERO, Vec3dCore.ZERO, 0f, new de.legoshi.parkourcalc.core.sim.Checkpoint() {
         });
         pc.tick();
-        assertTrue(bridge.ghostBlocks.isEmpty());
+        assertTrue(bridge.blockOverrides.isEmpty());
         pc.tick();
-        assertEquals(Collections.singletonList(door), bridge.ghostBlocks);
+        assertEquals(Collections.singletonList(door), bridge.blockOverrides);
         pc.tick();
-        assertTrue(bridge.ghostBlocks.isEmpty());
+        assertTrue(bridge.blockOverrides.isEmpty());
         pc.tick();
         pc.stop();
-        assertTrue(bridge.ghostBlocks.isEmpty());
+        assertTrue(bridge.blockOverrides.isEmpty());
     }
 
     @Test
-    public void ghostBlocksRoundTripThroughTheSaveAndChangeTheUndoSignature() throws Exception {
-        FileSystemSaveStore store = new FileSystemSaveStore(Files.createTempDirectory("pkc-ghost"), "test", "1.8.9", () -> null);
+    public void blockOverridesRoundTripThroughTheSaveAndChangeTheUndoSignature() throws Exception {
+        FileSystemSaveStore store = new FileSystemSaveStore(Files.createTempDirectory("pkc-overrides"), "test", "1.8.9", () -> null);
         InputData in = rows(3);
         String before = SaveIO.undoSignature(in, Vec3dCore.ZERO, Vec3dCore.ZERO, 0f, 0f, null, null);
-        in.getGhostBlocks().add(new GhostBlock(1, 3, -5, 70, 12, "minecraft:oak_trapdoor[open=true]"));
+        in.getBlockOverrides().add(new BlockOverride(1, 3, -5, 70, 12, "minecraft:oak_trapdoor[open=true]"));
         String after = SaveIO.undoSignature(in, Vec3dCore.ZERO, Vec3dCore.ZERO, 0f, 0f, null, null);
         assertNotEquals(before, after);
 
@@ -123,16 +123,16 @@ public class GhostBlocksTest {
         Result<SaveFile> loaded = SaveIO.load(store, "run");
         assertTrue(loaded.ok);
         InputData out = new InputData();
-        SaveIO.applyGhostBlocksTo(loaded.value, out);
-        assertEquals(in.getGhostBlocks().all(), out.getGhostBlocks().all());
-        assertTrue(SaveIO.ghostBlocksMatch(loaded.value, in));
+        SaveIO.applyBlockOverridesTo(loaded.value, out);
+        assertEquals(in.getBlockOverrides().all(), out.getBlockOverrides().all());
+        assertTrue(SaveIO.blockOverridesMatch(loaded.value, in));
 
         InputData empty = rows(1);
         Result<String> plain = SaveIO.save(store, "plain", empty, Vec3dCore.ZERO, Vec3dCore.ZERO, 0f, PlaybackController.DEFAULT_PITCH, null, null, false);
         assertTrue(plain.ok);
         SaveFile plainFile = SaveIO.load(store, "plain").value;
-        assertNull(plainFile.ghostBlocks);
-        SaveIO.applyGhostBlocksTo(plainFile, out);
-        assertTrue(out.getGhostBlocks().isEmpty());
+        assertNull(plainFile.blockOverrides);
+        SaveIO.applyBlockOverridesTo(plainFile, out);
+        assertTrue(out.getBlockOverrides().isEmpty());
     }
 }

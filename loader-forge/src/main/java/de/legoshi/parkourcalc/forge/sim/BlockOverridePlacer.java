@@ -1,6 +1,6 @@
 package de.legoshi.parkourcalc.forge.sim;
 
-import de.legoshi.parkourcalc.core.sim.GhostBlock;
+import de.legoshi.parkourcalc.core.sim.BlockOverride;
 import net.minecraft.block.Block;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.state.IBlockState;
@@ -15,11 +15,11 @@ import java.util.List;
 import java.util.Map;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
-public final class GhostBlockPlacer {
+public final class BlockOverridePlacer {
 
     private static final Map<String, Object> RESOLVED = new HashMap<String, Object>();
 
-    private GhostBlockPlacer() {
+    private BlockOverridePlacer() {
     }
 
     private static final class Placed {
@@ -45,10 +45,10 @@ public final class GhostBlockPlacer {
         }
     }
 
-    public static Runnable place(World world, List<GhostBlock> blocks) {
+    public static Runnable place(World world, List<BlockOverride> blocks) {
         if (world == null || blocks.isEmpty()) return null;
         final List<Placed> placed = new ArrayList<Placed>();
-        for (GhostBlock b : blocks) {
+        for (BlockOverride b : blocks) {
             IBlockState state = state(b.block);
             if (state == null) continue;
             //? if >=1.12 {
@@ -103,7 +103,7 @@ public final class GhostBlockPlacer {
             IProperty p = (IProperty) e.getKey();
             props.put(p.getName(), p.getName((Comparable) e.getValue()));
         }
-        return GhostBlock.Spec.format(idOf(state.getBlock()), props);
+        return BlockOverride.Spec.format(idOf(state.getBlock()), props);
     }
 
     private static synchronized Object resolve(String spec) {
@@ -115,7 +115,7 @@ public final class GhostBlockPlacer {
     }
 
     private static Object parse(String spec) {
-        GhostBlock.Spec parsed = GhostBlock.Spec.parse(spec);
+        BlockOverride.Spec parsed = BlockOverride.Spec.parse(spec);
         if (!parsed.valid()) return parsed.error;
         Block block = Block.getBlockFromName(parsed.id);
         if (block == null) return "Unknown block " + parsed.id;

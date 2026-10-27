@@ -5,7 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 
-public final class GhostBlock {
+public final class BlockOverride {
 
     public static final String DEFAULT_BLOCK = "minecraft:air";
 
@@ -16,7 +16,7 @@ public final class GhostBlock {
     public final int z;
     public final String block;
 
-    public GhostBlock(int startTick, int endTick, int x, int y, int z, String block) {
+    public BlockOverride(int startTick, int endTick, int x, int y, int z, String block) {
         this.startTick = startTick;
         this.endTick = endTick;
         this.x = x;
@@ -30,16 +30,16 @@ public final class GhostBlock {
         return tick >= startTick && tick <= endTick;
     }
 
-    public GhostBlock withTicks(int start, int end) {
-        return new GhostBlock(start, end, x, y, z, block);
+    public BlockOverride withTicks(int start, int end) {
+        return new BlockOverride(start, end, x, y, z, block);
     }
 
-    public GhostBlock withPos(int nx, int ny, int nz) {
-        return new GhostBlock(startTick, endTick, nx, ny, nz, block);
+    public BlockOverride withPos(int nx, int ny, int nz) {
+        return new BlockOverride(startTick, endTick, nx, ny, nz, block);
     }
 
-    public GhostBlock withBlock(String spec) {
-        return new GhostBlock(startTick, endTick, x, y, z, spec);
+    public BlockOverride withBlock(String spec) {
+        return new BlockOverride(startTick, endTick, x, y, z, spec);
     }
 
     public Spec spec() {
@@ -48,8 +48,8 @@ public final class GhostBlock {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof GhostBlock)) return false;
-        GhostBlock g = (GhostBlock) o;
+        if (!(o instanceof BlockOverride)) return false;
+        BlockOverride g = (BlockOverride) o;
         return startTick == g.startTick && endTick == g.endTick && x == g.x && y == g.y && z == g.z
                 && block.equals(g.block);
     }

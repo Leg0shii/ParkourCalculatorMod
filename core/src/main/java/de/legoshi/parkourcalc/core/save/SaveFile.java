@@ -15,7 +15,7 @@ public final class SaveFile {
     public World world;
     public Start start;
     public List<Row> rows = new ArrayList<Row>();
-    public List<GhostBlock> ghostBlocks;
+    public List<BlockOverride> blockOverrides;
     public AngleSolver angleSolver;
     public List<DebugTick> debug;
 
@@ -67,7 +67,7 @@ public final class SaveFile {
         public List<String> onejumpOptional;
     }
 
-    public static final class GhostBlock {
+    public static final class BlockOverride {
         public int startTick;
         public int endTick;
         public int x;

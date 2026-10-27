@@ -39,7 +39,7 @@ public final class SimulationRunner {
         path.add(snapshot());
         checkpoints.add(simulator.saveCheckpoint());
 
-        replayFrom(0, inputData.getRows(), inputData.getGhostBlocks());
+        replayFrom(0, inputData.getRows(), inputData.getBlockOverrides());
         simulator.onPassEnd();
         return path;
     }
@@ -67,23 +67,23 @@ public final class SimulationRunner {
         }
         simulator.takeServerSimEvents();
 
-        replayFrom(dirtyTick, inputData.getRows(), inputData.getGhostBlocks());
+        replayFrom(dirtyTick, inputData.getRows(), inputData.getBlockOverrides());
         simulator.onPassEnd();
         return path;
     }
 
-    private void replayFrom(int startRow, List<InputRow> rows, GhostBlocks ghostBlocks) {
+    private void replayFrom(int startRow, List<InputRow> rows, BlockOverrides blockOverrides) {
         try {
-            replayRows(startRow, rows, ghostBlocks);
+            replayRows(startRow, rows, blockOverrides);
         } finally {
-            simulator.setGhostBlocks(Collections.<GhostBlock>emptyList());
+            simulator.setBlockOverrides(Collections.<BlockOverride>emptyList());
         }
     }
 
-    private void replayRows(int startRow, List<InputRow> rows, GhostBlocks ghostBlocks) {
+    private void replayRows(int startRow, List<InputRow> rows, BlockOverrides blockOverrides) {
         for (int i = startRow; i < rows.size(); i++) {
             InputRow row = rows.get(i);
-            simulator.setGhostBlocks(ghostBlocks.activeAtRow(i));
+            simulator.setBlockOverrides(blockOverrides.activeAtRow(i));
             if (row.isTeleportEnabled()) {
                 simulator.teleport(
                         new Vec3dCore(row.getTeleportX(), row.getTeleportY(), row.getTeleportZ()),

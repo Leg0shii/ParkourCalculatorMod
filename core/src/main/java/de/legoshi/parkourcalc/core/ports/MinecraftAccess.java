@@ -62,7 +62,7 @@ public interface MinecraftAccess {
         return null;
     }
 
-    default String ghostBlockError(String spec) {
+    default String blockOverrideError(String spec) {
         return null;
     }
 

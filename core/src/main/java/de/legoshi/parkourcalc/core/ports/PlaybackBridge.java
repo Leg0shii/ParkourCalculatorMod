@@ -1,7 +1,7 @@
 package de.legoshi.parkourcalc.core.ports;
 
 import de.legoshi.parkourcalc.core.sim.Checkpoint;
-import de.legoshi.parkourcalc.core.sim.GhostBlock;
+import de.legoshi.parkourcalc.core.sim.BlockOverride;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 
@@ -55,7 +55,7 @@ public interface PlaybackBridge {
 
     void applyEffects(int[] effectLevels);
 
-    default void setGhostBlocks(List<GhostBlock> active) {}
+    default void setBlockOverrides(List<BlockOverride> active) {}
 
     /** Switch the held hotbar slot (0-8) so playback places from the right slot. No-op if unsupported. */
     default void setHotbarSlot(int slotZeroBased) {}

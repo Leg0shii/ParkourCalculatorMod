@@ -4,8 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
 import de.legoshi.parkourcalc.core.sim.AABB;
-import de.legoshi.parkourcalc.core.sim.GhostBlock;
-import de.legoshi.parkourcalc.core.sim.GhostBlocks;
+import de.legoshi.parkourcalc.core.sim.BlockOverride;
+import de.legoshi.parkourcalc.core.sim.BlockOverrides;
 import de.legoshi.parkourcalc.core.sim.StartResumeState;
 import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
@@ -105,7 +105,7 @@ public final class SaveIO {
             rows.add(toSaveRow(row));
         }
         file.rows = rows;
-        file.ghostBlocks = toSaveGhostBlocks(inputData.getGhostBlocks());
+        file.blockOverrides = toSaveBlockOverrides(inputData.getBlockOverrides());
         file.angleSolver = toSaveAngleSolver(angleSolver);
         return file;
     }
@@ -131,8 +131,8 @@ public final class SaveIO {
         SaveFile.Resume res = toSaveResume(resume);
         if (res != null) sb.append(COMPACT_GSON.toJson(res));
         sb.append('#');
-        List<SaveFile.GhostBlock> ghosts = toSaveGhostBlocks(inputData.getGhostBlocks());
-        if (ghosts != null) sb.append(COMPACT_GSON.toJson(ghosts));
+        List<SaveFile.BlockOverride> overrides = toSaveBlockOverrides(inputData.getBlockOverrides());
+        if (overrides != null) sb.append(COMPACT_GSON.toJson(overrides));
         sb.append('#');
         SaveFile.AngleSolver solver = toSaveAngleSolver(angleSolver);
         if (solver != null) sb.append(COMPACT_GSON.toJson(solver));
@@ -181,29 +181,29 @@ public final class SaveIO {
         }
     }
 
-    public static void applyGhostBlocksTo(SaveFile file, InputData inputData) {
-        inputData.getGhostBlocks().replaceAll(ghostBlocksOf(file));
+    public static void applyBlockOverridesTo(SaveFile file, InputData inputData) {
+        inputData.getBlockOverrides().replaceAll(blockOverridesOf(file));
     }
 
-    public static boolean ghostBlocksMatch(SaveFile file, InputData inputData) {
-        return ghostBlocksOf(file).equals(inputData.getGhostBlocks().all());
+    public static boolean blockOverridesMatch(SaveFile file, InputData inputData) {
+        return blockOverridesOf(file).equals(inputData.getBlockOverrides().all());
     }
 
-    public static List<GhostBlock> ghostBlocksOf(SaveFile file) {
-        List<GhostBlock> out = new ArrayList<>();
-        if (file == null || file.ghostBlocks == null) return out;
-        for (SaveFile.GhostBlock g : file.ghostBlocks) {
+    public static List<BlockOverride> blockOverridesOf(SaveFile file) {
+        List<BlockOverride> out = new ArrayList<>();
+        if (file == null || file.blockOverrides == null) return out;
+        for (SaveFile.BlockOverride g : file.blockOverrides) {
             if (g == null) continue;
-            out.add(new GhostBlock(g.startTick, g.endTick, g.x, g.y, g.z, g.block));
+            out.add(new BlockOverride(g.startTick, g.endTick, g.x, g.y, g.z, g.block));
         }
         return out;
     }
 
-    private static List<SaveFile.GhostBlock> toSaveGhostBlocks(GhostBlocks blocks) {
+    private static List<SaveFile.BlockOverride> toSaveBlockOverrides(BlockOverrides blocks) {
         if (blocks == null || blocks.isEmpty()) return null;
-        List<SaveFile.GhostBlock> out = new ArrayList<>(blocks.size());
-        for (GhostBlock b : blocks.all()) {
-            SaveFile.GhostBlock g = new SaveFile.GhostBlock();
+        List<SaveFile.BlockOverride> out = new ArrayList<>(blocks.size());
+        for (BlockOverride b : blocks.all()) {
+            SaveFile.BlockOverride g = new SaveFile.BlockOverride();
             g.startTick = b.startTick;
             g.endTick = b.endTick;
             g.x = b.x;
@@ -457,7 +457,7 @@ public final class SaveIO {
             rows.add(toSaveRow(row));
         }
         file.rows = rows;
-        file.ghostBlocks = toSaveGhostBlocks(inputData.getGhostBlocks());
+        file.blockOverrides = toSaveBlockOverrides(inputData.getBlockOverrides());
 
         file.angleSolver = toSaveAngleSolver(angleSolver);
 

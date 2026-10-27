@@ -5,7 +5,7 @@ import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
 import de.legoshi.parkourcalc.core.sim.AABB;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.fabric.input.FabricInput;
-import de.legoshi.parkourcalc.fabric.sim.GhostBlockPlacer;
+import de.legoshi.parkourcalc.fabric.sim.BlockOverridePlacer;
 import de.legoshi.parkourcalc.fabric.sim.paired.PairedServerSim;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Camera;
@@ -123,12 +123,12 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
         if (world == null) return null;
         BlockPos pos = new BlockPos(x, y, z);
         if (!world.hasChunk(x >> 4, z >> 4)) return null;
-        return GhostBlockPlacer.describe(world.getBlockState(pos));
+        return BlockOverridePlacer.describe(world.getBlockState(pos));
     }
 
     @Override
-    public String ghostBlockError(String spec) {
-        return GhostBlockPlacer.error(spec);
+    public String blockOverrideError(String spec) {
+        return BlockOverridePlacer.error(spec);
     }
 
     @Override

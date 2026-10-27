@@ -4,12 +4,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public final class GhostBlocks {
+public final class BlockOverrides {
 
-    private final List<GhostBlock> blocks = new ArrayList<GhostBlock>();
+    private final List<BlockOverride> blocks = new ArrayList<BlockOverride>();
     private int modCount;
 
-    public List<GhostBlock> all() {
+    public List<BlockOverride> all() {
         return Collections.unmodifiableList(blocks);
     }
 
@@ -21,7 +21,7 @@ public final class GhostBlocks {
         return blocks.isEmpty();
     }
 
-    public GhostBlock get(int index) {
+    public BlockOverride get(int index) {
         return blocks.get(index);
     }
 
@@ -29,12 +29,12 @@ public final class GhostBlocks {
         return modCount;
     }
 
-    public void add(GhostBlock block) {
+    public void add(BlockOverride block) {
         blocks.add(block);
         modCount++;
     }
 
-    public void set(int index, GhostBlock block) {
+    public void set(int index, BlockOverride block) {
         if (index < 0 || index >= blocks.size() || blocks.get(index).equals(block)) return;
         blocks.set(index, block);
         modCount++;
@@ -46,7 +46,7 @@ public final class GhostBlocks {
         modCount++;
     }
 
-    public void replaceAll(List<GhostBlock> next) {
+    public void replaceAll(List<BlockOverride> next) {
         if (blocks.equals(next)) return;
         blocks.clear();
         if (next != null) blocks.addAll(next);
@@ -59,13 +59,13 @@ public final class GhostBlocks {
         modCount++;
     }
 
-    public List<GhostBlock> activeAtRow(int row) {
-        List<GhostBlock> active = null;
-        for (GhostBlock b : blocks) {
+    public List<BlockOverride> activeAtRow(int row) {
+        List<BlockOverride> active = null;
+        for (BlockOverride b : blocks) {
             if (!b.activeAtRow(row) || !b.spec().valid()) continue;
-            if (active == null) active = new ArrayList<GhostBlock>();
+            if (active == null) active = new ArrayList<BlockOverride>();
             active.add(b);
         }
-        return active == null ? Collections.<GhostBlock>emptyList() : active;
+        return active == null ? Collections.<BlockOverride>emptyList() : active;
     }
 }

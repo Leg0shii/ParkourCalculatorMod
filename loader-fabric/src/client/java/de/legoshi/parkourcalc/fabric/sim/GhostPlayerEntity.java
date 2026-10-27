@@ -1,7 +1,7 @@
 package de.legoshi.parkourcalc.fabric.sim;
 
 import com.mojang.authlib.GameProfile;
-import de.legoshi.parkourcalc.core.sim.GhostBlock;
+import de.legoshi.parkourcalc.core.sim.BlockOverride;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 import de.legoshi.parkourcalc.fabric.FabricParkourCalculator;
 import net.minecraft.client.Minecraft;
@@ -45,7 +45,7 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
     private PlayerInfo ownerInfo;
     private int sprintTriggerTime = 0;
     private boolean crouching;
-    private List<GhostBlock> ghostBlocks = List.of();
+    private List<BlockOverride> blockOverrides = List.of();
 
     public GhostPlayerEntity(ClientLevel level, GameProfile profile) {
         super(level, profile);
@@ -86,8 +86,8 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
         this.fallDistance = c.fallDistance;
     }
 
-    public void setGhostBlocks(List<GhostBlock> active) {
-        this.ghostBlocks = active;
+    public void setBlockOverrides(List<BlockOverride> active) {
+        this.blockOverrides = active;
     }
 
     @Override
@@ -96,7 +96,7 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
             this.setOnGround(FabricParkourCalculator.firstTickOnGround());
             this.fallDistance = 0;
         }
-        Runnable restore = GhostBlockPlacer.place(level(), ghostBlocks);
+        Runnable restore = BlockOverridePlacer.place(level(), blockOverrides);
         try {
             super.tick();
         } finally {

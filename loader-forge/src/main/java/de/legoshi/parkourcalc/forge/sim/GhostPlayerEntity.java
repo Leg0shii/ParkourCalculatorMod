@@ -1,7 +1,7 @@
 package de.legoshi.parkourcalc.forge.sim;
 
 import com.mojang.authlib.GameProfile;
-import de.legoshi.parkourcalc.core.sim.GhostBlock;
+import de.legoshi.parkourcalc.core.sim.BlockOverride;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 import de.legoshi.parkourcalc.forge.core.sim.PlayerSprintMachine;
 //? if >=1.12
@@ -29,7 +29,7 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
 
     private InputRow currentInput = new InputRow();
     private PlayerSprintMachine.State sprintState = PlayerSprintMachine.State.initial();
-    private List<GhostBlock> ghostBlocks = Collections.emptyList();
+    private List<BlockOverride> blockOverrides = Collections.emptyList();
 
     public GhostPlayerEntity(World world, GameProfile profile) {
         super(world, profile);
@@ -39,13 +39,13 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
         this.currentInput = row;
     }
 
-    public void setGhostBlocks(List<GhostBlock> active) {
-        this.ghostBlocks = active;
+    public void setBlockOverrides(List<BlockOverride> active) {
+        this.blockOverrides = active;
     }
 
     @Override
     public void onUpdate() {
-        Runnable restore = GhostBlockPlacer.place(getEntityWorld(), ghostBlocks);
+        Runnable restore = BlockOverridePlacer.place(getEntityWorld(), blockOverrides);
         try {
             super.onUpdate();
         } finally {
