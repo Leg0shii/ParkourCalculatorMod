@@ -12,6 +12,7 @@ public final class Settings {
     private static final float[] DEFAULT_TICK_SNEAK = {1.000f, 0.604f, 0.239f, 0.50f};          // orange     #ff9a3d
     private static final float[] DEFAULT_TICK_WALL = {1.000f, 0.231f, 0.361f, 0.50f};           // red        #ff3b5c
     private static final float[] DEFAULT_TICK_SOFT_COLLISION = {1.000f, 0.435f, 0.529f, 0.50f}; // rose       #ff6f87
+    private static final float[] DEFAULT_TICK_GLIDING = {0.796f, 0.651f, 0.969f, 0.50f};        // mauve      #cba6f7
     private static final float[] DEFAULT_TICK_SOLVER_START = {0.651f, 0.890f, 0.631f, 0.60f};   // green      #a6e3a1
     private static final float[] DEFAULT_TICK_SOLVER_GOAL = {0.976f, 0.886f, 0.686f, 0.60f};    // yellow     #f9e2af
     private static final float[] DEFAULT_TICK_DEVIATION = {1.000f, 0.184f, 0.831f, 0.60f};      // magenta    #ff2fd4
@@ -144,6 +145,7 @@ public final class Settings {
     public final float[] tickSneak = DEFAULT_TICK_SNEAK.clone();
     public final float[] tickWall = DEFAULT_TICK_WALL.clone();
     public final float[] tickSoftCollision = DEFAULT_TICK_SOFT_COLLISION.clone();
+    public final float[] tickGliding = DEFAULT_TICK_GLIDING.clone();
     public final float[] tickSolverStart = DEFAULT_TICK_SOLVER_START.clone();
     public final float[] tickSolverGoal = DEFAULT_TICK_SOLVER_GOAL.clone();
     public final float[] tickDeviation = DEFAULT_TICK_DEVIATION.clone();
@@ -282,6 +284,7 @@ public final class Settings {
         System.arraycopy(DEFAULT_TICK_SNEAK, 0, tickSneak, 0, 4);
         System.arraycopy(DEFAULT_TICK_WALL, 0, tickWall, 0, 4);
         System.arraycopy(DEFAULT_TICK_SOFT_COLLISION, 0, tickSoftCollision, 0, 4);
+        System.arraycopy(DEFAULT_TICK_GLIDING, 0, tickGliding, 0, 4);
         System.arraycopy(DEFAULT_TICK_SOLVER_START, 0, tickSolverStart, 0, 4);
         System.arraycopy(DEFAULT_TICK_SOLVER_GOAL, 0, tickSolverGoal, 0, 4);
         System.arraycopy(DEFAULT_TICK_DEVIATION, 0, tickDeviation, 0, 4);

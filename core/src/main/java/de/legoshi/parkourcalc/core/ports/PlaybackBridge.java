@@ -47,6 +47,12 @@ public interface PlaybackBridge {
 
     default void suppressFlight() {}
 
+    default boolean hasElytraEquipped() {
+        return true;
+    }
+
+    default void prepareElytra(boolean equipped) {}
+
     /** Close any open mod UI (control panel / GuiScreen) the same way the toggle key would. */
     void closeUI();
 

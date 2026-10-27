@@ -62,6 +62,16 @@ public final class ForgeMinecraftAccess implements MinecraftAccess {
     }
 
     @Override
+    public boolean isPlayerWearingElytra() {
+        //? if >=1.12 {
+        EntityPlayerSP player = McClient.player();
+        return player != null && de.legoshi.parkourcalc.forge.sim.ElytraGlide.wearing(player);
+        //?} else {
+        /*return false;
+        *///?}
+    }
+
+    @Override
     public Vec3dCore getEyePosition() {
         Entity view = Minecraft.getMinecraft().getRenderViewEntity();
         if (view == null) return Vec3dCore.ZERO;

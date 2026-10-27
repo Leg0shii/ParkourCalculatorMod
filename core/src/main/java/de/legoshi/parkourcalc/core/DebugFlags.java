@@ -35,6 +35,7 @@ public final class DebugFlags {
             appendBoolDiff(diff, "wallCollision", p.wallCollision, f.wallCollision);
             appendVecDiff(diff, "vel", p.velocity, f.velocity);
             appendBoolDiff(diff, "softCollision", p.softCollision, f.softCollision);
+            appendBoolDiff(diff, "gliding", p.gliding, f.gliding);
             appendDoubleDiff(diff, "collisionAngle", p.collisionAngleDegrees, f.collisionAngleDegrees);
             if (diff.length() > 0) {
                 System.out.println("[PC-DIFF] dirtyTick=" + dirtyTick + " tick=" + i + diff);

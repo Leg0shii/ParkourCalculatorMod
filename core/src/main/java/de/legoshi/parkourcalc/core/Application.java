@@ -136,6 +136,7 @@ public final class Application {
         );
         this.playback = new PlaybackController(inputData, runner, settings);
         this.playback.setStartRangeResolver(this::resolvePlaybackStartRange);
+        this.playback.setWarningSink(m -> pushHudMessage(m, HudMessageStyle.COLOR_WARN));
         this.recorder = new de.legoshi.parkourcalc.core.record.HumanRecorder(saveController::getSaveStore, mc::getMouseSensitivity);
     }
 
@@ -249,9 +250,9 @@ public final class Application {
         saveController.setSolverEngine(angleSolverEngine);
         undoController = new UndoController<>(
                 () -> SaveIO.undoSignature(inputData, runner.getStartPosition(), runner.getStartVelocity(),
-                        runner.getStartYaw(), runner.getStartPitch(), runner.getStartResumeState(), angleSolverState),
+                        runner.getStartYaw(), runner.getStartPitch(), runner.isElytraEquipped(), runner.getStartResumeState(), angleSolverState),
                 () -> SaveIO.buildUndoSnapshot(inputData, runner.getStartPosition(), runner.getStartVelocity(),
-                        runner.getStartYaw(), runner.getStartPitch(), runner.getStartResumeState(), angleSolverState),
+                        runner.getStartYaw(), runner.getStartPitch(), runner.isElytraEquipped(), runner.getStartResumeState(), angleSolverState),
                 SaveIO::undoJson,
                 saveController::applySnapshotJson);
         saveController.setUndoController(undoController);
@@ -264,6 +265,7 @@ public final class Application {
         this.angleSolverWindow = angleSolverWindow;
         angleSolverWindow.setPlayerYawSupplier(mc::getPlayerYaw);
         angleSolverWindow.setTeleportAtRow(t -> t >= 0 && t < inputData.size() && inputData.get(t).isTeleportEnabled());
+        angleSolverWindow.setGlidingAtRow(this::rowGlides);
         runTicks = new RunTicksController(angleSolverState, angleSolverEngine, inputData, constraintSelection,
                 hudMessages, this::runSimulation, saveController::markDirty, this::pushHudMessage);
         angleSolverWindow.setRunTicksControls(runTicks);
@@ -280,7 +282,7 @@ public final class Application {
                 new TurnProfileStore(saveController::getSaveStore), saveController::currentName,
                 t -> boxController.getState(t),
                 () -> SaveIO.undoSignature(inputData, runner.getStartPosition(), runner.getStartVelocity(),
-                        runner.getStartYaw(), runner.getStartPitch(), runner.getStartResumeState(), angleSolverState));
+                        runner.getStartYaw(), runner.getStartPitch(), runner.isElytraEquipped(), runner.getStartResumeState(), angleSolverState));
         attemptTracker = new AttemptTracker(turnProfile, () -> settings.viewTurnProfile || settings.viewOnejumpKeys
                 || settings.viewOnejumpSetup, this::isPlaybackRunning, () -> settings.onejumpTurnTiming);
         practiceMacro = new PracticeMacro(turnProfile, attemptTracker, settings);
@@ -579,6 +581,7 @@ public final class Application {
         if (!mc.isReady()) return;
         runner.setStartPosition(mc.getPlayerPosition());
         runner.setStartYaw(mc.getPlayerYaw());
+        runner.setElytraEquipped(runner.supportsElytra() && mc.isPlayerWearingElytra());
         onUserChange(-1);
     }
 
@@ -787,8 +790,27 @@ public final class Application {
             pushHudMessage("Can't solve: the solve range crosses a teleport", HudMessageStyle.COLOR_WARN);
             return;
         }
+        if (solveRangeCrossesGliding()) {
+            pushHudMessage("Can't solve: the solve range crosses an elytra glide", HudMessageStyle.COLOR_WARN);
+            return;
+        }
         if (runTicks != null) runTicks.start();
         else solverEngine.solve();
+    }
+
+    private boolean rowGlides(int row) {
+        TickState after = boxController.getState(row + 1);
+        return after != null && after.gliding;
+    }
+
+    private boolean solveRangeCrossesGliding() {
+        if (angleSolverState == null) return false;
+        int lo = Math.min(angleSolverState.getStartTick(), angleSolverState.getLandingTick());
+        int hi = Math.max(angleSolverState.getStartTick(), angleSolverState.getLandingTick());
+        for (int t = lo; t < hi; t++) {
+            if (rowGlides(t)) return true;
+        }
+        return false;
     }
 
     private boolean solveRangeCrossesTeleport() {

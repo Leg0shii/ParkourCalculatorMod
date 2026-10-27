@@ -112,9 +112,11 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
         ClientLevel level = mc.level;
         LocalPlayer client = mc.player;
         if (level == null || client == null) return;
+        boolean elytra = ghost != null && de.legoshi.parkourcalc.fabric.sim.ElytraGlide.wearing(ghost);
         removeGhostEntity();
         GhostPlayerEntity g = new GhostPlayerEntity(level, client.getGameProfile());
         g.setId(GHOST_ENTITY_ID);
+        de.legoshi.parkourcalc.fabric.sim.ElytraGlide.equip(g, elytra);
         g.setInput(currentRow);
         snapTo(g, pos.x, pos.y, pos.z, yaw, client.getXRot());
         g.setYBodyRot(yaw);
@@ -547,6 +549,18 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
         for (InputRow.Key k : InputRow.Key.values()) {
             setKey(k, false);
         }
+    }
+
+    @Override
+    public boolean hasElytraEquipped() {
+        if (!isSingleplayer()) return true;
+        LocalPlayer p = Minecraft.getInstance().player;
+        return p != null && de.legoshi.parkourcalc.fabric.sim.ElytraGlide.wearing(p);
+    }
+
+    @Override
+    public void prepareElytra(boolean equipped) {
+        if (ghost != null) de.legoshi.parkourcalc.fabric.sim.ElytraGlide.equip(ghost, equipped);
     }
 
     @Override

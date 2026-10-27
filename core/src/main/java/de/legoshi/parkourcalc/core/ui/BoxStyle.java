@@ -27,6 +27,7 @@ public final class BoxStyle {
     public static final double HITBOX_HALF_WIDTH = ConstraintDeriver.HALF;
     public static final double HITBOX_HEIGHT_STANDING = 1.8;
     public static final double HITBOX_HEIGHT_SNEAKING = 1.5;
+    public static final double HITBOX_HEIGHT_GLIDING = 0.6;
 
     /** Hitbox edges render as thin world-space boxes (glLineWidth > 1 is ignored by most GPUs and by Fabric's pipeline). */
     public static final double HITBOX_EDGE_THICKNESS = 0.025;
@@ -162,7 +163,11 @@ public final class BoxStyle {
 
     /** {@code position} is the entity center-bottom (MC convention). */
     public static AABB hitboxAabbAt(Vec3dCore position, boolean sneaking) {
-        double h = sneaking ? HITBOX_HEIGHT_SNEAKING : HITBOX_HEIGHT_STANDING;
+        return hitboxAabbAt(position, sneaking, false);
+    }
+
+    public static AABB hitboxAabbAt(Vec3dCore position, boolean sneaking, boolean gliding) {
+        double h = gliding ? HITBOX_HEIGHT_GLIDING : sneaking ? HITBOX_HEIGHT_SNEAKING : HITBOX_HEIGHT_STANDING;
         return new AABB(
                 new Vec3dCore(position.x - HITBOX_HALF_WIDTH, position.y, position.z - HITBOX_HALF_WIDTH),
                 new Vec3dCore(position.x + HITBOX_HALF_WIDTH, position.y + h, position.z + HITBOX_HALF_WIDTH)
@@ -184,6 +189,7 @@ public final class BoxStyle {
         if (solverGoal) return settings.tickSolverGoal;
         if (state.softCollision) return settings.tickSoftCollision;
         if (state.wallCollision) return settings.tickWall;
+        if (state.gliding) return settings.tickGliding;
         if (!state.onGround) return settings.tickAir;
         if (state.sneaking) return settings.tickSneak;
         return settings.tickDefault;

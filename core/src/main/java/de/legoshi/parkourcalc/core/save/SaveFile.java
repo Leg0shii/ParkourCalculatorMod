@@ -29,11 +29,13 @@ public final class SaveFile {
         public double[] vel;
         public float yaw;
         public Float pitch;
+        public Boolean elytra;
         public Resume resume;
     }
 
     public static final class Resume {
         public boolean onGround;
+        public Boolean gliding;
         public boolean wall;
         public boolean softWall;
         public boolean sprinting;
@@ -212,6 +214,7 @@ public final class SaveFile {
         public boolean sprinting;
         public boolean wallCollision;
         public boolean softCollision;
+        public Boolean gliding;
         public Double collisionAngle;                    // degrees; null = not modelled / NaN
         public Float moveForward;                        // moveFlying inputs the tick ran with; null = unsampled
         public Float moveStrafe;

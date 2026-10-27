@@ -57,6 +57,11 @@ public class SimulatorEntity extends EntityPlayer {
     private Medium tickMedium;
     private double tickGroundFriction = Double.NaN;
     private int tickSoulsandCells;
+    private boolean tickGliding;
+    private boolean elytraEquipped;
+    private boolean prevJump;
+    //? if >=1.12
+    private final ElytraGlide.Lag glide = new ElytraGlide.Lag();
 
     private final ArrayList<Vec3dCore> subtickBuf = new ArrayList<Vec3dCore>(8);
     private boolean capturing = false;
@@ -107,12 +112,38 @@ public class SimulatorEntity extends EntityPlayer {
         this.startPosition = startPosition;
         this.startVelocity = startVelocity;
         this.startYaw = startYaw;
+        this.setSilent(true);
         resetPlayer();
     }
 
     public void setInput(InputRow row) {
         this.currentInput = row;
     }
+
+    public void setElytraEquipped(boolean equipped) {
+        this.elytraEquipped = equipped;
+        //? if >=1.12
+        ElytraGlide.equip(this, equipped);
+    }
+
+    public boolean isElytraEquipped() {
+        return elytraEquipped;
+    }
+
+    public boolean capturedTickGliding() {
+        return tickGliding;
+    }
+
+    //? if >=1.12 {
+    public ElytraGlide.Lag glide() {
+        return glide;
+    }
+
+    static void setEntityFlag(net.minecraft.entity.Entity entity, int flag, boolean set) {
+        byte bits = entity.getDataManager().get(FLAGS);
+        entity.getDataManager().set(FLAGS, (byte) (set ? bits | 1 << flag : bits & ~(1 << flag)));
+    }
+    //?}
 
     public void resetPlayer() {
         resetPlayer(null);
@@ -134,6 +165,11 @@ public class SimulatorEntity extends EntityPlayer {
         *///?}
         this.rotationYaw = startYaw;
         this.rotationPitch = 0.0F;
+        this.prevJump = false;
+        //? if >=1.12 {
+        this.glide.reset(this);
+        ElytraGlide.equip(this, elytraEquipped);
+        //?}
 
         this.currentInput = new InputRow();
         this.sprintState = PlayerSprintMachine.State.initial();
@@ -154,6 +190,7 @@ public class SimulatorEntity extends EntityPlayer {
         this.tickMedium = null;
         this.tickGroundFriction = Double.NaN;
         this.tickSoulsandCells = 0;
+        this.tickGliding = false;
         if (resume != null) {
             applyResume(resume);
         }
@@ -161,6 +198,12 @@ public class SimulatorEntity extends EntityPlayer {
 
     private void applyResume(StartResumeState resume) {
         this.onGround = resume.onGround;
+        //? if >=1.12 {
+        if (resume.gliding) {
+            ElytraGlide.setFallFlying(this, true);
+            this.setSize(0.6F, 0.6F);
+        }
+        //?}
         //? if >=1.12 {
         this.collidedHorizontally = resume.wallContact;
         //?} else {
@@ -193,8 +236,28 @@ public class SimulatorEntity extends EntityPlayer {
 
     @Override
     public void onLivingUpdate() {
+        boolean wasJumping = prevJump;
         applyMovementInput();
+        boolean jump = currentInput.isKeyActive(InputRow.Key.JUMP);
+        prevJump = jump;
+        //? if >=1.12 {
+        if (ElytraGlide.requestsDeploy(this, jump, wasJumping)) {
+            glide.request(this);
+        }
+        //?}
         super.onLivingUpdate();
+    }
+
+    @Override
+    public void onUpdate() {
+        //? if >=1.12
+        glide.beginTick(this);
+        super.onUpdate();
+        //? if >=1.12 {
+        if (glide.endTick(this)) {
+            this.updateSize();
+        }
+        //?}
     }
 
     @Override
@@ -215,6 +278,7 @@ public class SimulatorEntity extends EntityPlayer {
         } else {
             tickGroundFriction = Double.NaN;
         }
+        tickGliding = this.isElytraFlying() && !water && !lava;
         super.travel(strafe, vertical, forward);
         //?} else {
         /*tickGroundFriction = this.onGround
@@ -472,6 +536,12 @@ public class SimulatorEntity extends EntityPlayer {
         c.width = this.width;
         c.height = this.height;
         c.fallDistance = this.fallDistance;
+        c.prevJump = this.prevJump;
+        //? if >=1.12 {
+        c.fallFlying = this.isElytraFlying();
+        c.glidePendingStop = this.glide.pendingStop();
+        c.glidePendingStart = this.glide.pendingStart();
+        //?}
         return c;
     }
 
@@ -479,6 +549,9 @@ public class SimulatorEntity extends EntityPlayer {
         // Start from the clean spawn baseline (same as a full run's resetToStart) so no uncaptured
         // entity state from the previous run leaks in; the overlay below restores the history it carries.
         resetPlayer();
+        this.prevJump = c.prevJump;
+        //? if >=1.12
+        this.glide.restore(this, c.fallFlying, c.glidePendingStop, c.glidePendingStart);
         this.motionX = c.motionX;
         this.motionY = c.motionY;
         this.motionZ = c.motionZ;
@@ -519,6 +592,9 @@ public class SimulatorEntity extends EntityPlayer {
         this.jumpTicks = 0;
         this.isInWeb = false;
         this.fallDistance = 0;
+        this.prevJump = false;
+        //? if >=1.12
+        this.glide.reset(this);
     }
 
     public static void applyCheckpoint(EntityLivingBase p, de.legoshi.parkourcalc.core.sim.Checkpoint state) {
@@ -539,6 +615,8 @@ public class SimulatorEntity extends EntityPlayer {
         if (c.isInWeb) {
             p.setInWeb();
         }
+        //? if >=1.12
+        ElytraGlide.setFallFlying(p, c.fallFlying);
     }
 
     public static final class Checkpoint implements de.legoshi.parkourcalc.core.sim.Checkpoint {
@@ -556,5 +634,9 @@ public class SimulatorEntity extends EntityPlayer {
         float width;
         float height;
         float fallDistance;
+        boolean prevJump;
+        public boolean fallFlying;
+        boolean glidePendingStop;
+        boolean glidePendingStart;
     }
 }

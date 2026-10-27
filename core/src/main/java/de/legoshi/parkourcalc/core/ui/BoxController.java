@@ -425,7 +425,7 @@ public final class BoxController {
         TickState s = states.get(i);
         List<Vec3dCore> walk = walkFor(i, s, useSubtickPositions);
         for (int k = 0; k < walk.size(); k++) {
-            AABB hb = BoxStyle.hitboxAabbAt(walk.get(k), s.sneaking);
+            AABB hb = BoxStyle.hitboxAabbAt(walk.get(k), s.sneaking, s.gliding);
             double x0 = hb.min.x, y0 = hb.min.y, z0 = hb.min.z;
             double x1 = hb.max.x, y1 = hb.max.y, z1 = hb.max.z;
             emitInsetEdge(renderer, x0, y0, z0, x1, y1, z1, SPAN, INSET_LO, INSET_LO, t, argb);

@@ -27,6 +27,9 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
 
     private InputRow currentInput = new InputRow();
     private PlayerSprintMachine.State sprintState = PlayerSprintMachine.State.initial();
+    private boolean prevJump;
+    //? if >=1.12
+    private final ElytraGlide.Lag glide = new ElytraGlide.Lag();
 
     public GhostPlayerEntity(World world, GameProfile profile) {
         super(world, profile);
@@ -46,8 +49,28 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
 
     @Override
     public void onLivingUpdate() {
+        boolean wasJumping = prevJump;
         applyMovementInput();
+        boolean jump = currentInput.isKeyActive(InputRow.Key.JUMP);
+        prevJump = jump;
+        //? if >=1.12 {
+        if (ElytraGlide.requestsDeploy(this, jump, wasJumping)) {
+            glide.request(this);
+        }
+        //?}
         super.onLivingUpdate();
+    }
+
+    @Override
+    public void onUpdate() {
+        //? if >=1.12
+        glide.beginTick(this);
+        super.onUpdate();
+        //? if >=1.12 {
+        if (glide.endTick(this)) {
+            this.updateSize();
+        }
+        //?}
     }
 
     private void applyMovementInput() {

@@ -58,6 +58,8 @@ public final class AngleSolverWindow implements RenderInterface {
     private static final String TITLE = "Angle Solver";
     private static final String TELEPORT_SOLVE_BLOCKED =
             "Can't solve: the solve range crosses a tick with a teleport, which overrides that tick's movement.";
+    private static final String GLIDING_SOLVE_BLOCKED =
+            "Can't solve: the solve range crosses a tick that glides with the elytra, which the solver's movement model does not cover.";
 
     private static final String[] GOALS = {"+X", "-X", "+Z", "-Z", "Angle"};
     private static final String[] GOAL_TIPS = {
@@ -152,6 +154,7 @@ public final class AngleSolverWindow implements RenderInterface {
     private RunTicksControls runTicks = RunTicksControls.NONE;
     private java.util.function.DoubleSupplier playerYawSupplier = () -> 0.0;
     private java.util.function.IntPredicate teleportAtRow = t -> false;
+    private java.util.function.IntPredicate glidingAtRow = t -> false;
 
     public void setPlayerYawSupplier(java.util.function.DoubleSupplier supplier) {
         this.playerYawSupplier = supplier != null ? supplier : () -> 0.0;
@@ -159,6 +162,10 @@ public final class AngleSolverWindow implements RenderInterface {
 
     public void setTeleportAtRow(java.util.function.IntPredicate predicate) {
         this.teleportAtRow = predicate != null ? predicate : t -> false;
+    }
+
+    public void setGlidingAtRow(java.util.function.IntPredicate predicate) {
+        this.glidingAtRow = predicate != null ? predicate : t -> false;
     }
 
     public void setRunTicksControls(RunTicksControls controls) {
@@ -890,13 +897,14 @@ public final class AngleSolverWindow implements RenderInterface {
     private void renderActions() {
         boolean busy = engine.isSolving() || runTicks.isRunning();
         boolean teleportBlocked = !busy && solveRangeCrossesTeleport();
+        boolean glidingBlocked = !busy && !teleportBlocked && solveRangeCrossesGliding();
         if (busy) {
             if (Controls.secondaryButton("Stop")) {
                 if (runTicks.isRunning()) runTicks.cancel();
                 else engine.stopAndUseBest();
             }
             if (ImGui.isItemHovered()) ImGui.setTooltip("Stop the search and keep the best solution found so far.");
-        } else if (teleportBlocked) {
+        } else if (teleportBlocked || glidingBlocked) {
             Controls.disabledButton("Solve");
         } else if (Controls.primaryButton("Solve")) {
             runTicks.start();
@@ -917,11 +925,20 @@ public final class AngleSolverWindow implements RenderInterface {
         if (ImGui.isItemHovered()) {
             ImGui.setTooltip("Capture each tick's surface state (ground + medium) from the simulation into the overrides, for the solve range (H).");
         }
-        if (teleportBlocked) {
+        if (teleportBlocked || glidingBlocked) {
             ThemeManager.pushTextColor(ThemeManager.warningColor());
-            ImGui.textWrapped(TELEPORT_SOLVE_BLOCKED);
+            ImGui.textWrapped(teleportBlocked ? TELEPORT_SOLVE_BLOCKED : GLIDING_SOLVE_BLOCKED);
             ThemeManager.popTextColor();
         }
+    }
+
+    private boolean solveRangeCrossesGliding() {
+        int lo = Math.min(state.getStartTick(), state.getLandingTick());
+        int hi = Math.max(state.getStartTick(), state.getLandingTick());
+        for (int t = lo; t < hi; t++) {
+            if (glidingAtRow.test(t)) return true;
+        }
+        return false;
     }
 
     private boolean solveRangeCrossesTeleport() {

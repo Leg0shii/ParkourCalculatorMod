@@ -41,7 +41,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class SimulatorEntity extends Player {
+public class SimulatorEntity extends Player implements ElytraGlide.Glider {
 
     public final SimulatorInput input = new SimulatorInput();
     public Vec3 startPosition;
@@ -62,6 +62,9 @@ public class SimulatorEntity extends Player {
     private Medium tickMedium;
     private double tickGroundFriction = Double.NaN;
     private int tickSoulsandCells;
+    private boolean tickGliding;
+    private boolean elytraEquipped;
+    private final ElytraGlide.Lag glide = new ElytraGlide.Lag();
 
     public double getLastCollisionAngleDegrees() {
         return lastCollisionAngleDegrees;
@@ -106,7 +109,34 @@ public class SimulatorEntity extends Player {
         this.startPosition = startPosition;
         this.startVelocity = startVelocity;
         this.startYaw = startYaw;
+        this.setSilent(true);
         resetPlayer();
+    }
+
+    public void setElytraEquipped(boolean equipped) {
+        this.elytraEquipped = equipped;
+        ElytraGlide.equip(this, equipped);
+    }
+
+    public boolean isElytraEquipped() {
+        return elytraEquipped;
+    }
+
+    public boolean capturedTickGliding() {
+        return tickGliding;
+    }
+
+    public ElytraGlide.Lag glide() {
+        return glide;
+    }
+
+    @Override
+    public boolean glideStillPossible() {
+        //? if >=1.21.2 {
+        return this.canGlide();
+        //?} else {
+        /*return ElytraGlide.legacyCanKeepGliding(this);
+        *///?}
     }
 
     public void resetPlayer() {
@@ -121,6 +151,8 @@ public class SimulatorEntity extends Player {
         this.setPos(startPosition);
         this.setDeltaMovement(Vec3.ZERO);
         this.setRot(startYaw, 0);
+        this.glide.reset(this);
+        ElytraGlide.equip(this, elytraEquipped);
 
         this.input.setData(new InputRow());
         this.sprintTriggerTime = 0;
@@ -132,6 +164,7 @@ public class SimulatorEntity extends Player {
         this.tickMedium = null;
         this.tickGroundFriction = Double.NaN;
         this.tickSoulsandCells = 0;
+        this.tickGliding = false;
         if (resume != null) {
             applyResume(resume);
         }
@@ -139,6 +172,11 @@ public class SimulatorEntity extends Player {
 
     private void applyResume(StartResumeState resume) {
         this.setOnGround(resume.onGround);
+        if (resume.gliding) {
+            ElytraGlide.setFallFlying(this, true);
+            this.setPose(Pose.FALL_FLYING);
+            this.refreshDimensions();
+        }
         this.horizontalCollision = resume.wallContact;
         this.minorHorizontalCollision = resume.softWallContact;
         this.setSprinting(resume.sprinting);
@@ -173,6 +211,7 @@ public class SimulatorEntity extends Player {
         tickGroundFriction = this.onGround()
                 ? (double) this.level().getBlockState(this.getBlockPosBelowThatAffectsMyMovement()).getBlock().getFriction()
                 : Double.NaN;
+        tickGliding = this.isFallFlying() && !fluid;
         super.travel(input);
         tickSoulsandCells = this.getBlockSpeedFactor() != 1.0F ? 1 : 0;
         tickMedium = Medium.fromFlags(web, water, lava, ladder, tickSoulsandCells > 0);
@@ -336,12 +375,16 @@ public class SimulatorEntity extends Player {
     @Override
     public void tick() {
         this.setOldPosAndRot();
+        this.glide.beginTick(this);
         Vec3 before = this.position();
         super.tick();
         if (!this.collisionAngleComputedThisTick) {
             Vec3 after = this.position();
             this.lastCollisionAngleDegrees = computeCollisionAngleDegrees(
                     after.x - before.x, after.z - before.z);
+        }
+        if (this.glide.endTick(this)) {
+            this.updatePlayerPose();
         }
     }
 
@@ -361,6 +404,7 @@ public class SimulatorEntity extends Player {
 
         // Capture pre-input.tick() so wasShiftKeyDown/hasForwardImpulse hold the previous tick's state.
         boolean wasShiftKeyDown = this.input.keyPresses.shift();
+        boolean wasJumping = this.input.keyPresses.jump();
         //? if >=26.1 {
         boolean hasForwardImpulse = this.input.hasForwardImpulse();
         //?} else {
@@ -427,7 +471,8 @@ public class SimulatorEntity extends Player {
                 && !this.isSprinting()
                 && enoughFood
                 && !this.isUsingItem()
-                && !this.hasEffect(MobEffects.BLINDNESS)) {
+                && !this.hasEffect(MobEffects.BLINDNESS)
+                && this.glideAllowsSprint()) {
             if (this.sprintTriggerTime <= 0 && !this.input.keyPresses.sprint()) {
                 this.sprintTriggerTime = 7;
             } else {
@@ -441,6 +486,7 @@ public class SimulatorEntity extends Player {
                 && enoughFood
                 && !this.isUsingItem()
                 && !this.hasEffect(MobEffects.BLINDNESS)
+                && this.glideAllowsSprint()
                 && this.input.keyPresses.sprint()) {
             this.setSprinting(true);
         }
@@ -460,7 +506,17 @@ public class SimulatorEntity extends Player {
             }
         }
 
+        ElytraGlide.tryDeploy(this, this.input.keyPresses.jump(), wasJumping);
+
         super.aiStep();
+    }
+
+    private boolean glideAllowsSprint() {
+        //? if >=1.21.2 {
+        return !this.isFallFlying();
+        //?} else {
+        /*return true;
+        *///?}
     }
 
     /** Read sneak directly from the per-tick input so any caller during this tick
@@ -632,6 +688,8 @@ public class SimulatorEntity extends Player {
         c.pose = this.getPose();
         c.crouching = this.crouching;
         c.fallDistance = this.fallDistance;
+        c.fallFlying = this.isFallFlying();
+        c.glidePendingStop = this.glide.pendingStop();
         return c;
     }
 
@@ -640,6 +698,7 @@ public class SimulatorEntity extends Player {
         // entity state from the previous run leaks in; the overlay below restores the history it carries.
         resetPlayer();
         this.crouching = c.crouching;
+        this.glide.restore(this, c.fallFlying, c.glidePendingStop);
         this.setPose(c.pose);
         this.refreshDimensions();
         this.setPos(c.pos);
@@ -686,6 +745,7 @@ public class SimulatorEntity extends Player {
         this.stuckSpeedMultiplier = Vec3.ZERO;
         this.fallDistance = 0;
         this.crouching = false;
+        this.glide.reset(this);
         this.setPose(Pose.STANDING);
         this.refreshDimensions();
     }
@@ -700,6 +760,7 @@ public class SimulatorEntity extends Player {
         p.noJumpDelay = c.jumpingCooldown;
         p.stuckSpeedMultiplier = c.movementMultiplier;
         p.fallDistance = c.fallDistance;
+        ElytraGlide.setFallFlying(p, c.fallFlying);
     }
 
     public static final class Checkpoint implements de.legoshi.parkourcalc.core.sim.Checkpoint {
@@ -723,5 +784,7 @@ public class SimulatorEntity extends Player {
         //?} else {
         /*float fallDistance;
         *///?}
+        public boolean fallFlying;
+        boolean glidePendingStop;
     }
 }

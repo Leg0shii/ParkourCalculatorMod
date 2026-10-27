@@ -11,7 +11,13 @@ import java.util.Map;
 
 public class FakePlaybackBridge implements PlaybackBridge {
 
+    @Override public boolean hasElytraEquipped() { return elytraWorn; }
+
+    @Override public void prepareElytra(boolean equipped) { preparedElytra = equipped; }
+
     public boolean paused;
+    public boolean elytraWorn = true;
+    public Boolean preparedElytra;
     public int releaseAllCalls;
     public int suppressFlightCalls;
     public int teleportCalls;

@@ -22,6 +22,7 @@ public final class SimulationRunner {
     private final List<ServerSimEvent> serverEvents = new ArrayList<>();
 
     private float startPitch = PlaybackController.DEFAULT_PITCH;
+    private boolean elytraEquipped;
 
     public static final double DEFAULT_DRAG_TOLERANCE = 1.0e-6;
 
@@ -119,7 +120,8 @@ public final class SimulationRunner {
                 simulator.getCurrentTickMedium(),
                 simulator.getCurrentTickGroundFriction(),
                 simulator.getCurrentTickSoulsandCells(),
-                simulator.getCurrentServerSample()
+                simulator.getCurrentServerSample(),
+                simulator.isCurrentGliding()
         );
     }
 
@@ -184,6 +186,19 @@ public final class SimulationRunner {
     public void setStartPitch(float pitch) {
         startPitch = Math.max(-90f, Math.min(90f, pitch));
         simulator.setStartPitch(startPitch);
+    }
+
+    public boolean isElytraEquipped() {
+        return elytraEquipped;
+    }
+
+    public void setElytraEquipped(boolean equipped) {
+        elytraEquipped = equipped;
+        simulator.setElytraEquipped(equipped);
+    }
+
+    public boolean supportsElytra() {
+        return simulator.supportsElytra();
     }
 
     public void onReplayStart(int startTick) {

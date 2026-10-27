@@ -237,11 +237,31 @@ public final class ForgeSimulator extends LazyEntitySimulator<SimulatorEntity> {
     }
 
     @Override
+    public boolean supportsElytra() {
+        //? if >=1.12 {
+        return true;
+        //?} else {
+        /*return false;
+        *///?}
+    }
+
+    @Override
+    protected boolean isGliding(SimulatorEntity e) {
+        return e.capturedTickGliding();
+    }
+
+    @Override
+    protected void applyElytra(SimulatorEntity e, boolean equipped) {
+        e.setElytraEquipped(equipped);
+    }
+
+    @Override
     protected StartResumeState describeResume(Checkpoint checkpoint) {
         SimulatorEntity.Checkpoint c = PairedCheckpoint.clientPart(checkpoint);
         if (c == null) return null;
         StartResumeState r = new StartResumeState();
         r.onGround = c.onGround;
+        r.gliding = c.fallFlying;
         r.wallContact = c.collidedHorizontally;
         r.sprinting = c.sprinting;
         r.jumpCooldown = c.jumpTicks;
@@ -345,6 +365,7 @@ public final class ForgeSimulator extends LazyEntitySimulator<SimulatorEntity> {
                 + " sne=" + e.isSneaking()
                 //? if >=1.12 {
                 + " colH=" + e.collidedHorizontally
+                + " glide=" + e.isElytraFlying()
                 //?} else {
                 /*+ " colH=" + e.isCollidedHorizontally
                 *///?}

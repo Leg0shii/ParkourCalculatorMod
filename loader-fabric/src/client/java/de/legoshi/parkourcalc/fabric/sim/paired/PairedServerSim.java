@@ -93,6 +93,7 @@ public final class PairedServerSim {
     //? if <26.1
     //private boolean lastShiftKeyDown;
     private boolean lastSprinting;
+    private boolean lastFallFlying;
     private boolean prevRightClick;
     private int rightClickDelay;
     private int useSequence;
@@ -178,6 +179,9 @@ public final class PairedServerSim {
         sp.clearFire();
         sp.setShiftKeyDown(false);
         sp.setSprinting(false);
+        sp.setSilent(true);
+        de.legoshi.parkourcalc.fabric.sim.ElytraGlide.equip(sp, de.legoshi.parkourcalc.fabric.sim.ElytraGlide.wearing(e));
+        de.legoshi.parkourcalc.fabric.sim.ElytraGlide.setFallFlying(sp, false);
         handler.resetPosition();
         handler.handleMovePlayer(new ServerboundMovePlayerPacket.PosRot(
         //? if >=1.21.2 {
@@ -219,6 +223,7 @@ public final class PairedServerSim {
         //? if <26.1
         //lastShiftKeyDown = false;
         lastSprinting = false;
+        lastFallFlying = false;
         prevRightClick = false;
         rightClickDelay = 0;
         useSequence = 0;
@@ -337,6 +342,7 @@ public final class PairedServerSim {
             //? if >=1.21.2
             synthesizeInputPacket(e);
             synthesizeSprintCommand(e);
+            synthesizeFallFlyingCommand(e);
             synthesizeMovePacket(e);
             //? if >=1.21.2
             serverbound.add(ServerboundClientTickEndPacket.INSTANCE);
@@ -344,6 +350,7 @@ public final class PairedServerSim {
             drainServerbound();
             reportReplayMismatch(e);
             sp.tick();
+            if (e.isFallFlying() && !sp.isFallFlying()) e.glide().forceStop();
             flushHurtMarked();
             tickHandler();
             emitBlockChangeEvents();
@@ -383,6 +390,14 @@ public final class PairedServerSim {
                     : ServerboundPlayerCommandPacket.Action.STOP_SPRINTING));
             lastSprinting = sprinting;
         }
+    }
+
+    private void synthesizeFallFlyingCommand(SimulatorEntity e) {
+        boolean fallFlying = e.isFallFlying();
+        if (fallFlying && !lastFallFlying) {
+            serverbound.add(new ServerboundPlayerCommandPacket(sp, ServerboundPlayerCommandPacket.Action.START_FALL_FLYING));
+        }
+        lastFallFlying = fallFlying;
     }
 
     private void synthesizeMovePacket(SimulatorEntity e) {
@@ -701,6 +716,8 @@ public final class PairedServerSim {
         //? if <26.1
         //c.lastShiftKeyDown = lastShiftKeyDown;
         c.lastSprinting = lastSprinting;
+        c.lastFallFlying = lastFallFlying;
+        c.fallFlying = sp.isFallFlying();
         c.prevRightClick = prevRightClick;
         c.rightClickDelay = rightClickDelay;
         c.useSequence = useSequence;
@@ -767,6 +784,8 @@ public final class PairedServerSim {
         //? if <26.1
         //lastShiftKeyDown = c.lastShiftKeyDown;
         lastSprinting = c.lastSprinting;
+        lastFallFlying = c.lastFallFlying;
+        de.legoshi.parkourcalc.fabric.sim.ElytraGlide.setFallFlying(sp, c.fallFlying);
         prevRightClick = c.prevRightClick;
         rightClickDelay = c.rightClickDelay;
         useSequence = c.useSequence;
@@ -830,6 +849,8 @@ public final class PairedServerSim {
         //? if <26.1
         //boolean lastShiftKeyDown;
         boolean lastSprinting;
+        boolean lastFallFlying;
+        boolean fallFlying;
         boolean prevRightClick;
         int rightClickDelay;
         int useSequence;

@@ -34,6 +34,8 @@ public enum TickInfoStat {
             "Sneak input active during this tick."),
     COLLISION("collision", "Collision", Kind.BOOL,
             "Horizontal collision occurred this tick (MC horizontalCollision)."),
+    GLIDING("gliding", "Gliding", Kind.BOOL,
+            "Elytra flight was active during this tick (the fall-flying travel branch ran). Needs the Elytra equipped start setting; never on 1.8.9."),
     SOFT_COLLISION("softCollision", "Soft collision", Kind.BOOL,
             "26.2 only: grazing wall hit that does NOT break sprint (Entity.minorHorizontalCollision). Always false on 1.8.9/1.12.2.",
             "26.2 only: grazing wall hit that does NOT break sprint. n/a when no horizontal collision is happening."),

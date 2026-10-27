@@ -193,6 +193,9 @@ public final class PairedServerSim {
         sp.managedPosX = sp.posX;
         sp.managedPosZ = sp.posZ;
         //? if >=1.12 {
+        sp.setSilent(true);
+        de.legoshi.parkourcalc.forge.sim.ElytraGlide.equip(sp, de.legoshi.parkourcalc.forge.sim.ElytraGlide.wearing(e));
+        de.legoshi.parkourcalc.forge.sim.ElytraGlide.setFallFlying(sp, false);
         handler.targetPos = null;
         handler.firstGoodX = e.posX;
         handler.firstGoodY = e.posY;
@@ -356,6 +359,8 @@ public final class PairedServerSim {
         try {
             synthesizeSprintCommand(e);
             synthesizeSneakCommand(e);
+            //? if >=1.12
+            synthesizeFallFlyingCommand(e);
             synthesizeMovePacket(e);
             lastMoveJumped = sp.onGround && !e.onGround && e.getEntityBoundingBox().minY > sp.posY;
             sp.managedPosX = sp.posX;
@@ -363,6 +368,10 @@ public final class PairedServerSim {
             drainServerbound();
             reportReplayMismatch(e);
             sp.onUpdate();
+            //? if >=1.12 {
+            if (e.glide().pendingStart() && !sp.isElytraFlying()) e.glide().cancelStart();
+            if (e.isElytraFlying() && !sp.isElytraFlying()) e.glide().forceStop();
+            //?}
             flushVelocityChanged();
             handler.update();
             emitBlockChangeEvents();
@@ -403,6 +412,14 @@ public final class PairedServerSim {
             lastSneaking = sneaking;
         }
     }
+
+    //? if >=1.12 {
+    private void synthesizeFallFlyingCommand(SimulatorEntity e) {
+        if (e.glide().pendingStart() && !e.isElytraFlying()) {
+            serverbound.add(new CPacketEntityAction(sp, CPacketEntityAction.Action.START_FALL_FLYING));
+        }
+    }
+    //?}
 
     private void synthesizeMovePacket(SimulatorEntity e) {
         double minY = e.getEntityBoundingBox().minY;
@@ -690,6 +707,8 @@ public final class PairedServerSim {
         c.fire = sp.fire;
         c.sneaking = sp.isSneaking();
         c.sprinting = sp.isSprinting();
+        //? if >=1.12
+        c.fallFlying = sp.isElytraFlying();
         //? if >=1.12 {
         c.targetPos = handler.targetPos;
         c.teleportId = handler.teleportId;
@@ -760,6 +779,8 @@ public final class PairedServerSim {
         sp.fire = c.fire;
         sp.setSneaking(c.sneaking);
         sp.setSprinting(c.sprinting);
+        //? if >=1.12
+        de.legoshi.parkourcalc.forge.sim.ElytraGlide.setFallFlying(sp, c.fallFlying);
         sp.respawnInvulnerabilityTicks = 0;
         sp.managedPosX = sp.posX;
         sp.managedPosZ = sp.posZ;
@@ -873,6 +894,7 @@ public final class PairedServerSim {
         //?}
         boolean lastSprinting;
         boolean lastSneaking;
+        boolean fallFlying;
         boolean prevRightClick;
         int rightClickDelay;
         float pitch;

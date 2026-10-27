@@ -73,6 +73,8 @@ public final class PairedCheckpoint implements Checkpoint {
         sp.spawnInvulnerableTime = 0;
         *///?}
         net.minecraft.world.phys.Vec3 beforeMotion = sp.getDeltaMovement();
+        SimulatorEntity.Checkpoint clientPart = clientPart(checkpoint);
+        de.legoshi.parkourcalc.fabric.sim.ElytraGlide.setFallFlying(sp, clientPart != null && clientPart.fallFlying);
         if (checkpoint instanceof PairedCheckpoint paired) {
             sp.setRemainingFireTicks(paired.server.remainingFireTicks);
             sp.setAirSupply(paired.server.airSupply);

@@ -103,8 +103,12 @@ public final class ForgePlaybackBridge implements PlaybackBridge {
         WorldClient world = McClient.world();
         EntityPlayerSP client = McClient.player();
         if (world == null || client == null) return;
+        //? if >=1.12
+        boolean elytra = ghost != null && de.legoshi.parkourcalc.forge.sim.ElytraGlide.wearing(ghost);
         removeGhostEntity();
         GhostPlayerEntity g = new GhostPlayerEntity(world, client.getGameProfile());
+        //? if >=1.12
+        de.legoshi.parkourcalc.forge.sim.ElytraGlide.equip(g, elytra);
         g.setInput(currentRow);
         g.setLocationAndAngles(pos.x, pos.y, pos.z, yaw, client.rotationPitch);
         g.renderYawOffset = yaw;
@@ -355,6 +359,23 @@ public final class ForgePlaybackBridge implements PlaybackBridge {
         for (InputRow.Key k : InputRow.Key.values()) {
             setKey(k, false);
         }
+    }
+
+    @Override
+    public boolean hasElytraEquipped() {
+        //? if >=1.12 {
+        if (!isSingleplayer()) return true;
+        EntityPlayerSP p = McClient.player();
+        return p != null && de.legoshi.parkourcalc.forge.sim.ElytraGlide.wearing(p);
+        //?} else {
+        /*return true;
+        *///?}
+    }
+
+    @Override
+    public void prepareElytra(boolean equipped) {
+        //? if >=1.12
+        if (ghost != null) de.legoshi.parkourcalc.forge.sim.ElytraGlide.equip(ghost, equipped);
     }
 
     @Override
