@@ -319,6 +319,12 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
     }
 
     @Override
+    public boolean isUltrawarm() {
+        net.minecraft.client.multiplayer.ClientLevel level = Minecraft.getInstance().level;
+        return level != null && level.dimensionType().ultraWarm();
+    }
+
+    @Override
     public boolean isChunkLoaded(int chunkX, int chunkZ) {
         ClientLevel level = Minecraft.getInstance().level;
         return level != null && level.hasChunk(chunkX, chunkZ);

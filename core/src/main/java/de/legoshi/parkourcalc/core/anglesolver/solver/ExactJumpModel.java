@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.core.anglesolver.solver;
 
+import de.legoshi.parkourcalc.core.anglesolver.FlowDirection;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.MovementEffect;
 
@@ -29,6 +30,12 @@ public final class ExactJumpModel implements ForwardModel {
     private static final double FLUID_JUMP_BOOST = (double) 0.04F;
     private static final double WATER_DRAG = (double) 0.8F;
     private static final double WATER_SPRINT_DRAG = (double) 0.9F;
+    private static final double WATER_PUSH = 0.014;
+    private static final double LAVA_PUSH = 0.0023;
+    private static final double LAVA_PUSH_ULTRAWARM = 0.007;
+    private static final double MIN_FLUID_PUSH = 0.0045000000000000005;
+    private static final double MIN_FLUID_PUSH_BELOW = 0.003;
+    private static final double NORMALIZE_EPSILON = 1.0E-4;
     private static final double MODERN_FLUID_GRAVITY = Constants.GRAVITY / 16.0;
     private static final double WEB_Y_SCALE = (double) 0.05F;
     private static final double WEAVING_WEB_XZ_SCALE = 0.5;
@@ -249,6 +256,43 @@ public final class ExactJumpModel implements ForwardModel {
             double vy = velY[t];
             double vz = velZ[t];
 
+            SurfaceKind kind = scenario.surfaceAt(t);
+            boolean water = kind == SurfaceKind.WATER;
+            boolean fluid = water || kind == SurfaceKind.LAVA;
+            FlowDirection flow = scenario.flowAt(t);
+            if (fluid && flow.pushes() && (modern || water)) {
+                double scale = water ? WATER_PUSH : scenario.ultrawarm ? LAVA_PUSH_ULTRAWARM : LAVA_PUSH;
+                double px;
+                double pz;
+                if (modern) {
+                    px = flow.dx * scale;
+                    pz = flow.dz * scale;
+                    if (Math.abs(vx) < MIN_FLUID_PUSH_BELOW && Math.abs(vz) < MIN_FLUID_PUSH_BELOW) {
+                        double len = Math.sqrt(px * px + pz * pz);
+                        if (len < MIN_FLUID_PUSH) {
+                            if (len < NORMALIZE_EPSILON) {
+                                px = 0.0;
+                                pz = 0.0;
+                            } else {
+                                px = px / len * MIN_FLUID_PUSH;
+                                pz = pz / len * MIN_FLUID_PUSH;
+                            }
+                        }
+                    }
+                } else {
+                    double len = Math.sqrt(flow.dx * flow.dx + flow.dz * flow.dz);
+                    if (len < NORMALIZE_EPSILON) {
+                        px = 0.0;
+                        pz = 0.0;
+                    } else {
+                        px = flow.dx / len * scale;
+                        pz = flow.dz / len * scale;
+                    }
+                }
+                vx += px;
+                vz += pz;
+            }
+
             // (1) momentum cancellation, top of tick, on the post-friction carry from last tick.
             if (perAxisInertia) {
                 if (Math.abs(vx) < thr) vx = 0.0;
@@ -267,9 +311,6 @@ public final class ExactJumpModel implements ForwardModel {
             int slow = scenario.factorSlownessAt(t);
             double slipOv = scenario.slipAt(t);
             boolean contact = !Double.isNaN(slipOv);
-            SurfaceKind kind = scenario.surfaceAt(t);
-            boolean water = kind == SurfaceKind.WATER;
-            boolean fluid = water || kind == SurfaceKind.LAVA;
             float slipF = contact ? (float) slipOv : Constants.SLIP_F;
             boolean fluidGroundJump = modern && fluid && contact && scenario.jumpAt(t);
             boolean isJumpTick = fluidGroundJump || (!fluid && scenario.jumpAt(t) && contact);

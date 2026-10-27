@@ -13,6 +13,7 @@ import de.legoshi.parkourcalc.core.ui.MovementEffect;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.BlockSelection;
 import de.legoshi.parkourcalc.core.anglesolver.Constraint;
+import de.legoshi.parkourcalc.core.anglesolver.FlowDirection;
 import de.legoshi.parkourcalc.core.anglesolver.Medium;
 import de.legoshi.parkourcalc.core.anglesolver.Potion;
 import de.legoshi.parkourcalc.core.anglesolver.PotionDose;
@@ -766,6 +767,7 @@ public final class SaveIO {
         out.slipperiness = ov.overridesSlipperiness() ? ov.getSlipperiness().name() : null;
         out.medium = ov.overridesMedium() ? ov.getMedium().name() : null;
         out.soulsandCells = ov.getMedium() == Medium.SOULSAND && ov.getSoulsandCells() > 1 ? ov.getSoulsandCells() : null;
+        out.flow = ov.overridesFlow() ? ov.getFlow().name() : null;
         out.damage = ov.overridesDamage() ? Boolean.TRUE : null;
         for (PotionDose d : ov.getAdded()) {
             out.added.add(toSaveDose(d));
@@ -788,6 +790,8 @@ public final class SaveIO {
         Medium medium = parseEnumOrNull(Medium.class, src.medium);
         if (medium != null && medium != Medium.NONE) dst.setMedium(medium);
         if (src.soulsandCells != null && dst.getMedium() == Medium.SOULSAND) dst.setSoulsandCells(src.soulsandCells);
+        FlowDirection flow = parseEnumOrNull(FlowDirection.class, src.flow);
+        if (flow != null) dst.setFlow(flow);
         if (src.damage != null && src.damage) dst.setDamage(true);
         if (src.added != null) {
             for (SaveFile.Dose d : src.added) {

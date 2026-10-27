@@ -241,6 +241,7 @@ public final class Application {
         AngleSolverEngine angleSolverEngine = new AngleSolverEngine(angleSolverState, boxController, inputData, this::onUserChange, forwardModel);
         angleSolverEngine.setOnStartMoved(runner::setStartPosition);
         angleSolverEngine.setOnStartYawChanged(runner::setStartYaw);
+        angleSolverEngine.setUltrawarm(mc::isUltrawarm);
         this.solverEngine = angleSolverEngine;
         if (saveStore != null) {
             angleSolverEngine.setRunLog(new SolveRunLog(saveStore.getSaveDir().resolve("runs"),
