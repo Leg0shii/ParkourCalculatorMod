@@ -172,6 +172,24 @@ public class BuiltinGraphsTest {
     }
 
     @Test
+    public void smoothInputsIsTheInputsStageAloneWithTheWholeBudget() {
+        SolverGraph g = BuiltinGraphs.smoothInputs(0.4, true, false);
+        assertFalse(GraphValidator.hasErrors(GraphValidator.validate(g)));
+        assertEquals(Arrays.asList("entry", "smooth", "emit"), nodeIds(g));
+        assertEquals("inputSmooth", g.node("smooth").type.id);
+        assertLinear(g, new String[][] {{"entry", "smooth"}, {"smooth", "emit"}});
+        assertEquals(0.4, g.node("smooth").params.getDouble("giveBack"), 0.0);
+        assertTrue(g.node("smooth").params.getBool("allowA"));
+        assertFalse(g.node("smooth").params.getBool("allowD"));
+        assertEquals(1.0, g.node("smooth").params.getDouble(GraphRunner.RESERVE_FRACTION_PARAM), 0.0);
+        assertTrue(BuiltinGraphs.isSmoothPreset(BuiltinGraphs.SMOOTH_INPUTS_PRESET));
+        assertTrue(BuiltinGraphs.isSmoothPreset(BuiltinGraphs.SMOOTH_PRESET));
+        assertFalse(BuiltinGraphs.isSmoothPreset(BuiltinGraphs.FAST_PRESET));
+        assertFalse("the inputs smooth graph is not a selectable preset",
+                BuiltinGraphs.isBuiltinPreset(BuiltinGraphs.SMOOTH_INPUTS_PRESET));
+    }
+
+    @Test
     public void wrapReserveIsDeclaredOnTheNode() {
         SolverGraph opt = BuiltinGraphs.optimize(45);
         assertEquals(3_000_000_000L, GraphRunner.reserveNanos(opt.node("wrap"), 45_000_000_000L));

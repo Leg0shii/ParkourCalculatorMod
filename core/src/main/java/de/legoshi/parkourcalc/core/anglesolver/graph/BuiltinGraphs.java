@@ -10,6 +10,7 @@ public final class BuiltinGraphs {
     public static final String MULTI_START_PRESET = "Fast (multi-start)";
     public static final String OPTIMIZE_PRESET = "Optimize";
     public static final String SMOOTH_PRESET = "Smooth";
+    public static final String SMOOTH_INPUTS_PRESET = "Smooth (inputs)";
 
     public static final double WRAP_RESERVE_FRACTION = 0.25;
     public static final int WRAP_RESERVE_CAP_SEC = 3;
@@ -32,6 +33,25 @@ public final class BuiltinGraphs {
         g.add("entry", "entry");
         g.add("smooth", "smooth")
                 .set("smooth", "giveBack", giveBack)
+                .set("smooth", GraphRunner.RESERVE_FRACTION_PARAM, 1.0)
+                .set("smooth", GraphRunner.RESERVE_CAP_PARAM, 0);
+        g.add("emit", "emit");
+        chain(g, "entry", "smooth");
+        chain(g, "smooth", "emit");
+        return g.build();
+    }
+
+    public static boolean isSmoothPreset(String name) {
+        return SMOOTH_PRESET.equals(name) || SMOOTH_INPUTS_PRESET.equals(name);
+    }
+
+    public static SolverGraph smoothInputs(double giveBack, boolean allowA, boolean allowD) {
+        GraphBuilder g = new GraphBuilder(SMOOTH_INPUTS_PRESET, true);
+        g.add("entry", "entry");
+        g.add("smooth", "inputSmooth")
+                .set("smooth", "giveBack", giveBack)
+                .set("smooth", "allowA", allowA)
+                .set("smooth", "allowD", allowD)
                 .set("smooth", GraphRunner.RESERVE_FRACTION_PARAM, 1.0)
                 .set("smooth", GraphRunner.RESERVE_CAP_PARAM, 0);
         g.add("emit", "emit");

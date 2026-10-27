@@ -251,6 +251,20 @@ public final class NodeHelp {
                 + " which is also how long it may run. With no overall solve time it gets a fixed 0.4 s.");
         param("smooth", "reserveCapSec", "The most seconds the smoothing may take. 0 means no cap.");
 
+        node("inputSmooth", "Smooths the turn of a jump that already lands and may also change the keys of"
+                + " single ticks for a calmer turn: W, A, S, D and sprint per tick, including a tick with no"
+                + " key held and a sprint reset. Every key change is re-solved and checked byte-exact against"
+                + " every constraint; the result is never less smooth than the plain smoothing on the same"
+                + " path. The jump tick and sneaking ticks keep their keys. Takes longer than the plain"
+                + " smoothing.");
+        param("inputSmooth", "giveBack", "How much of the offset past the goal wall the smoothing may trade,"
+                + " 0 to 1, shared by the key changes and the turn.");
+        param("inputSmooth", "allowA", "Whether a changed tick may strafe with A.");
+        param("inputSmooth", "allowD", "Whether a changed tick may strafe with D.");
+        param("inputSmooth", "reserveFraction", "The share of the whole solve time held back for this stage,"
+                + " which is also how long it may run. With no overall solve time it gets a fixed 1.2 s.");
+        param("inputSmooth", "reserveCapSec", "The most seconds the stage may take. 0 means no cap.");
+
         node("leafSnap", "Snaps each aim angle onto the nearest exact value the game can actually use,"
                 + " keeping the snap only if the jump still lands.");
         param("leafSnap", "pairPass", "Turn on a second, more thorough snapping pass that adjusts angles in"
