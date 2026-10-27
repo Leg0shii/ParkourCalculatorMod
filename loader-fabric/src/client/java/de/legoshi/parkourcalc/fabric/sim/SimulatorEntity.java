@@ -41,7 +41,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class SimulatorEntity extends Player {
+public class SimulatorEntity extends Player implements ElytraGlide.Glider {
 
     public final SimulatorInput input = new SimulatorInput();
     public Vec3 startPosition;
@@ -128,6 +128,15 @@ public class SimulatorEntity extends Player {
 
     public ElytraGlide.Lag glide() {
         return glide;
+    }
+
+    @Override
+    public boolean glideStillPossible() {
+        //? if >=1.21.2 {
+        return this.canGlide();
+        //?} else {
+        /*return ElytraGlide.legacyCanKeepGliding(this);
+        *///?}
     }
 
     public void resetPlayer() {

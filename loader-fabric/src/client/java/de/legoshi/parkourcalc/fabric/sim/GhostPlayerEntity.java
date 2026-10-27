@@ -35,7 +35,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @SuppressWarnings("DuplicatedCode")
-public class GhostPlayerEntity extends AbstractClientPlayer {
+public class GhostPlayerEntity extends AbstractClientPlayer implements ElytraGlide.Glider {
 
     public final SimulatorInput input = new SimulatorInput();
 
@@ -64,6 +64,15 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
 
     public void setInput(InputRow row) {
         this.input.setData(row);
+    }
+
+    @Override
+    public boolean glideStillPossible() {
+        //? if >=1.21.2 {
+        return this.canGlide();
+        //?} else {
+        /*return ElytraGlide.legacyCanKeepGliding(this);
+        *///?}
     }
 
     public void copyModelCustomisationFrom(Player source) {

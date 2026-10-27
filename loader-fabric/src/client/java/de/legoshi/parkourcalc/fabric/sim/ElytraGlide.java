@@ -31,15 +31,21 @@ public final class ElytraGlide {
         return p.tryToStartFallFlying();
     }
 
+    public interface Glider {
+        boolean glideStillPossible();
+    }
+
     public static boolean canKeepGliding(Player p) {
-        //? if >=1.21.2 {
-        return p.canGlide();
-        //?} else {
-        /*if (p.onGround() || p.isPassenger() || p.hasEffect(MobEffects.LEVITATION)) return false;
+        return ((Glider) p).glideStillPossible();
+    }
+
+    //? if <1.21.2 {
+    /*public static boolean legacyCanKeepGliding(Player p) {
+        if (p.onGround() || p.isPassenger() || p.hasEffect(MobEffects.LEVITATION)) return false;
         ItemStack chest = p.getItemBySlot(EquipmentSlot.CHEST);
         return chest.is(Items.ELYTRA) && ElytraItem.isFlyEnabled(chest);
-        *///?}
     }
+    *///?}
 
     public static void setFallFlying(Player p, boolean fallFlying) {
         if (fallFlying == p.isFallFlying()) return;
