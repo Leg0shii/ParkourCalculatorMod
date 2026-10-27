@@ -416,6 +416,8 @@ public final class VelocityFinder {
         c.slipPerTick = s.slipPerTick;
         c.surfacePerTick = s.surfacePerTick;
         c.soulsandCellsPerTick = s.soulsandCellsPerTick;
+        c.flowPerTick = s.flowPerTick;
+        c.ultrawarm = s.ultrawarm;
         c.sneakPerTick = s.sneakPerTick;
         c.dolphinsGracePerTick = s.dolphinsGracePerTick;
         c.weavingPerTick = s.weavingPerTick;

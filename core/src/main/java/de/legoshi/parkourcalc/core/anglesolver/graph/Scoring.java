@@ -116,6 +116,8 @@ public final class Scoring {
         a.slipPerTick = b.slipPerTick;
         a.surfacePerTick = b.surfacePerTick;
         a.soulsandCellsPerTick = b.soulsandCellsPerTick;
+        a.flowPerTick = b.flowPerTick;
+        a.ultrawarm = b.ultrawarm;
         a.sneakPerTick = b.sneakPerTick;
         a.dolphinsGracePerTick = b.dolphinsGracePerTick;
         a.weavingPerTick = b.weavingPerTick;

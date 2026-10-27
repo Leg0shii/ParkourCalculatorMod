@@ -342,6 +342,12 @@ public final class ForgeMinecraftAccess implements MinecraftAccess {
     }
 
     @Override
+    public boolean isUltrawarm() {
+        World world = McClient.world();
+        return world != null && world.provider.doesWaterVaporize();
+    }
+
+    @Override
     public boolean isChunkLoaded(int chunkX, int chunkZ) {
         WorldClient world = McClient.world();
         //? if >=1.12 {
