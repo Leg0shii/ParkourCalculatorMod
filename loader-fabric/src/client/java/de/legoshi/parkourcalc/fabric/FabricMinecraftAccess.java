@@ -321,7 +321,12 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
     @Override
     public boolean isUltrawarm() {
         net.minecraft.client.multiplayer.ClientLevel level = Minecraft.getInstance().level;
-        return level != null && level.dimensionType().ultraWarm();
+        if (level == null) return false;
+        //? if >=26.1 {
+        return level.dimension() == net.minecraft.world.level.Level.NETHER;
+        //?} else {
+        /*return level.dimensionType().ultraWarm();
+        *///?}
     }
 
     @Override
