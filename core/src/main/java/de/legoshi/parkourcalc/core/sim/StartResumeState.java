@@ -8,6 +8,7 @@ import java.util.Set;
 public final class StartResumeState {
 
     public boolean onGround;
+    public boolean gliding;
     public boolean wallContact;
     public boolean softWallContact;
     public boolean sprinting;
@@ -21,6 +22,7 @@ public final class StartResumeState {
     public StartResumeState copy() {
         StartResumeState c = new StartResumeState();
         c.onGround = onGround;
+        c.gliding = gliding;
         c.wallContact = wallContact;
         c.softWallContact = softWallContact;
         c.sprinting = sprinting;
@@ -36,6 +38,7 @@ public final class StartResumeState {
     public boolean sameAs(StartResumeState o) {
         if (o == null) return false;
         return onGround == o.onGround
+                && gliding == o.gliding
                 && wallContact == o.wallContact
                 && softWallContact == o.softWallContact
                 && sprinting == o.sprinting

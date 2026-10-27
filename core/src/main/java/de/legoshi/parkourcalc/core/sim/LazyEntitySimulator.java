@@ -21,6 +21,7 @@ public abstract class LazyEntitySimulator<E> implements Simulator {
     private Vec3dCore pendingVelocity;
     private Float pendingYaw;
     private StartResumeState startResume;
+    private boolean elytraEquipped;
     private int debugTickIndex;
 
     @Override
@@ -132,6 +133,23 @@ public abstract class LazyEntitySimulator<E> implements Simulator {
     }
 
     @Override
+    public final boolean isCurrentGliding() {
+        return isGliding(ensureEntity());
+    }
+
+    @Override
+    public final void setElytraEquipped(boolean equipped) {
+        elytraEquipped = equipped;
+        if (entity != null) {
+            applyElytra(entity, equipped);
+        }
+    }
+
+    public final boolean isElytraEquipped() {
+        return elytraEquipped;
+    }
+
+    @Override
     public final float getCurrentYaw() {
         return getYaw(ensureEntity());
     }
@@ -234,12 +252,20 @@ public abstract class LazyEntitySimulator<E> implements Simulator {
         }
         if (entity == null) {
             entity = createEntity(pendingStart, pendingVelocity, pendingYaw);
+            applyElytra(entity, elytraEquipped);
         }
         return entity;
     }
 
     protected boolean isEntityStale(E entity) {
         return false;
+    }
+
+    protected boolean isGliding(E entity) {
+        return false;
+    }
+
+    protected void applyElytra(E entity, boolean equipped) {
     }
 
     /** Any of pendingStart/pendingVelocity/pendingYaw may be null; subclass falls back to defaults. */

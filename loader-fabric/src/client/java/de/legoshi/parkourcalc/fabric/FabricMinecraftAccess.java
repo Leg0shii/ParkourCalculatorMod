@@ -55,6 +55,12 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
     }
 
     @Override
+    public boolean isPlayerWearingElytra() {
+        Player player = Minecraft.getInstance().player;
+        return player != null && de.legoshi.parkourcalc.fabric.sim.ElytraGlide.wearing(player);
+    }
+
+    @Override
     public Vec3dCore getEyePosition() {
         //? if >=26.1 {
         Camera camera = Minecraft.getInstance().gameRenderer.mainCamera();

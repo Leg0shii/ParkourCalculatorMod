@@ -235,6 +235,7 @@ public final class PathRenderPlan {
         h = 31 * h + Arrays.hashCode(settings.tickSelected);
         h = 31 * h + Arrays.hashCode(settings.tickSoftCollision);
         h = 31 * h + Arrays.hashCode(settings.tickWall);
+        h = 31 * h + Arrays.hashCode(settings.tickGliding);
         h = 31 * h + Arrays.hashCode(settings.tickAir);
         h = 31 * h + Arrays.hashCode(settings.tickSneak);
         h = 31 * h + Arrays.hashCode(settings.tickSolverStart);
@@ -262,6 +263,7 @@ public final class PathRenderPlan {
         h = 31 * h + Arrays.hashCode(settings.tickSelected);
         h = 31 * h + Arrays.hashCode(settings.tickSoftCollision);
         h = 31 * h + Arrays.hashCode(settings.tickWall);
+        h = 31 * h + Arrays.hashCode(settings.tickGliding);
         h = 31 * h + Arrays.hashCode(settings.tickAir);
         h = 31 * h + Arrays.hashCode(settings.tickSneak);
         h = 31 * h + Arrays.hashCode(settings.tickSolverStart);

@@ -118,6 +118,12 @@ public final class StartStateTable {
         sectionHeader("Rotation");
         rotationEditor(runner.getStartYaw(), runner.getStartPitch());
 
+        if (runner.supportsElytra()) {
+            ThemeManager.sectionSpacing();
+            sectionHeader("Equipment");
+            equipmentEditor();
+        }
+
         ThemeManager.sectionSpacing();
         if (Controls.secondaryButton(COPY_TELEPORT_LABEL, ImGui.getContentRegionAvail().x) && copyTeleport != null) {
             copyTeleport.run();
@@ -178,6 +184,24 @@ public final class StartStateTable {
         ThemeManager.endStandardFormTable();
     }
 
+    private void equipmentEditor() {
+        if (!ThemeManager.beginStandardFormTable("##equip", 2)) return;
+        ImGui.tableSetupColumn("l", ImGuiTableColumnFlags.WidthFixed, resumeLabelWidth());
+        ImGui.tableSetupColumn("v", ImGuiTableColumnFlags.WidthStretch);
+        Controls.pushInputFrameHeight();
+        ImGui.tableNextRow();
+        ImGui.tableNextColumn();
+        Controls.labelCell("Elytra equipped");
+        ImGui.tableNextColumn();
+        boolean equipped = runner.isElytraEquipped();
+        if (ImGui.checkbox("##equip_elytra", equipped)) {
+            runner.setElytraEquipped(!equipped);
+            reSimulate.run();
+        }
+        Controls.popInputFrameHeight();
+        ThemeManager.endStandardFormTable();
+    }
+
     private void resumeEditor() {
         StartResumeState pinned = runner.getStartResumeState();
         if (pinned != null) {
@@ -193,6 +217,9 @@ public final class StartStateTable {
         ImGui.tableSetupColumn("v", ImGuiTableColumnFlags.WidthStretch);
         Controls.pushInputFrameHeight();
         boolRow("On ground", "##res_ground", resume.onGround, v -> resume.onGround = v);
+        if (runner.supportsElytra()) {
+            boolRow("Gliding", "##res_gliding", resume.gliding, v -> resume.gliding = v);
+        }
         boolRow("Sprinting", "##res_sprinting", resume.sprinting, v -> resume.sprinting = v);
         boolRow("Wall contact", "##res_wall", resume.wallContact, v -> resume.wallContact = v);
         boolRow("Grazing contact", "##res_soft", resume.softWallContact, v -> resume.softWallContact = v);
@@ -302,7 +329,7 @@ public final class StartStateTable {
     private float resumeLabelWidth() {
         float max = 0f;
         for (String l : new String[]{"On ground", "Sprinting", "Wall contact", "Grazing contact",
-                "Cobweb slow", "Jump cooldown", "Sprint window", "Held last tick"}) {
+                "Cobweb slow", "Jump cooldown", "Sprint window", "Held last tick", "Elytra equipped"}) {
             max = Math.max(max, ImGui.calcTextSize(l).x);
         }
         return max + ThemeManager.SM * ThemeManager.uiScale();

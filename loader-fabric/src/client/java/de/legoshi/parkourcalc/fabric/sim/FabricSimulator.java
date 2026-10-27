@@ -159,6 +159,21 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
     }
 
     @Override
+    public boolean supportsElytra() {
+        return true;
+    }
+
+    @Override
+    protected boolean isGliding(SimulatorEntity e) {
+        return e.capturedTickGliding();
+    }
+
+    @Override
+    protected void applyElytra(SimulatorEntity e, boolean equipped) {
+        e.setElytraEquipped(equipped);
+    }
+
+    @Override
     protected boolean isEntityStale(SimulatorEntity e) {
         Minecraft client = Minecraft.getInstance();
         ClientLevel clientWorld = client.level;
@@ -185,6 +200,7 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
         if (c == null) return null;
         StartResumeState r = new StartResumeState();
         r.onGround = c.onGround;
+        r.gliding = c.fallFlying;
         r.wallContact = c.horizontalCollision;
         r.softWallContact = c.collidedSoftly;
         r.sprinting = c.sprinting;
@@ -292,6 +308,7 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
                 + " spr=" + e.isSprinting()
                 + " sne=" + e.isShiftKeyDown()
                 + " colH=" + e.horizontalCollision
+                + " glide=" + e.isFallFlying()
                 + " mvF=" + e.zza
                 + " mvS=" + e.xxa
                 + " spdAmp=" + MovementEffects.amplifier(e, MovementEffect.SPEED)

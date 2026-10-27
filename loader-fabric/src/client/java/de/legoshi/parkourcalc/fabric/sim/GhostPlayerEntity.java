@@ -43,6 +43,7 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
     private PlayerInfo ownerInfo;
     private int sprintTriggerTime = 0;
     private boolean crouching;
+    private final ElytraGlide.Lag glide = new ElytraGlide.Lag();
 
     public GhostPlayerEntity(ClientLevel level, GameProfile profile) {
         super(level, profile);
@@ -81,6 +82,7 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
         this.noJumpDelay = c.jumpingCooldown;
         this.stuckSpeedMultiplier = c.movementMultiplier;
         this.fallDistance = c.fallDistance;
+        ElytraGlide.setFallFlying(this, c.fallFlying);
     }
 
     @Override
@@ -89,7 +91,11 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
             this.setOnGround(FabricParkourCalculator.firstTickOnGround());
             this.fallDistance = 0;
         }
+        this.glide.beginTick(this);
         super.tick();
+        if (this.glide.endTick(this)) {
+            this.updatePlayerPose();
+        }
     }
 
     @Override
@@ -211,6 +217,7 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
         }
 
         boolean wasShiftKeyDown = this.input.keyPresses.shift();
+        boolean wasJumping = this.input.keyPresses.jump();
         //? if >=26.1 {
         boolean hasForwardImpulse = this.input.hasForwardImpulse();
         //?} else {
@@ -278,7 +285,8 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
                 && !this.isSprinting()
                 && enoughFood
                 && !this.isUsingItem()
-                && !this.hasEffect(MobEffects.BLINDNESS)) {
+                && !this.hasEffect(MobEffects.BLINDNESS)
+                && this.glideAllowsSprint()) {
             if (this.sprintTriggerTime <= 0 && !this.input.keyPresses.sprint()) {
                 this.sprintTriggerTime = 7;
             } else {
@@ -292,6 +300,7 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
                 && enoughFood
                 && !this.isUsingItem()
                 && !this.hasEffect(MobEffects.BLINDNESS)
+                && this.glideAllowsSprint()
                 && this.input.keyPresses.sprint()) {
             this.setSprinting(true);
         }
@@ -311,7 +320,17 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
         }
         *///?}
 
+        ElytraGlide.tryDeploy(this, this.input.keyPresses.jump(), wasJumping);
+
         super.aiStep();
+    }
+
+    private boolean glideAllowsSprint() {
+        //? if >=1.21.2 {
+        return !this.isFallFlying();
+        //?} else {
+        /*return true;
+        *///?}
     }
 
     @Override

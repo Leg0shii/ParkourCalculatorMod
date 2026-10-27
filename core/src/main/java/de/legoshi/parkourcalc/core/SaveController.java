@@ -137,7 +137,7 @@ public final class SaveController {
         if (tempActive) return;
         List<TickState> states = boxController != null ? boxController.getStates() : null;
         preTempSnapshotJson = SaveIO.snapshotJson(store, inputData, runner.getStartPosition(),
-                runner.getStartVelocity(), runner.getStartYaw(), runner.getStartPitch(),
+                runner.getStartVelocity(), runner.getStartYaw(), runner.getStartPitch(), runner.isElytraEquipped(),
                 runner.getStartResumeState(), angleSolver, states);
         tempActive = true;
     }
@@ -165,6 +165,7 @@ public final class SaveController {
             runner.setStartVelocity(SaveIO.velOf(f.start));
             runner.setStartYaw(f.start.yaw);
             runner.setStartPitch(f.start.pitch != null ? f.start.pitch : PlaybackController.DEFAULT_PITCH);
+            runner.setElytraEquipped(runner.supportsElytra() && SaveIO.elytraOf(f.start));
             runner.setStartResumeState(SaveIO.resumeOf(f.start));
             retriggerSimulation.run();
         } else if (dirtyTick >= 0) {
@@ -182,6 +183,7 @@ public final class SaveController {
                 && vel.x == curVel.x && vel.y == curVel.y && vel.z == curVel.z
                 && s.yaw == runner.getStartYaw()
                 && pitch == runner.getStartPitch()
+                && SaveIO.elytraOf(s) == runner.isElytraEquipped()
                 && StartResumeState.sameAs(SaveIO.resumeOf(s), runner.getStartResumeState());
     }
 
@@ -205,7 +207,7 @@ public final class SaveController {
         List<TickState> states = boxController != null ? boxController.getStates() : null;
         boolean fullDebug = settings != null && settings.saveDebugValues;
         return SaveIO.save(store, rawName, inputData, runner.getStartPosition(), runner.getStartVelocity(),
-                runner.getStartYaw(), runner.getStartPitch(), runner.getStartResumeState(), angleSolver, states, fullDebug);
+                runner.getStartYaw(), runner.getStartPitch(), runner.isElytraEquipped(), runner.getStartResumeState(), angleSolver, states, fullDebug);
     }
 
     public Result<String> saveSelectionAsNewTas(String rawName, List<InputRow> rows, List<Integer> sourceRows,
@@ -216,7 +218,7 @@ public final class SaveController {
         InputData slice = new InputData();
         for (InputRow row : rows) slice.getRows().add(row);
         AngleSolverState sliceSolver = SaveIO.sliceAngleSolverState(angleSolver, sourceRows);
-        return SaveIO.save(store, rawName, slice, startPos, startVel, startYaw, startPitch, resume, sliceSolver, null, false);
+        return SaveIO.save(store, rawName, slice, startPos, startVel, startYaw, startPitch, runner.isElytraEquipped(), resume, sliceSolver, null, false);
     }
 
     public Result<String> save(String name) {
@@ -228,7 +230,7 @@ public final class SaveController {
         List<TickState> states = boxController != null ? boxController.getStates() : null;
         boolean fullDebug = settings != null && settings.saveDebugValues;
         SaveFile file = SaveIO.buildSaveFile(store, inputData, runner.getStartPosition(), runner.getStartVelocity(),
-                runner.getStartYaw(), runner.getStartPitch(), runner.getStartResumeState(), angleSolver, states, fullDebug);
+                runner.getStartYaw(), runner.getStartPitch(), runner.isElytraEquipped(), runner.getStartResumeState(), angleSolver, states, fullDebug);
         FileSystemSaveStore target = store;
         writeExecutor().execute(() -> {
             try {
@@ -300,6 +302,7 @@ public final class SaveController {
         runner.setStartVelocity(SaveIO.velOf(s));
         runner.setStartYaw(s.yaw);
         runner.setStartPitch(s.pitch != null ? s.pitch : PlaybackController.DEFAULT_PITCH);
+        runner.setElytraEquipped(runner.supportsElytra() && SaveIO.elytraOf(s));
         runner.setStartResumeState(SaveIO.resumeOf(s));
         retriggerSimulation.run();
         currentName = name;
@@ -401,9 +404,11 @@ public final class SaveController {
             runner.setStartPosition(mc.getPlayerPosition());
             runner.setStartYaw(mc.getPlayerYaw());
             runner.setStartPitch(mc.getPlayerPitch());
+            runner.setElytraEquipped(runner.supportsElytra() && mc.isPlayerWearingElytra());
         } else {
             runner.setStartYaw(0.0F);
             runner.setStartPitch(PlaybackController.DEFAULT_PITCH);
+            runner.setElytraEquipped(false);
         }
         retriggerSimulation.run();
         if (undo != null) undo.onDocumentReplaced(null);

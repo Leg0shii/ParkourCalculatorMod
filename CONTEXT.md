@@ -58,7 +58,7 @@ The raw float backing facing: horizontal rotation in degrees, unbounded. It keep
 _Avoid_: rotationYaw (the code field name)
 
 **Pitch**:
-The vertical look angle. Does not affect horizontal parkour movement at all (it only matters for elytra and swimming, both out of scope), but it is still a per-tick input the tool records.
+The vertical look angle. Does not affect horizontal parkour movement on foot (it only matters for swimming and for elytra gliding, where it is the main control), but it is still a per-tick input the tool records.
 
 **Direction** (D_t):
 The horizontal direction the player actually moves, `atan2(-vx, vz)`, determined by inputs and rotation together. In the movement formulas it is `D_t`, and it sets the direction of ground and air acceleration. Distinct from facing: facing is where you look (rotation only), direction is where you go (inputs plus rotation). The two coincide only when moving straight forward.
@@ -203,7 +203,10 @@ A glitch from jumping into a ceiling or step (caused by stepping). Cancels the p
 Chaining multiple jump cancels to gain momentum. Stair grinding (called slab boost) is the easier form; ceiling grinding is much harder.
 
 **Bounding box**:
-An axis-aligned cuboid given by min/max on each axis. The player's is 0.6 x 1.8 x 0.6.
+An axis-aligned cuboid given by min/max on each axis. The player's is 0.6 x 1.8 x 0.6 (0.6 x 0.6 x 0.6 while gliding).
+
+**Gliding** (elytra, fall flying):
+Flight with an equipped elytra: a Jump press while falling deploys it (the server confirms, so on 1.12.2 the glide starts a tick after the press; on 1.20.4 and later the client starts it on the press tick), pitch then steers the vanilla fall-flying physics, and landing, water or lava end it a tick later. A per-TAS "Elytra equipped" start setting turns it on; gliding ticks get their own box colour and a Gliding tick-info row, and the solver refuses a solve range that crosses one. Not on 1.8.9, which has no elytra. Firework rockets are not modelled.
 
 **Collision box**:
 The volume of a block the player physically collides with (one or more bounding boxes). The player's bounding box is not allowed to intersect a collision box.

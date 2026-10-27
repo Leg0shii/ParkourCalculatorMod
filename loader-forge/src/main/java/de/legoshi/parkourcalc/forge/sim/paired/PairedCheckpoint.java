@@ -77,6 +77,10 @@ public final class PairedCheckpoint implements Checkpoint {
     public static void applyRestartState(EntityPlayerMP sp, Checkpoint checkpoint) {
         sp.velocityChanged = false;
         sp.respawnInvulnerabilityTicks = 0;
+        //? if >=1.12 {
+        SimulatorEntity.Checkpoint clientPart = clientPart(checkpoint);
+        de.legoshi.parkourcalc.forge.sim.ElytraGlide.setFallFlying(sp, clientPart != null && clientPart.fallFlying);
+        //?}
         if (checkpoint instanceof PairedCheckpoint) {
             PairedServerSim.ServerCheckpoint c = ((PairedCheckpoint) checkpoint).server;
             sp.fire = c.fire;

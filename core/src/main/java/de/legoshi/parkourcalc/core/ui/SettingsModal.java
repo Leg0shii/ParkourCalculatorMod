@@ -623,6 +623,7 @@ public final class SettingsModal {
         renderColor("tick box sneak", settings.tickSneak, flags);
         renderColor("tick box wall", settings.tickWall, flags);
         renderColor("tick box soft collision", settings.tickSoftCollision, flags);
+        renderColor("tick box gliding", settings.tickGliding, flags);
         renderColor("tick box solver start", settings.tickSolverStart, flags);
         renderColor("tick box solver goal", settings.tickSolverGoal, flags);
         renderColor("tick box desync", settings.tickDeviation, flags);

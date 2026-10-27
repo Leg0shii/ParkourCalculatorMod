@@ -59,6 +59,17 @@ public interface Simulator {
         return null;
     }
 
+    default boolean isCurrentGliding() {
+        return false;
+    }
+
+    default boolean supportsElytra() {
+        return false;
+    }
+
+    default void setElytraEquipped(boolean equipped) {
+    }
+
     float getCurrentYaw();
 
     List<Vec3dCore> getCurrentSubtickPath();

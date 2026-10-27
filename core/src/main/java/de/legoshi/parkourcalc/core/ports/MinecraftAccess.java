@@ -28,6 +28,10 @@ public interface MinecraftAccess {
 
     float getPlayerPitch();
 
+    default boolean isPlayerWearingElytra() {
+        return false;
+    }
+
     /** Eye / camera position for picking and ray-casts. */
     Vec3dCore getEyePosition();
 

@@ -51,6 +51,7 @@ public final class PlaybackController {
 
     private Supplier<StartRange> startRangeResolver;
     private Runnable onStart = () -> { };
+    private java.util.function.Consumer<String> warn = m -> { };
     private boolean firstTickOnGround;
 
     // currentTickYaw is the physics yaw, kept bit-identical to the simulator's rotationYaw:
@@ -168,9 +169,30 @@ public final class PlaybackController {
         this.onStart = onStart;
     }
 
+    public void setWarningSink(java.util.function.Consumer<String> warn) {
+        this.warn = warn != null ? warn : m -> { };
+    }
+
+    public static final String ELYTRA_MISSING = "Can't replay: the TAS starts with an elytra equipped, put one in the chest slot first";
+    public static final String ELYTRA_UNEXPECTED = "Replay: the player wears an elytra but the TAS has none, a Jump press in the air may glide";
+
+    private boolean elytraReady() {
+        boolean wanted = runner.isElytraEquipped();
+        boolean worn = bridge.hasElytraEquipped();
+        if (wanted && !worn) {
+            warn.accept(ELYTRA_MISSING);
+            return false;
+        }
+        if (!wanted && worn) {
+            warn.accept(ELYTRA_UNEXPECTED);
+        }
+        return true;
+    }
+
     public void start(int startIndex, int stopExclusive, Vec3dCore pos, Vec3dCore vel, float yaw, Checkpoint carry) {
         if (running) return;
         if (!canStart()) return;
+        if (!elytraReady()) return;
         onStart.run();
 
         int size = inputData.size();
@@ -193,6 +215,7 @@ public final class PlaybackController {
         firstTickOnGround = runner.firstTickOnGround();
         bridge.beginReplayLockstep();
         bridge.teleport(pos, vel, yaw, carry);
+        bridge.prepareElytra(runner.isElytraEquipped());
         // Drop any user-held key so the warmup runs with an empty InputRow like the simulator does.
         bridge.releaseAllKeys();
         startTick = from;

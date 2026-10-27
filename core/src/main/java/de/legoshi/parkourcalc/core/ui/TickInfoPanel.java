@@ -273,6 +273,9 @@ public final class TickInfoPanel implements RenderInterface {
             case COLLISION:
                 rowBool(stat.label(), cur.wallCollision, tip);
                 break;
+            case GLIDING:
+                rowBool(stat.label(), cur.gliding, tip);
+                break;
             case SOFT_COLLISION:
                 if (cur.wallCollision) {
                     rowBool(stat.label(), cur.softCollision, tip);
