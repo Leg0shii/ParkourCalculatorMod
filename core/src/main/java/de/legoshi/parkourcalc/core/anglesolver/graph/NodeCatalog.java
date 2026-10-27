@@ -8,6 +8,7 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.FoldDriverNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.FreeStartImproveNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.HomotopyLadderNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.IlsPolishNode;
+import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.InputSmoothNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.LabelNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.LeafSnapNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.MarkSettledNode;
@@ -291,6 +292,20 @@ public final class NodeCatalog {
                         BuiltinGraphs.SMOOTH_RESERVE_CAP_SEC))
                 .fallback(Guarantee.UNCHANGED)
                 .factory(SmoothNode::new)
+                .build());
+        register(NodeType.builder("inputSmooth", "Smoothing (inputs)", NodeCategory.POLISH)
+                .requires(InputRequirement.ANY)
+                .branch(Branch.feasible(Guarantee.IMPROVED))
+                .branch(Branch.preserves(Guarantee.UNCHANGED))
+                .param(ParamSpec.decimal("giveBack", "Give-back share of the offset", 0.0, 1.0, 1.0))
+                .param(ParamSpec.bool("allowA", "May strafe with A", true))
+                .param(ParamSpec.bool("allowD", "May strafe with D", true))
+                .param(ParamSpec.decimal(GraphRunner.RESERVE_FRACTION_PARAM, "Reserved share of the solve time", 0.0, 1.0,
+                        BuiltinGraphs.SMOOTH_RESERVE_FRACTION))
+                .param(ParamSpec.integer(GraphRunner.RESERVE_CAP_PARAM, "Reserve cap (s, 0 = none)", 0, 600,
+                        3 * BuiltinGraphs.SMOOTH_RESERVE_CAP_SEC))
+                .fallback(Guarantee.UNCHANGED)
+                .factory(InputSmoothNode::new)
                 .build());
         register(NodeType.builder("translatedStart", "Translated start", NodeCategory.RECOVERY)
                 .requires(InputRequirement.ANY)

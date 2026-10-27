@@ -16,7 +16,7 @@ class that names the capture.
 | `legal/`          | behaves in legal mode: lands at the goal wall with a non-positive shortfall, or reports the shortfall of the dropped goal wall with every hard wall held |
 | `optimize/`       | is never made worse by Optimize: cold THOROUGH vs FAST, or THOROUGH adopting the FAST incumbent |
 | `multistart/`     | runs the seed sweep of the multi-start preset where the start is free, and skips it where it is pinned |
-| `smooth/`         | smooths after a solve: the Smooth button yields a smoothed, still feasible result; with `resmooth` every press starts again from the unsmoothed solve |
+| `smooth/`         | smooths after a solve: the Smooth button yields a smoothed, still feasible result; with `resmooth` every press starts again from the unsmoothed solve; with `smoothInputs` the Turn and inputs mode changes the keys of at least `minChanged` ticks, stays feasible within the give-back, is never less smooth than Turn only on the same solve, and Apply writes the keys and switches those ticks to Keep / Derive |
 | `freestart/`      | solves with a free start box: the adopted start lies in the box, the seed may be displaced, the box may be pinned afterwards |
 | `levelset/`       | is lifted by the level-set ascent on the sidecar's `axis` and `goal` by at least `minGain` over the SLP hug, staying under the dual bound |
 | `ils/`            | is polished by the ILS from the closed form's byte-exact feasible seed without losing feasibility or objective, and an infeasible seed comes back untouched |
@@ -126,6 +126,8 @@ Every fixture JSON is one line, no BOM, no trailing newline.
 
   // smooth/
   "resmooth":        true,      // also smooth at 50 % twice and then at 0 % on a fresh solve: each press starts from the unsmoothed solve
+  "smoothInputs":    true,      // also smooth in the Turn and inputs mode (gh-606): the keys of at least minChanged ticks change
+  "minChanged":      1,         // smoothInputs: the least number of ticks whose keys must change (default 1)
   "strafeSide":      "BOTH"     // any check: the Force 45 strafe side the rig solves with (A, D or BOTH; the save's own when absent)
 }
 ```

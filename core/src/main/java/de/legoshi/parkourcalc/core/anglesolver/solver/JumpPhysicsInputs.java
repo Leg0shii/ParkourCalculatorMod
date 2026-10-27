@@ -62,6 +62,8 @@ public final class JumpPhysicsInputs {
      *  null = the legacy assumption: sprinting on every tick. */
     public boolean[] sprintPerTick = null;
 
+    public boolean[] sprintKeyPerTick = null;
+
     /** Sprint state in force on the tick before this window's first tick. MC snapshots the movement
      *  factor (landMovementFactor / jumpMovementFactor) after the move, so the factor lags isSprinting()
      *  by one tick: tick t's ground/air factor reflects tick t-1's sprint (see {@link #factorSprintAt}).
@@ -120,6 +122,7 @@ public final class JumpPhysicsInputs {
         c.weavingPerTick = weavingPerTick;
         c.yawLockedPerTick = yawLockedPerTick;
         c.sprintPerTick = sprintPerTick;
+        c.sprintKeyPerTick = sprintKeyPerTick;
         c.incomingSprint = incomingSprint;
         c.liveMovementFactor = liveMovementFactor;
         c.incomingAmp = incomingAmp;
@@ -160,6 +163,7 @@ public final class JumpPhysicsInputs {
         boolean[] weaving = new boolean[m];
         boolean[] locked = new boolean[m];
         boolean[] sprint = new boolean[m];
+        boolean[] sprintKey = new boolean[m];
         float[] fwd = new float[m];
         float[] str = new float[m];
         boolean[] damage = damagePerTick == null ? null : new boolean[m];
@@ -180,6 +184,7 @@ public final class JumpPhysicsInputs {
             weaving[k] = weavingAt(i);
             locked[k] = yawLockedPerTick != null && i < yawLockedPerTick.length && yawLockedPerTick[i];
             sprint[k] = sprintAt(i);
+            sprintKey[k] = sprintKeyAt(i);
             fwd[k] = forwardAt(i);
             str[k] = strafeInputAt(i);
             if (damage != null) damage[k] = damageAt(i);
@@ -199,6 +204,7 @@ public final class JumpPhysicsInputs {
         c.weavingPerTick = weaving;
         c.yawLockedPerTick = locked;
         c.sprintPerTick = sprint;
+        c.sprintKeyPerTick = sprintKey;
         c.forwardInputPerTick = fwd;
         c.strafeInputPerTick = str;
         c.damagePerTick = damage;
@@ -298,6 +304,11 @@ public final class JumpPhysicsInputs {
     public boolean sprintAt(int tick) {
         if (sprintPerTick == null) return true;
         return tick >= 0 && tick < sprintPerTick.length && sprintPerTick[tick];
+    }
+
+    public boolean sprintKeyAt(int tick) {
+        if (sprintKeyPerTick == null) return true;
+        return tick >= 0 && tick < sprintKeyPerTick.length && sprintKeyPerTick[tick];
     }
 
     /** Sprint state that drives this tick's ground/air movement factor. MC recomputes the factor after
