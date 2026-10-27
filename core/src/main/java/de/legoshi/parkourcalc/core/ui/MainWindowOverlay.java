@@ -378,6 +378,10 @@ public final class MainWindowOverlay implements RenderInterface {
             }
             ImGui.endMenu();
         }
+        if (ImGui.menuItem("Ghost Blocks", null, settings.viewGhostBlocks)) {
+            settings.viewGhostBlocks = !settings.viewGhostBlocks;
+            onSettingsChanged.run();
+        }
         if (ImGui.menuItem("Recorder", null, settings.viewRecorder)) {
             settings.viewRecorder = !settings.viewRecorder;
             onSettingsChanged.run();

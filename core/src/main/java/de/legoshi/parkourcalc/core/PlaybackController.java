@@ -2,6 +2,7 @@ package de.legoshi.parkourcalc.core;
 
 import de.legoshi.parkourcalc.core.ports.PlaybackBridge;
 import de.legoshi.parkourcalc.core.sim.Checkpoint;
+import de.legoshi.parkourcalc.core.sim.GhostBlock;
 import de.legoshi.parkourcalc.core.sim.SimulationRunner;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.DebugFlags;
@@ -12,6 +13,7 @@ import de.legoshi.parkourcalc.core.ui.Settings;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -247,6 +249,7 @@ public final class PlaybackController {
         pausedAtNanos = 0L;
         if (bridge != null) {
             bridge.releaseAllKeys();
+            bridge.setGhostBlocks(Collections.<GhostBlock>emptyList());
             bridge.applyEffects(new int[MovementEffect.count()]);
             if (DebugFlags.PAIRED_DIAGNOSTICS) {
                 bridge.finishPlaybackCapture();
@@ -305,6 +308,7 @@ public final class PlaybackController {
             bridge.suppressFlight();
         }
         if (nextTick >= stopTick) {
+            bridge.setGhostBlocks(Collections.<GhostBlock>emptyList());
             // Stop only once the visual has caught up to the final yaw and a tick
             // window has elapsed; a low cap can keep the ease running past the final input.
             boolean caughtUp = displayedYaw == displayTargetYaw;
@@ -320,6 +324,7 @@ public final class PlaybackController {
 
         if (holdRemaining > 0) {
             holdRemaining--;
+            bridge.setGhostBlocks(Collections.<GhostBlock>emptyList());
             bridge.releaseAllKeys();
             bridge.teleport(startPos, Vec3dCore.ZERO, startYaw, null);
             bridge.releaseReplayLockstep();
@@ -331,6 +336,7 @@ public final class PlaybackController {
         }
 
         if (warmupRemaining > 0) {
+            bridge.setGhostBlocks(Collections.<GhostBlock>emptyList());
             bridge.releaseAllKeys();
             warmupRemaining--;
             bridge.releaseReplayLockstep();
@@ -380,6 +386,7 @@ public final class PlaybackController {
         prevTickPitch = currentTickPitch;
         currentTickPitch = applyPitch(currentTickPitch, motion);
         bridge.setPitch(currentTickPitch);
+        bridge.setGhostBlocks(inputData.getGhostBlocks().activeAtRow(nextTick));
         tickEndNanos = System.nanoTime();
         nextTick++;
         bridge.releaseReplayLockstep();

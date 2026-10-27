@@ -153,9 +153,10 @@ public final class SaveController {
         SaveFile f = SaveIO.parseSafe(json);
         if (f == null || f.start == null) return;
         if (solverEngine != null) solverEngine.onProblemReplaced();
-        boolean incremental = retriggerFrom != null && startMatches(f.start);
+        boolean incremental = retriggerFrom != null && startMatches(f.start) && SaveIO.ghostBlocksMatch(f, inputData);
         int dirtyTick = incremental ? firstChangedRow(f.rows) : -1;
         SaveIO.applyRowsTo(f, inputData);
+        SaveIO.applyGhostBlocksTo(f, inputData);
         SaveIO.applyAngleSolverTo(f, angleSolver);
         resolveGraphPreset();
         markDirty();
@@ -292,6 +293,7 @@ public final class SaveController {
         sessionActive = true;
         if (solverEngine != null) solverEngine.onProblemReplaced();
         SaveIO.applyRowsTo(result.value, inputData);
+        SaveIO.applyGhostBlocksTo(result.value, inputData);
         SaveIO.applyAngleSolverTo(result.value, angleSolver, inputData.size());
         resolveGraphPreset();
         // Must precede the setStart* calls: invalidate clears pending*, which they then refill.
@@ -392,6 +394,7 @@ public final class SaveController {
     public void newSession() {
         sessionActive = true;
         inputData.clear();
+        inputData.getGhostBlocks().clear();
         if (solverEngine != null) solverEngine.onProblemReplaced();
         if (angleSolver != null) angleSolver.reset();
         discardCurrent();

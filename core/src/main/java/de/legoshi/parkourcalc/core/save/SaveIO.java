@@ -4,6 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
 import de.legoshi.parkourcalc.core.sim.AABB;
+import de.legoshi.parkourcalc.core.sim.GhostBlock;
+import de.legoshi.parkourcalc.core.sim.GhostBlocks;
 import de.legoshi.parkourcalc.core.sim.StartResumeState;
 import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
@@ -103,6 +105,7 @@ public final class SaveIO {
             rows.add(toSaveRow(row));
         }
         file.rows = rows;
+        file.ghostBlocks = toSaveGhostBlocks(inputData.getGhostBlocks());
         file.angleSolver = toSaveAngleSolver(angleSolver);
         return file;
     }
@@ -127,6 +130,9 @@ public final class SaveIO {
                 .append('#').append(startYaw).append('#').append(startPitch).append('#');
         SaveFile.Resume res = toSaveResume(resume);
         if (res != null) sb.append(COMPACT_GSON.toJson(res));
+        sb.append('#');
+        List<SaveFile.GhostBlock> ghosts = toSaveGhostBlocks(inputData.getGhostBlocks());
+        if (ghosts != null) sb.append(COMPACT_GSON.toJson(ghosts));
         sb.append('#');
         SaveFile.AngleSolver solver = toSaveAngleSolver(angleSolver);
         if (solver != null) sb.append(COMPACT_GSON.toJson(solver));
@@ -173,6 +179,40 @@ public final class SaveIO {
                 rows.add(toInputRow(r));
             }
         }
+    }
+
+    public static void applyGhostBlocksTo(SaveFile file, InputData inputData) {
+        inputData.getGhostBlocks().replaceAll(ghostBlocksOf(file));
+    }
+
+    public static boolean ghostBlocksMatch(SaveFile file, InputData inputData) {
+        return ghostBlocksOf(file).equals(inputData.getGhostBlocks().all());
+    }
+
+    public static List<GhostBlock> ghostBlocksOf(SaveFile file) {
+        List<GhostBlock> out = new ArrayList<>();
+        if (file == null || file.ghostBlocks == null) return out;
+        for (SaveFile.GhostBlock g : file.ghostBlocks) {
+            if (g == null) continue;
+            out.add(new GhostBlock(g.startTick, g.endTick, g.x, g.y, g.z, g.block));
+        }
+        return out;
+    }
+
+    private static List<SaveFile.GhostBlock> toSaveGhostBlocks(GhostBlocks blocks) {
+        if (blocks == null || blocks.isEmpty()) return null;
+        List<SaveFile.GhostBlock> out = new ArrayList<>(blocks.size());
+        for (GhostBlock b : blocks.all()) {
+            SaveFile.GhostBlock g = new SaveFile.GhostBlock();
+            g.startTick = b.startTick;
+            g.endTick = b.endTick;
+            g.x = b.x;
+            g.y = b.y;
+            g.z = b.z;
+            g.block = b.block;
+            out.add(g);
+        }
+        return out;
     }
 
     /** Rebuilds the Angle Solver problem from the save. Always resets first, so a pre-feature save yields an empty solver. */
@@ -417,6 +457,7 @@ public final class SaveIO {
             rows.add(toSaveRow(row));
         }
         file.rows = rows;
+        file.ghostBlocks = toSaveGhostBlocks(inputData.getGhostBlocks());
 
         file.angleSolver = toSaveAngleSolver(angleSolver);
 

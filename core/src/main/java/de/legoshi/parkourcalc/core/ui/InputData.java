@@ -1,5 +1,7 @@
 package de.legoshi.parkourcalc.core.ui;
 
+import de.legoshi.parkourcalc.core.sim.GhostBlocks;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -7,6 +9,11 @@ import java.util.List;
 public class InputData {
 
     private final List<InputRow> rows = new ArrayList<>();
+    private final GhostBlocks ghostBlocks = new GhostBlocks();
+
+    public GhostBlocks getGhostBlocks() {
+        return ghostBlocks;
+    }
 
     public void clear() {
         rows.clear();

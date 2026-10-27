@@ -58,6 +58,14 @@ public interface MinecraftAccess {
         return false;
     }
 
+    default String describeBlockState(int x, int y, int z) {
+        return null;
+    }
+
+    default String ghostBlockError(String spec) {
+        return null;
+    }
+
     double getInsideBlockInset();
 
     default VelocityPacketCodec velocityPacketCodec() {

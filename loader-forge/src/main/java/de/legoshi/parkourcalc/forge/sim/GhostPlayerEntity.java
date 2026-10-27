@@ -1,6 +1,7 @@
 package de.legoshi.parkourcalc.forge.sim;
 
 import com.mojang.authlib.GameProfile;
+import de.legoshi.parkourcalc.core.sim.GhostBlock;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 import de.legoshi.parkourcalc.forge.core.sim.PlayerSprintMachine;
 //? if >=1.12
@@ -16,6 +17,7 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
 
 import java.util.ArrayList;
+import java.util.Collections;
 //? if <1.12
 //import java.util.Collection;
 import java.util.List;
@@ -27,6 +29,7 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
 
     private InputRow currentInput = new InputRow();
     private PlayerSprintMachine.State sprintState = PlayerSprintMachine.State.initial();
+    private List<GhostBlock> ghostBlocks = Collections.emptyList();
 
     public GhostPlayerEntity(World world, GameProfile profile) {
         super(world, profile);
@@ -34,6 +37,20 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
 
     public void setInput(InputRow row) {
         this.currentInput = row;
+    }
+
+    public void setGhostBlocks(List<GhostBlock> active) {
+        this.ghostBlocks = active;
+    }
+
+    @Override
+    public void onUpdate() {
+        Runnable restore = GhostBlockPlacer.place(getEntityWorld(), ghostBlocks);
+        try {
+            super.onUpdate();
+        } finally {
+            if (restore != null) restore.run();
+        }
     }
 
     public void applyCarry(de.legoshi.parkourcalc.core.sim.Checkpoint carry) {

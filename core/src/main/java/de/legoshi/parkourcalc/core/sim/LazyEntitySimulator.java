@@ -22,6 +22,7 @@ public abstract class LazyEntitySimulator<E> implements Simulator {
     private Float pendingYaw;
     private StartResumeState startResume;
     private int debugTickIndex;
+    private List<GhostBlock> ghostBlocks = Collections.emptyList();
 
     @Override
     public final void resetToStart() {
@@ -50,9 +51,19 @@ public abstract class LazyEntitySimulator<E> implements Simulator {
     }
 
     @Override
+    public final void setGhostBlocks(List<GhostBlock> active) {
+        ghostBlocks = active == null ? Collections.<GhostBlock>emptyList() : active;
+    }
+
+    @Override
     public final void tick() {
         E e = ensureEntity();
-        tickEntity(e);
+        Runnable restore = ghostBlocks.isEmpty() ? null : placeGhostBlocks(e, ghostBlocks);
+        try {
+            tickEntity(e);
+        } finally {
+            if (restore != null) restore.run();
+        }
         if (DebugFlags.DUMP_TICK_STATE && DebugFlags.simTickSink != null) {
             String dump = formatDebugState(e, debugTickIndex);
             if (dump != null) {
@@ -63,6 +74,10 @@ public abstract class LazyEntitySimulator<E> implements Simulator {
     }
 
     protected String formatDebugState(E entity, int tickIndex) {
+        return null;
+    }
+
+    protected Runnable placeGhostBlocks(E entity, List<GhostBlock> active) {
         return null;
     }
 
