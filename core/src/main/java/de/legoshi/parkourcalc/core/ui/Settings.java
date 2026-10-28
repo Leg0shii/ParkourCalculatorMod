@@ -84,7 +84,7 @@ public final class Settings {
     private static final boolean DEFAULT_VIEW_SENSE_FINDER = false;
     private static final boolean DEFAULT_SENSE_FINDER_COUNT_VIEW = false;
     private static final boolean DEFAULT_VIEW_RECORDER = false;
-    private static final boolean DEFAULT_VIEW_KEYSTROKES = true;
+    private static final boolean DEFAULT_VIEW_KEYSTROKES = false;
     private static final int DEFAULT_TURN_PROFILE_ATTEMPTS = 20_000;
     private static final int DEFAULT_ONEJUMP_SPREAD_ATTEMPTS = 1000;
     private static final boolean DEFAULT_SAVE_DEBUG_VALUES = false;
@@ -126,10 +126,6 @@ public final class Settings {
     public static final int MIN_REPLAY_START_DELAY_TICKS = 0;
     public static final int MAX_REPLAY_START_DELAY_TICKS = 20;
 
-    public static final int REPLAY_KEYSTROKES_OFF = 0;
-    public static final int REPLAY_KEYSTROKES_CLIENT_SIDED = 1;
-    public static final int REPLAY_KEYSTROKES_EVERY = 2;
-    private static final int DEFAULT_REPLAY_KEYSTROKES = REPLAY_KEYSTROKES_CLIENT_SIDED;
     private static final boolean DEFAULT_REPLAY_KEYSTROKES_MOUSE = true;
     private static final boolean DEFAULT_REPLAY_KEYSTROKES_SCROLL = false;
 
@@ -271,7 +267,6 @@ public final class Settings {
     public boolean pairedDamage = DEFAULT_PAIRED_DAMAGE;
     public boolean lockstepReplay = DEFAULT_LOCKSTEP_REPLAY;
     public int replayStartDelayTicks = DEFAULT_REPLAY_START_DELAY_TICKS;
-    public int replayKeystrokes = DEFAULT_REPLAY_KEYSTROKES;
     public boolean replayKeystrokesMouse = DEFAULT_REPLAY_KEYSTROKES_MOUSE;
     public boolean replayKeystrokesScroll = DEFAULT_REPLAY_KEYSTROKES_SCROLL;
 
@@ -393,7 +388,6 @@ public final class Settings {
         pairedDamage = DEFAULT_PAIRED_DAMAGE;
         lockstepReplay = DEFAULT_LOCKSTEP_REPLAY;
         replayStartDelayTicks = DEFAULT_REPLAY_START_DELAY_TICKS;
-        replayKeystrokes = DEFAULT_REPLAY_KEYSTROKES;
         replayKeystrokesMouse = DEFAULT_REPLAY_KEYSTROKES_MOUSE;
         replayKeystrokesScroll = DEFAULT_REPLAY_KEYSTROKES_SCROLL;
     }

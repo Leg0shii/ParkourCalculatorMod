@@ -91,8 +91,6 @@ public final class SettingsModal {
 
     private static final String[] ARROW_MODE_LABELS = {"Yaw", "Combined"};
     private static final String[] HUD_MESSAGE_ORDER_LABELS = {"Downwards", "Upwards"};
-    private static final String[] REPLAY_KEYSTROKES_LABELS = {"Off", "Client-sided replay", "Every replay"};
-    private static final String TT_REPLAY_KEYSTROKES = "Shows the keys the replay presses (W A S D, sprint, sneak, jump and the mouse buttons) in a small panel. Keystroke mods cannot see the keys of a client-sided replay, so it is on for those by default; Every replay also shows it in singleplayer. While the main UI is open the panel stays visible so it can be dragged.";
 
     private static final String TT_REPLAY_KEYSTROKES_MOUSE = "Adds a square next to the keys whose dot follows the replay's turn each tick: right turns move it right, looking down moves it down, 10 degrees reaches the edge.";
     private static final String TT_REPLAY_KEYSTROKES_SCROLL = "Slides each older tick of the mouse trail further down the square, so a turn draws a curve over the last 8 ticks instead of a line back and forth.";
@@ -110,7 +108,6 @@ public final class SettingsModal {
     private final int[] hudMessageCountBuf = new int[1];
     private final float[] hudMessageScaleBuf = new float[1];
     private final ImInt hudMessageOrderBuf = new ImInt();
-    private final ImInt replayKeystrokesBuf = new ImInt();
     private final String[] scaleLabels;
 
     private boolean openRequested;
@@ -382,15 +379,6 @@ public final class SettingsModal {
                 }
                 if (ImGui.isItemDeactivatedAfterEdit()) onChanged.run();
                 tooltipForLastItem(TT_REPLAY_START_DELAY);
-            });
-            replayKeystrokesBuf.set(settings.replayKeystrokes);
-            row("Keystrokes", () -> {
-                ImGui.setNextItemWidth(-1);
-                if (Controls.combo("##replay_keystrokes", replayKeystrokesBuf, REPLAY_KEYSTROKES_LABELS)) {
-                    settings.replayKeystrokes = replayKeystrokesBuf.get();
-                    onChanged.run();
-                }
-                tooltipForLastItem(TT_REPLAY_KEYSTROKES);
             });
             checkboxRow("Keystrokes mouse pad", "##replay_keystrokes_mouse", settings.replayKeystrokesMouse, TT_REPLAY_KEYSTROKES_MOUSE, v -> settings.replayKeystrokesMouse = v);
             checkboxRow("Scrolling mouse trail", "##replay_keystrokes_scroll", settings.replayKeystrokesScroll, TT_REPLAY_KEYSTROKES_SCROLL, v -> settings.replayKeystrokesScroll = v);

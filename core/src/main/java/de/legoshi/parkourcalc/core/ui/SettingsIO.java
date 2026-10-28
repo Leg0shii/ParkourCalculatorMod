@@ -53,7 +53,6 @@ public final class SettingsIO {
         clampScaleIndex(settings);
         clampArrowMode(settings);
         clampReplayStartDelay(settings);
-        clampReplayKeystrokes(settings);
         normalizeTickInfoStats(settings);
     }
 
@@ -110,13 +109,6 @@ public final class SettingsIO {
             settings.replayStartDelayTicks = Settings.MIN_REPLAY_START_DELAY_TICKS;
         } else if (settings.replayStartDelayTicks > Settings.MAX_REPLAY_START_DELAY_TICKS) {
             settings.replayStartDelayTicks = Settings.MAX_REPLAY_START_DELAY_TICKS;
-        }
-    }
-
-    private static void clampReplayKeystrokes(Settings settings) {
-        if (settings.replayKeystrokes < Settings.REPLAY_KEYSTROKES_OFF
-                || settings.replayKeystrokes > Settings.REPLAY_KEYSTROKES_EVERY) {
-            settings.replayKeystrokes = Settings.REPLAY_KEYSTROKES_CLIENT_SIDED;
         }
     }
 

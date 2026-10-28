@@ -75,10 +75,4 @@ public class ReplayKeystrokesTest {
         pc.tick();
         assertFalse(pc.isKeyPressed(InputRow.Key.W));
     }
-
-    @Test
-    public void clientSidedSessionOnlyInMultiplayer() {
-        assertTrue(controller(multiplayer(), rows()).isClientSidedSession());
-        assertFalse(controller(new FakePlaybackBridge(), rows()).isClientSidedSession());
-    }
 }

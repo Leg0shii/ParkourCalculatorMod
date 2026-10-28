@@ -130,10 +130,6 @@ public final class PlaybackController {
         return nextTick - 1;
     }
 
-    public boolean isClientSidedSession() {
-        return bridge != null && !bridge.isSingleplayer() && bridge.supportsMultiplayerPlayback();
-    }
-
     public boolean isKeyPressed(InputRow.Key key) {
         return running && pressedRow != null && pressedRow.isKeyActive(key);
     }

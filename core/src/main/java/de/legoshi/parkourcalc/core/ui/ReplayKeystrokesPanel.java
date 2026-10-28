@@ -54,7 +54,7 @@ public final class ReplayKeystrokesPanel {
     }
 
     public void render(ImGuiIO io, boolean panelOpen) {
-        if (!isShown(panelOpen)) return;
+        if (!settings.viewKeystrokes) return;
         updateTrail();
         float uiScale = ThemeManager.uiScale();
         float pad = PAD * uiScale;
@@ -103,16 +103,6 @@ public final class ReplayKeystrokesPanel {
         }
         ImGui.end();
         ImGui.popStyleVar(2);
-    }
-
-    private boolean isShown(boolean panelOpen) {
-        if (!settings.viewKeystrokes) return false;
-        int mode = settings.replayKeystrokes;
-        if (mode == Settings.REPLAY_KEYSTROKES_OFF) return false;
-        boolean running = playback.isRunning();
-        boolean clientSided = playback.isClientSidedSession();
-        if (mode == Settings.REPLAY_KEYSTROKES_EVERY) return running || panelOpen;
-        return clientSided && (running || panelOpen);
     }
 
     private void updateTrail() {
