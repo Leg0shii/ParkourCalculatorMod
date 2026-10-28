@@ -92,7 +92,6 @@ public final class SettingsModal {
     private static final String[] ARROW_MODE_LABELS = {"Yaw", "Combined"};
     private static final String[] HUD_MESSAGE_ORDER_LABELS = {"Downwards", "Upwards"};
 
-    private static final String TT_REPLAY_KEYSTROKES_MOUSE = "Adds a square next to the keys whose dot follows the replay's turn each tick: right turns move it right, looking down moves it down, 10 degrees reaches the edge.";
     private static final String TT_REPLAY_KEYSTROKES_SCROLL = "Slides each older tick of the mouse trail further down the square, so a turn draws a curve over the last 8 ticks instead of a line back and forth.";
 
     private static final String TT_REPLAY_START_DELAY = "Waits this many ticks after playback starts before the macro's inputs begin. The player holds at the start while the delay counts down; 0 starts immediately.";
@@ -380,7 +379,6 @@ public final class SettingsModal {
                 if (ImGui.isItemDeactivatedAfterEdit()) onChanged.run();
                 tooltipForLastItem(TT_REPLAY_START_DELAY);
             });
-            checkboxRow("Keystrokes mouse pad", "##replay_keystrokes_mouse", settings.replayKeystrokesMouse, TT_REPLAY_KEYSTROKES_MOUSE, v -> settings.replayKeystrokesMouse = v);
             checkboxRow("Scrolling mouse trail", "##replay_keystrokes_scroll", settings.replayKeystrokesScroll, TT_REPLAY_KEYSTROKES_SCROLL, v -> settings.replayKeystrokesScroll = v);
             checkboxRow("Lockstep replay", "##lockstep_replay", settings.lockstepReplay, TT_LOCKSTEP_REPLAY, v -> settings.lockstepReplay = v);
             checkboxRow("Disable creative flight", "##disable_flight_playback", settings.disableFlightDuringPlayback, TT_DISABLE_FLIGHT_PLAYBACK, v -> settings.disableFlightDuringPlayback = v);

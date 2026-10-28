@@ -33,7 +33,7 @@ public final class ReplayKeystrokesPanel {
     private static final float BG_ALPHA = 0.85f;
     private static final float KEYS_W = KEY * 3f + GAP * 2f;
     private static final float KEYS_H = KEY * 2f + WIDE_H * 3f + GAP * 4f;
-    private static final float BASE_W = KEYS_W + GAP * 2f + KEYS_H;
+    private static final float KEY_BLOCK_H = KEY * 2f + WIDE_H * 2f + GAP * 3f;
     private static final float FULL_TURN_DEG = 10f;
     private static final float DOT = 4f;
     private static final int TRAIL = 8;
@@ -45,7 +45,7 @@ public final class ReplayKeystrokesPanel {
     private final float[] trailY = new float[TRAIL];
     private int trailCount;
     private long trailTick = -1L;
-    private Boolean lastMouse;
+    private int lastLayout = -1;
     private float lastScale = 1f;
 
     public ReplayKeystrokesPanel(PlaybackController playback, Settings settings) {
@@ -54,19 +54,25 @@ public final class ReplayKeystrokesPanel {
     }
 
     public void render(ImGuiIO io, boolean panelOpen) {
-        if (!settings.viewKeystrokes) return;
+        boolean keys = settings.viewKeystrokes;
+        boolean buttons = settings.viewMouseStrokes;
+        boolean movement = settings.viewMouseMovement;
+        if (!keys && !buttons && !movement) return;
         updateTrail();
+        float leftW = keys || buttons ? KEYS_W : 0f;
+        float leftH = (keys ? KEY_BLOCK_H : 0f) + (buttons ? WIDE_H : 0f) + (keys && buttons ? GAP : 0f);
+        float baseW = leftW + (movement ? KEYS_H : 0f) + (leftW > 0f && movement ? GAP * 2f : 0f);
+        float baseH = movement ? KEYS_H : leftH;
+        int layout = (keys ? 1 : 0) | (buttons ? 2 : 0) | (movement ? 4 : 0);
         float uiScale = ThemeManager.uiScale();
         float pad = PAD * uiScale;
         ImGui.setNextWindowPos(EDGE, io.getDisplaySizeY() - EDGE, ImGuiCond.FirstUseEver, 0f, 1f);
-        boolean mouse = settings.replayKeystrokesMouse;
-        float baseW = mouse ? BASE_W : KEYS_W;
-        if (lastMouse == null) {
-            ImGui.setNextWindowSize(baseW * uiScale + pad * 2f, KEYS_H * uiScale + pad * 2f, ImGuiCond.FirstUseEver);
-        } else if (lastMouse != mouse) {
-            ImGui.setNextWindowSize(baseW * lastScale + pad * 2f, KEYS_H * lastScale + pad * 2f, ImGuiCond.Always);
+        if (lastLayout < 0) {
+            ImGui.setNextWindowSize(baseW * uiScale + pad * 2f, baseH * uiScale + pad * 2f, ImGuiCond.FirstUseEver);
+        } else if (lastLayout != layout) {
+            ImGui.setNextWindowSize(baseW * lastScale + pad * 2f, baseH * lastScale + pad * 2f, ImGuiCond.Always);
         }
-        lastMouse = mouse;
+        lastLayout = layout;
         ImGui.setNextWindowBgAlpha(BG_ALPHA);
         ImGui.pushStyleVar(ImGuiStyleVar.WindowPadding, pad, pad);
         ImGui.pushStyleVar(ImGuiStyleVar.WindowMinSize, 1f, 1f);
@@ -74,7 +80,7 @@ public final class ReplayKeystrokesPanel {
         if (ImGui.begin(WINDOW_ID, flags)) {
             ImVec2 origin = ImGui.getCursorScreenPos();
             ImVec2 avail = ImGui.getContentRegionAvail();
-            float s = Math.max(0.1f, Math.min(avail.x / baseW, avail.y / KEYS_H));
+            float s = Math.max(0.1f, Math.min(avail.x / baseW, avail.y / baseH));
             lastScale = s;
             float textScale = s / uiScale;
             ImDrawList dl = ImGui.getWindowDrawList();
@@ -85,21 +91,28 @@ public final class ReplayKeystrokesPanel {
             float half = (width - gap) * 0.5f;
             float x = origin.x;
             float y = origin.y;
-            drawKey(dl, x + key + gap, y, key, key, "W", InputRow.Key.W, s, textScale);
-            y += key + gap;
-            drawKey(dl, x, y, key, key, "A", InputRow.Key.A, s, textScale);
-            drawKey(dl, x + key + gap, y, key, key, "S", InputRow.Key.S, s, textScale);
-            drawKey(dl, x + (key + gap) * 2f, y, key, key, "D", InputRow.Key.D, s, textScale);
-            y += key + gap;
-            drawKey(dl, x, y, half, wideH, "Sprint", InputRow.Key.SPRINT, s, textScale);
-            drawKey(dl, x + half + gap, y, half, wideH, "Sneak", InputRow.Key.SNEAK, s, textScale);
-            y += wideH + gap;
-            drawKey(dl, x, y, width, wideH, "Jump", InputRow.Key.JUMP, s, textScale);
-            y += wideH + gap;
-            drawKey(dl, x, y, half, wideH, "LMB", InputRow.Key.LEFT_CLICK, s, textScale);
-            drawKey(dl, x + half + gap, y, half, wideH, "RMB", InputRow.Key.RIGHT_CLICK, s, textScale);
-            if (mouse) drawPad(dl, x + width + gap * 2f, origin.y, KEYS_H * s, s);
-            ImGui.dummy(baseW * s, KEYS_H * s);
+            if (keys) {
+                drawKey(dl, x + key + gap, y, key, key, "W", InputRow.Key.W, s, textScale);
+                y += key + gap;
+                drawKey(dl, x, y, key, key, "A", InputRow.Key.A, s, textScale);
+                drawKey(dl, x + key + gap, y, key, key, "S", InputRow.Key.S, s, textScale);
+                drawKey(dl, x + (key + gap) * 2f, y, key, key, "D", InputRow.Key.D, s, textScale);
+                y += key + gap;
+                drawKey(dl, x, y, half, wideH, "Sprint", InputRow.Key.SPRINT, s, textScale);
+                drawKey(dl, x + half + gap, y, half, wideH, "Sneak", InputRow.Key.SNEAK, s, textScale);
+                y += wideH + gap;
+                drawKey(dl, x, y, width, wideH, "Jump", InputRow.Key.JUMP, s, textScale);
+                y += wideH + gap;
+            }
+            if (buttons) {
+                drawKey(dl, x, y, half, wideH, "LMB", InputRow.Key.LEFT_CLICK, s, textScale);
+                drawKey(dl, x + half + gap, y, half, wideH, "RMB", InputRow.Key.RIGHT_CLICK, s, textScale);
+            }
+            if (movement) {
+                float padX = leftW > 0f ? x + width + gap * 2f : x;
+                drawPad(dl, padX, origin.y, KEYS_H * s, s);
+            }
+            ImGui.dummy(baseW * s, baseH * s);
         }
         ImGui.end();
         ImGui.popStyleVar(2);
