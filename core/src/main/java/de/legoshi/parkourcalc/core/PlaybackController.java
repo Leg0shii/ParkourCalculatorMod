@@ -81,6 +81,9 @@ public final class PlaybackController {
     private long teleportNoticeNanos;
 
     private InputRow pressedRow;
+    private float turnYaw;
+    private float turnPitch;
+    private long appliedTicks;
 
     private final List<String> simTickDumps = new ArrayList<String>();
 
@@ -133,6 +136,18 @@ public final class PlaybackController {
 
     public boolean isKeyPressed(InputRow.Key key) {
         return running && pressedRow != null && pressedRow.isKeyActive(key);
+    }
+
+    public float tickTurnYaw() {
+        return running && pressedRow != null ? turnYaw : 0f;
+    }
+
+    public float tickTurnPitch() {
+        return running && pressedRow != null ? turnPitch : 0f;
+    }
+
+    public long appliedTicks() {
+        return appliedTicks;
     }
 
     public boolean firstTickOnGround() {
@@ -395,6 +410,9 @@ public final class PlaybackController {
         prevTickPitch = currentTickPitch;
         currentTickPitch = applyPitch(currentTickPitch, motion);
         bridge.setPitch(currentTickPitch);
+        turnYaw = displayTargetYaw - prevTickYaw;
+        turnPitch = currentTickPitch - prevTickPitch;
+        appliedTicks++;
         tickEndNanos = System.nanoTime();
         nextTick++;
         bridge.releaseReplayLockstep();

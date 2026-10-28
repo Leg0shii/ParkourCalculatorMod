@@ -389,6 +389,10 @@ public final class MainWindowOverlay implements RenderInterface {
             settings.viewRecorder = !settings.viewRecorder;
             onSettingsChanged.run();
         }
+        if (ImGui.menuItem("Keystrokes", null, settings.viewKeystrokes)) {
+            settings.viewKeystrokes = !settings.viewKeystrokes;
+            onSettingsChanged.run();
+        }
     }
 
     private void renderHelpMenuItems() {

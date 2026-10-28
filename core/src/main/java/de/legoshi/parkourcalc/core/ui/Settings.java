@@ -84,6 +84,7 @@ public final class Settings {
     private static final boolean DEFAULT_VIEW_SENSE_FINDER = false;
     private static final boolean DEFAULT_SENSE_FINDER_COUNT_VIEW = false;
     private static final boolean DEFAULT_VIEW_RECORDER = false;
+    private static final boolean DEFAULT_VIEW_KEYSTROKES = true;
     private static final int DEFAULT_TURN_PROFILE_ATTEMPTS = 20_000;
     private static final int DEFAULT_ONEJUMP_SPREAD_ATTEMPTS = 1000;
     private static final boolean DEFAULT_SAVE_DEBUG_VALUES = false;
@@ -239,6 +240,7 @@ public final class Settings {
     public boolean onejumpStopKeysOnFail = false;
     public boolean onejumpStopTurnOnFail = false;
     public boolean viewRecorder = DEFAULT_VIEW_RECORDER;
+    public boolean viewKeystrokes = DEFAULT_VIEW_KEYSTROKES;
     public int turnProfileAttempts = DEFAULT_TURN_PROFILE_ATTEMPTS;
     public int onejumpSpreadAttempts = DEFAULT_ONEJUMP_SPREAD_ATTEMPTS;
     public boolean turnProfileShowRating = true;
@@ -368,6 +370,7 @@ public final class Settings {
         onejumpStopKeysOnFail = false;
         onejumpStopTurnOnFail = false;
         viewRecorder = DEFAULT_VIEW_RECORDER;
+        viewKeystrokes = DEFAULT_VIEW_KEYSTROKES;
         turnProfileAttempts = DEFAULT_TURN_PROFILE_ATTEMPTS;
         onejumpSpreadAttempts = DEFAULT_ONEJUMP_SPREAD_ATTEMPTS;
         turnProfileShowRating = true;
