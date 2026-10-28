@@ -130,6 +130,8 @@ public final class Settings {
     public static final int REPLAY_KEYSTROKES_CLIENT_SIDED = 1;
     public static final int REPLAY_KEYSTROKES_EVERY = 2;
     private static final int DEFAULT_REPLAY_KEYSTROKES = REPLAY_KEYSTROKES_CLIENT_SIDED;
+    private static final boolean DEFAULT_REPLAY_KEYSTROKES_MOUSE = true;
+    private static final boolean DEFAULT_REPLAY_KEYSTROKES_SCROLL = false;
 
     private static final int DEFAULT_TICK_INFO_PRECISION = 5;
     public static final int DEFAULT_SOLVER_STATS_PRECISION = 5;
@@ -270,6 +272,8 @@ public final class Settings {
     public boolean lockstepReplay = DEFAULT_LOCKSTEP_REPLAY;
     public int replayStartDelayTicks = DEFAULT_REPLAY_START_DELAY_TICKS;
     public int replayKeystrokes = DEFAULT_REPLAY_KEYSTROKES;
+    public boolean replayKeystrokesMouse = DEFAULT_REPLAY_KEYSTROKES_MOUSE;
+    public boolean replayKeystrokesScroll = DEFAULT_REPLAY_KEYSTROKES_SCROLL;
 
     public static int defaultTickInfoPrecision() {
         return DEFAULT_TICK_INFO_PRECISION;
@@ -390,5 +394,7 @@ public final class Settings {
         lockstepReplay = DEFAULT_LOCKSTEP_REPLAY;
         replayStartDelayTicks = DEFAULT_REPLAY_START_DELAY_TICKS;
         replayKeystrokes = DEFAULT_REPLAY_KEYSTROKES;
+        replayKeystrokesMouse = DEFAULT_REPLAY_KEYSTROKES_MOUSE;
+        replayKeystrokesScroll = DEFAULT_REPLAY_KEYSTROKES_SCROLL;
     }
 }

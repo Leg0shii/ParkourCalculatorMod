@@ -94,6 +94,9 @@ public final class SettingsModal {
     private static final String[] REPLAY_KEYSTROKES_LABELS = {"Off", "Client-sided replay", "Every replay"};
     private static final String TT_REPLAY_KEYSTROKES = "Shows the keys the replay presses (W A S D, sprint, sneak, jump and the mouse buttons) in a small panel. Keystroke mods cannot see the keys of a client-sided replay, so it is on for those by default; Every replay also shows it in singleplayer. While the main UI is open the panel stays visible so it can be dragged.";
 
+    private static final String TT_REPLAY_KEYSTROKES_MOUSE = "Adds a square next to the keys whose dot follows the replay's turn each tick: right turns move it right, looking down moves it down, 10 degrees reaches the edge.";
+    private static final String TT_REPLAY_KEYSTROKES_SCROLL = "Slides each older tick of the mouse trail further down the square, so a turn draws a curve over the last 8 ticks instead of a line back and forth.";
+
     private static final String TT_REPLAY_START_DELAY = "Waits this many ticks after playback starts before the macro's inputs begin. The player holds at the start while the delay counts down; 0 starts immediately.";
     private final ImInt scaleIndexBuf = new ImInt();
     private final int[] replayStartDelayBuf = new int[1];
@@ -389,6 +392,8 @@ public final class SettingsModal {
                 }
                 tooltipForLastItem(TT_REPLAY_KEYSTROKES);
             });
+            checkboxRow("Keystrokes mouse pad", "##replay_keystrokes_mouse", settings.replayKeystrokesMouse, TT_REPLAY_KEYSTROKES_MOUSE, v -> settings.replayKeystrokesMouse = v);
+            checkboxRow("Scrolling mouse trail", "##replay_keystrokes_scroll", settings.replayKeystrokesScroll, TT_REPLAY_KEYSTROKES_SCROLL, v -> settings.replayKeystrokesScroll = v);
             checkboxRow("Lockstep replay", "##lockstep_replay", settings.lockstepReplay, TT_LOCKSTEP_REPLAY, v -> settings.lockstepReplay = v);
             checkboxRow("Disable creative flight", "##disable_flight_playback", settings.disableFlightDuringPlayback, TT_DISABLE_FLIGHT_PLAYBACK, v -> settings.disableFlightDuringPlayback = v);
             checkboxRow("Keep tick boxes shown", "##keep_boxes_playback", settings.keepBoxesDuringPlayback, TT_KEEP_BOXES_PLAYBACK, v -> settings.keepBoxesDuringPlayback = v);

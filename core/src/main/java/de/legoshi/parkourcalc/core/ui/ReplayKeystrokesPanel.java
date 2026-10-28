@@ -37,6 +37,7 @@ public final class ReplayKeystrokesPanel {
     private static final float FULL_TURN_DEG = 10f;
     private static final float DOT = 4f;
     private static final int TRAIL = 8;
+    private static final int FLAT_TRAIL = 4;
 
     private final PlaybackController playback;
     private final Settings settings;
@@ -44,6 +45,8 @@ public final class ReplayKeystrokesPanel {
     private final float[] trailY = new float[TRAIL];
     private int trailCount;
     private long trailTick = -1L;
+    private Boolean lastMouse;
+    private float lastScale = 1f;
 
     public ReplayKeystrokesPanel(PlaybackController playback, Settings settings) {
         this.playback = playback;
@@ -56,7 +59,14 @@ public final class ReplayKeystrokesPanel {
         float uiScale = ThemeManager.uiScale();
         float pad = PAD * uiScale;
         ImGui.setNextWindowPos(EDGE, io.getDisplaySizeY() - EDGE, ImGuiCond.FirstUseEver, 0f, 1f);
-        ImGui.setNextWindowSize(BASE_W * uiScale + pad * 2f, KEYS_H * uiScale + pad * 2f, ImGuiCond.FirstUseEver);
+        boolean mouse = settings.replayKeystrokesMouse;
+        float baseW = mouse ? BASE_W : KEYS_W;
+        if (lastMouse == null) {
+            ImGui.setNextWindowSize(baseW * uiScale + pad * 2f, KEYS_H * uiScale + pad * 2f, ImGuiCond.FirstUseEver);
+        } else if (lastMouse != mouse) {
+            ImGui.setNextWindowSize(baseW * lastScale + pad * 2f, KEYS_H * lastScale + pad * 2f, ImGuiCond.Always);
+        }
+        lastMouse = mouse;
         ImGui.setNextWindowBgAlpha(BG_ALPHA);
         ImGui.pushStyleVar(ImGuiStyleVar.WindowPadding, pad, pad);
         ImGui.pushStyleVar(ImGuiStyleVar.WindowMinSize, 1f, 1f);
@@ -64,7 +74,8 @@ public final class ReplayKeystrokesPanel {
         if (ImGui.begin(WINDOW_ID, flags)) {
             ImVec2 origin = ImGui.getCursorScreenPos();
             ImVec2 avail = ImGui.getContentRegionAvail();
-            float s = Math.max(0.1f, Math.min(avail.x / BASE_W, avail.y / KEYS_H));
+            float s = Math.max(0.1f, Math.min(avail.x / baseW, avail.y / KEYS_H));
+            lastScale = s;
             float textScale = s / uiScale;
             ImDrawList dl = ImGui.getWindowDrawList();
             float key = KEY * s;
@@ -87,8 +98,8 @@ public final class ReplayKeystrokesPanel {
             y += wideH + gap;
             drawKey(dl, x, y, half, wideH, "LMB", InputRow.Key.LEFT_CLICK, s, textScale);
             drawKey(dl, x + half + gap, y, half, wideH, "RMB", InputRow.Key.RIGHT_CLICK, s, textScale);
-            drawPad(dl, x + width + gap * 2f, origin.y, KEYS_H * s, s);
-            ImGui.dummy(BASE_W * s, KEYS_H * s);
+            if (mouse) drawPad(dl, x + width + gap * 2f, origin.y, KEYS_H * s, s);
+            ImGui.dummy(baseW * s, KEYS_H * s);
         }
         ImGui.end();
         ImGui.popStyleVar(2);
@@ -133,7 +144,7 @@ public final class ReplayKeystrokesPanel {
         dl.addLine(cx, y, cx, y + side, withAlpha(border, 0.5f));
         float dot = DOT * s;
         float reach = side * 0.5f - dot - s;
-        float step = reach / (TRAIL - 1);
+        float step = settings.replayKeystrokesScroll ? reach / (TRAIL - 1) : 0f;
         float minY = y + dot + s;
         float maxY = y + side - dot - s;
         int accent = ThemeManager.accentColor();
@@ -141,8 +152,9 @@ public final class ReplayKeystrokesPanel {
             dl.addCircleFilled(cx, cy, dot, accent);
             return;
         }
-        for (int i = trailCount - 1; i > 0; i--) {
-            float fade = 1f - (float) i / TRAIL;
+        int shown = settings.replayKeystrokesScroll ? trailCount : Math.min(trailCount, FLAT_TRAIL);
+        for (int i = shown - 1; i > 0; i--) {
+            float fade = 1f - (float) i / shown;
             float px = cx + trailX[i] * reach;
             float py = clamp(cy + trailY[i] * reach + i * step, minY, maxY);
             float nx = cx + trailX[i - 1] * reach;
