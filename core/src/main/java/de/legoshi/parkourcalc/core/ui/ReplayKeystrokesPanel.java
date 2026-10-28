@@ -36,7 +36,7 @@ public final class ReplayKeystrokesPanel {
     private static final float BASE_W = KEYS_W + GAP * 2f + KEYS_H;
     private static final float FULL_TURN_DEG = 10f;
     private static final float DOT = 4f;
-    private static final int TRAIL = 4;
+    private static final int TRAIL = 8;
 
     private final PlaybackController playback;
     private final Settings settings;
@@ -133,6 +133,9 @@ public final class ReplayKeystrokesPanel {
         dl.addLine(cx, y, cx, y + side, withAlpha(border, 0.5f));
         float dot = DOT * s;
         float reach = side * 0.5f - dot - s;
+        float step = reach / (TRAIL - 1);
+        float minY = y + dot + s;
+        float maxY = y + side - dot - s;
         int accent = ThemeManager.accentColor();
         if (trailCount == 0) {
             dl.addCircleFilled(cx, cy, dot, accent);
@@ -141,9 +144,9 @@ public final class ReplayKeystrokesPanel {
         for (int i = trailCount - 1; i > 0; i--) {
             float fade = 1f - (float) i / TRAIL;
             float px = cx + trailX[i] * reach;
-            float py = cy + trailY[i] * reach;
+            float py = clamp(cy + trailY[i] * reach + i * step, minY, maxY);
             float nx = cx + trailX[i - 1] * reach;
-            float ny = cy + trailY[i - 1] * reach;
+            float ny = clamp(cy + trailY[i - 1] * reach + (i - 1) * step, minY, maxY);
             dl.addLine(px, py, nx, ny, withAlpha(accent, fade * 0.6f), 2f * s);
             dl.addCircleFilled(px, py, dot * (0.4f + 0.4f * fade), withAlpha(accent, fade * 0.7f));
         }
@@ -161,12 +164,17 @@ public final class ReplayKeystrokesPanel {
             dl.addRect(x, y, x + w, y + h, ThemeManager.borderColor(), rounding);
         }
         ImFont font = ImGui.getFont();
-        float fontSize = ImGui.getFontSize() * textScale;
         ImVec2 ts = ImGui.calcTextSize(label);
-        float tw = ts.x * textScale;
-        float th = ts.y * textScale;
+        float fit = Math.min(textScale, Math.min((w - 4f * s) / ts.x, (h - 2f * s) / ts.y));
+        float fontSize = ImGui.getFontSize() * fit;
+        float tw = ts.x * fit;
+        float th = ts.y * fit;
         int text = pressed ? ThemeManager.bgDarkColor() : ThemeManager.textMutedColor();
         dl.addText(font, fontSize, x + (w - tw) * 0.5f, y + (h - th) * 0.5f, text, label);
+    }
+
+    private static float clamp(float v, float lo, float hi) {
+        return Math.max(lo, Math.min(hi, v));
     }
 
     private static float clampUnit(float v) {
