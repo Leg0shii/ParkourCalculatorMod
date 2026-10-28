@@ -700,6 +700,18 @@ public final class ThemeManager {
         return u32(OK);
     }
 
+    public static int accentHoverColor() {
+        return u32(ACCENT_HOVER);
+    }
+
+    public static int accentActiveColor() {
+        return u32(ACCENT_ACTIVE);
+    }
+
+    public static int accentBorderColor() {
+        return u32(ACCENT_BORDER);
+    }
+
     public static int accentColor() {
         return u32(ACCENT);
     }

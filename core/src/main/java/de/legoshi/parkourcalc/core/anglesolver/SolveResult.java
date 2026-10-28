@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.core.anglesolver;
 
+import de.legoshi.parkourcalc.core.anglesolver.solver.TickInputs;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -98,6 +99,7 @@ public final class SolveResult {
     private String smoothStop;
     private long smoothNanos;
     private int[] strafeSides;
+    private TickInputs[] inputChanges;
 
     public SolveResult(boolean success, int met, int total, int startTick, int landingTick) {
         this.success = success;
@@ -248,6 +250,14 @@ public final class SolveResult {
 
     public int[] getStrafeSides() {
         return strafeSides;
+    }
+
+    public TickInputs[] getInputChanges() {
+        return inputChanges;
+    }
+
+    public void setInputChanges(TickInputs[] inputChanges) {
+        this.inputChanges = inputChanges;
     }
 
     public void setStrafeSides(int[] strafeSides) {

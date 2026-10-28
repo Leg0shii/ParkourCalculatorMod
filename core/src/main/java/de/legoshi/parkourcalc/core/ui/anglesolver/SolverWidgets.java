@@ -1,10 +1,12 @@
 package de.legoshi.parkourcalc.core.ui.anglesolver;
 
+import de.legoshi.parkourcalc.core.ui.theme.Controls;
 import de.legoshi.parkourcalc.core.ui.theme.Fonts;
 import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
 import imgui.ImDrawList;
 import imgui.ImGui;
 import imgui.ImVec2;
+import imgui.flag.ImDrawFlags;
 
 /**
  * Immediate-mode widgets the Angle Solver needs that aren't in {@code Controls}:
@@ -147,6 +149,66 @@ public final class SolverWidgets {
 
     public static float dropdownArrowWidth() {
         return ImGui.getFrameHeight();
+    }
+
+    private static boolean splitMainHovered;
+    private static boolean splitArrowHovered;
+
+    public static boolean splitMainHovered() {
+        return splitMainHovered;
+    }
+
+    public static boolean splitArrowHovered() {
+        return splitArrowHovered;
+    }
+
+    public static int splitButton(String id, String label, boolean enabled, boolean dropdownOpen) {
+        float scale = s();
+        float h = Controls.buttonHeight();
+        float mainW = Controls.buttonWidth(label);
+        float arrowW = h;
+        ImDrawList dl = ImGui.getWindowDrawList();
+        ImGui.pushID(id);
+        boolean mainClicked = ImGui.invisibleButton("main", mainW, h) && enabled;
+        ImVec2 mn = ImGui.getItemRectMin();
+        ImVec2 mx = ImGui.getItemRectMax();
+        splitMainHovered = ImGui.isItemHovered();
+        boolean mainActive = ImGui.isItemActive();
+        ImGui.sameLine(0, 0);
+        boolean arrowClicked = ImGui.invisibleButton("arrow", arrowW, h);
+        ImVec2 amn = ImGui.getItemRectMin();
+        ImVec2 amx = ImGui.getItemRectMax();
+        splitArrowHovered = ImGui.isItemHovered();
+        boolean arrowActive = ImGui.isItemActive();
+        dropdownLeft = amn.x;
+        dropdownBottom = amx.y;
+        ImGui.popID();
+
+        int border = enabled ? ThemeManager.accentBorderColor() : ThemeManager.borderColor();
+        int text = enabled ? ThemeManager.bgDarkColor() : ThemeManager.textMutedColor();
+        int mainFill = fill(enabled, splitMainHovered, mainActive);
+        int arrowFill = fill(enabled, splitArrowHovered || dropdownOpen, arrowActive);
+        float round = ImGui.getStyle().getFrameRounding();
+        dl.addRectFilled(mn.x, mn.y, mx.x, mx.y, mainFill, round, ImDrawFlags.RoundCornersLeft);
+        dl.addRectFilled(amn.x, amn.y, amx.x, amx.y, arrowFill, round, ImDrawFlags.RoundCornersRight);
+        dl.addLine(amn.x, amn.y, amn.x, amx.y, border, 1f);
+        dl.addRect(mn.x, mn.y, amx.x, amx.y, border, round, ImDrawFlags.RoundCornersAll, 1f);
+        ImVec2 ts = ImGui.calcTextSize(label);
+        dl.addText(mn.x + (mx.x - mn.x - ts.x) * 0.5f, textY(mn.y, h), text, label);
+        float cx = (amn.x + amx.x) * 0.5f;
+        float cy = (amn.y + amx.y) * 0.5f;
+        if (dropdownOpen) triangleDown(dl, cx, cy, 3.3f * scale, text);
+        else triangleRight(dl, cx, cy, 3.3f * scale, text);
+        if (mainClicked) return 0;
+        if (arrowClicked) return DROPDOWN_CLICKED;
+        return -1;
+    }
+
+    private static int fill(boolean enabled, boolean hovered, boolean active) {
+        if (!enabled) return ThemeManager.panelColor();
+        if (active) return ThemeManager.accentActiveColor();
+        if (hovered) return ThemeManager.accentHoverColor();
+        return ThemeManager.accentColor();
     }
 
     public static int segmented(String id, String[] labels, String[] tooltips, int selected, float fillWidth,

@@ -43,6 +43,11 @@ public class SaveFieldRoundTripTest {
         return state;
     }
 
+    private static String snapshot(AngleSolverState state) {
+        return SaveIO.undoJson(SaveIO.buildUndoSnapshot(new InputData(), Vec3dCore.ZERO, Vec3dCore.ZERO,
+                0f, PlaybackController.DEFAULT_PITCH, null, state));
+    }
+
     private static SaveFile.Start start(double[] vel) {
         SaveFile.Start s = new SaveFile.Start();
         s.pos = new double[]{0.0, 0.0, 0.0};
@@ -155,6 +160,20 @@ public class SaveFieldRoundTripTest {
         assertNotNull(state.getResult());
         assertTrue("a file written before the field existed must load with no plates",
                 state.getResult().getUnmetTicks().isEmpty());
+    }
+
+    @Test
+    public void smoothModeRoundTripsAndDefaultsToTurnOnly() throws Exception {
+        AngleSolverState state = load("{\"version\":1,\"angleSolver\":{\"smoothMode\":\"INPUTS\"}}");
+        assertEquals(AngleSolverState.SmoothMode.INPUTS, state.getSmoothMode());
+        assertEquals(AngleSolverState.SmoothMode.INPUTS, saveAndReload(state).getSmoothMode());
+        state.setSmoothMode(AngleSolverState.SmoothMode.TURN);
+        assertEquals(AngleSolverState.SmoothMode.TURN, saveAndReload(state).getSmoothMode());
+        assertTrue("the default mode is not written", snapshot(state).indexOf("smoothMode") < 0);
+        state.setSmoothMode(AngleSolverState.SmoothMode.INPUTS);
+        assertTrue(snapshot(state).contains("\"smoothMode\":\"INPUTS\""));
+        assertEquals(AngleSolverState.SmoothMode.TURN,
+                load("{\"version\":1,\"angleSolver\":{\"smoothLambda\":0.01}}").getSmoothMode());
     }
 
     @Test
