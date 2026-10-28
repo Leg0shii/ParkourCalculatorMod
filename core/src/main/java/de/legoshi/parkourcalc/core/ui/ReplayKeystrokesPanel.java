@@ -38,13 +38,20 @@ public final class ReplayKeystrokesPanel {
     private static final float DOT = 4f;
     private static final int TRAIL = 8;
     private static final int FLAT_TRAIL = 4;
+    private static final long TICK_NANOS = 50_000_000L;
+    private static final float SMOOTH_RATE = 30f;
+    private static final int HISTORY = 1024;
 
     private final PlaybackController playback;
     private final Settings settings;
-    private final float[] trailX = new float[TRAIL];
-    private final float[] trailY = new float[TRAIL];
-    private int trailCount;
-    private long trailTick = -1L;
+    private final float[] histX = new float[HISTORY];
+    private final float[] histY = new float[HISTORY];
+    private final long[] histT = new long[HISTORY];
+    private int histHead;
+    private int histCount;
+    private float smoothX;
+    private float smoothY;
+    private long lastFrameNanos;
     private int lastLayout = -1;
     private float lastScale = 1f;
 
@@ -58,7 +65,7 @@ public final class ReplayKeystrokesPanel {
         boolean buttons = settings.viewMouseStrokes;
         boolean movement = settings.viewMouseMovement;
         if (!keys && !buttons && !movement) return;
-        updateTrail();
+        updateMotion();
         float leftW = keys || buttons ? KEYS_W : 0f;
         float leftH = (keys ? KEY_BLOCK_H : 0f) + (buttons ? WIDE_H : 0f) + (keys && buttons ? GAP : 0f);
         float baseW = leftW + (movement ? KEYS_H : 0f) + (leftW > 0f && movement ? GAP * 2f : 0f);
@@ -89,6 +96,7 @@ public final class ReplayKeystrokesPanel {
             float gap = GAP * s;
             float width = KEYS_W * s;
             float half = (width - gap) * 0.5f;
+            textScale = labelScale(textScale, half, wideH, s);
             float x = origin.x;
             float y = origin.y;
             if (keys) {
@@ -118,22 +126,21 @@ public final class ReplayKeystrokesPanel {
         ImGui.popStyleVar(2);
     }
 
-    private void updateTrail() {
-        if (!playback.isRunning()) {
-            trailCount = 0;
-            trailTick = -1L;
-            return;
-        }
-        long tick = playback.appliedTicks();
-        if (tick == trailTick) return;
-        trailTick = tick;
-        for (int i = TRAIL - 1; i > 0; i--) {
-            trailX[i] = trailX[i - 1];
-            trailY[i] = trailY[i - 1];
-        }
-        trailX[0] = clampUnit(playback.tickTurnYaw() / FULL_TURN_DEG);
-        trailY[0] = clampUnit(playback.tickTurnPitch() / FULL_TURN_DEG);
-        trailCount = Math.min(trailCount + 1, TRAIL);
+    private void updateMotion() {
+        long now = System.nanoTime();
+        float dt = lastFrameNanos == 0L ? 0f : Math.min(0.1f, (now - lastFrameNanos) / 1e9f);
+        lastFrameNanos = now;
+        boolean running = playback.isRunning();
+        float tx = running ? clampUnit(playback.tickTurnYaw() / FULL_TURN_DEG) : 0f;
+        float ty = running ? clampUnit(playback.tickTurnPitch() / FULL_TURN_DEG) : 0f;
+        float blend = 1f - (float) Math.exp(-dt * SMOOTH_RATE);
+        smoothX += (tx - smoothX) * blend;
+        smoothY += (ty - smoothY) * blend;
+        histHead = (histHead + 1) % HISTORY;
+        histX[histHead] = smoothX;
+        histY[histHead] = smoothY;
+        histT[histHead] = now;
+        histCount = Math.min(histCount + 1, HISTORY);
     }
 
     private void drawPad(ImDrawList dl, float x, float y, float side, float s) {
@@ -151,21 +158,26 @@ public final class ReplayKeystrokesPanel {
         float minY = y + dot + s;
         float maxY = y + side - dot - s;
         int accent = ThemeManager.accentColor();
-        if (trailCount == 0) {
-            dl.addCircleFilled(cx, cy, dot, accent);
-            return;
+        boolean scroll = settings.replayKeystrokesScroll;
+        long window = (scroll ? TRAIL : FLAT_TRAIL) * TICK_NANOS;
+        long now = histCount > 0 ? histT[histHead] : 0L;
+        float px = 0f;
+        float py = 0f;
+        for (int n = 0; n < histCount; n++) {
+            int idx = (histHead - n + HISTORY) % HISTORY;
+            long age = now - histT[idx];
+            if (age > window) break;
+            float ticks = age / (float) TICK_NANOS;
+            float qx = cx + histX[idx] * reach;
+            float qy = clamp(cy + histY[idx] * reach + ticks * step, minY, maxY);
+            if (n > 0) {
+                float fade = 1f - (float) age / window;
+                dl.addLine(px, py, qx, qy, withAlpha(accent, fade * 0.6f), 2f * s);
+            }
+            px = qx;
+            py = qy;
         }
-        int shown = settings.replayKeystrokesScroll ? trailCount : Math.min(trailCount, FLAT_TRAIL);
-        for (int i = shown - 1; i > 0; i--) {
-            float fade = 1f - (float) i / shown;
-            float px = cx + trailX[i] * reach;
-            float py = clamp(cy + trailY[i] * reach + i * step, minY, maxY);
-            float nx = cx + trailX[i - 1] * reach;
-            float ny = clamp(cy + trailY[i - 1] * reach + (i - 1) * step, minY, maxY);
-            dl.addLine(px, py, nx, ny, withAlpha(accent, fade * 0.6f), 2f * s);
-            dl.addCircleFilled(px, py, dot * (0.4f + 0.4f * fade), withAlpha(accent, fade * 0.7f));
-        }
-        dl.addCircleFilled(cx + trailX[0] * reach, cy + trailY[0] * reach, dot, accent);
+        dl.addCircleFilled(cx + smoothX * reach, cy + smoothY * reach, dot, accent);
     }
 
     private void drawKey(ImDrawList dl, float x, float y, float w, float h, String label, InputRow.Key key,
@@ -180,12 +192,18 @@ public final class ReplayKeystrokesPanel {
         }
         ImFont font = ImGui.getFont();
         ImVec2 ts = ImGui.calcTextSize(label);
-        float fit = Math.min(textScale, Math.min((w - 4f * s) / ts.x, (h - 2f * s) / ts.y));
-        float fontSize = ImGui.getFontSize() * fit;
-        float tw = ts.x * fit;
-        float th = ts.y * fit;
+        float fontSize = ImGui.getFontSize() * textScale;
+        float tw = ts.x * textScale;
+        float th = ts.y * textScale;
         int text = pressed ? ThemeManager.bgDarkColor() : ThemeManager.textMutedColor();
         dl.addText(font, fontSize, x + (w - tw) * 0.5f, y + (h - th) * 0.5f, text, label);
+    }
+
+    private static float labelScale(float textScale, float half, float wideH, float s) {
+        ImVec2 sprint = ImGui.calcTextSize("Sprint");
+        ImVec2 sneak = ImGui.calcTextSize("Sneak");
+        float widest = Math.max(sprint.x, sneak.x);
+        return Math.min(textScale, Math.min((half - 4f * s) / widest, (wideH - 2f * s) / sprint.y));
     }
 
     private static float clamp(float v, float lo, float hi) {
