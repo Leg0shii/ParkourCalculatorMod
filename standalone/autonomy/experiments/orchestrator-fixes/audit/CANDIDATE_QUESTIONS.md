@@ -116,6 +116,28 @@ The causes are separable:
 
 The interaction-gate plan addresses item4. It does not by itself fix family allocation, the window barrier or prove all later waits useless. Those require an explicit scheduling/decision-domain plan rather than increasing budgets and assuming the current queue eventually gives useful coverage. No runtime change was made while answering these questions.
 
+## 7. Why only initial runs0/8, rather than9/10/11?
+
+Investigated at source `93652150`, 2026-11-03, in isolated branch `research/real11-initial-run-ticks`. No solver behavior or fixture was changed, and no new numerical solve was run.
+
+The current cold fixture explicitly supplies `initialJumpInputs=[0,8]`. `fixed_clock_experiment.run` passes this list into `SupportOrder`; `SupportOrder.audit` rejects a program whose first grounded jump input is outside the list with reason `initial_jump_domain`. It also rejects a no-jump prefix once its horizon exceeds the largest listed input. This is a configured search-domain restriction, not a physical bound, a solver result, or evidence that all later takeoffs lose.
+
+The source-era README attributes the restriction to the earlier decision to retain the immediate0 and delayed8 families while narrowing the pilot. Retaining those two useful families does not itself establish that they exhaust useful initial choices. This follow-up question reopens that coverage issue; it does not supply a new maximum initial delay.
+
+| Initial grounded run inputs / first jump | What the saved evidence establishes |
+| --- | --- |
+| 0 / input0 | Current cold family; saved complete reference reaches Z64 approximately−1093.267553. |
+| 8 / input8 | Current cold family; saved constructive continuation reaches Z64 approximately−1094.579584. |
+| 9 / input9 | Excluded by the current fixture, but an older constructive continuation passed recorded replay through64, reaching Z64 approximately−1094.113304. Its B2/B3/B4/B5 arrivals were18/27/40/56. |
+| 10 / input10 | Excluded by the current fixture; no tested complete continuation identified in the linked corpus. |
+| 11 / input11 | Excluded by the current fixture; no tested complete continuation identified in the linked corpus. |
+
+These are nonexhaustive best-found continuations, not independently optimal results for each initial delay. In particular9's saved result exceeds8's saved result; neither comparison proves the winning initial delay globally. Evidence for9: [constructive probe log](../../linkcraft11-opening/evidence/real11-constructive-probe.log), [original result table](../../linkcraft11-opening/README.md#a-concrete-failure-of-local-timeprogress-exclusion).
+
+The first comparison is at state10 after inputs0..9. Jump9 can appear in that prefix. Jump10 or11 cannot yet appear there: both share an initial ten-input run prefix, which must survive the checkpoint and then branch into different takeoff times. `SupportOrder` can represent a broader allowed list, including a no-jump prefix at10 when the maximum allowed takeoff is at least10; that only removes this policy rejection. It does not guarantee generation, retention, numerical feasibility or downstream coverage under the existing search limits. Widening an eventual investigation should therefore preserve unfinished run prefixes and compare continuations at a common support/goal, rather than treating the state10 boundary or eight ticks as a physical cutoff.
+
+There is no established physics or optimality argument here for excluding9/10/11. A wider initial-delay experiment is distinct from the solver/DFS fixes and should use a fresh fixture/output path, preserve the0/8 controls, and report finite tested coverage without claiming a complete timing search.
+
 ## Evidence references and audit correction
 
 - [Original complete candidate/constraint tables](CANDIDATE_AUDIT.md), [208-call ledger](WORKER_CALLS.md), [saved source reports](../evidence/cold-summary.json), and [question-specific extracted evidence](question-evidence.json).
