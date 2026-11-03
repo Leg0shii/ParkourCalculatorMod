@@ -2,6 +2,8 @@
 
 Verified against `16a7423e`, 2026-11-03. This page and the [current implementation plan](../autonomy/DFS_INTERACTION_IMPLEMENTATION_PLAN.md) orient new work; historical experiment reports describe their source revision. Documentation consolidation changes no runtime.
 
+Latest Real11 user correction, recorded in isolated investigation branch `research/real11-initial-run-ticks`: require an actual B7 landing, minimize its absolute time, then maximize Z at that tick; infer support order from generated feasible decisions. The recorded fixed64 fixture has not been changed. Existing automatic route/window/direction/goal components and landing-time ranking can be reused, but their Real11 integration is unfinished. B6's reported rightward extension is absent from the stored box; exact new bounds are unknown. See [Real11 task/status](REAL11_GUIDE.md) and the linked capability audit. These are new requirements, not shipped solver changes.
+
 ## What exists
 
 `ipopt` solves fixed-input continuous horizontal trajectories, with scalar independent validation, subprocess isolation, incumbent retention, optional prescribed contacts/vertical/ladder schedules and replay/export support. `autonomy` builds discrete movement/input/contact programs using existing Java physics and constraint helpers, selects concrete constraint alternatives, invokes IPOPT, and validates against supplied geometry. `cell_routes` decomposes player configuration space and uses cell corridors for high-level guidance. `route_guidance` contains earlier disk/SOCP/mixed-decision experiments, not the selected implementation direction.

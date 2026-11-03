@@ -13,6 +13,8 @@
 | Topic | Decision and rationale |
 | --- | --- |
 | Layering | Enumerate a small number of broad spatial routes, then optimize discrete local interactions within each. A spatial route does not determine a jump schedule or constant time edge weight. |
+| Real11 task correction | Latest user request minimizes time to an actual B7 landing, then maximizes Z at that same tick. The existing fixed64/optional-B7 fixture and measurements remain an older benchmark; no corrected-objective result exists yet in this investigation. |
+| Real11 route/support discovery | Use generated feasible decisions to determine support order, rather than requiring B2/B3/B4/B5 by fixture. Reuse the implemented automatic routing/window/direction/goal components; their integration is incomplete. Preserve meaningful B1 setup self-hops. The user reports B6 extends farther right; the stored one-block-X box is incomplete for that description, and exact revised bounds remain unspecified. Intentional wall hits stay deferred. |
 | Local guidance | Naive connected route endpoints can supply direction/progress guidance. No new relaxation is required to implement current search. Re-solve all facings from the beginning so later decisions can alter the continuous path. |
 | Comparing alternatives | A shared spatial goal compares **time**; a shared absolute tick compares **objective/progress**. Generate allowed candidates, then compare; don't manufacture completion-time families as the objective of generation. |
 | Retention | Discard only markedly worse candidates on justified comparable measurements; preserve close/unknown/protected alternatives. Full regression continuations of heuristically dropped candidates reveal false pruning. |
