@@ -1,0 +1,126 @@
+import itertools
+import json
+import random
+import unittest
+
+from standalone.autonomy.cell_routes.geometry import contains, decompose, dimension, intersection
+from standalone.autonomy.cell_routes.regions import build_route_graph, canonical_cover, diagnostic_svg, support_components
+from standalone.autonomy.tests.test_cell_geometry import scene_for
+
+
+def task_scene(solids, owners=None, **kwargs):
+    scene = scene_for(solids, **kwargs)
+    if owners is not None:
+        for block, owner in zip(scene['blocks'], owners):
+            block['sourceBlock'] = owner
+    for block, box in zip(scene['blocks'], solids):
+        block.update(top=box[4], bounds=[box[0], box[3], box[2], box[5]])
+    scene.update(initial=dict(position=[.5, 1, .5]), startBlock='0', goalBlock=str(len(solids)-1))
+    return scene
+
+
+class RouteRegionTests(unittest.TestCase):
+    def test_canonical_union_discards_encoding_seams_but_keeps_hole_and_concavity(self):
+        whole = [(0, 1, 0, 2, 1, 1)]
+        split = [(0, 1, 0, 1.3, 1, 1), (1, 1, 0, 2, 1, 1)]
+        self.assertEqual(canonical_cover(whole), canonical_cover(split))
+        lshape = [(0, 1, 0, 1, 1, 3), (1, 1, 0, 3, 1, 1)]
+        cover = canonical_cover(lshape)
+        self.assertFalse(any(contains(b, [2, 1, 2]) for b in cover))
+        ring = [(0, 1, 0, 3, 1, 1), (0, 1, 2, 3, 1, 3),
+                (0, 1, 1, 1, 1, 2), (2, 1, 1, 3, 1, 2)]
+        self.assertFalse(any(contains(b, [1.5, 1, 1.5]) for b in canonical_cover(ring)))
+        self.assertEqual(cover, canonical_cover(reversed(lshape)))
+
+    def test_boundary_lines_points_and_exact_doubles_are_retained(self):
+        boxes = [(0, 1, 0, 1, 1, 1), (1, 1, 0, 2, 1, 0), (3, 1, 0, 3, 1, 0)]
+        cover = canonical_cover(boxes)
+        self.assertTrue(any(contains(b, [1.5, 1, 0]) for b in cover))
+        self.assertTrue(any(contains(b, [3, 1, 0]) for b in cover))
+        self.assertFalse(any(contains(b, [1.5, 1, .1]) for b in cover))
+        self.assertEqual(cover, canonical_cover(cover))
+        self.assertNotEqual(canonical_cover([(0, 1, 0, 1, 1, 1)]),
+                            canonical_cover([(0, 1, 0, 1.000000000000001, 1, 1)]))
+
+    def test_local_refinement_preserves_free_volume_boundaries_and_residual_air(self):
+        scene = task_scene([[0, 0, 0, 1, 1, 1], [2, 0, 1, 3, 2, 2]])
+        before, after = decompose(scene, refine_support=False), decompose(scene)
+        volume = lambda d: sum((c.bounds[3]-c.bounds[0])*(c.bounds[4]-c.bounds[1])*(c.bounds[5]-c.bounds[2])
+                               for c in d.cells if c.dimension == 3)
+        self.assertAlmostEqual(volume(before), volume(after))
+        self.assertGreater(len(after.cells), len(before.cells))
+        rng = random.Random(18)
+        points = [[rng.uniform(before.bounds[a], before.bounds[a+3]) for a in range(3)] for _ in range(1000)]
+        points += [list(p) for c in before.cells for p in itertools.product(*[(c.bounds[a], c.bounds[a+3]) for a in range(3)])]
+        for point in points:
+            self.assertEqual(bool(before.locate(point)), bool(after.locate(point)), point)
+        for cell in after.cells:
+            self.assertTrue(after.parent_cells[cell.id])
+            self.assertTrue(all(intersection(cell.bounds, before.cells[p].bounds) == cell.bounds
+                                for p in after.parent_cells[cell.id]))
+        for a, b in itertools.combinations(after.cells, 2):
+            overlap = intersection(a.bounds, b.bounds)
+            self.assertTrue(overlap is None or dimension(overlap) < 3)
+        # Above-footprint pieces and broad residual cells both survive.
+        from standalone.autonomy.obstacle_geometry import expanded_box
+        support_box = expanded_box(scene['collisionScene']['solids'][0])
+        self.assertTrue(any(c.bounds[0] == support_box[0] and c.bounds[3] == support_box[3]
+                            and c.bounds[1] == 1 for c in after.cells))
+        self.assertTrue(after.locate([4, 3, 4]))
+
+    def test_exposed_component_keys_survive_same_owner_box_split(self):
+        whole = task_scene([[0, 0, 0, 2, 1, 1]], ['floor'])
+        split = task_scene([[0, 0, 0, 1, 1, 1], [1, 0, 0, 2, 1, 1]], ['floor', 'floor'])
+        a, b = (support_components(decompose(s)) for s in (whole, split))
+        self.assertEqual([(s.key, s.cover) for s in a], [(s.key, s.cover) for s in b])
+        self.assertEqual(b[0].solids, (0, 1))
+
+    def test_covered_top_not_support_and_disconnected_same_owner_stays_separate(self):
+        scene = task_scene([[0, 0, 0, 2, 1, 2], [0, 1, 0, 1, 3, 1], [4, 0, 0, 5, 1, 1]],
+                           ['floor', 'obstacle', 'floor'], bounds=(-5, -5, -5, 8, 7, 6))
+        surfaces = support_components(decompose(scene))
+        floors = [s for s in surfaces if s.owner == 'floor']
+        self.assertEqual(len(floors), 2)
+        self.assertFalse(any(contains(b, [.5, 1, .5]) for s in floors for b in s.cover))
+        self.assertTrue(any(contains(b, [1.8, 1, 1.8]) for s in floors for b in s.cover))
+
+    def test_graph_represents_overflight_separately_from_physical_contact(self):
+        scene = task_scene([[0, 0, 0, 1, 1, 1], [3, 0, 0, 4, 1, 1]])
+        d = decompose(scene)
+        graph = build_route_graph(scene, d)
+        regions = {r.key: r for r in graph.regions}
+        self.assertEqual(len(graph.starts), 1)
+        self.assertEqual(regions[graph.starts[0]].kind, 'support_surface')
+        support = next(s for s in graph.supports if s.owner == '0')
+        above = [r for r in graph.regions if r.kind == 'air_volume' and any(contains(b, [.5, 2, .5]) for b in r.cover)]
+        self.assertTrue(above)
+        self.assertNotIn(support.key, {r.key for r in above})
+        links = [t for t in graph.transitions if t.target == support.key]
+        self.assertTrue(links)
+        self.assertTrue(all(t.kind == 'support_arrival' and t.patches and t.evidence == 'geometry_only' for t in links))
+        self.assertTrue(all(b[1] == b[4] == 1 for t in links for b in t.cover))
+        self.assertTrue(all(not t.movement_families for t in graph.transitions if t.kind == 'open_portal'))
+        self.assertEqual(len(json.loads(json.dumps(graph.to_dict(), allow_nan=False))['regions']), len(graph.regions))
+        self.assertIn('stroke="red"', diagnostic_svg(graph, y=1))
+
+    def test_exact_height_ceiling_keeps_surface_boundary_region(self):
+        from standalone.autonomy.obstacle_geometry import BODY_HEIGHT
+        scene = task_scene([[-3, -1, -3, 3, 0, 3], [-3, BODY_HEIGHT, -3, 3, 3, 3]])
+        graph = build_route_graph(scene, decompose(scene))
+        floor = next(s for s in graph.supports if s.owner == '0')
+        self.assertTrue(any(contains(b, [0, 0, 0]) for b in floor.cover))
+        self.assertTrue(any(r.kind == 'air_volume' and any(dimension(b) == 2 for b in r.cover) for r in graph.regions))
+
+    def test_virtual_goal_keeps_one_sided_predicate_without_finite_floor(self):
+        scene = task_scene([[0, 0, 0, 1, 1, 1], [3, 0, 0, 4, 1, 1]])
+        spec = dict(kind='landing_height_region', height=1, rows=[dict(mode='X', cmp='GE', rhs=3)])
+        graph = build_route_graph(scene, decompose(scene), spec)
+        terminal = next(r for r in graph.regions if r.key in graph.goals)
+        self.assertEqual(terminal.predicate, spec)
+        self.assertEqual(terminal.cover, ())
+        self.assertTrue(all(not t.cover for t in graph.transitions if t.kind == 'finish'))
+        self.assertTrue(any(r.kind == 'support_surface' and r.owners == ('1',) for r in graph.regions))
+
+
+if __name__ == '__main__':
+    unittest.main()

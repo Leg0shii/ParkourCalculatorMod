@@ -8,16 +8,21 @@
 
 [GENERATION_RELEVANCE_PLAN.md](../autonomy/GENERATION_RELEVANCE_PLAN.md) supplies interaction/ownership detail; the consolidated DFS plan controls integration and ordering. The seven earlier workstreams in [ORCHESTRATOR_IMPLEMENTATION_PLAN.md](../autonomy/ORCHESTRATOR_IMPLEMENTATION_PLAN.md) were implemented to their recorded scope; the DFS/early-interaction change addresses the later traversal and builder-wiring gaps. Its old traversal policy is superseded.
 
+The requested [spatial corridor refactor plan](../autonomy/SPATIAL_CORRIDOR_REFACTOR_PLAN.md) is the current detailed proposal for the spatial layer: typed support/air regions, meaningful 3D passage identity, untimed route discovery, stage-aware constraints/audits and goals/directions, with concrete modules and acceptance gates. Overflight versus landing/run-off is explicitly a different route. It supersedes the earlier [support/goal/direction investigation breakdown](../autonomy/DFS_INTERACTION_IMPLEMENTATION_PLAN.md#21-integration-plan-infer-support-order-from-generated-decisions) where route identity differed; the DFS/early-interaction requirements remain. Milestone1 is implemented in the isolated branch: local support refinement and typed region graph; route semantics/progress/DFS migration remain pending. Automatic Real11 corridor coverage is a measured dependency; the first/default-shortlist signatures exclude the saved historical reference.
+
+The [corridor handoff](CORRIDOR_AGENT_HANDOFF.md) through `61355976` is imported at merge `984b701b`. The spatial and DFS plans now explicitly preserve the implemented `InteractionGate`, probe uncertainty, dedup/ownership, schema5 execution state, exact request logs, virtual finish and latest-jump local-run policy. Existing historical state-protection helpers are not the active global DFS exclusion pass; no such pass or additional continuation-time pruning is enabled by this refactor.
+
 ## Durable user decisions
 
 | Topic | Decision and rationale |
 | --- | --- |
 | Layering | Enumerate a small number of broad spatial routes, then optimize discrete local interactions within each. A spatial route does not determine a jump schedule or constant time edge weight. |
-| Real11 task correction | Latest user request minimizes time to an actual B7 landing, then maximizes Z at that same tick. The existing fixed64/optional-B7 fixture and measurements remain an older benchmark; no corrected-objective result exists yet in this investigation. |
-| Real11 route/support discovery | Use generated feasible decisions to determine support order, rather than requiring B2/B3/B4/B5 by fixture. Reuse the implemented automatic routing/window/direction/goal components; their integration is incomplete. Preserve meaningful B1 setup self-hops. The user reports B6 extends farther right; the stored one-block-X box is incomplete for that description, and exact revised bounds remain unspecified. Intentional wall hits stay deferred. |
+| Spatial route identity, clarified | Different progression supports and different 3D obstacle passages are different routes. Overflying a block versus landing then running off is explicitly different even with matching X/Z projections. Timing, run duration and facings within the same itinerary remain local. Same-neighborhood setup hops remain local unless they cross another meaningful passage; broad revisits retain their ordered occurrence. |
+| Real11 task correction | Current handoff contract is the descending height7 clock with player-center X<729.7, Z>=−1095.3; minimize achieved tick then maximize Z at that tick. Free overshoot and actual finite B7 contact are distinct valid models. No fake floor, lower X goal bound or upper Z goal bound. Use the implemented `terminal_goals` adapter; the literal-finite-B7 and fixed64 interpretations are historical. |
+| Real11 route/support discovery | Automatically discover untimed support/contact and 3D passage itineraries using geometry and existing movement-aware proposals, rather than requiring B2/B3/B4/B5 by fixture. Local search realizes each selected itinerary and must not silently skip its support stages. Reuse existing geometry/movement/goal/direction helpers; the typed spatial representation and integration remain work. Preserve meaningful B1 setup self-hops. The user reports B6 extends farther right; the stored one-block-X box is incomplete for that description, and exact revised bounds remain unspecified. Intentional wall hits stay deferred. |
 | Local guidance | Naive connected route endpoints can supply direction/progress guidance. No new relaxation is required to implement current search. Re-solve all facings from the beginning so later decisions can alter the continuous path. |
 | Comparing alternatives | A shared spatial goal compares **time**; a shared absolute tick compares **objective/progress**. Generate allowed candidates, then compare; don't manufacture completion-time families as the objective of generation. |
-| Retention | Discard only markedly worse candidates on justified comparable measurements; preserve close/unknown/protected alternatives. Full regression continuations of heuristically dropped candidates reveal false pruning. |
+| Retention | Implemented DFS retains siblings/unknowns/refinements; its current heuristic exclusion is extra ordinary preparation before the latest jump within a matching interaction pattern. The old global peer-retention pass is inactive. Keep smaller/earlier unknown/equal-run candidates and distinct contacts; audit heuristic exclusions with full continuations. |
 | State protection | For matching schedule/phase/scope, position within existing margin, greater directional velocity OR greater horizontal speed blocks peer exclusion. Full position and velocity from the same witness; no arbitrary weighted score. |
 | Different schedules | Absolute-tick p/v is not apples-to-apples across different ground/air histories. Preserve fewer-run/more-effective-jump protections and incomparability. Equal counts do not establish equal schedule. |
 | Ordering, clarified | Fewest **achieved arrival ticks at the same point**, then most effective grounded jumps, then fewest grounded nonjump runs. Follow chosen child to completion before root siblings. Old simulated-prefix rule is wrong. |
@@ -27,7 +32,7 @@
 | Relevance | One generic block/tick/phase eligibility helper for required and unwanted interactions; no landing/avoid special-case system. Proved impossible means no interaction-derived choices, rows or checks. Unknown retains coverage. |
 | Corridor | Keep checks plus diagnostic logging. Preliminary constraints and corridor checks have matching scope. Guide-point coordinate envelopes must not become accidental walls. Future removal remains undecided. |
 | Budget | Minutes or longer are acceptable for accuracy. Explain structural failures before widening caps; preserve unfinished work and reference controls separately from discovery. |
-| Workflow | Isolated branch/worktree, no other-agent communication, commits at reasonable boundaries, persist decisions and measured facts. This is the new path, not a feature-flag rollout exercise. |
+| Workflow | Isolated branch/worktree, no other-agent communication, persist decisions and measured facts. Only commit after a feature implementation; bundle related documentation, tests and fixtures. Investigation/planning/documentation-only turns do not require a commit. This is the new path, not a feature-flag rollout exercise. |
 
 ## Prior research: consult, do not restart by default
 
@@ -41,7 +46,7 @@
 | Resume and dead prefixes | [continuation plan](../autonomy/SEARCH_CONTINUATION_FIX_PLAN.md), [implemented results](../autonomy/experiments/orchestrator-fixes/README.md) | Existing machinery to extend; first-floor death proof is conservative and incomplete. |
 | Known future improvements | [backlog](../autonomy/PRUNING_IMPROVEMENTS_BACKLOG.md) | Revisit when a measured map exposes a need, not a mandate to raise counts now. |
 
-Discrete decision transfer from completed/sibling solves, new objective bounding, expanded ladders/water/intentional wall hits and automatic redesign of all spatial routes remain deferred. Numerical initialization using compatible facing guesses is different from committing another branch's decisions.
+Discrete decision transfer from completed/sibling solves, new objective bounding and expanded ladders/water/intentional wall hits remain deferred. The user has now requested a concrete spatial-system refactor plan; it is linked above, with milestone1 implemented and subsequent milestones pending. Numerical initialization using compatible facing guesses is different from committing another branch's decisions.
 
 ## Historical material
 
@@ -56,7 +61,7 @@ Supersedes the earlier fixed64 experiment and the literal-finite-B7 interpretati
 
 ## Minimum-run rule clarified by the user (2026-11-03)
 
-For the same interaction pattern (support/obstacle/contact choices), test the least-run timings for feasibility and continue the feasible representative rather than normally solving extra-run copies. This is a heuristic; retain earlier unknowns and audit skipped candidates in false-pruning regressions. Distinct interaction choices remain distinct, and absolute timing or repeated standing contacts alone must not create a new pattern. Current DFS does **not** implement this exclusion: it uses run count for ordering, and its family key includes absolute timing. The [call audit](../autonomy/experiments/virtual-finish/PRUNING_AUDIT.md) records the implementation gap, alongside missing early propagation of known remaining finish duration. No runtime fix is included in this documentation turn.
+Historical pre-`db211b2b` ruling: for the same interaction pattern, test least-run timings for feasibility and retain earlier unknowns/distinct interactions. The [call audit](../autonomy/experiments/virtual-finish/PRUNING_AUDIT.md) records the then-missing local exclusion and additional time-reasoning questions. The following implementation section supersedes that missing-status diagnosis: latest-jump local runs are now implemented, while further continuation-time reasoning remains deferred.
 
 ## Latest implementation: local run pruning; time reasoning deferred
 

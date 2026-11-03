@@ -1,103 +1,112 @@
-# Consolidated plan: depth-first decision search and early interaction eligibility
+# Consolidated plan: depth-first decisions and shared interaction eligibility
 
-2026-11-03. This is the current authoritative implementation plan requested by the user. It combines the traversal correction with [the interaction-generation fix](GENERATION_RELEVANCE_PLAN.md). The previous shortest-prefix processing rule and checkpoint-window drain requirement are superseded. Core runtime implementation landed at `498c054c`; [results and current validation](experiments/dfs-interactions/README.md) track acceptance and remaining limits. The requirements below remain the design record. Continue in the existing isolated research/ipopt-cell-routes worktree; no other-agent work is requested.
+2026-11-03. **Implemented baseline, with pending spatial integration.** Core DFS/early-interaction work landed through `498c054c`, request logging at `072a1111`, virtual finish at `71c9bb7e`, and latest-jump run pruning at `db211b2b` with generic regressions through `c1e71cb3`. The [corridor-agent handoff](../docs/CORRIDOR_AGENT_HANDOFF.md) was imported through `61355976`, merged as `984b701b` in isolated branch `research/real11-initial-run-ticks`. Do not rebuild these completed workstreams or describe them as unimplemented.
 
-## 1. Intended search behavior
+The [spatial corridor refactor plan](SPATIAL_CORRIDOR_REFACTOR_PLAN.md) specifies the remaining region/route/stage changes. This document records the implemented search invariants and the exact integration obligations. Earlier pre-handoff drafts are superseded; the original source-era plans, experiments and corridor investigation ledgers preserve their evidence. No spatial-refactor runtime is claimed by this update.
 
-Latest Real11 task correction, 2026-11-03: the requested terminal objective is now earliest actual B7 landing, then maximum Z at that same tick. Support order must emerge from generated feasible decisions, not a required B2/B3/B4/B5 fixture list. Existing0/8 and B2 timing examples below are historical controls, not an exhaustive initial domain or a prescribed support chain. Reuse existing automatic routing, opportunity-window, segment-direction and landing/region-probe components; automatic decision-to-goal/range integration remains work. The stored B6 box omits the user's reported rightward extension, whose exact bounds are still unknown. This correction supersedes fixed64/optional-B7 assumptions without rewriting old measurements. Intentional wall-hit search stays deferred.
+After compaction, use the [implementation resume handoff](../docs/CORRIDOR_IMPLEMENTATION_RESUME.md) and spatial-plan sections10–11. They enumerate the existing DFS `goal_list`/frame/terminal call sites, stage-scoped adapter requirements, virtual-finish outstanding-contact trap and first feature slice. Do not start a second DFS or re-run old investigations as the first implementation action.
 
-For one chosen spatial route, compare the alternatives for the current decision at one common spatial goal, select the most promising candidate, and follow its decisions in depth toward a fully accepted terminal solve. Save sibling alternatives for backtracking. Do not explore all candidates to one absolute-clock checkpoint before letting any candidate proceed.
+## 1. Implemented search behavior and current task
 
-For the historical Real110/8 control, the common comparison is landing on B2, not how many inputs have been simulated so far. Existing accepted comparison witnesses reach B2 at21 for P01's self-hop setup and17 for P02's delayed setup. Therefore P02 is the first family to follow in that two-family control. P01 remains a saved root sibling. These times are evidence for expected ordering, not hardcoded timings or proofs of global minimum arrival. Broader generated alternatives must not be excluded merely because they are absent from this control.
+`checkpoint_search.find_checkpoint_route` prepares geometry/scope and delegates to `depth_first.search_goals`. Compare current alternatives at the same spatial goal, continue the selected validated child deeply, retain siblings/unknowns/refinements and backtrack. Absolute clock windows are optional observations, not a barrier. Every continuous solve starts from the original position and stored velocity, with all earlier facings free.
 
-Within the active family, each next decision is handled the same way: compare its relevant local alternatives at a shared point, choose one, and descend. Once a full path is solved, backtrack to the nearest unresolved alternative and eventually the other initial family. Finding a first incumbent does not delete remaining work. A deadline saves the active path and siblings instead of restarting or silently declaring them inferior.
+Current Real11 finish is the **descending height7 clock with player-center X<729.7 and Z>=−1095.3**, minimizing the achieved tick T first and maximizing Z[T] second. Use `terminal_goals` and the canonical [virtual-finish fixture](experiments/virtual-finish/fixture.json). The target has no new lower X or upper Z bound and is not an artificial collision floor. A free overshoot can end below height7 and airborne. A physical finite B7 contact is a separate valid final model with actual collision constraints. The 200-input horizon is a guard, not a fixed finish64.
+
+The current fixture still supplies B2→B3→B4→B5 and initial0/8 as explicit controls. The spatial refactor will automatically discover untimed support/contact and 3D passage itineraries, rather than demand that intermediate order from input. Once a route selects a support visit, its inner search must realize it. Overflight and landing/run-off are different spatial routes even if X/Z projections match; local timing and facings remain variable within the selected itinerary. Finite-support terminal tasks remain supported as separate generic cases.
 
 ## 2. Compare candidates at the same point
 
-Each comparison frame explicitly identifies its spatial goal: for example the next required landing/support or an outgoing portal/region after a turn. All sibling timing comparisons must share that goal and task context. For a shared spatial goal, use `(achieved absolute arrival time, -effective jump count, run count, stable identity)`. Thus earlier arrival comes first, then more jumps and fewer runs for ties. The earlier fewest-ticks rule is not a preference for shorter partial histories.
+Current arrival ordering is `(validated absolute arrival, -effective grounded jumps, grounded nonjump runs, stable identity)`. The shorter simulated-prefix processing key organizes local generation; it is not a completion-time comparison. Observed feasible arrival is not a proof of earliest arrival or a lower bound on unseen alternatives.
 
-Existing fixed-clock objectives remain available as secondary guidance where schedules/phases are compatible. They cannot silently replace arrival time or compare unrelated goals/phases. Retain current0.25-block/1-tick margins and agreed position/velocity/schedule protections. Keep close alternatives, incomparable outcomes and initial P01 fallback for later exploration. Final results are judged by the actual requested terminal objective: earliest actual B7 landing, then maximum Z at that same tick. A configured horizon is a search limit, not a forced terminal64 clock. The existing `candidate_rank` time-first ordering and landing-mode validation should be reused.
+The historical Real110/8 control measured B2 arrivals21/17 for P01/P02. These remain regression evidence for ordering, not constants to put in generic code or proof that P01 loses at the terminal objective. Current DFS retains alternatives and follows the actual validated arrival program. Optional repair/refinement work cannot recreate a global window drain.
 
-Do an initial scoring pass over the current decision alternatives; do not enumerate their Cartesian products with later decisions. Separate the work needed to obtain a validated local comparison from optional additional refinement of an already scored candidate. Extra facing polish or unvisited constraint alternatives remain saved work, not a prerequisite for every candidate to advance. Goal-local generation may require intermediate supports/self-hops, but must remain separate from outer full-route traversal.
+Keep the agreed0.25-block/1-tick margins and same-witness position/velocity/schedule metadata where used. The former `time_progress` peer-protection/retention helpers remain available, but **the implemented DFS does not run that global peer-pruning pass**. It retains siblings except for its explicit latest-jump run heuristic and existing necessary exclusions. The spatial refactor must not silently reactivate historical exclusions.
 
-An observed arrival is a feasible measurement, not an admissible lower bound or proof of earliest arrival. Missing/unknown comparisons remain explicit. If local generation or numerical scoring is suspended, preserve its iterator and unresolved alternatives; do not label a selected evaluated child the globally fastest unseen child.
+### 2.1 Integration plan: infer support order from generated decisions
 
-## 3. Promote actual decision programs, then solve from the original state
+The remaining work is spatial route discovery, not a second movement generator. Build typed support-surface/air regions from the existing decomposition and finite contact patches, with movement-aware possible transfers from current builders and `InteractionGate`. The resulting route stages supply the required contact itinerary. The current supplied `SupportOrder` is retained only for source-specific controls and historical reproduction.
 
-The selected arrival result must carry its concrete discrete program and owned interaction constraints into the child frame. Do not store only the arrival score and then continue an unrelated open-air prefix which omits that arrival. For example an accepted B2 landing at17 supplies that selected landing/input schedule as the active P02 branch.
+Extend the existing DFS frame's stage/goal source instead of creating another DFS. The present `goal_list`/index mapping must consume the selected route's next support/passage stage. Keep original-state generation, setup self-hops, unknown destinations, owned constraints, accepted variants and suspended generator work. An omitted support/passage belongs to a different route; a newly found alternate route is queued without transferring another branch's decisions as a seed.
 
-Only decisions are committed along the current branch. Every continuous re-solve still starts from the full original position/velocity and leaves all prior facings variable. Do not pin the saved witness's arrival X/Z/velocity or copy comparison-only goal/clock rows into permanent task constraints. Existing movement/contact/constraint builders and IPOPT equations remain unchanged. Normal momentum is carried with zero inertia thresholds.
+### 2.2 Integration plan: select a common comparison goal
 
-Each actual fixed numerical alternative contains its selected inputs and complete in-scope constraints before IPOPT is called. A successful local witness or soft guide does not exempt the next solve from assembly/validation.
+Reuse `comparison_goals.goal_spec`, landing/region validation, `probe_spatial`, `goal_key` and the existing virtual-goal adapter. A support stage supplies a finite landing goal, an open passage supplies its actual portal/region predicate, and the terminal stage supplies the task's virtual or finite-support goal. Add an explicit zero-thickness portal goal when necessary; do not fake one by adding arbitrary epsilon-width walls.
 
-## 4. Implement a persistent DFS stack instead of a window barrier
+All sibling timing comparisons share goal/context identity. Different spatial routes can have different intermediate goals and cannot be ranked by unrelated local arrival times. Retain unknown/incomparable alternatives and compare completed routes by the actual terminal objective. Region probes evaluate arrivals in already generated programs; they do not automatically discover a future continuation. Adopt the returned accepted program, not merely its score or facing guess.
 
-A frame stores: parent/ancestor decision identity; route and shared comparison goal; local alternative generator/cursor; comparison results and provenance; ordered untried siblings; active child; numerical pending/in-flight/unresolved state; any remaining refinement for already scored candidates; exhausted/proven-dead/suspended status. Use pure serializable state and exact compatible contexts, reusing current persistence machinery.
+### 2.3 Integration plan: select progress direction from ordered route stage
 
-Traversal:
+Reuse `horizontal_segments` and `checkpoint`, with a common outgoing segment selected from the route-stage cursor before scoring siblings. Replace the old Real11 start→B5/+Z driver rule. Do not infer progress by a global nearest-point projection that can jump ahead at revisits/self-intersections.
 
-1. Open the next decision frame on the active branch.
-2. Generate relevant local alternatives and obtain their comparison measurements.
-3. Select the best comparable child, preserving all eligible siblings and unresolved work.
-4. Descend immediately to that child's next decision. Do not drain a global checkpoint pool or every optional repair/refinement source first.
-5. At the true task endpoint, fully solve and independently validate the selected complete program; update the incumbent.
-6. If the active choice is impossible/exhausted, or after a completed path, backtrack through the saved stack to the next alternative. A numerical unknown is suspended work, not a proof that a subtree is dead.
+Use the same new 3D route-progress predicates for prefix eligibility, goal achievement and final stage auditing. `plan_windows` already derives a clock from supplied real decision ranges/readiness/dependencies; the primary spatial-goal DFS does not need authored10/28/44/55 clocks. `score_features.quietFromState` remains diagnostic, not a clock selector. Stage metadata never freezes optimized position, velocity or facings.
 
-Remove shortest-prefix ordering as the global traversal policy. Local generation still has to organize unsolved proposals, but that internal work order must not preempt the selected active branch or be presented as a fastest-route comparison. Replace the current default checkpoint-drain path rather than adding a rollout mode that leaves the old behavior authoritative. Checkpoints can remain diagnostic/comparison records without imposing a breadth barrier.
+### 2.4 Implementation order and focused acceptance
 
-Persist transitions before dispatch, after accepted local/terminal results and while backtracking. Preserve accepted incumbents and all eligible siblings at stops. Version changed search/generator schemas; old raw queues are historical evidence or explicitly reconstructed inputs, not silently exact new-stack continuations.
+Follow the spatial plan's milestones: semantic regions; typed route identity/enumeration; shared phase/contact progress; fixed guard integration; stage-derived goals/directions in the **existing** DFS; then matched-budget cold/coverage audits. Pair every feature with meaningful generic tests, source-specific fixtures, updated diagnostics and docs. Commit at feature implementation boundaries, not for this planning turn.
 
-## 5. One interaction gate, before every consumer
+Keep the imported execution-owner and persistence rules throughout integration. A new outer route queue cannot require every route's optional refinement to finish before a promising child descends. New stage rows must retain owner completion states and exact request/scope/validation identities.
 
-For each block/tick/collision phase, compute conservative interaction eligibility in the actual fixed or proposed movement context before creating alternatives, block-derived rows, prerequisites or interaction-specific checks. If the interaction is provably unreachable, none of those consumers may introduce it. Unknown/not-ruled-out preserves coverage.
+### 2.5 Cell decomposition and anchor investigation: focused improvement proposal
 
-Reuse the existing shared helper, compiled coefficients and Y->X->Z sweep semantics. Context includes geometry/body, original state, selected inputs/scalar/contact history, existing decisions and scope; recompute when it changes. A guide trajectory is not a reach envelope. Safely above a block means the relevant swept phase is clear, not just one endpoint sample. Do not accidentally remove actual support/landing/contact requirements.
+The pre-handoff geometry diagnostics were performed at `93652150`, not the new solver baseline. [Corridor comparison](experiments/linkcraft11-opening/audit/corridor-comparison-2026-11-03.json), [default shortlist](experiments/linkcraft11-opening/audit/automatic-route-defaults-2026-11-03.json) and [decomposition investigation](experiments/linkcraft11-opening/audit/decomposition-investigation-2026-11-03.json) remain unchanged evidence.
 
-Apply the same eligibility result to normal, stepping/blip, ceiling, passage/contact builders and interaction-derived corridor checks. An alternate builder may not bypass it, and validation/truncation may not resurrect a discarded interaction. Preserve explicit task/route-region constraints in their declared scope. Keep physical acceptance validation; do not remove corridor checking wholesale as an unrelated policy change.
+They show existing exposed top patches, reflected rather than fixed negative-Z selection, scene-wide portal midpoint sensitivity, and a geometry-only33→47 support-aligned refinement preserving free volume. The conditioned B2→B3 anchor fits existing cells. Those are diagnostic findings, not a completed route refactor, executable flight or replacement physics. The new spatial contract also requires explicit support-contact stages so overflight cannot satisfy a landing route.
 
-If a proposed required interaction cannot occur, discard that proposal. If a block cannot interact during a phase, generate no prevention choice or derived check for that phase. These follow from the one interaction invariant; do not create separate landing-versus-avoid relevance systems.
+Current virtual-goal execution expands the finite collision-query envelope from the horizon; its edges/midpoint must not become goal bounds, mandatory spatial walls or local guide anchors. Keep full-map geometry coverage claims distinct from stored-geometry regression work. The user's reported B6 rightward extent still lacks exact revised bounds.
 
-## 6. Generate only distinct relevant models; preserve ownership across scope
+## 3. Promote actual decision programs and preserve ownership
 
-Generate face changes only where they change constraints on eligible states/phases. Canonicalize each obstacle's exact effective row sets before combining blocks, and canonicalize equivalent partial combinations before costly refinement. Include remaining resource/cap state and committed interaction metadata when relevant; do not merge different physics, scopes or future capabilities based on similar trajectories. Check previously handled exact complete keys before repeating expensive refinement.
+`depth_first.commit_arrival` promotes actual validated decisions and selected hard constraints, preserving only optional compatible facing initialization. It removes rows owned by removed, uncommitted future events; `truncate_program`/`constraintOwners` and full-proposal screening must keep that invariant. Do not copy comparison-only rows into permanent task requirements, pin intermediate states or recreate orphan approach conditions when adding stages.
 
-Screen a whole proposal's necessary interactions before throwing away information through checkpoint projection. Attach lightweight ownership to existing interaction/row bundles. An uncommitted future event must not leave orphan hard approach conditions in a shorter prefix. An explicitly committed future choice retains its necessary earlier prerequisites and explicit scope. Task rows and conditions of modeled events remain intact.
+Each numerical alternative contains fixed inputs, actual selected interactions and all claimed in-scope constraints before IPOPT. Reuse the imported effective-model deduplication, constraint builders and exact solve identities. Final physical acceptance remains independent of route membership.
 
-P04/P05 regressions: the broader P03 context already excludes B4 in all84 phases through28. Their blip builder nevertheless creates B4 approach/contact conditions for inputs28/29; truncation removes the events and retains the state28 row. Both full proposals are rejected by the existing shared screen at29/X, while the truncated aliases pass. The fix must exclude that impossible interaction before constructing those aliases and leave the ordinary B2->B3 continuation available.
+## 4. Existing persistent DFS and pending route-stage extension
 
-The P06/P07 duplicate examples are the same early-eligibility/canonicalization requirement: gate18/19 or20/21 can yield identical rows in clear gaps, and B3 has many inactive face prefixes before its only relevant states27/28. Preserve distinct actual models while removing repeated descriptions.
+Current schema is5, `kind=ordered_goal_dfs`. Frames retain parent/goal identity, ready/scored candidates, generator cursor, numerical in-flight state, siblings, accepted variants, refinements and unknown/suspended work. Each unfinished frame has exactly one execution owner. The incumbent survives deadline and resume.
 
-## 7. Pruning, backtracking and explicitly deferred work
+Extend those frames with semantic route key, stage occurrence/variant cursor and task goal identity. Preserve existing child selection, descent and backtracking. Version/context changes must be explicit; pre-local-run schema5 states already differ by policy fingerprint and cannot silently resume as equivalent. Persist transitions before dispatch and after results/backtracking. Do not deserialize the old checkpoint queue or a legacy horizontal route signature as exact new-stage continuation.
 
-Use proven unreachable interactions, inconsistent required conditions, genuine dead-prefix exclusions and exact model/state equivalence to eliminate work irreversibly. Use local timing/progress/state measurements to order exploration; retain protected/near alternatives and record any heuristic exclusions separately for complete regression audit. A later B2 arrival alone cannot prove P01 worse at the final objective.
+## 5. Existing interaction gate and conservative probe semantics
 
-A valid terminal incumbent enables whole-route comparisons and can support any already justified bounds, but does not create a new dominance certificate. No new global objective-bound project is required for this implementation. Do not turn unknowns, generation caps or IPOPT timeouts into infeasibility.
+Use `interactions.InteractionGate.context/query/required` and shared `interaction_reachability` in the original-state compiled context. Proven impossible required interactions reject proposals; a block proved unable to interact contributes no prevention choices or interaction-derived checks. Unknown preserves coverage. Recompute/cache against actual discrete context, scope and model identity.
 
-Reusing discrete decisions from a previously completed solve to initialize a sibling/subsequent solve is explicitly deferred. A branch inherits only its own chosen ancestors. Compatible existing facing guesses may remain initialization only, never hard state or facing constraints. Ladders, water, intentional wall-hit expansion and redesign of every spatial route remain out of scope.
+Preserve the matching eligible gate subset in pre-solve and terminal stage checks (`3ebd9407`). Adding typed regions must not resurrect an excluded gate through a stage predicate or projected guard.
 
-## 8. Implementation sequence and modules
+Preserve the step/grind correction (`498c054c`): realized scalar endpoints omit named collision probes. Keep Y unknown and intended unclipped X/Z coverage on those phases, then rely on existing case/scene validation. Do not infer noninteraction or route impossibility solely from realized feet height. Full proposal checks remain before projection/truncation.
 
-| Step | Change | Main locations |
+## 6. Existing effective-model dedup and exact diagnostics
+
+Per-obstacle/partial effective models deduplicate before expensive combination/refinement. Keep physical scope, owned prerequisites, prior decisions and remaining resource distinctions in identity where relevant. Different input times or descriptions do not necessarily make different models; identical input schedules do not prove identical models either.
+
+Preserve exact fixed numerical requests/problem hashes, solve/scope IDs, selected branch rows and validation results. The handoff explicitly requires current corridor-related calls to remain visible until actual corridor changes explain any savings. Combined-ledger8/9 differ by free/physical terminal model; initial0-ledger5→6 and7→8 include two models with corridor repairs. Do not special-case or suppress those call IDs.
+
+The B3 audit is a mandatory integration regression: crossing its X=738.5 midpoint outside the old Z strip can be physically valid before the later landing. Replace that overly strong route predicate through general 3D stage semantics; keep the before/after model and physical/corridor outcomes. Do not merely delete the checker or misclassify a corridor rejection as numerical failure.
+
+## 7. Implemented latest-jump run heuristic; time reasoning deferred
+
+`minimum_runs.latest_jump` measures runs immediately before the latest effective grounded jump: `jumpInput-groundState`. It normalizes ordinary repeated same-support preparation only, keeping earlier decisions, support, in-air schedule, contacts/cases, hard rows and terminal contact pattern. Per-frame `minimumRuns` records the least validated feasible count; larger copies of the same pattern are heuristic exclusions.
+
+Equal-run choices, earlier smaller/unknown candidates, interacting preparation, sneak/ladder cases and distinct patterns remain eligible. A prefix with15 total runs can have only3 local runs before its last jump. Generic regressions cover minima0/1/2/5/9 and dynamic tightening; those are tests, not fixed thresholds.
+
+New route rows must have correct ownership and scope so they neither merge distinct semantic/contact patterns nor accidentally turn a known local run comparison into total-run pruning. Preserve `minimumRunExclusions`, representative IDs and the fresh `minimum_run_pruning=False` control; policy changes alter resume context. Keep the existing elapsed-input cutoff. **Additional continuation-time bounds/pruning remain deferred**, as do discrete decision transfer, inertia-threshold work, water, and intentional wall-hit/ladder expansion.
+
+## 8. Implementation status and reuse map
+
+| Workstream | Status / existing location | Spatial refactor action |
 | --- | --- | --- |
-| 1 | Define shared goal-aware candidate/frame records, interaction ownership and exact context identities | solve_spec.py; existing comparison/frame records |
-| 2 | Wire one early eligibility gate through every block-interaction consumer and projection path | reachability.py; movement_generation/open_movement; stepping/ceiling/contact builders; corridor adapter; movement_composition |
-| 3 | Canonicalize meaningful per-block/partial constraint models before products/refinement | constraint_variants.py; block_contacts.py |
-| 4 | Make goal-local scoring return the validated decision program, constraints and resumable work | comparison_goals.py; evaluate_program; existing score/protection helpers |
-| 5 | Replace global window draining and shortest-prefix priority with the persistent DFS stack | checkpoint_search.py; movement_frontier.py; decision_windows.py |
-| 6 | Update CLI/resume, complete request logs and independent validation/audits | fixed_clock_experiment.py; report writers; existing audit tooling |
+| Goal-aware traversal and promotion | Implemented: `cell_routes/depth_first.py`, `checkpoint_search.py` | Derive frame goals/cursors from route stages; preserve DFS lifecycle |
+| Shared early eligibility | Implemented: `interactions.py`, open movement/step/ceiling callers, `reachability.py` | Reuse the gate for region/passage proposals and scoped checks; retain probe uncertainty |
+| Effective-model dedup and owned projection | Implemented: `constraint_variants.py`, `block_contacts.py`, `movement_composition.py`, `movement_frontier.py` | Add correctly owned spatial guard alternatives and exact route context |
+| Exact numerical/validation evidence | Implemented: `block_contacts.py`, `search.py`, diagnostics | Preserve all models/costs and add semantic-stage provenance |
+| Virtual finish | Implemented: `terminal_goals.py`, comparison/generation/runner integration | Represent terminal predicate without fake terrain; preserve free/physical alternatives |
+| Latest-jump local runs | Implemented: `minimum_runs.py`, DFS wiring | Preserve policy/counts/representatives and pattern distinctions |
+| Typed support/air regions, 3D corridor stages and automatic support order | Pending: [spatial refactor plan](SPATIAL_CORRIDOR_REFACTOR_PLAN.md) | Implement semantic regions, route discovery/progress and fixed stage guards |
+| Stage-derived goals/anchors/directions | Pending coordination of existing helper APIs | Connect route stages to existing probes/checkpoints; no second solver/DFS |
 
-Avoid a second physics implementation or a new solver API. Build the eligibility contract before integration so the DFS cannot reproduce the old explosion inside its first frame. Commit at coherent implementation/test boundaries in the existing isolated worktree.
+## 9. Acceptance and integration evidence
 
-## 9. Acceptance and evidence
+Existing core evidence: [DFS results](experiments/dfs-interactions/README.md), [virtual-finish results](experiments/virtual-finish/README.md), [latest-jump runs](experiments/last-jump-runs/README.md) and the [handoff](../docs/CORRIDOR_AGENT_HANDOFF.md). Older208-call/fixed64 reports remain historical; no global optimality or fully green ladder-inclusive claim follows from focused checks.
 
-- Deterministic traversal test: both first-decision candidates are compared at the same point; the earlier arrival is selected; it reaches a terminal solve before its root sibling is continued. Backtracking subsequently reaches that sibling. Optional refinement and absolute-clock diagnostics cannot recreate a breadth barrier.
-- Real11 ordering regression: generated/validated B2 arrival17 for P02 precedes P01 arrival21 in exploration, even though the former uses more runs/fewer jumps. P01 remains available. No recorded schedule/yaw may be injected into the cold run.
-- Child-program regression: a successful spatial probe's selected landing and inputs really occur in the continued branch; original-state facings remain variable.
-- Event-scope/canonicalization controls: P04/P05 excluded before orphan rows exist; reachable adjacent blips, ceilings, near tangencies, required support and true phase crossings remain valid. Small exhaustible cases preserve the union of distinct feasible models and relevant cap states.
-- No impossible block interaction may reappear through a constraint name, alternate builder, route signature or truncated owner. Cover above-block and horizontally unreachable cases through the same helper.
-- Save/load tests preserve active depth, scored/unknown siblings, generator/refinement cursors, in-flight work and incumbents. Do not repeat completed exact-context requests or lose a suspended branch.
-- Audit all calls and transitions: parent/decision/frame IDs, common-goal comparison, chosen child/backtrack, eligibility proof, exact input/constraint context, worker result/objective, validation and pending state. Close the previous probe/per-branch logging gaps.
-- Real11 numerical acceptance: reach a validated B7 landing through the first selected family, independently replay it, then continue backtracking under the declared budget. Rank complete candidates by landing tick first, maximum Z at that tick second; an airborne fixed64 witness is not a complete result for this task. Record first-full-solution time, landing tick/Z, per-family calls, duplicates, refinements and unexplored work. Compare against the old201-vs7 family imbalance; do not substitute a larger cap for the traversal correction.
-- Complete retained and otherwise deferred/heuristically excluded alternatives on tractable regression maps to measure quality loss. One first-found DFS incumbent is not a global optimality proof.
+Fresh post-merge acceptance at `984b701b`: **52 tests passed, no skips**, native compiler/IPOPT enabled, about17 seconds. Modules: `test_minimum_runs`, `test_depth_first`, `test_orchestrator_continuation`, `test_fixed_clock_goal`, `test_terminal_goals`. [Log](experiments/linkcraft11-opening/audit/handoff-integration-focused-2026-11-03.log), [settings/summary](experiments/linkcraft11-opening/audit/handoff-integration-focused-2026-11-03.json). Existing helpers were used read-only; no shared Java rebuild or cold retry was started.
 
-Run focused standalone contracts, then affected wider standalone/numerical suites. No mod Gradle gate or game launch is needed for this work.
+Future spatial acceptance must retain these controls and add semantic contact/overflight and 3D passage separation, union guards, multiple portal crossings per input, mandatory stage preservation, scoped future omission, transformed geometry, automatic historical-witness representation, route-stage resume parity and unchanged local-run/terminal model distinctions. Compare current corridor repairs by exact models before/after the refactor. Keep all unknown/capped work visible and write new evidence paths. Numerical feasibility, route acceptance, independent scene replay and executable/game replay remain separate claims.

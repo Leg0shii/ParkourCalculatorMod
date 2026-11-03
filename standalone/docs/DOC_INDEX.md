@@ -53,6 +53,7 @@ All tracked standalone Markdown plus this consolidation. Read [AGENTS](../AGENTS
 | [autonomy/RUN_TICKS_PLAN.md](../autonomy/RUN_TICKS_PLAN.md) | Run-ticks prototype: status and remaining work | Prior plan/design reference; check decisions index for implemented/superseded scope |
 | [autonomy/SEARCH_CONTINUATION_FIX_PLAN.md](../autonomy/SEARCH_CONTINUATION_FIX_PLAN.md) | Resume unfinished solves and reject provably dead prefixes | Prior plan/design reference; check decisions index for implemented/superseded scope |
 | [autonomy/SEARCH_OBJECTIVE.md](../autonomy/SEARCH_OBJECTIVE.md) | Search order: total ticks, then objective | Mechanics/research reference; current decisions control scope |
+| [autonomy/SPATIAL_CORRIDOR_REFACTOR_PLAN.md](../autonomy/SPATIAL_CORRIDOR_REFACTOR_PLAN.md) | Typed support/air regions, 3D route identity, discovery, staged constraints and DFS integration | Pending spatial proposal, reconciled with imported DFS/virtual-finish/local-run implementation through `61355976` |
 | [autonomy/SPATIAL_ROUTE_RESEARCH.md](../autonomy/SPATIAL_ROUTE_RESEARCH.md) | From collision geometry to spatial route families | Mechanics/research reference; current decisions control scope |
 | [autonomy/STATE_PROTECTION_IMPLEMENTATION_PLAN.md](../autonomy/STATE_PROTECTION_IMPLEMENTATION_PLAN.md) | Implementation plan: velocity and schedule protection | Prior plan/design reference; check decisions index for implemented/superseded scope |
 | [autonomy/STEPPING_CASES.md](../autonomy/STEPPING_CASES.md) | Stepping terminology and cases | Mechanics/research reference; current decisions control scope |
@@ -113,6 +114,7 @@ All tracked standalone Markdown plus this consolidation. Read [AGENTS](../AGENTS
 | [docs/ARCHITECTURE.md](ARCHITECTURE.md) | Architecture and execution flow | Current navigation/guidance |
 | [docs/CODE_MAP.md](CODE_MAP.md) | Production code map | Current navigation/guidance |
 | [docs/CORRIDOR_AGENT_HANDOFF.md](CORRIDOR_AGENT_HANDOFF.md) | Handoff: changes since the standalone AGENTS consolidation | Current navigation/guidance |
+| [docs/CORRIDOR_IMPLEMENTATION_RESUME.md](CORRIDOR_IMPLEMENTATION_RESUME.md) | Exact checkout/state, implementation authorization, next action and test commands after compaction | Current corridor implementation resume entry point |
 | [docs/CURRENT_STATE.md](CURRENT_STATE.md) | Current standalone state | Current navigation/guidance |
 | [docs/DECISIONS_AND_PLANS.md](DECISIONS_AND_PLANS.md) | Decisions and plan authority | Current navigation/guidance |
 | [docs/DEVELOPMENT.md](DEVELOPMENT.md) | Writing code and fixes | Current navigation/guidance |

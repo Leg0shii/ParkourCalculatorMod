@@ -2,6 +2,8 @@
 
 2026-10-31. Research response to the user's question: given relevant blocks as AABBs or another reasonable geometric representation, how can we automatically derive the broad path choices that precede local movement/timing optimization? Input serialization is deliberately outside this design. This is a proposed abstraction and source review, not an implementation or measured performance result.
 
+Latest user clarification, 2026-11-03: support progression and 3D passage choices distinguish spatial routes. In particular overflight and landing then running off a block are different routes even with identical X/Z projections. This supersedes the older optional-contact grouping in this research note. Timing, run duration and facings within the same spatial/contact itinerary remain local. See the requested [concrete refactor plan](SPATIAL_CORRIDOR_REFACTOR_PLAN.md) for current implementation direction; historical research and measurements below remain preserved.
+
 ## General cell-decomposition context, researched 2026-10-31
 
 The user requested that the general method be studied before committing to its application. The earlier height-band sketch was one construction, not a definition of cell decomposition or an adopted implementation.
@@ -226,6 +228,8 @@ One input may cross several cells, just as many inputs may stay in one cell. Do 
 This keeps the user's conceptual separation: path selection is about spatial choices, while local optimization determines a timed movement through those choices. At a fine partition, local method replacement may change incidental cell crossings; grouping such nearby itineraries into one broad route family remains an optional normalization step. No times, weights or movement states are fixed merely by accepting this abstraction.
 
 ## Defining a broad route family operationally
+
+Historical grouping below: its explicit landing/overflight example is superseded by the 2026-11-03 clarification above. The requirement to preserve meaningful passages and ignore incidental subdivision still applies.
 
 A family signature is the ordered sequence of significant spatial passages, side choices and selected transit landmarks. It does not contain every elementary cell ID or every physical contact. A small number of semantically meaningful portal tokens makes the grouping stable against arbitrary tessellation.
 

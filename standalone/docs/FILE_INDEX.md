@@ -62,6 +62,7 @@ Evidence filenames identify different runs/contexts; do not treat reports as exe
 | [RUN_TICKS_PLAN.md](../autonomy/RUN_TICKS_PLAN.md) | Run-ticks prototype: status and remaining work. See documentation index for authority/status. |
 | [SEARCH_CONTINUATION_FIX_PLAN.md](../autonomy/SEARCH_CONTINUATION_FIX_PLAN.md) | Resume unfinished solves and reject provably dead prefixes. See documentation index for authority/status. |
 | [SEARCH_OBJECTIVE.md](../autonomy/SEARCH_OBJECTIVE.md) | Search order: total ticks, then objective. See documentation index for authority/status. |
+| [SPATIAL_CORRIDOR_REFACTOR_PLAN.md](../autonomy/SPATIAL_CORRIDOR_REFACTOR_PLAN.md) | Detailed requested refactor of spatial cells/corridors: support visits, 3D passages, discovery, constraints, goals and acceptance milestones. |
 | [SPATIAL_ROUTE_RESEARCH.md](../autonomy/SPATIAL_ROUTE_RESEARCH.md) | From collision geometry to spatial route families. See documentation index for authority/status. |
 | [STATE_PROTECTION_IMPLEMENTATION_PLAN.md](../autonomy/STATE_PROTECTION_IMPLEMENTATION_PLAN.md) | Implementation plan: velocity and schedule protection. See documentation index for authority/status. |
 | [STEPPING_CASES.md](../autonomy/STEPPING_CASES.md) | Stepping terminology and cases. See documentation index for authority/status. |
@@ -143,6 +144,7 @@ Evidence filenames identify different runs/contexts; do not treat reports as exe
 | [fixed_clock_experiment.py](../autonomy/cell_routes/fixed_clock_experiment.py) | Current fixed-terminal-clock fixture runner with support-order policy, atomic progress and resume CLI. |
 | [generation_diagnostic.py](../autonomy/cell_routes/generation_diagnostic.py) | Physical/execution keys, generator/queue instrumentation and report saving. |
 | [geometry.py](../autonomy/cell_routes/geometry.py) | AABB subtraction/merging, cells/portals/contact patches, free-space decomposition and segment coverage/SVG. |
+| [regions.py](../autonomy/cell_routes/regions.py) | Exact exposed support unions/components; typed volume/surface graph, directed open/contact links, schema1 dumps and actual rectangle SVG. |
 | [local.py](../autonomy/cell_routes/local.py) | Search work budgets/counters, counting compiler and scoped corridor/scene acceptance adapter. |
 | [minimum_runs.py](../autonomy/cell_routes/minimum_runs.py) | Latest-jump ordinary ground-hold pattern normalization, validated feasible representatives and heuristic extra-run exclusions. |
 | [repair_diagnostic.py](../autonomy/cell_routes/repair_diagnostic.py) | Diagnostic of repair queue allocation and failures. |
@@ -1009,6 +1011,7 @@ Evidence filenames identify different runs/contexts; do not treat reports as exe
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Architecture and execution flow. See documentation index for authority/status. |
 | [CODE_MAP.md](CODE_MAP.md) | Production code map. See documentation index for authority/status. |
 | [CORRIDOR_AGENT_HANDOFF.md](CORRIDOR_AGENT_HANDOFF.md) | Handoff: changes since the standalone AGENTS consolidation. See documentation index for authority/status. |
+| [CORRIDOR_IMPLEMENTATION_RESUME.md](CORRIDOR_IMPLEMENTATION_RESUME.md) | Resume corridor implementation after compaction: isolated checkout and uncommitted state, settled requirements, implementation sequence and verification environment. |
 | [CURRENT_STATE.md](CURRENT_STATE.md) | Current standalone state. See documentation index for authority/status. |
 | [DECISIONS_AND_PLANS.md](DECISIONS_AND_PLANS.md) | Decisions and plan authority. See documentation index for authority/status. |
 | [DEVELOPMENT.md](DEVELOPMENT.md) | Writing code and fixes. See documentation index for authority/status. |

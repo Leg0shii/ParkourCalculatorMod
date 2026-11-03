@@ -2,6 +2,8 @@
 
 Read [current state](CURRENT_STATE.md) before assuming a planned component already exists. [Code map](CODE_MAP.md) identifies modules; [function index](FUNCTION_INDEX.md) points to definitions. Python packages are imported from the physical repository root.
 
+The requested [spatial corridor refactor](../autonomy/SPATIAL_CORRIDOR_REFACTOR_PLAN.md) changes the planned spatial contract: support-surface visits and 3D passages, including overflight versus landing/run-off, distinguish routes. Its support refinement and typed region/transition graph (schema1) are implemented in `geometry.py`/`regions.py`; semantic routes/progress and DFS integration are still pending. The module descriptions below describe the inspected current code.
+
 ## The three layers
 
 1. **Geometry/spatial route:** `block_search.prepare_scene` normalizes supplied physical AABBs and the original state. `cell_routes.geometry.decompose` builds free player-configuration cells, portals and contact patches. `routes.enumerate_routes` or `corridor_for_points` supplies a broad spatial corridor. A cell is a spatial region, not a tick; a guide point is not a solver wall. The graph alone does not determine dynamics, contact schedule or travel time.
@@ -28,9 +30,9 @@ Read [current state](CURRENT_STATE.md) before assuming a planned component alrea
 | `evaluate_program` in `cell_routes.checkpoint_search` | Compile program; validate scalar vertical schedule; scope adapter; obtain coefficients/reach bounds; select fixed alternatives; call contact solver; record physical acceptance. Partial/checkpoint success is not a terminal route. |
 | `solve_contact_branches` in `block_contacts` | Inner search for concrete geometry/contact/constraint alternatives of one program. Saves repair state, logs, guesses and accepted candidate. “Repair” does not mean IPOPT chooses discrete decisions. |
 | `probe_spatial` in `cell_routes.comparison_goals` | Seek validated arrival at a common landing/region goal, possibly via local choices. Observed arrival is a feasible time measurement, not proof of earliest arrival. |
-| `retain_two_goals`, `protections` in `cell_routes.time_progress` | Time/progress retention and schedule/velocity guards. Ordering and exclusion evidence are separate. |
+| `retain_two_goals`, `protections` in `cell_routes.time_progress` | Existing time/progress/state helpers; the current DFS does not run their former global peer-retention pass. |
 | `find_checkpoint_route` in `cell_routes.checkpoint_search` | Validates/setup scene, corridor and scope, then delegates outer traversal to `depth_first.search_goals`. |
-| `fixed_clock_experiment.run` | Apply fixture/support order/terminal clock, run search, replay full witnesses. CLI writes progress atomically. |
+| `fixed_clock_experiment.run` | Run fixed-clock or virtual-height-goal fixtures, preserving physical collision geometry and independent replay. Virtual mode derives finite query coverage from the horizon without adding goal terrain. CLI writes progress atomically. |
 | `ipopt.prepare`, `ipopt.validate` | Normalize fixed request; scalar replay independently validates facings. Arrays have n inputs and n+1 states. |
 | `ipopt.solver.solve` | Worker lifecycle, deadline, cancellation, protocol, incumbent retention and independent validation. |
 | `ipopt.worker` / `continuation.run` | CasADi/IPOPT phases and optional inertia continuation for supported fixed problems. Current decision research explicitly requests threshold zero. |

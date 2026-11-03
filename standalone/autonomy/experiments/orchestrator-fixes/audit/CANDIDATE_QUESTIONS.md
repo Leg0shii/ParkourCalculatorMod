@@ -196,6 +196,86 @@ The user reports that B6 extends much farther right. Stored B6 is only `[730,0,-
 
 Thirty-five existing nonnumerical tests passed: `DecisionWindowTests`, `CheckpointTests`, `ComparisonGoalTests`, `CellRouteTests`. They cover opportunity-derived clocks, direction/turn handling, goal semantics and geometric routes. Source confirms time/Z ranking; this investigation did not run a new IPOPT search, certify B2-only reachability, or produce a corrected-objective Real11 solution. The associated current-state/decision/DFS-plan notes record the user's task correction; runtime files remain untouched.
 
+## 10. How does the automatic corridor compare with the supplied one?
+
+2026-11-03, runtime `93652150`; comparison source revision `6bfc20b8`. The same stored scene/decomposition is used for both routes. The automatic route is the first result saved in the section9 smoke check; the supplied corridor is rebuilt with current `corridor_for_points` from the historical fixture. No movement search or numerical solve was run. The user's updated commit practice is recorded in AGENTS: this investigation/plan remains uncommitted for bundling with a later implementation.
+
+| Property | Supplied corridor | First automatic corridor |
+| --- | --- | --- |
+| Guide cell itinerary | 31→29→26→22→21→17→16→12→8→2→4 | 31→29→24→22→19→17→14→12→5→2→4 |
+| B2/B3/B4/B5 midpoint crossings | Inside each expanded horizontal footprint strip (`side=0`) | South of each expanded strip (`side=-1`) |
+| B6 midpoint crossing | South of B6 | South of B6 |
+| Guide feet-Y range | 5..9 | approximately2.1..7 |
+| Endpoint | `(728.9,7.2,-1088)`, beyond B7 for the historical fixed64 objective | approximately`(729.2,7,-1094.5)`, inside the B7 landing region |
+| Geometric polyline length | 45.224990 blocks | 33.171508 blocks |
+| Horizontal polyline length | 29.024990 blocks | 26.194386 blocks |
+| Current horizontal projection | Exactly the same broad projection for both | Exactly the same broad projection for both |
+| Ordered crossing signature | Matches the saved validated historical trajectory | Rejects that trajectory; first mismatch is B2 |
+
+The endpoint difference means the lengths are not a shortest-route comparison to an identical target. Guide Y coordinates describe geometric free space, not an executable flight or fixed numerical altitude. The automatic guide descends below support tops and later rises to7; the geometric router does not know whether the movement program can do that. In current code both projections are broad free-space projections, so the meaningful restriction difference here is the ordered side signature, as well as different directions from their guide points. Both corridors have empty `stage_paths`; an active stage cursor is not already supplied by the forward adapter for these records.
+
+![Comparison of supplied and first automatic guides](../../linkcraft11-opening/audit/corridor-comparison-2026-11-03.png)
+
+The updated diagram shows the selected cells' actual X–Z rectangles and their feet-Y intervals. Automatic guide markers are the original start, shared-portal midpoints and a point in the terminal landing-region/cell overlap; they are not cell centers. Supplied markers are authored waypoints. Seven selected cells are shared. The supplied route additionally selects C26/C21/C16/C8 above the supports, while the automatic route selects C24/C19/C14/C5 to their south with upper Y bounds6/7/7.5/6. The JSON's `cellVisualization` records every selected cell's full-precision AABB. Projected rectangles can overlap when cells occupy different heights; they depict selected cells rather than the broader `corridor.projection` guard.
+
+The saved64-input historical reference was checked with current `routes.audit_candidate` using its CSV X/Y/Z states. It passes the rebuilt supplied corridor and fails the automatic corridor with `reason=corridor_signature`, `mismatch=1`. This is a corridor-coverage check of an existing physically validated witness, not a new physical validation or a solution to the corrected B7 task. [Exact route comparison, hashes and audit verdicts](../../linkcraft11-opening/audit/corridor-comparison-2026-11-03.json).
+
+A separate geometry-only call with the existing enumerator defaults (`max_routes=50`, `max_expansions=5000`, depth64, visits2, deadline10s) returned50 signatures after810 expansions (~0.150 seconds), stopped at `route_limit` with2604 queue entries, and produced **zero corridors accepting that saved reference**. This does not establish50 executable alternatives or that the real map has more than one useful route. It identifies the same geometric portal-midpoint/incidental-support-crossing coverage limitation already documented in the earlier multi-support experiment. [Default-shortlist evidence](../../linkcraft11-opening/audit/automatic-route-defaults-2026-11-03.json). No cap was widened beyond the enumerator's existing defaults.
+
+Therefore replacing the supplied route with the first automatic result is insufficient. The three requested support/goal/direction integrations mostly reuse helpers, but automatic routing needs a separate coverage correction before claiming autonomous Real11 discovery. The [consolidated plan sections2.1–2.4](../../../DFS_INTERACTION_IMPLEMENTATION_PLAN.md#21-integration-plan-infer-support-order-from-generated-decisions) give the exact helper calls, small missing selectors, fallback behavior, implementation sequence and regression scope. The stored B6 still lacks its reported rightward extension; no new geometry was inferred.
+
+## 11. Are large air cells and negative-Z block cells built into decomposition?
+
+2026-11-03, runtime `93652150`. The user requested investigation of support-aligned cells and air anchors between neighboring block regions. Source inspection, geometric/reflection probes and a local partition diagnostic were performed; production geometry/routing and numerical solvers remain unchanged.
+
+### Current construction
+
+`geometry.decompose` expands each physical box by the player half-width in X/Z and body height below its Y minimum; shrinks declared coverage for the body; subtracts expanded open interiors by sequential X/Y/Z slabs; merges adjacent pieces that form a cuboid; and retains exact boundary strata. Pairwise cell intersections supply portals. Physical face intersections supply `ContactPatch` records with owner and support/ceiling/wall semantics. Cells contain free player reference positions. They are not physical blocks and are not uniformly grounded regions.
+
+Large air cells are the remaining free volume inside declared coverage. Some span Y−200..22.2 or almost the entire Z extent. That is geometrically legitimate; it is not a claim that the player can fly freely throughout them. The implementation already has the finite exposed top support patches needed by the user's requested landing anchors:
+
+| Support | Top plane | Cell containing its finite exposed top patch |
+| --- | --- | --- |
+| B1 | Y5 | C29 and C31, preserving the corner union |
+| B2 | Y6 | C26 |
+| B3 | Y7 | C21 |
+| B4 | Y7.5 | C16 |
+| B5 | Y6 | C8, clipped by B6's occupied footprint |
+| B6 | Y20 | C10; existence is not evidence it is reachable |
+| B7 | Y7 | C4, clipped by B6's occupied footprint |
+
+The lower side cells are also valid free space and must not simply be deleted. `enumerate_routes` selects them as part of a geometric point-connectivity route, without requiring the necessary movement/contact sequence. It uses full portal midpoints to order/represent that route. There is no fixed negative-Z branch: reflecting the stored scene in Z gives33 cells/92 portals and a mirrored first route on the positive-Z side, again after72 expansions. Both sides remain available in decomposition; the existing route test also covers both sides and overflight.
+
+### Measured anchor defect
+
+Even the correct above-support itinerary C26→C22→C21 has bad raw midpoint guidance for B2→B3. The two full portal patches span Z−1107.7..−1085.3 and Y6/7..22.2. Their midpoints are `(740.7,14.1,-1096.5)` and `(739.3,14.6,-1096.5)`, far from the finite support centers `(741.5,6,-1103.5)` and `(738.5,7,-1100.5)`.
+
+Extending only empty coverage by10 in +Z moves those midpoints by5 in Z. Extending only the ceiling of coverage by10 moves them by5 in Y. Both support patches stay unchanged. Thus the anchor problem persists even if the useful cell sequence is selected; geometric midpoint ranking is sensitive to irrelevant empty scene bounds.
+
+A geometry-only diagnostic through the exact same cells and portals uses an air anchor `(740,7,-1102)` between the supports. It lifts the source reference to the higher top, intersects the straight X/Z support connection with the portal faces, and retains the actual support endpoints. `segment_covered` accepts every segment. The raw-midpoint polyline is20.847606 blocks long, compared with5.242641 for this diagnostic. These are geometric lengths, not flight times or feasibility certificates; no reference facings or numerical solver were used.
+
+### Local support-aligned refinement diagnostic
+
+Splitting each exposed-support cell only at its own top patch's X/Z borders produces47 regions from33. The above-support prisms have the actual finite support footprints; all remaining air pieces are retained. The free volume remains111249.919783 and1650 deterministic coverage samples remain covered. This is a geometry-only overlay; production decomposition/adjacency is unchanged. Full-precision regions, top patches, portal bounds, reflected route and empty-coverage probes are saved in [decomposition investigation](../../linkcraft11-opening/audit/decomposition-investigation-2026-11-03.json).
+
+The recommended change combines support-aware anchors, optional local support-footprint refinement, and movement-aware route proposals using existing builders/checks. Partition refinement alone leaves the portal-midpoint and flying-graph problems unresolved. A support becomes a landing anchor when selected by a candidate decision, not a mandatory visit merely because its top exists. The [integrated improvement proposal](../../../DFS_INTERACTION_IMPLEMENTATION_PLAN.md#25-cell-decomposition-and-anchor-investigation-focused-improvement-proposal) gives implementation order and regression scope. Fifteen existing geometry/route tests passed. The stored B6 remains incomplete relative to the user's reported rightward extension.
+
+## 12. What is a spatial route supposed to distinguish?
+
+The original [cell-route plan](../../../CELL_ROUTE_EXPERIMENT_PLAN.md#stage-2-spatial-routes-and-mapping-real-trajectories-to-them) and [spatial research](../../../SPATIAL_ROUTE_RESEARCH.md#4-compress-subdivision-artifacts-without-erasing-route-choices) require preservation of meaningful support neighborhoods, multiple obstacle passages and a raw finite cell/portal itinerary, with only incidental subdivisions normalized away. The prototype's global horizontal guard and dominant-axis signature do not implement that full contract. Older research explicitly allowed some overflight/landing alternatives in one family; the user has now clarified that **overflying a block and landing then running off it are different routes because their vertical/contact paths differ**, including with the same horizontal projection.
+
+The requested [concrete refactor plan](../../../SPATIAL_CORRIDOR_REFACTOR_PLAN.md) specifies support-surface nodes beside air volumes, typed open/contact transitions, meaningful 3D route stages, automatic untimed support order, route-constrained local realization, phase-accurate route progress, stage-derived goals/directions, persistence, file-level changes and acceptance milestones. It supersedes the earlier investigation drafts where the division of support/contact choices differs. No production implementation or commit is implied by the plan.
+
+## 13. Corridor-agent handoff imported and plans reconciled
+
+2026-11-03. Read [CORRIDOR_AGENT_HANDOFF](../../../../docs/CORRIDOR_AGENT_HANDOFF.md), fetched the source branch and merged its committed revision `61355976` as `984b701b` into `research/real11-initial-run-ticks`. Uncommitted corridor plans/artifacts were backed up and restored; the source checkout's uncommitted retry was not imported. The earlier sections remain source-era analyses at `93652150` where stated.
+
+The [spatial refactor plan](../../../SPATIAL_CORRIDOR_REFACTOR_PLAN.md#0-imported-baseline-and-integration-requirements) and [DFS plan](../../../DFS_INTERACTION_IMPLEMENTATION_PLAN.md) now build on implemented `depth_first.search_goals`, early `InteractionGate`, effective-model dedup, row ownership, conservative named-step probes, exact request/validation logging, virtual terminal goal and latest-jump local-run pruning. Existing schema5 state/policy fingerprints and one-owner frame execution must survive route-stage integration. Historical global peer retention is inactive, additional continuation-time pruning stays deferred, and corridor-related calls must remain visible until actual semantic/model changes explain savings.
+
+The current task finish is a descending height7 clock with X<729.7 and Z>=−1095.3, no extra lower X/upper Z bound and no virtual physical floor. Free overshoot and finite B7 contact remain distinct valid terminal models. This supersedes the earlier literal-finite-B7 interpretation without rewriting historical evidence. The 200-input limit is a guard.
+
+Fresh post-merge native acceptance:52 tests passed, no skips, approximately17s, using existing compiler/worker paths read-only. [Exact log](../../linkcraft11-opening/audit/handoff-integration-focused-2026-11-03.log), [command/context](../../linkcraft11-opening/audit/handoff-integration-focused-2026-11-03.json). No shared helper rebuild, mod test or cold retry was started. Plan/documentation updates remain uncommitted for the next feature boundary.
+
 ## Evidence references and audit correction
 
 - [Original complete candidate/constraint tables](CANDIDATE_AUDIT.md), [208-call ledger](WORKER_CALLS.md), [saved source reports](../evidence/cold-summary.json), and [question-specific extracted evidence](question-evidence.json).
