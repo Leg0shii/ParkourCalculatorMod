@@ -288,7 +288,8 @@ public final class PathRenderPlan {
         h = 31 * h + (settings.pressurePlateFullBlock ? 256 : 0);
         h = 31 * h + (settings.showHitDistanceLines ? 64 : 0);
         h = 31 * h + (settings.hitDistanceSelectedOnly ? 128 : 0);
-        h = 31 * h + (settings.hitDistanceGameReach ? 512 : 0);
+        h = 31 * h + settings.hitDistanceReachMode;
+        h = 31 * h + Float.hashCode(settings.hitDistanceCustomReach);
         h = 31 * h + Float.hashCode(settings.constraintFrontWidth);
         h = 31 * h + Float.hashCode(settings.constraintFrontHeight);
         h = 31 * h + Float.hashCode(settings.constraintFrontLength);

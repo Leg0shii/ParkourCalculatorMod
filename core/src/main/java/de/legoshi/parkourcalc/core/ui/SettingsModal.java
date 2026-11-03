@@ -28,9 +28,10 @@ public final class SettingsModal {
     private static final String TT_SCROLLBAR_GRAB = "Minimum length of the draggable scrollbar grab. Also applies to slider grab handles. Scales with UI Scale.";
     private static final String TT_YAW_ARROWS = "Draws an arrow at each tick's position showing the facing angle that frame.";
     private static final String TT_ARROW_MODE = "Which facing arrow to draw: the flat yaw arrow, or one arrow combining yaw and pitch into the actual look direction.";
-    private static final String TT_HIT_DISTANCE = "Draws a line from each tick's eye position along that tick's look direction, out to block reach (4.5). The line changes color when it hits a block within reach, showing where a click on that tick would land, e.g. on a button.";
+    private static final String TT_HIT_DISTANCE = "Draws a line from each tick's eye position along that tick's look direction, out to the block reach chosen below. The line changes color when it hits a block within reach, showing where a click on that tick would land, e.g. on a button.";
     private static final String TT_HIT_DISTANCE_SELECTED = "Limits the hit distance line to the currently selected ticks. Selected-tick lines re-cast every frame, so they also track world edits instantly.";
-    private static final String TT_HIT_DISTANCE_GAME_REACH = "Uses the current game mode's block reach for the hit distance line (5.0 in creative) instead of the survival reach of 4.5.";
+    private static final String TT_HIT_DISTANCE_REACH = "Block reach used for the hit distance lines: the survival reach of 4.5, the creative reach of 5.0, the current game mode's reach, or a custom value for servers with another reach.";
+    private static final String TT_HIT_DISTANCE_CUSTOM_REACH = "Block reach in blocks for the hit distance lines while the reach is set to Custom. Ctrl+click the slider to type a value.";
     private static final String TT_HITBOX = "Draws the player's hitbox at the currently selected tick.";
     private static final String TT_FULL_HITBOX = "Draws hitboxes for every tick in the TAS, not just the active one. Heavy on long TASes.";
     private static final String TT_SUBTICK = "Renders the interpolated path between adjacent ticks, exposing collision moments inside a tick.";
@@ -90,6 +91,7 @@ public final class SettingsModal {
     private boolean pairedConfirmTarget;
 
     private static final String[] ARROW_MODE_LABELS = {"Yaw", "Combined"};
+    private static final String[] HIT_DISTANCE_REACH_LABELS = {"Survival (4.5)", "Creative (5.0)", "Game mode", "Custom"};
     private static final String[] HUD_MESSAGE_ORDER_LABELS = {"Downwards", "Upwards"};
 
     private static final String TT_REPLAY_KEYSTROKES_SCROLL = "Slides each older tick of the mouse trail further down the square, so a turn draws a curve over the last 8 ticks instead of a line back and forth.";
@@ -98,6 +100,8 @@ public final class SettingsModal {
     private final ImInt scaleIndexBuf = new ImInt();
     private final int[] replayStartDelayBuf = new int[1];
     private final ImInt arrowModeBuf = new ImInt();
+    private final ImInt hitDistanceReachModeBuf = new ImInt();
+    private final float[] hitDistanceCustomReachBuf = new float[1];
     private final float[] yawTurnCapBuf = new float[1];
     private final int[] pathRenderDistanceBuf = new int[1];
     private final float[] scrollbarSizeBuf = new float[1];
@@ -502,7 +506,27 @@ public final class SettingsModal {
             });
             checkboxRow("Show hit distance lines", "##show_hit_distance", settings.showHitDistanceLines, TT_HIT_DISTANCE, v -> settings.showHitDistanceLines = v);
             checkboxRow("Hit distance for selected ticks only", "##hit_distance_selected", settings.hitDistanceSelectedOnly, TT_HIT_DISTANCE_SELECTED, v -> settings.hitDistanceSelectedOnly = v);
-            checkboxRow("Hit distance uses game mode reach", "##hit_distance_game_reach", settings.hitDistanceGameReach, TT_HIT_DISTANCE_GAME_REACH, v -> settings.hitDistanceGameReach = v);
+            hitDistanceReachModeBuf.set(settings.hitDistanceReachMode);
+            row("Hit distance reach", () -> {
+                ImGui.setNextItemWidth(-1);
+                if (Controls.combo("##hit_distance_reach", hitDistanceReachModeBuf, HIT_DISTANCE_REACH_LABELS)) {
+                    settings.hitDistanceReachMode = hitDistanceReachModeBuf.get();
+                    onChanged.run();
+                }
+                tooltipForLastItem(TT_HIT_DISTANCE_REACH);
+            });
+            if (settings.hitDistanceReachMode == Settings.HIT_DISTANCE_REACH_CUSTOM) {
+                row("Custom reach", () -> {
+                    hitDistanceCustomReachBuf[0] = settings.hitDistanceCustomReach;
+                    ImGui.setNextItemWidth(-1);
+                    if (Controls.sliderFloat("##hit_distance_custom_reach", hitDistanceCustomReachBuf,
+                            Settings.MIN_HIT_DISTANCE_CUSTOM_REACH, Settings.MAX_HIT_DISTANCE_CUSTOM_REACH, "%.2f blocks")) {
+                        settings.hitDistanceCustomReach = hitDistanceCustomReachBuf[0];
+                    }
+                    if (ImGui.isItemDeactivatedAfterEdit()) onChanged.run();
+                    tooltipForLastItem(TT_HIT_DISTANCE_CUSTOM_REACH);
+                });
+            }
             checkboxRow("Show hitbox", "##show_hitbox", settings.showHitbox, TT_HITBOX, v -> settings.showHitbox = v);
             checkboxRow("Show full hitbox", "##show_full_hitbox", settings.showFullHitbox, TT_FULL_HITBOX, v -> settings.showFullHitbox = v);
             checkboxRow("Subtick visualization", "##show_subtick", settings.showSubtick, TT_SUBTICK, v -> settings.showSubtick = v);
