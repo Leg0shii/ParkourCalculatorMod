@@ -45,7 +45,7 @@ Every jar ships the same core: the input table, the simulation, the angle solver
 
 ### Angle solver
 - **Constraints per tick**: absolute X/Z/F, X/Z relative to any reference tick, per-tick dX/dZ/dF deltas, a dX-vs-dZ comparison, and RT (run-tick count). Each accepts a comparison or a range and can be disabled without deleting it.
-- **Block-derived constraints**: look at a block and press `B` to add its landing footprint or wall as a constraint. Modifiers cover entering walls, unions of several blocks, pressure plates, ladders, vines, slime and ice.
+- **Block-derived constraints**: look at a block and press `B` to add its landing footprint or wall as a constraint. Modifiers cover entering walls, unions of several blocks, pressure plates, ladders, vines, slime, ice and honey.
 - **Free start position**: the solver picks the best takeoff spot inside the start block's footprint.
 - **Objectives**: maximize or minimize X or Z, or distance or motion along a custom facing angle; optional Smooth (TAS) scoring for human-playable turn shapes.
 - **Time budget**: one slider. 0 s returns the first feasible path, anything above keeps improving the result until the budget runs out (milliseconds work too: `250ms`), and Custom budget lets you pick or edit a solver graph in the node editor with per-node help and per-stage budgets. Built-in presets include Fast, Optimize, Fast (multi-start) and Fast (run ticks).
@@ -100,11 +100,11 @@ Click and drag the first box in the world. Hold Shift to move the whole path rig
 |-----|--------|
 | `G` | Toggle UI |
 | `P` | Start/stop playback |
-| `B` | Add the targeted block's footprint (top face) or wall (side face) as a constraint on the selected tick |
+| `B` | Add the targeted block's footprint (top face) or wall (side face) as a constraint on the selected tick; a honey block beside the footprint or under the crosshair counts as a full cube, since the player slides on it inside the full block, not only on its hitbox |
 | `B` on a cobweb | Wall constraint on the web's contact box, which sits inside the block by the game version's epsilon (0.001 on 1.8.9 and 1.12.2, 1e-7 on 1.20.4, 1e-5 from 1.21.2) |
 | `Shift+B` | Wall constraint for entering the block's side instead of stopping at it |
 | `Alt+B` | Merge the new footprint or wall with the existing constraint |
-| `Ctrl+B` | Remove that constraint; on a pressure plate, ladder, vine, slime or ice block it adds the cell constraint instead |
+| `Ctrl+B` | Remove that constraint; on a pressure plate, ladder, vine, slime or ice block it adds the cell constraint instead; on the side of a honey block it places the wall on the honey hitbox (0.2375b off the block face) instead of the default 0.3b, where the honey slide zone starts |
 | `X` | Remove the selected constraints (also `Delete constraints` in the tick right-click menu while the Angle Solver is open) |
 | `V` | Solve and apply (Angle Solver) |
 | `I` / `O` | Set the solver start / goal tick to the selected tick |

@@ -50,6 +50,10 @@ public interface MinecraftAccess {
         return false;
     }
 
+    default boolean isHoneyBlock(int x, int y, int z) {
+        return false;
+    }
+
     default double[] getPressurePlateFootprint(int x, int y, int z) {
         return null;
     }

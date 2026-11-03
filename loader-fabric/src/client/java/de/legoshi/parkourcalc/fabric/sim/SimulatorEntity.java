@@ -29,6 +29,8 @@ import net.minecraft.world.entity.player.Player;
 //import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 //? if >=26.1
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
@@ -175,7 +177,14 @@ public class SimulatorEntity extends Player {
                 : Double.NaN;
         super.travel(input);
         tickSoulsandCells = this.getBlockSpeedFactor() != 1.0F ? 1 : 0;
-        tickMedium = Medium.fromFlags(web, water, lava, ladder, tickSoulsandCells > 0);
+        boolean honey = tickSoulsandCells > 0 && speedFactorBlockIsHoney();
+        tickMedium = Medium.fromFlags(web, water, lava, ladder, tickSoulsandCells > 0, honey);
+    }
+
+    private boolean speedFactorBlockIsHoney() {
+        BlockState at = this.level().getBlockState(this.blockPosition());
+        if (at.getBlock().getSpeedFactor() != 1.0F) return at.is(Blocks.HONEY_BLOCK);
+        return this.level().getBlockState(this.getBlockPosBelowThatAffectsMyMovement()).is(Blocks.HONEY_BLOCK);
     }
 
     public Medium capturedTickMedium() {

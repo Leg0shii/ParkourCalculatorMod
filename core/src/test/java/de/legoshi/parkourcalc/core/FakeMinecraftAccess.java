@@ -27,6 +27,7 @@ public class FakeMinecraftAccess implements MinecraftAccess {
     public boolean ready = true;
     public double[] pressurePlateFootprint;
     public final Set<List<Integer>> cobwebs = new HashSet<>();
+    public final Set<List<Integer>> honeyBlocks = new HashSet<>();
     public double insideBlockInset = 0.001;
     public Vec3dCore eyePosition = Vec3dCore.ZERO;
     public Vec3dCore lookDirection = Vec3dCore.ZERO;
@@ -48,6 +49,14 @@ public class FakeMinecraftAccess implements MinecraftAccess {
     }
     @Override public double[] getPressurePlateFootprint(int x, int y, int z) { return pressurePlateFootprint; }
     @Override public boolean isCobweb(int x, int y, int z) { return cobwebs.contains(Arrays.asList(x, y, z)); }
+    @Override public boolean isHoneyBlock(int x, int y, int z) { return honeyBlocks.contains(Arrays.asList(x, y, z)); }
+
+    public void addHoneyBlock(int x, int y, int z) {
+        honeyBlocks.add(Arrays.asList(x, y, z));
+        addBlock(x, y, z, new AABB(
+                new Vec3dCore(x + 0.0625, y, z + 0.0625),
+                new Vec3dCore(x + 0.9375, y + 0.9375, z + 0.9375)));
+    }
     @Override public double getInsideBlockInset() { return insideBlockInset; }
 
     @Override
