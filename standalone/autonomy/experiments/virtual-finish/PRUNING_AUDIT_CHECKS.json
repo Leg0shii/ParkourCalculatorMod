@@ -1,0 +1,192 @@
+{
+  "sourceRuntime": "71c9bb7e",
+  "newNumericalSolves": 0,
+  "runs": {
+    "cold": {
+      "prefixes": [
+        {
+          "call": 7,
+          "prefixTick": 58,
+          "ordinaryFinishTick": 67,
+          "sameNonHoldContactSequence": true,
+          "cases": [],
+          "fullOrdinaryFinishSolved": true
+        },
+        {
+          "call": 10,
+          "prefixTick": 59,
+          "ordinaryFinishTick": 68,
+          "sameNonHoldContactSequence": true,
+          "cases": [],
+          "fullOrdinaryFinishSolved": false
+        },
+        {
+          "call": 11,
+          "prefixTick": 63,
+          "ordinaryFinishTick": 72,
+          "sameNonHoldContactSequence": true,
+          "cases": [],
+          "fullOrdinaryFinishSolved": false
+        },
+        {
+          "call": 12,
+          "prefixTick": 64,
+          "ordinaryFinishTick": 73,
+          "sameNonHoldContactSequence": true,
+          "cases": [],
+          "fullOrdinaryFinishSolved": false
+        }
+      ],
+      "recordedTimeBoundExclusions": [
+        68,
+        68,
+        73,
+        73
+      ]
+    },
+    "initial0-cold": {
+      "prefixes": [
+        {
+          "call": 4,
+          "prefixTick": 55,
+          "ordinaryFinishTick": 64,
+          "sameNonHoldContactSequence": true,
+          "cases": [],
+          "fullOrdinaryFinishSolved": true
+        },
+        {
+          "call": 9,
+          "prefixTick": 56,
+          "ordinaryFinishTick": 65,
+          "sameNonHoldContactSequence": true,
+          "cases": [],
+          "fullOrdinaryFinishSolved": false
+        },
+        {
+          "call": 10,
+          "prefixTick": 57,
+          "ordinaryFinishTick": 66,
+          "sameNonHoldContactSequence": true,
+          "cases": [],
+          "fullOrdinaryFinishSolved": false
+        },
+        {
+          "call": 11,
+          "prefixTick": 58,
+          "ordinaryFinishTick": 67,
+          "sameNonHoldContactSequence": true,
+          "cases": [],
+          "fullOrdinaryFinishSolved": false
+        },
+        {
+          "call": 12,
+          "prefixTick": 59,
+          "ordinaryFinishTick": 68,
+          "sameNonHoldContactSequence": true,
+          "cases": [],
+          "fullOrdinaryFinishSolved": false
+        },
+        {
+          "call": 13,
+          "prefixTick": 60,
+          "ordinaryFinishTick": 69,
+          "sameNonHoldContactSequence": true,
+          "cases": [],
+          "fullOrdinaryFinishSolved": false
+        },
+        {
+          "call": 14,
+          "prefixTick": 62,
+          "ordinaryFinishTick": 71,
+          "sameNonHoldContactSequence": true,
+          "cases": [],
+          "fullOrdinaryFinishSolved": false
+        },
+        {
+          "call": 15,
+          "prefixTick": 63,
+          "ordinaryFinishTick": 72,
+          "sameNonHoldContactSequence": true,
+          "cases": [],
+          "fullOrdinaryFinishSolved": false
+        }
+      ],
+      "recordedTimeBoundExclusions": [
+        65,
+        65,
+        66,
+        66,
+        67,
+        67,
+        68,
+        68
+      ]
+    }
+  },
+  "initial0TerminalPairs": {
+    "5->6": {
+      "changedFields": [
+        "yaw",
+        "walls",
+        "fallbackYaw"
+      ],
+      "addedRows": [
+        {
+          "cmp": "GE",
+          "mode": "Z",
+          "name": "cell_corridor:0",
+          "op": "PLUS",
+          "rhs": -1101.299999811921,
+          "t1": 27
+        },
+        {
+          "cmp": "LE",
+          "mode": "Z",
+          "name": "cell_corridor:0",
+          "op": "PLUS",
+          "rhs": -1099.700000188079,
+          "t1": 27
+        }
+      ],
+      "initialWorkerStatus": "feasible",
+      "initialCorridorAccepted": false,
+      "firstRequestSceneReplay": "not_run",
+      "repairedProgramStatus": "feasible",
+      "repairedObjective": -1093.267554656693,
+      "finalY": 6.796735600668692,
+      "finalGround": false
+    },
+    "7->8": {
+      "changedFields": [
+        "yaw",
+        "walls",
+        "fallbackYaw"
+      ],
+      "addedRows": [
+        {
+          "cmp": "GE",
+          "mode": "Z",
+          "name": "cell_corridor:0",
+          "op": "PLUS",
+          "rhs": -1101.299999811921,
+          "t1": 27
+        },
+        {
+          "cmp": "LE",
+          "mode": "Z",
+          "name": "cell_corridor:0",
+          "op": "PLUS",
+          "rhs": -1099.700000188079,
+          "t1": 27
+        }
+      ],
+      "initialWorkerStatus": "feasible",
+      "initialCorridorAccepted": false,
+      "firstRequestSceneReplay": "not_run",
+      "repairedProgramStatus": "feasible",
+      "repairedObjective": -1093.4154657769086,
+      "finalY": 7,
+      "finalGround": true
+    }
+  }
+}

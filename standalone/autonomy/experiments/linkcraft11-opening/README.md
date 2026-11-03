@@ -1,5 +1,7 @@
 # Linkcraft Real11 opening: fixed-clock solve and retention counterexample
 
+> Current implementation: [DFS/early-interaction results](../dfs-interactions/README.md). This supersedes earlier pending-status and checkpoint-ordering descriptions below; historical evidence remains unchanged.
+
 > Current navigation/status: [Real11 agent guide](../../../docs/REAL11_GUIDE.md), [current state](../../../docs/CURRENT_STATE.md). This page records the original pilot and successive corrections; do not interpret its older pending-policy statements as current runtime status.
 
 Latest failure investigation: [why all four main/resumed trials returned unknown](OTHER_FAILURES.md). The first two never reach numerical evaluation in the final64-input objective stage; the distant trial separately attempts two64-input B5-landing probes. A useful corrected B3-wait choice appears at proposal125, beyond the original20; an exact known continuation at135 validates from a retained parent in two calls. Final searches also starve their base problem behind inherited repair queues, and the55-input resume repeats18 prior finals without their64-input repair progress. A queue-order control recovers a valid64-input solution under the same8-second/24-call limits. These are additional failures beyond the early retention rule; protection guards alone do not fix all of them. Production code is unchanged by the investigation.

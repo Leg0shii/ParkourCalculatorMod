@@ -13,7 +13,7 @@ from .hit_events import wall_hit_options
 from .repair_state import branch_key, compatible, context as repair_context
 
 
-def floor_checks(scene, block_ids, profiles):
+def floor_checks(scene, block_ids, profiles, *, envelopes=None):
     checks = []
     by_id = {b['id']: b for b in scene['blocks']}
     for leg, profile in enumerate(profiles):
@@ -28,6 +28,11 @@ def floor_checks(scene, block_ids, profiles):
             if movement >= 0:
                 continue
             for block in scene['blocks']:
+                if envelopes is not None:
+                    from .interactions import block_interaction
+                    box = scene['collisionScene']['solids'][block['solidIndex']]
+                    if block_interaction(envelopes,box,offset,('Y',))['ruledOut']:
+                        continue
                 top = block['top']
                 planned_floor = any(e['offset'] == offset and e.get('role') in ('landing', 'step')
                                     and e['plane'] == top and e['box'] == scene['collisionScene']['solids'][block['solidIndex']]
@@ -35,6 +40,11 @@ def floor_checks(scene, block_ids, profiles):
                 if next_y <= top <= y and not planned_floor and not (offset + 1 == profile['airtime'] and top == target_top):
                     checks.append({'leg': leg, 'offset': offset, 'block': copy.deepcopy(block), 'reason': 'earlier_floor'})
         for block in scene['blocks']:
+            if envelopes is not None:
+                from .interactions import block_interaction
+                box = scene['collisionScene']['solids'][block['solidIndex']]
+                if block_interaction(envelopes,box,0)['ruledOut']:
+                    continue
             selected_step = profile.get('profileKind') in ('stair', 'step') and block['id'] == block_ids[leg + 1]
             selected_step |= any(e['input'] == 0 and e['case'] in ('normal_step', 'slab_boost')
                                  and e['box'] == scene['collisionScene']['solids'][block['solidIndex']]
@@ -178,6 +188,7 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
         return dict(version=2, context=current_context,
             pending=[save_branch(score, rows, passages, hits, yaw) for score, _, rows, passages, hits, yaw in sorted(queue)],
             unresolved=copy.deepcopy(unresolved), seen=sorted(seen), incumbent=copy.deepcopy(best_branch),
+            acceptedVariants=copy.deepcopy(accepted_variants),
             acceptedResult=saved_best, inFlight=copy.deepcopy(in_flight), completed=copy.deepcopy(completed),
             referenceWarmYaw=copy.deepcopy(reference_yaw), interactionChoices=copy.deepcopy(choices),
             constraintGeneration=copy.deepcopy(getattr(variant_source, 'state', None)),
@@ -200,6 +211,7 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
     best_result = copy.deepcopy(resume_state.get('acceptedResult')) if exact_resume else None
     best_branch = copy.deepcopy(resume_state.get('incumbent')) if exact_resume else None
     completed = copy.deepcopy(resume_state.get('completed', [])) if exact_resume else []
+    accepted_variants = copy.deepcopy(resume_state.get('acceptedVariants', [])) if exact_resume else []
     in_flight = None
     if best_result is not None:
         saved = best_result['best']
@@ -351,12 +363,16 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
                             optimize_goal=optimize_goal, python_executable=python_executable,
                             cancel_event=cancel_event, work=work, on_candidate=retain)
         inner_attempts.extend(result['attempts'])
-        completed.append(dict(branch=branch_key(rows, passages, hits), status=result['status'],
-                              problemHashes=[a.get('problemHash') for a in result['attempts'] if a.get('problemHash')]))
+        completion = dict(branch=branch_key(rows, passages, hits), status=result['status'],
+            validationStatus='not_run' if result['best'] else 'no_candidate',
+            problemHashes=[a.get('problemHash') for a in result['attempts'] if a.get('problemHash')])
+        completed.append(completion)
         if result['best'] is not None:
             proposal_yaw = result['best']['candidate']['yaw'][:]
         try:
             checked = audit(result['best']) if result['best'] else None
+            if checked is not None:
+                completion['validationStatus'] = 'accepted' if checked.get('accepted') else checked.get('reason','rejected')
         except TimeoutError:
             unresolved.append(save_branch(score, rows, passages, hits, proposal_yaw))
             termination = 'geometry_deadline'
@@ -370,7 +386,7 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
             return finish(dict(status='error', termination='geometry_check', error=str(error), best=None,
                         attempts=inner_attempts, contactAttempts=attempts))
         conflicts = checked['conflicts'] if checked else []
-        attempts.append({'status': result['status'], 'constraintCount': len(rows),
+        attempts.append({'branch': branch_key(rows, passages, hits), 'status': result['status'], 'constraintCount': len(rows),
                          'passageCount': len(passages),
                          'wallHitCount': len(hits), 'wallHitGeneration': {k: v for k, v in hit_pool.items() if k != 'options'},
                          'passageKinds': [p['kind'] for p in passages],
@@ -433,6 +449,9 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
                     continue
                 result['best']['geometryCheck'] = checked
             result['best'] = enrich(result['best'], audit_result)
+            accepted_key = branch_key(rows, passages, hits)
+            if not any(v['branch']==accepted_key for v in accepted_variants):
+                accepted_variants.append(dict(branch=accepted_key,best=copy.deepcopy(result['best'])))
             if reference_yaw is None:
                 reference_yaw = result['best']['candidate']['yaw'][:]
             if work is not None and not audit_result.get('reportedAcceptance'):

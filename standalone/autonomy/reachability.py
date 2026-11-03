@@ -77,6 +77,22 @@ def reachable_envelopes(problem, y=None):
         phases.append(dict(Y=dict(X=a['X'], Y=sweep('Y'), Z=a['Z']),
             X=dict(X=sweep('X'), Y=b['Y'], Z=a['Z']),
             Z=dict(X=b['X'], Y=b['Y'], Z=sweep('Z'))))
+    # Named step/grind events describe realized Y, not the heights of both
+    # legacy step probes. Until their probe geometry is bounded explicitly,
+    # retain unknown Y in interaction phases; X/Z envelopes remain valid.
+    # Ordinary movement and ordinary floor/ceiling clips keep exact Y sweeps.
+    for contact in problem.get('vertical', {}).get('contacts', []):
+        tick = contact['state']-1
+        if contact.get('case') and 0 <= tick < len(phases):
+            for phase in phases[tick].values():
+                phase['Y'] = [-math.inf, math.inf]
+            for phase in ('X','Z'):
+                for i, axis in enumerate(('X','Z')):
+                    lo, hi = states[tick][axis]
+                    move_lo, move_hi = movements[tick][i]
+                    realized = states[tick+1][axis]
+                    phases[tick][phase][axis] = [min(lo,lo+move_lo,realized[0]),
+                                                max(hi,hi+move_hi,realized[1])]
     speed = math.hypot(*problem['velocity'])
     if 'initialIntervals' in problem:
         speed = math.hypot(*(max(abs(a), abs(b)) for a,b in zip(problem['initialIntervals'][2],problem['initialIntervals'][3])))

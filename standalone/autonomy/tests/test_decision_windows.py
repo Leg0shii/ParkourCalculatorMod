@@ -120,7 +120,7 @@ class DecisionWindowTests(unittest.TestCase):
 @unittest.skipUnless(os.environ.get('PKC_RUN_TICKS_COMPILER') and os.environ.get('PKC_IPOPT_PYTHON'),
                      'Set compiler and IPOPT Python for numerical tests')
 class DecisionWindowNumericalTests(unittest.TestCase):
-    def test_joint_window_band_and_original_state_replay(self):
+    def test_joint_decision_policy_and_original_state_replay_under_dfs(self):
         scene = flat_scene()
         with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:
             result = find_checkpoint_route(scene,compiler,opportunities=[decision('launch',0,2,kinds=['jump']),
@@ -129,14 +129,14 @@ class DecisionWindowNumericalTests(unittest.TestCase):
                 max_solver_calls=48,score_call_limit=4,score_seconds=2,candidate_seconds=.7,
                 python_executable=os.environ['PKC_IPOPT_PYTHON'])
             self.assertEqual(result['checkpoints'][0]['tick'],6)
-            self.assertEqual(result['windows'][0]['retention']['policy'],'two_goal_margin')
-            scored = [c for c in result['windows'][0]['candidates'] if c['value'] is not None and not c['complete']]
+            self.assertEqual(result['comparisonPolicy'],'goal_arrival_dfs')
+            self.assertEqual(len(result['decisionPlan']['clusters']),2)
+            scored = [c for c in result['finalAttempts'] if c.get('witness')]
             self.assertTrue(scored)
             for record in scored:
                 self.assertTrue(record['decisionAudit']['accepted'])
-                self.assertEqual(record['ticks'],6)
-                self.assertEqual(record['features']['samples'][-1]['tick'],6)
                 self.assertTrue(all(not (2<e['input']<6) for e in record['decisionAudit']['events']))
+                self.assertEqual(record['goal'],dict(kind='landing',block=scene['goalBlock']))
                 self.assertTrue(replay_witness(scene,record['witness'],compiler)['passed'])
             self.assertEqual(result['status'],'feasible',result['termination'])
             self.assertTrue(replay_witness(scene,result['best'],compiler)['passed'])

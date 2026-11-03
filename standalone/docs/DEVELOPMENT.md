@@ -1,6 +1,6 @@
 # Writing code and fixes
 
-Read [AGENTS](../AGENTS.md), [current state](CURRENT_STATE.md), [architecture](ARCHITECTURE.md) and the affected module in [code map](CODE_MAP.md). The active DFS/early-interaction plan is approved; this consolidation does not implement it. Continue in the isolated worktree, preserve unrelated edits, commit coherent reviewable boundaries. No agent delegation or external communication is required.
+Read [AGENTS](../AGENTS.md), [current state](CURRENT_STATE.md), [architecture](ARCHITECTURE.md) and the affected module in [code map](CODE_MAP.md). The DFS/early-interaction plan is implemented at `498c054c`; use its results and current-state guide as the baseline for further fixes. Continue in the isolated worktree, preserve unrelated edits, commit coherent reviewable boundaries. No agent delegation or external communication is required.
 
 ## Where new behavior belongs
 
@@ -32,3 +32,6 @@ Markdown uses descriptive relative links and small comparable tables. Put blank 
 ## Boundaries on claims
 
 Conservative interval/phase exclusion differs from a numerical LP infeasibility result with tolerances. IPOPT is a local continuous solver, not a global discrete certificate. A guide is not a reach envelope. A valid supplied-scene trajectory is not validated against undeclared world blocks. Keep exact local replay and actual-world validation as separate claims. These distinctions should appear in output and audit records, not as implementation jargon in user-facing product flows.
+
+
+For a new named contact case, make its vertical contact metadata explicit through the existing profile/compiler path. Reachability must cover intended movement and collision probes, not just realized endpoints. Current named step/grind phases deliberately keep unknown Y and outer intended X/Z bounds. Tightening that uncertainty requires a sound probe model and feasible-control regressions (including the five-input grind/blip route), not an endpoint-height shortcut.

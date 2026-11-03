@@ -42,3 +42,32 @@ Implemented consolidated policy: [velocity/schedule protection plan](STATE_PROTE
 Evidence: [two-goal experiments](experiments/two-goal-comparisons/README.md), [implementation plan](TIME_PROGRESS_IMPLEMENTATION_PLAN.md), [living discussion](PRUNING_RESEARCH.md). Accepted witnesses establish conditional physical validity, not global optimality or completeness of ungenerated choices. Numerical unknown never means proven infeasible. The74/78 statistic is scoped to the tested movement/timing domain.
 
 Current result: [Linkcraft Real11 opening](experiments/linkcraft11-opening/README.md), valid airborne maxZ candidate at64 and a scoped local-retention counterexample. User-confirmed geometry supersedes the original inventory guesses. Do not add external world geometry or use recorded facings/timings as the cold solution. Immediate next correction is D1: retain both user-selected initial0/8 setup families, then enumerate the relevant B6 decisions. Generic constructive completion/history reopening remain deferred candidates for broader problems, not default runtime features.
+
+
+## Named collision-probe envelopes (2026-11-03)
+
+The DFS early gate initially excluded valid grind/blip interactions by using realized Y endpoints. The shared envelope now retains unknown Y and intended unclipped X/Z bounds on named step/grind inputs. Existing scalar/case/scene validation remains authoritative. If false-positive interaction generation becomes costly, derive conservative probe extents from the existing movement implementation instead of reimplementing collision physics. Preserve generic `generic-grind-blip` completion at five inputs, corner/blip-up/grind and selected-clip cases; endpoint-only clearance is insufficient. This is a future precision/performance refinement, not a reason to remove the current safety uncertainty.
+
+## Virtual-finish evidence: remaining time versus DFS ordering (2026-11-03)
+
+The [corrected Real11 task](experiments/virtual-finish/README.md) makes final time primary. Combined DFS starts from the earlier B2 arrival and finds a67-tick finish, while an independently cold initial0 diagnostic finds64 despite reaching B2 later. Root fallback retention works, but default DFS can spend the whole budget inside nearer siblings. Its new safe elapsed-input cutoff is deliberately weak: a B5 prefix at59 can be shorter than incumbent67 and still need too much time to finish. Investigate generic conservative remaining-time bounds, including the required terminal region and allowed future event families, before increasing candidate counts. A free-flight landing duration alone is not sound if intervening stepping/ceiling/contact changes remain allowed. Root scheduling changes also need an explicit comparison against the approved DFS policy; neither is implemented by this note. Preserve equal-time Z alternatives, unknowns and pending repairs.
+
+## Clarification: concrete pruning gaps, not just generic bound research
+
+The user clarified minimum-run pruning for identical interaction patterns. The [virtual-finish call audit](experiments/virtual-finish/PRUNING_AUDIT.md) shows it is currently absent; counts only affect ordering. It also shows known ordinary suffix clocks are already sufficient to reject the listed delayed completions within their unchanged interaction families. Address semantic grouping/feasible-representative exclusion and early suffix-duration propagation before treating these wasted calls as a reason for more candidates or a sophisticated new model. Initial0 5–8 are distinct final contact choices plus corridor repair, not four run schedules. Documentation status only; runtime unchanged.
+
+## Selected local-run fix implemented; continuation-time improvement deferred
+
+The latest user decision selects local last-jump runs, not total run count. `db211b2b` implements that policy and preserves audit programs; see [implementation/evidence](experiments/last-jump-runs/README.md). Additional time pruning stays deferred: first establish that a completed interaction family admits no faster suffix, then reason about delayed prefixes. Do not implement the earlier nine-input propagation suggestion merely because it appears in the historical audit. B3 corridor checks are unchanged and are explained in section7 of that audit.
+
+## Independent work while corridor/cell decomposition changes elsewhere
+
+Recommendation, not a new implementation commitment: prioritize a small end-to-end false-pruning audit of the latest-jump minimum-run heuristic. Existing52 focused tests validate counting, pattern separation, dispatch and resume; the remaining question is whether choosing a feasible minimum-run prefix loses a better or uniquely feasible later continuation. Use small non-Real11 scenes with prescribed support/interaction sequences and unambiguous spatial guides, run the existing pruning-on/off control, and complete saved excluded candidates. Compare terminal feasibility, earliest tick, secondary objective and worker count; preserve unresolved cases as unknown. Include ordinary consecutive jumps, stepping, ceilings and a change of travel direction. If a counterexample appears, reduce it to a regression before deciding whether/how to reopen extra-run alternatives. Do not modify corridor/cell code or add continuation-time bounds for this audit.
+
+A second independent task is request/work accounting on existing evidence and those small cases: distinguish distinct input schedules, alternative hard-constraint models, exact repeated numerical requests, symbolic generation, numerical solving and validation/reporting cost. Existing dedup/logging must be reused; establish a specific duplicate or expensive stage before proposing another optimization or changing candidate caps.
+
+Further Real11 solves remain deferred. Corridor/cell decomposition belongs to the other agent. Additional time pruning, discrete decision transfer and inertia-threshold work retain their prior deferred status.
+
+## Latest retry authorization
+
+The user now authorizes another fresh Real11 run after pushing the current branch and writing the [corridor-agent handoff](../docs/CORRIDOR_AGENT_HANDOFF.md). Keep local-run pruning enabled, candidate caps unchanged, and existing corridor-related calls visible. Corridor/cell changes remain with the other agent; additional time pruning stays deferred.

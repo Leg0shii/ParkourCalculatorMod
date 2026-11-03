@@ -64,6 +64,9 @@ def movement_choice(kind, initial, trace, *, contacts=(), cases=(), constraints=
         return None
     profile = profile_from_trace(trace, contacts=contacts, cases=cases, constraints=constraints,
                                  units=units, landing_phase=landing_phase)
+    events = list(contacts)+list(cases)
+    owner = max((e.get('offset', e.get('input', -1))+1 for e in events), default=0)
+    profile['constraintOwners'] = [owner]*len(profile['positionConstraints'])
     unit = next((u for u in profile['generatedUnits'] if u['type'] == kind), None)
     if unit is None:
         raise ValueError('A movement choice must contain its owning type')
@@ -184,13 +187,15 @@ def append_choice(program, choice, *, max_inputs=200):
             and c.get('ownerRegion') == event['column']['id'] and max(0, s['entryState'] - 1) <= c['offset'] < s['exitState']]
     profile = profile_from_trace(trace, contacts=contacts, cases=cases, constraints=constraints,
                                  units=units, landing_phase=tail['landingPhase'])
+    profile['constraintOwners'] = old.get('constraintOwners', [0]*len(old['positionConstraints'])) + [
+        cut+owner if owner else 0 for owner in tail.get('constraintOwners', [0]*len(tail['positionConstraints']))]
     masks = compile_units(profile['airtime'], units)
     if events and masks['ladderTicks'] != ladder:
         raise ValueError('Movement units disagree with composed ladder membership')
     result = dict(initial=copy.deepcopy(program['initial']), profile=profile, ladderEvents=events,
                   movementUnits=units, terminal='open', terminalSupport=choice.get('terminalSupport'),
                   interactions=program['interactions'] + int(choice.get('interaction', False)), trace=trace)
-    for key in ('threshold', 'guideSeedYaw', 'repairState', 'solveScope'):
+    for key in ('threshold', 'guideSeedYaw', 'repairState', 'solveScope', 'committedThrough'):
         if key in program:
             if key == 'repairState' and (program[key].get('context', {}).get('scope') or {}).get('solveIdentity'):
                 continue
@@ -217,8 +222,12 @@ def truncate_program(program, ticks):
     profile['caseEvents'] = [c for c in profile['caseEvents'] if c['input'] < ticks]
     for event in profile['caseEvents']:
         event['anchors'] = {k: v for k, v in event.get('anchors', {}).items() if v <= ticks}
-    profile['positionConstraints'] = [r for r in profile['positionConstraints']
-                                      if r['t1'] <= ticks and (r.get('t2') is None or r['t2'] <= ticks)]
+    rows = [(r, owner) for r, owner in zip(profile['positionConstraints'],
+        profile.get('constraintOwners', [0]*len(profile['positionConstraints'])))
+        if r['t1'] <= ticks and (r.get('t2') is None or r['t2'] <= ticks)
+        and (not owner or owner <= ticks or program.get('committedThrough', 0) >= owner)]
+    profile['positionConstraints'] = [r for r, owner in rows]
+    profile['constraintOwners'] = [owner for r, owner in rows]
     from .movement_units import profile_program
     profile['generatedUnits'] = profile_program(profile)
     profile['landingPhase'] = 'post'
@@ -241,7 +250,7 @@ def truncate_program(program, ticks):
 
 
 def program_physics_key(program):
-    profile = {k: v for k, v in program['profile'].items() if k != 'generatedUnits'}
+    profile = {k: v for k, v in program['profile'].items() if k not in ('generatedUnits', 'constraintOwners')}
     profile['positionConstraints'] = sorted(
         [{k: v for k, v in row.items() if k != 'name'} for row in profile['positionConstraints']],
         key=lambda row: json.dumps(row, sort_keys=True))
@@ -252,6 +261,7 @@ def program_physics_key(program):
 
 def program_search_key(program):
     key = program_physics_key(program)
+    key += '|owners=' + json.dumps([program['profile'].get('constraintOwners', []), program.get('committedThrough', 0), program.get('interactions', 0), program.get('solveScope')])
     if program.get('repairState') is not None:
         key += '|repair=' + hashlib.sha256(json.dumps(program['repairState'],sort_keys=True).encode()).hexdigest()
     return key

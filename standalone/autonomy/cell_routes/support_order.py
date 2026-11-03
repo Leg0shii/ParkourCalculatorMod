@@ -1,17 +1,20 @@
 class SupportOrder:
-    def __init__(self,scene,supports,terminal_tick,initial_jump_inputs=None):
+    def __init__(self,scene,supports,terminal_tick,initial_jump_inputs=None,*,max_inputs=None):
         ids={b['id'] for b in scene['blocks']}
-        if not supports or len(set(supports))!=len(supports) or any(s not in ids for s in supports):
+        if not isinstance(supports,(list,tuple)) or len(set(supports))!=len(supports) or any(s not in ids for s in supports):
             raise ValueError('Support order requires distinct scene block IDs')
         self.supports=list(supports)
         self.start=scene['startBlock']
         self.terminal_tick=terminal_tick
+        horizon=terminal_tick if terminal_tick is not None else max_inputs if max_inputs is not None else 200
         self.initial_jump_inputs = sorted(set(initial_jump_inputs)) if initial_jump_inputs is not None else None
         if self.initial_jump_inputs is not None and (not self.initial_jump_inputs or any(
-                type(t) is not int or not 0 <= t < terminal_tick for t in self.initial_jump_inputs)):
+                type(t) is not int or not 0 <= t < horizon for t in self.initial_jump_inputs)):
             raise ValueError('Initial jump inputs must fit the solve horizon')
         self.checkpoint_identity = dict(supports=self.supports, start=self.start, terminalTick=terminal_tick,
                                        initialJumpInputs=self.initial_jump_inputs)
+        if terminal_tick is None:
+            self.checkpoint_identity['searchHorizon']=horizon
         self.boxes={tuple(scene['collisionScene']['solids'][b['solidIndex']]):b['id'] for b in scene['blocks']}
 
     def audit(self,program):
@@ -40,7 +43,7 @@ class SupportOrder:
                 return dict(accepted=False,progress=index,observed=observed,reason='support_order')
             current=name
             index+=1
-        accepted=p['airtime']!=self.terminal_tick or index==len(self.supports)
+        accepted=self.terminal_tick is None or p['airtime']!=self.terminal_tick or index==len(self.supports)
         return dict(accepted=accepted,progress=index,observed=observed,
                     reason=None if accepted else 'unfinished_support_order_at_clock')
 

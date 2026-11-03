@@ -1,14 +1,14 @@
 # Function and test definition index
 
-Source snapshot: `16a7423e` plus documentation consolidation. Line numbers are navigation hints; use `rg` after edits. This is a locator, not a replacement for [function contracts](ARCHITECTURE.md). Includes every top-level Python function/class and class method, plus test methods. Nested callbacks remain in their enclosing function. Java entry points are in the [code map](CODE_MAP.md).
+Source snapshot: current DFS implementation source, including request-audit logging. Line numbers are navigation hints; use `rg` after edits. This is a locator, not a replacement for [function contracts](ARCHITECTURE.md). Includes every top-level Python function/class and class method, plus test methods. Nested callbacks remain in their enclosing function. Java entry points are in the [code map](CODE_MAP.md).
 
 ## [autonomy/block_contacts.py](../autonomy/block_contacts.py)
 
 - `floor_checks` — def, line 16.
-- `contact_conflicts` — def, line 49.
-- `avoid_contact_rows` — def, line 59.
-- `validate_vertical_schedule` — def, line 71.
-- `solve_contact_branches` — def, line 110.
+- `contact_conflicts` — def, line 59.
+- `avoid_contact_rows` — def, line 69.
+- `validate_vertical_schedule` — def, line 81.
+- `solve_contact_branches` — def, line 120.
 
 ## [autonomy/block_profiles.py](../autonomy/block_profiles.py)
 
@@ -81,18 +81,18 @@ Source snapshot: `16a7423e` plus documentation consolidation. Line numbers are n
 
 ## [autonomy/cell_routes/checkpoint_search.py](../autonomy/cell_routes/checkpoint_search.py)
 
-- `ScopedWork` — class, line 25.
-- `ScopedWork.__init__` — def, line 26.
-- `ScopedWork.deadline` — def, line 31.
-- `ScopedWork.termination` — def, line 35.
-- `ScopedWork.check` — def, line 38.
-- `ScopedWork.proposal` — def, line 42.
-- `ScopedWork.before_solve` — def, line 46.
-- `ScopedWork.accepted` — def, line 51.
-- `_motion_bound` — def, line 55.
-- `evaluate_program` — def, line 63.
-- `_key` — def, line 149.
-- `find_checkpoint_route` — def, line 153.
+- `ScopedWork` — class, line 23.
+- `ScopedWork.__init__` — def, line 24.
+- `ScopedWork.deadline` — def, line 29.
+- `ScopedWork.termination` — def, line 33.
+- `ScopedWork.check` — def, line 36.
+- `ScopedWork.proposal` — def, line 40.
+- `ScopedWork.before_solve` — def, line 44.
+- `ScopedWork.accepted` — def, line 49.
+- `_motion_bound` — def, line 53.
+- `evaluate_program` — def, line 61.
+- `_key` — def, line 163.
+- `find_checkpoint_route` — def, line 167.
 
 ## [autonomy/cell_routes/checkpoints.py](../autonomy/cell_routes/checkpoints.py)
 
@@ -116,11 +116,11 @@ Source snapshot: `16a7423e` plus documentation consolidation. Line numbers are n
 ## [autonomy/cell_routes/comparison_goals.py](../autonomy/cell_routes/comparison_goals.py)
 
 - `goal_spec` — def, line 14.
-- `goal_key` — def, line 38.
-- `region_arrival` — def, line 44.
-- `landing_satisfied` — def, line 58.
-- `_landing_prefixes` — def, line 63.
-- `probe_spatial` — def, line 79.
+- `goal_key` — def, line 41.
+- `region_arrival` — def, line 47.
+- `landing_satisfied` — def, line 61.
+- `_landing_prefixes` — def, line 66.
+- `probe_spatial` — def, line 82.
 
 ## [autonomy/cell_routes/corridor_guards.py](../autonomy/cell_routes/corridor_guards.py)
 
@@ -137,6 +137,14 @@ Source snapshot: `16a7423e` plus documentation consolidation. Line numbers are n
 - `retain_candidates` — def, line 109.
 - `score_features` — def, line 130.
 - `fair_programs` — def, line 143.
+
+## [autonomy/cell_routes/depth_first.py](../autonomy/cell_routes/depth_first.py)
+
+- `candidate_key` — def, line 17.
+- `arrival_key` — def, line 22.
+- `decision_family` — def, line 27.
+- `commit_arrival` — def, line 38.
+- `search_goals` — def, line 58.
 
 ## [autonomy/cell_routes/experiment.py](../autonomy/cell_routes/experiment.py)
 
@@ -167,8 +175,8 @@ Source snapshot: `16a7423e` plus documentation consolidation. Line numbers are n
 
 ## [autonomy/cell_routes/fixed_clock_experiment.py](../autonomy/cell_routes/fixed_clock_experiment.py)
 
-- `run` — def, line 22.
-- `main` — def, line 54.
+- `run` — def, line 23.
+- `main` — def, line 93.
 
 ## [autonomy/cell_routes/generation_diagnostic.py](../autonomy/cell_routes/generation_diagnostic.py)
 
@@ -230,9 +238,17 @@ Source snapshot: `16a7423e` plus documentation consolidation. Line numbers are n
 - `CorridorAdapter.prefix` — def, line 125.
 - `CorridorAdapter.row` — def, line 188.
 - `CorridorAdapter.scoped` — def, line 191.
-- `CorridorAdapter.failure_diagnostics` — def, line 205.
-- `CorridorAdapter.candidate` — def, line 230.
-- `CorridorAdapter.summary` — def, line 276.
+- `CorridorAdapter.eligible` — def, line 205.
+- `CorridorAdapter.failure_diagnostics` — def, line 216.
+- `CorridorAdapter.candidate` — def, line 241.
+- `CorridorAdapter.summary` — def, line 287.
+
+## [autonomy/cell_routes/minimum_runs.py](../autonomy/cell_routes/minimum_runs.py)
+
+- `_shift` — def, line 11.
+- `latest_jump` — def, line 20.
+- `remember` — def, line 73.
+- `exclusion` — def, line 80.
 
 ## [autonomy/cell_routes/repair_diagnostic.py](../autonomy/cell_routes/repair_diagnostic.py)
 
@@ -272,10 +288,10 @@ Source snapshot: `16a7423e` plus documentation consolidation. Line numbers are n
 
 - `SupportOrder` — class, line 1.
 - `SupportOrder.__init__` — def, line 2.
-- `SupportOrder.audit` — def, line 17.
-- `SupportOrder.__call__` — def, line 47.
-- `SupportOrder.remaining` — def, line 49.
-- `SupportOrder.priority` — def, line 52.
+- `SupportOrder.audit` — def, line 20.
+- `SupportOrder.__call__` — def, line 50.
+- `SupportOrder.remaining` — def, line 52.
+- `SupportOrder.priority` — def, line 55.
 
 ## [autonomy/cell_routes/time_progress.py](../autonomy/cell_routes/time_progress.py)
 
@@ -322,27 +338,30 @@ Source snapshot: `16a7423e` plus documentation consolidation. Line numbers are n
 
 - `JavaCompiler` — class, line 6.
 - `JavaCompiler.__init__` — def, line 7.
-- `JavaCompiler._errors` — def, line 17.
-- `JavaCompiler.compile` — def, line 25.
-- `JavaCompiler.derive_footprints` — def, line 34.
-- `JavaCompiler.derive_standing_footprints` — def, line 37.
-- `JavaCompiler.check_scene` — def, line 40.
-- `JavaCompiler._exchange` — def, line 46.
-- `JavaCompiler.close` — def, line 71.
-- `JavaCompiler.__enter__` — def, line 82.
-- `JavaCompiler.__exit__` — def, line 85.
+- `JavaCompiler._start` — def, line 15.
+- `JavaCompiler._errors` — def, line 22.
+- `JavaCompiler.compile` — def, line 30.
+- `JavaCompiler.derive_footprints` — def, line 39.
+- `JavaCompiler.derive_standing_footprints` — def, line 42.
+- `JavaCompiler.check_scene` — def, line 45.
+- `JavaCompiler._exchange` — def, line 51.
+- `JavaCompiler.close` — def, line 80.
+- `JavaCompiler.__enter__` — def, line 92.
+- `JavaCompiler.__exit__` — def, line 95.
 
 ## [autonomy/constraint_variants.py](../autonomy/constraint_variants.py)
 
-- `ConstraintVariants` — class, line 12.
-- `ConstraintVariants.__init__` — def, line 13.
-- `ConstraintVariants.excluded` — def, line 145.
-- `ConstraintVariants.face_row` — def, line 148.
-- `ConstraintVariants.check` — def, line 153.
-- `ConstraintVariants.option` — def, line 157.
-- `ConstraintVariants.__iter__` — def, line 219.
-- `ConstraintVariants.entailed` — def, line 222.
-- `ConstraintVariants.__next__` — def, line 236.
+- `ConstraintVariants` — class, line 13.
+- `ConstraintVariants.__init__` — def, line 14.
+- `ConstraintVariants.excluded` — def, line 148.
+- `ConstraintVariants.face_row` — def, line 151.
+- `ConstraintVariants.check` — def, line 156.
+- `ConstraintVariants.effective_key` — def, line 160.
+- `ConstraintVariants.segment_rows` — def, line 172.
+- `ConstraintVariants.option` — def, line 177.
+- `ConstraintVariants.__iter__` — def, line 257.
+- `ConstraintVariants.entailed` — def, line 260.
+- `ConstraintVariants.__next__` — def, line 274.
 
 ## [autonomy/contact_combinations.py](../autonomy/contact_combinations.py)
 
@@ -369,6 +388,19 @@ Source snapshot: `16a7423e` plus documentation consolidation. Line numbers are n
 
 - `read` — def, line 12.
 - `main` — def, line 16.
+
+## [autonomy/experiments/dfs-interactions/measure_generation.py](../autonomy/experiments/dfs-interactions/measure_generation.py)
+
+- `main` — def, line 10.
+
+## [autonomy/experiments/dfs-interactions/summarize.py](../autonomy/experiments/dfs-interactions/summarize.py)
+
+- `read` — def, line 8.
+- `records` — def, line 13.
+- `calls` — def, line 27.
+- `first_full_calls` — def, line 40.
+- `run_summary` — def, line 56.
+- `main` — def, line 89.
 
 ## [autonomy/experiments/linkcraft11-opening/audit_trace.py](../autonomy/experiments/linkcraft11-opening/audit_trace.py)
 
@@ -466,6 +498,18 @@ Source snapshot: `16a7423e` plus documentation consolidation. Line numbers are n
 - `float_height` — def, line 139.
 - `hit_seed` — def, line 144.
 
+## [autonomy/interactions.py](../autonomy/interactions.py)
+
+- `block_interaction` — def, line 5.
+- `interaction_allowed` — def, line 10.
+- `InteractionGate` — class, line 15.
+- `InteractionGate.__init__` — def, line 16.
+- `InteractionGate.envelopes` — def, line 22.
+- `InteractionGate.query` — def, line 45.
+- `InteractionGate.required` — def, line 72.
+- `InteractionGate.context` — def, line 86.
+- `InteractionGate.summary` — def, line 89.
+
 ## [autonomy/ladder_ceiling.py](../autonomy/ladder_ceiling.py)
 
 - `_unit_at` — def, line 7.
@@ -547,14 +591,14 @@ Source snapshot: `16a7423e` plus documentation consolidation. Line numbers are n
 - `boundary_state` — def, line 37.
 - `profile_from_trace` — def, line 47.
 - `movement_choice` — def, line 61.
-- `_contacts` — def, line 75.
-- `_shift_event` — def, line 80.
-- `_events` — def, line 97.
-- `append_choice` — def, line 123.
-- `truncate_program` — def, line 201.
-- `program_physics_key` — def, line 243.
-- `program_search_key` — def, line 253.
-- `compile_program` — def, line 260.
+- `_contacts` — def, line 78.
+- `_shift_event` — def, line 83.
+- `_events` — def, line 100.
+- `append_choice` — def, line 126.
+- `truncate_program` — def, line 206.
+- `program_physics_key` — def, line 252.
+- `program_search_key` — def, line 262.
+- `compile_program` — def, line 270.
 
 ## [autonomy/movement_contacts.py](../autonomy/movement_contacts.py)
 
@@ -578,20 +622,20 @@ Source snapshot: `16a7423e` plus documentation consolidation. Line numbers are n
 
 - `register_movement_type` — def, line 10.
 - `generate_choices` — def, line 17.
-- `_unit` — def, line 28.
-- `NormalGenerator` — class, line 36.
-- `NormalGenerator.sneak_inputs` — def, line 37.
-- `NormalGenerator.generate` — def, line 40.
-- `LadderFallGenerator` — class, line 64.
-- `LadderFallGenerator.sneak_inputs` — def, line 65.
-- `LadderFallGenerator.generate` — def, line 68.
-- `LadderClimbGenerator` — class, line 82.
-- `LadderClimbGenerator.sneak_inputs` — def, line 83.
-- `LadderClimbGenerator._choice` — def, line 86.
-- `LadderClimbGenerator.generate` — def, line 108.
-- `generate_unit_programs` — def, line 138.
-- `materialize_generated_units` — def, line 163.
-- `sneak_domain` — def, line 175.
+- `_unit` — def, line 31.
+- `NormalGenerator` — class, line 39.
+- `NormalGenerator.sneak_inputs` — def, line 40.
+- `NormalGenerator.generate` — def, line 43.
+- `LadderFallGenerator` — class, line 67.
+- `LadderFallGenerator.sneak_inputs` — def, line 68.
+- `LadderFallGenerator.generate` — def, line 71.
+- `LadderClimbGenerator` — class, line 85.
+- `LadderClimbGenerator.sneak_inputs` — def, line 86.
+- `LadderClimbGenerator._choice` — def, line 89.
+- `LadderClimbGenerator.generate` — def, line 111.
+- `generate_unit_programs` — def, line 141.
+- `materialize_generated_units` — def, line 166.
+- `sneak_domain` — def, line 178.
 
 ## [autonomy/movement_problem.py](../autonomy/movement_problem.py)
 
@@ -604,8 +648,8 @@ Source snapshot: `16a7423e` plus documentation consolidation. Line numbers are n
 
 - `movement_settings` — def, line 13.
 - `iter_movement_programs` — def, line 30.
-- `find_movement_blocks` — def, line 219.
-- `screen_program` — def, line 283.
+- `find_movement_blocks` — def, line 224.
+- `screen_program` — def, line 294.
 
 ## [autonomy/movement_units.py](../autonomy/movement_units.py)
 
@@ -653,7 +697,7 @@ Source snapshot: `16a7423e` plus documentation consolidation. Line numbers are n
 ## [autonomy/reachability.py](../autonomy/reachability.py)
 
 - `reachable_envelopes` — def, line 6.
-- `interaction_reachability` — def, line 103.
+- `interaction_reachability` — def, line 119.
 
 ## [autonomy/repair_state.py](../autonomy/repair_state.py)
 
@@ -779,6 +823,15 @@ Source snapshot: `16a7423e` plus documentation consolidation. Line numbers are n
 - `SteppingGenerator` — class, line 88.
 - `SteppingGenerator.generate` — def, line 89.
 - `open_stepping_choices` — def, line 121.
+
+## [autonomy/terminal_goals.py](../autonomy/terminal_goals.py)
+
+- `prepare_goal` — def, line 10.
+- `height_clock` — def, line 27.
+- `goal_rows` — def, line 39.
+- `bind_goal` — def, line 45.
+- `satisfied` — def, line 59.
+- `finish_choices` — def, line 69.
 
 ## [autonomy/tests/test_acceptance.py](../autonomy/tests/test_acceptance.py)
 
@@ -941,8 +994,8 @@ Source snapshot: `16a7423e` plus documentation consolidation. Line numbers are n
 - `CheckpointNumericalTests.test_known_post_turn_seed_survives_polishing_and_replays` — def, line 195.
 - `CheckpointNumericalTests.test_common_tick_scores_distinct_y_with_normal_momentum_carry` — def, line 213.
 - `CheckpointNumericalTests.test_prefixes_continue_to_an_accepted_goal_without_freezing_the_start` — def, line 240.
-- `CheckpointNumericalTests.test_a_later_constraint_can_reoptimize_facings_before_the_previous_checkpoint` — def, line 258.
-- `CheckpointNumericalTests.test_turn_checkpoint_keeps_a_shared_post_turn_stage_and_replays` — def, line 286.
+- `CheckpointNumericalTests.test_a_later_constraint_can_reoptimize_facings_before_the_previous_checkpoint` — def, line 261.
+- `CheckpointNumericalTests.test_turn_route_reaches_the_goal_and_replays_without_a_clock_barrier` — def, line 289.
 
 ## [autonomy/tests/test_climbable_search.py](../autonomy/tests/test_climbable_search.py)
 
@@ -1033,7 +1086,31 @@ Source snapshot: `16a7423e` plus documentation consolidation. Line numbers are n
 - `DecisionWindowTests.test_policy_disallows_new_jump_choices_in_the_clear_continuation` — def, line 92.
 - `DecisionWindowTests.test_fair_generation_gives_each_parent_a_turn_and_bounded_quota` — def, line 104.
 - `DecisionWindowNumericalTests` — class, line 122.
-- `DecisionWindowNumericalTests.test_joint_window_band_and_original_state_replay` — def, line 123.
+- `DecisionWindowNumericalTests.test_joint_decision_policy_and_original_state_replay_under_dfs` — def, line 123.
+
+## [autonomy/tests/test_depth_first.py](../autonomy/tests/test_depth_first.py)
+
+- `program` — def, line 19.
+- `DepthFirstTests` — class, line 29.
+- `DepthFirstTests.run_search` — def, line 30.
+- `DepthFirstTests.test_common_goal_arrival_wins_and_completes_before_later_sibling` — def, line 79.
+- `DepthFirstTests.test_deadline_preserves_incumbent_and_unvisited_sibling_without_redispatch` — def, line 88.
+- `DepthFirstTests.test_in_flight_state_and_identity_survive_a_mid_solve_stop` — def, line 98.
+- `DepthFirstTests.test_other_valid_constraint_variants_are_not_lost_to_local_objective_ranking` — def, line 111.
+- `DepthFirstTests.test_spatial_decision_goals_do_not_require_clock_windows` — def, line 120.
+- `DepthFirstTests.test_old_checkpoint_state_is_not_silently_loaded_as_dfs` — def, line 126.
+- `InteractionOwnershipTests` — class, line 132.
+- `InteractionOwnershipTests.test_uncommitted_future_contact_cannot_leave_early_approach_rows` — def, line 133.
+- `InteractionOwnershipTests.test_shared_gate_distinguishes_swept_phase_and_keeps_unknown` — def, line 153.
+- `InteractionOwnershipTests.test_realized_grind_height_is_not_the_collision_probe_height` — def, line 162.
+- `VariantCoverageTests` — class, line 178.
+- `VariantCoverageTests.test_distinct_options_cover_small_exhaustible_clear_trajectories` — def, line 179.
+- `BuilderGateTests` — class, line 223.
+- `BuilderGateTests.test_all_open_families_gate_before_creating_hard_block_rows` — def, line 224.
+- `CompilerRecoveryTests` — class, line 249.
+- `CompilerRecoveryTests.test_timed_out_bridge_can_restart_for_independent_validation` — def, line 250.
+- `HistoricalInteractionTests` — class, line 260.
+- `HistoricalInteractionTests.test_real11_b4_blip_is_excluded_before_its_wall_options_are_built` — def, line 261.
 
 ## [autonomy/tests/test_failure_diagnostic.py](../autonomy/tests/test_failure_diagnostic.py)
 
@@ -1048,13 +1125,14 @@ Source snapshot: `16a7423e` plus documentation consolidation. Line numbers are n
 
 - `FixedClockTests` — class, line 19.
 - `FixedClockTests.test_priority_proposes_the_actual_intermediate_contact_before_an_air_gap` — def, line 20.
-- `FixedClockTests.test_spatial_goals_must_match_the_comparison_checkpoints` — def, line 35.
+- `FixedClockTests.test_unknown_spatial_goal_is_rejected_before_compilation` — def, line 35.
 - `FixedClockTests.test_explicit_clock_preserves_direction_without_goal_region` — def, line 41.
 - `FixedClockTests.test_clock_generation_continues_after_goal_tag` — def, line 48.
 - `FixedClockNumericalTests` — class, line 62.
 - `FixedClockNumericalTests.test_terminal_clock_can_overshoot_goal_and_finish_airborne` — def, line 63.
-- `SupportOrderTests` — class, line 87.
-- `SupportOrderTests.test_route_order_preserves_timings_and_does_not_require_terminal_landing` — def, line 88.
+- `FixedClockNumericalTests.test_unreachable_floor_gates_are_excluded_from_terminal_stage_checks` — def, line 91.
+- `SupportOrderTests` — class, line 126.
+- `SupportOrderTests.test_route_order_preserves_timings_and_does_not_require_terminal_landing` — def, line 127.
 
 ## [autonomy/tests/test_full_route_witness.py](../autonomy/tests/test_full_route_witness.py)
 
@@ -1252,6 +1330,26 @@ Source snapshot: `16a7423e` plus documentation consolidation. Line numbers are n
 - `LongLadderChainTests.test_saved_cold_three_and_prescribed_five_climbs_revalidate_full_scene` — def, line 20.
 - `LongLadderChainTests.test_fresh_solves_start_inside_first_ladder_without_turning_back_to_its_centre` — def, line 40.
 
+## [autonomy/tests/test_minimum_runs.py](../autonomy/tests/test_minimum_runs.py)
+
+- `flight` — def, line 17.
+- `MinimumRunTests` — class, line 26.
+- `MinimumRunTests.setUp` — def, line 27.
+- `MinimumRunTests.test_same_last_jump_discards_more_runs_but_keeps_equal_and_fewer` — def, line 29.
+- `MinimumRunTests.test_equal_run_timing_variants_and_distinct_obstacle_choices_survive` — def, line 46.
+- `MinimumRunTests.test_interacting_or_unclassified_ground_preparation_is_retained` — def, line 56.
+- `MinimumRunTests.test_changed_prior_decisions_do_not_share_a_representative` — def, line 65.
+- `ArchivedMinimumRunTests` — class, line 73.
+- `ArchivedMinimumRunTests.setUpClass` — def, line 75.
+- `ArchivedMinimumRunTests.test_real11_last_jump_three_runs_excludes_four_not_total_fifteen` — def, line 86.
+- `ArchivedMinimumRunTests.test_real11_zero_run_last_jump_excludes_all_delayed_prefix_calls` — def, line 94.
+- `ArchivedMinimumRunTests.test_real11_initial_histories_and_terminal_contacts_stay_distinct` — def, line 100.
+- `MinimumRunDfsTests` — class, line 107.
+- `MinimumRunDfsTests.search` — def, line 108.
+- `MinimumRunDfsTests.test_prunes_before_dispatch_and_can_replay_exclusions_as_a_control` — def, line 132.
+- `MinimumRunDfsTests.test_unknown_earlier_timing_is_preserved_and_does_not_establish_minimum` — def, line 137.
+- `MinimumRunDfsTests.test_feasible_representative_survives_resume_and_policy_mismatch_is_rejected` — def, line 142.
+
 ## [autonomy/tests/test_movement_composition.py](../autonomy/tests/test_movement_composition.py)
 
 - `MovementCompositionTests` — class, line 29.
@@ -1379,8 +1477,8 @@ Source snapshot: `16a7423e` plus documentation consolidation. Line numbers are n
 - `StateProtectionTests.test_queue_key_counts_effective_grounded_inputs` — def, line 206.
 - `OuterResumeTests` — class, line 211.
 - `OuterResumeTests.test_split_search_does_not_dispatch_the_completed_terminal_again` — def, line 212.
-- `ScopedNumericalTests` — class, line 248.
-- `ScopedNumericalTests.test_omitted_future_obstacle_does_not_reject_preliminary_guidance` — def, line 249.
+- `ScopedNumericalTests` — class, line 250.
+- `ScopedNumericalTests.test_omitted_future_obstacle_does_not_reject_preliminary_guidance` — def, line 251.
 
 ## [autonomy/tests/test_repair_resume.py](../autonomy/tests/test_repair_resume.py)
 
@@ -1504,6 +1602,17 @@ Source snapshot: `16a7423e` plus documentation consolidation. Line numbers are n
 - `SteppingNumericalTests.test_grind_continues_through_normal_air_to_a_lower_floor` — def, line 254.
 - `SteppingNumericalTests.test_cold_discovery_covers_the_catalogue_and_allows_composite_height_gain` — def, line 273.
 - `SteppingNumericalTests.test_cold_geometry_discovers_normal_steps_and_exposes_generation_caps` — def, line 290.
+
+## [autonomy/tests/test_terminal_goals.py](../autonomy/tests/test_terminal_goals.py)
+
+- `TerminalGoalTests` — class, line 13.
+- `TerminalGoalTests.setUp` — def, line 14.
+- `TerminalGoalTests.program` — def, line 19.
+- `TerminalGoalTests.test_downward_height_clock_is_not_a_fixed_tick_or_apex` — def, line 23.
+- `TerminalGoalTests.test_goal_rows_are_one_sided_center_bounds_with_no_fake_landing` — def, line 28.
+- `TerminalGoalTests.test_unknown_or_vertical_terminal_rows_are_rejected` — def, line 49.
+- `TerminalGoalNumericalTests` — class, line 56.
+- `TerminalGoalNumericalTests.test_generic_height_goal_can_finish_airborne_beyond_the_physical_block` — def, line 57.
 
 ## [autonomy/tests/test_time_progress.py](../autonomy/tests/test_time_progress.py)
 

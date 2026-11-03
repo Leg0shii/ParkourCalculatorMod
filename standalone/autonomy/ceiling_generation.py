@@ -64,6 +64,7 @@ class CeilingGenerator:
 
 
 def open_ceiling_choices(context):
+    from .interactions import interaction_allowed
     from .movement_composition import scalar_initial
     from .open_movement import approaches, event_choice, named_choice
     initial = scalar_initial(context['state'])
@@ -80,6 +81,8 @@ def open_ceiling_choices(context):
                         if move > 0 and trace['position'][t] <= plane < trace['position'][t + 1]), None)
             if hit is None:
                 continue
+            if not interaction_allowed(context, box, hit, jumping=jumping, phases=('Y',)):
+                continue
             finite = [dict(leg=0, offset=hit, axis='Y', direction=1, plane=plane, box=box,
                            role='ceiling', blockId=block['id'], solidIndex=block['solidIndex'])]
             choice = event_choice(context, 'ceiling', state, hit + 1, jumping=jumping, finite=finite,
@@ -87,7 +90,7 @@ def open_ceiling_choices(context):
             if choice:
                 yield choice
         clearance = plane - initial['position']
-        if initial['onGround'] and 0 <= clearance < f32(.42):
+        if initial['onGround'] and 0 <= clearance < f32(.42) and interaction_allowed(context, box, 0, jumping=True):
             for axis in ('X', 'Z'):
                 for sign in (-1, 1):
                     event = dict(case='grind', input=0, plane=initial['position'], clearance=clearance,

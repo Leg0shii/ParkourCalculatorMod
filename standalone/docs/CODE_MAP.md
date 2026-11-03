@@ -1,6 +1,6 @@
 # Production code map
 
-Snapshot at `16a7423e` plus documentation consolidation. Every production Python module is listed below, along with Java/build adapters and experiment scripts. Tests/data/docs have an exhaustive [file index](FILE_INDEX.md). [Architecture](ARCHITECTURE.md) explains interactions and important function contracts; [function index](FUNCTION_INDEX.md) supplies definitions and source lines.
+Snapshot at the current DFS implementation source, including request-audit logging. Every production Python module is listed below, along with Java/build adapters and experiment scripts. Tests/data/docs have an exhaustive [file index](FILE_INDEX.md). [Architecture](ARCHITECTURE.md) explains interactions and important function contracts; [function index](FUNCTION_INDEX.md) supplies definitions and source lines.
 
 ## autonomy
 
@@ -21,6 +21,7 @@ Snapshot at `16a7423e` plus documentation consolidation. Every production Python
 | [contact_combinations.py](../autonomy/contact_combinations.py) | Merge, validate and compile heterogeneous contact events; enumerate combinations. |
 | [contact_profiles.py](../autonomy/contact_profiles.py) | Contact-derived scalar profiles and opportunity generation. |
 | [hit_events.py](../autonomy/hit_events.py) | Compile/validate horizontal hit events, options and initial guesses. |
+| [interactions.py](../autonomy/interactions.py) | Shared block/tick/phase eligibility and compiled prefix/approach gate before open builders; uncertain named probes preserve coverage. |
 | [ladder_ceiling.py](../autonomy/ladder_ceiling.py) | Assign ceiling contacts to ladder units and predict revised ceiling sequences. |
 | [ladder_episodes.py](../autonomy/ladder_episodes.py) | Compose multiple ladder episodes with original-state continuity. |
 | [ladder_events.py](../autonomy/ladder_events.py) | Validate and compile prescribed ladder event fields. |
@@ -34,7 +35,7 @@ Snapshot at `16a7423e` plus documentation consolidation. Every production Python
 | [movement_composition.py](../autonomy/movement_composition.py) | Original-state program records, append/truncate, scalar trace conversion, physical/search keys and compile to route/profiles. |
 | [movement_contacts.py](../autonomy/movement_contacts.py) | Interleave contact families and seed mixed-schedule programs. |
 | [movement_entry.py](../autonomy/movement_entry.py) | Build/probe numerical problems for entries into movement regions. |
-| [movement_frontier.py](../autonomy/movement_frontier.py) | Persistent symbolic program frontier and cursors; current shortest-prefix queue, to be integrated into DFS. |
+| [movement_frontier.py](../autonomy/movement_frontier.py) | Persistent symbolic program frontier and cursors; local symbolic queue inside goal-aware DFS, with owned-row projection and full-proposal screening. |
 | [movement_generation.py](../autonomy/movement_generation.py) | Movement type registry and normal/ladder generators; materialize choices into units. |
 | [movement_problem.py](../autonomy/movement_problem.py) | Waypoint-based initial guesses and raw horizontal/vertical candidate assembly. |
 | [movement_search.py](../autonomy/movement_search.py) | Movement settings, program iteration/search and generic necessary-condition screening. |
@@ -53,6 +54,7 @@ Snapshot at `16a7423e` plus documentation consolidation. Every production Python
 | [solve_blocks.py](../autonomy/solve_blocks.py) | CLI for autonomous block-scene solve. |
 | [solve_spec.py](../autonomy/solve_spec.py) | Solve scope, physical/context digests, motion metadata, processing key and validation projection. |
 | [stepping_generation.py](../autonomy/stepping_generation.py) | Named stepping profiles and registered open stepping choices. |
+| [terminal_goals.py](../autonomy/terminal_goals.py) | Generic one-sided horizontal finish bounds at a discovered descending height clock; no artificial terrain. |
 | [vertical_profiles.py](../autonomy/vertical_profiles.py) | Vertical trace flags and existing ladder schedule simulation. |
 
 ## autonomy/cell_routes
@@ -61,12 +63,13 @@ Snapshot at `16a7423e` plus documentation consolidation. Every production Python
 | --- | --- |
 | [__init__.py](../autonomy/cell_routes/__init__.py) | Cell-route experiment package marker. |
 | [checkpoint_experiment.py](../autonomy/cell_routes/checkpoint_experiment.py) | Initial checkpoint-guidance fixture runner and independent witness replay. |
-| [checkpoint_search.py](../autonomy/cell_routes/checkpoint_search.py) | Current fixed-window outer search and fixed-program evaluation; target of goal-aware DFS replacement. |
+| [checkpoint_search.py](../autonomy/cell_routes/checkpoint_search.py) | Scene/corridor setup and scoped fixed-program evaluation; delegates outer traversal to depth_first. |
 | [checkpoints.py](../autonomy/cell_routes/checkpoints.py) | Geometric direction segments, checkpoint rows/stage checks and prefix/decision retention helpers. |
 | [comparison_audit.py](../autonomy/cell_routes/comparison_audit.py) | Complete continuation audit of retained and discarded comparison-pool entries. |
 | [comparison_goals.py](../autonomy/cell_routes/comparison_goals.py) | Common spatial-goal identity, arrival/landing checks and auxiliary arrival probes. |
 | [corridor_guards.py](../autonomy/cell_routes/corridor_guards.py) | Merge projected corridor geometry into broad movement-region guards without guide-point clipping. |
 | [decision_windows.py](../autonomy/cell_routes/decision_windows.py) | Cluster decision opportunities, construct comparison windows and retain/score candidate bands. |
+| [depth_first.py](../autonomy/cell_routes/depth_first.py) | Goal-based DFS frames, arrival ranking, actual decision promotion, saved siblings/refinements and version5 continuation. |
 | [experiment.py](../autonomy/cell_routes/experiment.py) | Cell-route benchmark arms, witness verification and compact experiment reports. |
 | [failure_diagnostic.py](../autonomy/cell_routes/failure_diagnostic.py) | Generation and warm-control failure diagnostics, candidate audit hooks and CLI. |
 | [fix_validation.py](../autonomy/cell_routes/fix_validation.py) | Focused generic failure-fix validation runner. |
@@ -74,6 +77,7 @@ Snapshot at `16a7423e` plus documentation consolidation. Every production Python
 | [generation_diagnostic.py](../autonomy/cell_routes/generation_diagnostic.py) | Physical/execution keys, generator/queue instrumentation and report saving. |
 | [geometry.py](../autonomy/cell_routes/geometry.py) | AABB subtraction/merging, cells/portals/contact patches, free-space decomposition and segment coverage/SVG. |
 | [local.py](../autonomy/cell_routes/local.py) | Search work budgets/counters, counting compiler and scoped corridor/scene acceptance adapter. |
+| [minimum_runs.py](../autonomy/cell_routes/minimum_runs.py) | Latest-jump ordinary ground-hold pattern normalization, validated feasible representatives and heuristic extra-run exclusions. |
 | [repair_diagnostic.py](../autonomy/cell_routes/repair_diagnostic.py) | Diagnostic of repair queue allocation and failures. |
 | [repair_resume_experiment.py](../autonomy/cell_routes/repair_resume_experiment.py) | Experiment preserving and resuming inner repair work. |
 | [routes.py](../autonomy/cell_routes/routes.py) | Route enumeration, landmarks/signatures, guide polyline/corridor projection and horizontal traces. |
@@ -123,6 +127,8 @@ These reuse current mod sources. Scripts are evidence tools, not alternative pro
 | [autonomy/experiments/cell-routes/run_benchmarks.py](../autonomy/experiments/cell-routes/run_benchmarks.py) | Run initial generic non-ladder spatial-route benchmark families. |
 | [autonomy/experiments/checkpoint-guidance/plot_diagnostic.py](../autonomy/experiments/checkpoint-guidance/plot_diagnostic.py) | Render checkpoint-guidance diagnostic reports. |
 | [autonomy/experiments/decision-windows/analyze_results.py](../autonomy/experiments/decision-windows/analyze_results.py) | Analyze saved decision-window candidate outcomes. |
+| [autonomy/experiments/dfs-interactions/measure_generation.py](../autonomy/experiments/dfs-interactions/measure_generation.py) | Measure current per-block option generation over archived physical contexts, explicitly rebuilding cursors rather than restoring incompatible old ones. |
+| [autonomy/experiments/dfs-interactions/summarize.py](../autonomy/experiments/dfs-interactions/summarize.py) | Reconcile cold/resume frame ownership, worker requests/fingerprints, completed history and independent replays into an evidence summary. |
 | [autonomy/experiments/linkcraft11-opening/DeriveSelectedFootprints.java](../autonomy/experiments/linkcraft11-opening/DeriveSelectedFootprints.java) | Demonstrate actual mod neighbor-aware selected-block footprint derivation. |
 | [autonomy/experiments/linkcraft11-opening/audit_trace.py](../autonomy/experiments/linkcraft11-opening/audit_trace.py) | Extract initial pilot cells, programs/requests and retention/commit trace. |
 | [autonomy/experiments/linkcraft11-opening/evidence/scripts/probe_real11_corridor.py](../autonomy/experiments/linkcraft11-opening/evidence/scripts/probe_real11_corridor.py) | Historical corridor constraint/signature control; executes at module top level. Inspect before running, never import for discovery. |

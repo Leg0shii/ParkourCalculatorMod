@@ -28,7 +28,7 @@ def effective_rows(rows,envelopes):
     return tuple(sorted(result))
 
 
-def source_for(audit,p):
+def source_for(audit,p,*,restore=True):
     route=p['compiledRoute'];program=p['record']['program'];plan=schedule(route,[0])
     profile=route['verticalProfiles'][0]
     vertical=validate_vertical_schedule(route,[profile],plan)
@@ -43,8 +43,8 @@ def source_for(audit,p):
         [profile]) if c['offset']<p['ticks']]
     saved=program['repairState']['constraintGeneration']
     source=ConstraintVariants(route,profile,plan,audit['scene']['collisionScene'],envelopes,p['scope'],
-        checks=checks,gates=landmarks(audit['scene']),signature=(),state=saved,reference=saved['reference'])
-    if source.state['context']!=saved['context']:
+        checks=checks,gates=landmarks(audit['scene']),signature=(),state=saved if restore else None,reference=saved['reference'])
+    if restore and source.state['context']!=saved['context']:
         raise ValueError('Constraint source context does not exactly match the saved cursor')
     return source
 

@@ -87,6 +87,7 @@ Evidence filenames identify different runs/contexts; do not treat reports as exe
 | [contact_combinations.py](../autonomy/contact_combinations.py) | Merge, validate and compile heterogeneous contact events; enumerate combinations. |
 | [contact_profiles.py](../autonomy/contact_profiles.py) | Contact-derived scalar profiles and opportunity generation. |
 | [hit_events.py](../autonomy/hit_events.py) | Compile/validate horizontal hit events, options and initial guesses. |
+| [interactions.py](../autonomy/interactions.py) | Shared block/tick/phase eligibility and compiled prefix/approach gate before open builders; uncertain named probes preserve coverage. |
 | [ladder_ceiling.py](../autonomy/ladder_ceiling.py) | Assign ceiling contacts to ladder units and predict revised ceiling sequences. |
 | [ladder_episodes.py](../autonomy/ladder_episodes.py) | Compose multiple ladder episodes with original-state continuity. |
 | [ladder_events.py](../autonomy/ladder_events.py) | Validate and compile prescribed ladder event fields. |
@@ -100,7 +101,7 @@ Evidence filenames identify different runs/contexts; do not treat reports as exe
 | [movement_composition.py](../autonomy/movement_composition.py) | Original-state program records, append/truncate, scalar trace conversion, physical/search keys and compile to route/profiles. |
 | [movement_contacts.py](../autonomy/movement_contacts.py) | Interleave contact families and seed mixed-schedule programs. |
 | [movement_entry.py](../autonomy/movement_entry.py) | Build/probe numerical problems for entries into movement regions. |
-| [movement_frontier.py](../autonomy/movement_frontier.py) | Persistent symbolic program frontier and cursors; current shortest-prefix queue, to be integrated into DFS. |
+| [movement_frontier.py](../autonomy/movement_frontier.py) | Persistent symbolic program frontier and cursors; local symbolic queue inside goal-aware DFS, with owned-row projection and full-proposal screening. |
 | [movement_generation.py](../autonomy/movement_generation.py) | Movement type registry and normal/ladder generators; materialize choices into units. |
 | [movement_problem.py](../autonomy/movement_problem.py) | Waypoint-based initial guesses and raw horizontal/vertical candidate assembly. |
 | [movement_search.py](../autonomy/movement_search.py) | Movement settings, program iteration/search and generic necessary-condition screening. |
@@ -119,6 +120,7 @@ Evidence filenames identify different runs/contexts; do not treat reports as exe
 | [solve_blocks.py](../autonomy/solve_blocks.py) | CLI for autonomous block-scene solve. |
 | [solve_spec.py](../autonomy/solve_spec.py) | Solve scope, physical/context digests, motion metadata, processing key and validation projection. |
 | [stepping_generation.py](../autonomy/stepping_generation.py) | Named stepping profiles and registered open stepping choices. |
+| [terminal_goals.py](../autonomy/terminal_goals.py) | Generic one-sided horizontal finish bounds at a discovered descending height clock; no artificial terrain. |
 | [vertical_profiles.py](../autonomy/vertical_profiles.py) | Vertical trace flags and existing ladder schedule simulation. |
 
 ## autonomy/cell_routes
@@ -128,12 +130,13 @@ Evidence filenames identify different runs/contexts; do not treat reports as exe
 | [ORCHESTRATOR_CONTRACT.md](../autonomy/cell_routes/ORCHESTRATOR_CONTRACT.md) | Fixed-decision continuous-solve contract. See documentation index for authority/status. |
 | [__init__.py](../autonomy/cell_routes/__init__.py) | Cell-route experiment package marker. |
 | [checkpoint_experiment.py](../autonomy/cell_routes/checkpoint_experiment.py) | Initial checkpoint-guidance fixture runner and independent witness replay. |
-| [checkpoint_search.py](../autonomy/cell_routes/checkpoint_search.py) | Current fixed-window outer search and fixed-program evaluation; target of goal-aware DFS replacement. |
+| [checkpoint_search.py](../autonomy/cell_routes/checkpoint_search.py) | Scene/corridor setup and scoped fixed-program evaluation; delegates outer traversal to depth_first. |
 | [checkpoints.py](../autonomy/cell_routes/checkpoints.py) | Geometric direction segments, checkpoint rows/stage checks and prefix/decision retention helpers. |
 | [comparison_audit.py](../autonomy/cell_routes/comparison_audit.py) | Complete continuation audit of retained and discarded comparison-pool entries. |
 | [comparison_goals.py](../autonomy/cell_routes/comparison_goals.py) | Common spatial-goal identity, arrival/landing checks and auxiliary arrival probes. |
 | [corridor_guards.py](../autonomy/cell_routes/corridor_guards.py) | Merge projected corridor geometry into broad movement-region guards without guide-point clipping. |
 | [decision_windows.py](../autonomy/cell_routes/decision_windows.py) | Cluster decision opportunities, construct comparison windows and retain/score candidate bands. |
+| [depth_first.py](../autonomy/cell_routes/depth_first.py) | Goal-based DFS frames, arrival ranking, actual decision promotion, saved siblings/refinements and version5 continuation. |
 | [experiment.py](../autonomy/cell_routes/experiment.py) | Cell-route benchmark arms, witness verification and compact experiment reports. |
 | [failure_diagnostic.py](../autonomy/cell_routes/failure_diagnostic.py) | Generation and warm-control failure diagnostics, candidate audit hooks and CLI. |
 | [fix_validation.py](../autonomy/cell_routes/fix_validation.py) | Focused generic failure-fix validation runner. |
@@ -141,6 +144,7 @@ Evidence filenames identify different runs/contexts; do not treat reports as exe
 | [generation_diagnostic.py](../autonomy/cell_routes/generation_diagnostic.py) | Physical/execution keys, generator/queue instrumentation and report saving. |
 | [geometry.py](../autonomy/cell_routes/geometry.py) | AABB subtraction/merging, cells/portals/contact patches, free-space decomposition and segment coverage/SVG. |
 | [local.py](../autonomy/cell_routes/local.py) | Search work budgets/counters, counting compiler and scoped corridor/scene acceptance adapter. |
+| [minimum_runs.py](../autonomy/cell_routes/minimum_runs.py) | Latest-jump ordinary ground-hold pattern normalization, validated feasible representatives and heuristic extra-run exclusions. |
 | [repair_diagnostic.py](../autonomy/cell_routes/repair_diagnostic.py) | Diagnostic of repair queue allocation and failures. |
 | [repair_resume_experiment.py](../autonomy/cell_routes/repair_resume_experiment.py) | Experiment preserving and resuming inner repair work. |
 | [routes.py](../autonomy/cell_routes/routes.py) | Route enumeration, landmarks/signatures, guide polyline/corridor projection and horizontal traces. |
@@ -342,6 +346,40 @@ Evidence filenames identify different runs/contexts; do not treat reports as exe
 | [step-or-jump.json](../autonomy/experiments/decision-windows/fixtures/step-or-jump.json) | Reproducible input/model fixture: step-or-jump.json; owning tests/experiment define domain and expected acceptance. |
 | [turn-blockage.json](../autonomy/experiments/decision-windows/fixtures/turn-blockage.json) | Reproducible input/model fixture: turn-blockage.json; owning tests/experiment define domain and expected acceptance. |
 
+## autonomy/experiments/dfs-interactions
+
+| File | Purpose |
+| --- | --- |
+| [CALLS.md](../autonomy/experiments/dfs-interactions/CALLS.md) | DFS cold/resume worker calls. See documentation index for authority/status. |
+| [README.md](../autonomy/experiments/dfs-interactions/README.md) | Goal-aware DFS and early interaction eligibility. See documentation index for authority/status. |
+| [measure_generation.py](../autonomy/experiments/dfs-interactions/measure_generation.py) | Measure current per-block option generation over archived physical contexts, explicitly rebuilding cursors rather than restoring incompatible old ones. |
+| [real11-fixture.json](../autonomy/experiments/dfs-interactions/real11-fixture.json) | Structured experiment data/settings/provenance: real11 fixture. |
+| [summarize.py](../autonomy/experiments/dfs-interactions/summarize.py) | Reconcile cold/resume frame ownership, worker requests/fingerprints, completed history and independent replays into an evidence summary. |
+
+## autonomy/experiments/dfs-interactions/evidence
+
+| File | Purpose |
+| --- | --- |
+| [broader-before-probe-fix-tests.log](../autonomy/experiments/dfs-interactions/evidence/broader-before-probe-fix-tests.log) | Captured commands/test/runtime output or investigation notes; source-era evidence. |
+| [generation-current.json](../autonomy/experiments/dfs-interactions/evidence/generation-current.json) | Structured experiment data/settings/provenance: generation current. |
+| [generation.json](../autonomy/experiments/dfs-interactions/evidence/generation.json) | Structured experiment data/settings/provenance: generation. |
+| [generation.log](../autonomy/experiments/dfs-interactions/evidence/generation.log) | Captured commands/test/runtime output or investigation notes; source-era evidence. |
+| [ipopt-tests.log](../autonomy/experiments/dfs-interactions/evidence/ipopt-tests.log) | Captured commands/test/runtime output or investigation notes; source-era evidence. |
+| [logging-tests.log](../autonomy/experiments/dfs-interactions/evidence/logging-tests.log) | Captured commands/test/runtime output or investigation notes; source-era evidence. |
+| [manifest.json](../autonomy/experiments/dfs-interactions/evidence/manifest.json) | Structured experiment data/settings/provenance: manifest. |
+| [nonladder-tests.log](../autonomy/experiments/dfs-interactions/evidence/nonladder-tests.log) | Captured commands/test/runtime output or investigation notes; source-era evidence. |
+| [probe-height-tests.log](../autonomy/experiments/dfs-interactions/evidence/probe-height-tests.log) | Captured commands/test/runtime output or investigation notes; source-era evidence. |
+| [real11-before-stage-scope-fix.json.gz](../autonomy/experiments/dfs-interactions/evidence/real11-before-stage-scope-fix.json.gz) | Compressed exact result/request/continuation evidence; inspect owning experiment and source fields before reuse. |
+| [real11-before-stage-scope-fix.log](../autonomy/experiments/dfs-interactions/evidence/real11-before-stage-scope-fix.log) | Captured commands/test/runtime output or investigation notes; source-era evidence. |
+| [real11-before-step-probe-fix.json.gz](../autonomy/experiments/dfs-interactions/evidence/real11-before-step-probe-fix.json.gz) | Compressed exact result/request/continuation evidence; inspect owning experiment and source fields before reuse. |
+| [real11-before-step-probe-fix.log](../autonomy/experiments/dfs-interactions/evidence/real11-before-step-probe-fix.log) | Captured commands/test/runtime output or investigation notes; source-era evidence. |
+| [real11-cold.json.gz](../autonomy/experiments/dfs-interactions/evidence/real11-cold.json.gz) | Compressed exact result/request/continuation evidence; inspect owning experiment and source fields before reuse. |
+| [real11-cold.log](../autonomy/experiments/dfs-interactions/evidence/real11-cold.log) | Captured commands/test/runtime output or investigation notes; source-era evidence. |
+| [real11-resume.json.gz](../autonomy/experiments/dfs-interactions/evidence/real11-resume.json.gz) | Compressed exact result/request/continuation evidence; inspect owning experiment and source fields before reuse. |
+| [real11-resume.log](../autonomy/experiments/dfs-interactions/evidence/real11-resume.log) | Captured commands/test/runtime output or investigation notes; source-era evidence. |
+| [summary.json](../autonomy/experiments/dfs-interactions/evidence/summary.json) | Structured experiment data/settings/provenance: summary. |
+| [validation.json](../autonomy/experiments/dfs-interactions/evidence/validation.json) | Structured experiment data/settings/provenance: validation. |
+
 ## autonomy/experiments/failure-fixes
 
 | File | Purpose |
@@ -446,6 +484,21 @@ Evidence filenames identify different runs/contexts; do not treat reports as exe
 | [ladder-side-landing.json](../autonomy/experiments/ladder-search/ladder-side-landing.json) | Structured experiment data/settings/provenance: ladder side landing. |
 | [ladder-thin-top.json](../autonomy/experiments/ladder-search/ladder-thin-top.json) | Structured experiment data/settings/provenance: ladder thin top. |
 | [ladder-top.json](../autonomy/experiments/ladder-search/ladder-top.json) | Structured experiment data/settings/provenance: ladder top. |
+
+## autonomy/experiments/last-jump-runs
+
+| File | Purpose |
+| --- | --- |
+| [README.md](../autonomy/experiments/last-jump-runs/README.md) | Minimum runs before the latest jump. See documentation index for authority/status. |
+
+## autonomy/experiments/last-jump-runs/evidence
+
+| File | Purpose |
+| --- | --- |
+| [focused-summary.json](../autonomy/experiments/last-jump-runs/evidence/focused-summary.json) | Structured experiment data/settings/provenance: focused summary. |
+| [focused-tests.log](../autonomy/experiments/last-jump-runs/evidence/focused-tests.log) | Captured commands/test/runtime output or investigation notes; source-era evidence. |
+| [generic-focused-summary.json](../autonomy/experiments/last-jump-runs/evidence/generic-focused-summary.json) | Structured experiment data/settings/provenance: generic focused summary. |
+| [generic-focused-tests.log](../autonomy/experiments/last-jump-runs/evidence/generic-focused-tests.log) | Captured commands/test/runtime output or investigation notes; source-era evidence. |
 
 ## autonomy/experiments/linkcraft11-j0-j16
 
@@ -780,6 +833,30 @@ Evidence filenames identify different runs/contexts; do not treat reports as exe
 | [separated-two-jumps-reverse.json](../autonomy/experiments/two-goal-comparisons/fixtures/separated-two-jumps-reverse.json) | Reproducible input/model fixture: separated-two-jumps-reverse.json; owning tests/experiment define domain and expected acceptance. |
 | [separated-two-jumps.json](../autonomy/experiments/two-goal-comparisons/fixtures/separated-two-jumps.json) | Reproducible input/model fixture: separated-two-jumps.json; owning tests/experiment define domain and expected acceptance. |
 
+## autonomy/experiments/virtual-finish
+
+| File | Purpose |
+| --- | --- |
+| [CALLS.md](../autonomy/experiments/virtual-finish/CALLS.md) | Numerical request ledger. See documentation index for authority/status. |
+| [PRUNING_AUDIT.md](../autonomy/experiments/virtual-finish/PRUNING_AUDIT.md) | Why these requests survived pruning. See documentation index for authority/status. |
+| [PRUNING_AUDIT_CHECKS.json](../autonomy/experiments/virtual-finish/PRUNING_AUDIT_CHECKS.json) | Structured experiment data/settings/provenance: PRUNING AUDIT CHECKS. |
+| [README.md](../autonomy/experiments/virtual-finish/README.md) | Real11 virtual finish. See documentation index for authority/status. |
+| [fixture.json](../autonomy/experiments/virtual-finish/fixture.json) | Structured experiment data/settings/provenance: fixture. |
+| [initial0-fixture.json](../autonomy/experiments/virtual-finish/initial0-fixture.json) | Structured experiment data/settings/provenance: initial0 fixture. |
+
+## autonomy/experiments/virtual-finish/evidence
+
+| File | Purpose |
+| --- | --- |
+| [cold.json.gz](../autonomy/experiments/virtual-finish/evidence/cold.json.gz) | Compressed exact result/request/continuation evidence; inspect owning experiment and source fields before reuse. |
+| [cold.log](../autonomy/experiments/virtual-finish/evidence/cold.log) | Captured commands/test/runtime output or investigation notes; source-era evidence. |
+| [initial0-cold.json.gz](../autonomy/experiments/virtual-finish/evidence/initial0-cold.json.gz) | Compressed exact result/request/continuation evidence; inspect owning experiment and source fields before reuse. |
+| [initial0-cold.log](../autonomy/experiments/virtual-finish/evidence/initial0-cold.log) | Captured commands/test/runtime output or investigation notes; source-era evidence. |
+| [manifest.json](../autonomy/experiments/virtual-finish/evidence/manifest.json) | Structured experiment data/settings/provenance: manifest. |
+| [nonladder-tests.log](../autonomy/experiments/virtual-finish/evidence/nonladder-tests.log) | Captured commands/test/runtime output or investigation notes; source-era evidence. |
+| [summary.json](../autonomy/experiments/virtual-finish/evidence/summary.json) | Structured experiment data/settings/provenance: summary. |
+| [terminal-resume-tests.log](../autonomy/experiments/virtual-finish/evidence/terminal-resume-tests.log) | Captured commands/test/runtime output or investigation notes; source-era evidence. |
+
 ## autonomy/fixtures
 
 | File | Purpose |
@@ -891,8 +968,9 @@ Evidence filenames identify different runs/contexts; do not treat reports as exe
 | [test_contacts.py](../autonomy/tests/test_contacts.py) | Tests: full route keeps all jumps runoff step and run cost; reduced jump must enter target on first movement; step landing is after horizontal movement with no early landing (additional cases in file). |
 | [test_corridor_guards.py](../autonomy/tests/test_corridor_guards.py) | Tests: projection failure logs exact phase and detached replay data; signature failure logs expected and actual crossing; crossing adjacent rectangles is preserved in both axes and directions (additional cases in file). |
 | [test_decision_windows.py](../autonomy/tests/test_decision_windows.py) | Tests: fixture domains include the known physical controls; joint cluster runs to the next input not one state earlier; dependencies merge the intervening decisions (additional cases in file). |
+| [test_depth_first.py](../autonomy/tests/test_depth_first.py) | Tests: common goal arrival wins and completes before later sibling; deadline preserves incumbent and unvisited sibling without redispatch; in flight state and identity survive a mid solve stop (additional cases in file). |
 | [test_failure_diagnostic.py](../autonomy/tests/test_failure_diagnostic.py) | Tests: instrumented baseline preserves generator outputs and counts; completed candidate priority is separate from partial length; tick fair pruning preserves multiple elapsed buckets (additional cases in file). |
-| [test_fixed_clock_goal.py](../autonomy/tests/test_fixed_clock_goal.py) | Tests: priority proposes the actual intermediate contact before an air gap; spatial goals must match the comparison checkpoints; explicit clock preserves direction without goal region (additional cases in file). |
+| [test_fixed_clock_goal.py](../autonomy/tests/test_fixed_clock_goal.py) | Tests: priority proposes the actual intermediate contact before an air gap; unknown spatial goal is rejected before compilation; explicit clock preserves direction without goal region (additional cases in file). |
 | [test_full_route_witness.py](../autonomy/tests/test_full_route_witness.py) | Tests: full linkcraft 0 to 16 solution is independently valid. |
 | [test_generic_composition.py](../autonomy/tests/test_generic_composition.py) | Tests: repeated supported units do not stop replay at first landing; unbounded repeated event types share the same append contract; grind can end in air then choose another movement type (additional cases in file). |
 | [test_hanging_vines.py](../autonomy/tests/test_hanging_vines.py) | Tests: falling region does not require a wall or hide real wall choices; all four horizontal entry faces remain available; wall free generation keeps all sneak masks without phantom climbing (additional cases in file). |
@@ -905,6 +983,7 @@ Evidence filenames identify different runs/contexts; do not treat reports as exe
 | [test_ladder_schedules.py](../autonomy/tests/test_ladder_schedules.py) | Tests: four stop choices omit first final or both hits; two stops are not adjacent and short windows remain valid; invalid climb windows are rejected (additional cases in file). |
 | [test_linkcraft.py](../autonomy/tests/test_linkcraft.py) | Tests: extracts without any recorded facing field; missing geometry is not invented; grounded height change is not silently retimed. |
 | [test_long_ladder_chains.py](../autonomy/tests/test_long_ladder_chains.py) | Tests: saved cold three and prescribed five climbs revalidate full scene; fresh solves start inside first ladder without turning back to its centre. |
+| [test_minimum_runs.py](../autonomy/tests/test_minimum_runs.py) | Generic dispatch/resume/unknown and archived Real11 regressions for local last-jump run pruning. |
 | [test_movement_composition.py](../autonomy/tests/test_movement_composition.py) | Tests: direct transfer seam preserves both regions and entry hit; endpoint stops keep their unit and change actual y carry; units retime together with runs hits and sneak (additional cases in file). |
 | [test_movement_contacts.py](../autonomy/tests/test_movement_contacts.py) | Tests: ceiling regenerates exit time instead of requiring old exit to work; contact assisted entry is generated even without a baseline schedule; repeated ceiling clips during climbing are generated as one sequence (additional cases in file). |
 | [test_movement_entry.py](../autonomy/tests/test_movement_entry.py) | Tests: initial membership needs no provisional jump or fall; expired budget retains every unknown entry as unprobed; unknown numerical results are never infeasibility (additional cases in file). |
@@ -920,6 +999,7 @@ Evidence filenames identify different runs/contexts; do not treat reports as exe
 | [test_search_fixes.py](../autonomy/tests/test_search_fixes.py) | Tests: completed profiles survive partial queue and expansion caps; outer incumbent survives invalid polish and repair continues; invalid seed is never retained (additional cases in file). |
 | [test_shared_contacts.py](../autonomy/tests/test_shared_contacts.py) | Tests: hit cancels sprint with carried air factor; raw wall clip and outward following movement; finite face and nearer wall reject selected hit (additional cases in file). |
 | [test_stepping_cases.py](../autonomy/tests/test_stepping_cases.py) | Tests: legacy prefix without landing phase keeps pre landing timing; legacy boost profile is adapted to its registered owner; scalar named outcomes and rejected controls (additional cases in file). |
+| [test_terminal_goals.py](../autonomy/tests/test_terminal_goals.py) | Unit and native regression checks for discovered virtual landing-height goals and actual physical replay. |
 | [test_time_progress.py](../autonomy/tests/test_time_progress.py) | Tests: fast and far are different and tradeoffs survive; similar candidates are not strictly frontier pruned; only marked inferiority is discarded (additional cases in file). |
 
 ## docs
@@ -928,6 +1008,7 @@ Evidence filenames identify different runs/contexts; do not treat reports as exe
 | --- | --- |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Architecture and execution flow. See documentation index for authority/status. |
 | [CODE_MAP.md](CODE_MAP.md) | Production code map. See documentation index for authority/status. |
+| [CORRIDOR_AGENT_HANDOFF.md](CORRIDOR_AGENT_HANDOFF.md) | Handoff: changes since the standalone AGENTS consolidation. See documentation index for authority/status. |
 | [CURRENT_STATE.md](CURRENT_STATE.md) | Current standalone state. See documentation index for authority/status. |
 | [DECISIONS_AND_PLANS.md](DECISIONS_AND_PLANS.md) | Decisions and plan authority. See documentation index for authority/status. |
 | [DEVELOPMENT.md](DEVELOPMENT.md) | Writing code and fixes. See documentation index for authority/status. |

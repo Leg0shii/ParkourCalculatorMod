@@ -1,0 +1,467 @@
+{
+  "runtimeRevision": "072a11116b485f2ca9f5c02e2a7cc6ae80b442a5",
+  "artifactRoot": "standalone/autonomy/experiments/dfs-interactions",
+  "artifacts": {
+    "CALLS.md": {
+      "bytes": 2766,
+      "sha256": "a69e96d928dac066727b3a2520893986284a1f2fea86c1bb5bcf414df2a33b5b"
+    },
+    "README.md": {
+      "bytes": 11020,
+      "sha256": "9ff4fa9af6d1c55e9c945fea20421a3812883dc01ad6ea312cf17aa2515f14a9"
+    },
+    "evidence/broader-before-probe-fix-tests.log": {
+      "bytes": 84005,
+      "sha256": "895c5d1ee53819cab3988dfcf856ff9719a2c3a3c49259f95fe253222122fd7a"
+    },
+    "evidence/generation-current.json": {
+      "bytes": 877,
+      "sha256": "bdd87f46e38187ff2e6d9ecbc0448d8430af0a03e6883b2fed4759f148be8008"
+    },
+    "evidence/generation.json": {
+      "bytes": 876,
+      "sha256": "c0d14a120a984a6cdd693a18682fcf87053b470f906a670911c4d7a397b798db"
+    },
+    "evidence/generation.log": {
+      "bytes": 876,
+      "sha256": "c0d14a120a984a6cdd693a18682fcf87053b470f906a670911c4d7a397b798db"
+    },
+    "evidence/ipopt-tests.log": {
+      "bytes": 8394,
+      "sha256": "63f38e4b96c1a987916b815b004ca50a4467dd9f0898453aa18432a3171ee746"
+    },
+    "evidence/logging-tests.log": {
+      "bytes": 99,
+      "sha256": "708a3b97f77f581eac4ddd06ea6c09a74ecaa98baa083b4828790070922aeaed"
+    },
+    "evidence/nonladder-tests.log": {
+      "bytes": 64493,
+      "sha256": "6a894d5c0cc911249adee3f1d054cca241a741cb20051673e890ca9b4dfa7115"
+    },
+    "evidence/probe-height-tests.log": {
+      "bytes": 4517,
+      "sha256": "e1061e487ffb3b81002bb6f3f3d6b13b33c85dcb60008841727ad3f19df86e10"
+    },
+    "evidence/real11-before-stage-scope-fix.json.gz": {
+      "bytes": 7692939,
+      "sha256": "db8aca45a0da4c1f7354329046a471fd561b196b4b081b3042278e3065be2477"
+    },
+    "evidence/real11-before-stage-scope-fix.log": {
+      "bytes": 1347,
+      "sha256": "dc22f1c122ed4189dfbb1d390035bffae3eedfcdac05a170c988477a6b7699b9"
+    },
+    "evidence/real11-before-step-probe-fix.json.gz": {
+      "bytes": 3705807,
+      "sha256": "99d3b64641a0260b26702190731bf53c9ccdc6f71a5afe214ebe8963847a1b8c"
+    },
+    "evidence/real11-before-step-probe-fix.log": {
+      "bytes": 1112,
+      "sha256": "3bef84512bdf9c9a792411bcba777e683d469774aca63087b3f89a6c32f9b10e"
+    },
+    "evidence/real11-cold.json.gz": {
+      "bytes": 3705865,
+      "sha256": "31de127cd6c29b06357c02c3606306b5772f87714f19593ce59476e8b6a2f200"
+    },
+    "evidence/real11-cold.log": {
+      "bytes": 1111,
+      "sha256": "b0fa7490db6a47f3f0728bb4fd4d0fd4314f6603802dba5cbe6402c0f6bbda42"
+    },
+    "evidence/real11-resume.json.gz": {
+      "bytes": 8056164,
+      "sha256": "26b05b29c7131331f7b05168a8c49ad959902f2b2b7103ba4a0008171d7036e1"
+    },
+    "evidence/real11-resume.log": {
+      "bytes": 721,
+      "sha256": "19c14cef22550753fcf054169b94aacf7b01ac5fb86bacf06f6b2f9235a630a4"
+    },
+    "evidence/summary.json": {
+      "bytes": 2112,
+      "sha256": "b65ac02b8fdef2e7c53c7a0d28437c8d407719de8d4d3919cfec0d22d5b32f6f"
+    },
+    "evidence/validation.json": {
+      "bytes": 1100,
+      "sha256": "de7f103133093e4c3db78c2d78ef13c58219e9e8f03a24c6240c2354738799ab"
+    },
+    "measure_generation.py": {
+      "bytes": 2344,
+      "sha256": "e817bd37c594cf8a1a21a04664dc71b356f33b91d1666cffe4235d598c5c0a54"
+    },
+    "real11-fixture.json": {
+      "bytes": 5388,
+      "sha256": "2a6f556bf0e45cd80198d83c05f028516c56178fb039e74bef6d10892fa27a1c"
+    },
+    "summarize.py": {
+      "bytes": 8267,
+      "sha256": "83bf82f834bb7941951377eb93916a830a6df72ce1b57581065b8b7244624d40"
+    }
+  },
+  "runtimeSources": {
+    "standalone/autonomy/__init__.py": {
+      "bytes": 722,
+      "sha256": "9675a573a5d2e0617653bc4de99f58c1c7cd72de101cbffd7c3f82ebc7086e37"
+    },
+    "standalone/autonomy/block_contacts.py": {
+      "bytes": 30354,
+      "sha256": "b8af1d0dec0b19e39d86e4c3af2ad3c5a2673eb1a5a8203d2375b4183eea3b55"
+    },
+    "standalone/autonomy/block_profiles.py": {
+      "bytes": 5886,
+      "sha256": "6de885b41a2e6d55e0878540f148724aa5fbfc92e18f9f60c1c4b597c9e2f559"
+    },
+    "standalone/autonomy/block_search.py": {
+      "bytes": 40008,
+      "sha256": "1b57fdaa023f3c0057ae8d4e4c65692160c569f2976a82e57557bf4a9d76fecf"
+    },
+    "standalone/autonomy/blockages.py": {
+      "bytes": 16385,
+      "sha256": "19b40ff11f0a7555543e09fba2f13161b7924ef2e898bd497636d3a6cc386c04"
+    },
+    "standalone/autonomy/case_profiles.py": {
+      "bytes": 4324,
+      "sha256": "d024822d2f6aef2439acb9bccfa540d82c979773209d5b51c8f0d808c267c0ac"
+    },
+    "standalone/autonomy/ceiling_contacts.py": {
+      "bytes": 48,
+      "sha256": "754b887c88ac423a8f4bbd486f2246acd7820c4ebe9b9ba1778eb0ac6d557040"
+    },
+    "standalone/autonomy/ceiling_generation.py": {
+      "bytes": 5309,
+      "sha256": "7004d648f412c4b643165568738094c9db3e97e082ce10c1b398ab759f8d568b"
+    },
+    "standalone/autonomy/ceiling_primitives.py": {
+      "bytes": 3971,
+      "sha256": "15d43e1f0e6564880c8d73e1b16c0013fbb75b0068d99d1beb3c579a3b3a0f6c"
+    },
+    "standalone/autonomy/climbable_search.py": {
+      "bytes": 35268,
+      "sha256": "bfc21052a0aa02d2ef3484f090377ba1885700e8f631c11e30442b864db48cc3"
+    },
+    "standalone/autonomy/compiler.py": {
+      "bytes": 3892,
+      "sha256": "7fa0601a0ee04cad907eb4a961fb18fd98b7c00771b2159a0e5db3065d80350b"
+    },
+    "standalone/autonomy/constraint_variants.py": {
+      "bytes": 17258,
+      "sha256": "bbea1380c74671528aade371b5c43310f6b025d3746a5480f314970b553de97c"
+    },
+    "standalone/autonomy/contact_combinations.py": {
+      "bytes": 7946,
+      "sha256": "7e000c25f11559357dee586bc210400b3acd3bc48e9a3f4cd452c34b56ce3e8c"
+    },
+    "standalone/autonomy/contact_profiles.py": {
+      "bytes": 4652,
+      "sha256": "32f3de58736d02770ef34374d8eb9c8a577dc1c3cf0384bd77072cb574b9717b"
+    },
+    "standalone/autonomy/hit_events.py": {
+      "bytes": 9499,
+      "sha256": "24caae4625b7a023ad9cd3b147081eba6111a1a3cc90f6826c4c53f61ba7c6f9"
+    },
+    "standalone/autonomy/interactions.py": {
+      "bytes": 4745,
+      "sha256": "af4e3039949a3c2a5d719ed357569689b4246da5f60825e8f6b2317e65c74489"
+    },
+    "standalone/autonomy/ladder_ceiling.py": {
+      "bytes": 3544,
+      "sha256": "e80ec9eb9f9f72006c4b490a62a2c15ddd79a58ec839f44490c6315360090cbd"
+    },
+    "standalone/autonomy/ladder_episodes.py": {
+      "bytes": 5379,
+      "sha256": "3c462d4c4e3eb1f856fffa0a95bb9d88917a593a76e8187692851baf26c75fec"
+    },
+    "standalone/autonomy/ladder_events.py": {
+      "bytes": 5086,
+      "sha256": "4fd5c476aa623e9debdcdd485a39f0c2df7e79ca1efc27c89dd2bed7e9f17d5a"
+    },
+    "standalone/autonomy/ladder_geometry.py": {
+      "bytes": 10181,
+      "sha256": "5295e1823b39d6f6db5fc4511ca7c69fcda5931ed6a01ddec89ea14578c936e0"
+    },
+    "standalone/autonomy/ladder_ranking.py": {
+      "bytes": 5270,
+      "sha256": "790bfe1c60c31d4a95809693b0a9a265be7ed465f867816ec3a4f396a6d0fdc1"
+    },
+    "standalone/autonomy/ladder_schedules.py": {
+      "bytes": 16844,
+      "sha256": "7a7c16c05784e8e39415088581612cab04f259b692c6ff3b7aa451a647f51232"
+    },
+    "standalone/autonomy/ladder_transfers.py": {
+      "bytes": 14862,
+      "sha256": "c68285f9c3b4605af44112bb6cae41e382ca53f1a7e7d97cc737f909f20a7cf4"
+    },
+    "standalone/autonomy/linear_reachability.py": {
+      "bytes": 4180,
+      "sha256": "42ed9786ba3883a8a69369c26a9cc393ad7b68801e0251007b823eb693befa55"
+    },
+    "standalone/autonomy/linkcraft.py": {
+      "bytes": 10596,
+      "sha256": "12d90184af1c46ea5f4f7feccae9b298df06a7d480a76205563cd4a359c554a3"
+    },
+    "standalone/autonomy/mixed_ladder.py": {
+      "bytes": 5138,
+      "sha256": "aac1b04e7793689b3a89e1ccd74ebcb4d3125c415f64a241b30d7bf048d82efa"
+    },
+    "standalone/autonomy/movement_composition.py": {
+      "bytes": 16318,
+      "sha256": "3192d44f4b2971db08d98f9a6558142455f900d2e49b7b94d127fd739b948cd0"
+    },
+    "standalone/autonomy/movement_contacts.py": {
+      "bytes": 9423,
+      "sha256": "603921982b55b14de23404dc405fe8cf0b94b7bc33a1cc8eb33834246ef4ef5a"
+    },
+    "standalone/autonomy/movement_entry.py": {
+      "bytes": 10447,
+      "sha256": "3d138978c86629171ce4b96a32f66693c7bca48c34473d7020708d5940aa25f1"
+    },
+    "standalone/autonomy/movement_frontier.py": {
+      "bytes": 8506,
+      "sha256": "cd5f62e960d2da3d30ea2f8be2a79747da74a945b8bbf48d0267f36fe9bbaab2"
+    },
+    "standalone/autonomy/movement_generation.py": {
+      "bytes": 9468,
+      "sha256": "bb99d51113f71bd5ee778c6893d6b3246bb833551d842efadc96cb48723a28f9"
+    },
+    "standalone/autonomy/movement_problem.py": {
+      "bytes": 4628,
+      "sha256": "907e615dc719a00463c9e586561f83fb59542f41dde7191a60b4ba6923aec40d"
+    },
+    "standalone/autonomy/movement_search.py": {
+      "bytes": 19500,
+      "sha256": "ea1a0d964d031f29931a3dd1e10b2b721dd73667864c61af59ae79c88853c99a"
+    },
+    "standalone/autonomy/movement_units.py": {
+      "bytes": 10505,
+      "sha256": "1d84e257b7ed2f9e6fc5f5201754376757c9b0770bd19764a348611717303a90"
+    },
+    "standalone/autonomy/obstacle_geometry.py": {
+      "bytes": 6557,
+      "sha256": "9c665a862063693a00155f0a0754c2c57b10a344e144e7b55ed5297e16b69581"
+    },
+    "standalone/autonomy/open_ladder.py": {
+      "bytes": 8438,
+      "sha256": "f8fa3a482baea420dafac9a9f8ae1ad59ac70dff19df0c6335e4cb1a3a0e7210"
+    },
+    "standalone/autonomy/open_movement.py": {
+      "bytes": 3891,
+      "sha256": "a1e1f2f3a433004e4072bb33451f92af4bc9ec970a3613e581a8102130bef74e"
+    },
+    "standalone/autonomy/prefix_viability.py": {
+      "bytes": 2460,
+      "sha256": "11b3db80154bdbdb0332a288fef7bf91fa217cf4b146e87481b628a783f7843c"
+    },
+    "standalone/autonomy/ranking.py": {
+      "bytes": 3707,
+      "sha256": "116cb2c23a61fdc2d52b551555f931bd9e369425a302127f50f379965b359ab9"
+    },
+    "standalone/autonomy/reachability.py": {
+      "bytes": 9971,
+      "sha256": "f5597b2406664fd3ee6ee5850f1a9cd3c47f50ec7fd6e9e0a9b09a3036d08259"
+    },
+    "standalone/autonomy/repair_state.py": {
+      "bytes": 3036,
+      "sha256": "30fcd4bc32753219b4f9b8b6737f3ce058332993e1e32c52a9b21487f7302165"
+    },
+    "standalone/autonomy/route.py": {
+      "bytes": 20082,
+      "sha256": "a6cd41c11a3daa2cc5c0112e06f243d708e0d19993e05676d0cec77608318ef0"
+    },
+    "standalone/autonomy/screen.py": {
+      "bytes": 278,
+      "sha256": "bd4edc177e8ed590a61d1757fe5066eb590fd7e55ca5268de400c93892897f6a"
+    },
+    "standalone/autonomy/search.py": {
+      "bytes": 17003,
+      "sha256": "a403afe724d0ee6837cd895b34b6cb29fb5852f843fddbf8cbb346274a2cb615"
+    },
+    "standalone/autonomy/solve.py": {
+      "bytes": 1981,
+      "sha256": "674e2653aedf730164b6210721d088ca33a7fc1370f83a519206bd217b66b37a"
+    },
+    "standalone/autonomy/solve_blocks.py": {
+      "bytes": 2654,
+      "sha256": "faf9cbaf5fdd8432e98aa580e5ea1dff9b5a0e3f63f860898460227a87aa531c"
+    },
+    "standalone/autonomy/solve_spec.py": {
+      "bytes": 4708,
+      "sha256": "e0170fb0b48dc517d23bedbb6d3cc3914a25735ae3253ad32d0ea6bad12c6495"
+    },
+    "standalone/autonomy/stepping_generation.py": {
+      "bytes": 11577,
+      "sha256": "23de2472f1b151ad611d0f7c8cd4807f152d78907f69e6b1d86fd4c65c8f9323"
+    },
+    "standalone/autonomy/vertical_profiles.py": {
+      "bytes": 5440,
+      "sha256": "de20bf3a0314ea39e8dd38d649ac84b05e23a6857c0a7267eb745f3bb12cc167"
+    },
+    "standalone/autonomy/cell_routes/__init__.py": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "standalone/autonomy/cell_routes/checkpoint_experiment.py": {
+      "bytes": 7629,
+      "sha256": "2dee0d907220701e7ef2d8e70e727400fea3c73df5b67c0d7fa5eeb106fbe76c"
+    },
+    "standalone/autonomy/cell_routes/checkpoint_search.py": {
+      "bytes": 17527,
+      "sha256": "7b8c3712e6c3b49bb3fd9c257ae636f63b8dbb9693dec8cd23d3a3b7e2d2f16c"
+    },
+    "standalone/autonomy/cell_routes/checkpoints.py": {
+      "bytes": 5649,
+      "sha256": "09dbb20802f35a70fda012bfcc600dbb643db7ed6c77d544f40fe982f5603179"
+    },
+    "standalone/autonomy/cell_routes/comparison_audit.py": {
+      "bytes": 9233,
+      "sha256": "5d0a13c87a22e0224b6dd3d59a3ee940581cf573f177ea0b6742fb2a6053fc4e"
+    },
+    "standalone/autonomy/cell_routes/comparison_goals.py": {
+      "bytes": 9147,
+      "sha256": "889ec54ae9eacd7e958dd5ddce6f0e7ed574b653d8ecdfe6434692997d624730"
+    },
+    "standalone/autonomy/cell_routes/corridor_guards.py": {
+      "bytes": 1100,
+      "sha256": "ef9c5a39e3e7440ced63fd665edc785739eb9d5f9caff11553aa47a718dcb364"
+    },
+    "standalone/autonomy/cell_routes/decision_windows.py": {
+      "bytes": 9528,
+      "sha256": "a48b15a241cc25b94abffed80dd1adea5c13ba68305c0c22a9ba3ecfbd65ee5b"
+    },
+    "standalone/autonomy/cell_routes/depth_first.py": {
+      "bytes": 28270,
+      "sha256": "bb206898d32bec91609fdad88e472674e267efecfa9fc88c42011140e522c10a"
+    },
+    "standalone/autonomy/cell_routes/experiment.py": {
+      "bytes": 19596,
+      "sha256": "77ea642f386fd13da3e512d57754d9add567c96d19895e47fbdcfacc08fc44f1"
+    },
+    "standalone/autonomy/cell_routes/failure_diagnostic.py": {
+      "bytes": 19242,
+      "sha256": "86a6af5527361650e9f228e096807bdd9d90e3afab74b8708ab1f4119e95a13e"
+    },
+    "standalone/autonomy/cell_routes/fix_validation.py": {
+      "bytes": 1374,
+      "sha256": "27fd57a8cb24e117a1287561c8b6a52157e394c23f1381935bd0f617a1200fc8"
+    },
+    "standalone/autonomy/cell_routes/fixed_clock_experiment.py": {
+      "bytes": 5581,
+      "sha256": "a62209b0cf0400cdc3f72bdf7d3151c6c9376252821b4d04f68199b1fccc7a20"
+    },
+    "standalone/autonomy/cell_routes/generation_diagnostic.py": {
+      "bytes": 5210,
+      "sha256": "f3374b3d9bb1871ecf89e0a0bdc5ef0d0c87ef7aae4f5b1752e2cd4f821d6e54"
+    },
+    "standalone/autonomy/cell_routes/geometry.py": {
+      "bytes": 9276,
+      "sha256": "8b1277bff2a0f45f700999a1e46eea8afd0fa8343c6a9dac0199d15273986806"
+    },
+    "standalone/autonomy/cell_routes/local.py": {
+      "bytes": 15180,
+      "sha256": "9e5cc2fa6b797562c0760758a5be69fc2aaa7cba871295e7d2ee8c822bf95938"
+    },
+    "standalone/autonomy/cell_routes/repair_diagnostic.py": {
+      "bytes": 4125,
+      "sha256": "58b803c3b3d8c11ce98f354194abe8de41aa4f862edff25f2fb29f4f1810e8ae"
+    },
+    "standalone/autonomy/cell_routes/repair_resume_experiment.py": {
+      "bytes": 3296,
+      "sha256": "0132d046f37a06fa46aee93fe1d8f36fe21c5a2776299e4ba3edea95202e25b1"
+    },
+    "standalone/autonomy/cell_routes/routes.py": {
+      "bytes": 12724,
+      "sha256": "f4f14822455ebfd772c44f968620258d00c06454a3fbcf4c6e83da328cd3281a"
+    },
+    "standalone/autonomy/cell_routes/scalar_seed_diagnostic.py": {
+      "bytes": 2776,
+      "sha256": "37c6385cc56ed7cfc26aea44865284fafa41fe5bcde8abf001aa433f827bc8ba"
+    },
+    "standalone/autonomy/cell_routes/support_order.py": {
+      "bytes": 3049,
+      "sha256": "682e45099844a509f735e1323930b34820065bbdcc6815eeb3c1abff1a7a7592"
+    },
+    "standalone/autonomy/cell_routes/time_progress.py": {
+      "bytes": 7362,
+      "sha256": "f905c8b3e2e5195b8fc59a44284327b62e2f44b4c783001a3320af16099dc305"
+    },
+    "standalone/autonomy/cell_routes/two_goal_experiment.py": {
+      "bytes": 5486,
+      "sha256": "b550b1dc37ad04fd5bc4551eeb28cc2852d42a0acaf7b7c03c57526561778a1c"
+    },
+    "standalone/autonomy/cell_routes/window_diagnostic.py": {
+      "bytes": 8741,
+      "sha256": "8ed7bc87477ab8b9b20009c4b0d35f1abbac13a297cac4caf47f0c3454325f6c"
+    },
+    "standalone/autonomy/cell_routes/window_experiment.py": {
+      "bytes": 3976,
+      "sha256": "0c5eda216e269805f666011968b06ed5b497a8976e0f698f688d1832955a1092"
+    },
+    "standalone/ipopt/__init__.py": {
+      "bytes": 161,
+      "sha256": "01cd6ea7f4981e14d15dc3887b63827d2f70ca394c028d877e71da68fca2f8b1"
+    },
+    "standalone/ipopt/capture.py": {
+      "bytes": 6182,
+      "sha256": "b3af9eae22e282cef8a9c1a045ca88c5a5c392b6eabc2e50919a0133514e75e6"
+    },
+    "standalone/ipopt/continuation.py": {
+      "bytes": 4178,
+      "sha256": "a740bb6fd9cbf1ef3de8bedd7208a709dca931d050010c512a1fc2002b4f548a"
+    },
+    "standalone/ipopt/ladder.py": {
+      "bytes": 4038,
+      "sha256": "72f46adf6a4f81a2cc123362daf9f4a847c2326fbd6a14b101124a695a80b3b8"
+    },
+    "standalone/ipopt/model.py": {
+      "bytes": 18921,
+      "sha256": "e53842f37bca3a15455bf9ab72cdec9825a4c55f64b7e744dae40e99a9f42f23"
+    },
+    "standalone/ipopt/solve.py": {
+      "bytes": 3396,
+      "sha256": "2c7ff0c666c91d73dcf1b96e1db9566ac492d9d44a6caac101d49c37636e4528"
+    },
+    "standalone/ipopt/solver.py": {
+      "bytes": 8519,
+      "sha256": "c0d2aadd9bcdad4de3f2466fe1e6b82769284ec42f42328cb9fe4cf689a729bc"
+    },
+    "standalone/ipopt/worker.py": {
+      "bytes": 12689,
+      "sha256": "1f5f6ca2359201d6685e27847ee4172a0fa3def502704b27dd5d8cb38ab10538"
+    },
+    "standalone/autonomy/java/CompileRunTicksPhysics.java": {
+      "bytes": 20466,
+      "sha256": "0ce9a1f3617abb5de304728b31660cccdd2be6fc49f4318dfcd47494dcc6d71f"
+    },
+    "core/src/main/java/de/legoshi/parkourcalc/core/anglesolver/solver/ExactJumpModel.java": {
+      "bytes": 24724,
+      "sha256": "3afadfa89c6cfbf455c671c68276dd1e5c8085fea467bd08e4d8b2a50fb3073d"
+    },
+    "core/src/main/java/de/legoshi/parkourcalc/core/anglesolver/solver/JumpPhysicsInputs.java": {
+      "bytes": 16959,
+      "sha256": "65683b93e11be53b0e20e88692c4657a355e124c57f2359d9a23f35374fd78ca"
+    },
+    "core/src/main/java/de/legoshi/parkourcalc/core/replay/StaticScene.java": {
+      "bytes": 12800,
+      "sha256": "657eaafcd3b64356af3034587ada3da7f1e47f5ca4e1830dcb5ed8df3fcc9984"
+    },
+    "forge-core/src/main/java/de/legoshi/parkourcalc/forge/core/sim/PlayerSprintMachine.java": {
+      "bytes": 5767,
+      "sha256": "cf17a36749ba1ad1e9a2acd4df68f6adf8136a42b480b6356932c51f3736158c"
+    }
+  },
+  "python": "3.12.2 (v3.12.2:6abddd9f6a, Feb  6 2024, 17:02:06) [Clang 13.0.0 (clang-1300.0.29.30)]",
+  "platform": "macOS-15.7.1-arm64-arm-64bit",
+  "dependencies": {
+    "casadi": "3.8.1",
+    "numpy": "2.5.4",
+    "scipy": "1.18.1",
+    "clarabel": "0.11.1"
+  },
+  "compilerDescriptor": {
+    "bytes": 1406,
+    "sha256": "6ba1237fd3424d3c054585d7a78c971f96ae73e795ac037c5111fa66b2b575bd"
+  },
+  "notes": [
+    "All reported cold/resume witnesses independently replay against the supplied scene.",
+    "Cold source498c054c and resumed source072a1111 share the same semantic context; latter adds logging.",
+    "The before-stage/probe reports are development diagnostics, not exact continuation sources for schema5.",
+    "Some measurements overlap numerical tests; no isolated speedup claim.",
+    "The known ladder baseline is not fixed and excluded from the final non-ladder acceptance pass."
+  ]
+}

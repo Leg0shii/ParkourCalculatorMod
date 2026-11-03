@@ -248,10 +248,13 @@ class CheckpointNumericalTests(unittest.TestCase):
             candidate_seconds=.7,score_seconds=2,python_executable=os.environ['PKC_IPOPT_PYTHON'])
         self.assertEqual(result['status'],'feasible',result['termination'])
         self.assertLessEqual(result['best']['plan']['ticks'],12)
-        self.assertTrue(result['windows'])
-        for candidate in result['windows'][0]['candidates']:
-            if not candidate['complete']:
-                self.assertEqual(candidate['ticks'],4)
+        self.assertEqual(result['searchState']['kind'],'ordered_goal_dfs')
+        self.assertEqual(result['checkpoints'][0]['tick'],4)
+        self.assertTrue(result['finalAttempts'])
+        for record in result['finalAttempts']:
+            self.assertEqual(record['goal'],dict(kind='landing',block=request['goalBlock']))
+            self.assertEqual(record['witness']['route']['initial'],request['initial'])
+            self.assertFalse(any(r['mode']=='F' for r in record['witness']['plan']['walls']))
         self.assertTrue(replay_witness(prepare_scene(request),result['best'],self.compiler)['passed'])
         self.assertFalse(result['objectiveOptimalityProven'])
 
@@ -283,17 +286,17 @@ class CheckpointNumericalTests(unittest.TestCase):
         self.assertEqual(before['positions'][0],after['positions'][0])
         self.assertEqual(before['velocity'][0],after['velocity'][0])
 
-    def test_turn_checkpoint_keeps_a_shared_post_turn_stage_and_replays(self):
+    def test_turn_route_reaches_the_goal_and_replays_without_a_clock_barrier(self):
         from standalone.autonomy.cell_routes.checkpoint_experiment import replay_witness, run_fixture
         fixture = json.loads((ROOT/'experiments/checkpoint-guidance/fixtures/turn-blockage.json').read_text())
         result = run_fixture(fixture,self.compiler,python_executable=os.environ['PKC_IPOPT_PYTHON'])
         self.assertEqual(result['status'],'feasible',result['termination'])
-        accepted = [c for c in result['windows'][0]['candidates'] if c['value'] is not None and not c['complete']]
-        self.assertGreaterEqual(len(accepted),1)
+        self.assertEqual(result['searchState']['kind'],'ordered_goal_dfs')
+        self.assertEqual(result['checkpoints'][0]['tick'],6)
+        accepted = [c for c in result['finalAttempts'] if c.get('witness')]
+        self.assertTrue(accepted)
         for record in accepted:
-            self.assertEqual(record['ticks'],6)
-            self.assertTrue(record['comparisonStage']['accepted'])
-            self.assertTrue(record['comparisonStage']['beforeNextTurn'])
+            self.assertEqual(record['goal'],dict(kind='landing',block=fixture['request']['goalBlock']))
             self.assertTrue(replay_witness(prepare_scene(fixture['request']),record['witness'],self.compiler)['passed'])
         self.assertTrue(replay_witness(prepare_scene(fixture['request']),result['best'],self.compiler)['passed'])
 

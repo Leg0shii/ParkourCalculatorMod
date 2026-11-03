@@ -61,6 +61,9 @@ def normal_choices(context):
             if t is None:
                 continue
             box = context['scene']['collisionScene']['solids'][block['solidIndex']]
+            from .interactions import interaction_allowed
+            if not interaction_allowed(context, box, t, jumping=jumping, phases=('Y',)):
+                continue
             finite = [dict(leg=0, offset=t, axis='Y', direction=-1, plane=block['top'], box=box, role='landing')]
             choice = event_choice(context, 'normal', initial, t + 1, jumping=jumping,
                 vertical=[dict(state=t + 1, direction=-1, plane=block['top'])], finite=finite,

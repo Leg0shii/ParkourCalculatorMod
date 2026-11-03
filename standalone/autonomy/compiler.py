@@ -8,7 +8,12 @@ class JavaCompiler:
         command = config.get('command') if isinstance(config, dict) else None
         if not isinstance(command, list) or not command or any(not isinstance(part, str) for part in command):
             raise ValueError('Compiler config needs a nonempty command list')
-        self.process = subprocess.Popen(config['command'], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+        self.command = command[:]
+        self.timed_out = False
+        self._start()
+
+    def _start(self):
+        self.process = subprocess.Popen(self.command, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                         stderr=subprocess.PIPE, text=True, bufsize=1)
         self.errors = []
         self.reader = threading.Thread(target=self._errors, daemon=True)
@@ -45,6 +50,9 @@ class JavaCompiler:
 
     def _exchange(self, message, seconds):
         import queue
+        if self.timed_out:
+            self._start()
+            self.timed_out = False
         received = queue.Queue(maxsize=1)
 
         def exchange():
@@ -60,6 +68,7 @@ class JavaCompiler:
             line = received.get(timeout=seconds)
         except queue.Empty:
             self.close()
+            self.timed_out = True
             raise TimeoutError('Movement coefficient compilation exceeded the budget')
         if isinstance(line, Exception) or not line:
             raise RuntimeError('Coefficient compiler failed: ' + str(line) + ' ' + '\n'.join(self.errors))
@@ -69,6 +78,7 @@ class JavaCompiler:
         return result
 
     def close(self):
+        self.timed_out = False
         if self.process.poll() is None:
             self.process.terminate()
             try:

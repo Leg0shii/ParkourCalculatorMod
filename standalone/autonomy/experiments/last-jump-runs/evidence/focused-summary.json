@@ -1,0 +1,19 @@
+{
+  "runtimeSource": "db211b2b",
+  "tests": 52,
+  "elapsedSeconds": 16.852,
+  "passed": true,
+  "skipped": 0,
+  "nativeCompiler": true,
+  "nativeIpopt": true,
+  "modules": [
+    "test_minimum_runs",
+    "test_depth_first",
+    "test_orchestrator_continuation",
+    "test_fixed_clock_goal",
+    "test_terminal_goals"
+  ],
+  "scope": "Focused regressions only; archived Real11 data inspected without a new Real11 solve",
+  "continuationTimePruning": "deferred",
+  "corridorChanges": "deferred"
+}

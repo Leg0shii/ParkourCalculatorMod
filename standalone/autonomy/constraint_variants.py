@@ -5,6 +5,7 @@ import itertools
 
 from .blockages import faces, face_chains, intervals, consecutive, blockage_counts, compile_passages, passage_kind, face_clearance
 from .obstacle_geometry import expanded_box
+from .interactions import block_interaction
 from .reachability import interaction_reachability
 from .solve_spec import digest
 
@@ -13,7 +14,7 @@ class ConstraintVariants:
     def __init__(self, route, profile, plan, geometry, envelopes, scope, *, checks=(), gates=(), signature=(), state=None, deadline=None, reference=None):
         self.route, self.profile, self.plan = route, profile, plan
         self.envelopes, self.deadline, self.through = envelopes, deadline, scope['through']
-        context = digest(dict(version=4, route={k: v for k, v in route.items() if k != 'warmYaw'},
+        context = digest(dict(version=5, route={k: v for k, v in route.items() if k != 'warmYaw'},
                               profile=profile, scope=scope, gates=list(gates), signature=signature,
                               modelKey=envelopes.get('modelKey')))
         if state and state.get('context') == context:
@@ -35,7 +36,7 @@ class ConstraintVariants:
             excluded_phases = []
             for tick in range(self.through):
                 for phase in ('Y', 'X', 'Z'):
-                    checked = interaction_reachability(envelopes, dict(regions=[dict(tick=tick, phase=phase, bounds=expanded, interior=True)]))
+                    checked = block_interaction(envelopes,box,tick,(phase,),interior=True)
                     if not checked['ruledOut']:
                         possible.append((tick, phase))
                     else:
@@ -141,6 +142,8 @@ class ConstraintVariants:
         self.seen = set(self.state['seen'])
         self.state.setdefault('screenExclusions', [])
         self.state.setdefault('duplicateVariants', 0)
+        self.state.setdefault('partialSeen', [])
+        self.partial_seen = set(self.state['partialSeen'])
 
     def excluded(self, rows, proof):
         self.state['screenExclusions'].append(dict(rowsHash=digest(rows),proof=proof))
@@ -154,6 +157,23 @@ class ConstraintVariants:
         if self.deadline is not None and time.monotonic() >= self.deadline:
             raise TimeoutError('constraint_generation_deadline')
 
+    def effective_key(self, rows):
+        bounds = {}
+        for row in rows:
+            t, axis = row.get('t1', row.get('offset')), row['mode']
+            lo, hi = self.envelopes['states'][t][axis]
+            if row['cmp'] == 'GE' and lo >= row['rhs'] or row['cmp'] == 'LE' and hi <= row['rhs']:
+                continue
+            key = (t, axis, row['cmp'])
+            value = row['rhs']
+            bounds[key] = max(bounds.get(key, value), value) if row['cmp'] == 'GE' else min(bounds.get(key, value), value)
+        return digest(sorted((t, axis, cmp, value) for (t, axis, cmp), value in bounds.items()))
+
+    def segment_rows(self, item, face, begin, end):
+        if face['axis'] == 'Y':
+            return []
+        return [self.face_row(face, t) for t in range(begin, end+1) if t in item['required'][face['axis']]]
+
     def option(self, item, cursor):
         if 'rows' in item:
             index = cursor.get('index', 0)
@@ -164,6 +184,10 @@ class ConstraintVariants:
         cursor.setdefault('chain', 0)
         cursor.setdefault('frontier', [])
         cursor.setdefault('started', False)
+        cursor.setdefault('seenOptions', [])
+        option_seen = set(cursor['seenOptions'])
+        cursor.setdefault('seenNodes', [])
+        node_seen = set(cursor['seenNodes'])
         while cursor['chain'] < len(item['chains']):
             self.check()
             chain = item['chains'][cursor['chain']]
@@ -176,6 +200,14 @@ class ConstraintVariants:
                 cursor['started'] = False
                 continue
             depth, start, gates = cursor['frontier'].pop()
+            ranges = intervals(chosen[:depth+1], gates, 0, start)
+            paid = [row for face, (a, b) in zip(chosen, ranges[:-1])
+                    for row in self.segment_rows(item, face, a, b)]
+            node_key = digest([cursor['chain'], depth, start, self.effective_key(paid)])
+            if node_key in node_seen:
+                continue
+            node_seen.add(node_key)
+            cursor['seenNodes'].append(node_key)
             covered = False
             for j in range(depth+1):
                 beginning = 0 if j == 0 else gates[j-1]+int(consecutive(chosen[j-1],chosen[j]))
@@ -198,8 +230,14 @@ class ConstraintVariants:
                     kind=passage_kind(chosen), blockageCounts=counts, blockageCount=len(gates))
                 rows, failed = compile_passages(dict(self.route, passages=[passage]), self.events)
                 if not failed:
-                    return dict(passage=passage, rows=[dict(r, leg=0, offset=r['t1']) for r in rows
-                                                       if r['t1'] in item['required'][r['mode']]])
+                    rows = [dict(r, leg=0, offset=r['t1']) for r in rows if r['t1'] in item['required'][r['mode']]]
+                    key = digest([self.effective_key(rows), counts])
+                    if key in option_seen:
+                        self.state['duplicateVariants'] += 1
+                        continue
+                    option_seen.add(key)
+                    cursor['seenOptions'].append(key)
+                    return dict(passage=passage, rows=rows)
                 continue
             next_nodes = []
             for gate in range(start, self.through+1):
@@ -240,19 +278,15 @@ class ConstraintVariants:
             if node['item'] == len(self.items):
                 self.state['pending'].pop()
                 rows = [dict(r, t1=r.get('t1', r['offset'])) for r in node['rows']]
+                key = self.effective_key(rows)
+                if key in self.seen:
+                    self.state['duplicateVariants'] += 1
+                    continue
                 proof = interaction_reachability(self.envelopes, rows, refine=True)
                 if proof['ruledOut']:
                     self.excluded(rows,proof)
-                    continue
-                effective = []
-                for row in rows:
-                    lo, hi = self.envelopes['states'][row['t1']][row['mode']]
-                    if row['cmp'] == 'GE' and lo >= row['rhs'] or row['cmp'] == 'LE' and hi <= row['rhs']:
-                        continue
-                    effective.append({k: row[k] for k in ('mode', 't1', 'cmp', 'rhs')})
-                key = digest(sorted(effective, key=lambda r: (r['t1'], r['mode'], r['cmp'], r['rhs'])))
-                if key in self.seen:
-                    self.state['duplicateVariants'] += 1
+                    self.seen.add(key)
+                    self.state['seen'].append(key)
                     continue
                 self.seen.add(key)
                 self.state['seen'].append(key)
@@ -276,6 +310,15 @@ class ConstraintVariants:
                 continue
             child = dict(item=node['item']+1, rows=rows,
                          passages=node['passages']+([option['passage']] if 'passage' in option else []))
+            # Keep resource usage in a partial identity: equal rows alone do not
+            # make different remaining blockage budgets interchangeable.
+            partial_key = digest([child['item'], self.effective_key(rows),
+                [(p['solidIndex'], p['blockageCounts']) for p in child['passages']]])
+            if partial_key in self.partial_seen:
+                self.state['duplicateVariants'] += 1
+                continue
+            self.partial_seen.add(partial_key)
+            self.state['partialSeen'].append(partial_key)
             self.state['pending'].append(child)
         self.state['exhausted'] = True
         raise StopIteration

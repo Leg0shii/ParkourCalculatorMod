@@ -1,6 +1,16 @@
 # Linkcraft Real11 opening: agent guide
 
-This is a navigation and interpretation guide, not a new solve. Generic code must not depend on these labels/coordinates/ticks. [Current state](CURRENT_STATE.md) and [current DFS/interaction plan](../autonomy/DFS_INTERACTION_IMPLEMENTATION_PLAN.md) supersede old pilot policies. Read the archived ledgers to answer existing questions before rerunning jobs.
+## Current requested terminal goal: virtual B7 landing (2026-11-03)
+
+The user clarified the intended finish after the fixed-clock benchmark. At the B7-height landing event (height7), use the horizontal goal **X < 729.7 and Z >= -1095.3**, with no goal-imposed lower X bound or upper Z bound. The region is a virtual landing target extending indefinitely toward +Z, not B7's original finite support footprint. Its coordinates are player-center bounds; do not expand them by the hitbox again.
+
+The task objective is lexicographic: **minimize the achieved landing tick T, then maximize Z[T] among candidates at that earliest tick**. T is discovered, not fixed to64. Preserve normal momentum, zero inertia thresholds and original-state continuous re-solves. Use existing numerical clearances for strict inequalities.
+
+This goal does not authorize adding artificial side walls or treating an enlarged goal footprint as new collision terrain during the approach. Supplied physical obstacles and the virtual terminal condition remain distinct. Finite implementation envelopes must come from reach/horizon bounds, not arbitrary goal-coordinate caps.
+
+The generic `terminal_goals` adapter and the [new fixture](../autonomy/experiments/virtual-finish/fixture.json) now implement this objective. It discovers the downward height-crossing tick from the existing scalar movement model, adds only endpoint horizontal rows and preserves actual collisions with the supplied scene. An overshooting trajectory can end below height7 and airborne: this is a nominal landing-height clock, not an artificial collision floor. Actual Y and ground state are reported separately. Ordinary finite-support landing choices remain available. The 200-input horizon is a search guard, not a fixed finish. [New cold evidence](../autonomy/experiments/virtual-finish/README.md): combined0/8 DFS finds67 (Z≈−1093.82313); a separate initial0-only cold diagnostic finds64 (Z≈−1093.26755), with no reference seeds. All34 replay checks pass. The combined run still spends its budget in the initial8 subtree, so do not present the diagnostic as default traversal success. Neither run proves the earliest possible tick. All372 selected regression tests pass. The archived91.22s MAXZ-at64 result remains historical.
+
+This guide first describes the archived pre-DFS audit. [Current DFS cold/resume results](../autonomy/experiments/dfs-interactions/README.md) and evidence are a separate, newer corpus. Generic code must not depend on these labels/coordinates/ticks. [Current state](CURRENT_STATE.md) and [current DFS/interaction plan](../autonomy/DFS_INTERACTION_IMPLEMENTATION_PLAN.md) supersede old pilot policies. Read the archived ledgers to answer existing questions before rerunning jobs.
 
 ## Current requested task and historical benchmark
 
@@ -56,7 +66,11 @@ P labels are local to the current cold audit corpus, not permanent solver types.
 
 P03 completed local work after two worker calls, but the window barrier prevented deeper continuation. P06/P07 repeatedly outranked ready P02 descendants using current `(prefix inputs,-jumps,runs,id)` priority; persistent traversal bypasses `fair_parents`. P06 received29 chunks, P07 received50. P01-family calls201, P02-family calls7. P06/P07 together account176 of208 worker calls (164 main+12 spatial). Second-jump inputs13..15 did appear as shorter pending F02..F07; they were not proved infeasible or main-scored. **16/17 are second-jump absolute indices, not run counts.**
 
-Approved correction: compare arrivals at B2, P02 observed17 versus P01 observed21, follow P02 to completion first, keep P01 for backtracking. These measurements are not proven minimum arrivals. A complete reference from the P01 family ultimately does better at the final objective than the saved delayed continuation; early arrival alone does not authorize dropping the fallback.
+Implemented correction: compare arrivals at B2, P02 observed17 versus P01 observed21, follow P02 to completion first, keep P01 for backtracking. These measurements are not proven minimum arrivals. A complete reference from the P01 family ultimately does better at the final objective than the saved delayed continuation; early arrival alone does not authorize dropping the fallback.
+
+## Latest virtual-finish pruning questions
+
+See [the dedicated audit](../autonomy/experiments/virtual-finish/PRUNING_AUDIT.md) for cold10–12, initial0 5–8 and9–15. It separates missing same-interaction minimum-run pruning from the weak elapsed-prefix time cutoff, and identifies corridor repairs versus actual terminal-contact choices. This is an offline explanation, not a new solve or shipped pruning fix.
 
 ## Exact counts and limits of the record
 
@@ -87,3 +101,10 @@ At state10 delayed8 wins position and forward velocity, yet immediate0's advanta
 `728.9` is an authored guide point, not a player-expanded B6 face. B6 expanded horizontal X faces are approximately729.7 and731.3. Historical projection clipped excursions to guide-coordinate extents; the scoped corridor change uses broad physical movement regions and matching modeled obstacles. Keep logging to distinguish physically valid alternate signatures, too-narrow corridor bugs, and missing physical constraints.
 
 The saved complete reference uses jumps `[0,12,21,30,40,55]`, achieves Z64 approximately−1093.2675533415547, airborne, with no required B7 landing. It is a validated best-found control, **not a global optimality certificate or cold-discovery result**. Run commands are in [runbook](RUNBOOK.md).
+
+
+## Current implementation evidence
+
+[DFS results](../autonomy/experiments/dfs-interactions/README.md) supersede the pre-DFS stall as current discovery status. The cold run reaches a complete standalone route after91.22s/eight calls; total cold/resume dispatches are10+4=14, with no repeated completed requests and all10/18 independent witness replays passing. [Summary](../autonomy/experiments/dfs-interactions/evidence/summary.json), [current call table](../autonomy/experiments/dfs-interactions/CALLS.md). Both root arrivals17/21 were measured and retained; only17 has been fully descended so far. Best Z64−1094.5755032869683 remains about1.308 blocks behind the separately seeded reference. Distinguish valid cold discovery from proof of optimality or exhaustive root coverage.
+
+Named step/grind interaction queries now preserve probe-height uncertainty rather than using realized Y alone. The generic five-input grind/blip regression exposed and verified this correction; it is separate from the horizontally unreachable Real11 B4 bug. Production algorithms contain no Real11-specific tick/block rules.

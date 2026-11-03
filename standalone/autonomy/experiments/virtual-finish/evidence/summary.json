@@ -1,0 +1,117 @@
+{
+  "runtimeSource": "71c9bb7e",
+  "objectiveOrder": [
+    "earliest descending height7 tick",
+    "maximum Z at that tick"
+  ],
+  "terminalRegion": {
+    "xLessThan": 729.7,
+    "zAtLeast": -1095.3,
+    "artificialTerrain": false
+  },
+  "runs": {
+    "cold": {
+      "source": "71c9bb7e8158e3ff5b8481bcdb99ec2f7edd25f3",
+      "status": "feasible",
+      "termination": "deadline",
+      "elapsedSeconds": 312.71386620774865,
+      "firstFullSolutionSeconds": 100.94657662510872,
+      "solverCalls": 12,
+      "replayChecks": 13,
+      "allReplaysPassed": true,
+      "ticks": 67,
+      "x": 728.8506329602875,
+      "z": -1093.8231291279697,
+      "actualY": 7,
+      "actualOnGround": true,
+      "jumps": [
+        8,
+        19,
+        30,
+        43,
+        58
+      ],
+      "supports": [
+        {
+          "tick": 17,
+          "block": "b2"
+        },
+        {
+          "tick": 28,
+          "block": "b3"
+        },
+        {
+          "tick": 40,
+          "block": "b4"
+        },
+        {
+          "tick": 58,
+          "block": "b5"
+        },
+        {
+          "tick": 67,
+          "block": "b7"
+        }
+      ],
+      "initialJumpDomain": [
+        0,
+        8
+      ],
+      "minimumTicksProven": false,
+      "objectiveOptimalityProven": false,
+      "timeBoundExclusions": 4,
+      "activeFrames": 4,
+      "deferredRefinementFrames": 1
+    },
+    "initial0-cold": {
+      "source": "71c9bb7e8158e3ff5b8481bcdb99ec2f7edd25f3",
+      "status": "feasible",
+      "termination": "deadline",
+      "elapsedSeconds": 306.4226305820048,
+      "firstFullSolutionSeconds": 59.45692862197757,
+      "solverCalls": 15,
+      "replayChecks": 21,
+      "allReplaysPassed": true,
+      "ticks": 64,
+      "x": 728.9505309738937,
+      "z": -1093.267554656693,
+      "actualY": 6.796735600668692,
+      "actualOnGround": false,
+      "jumps": [
+        0,
+        12,
+        21,
+        30,
+        40,
+        55
+      ],
+      "supports": [
+        {
+          "tick": 21,
+          "block": "b2"
+        },
+        {
+          "tick": 30,
+          "block": "b3"
+        },
+        {
+          "tick": 40,
+          "block": "b4"
+        },
+        {
+          "tick": 55,
+          "block": "b5"
+        }
+      ],
+      "initialJumpDomain": [
+        0
+      ],
+      "minimumTicksProven": false,
+      "objectiveOptimalityProven": false,
+      "timeBoundExclusions": 8,
+      "activeFrames": 4,
+      "deferredRefinementFrames": 1
+    }
+  },
+  "bestFoundRun": "initial0-cold"
+}

@@ -119,6 +119,7 @@ class SteppingGenerator:
 
 
 def open_stepping_choices(context):
+    from .interactions import interaction_allowed
     from .movement_composition import scalar_initial
     from .open_movement import approaches, first_descent, named_choice
     initial = scalar_initial(context['state'])
@@ -134,6 +135,8 @@ def open_stepping_choices(context):
             for case, jumping in [('normal_step', False), ('slab_boost', True)]:
                 if not enabled(case) or not 0 < rise <= f32(.6) or jumping and rise <= f32(.42):
                     continue
+                if not interaction_allowed(context, box, 0, jumping=jumping):
+                    continue
                 for axis in ('X', 'Z'):
                     for direction in (-1, 1):
                         rows = [outside_row(box, axis, -direction, 0)] + region_rows(block, 1)
@@ -143,7 +146,7 @@ def open_stepping_choices(context):
                                               constraints=rows, support=block['id'] if not jumping else None)
                         if choice:
                             yield choice
-            if enabled('corner_jump_cancel') and f32(.42) < rise <= f32(.6):
+            if enabled('corner_jump_cancel') and f32(.42) < rise <= f32(.6) and interaction_allowed(context, box, 0, jumping=True):
                 for xdir in (-1, 1):
                     for zdir in (-1, 1):
                         event = dict(case='corner_jump_cancel', input=0, plane=y0, higherHeight=block['top'],
@@ -159,12 +162,16 @@ def open_stepping_choices(context):
             landing = first_descent(trace, lower['top'])
             if landing is None:
                 continue
+            if not interaction_allowed(context, box_for(lower, context), landing, jumping=jumping):
+                continue
             y = trace['position'][landing]
             lower_rows = region_rows(lower, landing, 'case:lower_landing')
             for higher in scene['blocks']:
                 if higher['top'] <= lower['top']:
                     continue
                 box = box_for(higher, context)
+                if not interaction_allowed(context, box, landing, jumping=jumping):
+                    continue
                 if enabled('blip') and 0 <= higher['top'] - y <= f32(.6):
                     options = landing_wall_options(box, landing) if landing else (
                         ([outside_row(box, axis, sign, 0, 'blip:wall_avoid')], [])

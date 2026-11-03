@@ -1,5 +1,7 @@
 # Run ticks over a block route
 
+> Current implementation: [DFS/early-interaction results](experiments/dfs-interactions/README.md). This supersedes earlier pending-status and checkpoint-ordering descriptions below; historical evidence remains unchanged.
+
 > Current entry: [standalone AGENTS](../AGENTS.md), [current state](../docs/CURRENT_STATE.md), [approved DFS/early-interaction plan](DFS_INTERACTION_IMPLEMENTATION_PLAN.md). The experiment updates below are chronological; current runtime still uses checkpoint traversal and the new plan is not implemented.
 
 Isolated cell-route experiment: [implementation, non-ladder benchmarks and next decisions](experiments/cell-routes/README.md), branch `research/ipopt-cell-routes`. Bounds remain deferred.

@@ -202,6 +202,17 @@ class CorridorAdapter:
         result.validation_scope = scope
         return result
 
+    def eligible(self, envelopes, through):
+        from ..interactions import block_interaction
+        result = copy.copy(self)
+        result.corridor = copy.deepcopy(self.corridor)
+        result.gates = [g for g in self.gates if any(not block_interaction(envelopes,g['box'],t)['ruledOut']
+                                                  for t in range(through))]
+        ids = {g['id'] for g in result.gates}
+        result.corridor.signature = tuple(token for token in self.corridor.signature if token[0] in ids)
+        result.counts['unreachableInteractionGatesRemoved'] += len(self.gates)-len(result.gates)
+        return result
+
     def failure_diagnostics(self, checked, plan, candidate, vertical, partial, alternatives):
         failure = dict(reason=checked['reason'])
         if checked['reason'] == 'corridor_projection':

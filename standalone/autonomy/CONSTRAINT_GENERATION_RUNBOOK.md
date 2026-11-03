@@ -1,5 +1,7 @@
 # Reusing the mod's block constraints in route discovery
 
+> Current implementation: [DFS/early-interaction results](experiments/dfs-interactions/README.md). This supersedes earlier pending-status and checkpoint-ordering descriptions below; historical evidence remains unchanged.
+
 > Current authority: [DFS/early-interaction plan](DFS_INTERACTION_IMPLEMENTATION_PLAN.md), [current state](../docs/CURRENT_STATE.md). The seven-workstream fixes are implemented to their recorded scope; universal early builder gating, ownership and DFS remain pending. Earlier pending statements below are historical, superseded by the implemented workflow section and current plan.
 
 

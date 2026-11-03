@@ -1,5 +1,7 @@
 # Orchestrator fixes and regression results
 
+> Current implementation: [DFS/early-interaction results](../dfs-interactions/README.md). This supersedes earlier pending-status and checkpoint-ordering descriptions below; historical evidence remains unchanged.
+
 > Current next implementation: [DFS and universal early interaction eligibility](../../DFS_INTERACTION_IMPLEMENTATION_PLAN.md), still pending. [Current state](../../../docs/CURRENT_STATE.md) separates the seven implemented workstreams below from their remaining coverage/ordering gaps.
 
 The earlier e3d1087b coverage/repair milestone and its unchanged evidence are preserved in [LEGACY_RESULTS.md](LEGACY_RESULTS.md). The current implementation/evidence below are a separate milestone.

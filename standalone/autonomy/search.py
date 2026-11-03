@@ -265,7 +265,9 @@ def find_route(request, compiler, *, seconds=60, candidate_seconds=2, retries=1,
                 result = solve(problem, seconds=budget, stop_on_feasible=not polish,
                                python_executable=python_executable, cancel_event=cancel_event, on_incumbent=publish)
                 diagnostics.append({'status': result['status'], 'termination': result.get('termination'),
-                                    'elapsedSeconds': result.get('elapsedSeconds'), 'error': result.get('error')})
+                                    'elapsedSeconds': result.get('elapsedSeconds'), 'error': result.get('error'),
+                                    'problemHash': fingerprint(problem), 'request': copy.deepcopy(problem),
+                                    'callOptions': dict(seconds=budget,stopOnFeasible=not polish)})
                 if result['status'] == 'cancelled':
                     return {'status': 'cancelled', 'diagnostics': diagnostics}
                 if result['feasible']:

@@ -20,7 +20,7 @@
 
 `ipopt/tests/` separates `test_model` (scalar equations/constraints), `test_solver` (worker lifecycle, independent validation and failure handling), `test_continuation` (incumbents/inertia phases), `test_capture`, `test_ladder_model`, `test_movement` and real-worker `test_integration`. Reuse these instead of creating a second acceptance oracle.
 
-Useful existing contracts in `test_orchestrator_continuation`: all swept acceleration directions remain in the envelope; required and unwanted interactions share one query; selected clips preserve feasible controls; complete scope cannot omit blocks; fall rejection needs required future contact; schedule equality is stronger than count equality; independent velocity/speed guards; interrupted generation and terminal resume retain work; omitted future obstacles do not reject preliminary guidance. These test existing helpers, not universal early wiring or DFS, which remain planned.
+Useful existing contracts in `test_orchestrator_continuation`: all swept acceleration directions remain in the envelope; required and unwanted interactions share one query; selected clips preserve feasible controls; complete scope cannot omit blocks; fall rejection needs required future contact; schedule equality is stronger than count equality; independent velocity/speed guards; interrupted generation and terminal resume retain work; omitted future obstacles do not reject preliminary guidance. The newer `test_depth_first` adds traversal, promotion, ownership, accepted-variant, resume and early-builder coverage.
 
 ## Non-Real11 regression families
 
@@ -35,7 +35,7 @@ Use fixture paths under [autonomy/fixtures](../autonomy/fixtures). Examples:
 
 The [experiments](../autonomy/experiments) directories contain fixture-specific runbooks/results, rendered trajectories, archived reports and diagnostic scripts. These are evidence, not all unit-test inputs. In particular the old 200/400-input IPOPT Real11 captures are different from the seven-box/state64 autonomous opening.
 
-## Tests required for the pending DFS/interaction implementation
+## DFS/interaction acceptance coverage
 
 Follow the detailed acceptance section in [the current plan](../autonomy/DFS_INTERACTION_IMPLEMENTATION_PLAN.md). At minimum:
 
@@ -49,8 +49,19 @@ Follow the detailed acceptance section in [the current plan](../autonomy/DFS_INT
 
 ## Recorded baseline and honest reporting
 
-[Orchestrator results](../autonomy/experiments/orchestrator-fixes/README.md) records: final focused numerical gate 94 passes; wider numerical autonomy discovery 450 tests, 449 passes and one baseline failure (~742s); fast discovery 451 tests with 89 skips and the same failure; IPOPT 54 tests with nine skips and executed tests passing. The broad numerical process preceded the final queue-copy regression; the focused gate covered that addition. These numbers are historical, not this documentation pass's validation.
+[Orchestrator results](../autonomy/experiments/orchestrator-fixes/README.md) records: final focused numerical gate 94 passes; wider numerical autonomy discovery 450 tests, 449 passes and one baseline failure (~742s); fast discovery 451 tests with 89 skips and the same failure; IPOPT 54 tests with nine skips and executed tests passing. The broad numerical process preceded the final queue-copy regression; the focused gate covered that addition. These numbers describe the pre-DFS source; current validation is recorded in the DFS experiment results.
 
 Known baseline: `test_ladder_composition.LadderRegionTests.test_repeated_ladder_ceiling_events_regenerate_the_complete_schedule`, reproduced unchanged on clean `3082f8fc`. Report it explicitly if encountered. Do not suppress it or casually fix an unrelated ladder mechanism during the non-ladder work.
 
 For new runs record source revision plus dirty diff, Python/runtime/compiler context, command, wall time, counts/skips/failures, full acceptance tier and limits. Increasing budgets is useful for accuracy, but is not a substitute for explaining an exclusion or generation defect. Unknown outcomes remain in the audit. Documentation changes need local navigation/inventory validation, not solver reruns.
+
+
+Current DFS acceptance: [results and logs](../autonomy/experiments/dfs-interactions/README.md) record368/368 selected non-ladder numerical autonomy tests,54/54 IPOPT tests and25/25 post-logging repair/terminal tests passing. The previous broader466-test process exposed two grind/blip regressions, corrected by retaining named-probe uncertainty; both pass in the final non-ladder gate. The pre-existing ladder baseline remains. Current cold/resume reports reconcile14 worker calls, zero repeated completed requests and all independent witness replays. The final affected-scope pass intentionally excludes dedicated ladder/climbable/vine tests and is not an all-suite green claim.
+
+## Virtual terminal goals
+
+`test_terminal_goals` checks descending-height timing, one-sided player-center rows, strict-bound clearance, no fake floor, generic airborne overshoot and independent native scene replay. Run with the native environment from the runbook; otherwise the integration case skips. Existing fixed-clock and physical landing tests remain separate regressions.
+
+## Latest-jump run pruning
+
+`test_minimum_runs` combines generic dispatch/resume/unknown controls with archived Real11 programs. It checks local preparation counts and preserves different prior interactions, hard obstacle-side rows and free/physical terminal contacts. Full counterfactual controls can set `minimum_run_pruning=False` in fresh fixture settings; policy changes intentionally invalidate exact resume. Saved `minimumRunExclusions` include each discrete program and the representative causing exclusion. Continuation-time pruning remains deferred and is not required for this policy.

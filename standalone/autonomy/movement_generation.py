@@ -19,6 +19,9 @@ def generate_choices(kind, context, **options):
         raise ValueError('Open choices use relative inputs; the composer owns retiming')
     if kind not in GENERATORS:
         raise ValueError('Unsupported movement generator: ' + str(kind))
+    if kind=='normal' and context.get('mode')=='open' and context.get('terminalGoal') is not None:
+        from .terminal_goals import finish_choices
+        yield from finish_choices(context)
     for choice in GENERATORS[kind].generate(context, **options):
         if choice['unit']['type'] != kind:
             raise ValueError('Movement generator returned a different type')

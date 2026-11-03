@@ -1,6 +1,6 @@
 # Consolidated plan: depth-first decision search and early interaction eligibility
 
-2026-11-03. This is the current authoritative implementation plan requested by the user. It combines the traversal correction with [the interaction-generation fix](GENERATION_RELEVANCE_PLAN.md). The previous shortest-prefix processing rule and checkpoint-window drain requirement are superseded. Runtime implementation has not started under this plan. Continue in the existing isolated research/ipopt-cell-routes worktree; no other-agent work is requested.
+2026-11-03. This is the current authoritative implementation plan requested by the user. It combines the traversal correction with [the interaction-generation fix](GENERATION_RELEVANCE_PLAN.md). The previous shortest-prefix processing rule and checkpoint-window drain requirement are superseded. Core runtime implementation landed at `498c054c`; [results and current validation](experiments/dfs-interactions/README.md) track acceptance and remaining limits. The requirements below remain the design record. Continue in the existing isolated research/ipopt-cell-routes worktree; no other-agent work is requested.
 
 ## 1. Intended search behavior
 

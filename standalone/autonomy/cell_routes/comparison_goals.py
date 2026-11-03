@@ -13,6 +13,9 @@ from .time_progress import generation_exhausted
 
 def goal_spec(scene, spec=None):
     spec=copy.deepcopy(spec or dict(kind='landing',block=scene['goalBlock']))
+    if spec.get('kind')=='landing_height_region':
+        from standalone.autonomy.terminal_goals import prepare_goal
+        return prepare_goal(spec)
     if spec.get('kind')=='landing':
         if set(spec)-{'kind','block'} or spec.get('block') not in {b['id'] for b in scene['blocks']}:
             raise ValueError('Landing comparison requires a scene block')

@@ -2,7 +2,7 @@
 
 Start at [AGENTS.md](AGENTS.md). Current work is on `research/ipopt-cell-routes` in the isolated research worktree, continuing the older IPOPT consolidation. The continuous solver, movement composition, collision validation, local replay and TAS export already exist.
 
-The next approved runtime change is [goal-aware DFS and early interaction eligibility](autonomy/DFS_INTERACTION_IMPLEMENTATION_PLAN.md). It has not been implemented. This documentation pass changes no solver behavior.
+[Goal-aware DFS and early interaction eligibility](autonomy/DFS_INTERACTION_IMPLEMENTATION_PLAN.md) is implemented at `498c054c`. See [results and validation](autonomy/experiments/dfs-interactions/README.md) and the current-state guide for limits.
 
 | Task | Entry |
 | --- | --- |

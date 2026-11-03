@@ -216,7 +216,7 @@ class OuterResumeTests(unittest.TestCase):
         self.assertEqual(len(seeds),2)
         cp=Checkpoint(2,-1,(1.,0.),tuple(scene['initial']['position']),(5.5,1.,.5),())
         calls=[]
-        def generated(scene,roots,*,report,continuation=None,**kwargs):
+        def generated(scene,*,report,continuation=None,**kwargs):
             state=copy.deepcopy(continuation) if continuation else dict(cursor=0,expanded=0,exhausted=False)
             report['continuation']=state
             while state['cursor'] < len(seeds):
@@ -226,15 +226,17 @@ class OuterResumeTests(unittest.TestCase):
         def evaluate(scene,p,compiler,adapter,work,motion,**kwargs):
             work.before_solve({});identity=program_physics_key(p);calls.append(identity)
             score=float(seeds.index(next(q for q in seeds if program_physics_key(q)==identity)))
-            best=dict(allocation=[0],cost=0,plan=dict(ticks=2),profiles=[p['profile']],
+            best=dict(allocation=[0],cost=0,plan=dict(ticks=2,walls=[]),profiles=[p['profile']],
                 candidate=dict(objective=score,positions=[[0.,0.],[score,0.],[score,0.]],velocity=[[0.,0.]]*3,yaw=[0.,0.]))
             return dict(status='feasible',termination='done',best=best,work=dict(solverCalls=1),
                 fullSceneValidated=True,repairState=dict(pending=[],unresolved=[],constraintGeneration=dict(exhausted=True)))
         class Compiler:pass
         options=dict(terminal_checkpoint=cp,spatial_points=[[.5,1.,.5],[5.5,1.,.5]],seconds=3,rescue_passes=0)
         with patch('standalone.autonomy.cell_routes.checkpoint_search._motion_bound',return_value={}), \
-             patch('standalone.autonomy.cell_routes.checkpoint_search.fair_programs',side_effect=generated), \
-             patch('standalone.autonomy.cell_routes.checkpoint_search.evaluate_program',side_effect=evaluate):
+             patch('standalone.autonomy.cell_routes.depth_first.iter_movement_programs',side_effect=generated), \
+             patch('standalone.autonomy.cell_routes.depth_first.generate_choices',side_effect=lambda *args,**kwargs:(v for v in ())), \
+             patch('standalone.autonomy.cell_routes.checkpoint_search.evaluate_program',side_effect=evaluate), \
+             patch('standalone.autonomy.cell_routes.checkpoint_experiment.replay_witness',return_value=dict(passed=True)):
             first=find_checkpoint_route(scene,Compiler(),max_solver_calls=1,**options)
             saved=json.loads(json.dumps(first['searchState']))
             second=find_checkpoint_route(scene,Compiler(),max_solver_calls=5,resume_state=saved,**options)

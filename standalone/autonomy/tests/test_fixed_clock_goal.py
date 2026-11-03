@@ -32,10 +32,10 @@ class FixedClockTests(unittest.TestCase):
         self.assertEqual(policy.audit(ordinary)['progress'],0)
         self.assertEqual(policy.audit(ranked)['progress'],1)
 
-    def test_spatial_goals_must_match_the_comparison_checkpoints(self):
+    def test_unknown_spatial_goal_is_rejected_before_compilation(self):
         scene=flat_scene()
-        with self.assertRaisesRegex(ValueError,'one shared spatial goal'):
-            find_checkpoint_route(scene,object(),checkpoints=[],spatial_goals=[dict(kind='landing',block='goal')],
+        with self.assertRaisesRegex(ValueError,'Landing comparison requires'):
+            find_checkpoint_route(scene,object(),checkpoints=[],spatial_goals=[dict(kind='landing',block='missing')],
                 spatial_points=[[.5,1,.5],[5.5,1,.5]])
 
     def test_explicit_clock_preserves_direction_without_goal_region(self):
@@ -80,8 +80,47 @@ class FixedClockNumericalTests(unittest.TestCase):
             self.assertFalse(best['candidate']['onGround'][-1])
             self.assertFalse(best['route']['terminalSupportRequired'])
             self.assertTrue(replay_witness(prepare_scene(request),best,compiler)['passed'])
+            from standalone.ipopt.model import prepare, fingerprint
+            calls=[d for r in result['finalAttempts'] for a in r['numericalAttempts'] for d in a.get('diagnostics',[])]
+            self.assertTrue(calls)
+            for call in calls:
+                self.assertEqual(fingerprint(prepare(call['request'])),call['problemHash'])
         self.assertEqual(request,original)
         self.assertEqual(result['goalType'],'fixed_absolute_tick_objective')
+
+    def test_unreachable_floor_gates_are_excluded_from_terminal_stage_checks(self):
+        from unittest.mock import patch
+        from standalone.autonomy.cell_routes.geometry import decompose
+        from standalone.autonomy.cell_routes.routes import corridor_for_points, landmarks
+        from standalone.autonomy.cell_routes.local import CorridorAdapter, SearchWork
+        from standalone.autonomy.cell_routes.checkpoint_search import evaluate_program, _motion_bound
+        from standalone.autonomy.open_movement import event_choice
+        from standalone.autonomy.movement_composition import empty_program, append_choice
+        request=flat_scene()
+        middle=[3.5,0.,-1.,4.5,1.,1.]
+        request['collisionScene']['solids'].append(middle)
+        request['blocks'].append(dict(id='middle',sourceBlock='middle',solidIndex=2,top=1.,bounds=[3.5,4.5,-1.,1.]))
+        d=decompose(request);g=landmarks(request)
+        corridor=corridor_for_points(d,[[.5,1,.5],[.5,3,.5],[8.,3,.5]],g)
+        adapter=CorridorAdapter(request,corridor,g,decomposition=d)
+        root=empty_program(request['initial'],threshold=0.)
+        p=append_choice(root,event_choice(dict(threshold=0.),'normal',root['initial'],8,jumping=True))
+        cp=Checkpoint(8,-1,(1.,0.),(.5,1.,.5),(8.,3.,.5),corridor.signature)
+        original=Checkpoint.stage;seen=[]
+        def stage(checkpoint,candidate,gates):
+            seen.append(gates)
+            self.assertFalse(any(gate['box']==middle for gate in gates))
+            return original(checkpoint,candidate,gates)
+        with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler, \
+             patch.object(Checkpoint,'stage',stage):
+            result=evaluate_program(request,p,compiler,adapter,SearchWork(16),_motion_bound(request,compiler,2),
+                checkpoint=cp,seconds=5,candidate_seconds=.7,solver_calls=16,
+                python_executable=os.environ['PKC_IPOPT_PYTHON'])
+            self.assertIsNotNone(result['best'],result['termination'])
+            self.assertTrue(seen)
+            self.assertTrue(result['comparisonStage']['accepted'])
+            self.assertGreater(adapter.counts['unreachableInteractionGatesRemoved'],0)
+            self.assertTrue(replay_witness(request,result['best'],compiler)['passed'])
 
 
 class SupportOrderTests(unittest.TestCase):

@@ -2,24 +2,27 @@ import copy
 import time
 
 from .case_profiles import entry_possible
-from .movement_composition import append_choice, boundary_state, empty_program, program_physics_key, truncate_program
+from .movement_composition import append_choice, boundary_state, empty_program, program_physics_key, program_search_key, truncate_program
 from .movement_generation import generate_choices
 from .solve_spec import digest, processing_key
 
 
 def persistent_programs(scene, *, settings, report, continuation=None, deadline=None, cancel_event=None, work=None,
                         initial_programs=None, checkpoint_tick=None, threshold=.005, screen=None,
-                        context_adapter=None, program_filter=None, stop_on_goal=True, **kwargs):
+                        context_adapter=None, program_filter=None, stop_on_goal=True, terminal_goal=None, **kwargs):
     initial = empty_program(scene['initial'], threshold=threshold)
     initial['terminalSupport'] = scene['startBlock']
     seeds = [initial] if initial_programs is None else initial_programs
-    context = digest(dict(scene=scene, settings={k: v for k, v in settings.items() if k not in
+    context_value = dict(version=2, scene=scene, settings={k: v for k, v in settings.items() if k not in
         ('maxPrefixes', 'maxQueuedPrefixes', 'maxChoicesPerType', 'expansionsPerProposal')},
-        roots=[program_physics_key(p) for p in seeds], checkpoint=checkpoint_tick, threshold=threshold,
-        stopOnGoal=stop_on_goal))
+        roots=[program_search_key(p) for p in seeds], checkpoint=checkpoint_tick, threshold=threshold,
+        stopOnGoal=stop_on_goal)
+    if terminal_goal is not None:
+        context_value['terminalGoal']=terminal_goal
+    context=digest(context_value)
     if continuation is not None and continuation.get('context') != context:
         raise ValueError('Incompatible movement generation checkpoint')
-    state = copy.deepcopy(continuation) if continuation is not None else dict(version=1, context=context,
+    state = copy.deepcopy(continuation) if continuation is not None else dict(version=2, context=context,
         pending=copy.deepcopy(seeds), ready=[], expansion=None, seen=[], generated=0, expanded=0, emitted=0,
         screened=0, policyRejections=0, exhausted=False)
     state.setdefault('exclusions', [])
@@ -37,6 +40,8 @@ def persistent_programs(scene, *, settings, report, continuation=None, deadline=
             raise TimeoutError('deadline')
 
     def complete(p):
+        if terminal_goal is not None:
+            return p.get('terminalGoal')==terminal_goal
         return (checkpoint_tick is not None and p['profile']['airtime'] == checkpoint_tick or
             stop_on_goal and p['profile']['grounded'][-1] and p['terminalSupport'] == scene['goalBlock']
             and p['profile']['airtime'] > 0)
@@ -64,6 +69,9 @@ def persistent_programs(scene, *, settings, report, continuation=None, deadline=
             e = state['expansion']
             if state['ready'] and (e is None or e.get('cursor', 0) % settings['maxChoicesPerType'] == 0):
                 program = take(state['ready'])
+                if program_filter is not None and not program_filter(program):
+                    state['policyRejections'] += 1
+                    continue
                 state['emitted'] += 1
                 program['terminal'] = 'open' if checkpoint_tick is not None else 'landed'
                 update()
@@ -74,6 +82,9 @@ def persistent_programs(scene, *, settings, report, continuation=None, deadline=
                     update('prefix_limit')
                     return
                 program = take(state['pending'])
+                if program_filter is not None and not program_filter(program):
+                    state['policyRejections'] += 1
+                    continue
                 if complete(program):
                     state['ready'].append(program)
                     continue
@@ -94,6 +105,8 @@ def persistent_programs(scene, *, settings, report, continuation=None, deadline=
                 context_data = dict(mode='open', scene=scene, program=p, state=boundary_state(p), maxInputs=remaining,
                     maxEntryInputs=settings['maxEntryInputs'], checkBudget=budget, deadline=deadline,
                     cancelEvent=cancel_event, normalGap=checkpoint_tick is not None, generationRecords=[])
+                if terminal_goal is not None:
+                    context_data['terminalGoal']=terminal_goal
                 if threshold != .005:
                     context_data['threshold'] = threshold
                 if checkpoint_tick is not None:
@@ -119,6 +132,18 @@ def persistent_programs(scene, *, settings, report, continuation=None, deadline=
                 e['cursor'] += 1
                 state['generated'] += 1
             child = append_choice(e['program'], e['choice'], max_inputs=settings['maxInputs'])
+            if child is not None and terminal_goal is not None:
+                from .terminal_goals import bind_goal
+                child=bind_goal(child,terminal_goal,scene.get('supportClearance',1e-6))
+            if child is not None and screen is not None:
+                proof = screen(child)
+                if proof is not None:
+                    state['screened'] += 1
+                    state['exclusions'].append(dict(id=digest(program_physics_key(child)),
+                        ticks=child['profile']['airtime'], proof=proof, scope='full_proposal_before_projection'))
+                    e.pop('choice', None)
+                    update()
+                    continue
             if child is not None and checkpoint_tick is not None and child['profile']['airtime'] > checkpoint_tick:
                 child = truncate_program(child, checkpoint_tick)
             accepted = child is not None and entry_possible(child['profile'], initial_bounds)
@@ -127,7 +152,7 @@ def persistent_programs(scene, *, settings, report, continuation=None, deadline=
                 accepted = False
             if accepted and context_data.get('prefixFilter') is not None and not context_data['prefixFilter'](child):
                 accepted = False
-            identity = program_physics_key(child) if accepted else None
+            identity = program_search_key(child) if accepted else None
             if identity in seen:
                 accepted = False
             if accepted and screen is not None:
