@@ -138,6 +138,39 @@ The first comparison is at state10 after inputs0..9. Jump9 can appear in that pr
 
 There is no established physics or optimality argument here for excluding9/10/11. A wider initial-delay experiment is distinct from the solver/DFS fixes and should use a fresh fixture/output path, preserve the0/8 controls, and report finite tested coverage without claiming a complete timing search.
 
+## 8. Why compare first at state10, and what was supplied rather than discovered?
+
+Audited in the isolated investigation worktree at runtime source `93652150`, 2026-11-03. This describes that snapshot, not another agent's concurrent implementation. Documentation only; no numerical rerun or search change.
+
+State10 is an explicit pilot choice. The original fixture introduced in `78fe99dd` already contained `comparisonTicks=[10,28,44,55]`. `fixed_clock_experiment.run` converts those literal ticks into `Checkpoint` objects. No code derives them from landings, turn completion, reachability, or a quiet interval. The archived execution audit calls them arbitrary absolute states; no defensible derivation of the particular number10 was found. Their operational purpose was to split generation/scoring/retention into intermediate fixed-clock windows before the requested terminal64 objective. That explains the mechanism, not why10 is a good boundary.
+
+The first checkpoint runs after inputs0..9, while the immediate0 and delayed8 families are in different jump phases. In the old pilot, short-horizon pruning removed immediate0 even though it later supplied the best tested complete continuation. In the later cold corpus, both families survive10, but the state28 window barrier blocks further descent. Those are different failures of the same manually clocked orchestration, not a reason to treat10 as a natural decision boundary.
+
+### Fixture choices and driver policies
+
+| Item | Supplied behavior and consequence |
+| --- | --- |
+| Initial alternatives | `initialJumpInputs=[0,8]` excludes every other first grounded jump time, including9/10/11. |
+| Comparison clocks | `[10,28,44,55]` cuts partial programs at authored absolute times. Checkpoint construction supplies no comparison region or required crossing signature and leaves `bounded_end=False`; an accepted stage does not establish turn completion. |
+| Spatial route | Eighteen supplied `spatialPoints` choose one corridor via B2/B3/B4/B5 and left of B6. Decomposition is computed, but automatic route enumeration is bypassed. Coordinates such as X728.9 are authored guide values, not physical obstacle faces. Corridor/landmark restrictions then affect candidates. Earlier guide-extent clipping bugs are documented separately; do not report their old projection as the current repaired implementation. |
+| Support order | `requiredSupports=[b2,b3,b4,b5]` requires those contacts in order by64; skipping/reordering is excluded. Repeated contacts with the current support remain allowed. |
+| Scoring directions | The driver uses the normalized start→B5-center horizontal vector at10/28/44, then hard-selects +Z at the last comparison55. This is a driver rule, not the current guide segment or optimized direction. Terminal +Z is task-defined. |
+| Spatial comparison goals | The fixture maps10/28/44/55 to B2/B3/B4/B5 landing probes. Probe arrival times are solved, not supplied. The historical first trial instead used B5 for every probe. |
+| Movement domain | `types=[normal,stepping]`, `force45=True`, `sprint=True`, `incomingSprint=False`, zero intentional wall hits; this driver excludes ladders and other movement types. Ceiling is not selected in this fixture. These are selected capabilities/input assumptions, not proof that other movements are useless. |
+| Ground waits | The fixture permits64 total/per-jump run ticks. Generic grounded jump/nonjump generation and same-support returns permit later waits/self-hops. This is much broader than the earlier simplified no-extra-run interpretation, despite the narrow first-jump list. |
+| Physics model | The checkpoint driver explicitly uses inertia threshold0 while retaining normal momentum. This is the recorded modeling decision; coefficients, body dimensions and collision-phase rules come from shared physics/builders. |
+| Work order and advancement | Source code prioritizes `(simulated prefix length,-grounded jumps,grounded runs,ID)` and drains a global checkpoint window before advancing. It does not select the next deep branch by achieved shared-goal arrival time. Persistent mode bypasses the per-parent fairness loop even with `fair_parents=True`. |
+| Retention policy | Default `time_progress`, progress margin0.25 blocks, time margin1 tick, beam setting8 and unknown setting1. These are policy parameters, not physical dominance proofs. In this snapshot protected/deferred candidates can exceed the active beam; it is not a hard eight-history total. |
+| Resource limits | Fixture:300 seconds; candidate2s; score8s; total numerical calls1024; score-call chunk6; final-call chunk24; spatial probe5s/6 calls/4 candidates/128 prefixes. Movement settings:64 input horizon,2048 expansions,384 queued prefixes,16 choices/type. Contact branch setting32 and passage candidate setting128 also bound work. In the persistent current path `max_candidates=20` fills the ready batch rather than limiting the entire window to20 evaluations. The older pilot did use a20-program per-comparison cap. Limits can leave work unexplored; they do not certify impossibility. |
+
+The geometry/start state, declared coverage and empty unspecified space, maximumZ at absolute64, and optional B7 landing define the requested benchmark and its world assumptions. They need to be explicit inputs. In particular64 remains a legitimate terminal objective clock; questioning intermediate10 does not make the final task clock arbitrary. B7's `goalBlock` label is a catalogue reference in this mode, not a required landing.
+
+### What the program actually determines
+
+The decomposition/collision geometry is computed from supplied boxes. Within the selected domain the generic builders generate later jumps, waits, self-returns, landings, stepping possibilities and obstacle/contact constraint alternatives. Vertical landing offsets are computed from shared physics. IPOPT optimizes facings and resulting horizontal trajectories from the original state on every fixed-program solve. It does not choose missing discrete timing families that the outer filter excluded. No exact reference jump sequence, per-support arrival times, per-tick facing sequence or intermediate optimized state is imposed on a cold run. The saved successful constructive controls are separate nonexhaustive probes over selected starting families and0..3 later run delays, not autonomous cold-discovery results.
+
+The approved DFS plan already replaces manually clocked global advancement with shared-spatial-goal comparison and persistent descent/backtracking; it is unimplemented in this audited snapshot. That plan alone does not broaden the explicit0/8 fixture domain or discover new spatial routes. This investigation changes neither plan nor runtime. Source pointers: [fixture](../../linkcraft11-opening/fixtures/clock64-orchestrator.json), [driver](../../../cell_routes/fixed_clock_experiment.py), [traversal](../../../cell_routes/checkpoint_search.py), [policy](../../../cell_routes/support_order.py), [movement settings](../../../movement_search.py), [source-era audit](../../linkcraft11-opening/EXECUTION_AUDIT.md).
+
 ## Evidence references and audit correction
 
 - [Original complete candidate/constraint tables](CANDIDATE_AUDIT.md), [208-call ledger](WORKER_CALLS.md), [saved source reports](../evidence/cold-summary.json), and [question-specific extracted evidence](question-evidence.json).
