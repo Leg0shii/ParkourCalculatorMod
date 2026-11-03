@@ -8,6 +8,7 @@ public enum Medium {
     LAVA("Lava", "drag 0.50", SurfaceKind.LAVA),
     LADDER("Ladder", "cap 0.15", SurfaceKind.LADDER),
     SOULSAND("Soulsand", "x0.40", SurfaceKind.SOULSAND),
+    HONEY("Honey", "x0.40", SurfaceKind.HONEY),
     COBWEB("Cobweb", "x0.25", SurfaceKind.COBWEB);
 
     public final String label;
@@ -21,10 +22,16 @@ public enum Medium {
     }
 
     public static Medium fromFlags(boolean web, boolean water, boolean lava, boolean ladder, boolean soulsand) {
+        return fromFlags(web, water, lava, ladder, soulsand, false);
+    }
+
+    public static Medium fromFlags(boolean web, boolean water, boolean lava, boolean ladder, boolean soulsand,
+                                   boolean honey) {
         if (web) return COBWEB;
         if (water) return WATER;
         if (lava) return LAVA;
         if (ladder) return LADDER;
+        if (honey) return HONEY;
         if (soulsand) return SOULSAND;
         return NONE;
     }

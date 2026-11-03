@@ -27,6 +27,8 @@ public final class ExactJumpModel implements ForwardModel {
 
     private static final double LADDER_XZ_CAP = (double) 0.15F;
     private static final double FLUID_JUMP_BOOST = (double) 0.04F;
+    private static final float HONEY_SPEED_FACTOR_F = 0.4F;
+    private static final float HONEY_JUMP_FACTOR_F = 0.5F;
     private static final double WATER_DRAG = (double) 0.8F;
     private static final double WATER_SPRINT_DRAG = (double) 0.9F;
     private static final double MODERN_FLUID_GRAVITY = Constants.GRAVITY / 16.0;
@@ -285,7 +287,8 @@ public final class ExactJumpModel implements ForwardModel {
                 if (modern) {
                     // jump(): Math.max'd impulse; the sprint boost is double (float sin widened, * 0.2)
                     // from 1.20.5 on and the float product sin * 0.2F (then widened) up to 1.20.4.
-                    vy = Math.max((double) Constants.JUMP_VEL_F, vy);
+                    float jumpVel = kind == SurfaceKind.HONEY ? Constants.JUMP_VEL_F * HONEY_JUMP_FACTOR_F : Constants.JUMP_VEL_F;
+                    vy = Math.max((double) jumpVel, vy);
                     if (sprint) {
                         float fj = yawF * (float) (Math.PI / 180.0);
                         if (floatSprintBoost) {
@@ -405,7 +408,11 @@ public final class ExactJumpModel implements ForwardModel {
                 vy = 0.2;
             }
 
-            if (kind == SurfaceKind.SOULSAND) {
+            if (kind == SurfaceKind.HONEY) {
+                double honeyFactor = (double) HONEY_SPEED_FACTOR_F;
+                vx *= honeyFactor;
+                vz *= honeyFactor;
+            } else if (kind == SurfaceKind.SOULSAND) {
                 if (modern) {
                     double soulFactor = (double) 0.4F;
                     vx *= soulFactor;

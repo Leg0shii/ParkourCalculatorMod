@@ -12,6 +12,7 @@ public final class ConstraintDeriver {
 
     public static final double HALF = (double) (0.6f / 2.0f);
     public static final double BODY_HEIGHT = 1.8;
+    public static final double HONEY_HITBOX_INSET = 1.0 / 16.0;
     private static final double EPS = 1.0e-7;
     private static final double SPAN_EPS = 1.0e-3;
 

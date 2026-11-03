@@ -140,6 +140,62 @@ public class ConstraintKeyControllerTest {
         assertEquals("wall sits on the inset collision face, not the outline hit", 5.9375 + HALF, wall.getValue(), EPS);
     }
 
+    @Test
+    public void wallOnAHoneySideStopsWhereTheSlideZoneStarts() {
+        mc.addHoneyBlock(5, 65, 8);
+        mc.lookedAtBlock = new int[] {5, 65, 8};
+        mc.lookedAtFace = Face.NEG_X;
+        mc.lookedAtHitVec = new Vec3dCore(5.0625, 65.5, 8.5);
+
+        controller.onKey(false, false);
+
+        Constraint wall = wall(Constraint.Field.X);
+        assertEquals(Constraint.Op.LE, wall.getOp());
+        assertEquals("the default honey wall sits 0.3b off the full block face", 5.0 - HALF, wall.getValue(), EPS);
+    }
+
+    @Test
+    public void ctrlBOnAHoneySideUsesTheHitboxFaceInsteadOfClearing() {
+        mc.addHoneyBlock(5, 65, 8);
+        mc.lookedAtBlock = new int[] {5, 65, 8};
+        mc.lookedAtFace = Face.NEG_X;
+        mc.lookedAtHitVec = new Vec3dCore(5.0625, 65.5, 8.5);
+
+        controller.onKey(false, true);
+
+        Constraint wall = wall(Constraint.Field.X);
+        assertEquals(Constraint.Op.LE, wall.getOp());
+        assertEquals("Ctrl+B keeps the collision face of the honey hitbox", 5.0625 - HALF, wall.getValue(), EPS);
+    }
+
+    @Test
+    public void footprintBesideAHoneyWallStopsAtTheFullCube() {
+        mc.addBlock(5, 64, 8, box(5.0, 64.0, 8.0, 6.0, 65.0, 9.0));
+        mc.addHoneyBlock(6, 65, 8);
+        mc.lookedAtBlock = new int[] {5, 64, 8};
+        mc.lookedAtFace = Face.POS_Y;
+        mc.lookedAtHitVec = new Vec3dCore(5.5, 65.0, 8.5);
+
+        controller.onKey(false, false);
+
+        Constraint x = range(Constraint.Field.X);
+        assertEquals("the footprint ends where the slide zone of the honey wall begins", 6.0 - HALF, x.getHi(), EPS);
+    }
+
+    @Test
+    public void footprintOnAHoneyTopIsNotClippedByTheNeighbouringHoneyTop() {
+        mc.addHoneyBlock(5, 64, 8);
+        mc.addHoneyBlock(6, 64, 8);
+        mc.lookedAtBlock = new int[] {5, 64, 8};
+        mc.lookedAtFace = Face.POS_Y;
+        mc.lookedAtHitVec = new Vec3dCore(5.5, 64.9375, 8.5);
+
+        controller.onKey(false, false);
+
+        Constraint x = range(Constraint.Field.X);
+        assertTrue("a honey top at foot level is walked over, not a slide wall", x.getHi() > 5.9375);
+    }
+
     private Constraint wall(Constraint.Field field) {
         for (Constraint c : constraints()) {
             if (!c.isRange() && c.getField() == field) return c;

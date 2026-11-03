@@ -110,6 +110,13 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
     }
 
     @Override
+    public boolean isHoneyBlock(int x, int y, int z) {
+        ClientLevel world = Minecraft.getInstance().level;
+        if (world == null) return false;
+        return world.getBlockState(new BlockPos(x, y, z)).is(Blocks.HONEY_BLOCK);
+    }
+
+    @Override
     public boolean isCobweb(int x, int y, int z) {
         ClientLevel world = Minecraft.getInstance().level;
         if (world == null) return false;

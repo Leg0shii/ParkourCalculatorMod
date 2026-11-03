@@ -92,6 +92,8 @@ public class SurfaceCaptureTest {
         assertEquals(Medium.LAVA, Medium.fromFlags(false, false, true, true, true));
         assertEquals(Medium.LADDER, Medium.fromFlags(false, false, false, true, true));
         assertEquals(Medium.SOULSAND, Medium.fromFlags(false, false, false, false, true));
+        assertEquals(Medium.HONEY, Medium.fromFlags(false, false, false, false, true, true));
+        assertEquals(Medium.LADDER, Medium.fromFlags(false, false, false, true, true, true));
         assertEquals(Medium.NONE, Medium.fromFlags(false, false, false, false, false));
     }
 }

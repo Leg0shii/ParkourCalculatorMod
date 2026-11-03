@@ -69,8 +69,9 @@ public final class ConstraintKeyController {
             }
         }
 
+        boolean honey = mc.isHoneyBlock(bx, by, bz);
         if (remove && mc.isClimbable(bx, by, bz)) {
-            List<AABB> obstacles = mc.getCollisionBoxes(bx - 1, by, bz - 1, bx + 1, by + 1, bz + 1);
+            List<AABB> obstacles = obstacles(bx - 1, by, bz - 1, bx + 1, by + 1, bz + 1, by);
             double[] r = ConstraintDeriver.deriveCell(bx, bz, by, bx + 0.5, bz + 0.5, obstacles);
             state.setFootprint(tick, r[0], r[1], r[2], r[3]);
             onChanged.run();
@@ -78,7 +79,7 @@ public final class ConstraintKeyController {
         }
         if (remove && face == Face.POS_Y && (mc.isSlimeBlock(bx, by, bz) || mc.isIce(bx, by, bz))) {
             if (hit == null) return;
-            List<AABB> obstacles = mc.getCollisionBoxes(bx - 1, by + 1, bz - 1, bx + 1, by + 2, bz + 1);
+            List<AABB> obstacles = obstacles(bx - 1, by + 1, bz - 1, bx + 1, by + 2, bz + 1, by + 1.0);
             double[] r = ConstraintDeriver.deriveCell(bx, bz, by + 1.0, hit.x, hit.z, obstacles);
             state.setFootprint(tick, r[0], r[1], r[2], r[3]);
             onChanged.run();
@@ -91,7 +92,7 @@ public final class ConstraintKeyController {
             } else {
                 if (hit == null) return;
                 AABB support = supportBox(bx, by, bz, hit);
-                List<AABB> obstacles = mc.getCollisionBoxes(bx - 1, by, bz - 1, bx + 1, by + 2, bz + 1);
+                List<AABB> obstacles = obstacles(bx - 1, by, bz - 1, bx + 1, by + 2, bz + 1, support.max.y);
                 double[] r = ConstraintDeriver.deriveFootprint(support, hit.x, hit.z, obstacles, modernCollision,
                         mc.getPlayerYaw());
                 if (merge) {
@@ -102,13 +103,18 @@ public final class ConstraintKeyController {
                 }
             }
         } else if (ConstraintDeriver.isSide(face)) {
-            if (remove) {
+            if (remove && !honey) {
                 state.clearWall(tick, ConstraintDeriver.axisOf(face), ConstraintDeriver.wallIsLowerBound(face, enter));
             } else {
                 if (hit == null) return;
-                List<AABB> boxes = cobweb != null
-                        ? Collections.singletonList(cobweb)
-                        : mc.getBlockCollisionBoxes(bx, by, bz);
+                List<AABB> boxes;
+                if (cobweb != null) {
+                    boxes = Collections.singletonList(cobweb);
+                } else if (honey && !remove) {
+                    boxes = Collections.singletonList(fullCube(bx, by, bz));
+                } else {
+                    boxes = mc.getBlockCollisionBoxes(bx, by, bz);
+                }
                 Constraint wall = ConstraintDeriver.deriveWall(face, boxes, hit, enter);
                 if (merge) {
                     state.mergeWall(tick, wall);
@@ -156,15 +162,33 @@ public final class ConstraintKeyController {
                 Math.min(fresh[2], existing[2]), Math.max(fresh[3], existing[3])};
         double h = ConstraintDeriver.HALF;
         int by = (int) Math.floor(footY);
-        List<AABB> obstacles = mc.getCollisionBoxes(
+        List<AABB> obstacles = obstacles(
                 (int) Math.floor(union[0] - h), by, (int) Math.floor(union[2] - h),
-                (int) Math.ceil(union[1] + h), by + 2, (int) Math.ceil(union[3] + h));
+                (int) Math.ceil(union[1] + h), by + 2, (int) Math.ceil(union[3] + h), footY);
         double[] clipped = ConstraintDeriver.clipMergedFootprint(union, existing, footY, hit.x, hit.z, obstacles);
         if (clipped != null) return clipped;
         if (hudMessage != null) {
             hudMessage.accept("Merged footprint at T" + (tick + 1) + " spans a block; kept the plain union");
         }
         return union;
+    }
+
+    private List<AABB> obstacles(int x0, int y0, int z0, int x1, int y1, int z1, double footY) {
+        List<AABB> out = new ArrayList<>(mc.getCollisionBoxes(x0, y0, z0, x1, y1, z1));
+        double slideTop = footY + ConstraintDeriver.HONEY_HITBOX_INSET + 1.0e-7;
+        for (int y = y0; y <= y1; y++) {
+            if (y + 1.0 <= slideTop) continue;
+            for (int x = x0; x <= x1; x++) {
+                for (int z = z0; z <= z1; z++) {
+                    if (mc.isHoneyBlock(x, y, z)) out.add(fullCube(x, y, z));
+                }
+            }
+        }
+        return out;
+    }
+
+    private static AABB fullCube(int x, int y, int z) {
+        return new AABB(new Vec3dCore(x, y, z), new Vec3dCore(x + 1.0, y + 1.0, z + 1.0));
     }
 
     private AABB supportBox(int bx, int by, int bz, Vec3dCore hit) {
