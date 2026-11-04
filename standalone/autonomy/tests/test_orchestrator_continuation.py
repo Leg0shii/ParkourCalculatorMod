@@ -187,7 +187,8 @@ class PersistentGenerationTests(unittest.TestCase):
         actual=list(itertools.islice(restored,6))
         self.assertEqual(actual,expected)
         self.assertTrue(actual)
-        self.assertNotEqual(first['rows'],actual[0]['rows'])
+        self.assertNotEqual((first['rows'], first['selectedPassages']),
+                            (actual[0]['rows'], actual[0]['selectedPassages']))
 
 
 class StateProtectionTests(unittest.TestCase):

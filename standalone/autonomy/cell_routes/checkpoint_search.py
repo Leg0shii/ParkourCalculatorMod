@@ -147,7 +147,7 @@ def evaluate_program(scene, program, compiler, adapter, work, motion_bound, *, c
         max_horizontal=scene['maxHorizontalBlockagesPerObstacle'], max_vertical=scene['maxVerticalBlockagesPerObstacle'],
         max_passage_candidates=scene['maxPassageCandidates'], solid_blocks=owners, max_wall_hits=0,
         candidate_filter=candidate_filter, work=scoped, resume_state=program.get('repairState'),
-        repair_scope=dict(solveIdentity=identity, scope=scope, assemblyVersion=6),
+        repair_scope=dict(solveIdentity=identity, scope=scope, assemblyVersion=7),
         validation_scope=scope, initial_variants=variants, on_progress=on_progress, retry_unresolved=retry_unresolved)
     if result['best'] is not None:
         if checkpoint is not None and scope['purpose'] == 'complete':
