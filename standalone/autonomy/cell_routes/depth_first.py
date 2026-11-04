@@ -91,7 +91,7 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
         terminal=terminal_plan.to_dict() if terminal_plan else None, corridor=adapter.corridor.to_dict(),
         windows=window_plan, filter=getattr(program_filter, 'checkpoint_identity', None),
         margins=[time_margin,progress_margin], physics=motion,
-        **({'eventStagePolicy':2} if event_route else {}),
+        **({'eventStagePolicy':3} if event_route else {}),
         minimumRunPolicy=POLICY_VERSION if minimum_run_pruning else None,
         **({'routeStagePolicy':2,'routeCommitPolicy':1,'routeProposalPolicy':1} if typed_route else {})))
     if resume_state is not None and (resume_state.get('version') != schema or

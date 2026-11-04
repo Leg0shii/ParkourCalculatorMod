@@ -1,6 +1,6 @@
 # Function and test definition index
 
-Source snapshot: semantic corridor implementation, including the imported DFS/request audit and current changed modules. Line numbers are navigation hints; use `rg` after edits. This is a locator, not a replacement for [function contracts](ARCHITECTURE.md). Includes every top-level Python function/class and class method, plus test methods. Nested callbacks remain in their enclosing function. Java entry points are in the [code map](CODE_MAP.md).
+Source snapshot: generic event discovery implementation, including the imported DFS/request audit and current changed modules. Line numbers are navigation hints; use `rg` after edits. This is a locator, not a replacement for [function contracts](ARCHITECTURE.md). Includes every top-level Python function/class and class method, plus test methods. Nested callbacks remain in their enclosing function. Java entry points are in the [code map](CODE_MAP.md).
 
 ## [autonomy/block_contacts.py](../autonomy/block_contacts.py)
 
@@ -76,7 +76,7 @@ Source snapshot: semantic corridor implementation, including the imported DFS/re
 
 - `source_hashes` — def, line 22.
 - `run` — def, line 29.
-- `main` — def, line 47.
+- `main` — def, line 49.
 
 ## [autonomy/cell_routes/checkpoint_experiment.py](../autonomy/cell_routes/checkpoint_experiment.py)
 
@@ -97,8 +97,8 @@ Source snapshot: semantic corridor implementation, including the imported DFS/re
 - `ScopedWork.accepted` — def, line 49.
 - `_motion_bound` — def, line 53.
 - `evaluate_program` — def, line 61.
-- `_key` — def, line 171.
-- `find_checkpoint_route` — def, line 175.
+- `_key` — def, line 185.
+- `find_checkpoint_route` — def, line 189.
 
 ## [autonomy/cell_routes/checkpoints.py](../autonomy/cell_routes/checkpoints.py)
 
@@ -156,6 +156,53 @@ Source snapshot: semantic corridor implementation, including the imported DFS/re
 - `decision_family` — def, line 27.
 - `commit_arrival` — def, line 38.
 - `search_goals` — def, line 58.
+
+## [autonomy/cell_routes/event_adapter.py](../autonomy/cell_routes/event_adapter.py)
+
+- `EventReference` — class, line 16.
+- `EventReference.to_dict` — def, line 21.
+- `EventGuideAdapter` — class, line 25.
+- `EventGuideAdapter.__init__` — def, line 28.
+- `EventGuideAdapter.initial_cursor` — def, line 41.
+- `EventGuideAdapter.next_goals` — def, line 44.
+- `EventGuideAdapter.for_goal` — def, line 104.
+- `EventGuideAdapter.advance` — def, line 122.
+- `EventGuideAdapter.context` — def, line 125.
+- `EventGuideAdapter.program_allowed` — def, line 132.
+- `EventGuideAdapter.scoped` — def, line 135.
+- `EventGuideAdapter.bind_program` — def, line 139.
+- `EventGuideAdapter.eligible` — def, line 143.
+- `EventGuideAdapter.contact_regions` — def, line 146.
+- `EventGuideAdapter.candidate` — def, line 168.
+- `EventGuideAdapter.summary` — def, line 200.
+
+## [autonomy/cell_routes/event_coverage_audit.py](../autonomy/cell_routes/event_coverage_audit.py)
+
+- `discover` — def, line 14.
+- `audit` — def, line 50.
+
+## [autonomy/cell_routes/event_routes.py](../autonomy/cell_routes/event_routes.py)
+
+- `_json` — def, line 22.
+- `SurfaceGroup` — class, line 27.
+- `surface_groups` — def, line 36.
+- `RouteDomain` — class, line 76.
+- `RouteDomain.id` — def, line 85.
+- `RouteDomain.to_dict` — def, line 88.
+- `RouteDomain.from_dict` — def, line 92.
+- `build_route_domain` — def, line 102.
+- `support_episodes` — def, line 135.
+- `build_event_graph` — def, line 172.
+- `initial_cursor` — def, line 201.
+- `next_goals` — def, line 218.
+- `semantic_prefix` — def, line 282.
+- `advance_cursor` — def, line 295.
+- `observed_route` — def, line 307.
+
+## [autonomy/cell_routes/event_search.py](../autonomy/cell_routes/event_search.py)
+
+- `discovery_settings` — def, line 16.
+- `search_event_routes` — def, line 29.
 
 ## [autonomy/cell_routes/experiment.py](../autonomy/cell_routes/experiment.py)
 
@@ -231,6 +278,13 @@ Source snapshot: semantic corridor implementation, including the imported DFS/re
 - `segment_covered` — def, line 273.
 - `diagnostic_svg` — def, line 287.
 
+## [autonomy/cell_routes/guides.py](../autonomy/cell_routes/guides.py)
+
+- `task_reference` — def, line 12.
+- `segment_in_cover` — def, line 25.
+- `guide_for` — def, line 35.
+- `outgoing_objective` — def, line 109.
+
 ## [autonomy/cell_routes/local.py](../autonomy/cell_routes/local.py)
 
 - `SearchWork` — class, line 13.
@@ -278,8 +332,10 @@ Source snapshot: semantic corridor implementation, including the imported DFS/re
 - `RouteGraph.neighbors` — def, line 168.
 - `free_transit_cover` — def, line 175.
 - `build_route_graph` — def, line 230.
-- `annotate_normal_proposals` — def, line 327.
-- `diagnostic_svg` — def, line 404.
+- `build_geometry_graph` — def, line 240.
+- `_incidence_graph` — def, line 252.
+- `annotate_normal_proposals` — def, line 344.
+- `diagnostic_svg` — def, line 421.
 
 ## [autonomy/cell_routes/repair_diagnostic.py](../autonomy/cell_routes/repair_diagnostic.py)
 
@@ -430,17 +486,20 @@ Source snapshot: semantic corridor implementation, including the imported DFS/re
 
 ## [autonomy/constraint_variants.py](../autonomy/constraint_variants.py)
 
-- `ConstraintVariants` — class, line 13.
-- `ConstraintVariants.__init__` — def, line 14.
-- `ConstraintVariants.excluded` — def, line 151.
-- `ConstraintVariants.face_row` — def, line 154.
-- `ConstraintVariants.check` — def, line 159.
-- `ConstraintVariants.effective_key` — def, line 163.
-- `ConstraintVariants.segment_rows` — def, line 175.
-- `ConstraintVariants.option` — def, line 180.
-- `ConstraintVariants.__iter__` — def, line 262.
-- `ConstraintVariants.entailed` — def, line 265.
-- `ConstraintVariants.__next__` — def, line 279.
+- `ConstraintVariants` — class, line 12.
+- `ConstraintVariants.__init__` — def, line 13.
+- `ConstraintVariants.prepare_item` — def, line 55.
+- `ConstraintVariants._prepare_item` — def, line 62.
+- `ConstraintVariants.excluded` — def, line 204.
+- `ConstraintVariants.face_row` — def, line 207.
+- `ConstraintVariants.check` — def, line 212.
+- `ConstraintVariants.effective_key` — def, line 216.
+- `ConstraintVariants.segment_rows` — def, line 228.
+- `ConstraintVariants.option` — def, line 233.
+- `ConstraintVariants.__iter__` — def, line 316.
+- `ConstraintVariants.entailed` — def, line 319.
+- `ConstraintVariants.__next__` — def, line 333.
+- `ConstraintVariants._next_variant` — def, line 340.
 
 ## [autonomy/contact_combinations.py](../autonomy/contact_combinations.py)
 
@@ -455,6 +514,14 @@ Source snapshot: semantic corridor implementation, including the imported DFS/re
 - `contact_opportunities` — def, line 51.
 - `generate_contact_profiles` — def, line 69.
 
+## [autonomy/experiments/automatic-corridors/compare.py](../autonomy/experiments/automatic-corridors/compare.py)
+
+- `verify_automatic` — def, line 21.
+- `main` — def, line 42.
+
+## [autonomy/experiments/automatic-corridors/compare_generic.py](../autonomy/experiments/automatic-corridors/compare_generic.py)
+
+- `main` — def, line 18.
 ## [autonomy/experiments/cell-routes/run_benchmarks.py](../autonomy/experiments/cell-routes/run_benchmarks.py)
 
 - `main` — def, line 24.
@@ -579,15 +646,18 @@ Source snapshot: semantic corridor implementation, including the imported DFS/re
 
 ## [autonomy/interactions.py](../autonomy/interactions.py)
 
-- `block_interaction` — def, line 5.
-- `interaction_allowed` — def, line 10.
-- `InteractionGate` — class, line 15.
-- `InteractionGate.__init__` — def, line 16.
-- `InteractionGate.envelopes` — def, line 22.
-- `InteractionGate.query` — def, line 45.
-- `InteractionGate.required` — def, line 72.
-- `InteractionGate.context` — def, line 86.
-- `InteractionGate.summary` — def, line 89.
+- `interaction_context_key` — def, line 8.
+- `query_interaction` — def, line 23.
+- `normalize_alternatives` — def, line 65.
+- `block_interaction` — def, line 82.
+- `interaction_allowed` — def, line 87.
+- `InteractionGate` — class, line 92.
+- `InteractionGate.__init__` — def, line 93.
+- `InteractionGate.envelopes` — def, line 99.
+- `InteractionGate.query` — def, line 122.
+- `InteractionGate.required` — def, line 149.
+- `InteractionGate.context` — def, line 167.
+- `InteractionGate.summary` — def, line 170.
 
 ## [autonomy/ladder_ceiling.py](../autonomy/ladder_ceiling.py)
 
@@ -1191,6 +1261,36 @@ Source snapshot: semantic corridor implementation, including the imported DFS/re
 - `HistoricalInteractionTests` — class, line 260.
 - `HistoricalInteractionTests.test_real11_b4_blip_is_excluded_before_its_wall_options_are_built` — def, line 261.
 
+## [autonomy/tests/test_event_domain.py](../autonomy/tests/test_event_domain.py)
+
+- `EventDomainTests` — class, line 12.
+- `EventDomainTests.test_rim_only_overlap_is_not_a_certified_surface_connection` — def, line 13.
+- `EventDomainTests.test_raw_graph_keeps_every_cell_portal_and_physical_component` — def, line 18.
+- `EventDomainTests.test_portable_immutable_domain_and_content_validation` — def, line 28.
+- `EventDomainTests.test_airborne_start_cannot_acquire_support_permission` — def, line 43.
+- `EventDomainTests.test_coplanar_group_preserves_hole_provenance_and_owner_task` — def, line 51.
+- `EventDomainTests.test_equivalent_encoding_preserves_semantic_surface_geometry` — def, line 62.
+- `EventDomainTests.test_running_rows_are_silent_but_landings_revisits_and_named_cases_survive` — def, line 68.
+
+## [autonomy/tests/test_event_routes.py](../autonomy/tests/test_event_routes.py)
+
+- `EventRouteTests` — class, line 8.
+- `EventRouteTests.domain` — def, line 9.
+- `EventRouteTests.test_both_contacts_and_overflight_finish_remain_in_one_language` — def, line 14.
+- `EventRouteTests.test_work_limits_and_reload_preserve_all_next_goals` — def, line 30.
+- `EventRouteTests.test_revisits_are_occurrences_without_a_global_visit_cap` — def, line 43.
+- `EventRouteTests.test_unknown_boundary_cannot_certify_disconnection` — def, line 52.
+- `EventRouteTests.test_route_semantics_exclude_absolute_timing_but_keep_physical_feature_order` — def, line 59.
+
+## [autonomy/tests/test_event_search.py](../autonomy/tests/test_event_search.py)
+
+- `EventSearchTests` — class, line 17.
+- `EventSearchTests.test_disconnected_regions_on_one_physical_block_have_contact_phase_guards` — def, line 18.
+- `EventSearchTests.test_same_support_setup_is_local_without_removing_its_physical_choices` — def, line 43.
+- `EventSearchTests.test_adapter_has_no_inherited_raw_cell_rejection_paths` — def, line 56.
+- `EventSearchTests.test_default_dynamic_goals_share_prefix_and_publish_actual_child_atomically` — def, line 69.
+- `EventSearchTests.test_explicit_old_catalogue_settings_and_states_are_not_reinterpreted` — def, line 114.
+
 ## [autonomy/tests/test_failure_diagnostic.py](../autonomy/tests/test_failure_diagnostic.py)
 
 - `FailureDiagnosticTests` — class, line 10.
@@ -1242,6 +1342,14 @@ Source snapshot: semantic corridor implementation, including the imported DFS/re
 - `GenericNumericalTests.test_two_airborne_ladders_continue_into_blip_without_a_support_reset` — def, line 256.
 - `GenericNumericalTests.test_five_airborne_ladders_share_the_same_generic_route_compilation` — def, line 278.
 
+## [autonomy/tests/test_guide_progress.py](../autonomy/tests/test_guide_progress.py)
+
+- `GuideTests` — class, line 8.
+- `GuideTests.guide` — def, line 9.
+- `GuideTests.test_witness_points_use_local_interfaces_and_are_covered` — def, line 18.
+- `GuideTests.test_interruption_resumes_witness_and_never_calls_direct_hint_a_witness` — def, line 29.
+- `GuideTests.test_segment_shortcut_cannot_fill_a_hole` — def, line 40.
+
 ## [autonomy/tests/test_hanging_vines.py](../autonomy/tests/test_hanging_vines.py)
 
 - `falling_context` — def, line 22.
@@ -1289,6 +1397,18 @@ Source snapshot: semantic corridor implementation, including the imported DFS/re
 - `IntegrationTests.test_java_reuses_the_mod_footprint_deriver` — def, line 340.
 - `IntegrationTests.test_known_routes_zero_one_and_backtracking` — def, line 354.
 - `IntegrationTests.test_linkcraft_section_keeps_runoff_and_finds_without_recorded_facings` — def, line 375.
+
+## [autonomy/tests/test_interaction_normalization.py](../autonomy/tests/test_interaction_normalization.py)
+
+- `context` — def, line 11.
+- `source` — def, line 16.
+- `InteractionNormalizationTests` — class, line 23.
+- `InteractionNormalizationTests.test_far_avoid_is_omitted_but_absent_required_contact_rejects_owner` — def, line 24.
+- `InteractionNormalizationTests.test_top_contact_boundary_does_not_share_interior_absence_proof` — def, line 40.
+- `InteractionNormalizationTests.test_context_and_probe_uncertainty_invalidate_proofs` — def, line 46.
+- `InteractionNormalizationTests.test_interrupted_phase_mask_and_table_preparation_resumes_exactly` — def, line 55.
+- `InteractionNormalizationTests.test_old_or_changed_constraint_state_is_explicitly_rejected` — def, line 79.
+- `InteractionNormalizationTests.test_absent_prerequisite_rejects_the_whole_owned_alternative` — def, line 85.
 
 ## [autonomy/tests/test_ladder_bridge.py](../autonomy/tests/test_ladder_bridge.py)
 
@@ -1548,16 +1668,16 @@ Source snapshot: semantic corridor implementation, including the imported DFS/re
 - `PersistentGenerationTests.test_choice_and_queue_sizes_do_not_erase_a_late_candidate_after_reload` — def, line 133.
 - `PersistentGenerationTests.test_interrupted_screen_keeps_the_unprocessed_choice` — def, line 164.
 - `PersistentGenerationTests.test_constraint_generation_cursor_survives_a_new_facing_guess` — def, line 175.
-- `StateProtectionTests` — class, line 193.
-- `StateProtectionTests.check_protected` — def, line 194.
-- `StateProtectionTests.test_forward_velocity_and_speed_are_independent_guards` — def, line 200.
-- `StateProtectionTests.test_different_schedules_are_not_clock_compared_even_with_equal_counts` — def, line 204.
-- `StateProtectionTests.test_missing_velocity_keeps_candidate_unknown_rather_than_inferior` — def, line 210.
-- `StateProtectionTests.test_queue_key_counts_effective_grounded_inputs` — def, line 215.
-- `OuterResumeTests` — class, line 220.
-- `OuterResumeTests.test_split_search_does_not_dispatch_the_completed_terminal_again` — def, line 221.
-- `ScopedNumericalTests` — class, line 259.
-- `ScopedNumericalTests.test_omitted_future_obstacle_does_not_reject_preliminary_guidance` — def, line 260.
+- `StateProtectionTests` — class, line 194.
+- `StateProtectionTests.check_protected` — def, line 195.
+- `StateProtectionTests.test_forward_velocity_and_speed_are_independent_guards` — def, line 201.
+- `StateProtectionTests.test_different_schedules_are_not_clock_compared_even_with_equal_counts` — def, line 205.
+- `StateProtectionTests.test_missing_velocity_keeps_candidate_unknown_rather_than_inferior` — def, line 211.
+- `StateProtectionTests.test_queue_key_counts_effective_grounded_inputs` — def, line 216.
+- `OuterResumeTests` — class, line 221.
+- `OuterResumeTests.test_split_search_does_not_dispatch_the_completed_terminal_again` — def, line 222.
+- `ScopedNumericalTests` — class, line 260.
+- `ScopedNumericalTests.test_omitted_future_obstacle_does_not_reject_preliminary_guidance` — def, line 261.
 
 ## [autonomy/tests/test_repair_resume.py](../autonomy/tests/test_repair_resume.py)
 
@@ -1931,12 +2051,3 @@ Source snapshot: semantic corridor implementation, including the imported DFS/re
 - `fixed_phase` — def, line 105.
 - `phase` — def, line 226.
 - `main` — def, line 275.
-
-## [autonomy/experiments/automatic-corridors/compare.py](../autonomy/experiments/automatic-corridors/compare.py)
-
-- `verify_automatic` — def, line 21.
-- `main` — def, line 42.
-
-## [autonomy/experiments/automatic-corridors/compare_generic.py](../autonomy/experiments/automatic-corridors/compare_generic.py)
-
-- `main` — def, line 18.

@@ -18,5 +18,5 @@ with JavaCompiler(json.loads(Path('/Users/arvindmurty/CS/ParkourCalculatorMod-ip
     report=audit(fixture,compiler,witness)
 report.update(sourceRevision=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),sourceHashes=before,
     sourceUnchanged=before==source_hashes(),archiveHash=hashlib.sha256(archive.read_bytes()).hexdigest())
-save(here/'coverage-contact-regions-2026-11-03.json.gz',report)
+save(here/'coverage-forward-service-2026-11-03.json.gz',report)
 print(json.dumps({k:report[k] for k in ('rawGeometryAdmitted','semanticProjectionRepresented','usefulGuidesMaterialized','sourceUnchanged')}),flush=True)

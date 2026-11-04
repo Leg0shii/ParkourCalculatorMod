@@ -15,6 +15,21 @@ from standalone.autonomy.movement_generation import generate_choices
 
 
 class EventSearchTests(unittest.TestCase):
+    def test_quick_reverse_landings_do_not_preempt_forward_goal_service(self):
+        scene=prepare_scene(dict(version=1,sceneModel='collision_boxes',maxWallHits=0,
+            initial=dict(position=[.5,1,.5],velocity=[0,-.0784000015258789,0],yaw=0),
+            geometryBounds=[-5,-5,-5,12,10,5],startBlock='start',goalBlock='goal',blocks=[
+                dict(id=name,boxes=[[x,0,0,x+1,height,1]])
+                for name,x,height in [('start',0,1),('mid',2,2),('next',4,3),('goal',6,4)]],
+            movementSearch=dict(types=['normal'],maxInputs=30)))
+        data=build_route_domain(scene,dict(kind='landing',block='goal')).to_dict()
+        adapter=EventGuideAdapter(data,build_event_graph(data),motion=dict(movementAfterSupportCheck=.5))
+        p=program(scene,4,4);p['terminalSupport']='mid';p['profile']['position'][-1]=2
+        cursor=adapter.initial_cursor([p])
+        requests,_,_=adapter.next_goals(cursor,[p])
+        concrete=[r for r in requests if not r['localSetupAlias']]
+        self.assertEqual(concrete[0]['goal']['block'],'next')
+        self.assertIn('start',[r['goal'].get('block') for r in concrete])
     def test_disconnected_regions_on_one_physical_block_have_contact_phase_guards(self):
         scene=prepare_scene(dict(version=1,sceneModel='collision_boxes',maxWallHits=0,
             initial=dict(position=[.5,1,.5],velocity=[0,-.0784000015258789,0],yaw=0),

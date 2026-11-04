@@ -162,3 +162,15 @@ These reuse current mod sources. Scripts are evidence tools, not alternative pro
 | [ipopt/java/ReplayStandaloneIpopt.java](../ipopt/java/ReplayStandaloneIpopt.java) | Replay/repair solved facings as executable local TAS inputs and export only validated results. |
 
 Maintain this map when public modules change. Index generation uses Python AST and `git ls-files --cached --others --exclude-standard standalone`; ignore build output, virtualenvs and caches. Purposes are editorial, not inferred dependency contracts.
+
+## Generic event discovery
+
+| Module | Responsibility |
+| --- | --- |
+| [event_routes.py](../autonomy/cell_routes/event_routes.py) | Immutable domain and physical feature/surface provenance; cyclic connector language; residual next-goal cursors; untimed semantic prefixes and observed physical passage evidence. |
+| [guides.py](../autonomy/cell_routes/guides.py) | Local finite witness anchors, resumable shortest witness, checked shortcuts and outgoing objectives. |
+| [event_adapter.py](../autonomy/cell_routes/event_adapter.py) | Explicit dynamic stage provider and required physical contact-region predicates, with no inherited raw-cell filtering. |
+| [event_search.py](../autonomy/cell_routes/event_search.py) | Automatic configuration/state cutover, one shared domain/DFS and bounded fair owner allocation. |
+| [event_coverage_audit.py](../autonomy/cell_routes/event_coverage_audit.py) | Unseeded graph/guide discovery, then separate raw/semantic/materialized coverage and archived replay. |
+
+Current automatic CLI: [automatic_experiment.py](../autonomy/cell_routes/automatic_experiment.py). New profiling, native, generic and matched controls: [event-route-discovery](../autonomy/experiments/event-route-discovery/README.md). Legacy automatic catalogue scripts retain source-specific meaning; old fixtures are not silently migrated.

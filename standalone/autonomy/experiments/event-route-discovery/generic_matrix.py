@@ -1,5 +1,6 @@
 """Unseeded generic automatic cases; unknown is reported, never infeasible."""
 import copy
+import argparse
 import json
 from pathlib import Path
 import sys
@@ -29,13 +30,25 @@ cases=[
  make('corner-detour',[('start',[-2,0,-2,2,1,2]),('avoid',[2.5,0,.2,3,5,1.5]),('goal',[4.5,0,-1,5.5,1,1])]),
  make('underpass',[('start',start),('ceiling',[1.5,3,-2,4,4,2]),('goal',[5,-2,-1,6,-1,1])],
       initial=dict(position=[2.8,1,.5],velocity=[.3,-.0784000015258789,0]),types=('normal','ceiling')),
- make('airborne',[('start',start),('goal',[5,0,-1,6,1,1])],initial=dict(position=[.5,2,.5],onGround=False),
-      goal=dict(kind='landing_height_region',height=1.5,rows=[dict(mode='X',cmp='GE',rhs=1.)])),
+ dict(make('airborne-prefix-control',[('start',start),('goal',[5,0,-1,6,1,1])],
+      goal=dict(kind='landing_height_region',height=1.5,rows=[dict(mode='X',cmp='GE',rhs=1.)])),airbornePrefixControl=True),
 ]
-path=here/'generic-matrix-2026-11-03';path.mkdir(exist_ok=False)
+parser=argparse.ArgumentParser();parser.add_argument('--only');parser.add_argument('--output-dir',type=Path,required=True);args=parser.parse_args()
+if args.only:cases=[c for c in cases if c['name']==args.only]
+path=args.output_dir;path.mkdir(exist_ok=False)
 hashes=source_hashes();summary=dict(sourceHashes=hashes,runs=[])
 with JavaCompiler(json.loads(Path('/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/standalone/autonomy/build/compiler.json').read_text())) as compiler:
     for fixture in cases:
+        if fixture.get('airbornePrefixControl'):
+            from standalone.autonomy.block_search import prepare_scene
+            from standalone.autonomy.movement_composition import empty_program,boundary_state,append_choice
+            from standalone.autonomy.open_movement import event_choice
+            scene=prepare_scene(fixture['request']);root=empty_program(scene['initial'],threshold=0.)
+            root['terminalSupport']=scene['startBlock']
+            ctx=dict(state=boundary_state(root),threshold=0.)
+            child=append_choice(root,event_choice(ctx,'normal',ctx['state'],1,jumping=True))
+            fixture['settings']['initial_programs']=[child]
+            fixture['provenance']='Explicit one-input jump prefix; airborne continuation control, not cold discovery'
         before=time.monotonic()
         result,validation=run(fixture,compiler,python_executable=sys.executable)
         best=result['best']

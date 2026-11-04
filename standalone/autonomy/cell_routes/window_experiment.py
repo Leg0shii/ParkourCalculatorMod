@@ -22,9 +22,10 @@ def run_fixture(fixture, compiler, *, gap=None, settings=None, python_executable
 
 def save(path, report):
     path.parent.mkdir(parents=True,exist_ok=True)
-    data = json.dumps(report,indent=2,allow_nan=False).encode()
+    compressed = path.suffix=='.gz'
+    data = json.dumps(report,allow_nan=False,**(dict(separators=(',',':')) if compressed else dict(indent=2))).encode()
     temporary = path.with_suffix(path.suffix+'.tmp')
-    temporary.write_bytes(gzip.compress(data,mtime=0) if path.suffix=='.gz' else data)
+    temporary.write_bytes(gzip.compress(data,compresslevel=1,mtime=0) if compressed else data)
     temporary.replace(path)
 
 

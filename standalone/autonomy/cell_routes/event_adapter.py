@@ -92,7 +92,7 @@ class EventGuideAdapter:
             reference=task_reference(self.data,self.scene['initial']['position'])
             target=guide_for(self.data,self.graph,request,self.scene['initial']['position'],max_expansions=0)['target']
             distance=math.hypot(target[0]-reference[0],target[2]-reference[2])
-            return (not possible, same, not request['terminal'],earliest,distance,request['id'])
+            return (not possible, same, not request['terminal'],distance,earliest,request['id'])
         requests.sort(key=rank)
         for request in requests:
             request['afterTick']=min(p['profile']['airtime'] for p in parents)

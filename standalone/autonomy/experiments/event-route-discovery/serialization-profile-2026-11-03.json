@@ -1,0 +1,18 @@
+{
+  "input": "standalone/autonomy/experiments/event-route-discovery/matched-contact-regions-2026-11-03/automatic.json.gz",
+  "inputHash": "3e78bd06cd492e71e4010509bb552bb7f882e7a88e05d3ecc9487cce8f719589",
+  "measurements": {
+    "indented-level9": {
+      "jsonSeconds": 2.8579069152474403,
+      "gzipSeconds": 2.922566082328558,
+      "rawBytes": 163446148,
+      "gzipBytes": 5266850
+    },
+    "compact-level1": {
+      "jsonSeconds": 0.4358285404741764,
+      "gzipSeconds": 0.15424954146146774,
+      "rawBytes": 67285199,
+      "gzipBytes": 4954025
+    }
+  }
+}

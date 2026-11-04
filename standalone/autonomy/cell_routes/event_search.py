@@ -43,7 +43,7 @@ def search_event_routes(request, compiler, *, task_goal=None, discovery=None, **
     cfg=movement_settings(scene)
     cfg['types']=[t for t in cfg['types'] if t in ('normal','ceiling','stepping')]
     scene['movementSearch']=cfg
-    context=digest(dict(policy=2,constraintPolicy=7,scene={k:v for k,v in scene.items() if k!='movementSearch'},
+    context=digest(dict(policy=3,constraintPolicy=7,scene={k:v for k,v in scene.items() if k!='movementSearch'},
         task=task,roots=roots,filter=getattr(policy,'checkpoint_identity',None),
         minimumRuns=options['minimum_run_pruning'],
         domain={k:v for k,v in cfg.items() if k not in
