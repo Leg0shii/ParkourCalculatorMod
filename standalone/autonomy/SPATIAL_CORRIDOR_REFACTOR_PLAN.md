@@ -1,20 +1,22 @@
 # Spatial corridor refactor: preserve support visits and 3D passage choices
 
-> Next implementation: [GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md](GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md) is the controlling concrete plan for replacing automatic air-box walk identity with a lazy contact/interaction language. It specifies records/APIs, raw backing geometry, scoped approach normalization, physical-constraint handoff, DFS ownership, migration and acceptance. [The cited research](GENERIC_ROUTE_DISCOVERY_RESEARCH.md) supplies the rationale. The implementation and original contract below describe the `a28e5b71` baseline; they are superseded where the next plan explicitly changes automatic route identity or per-input cell containment.
+> Current automatic implementation: [GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md](GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md) controls the implemented replacement of automatic air-box walk identity with a lazy contact/interaction language. Runtime source `08b00185` passes447 selected native tests; cold stored-Real11 search reaches T67 at16.09s with24 post-run replays passing. See [current evidence](experiments/event-route-discovery/README.md) for the final matched-control status. It specifies records/APIs, raw backing geometry, scoped approach normalization, physical-constraint handoff, DFS ownership, migration and acceptance. [The cited research](GENERIC_ROUTE_DISCOVERY_RESEARCH.md) supplies the rationale. The implementation and original contract below describe the `a28e5b71` baseline; they are superseded where the next plan explicitly changes automatic route identity or per-input cell containment.
 
-## Next implementation scope
+## Current automatic scope
 
 - Keep covering raw geometry/contact incidence; optional overlapping boxes accelerate guide construction.
 - Discover cyclic contact/passage alternatives lazily; retain unknown residual connectors instead of exhausting a50-walk catalogue.
 - Query target-side/corner relevance before branch creation, retain required landings and physical resource constraints.
 - Share compatible actual-prefix ownership; keep different physical programs, commitments and score contexts distinct.
-- Start with [M0 preparation profiling](GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md#m0--freeze-evidence-and-measure-preparation), then M1 domain/contact catalogue and M2 shared normalization. No new runtime is implemented by this planning update.
+- M0 profiling, domain/contact catalogue, shared normalization and schema7 dynamic DFS are implemented. Automatic raw-walk containment is removed; finite required contact-region alternatives remain hard at their existing physical phase. Final acceptance is tracked in the generic plan ledger.
 
 2026-11-03. Spatial-refactor implementation contract. The geometry, typed route/progress/guard and DFS integration are implemented. Stored-scene coverage and matched cold evidence are recorded below; automatic Real11 completion remains a measured performance limitation. Updated after importing [CORRIDOR_AGENT_HANDOFF](../docs/CORRIDOR_AGENT_HANDOFF.md) through `61355976`, merged as `984b701b` into isolated branch `research/real11-initial-run-ticks`. The earlier geometry diagnostics remain source-specific at `93652150`. This plan specifies the spatial representation and its integration with the **implemented** [DFS/interaction search](DFS_INTERACTION_IMPLEMENTATION_PLAN.md). It supersedes that plan's earlier sections2.1–2.5 where route identity or division of work differs. Preserve the imported runtime protections below rather than reimplementing them. Only committed handoff changes were imported; the source checkout's in-progress retry was left untouched.
 
 For compact-resume checkout/state/commands and the next action, use [CORRIDOR_IMPLEMENTATION_RESUME.md](../docs/CORRIDOR_IMPLEMENTATION_RESUME.md). Sections10–11 below provide the implementation API/call-site checklist, first slice and test matrix; this is not only a conceptual design.
 
 ## Implementation status
+
+This section records the historical `a28e5b71` feature. The current automatic backend is the generic event implementation linked above; do not apply this baseline’s raw-walk acceptance contract to it.
 
 2026-11-03: milestone1 committed at `f9aa0d96`; milestones2–5 are implemented in the isolated worktree. Milestone6 has coverage and matched cold evidence; it does not establish automatic Real11 completion or optimality. This section describes actual code; the detailed sections below preserve the design contract and acceptance checklist.
 

@@ -1,8 +1,8 @@
 # Consolidated plan: depth-first decisions and shared interaction eligibility
 
-> Next implementation: [GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md](GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md) controls the event-language/stage-provider refactor. [Its DFS call-site table](GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md#92-exact-dfs-call-site-edits) replaces the automatic fixed full `goal_list` with lazy `GoalRequest` stages while preserving this engine's generation, promotion, sibling/unknown and single-owner protections. [The research](GENERIC_ROUTE_DISCOVERY_RESEARCH.md) remains the cited rationale. Baseline behavior below describes `a28e5b71`, not a claim that the next plan is already implemented.
+> Current automatic implementation: [GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md](GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md) controls the implemented event-language/stage-provider refactor at `08b00185`. Its dynamic `GoalRequest` stages use the existing DFS with schema7, event-stage policy3, separate score contexts, pending-child owners and retained siblings/unknowns. Constraint generation is state2/policy7 and repair assembly8.447 selected native checks pass with stable source hashes; automatic stored-Real11 cold search finds T67 at16.09s and all24 independent post-run replays pass. See [current evidence](experiments/event-route-discovery/README.md) for the matched-control status. The remainder records the source-specific `a28e5b71` baseline and its original design history.
 
-## Next DFS integration contract
+## Implemented automatic integration contract
 
 - Use semantic event/goal cursors and immutable stage views; a frame's index is decision depth rather than a lookup into a fixed future support list.
 - One compatible actual prefix/next-goal owner can service latent future guide aliases without copying solved sibling decisions.
@@ -14,7 +14,7 @@
 
 The [spatial corridor refactor plan](SPATIAL_CORRIDOR_REFACTOR_PLAN.md) records the implemented region/route/stage contract and remaining acceptance scope. This document records the implemented search invariants and the exact integration obligations. Earlier pre-handoff drafts are superseded; the original source-era plans, experiments and corridor investigation ledgers preserve their evidence. The implementation-status sections distinguish current runtime from the original integration checklist.
 
-After compaction, use the [implementation resume handoff](../docs/CORRIDOR_IMPLEMENTATION_RESUME.md) and spatial-plan sections10–11. They enumerate the existing DFS `goal_list`/frame/terminal call sites, stage-scoped adapter requirements, virtual-finish outstanding-contact trap and first feature slice. Do not start a second DFS or re-run old investigations as the first implementation action.
+After compaction, use the [implementation resume handoff](../docs/CORRIDOR_IMPLEMENTATION_RESUME.md) and the generic plan’s implementation ledger. The older spatial-plan sections10–11 remain historical context. They enumerate the existing DFS `goal_list`/frame/terminal call sites, stage-scoped adapter requirements, virtual-finish outstanding-contact trap and first feature slice. Do not start a second DFS or re-run old investigations as the first implementation action.
 
 ## Spatial implementation update (2026-11-03)
 

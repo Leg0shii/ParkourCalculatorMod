@@ -142,3 +142,5 @@ All tracked standalone Markdown plus this consolidation. Read [AGENTS](../AGENTS
 
 - [Implementation contract/status](../autonomy/SPATIAL_CORRIDOR_REFACTOR_PLAN.md), [DFS integration](../autonomy/DFS_INTERACTION_IMPLEMENTATION_PLAN.md), [active resume handoff](CORRIDOR_IMPLEMENTATION_RESUME.md).
 - [Automatic fixture, commands, coverage and numerical evidence](../autonomy/experiments/automatic-corridors/README.md). Source-era failed audits remain alongside final acceptance reports.
+
+- [Event-discovery implementation evidence](../autonomy/experiments/event-route-discovery/README.md):447-test final native gate, seven generic/control replays, three-tier coverage, matched automatic/supplied cold results, complete new trajectory diagram and source/evidence manifest.

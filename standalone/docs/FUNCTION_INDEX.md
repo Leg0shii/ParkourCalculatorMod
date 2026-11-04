@@ -454,7 +454,7 @@ Source snapshot: generic event discovery implementation, including the imported 
 
 - `run_fixture` — def, line 16.
 - `save` — def, line 23.
-- `main` — def, line 31.
+- `main` — def, line 32.
 
 ## [autonomy/climbable_search.py](../autonomy/climbable_search.py)
 
@@ -1285,11 +1285,12 @@ Source snapshot: generic event discovery implementation, including the imported 
 ## [autonomy/tests/test_event_search.py](../autonomy/tests/test_event_search.py)
 
 - `EventSearchTests` — class, line 17.
-- `EventSearchTests.test_disconnected_regions_on_one_physical_block_have_contact_phase_guards` — def, line 18.
-- `EventSearchTests.test_same_support_setup_is_local_without_removing_its_physical_choices` — def, line 43.
-- `EventSearchTests.test_adapter_has_no_inherited_raw_cell_rejection_paths` — def, line 56.
-- `EventSearchTests.test_default_dynamic_goals_share_prefix_and_publish_actual_child_atomically` — def, line 69.
-- `EventSearchTests.test_explicit_old_catalogue_settings_and_states_are_not_reinterpreted` — def, line 114.
+- `EventSearchTests.test_quick_reverse_landings_do_not_preempt_forward_goal_service` — def, line 18.
+- `EventSearchTests.test_disconnected_regions_on_one_physical_block_have_contact_phase_guards` — def, line 33.
+- `EventSearchTests.test_same_support_setup_is_local_without_removing_its_physical_choices` — def, line 58.
+- `EventSearchTests.test_adapter_has_no_inherited_raw_cell_rejection_paths` — def, line 71.
+- `EventSearchTests.test_default_dynamic_goals_share_prefix_and_publish_actual_child_atomically` — def, line 84.
+- `EventSearchTests.test_explicit_old_catalogue_settings_and_states_are_not_reinterpreted` — def, line 129.
 
 ## [autonomy/tests/test_failure_diagnostic.py](../autonomy/tests/test_failure_diagnostic.py)
 
