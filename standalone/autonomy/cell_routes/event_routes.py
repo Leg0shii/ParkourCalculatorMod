@@ -177,14 +177,18 @@ def build_event_graph(domain):
     data = domain.to_dict() if isinstance(domain, RouteDomain) else domain
     raw = data['geometry']
     scene = data['scene']
+    task = data['task'] or dict(kind='landing', block=scene['goalBlock'])
     events = []
     for surface in data['surfaces']:
         blocks = sorted(b['id'] for b in scene['blocks'] if b['solidIndex'] in surface['solids'])
+        if task['kind']=='landing' and blocks == [task['block']]:
+            # This exact contact already is the task; do not score it twice
+            # under a generic visit and an identical terminal request.
+            continue
         events.append(dict(id='visit:'+surface['id'], kind='support_visit', surface=surface['id'],
             attachments=surface['components'], cover=surface['cover'],
             goal=dict(kind='landing', block=blocks[0], blocks=blocks, surface=surface['id']), terminal=False))
     # Keep an explicit owner-specific task even on a shared coplanar surface.
-    task = data['task'] or dict(kind='landing', block=scene['goalBlock'])
     events.append(dict(id='finish:'+geometry_key(task), kind='finish', attachments=raw['goals'],
         cover=[], goal=task, terminal=True))
     result = dict(schema=GRAPH_SCHEMA, domainId=data['domainId'], events=sorted(events, key=lambda e:e['id']),
@@ -273,3 +277,29 @@ def advance_cursor(domain, graph, cursor, request, observed):
     # No selected raw path is carried forward as a hard requirement.
     result['outsideUnresolved'] = data['coverage']['enclosure'] != 'complete'
     return result
+
+
+def observed_route(data, profile, witness, *, after=0):
+    """Keep physical approach evidence distinct from optional guide labels.
+
+    Equal-row physical alternatives retain their provenance/resource union.
+    Timed rows remain in the fixed model; semantic words use physical features.
+    """
+    episodes = [e for e in support_episodes(data,profile) if e['input']>=after]
+    alternatives = witness.get('selectedInteractionAlternatives', [witness.get('selectedInteractions',[])])
+    passages=[]
+    for bundle in alternatives:
+        variant=[]
+        for passage in bundle:
+            features=[]
+            for face in passage['faces']:
+                matches=[f['id'] for f in data['features'] if f['solidIndex']==passage['solidIndex'] and
+                    f['axis']=='XYZ'.index(face['axis']) and f['side']==face['direction'] and
+                    f['bounds'][f['axis']]==face['plane']]
+                features.append(matches)
+            variant.append(dict(kind='passage',features=features,gates=passage['gates'],
+                resources=passage['blockageCounts'],classification='selected_model',
+                window=[0,profile['airtime']]))
+        passages.append(variant)
+    return dict(events=episodes,passageAlternatives=passages,optionalGuide='uncommitted',
+        validation='fixed_model_evidence',after=after)

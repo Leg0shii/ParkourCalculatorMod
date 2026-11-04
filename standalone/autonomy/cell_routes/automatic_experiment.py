@@ -22,17 +22,19 @@ from .window_experiment import save
 def source_hashes():
     root=Path(__file__).resolve().parents[3]
     sources=sorted((root/'standalone/autonomy/cell_routes').glob('*.py'))
-    sources += [root/'standalone/autonomy'/n for n in ('constraint_variants.py','movement_search.py','movement_frontier.py','open_movement.py')]
+    sources += sorted((root/'standalone/autonomy').glob('*.py'))
     return {str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for p in sources}
 
 
 def run(fixture,compiler,*,python_executable=None,resume_state=None,on_progress=None,cancel_event=None):
     request=fixture['request']
+    if 'spatialSettings' in fixture:
+        raise ValueError('Legacy spatialSettings is not event discovery; use discoverySettings version1')
     from ..movement_search import movement_settings
     cfg=movement_settings(prepare_scene(request))
     policy=InitialJumpDomain(fixture.get('initialJumpInputs'),max_inputs=cfg['maxInputs'])
     result=find_checkpoint_route(request,compiler,task_goal=fixture.get('terminalGoal'),
-        spatial_settings=fixture.get('spatialSettings'),program_filter=policy,
+        discovery_settings=fixture.get('discoverySettings'),program_filter=policy,
         resume_state=resume_state,on_progress=on_progress,cancel_event=cancel_event,
         python_executable=python_executable,**fixture.get('settings',{}))
     validation=[]
@@ -77,7 +79,8 @@ def main():
         result,validation=run(fixture,compiler,python_executable=args.python,resume_state=previous,
                               on_progress=progress,cancel_event=cancel)
     report.pop('searchState',None)
-    report.update(result=result,validation=validation)
+    report.update(result=result,validation=validation,sourceHashesAfter=source_hashes(),
+                  sourceUnchanged=report['sourceHashes']==source_hashes())
     save(args.output,report)
     best=result['best']
     print(json.dumps(dict(status=result['status'],termination=result['termination'],work=result['work'],

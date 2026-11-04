@@ -146,13 +146,15 @@ class InteractionGate:
         if envelope is None:
             return dict(reason='vertical_schedule')
         profile = program['profile']
+        context = dict(envelopes=envelope)
+        context_key = interaction_context_key(context)
         for event in profile.get('contactEvents', [])+profile.get('caseEvents', []):
             if 'box' not in event:
                 continue
             tick = event.get('offset', event.get('input'))
             proof = query_interaction(dict(box=event['box'], role='required_contact',
                 windows=[dict(tick=tick, phase=p) for p in ('Y', 'X', 'Z')], interior=False),
-                dict(envelopes=envelope))
+                context, context_key=context_key)
             if proof['status'] == 'absent':
                 return dict(reason='required_interaction_unreachable', input=tick, box=event['box'], proof=proof)
         return None

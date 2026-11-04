@@ -63,8 +63,9 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
     from .checkpoint_search import evaluate_program
     from .checkpoint_experiment import replay_witness
 
-    typed_route = hasattr(adapter,'for_goal')
-    goal_list = [goal_spec(scene,g) for g in adapter.goals()] if typed_route else (
+    event_route = getattr(adapter, 'search_contract', None) == 'event_goals_v1'
+    typed_route = event_route or hasattr(adapter,'for_goal')
+    goal_list = [] if event_route else [goal_spec(scene,g) for g in adapter.goals()] if typed_route else (
         [goal_spec(scene, g) for g in goals] if goals else ([] if terminal_plan is not None else [default_goal]))
     # Repeated clock observations of the same goal are not separate decisions.
     if not typed_route:
@@ -82,7 +83,7 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
         raise ValueError('DFS roots must preserve original state and zero inertia thresholds')
     if any(not accepted_program(p) for p in roots):
         raise ValueError('DFS roots violate the decision domain')
-    schema = 6 if typed_route else 5
+    schema = 7 if event_route else 6 if typed_route else 5
     context = digest(dict(version=schema, kind='ordered_goal_dfs', movementGenerationPolicy=3,constraintGenerationPolicy=6,
         scene={k:v for k,v in scene.items() if k!='movementSearch'},
         domain={k:v for k,v in cfg.items() if k not in ('maxPrefixes','maxQueuedPrefixes','maxChoicesPerType','expansionsPerProposal')},
@@ -98,11 +99,17 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
     state = copy.deepcopy(resume_state) if resume_state is not None else dict(version=schema, kind='ordered_goal_dfs',
         context=context, initialRoots=roots, stack=[], suspended=[], refinements=[], frames=[], transitions=[],
         windows=[], finalAttempts=[], best=None, cumulativeCalls=0, session=0, expanded=0, nextFrame=0)
+    if event_route:
+        state.setdefault('goalQueue', [])
+        state.setdefault('goalOwners', {})
+        state.setdefault('discovery', {})
     state['session'] += 1
     prior_calls, initial_expanded = state['cumulativeCalls'], state['expanded']
     if resume_state and state['best'] is not None and not replay_witness(scene,state['best'],compiler)['passed']:
         raise ValueError('Saved DFS incumbent no longer passes independent replay')
     gate = InteractionGate(scene, compiler, seconds=candidate_seconds)
+    if event_route:
+        gate.cache = adapter.interaction_cache
     state.setdefault('timeBoundExclusions',[])
     state.setdefault('minimumRunExclusions',[])
     excluded_runs={(r['frame'],r['candidate']) for r in state['minimumRunExclusions']}
@@ -121,22 +128,73 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
         if not typed_route or kind!='choose':
             publish()
 
-    def frame(index, parents, parent=None):
-        f = dict(id=state['nextFrame'], index=index, parents=copy.deepcopy(parents), parent=parent,
-            goal=goal_list[index] if index<len(goal_list) else None, phase='generate', generation={},
-            ready=[], records=[], inFlight=None, sourceExhausted=False, batches=0)
-        state['nextFrame'] += 1
+    stage_views = {}
+
+    def frame(index, parents, parent=None, cursor=None):
+        if event_route:
+            cursor = cursor if cursor is not None else adapter.initial_cursor(parents)
+            owner = digest(dict(parents=[candidate_key(p) for p in parents], cursor=cursor,
+                physics=motion, domain=adapter.data['domainId']))
+            if owner in state['goalOwners']:
+                return None
+            discovery = dict(owner=owner,index=index,parents=copy.deepcopy(parents),parent=parent,
+                cursor=cursor,continuation=None,exhausted=False)
+            state['discovery'][owner] = discovery
+            state['goalOwners'][owner] = []
+            if parent is not None:
+                state['pendingGoalOwner'] = owner
+            expand_discovery(discovery)
+            ready = next((f for f in state['goalQueue'] if f['owner']==owner),None)
+            if ready is not None:
+                f = ready
+                state['goalQueue'].remove(f)
+                state['stack'].append(f)
+                if state.get('pendingGoalOwner') == owner:
+                    state.pop('pendingGoalOwner')
+                transition('open',f,goal=f['goal'])
+                return f
+            publish()
+            return None
+        f = make_frame(index,parents,parent,goal_list[index] if index<len(goal_list) else None)
         state['stack'].append(f)
-        transition('open', f, goal=f['goal'])
+        transition('open',f,goal=f['goal'])
         return f
 
-    stage_views = {}
+    def make_frame(index, parents, parent, goal, **fields):
+        f = dict(id=state['nextFrame'], index=index, parents=copy.deepcopy(parents), parent=parent,
+            goal=goal, phase='generate', generation={}, ready=[], records=[], inFlight=None,
+            sourceExhausted=False, batches=0, **fields)
+        state['nextFrame'] += 1
+        return f
+
+    def expand_discovery(discovery):
+        settings=getattr(adapter,'discovery_settings',{})
+        used=state.setdefault('discoveryWork',dict(expansions=0,materializations=0))
+        requests, continuation, report=adapter.next_goals(discovery['cursor'],discovery['parents'],
+            discovery['continuation'],budget=dict(check=work.check,
+                expansions=max(0,settings.get('maxGraphExpansions',5000)-used['expansions']),
+                materializations=max(0,settings.get('maxGuideMaterializations',50)-used['materializations'])))
+        used['expansions']+=report['expansions'];used['materializations']+=report['materializations']
+        discovery.update(continuation=continuation,exhausted=continuation['exhausted'])
+        for request in requests:
+            f=make_frame(discovery['index'],discovery['parents'],discovery['parent'],request['goal'],
+                goalRequest=request,semanticCursor=copy.deepcopy(discovery['cursor']),owner=discovery['owner'])
+            state['goalOwners'][discovery['owner']].append(f['id'])
+            state['goalQueue'].append(f)
+
     def stage_adapter(f):
         if not typed_route:
             return adapter
-        if f['index'] not in stage_views:
-            stage_views[f['index']] = adapter.for_goal(f['index'])
-        return stage_views[f['index']]
+        key=f['id'] if event_route else f['index']
+        if key not in stage_views:
+            stage_views[key] = (adapter.for_goal(f['goalRequest'],f['semanticCursor']) if event_route else adapter.for_goal(f['index']))
+            if event_route:
+                f['guide'] = stage_views[key].guide
+                f['scoreContextKey'] = stage_views[key].score_context
+        return stage_views[key]
+
+    def score_key(program,f):
+        return digest([candidate_key(program),stage_adapter(f).score_context]) if event_route else candidate_key(program)
 
     def configure(ctx, f):
         stage_adapter(f).context(ctx)
@@ -171,7 +229,10 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
         bound=time_bound(program) or run_bound(program,f)
         if bound is not None:
             return bound
-        if typed_route or goal_list and goal_list[-1]['kind']==KIND and not hasattr(program_filter,'remaining'):
+        if event_route:
+            g=f['goal']
+            required=[g['block']] if g['kind']=='landing' and program['terminalSupport'] not in g.get('blocks',[g['block']]) else []
+        elif typed_route or goal_list and goal_list[-1]['kind']==KIND and not hasattr(program_filter,'remaining'):
             first = f['index'] if f is not None else 0
             if first<len(goal_list) and goal_list[first]['kind']=='landing' and program['terminalSupport'] in goal_list[first].get('blocks',[goal_list[first]['block']]):
                 first += 1
@@ -196,10 +257,10 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
             repair.get('constraintGeneration') and not repair['constraintGeneration'].get('exhausted'))
 
     def terminal(f):
-        return f['index'] == len(goal_list)
+        return not event_route and f['index'] == len(goal_list)
 
     def final_frame(f):
-        return terminal(f) or terminal_plan is None and f['index']==len(goal_list)-1
+        return f['goalRequest']['terminal'] if event_route else terminal(f) or terminal_plan is None and f['index']==len(goal_list)-1
 
     def generate(f):
         if f['goal'] and f['goal']['kind']==KIND and not f.get('directDone'):
@@ -224,7 +285,7 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
                                 child=bind_goal(child,f['goal'],scene.get('supportClearance',1e-6))
                                 if child.get('terminalGoal')==f['goal'] and eligible(child,f) and screen(child,f) is None:
                                     identity=candidate_key(child)
-                                    if identity not in {candidate_key(p) for p in f['ready']} | {r['id'] for r in f['records']}:
+                                    if identity not in {candidate_key(p) for p in f['ready']} | {r.get('candidateKey',r['id']) for r in f['records']}:
                                         f['ready'].append(child)
                             f['directCursor']+=1
                     finally:source.close()
@@ -261,7 +322,7 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
                             child = append_choice(p,choice,max_inputs=cfg['maxInputs'])
                             if child is not None and accepted_program(child) and screen(child,f) is None:
                                 identity = candidate_key(child)
-                                if identity not in {r['id'] for r in f['records']}:
+                                if identity not in {r.get('candidateKey',r['id']) for r in f['records']}:
                                     f['ready'].append(child)
                         f['directCursor'] += 1
                         f.pop('directChoice',None)
@@ -293,7 +354,7 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
             context_adapter=lambda ctx:configure(ctx,f),program_filter=lambda p:eligible(p,f),stop_on_goal=cp is None,
             stop_supports=f['goal'].get('blocks') if f['goal'] and f['goal']['kind']=='landing' else None,
             terminal_goal=f['goal'] if f['goal'] and f['goal']['kind']==KIND else None)
-        seen = {r['id'] for r in f['records']} | {candidate_key(p) for p in f['ready']}
+        seen = {r.get('candidateKey',r['id']) for r in f['records']} | {candidate_key(p) for p in f['ready']}
         try:
             while len(f['ready']) < batch_size:
                 try:
@@ -322,7 +383,7 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
 
     def score(f, program, old=None):
         source_program = program
-        identity = old['id'] if old else f['inFlight']['id'] if f['inFlight'] is not None else candidate_key(program)
+        identity = old['id'] if old else f['inFlight']['id'] if f['inFlight'] is not None else score_key(program,f)
         work.counts['terminalEvaluations' if final_frame(f) else 'spatialGoalEvaluations'] += 1
         f['inFlight'] = dict(id=identity,program=program)
         transition('dispatch',f,candidate=identity,goal=f['goal'],inputs=program['profile']['airtime'])
@@ -340,7 +401,7 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
             f['inFlight']['program']['repairState'] = repair
             publish()
         active_adapter = stage_adapter(f)
-        guidance=adapter.outgoing_objective(f['index']) if typed_route and not final_frame(f) else None
+        guidance=active_adapter.objective if event_route and not final_frame(f) else adapter.outgoing_objective(f['index']) if typed_route and not final_frame(f) else None
         result = evaluate_program(target_scene,program,compiler,active_adapter,work,motion,checkpoint=cp,
             seconds=max(.001,min(score_seconds,deadline-time.monotonic())),candidate_seconds=candidate_seconds,
             solver_calls=final_calls if final_frame(f) else score_calls,python_executable=python_executable,
@@ -357,8 +418,12 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
             tried=old.get('tried',False) if old else False,solveScope=result.get('solveScope'),solveIdentity=result.get('solveIdentity'),
             numericalAttempts=result.get('repairState',{}).get('attemptLog',result.get('attempts',[])),
             contactAttempts=result.get('repairState',{}).get('contactLog',result.get('contactAttempts',[])))
+        record['candidateKey'] = candidate_key(program)
+        if event_route:
+            record['scoreContextKey'] = active_adapter.score_context
+            record['guideId'] = active_adapter.guide['id']
         record['ticks'] = program['profile']['airtime']
-        record['complete'] = terminal(f) or terminal_plan is None and f['index']==len(goal_list)-1
+        record['complete'] = final_frame(f)
         if window_plan is not None:
             from .decision_windows import DecisionPolicy
             record['decisionAudit'] = DecisionPolicy(window_plan,scene).audit(program)
@@ -414,7 +479,7 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
             record.update(status='unknown',termination='preliminary_scope_not_a_terminal_witness')
         if minimum_run_pruning and record.get('witness') and final_validated:
             remember(f.setdefault('minimumRuns',{}),latest_jump(program,scene),identity,record['arrival'])
-        if record.get('witness') and final_validated and (terminal(f) or terminal_plan is None and f['index']==len(goal_list)-1):
+        if record.get('witness') and final_validated and final_frame(f):
             from standalone.autonomy.ranking import candidate_rank
             candidate = copy.deepcopy(record['witness'])
             candidate.update(movementProgram=record['child'],blockIds=[scene['startBlock'],scene['goalBlock']])
@@ -444,12 +509,28 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
             state['suspended'].append(f)
         transition('backtrack',f,parent=f['parent'])
 
-    if not state['stack'] and state['nextFrame']==0:
+    def support_episodes_for_child(record):
+        from .event_routes import observed_route
+        return observed_route(adapter.data,record['child']['profile'],record['witness'],
+                              after=stage_adapter(f).request['afterTick'])
+
+    if event_route:
+        state['discoveryWork'] = dict(expansions=0,materializations=0)
+    if not state['stack'] and state['nextFrame']==0 and not state.get('goalOwners'):
         index = 0
         while not typed_route and index<len(goal_list) and goal_list[index]['kind']=='landing' and all(
                 list(_landing_prefixes(scene,p,goal_list[index]['block'])) for p in roots):
             index += 1
         frame(index,roots)
+    if event_route:
+        for discovery in state['discovery'].values():
+            if not discovery['exhausted']:
+                expand_discovery(discovery)
+        ready = next((f for f in state['goalQueue'] if f['owner']==state.get('pendingGoalOwner')),None)
+        if ready is not None:
+            state['goalQueue'].remove(ready)
+            state['stack'].append(ready)
+            state.pop('pendingGoalOwner')
     resumable = next((f for f in reversed(state['suspended']) if retry_unknown or any(numerical_pending(r) for r in f['records'])),None)
     if not state['stack'] and resumable is not None:
         f = resumable
@@ -462,9 +543,12 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
         state['stack'].append(f)
     resumable_ids = {f['id'] for f in state['suspended'] if retry_unknown or any(numerical_pending(r) for r in f['records'])}
     try:
-        while state['stack'] or state['refinements'] or resumable_ids:
+        while state['stack'] or state['refinements'] or resumable_ids or event_route and state['goalQueue']:
             work.check()
             if not state['stack']:
+                if event_route and state['goalQueue']:
+                    state['stack'].append(state['goalQueue'].pop(0))
+                    continue
                 if state['refinements']:
                     f = state['refinements'].pop(0)
                 else:
@@ -508,7 +592,7 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
                         if typed_route:
                             work.check()
                         f['ready'].remove(program)
-                        previous = next((r for r in f['records'] if r['id']==candidate_key(program)),None)
+                        previous = next((r for r in f['records'] if r.get('candidateKey',r['id'])==candidate_key(program)),None)
                     if not eligible(program,f):
                         f['inFlight']=None
                         transition('candidate_exclusion',f,candidate=candidate_key(program))
@@ -520,7 +604,7 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
                 chosen = min(options,key=arrival_key)
                 chosen['tried'] = True
                 transition('choose',f,candidate=chosen['id'],arrival=chosen['arrival'],key=list(arrival_key(chosen)))
-                if terminal(f) or terminal_plan is None and f['index']==len(goal_list)-1:
+                if final_frame(f):
                     candidate = copy.deepcopy(chosen['witness'])
                     candidate.update(movementProgram=chosen['child'],blockIds=[scene['startBlock'],scene['goalBlock']])
                     from standalone.autonomy.ranking import candidate_rank
@@ -541,7 +625,11 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
                     scored=len(options),unknown=sum(not r.get('witness') for r in f['records']),heuristicDrops=0,
                     generation=copy.deepcopy(f['generation']),retention=dict(policy='saved_dfs_siblings_no_cap_eviction'))
                 state['windows'].append(window)
-                if typed_route:
+                if event_route:
+                    observed=support_episodes_for_child(chosen)
+                    cursor=adapter.advance(f['semanticCursor'],chosen['child'],observed,f['goalRequest'])
+                    frame(f['index']+1,[chosen['child']],parent=dict(frame=f['id'],candidate=chosen['id']),cursor=cursor)
+                elif typed_route:
                     frame(f['index']+1,[chosen['child']],parent=dict(frame=f['id'],candidate=chosen['id']))
                 if on_window:
                     on_window(window)
@@ -566,7 +654,9 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
     except TimeoutError as error:
         termination = work.termination or str(error)
     publish()
-    generations = [f['generation'] for f in state['frames']+state['stack']]
+    if event_route and any(not d['exhausted'] for d in state['discovery'].values()) and termination=='exhausted':
+        termination='discovery_work_limit'
+    generations = [f['generation'] for f in state['frames']+state['stack']+state.get('goalQueue',[])]
     return dict(status='feasible' if state['best'] else 'cancelled' if termination=='cancelled' else
         'error' if termination=='error' else 'unknown',termination=termination,best=state['best'],
         windows=state['windows'],finalAttempts=state['finalAttempts'],corridor=adapter.corridor.to_dict(),
@@ -581,4 +671,4 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
         minimumRunPruning=dict(enabled=minimum_run_pruning,version=POLICY_VERSION,excluded=len(state['minimumRunExclusions']),
             scope='ordinary_ground_hold_before_latest_jump',certifiedDominance=False),
         terminalCheckpoint=terminal_plan.to_dict() if terminal_plan else None,
-        goalType='fixed_absolute_tick_objective' if terminal_plan else 'earliest_virtual_landing_height' if goal_list[-1]['kind']==KIND else 'landing_time')
+        goalType='fixed_absolute_tick_objective' if terminal_plan else 'earliest_virtual_landing_height' if (adapter.data['task'] if event_route else goal_list[-1])['kind']==KIND else 'landing_time')

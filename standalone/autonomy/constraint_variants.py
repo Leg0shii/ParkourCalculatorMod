@@ -47,8 +47,16 @@ class ConstraintVariants:
         self.state.setdefault('duplicateVariants', 0)
         self.state.setdefault('partialSeen', [])
         self.partial_seen = set(self.state['partialSeen'])
+        self.state.setdefault('timings',dict(preparationSeconds=0.,variantGenerationSeconds=0.))
 
     def prepare_item(self, item):
+        started=time.monotonic()
+        try:
+            return self._prepare_item(item)
+        finally:
+            self.state['timings']['preparationSeconds']+=time.monotonic()-started
+
+    def _prepare_item(self, item):
         """Resume between phases, mask states and dynamic-program table rows.
 
         All mutable preparation is owned by this iterator and JSON serializable.
@@ -320,6 +328,13 @@ class ConstraintVariants:
         return True
 
     def __next__(self):
+        started=time.monotonic()
+        try:
+            return self._next_variant()
+        finally:
+            self.state['timings']['variantGenerationSeconds']+=time.monotonic()-started
+
+    def _next_variant(self):
         while self.state['pending']:
             self.check()
             node = self.state['pending'][-1]

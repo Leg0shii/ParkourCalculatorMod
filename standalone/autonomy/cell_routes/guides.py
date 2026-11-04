@@ -115,6 +115,17 @@ def outgoing_objective(data, graph, request, guide):
     if request['terminal']:
         return dict(data['scene']['objective'])
     start = guide['target']
+    final = next(e for e in graph['events'] if e['terminal'])
+    current = next(e for e in graph['events'] if e['id']==request['event'])
+    onward = dict(request, id='onward:'+geometry_key((request['id'],start)), event=final['id'],
+        terminal=True, connector=dict(entry=current['attachments'],exit=final['attachments']))
+    witness = guide_for(data,graph,onward,start)
+    if witness['witness']:
+        from types import SimpleNamespace
+        segments=horizontal_segments(SimpleNamespace(points=witness['points']))
+        if segments:
+            first=segments[0]
+            return Checkpoint(1,-1,first['direction'],tuple(first['start']),tuple(first['end']),()).objective
     end = task_reference(data, start)
     dx, dz = end[0]-start[0], end[2]-start[2]
     length = math.hypot(dx, dz)

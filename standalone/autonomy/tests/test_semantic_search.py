@@ -215,17 +215,17 @@ class SemanticNumericalTests(unittest.TestCase):
         scene=flat_scene();original=copy.deepcopy(scene)
         with self.compiler() as compiler:
             result=find_checkpoint_route(scene,compiler,seconds=8,max_solver_calls=3,
-                candidate_seconds=.7,score_seconds=2,spatial_settings=dict(max_routes=2,max_expansions=300),
+                candidate_seconds=.7,score_seconds=2,discovery_settings=dict(maxGuideMaterializations=2,maxGraphExpansions=300),
                 python_executable=os.environ['PKC_IPOPT_PYTHON'])
             self.assertEqual(result['status'],'feasible',result['termination'])
             self.assertTrue(replay_witness(scene,result['best'],compiler)['passed'])
-            self.assertEqual(result['searchState']['kind'],'semantic_route_queue')
-            self.assertTrue(all(s['version']==6 for s in result['searchState']['children'].values()))
+            self.assertEqual(result['searchState']['kind'],'event_route_search')
+            self.assertEqual(result['searchState']['dfs']['version'],7)
             self.assertLessEqual(result['work']['solverCalls'],3)
             self.assertLessEqual(result['expandedPrefixes'],scene['movementSearch']['maxPrefixes'])
             saved=json.loads(json.dumps(result['searchState'],allow_nan=False))
             resumed=find_checkpoint_route(scene,compiler,seconds=2,max_solver_calls=2,
-                candidate_seconds=.7,score_seconds=2,spatial_settings=dict(max_routes=2,max_expansions=300),
+                candidate_seconds=.7,score_seconds=2,discovery_settings=dict(maxGuideMaterializations=2,maxGraphExpansions=300),
                 resume_state=saved,python_executable=os.environ['PKC_IPOPT_PYTHON'])
             self.assertTrue(resumed['resume']['exact'])
             self.assertEqual(resumed['best']['plan']['ticks'],result['best']['plan']['ticks'])
@@ -240,7 +240,7 @@ class SemanticNumericalTests(unittest.TestCase):
         goal=dict(kind='landing_height_region',height=2.,rows=[dict(mode='X',cmp='GE',rhs=1.5),dict(mode='Z',cmp='GE',rhs=-2.)])
         with self.compiler() as compiler:
             result=find_checkpoint_route(scene,compiler,task_goal=goal,seconds=12,max_solver_calls=4,
-                candidate_seconds=.7,score_seconds=2,spatial_settings=dict(max_routes=4,max_expansions=500),
+                candidate_seconds=.7,score_seconds=2,discovery_settings=dict(maxGuideMaterializations=4,maxGraphExpansions=500),
                 program_filter=InitialJumpDomain([0,1],max_inputs=20),python_executable=os.environ['PKC_IPOPT_PYTHON'])
             self.assertEqual(result['status'],'feasible',result['termination'])
             best=result['best']

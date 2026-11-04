@@ -62,6 +62,11 @@ def evaluate_program(scene, program, compiler, adapter, work, motion_bound, *, c
                      seconds=3, candidate_seconds=1, solver_calls=8, python_executable=None, cancel_event=None,
                      partial_corridor=False, required_landing=None, scope=None, on_progress=None, retry_unresolved=True, first_witness=False,
                      guide_objective=None):
+    timings={}
+    marked=time.monotonic()
+    def mark(name):
+        nonlocal marked
+        now=time.monotonic();timings[name]=now-marked;marked=now
     complete = checkpoint is None
     virtual=program.get('terminalGoal')
     if virtual is not None:
@@ -71,6 +76,7 @@ def evaluate_program(scene, program, compiler, adapter, work, motion_bound, *, c
             raise ValueError('Virtual finish program does not reach its height clock')
     compiled = compile_program(scene, program, require_complete=complete and virtual is None)
     route, profiles = compiled['route'], compiled['profiles']
+    mark('programCompilation')
     if guide_objective is not None:
         route['objective']=dict(axis='X',sense='MAX')
         route['guideObjective']=copy.deepcopy(guide_objective)
@@ -110,13 +116,16 @@ def evaluate_program(scene, program, compiler, adapter, work, motion_bound, *, c
         return dict(status='unknown', termination='vertical_schedule', best=None, attempts=[], contactAttempts=[],
                     work=scoped.local.summary(), solveScope=scope, fullSceneValidated=False)
     plan['vertical'] = dict(vertical['vertical'], referencePosition=vertical['y'], referenceVelocity=vertical['vy'])
+    mark('scopeAndVerticalPreparation')
     coefficients = compiler.compile(route, plan, max(.001, min(seconds, candidate_seconds)))
+    mark('coefficientCompilation')
     model = dict(coefficients, version=1, ticks=plan['ticks'], walls=plan['walls'], contacts=plan['contacts'],
         position=scene['initial']['position'][::2], velocity=scene['initial']['velocity'][::2],
         threshold=route.get('physicsThreshold', .005), vertical=vertical['vertical'], objective=dict(route.get('guideObjective', route['objective']), tick=plan['ticks']))
     envelopes = reachable_envelopes(model, vertical['y'])
     from standalone.autonomy.solve_spec import digest
     envelopes['modelKey'] = digest(coefficients)
+    mark('reachability')
     if hasattr(scoped_adapter, 'eligible'):
         scoped_adapter = scoped_adapter.eligible(envelopes, scope['through'])
         if checkpoint is not None:
@@ -139,6 +148,7 @@ def evaluate_program(scene, program, compiler, adapter, work, motion_bound, *, c
         state=program.get('repairState', {}).get('constraintGeneration'), deadline=scoped.deadline, reference=reference,
         route_guards=scoped_adapter.constraint_guards(program['profile'],envelopes,scope,scoped.deadline)
         if hasattr(scoped_adapter,'constraint_guards') else None)
+    mark('eligibilityAndVariantConstruction')
     result = solve_contact_branches(route, profiles, checks,
         compiler, seconds=seconds, candidate_seconds=candidate_seconds, retries=0,
         max_branches=scene['maxContactBranches'], improve=True, rank_equal_cost=not first_witness, optimize_goal=True,
@@ -149,6 +159,8 @@ def evaluate_program(scene, program, compiler, adapter, work, motion_bound, *, c
         candidate_filter=candidate_filter, work=scoped, resume_state=program.get('repairState'),
         repair_scope=dict(solveIdentity=identity, scope=scope, assemblyVersion=7),
         validation_scope=scope, initial_variants=variants, on_progress=on_progress, retry_unresolved=retry_unresolved)
+    mark('physicalSearchAndValidation')
+    result['timings']=dict(timings,**variants.state['timings'])
     if result['best'] is not None:
         if checkpoint is not None and scope['purpose'] == 'complete':
             stage = checkpoint.stage(result['best']['candidate'], scoped_adapter.gates)
@@ -181,7 +193,8 @@ def find_checkpoint_route(request, compiler, *, checkpoints=None, corridor=None,
                           spatial_seconds=1.5, spatial_calls=4, spatial_candidates=4, spatial_prefixes=64,
                           time_margin=1, progress_margin=None, rescue_passes=1, terminal_checkpoint=None, program_filter=None,
                           on_window=None, spatial_goals=None, program_priority=None, resume_state=None, on_progress=None,
-                          retry_unknown=False, minimum_run_pruning=True, task_goal=None, spatial_settings=None):
+                          retry_unknown=False, minimum_run_pruning=True, task_goal=None, spatial_settings=None,
+                          discovery_settings=None):
     entry_options = locals().copy()
     if type(minimum_run_pruning) is not bool:raise ValueError('minimum_run_pruning must be boolean')
     integer(rescue_passes,'rescue passes',0,100)
@@ -235,15 +248,17 @@ def find_checkpoint_route(request, compiler, *, checkpoints=None, corridor=None,
     if cancel_event is not None and cancel_event.is_set():
         return unfinished('cancelled')
     if corridor is None and spatial_points is None:
-        from .route_queue import search_routes
-        for name in ('request','compiler','corridor','spatial_points','task_goal','spatial_settings'):
+        if spatial_settings is not None:
+            raise ValueError('Legacy spatialSettings catalogue limits require their source-era runner; migrate to discoverySettings version1')
+        from .event_search import search_event_routes
+        for name in ('request','compiler','corridor','spatial_points','task_goal','spatial_settings','discovery_settings'):
             entry_options.pop(name)
         try:
-            return search_routes(request,compiler,task_goal=task_goal,spatial_settings=spatial_settings,**entry_options)
+            return search_event_routes(request,compiler,task_goal=task_goal,discovery=discovery_settings,**entry_options)
         except TimeoutError as error:
             return unfinished(str(error))
-    if task_goal is not None or spatial_settings is not None:
-        raise ValueError('task_goal/spatial_settings apply to automatic discovery; a supplied typed corridor embeds its task')
+    if task_goal is not None or spatial_settings is not None or discovery_settings is not None:
+        raise ValueError('task_goal/discovery_settings apply to automatic discovery; a supplied typed corridor embeds its task')
     try:
         d, gates = decompose(scene, deadline=deadline), landmarks(scene)
     except TimeoutError:

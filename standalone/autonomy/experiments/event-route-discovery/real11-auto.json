@@ -1,0 +1,196 @@
+{
+  "request": {
+    "version": 1,
+    "sceneModel": "collision_boxes",
+    "geometryBounds": [
+      726,
+      -200,
+      -1108,
+      749,
+      24,
+      -1085
+    ],
+    "initial": {
+      "position": [
+        746.5,
+        5,
+        -1104.5
+      ],
+      "velocity": [
+        0,
+        -0.0784000015258789,
+        0
+      ],
+      "yaw": 0
+    },
+    "startBlock": "b1",
+    "goalBlock": "b7",
+    "blocks": [
+      {
+        "id": "b1",
+        "boxes": [
+          [
+            742,
+            0,
+            -1105,
+            747,
+            5,
+            -1103
+          ]
+        ]
+      },
+      {
+        "id": "b2",
+        "boxes": [
+          [
+            741,
+            0,
+            -1104,
+            742,
+            6,
+            -1103
+          ]
+        ]
+      },
+      {
+        "id": "b3",
+        "boxes": [
+          [
+            738,
+            0,
+            -1101,
+            739,
+            7,
+            -1100
+          ]
+        ]
+      },
+      {
+        "id": "b4",
+        "boxes": [
+          [
+            734,
+            0,
+            -1100,
+            735,
+            7.5,
+            -1099
+          ]
+        ]
+      },
+      {
+        "id": "b5",
+        "boxes": [
+          [
+            730,
+            0,
+            -1096,
+            731,
+            6,
+            -1095
+          ]
+        ]
+      },
+      {
+        "id": "b6",
+        "boxes": [
+          [
+            730,
+            0,
+            -1095,
+            731,
+            20,
+            -1094
+          ]
+        ]
+      },
+      {
+        "id": "b7",
+        "boxes": [
+          [
+            729,
+            0,
+            -1095,
+            730,
+            7,
+            -1094
+          ]
+        ]
+      }
+    ],
+    "inputs": {
+      "force45": true,
+      "sprint": true,
+      "incomingSprint": false
+    },
+    "objective": {
+      "axis": "Z",
+      "sense": "MAX"
+    },
+    "maxWallHits": 0,
+    "maxContactCombinations": 0,
+    "maxContactBranches": 32,
+    "maxPassageCandidates": 128,
+    "maxRunTicksPerJump": 64,
+    "maxTotalRunTicks": 64,
+    "movementSearch": {
+      "types": [
+        "normal",
+        "stepping"
+      ],
+      "maxInputs": 200,
+      "maxPrefixes": 2048,
+      "maxQueuedPrefixes": 384,
+      "maxChoicesPerType": 16
+    }
+  },
+  "settings": {
+    "seconds": 300,
+    "candidate_seconds": 2,
+    "score_seconds": 8,
+    "max_solver_calls": 1024,
+    "max_candidates": 20,
+    "beam_width": 8,
+    "unknown_slots": 1,
+    "score_call_limit": 6,
+    "final_call_limit": 24,
+    "fair_parents": true,
+    "spatial_seconds": 5,
+    "spatial_calls": 6,
+    "spatial_candidates": 4,
+    "spatial_prefixes": 128,
+    "objective_gap": 0.25
+  },
+  "provenance": {
+    "control": "autonomy/experiments/virtual-finish/fixture.json",
+    "purpose": "Automatic support/contact/passage discovery on the same stored boxes and virtual finish; no authored support list, points or clocks",
+    "geometryCaveat": "B6 rightward extension is unspecified; stored geometry only",
+    "routingPolicy": "event_goals_v1; work quotas replace legacy catalogue limits; physical/task/input budgets unchanged"
+  },
+  "initialJumpInputs": [
+    0,
+    8
+  ],
+  "terminalGoal": {
+    "kind": "landing_height_region",
+    "height": 7,
+    "rows": [
+      {
+        "mode": "X",
+        "cmp": "LE",
+        "rhs": 729.7,
+        "strict": true
+      },
+      {
+        "mode": "Z",
+        "cmp": "GE",
+        "rhs": -1095.3
+      }
+    ]
+  },
+  "discoverySettings": {
+    "version": 1,
+    "maxGraphExpansions": 5000,
+    "maxGuideMaterializations": 50
+  }
+}
