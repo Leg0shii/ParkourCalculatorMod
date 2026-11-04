@@ -1097,3 +1097,9 @@ Evidence filenames identify different runs/contexts; do not treat reports as exe
 - [Generic matched controls](../autonomy/experiments/automatic-corridors/generic-fixtures.json), [driver](../autonomy/experiments/automatic-corridors/compare_generic.py), [Real11 comparison driver](../autonomy/experiments/automatic-corridors/compare.py) and [final native gate](../autonomy/experiments/automatic-corridors/allocation-context-final-native-2026-11-03.json).
 
 - [Final acceptance manifest](../autonomy/experiments/automatic-corridors/acceptance-manifest-2026-11-03.json), [final coverage rectangles](../autonomy/experiments/automatic-corridors/coverage-allocation-context-final-2026-11-03.json.regions.svg), and [final matched Real11 report](../autonomy/experiments/automatic-corridors/matched-allocation-context-2026-11-03/summary.json).
+
+## Generic route-discovery research
+
+- [GENERIC_ROUTE_DISCOVERY_RESEARCH.md](../autonomy/GENERIC_ROUTE_DISCOVERY_RESEARCH.md): cited primary literature and repository evidence, alternatives matrix, contact/approach route representation, B2→B3 examples, scoped irrelevance and merge rules, integration map and proposed experiments. Research document; no runtime implementation change.
+
+- [GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md](../autonomy/GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md): controlling next implementation plan with proposed records/APIs, module/call-site map, coverage and scope contracts, milestones, tests and cold-run acceptance. Planning only; runtime unchanged.

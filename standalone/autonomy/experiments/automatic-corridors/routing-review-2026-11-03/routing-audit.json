@@ -1,0 +1,2594 @@
+{
+  "sourceRevision": "a28e5b71cdbc6ef2c1a95b4ba72f9e7e2ac8c782",
+  "inputs": {
+    "automatic-corridors/matched-allocation-context-2026-11-03/automatic.json.gz": "01d3507aa66836a5ed4703dd73f8473f930a4628493d3e4aba48a8cbe27fb535",
+    "automatic-corridors/coverage-allocation-context-final-2026-11-03.json.gz": "a4fcef3d87b76c3dfb37e3810dbd9772452b5cfd04af5474752355cfb655e6af",
+    "virtual-finish/evidence/initial0-cold.json.gz": "4fd379811afc212692ca4a432416d7d004a3122f300b8c6ee6fa0812b688a809"
+  },
+  "sourceRuntimeHashes": {
+    "standalone/autonomy/cell_routes/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "standalone/autonomy/cell_routes/automatic_experiment.py": "32bf25534ceab3cda0cf75fdaa1dfaf7fd67138c2a5e0989fa0f8883b2dc3160",
+    "standalone/autonomy/cell_routes/checkpoint_experiment.py": "2dee0d907220701e7ef2d8e70e727400fea3c73df5b67c0d7fa5eeb106fbe76c",
+    "standalone/autonomy/cell_routes/checkpoint_search.py": "48c0e851153b3b507ed563337bb422bec485ac78b3a18402f9cbaa473919efc0",
+    "standalone/autonomy/cell_routes/checkpoints.py": "09dbb20802f35a70fda012bfcc600dbb643db7ed6c77d544f40fe982f5603179",
+    "standalone/autonomy/cell_routes/comparison_audit.py": "5d0a13c87a22e0224b6dd3d59a3ee940581cf573f177ea0b6742fb2a6053fc4e",
+    "standalone/autonomy/cell_routes/comparison_goals.py": "0f1cf809bbea51978fc7ecb6295595675b5671bb79f4e8665824cd968c22d6e8",
+    "standalone/autonomy/cell_routes/corridor_guards.py": "051cd8d75b457cc5407013d56f01345fec33eaebd5ec20156bced3068b1db479",
+    "standalone/autonomy/cell_routes/coverage_audit.py": "ab4f796a6d5aa9153bb142df431fe76bf368a9599c6afd7cee93c6efcfbc2f51",
+    "standalone/autonomy/cell_routes/decision_windows.py": "a48b15a241cc25b94abffed80dd1adea5c13ba68305c0c22a9ba3ecfbd65ee5b",
+    "standalone/autonomy/cell_routes/depth_first.py": "51f5d7b35a33f9ca8aaac1d95117ea102f9165545408edb647a22fe44df29f44",
+    "standalone/autonomy/cell_routes/experiment.py": "77ea642f386fd13da3e512d57754d9add567c96d19895e47fbdcfacc08fc44f1",
+    "standalone/autonomy/cell_routes/failure_diagnostic.py": "86a6af5527361650e9f228e096807bdd9d90e3afab74b8708ab1f4119e95a13e",
+    "standalone/autonomy/cell_routes/fix_validation.py": "27fd57a8cb24e117a1287561c8b6a52157e394c23f1381935bd0f617a1200fc8",
+    "standalone/autonomy/cell_routes/fixed_clock_experiment.py": "d8986372617642d839414b6afb50745a6ec65a8707867db8125206a2c3df58ba",
+    "standalone/autonomy/cell_routes/generation_diagnostic.py": "f3374b3d9bb1871ecf89e0a0bdc5ef0d0c87ef7aae4f5b1752e2cd4f821d6e54",
+    "standalone/autonomy/cell_routes/geometry.py": "b9a9f9f6e16c426f8bb1d6f0140a25192d4d5cd880e01c4746fa8b3eb3a3ff4d",
+    "standalone/autonomy/cell_routes/local.py": "9e5cc2fa6b797562c0760758a5be69fc2aaa7cba871295e7d2ee8c822bf95938",
+    "standalone/autonomy/cell_routes/minimum_runs.py": "ab8568cd33c7aabd8830740be46443b3eadab3e00b0f9c1942c0b5b00624c77d",
+    "standalone/autonomy/cell_routes/regions.py": "adcfee9c6224153ab936003e0dbe4dd6d664f84b4dfa7b09253370fa717f5468",
+    "standalone/autonomy/cell_routes/repair_diagnostic.py": "58b803c3b3d8c11ce98f354194abe8de41aa4f862edff25f2fb29f4f1810e8ae",
+    "standalone/autonomy/cell_routes/repair_resume_experiment.py": "0132d046f37a06fa46aee93fe1d8f36fe21c5a2776299e4ba3edea95202e25b1",
+    "standalone/autonomy/cell_routes/route_guards.py": "546a5ebdf27044ecb430f846adec35e96f60a3c7cda49555ddf8aad2d0b2ee4c",
+    "standalone/autonomy/cell_routes/route_progress.py": "d6e1edc8998a546d39cd97398048370ee70b85c294cb2f92766ee3bc84275dc1",
+    "standalone/autonomy/cell_routes/route_queue.py": "498452e5d5307cce0170c4a27d42efd304c33a77e013fd6a16ce66705a9f5fdd",
+    "standalone/autonomy/cell_routes/routes.py": "8324e4581a1388a4bce28f6f096c6a3c71fcd80985df4fb6c4a6b4b393bbe3b4",
+    "standalone/autonomy/cell_routes/scalar_seed_diagnostic.py": "37c6385cc56ed7cfc26aea44865284fafa41fe5bcde8abf001aa433f827bc8ba",
+    "standalone/autonomy/cell_routes/semantic_adapter.py": "9e061910a306dcc215ad1bf088ee94a9b087c80753549602c2664e30b30a42e4",
+    "standalone/autonomy/cell_routes/support_order.py": "a675caf679dc3f7578f18abe6cd80d15935a6f8c1bba342f8884a3281de57dad",
+    "standalone/autonomy/cell_routes/time_progress.py": "f905c8b3e2e5195b8fc59a44284327b62e2f44b4c783001a3320af16099dc305",
+    "standalone/autonomy/cell_routes/two_goal_experiment.py": "b550b1dc37ad04fd5bc4551eeb28cc2852d42a0acaf7b7c03c57526561778a1c",
+    "standalone/autonomy/cell_routes/window_diagnostic.py": "8ed7bc87477ab8b9b20009c4b0d35f1abbac13a297cac4caf47f0c3454325f6c",
+    "standalone/autonomy/cell_routes/window_experiment.py": "0c5eda216e269805f666011968b06ed5b497a8976e0f698f688d1832955a1092",
+    "standalone/autonomy/constraint_variants.py": "d40914bc0b94e624377c71066648f62f1f462b6125e9e522ebf0931dc7d3a7dd",
+    "standalone/autonomy/movement_search.py": "45d2d3f0f424d0bb1d67c64655a66d186f3b4dcd80f16de9f1baf00216391265",
+    "standalone/autonomy/movement_frontier.py": "a35cc8419e93b4b24e3b4fb76503bf284b297ae6ff97a2c6854498aebe911d9a",
+    "standalone/autonomy/open_movement.py": "99d81802c21d1e12f7d6b6cbfa16508475c7092379992c01930f2f6d973cc31b"
+  },
+  "routes": 50,
+  "startedRoutes": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "unstartedRoutes": [
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40,
+    41,
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    48,
+    49
+  ],
+  "acceptedArchivedWitnessRoutes": [
+    26
+  ],
+  "route26Started": false,
+  "supportFamilies": {
+    "b1 -> b2 -> b3 -> b4 -> b7": [
+      0,
+      1,
+      3,
+      4,
+      6,
+      7,
+      10,
+      13,
+      14,
+      15,
+      17,
+      18,
+      20,
+      21,
+      24,
+      27,
+      28,
+      29,
+      31,
+      32,
+      34,
+      35,
+      38,
+      41,
+      42,
+      43,
+      45,
+      46,
+      48,
+      49
+    ],
+    "b1 -> b2 -> b3 -> b4 -> b5": [
+      2,
+      5,
+      8,
+      9,
+      11,
+      12,
+      16,
+      19,
+      22,
+      23,
+      25,
+      26,
+      30,
+      33,
+      36,
+      37,
+      39,
+      40,
+      44,
+      47
+    ]
+  },
+  "calls": 13,
+  "searchWallSeconds": 303.28986566513777,
+  "solverWrapperSeconds": 14.629353415220976,
+  "outsideSolverWrapperSeconds": 288.6605122499168,
+  "outsideSolverWrapperFraction": 0.9517644502128757,
+  "solverTimingCaveat": "Includes worker startup/replay/cleanup; remaining wall time is not an instrumented per-function profile.",
+  "records": [
+    {
+      "route": 0,
+      "goal": "b2",
+      "ticks": 17,
+      "status": "feasible",
+      "termination": "lower_bound_reached",
+      "calls": 1,
+      "solverWrapperSeconds": 1.7219678312540054,
+      "candidateID": "e5117930a248df5e97bc1fa0c9f3785d9544a28817c3745cece334c0b075eca9",
+      "constraintVariantsEmitted": 1,
+      "pendingConstraintItems": [
+        0
+      ],
+      "problemHashes": [
+        "a197d16338249a40bda297f5174aa3f1333e66ead07ec6a1cac1a8ab8ffbfff6"
+      ]
+    },
+    {
+      "route": 0,
+      "goal": "b3",
+      "ticks": 29,
+      "status": "feasible",
+      "termination": "lower_bound_reached",
+      "calls": 1,
+      "solverWrapperSeconds": 0.9294385053217411,
+      "candidateID": "95d1d338ddf0a77ce8acdd5a000c6639c0bbae184b1901c45f6e38a5abb6c5b7",
+      "constraintVariantsEmitted": 2,
+      "pendingConstraintItems": [
+        0
+      ],
+      "problemHashes": [
+        "a911a23858c6874f73f0e58f8633d0c4373fa531f2d0191dcde624ac967a9437"
+      ]
+    },
+    {
+      "route": 0,
+      "goal": "b4",
+      "ticks": 41,
+      "status": "unknown",
+      "termination": "deadline",
+      "calls": 3,
+      "solverWrapperSeconds": 1.178406499326229,
+      "candidateID": "abecfe4b5286882b6308acad6285d75b12ea49788c08eaa4cc5e6219e660be91",
+      "constraintVariantsEmitted": 3,
+      "pendingConstraintItems": [
+        0
+      ],
+      "problemHashes": [
+        "1da05929eef075e2fb6605c242eb076ee4523a69addd18d15a87abb4d3aa896d",
+        "83c119f2be7f5b1780d581c1fcb56f94f4bfcc7cec24db85030eb2aa82526d04",
+        "b86710b76e703b059c94effbc974c05acdc53c1f1fbbe555d2663555e70c84df"
+      ]
+    },
+    {
+      "route": 1,
+      "goal": "b2",
+      "ticks": 17,
+      "status": "feasible",
+      "termination": "lower_bound_reached",
+      "calls": 1,
+      "solverWrapperSeconds": 0.6815924532711506,
+      "candidateID": "e5117930a248df5e97bc1fa0c9f3785d9544a28817c3745cece334c0b075eca9",
+      "constraintVariantsEmitted": 1,
+      "pendingConstraintItems": [
+        0
+      ],
+      "problemHashes": [
+        "0f7a6250a5a3487f91ce4dcd4f340221e8ecb922763279117ce7d918927ec6de"
+      ]
+    },
+    {
+      "route": 1,
+      "goal": "b3",
+      "ticks": 27,
+      "status": "unknown",
+      "termination": "deadline",
+      "calls": 3,
+      "solverWrapperSeconds": 0.9198330007493496,
+      "candidateID": "a4d3b2cdba5635dd11f6a527bc17d5e59c7bf808e3b54ba4807cdefcca86a6f6",
+      "constraintVariantsEmitted": 3,
+      "pendingConstraintItems": [
+        0
+      ],
+      "problemHashes": [
+        "69123422108fd30a1d06d9a1dda2d8a0eff67eaa8ff7fd103d57337f09a5a4a9",
+        "8b6b55159df2df0e069d95bd8e5721fdf2d6bdf81307bc5a1cf0b1d6b1c691d5",
+        "06c664471e0859450b6b94c795ab98d097b76ccd9dbd39e1cbec6974662180e4"
+      ]
+    },
+    {
+      "route": 2,
+      "goal": "b2",
+      "ticks": 17,
+      "status": "feasible",
+      "termination": "lower_bound_reached",
+      "calls": 1,
+      "solverWrapperSeconds": 2.467176876962185,
+      "candidateID": "e5117930a248df5e97bc1fa0c9f3785d9544a28817c3745cece334c0b075eca9",
+      "constraintVariantsEmitted": 1,
+      "pendingConstraintItems": [
+        0
+      ],
+      "problemHashes": [
+        "a197d16338249a40bda297f5174aa3f1333e66ead07ec6a1cac1a8ab8ffbfff6"
+      ]
+    },
+    {
+      "route": 2,
+      "goal": "b3",
+      "ticks": 29,
+      "status": "feasible",
+      "termination": "lower_bound_reached",
+      "calls": 1,
+      "solverWrapperSeconds": 2.763466626405716,
+      "candidateID": "95d1d338ddf0a77ce8acdd5a000c6639c0bbae184b1901c45f6e38a5abb6c5b7",
+      "constraintVariantsEmitted": 1,
+      "pendingConstraintItems": [
+        0
+      ],
+      "problemHashes": [
+        "ea08c37f811db2336446ceb3410a7eadd3573146f98fffe36b7078126816d83d"
+      ]
+    },
+    {
+      "route": 2,
+      "goal": "b4",
+      "ticks": 41,
+      "status": "unknown",
+      "termination": "deadline",
+      "calls": 0,
+      "solverWrapperSeconds": 0,
+      "candidateID": "01261e8b31521f0f15dadec62c59e397c55b303a931b2e4fd9f7981a61cfbd01",
+      "constraintVariantsEmitted": 1,
+      "pendingConstraintItems": [
+        0
+      ],
+      "problemHashes": []
+    },
+    {
+      "route": 3,
+      "goal": "b2",
+      "ticks": 17,
+      "status": "feasible",
+      "termination": "lower_bound_reached",
+      "calls": 1,
+      "solverWrapperSeconds": 3.310078166425228,
+      "candidateID": "e5117930a248df5e97bc1fa0c9f3785d9544a28817c3745cece334c0b075eca9",
+      "constraintVariantsEmitted": 1,
+      "pendingConstraintItems": [
+        0
+      ],
+      "problemHashes": [
+        "a197d16338249a40bda297f5174aa3f1333e66ead07ec6a1cac1a8ab8ffbfff6"
+      ]
+    },
+    {
+      "route": 3,
+      "goal": "b3",
+      "ticks": 29,
+      "status": "feasible",
+      "termination": "geometry_deadline",
+      "calls": 1,
+      "solverWrapperSeconds": 0.6573934555053711,
+      "candidateID": "95d1d338ddf0a77ce8acdd5a000c6639c0bbae184b1901c45f6e38a5abb6c5b7",
+      "constraintVariantsEmitted": 1,
+      "pendingConstraintItems": [
+        0
+      ],
+      "problemHashes": [
+        "ea08c37f811db2336446ceb3410a7eadd3573146f98fffe36b7078126816d83d"
+      ]
+    },
+    {
+      "route": 3,
+      "goal": "b4",
+      "ticks": 41,
+      "status": "unknown",
+      "termination": "deadline",
+      "calls": 0,
+      "solverWrapperSeconds": 0,
+      "candidateID": "01261e8b31521f0f15dadec62c59e397c55b303a931b2e4fd9f7981a61cfbd01",
+      "constraintVariantsEmitted": 1,
+      "pendingConstraintItems": [
+        0
+      ],
+      "problemHashes": []
+    },
+    {
+      "route": 4,
+      "goal": "b2",
+      "ticks": 17,
+      "status": "unknown",
+      "termination": "deadline",
+      "calls": 0,
+      "solverWrapperSeconds": 0,
+      "candidateID": "e5117930a248df5e97bc1fa0c9f3785d9544a28817c3745cece334c0b075eca9",
+      "constraintVariantsEmitted": 1,
+      "pendingConstraintItems": [
+        0
+      ],
+      "problemHashes": []
+    },
+    {
+      "route": 5,
+      "goal": "b2",
+      "ticks": 17,
+      "status": "unknown",
+      "termination": "deadline",
+      "calls": 0,
+      "solverWrapperSeconds": 0,
+      "candidateID": "e5117930a248df5e97bc1fa0c9f3785d9544a28817c3745cece334c0b075eca9",
+      "constraintVariantsEmitted": 1,
+      "pendingConstraintItems": [
+        0
+      ],
+      "problemHashes": []
+    },
+    {
+      "route": 6,
+      "goal": "b2",
+      "ticks": 17,
+      "status": "unknown",
+      "termination": "deadline",
+      "calls": 0,
+      "solverWrapperSeconds": 0,
+      "candidateID": "e5117930a248df5e97bc1fa0c9f3785d9544a28817c3745cece334c0b075eca9",
+      "constraintVariantsEmitted": 1,
+      "pendingConstraintItems": [
+        0
+      ],
+      "problemHashes": []
+    },
+    {
+      "route": 7,
+      "goal": "b2",
+      "ticks": 17,
+      "status": "unknown",
+      "termination": "deadline",
+      "calls": 0,
+      "solverWrapperSeconds": 0,
+      "candidateID": "e5117930a248df5e97bc1fa0c9f3785d9544a28817c3745cece334c0b075eca9",
+      "constraintVariantsEmitted": 1,
+      "pendingConstraintItems": [
+        0
+      ],
+      "problemHashes": []
+    },
+    {
+      "route": 8,
+      "goal": "b2",
+      "ticks": 17,
+      "status": "unknown",
+      "termination": "deadline",
+      "calls": 0,
+      "solverWrapperSeconds": 0,
+      "candidateID": "e5117930a248df5e97bc1fa0c9f3785d9544a28817c3745cece334c0b075eca9",
+      "constraintVariantsEmitted": 1,
+      "pendingConstraintItems": [
+        0
+      ],
+      "problemHashes": []
+    },
+    {
+      "route": 9,
+      "goal": "b2",
+      "ticks": 17,
+      "status": "unknown",
+      "termination": "deadline",
+      "calls": 0,
+      "solverWrapperSeconds": 0,
+      "candidateID": "e5117930a248df5e97bc1fa0c9f3785d9544a28817c3745cece334c0b075eca9",
+      "constraintVariantsEmitted": 1,
+      "pendingConstraintItems": [
+        0
+      ],
+      "problemHashes": []
+    }
+  ],
+  "initialDomain": [
+    0,
+    8
+  ],
+  "route0": {
+    "id": 0,
+    "cells": [
+      0,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      40,
+      41,
+      43,
+      44,
+      45,
+      46
+    ],
+    "portals": [
+      1,
+      3,
+      13,
+      14,
+      16,
+      24,
+      26,
+      34,
+      35,
+      45,
+      46,
+      52,
+      59,
+      61,
+      67,
+      68,
+      72,
+      77,
+      79,
+      85,
+      86,
+      90,
+      95,
+      97,
+      98,
+      106,
+      108,
+      109,
+      114,
+      115,
+      116,
+      117,
+      118,
+      120,
+      129,
+      130,
+      131,
+      134,
+      135,
+      137,
+      1,
+      3,
+      13,
+      16,
+      24,
+      26,
+      45,
+      46,
+      52,
+      59,
+      61,
+      67,
+      68,
+      72,
+      77,
+      79,
+      80,
+      85,
+      86,
+      89,
+      90,
+      92,
+      97,
+      98,
+      99,
+      114,
+      117,
+      118,
+      119,
+      120,
+      121,
+      134,
+      135,
+      136,
+      137,
+      138,
+      67,
+      68,
+      69,
+      70,
+      71,
+      72,
+      73,
+      74,
+      75,
+      79,
+      80,
+      81,
+      89,
+      90,
+      91,
+      92,
+      93,
+      97,
+      98,
+      99,
+      114,
+      117,
+      118,
+      119,
+      120,
+      121,
+      134,
+      135,
+      136,
+      137,
+      138,
+      3,
+      4,
+      22,
+      23,
+      24,
+      25,
+      26,
+      28,
+      30,
+      36,
+      37,
+      38,
+      44,
+      45,
+      47,
+      51
+    ],
+    "points": [
+      [
+        746.5,
+        5,
+        -1104.5
+      ],
+      [
+        743.5999999940395,
+        5,
+        -1104.300000011921
+      ],
+      [
+        743.5999999940395,
+        6,
+        -1104.300000011921
+      ],
+      [
+        742.3000000119209,
+        6,
+        -1103.5999999940395
+      ],
+      [
+        740.6999999880791,
+        6,
+        -1102.699999988079
+      ],
+      [
+        739.3999999940395,
+        7,
+        -1101.5
+      ],
+      [
+        739.3000000119209,
+        7,
+        -1101.300000011921
+      ],
+      [
+        737.6999999880791,
+        7,
+        -1100.1000000059605
+      ],
+      [
+        736.7000000059604,
+        7.5,
+        -1100.1000000059605
+      ],
+      [
+        735.3000000119209,
+        7.5,
+        -1100.1000000059605
+      ],
+      [
+        733.6999999880791,
+        7.5,
+        -1098.699999988079
+      ],
+      [
+        729.6999999880791,
+        7.5,
+        -1097.6000000059605
+      ],
+      [
+        729.6999999880791,
+        7,
+        -1095.300000011921
+      ],
+      [
+        729.7,
+        7,
+        -1095.3
+      ]
+    ],
+    "signature": [],
+    "projection": [
+      [
+        55.02626376856324,
+        0,
+        -1795.9737362314368,
+        740.6999999880791,
+        0,
+        -413.02626376856324
+      ],
+      [
+        729.6999999880791,
+        0,
+        -1795.9737362314368,
+        731.3000000119209,
+        0,
+        -1095.300000011921
+      ],
+      [
+        729.6999999880791,
+        0,
+        -1095.300000011921,
+        729.6999999880791,
+        0,
+        -1095.300000011921
+      ],
+      [
+        729.6999999880791,
+        0,
+        -1093.699999988079,
+        731.3000000119209,
+        0,
+        -1093.699999988079
+      ],
+      [
+        740.6999999880791,
+        0,
+        -1795.9737362314368,
+        742.3000000119209,
+        0,
+        -1102.699999988079
+      ],
+      [
+        740.6999999880791,
+        0,
+        -1102.699999988079,
+        747.3000000119209,
+        0,
+        -413.02626376856324
+      ],
+      [
+        741.6999999880791,
+        0,
+        -1795.9737362314368,
+        747.3000000119209,
+        0,
+        -1105.300000011921
+      ],
+      [
+        741.6999999880791,
+        0,
+        -1105.300000011921,
+        742.3000000119209,
+        0,
+        -1104.300000011921
+      ],
+      [
+        742.3000000119209,
+        0,
+        -1105.300000011921,
+        747.3000000119209,
+        0,
+        -1102.699999988079
+      ],
+      [
+        747.3000000119209,
+        0,
+        -1795.9737362314368,
+        1437.9737362314368,
+        0,
+        -413.02626376856324
+      ]
+    ],
+    "geometric_length": 22.62125093466214,
+    "variants": 1,
+    "source": "automatic",
+    "stage_paths": [],
+    "schema": 2,
+    "graph_context": "1c10ab3622af43e1ca2b44f324fe7f0a727f4986e305c683c56c8d5a6e9868ae",
+    "semantic_key": [
+      [
+        "start",
+        "support:8cd19d078a488045a786f85e59303cb1e10147e28b2d6dcef48bc51fbddaa423"
+      ],
+      [
+        "departure",
+        "support:8cd19d078a488045a786f85e59303cb1e10147e28b2d6dcef48bc51fbddaa423",
+        "transit:b27d2fcb74e1b40d96fe15b60ec28967f7c79b51c980f9d9f1189b242ae01e02"
+      ],
+      [
+        "passage",
+        "transit:b27d2fcb74e1b40d96fe15b60ec28967f7c79b51c980f9d9f1189b242ae01e02",
+        "transit:ed844002354adb10e7d8c84c0bb44b7aa739f86d45522b232bccb610aea2a148"
+      ],
+      [
+        "support",
+        "support:ad6e37621cf682e0abbfb77d3cf4c0f648d8de4ea80f22d731ab100b6fe0171b"
+      ],
+      [
+        "departure",
+        "support:ad6e37621cf682e0abbfb77d3cf4c0f648d8de4ea80f22d731ab100b6fe0171b",
+        "transit:ed844002354adb10e7d8c84c0bb44b7aa739f86d45522b232bccb610aea2a148"
+      ],
+      [
+        "passage",
+        "transit:ed844002354adb10e7d8c84c0bb44b7aa739f86d45522b232bccb610aea2a148",
+        "transit:f369db5edb99fdf31e6f555674b1e976300cdde678542f1df5699aba58939082"
+      ],
+      [
+        "support",
+        "support:ec347572a973b91b35a690fc9aec4f7371a8ac22850a6094d49bcc760fa058f8"
+      ],
+      [
+        "departure",
+        "support:ec347572a973b91b35a690fc9aec4f7371a8ac22850a6094d49bcc760fa058f8",
+        "transit:f79feda4ee2cc42bb8c2f0291eadb807d724ae11134cf91b64bcffbedaeab413"
+      ],
+      [
+        "passage",
+        "transit:f79feda4ee2cc42bb8c2f0291eadb807d724ae11134cf91b64bcffbedaeab413",
+        "transit:4790974757efd99f6aadb9f55c9247bf00c166f1b9419432a4dee61d940133c1"
+      ],
+      [
+        "support",
+        "support:3cfeae2be363663d26c842a051d0c838ddb6bf0371cb146e7437d1056d667448"
+      ],
+      [
+        "departure",
+        "support:3cfeae2be363663d26c842a051d0c838ddb6bf0371cb146e7437d1056d667448",
+        "transit:1c9e06e502b571e36625149b57b11968eb718ccb95c7e829cc36d3fac68029dd"
+      ],
+      [
+        "passage",
+        "transit:1c9e06e502b571e36625149b57b11968eb718ccb95c7e829cc36d3fac68029dd",
+        "transit:f7ebe6b50c1aae861781506676e4e66d3efc360b6cae70a44d0e1c08c84dc879"
+      ],
+      [
+        "support",
+        "support:125a129c1d4dc56b878907fb79b5220c7d30c87cdbdc80c63c8d0e498a3df4d7"
+      ],
+      [
+        "finish",
+        "terminal:7bace983516273be4a74b4e988420e8a1e36d662d24b04df304e0063e660a31f"
+      ]
+    ],
+    "stages": [
+      {
+        "occurrence": 0,
+        "kind": "open_portal",
+        "source": "air:b27d2fcb74e1b40d96fe15b60ec28967f7c79b51c980f9d9f1189b242ae01e02",
+        "target": "air:ed844002354adb10e7d8c84c0bb44b7aa739f86d45522b232bccb610aea2a148",
+        "transition": "transition:360a707c4564350023155349b262e23e19317174b6128d6639d25c12e732f97b",
+        "cover": [
+          [
+            55.02626376856324,
+            6,
+            -1795.9737362314368,
+            1437.9737362314368,
+            22.200000047683716,
+            -1104.300000011921
+          ]
+        ],
+        "cells": [
+          0,
+          2,
+          4,
+          7,
+          10,
+          13,
+          17,
+          19,
+          21,
+          24,
+          26,
+          28,
+          31,
+          33,
+          35,
+          36,
+          38,
+          40,
+          41,
+          43,
+          44,
+          46
+        ],
+        "portals": [
+          1,
+          3,
+          13,
+          14,
+          16,
+          24,
+          26,
+          34,
+          35,
+          45,
+          46,
+          52,
+          59,
+          61,
+          67,
+          68,
+          72,
+          77,
+          79,
+          85,
+          86,
+          90,
+          95,
+          97,
+          98,
+          106,
+          108,
+          109,
+          114,
+          115,
+          116,
+          117,
+          118,
+          120,
+          129,
+          130,
+          131,
+          134,
+          135,
+          137
+        ],
+        "predicate": null,
+        "guide_point": [
+          743.5999999940395,
+          6,
+          -1104.300000011921
+        ]
+      },
+      {
+        "occurrence": 1,
+        "kind": "support_arrival",
+        "source": "air:ed844002354adb10e7d8c84c0bb44b7aa739f86d45522b232bccb610aea2a148",
+        "target": "support:ad6e37621cf682e0abbfb77d3cf4c0f648d8de4ea80f22d731ab100b6fe0171b",
+        "transition": "transition:3351a51532713649c79414cbcba8d322fc936dbc849cd9c2fdcf56984d1b09e2",
+        "cover": [
+          [
+            740.6999999880791,
+            6,
+            -1104.300000011921,
+            742.3000000119209,
+            6,
+            -1102.699999988079
+          ]
+        ],
+        "cells": [
+          0,
+          2,
+          4,
+          7,
+          10,
+          13,
+          17,
+          19,
+          21,
+          24,
+          26,
+          28,
+          29,
+          31,
+          33,
+          34,
+          35,
+          36,
+          37,
+          40,
+          41,
+          43,
+          44,
+          45,
+          46
+        ],
+        "portals": [],
+        "predicate": null,
+        "guide_point": [
+          742.3000000119209,
+          6,
+          -1103.5999999940395
+        ]
+      },
+      {
+        "occurrence": 2,
+        "kind": "open_portal",
+        "source": "air:ed844002354adb10e7d8c84c0bb44b7aa739f86d45522b232bccb610aea2a148",
+        "target": "air:f369db5edb99fdf31e6f555674b1e976300cdde678542f1df5699aba58939082",
+        "transition": "transition:643cf61192ba4fb94c04dbd99dfd332e2e513dfb32140e5da03bdf95ff446ae7",
+        "cover": [
+          [
+            55.02626376856324,
+            7,
+            -1795.9737362314368,
+            1437.9737362314368,
+            22.200000047683716,
+            -1101.300000011921
+          ]
+        ],
+        "cells": [
+          0,
+          2,
+          4,
+          7,
+          10,
+          13,
+          17,
+          19,
+          21,
+          24,
+          26,
+          28,
+          29,
+          31,
+          33,
+          34,
+          35,
+          36,
+          37,
+          40,
+          41,
+          43,
+          44,
+          45,
+          46
+        ],
+        "portals": [
+          1,
+          3,
+          13,
+          16,
+          24,
+          26,
+          45,
+          46,
+          52,
+          59,
+          61,
+          67,
+          68,
+          72,
+          77,
+          79,
+          80,
+          85,
+          86,
+          89,
+          90,
+          92,
+          97,
+          98,
+          99,
+          114,
+          117,
+          118,
+          119,
+          120,
+          121,
+          134,
+          135,
+          136,
+          137,
+          138
+        ],
+        "predicate": null,
+        "guide_point": [
+          739.3999999940395,
+          7,
+          -1101.5
+        ]
+      },
+      {
+        "occurrence": 3,
+        "kind": "support_arrival",
+        "source": "air:f369db5edb99fdf31e6f555674b1e976300cdde678542f1df5699aba58939082",
+        "target": "support:ec347572a973b91b35a690fc9aec4f7371a8ac22850a6094d49bcc760fa058f8",
+        "transition": "transition:0e5f06b9930aed259e003d79243241b1b96108d45de15082ab418b088aad7674",
+        "cover": [
+          [
+            737.6999999880791,
+            7,
+            -1101.300000011921,
+            739.3000000119209,
+            7,
+            -1100.300000011921
+          ]
+        ],
+        "cells": [
+          0,
+          2,
+          4,
+          10,
+          13,
+          17,
+          19,
+          21,
+          22,
+          24,
+          26,
+          28,
+          29,
+          31,
+          35,
+          36,
+          37,
+          43,
+          44,
+          45,
+          46
+        ],
+        "portals": [],
+        "predicate": null,
+        "guide_point": [
+          739.3000000119209,
+          7,
+          -1101.300000011921
+        ]
+      },
+      {
+        "occurrence": 4,
+        "kind": "open_portal",
+        "source": "air:f79feda4ee2cc42bb8c2f0291eadb807d724ae11134cf91b64bcffbedaeab413",
+        "target": "air:4790974757efd99f6aadb9f55c9247bf00c166f1b9419432a4dee61d940133c1",
+        "transition": "transition:238b68f63d4f15417a8ed19ff240dea03ff42f940f8160b8f633902b1aa271d0",
+        "cover": [
+          [
+            735.3000000119209,
+            7.5,
+            -1795.9737362314368,
+            1437.9737362314368,
+            22.200000047683716,
+            -413.02626376856324
+          ]
+        ],
+        "cells": [
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          35,
+          36,
+          37,
+          43,
+          44,
+          45,
+          46
+        ],
+        "portals": [
+          67,
+          68,
+          69,
+          70,
+          71,
+          72,
+          73,
+          74,
+          75,
+          79,
+          80,
+          81,
+          89,
+          90,
+          91,
+          92,
+          93,
+          97,
+          98,
+          99,
+          114,
+          117,
+          118,
+          119,
+          120,
+          121,
+          134,
+          135,
+          136,
+          137,
+          138
+        ],
+        "predicate": null,
+        "guide_point": [
+          736.7000000059604,
+          7.5,
+          -1100.1000000059605
+        ]
+      },
+      {
+        "occurrence": 5,
+        "kind": "support_arrival",
+        "source": "air:4790974757efd99f6aadb9f55c9247bf00c166f1b9419432a4dee61d940133c1",
+        "target": "support:3cfeae2be363663d26c842a051d0c838ddb6bf0371cb146e7437d1056d667448",
+        "transition": "transition:a723bbc36f1dd6b3a4834f9e825613423274e4b4efd9653525128e88e470487c",
+        "cover": [
+          [
+            733.6999999880791,
+            7.5,
+            -1100.300000011921,
+            735.3000000119209,
+            7.5,
+            -1098.699999988079
+          ]
+        ],
+        "cells": [
+          9,
+          10,
+          11,
+          13,
+          14,
+          15,
+          16,
+          17,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          28,
+          29,
+          30,
+          31,
+          35,
+          36,
+          37,
+          43,
+          44,
+          45,
+          46
+        ],
+        "portals": [],
+        "predicate": null,
+        "guide_point": [
+          735.3000000119209,
+          7.5,
+          -1100.1000000059605
+        ]
+      },
+      {
+        "occurrence": 6,
+        "kind": "open_portal",
+        "source": "air:1c9e06e502b571e36625149b57b11968eb718ccb95c7e829cc36d3fac68029dd",
+        "target": "air:f7ebe6b50c1aae861781506676e4e66d3efc360b6cae70a44d0e1c08c84dc879",
+        "transition": "transition:aea438642d2642324e0b182a3987abcf0ca18befdad4b023776848b7858e2ae8",
+        "cover": [
+          [
+            55.02626376856324,
+            7.5,
+            -1795.9737362314368,
+            729.6999999880791,
+            22.200000047683716,
+            -1095.300000011921
+          ]
+        ],
+        "cells": [
+          0,
+          4,
+          5,
+          8,
+          10,
+          11,
+          13,
+          14,
+          17,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          28,
+          29,
+          30,
+          31,
+          35,
+          36,
+          37,
+          43,
+          44,
+          45,
+          46
+        ],
+        "portals": [
+          3,
+          4,
+          22,
+          23,
+          24,
+          25,
+          26,
+          28,
+          30,
+          36,
+          37,
+          38,
+          44,
+          45,
+          47,
+          51
+        ],
+        "predicate": null,
+        "guide_point": [
+          729.6999999880791,
+          7.5,
+          -1097.6000000059605
+        ]
+      },
+      {
+        "occurrence": 7,
+        "kind": "support_arrival",
+        "source": "air:f7ebe6b50c1aae861781506676e4e66d3efc360b6cae70a44d0e1c08c84dc879",
+        "target": "support:125a129c1d4dc56b878907fb79b5220c7d30c87cdbdc80c63c8d0e498a3df4d7",
+        "transition": "transition:93557b901d9089cd3ae57bb123a476722977607de1783289c2282588c68e9dbf",
+        "cover": [
+          [
+            728.6999999880791,
+            7,
+            -1095.300000011921,
+            729.6999999880791,
+            7,
+            -1093.699999988079
+          ]
+        ],
+        "cells": [
+          0,
+          2,
+          3,
+          4,
+          5,
+          6,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ],
+        "portals": [],
+        "predicate": null,
+        "guide_point": [
+          729.6999999880791,
+          7,
+          -1095.300000011921
+        ]
+      },
+      {
+        "occurrence": 8,
+        "kind": "finish",
+        "source": "support:125a129c1d4dc56b878907fb79b5220c7d30c87cdbdc80c63c8d0e498a3df4d7",
+        "target": "terminal:7bace983516273be4a74b4e988420e8a1e36d662d24b04df304e0063e660a31f",
+        "transition": "transition:a7eec1b6093a0526e7075298afe09fa96fbf57ebc65325bd574acb0e28291500",
+        "cover": [],
+        "cells": [
+          0,
+          2,
+          3,
+          4,
+          5,
+          6,
+          8,
+          9,
+          11,
+          12,
+          16
+        ],
+        "portals": [],
+        "predicate": {
+          "kind": "landing_height_region",
+          "height": 7,
+          "rows": [
+            {
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.7,
+              "strict": true
+            },
+            {
+              "mode": "Z",
+              "cmp": "GE",
+              "rhs": -1095.3
+            }
+          ]
+        },
+        "guide_point": [
+          729.6999999880791,
+          7,
+          -1095.300000011921
+        ]
+      }
+    ],
+    "route_variants": [
+      {
+        "regions": [
+          "support:8cd19d078a488045a786f85e59303cb1e10147e28b2d6dcef48bc51fbddaa423",
+          "air:b27d2fcb74e1b40d96fe15b60ec28967f7c79b51c980f9d9f1189b242ae01e02",
+          "air:ed844002354adb10e7d8c84c0bb44b7aa739f86d45522b232bccb610aea2a148",
+          "support:ad6e37621cf682e0abbfb77d3cf4c0f648d8de4ea80f22d731ab100b6fe0171b",
+          "air:ed844002354adb10e7d8c84c0bb44b7aa739f86d45522b232bccb610aea2a148",
+          "air:f369db5edb99fdf31e6f555674b1e976300cdde678542f1df5699aba58939082",
+          "support:ec347572a973b91b35a690fc9aec4f7371a8ac22850a6094d49bcc760fa058f8",
+          "air:f79feda4ee2cc42bb8c2f0291eadb807d724ae11134cf91b64bcffbedaeab413",
+          "air:4790974757efd99f6aadb9f55c9247bf00c166f1b9419432a4dee61d940133c1",
+          "support:3cfeae2be363663d26c842a051d0c838ddb6bf0371cb146e7437d1056d667448",
+          "air:1c9e06e502b571e36625149b57b11968eb718ccb95c7e829cc36d3fac68029dd",
+          "air:f7ebe6b50c1aae861781506676e4e66d3efc360b6cae70a44d0e1c08c84dc879",
+          "support:125a129c1d4dc56b878907fb79b5220c7d30c87cdbdc80c63c8d0e498a3df4d7",
+          "terminal:7bace983516273be4a74b4e988420e8a1e36d662d24b04df304e0063e660a31f"
+        ],
+        "transitions": [
+          "transition:2b2e8c6e1585c44fa473fb5bf5030675f22bba3084694a0a631e21b7584badde",
+          "transition:360a707c4564350023155349b262e23e19317174b6128d6639d25c12e732f97b",
+          "transition:3351a51532713649c79414cbcba8d322fc936dbc849cd9c2fdcf56984d1b09e2",
+          "transition:71e34649cd4d0091ce1f86ffa7d74f3f76b7ef7b6415e55452f1c09f2be65b57",
+          "transition:643cf61192ba4fb94c04dbd99dfd332e2e513dfb32140e5da03bdf95ff446ae7",
+          "transition:0e5f06b9930aed259e003d79243241b1b96108d45de15082ab418b088aad7674",
+          "transition:941cf1c93b63dcb3edb574284ef099e331012b23e8ad42d10a259143d9a669d1",
+          "transition:238b68f63d4f15417a8ed19ff240dea03ff42f940f8160b8f633902b1aa271d0",
+          "transition:a723bbc36f1dd6b3a4834f9e825613423274e4b4efd9653525128e88e470487c",
+          "transition:6b6771334e71bf5734d75dc2f02f5536a86249ca1f9c990ec2404dfcacaea3fb",
+          "transition:aea438642d2642324e0b182a3987abcf0ca18befdad4b023776848b7858e2ae8",
+          "transition:93557b901d9089cd3ae57bb123a476722977607de1783289c2282588c68e9dbf",
+          "transition:a7eec1b6093a0526e7075298afe09fa96fbf57ebc65325bd574acb0e28291500"
+        ]
+      }
+    ],
+    "region_graph": {}
+  },
+  "route26": {
+    "id": 26,
+    "cells": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46
+    ],
+    "portals": [
+      110,
+      113,
+      114,
+      115,
+      116,
+      117,
+      118,
+      119,
+      120,
+      121,
+      129,
+      130,
+      131,
+      134,
+      135,
+      136,
+      137,
+      138,
+      1,
+      3,
+      13,
+      16,
+      24,
+      26,
+      45,
+      46,
+      52,
+      59,
+      61,
+      67,
+      68,
+      72,
+      77,
+      79,
+      80,
+      85,
+      86,
+      89,
+      90,
+      92,
+      97,
+      98,
+      99,
+      114,
+      117,
+      118,
+      119,
+      120,
+      121,
+      134,
+      135,
+      136,
+      137,
+      138,
+      67,
+      68,
+      69,
+      70,
+      71,
+      72,
+      73,
+      74,
+      75,
+      79,
+      80,
+      81,
+      89,
+      90,
+      91,
+      92,
+      93,
+      97,
+      98,
+      99,
+      114,
+      117,
+      118,
+      119,
+      120,
+      121,
+      134,
+      135,
+      136,
+      137,
+      138,
+      44,
+      45,
+      46,
+      47,
+      48,
+      51,
+      52,
+      54,
+      59,
+      60,
+      61,
+      62,
+      63,
+      67,
+      69,
+      71,
+      73,
+      1,
+      3,
+      4,
+      13,
+      15,
+      16,
+      17,
+      22,
+      23,
+      24,
+      25,
+      26,
+      28,
+      30,
+      36,
+      37,
+      38,
+      44,
+      45,
+      47,
+      51,
+      2,
+      4,
+      5,
+      18,
+      19,
+      20,
+      27,
+      29,
+      30,
+      31,
+      32,
+      33,
+      39,
+      40,
+      41,
+      49,
+      53
+    ],
+    "points": [
+      [
+        746.5,
+        5,
+        -1104.5
+      ],
+      [
+        743.5999999940395,
+        5,
+        -1103.5999999940395
+      ],
+      [
+        743.5999999940395,
+        6,
+        -1103.5999999940395
+      ],
+      [
+        742.3000000119209,
+        6,
+        -1103.5999999940395
+      ],
+      [
+        740.6999999880791,
+        6,
+        -1102.699999988079
+      ],
+      [
+        739.3999999940395,
+        7,
+        -1101.5
+      ],
+      [
+        739.3000000119209,
+        7,
+        -1101.300000011921
+      ],
+      [
+        737.6999999880791,
+        7,
+        -1100.1000000059605
+      ],
+      [
+        736.7000000059604,
+        7.5,
+        -1100.1000000059605
+      ],
+      [
+        735.3000000119209,
+        7.5,
+        -1100.1000000059605
+      ],
+      [
+        733.6999999880791,
+        7.5,
+        -1098.699999988079
+      ],
+      [
+        733.3000000119209,
+        7.5,
+        -1098.1000000059605
+      ],
+      [
+        731.3000000119209,
+        6,
+        -1096.300000011921
+      ],
+      [
+        730.5000000059605,
+        6,
+        -1095.8000000059606
+      ],
+      [
+        729.6999999880791,
+        7,
+        -1095.8000000059606
+      ],
+      [
+        729.6999999880791,
+        7,
+        -1093.699999988079
+      ],
+      [
+        729.7,
+        7,
+        -1095.3
+      ]
+    ],
+    "signature": [],
+    "projection": [
+      [
+        55.02626376856324,
+        0,
+        -1795.9737362314368,
+        1437.9737362314368,
+        0,
+        -413.02626376856324
+      ],
+      [
+        729.6999999880791,
+        0,
+        -1795.9737362314368,
+        731.3000000119209,
+        0,
+        -1095.300000011921
+      ],
+      [
+        729.6999999880791,
+        0,
+        -1095.300000011921,
+        729.6999999880791,
+        0,
+        -1095.300000011921
+      ],
+      [
+        729.6999999880791,
+        0,
+        -1093.699999988079,
+        731.3000000119209,
+        0,
+        -1093.699999988079
+      ],
+      [
+        740.6999999880791,
+        0,
+        -1795.9737362314368,
+        742.3000000119209,
+        0,
+        -1102.699999988079
+      ],
+      [
+        740.6999999880791,
+        0,
+        -1102.699999988079,
+        747.3000000119209,
+        0,
+        -413.02626376856324
+      ],
+      [
+        741.6999999880791,
+        0,
+        -1795.9737362314368,
+        747.3000000119209,
+        0,
+        -1105.300000011921
+      ],
+      [
+        741.6999999880791,
+        0,
+        -1105.300000011921,
+        742.3000000119209,
+        0,
+        -1104.300000011921
+      ],
+      [
+        741.6999999880791,
+        0,
+        -1102.699999988079,
+        747.3000000119209,
+        0,
+        -1102.699999988079
+      ],
+      [
+        742.3000000119209,
+        0,
+        -1105.300000011921,
+        747.3000000119209,
+        0,
+        -1102.699999988079
+      ]
+    ],
+    "geometric_length": 25.797828965260887,
+    "variants": 1,
+    "source": "automatic",
+    "stage_paths": [],
+    "schema": 2,
+    "graph_context": "1c10ab3622af43e1ca2b44f324fe7f0a727f4986e305c683c56c8d5a6e9868ae",
+    "semantic_key": [
+      [
+        "start",
+        "support:8cd19d078a488045a786f85e59303cb1e10147e28b2d6dcef48bc51fbddaa423"
+      ],
+      [
+        "departure",
+        "support:8cd19d078a488045a786f85e59303cb1e10147e28b2d6dcef48bc51fbddaa423",
+        "transit:6637f27f97755d1dab015cedd14c1763db9ca8edc6e97bd0169d13acfcc3e71c"
+      ],
+      [
+        "passage",
+        "transit:6637f27f97755d1dab015cedd14c1763db9ca8edc6e97bd0169d13acfcc3e71c",
+        "transit:a1abb8336002db56f36051865159d884774b7168b0c12e185bda1108a9324984"
+      ],
+      [
+        "support",
+        "support:ad6e37621cf682e0abbfb77d3cf4c0f648d8de4ea80f22d731ab100b6fe0171b"
+      ],
+      [
+        "departure",
+        "support:ad6e37621cf682e0abbfb77d3cf4c0f648d8de4ea80f22d731ab100b6fe0171b",
+        "transit:ed844002354adb10e7d8c84c0bb44b7aa739f86d45522b232bccb610aea2a148"
+      ],
+      [
+        "passage",
+        "transit:ed844002354adb10e7d8c84c0bb44b7aa739f86d45522b232bccb610aea2a148",
+        "transit:f369db5edb99fdf31e6f555674b1e976300cdde678542f1df5699aba58939082"
+      ],
+      [
+        "support",
+        "support:ec347572a973b91b35a690fc9aec4f7371a8ac22850a6094d49bcc760fa058f8"
+      ],
+      [
+        "departure",
+        "support:ec347572a973b91b35a690fc9aec4f7371a8ac22850a6094d49bcc760fa058f8",
+        "transit:f79feda4ee2cc42bb8c2f0291eadb807d724ae11134cf91b64bcffbedaeab413"
+      ],
+      [
+        "passage",
+        "transit:f79feda4ee2cc42bb8c2f0291eadb807d724ae11134cf91b64bcffbedaeab413",
+        "transit:4790974757efd99f6aadb9f55c9247bf00c166f1b9419432a4dee61d940133c1"
+      ],
+      [
+        "support",
+        "support:3cfeae2be363663d26c842a051d0c838ddb6bf0371cb146e7437d1056d667448"
+      ],
+      [
+        "departure",
+        "support:3cfeae2be363663d26c842a051d0c838ddb6bf0371cb146e7437d1056d667448",
+        "transit:4790974757efd99f6aadb9f55c9247bf00c166f1b9419432a4dee61d940133c1"
+      ],
+      [
+        "passage",
+        "transit:4790974757efd99f6aadb9f55c9247bf00c166f1b9419432a4dee61d940133c1",
+        "transit:c83f0d67e1668b04e477a997ef59f6505682dca571422ff498f56d645587726f"
+      ],
+      [
+        "support",
+        "support:a44299aba84eba81e82b49de987a887d4ad208592c4cec94dd89c2d682aa83d8"
+      ],
+      [
+        "departure",
+        "support:a44299aba84eba81e82b49de987a887d4ad208592c4cec94dd89c2d682aa83d8",
+        "transit:c83f0d67e1668b04e477a997ef59f6505682dca571422ff498f56d645587726f"
+      ],
+      [
+        "passage",
+        "transit:c83f0d67e1668b04e477a997ef59f6505682dca571422ff498f56d645587726f",
+        "transit:f7ebe6b50c1aae861781506676e4e66d3efc360b6cae70a44d0e1c08c84dc879"
+      ],
+      [
+        "passage",
+        "transit:f7ebe6b50c1aae861781506676e4e66d3efc360b6cae70a44d0e1c08c84dc879",
+        "transit:5c66375770c8593eee0d7490eb43b71f8eb6964ecbcfd6c89bdeadb9b65f6d4a"
+      ],
+      [
+        "finish",
+        "terminal:7bace983516273be4a74b4e988420e8a1e36d662d24b04df304e0063e660a31f"
+      ]
+    ],
+    "stages": [
+      {
+        "occurrence": 0,
+        "kind": "open_portal",
+        "source": "air:6637f27f97755d1dab015cedd14c1763db9ca8edc6e97bd0169d13acfcc3e71c",
+        "target": "air:a1abb8336002db56f36051865159d884774b7168b0c12e185bda1108a9324984",
+        "transition": "transition:1bb352a11e4ab574e2453ceffd205388410a308181f6da3b7fcee8db7a0683b8",
+        "cover": [
+          [
+            742.3000000119209,
+            6,
+            -1795.9737362314368,
+            1437.9737362314368,
+            22.200000047683716,
+            -413.02626376856324
+          ]
+        ],
+        "cells": [
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46
+        ],
+        "portals": [
+          110,
+          113,
+          114,
+          115,
+          116,
+          117,
+          118,
+          119,
+          120,
+          121,
+          129,
+          130,
+          131,
+          134,
+          135,
+          136,
+          137,
+          138
+        ],
+        "predicate": null,
+        "guide_point": [
+          743.5999999940395,
+          6,
+          -1103.5999999940395
+        ]
+      },
+      {
+        "occurrence": 1,
+        "kind": "support_arrival",
+        "source": "air:a1abb8336002db56f36051865159d884774b7168b0c12e185bda1108a9324984",
+        "target": "support:ad6e37621cf682e0abbfb77d3cf4c0f648d8de4ea80f22d731ab100b6fe0171b",
+        "transition": "transition:22a4e6692e6afebc718df2acac349c25e33e3bb2171265086b8a0a7b188424a9",
+        "cover": [
+          [
+            740.6999999880791,
+            6,
+            -1104.300000011921,
+            742.3000000119209,
+            6,
+            -1102.699999988079
+          ]
+        ],
+        "cells": [
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          33,
+          34,
+          35,
+          36,
+          37,
+          40,
+          41,
+          43,
+          44,
+          45,
+          46
+        ],
+        "portals": [],
+        "predicate": null,
+        "guide_point": [
+          742.3000000119209,
+          6,
+          -1103.5999999940395
+        ]
+      },
+      {
+        "occurrence": 2,
+        "kind": "open_portal",
+        "source": "air:ed844002354adb10e7d8c84c0bb44b7aa739f86d45522b232bccb610aea2a148",
+        "target": "air:f369db5edb99fdf31e6f555674b1e976300cdde678542f1df5699aba58939082",
+        "transition": "transition:643cf61192ba4fb94c04dbd99dfd332e2e513dfb32140e5da03bdf95ff446ae7",
+        "cover": [
+          [
+            55.02626376856324,
+            7,
+            -1795.9737362314368,
+            1437.9737362314368,
+            22.200000047683716,
+            -1101.300000011921
+          ]
+        ],
+        "cells": [
+          0,
+          2,
+          4,
+          7,
+          10,
+          13,
+          17,
+          19,
+          21,
+          24,
+          26,
+          28,
+          29,
+          31,
+          33,
+          34,
+          35,
+          36,
+          37,
+          40,
+          41,
+          43,
+          44,
+          45,
+          46
+        ],
+        "portals": [
+          1,
+          3,
+          13,
+          16,
+          24,
+          26,
+          45,
+          46,
+          52,
+          59,
+          61,
+          67,
+          68,
+          72,
+          77,
+          79,
+          80,
+          85,
+          86,
+          89,
+          90,
+          92,
+          97,
+          98,
+          99,
+          114,
+          117,
+          118,
+          119,
+          120,
+          121,
+          134,
+          135,
+          136,
+          137,
+          138
+        ],
+        "predicate": null,
+        "guide_point": [
+          739.3999999940395,
+          7,
+          -1101.5
+        ]
+      },
+      {
+        "occurrence": 3,
+        "kind": "support_arrival",
+        "source": "air:f369db5edb99fdf31e6f555674b1e976300cdde678542f1df5699aba58939082",
+        "target": "support:ec347572a973b91b35a690fc9aec4f7371a8ac22850a6094d49bcc760fa058f8",
+        "transition": "transition:0e5f06b9930aed259e003d79243241b1b96108d45de15082ab418b088aad7674",
+        "cover": [
+          [
+            737.6999999880791,
+            7,
+            -1101.300000011921,
+            739.3000000119209,
+            7,
+            -1100.300000011921
+          ]
+        ],
+        "cells": [
+          0,
+          2,
+          4,
+          10,
+          13,
+          17,
+          19,
+          21,
+          22,
+          24,
+          26,
+          28,
+          29,
+          31,
+          35,
+          36,
+          37,
+          43,
+          44,
+          45,
+          46
+        ],
+        "portals": [],
+        "predicate": null,
+        "guide_point": [
+          739.3000000119209,
+          7,
+          -1101.300000011921
+        ]
+      },
+      {
+        "occurrence": 4,
+        "kind": "open_portal",
+        "source": "air:f79feda4ee2cc42bb8c2f0291eadb807d724ae11134cf91b64bcffbedaeab413",
+        "target": "air:4790974757efd99f6aadb9f55c9247bf00c166f1b9419432a4dee61d940133c1",
+        "transition": "transition:238b68f63d4f15417a8ed19ff240dea03ff42f940f8160b8f633902b1aa271d0",
+        "cover": [
+          [
+            735.3000000119209,
+            7.5,
+            -1795.9737362314368,
+            1437.9737362314368,
+            22.200000047683716,
+            -413.02626376856324
+          ]
+        ],
+        "cells": [
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          35,
+          36,
+          37,
+          43,
+          44,
+          45,
+          46
+        ],
+        "portals": [
+          67,
+          68,
+          69,
+          70,
+          71,
+          72,
+          73,
+          74,
+          75,
+          79,
+          80,
+          81,
+          89,
+          90,
+          91,
+          92,
+          93,
+          97,
+          98,
+          99,
+          114,
+          117,
+          118,
+          119,
+          120,
+          121,
+          134,
+          135,
+          136,
+          137,
+          138
+        ],
+        "predicate": null,
+        "guide_point": [
+          736.7000000059604,
+          7.5,
+          -1100.1000000059605
+        ]
+      },
+      {
+        "occurrence": 5,
+        "kind": "support_arrival",
+        "source": "air:4790974757efd99f6aadb9f55c9247bf00c166f1b9419432a4dee61d940133c1",
+        "target": "support:3cfeae2be363663d26c842a051d0c838ddb6bf0371cb146e7437d1056d667448",
+        "transition": "transition:a723bbc36f1dd6b3a4834f9e825613423274e4b4efd9653525128e88e470487c",
+        "cover": [
+          [
+            733.6999999880791,
+            7.5,
+            -1100.300000011921,
+            735.3000000119209,
+            7.5,
+            -1098.699999988079
+          ]
+        ],
+        "cells": [
+          9,
+          10,
+          11,
+          13,
+          14,
+          15,
+          16,
+          17,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          28,
+          29,
+          30,
+          31,
+          35,
+          36,
+          37,
+          43,
+          44,
+          45,
+          46
+        ],
+        "portals": [],
+        "predicate": null,
+        "guide_point": [
+          735.3000000119209,
+          7.5,
+          -1100.1000000059605
+        ]
+      },
+      {
+        "occurrence": 6,
+        "kind": "open_portal",
+        "source": "air:4790974757efd99f6aadb9f55c9247bf00c166f1b9419432a4dee61d940133c1",
+        "target": "air:c83f0d67e1668b04e477a997ef59f6505682dca571422ff498f56d645587726f",
+        "transition": "transition:ae3dcd3cd026cd3145e03e347c3f167471b3b709ea4001fe8df5991d8bf7d616",
+        "cover": [
+          [
+            731.3000000119209,
+            7.5,
+            -1795.9737362314368,
+            733.6999999880791,
+            22.200000047683716,
+            -1095.300000011921
+          ]
+        ],
+        "cells": [
+          9,
+          10,
+          11,
+          13,
+          14,
+          15,
+          16,
+          17,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          28,
+          29,
+          30,
+          31,
+          35,
+          36,
+          37,
+          43,
+          44,
+          45,
+          46
+        ],
+        "portals": [
+          44,
+          45,
+          46,
+          47,
+          48,
+          51,
+          52,
+          54,
+          59,
+          60,
+          61,
+          62,
+          63,
+          67,
+          69,
+          71,
+          73
+        ],
+        "predicate": null,
+        "guide_point": [
+          733.3000000119209,
+          7.5,
+          -1098.1000000059605
+        ]
+      },
+      {
+        "occurrence": 7,
+        "kind": "support_arrival",
+        "source": "air:c83f0d67e1668b04e477a997ef59f6505682dca571422ff498f56d645587726f",
+        "target": "support:a44299aba84eba81e82b49de987a887d4ad208592c4cec94dd89c2d682aa83d8",
+        "transition": "transition:55a370539803e65da4b49ed6987239454f238af941ade8d4f6fbdc25ac140d1f",
+        "cover": [
+          [
+            729.6999999880791,
+            6,
+            -1096.300000011921,
+            731.3000000119209,
+            6,
+            -1095.300000011921
+          ]
+        ],
+        "cells": [
+          0,
+          2,
+          4,
+          5,
+          7,
+          8,
+          10,
+          11,
+          13,
+          14,
+          17,
+          19,
+          20,
+          21,
+          22,
+          23
+        ],
+        "portals": [],
+        "predicate": null,
+        "guide_point": [
+          731.3000000119209,
+          6,
+          -1096.300000011921
+        ]
+      },
+      {
+        "occurrence": 8,
+        "kind": "open_portal",
+        "source": "air:c83f0d67e1668b04e477a997ef59f6505682dca571422ff498f56d645587726f",
+        "target": "air:f7ebe6b50c1aae861781506676e4e66d3efc360b6cae70a44d0e1c08c84dc879",
+        "transition": "transition:1ee0d785ec8d011e3ec36eafcd112796c122ba1099d68f1875774ac546b8c61d",
+        "cover": [
+          [
+            55.02626376856324,
+            7,
+            -1795.9737362314368,
+            729.6999999880791,
+            22.200000047683716,
+            -1095.300000011921
+          ]
+        ],
+        "cells": [
+          0,
+          2,
+          4,
+          5,
+          7,
+          8,
+          10,
+          11,
+          13,
+          14,
+          17,
+          19,
+          20,
+          21,
+          22,
+          23
+        ],
+        "portals": [
+          1,
+          3,
+          4,
+          13,
+          15,
+          16,
+          17,
+          22,
+          23,
+          24,
+          25,
+          26,
+          28,
+          30,
+          36,
+          37,
+          38,
+          44,
+          45,
+          47,
+          51
+        ],
+        "predicate": null,
+        "guide_point": [
+          729.6999999880791,
+          7,
+          -1095.8000000059606
+        ]
+      },
+      {
+        "occurrence": 9,
+        "kind": "open_portal",
+        "source": "air:f7ebe6b50c1aae861781506676e4e66d3efc360b6cae70a44d0e1c08c84dc879",
+        "target": "air:5c66375770c8593eee0d7490eb43b71f8eb6964ecbcfd6c89bdeadb9b65f6d4a",
+        "transition": "transition:25af8d4179f2a4971d584d7663d3208419e8d394c1bf73a2ce51412bb6856689",
+        "cover": [
+          [
+            55.02626376856324,
+            7,
+            -1093.699999988079,
+            729.6999999880791,
+            22.200000047683716,
+            -413.02626376856324
+          ]
+        ],
+        "cells": [
+          0,
+          2,
+          3,
+          4,
+          5,
+          6,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ],
+        "portals": [
+          2,
+          4,
+          5,
+          18,
+          19,
+          20,
+          27,
+          29,
+          30,
+          31,
+          32,
+          33,
+          39,
+          40,
+          41,
+          49,
+          53
+        ],
+        "predicate": null,
+        "guide_point": [
+          729.6999999880791,
+          7,
+          -1093.699999988079
+        ]
+      },
+      {
+        "occurrence": 10,
+        "kind": "finish",
+        "source": "air:5c66375770c8593eee0d7490eb43b71f8eb6964ecbcfd6c89bdeadb9b65f6d4a",
+        "target": "terminal:7bace983516273be4a74b4e988420e8a1e36d662d24b04df304e0063e660a31f",
+        "transition": "transition:bfe43ee847f81ed0058595d951e650c807f026bfa664903526ebbf4a9f04e7a1",
+        "cover": [],
+        "cells": [
+          0,
+          1,
+          3,
+          5,
+          6,
+          9,
+          12,
+          14,
+          15,
+          16,
+          17,
+          18,
+          20,
+          23,
+          24,
+          25,
+          27,
+          30,
+          31,
+          32,
+          34,
+          37,
+          42,
+          45,
+          46
+        ],
+        "portals": [],
+        "predicate": {
+          "kind": "landing_height_region",
+          "height": 7,
+          "rows": [
+            {
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.7,
+              "strict": true
+            },
+            {
+              "mode": "Z",
+              "cmp": "GE",
+              "rhs": -1095.3
+            }
+          ]
+        },
+        "guide_point": [
+          729.6999999880791,
+          7,
+          -1093.699999988079
+        ]
+      }
+    ],
+    "route_variants": [
+      {
+        "regions": [
+          "support:8cd19d078a488045a786f85e59303cb1e10147e28b2d6dcef48bc51fbddaa423",
+          "air:6637f27f97755d1dab015cedd14c1763db9ca8edc6e97bd0169d13acfcc3e71c",
+          "air:a1abb8336002db56f36051865159d884774b7168b0c12e185bda1108a9324984",
+          "support:ad6e37621cf682e0abbfb77d3cf4c0f648d8de4ea80f22d731ab100b6fe0171b",
+          "air:ed844002354adb10e7d8c84c0bb44b7aa739f86d45522b232bccb610aea2a148",
+          "air:f369db5edb99fdf31e6f555674b1e976300cdde678542f1df5699aba58939082",
+          "support:ec347572a973b91b35a690fc9aec4f7371a8ac22850a6094d49bcc760fa058f8",
+          "air:f79feda4ee2cc42bb8c2f0291eadb807d724ae11134cf91b64bcffbedaeab413",
+          "air:4790974757efd99f6aadb9f55c9247bf00c166f1b9419432a4dee61d940133c1",
+          "support:3cfeae2be363663d26c842a051d0c838ddb6bf0371cb146e7437d1056d667448",
+          "air:4790974757efd99f6aadb9f55c9247bf00c166f1b9419432a4dee61d940133c1",
+          "air:c83f0d67e1668b04e477a997ef59f6505682dca571422ff498f56d645587726f",
+          "support:a44299aba84eba81e82b49de987a887d4ad208592c4cec94dd89c2d682aa83d8",
+          "air:c83f0d67e1668b04e477a997ef59f6505682dca571422ff498f56d645587726f",
+          "air:f7ebe6b50c1aae861781506676e4e66d3efc360b6cae70a44d0e1c08c84dc879",
+          "air:5c66375770c8593eee0d7490eb43b71f8eb6964ecbcfd6c89bdeadb9b65f6d4a",
+          "terminal:7bace983516273be4a74b4e988420e8a1e36d662d24b04df304e0063e660a31f"
+        ],
+        "transitions": [
+          "transition:54d10c3e173eccaac5dbd107ddee70b4cc6f090fa3635f75e653002c517c3088",
+          "transition:1bb352a11e4ab574e2453ceffd205388410a308181f6da3b7fcee8db7a0683b8",
+          "transition:22a4e6692e6afebc718df2acac349c25e33e3bb2171265086b8a0a7b188424a9",
+          "transition:71e34649cd4d0091ce1f86ffa7d74f3f76b7ef7b6415e55452f1c09f2be65b57",
+          "transition:643cf61192ba4fb94c04dbd99dfd332e2e513dfb32140e5da03bdf95ff446ae7",
+          "transition:0e5f06b9930aed259e003d79243241b1b96108d45de15082ab418b088aad7674",
+          "transition:941cf1c93b63dcb3edb574284ef099e331012b23e8ad42d10a259143d9a669d1",
+          "transition:238b68f63d4f15417a8ed19ff240dea03ff42f940f8160b8f633902b1aa271d0",
+          "transition:a723bbc36f1dd6b3a4834f9e825613423274e4b4efd9653525128e88e470487c",
+          "transition:083745d2f016ed64ce07d12abd4ca6a5cd41ad4068bfd8b176d0df64ba3e97a3",
+          "transition:ae3dcd3cd026cd3145e03e347c3f167471b3b709ea4001fe8df5991d8bf7d616",
+          "transition:55a370539803e65da4b49ed6987239454f238af941ade8d4f6fbdc25ac140d1f",
+          "transition:3fff2b88c541f063bd8ed3d2d049b859f21d052f637603e9a3d482e21c3730ff",
+          "transition:1ee0d785ec8d011e3ec36eafcd112796c122ba1099d68f1875774ac546b8c61d",
+          "transition:25af8d4179f2a4971d584d7663d3208419e8d394c1bf73a2ce51412bb6856689",
+          "transition:bfe43ee847f81ed0058595d951e650c807f026bfa664903526ebbf4a9f04e7a1"
+        ]
+      }
+    ],
+    "region_graph": {}
+  },
+  "caveat": "Guide polylines are not trajectories or fixed waypoint equalities. All cells shown are a local crop of actual saved regions."
+}

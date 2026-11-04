@@ -1,5 +1,15 @@
 # Spatial corridor refactor: preserve support visits and 3D passage choices
 
+> Next implementation: [GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md](GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md) is the controlling concrete plan for replacing automatic air-box walk identity with a lazy contact/interaction language. It specifies records/APIs, raw backing geometry, scoped approach normalization, physical-constraint handoff, DFS ownership, migration and acceptance. [The cited research](GENERIC_ROUTE_DISCOVERY_RESEARCH.md) supplies the rationale. The implementation and original contract below describe the `a28e5b71` baseline; they are superseded where the next plan explicitly changes automatic route identity or per-input cell containment.
+
+## Next implementation scope
+
+- Keep covering raw geometry/contact incidence; optional overlapping boxes accelerate guide construction.
+- Discover cyclic contact/passage alternatives lazily; retain unknown residual connectors instead of exhausting a50-walk catalogue.
+- Query target-side/corner relevance before branch creation, retain required landings and physical resource constraints.
+- Share compatible actual-prefix ownership; keep different physical programs, commitments and score contexts distinct.
+- Start with [M0 preparation profiling](GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md#m0--freeze-evidence-and-measure-preparation), then M1 domain/contact catalogue and M2 shared normalization. No new runtime is implemented by this planning update.
+
 2026-11-03. Spatial-refactor implementation contract. The geometry, typed route/progress/guard and DFS integration are implemented. Stored-scene coverage and matched cold evidence are recorded below; automatic Real11 completion remains a measured performance limitation. Updated after importing [CORRIDOR_AGENT_HANDOFF](../docs/CORRIDOR_AGENT_HANDOFF.md) through `61355976`, merged as `984b701b` into isolated branch `research/real11-initial-run-ticks`. The earlier geometry diagnostics remain source-specific at `93652150`. This plan specifies the spatial representation and its integration with the **implemented** [DFS/interaction search](DFS_INTERACTION_IMPLEMENTATION_PLAN.md). It supersedes that plan's earlier sections2.1–2.5 where route identity or division of work differs. Preserve the imported runtime protections below rather than reimplementing them. Only committed handoff changes were imported; the source checkout's in-progress retry was left untouched.
 
 For compact-resume checkout/state/commands and the next action, use [CORRIDOR_IMPLEMENTATION_RESUME.md](../docs/CORRIDOR_IMPLEMENTATION_RESUME.md). Sections10–11 below provide the implementation API/call-site checklist, first slice and test matrix; this is not only a conceptual design.

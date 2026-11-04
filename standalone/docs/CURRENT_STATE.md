@@ -2,6 +2,10 @@
 
 For the completed feature handoff after compaction, start with [CORRIDOR_IMPLEMENTATION_RESUME.md](CORRIDOR_IMPLEMENTATION_RESUME.md). It records the isolated checkout, preserved uncommitted work, current authorization, exact imported baseline, implemented scope and verification commands. The detailed spatial plan's sections10–11 specify interfaces/call sites and the test matrix.
 
+## Generic route-discovery research (2026-11-03)
+
+The latest user clarification asks for generic discovery of potential contact/passage routes, conservative elimination of obviously impossible choices, and early removal of irrelevant approach/avoidance descriptions. A landing-block list alone is insufficient: a nearby target may require a side/corner approach before its top contact. The [cited research report](../autonomy/GENERIC_ROUTE_DISCOVERY_RESEARCH.md) compares decompositions, roadmaps and layered contact/interaction abstractions, defines scoped pruning/merging rules and works through B2→B3. The [concrete next implementation plan](../autonomy/GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md) now specifies the architecture, records/APIs, call-site changes, migration, milestones and acceptance tests. Implementation is authorized and underway in the isolated worktree. M1 now adds the immutable raw geometry/domain and support-episode catalogue;15 domain/region checks pass. The automatic entry remains the earlier catalogue while M2–M5 are implemented. See the plan’s implementation ledger; the research itself made no numerical feasibility claims.
+
 ## Spatial corridor implementation (2026-11-03)
 
 Support refinement is committed at `f9aa0d96`. The isolated worktree now implements typed support/air/terminal graphs, overlapping checked free convex transit regions, untimed route enumeration/resume, 3D progress, fixed axis-sweep guard alternatives, stage-derived goals/directions and a route queue over the existing DFS. Typed inner states use schema6; supplied controls retain schema5. The automatic path accepts unordered geometry and a task predicate, with an independent initial jump domain.

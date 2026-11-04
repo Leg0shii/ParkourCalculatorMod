@@ -1,5 +1,15 @@
 # Consolidated plan: depth-first decisions and shared interaction eligibility
 
+> Next implementation: [GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md](GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md) controls the event-language/stage-provider refactor. [Its DFS call-site table](GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md#92-exact-dfs-call-site-edits) replaces the automatic fixed full `goal_list` with lazy `GoalRequest` stages while preserving this engine's generation, promotion, sibling/unknown and single-owner protections. [The research](GENERIC_ROUTE_DISCOVERY_RESEARCH.md) remains the cited rationale. Baseline behavior below describes `a28e5b71`, not a claim that the next plan is already implemented.
+
+## Next DFS integration contract
+
+- Use semantic event/goal cursors and immutable stage views; a frame's index is decision depth rather than a lookup into a fixed future support list.
+- One compatible actual prefix/next-goal owner can service latent future guide aliases without copying solved sibling decisions.
+- Different objectives get separate score-record identities and repair state. Each physical repair queue keeps a fixed comparison objective.
+- Remove all automatic raw-cell filters with `RouteGuards`; keep physical collision/contact conditions, cap witnesses, owned prerequisites and full-scene validation.
+- Version automatic states/schema and changed shared-generator policies explicitly. Preserve legacy supplied controls and source-era evidence.
+
 2026-11-03. **Implemented baseline and typed spatial integration, with bounded numerical evidence.** Core DFS/early-interaction work landed through `498c054c`, request logging at `072a1111`, virtual finish at `71c9bb7e`, and latest-jump run pruning at `db211b2b` with generic regressions through `c1e71cb3`. The [corridor-agent handoff](../docs/CORRIDOR_AGENT_HANDOFF.md) was imported through `61355976`, merged as `984b701b` in isolated branch `research/real11-initial-run-ticks`. Do not rebuild these completed workstreams or describe them as unimplemented.
 
 The [spatial corridor refactor plan](SPATIAL_CORRIDOR_REFACTOR_PLAN.md) records the implemented region/route/stage contract and remaining acceptance scope. This document records the implemented search invariants and the exact integration obligations. Earlier pre-handoff drafts are superseded; the original source-era plans, experiments and corridor investigation ledgers preserve their evidence. The implementation-status sections distinguish current runtime from the original integration checklist.

@@ -234,6 +234,22 @@ def build_route_graph(scene, decomposition, task_goal=None, *, max_regions=20000
     # states remain explicit; the cuts above a footprint do not themselves
     # create independent overflight routes.
     transit=free_transit_cover(scene,decomposition,max_regions=max_regions,deadline=deadline)
+    return _incidence_graph(scene, decomposition, supports, task_goal, transit, deadline=deadline)
+
+
+def build_geometry_graph(scene, decomposition, supports=None, task_goal=None, *, deadline=None):
+    """Exact raw-cell incidence without mandatory overlapping-box expansion.
+
+    This is a covering substrate, not a selected route. Every raw cell/portal
+    survives, including boundary strata. Contact attachments use the same
+    positive-overlap convention as the legacy graph.
+    """
+    return _incidence_graph(scene, decomposition,
+        support_components(decomposition) if supports is None else supports,
+        task_goal, [c.bounds for c in decomposition.cells], deadline=deadline, raw=True)
+
+
+def _incidence_graph(scene, decomposition, supports, task_goal, transit, *, deadline=None, raw=False):
     regions=[RouteRegion('air:'+geometry_key(box),'air_volume',(box,),
         tuple(c.id for c in decomposition.cells if intersection(c.bounds,box) is not None),
         transit_key='transit:'+geometry_key(box)) for box in transit]
@@ -247,7 +263,7 @@ def build_route_graph(scene, decomposition, task_goal=None, *, max_regions=20000
         transitions.append(RouteTransition(key, source, target, kind, cover, portals, patches, families))
 
     transit_cells=[Cell(i,b,dimension(b)) for i,b in enumerate(transit)]
-    for p in cell_portals(transit_cells,deadline=deadline):
+    for p in (decomposition.portals if raw else cell_portals(transit_cells,deadline=deadline)):
         a,b=(regions[i].key for i in p.cells)
         # Both transit regions are free convex cuboids. Their exact shared
         # patch is connected and free; the raw subdivisions only encode it.
@@ -276,7 +292,8 @@ def build_route_graph(scene, decomposition, task_goal=None, *, max_regions=20000
 
     start = scene['initial']['position']
     start_owner = next(b.get('sourceBlock', b['id']) for b in scene['blocks'] if b['id'] == scene['startBlock'])
-    starts = tuple(s.key for s in supports if s.owner == start_owner and any(contains(b, start) for b in s.cover))
+    starts = tuple(s.key for s in supports if scene['initial'].get('onGround', True) and
+                   s.owner == start_owner and any(contains(b, start) for b in s.cover))
     # Do not fabricate grounded contact if the actual initial state is airborne.
     if not starts:
         starts = tuple(sorted(r.key for r in air_regions.values() if any(contains(b,start) for b in r.cover)))

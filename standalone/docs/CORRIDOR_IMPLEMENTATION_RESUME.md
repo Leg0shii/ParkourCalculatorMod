@@ -1,4 +1,8 @@
+Implementation authorized after compaction. Start with the [generic discovery plan](../autonomy/GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md) and its implementation ledger. M1 domain groundwork is implemented; automatic entry is not switched yet. Continue M2 onward in `/private/tmp/parkour-real11-initial-run-ticks`, preserving all earlier research and figures. Shared worker/helper dependencies remain read-only.
+
 # Resume the spatial corridor implementation
+
+Latest request (2026-11-03): make the generic route-discovery implementation plan concrete. Read [GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md](../autonomy/GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md) first: it contains the proposed records/APIs, raw-geometry backing graph, lazy contact/interaction language, role/phase-scoped pruning, exact/optimistic merging, DFS call-site edits, score/objective ownership, cache/resume policies, milestones and acceptance matrix. The user-authorized subagent's [cited research](../autonomy/GENERIC_ROUTE_DISCOVERY_RESEARCH.md) supplies the rationale. This turn changes planning/navigation only; runtime remains `a28e5b71`. On a later implementation request start at M0/M1, preserve all uncommitted research/figures/docs and do not restart conceptual research or implement the old air-walk contract again.
 
 Updated2026-11-03 after the semantic corridor feature and final source-stable checks. The implementation is complete to the scope below; automatic cold Real11 completion remains a measured performance limit. Read this status before treating the original plan as unimplemented work.
 
@@ -6,13 +10,13 @@ Updated2026-11-03 after the semantic corridor feature and final source-stable ch
 
 - Task checkout: `/private/tmp/parkour-real11-initial-run-ticks`, branch `research/real11-initial-run-ticks`, standalone directory beneath it. The tool environment may name the other agent's checkout; set workdir explicitly and confirm physical paths.
 - Imported committed handoff through `61355976`, merged as `984b701b`; support-region milestone1 is `f9aa0d96`. Use `git log -1` for the subsequent semantic corridor feature commit. Its runtime is identified exactly by the final evidence's sourceHashes, measured before that commit.
-- The other checkout's uncommitted solver work was not imported or edited. No mod/Java changes, helper rebuild, game launch, remote push or delegation were performed. Existing compiled helper and native worker were reused read-only.
+- The other checkout's uncommitted solver work was not imported or edited. During feature implementation no mod/Java changes, helper rebuild, game launch, remote push or delegation were performed; the later research delegation is recorded above. Existing compiled helper and native worker were reused read-only.
 - Preserve unrelated edits. Only commit after feature implementation, bundling related docs/tests/fixtures/evidence. No new implementation is authorized merely because an old plan contains future tense.
 - Old stash/backups predate this feature; never apply them to the implemented tree. Before-source audit patches in the evidence directory preserve the measured policy changes and pass reverse dry-runs against the final feature source.
 
-## Implemented scope
+## Implemented baseline scope (`a28e5b71`)
 
-Read [the spatial plan's implementation status](../autonomy/SPATIAL_CORRIDOR_REFACTOR_PLAN.md#implementation-status) and [the updated DFS plan](../autonomy/DFS_INTERACTION_IMPLEMENTATION_PLAN.md) for contracts/call sites.
+The following records the existing feature. The new implementation plan linked above supersedes its automatic route identity/guard contract for future work; the existing spatial and DFS plans retain their source-specific baseline details.
 
 1. `geometry.py` refines finite physical support footprints, retaining raw incidence/provenance (Real11 raw cells33→47).
 2. `regions.py` canonicalizes exposed support unions and builds explicit support/air/terminal nodes. Its bounded checked overlapping convex cover removes artificial extended subtraction walls. Existing open-solid subtraction checks every cuboid. It is not a complete maximal-box enumerator.

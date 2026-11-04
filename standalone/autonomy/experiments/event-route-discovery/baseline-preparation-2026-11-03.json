@@ -1,0 +1,606 @@
+{
+  "sourceRevision": "a28e5b71cdbc6ef2c1a95b4ba72f9e7e2ac8c782",
+  "archive": "standalone/autonomy/experiments/automatic-corridors/matched-allocation-context-2026-11-03/automatic.json.gz",
+  "archiveHash": "01d3507aa66836a5ed4703dd73f8473f930a4628493d3e4aba48a8cbe27fb535",
+  "purpose": "Fresh archived-context preparation; no numerical dispatch; not cold discovery",
+  "contexts": [
+    {
+      "route": 0,
+      "tick": 41,
+      "elapsedSeconds": 8.011123210191727,
+      "result": {
+        "status": "unknown",
+        "termination": "profile_preparation_only",
+        "profile": {
+          "itemCount": 1,
+          "exclusions": 7,
+          "outcome": "TimeoutError",
+          "emitted": 63,
+          "firstVariantSeconds": 0.7077945433557034,
+          "enumerationSeconds": 7.923775713890791
+        }
+      },
+      "functions": [
+        {
+          "file": "/private/tmp/parkour-real11-initial-run-ticks/standalone/autonomy/constraint_variants.py",
+          "line": 180,
+          "function": "option",
+          "calls": 727,
+          "selfSeconds": 0.020097840000000002,
+          "cumulativeSeconds": 5.098351604
+        },
+        {
+          "file": "/private/tmp/parkour-real11-initial-run-ticks/standalone/autonomy/cell_routes/route_guards.py",
+          "line": 165,
+          "function": "option",
+          "calls": 727,
+          "selfSeconds": 0.191178487,
+          "cumulativeSeconds": 5.078253764
+        },
+        {
+          "file": "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/copy.py",
+          "line": 118,
+          "function": "deepcopy",
+          "calls": 1491175,
+          "selfSeconds": 0.7739105550000001,
+          "cumulativeSeconds": 1.568013753
+        },
+        {
+          "file": "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/copy.py",
+          "line": 191,
+          "function": "_deepcopy_list",
+          "calls": 11109,
+          "selfSeconds": 0.038193197000000005,
+          "cumulativeSeconds": 1.5410168020000001
+        },
+        {
+          "file": "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/copy.py",
+          "line": 217,
+          "function": "_deepcopy_dict",
+          "calls": 113893,
+          "selfSeconds": 0.23466399200000002,
+          "cumulativeSeconds": 1.333346326
+        },
+        {
+          "file": "/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/.venv-guidance/lib/python3.12/site-packages/scipy/optimize/_highspy/_highs_wrapper.py",
+          "line": 306,
+          "function": "check_option",
+          "calls": 214,
+          "selfSeconds": 2.7236662010000003,
+          "cumulativeSeconds": 1.304587709
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "function": "<method 'get' of 'dict' objects>",
+          "calls": 12975898,
+          "selfSeconds": 1.233484739,
+          "cumulativeSeconds": 1.233484739
+        },
+        {
+          "file": "<frozen importlib._bootstrap>",
+          "line": 1349,
+          "function": "_find_and_load",
+          "calls": 551,
+          "selfSeconds": 0.0017139540000000002,
+          "cumulativeSeconds": 0.597667001
+        },
+        {
+          "file": "<frozen importlib._bootstrap>",
+          "line": 1304,
+          "function": "_find_and_load_unlocked",
+          "calls": 541,
+          "selfSeconds": 0.001263309,
+          "cumulativeSeconds": 0.5975509170000001
+        },
+        {
+          "file": "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/json/__init__.py",
+          "line": 183,
+          "function": "dumps",
+          "calls": 8094,
+          "selfSeconds": 0.011330055,
+          "cumulativeSeconds": 0.597203491
+        },
+        {
+          "file": "<frozen importlib._bootstrap>",
+          "line": 911,
+          "function": "_load_unlocked",
+          "calls": 527,
+          "selfSeconds": 0.000947123,
+          "cumulativeSeconds": 0.597135792
+        },
+        {
+          "file": "<frozen importlib._bootstrap_external>",
+          "line": 989,
+          "function": "exec_module",
+          "calls": 454,
+          "selfSeconds": 0.0015489280000000002,
+          "cumulativeSeconds": 0.5970487910000001
+        },
+        {
+          "file": "<frozen importlib._bootstrap>",
+          "line": 480,
+          "function": "_call_with_frames_removed",
+          "calls": 1306,
+          "selfSeconds": 0.000704073,
+          "cumulativeSeconds": 0.595383458
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "function": "<built-in method builtins.exec>",
+          "calls": 489,
+          "selfSeconds": 0.0035251830000000003,
+          "cumulativeSeconds": 0.5939677910000001
+        },
+        {
+          "file": "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/json/encoder.py",
+          "line": 183,
+          "function": "encode",
+          "calls": 8094,
+          "selfSeconds": 0.00868726,
+          "cumulativeSeconds": 0.5832814510000001
+        },
+        {
+          "file": "/private/tmp/parkour-real11-initial-run-ticks/standalone/autonomy/cell_routes/regions.py",
+          "line": 18,
+          "function": "geometry_key",
+          "calls": 6000,
+          "selfSeconds": 0.008312311000000001,
+          "cumulativeSeconds": 0.5730645320000001
+        },
+        {
+          "file": "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/json/encoder.py",
+          "line": 205,
+          "function": "iterencode",
+          "calls": 8094,
+          "selfSeconds": 0.5702727980000001,
+          "cumulativeSeconds": 0.5702727980000001
+        },
+        {
+          "file": "/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/.venv-guidance/lib/python3.12/site-packages/scipy/optimize/__init__.py",
+          "line": 1,
+          "function": "<module>",
+          "calls": 1,
+          "selfSeconds": 8.9005e-05,
+          "cumulativeSeconds": 0.5086989590000001
+        },
+        {
+          "file": "/private/tmp/parkour-real11-initial-run-ticks/standalone/autonomy/cell_routes/route_guards.py",
+          "line": 26,
+          "function": "canonical_rows",
+          "calls": 7586,
+          "selfSeconds": 0.271330509,
+          "cumulativeSeconds": 0.41733036500000004
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "function": "<built-in method builtins.__import__>",
+          "calls": 533,
+          "selfSeconds": 0.000337867,
+          "cumulativeSeconds": 0.35190375
+        },
+        {
+          "file": "<frozen importlib._bootstrap>",
+          "line": 1390,
+          "function": "_handle_fromlist",
+          "calls": 761,
+          "selfSeconds": 0.0007672800000000001,
+          "cumulativeSeconds": 0.34200625300000004
+        },
+        {
+          "file": "/private/tmp/parkour-real11-initial-run-ticks/standalone/autonomy/linear_reachability.py",
+          "line": 36,
+          "function": "row",
+          "calls": 185865,
+          "selfSeconds": 0.180428205,
+          "cumulativeSeconds": 0.32205984000000004
+        },
+        {
+          "file": "/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/.venv-guidance/lib/python3.12/site-packages/scipy/optimize/_optimize.py",
+          "line": 1,
+          "function": "<module>",
+          "calls": 1,
+          "selfSeconds": 5.3003e-05,
+          "cumulativeSeconds": 0.281558958
+        },
+        {
+          "file": "/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/.venv-guidance/lib/python3.12/site-packages/scipy/linalg/__init__.py",
+          "line": 1,
+          "function": "<module>",
+          "calls": 1,
+          "selfSeconds": 9.746e-05,
+          "cumulativeSeconds": 0.23518254100000002
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "function": "<built-in method builtins.hasattr>",
+          "calls": 15027,
+          "selfSeconds": 0.001654752,
+          "cumulativeSeconds": 0.19980355400000002
+        },
+        {
+          "file": "/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/.venv-guidance/lib/python3.12/site-packages/scipy/linalg/_misc.py",
+          "line": 1,
+          "function": "<module>",
+          "calls": 1,
+          "selfSeconds": 1.4666000000000002e-05,
+          "cumulativeSeconds": 0.18328775
+        },
+        {
+          "file": "/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/.venv-guidance/lib/python3.12/site-packages/scipy/_lib/_util.py",
+          "line": 1,
+          "function": "<module>",
+          "calls": 1,
+          "selfSeconds": 4.0668000000000004e-05,
+          "cumulativeSeconds": 0.173169291
+        },
+        {
+          "file": "/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/.venv-guidance/lib/python3.12/site-packages/scipy/_lib/_array_api.py",
+          "line": 1,
+          "function": "<module>",
+          "calls": 1,
+          "selfSeconds": 4.5664e-05,
+          "cumulativeSeconds": 0.172535666
+        },
+        {
+          "file": "/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/.venv-guidance/lib/python3.12/site-packages/scipy/_external/array_api_compat/numpy/__init__.py",
+          "line": 1,
+          "function": "<module>",
+          "calls": 1,
+          "selfSeconds": 6.174900000000001e-05,
+          "cumulativeSeconds": 0.160558625
+        },
+        {
+          "file": "/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/.venv-guidance/lib/python3.12/site-packages/scipy/_external/array_api_compat/_internal.py",
+          "line": 56,
+          "function": "clone_module",
+          "calls": 3,
+          "selfSeconds": 0.00015125000000000002,
+          "cumulativeSeconds": 0.15423387600000002
+        },
+        {
+          "file": "/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/.venv-guidance/lib/python3.12/site-packages/numpy/__init__.py",
+          "line": 700,
+          "function": "__getattr__",
+          "calls": 11,
+          "selfSeconds": 2.5709e-05,
+          "cumulativeSeconds": 0.153426832
+        },
+        {
+          "file": "<frozen importlib._bootstrap_external>",
+          "line": 1295,
+          "function": "exec_module",
+          "calls": 70,
+          "selfSeconds": 5.7086e-05,
+          "cumulativeSeconds": 0.14714612500000002
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "function": "<built-in method _imp.exec_dynamic>",
+          "calls": 70,
+          "selfSeconds": 0.021939744,
+          "cumulativeSeconds": 0.146975505
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "function": "<method 'append' of 'list' objects>",
+          "calls": 1775348,
+          "selfSeconds": 0.145566948,
+          "cumulativeSeconds": 0.145566948
+        },
+        {
+          "file": "<frozen importlib._bootstrap>",
+          "line": 806,
+          "function": "module_from_spec",
+          "calls": 527,
+          "selfSeconds": 0.000524278,
+          "cumulativeSeconds": 0.139114699
+        }
+      ]
+    },
+    {
+      "route": 4,
+      "tick": 17,
+      "elapsedSeconds": 8.004659913480282,
+      "result": {
+        "status": "unknown",
+        "termination": "profile_preparation_only",
+        "profile": {
+          "itemCount": 1,
+          "exclusions": 7,
+          "outcome": "TimeoutError",
+          "emitted": 516,
+          "firstVariantSeconds": 0.04008379206061363,
+          "enumerationSeconds": 7.943367958068848
+        }
+      },
+      "functions": [
+        {
+          "file": "/private/tmp/parkour-real11-initial-run-ticks/standalone/autonomy/constraint_variants.py",
+          "line": 180,
+          "function": "option",
+          "calls": 1381,
+          "selfSeconds": 0.065692075,
+          "cumulativeSeconds": 4.40066262
+        },
+        {
+          "file": "/private/tmp/parkour-real11-initial-run-ticks/standalone/autonomy/cell_routes/route_guards.py",
+          "line": 165,
+          "function": "option",
+          "calls": 1381,
+          "selfSeconds": 0.281546999,
+          "cumulativeSeconds": 4.334970545
+        },
+        {
+          "file": "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/copy.py",
+          "line": 118,
+          "function": "deepcopy",
+          "calls": 1940864,
+          "selfSeconds": 1.010780875,
+          "cumulativeSeconds": 2.0421279130000003
+        },
+        {
+          "file": "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/copy.py",
+          "line": 191,
+          "function": "_deepcopy_list",
+          "calls": 10545,
+          "selfSeconds": 0.044242543,
+          "cumulativeSeconds": 2.020436455
+        },
+        {
+          "file": "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/copy.py",
+          "line": 217,
+          "function": "_deepcopy_dict",
+          "calls": 148479,
+          "selfSeconds": 0.309329465,
+          "cumulativeSeconds": 1.7379556580000002
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "function": "<method 'get' of 'dict' objects>",
+          "calls": 9838201,
+          "selfSeconds": 0.9336719490000001,
+          "cumulativeSeconds": 0.9336719490000001
+        },
+        {
+          "file": "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/json/__init__.py",
+          "line": 183,
+          "function": "dumps",
+          "calls": 14322,
+          "selfSeconds": 0.018422988,
+          "cumulativeSeconds": 0.48485431500000004
+        },
+        {
+          "file": "/private/tmp/parkour-real11-initial-run-ticks/standalone/autonomy/linear_reachability.py",
+          "line": 36,
+          "function": "row",
+          "calls": 270384,
+          "selfSeconds": 0.26010594000000004,
+          "cumulativeSeconds": 0.466322269
+        },
+        {
+          "file": "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/json/encoder.py",
+          "line": 183,
+          "function": "encode",
+          "calls": 14322,
+          "selfSeconds": 0.014098629000000001,
+          "cumulativeSeconds": 0.462590861
+        },
+        {
+          "file": "/private/tmp/parkour-real11-initial-run-ticks/standalone/autonomy/cell_routes/regions.py",
+          "line": 18,
+          "function": "geometry_key",
+          "calls": 10487,
+          "selfSeconds": 0.013768087,
+          "cumulativeSeconds": 0.443330971
+        },
+        {
+          "file": "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/json/encoder.py",
+          "line": 205,
+          "function": "iterencode",
+          "calls": 14322,
+          "selfSeconds": 0.44156518100000003,
+          "cumulativeSeconds": 0.44156518100000003
+        },
+        {
+          "file": "/private/tmp/parkour-real11-initial-run-ticks/standalone/autonomy/cell_routes/route_guards.py",
+          "line": 26,
+          "function": "canonical_rows",
+          "calls": 10427,
+          "selfSeconds": 0.200813334,
+          "cumulativeSeconds": 0.29137957600000003
+        },
+        {
+          "file": "/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/.venv-guidance/lib/python3.12/site-packages/scipy/sparse/_coo.py",
+          "line": 32,
+          "function": "__init__",
+          "calls": 3612,
+          "selfSeconds": 0.01764811,
+          "cumulativeSeconds": 0.261643933
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "function": "<method 'append' of 'list' objects>",
+          "calls": 2447949,
+          "selfSeconds": 0.205054007,
+          "cumulativeSeconds": 0.205054007
+        },
+        {
+          "file": "/private/tmp/parkour-real11-initial-run-ticks/standalone/autonomy/linear_reachability.py",
+          "line": 41,
+          "function": "band",
+          "calls": 35088,
+          "selfSeconds": 0.026382938,
+          "cumulativeSeconds": 0.20020968800000002
+        },
+        {
+          "file": "/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/.venv-guidance/lib/python3.12/site-packages/scipy/optimize/_linprog_util.py",
+          "line": 919,
+          "function": "_parse_linprog",
+          "calls": 516,
+          "selfSeconds": 0.001655144,
+          "cumulativeSeconds": 0.145432532
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "function": "<built-in method builtins.id>",
+          "calls": 2269376,
+          "selfSeconds": 0.143128161,
+          "cumulativeSeconds": 0.143128161
+        },
+        {
+          "file": "/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/.venv-guidance/lib/python3.12/site-packages/scipy/optimize/_linprog_util.py",
+          "line": 213,
+          "function": "_clean_inputs",
+          "calls": 516,
+          "selfSeconds": 0.016654957,
+          "cumulativeSeconds": 0.139199241
+        },
+        {
+          "file": "/private/tmp/parkour-real11-initial-run-ticks/standalone/autonomy/constraint_variants.py",
+          "line": 163,
+          "function": "effective_key",
+          "calls": 1896,
+          "selfSeconds": 0.050979953,
+          "cumulativeSeconds": 0.12026756100000001
+        },
+        {
+          "file": "/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/.venv-guidance/lib/python3.12/site-packages/scipy/sparse/_construct.py",
+          "line": 1155,
+          "function": "vstack",
+          "calls": 516,
+          "selfSeconds": 0.0029896840000000003,
+          "cumulativeSeconds": 0.110373676
+        },
+        {
+          "file": "/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/.venv-guidance/lib/python3.12/site-packages/scipy/sparse/_construct.py",
+          "line": 1314,
+          "function": "_block",
+          "calls": 516,
+          "selfSeconds": 0.019625363,
+          "cumulativeSeconds": 0.10409907500000001
+        },
+        {
+          "file": "/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/.venv-guidance/lib/python3.12/site-packages/scipy/sparse/_base.py",
+          "line": 1695,
+          "function": "_get_index_dtype",
+          "calls": 7740,
+          "selfSeconds": 0.009046028000000001,
+          "cumulativeSeconds": 0.10253123600000001
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "function": "<built-in method builtins.sorted>",
+          "calls": 19004,
+          "selfSeconds": 0.079412298,
+          "cumulativeSeconds": 0.09717178600000001
+        },
+        {
+          "file": "/private/tmp/parkour-real11-initial-run-ticks/standalone/autonomy/cell_routes/route_guards.py",
+          "line": 66,
+          "function": "phase_options",
+          "calls": 17841,
+          "selfSeconds": 0.013682268000000001,
+          "cumulativeSeconds": 0.096386967
+        },
+        {
+          "file": "/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/.venv-guidance/lib/python3.12/site-packages/scipy/sparse/_sputils.py",
+          "line": 263,
+          "function": "get_index_dtype",
+          "calls": 8256,
+          "selfSeconds": 0.039556372,
+          "cumulativeSeconds": 0.09238573900000001
+        },
+        {
+          "file": "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/copy.py",
+          "line": 172,
+          "function": "_deepcopy_atomic",
+          "calls": 1781840,
+          "selfSeconds": 0.086479148,
+          "cumulativeSeconds": 0.086479148
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "function": "<built-in method numpy.asarray>",
+          "calls": 27864,
+          "selfSeconds": 0.083851874,
+          "cumulativeSeconds": 0.084615176
+        },
+        {
+          "file": "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/copy.py",
+          "line": 231,
+          "function": "_keep_alive",
+          "calls": 159024,
+          "selfSeconds": 0.051000445000000005,
+          "cumulativeSeconds": 0.07986470200000001
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "function": "<built-in method builtins.len>",
+          "calls": 1126179,
+          "selfSeconds": 0.078521223,
+          "cumulativeSeconds": 0.078521223
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "function": "<built-in method numpy.array>",
+          "calls": 15480,
+          "selfSeconds": 0.077570972,
+          "cumulativeSeconds": 0.077570972
+        },
+        {
+          "file": "/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/.venv-guidance/lib/python3.12/site-packages/scipy/sparse/_coo.py",
+          "line": 203,
+          "function": "_check",
+          "calls": 3612,
+          "selfSeconds": 0.016030133000000002,
+          "cumulativeSeconds": 0.073012121
+        },
+        {
+          "file": "/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/.venv-guidance/lib/python3.12/site-packages/scipy/optimize/_linprog_util.py",
+          "line": 160,
+          "function": "_format_A_constraints",
+          "calls": 1032,
+          "selfSeconds": 0.0015214100000000002,
+          "cumulativeSeconds": 0.070957118
+        },
+        {
+          "file": "/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/.venv-guidance/lib/python3.12/site-packages/scipy/sparse/_compressed.py",
+          "line": 30,
+          "function": "__init__",
+          "calls": 1548,
+          "selfSeconds": 0.006017629,
+          "cumulativeSeconds": 0.059499142000000005
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "function": "<built-in method builtins.max>",
+          "calls": 387665,
+          "selfSeconds": 0.05911454000000001,
+          "cumulativeSeconds": 0.05911454000000001
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "function": "<built-in method builtins.min>",
+          "calls": 395874,
+          "selfSeconds": 0.057945848,
+          "cumulativeSeconds": 0.057945848
+        }
+      ]
+    }
+  ]
+}

@@ -2,6 +2,10 @@
 
 2026-11-03. Read [current state](CURRENT_STATE.md) for implemented behavior. This page prevents an agent from treating older experiments as a new implementation request. User instructions override documentation. Within docs, the current consolidated plan and current-state guide supersede historical proposals.
 
+## Latest requested implementation plan
+
+The user requests a generic representation of all potential route choices, leaving physical feasibility to movement decisions and solves while discarding proved irrelevant/impossible interactions early. Meaningful routes can include approach sides/corners as well as support contacts. A proof that a target's premature side interaction cannot occur must preserve its required landing; an unknown interaction remains available. See [GENERIC_ROUTE_DISCOVERY_RESEARCH.md](../autonomy/GENERIC_ROUTE_DISCOVERY_RESEARCH.md) for the primary-source comparison, formal scope/merge conditions, proposed contact/interaction abstraction and staged validation. [GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md](../autonomy/GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md) is now the concrete controlling plan for the next automatic route refactor, including scoped relevance, lazy event/goal discovery, shared prefix owners and the physical-only solve boundary. This planning turn has not changed runtime. The earlier contracts below describe the implemented baseline.
+
 ## Current implementation authority
 
 [DFS_INTERACTION_IMPLEMENTATION_PLAN.md](../autonomy/DFS_INTERACTION_IMPLEMENTATION_PLAN.md) is the approved design, implemented at `498c054c` with [results](../autonomy/experiments/dfs-interactions/README.md). It replaces global shortest-prefix/checkpoint-window traversal with ordered DFS at common spatial decision goals, adopts validated child decision programs, applies one early interaction gate across all builders/checks, removes duplicate effective models before expensive combination, preserves owned prerequisites through projection, and saves a versioned backtracking stack.

@@ -1,0 +1,5 @@
+# Event route discovery implementation evidence
+
+The saved-context profiler replays **construction only**, with no numerical dispatch and no cold-search claim. It discards old repair cursors and gives each archived B4@41 / zero-call B2@17 program8 seconds. In the baseline product, all7 physical obstacle interiors are already excluded in these fixed contexts; the remaining item is the raw-route guard. B4 emits63 variants and B2 emits516 before the deadline. Guard-option cumulative time is approximately5.08s/4.34s; deep-copy cumulative time approximately1.57s/2.04s (nested times must not be summed). This supports prioritizing removal of the selected raw-walk product. It does not attribute the entire earlier303s run to these functions.
+
+See `baseline-preparation-2026-11-03.json` for function profiles and source-specific archive identity. The diagnostic script is `profile_saved_contexts.py`; use the native dependency environment in the controlling implementation plan and pass `--compiler` and `--output`. Historical automatic-corridor evidence remains unchanged.
