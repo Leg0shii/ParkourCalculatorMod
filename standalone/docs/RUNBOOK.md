@@ -152,4 +152,4 @@ From the task worktree root with the native environment set (the shared compiler
   --compiler "$PKC_RUN_TICKS_COMPILER" --python "$PKC_IPOPT_PYTHON"
 ```
 
-Outer state `event_route_search` schema1 stores one immutable domain/graph and schema7 dynamic DFS. Physical constraint generation uses state2/context6. Materialization guards suspend residual language/work and do not establish all-routes exhaustion. Full scene/task replay remains necessary for an accepted execution; raw cell-walk completion is no longer an automatic acceptance condition.
+Outer state `event_route_search` schema1 stores one immutable domain/graph and schema7 dynamic DFS. Physical constraint generation uses state2/context7. Materialization guards suspend residual language/work and do not establish all-routes exhaustion. Full scene/task replay remains necessary for an accepted execution; raw cell-walk completion is no longer an automatic acceptance condition.

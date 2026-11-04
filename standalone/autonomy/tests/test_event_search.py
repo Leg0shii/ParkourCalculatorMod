@@ -15,6 +15,31 @@ from standalone.autonomy.movement_generation import generate_choices
 
 
 class EventSearchTests(unittest.TestCase):
+    def test_disconnected_regions_on_one_physical_block_have_contact_phase_guards(self):
+        scene=prepare_scene(dict(version=1,sceneModel='collision_boxes',maxWallHits=0,
+            initial=dict(position=[.5,1,.5],velocity=[0,-.0784000015258789,0],yaw=0),
+            geometryBounds=[-5,-5,-7,12,10,7],startBlock='floor',goalBlock='goal',blocks=[
+                dict(id='floor',boxes=[[0,0,0,6,1,1]]),dict(id='wall',boxes=[[2,1,-5,3,6,5]]),
+                dict(id='goal',boxes=[[8,0,0,9,1,1]])],movementSearch=dict(types=['normal'])))
+        data=build_route_domain(scene,dict(kind='landing',block='goal')).to_dict()
+        adapter=EventGuideAdapter(data,build_event_graph(data))
+        root=empty_program(scene['initial'],threshold=0.);root['terminalSupport']='floor'
+        cursor=adapter.initial_cursor([root]);requests,_,_=adapter.next_goals(cursor,[root])
+        right=next(s for s in data['surfaces'] if s['owners']==['floor'] and min(b[0] for b in s['cover'])>3)
+        request=next(r for r in requests if r['goal'].get('surface')==right['id'])
+        p=program(scene,2,2);p['terminalSupport']='floor'
+        p['profile']['grounded']=[True,False,True]
+        p['profile']['contactEvents']=[dict(offset=1,axis='Y',direction=-1,box=scene['collisionScene']['solids'][0])]
+        view=adapter.for_goal(request,cursor).bind_program(p)
+        candidate=dict(positions=[[.5,.5],[.5,.5],[.5,.5]])
+        self.assertFalse(view.candidate({},candidate,{})['accepted'])
+        rows=view.contact_regions(p,2)
+        self.assertTrue(rows)
+        self.assertTrue(all(r['offset']==1 for option in rows for r in option))
+        candidate['positions'][1]=[4.,.5]
+        self.assertTrue(view.candidate({},candidate,{})['accepted'])
+        self.assertTrue(any(all((candidate['positions'][1][0 if r['mode']=='X' else 1]-r['rhs'])*
+            (1 if r['cmp']=='GE' else -1)>=0 for r in option) for option in rows))
     def test_same_support_setup_is_local_without_removing_its_physical_choices(self):
         scene=flat_scene();data=build_route_domain(scene,dict(kind='landing',block='goal')).to_dict()
         adapter=EventGuideAdapter(data,build_event_graph(data))

@@ -36,7 +36,7 @@ class SurfaceGroup:
 def surface_groups(supports):
     """Group certified coplanar walkable patches, preserving exact unions.
 
-    Positive-area components can meet across a positive-width seam. A point
+    Components need a common positive-area body-overlap region. A rim
     or a component made only of rims does not certify walkable connectivity.
     Physical owner components always survive separately in the domain.
     """
@@ -48,7 +48,7 @@ def surface_groups(supports):
                 if not all(z[0] < z[3] and z[2] < z[5] for z in (x, y)):
                     continue
                 overlap = intersection(x, y)
-                if overlap is not None and (overlap[0] < overlap[3] or overlap[2] < overlap[5]):
+                if overlap is not None and overlap[0] < overlap[3] and overlap[2] < overlap[5]:
                     return True
         return False
     pending = {s.key: s for s in supports}

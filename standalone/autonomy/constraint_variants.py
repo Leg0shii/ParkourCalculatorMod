@@ -10,16 +10,17 @@ from .solve_spec import digest
 
 
 class ConstraintVariants:
-    def __init__(self, route, profile, plan, geometry, envelopes, scope, *, checks=(), gates=(), signature=(), state=None, deadline=None, reference=None, route_guards=None):
+    def __init__(self, route, profile, plan, geometry, envelopes, scope, *, checks=(), gates=(), signature=(), state=None, deadline=None, reference=None, route_guards=None, required_alternatives=None):
         self.route, self.profile, self.plan = route, profile, plan
         self.envelopes, self.deadline, self.through = envelopes, deadline, scope['through']
         self.route_guards = route_guards
-        context = digest(dict(version=6, route={k: v for k, v in route.items() if k != 'warmYaw'},
+        context = digest(dict(version=7, route={k: v for k, v in route.items() if k != 'warmYaw'},
             profile=profile, scope=scope, gates=list(gates), signature=signature, checks=list(checks), geometry=geometry,
             envelope=interaction_context_key(envelopes),
-            routeGuards=route_guards.context if route_guards is not None else None))
+            routeGuards=route_guards.context if route_guards is not None else None,
+            requiredAlternatives=required_alternatives))
         if state is not None and (state.get('version') != 2 or state.get('context') != context):
-            raise ValueError('Incompatible constraint-generation continuation (policy6/state2)')
+            raise ValueError('Incompatible constraint-generation continuation (policy7/state2)')
         self.proof_context = context
         self.events = [dict(plan['events'][0], landing=self.through)]
         self.route_rows = []
@@ -32,6 +33,8 @@ class ConstraintVariants:
             self.route_rows.append(dict(leg=0, offset=self.through, mode='XYZ'[gate['axis']],
                 cmp='GE' if direction > 0 else 'LE', rhs=gate['plane'], name='route:crossing'))
         items = ([dict(routeGuard=True)] if route_guards is not None else [])
+        if required_alternatives is not None:
+            items.append(dict(rows=required_alternatives,role='required_contact'))
         items += [dict(solidIndex=i, box=geometry['solids'][i], preparation=dict(stage='phases', phase=0,
             possible=[], excluded=[])) for i in scope['solidIndices']]
         items += [dict(contactCheck=check) for check in checks

@@ -6,9 +6,15 @@ from standalone.autonomy.cell_routes.event_routes import RouteDomain, build_rout
 from standalone.autonomy.cell_routes.geometry import contains, decompose
 from standalone.autonomy.cell_routes.regions import build_geometry_graph, support_components
 from standalone.autonomy.tests.test_route_regions import task_scene
+from standalone.autonomy.route import HALF_WIDTH
 
 
 class EventDomainTests(unittest.TestCase):
+    def test_rim_only_overlap_is_not_a_certified_surface_connection(self):
+        gap=2*HALF_WIDTH
+        scene=task_scene([[0,0,0,1,1,1],[1+gap,0,0,2+gap,1,1]])
+        surfaces=build_route_domain(scene,None).to_dict()['surfaces']
+        self.assertEqual(len(surfaces),2)
     def test_raw_graph_keeps_every_cell_portal_and_physical_component(self):
         scene = task_scene([[0, 0, 0, 1, 1, 1], [3, 0, 0, 4, 2, 1]])
         d = decompose(scene)

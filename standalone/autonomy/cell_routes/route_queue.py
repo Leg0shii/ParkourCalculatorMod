@@ -59,7 +59,7 @@ def search_routes(request, compiler, *, task_goal=None, spatial_settings=None, *
     saved=options.pop('resume_state',None)
     if saved is not None and options.get('initial_programs') is None:
         options['initial_programs']=saved.get('initialRoots')
-    context=digest(dict(version=1,allocationPolicy=2,routeStagePolicy=2,routeCommitPolicy=1,routeProposalPolicy=1,movementGenerationPolicy=3,constraintGenerationPolicy=6,
+    context=digest(dict(version=1,allocationPolicy=2,routeStagePolicy=2,routeCommitPolicy=1,routeProposalPolicy=1,movementGenerationPolicy=3,constraintGenerationPolicy=7,
         graph=graph.context,task=task_goal,spatial=spatial,
         scene={k:v for k,v in scene.items() if k!='movementSearch'},
         domain={k:v for k,v in cfg.items() if k not in ('maxPrefixes','maxQueuedPrefixes','maxChoicesPerType','expansionsPerProposal')},

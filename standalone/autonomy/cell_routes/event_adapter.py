@@ -9,6 +9,7 @@ from ..open_movement import approaches, first_descent
 from .event_routes import initial_cursor, next_goals, advance_cursor, support_episodes
 from .guides import guide_for, outgoing_objective, task_reference
 from .regions import geometry_key
+from .geometry import contains
 
 
 @dataclass(frozen=True)
@@ -142,9 +143,35 @@ class EventGuideAdapter:
     def eligible(self, envelopes, through):
         return self
 
+    def contact_regions(self, program, through):
+        """Finite required-contact OR, independent of the chosen air witness.
+
+        Normal landing footprints apply at the Y phase's pre-X/Z position.
+        Named terminal support regions use their existing post-input convention.
+        No new probe-height model or waypoint clock is introduced.
+        """
+        goal=self.request['goal']
+        if through<program['profile']['airtime'] or goal['kind']!='landing' or 'surface' not in goal:
+            return None
+        surface=next(s for s in self.data['surfaces'] if s['id']==goal['surface'])
+        solids={b['solidIndex'] for b in self.scene['blocks'] if b['id'] in goal.get('blocks',[goal['block']])}
+        boxes={tuple(self.scene['collisionScene']['solids'][i]) for i in solids}
+        profile=program['profile']
+        states={e['offset'] for e in profile.get('contactEvents',[]) if e['axis']=='Y' and
+                e.get('direction')==-1 and tuple(e['box']) in boxes and self.request['afterTick']<=e['offset']<through}
+        states.update(e['input']+1 for e in profile.get('caseEvents',[]) if tuple(e.get('box',())) in boxes and
+                      self.request['afterTick']<=e['input']<through)
+        return [[dict(leg=0,offset=t,mode=axis,cmp=cmp,rhs=value,name='event:required_contact_region')
+                 for axis,a in (('X',0),('Z',2)) for cmp,value in (('GE',box[a]),('LE',box[a+3]))]
+                for t in sorted(states) for box in surface['cover']]
+
     def candidate(self, plan, candidate, vertical, *, partial=False):
         if self.program is None or self.request is None:
             raise ValueError('Event validation requires a physical program and goal request')
+        scope=getattr(self,'scope',None)
+        if scope and scope['purpose']=='preliminary':
+            return dict(accepted=True,requiredEventsSatisfied=False,taskSatisfied=False,
+                guideClassification='unknown',validation='preliminary_required_event_omitted',alternatives=[])
         self.counts['eventAudits']+=1
         goal=self.request['goal']
         target_owners=[b.get('sourceBlock',b['id']) for b in self.scene['blocks']
@@ -156,6 +183,12 @@ class EventGuideAdapter:
             solids={b['solidIndex'] for b in blocks}
             required=any(set(e['solids']).intersection(solids) and e['input'] >= self.request['afterTick']
                          for e in episodes if e['kind'] in ('support_visit','named_contact'))
+            if required and 'surface' in goal:
+                surface=next(s for s in self.data['surfaces'] if s['id']==goal['surface'])
+                states={e['input']+(e['kind']=='named_contact') for e in episodes
+                        if set(e['solids']).intersection(solids) and e['input']>=self.request['afterTick']}
+                required=any(contains(box,[candidate['positions'][t][0],surface['height'],candidate['positions'][t][1]],1e-7)
+                    for t in states for box in surface['cover'])
         else:
             from ..terminal_goals import satisfied
             required=satisfied(self.program,candidate,goal,self.scene.get('supportClearance',1e-6))
