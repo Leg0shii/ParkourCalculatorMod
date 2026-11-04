@@ -166,3 +166,110 @@ def support_episodes(domain, profile, *, required_owners=()):
         if surfaces and profile['grounded'][min(tick+1, profile['airtime'])]:
             current = set(surfaces)
     return result
+
+
+def build_event_graph(domain):
+    """Compile event attachments; connectors keep the full cyclic raw graph.
+
+    The graph is implicit between event attachments, so no O(paths) catalogue
+    or simple-path restriction is needed. Closure work is requested lazily.
+    """
+    data = domain.to_dict() if isinstance(domain, RouteDomain) else domain
+    raw = data['geometry']
+    scene = data['scene']
+    events = []
+    for surface in data['surfaces']:
+        blocks = sorted(b['id'] for b in scene['blocks'] if b['solidIndex'] in surface['solids'])
+        events.append(dict(id='visit:'+surface['id'], kind='support_visit', surface=surface['id'],
+            attachments=surface['components'], cover=surface['cover'],
+            goal=dict(kind='landing', block=blocks[0], blocks=blocks, surface=surface['id']), terminal=False))
+    # Keep an explicit owner-specific task even on a shared coplanar surface.
+    task = data['task'] or dict(kind='landing', block=scene['goalBlock'])
+    events.append(dict(id='finish:'+geometry_key(task), kind='finish', attachments=raw['goals'],
+        cover=[], goal=task, terminal=True))
+    result = dict(schema=GRAPH_SCHEMA, domainId=data['domainId'], events=sorted(events, key=lambda e:e['id']),
+        backingContext=raw['context'], outsideAttachment=data['coverage']['outsideAttachment'])
+    result['id'] = geometry_key(result)
+    return result
+
+
+def initial_cursor(domain, roots=None):
+    data = domain.to_dict() if isinstance(domain, RouteDomain) else domain
+    return dict(schema=CURSOR_SCHEMA, domainId=data['domainId'], occurrences=[],
+        attachments=data['geometry']['starts'], commitments=[], outsideUnresolved=True)
+
+
+def next_goals(domain, graph, cursor, continuation=None, *, max_expansions=5000, max_materializations=50, check=None):
+    """Budgeted silent closure, with contacts as outputs rather than barriers.
+
+    Air edges can pass over supports without consuming a contact. Closure never
+    traverses an arrival into another departure: that would splice a landing
+    into an alleged no-contact connector. The backing graph remains cyclic.
+    Work quotas suspend this query; they do not limit its represented language.
+    """
+    import copy
+    data = domain.to_dict() if isinstance(domain, RouteDomain) else domain
+    if cursor.get('domainId') != data['domainId'] or graph['domainId'] != data['domainId']:
+        raise ValueError('Incompatible semantic cursor/domain')
+    key = geometry_key((graph['id'], cursor))
+    if continuation is not None and continuation.get('context') != key:
+        raise ValueError('Incompatible next-goal continuation')
+    state = copy.deepcopy(continuation) if continuation is not None else dict(schema=1, context=key,
+        pending=list(cursor['attachments']), seen=[], reachable=[], emitted=[], exhausted=False)
+    edges = {}
+    for edge in data['geometry']['transitions']:
+        edges.setdefault(edge['source'], []).append(edge)
+    seen, reachable = set(state['seen']), set(state['reachable'])
+    work = 0
+    while state['pending'] and work < max_expansions:
+        if check:
+            try:
+                check()
+            except TimeoutError:
+                break
+        current = state['pending'].pop(0)
+        if current in seen:
+            continue
+        seen.add(current); work += 1
+        for edge in edges.get(current, []):
+            if edge['kind'] in ('open_portal', 'support_departure'):
+                if edge['target'] not in seen and edge['target'] not in state['pending']:
+                    state['pending'].append(edge['target'])
+            else:
+                reachable.add(edge['target'])
+    state['seen'], state['reachable'] = sorted(seen), sorted(reachable)
+    requests = []
+    for event in graph['events']:
+        if len(requests) >= max_materializations:
+            break
+        # Unknown enclosure keeps unreachable events optimistic. They must not
+        # be declared impossible because a finite query clips their attachment.
+        discovered = bool(set(event['attachments']).intersection(reachable))
+        if not discovered and (state['pending'] or not cursor['outsideUnresolved']):
+            continue
+        if event['id'] in state['emitted']:
+            continue
+        connector = dict(id='connector:'+geometry_key((graph['id'],cursor['attachments'],event['id'])),
+            backingGraph=graph['backingContext'], entry=cursor['attachments'], exit=event['attachments'],
+            outsideUnresolved=not discovered, refinement='unresolved', selectedWalk=None)
+        request = dict(schema=1, id='request:'+geometry_key((key,event['id'])), event=event['id'],
+            goal=event['goal'], terminal=event['terminal'], connector=connector,
+            commitments=cursor['commitments'], semanticPrefix=cursor['occurrences'])
+        requests.append(request); state['emitted'].append(event['id'])
+    eligible = [e for e in graph['events'] if cursor['outsideUnresolved'] or
+                set(e['attachments']).intersection(reachable)]
+    state['exhausted'] = not state['pending'] and all(e['id'] in state['emitted'] for e in eligible)
+    return requests, state, dict(expansions=work, materializations=len(requests),
+        termination='exhausted' if state['exhausted'] else 'graph_limit' if state['pending'] else 'guide_limit')
+
+
+def advance_cursor(domain, graph, cursor, request, observed):
+    import copy
+    data = domain.to_dict() if isinstance(domain, RouteDomain) else domain
+    event = next(e for e in graph['events'] if e['id'] == request['event'])
+    result = copy.deepcopy(cursor)
+    result['attachments'] = event['attachments']
+    result['occurrences'].append(dict(event=event['id'], occurrence=len(cursor['occurrences']), observed=observed))
+    # No selected raw path is carried forward as a hard requirement.
+    result['outsideUnresolved'] = data['coverage']['enclosure'] != 'complete'
+    return result
