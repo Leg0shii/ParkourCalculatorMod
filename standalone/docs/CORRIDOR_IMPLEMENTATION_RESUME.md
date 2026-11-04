@@ -1,99 +1,64 @@
-# Resume after compaction: implement the spatial corridor refactor
+# Resume the spatial corridor implementation
 
-Prepared2026-11-03 at the user's request before compaction. The user intends implementation next; this turn only made the plan/handoff thorough. Continue the existing task in the existing isolated branch. Do not restart the research or ask again whether to implement merely because context was compacted.
+Updated2026-11-03 after the semantic corridor feature and final source-stable checks. The implementation is complete to the scope below; automatic cold Real11 completion remains a measured performance limit. Read this status before treating the original plan as unimplemented work.
 
-## 1. Checkout and exact state
+## Checkout and preservation
 
-- Physical repo: `/private/tmp/parkour-real11-initial-run-ticks`.
-- Standalone root: `/private/tmp/parkour-real11-initial-run-ticks/standalone`.
-- Branch: `research/real11-initial-run-ticks`.
-- HEAD: `984b701bc0d158620b38971afa0fbd1c2f8ee2a6`, merging committed handoff `61355976` from `research/ipopt-cell-routes`.
-- The original session environment may still report the source checkout as cwd. Set each command's workdir explicitly to this isolated repo/standalone path. Do not switch/edit the source checkout at `/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes`.
-- Milestone1 is implemented: support-aligned refinement in `geometry.py` and typed graph in `regions.py`, plus `test_route_regions.py`.29 geometry/region/legacy route/local tests and52 native DFS/terminal tests pass without skips. Continue milestone2 (semantic route identity/enumeration), then the remaining milestones. The rest of this resume preserves the original implementation contract; the main plan status is authoritative.
-- **Uncommitted/untracked work is intentional and must survive.** In particular `autonomy/SPATIAL_CORRIDOR_REFACTOR_PLAN.md` is an untracked full implementation plan. Current docs, AGENTS and investigation artifacts are also uncommitted. Read `git status`; do not clean/reset/replace them with the older committed docs.
-- Before handoff integration, the work was backed up to `/private/tmp/real11-corridor-handoff-backup-zfb336e9` and stash object `2e247cf33d8a113e68154b1279fe14a95bf1d777`. These are **older backup snapshots**, not the latest plan. Do not apply them again or overwrite current files from them.
-- Only committed handoff changes were merged. The source agent's uncommitted fresh Real11 retry was left alone. Do not import/run/alter it as a side task.
+- Task checkout: `/private/tmp/parkour-real11-initial-run-ticks`, branch `research/real11-initial-run-ticks`, standalone directory beneath it. The tool environment may name the other agent's checkout; set workdir explicitly and confirm physical paths.
+- Imported committed handoff through `61355976`, merged as `984b701b`; support-region milestone1 is `f9aa0d96`. Use `git log -1` for the subsequent semantic corridor feature commit. Its runtime is identified exactly by the final evidence's sourceHashes, measured before that commit.
+- The other checkout's uncommitted solver work was not imported or edited. No mod/Java changes, helper rebuild, game launch, remote push or delegation were performed. Existing compiled helper and native worker were reused read-only.
+- Preserve unrelated edits. Only commit after feature implementation, bundling related docs/tests/fixtures/evidence. No new implementation is authorized merely because an old plan contains future tense.
+- Old stash/backups predate this feature; never apply them to the implemented tree. Before-source audit patches in the evidence directory preserve the measured policy changes and pass reverse dry-runs against the final feature source.
 
-## 2. Read order and authority
+## Implemented scope
 
-1. [AGENTS](../AGENTS.md): standalone scope; only commit at feature implementation boundaries, bundling related tests/docs/fixtures.
-2. [Spatial corridor refactor plan](../autonomy/SPATIAL_CORRIDOR_REFACTOR_PLAN.md), especially sections0,3–8,10–11. This is the detailed spatial implementation contract.
-3. [DFS implementation/integration plan](../autonomy/DFS_INTERACTION_IMPLEMENTATION_PLAN.md): DFS/interaction work is implemented; extend it rather than build another DFS.
-4. [Imported solver handoff](CORRIDOR_AGENT_HANDOFF.md) and [current state](CURRENT_STATE.md) for the runtime/policy/terminal boundary.
-5. Read affected code/tests, not the entire historical documentation corpus. Earlier research is already summarized and linked in the plan.
+Read [the spatial plan's implementation status](../autonomy/SPATIAL_CORRIDOR_REFACTOR_PLAN.md#implementation-status) and [the updated DFS plan](../autonomy/DFS_INTERACTION_IMPLEMENTATION_PLAN.md) for contracts/call sites.
 
-No skill is needed for this standalone Python task. Do not spawn or message other agents unless the user subsequently asks. Preserve unrelated work. The task does not call for a mod Gradle suite or game launch.
+1. `geometry.py` refines finite physical support footprints, retaining raw incidence/provenance (Real11 raw cells33→47).
+2. `regions.py` canonicalizes exposed support unions and builds explicit support/air/terminal nodes. Its bounded checked overlapping convex cover removes artificial extended subtraction walls. Existing open-solid subtraction checks every cuboid. It is not a complete maximal-box enumerator.
+3. `annotate_normal_proposals` reuses zero-threshold ordinary jump/run-off builders and compiled travel bounds. Last-support flight context survives portals. Missing normal proposals leave other methods unknown, not universally rejected.
+4. `routes.py` corridor2 uses ordered support/contact and 3D passage occurrences, whole compatible variants, conditioned local anchors and a resumable bounded frontier. Meaningful revisits remain ordered; setup hops stay local where no new passage occurs.
+5. `route_progress.py` audits Y→X→Z phases, finite interfaces and physical contacts; several portals can cross in one input. Variant cursors prevent splicing different paths.
+6. `route_guards.py` chooses connected fixed 3D axis-sweep/contact branches through existing `ConstraintVariants` before NLP. Existing physical avoidance and blockage/face-chain caps remain active.
+7. `semantic_adapter.py` derives goals and outgoing progress direction via existing helpers. Immutable views distinguish required contact from optional outgoing air; landing then running off within one input is valid. Physical final contact and virtual full-endpoint finish have different horizons.
+8. The existing `depth_first.py` is extended, not replaced. Typed routes use schema6, legacy supplied controls schema5. Scored promotion/child ownership is checkpoint-atomic. Typed generation scores the first ready proposal while preserving unconsumed iterator work. Zero prefix quota can drain ready work without adding expansions.
+9. `route_queue.py` allocates globally bounded work across routes, continues actual newly committed children and yields stalled peers. Each in-flight DFS owns an immutable variant language; newly discovered variants receive separate owners. Policy fingerprints include Stage2/Commit1/Proposal1/Allocation2 plus MovementGeneration3. Physical scene/domain identity excludes duplicated allocation sizes; changed horizons still reject.
+10. No-points/no-corridor `find_checkpoint_route` now uses automatic routing from unordered geometry/task. `InitialJumpDomain` is independent of inferred support order; no generic0/8 restriction. `automatic_experiment.py` provides cold/resume CLI, atomic snapshots and source hashes.
 
-## 3. Settled user decisions
+## Settled semantics and preserved handoff protections
 
-- Cells/portals exist to distinguish actual spatial alternatives: different supports, different obstacle passages and different vertical layers.
-- **Overflying a block and landing then running off it are different routes even when X/Z matches.** A support surface must therefore be an explicit contact state; a broad volume above it alone cannot distinguish those routes.
-- A route is an untimed ordered support/contact/passage itinerary. Local runs, jump times and facings can vary within it. Same-neighborhood setup hops remain local unless another meaningful passage is crossed; broad revisits stay ordered.
-- Automatically discover intermediate support order from unordered geometry plus existing movement-aware proposals. A selected discovered route's support stages then become real requirements for that route. Do not hardcode B2/B3/B4/B5 into generic code. Keep supplied-route fixtures as unchanged controls.
-- Representative guide points do not define route identity or become numerical waypoint walls. Air anchors should be conditioned on neighboring selected support/passage regions. Full portals remain feasible sets.
-- Current Real11 task is **virtual descending height7 finish**, X<729.7, Z>=−1095.3, no extra lower X/upper Z bound. Minimize achieved tick then maximize Z there. Free overshoot and actual finite B7 contact are distinct valid terminal alternatives. Do not restore the earlier literal-finite-B7-only or fixed64 interpretation.
-- Current canonical virtual fixture has `maxInputs=200` as a guard. Do not silently raise domain/caps. B6's reported rightward extension lacks exact bounds; use stored geometry for regressions and do not claim full real-map coverage until corrected.
-- No new physics/continuous backend, fractional movement decisions, global objective/time-bound project, discrete decision transfer, inertia-threshold work or intentional wall-hit/ladder/water expansion. Normal momentum and zero thresholds remain.
+Overflight versus landing/run-off are DIFFERENT routes even with equal X/Z. Routes are untimed itineraries; input timings/methods/facings are local. No generic B2→B3→B4→B5 order or authored comparison clocks. Intermediate comparisons use chosen physical supports and the actual finish; portals are untimed constraints/events, not extra inputs or epsilon boxes.
 
-## 4. Imported behavior that must survive
+Real11 task: descending HEIGHT7, player-center X<729.7, Z>=−1095.3; minimize achieved tick then maximize Z there. No lower X/upper Z goal bound, fake floor or fixed64. Free overshoot can finish below7 and airborne; finite B7 contact is a separate valid model. Horizon200 is a guard. The stored B6 `[730,0,-1095,731,20,-1094]` lacks the user's reported right extension; exact replacement bounds remain unknown.
 
-Implemented modules: `cell_routes/depth_first.py`, `interactions.py`, owned rows/effective dedup in existing builders, probe uncertainty in `reachability.py`, exact request logging, `terminal_goals.py`, and `cell_routes/minimum_runs.py`.
+Preserve original-state continuous re-solves with all earlier facings free, normal momentum and zero thresholds. Preserve InteractionGate, named probe unknown Y/intended movement, full-proposal screens, owned-row projection, exact requests, local latest-jump minimum-run policy, siblings/refinements/unknowns/suspended work and single execution ownership. No new global objective/time bounds, peer-retention pass, sibling decision transfer, or intentional wall-hit/ladder/water expansion.
 
-Reuse `InteractionGate.context/query/required`. Preserve step/grind unknown Y and intended unclipped X/Z probe coverage; realized endpoints are not a complete internal probe trace. Preserve `constraintOwners`, full-proposal screening, `commit_arrival` and no orphan future rows. Re-solve from original state with earlier facings free.
+## Final verification and evidence
 
-DFS currently has schema5 `ordered_goal_dfs` state. Preserve frame ownership, generator cursors, ready/scored/untried siblings, accepted variants, unknowns, refinements, suspended work and incumbent. The current active heuristic is dynamically learned preparation runs immediately before the latest jump; never replace it with total-run pruning, hardcoded thresholds or an old global peer-retention pass. Additional continuation-time reasoning is deferred.
+All reports are in [automatic-corridors](../autonomy/experiments/automatic-corridors/README.md), under distinct paths; earlier failed/intermediate reports are preserved.
 
-Keep all exact requests/model hashes and separate numerical/corridor/scene outcomes. The handoff's calls8/9 and initial0 calls5–8 include genuinely separate terminal models and corridor repairs. Do not suppress those IDs or assume equal controls imply duplicate models. Any saving must follow an actual generic corridor/model change with before/after evidence.
+- Final `allocation-context-final-native-2026-11-03.{json,log}`:420 tests pass, zero failures/errors/skips,234.1s, sourceUnchanged=true. Explicit47-module list includes generic mixed ladder controls; dedicated ladder/climbable/vine/movement-entry modules remain outside this scope because of the documented unrelated baseline. This is not an all-suite/actual-world claim.
+- Final `coverage-allocation-context-final-2026-11-03.json.gz`: unseeded default50/5000/64/2 enumeration admits archived initial0 T64 witness as route26, independent replay passes. Controls/positions enter only after enumeration. Rectangle SVGs show raw cells and transit/support domains. Native coverage also checks B2 landing/run-off within one input.
+- Final `matched-allocation-context-2026-11-03/summary.json`, sourceUnchanged=true: automatic declared300s/actual303.3s,13 calls, no finish,5 unique partial replays all pass. Supplied declared300s/actual311.8s,41 calls,T67,Z−1093.8231290646224,51 replay checks all pass. Both retain unresolved/pending work; neither proves minimum time.
+- `matched-generic-allocation-context-2026-11-03/summary.json`: flat-gap T14 both entry paths; intermediate automatic overflight T17 versus authored required-contact T24, all independently replayed, sourceUnchanged=true.
+- Earlier `matched-2026-11-03` and `matched-contact-promotion-2026-11-03` preserve before-source policies and expected-red regressions. Their partial outcomes are not final-source claims. Reverse audit patches reconstruct those versions; do not restore them as a new baseline.
 
-## 5. Implementation sequence; next action
+## Remaining limits and future investigation
 
-**Milestone1 implemented; preserve its code/tests and continue milestone2. Original first-slice contract:** exposed support components, support-aligned local refinement and typed volume/surface region graph. Read current `geometry.py`, `routes.py`, `ContactPatch`, `expanded_box`, and geometry tests. Add canonical finite face unions and region graph records in `regions.py`; extract/reuse incidence helpers rather than rederive physics. Retain all residual air and boundary geometry. Add generic tests and actual cell/portal dumps, run focused geometry/region checks, then commit that implemented feature with related docs/tests/fixtures.
+Automatic Real11 reaches intermediate supports but has not found a full finish under the matched budget. Symbolic route-guard plus physical-avoidance combinations are expensive; the B4 fixed model remained unresolved. Profile exact saved cursors/requests before proposing reductions. Never bypass physical caps, suppress fixture-specific calls, widen domains silently, or convert deadlines/local numerical failures into infeasibility proofs. This belongs in a separately scoped follow-up, coordinated with the solver agent's committed fixes.
 
-Then continue the full refactor through the plan's milestones:
+Named step/grind route certification remains explicitly unknown when shared diagnostics omit internal probes; no Python probe physics was invented. Exact probe instrumentation, exhaustive spatial coverage, actual-world/float-angle replay, intentional wall hits and unknown B6 geometry remain outside the measured feature. Representation coverage is not cold discovery or optimality.
 
-1. Semantic support/air/terminal regions and typed open/contact edges.
-2. Semantic route enumeration/normalization, preserving support, passage/layer and revisit identity rather than horizontal midpoint triples.
-3. Shared 3D Y/X/Z phase/contact progress with stage/variant cursors; no extra ticks per portal or accidental path splicing.
-4. Fixed stage/contact/axis-sweep guard alternatives through existing constraint builders/dedup/ownership, with matching preliminary/final scope.
-5. Stage-derived goals/anchors/directions in existing `search_goals`; update every fixed `goal_list`/`index`/terminal call site listed in plan section10, preserve minimum-run and resume behavior.
-6. Generic/native gates, automatic historical-witness representation without seeding, and matched supplied/automatic virtual-finish evidence.
+## Commands
 
-Future schemas proposed in the plan: region graph1, semantic corridor2, route-stage DFS6. Those are not current runtime versions. Change context identity explicitly when features land, reject incompatible old state and do not invent a lossless horizontal-signature migration.
-
-Important implementation trap: once all selected physical support stages are complete, a free virtual finish has **no outstanding physical B7 contact**. Update `screen`/remaining-requirement logic accordingly; preserve the finite-support fallback for ordinary landing tasks. Extend `search_goals`' existing frame lifecycle, not a replacement controller. Scope the adapter immutably per active frame so suspended work cannot inherit another frame's stage.
-
-The plan contains a concrete API/call-site checklist, ownership rules, uncertain named-probe handling, test matrix and milestone done criteria. Implementation is not complete just because anchors improve or milestone1 passes.
-
-## 6. Verification baseline and environment
-
-Post-merge native focused run: **52 tests passed, no skips**, ~17s at `984b701b`. [Log](../autonomy/experiments/linkcraft11-opening/audit/handoff-integration-focused-2026-11-03.log), [command/settings](../autonomy/experiments/linkcraft11-opening/audit/handoff-integration-focused-2026-11-03.json). Geometry/route checks passed15 tests earlier; the imported Python code is unchanged after those source-specific investigations.
-
-Use the existing worker/helper read-only unless affected code actually requires a rebuild:
+From the physical repository root:
 
 ```sh
-cd /private/tmp/parkour-real11-initial-run-ticks
 export OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1
 export PYTHONPATH="$PWD"
 export PKC_IPOPT_PYTHON=/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/.venv-guidance/bin/python
 export PKC_RUN_TICKS_COMPILER=/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/standalone/autonomy/build/compiler.json
-python3 -B -m unittest standalone.autonomy.tests.test_cell_geometry standalone.autonomy.tests.test_cell_routes -v
-"$PKC_IPOPT_PYTHON" -B -m unittest \
-  standalone.autonomy.tests.test_minimum_runs \
-  standalone.autonomy.tests.test_depth_first \
-  standalone.autonomy.tests.test_orchestrator_continuation \
-  standalone.autonomy.tests.test_fixed_clock_goal \
-  standalone.autonomy.tests.test_terminal_goals -v
+"$PKC_IPOPT_PYTHON" -B -m unittest standalone.autonomy.tests.test_semantic_search standalone.autonomy.tests.test_semantic_routes standalone.autonomy.tests.test_route_regions standalone.autonomy.tests.test_route_progress standalone.autonomy.tests.test_route_guards -v
 ```
 
-Do not rebuild a helper/classpath being used by another numerical run. If shared checker instrumentation becomes necessary for exact named-probe route classification, follow the plan's explicit probe caveat and applicable root/module instructions; do not invent a Python approximation. The known unrelated ladder baseline is not a reason to fix ladder code here.
-
-## 7. Existing investigation evidence; do not rerun blindly
-
-In `autonomy/experiments/linkcraft11-opening/audit/`:
-
-- `automatic-route-smoke-2026-11-03.json`: stored geometry33 cells/92 portals/247 patches; first geometric route after72 expansions.
-- `automatic-route-defaults-2026-11-03.json`: default50 signatures do not admit the saved historical valid trajectory. This is a representation gap, not proof of50 usable routes.
-- `corridor-comparison-2026-11-03.json` and PNG: selected cell rectangles/Y ranges, shared/unique regions, exact crossing differences and reference audits.
-- `decomposition-investigation-2026-11-03.json`: finite top patches, Z reflection, empty-coverage midpoint bias and local33→47 refinement preserving free volume/1650 samples. The conditioned B2→B3 air anchor fits existing cells but is not a physics solution.
-
-Do not overwrite those reports or reinterpret them as post-refactor measurements. New runs need new output paths, source/settings and validation scope. No new cold retry is required before milestone1; source-area retries belong to the other checkout's work.
+See the evidence README for automatic cold/resume and coverage CLI commands. Always choose new output paths. No active experiment sessions remain after feature finalization; do not poll obsolete session IDs from earlier handoffs.

@@ -4,7 +4,7 @@ import random
 import unittest
 
 from standalone.autonomy.cell_routes.geometry import contains, decompose, dimension, intersection
-from standalone.autonomy.cell_routes.regions import build_route_graph, canonical_cover, diagnostic_svg, support_components
+from standalone.autonomy.cell_routes.regions import build_route_graph, canonical_cover, diagnostic_svg, free_transit_cover, support_components
 from standalone.autonomy.tests.test_cell_geometry import scene_for
 
 
@@ -20,6 +20,20 @@ def task_scene(solids, owners=None, **kwargs):
 
 
 class RouteRegionTests(unittest.TestCase):
+    def test_overlapping_transit_cover_preserves_space_without_subtraction_walls(self):
+        from standalone.autonomy.obstacle_geometry import expanded_box
+        scene=task_scene([[0,0,0,4,1,2],[4,0,1,5,2,2]],bounds=(-5,-5,-5,8,7,6))
+        d=decompose(scene);cover=free_transit_cover(scene,d)
+        self.assertTrue(any(contains(b,[2,1.2,.5]) and contains(b,[2,1.2,1.5]) for b in cover))
+        rng=random.Random(811)
+        for _ in range(1000):
+            point=[rng.uniform(d.bounds[a],d.bounds[a+3]) for a in range(3)]
+            self.assertEqual(bool(d.locate(point)),any(contains(b,point) for b in cover))
+        for free_box in cover:
+            for solid in map(expanded_box,scene['collisionScene']['solids']):
+                self.assertFalse(all(max(free_box[a],solid[a])<min(free_box[a+3],solid[a+3]) for a in range(3)))
+        with self.assertRaises(ValueError):free_transit_cover(scene,d,max_regions=1)
+        with self.assertRaises(TimeoutError):free_transit_cover(scene,d,deadline=0)
     def test_canonical_union_discards_encoding_seams_but_keeps_hole_and_concavity(self):
         whole = [(0, 1, 0, 2, 1, 1)]
         split = [(0, 1, 0, 1.3, 1, 1), (1, 1, 0, 2, 1, 1)]

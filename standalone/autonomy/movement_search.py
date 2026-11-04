@@ -30,14 +30,15 @@ def movement_settings(scene):
 def iter_movement_programs(scene, *, settings=None, deadline=None, cancel_event=None, report=None, screen=None,
                            context_adapter=None, work=None, checkpoint_tick=None, initial_programs=None, threshold=.005,
                            program_filter=None, queue_policy='balanced', stop_on_goal=True, program_priority=None,
-                           persistent=False, continuation=None, terminal_goal=None):
+                           persistent=False, continuation=None, terminal_goal=None, stop_supports=None):
     cfg = movement_settings(scene) if settings is None else settings
     if persistent:
         from .movement_frontier import persistent_programs
         yield from persistent_programs(scene, settings=cfg, report=report if report is not None else {},
             continuation=continuation, deadline=deadline, cancel_event=cancel_event, work=work,
             initial_programs=initial_programs, checkpoint_tick=checkpoint_tick, threshold=threshold, screen=screen,
-            context_adapter=context_adapter, program_filter=program_filter, stop_on_goal=stop_on_goal, terminal_goal=terminal_goal)
+            context_adapter=context_adapter, program_filter=program_filter, stop_on_goal=stop_on_goal, terminal_goal=terminal_goal,
+            stop_supports=stop_supports)
         return
     if terminal_goal is not None:
         raise ValueError('Virtual terminal discovery requires the persistent movement source')
@@ -62,7 +63,7 @@ def iter_movement_programs(scene, *, settings=None, deadline=None, cancel_event=
     def complete(program):
         ticks = program['profile']['airtime']
         return checkpoint_tick is not None and ticks == checkpoint_tick or (
-            stop_on_goal and ticks and program['terminalSupport'] == scene['goalBlock'] and program['profile']['grounded'][-1]
+            stop_on_goal and ticks and program['terminalSupport'] in (stop_supports or [scene['goalBlock']]) and program['profile']['grounded'][-1]
             and (not scene.get('ladderSearch', {}).get('requireLadder') or program['ladderEvents']))
 
     def fair_subset(items, count):

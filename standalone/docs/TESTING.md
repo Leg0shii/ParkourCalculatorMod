@@ -65,3 +65,11 @@ Current DFS acceptance: [results and logs](../autonomy/experiments/dfs-interacti
 ## Latest-jump run pruning
 
 `test_minimum_runs` combines generic dispatch/resume/unknown controls with archived Real11 programs. It checks local preparation counts and preserves different prior interactions, hard obstacle-side rows and free/physical terminal contacts. Full counterfactual controls can set `minimum_run_pruning=False` in fresh fixture settings; policy changes intentionally invalidate exact resume. Saved `minimumRunExclusions` include each discrete program and the representative causing exclusion. Continuation-time pruning remains deferred and is not required for this policy.
+
+## Semantic corridor refactor
+
+Add `test_route_regions`, `test_semantic_routes`, `test_route_progress`, `test_route_guards` and `test_semantic_search` to the cell/DFS gate. They cover exact exposed unions and equivalent encodings, checked convex cover, landing versus overflight, 3D layer/passage order, meaningful revisits, no variant splicing, several portals per input, unknown named probes, fixed sweep alternatives, independent initial domains, immutable stage views and continuation. Native tests include inferred intermediate goals/outgoing objectives, exact one-prefix-per-session suspension/resume, finite and airborne virtual finishes, independent replay and archived Real11 witness coverage without seeding discovery.
+
+The semantic schema6 prefix quota can reach zero while already generated ready programs are drained; it cannot silently add an expansion for every new child frame. `test_inferred_intermediate_support_uses_outgoing_guide_objective` checks that boundary as well as actual native guidance wiring. Legacy controls remain under their existing schema5 behavior.
+
+Final spatial-refactor gate: [420 selected native tests](../autonomy/experiments/automatic-corridors/allocation-context-final-native-2026-11-03.json), zero failures/errors/skips,234.1s and sourceUnchanged=true. Its47-module list is explicit; dedicated ladder/climbable/vine/movement-entry modules are excluded, while generic mixed ladder controls execute. [Matched Real11 evidence](../autonomy/experiments/automatic-corridors/matched-allocation-context-2026-11-03/summary.json) preserves the automatic no-finish deadline and supplied T67 result separately from representation coverage.

@@ -118,3 +118,18 @@ PYTHONPATH="$PWD" .venv-guidance/bin/python \
 ```
 
 The included reports stop with a valid incumbent plus saved unfinished work. To continue them use the fixed-clock CLI, the same archived fixture, `--resume` on the saved resume report and a **new** output path. Ordinary continuation does not intentionally retry completed or unresolved numerical requests; `--retry-unknown` reopens unresolved ones. Report pending root/subtree coverage and any time spent serializing state; the time setting is a search budget, not a hard process-duration guarantee.
+
+## Automatic untimed corridor runs
+
+From the physical repository root, with the native worker environment above:
+
+```sh
+python3 -B -m standalone.autonomy.cell_routes.automatic_experiment \
+  --input standalone/autonomy/experiments/automatic-corridors/fixture.json \
+  --output /tmp/automatic-corridors-new.json.gz \
+  --compiler "$PKC_RUN_TICKS_COMPILER" --python "$PKC_IPOPT_PYTHON"
+```
+
+Resume with `--resume /tmp/automatic-corridors-new.json.gz` and a NEW output path. The fixture supplies unordered physical geometry, the terminal predicate, independent initial jump inputs and explicit existing budgets. It supplies no points/support list/comparison clocks. CLI progress keeps the latest full in-memory state and writes atomic periodic snapshots (at most one per second between completed writes), plus an unconditional final report. Source hashes distinguish dirty implementation measurements from archived revisions.
+
+`coverage_audit --input <fixture> --witness <archived-report.json.gz> --output <new-audit.json.gz> --compiler "$PKC_RUN_TICKS_COMPILER"` first enumerates without the witness, then independently replays/classifies it. Its SVGs show actual raw/transit/support rectangles, locally cropped only for display. Coverage does not seed a cold numerical search or establish minimum time.

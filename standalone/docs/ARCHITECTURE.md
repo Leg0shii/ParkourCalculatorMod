@@ -2,7 +2,7 @@
 
 Read [current state](CURRENT_STATE.md) before assuming a planned component already exists. [Code map](CODE_MAP.md) identifies modules; [function index](FUNCTION_INDEX.md) points to definitions. Python packages are imported from the physical repository root.
 
-The requested [spatial corridor refactor](../autonomy/SPATIAL_CORRIDOR_REFACTOR_PLAN.md) changes the planned spatial contract: support-surface visits and 3D passages, including overflight versus landing/run-off, distinguish routes. Its support refinement and typed region/transition graph (schema1) are implemented in `geometry.py`/`regions.py`; semantic routes/progress and DFS integration are still pending. The module descriptions below describe the inspected current code.
+The requested [spatial corridor refactor](../autonomy/SPATIAL_CORRIDOR_REFACTOR_PLAN.md) changes the planned spatial contract: support-surface visits and 3D passages, including overflight versus landing/run-off, distinguish routes. Its support refinement and typed region/transition graph (schema1) are implemented in `geometry.py`/`regions.py`; typed route/progress/guard and DFS integration are present in the worktree; final numerical evidence is being completed. The module descriptions below describe the inspected current code.
 
 ## The three layers
 
@@ -49,4 +49,16 @@ The **outer search** selects discrete programs; `searchState` contains generated
 
 Resume requires matching model/context identity, including horizon, goal/objective, scope, geometry, inputs, contacts and coefficients. A longer child is a new numerical problem, not an exact continuation of its shorter parent's raw queue. Existing code retains compatible facing guesses and preserves old work under its own identity. IPOPT internal iterations/Hessians are not serialized.
 
-The current DFS implementation uses version5 comparison frames/backtracking without a global window barrier. `acceptedVariants` in inner repair state preserves accepted fixed-constraint alternatives separately from the local best objective. A frame has one execution owner among active, suspended and deferred-refinement queues. Do not call an old checkpoint queue an exact DFS continuation without explicit schema conversion.
+The DFS uses schema5 for legacy supplied comparison frames and schema6 for typed route stages, without a global window barrier. The automatic outer queue uses schema1; route-stage/commit/proposal/allocation policies participate in continuation identity. `acceptedVariants` in inner repair state preserves accepted fixed-constraint alternatives separately from the local best objective. A frame has one execution owner among active, suspended and deferred-refinement queues. Do not call an old checkpoint queue an exact DFS continuation without explicit schema conversion.
+
+## Automatic semantic corridors
+
+`checkpoint_search.find_checkpoint_route` dispatches unordered geometry plus optional `task_goal` to `route_queue.search_routes` when no corridor/points are supplied. The explicit legacy point/supplied-corridor path remains a control. Automatic routing uses `regions.build_route_graph`, `annotate_normal_proposals` and `routes.enumerate_routes(route_graph=...)`; it does not require a support list or authored clocks. The virtual collision envelope comes from compiled horizon bounds and is reused by both runners.
+
+Raw support refinement retains exact free placement geometry and finite physical top patches. The route graph uses overlapping checked free convex cuboids to remove extended subtraction-plane restrictions. Every cuboid is collision-free under the same open-solid subtraction; the bounded cover constructor is not an all-maximal-cuboid or route-completeness certificate. Explicit physical support nodes distinguish landing from overflight. Alternative complete region/transition paths retain their own occurrence cursors.
+
+`SemanticCorridorAdapter` derives contact goals and immutable per-frame views. Intermediate landing solves use the existing compiled `guideObjective` path for outgoing direction; task objectives keep their existing schema. `RouteGuards` selects fixed 3D axis-sweep branches through `ConstraintVariants`; `route_progress` checks ordinary Y/X/Z phases and physical contacts. Named internal probes remain unknown if their geometry is missing, even when physical replay passes. Omitted preliminary route requirements are explicitly uncertified.
+
+Typed inner states are schema6 `ordered_goal_dfs`; the outer semantic route queue is schema1 and corridors are schema2. A resumed spatial catalogue cannot mutate an already running DFS's variant language: new variants get separate work ownership under the same semantic family. Initial jump domains are independent of inferred contact order. Sibling/unknown/refinement ownership, original-state facing freedom and the existing per-frame minimum-run policy remain in the imported DFS.
+
+Movement generation context3 hashes scene fields outside `movementSearch` plus normalized domain settings. Prefix/queue/choice/yield allocation fields can change between slices without losing candidates; horizon/type/physics/geometry changes remain incompatible. Both DFS and automatic queue carry `movementGenerationPolicy=3`, so a schema5 frame from an older policy is not silently accepted.

@@ -11,16 +11,19 @@ from .solve_spec import digest
 
 
 class ConstraintVariants:
-    def __init__(self, route, profile, plan, geometry, envelopes, scope, *, checks=(), gates=(), signature=(), state=None, deadline=None, reference=None):
+    def __init__(self, route, profile, plan, geometry, envelopes, scope, *, checks=(), gates=(), signature=(), state=None, deadline=None, reference=None, route_guards=None):
         self.route, self.profile, self.plan = route, profile, plan
         self.envelopes, self.deadline, self.through = envelopes, deadline, scope['through']
         context = digest(dict(version=5, route={k: v for k, v in route.items() if k != 'warmYaw'},
                               profile=profile, scope=scope, gates=list(gates), signature=signature,
-                              modelKey=envelopes.get('modelKey')))
+                              modelKey=envelopes.get('modelKey'),
+                              routeGuards=route_guards.context if route_guards is not None else None))
         if state and state.get('context') == context:
             reference = state.get('reference', reference)
         self.events = [dict(plan['events'][0], landing=self.through)]
         self.items, self.exclusions, self.route_rows = [], [], []
+        if route_guards is not None:
+            self.items.append(dict(routeGuards=route_guards))
         active = set(scope['solidIndices'])
         selected = {token[0]: token for token in signature}
         for gate in gates:
@@ -175,6 +178,8 @@ class ConstraintVariants:
         return [self.face_row(face, t) for t in range(begin, end+1) if t in item['required'][face['axis']]]
 
     def option(self, item, cursor):
+        if 'routeGuards' in item:
+            return item['routeGuards'].option(cursor)
         if 'rows' in item:
             index = cursor.get('index', 0)
             if index == len(item['rows']):

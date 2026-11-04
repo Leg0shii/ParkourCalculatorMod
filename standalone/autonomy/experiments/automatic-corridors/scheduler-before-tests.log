@@ -1,0 +1,28 @@
+FF
+======================================================================
+FAIL: test_expired_slice_commits_a_scored_arrival_before_suspending (standalone.autonomy.tests.test_semantic_search.SemanticStageTests.test_expired_slice_commits_a_scored_arrival_before_suspending)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/parkour-real11-initial-run-ticks/standalone/autonomy/tests/test_semantic_search.py", line 60, in test_expired_slice_commits_a_scored_arrival_before_suspending
+    self.assertEqual(result['searchState']['stack'][-1]['index'],1)
+AssertionError: 0 != 1
+
+======================================================================
+FAIL: test_new_child_continues_before_catalogue_drain_but_stall_yields (standalone.autonomy.tests.test_semantic_search.SemanticStageTests.test_new_child_continues_before_catalogue_drain_but_stall_yields)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/parkour-real11-initial-run-ticks/standalone/autonomy/tests/test_semantic_search.py", line 34, in test_new_child_continues_before_catalogue_drain_but_stall_yields
+    self.assertEqual(calls,[0,0,1])
+AssertionError: Lists differ: [0, 1, 0] != [0, 0, 1]
+
+First differing element 1:
+1
+0
+
+- [0, 1, 0]
++ [0, 0, 1]
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.101s
+
+FAILED (failures=2)

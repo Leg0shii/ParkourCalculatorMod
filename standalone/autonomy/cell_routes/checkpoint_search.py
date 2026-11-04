@@ -13,7 +13,7 @@ from .checkpoints import checkpoint
 from .decision_windows import DecisionPolicy, plan_windows
 from .geometry import decompose
 from .local import CorridorAdapter, CountingCompiler, SearchWork
-from .routes import corridor_for_points, enumerate_routes, landmarks
+from .routes import corridor_for_points, landmarks
 from .comparison_goals import goal_spec, landing_satisfied
 from standalone.autonomy.solve_spec import solve_scope, solve_identity, validation_prefix
 from standalone.autonomy.reachability import reachable_envelopes
@@ -60,7 +60,8 @@ def _motion_bound(scene, compiler, seconds):
 
 def evaluate_program(scene, program, compiler, adapter, work, motion_bound, *, checkpoint=None,
                      seconds=3, candidate_seconds=1, solver_calls=8, python_executable=None, cancel_event=None,
-                     partial_corridor=False, required_landing=None, scope=None, on_progress=None, retry_unresolved=True, first_witness=False):
+                     partial_corridor=False, required_landing=None, scope=None, on_progress=None, retry_unresolved=True, first_witness=False,
+                     guide_objective=None):
     complete = checkpoint is None
     virtual=program.get('terminalGoal')
     if virtual is not None:
@@ -70,8 +71,13 @@ def evaluate_program(scene, program, compiler, adapter, work, motion_bound, *, c
             raise ValueError('Virtual finish program does not reach its height clock')
     compiled = compile_program(scene, program, require_complete=complete and virtual is None)
     route, profiles = compiled['route'], compiled['profiles']
+    if guide_objective is not None:
+        route['objective']=dict(axis='X',sense='MAX')
+        route['guideObjective']=copy.deepcopy(guide_objective)
     scope = solve_scope(scene, program, scope)
     scoped_adapter = adapter.scoped(scope) if hasattr(adapter, 'scoped') else adapter
+    if hasattr(scoped_adapter,'bind_program'):
+        scoped_adapter = scoped_adapter.bind_program(program)
     if checkpoint is not None:
         if program['profile']['airtime'] != checkpoint.tick:
             raise ValueError('Every compared program must end at the shared absolute tick')
@@ -130,7 +136,9 @@ def evaluate_program(scene, program, compiler, adapter, work, motion_bound, *, c
         getattr(scoped_adapter, 'corridor', None).to_dict() if hasattr(scoped_adapter, 'corridor') else None, coefficients)
     variants = ConstraintVariants(route, profiles[0], plan, scene['collisionScene'], envelopes, scope,
         checks=checks, gates=scoped_adapter.gates, signature=signature,
-        state=program.get('repairState', {}).get('constraintGeneration'), deadline=scoped.deadline, reference=reference)
+        state=program.get('repairState', {}).get('constraintGeneration'), deadline=scoped.deadline, reference=reference,
+        route_guards=scoped_adapter.constraint_guards(program['profile'],envelopes,scope,scoped.deadline)
+        if hasattr(scoped_adapter,'constraint_guards') else None)
     result = solve_contact_branches(route, profiles, checks,
         compiler, seconds=seconds, candidate_seconds=candidate_seconds, retries=0,
         max_branches=scene['maxContactBranches'], improve=True, rank_equal_cost=not first_witness, optimize_goal=True,
@@ -173,7 +181,8 @@ def find_checkpoint_route(request, compiler, *, checkpoints=None, corridor=None,
                           spatial_seconds=1.5, spatial_calls=4, spatial_candidates=4, spatial_prefixes=64,
                           time_margin=1, progress_margin=None, rescue_passes=1, terminal_checkpoint=None, program_filter=None,
                           on_window=None, spatial_goals=None, program_priority=None, resume_state=None, on_progress=None,
-                          retry_unknown=False, minimum_run_pruning=True):
+                          retry_unknown=False, minimum_run_pruning=True, task_goal=None, spatial_settings=None):
+    entry_options = locals().copy()
     if type(minimum_run_pruning) is not bool:raise ValueError('minimum_run_pruning must be boolean')
     integer(rescue_passes,'rescue passes',0,100)
     if comparison_policy not in ('time_progress','objective_band','unpruned'):
@@ -225,27 +234,29 @@ def find_checkpoint_route(request, compiler, *, checkpoints=None, corridor=None,
             objectiveOptimalityProven=False, minimumTicksProven=False, comparisonPolicy=comparison_policy)
     if cancel_event is not None and cancel_event.is_set():
         return unfinished('cancelled')
+    if corridor is None and spatial_points is None:
+        from .route_queue import search_routes
+        for name in ('request','compiler','corridor','spatial_points','task_goal','spatial_settings'):
+            entry_options.pop(name)
+        try:
+            return search_routes(request,compiler,task_goal=task_goal,spatial_settings=spatial_settings,**entry_options)
+        except TimeoutError as error:
+            return unfinished(str(error))
+    if task_goal is not None or spatial_settings is not None:
+        raise ValueError('task_goal/spatial_settings apply to automatic discovery; a supplied typed corridor embeds its task')
     try:
         d, gates = decompose(scene, deadline=deadline), landmarks(scene)
     except TimeoutError:
         return unfinished('deadline')
     route_report = None
     if corridor is None:
-        if spatial_points is not None:
-            goal = next(b for b in scene['blocks'] if b['id'] == scene['goalBlock'])
-            if list(spatial_points[0]) != list(scene['initial']['position']):
-                raise ValueError('The spatial guide must start at the original initial position')
-            last = spatial_points[-1]
-            if terminal_checkpoint is None and not (spatial_goals and spatial_goals[-1]['kind']=='landing_height_region') and (abs(last[1]-goal['top']) > 1e-7 or not supports(goal,last[0],last[2])):
-                raise ValueError('The spatial guide must end in the goal landing region')
-            corridor = corridor_for_points(d, spatial_points, gates)
-        else:
-            routes, route_report = enumerate_routes(scene, d, max_routes=1, max_expansions=1000, deadline=deadline)
-            if not routes:
-                result = unfinished('no_spatial_route')
-                result['routeGeneration'] = route_report
-                return result
-            corridor = routes[0]
+        corridor = corridor_for_points(d, spatial_points, gates)
+        goal = next(b for b in scene['blocks'] if b['id'] == scene['goalBlock'])
+        if list(spatial_points[0]) != list(scene['initial']['position']):
+            raise ValueError('The spatial guide must start at the original initial position')
+        last = spatial_points[-1]
+        if terminal_checkpoint is None and not (spatial_goals and spatial_goals[-1]['kind']=='landing_height_region') and (abs(last[1]-goal['top']) > 1e-7 or not supports(goal,last[0],last[2])):
+            raise ValueError('The spatial guide must end in the goal landing region')
     window_plan = plan_windows(opportunities,gap=cluster_gap,max_inputs=cfg['maxInputs']) if opportunities is not None else None
     policy = DecisionPolicy(window_plan,scene) if window_plan is not None else None
     def accepted_program(program):
@@ -264,7 +275,11 @@ def find_checkpoint_route(request, compiler, *, checkpoints=None, corridor=None,
         raise ValueError('Checkpoints must increase in absolute tick and ordered route segment')
     if plans and plans[-1].tick > cfg['maxInputs']:
         raise ValueError('Checkpoint exceeds movement horizon')
-    adapter = CorridorAdapter(scene, corridor, gates, decomposition=d)
+    if corridor.schema == 2:
+        from .semantic_adapter import SemanticCorridorAdapter
+        adapter = SemanticCorridorAdapter(scene,corridor,decomposition=d)
+    else:
+        adapter = CorridorAdapter(scene, corridor, gates, decomposition=d)
     try:
         work.check()
         motion = _motion_bound(scene, counted, max(.001,min(score_seconds,deadline-time.monotonic())))

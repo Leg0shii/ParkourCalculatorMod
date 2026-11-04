@@ -135,3 +135,8 @@ All tracked standalone Markdown plus this consolidation. Read [AGENTS](../AGENTS
 | [ipopt/RECENT_REPLAY_HANDOFF.md](../ipopt/RECENT_REPLAY_HANDOFF.md) | Replay and movement handoff, updated 2026-10-28 | Historical handoff; current AGENTS supersedes task/branch instructions |
 | [ipopt/REPLAY.md](../ipopt/REPLAY.md) | Local Minecraft movement replay | Existing API/mechanics reference; check current scope |
 | [ipopt/RUN_TICKS_PHYSICS_HANDOFF.md](../ipopt/RUN_TICKS_PHYSICS_HANDOFF.md) | Block-sequence and minimum-run-ticks physics handoff | Historical handoff; current AGENTS supersedes task/branch instructions |
+
+## Automatic semantic corridor implementation
+
+- [Implementation contract/status](../autonomy/SPATIAL_CORRIDOR_REFACTOR_PLAN.md), [DFS integration](../autonomy/DFS_INTERACTION_IMPLEMENTATION_PLAN.md), [active resume handoff](CORRIDOR_IMPLEMENTATION_RESUME.md).
+- [Automatic fixture, commands, coverage and numerical evidence](../autonomy/experiments/automatic-corridors/README.md). Source-era failed audits remain alongside final acceptance reports.

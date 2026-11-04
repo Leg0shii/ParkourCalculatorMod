@@ -9,20 +9,24 @@ from .solve_spec import digest, processing_key
 
 def persistent_programs(scene, *, settings, report, continuation=None, deadline=None, cancel_event=None, work=None,
                         initial_programs=None, checkpoint_tick=None, threshold=.005, screen=None,
-                        context_adapter=None, program_filter=None, stop_on_goal=True, terminal_goal=None, **kwargs):
+                        context_adapter=None, program_filter=None, stop_on_goal=True, terminal_goal=None, stop_supports=None, **kwargs):
     initial = empty_program(scene['initial'], threshold=threshold)
     initial['terminalSupport'] = scene['startBlock']
     seeds = [initial] if initial_programs is None else initial_programs
-    context_value = dict(version=2, scene=scene, settings={k: v for k, v in settings.items() if k not in
+    # The scene also carries movementSearch. Hash its physical fields here;
+    # settings below already owns the domain and deliberately excludes slices.
+    context_value = dict(version=3, scene={k:v for k,v in scene.items() if k!='movementSearch'}, settings={k: v for k, v in settings.items() if k not in
         ('maxPrefixes', 'maxQueuedPrefixes', 'maxChoicesPerType', 'expansionsPerProposal')},
         roots=[program_search_key(p) for p in seeds], checkpoint=checkpoint_tick, threshold=threshold,
         stopOnGoal=stop_on_goal)
     if terminal_goal is not None:
         context_value['terminalGoal']=terminal_goal
+    if stop_supports is not None:
+        context_value['stopSupports']=stop_supports
     context=digest(context_value)
     if continuation is not None and continuation.get('context') != context:
         raise ValueError('Incompatible movement generation checkpoint')
-    state = copy.deepcopy(continuation) if continuation is not None else dict(version=2, context=context,
+    state = copy.deepcopy(continuation) if continuation is not None else dict(version=3, context=context,
         pending=copy.deepcopy(seeds), ready=[], expansion=None, seen=[], generated=0, expanded=0, emitted=0,
         screened=0, policyRejections=0, exhausted=False)
     state.setdefault('exclusions', [])
@@ -43,7 +47,7 @@ def persistent_programs(scene, *, settings, report, continuation=None, deadline=
         if terminal_goal is not None:
             return p.get('terminalGoal')==terminal_goal
         return (checkpoint_tick is not None and p['profile']['airtime'] == checkpoint_tick or
-            stop_on_goal and p['profile']['grounded'][-1] and p['terminalSupport'] == scene['goalBlock']
+            stop_on_goal and p['profile']['grounded'][-1] and p['terminalSupport'] in (stop_supports or [scene['goalBlock']])
             and p['profile']['airtime'] > 0)
 
     def key(p):

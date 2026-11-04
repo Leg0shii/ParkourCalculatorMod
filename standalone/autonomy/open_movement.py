@@ -57,6 +57,8 @@ def normal_choices(context):
         for block in context['scene']['blocks']:
             if context.get('checkBudget'):
                 context['checkBudget']()
+            if context.get('supportAllowed') is not None and not context['supportAllowed'](block):
+                continue
             t = first_descent(trace, block['top'])
             if t is None:
                 continue

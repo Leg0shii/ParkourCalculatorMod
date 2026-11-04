@@ -1,10 +1,26 @@
 # Consolidated plan: depth-first decisions and shared interaction eligibility
 
-2026-11-03. **Implemented baseline, with pending spatial integration.** Core DFS/early-interaction work landed through `498c054c`, request logging at `072a1111`, virtual finish at `71c9bb7e`, and latest-jump run pruning at `db211b2b` with generic regressions through `c1e71cb3`. The [corridor-agent handoff](../docs/CORRIDOR_AGENT_HANDOFF.md) was imported through `61355976`, merged as `984b701b` in isolated branch `research/real11-initial-run-ticks`. Do not rebuild these completed workstreams or describe them as unimplemented.
+2026-11-03. **Implemented baseline and typed spatial integration, with bounded numerical evidence.** Core DFS/early-interaction work landed through `498c054c`, request logging at `072a1111`, virtual finish at `71c9bb7e`, and latest-jump run pruning at `db211b2b` with generic regressions through `c1e71cb3`. The [corridor-agent handoff](../docs/CORRIDOR_AGENT_HANDOFF.md) was imported through `61355976`, merged as `984b701b` in isolated branch `research/real11-initial-run-ticks`. Do not rebuild these completed workstreams or describe them as unimplemented.
 
-The [spatial corridor refactor plan](SPATIAL_CORRIDOR_REFACTOR_PLAN.md) specifies the remaining region/route/stage changes. This document records the implemented search invariants and the exact integration obligations. Earlier pre-handoff drafts are superseded; the original source-era plans, experiments and corridor investigation ledgers preserve their evidence. No spatial-refactor runtime is claimed by this update.
+The [spatial corridor refactor plan](SPATIAL_CORRIDOR_REFACTOR_PLAN.md) records the implemented region/route/stage contract and remaining acceptance scope. This document records the implemented search invariants and the exact integration obligations. Earlier pre-handoff drafts are superseded; the original source-era plans, experiments and corridor investigation ledgers preserve their evidence. The implementation-status sections distinguish current runtime from the original integration checklist.
 
 After compaction, use the [implementation resume handoff](../docs/CORRIDOR_IMPLEMENTATION_RESUME.md) and spatial-plan sections10–11. They enumerate the existing DFS `goal_list`/frame/terminal call sites, stage-scoped adapter requirements, virtual-finish outstanding-contact trap and first feature slice. Do not start a second DFS or re-run old investigations as the first implementation action.
+
+## Spatial implementation update (2026-11-03)
+
+The [spatial refactor plan](SPATIAL_CORRIDOR_REFACTOR_PLAN.md#implementation-status) now has the support/air graph, untimed route queue, 3D progress and fixed guard integration, plus stage-derived goals/directions in this existing DFS. Typed routes use schema6; legacy supplied controls retain schema5. `SemanticCorridorAdapter.goals/for_goal` provides each frame an immutable support-stage prefix. `RouteGuards` supplies fixed disjunctive axis-sweep rows through `ConstraintVariants`; physical events, owned row retention, full-history facings, accepted variants, minimum-run tables and suspended work retain their existing owners.
+
+The automatic path requires no authored support order or comparison clocks. Comparisons are selected support visits and the true terminal predicate; intervening portals are untimed membership/progress events. Optional explicit zero-width portal comparisons are not required by this path and have no epsilon-box implementation. The outgoing objective derives from the selected stage's guide segments using existing helpers. A free virtual finish has no fallback physical-B7 requirement.
+
+Normal support opportunities are conditioned on the selected stage before normal landing rows are built; the imported interaction gate still screens normal/step/ceiling physics. Named internal probes retain unknown route status when their geometry is absent from shared diagnostics. No global continuation-time bound or sibling decision transfer was added. The source-stable matched300-second Real11 run found no automatic finish in13 calls (5 unique partial witnesses replayed); supplied routing found T67 in41 calls (51 replay checks). Coverage of the archived64-input itinerary passes separately. The final native gate passes420 selected tests with no skips/failures and sourceUnchanged=true; dedicated ladder modules remain outside its scope. See the [evidence and limitations](experiments/automatic-corridors/README.md); these outcomes do not prove infeasibility or optimality.
+
+Movement-generation context3 hashes physical scene fields and normalized domain settings without allocation-size duplication. Both DFS and outer queue include `movementGenerationPolicy=3` and reject older continuations explicitly. Allocation changes preserve all pending candidates; changed input horizons still reject.
+
+### Contact-phase and persistent promotion boundary
+
+Typed physical goals record a required occurrence plus optional outgoing air/portal occurrences, so post-landing X/Z can leave the finite support within the same input. A physical terminal route may end its requirement at contact; physical replay still checks the whole input. Virtual finish remains a full endpoint predicate.
+
+Typed `choose` and child ownership form one published transaction; callbacks cannot save a tried arrival without its child. An expired allocation can finish this pure promotion before the next numerical dispatch check. The outer queue continues actual newly committed children and yields stalled work. Typed generation scores the first ready proposal and retains the rest in the existing iterator; it does not introduce another buffer/window drain. These policies are fingerprinted and legacy controls are unchanged. Focused regressions reproduce the previous delayed promotion, catalogue drain, contact-prefix rejection and half-published choice.
 
 ## 1. Implemented search behavior and current task
 
@@ -12,7 +28,7 @@ After compaction, use the [implementation resume handoff](../docs/CORRIDOR_IMPLE
 
 Current Real11 finish is the **descending height7 clock with player-center X<729.7 and Z>=−1095.3**, minimizing the achieved tick T first and maximizing Z[T] second. Use `terminal_goals` and the canonical [virtual-finish fixture](experiments/virtual-finish/fixture.json). The target has no new lower X or upper Z bound and is not an artificial collision floor. A free overshoot can end below height7 and airborne. A physical finite B7 contact is a separate valid final model with actual collision constraints. The 200-input horizon is a guard, not a fixed finish64.
 
-The current fixture still supplies B2→B3→B4→B5 and initial0/8 as explicit controls. The spatial refactor will automatically discover untimed support/contact and 3D passage itineraries, rather than demand that intermediate order from input. Once a route selects a support visit, its inner search must realize it. Overflight and landing/run-off are different spatial routes even if X/Z projections match; local timing and facings remain variable within the selected itinerary. Finite-support terminal tasks remain supported as separate generic cases.
+The current fixture still supplies B2→B3→B4→B5 and initial0/8 as explicit controls. The automatic spatial path now discovers untimed support/contact and 3D passage itineraries, rather than demand that intermediate order from input. Once a route selects a support visit, its inner search must realize it. Overflight and landing/run-off are different spatial routes even if X/Z projections match; local timing and facings remain variable within the selected itinerary. Finite-support terminal tasks remain supported as separate generic cases.
 
 ## 2. Compare candidates at the same point
 
@@ -60,9 +76,9 @@ Current virtual-goal execution expands the finite collision-query envelope from 
 
 Each numerical alternative contains fixed inputs, actual selected interactions and all claimed in-scope constraints before IPOPT. Reuse the imported effective-model deduplication, constraint builders and exact solve identities. Final physical acceptance remains independent of route membership.
 
-## 4. Existing persistent DFS and pending route-stage extension
+## 4. Persistent DFS and implemented route-stage extension
 
-Current schema is5, `kind=ordered_goal_dfs`. Frames retain parent/goal identity, ready/scored candidates, generator cursor, numerical in-flight state, siblings, accepted variants, refinements and unknown/suspended work. Each unfinished frame has exactly one execution owner. The incumbent survives deadline and resume.
+Supplied legacy routes use schema5 and typed route stages use schema6, both `kind=ordered_goal_dfs`. Frames retain parent/goal identity, ready/scored candidates, generator cursor, numerical in-flight state, siblings, accepted variants, refinements and unknown/suspended work. Each unfinished frame has exactly one execution owner. The incumbent survives deadline and resume.
 
 Extend those frames with semantic route key, stage occurrence/variant cursor and task goal identity. Preserve existing child selection, descent and backtracking. Version/context changes must be explicit; pre-local-run schema5 states already differ by policy fingerprint and cannot silently resume as equivalent. Persist transitions before dispatch and after results/backtracking. Do not deserialize the old checkpoint queue or a legacy horizontal route signature as exact new-stage continuation.
 

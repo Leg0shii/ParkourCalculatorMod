@@ -1,0 +1,34 @@
+--- a/standalone/autonomy/cell_routes/depth_first.py
++++ b/standalone/autonomy/cell_routes/depth_first.py
+@@ -90,7 +90,7 @@
+         windows=window_plan, filter=getattr(program_filter, 'checkpoint_identity', None),
+         margins=[time_margin,progress_margin], physics=motion,
+         minimumRunPolicy=POLICY_VERSION if minimum_run_pruning else None,
+-        **({'routeStagePolicy':2,'routeCommitPolicy':1} if typed_route else {})))
++        **({'routeStagePolicy':2,'routeCommitPolicy':1,'routeProposalPolicy':1} if typed_route else {})))
+     if resume_state is not None and (resume_state.get('version') != schema or
+             resume_state.get('kind') != 'ordered_goal_dfs' or resume_state.get('context') != context):
+         raise ValueError('Incompatible DFS continuation; old checkpoint queues require explicit reconstruction')
+@@ -304,6 +304,10 @@
+                 if identity not in seen:
+                     f['ready'].append(p)
+                     seen.add(identity)
++                    if typed_route:
++                        # Score the iterator's first ready arrival immediately.
++                        # Remaining proposals stay owned by its saved cursor.
++                        break
+         finally:
+             source.close()
+             state['expanded'] += report.get('continuation',{}).get('expanded',0)-before
+--- a/standalone/autonomy/cell_routes/route_queue.py
++++ b/standalone/autonomy/cell_routes/route_queue.py
+@@ -59,7 +59,8 @@
+     saved=options.pop('resume_state',None)
+     if saved is not None and options.get('initial_programs') is None:
+         options['initial_programs']=saved.get('initialRoots')
+-    context=digest(dict(version=1,allocationPolicy=2,routeStagePolicy=2,routeCommitPolicy=1,graph=graph.context,task=task_goal,spatial=spatial,
++    context=digest(dict(version=1,allocationPolicy=2,routeStagePolicy=2,routeCommitPolicy=1,routeProposalPolicy=1,
++        graph=graph.context,task=task_goal,spatial=spatial,
+         scene={k:v for k,v in scene.items() if k!='movementSearch'},
+         domain={k:v for k,v in cfg.items() if k not in ('maxPrefixes','maxQueuedPrefixes','maxChoicesPerType','expansionsPerProposal')},
+         roots=options.get('initial_programs'),filter=getattr(policy,'checkpoint_identity',None),

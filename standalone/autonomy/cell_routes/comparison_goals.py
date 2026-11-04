@@ -17,8 +17,11 @@ def goal_spec(scene, spec=None):
         from standalone.autonomy.terminal_goals import prepare_goal
         return prepare_goal(spec)
     if spec.get('kind')=='landing':
-        if set(spec)-{'kind','block'} or spec.get('block') not in {b['id'] for b in scene['blocks']}:
+        if set(spec)-{'kind','block','blocks','surface'} or spec.get('block') not in {b['id'] for b in scene['blocks']}:
             raise ValueError('Landing comparison requires a scene block')
+        if 'blocks' in spec and (not isinstance(spec['blocks'],list) or not spec['blocks'] or
+                spec['block'] not in spec['blocks'] or any(b not in {v['id'] for v in scene['blocks']} for b in spec['blocks'])):
+            raise ValueError('Landing surface requires its physical support alternatives')
     elif spec.get('kind')=='region':
         if set(spec)-{'kind','region','segment','first_tick','y'}:
             raise ValueError('Unsupported region comparison fields')

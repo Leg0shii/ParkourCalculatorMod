@@ -1,14 +1,43 @@
 # Spatial corridor refactor: preserve support visits and 3D passage choices
 
-2026-11-03. Spatial-refactor implementation contract. Milestone1 (support-aligned refinement and typed region graph) is implemented; route enumeration, progress, fixed guards and DFS integration remain pending. Updated after importing [CORRIDOR_AGENT_HANDOFF](../docs/CORRIDOR_AGENT_HANDOFF.md) through `61355976`, merged as `984b701b` into isolated branch `research/real11-initial-run-ticks`. The earlier geometry diagnostics remain source-specific at `93652150`. This plan specifies the spatial representation and its integration with the **implemented** [DFS/interaction search](DFS_INTERACTION_IMPLEMENTATION_PLAN.md). It supersedes that plan's earlier sections2.1–2.5 where route identity or division of work differs. Preserve the imported runtime protections below rather than reimplementing them. Only committed handoff changes were imported; the source checkout's in-progress retry was left untouched.
+2026-11-03. Spatial-refactor implementation contract. The geometry, typed route/progress/guard and DFS integration are implemented. Stored-scene coverage and matched cold evidence are recorded below; automatic Real11 completion remains a measured performance limitation. Updated after importing [CORRIDOR_AGENT_HANDOFF](../docs/CORRIDOR_AGENT_HANDOFF.md) through `61355976`, merged as `984b701b` into isolated branch `research/real11-initial-run-ticks`. The earlier geometry diagnostics remain source-specific at `93652150`. This plan specifies the spatial representation and its integration with the **implemented** [DFS/interaction search](DFS_INTERACTION_IMPLEMENTATION_PLAN.md). It supersedes that plan's earlier sections2.1–2.5 where route identity or division of work differs. Preserve the imported runtime protections below rather than reimplementing them. Only committed handoff changes were imported; the source checkout's in-progress retry was left untouched.
 
 For compact-resume checkout/state/commands and the next action, use [CORRIDOR_IMPLEMENTATION_RESUME.md](../docs/CORRIDOR_IMPLEMENTATION_RESUME.md). Sections10–11 below provide the implementation API/call-site checklist, first slice and test matrix; this is not only a conceptual design.
 
 ## Implementation status
 
-Milestone1 implemented2026-11-03: `geometry.decompose` refines incident above-support cells at finite footprint edges, retaining residual air and boundary strata and recording parent incidence. `regions.py` canonicalizes exact exposed planar unions and creates explicit support/air nodes with directed open/contact links (graph schema1). Contact links are geometric candidates requiring physical interaction; they are not certified jumps. The legacy corridor enumerator/adapter/DFS still operate under their existing contract until subsequent milestones land.
+2026-11-03: milestone1 committed at `f9aa0d96`; milestones2–5 are implemented in the isolated worktree. Milestone6 has coverage and matched cold evidence; it does not establish automatic Real11 completion or optimality. This section describes actual code; the detailed sections below preserve the design contract and acceptance checklist.
 
-Verification:29 geometry/region/legacy-route/local-adapter tests and52 focused native DFS/interaction/terminal tests pass, no skips. Stored-geometry diagnostic:33→47 cells,7 support components, with actual rectangle SVG and exact incidence dump in [semantic-regions audit](experiments/linkcraft11-opening/audit/semantic-regions-2026-11-03.json). No cold numerical retry or helper rebuild. Continue milestone2; milestone1 is not the completed refactor.
+| Layer | Implemented behavior |
+| --- | --- |
+| Geometry | Support-aligned raw refinement (stored Real11:33→47 cells), exact exposed support unions and physical provenance. Overlapping free convex transit cuboids remove artificial extended subtraction planes while retaining the raw geometry/incidence. |
+| Typed graph/routes | Region graph1, corridor2; directed physical support arrival/departure, finite 3D openings, virtual predicate. Ordered occurrences and compatible complete variants survive normalization. Bounded spatial frontier and emitted families resume. |
+| Movement context | Existing zero-threshold normal/run-off builders and compiled travel coefficients order ordinary proposals. Last-support flight height/finish context survives air portals. Missing normal proposals leave other methods unknown, never excluded. |
+| Progress/guards | Shared slab intersection primitive, Y→X→Z progress and actual support events. Connected 3D axis-sweep branches enter `ConstraintVariants` before numerical dispatch. A phase can cross several portals. Unknown named internal probes never become certified stages or endpoint-height exclusions. |
+| DFS/guidance | Existing DFS with schema6 for typed routes (legacy supplied controls remain schema5). `SemanticCorridorAdapter.goals/for_goal` derive physical comparison goals and immutable prefix views; outgoing guide segments reuse `horizontal_segments`/`Checkpoint.objective`. Physical parts of one support component are landing alternatives. |
+| Task entry | No supplied points/support list/clocks required. `find_checkpoint_route` automatically builds graph/routes when no corridor/points are supplied. `task_goal`, explicit spatial limits, independent `InitialJumpDomain`, bounded route queue and exact inner continuations. |
+
+### Implementation refinements justified by coverage audits
+
+The raw support refinement is retained for geometry and diagnostics, but a linear itinerary through every subtraction cell is too restrictive. It rejected a physically replayed historical witness after B2 merely because it moved north before crossing the artificial X partition. `free_transit_cover` now expands checked free cuboids in all axis orders, including seeds clipped at physical obstacle planes; overlapping convex domains remove those artificial extensions. Every candidate uses the existing open-solid subtraction test. This cover is bounded and is not claimed to enumerate every maximal cuboid. Distinct passages still retain their ordered convex domains/finite interfaces; opposite paths are not unioned into one corridor.
+
+Spatial work is fairly serviced by initial air neighborhood, last physical support and current/terminal region. Ordinary proposals and original-start-compatible departures are ordering hints, not rejection proofs. A free descending finish requires an air region extending below its height; physical clipping at the height finishes through the explicit support state. This preserves both alternatives without inventing a floor. Raw air visits are counted within each physical flight episode; selected support revisits retain ordered occurrences and the explicit visit/depth caps.
+
+The final automatic50-route shortlist admits the archived initial0,64-input virtual-finish witness after independent physical replay, with no witness controls or positions used in enumeration. The intermediate failed coverage audits are retained in `experiments/automatic-corridors/`. This establishes representation coverage, not cold numerical discovery or optimality.
+
+Intermediate comparisons currently use selected physical support visits; all intervening portals remain untimed constraints/progress events and may be crossed in the same input. An optional comparison clock at a zero-width portal is not needed by this execution path and is not implemented as an epsilon box. Named step/grind route certification remains explicitly unknown when shared diagnostics omit internal probe geometry. The existing supplied-scene mechanics/tests remain controls; no new Java physics or instrumentation was introduced.
+
+The first30-second automatic smoke reached the symbolic per-route allocation limit without a numerical call: using the proposal-yield interval as a prefix allocation stopped before an allowed setup could become a landing proposal. Allocation now supplies a full configured choice batch while respecting the original global prefix/call/time caps. The corrected smoke reached validated B2 arrivals; the matched reports below preserve the cold outcome and all pending work.
+
+### Contact-phase and controller completion fixes
+
+Intermediate support views extend through outgoing air/passage occurrences before the next required contact; `required` records the actual comparison occurrence. Landing then running off in the remaining X/Z of the same input is therefore valid. Final finite landing requirements may end at their physical contact phase while scene validation still checks the entire input. Virtual endpoints retain their complete X/Z/height-clock contract.
+
+Typed arrival promotion is checkpoint-atomic. Pure scored selection precedes the next numerical budget check; the child owner exists before publication/window callbacks. The route queue continues a newly committed child in the next bounded allocation, yielding peers after a stall. Typed generators stream the first ready proposal rather than drain a proposal buffer. Existing persistent cursors retain every unconsumed candidate. StagePolicy2, CommitPolicy1, ProposalPolicy1 and AllocationPolicy2 participate in compatibility identity; legacy supplied-controller semantics remain unchanged.
+
+The final source-stable matched300-second comparison made13 automatic worker calls, reached intermediate supports and retained5 unique independently replayed partial witnesses, but found no terminal incumbent (actual303.3s). The supplied control made41 calls and found T67, Z−1093.8231290646224 (actual311.8s); all51 replay checks passed. Neither arm proves minimum time. The final source-stable native gate passes420 tests with zero failures/errors/skips (234.1s); dedicated ladder/climbable/vine/movement-entry modules remain outside this recorded scope. See [complete evidence](experiments/automatic-corridors/README.md). Symbolic guard/physical-avoidance combinations and unresolved fixed models remain costly; this refactor does not bypass their caps or turn deadlines into rejection proofs.
+
+Movement-generation context3 excludes allocation fields carried in the scene as well as settings; `movementGenerationPolicy=3` fingerprints both inner and outer continuations. A generic matched regression exposed the prior incompatibility on a smaller final slice. Candidate-preservation/horizon-rejection controls pass after the fix. The generic matched flat gap gives T14 for both entry paths; with an intermediate support available, automatic overflight gives T17 versus the authored contact route T24, all independently replayed. See the evidence guide for exact budgets and the distinction between different itineraries.
 
 ## 0. Imported baseline and integration requirements
 
@@ -189,7 +218,7 @@ No mod source or continuous-worker change is required. The solver/orchestration 
 
 ## 8. Milestones and acceptance gates
 
-Each milestone is a feature implementation boundary with its tests, fixtures and docs bundled. This planning turn makes no commit.
+Each milestone is a feature implementation boundary with its tests, fixtures and docs bundled. The status above records the implemented scope and measured limits; this checklist preserves the original acceptance contract.
 
 1. **Semantic regions.** Implement/refine finite support components and typed surface/volume regions. Pass existing geometry coverage/boundary tests plus equivalent-box-split, overlapping support, covered-top and B1 corner-union controls. Show real region rectangles/portals, not only guide lines. Done when every usable top patch has a distinct surface node and all residual air/boundary space is retained.
 2. **Route identity and enumeration.** Replace horizontal signatures with the typed graph/stage key. Small exhaustive fixtures must retain both support branches, both obstacle sides, over/under passages and contact versus overflight. Timing changes stay in one route; meaningful revisits stay distinct; subdivision changes do not invent alternatives. Done when reference routes map automatically without supplied order/waypoints and duplicate raw walks cannot consume the semantic route budget.
@@ -254,11 +283,11 @@ The new automatic runner must not require `spatialPoints`, `requiredSupports`, `
 
 Legacy prescribed point routes are explicit diagnostics. A bare polyline can establish geometric passage coverage but cannot certify a contact itinerary; require contact annotations or a validated witness when importing mandatory support stages. No hidden legacy production fallback or feature-flag rollout is required.
 
-Target versioning for the new implementation: region graph schema1, semantic corridor schema2, route-stage DFS schema6. These are future schema versions; current schema5 stays the imported baseline until the feature changes its semantics. Include terminal goal, route key, stage language/geometry, physical scope, generation domain, minimum-run policy version and initial roots in compatibility identities. Reject old raw state with an explanatory message; do not guess a lossless migration from a horizontal signature.
+Target versioning for the new implementation: region graph schema1, semantic corridor schema2, route-stage DFS schema6. These versions are implemented for typed routing; supplied legacy controls retain schema5. Include terminal goal, route key, stage language/geometry, physical scope, generation domain, minimum-run policy version and initial roots in compatibility identities. Reject old raw state with an explanatory message; do not guess a lossless migration from a horizontal signature.
 
 ## 11. First implementation slice and test matrix
 
-Begin after compaction with milestone1, not another Real11 solve or another design restart. The first slice is:
+The original milestone1 slice below is implemented. Resume from the current implementation-status section rather than repeating it:
 
 1. Add rectangle-union canonicalization and exposed support-component extraction in `regions.py`, using existing geometry/provenance.
 2. Extract contact/incidence helpers from `geometry.py` and add local support-footprint refinement while preserving all air/boundary regions.
@@ -266,7 +295,7 @@ Begin after compaction with milestone1, not another Real11 solve or another desi
 4. Add focused generic tests, diagnostic dumps/rectangles and navigation entries. Demonstrate that overflight and support contact can be represented separately before changing enumeration/DFS.
 5. Run the existing geometry/route tests plus the new semantic-region tests. Commit this feature with its tests/docs/fixtures, then continue the remaining milestones. Do not end the overall implementation at milestone1 or describe the whole refactor as shipped.
 
-Proposed cohesive test modules are `test_route_regions`, `test_semantic_routes` and `test_route_progress`; extend existing tests when that avoids duplication. They are proposed names until implemented. Minimum required cases:
+Proposed cohesive test modules are `test_route_regions`, `test_semantic_routes` and `test_route_progress`; extend existing tests when that avoids duplication. These modules are now implemented; `test_route_guards` and `test_semantic_search` extend their integration coverage. Minimum required cases:
 
 | Layer | Cases / assertions |
 | --- | --- |

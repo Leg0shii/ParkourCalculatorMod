@@ -76,12 +76,18 @@ Snapshot at the current DFS implementation source, including request-audit loggi
 | [fixed_clock_experiment.py](../autonomy/cell_routes/fixed_clock_experiment.py) | Current fixed-terminal-clock fixture runner with support-order policy, atomic progress and resume CLI. |
 | [generation_diagnostic.py](../autonomy/cell_routes/generation_diagnostic.py) | Physical/execution keys, generator/queue instrumentation and report saving. |
 | [geometry.py](../autonomy/cell_routes/geometry.py) | AABB subtraction/merging, cells/portals/contact patches, free-space decomposition and segment coverage/SVG. |
-| [regions.py](../autonomy/cell_routes/regions.py) | Exact exposed support unions/components; typed volume/surface graph, directed open/contact links, schema1 dumps and actual rectangle SVG. |
+| [regions.py](../autonomy/cell_routes/regions.py) | Exact support unions; checked overlapping free convex cover, typed graph and ordinary movement proposal context. |
 | [local.py](../autonomy/cell_routes/local.py) | Search work budgets/counters, counting compiler and scoped corridor/scene acceptance adapter. |
 | [minimum_runs.py](../autonomy/cell_routes/minimum_runs.py) | Latest-jump ordinary ground-hold pattern normalization, validated feasible representatives and heuristic extra-run exclusions. |
 | [repair_diagnostic.py](../autonomy/cell_routes/repair_diagnostic.py) | Diagnostic of repair queue allocation and failures. |
 | [repair_resume_experiment.py](../autonomy/cell_routes/repair_resume_experiment.py) | Experiment preserving and resuming inner repair work. |
 | [routes.py](../autonomy/cell_routes/routes.py) | Route enumeration, landmarks/signatures, guide polyline/corridor projection and horizontal traces. |
+| [coverage_audit.py](../autonomy/cell_routes/coverage_audit.py) | Unseeded spatial witness-coverage audit with independent replay and actual rectangle SVGs. |
+| [automatic_experiment.py](../autonomy/cell_routes/automatic_experiment.py) | Cold/resume CLI for unordered geometry/task fixtures, runtime hashes and atomic evidence. |
+| [route_queue.py](../autonomy/cell_routes/route_queue.py) | Automatic task entry, global work guards, bounded route allocations and exact per-route DFS continuation. |
+| [semantic_adapter.py](../autonomy/cell_routes/semantic_adapter.py) | Immutable stage views, inferred support goals, early ordinary support conditioning and outgoing guide objectives. |
+| [route_guards.py](../autonomy/cell_routes/route_guards.py) | Fixed connected axis-sweep/contact/portal alternatives selected through ConstraintVariants before numerical dispatch. |
+| [route_progress.py](../autonomy/cell_routes/route_progress.py) | Ordered 3D phase/contact progress with occurrence and complete-variant cursors; unknown named probes. |
 | [scalar_seed_diagnostic.py](../autonomy/cell_routes/scalar_seed_diagnostic.py) | Synthetic and fixture tests of scalar seed/fallback validity. |
 | [support_order.py](../autonomy/cell_routes/support_order.py) | Fixture policy enforcing a supplied required support order on generated programs. |
 | [time_progress.py](../autonomy/cell_routes/time_progress.py) | Time/progress comparison, same-witness state protections and retained/deferred frontier. |
@@ -124,6 +130,8 @@ These reuse current mod sources. Scripts are evidence tools, not alternative pro
 | File | Purpose |
 | --- | --- |
 | [autonomy/compiler.gradle](../autonomy/compiler.gradle) | Gradle init tasks for shared standalone coefficient/scene Java compiler and local classpath descriptor. |
+| [autonomy/experiments/automatic-corridors/compare.py](../autonomy/experiments/automatic-corridors/compare.py) | Matched automatic/supplied Real11 controls with identical snapshot cadence, exact work reports and independent replays. |
+| [autonomy/experiments/automatic-corridors/compare_generic.py](../autonomy/experiments/automatic-corridors/compare_generic.py) | Small generic matched automatic versus authored-goal controls with complete reports. |
 | [autonomy/experiments/blockage-order/BlockageOrderProbe.java](../autonomy/experiments/blockage-order/BlockageOrderProbe.java) | Probe shared legacy collision-order constraints for signed blockage cases. |
 | [autonomy/experiments/cell-routes/run_benchmarks.py](../autonomy/experiments/cell-routes/run_benchmarks.py) | Run initial generic non-ladder spatial-route benchmark families. |
 | [autonomy/experiments/checkpoint-guidance/plot_diagnostic.py](../autonomy/experiments/checkpoint-guidance/plot_diagnostic.py) | Render checkpoint-guidance diagnostic reports. |

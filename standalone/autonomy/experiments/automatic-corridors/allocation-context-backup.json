@@ -1,0 +1,8 @@
+{
+  "backup": "/var/folders/82/82nvp9f97qxb2wsdqls8lgq40000gn/T/semantic-before-allocation-context-gnygvq0s",
+  "paths": [
+    "standalone/autonomy/movement_frontier.py",
+    "standalone/autonomy/cell_routes/depth_first.py",
+    "standalone/autonomy/cell_routes/route_queue.py"
+  ]
+}

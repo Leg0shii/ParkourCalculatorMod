@@ -1,5 +1,9 @@
 # Linkcraft Real11 opening: agent guide
 
+## Automatic corridor implementation (2026-11-03)
+
+The new [automatic fixture and evidence](../autonomy/experiments/automatic-corridors/README.md) discovers contact/passage itineraries without supplied points, support order or clocks. Typed region/corridor/DFS integration and fixed 3D guard selection are implemented in the isolated branch. The default50-route shortlist admits the archived initial0,64-input witness after independent replay, without seeding discovery. This is representation coverage, not a new cold-search result. The final source-stable300-second comparison found no automatic finish in13 calls; supplied routing found replay-validated T67 in41 calls. This remains a cold-search performance limitation, not an infeasibility result. The supplied virtual fixture below stays an unchanged control; exact B6 extension remains unspecified.
+
 ## Current requested terminal goal: virtual B7 landing (2026-11-03)
 
 The user clarified the intended finish after the fixed-clock benchmark. At the B7-height landing event (height7), use the horizontal goal **X < 729.7 and Z >= -1095.3**, with no goal-imposed lower X bound or upper Z bound. The region is a virtual landing target extending indefinitely toward +Z, not B7's original finite support footprint. Its coordinates are player-center bounds; do not expand them by the hitbox again.

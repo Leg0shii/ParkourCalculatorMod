@@ -159,10 +159,14 @@ def contact_patches(cells, solids, owners):
 
 def refine_support_cells(cells, contacts, *, max_cells, deadline=None):
     """Split only cells incident above a finite support; keep residual air/strata."""
-    by_cell = {}
+    from .regions import canonical_cover
+    by_owner = {}
     for patch in contacts:
         if patch.kind == 'support' and cells[patch.cell].bounds[1] == patch.bounds[1]:
-            by_cell.setdefault(patch.cell, set()).add(patch.bounds)
+            by_owner.setdefault((patch.cell, patch.owner), set()).add(patch.bounds)
+    by_cell = {}
+    for (cell, _), patches in by_owner.items():
+        by_cell.setdefault(cell, set()).update(canonical_cover(patches))
     refined = {}
     for cell in cells:
         if deadline is not None and time.monotonic() >= deadline:
@@ -200,7 +204,7 @@ def decompose(scene, *, max_cells=20000, deadline=None, refine_support=True):
     if any(bounds[a] > bounds[a + 3] for a in range(3)):
         raise ValueError('Scene coverage is smaller than the player body')
     solids = [tuple(expanded_box(b)) for b in geometry['solids']]
-    raw = union_subtract([bounds], solids, max_cells, deadline=deadline)
+    raw = union_subtract([bounds], merge_boxes(solids), max_cells, deadline=deadline)
     volumes = merge_boxes(raw)
     faces = []
     for solid in solids:
@@ -240,25 +244,29 @@ def decompose(scene, *, max_cells=20000, deadline=None, refine_support=True):
              portals=len(portals), contactPatches=len(contacts), elapsedSeconds=time.monotonic() - started), parents)
 
 
+def box_segment_interval(box, start, end, tolerance=1e-9):
+    lo, hi = 0., 1.
+    for axis in range(3):
+        delta = end[axis] - start[axis]
+        if delta == 0:
+            if not box[axis] - tolerance <= start[axis] <= box[axis + 3] + tolerance:
+                return None
+        else:
+            a = (box[axis] - tolerance - start[axis]) / delta
+            b = (box[axis + 3] + tolerance - start[axis]) / delta
+            lo, hi = max(lo, min(a, b)), min(hi, max(a, b))
+    return (max(0., lo), min(1., hi)) if lo <= hi else None
+
+
 def segment_intervals(decomposition, start, end, cell_ids=None, tolerance=1e-9):
     allowed = set(cell_ids) if cell_ids is not None else None
     result = []
     for cell in decomposition.cells:
         if allowed is not None and cell.id not in allowed:
             continue
-        lo, hi = 0., 1.
-        for axis in range(3):
-            delta = end[axis] - start[axis]
-            if delta == 0:
-                if not cell.bounds[axis] - tolerance <= start[axis] <= cell.bounds[axis + 3] + tolerance:
-                    hi = -1
-                    break
-            else:
-                a = (cell.bounds[axis] - tolerance - start[axis]) / delta
-                b = (cell.bounds[axis + 3] + tolerance - start[axis]) / delta
-                lo, hi = max(lo, min(a, b)), min(hi, max(a, b))
-        if lo <= hi:
-            result.append((max(0., lo), min(1., hi), cell.id))
+        interval = box_segment_interval(cell.bounds, start, end, tolerance)
+        if interval is not None:
+            result.append((*interval, cell.id))
     return sorted(result)
 
 
@@ -276,8 +284,8 @@ def segment_covered(decomposition, start, end, cell_ids=None, tolerance=1e-9):
     return False
 
 
-def diagnostic_svg(decomposition, *, y):
-    b = decomposition.bounds
+def diagnostic_svg(decomposition, *, y, bounds=None):
+    b = bounds or decomposition.bounds
     width, height = b[3] - b[0], b[5] - b[2]
     lines = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{b[0]} {b[2]} {width} {height}">']
     stroke = max(width, height) / 600

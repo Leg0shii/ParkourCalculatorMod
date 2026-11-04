@@ -1,0 +1,342 @@
+[
+  {
+    "name": "flat-gap",
+    "request": {
+      "version": 1,
+      "sceneModel": "collision_boxes",
+      "geometryBounds": [
+        -10,
+        -5,
+        -10,
+        20,
+        12,
+        10
+      ],
+      "initial": {
+        "position": [
+          0.5,
+          1,
+          0.5
+        ],
+        "velocity": [
+          0.25,
+          -0.0784000015258789,
+          0
+        ],
+        "yaw": -90
+      },
+      "startBlock": "start",
+      "goalBlock": "goal",
+      "maxWallHits": 0,
+      "maxContactCombinations": 0,
+      "blocks": [
+        {
+          "id": "start",
+          "sourceBlock": "start",
+          "solidIndex": 0,
+          "bounds": [
+            -2,
+            3,
+            -2,
+            2
+          ],
+          "top": 1
+        },
+        {
+          "id": "goal",
+          "sourceBlock": "goal",
+          "solidIndex": 1,
+          "bounds": [
+            5,
+            6,
+            -1,
+            1
+          ],
+          "top": 1
+        }
+      ],
+      "movementSearch": {
+        "types": [
+          "normal"
+        ],
+        "maxInputs": 30,
+        "maxPrefixes": 96,
+        "maxQueuedPrefixes": 128,
+        "maxChoicesPerType": 16
+      },
+      "objective": {
+        "axis": "X",
+        "sense": "MAX"
+      },
+      "maxWallHitCandidates": 24,
+      "maxSteppingProfiles": 128,
+      "maxCombinedEvents": 3,
+      "ceilingHits": true,
+      "collisionScene": {
+        "version": 1,
+        "profile": "minecraft-1.8.9",
+        "bounds": [
+          -10,
+          -5,
+          -10,
+          20,
+          12,
+          10
+        ],
+        "solids": [
+          [
+            -2,
+            0,
+            -2,
+            3,
+            1,
+            2
+          ],
+          [
+            5,
+            0,
+            -1,
+            6,
+            1,
+            1
+          ]
+        ],
+        "stepHeight": 0.6
+      },
+      "stairBoost": true,
+      "inputs": {
+        "sprint": true,
+        "force45": true,
+        "forward": 0.9800000190734863,
+        "strafe": 0.0,
+        "incomingSprint": false
+      },
+      "maxJumps": 4,
+      "maxPrefixes": 200,
+      "maxQueuedPrefixes": 4000,
+      "maxRunTicksPerJump": 6,
+      "maxTotalRunTicks": 12,
+      "maxFlightInputs": 200,
+      "maxContactBranches": 16,
+      "maxBlockagesPerObstacle": 3,
+      "maxHorizontalBlockagesPerObstacle": 2,
+      "maxVerticalBlockagesPerObstacle": 2,
+      "maxPassageCandidates": 128,
+      "supportClearance": 1e-06
+    },
+    "spatialPoints": [
+      [
+        0.5,
+        1,
+        0.5
+      ],
+      [
+        5.5,
+        1,
+        0
+      ]
+    ],
+    "spatialGoals": [
+      {
+        "kind": "landing",
+        "block": "goal"
+      }
+    ],
+    "spatialSettings": {
+      "max_routes": 12,
+      "max_expansions": 3000,
+      "max_visits": 1
+    },
+    "settings": {
+      "seconds": 12,
+      "max_solver_calls": 8,
+      "candidate_seconds": 0.7,
+      "score_seconds": 2
+    },
+    "provenance": "Physical scene copied from existing generic native semantic regression fixtures; no movement inputs or facings supplied"
+  },
+  {
+    "name": "intermediate-support",
+    "request": {
+      "version": 1,
+      "sceneModel": "collision_boxes",
+      "geometryBounds": [
+        -4,
+        -4,
+        -5,
+        10,
+        9,
+        7
+      ],
+      "initial": {
+        "position": [
+          0.5,
+          1,
+          0.5
+        ],
+        "velocity": [
+          0,
+          -0.0784000015258789,
+          0
+        ],
+        "yaw": -90
+      },
+      "startBlock": "start",
+      "goalBlock": "goal",
+      "blocks": [
+        {
+          "id": "start",
+          "sourceBlock": "start",
+          "solidIndex": 0,
+          "bounds": [
+            0,
+            1,
+            0,
+            1
+          ],
+          "top": 1
+        },
+        {
+          "id": "wall",
+          "sourceBlock": "wall",
+          "solidIndex": 1,
+          "bounds": [
+            2,
+            3,
+            0,
+            1
+          ],
+          "top": 1
+        },
+        {
+          "id": "goal",
+          "sourceBlock": "goal",
+          "solidIndex": 2,
+          "bounds": [
+            5,
+            6,
+            0,
+            1
+          ],
+          "top": 1
+        }
+      ],
+      "maxWallHits": 0,
+      "maxContactCombinations": 0,
+      "movementSearch": {
+        "types": [
+          "normal"
+        ],
+        "maxInputs": 30,
+        "maxPrefixes": 24,
+        "maxChoicesPerType": 12
+      },
+      "objective": {
+        "axis": "X",
+        "sense": "MAX"
+      },
+      "maxWallHitCandidates": 24,
+      "maxSteppingProfiles": 128,
+      "maxCombinedEvents": 3,
+      "ceilingHits": true,
+      "collisionScene": {
+        "version": 1,
+        "profile": "minecraft-1.8.9",
+        "bounds": [
+          -4,
+          -4,
+          -5,
+          10,
+          9,
+          7
+        ],
+        "solids": [
+          [
+            0,
+            0,
+            0,
+            1,
+            1,
+            1
+          ],
+          [
+            2,
+            0,
+            0,
+            3,
+            1,
+            1
+          ],
+          [
+            5,
+            0,
+            0,
+            6,
+            1,
+            1
+          ]
+        ],
+        "stepHeight": 0.6
+      },
+      "stairBoost": true,
+      "inputs": {
+        "sprint": true,
+        "force45": true,
+        "forward": 0.9800000190734863,
+        "strafe": 0.0,
+        "incomingSprint": false
+      },
+      "maxJumps": 4,
+      "maxPrefixes": 200,
+      "maxQueuedPrefixes": 4000,
+      "maxRunTicksPerJump": 6,
+      "maxTotalRunTicks": 12,
+      "maxFlightInputs": 200,
+      "maxContactBranches": 16,
+      "maxBlockagesPerObstacle": 3,
+      "maxHorizontalBlockagesPerObstacle": 2,
+      "maxVerticalBlockagesPerObstacle": 2,
+      "maxPassageCandidates": 128,
+      "supportClearance": 1e-06
+    },
+    "spatialPoints": [
+      [
+        0.5,
+        1,
+        0.5
+      ],
+      [
+        2.5,
+        1,
+        0.5
+      ],
+      [
+        5.5,
+        1,
+        0.5
+      ]
+    ],
+    "spatialGoals": [
+      {
+        "kind": "landing",
+        "block": "wall"
+      },
+      {
+        "kind": "landing",
+        "block": "goal"
+      }
+    ],
+    "spatialSettings": {
+      "max_routes": 12,
+      "max_expansions": 3000,
+      "max_visits": 1
+    },
+    "settings": {
+      "seconds": 12,
+      "max_solver_calls": 8,
+      "candidate_seconds": 0.7,
+      "score_seconds": 2
+    },
+    "provenance": "Physical scene copied from existing generic native semantic regression fixtures; no movement inputs or facings supplied"
+  }
+]

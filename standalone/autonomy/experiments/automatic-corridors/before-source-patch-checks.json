@@ -1,0 +1,34 @@
+[
+  {
+    "stage": "streaming",
+    "reversePatches": [
+      "allocation-context-fix.patch",
+      "first-ready-streaming-fix.patch"
+    ],
+    "passed": true,
+    "files": {
+      "standalone/autonomy/cell_routes/depth_first.py": "892b84529dfe8afe36650221124f98b8a0d79b20d08696154de41bd1cdd56429",
+      "standalone/autonomy/cell_routes/route_guards.py": "546a5ebdf27044ecb430f846adec35e96f60a3c7cda49555ddf8aad2d0b2ee4c",
+      "standalone/autonomy/cell_routes/route_progress.py": "d6e1edc8998a546d39cd97398048370ee70b85c294cb2f92766ee3bc84275dc1",
+      "standalone/autonomy/cell_routes/route_queue.py": "f81608c2db2724b3f0b5fb924241c19381a51b7e4f2ddb09809c944b25eb06ed",
+      "standalone/autonomy/cell_routes/semantic_adapter.py": "9e061910a306dcc215ad1bf088ee94a9b087c80753549602c2664e30b30a42e4",
+      "standalone/autonomy/movement_frontier.py": "1671e0015f33a5645d1d66fc458e3b4dc2eb005ac25769b7bb8532d13a1065ac"
+    }
+  },
+  {
+    "stage": "contact",
+    "reversePatches": [
+      "allocation-context-fix.patch",
+      "contact-promotion-fix.patch"
+    ],
+    "passed": true,
+    "files": {
+      "standalone/autonomy/cell_routes/depth_first.py": "1984be62f248d0120279e23b080494a08ea5d3f27546362e50263b2e7e3959ef",
+      "standalone/autonomy/cell_routes/route_guards.py": "b285349e3eae456cfc4df6cb7df2fe7fa4fa2955718ab4d7346936c5f6a614c3",
+      "standalone/autonomy/cell_routes/route_progress.py": "aeae6e224e04f3bb78812c40afaad2b1fa8191245eed9c9187501ab9ab91cec0",
+      "standalone/autonomy/cell_routes/route_queue.py": "d60f90ffb8559a1c52102a94b24b70bb66b188683e3ff1c3442d97b319fb9766",
+      "standalone/autonomy/cell_routes/semantic_adapter.py": "efbcf68d011fbdc719ceac6073c63b4b9fb1e5abd0d375683f0c03538d6e6ec8",
+      "standalone/autonomy/movement_frontier.py": "1671e0015f33a5645d1d66fc458e3b4dc2eb005ac25769b7bb8532d13a1065ac"
+    }
+  }
+]
