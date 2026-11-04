@@ -194,7 +194,7 @@ def solve(request, *, seconds=None, stop_on_feasible=None, python_executable=Non
             'problem': {'ticks': problem['ticks'], 'constraints': len(problem['walls']),
                         'contacts': len(problem['contacts']), 'threshold': problem['threshold'],
                         'objective': problem['objective'], 'source': problem.get('source')},
-            'termination': termination, 'workerStatus': worker_status, 'error': error,
+            'termination': termination, 'workerStatus': worker_status, 'workerLaunched': process is not None, 'error': error,
             'tolerance': TOLERANCE, 'phases': phases,
             'diagnostics': {'rejectedCandidates': rejected, 'lastRejection': last_rejection,
                             'stderr': list(stderr)}}

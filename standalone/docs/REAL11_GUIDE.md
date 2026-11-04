@@ -1,10 +1,18 @@
 # Linkcraft Real11 opening: agent guide
 
+## Physical B7 and anchor implementation (2026-11-04)
+
+The [fresh fixture](../autonomy/experiments/anchor-feasibility/real11-anchors.json) extends B7 one block +Z to `[729,0,-1095,730,7,-1093]` and requires actual B7 landing. It minimizes achieved T, then maximizes Z; terminal guide is `(729.5,7,-1093)`. Normal body-overlap support still applies. The old virtual target/extra X<729.7 row is absent from the new fixture.
+
+The new default physical-task engine uses caller-declared anchors B2/B3/B4/B5, backward/onward guides, intermediate early stopping, global hard-jump latches and recoverable ordinary extra runs. Internal queries check selected completed decisions without future anchor rows or fixed intermediate poses. The preliminary binary110° turn heuristic records its edge/margin/distances/keys and replay drift. Multiple jumps on the current block remain available; inter-block returns are [deferred](../autonomy/REVISIT_DISCOVERY_DEFERRED_PLAN.md).
+
+[New-task implementation and evidence](../autonomy/experiments/anchor-feasibility/README.md), [plan](../autonomy/ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md), and [resume](ANCHOR_IMPLEMENTATION_RESUME.md) describe current source/verification. The2026-11-03 results below remain historical controls with original geometry/virtual semantics. B6's reported extension still needs actual bounds.
+
 ## Automatic corridor implementation (2026-11-03)
 
 The new [automatic fixture and evidence](../autonomy/experiments/automatic-corridors/README.md) discovers contact/passage itineraries without supplied points, support order or clocks. Typed region/corridor/DFS integration and fixed 3D guard selection are implemented in the isolated branch. The default50-route shortlist admits the archived initial0,64-input witness after independent replay, without seeding discovery. This is representation coverage, not a new cold-search result. The final source-stable300-second comparison found no automatic finish in13 calls; supplied routing found replay-validated T67 in41 calls. This remains a cold-search performance limitation, not an infeasibility result. The supplied virtual fixture below stays an unchanged control; exact B6 extension remains unspecified.
 
-## Current requested terminal goal: virtual B7 landing (2026-11-03)
+## Previous terminal goal: virtual B7 landing (2026-11-03)
 
 The user clarified the intended finish after the fixed-clock benchmark. At the B7-height landing event (height7), use the horizontal goal **X < 729.7 and Z >= -1095.3**, with no goal-imposed lower X bound or upper Z bound. The region is a virtual landing target extending indefinitely toward +Z, not B7's original finite support footprint. Its coordinates are player-center bounds; do not expand them by the hitbox again.
 
@@ -16,9 +24,9 @@ The generic `terminal_goals` adapter and the [new fixture](../autonomy/experimen
 
 This guide first describes the archived pre-DFS audit. [Current DFS cold/resume results](../autonomy/experiments/dfs-interactions/README.md) and evidence are a separate, newer corpus. Generic code must not depend on these labels/coordinates/ticks. [Current state](CURRENT_STATE.md) and [current DFS/interaction plan](../autonomy/DFS_INTERACTION_IMPLEMENTATION_PLAN.md) supersede old pilot policies. Read the archived ledgers to answer existing questions before rerunning jobs.
 
-## Current requested task and historical benchmark
+## Implemented virtual baseline and historical benchmark
 
-The current finish is the implemented **virtual height7 crossing described above**, superseding the earlier literal-finite-B7 interpretation in the source-era capability discussion. The [corridor handoff](CORRIDOR_AGENT_HANDOFF.md) through `61355976` is imported at merge `984b701b`; [spatial-plan section0](../autonomy/SPATIAL_CORRIDOR_REFACTOR_PLAN.md#0-imported-baseline-and-integration-requirements) lists compatibility requirements. The automatic spatial path must discover intermediate supports rather than require a supplied B2/B3/B4/B5 list; the canonical virtual fixture still supplies that route as a control. Intentional wall hits remain future work. B6's reported rightward extension lacks exact revised bounds. Historical capability audits describe their inspected `93652150` code, not the new implementation status.
+The accepted baseline finish is the implemented **virtual height7 crossing described above**, superseding the earlier literal-finite-B7 interpretation in the source-era capability discussion. The [corridor handoff](CORRIDOR_AGENT_HANDOFF.md) through `61355976` is imported at merge `984b701b`; [spatial-plan section0](../autonomy/SPATIAL_CORRIDOR_REFACTOR_PLAN.md#0-imported-baseline-and-integration-requirements) lists compatibility requirements. The automatic spatial path must discover intermediate supports rather than require a supplied B2/B3/B4/B5 list; the canonical virtual fixture still supplies that route as a control. Intentional wall hits remain future work. B6's reported rightward extension lacks exact revised bounds. Historical capability audits describe their inspected `93652150` code, not the new implementation status.
 
 Spatial contract clarified subsequently: different supports and 3D passages distinguish routes; overflight and landing/run-off are different even with identical horizontal projections. Support itineraries are discovered automatically by the spatial layer, then realized by local timing/method search. See the [concrete refactor proposal](../autonomy/SPATIAL_CORRIDOR_REFACTOR_PLAN.md). Earlier diagnostic grouping and supplied support lists are historical, not the desired route contract.
 

@@ -26,7 +26,7 @@ def discovery_settings(settings=None):
     return defaults
 
 
-def search_event_routes(request, compiler, *, task_goal=None, discovery=None, **options):
+def search_event_routes(request, compiler, *, task_goal=None, discovery=None, anchor_search=None, **options):
     from .checkpoint_search import _motion_bound
     from .depth_first import search_goals
     started=time.monotonic(); deadline=started+options['seconds']
@@ -35,6 +35,12 @@ def search_event_routes(request, compiler, *, task_goal=None, discovery=None, **
         raise ValueError('Automatic event discovery derives its own contact/finish goals')
     scene=prepare_scene(request)
     task=goal_spec(scene,task_goal if task_goal is not None else options.get('spatial_goal'))
+    anchor_policy=None
+    if task['kind']=='landing' or anchor_search is not None:
+        from .anchor_policy import settings, semantic_settings
+        anchor_policy=settings(anchor_search or {},scene)
+        if task['kind']!='landing':
+            raise ValueError('Anchor search requires a finite physical landing task')
     saved=options.get('resume_state')
     policy=options.get('program_filter')
     roots=options.get('initial_programs')
@@ -43,12 +49,15 @@ def search_event_routes(request, compiler, *, task_goal=None, discovery=None, **
     cfg=movement_settings(scene)
     cfg['types']=[t for t in cfg['types'] if t in ('normal','ceiling','stepping')]
     scene['movementSearch']=cfg
-    context=digest(dict(policy=3,constraintPolicy=7,scene={k:v for k,v in scene.items() if k!='movementSearch'},
+    context=digest(dict(policy=4 if anchor_policy else 3,
+        **(dict(anchorPolicy=semantic_settings(anchor_policy)) if anchor_policy else {}),
+        constraintPolicy=7,scene={k:v for k,v in scene.items() if k!='movementSearch'},
         task=task,roots=roots,filter=getattr(policy,'checkpoint_identity',None),
         minimumRuns=options['minimum_run_pruning'],
         domain={k:v for k,v in cfg.items() if k not in
             ('maxPrefixes','maxQueuedPrefixes','maxChoicesPerType','expansionsPerProposal')}))
-    if saved is not None and (saved.get('schema')!=1 or saved.get('kind')!='event_route_search' or saved.get('context')!=context):
+    schema=2 if anchor_policy else 1
+    if saved is not None and (saved.get('schema')!=schema or saved.get('kind')!='event_route_search' or saved.get('context')!=context):
         raise ValueError('Incompatible automatic event continuation; cell-walk/schema6 states require their source-era runner')
     counted=CountingCompiler(compiler)
     if saved is not None:
@@ -63,7 +72,7 @@ def search_event_routes(request, compiler, *, task_goal=None, discovery=None, **
             scene['movementSearch']=cfg
         domain=build_route_domain(scene,task,deadline=deadline)
         data=domain.to_dict()
-        state=dict(schema=1,kind='event_route_search',context=context,domain=data,graph=build_event_graph(data),
+        state=dict(schema=schema,kind='event_route_search',context=context,domain=data,graph=build_event_graph(data),
             dfs=None,initialRoots=copy.deepcopy(roots),effectiveRequest=request,best=None,sessions=0,allocations=[])
     state['sessions']+=1
     motion=state.get('motion')
@@ -72,12 +81,21 @@ def search_event_routes(request, compiler, *, task_goal=None, discovery=None, **
         state['motion']=motion
     adapter=EventGuideAdapter(state['domain'],state['graph'],motion=motion,compiler=counted,
                               candidate_seconds=options['candidate_seconds'])
-    calls=0; expanded=0; allocations=[]
+    if anchor_policy is not None:
+        from .anchor_adapter import AnchorAdapter
+        adapter=AnchorAdapter(state['domain'],state['graph'],anchor_policy,motion=motion,compiler=counted,
+                              candidate_seconds=options['candidate_seconds'])
+        state['anchorPolicy']=anchor_policy
+        state['guidePlan']=adapter.guide_plan
+    calls=0; expanded=0; allocations=[]; worker_calls=0; seed_returns=0
     used=dict(expansions=0,materializations=0)
     termination='exhausted'
     last=None
     def accepted_program(program):
         from ..solve_spec import motion_record
+        if anchor_policy is not None:
+            from .anchor_policy import within_caps
+            if not within_caps(request,program):return False
         movement=motion_record(program)
         if movement is not None and any(name in request and movement[field]>request[name]
                 for name,field in (('maxTotalRunTicks','runs'),('maxJumps','jumps'))):
@@ -113,12 +131,13 @@ def search_event_routes(request, compiler, *, task_goal=None, discovery=None, **
         dfs=state['dfs']
         for k in used:used[k]+=dfs['discoveryWork'][k]
         calls+=last['work'].get('solverCalls',0);expanded+=last['expandedPrefixes']
+        worker_calls+=last['work'].get('workerLaunches',0);seed_returns+=last['work'].get('feasibleSeedReturns',0)
         after_depth=max((f['index'] for f in dfs['stack']),default=-1)
         advanced=after_depth>before_depth
         allocation=dict(calls=last['work'].get('solverCalls',0),expanded=last['expandedPrefixes'],
             termination=last['termination'],beforeDepth=before_depth,afterDepth=after_depth,advanced=advanced)
         allocations.append(allocation);state['allocations'].append(allocation)
-        if not advanced and dfs['stack'] and dfs['goalQueue']:
+        if anchor_policy is None and not advanced and dfs['stack'] and dfs['goalQueue']:
             # Each frame contains its actual parent/program/cursor. Parking a
             # stack changes service order only, never adopts a sibling child.
             dfs['goalQueue'].extend(reversed(dfs['stack']))
@@ -140,12 +159,22 @@ def search_event_routes(request, compiler, *, task_goal=None, discovery=None, **
     report=dict(last or {})
     report.update(status='feasible' if state['best'] else 'cancelled' if termination=='cancelled' else 'unknown',
         termination=termination,best=state['best'],searchState=state,effectiveRequest=request,taskGoal=task,
-        work=dict(solverCalls=calls,maxSolverCalls=options['max_solver_calls']),expandedPrefixes=expanded,
+        work=dict(solverCalls=calls,workerLaunches=worker_calls,feasibleSeedReturns=seed_returns,
+                  maxSolverCalls=options['max_solver_calls']),expandedPrefixes=expanded,
         elapsedSeconds=time.monotonic()-started,compiler=counted.summary(),backend='event_goals_v1',
         routeGeneration=dict(backend='event_goals_v1',events=len(state['graph']['events']),**used,
             coverage=state['domain']['coverage'],completeEnumeration=False),routeAttempts=allocations,
         routeWorkUnits=sum(len(v) for v in state['dfs']['goalOwners'].values()) if state['dfs'] else 0,
         coverageProven=False,objectiveOptimalityProven=False,minimumTicksProven=False,
         resume=dict(exact=saved is not None,session=state['sessions']))
+    if anchor_policy is not None and state['dfs']:
+        from .turn_observability import summary
+        report['anchorSearch']=dict(policy=anchor_policy,guidePlan=adapter.guide_plan,
+            hardLatches=state['dfs']['hardLatches'],latchRevision=state['dfs']['latchRevision'],
+            nodes=state['dfs']['nodeResults'],observations=summary(state['dfs']['observations']),
+            runDeferrals=len(state['dfs']['minimumRunExclusions']),
+            runRestorations=sum(r.get('restored',False) for r in state['dfs']['minimumRunExclusions']))
+        report['backend']='anchor_goals_v1'
+        report['routeGeneration']['backend']='anchor_goals_v1'
     if options.get('on_progress'):options['on_progress'](state)
     return report

@@ -1,0 +1,5 @@
+{
+  "status": "interrupted",
+  "reason": "Restarted after default physical-task policy and selected-descent scheduling were corrected",
+  "acceptance": false
+}

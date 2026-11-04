@@ -1,6 +1,103 @@
 # Function and test definition index
 
-Source snapshot: generic event discovery implementation, including the imported DFS/request audit and current changed modules. Line numbers are navigation hints; use `rg` after edits. This is a locator, not a replacement for [function contracts](ARCHITECTURE.md). Includes every top-level Python function/class and class method, plus test methods. Nested callbacks remain in their enclosing function. Java entry points are in the [code map](CODE_MAP.md).
+Source snapshot: anchor DFS and generic event discovery implementation, including the imported DFS/request audit and current changed modules. Line numbers are navigation hints; use `rg` after edits. This is a locator, not a replacement for [function contracts](ARCHITECTURE.md). Includes every top-level Python function/class and class method, plus test methods. Nested callbacks remain in their enclosing function. Java entry points are in the [code map](CODE_MAP.md).
+
+## [autonomy/cell_routes/anchor_adapter.py](../autonomy/cell_routes/anchor_adapter.py)
+
+- `AnchorAdapter` — class, line 11.
+- `AnchorAdapter.__init__` — method, line 12.
+- `AnchorAdapter.initial_cursor` — method, line 18.
+- `AnchorAdapter.next_goals` — method, line 27.
+- `AnchorAdapter.for_goal` — method, line 51.
+- `AnchorAdapter.for_node` — method, line 65.
+- `AnchorAdapter.advance` — method, line 69.
+- `AnchorAdapter.context` — method, line 75.
+- `AnchorAdapter.program_allowed` — method, line 85.
+- `AnchorAdapter.contact_regions` — method, line 89.
+- `AnchorAdapter.candidate` — method, line 92.
+- `AnchorAdapter.summary` — method, line 102.
+
+## [autonomy/cell_routes/anchor_policy.py](../autonomy/cell_routes/anchor_policy.py)
+
+- `settings` — def, line 8.
+- `semantic_settings` — def, line 40.
+- `owner` — def, line 44.
+- `visits` — def, line 49.
+- `visit_state` — def, line 77.
+- `audit` — def, line 92.
+- `local_counts` — def, line 110.
+- `priority` — def, line 119.
+- `within_caps` — def, line 124.
+- `single_jump_structure` — def, line 138.
+
+## [autonomy/cell_routes/anchor_guides.py](../autonomy/cell_routes/anchor_guides.py)
+
+- `nearest` — def, line 9.
+- `landing_cover` — def, line 16.
+- `terminal_point` — def, line 23.
+- `unit` — def, line 40.
+- `build_guides` — def, line 45.
+- `classify` — def, line 79.
+- `onward_objective` — def, line 91.
+
+## [autonomy/cell_routes/node_feasibility.py](../autonomy/cell_routes/node_feasibility.py)
+
+- `policy_spec` — def, line 9.
+- `node_identity` — def, line 26.
+- `outcome` — def, line 33.
+- `meaningful_choice` — def, line 57.
+- `solve_due` — def, line 64.
+
+## [autonomy/cell_routes/turn_observability.py](../autonomy/cell_routes/turn_observability.py)
+
+- `record` — def, line 10.
+- `replay` — def, line 31.
+- `summary` — def, line 41.
+- `draw` — def, line 62.
+
+## [autonomy/tests/test_anchor_policy.py](../autonomy/tests/test_anchor_policy.py)
+
+- `scene` — def, line 17.
+- `history` — def, line 26.
+- `AnchorPolicyTests` — class, line 38.
+- `AnchorPolicyTests.test_owner_returns_excluded_but_all_same_owner_jumps_preserved` — method, line 39.
+- `AnchorPolicyTests.test_anchor_order_optional_contacts_and_span_counts` — method, line 48.
+- `AnchorPolicyTests.test_unique_anchors_and_explicit_policy_validation` — method, line 63.
+- `AnchorPolicyTests.test_backward_guides_finite_terminal_and_onward_objective` — method, line 69.
+- `AnchorPolicyTests.test_nearest_preserves_disconnected_cover_and_stable_ties` — method, line 82.
+- `AnchorPolicyTests.test_axis_and_diagonal_binary_edge_equality_scope_and_reflection` — method, line 87.
+- `AnchorPolicyTests.test_observability_is_binary_idempotent_and_logs_replay_flip` — method, line 99.
+- `AnchorPolicyTests.test_internal_node_does_not_require_future_landing_or_region` — method, line 116.
+- `AnchorPolicyTests.test_exact_failure_has_no_ancestor_side_effect_or_or_parent_shortcut` — method, line 133.
+- `AnchorPolicyTests.test_dynamic_repair_progress_does_not_change_node_identity_but_scope_does` — method, line 147.
+- `AnchorPolicyTests.test_ceiling_and_corner_cancel_are_impulses_without_invented_support_visits` — method, line 153.
+- `AnchorPolicyTests.test_hard_structure_excludes_setup_hop_runoff_and_zero_jump_finish` — method, line 165.
+- `AnchorPolicyTests.test_declared_caps_are_not_widened_during_recovery` — method, line 174.
+- `AnchorPolicyTests.test_repair_exhaustion_backtracks_without_oracle_or_ancestor_rejection` — method, line 182.
+
+## [autonomy/tests/test_anchor_dfs.py](../autonomy/tests/test_anchor_dfs.py)
+
+- `extend` — def, line 11.
+- `AnchorDFSTests` — class, line 27.
+- `AnchorDFSTests.run_tree` — method, line 28.
+- `AnchorDFSTests.test_global_latch_survives_abandoned_certifier_and_changed_incoming_prefix` — method, line 61.
+- `AnchorDFSTests.test_logging_does_not_change_solver_allocation_and_anchors_force_queries` — method, line 71.
+- `AnchorDFSTests.test_latch_resume_keeps_exact_parent_and_does_not_repeat_scored_nodes` — method, line 82.
+- `AnchorDFSTests.test_completed_decision_cadence_and_forced_anchor_or_terminal` — method, line 89.
+- `AnchorDFSTests.test_failed_finish_restores_deferred_runs_on_actual_parent_without_redeferring` — method, line 99.
+
+## [autonomy/tests/test_anchor_search.py](../autonomy/tests/test_anchor_search.py)
+
+- `AnchorSearchTests` — class, line 20.
+- `AnchorSearchTests.frontier` — method, line 21.
+- `AnchorSearchTests.test_multiple_same_block_jumps_generated_and_no_solve_for_run_hold` — method, line 29.
+- `AnchorSearchTests.test_rejected_child_preserves_parent_and_other_children` — method, line 44.
+- `AnchorSearchTests.test_suspended_exact_child_resumes_same_choice_before_siblings` — method, line 56.
+- `AnchorSearchTests.test_stop_policy_keeps_native_validation_and_cannot_reuse_polished_context` — method, line 74.
+- `AnchorSearchTests.test_completed_oracle_rejects_only_selected_model_and_limits_stay_pending` — method, line 89.
+- `AnchorSearchTests.test_actual_landing_clock_binds_before_unused_suffix_and_drops_owned_future_rows` — method, line 103.
+- `AnchorNativeTests` — class, line 127.
+- `AnchorNativeTests.test_cold_finite_landing_with_observable_internal_queries` — method, line 128.
 
 ## [autonomy/block_contacts.py](../autonomy/block_contacts.py)
 
@@ -75,8 +172,8 @@ Source snapshot: generic event discovery implementation, including the imported 
 ## [autonomy/cell_routes/automatic_experiment.py](../autonomy/cell_routes/automatic_experiment.py)
 
 - `source_hashes` — def, line 22.
-- `run` — def, line 29.
-- `main` — def, line 49.
+- `run` — def, line 30.
+- `main` — def, line 51.
 
 ## [autonomy/cell_routes/checkpoint_experiment.py](../autonomy/cell_routes/checkpoint_experiment.py)
 
@@ -88,17 +185,17 @@ Source snapshot: generic event discovery implementation, including the imported 
 ## [autonomy/cell_routes/checkpoint_search.py](../autonomy/cell_routes/checkpoint_search.py)
 
 - `ScopedWork` — class, line 23.
-- `ScopedWork.__init__` — def, line 24.
-- `ScopedWork.deadline` — def, line 29.
-- `ScopedWork.termination` — def, line 33.
-- `ScopedWork.check` — def, line 36.
-- `ScopedWork.proposal` — def, line 40.
-- `ScopedWork.before_solve` — def, line 44.
-- `ScopedWork.accepted` — def, line 49.
+- `ScopedWork.__init__` — method, line 24.
+- `ScopedWork.deadline` — method, line 29.
+- `ScopedWork.termination` — method, line 33.
+- `ScopedWork.check` — method, line 36.
+- `ScopedWork.proposal` — method, line 40.
+- `ScopedWork.before_solve` — method, line 44.
+- `ScopedWork.accepted` — method, line 49.
 - `_motion_bound` — def, line 53.
 - `evaluate_program` — def, line 61.
-- `_key` — def, line 185.
-- `find_checkpoint_route` — def, line 189.
+- `_key` — def, line 197.
+- `find_checkpoint_route` — def, line 201.
 
 ## [autonomy/cell_routes/checkpoints.py](../autonomy/cell_routes/checkpoints.py)
 
@@ -151,11 +248,11 @@ Source snapshot: generic event discovery implementation, including the imported 
 
 ## [autonomy/cell_routes/depth_first.py](../autonomy/cell_routes/depth_first.py)
 
-- `candidate_key` — def, line 17.
-- `arrival_key` — def, line 22.
-- `decision_family` — def, line 27.
-- `commit_arrival` — def, line 38.
-- `search_goals` — def, line 58.
+- `candidate_key` — def, line 18.
+- `arrival_key` — def, line 23.
+- `decision_family` — def, line 28.
+- `commit_arrival` — def, line 39.
+- `search_goals` — def, line 59.
 
 ## [autonomy/cell_routes/event_adapter.py](../autonomy/cell_routes/event_adapter.py)
 
@@ -744,10 +841,10 @@ Source snapshot: generic event discovery implementation, including the imported 
 - `_shift_event` — def, line 83.
 - `_events` — def, line 100.
 - `append_choice` — def, line 126.
-- `truncate_program` — def, line 206.
-- `program_physics_key` — def, line 252.
-- `program_search_key` — def, line 262.
-- `compile_program` — def, line 270.
+- `truncate_program` — def, line 208.
+- `program_physics_key` — def, line 254.
+- `program_search_key` — def, line 264.
+- `compile_program` — def, line 272.
 
 ## [autonomy/movement_contacts.py](../autonomy/movement_contacts.py)
 
@@ -797,8 +894,8 @@ Source snapshot: generic event discovery implementation, including the imported 
 
 - `movement_settings` — def, line 13.
 - `iter_movement_programs` — def, line 30.
-- `find_movement_blocks` — def, line 225.
-- `screen_program` — def, line 295.
+- `find_movement_blocks` — def, line 226.
+- `screen_program` — def, line 296.
 
 ## [autonomy/movement_units.py](../autonomy/movement_units.py)
 
@@ -970,7 +1067,7 @@ Source snapshot: generic event discovery implementation, including the imported 
 - `box_for` — def, line 9.
 - `stepping_profiles` — def, line 13.
 - `SteppingGenerator` — class, line 88.
-- `SteppingGenerator.generate` — def, line 89.
+- `SteppingGenerator.generate` — method, line 89.
 - `open_stepping_choices` — def, line 121.
 
 ## [autonomy/terminal_goals.py](../autonomy/terminal_goals.py)
@@ -1285,12 +1382,12 @@ Source snapshot: generic event discovery implementation, including the imported 
 ## [autonomy/tests/test_event_search.py](../autonomy/tests/test_event_search.py)
 
 - `EventSearchTests` — class, line 17.
-- `EventSearchTests.test_quick_reverse_landings_do_not_preempt_forward_goal_service` — def, line 18.
-- `EventSearchTests.test_disconnected_regions_on_one_physical_block_have_contact_phase_guards` — def, line 33.
-- `EventSearchTests.test_same_support_setup_is_local_without_removing_its_physical_choices` — def, line 58.
-- `EventSearchTests.test_adapter_has_no_inherited_raw_cell_rejection_paths` — def, line 71.
-- `EventSearchTests.test_default_dynamic_goals_share_prefix_and_publish_actual_child_atomically` — def, line 84.
-- `EventSearchTests.test_explicit_old_catalogue_settings_and_states_are_not_reinterpreted` — def, line 129.
+- `EventSearchTests.test_quick_reverse_landings_do_not_preempt_forward_goal_service` — method, line 18.
+- `EventSearchTests.test_disconnected_regions_on_one_physical_block_have_contact_phase_guards` — method, line 33.
+- `EventSearchTests.test_same_support_setup_is_local_without_removing_its_physical_choices` — method, line 58.
+- `EventSearchTests.test_adapter_has_no_inherited_raw_cell_rejection_paths` — method, line 71.
+- `EventSearchTests.test_declared_anchor_goals_share_prefix_and_publish_actual_child_atomically` — method, line 84.
+- `EventSearchTests.test_explicit_old_catalogue_settings_and_states_are_not_reinterpreted` — method, line 129.
 
 ## [autonomy/tests/test_failure_diagnostic.py](../autonomy/tests/test_failure_diagnostic.py)
 
@@ -1822,18 +1919,18 @@ Source snapshot: generic event discovery implementation, including the imported 
 ## [autonomy/tests/test_semantic_search.py](../autonomy/tests/test_semantic_search.py)
 
 - `SemanticStageTests` — class, line 19.
-- `SemanticStageTests.test_first_ready_proposal_is_scored_before_requesting_more` — def, line 20.
-- `SemanticStageTests.test_new_child_continues_before_catalogue_drain_but_stall_yields` — def, line 48.
-- `SemanticStageTests.test_expired_slice_commits_a_scored_arrival_before_suspending` — def, line 65.
-- `SemanticStageTests.test_spatial_resume_keeps_each_running_variant_language_immutable` — def, line 100.
-- `SemanticStageTests.test_stage_views_are_immutable_and_support_order_is_discovered` — def, line 124.
-- `SemanticStageTests.test_initial_domain_is_independent_of_support_order` — def, line 145.
+- `SemanticStageTests.test_first_ready_proposal_is_scored_before_requesting_more` — method, line 20.
+- `SemanticStageTests.test_new_child_continues_before_catalogue_drain_but_stall_yields` — method, line 48.
+- `SemanticStageTests.test_expired_slice_commits_a_scored_arrival_before_suspending` — method, line 65.
+- `SemanticStageTests.test_spatial_resume_keeps_each_running_variant_language_immutable` — method, line 100.
+- `SemanticStageTests.test_stage_views_are_immutable_and_support_order_is_discovered` — method, line 124.
+- `SemanticStageTests.test_initial_domain_is_independent_of_support_order` — method, line 145.
 - `SemanticNumericalTests` — class, line 161.
-- `SemanticNumericalTests.compiler` — def, line 162.
-- `SemanticNumericalTests.test_inferred_intermediate_support_uses_outgoing_guide_objective` — def, line 166.
-- `SemanticNumericalTests.test_stored_real11_witness_has_an_unseeded_automatic_corridor` — def, line 188.
-- `SemanticNumericalTests.test_automatic_finite_landing_without_points_support_list_or_clocks` — def, line 212.
-- `SemanticNumericalTests.test_free_virtual_finish_has_no_outstanding_physical_goal_contact` — def, line 234.
+- `SemanticNumericalTests.compiler` — method, line 162.
+- `SemanticNumericalTests.test_inferred_intermediate_support_uses_outgoing_guide_objective` — method, line 166.
+- `SemanticNumericalTests.test_stored_real11_witness_has_an_unseeded_automatic_corridor` — method, line 188.
+- `SemanticNumericalTests.test_automatic_finite_landing_without_points_support_list_or_clocks` — method, line 212.
+- `SemanticNumericalTests.test_free_virtual_finish_has_no_outstanding_physical_goal_contact` — method, line 234.
 
 ## [autonomy/tests/test_shared_contacts.py](../autonomy/tests/test_shared_contacts.py)
 
@@ -2052,3 +2149,25 @@ Source snapshot: generic event discovery implementation, including the imported 
 - `fixed_phase` — def, line 105.
 - `phase` — def, line 226.
 - `main` — def, line 275.
+
+## [autonomy/experiments/anchor-feasibility/native_gate.py](../autonomy/experiments/anchor-feasibility/native_gate.py)
+
+- `main` — def, line 14.
+
+## [autonomy/experiments/anchor-feasibility/measure.py](../autonomy/experiments/anchor-feasibility/measure.py)
+
+- `witnesses` — def, line 23.
+- `main` — def, line 36.
+
+## [autonomy/experiments/anchor-feasibility/acceptance_manifest.py](../autonomy/experiments/anchor-feasibility/acceptance_manifest.py)
+
+- `main` — def, line 12.
+
+## [autonomy/experiments/anchor-feasibility/generic_controls.py](../autonomy/experiments/anchor-feasibility/generic_controls.py)
+
+- `fixtures` — def, line 16.
+- `main` — def, line 40.
+
+## [autonomy/experiments/anchor-feasibility/render_full_scene.py](../autonomy/experiments/anchor-feasibility/render_full_scene.py)
+
+- `main` — def, line 13.

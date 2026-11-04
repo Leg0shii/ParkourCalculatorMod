@@ -9,7 +9,8 @@ from .solve_spec import digest, processing_key
 
 def persistent_programs(scene, *, settings, report, continuation=None, deadline=None, cancel_event=None, work=None,
                         initial_programs=None, checkpoint_tick=None, threshold=.005, screen=None,
-                        context_adapter=None, program_filter=None, stop_on_goal=True, terminal_goal=None, stop_supports=None, **kwargs):
+                        context_adapter=None, program_filter=None, stop_on_goal=True, terminal_goal=None, stop_supports=None,
+                        node_evaluator=None, priority_key=None, policy_context=None, **kwargs):
     initial = empty_program(scene['initial'], threshold=threshold)
     initial['terminalSupport'] = scene['startBlock']
     seeds = [initial] if initial_programs is None else initial_programs
@@ -23,13 +24,17 @@ def persistent_programs(scene, *, settings, report, continuation=None, deadline=
         context_value['terminalGoal']=terminal_goal
     if stop_supports is not None:
         context_value['stopSupports']=stop_supports
+    if policy_context is not None:
+        context_value.update(version=4,decisionPolicy=policy_context)
     context=digest(context_value)
     if continuation is not None and continuation.get('context') != context:
         raise ValueError('Incompatible movement generation checkpoint')
-    state = copy.deepcopy(continuation) if continuation is not None else dict(version=3, context=context,
+    state = copy.deepcopy(continuation) if continuation is not None else dict(version=4 if policy_context is not None else 3, context=context,
         pending=copy.deepcopy(seeds), ready=[], expansion=None, seen=[], generated=0, expanded=0, emitted=0,
         screened=0, policyRejections=0, exhausted=False)
     state.setdefault('exclusions', [])
+    if node_evaluator is not None:
+        state.setdefault('nodes', {})
     seen = set(state['seen'])
     expanded = 0
     iterator, iterator_key = None, None
@@ -51,7 +56,7 @@ def persistent_programs(scene, *, settings, report, continuation=None, deadline=
             and p['profile']['airtime'] > 0)
 
     def key(p):
-        return processing_key(p, digest(program_physics_key(p)))
+        return priority_key(p) if priority_key else processing_key(p, digest(program_physics_key(p)))
 
     def take(items):
         p = min(items, key=key)
@@ -61,14 +66,14 @@ def persistent_programs(scene, *, settings, report, continuation=None, deadline=
     def update(reason='running'):
         report.update(termination=reason, expandedPrefixes=expanded, totalExpandedPrefixes=state['expanded'],
             generated=state['generated'], emittedPrograms=state['emitted'], screenedPrefixes=state['screened'],
-            remainingPrefixes=len(state['pending'])+len(state['ready'])+int(state['expansion'] is not None),
+            remainingPrefixes=len(state['pending'])+len(state['ready'])+int(state['expansion'] is not None)+int(state.get('nodeInFlight') is not None),
             queuedCompletePrograms=len(state['ready']), queueDrops=0, partialQueueDrops=0, completeQueueDrops=0,
             policyRejections=state['policyRejections'], queuePolicy='persistent', types=settings['types'],
             explicitProgramPriority=False, deferredPrefixes=max(0, len(state['pending'])-settings['maxQueuedPrefixes']),
             continuation=state, minimumTicksProven=False)
 
     try:
-        while state['pending'] or state['ready'] or state['expansion'] is not None:
+        while state['pending'] or state['ready'] or state['expansion'] is not None or state.get('nodeInFlight') is not None:
             budget()
             e = state['expansion']
             if state['ready'] and (e is None or e.get('cursor', 0) % settings['maxChoicesPerType'] == 0):
@@ -85,15 +90,32 @@ def persistent_programs(scene, *, settings, report, continuation=None, deadline=
                 if expanded >= settings['maxPrefixes']:
                     update('prefix_limit')
                     return
-                program = take(state['pending'])
+                program = state.get('nodeInFlight') or take(state['pending'])
                 if program_filter is not None and not program_filter(program):
                     state['policyRejections'] += 1
+                    state.pop('nodeInFlight',None)
                     continue
                 if complete(program):
                     state['ready'].append(program)
                     continue
                 if program['profile']['airtime'] >= settings['maxInputs'] or program['interactions'] >= settings['maxInteractions']:
+                    state.pop('nodeInFlight',None)
                     continue
+                if node_evaluator is not None and program.get('needsNodeSolve'):
+                    # Query a decision when it is selected for descent. Merely
+                    # constructing an unselected sibling must not spend NLPs.
+                    state['nodeInFlight']=program
+                    update()
+                    result=node_evaluator(program,state['nodes'],False)
+                    state['nodeInFlight']=program=result['program']
+                    if result['status'] in ('suspended','error'):
+                        update(result['status'])
+                        return
+                    state.pop('nodeInFlight',None)
+                    if result['status'] in ('oracle_rejected','exhausted'):
+                        update()
+                        continue
+                    program.pop('needsNodeSolve',None)
                 e = dict(program=program, kind=0, cursor=0)
                 state['expansion'] = e
                 expanded += 1
@@ -135,7 +157,12 @@ def persistent_programs(scene, *, settings, report, continuation=None, deadline=
                 e['choice'] = copy.deepcopy(choice)
                 e['cursor'] += 1
                 state['generated'] += 1
-            child = append_choice(e['program'], e['choice'], max_inputs=settings['maxInputs'])
+            child = copy.deepcopy(e['child']) if 'child' in e else append_choice(e['program'], e['choice'], max_inputs=settings['maxInputs'])
+            if child is not None and node_evaluator is not None:
+                parent=e['program']
+                for field in ('decisionPoint','decisionPointSource','decisionPointTick','decisionTurnaround','restoredRun'):
+                    if field in parent:child.setdefault(field,copy.deepcopy(parent[field]))
+                child.setdefault('priorityTurnaround',parent.get('decisionTurnaround',False))
             if child is not None and terminal_goal is not None:
                 from .terminal_goals import bind_goal
                 child=bind_goal(child,terminal_goal,scene.get('supportClearance',1e-6))
@@ -150,6 +177,12 @@ def persistent_programs(scene, *, settings, report, continuation=None, deadline=
                     continue
             if child is not None and checkpoint_tick is not None and child['profile']['airtime'] > checkpoint_tick:
                 child = truncate_program(child, checkpoint_tick)
+            if child is not None and node_evaluator is not None and stop_on_goal:
+                from .cell_routes.comparison_goals import _landing_prefixes
+                arrivals=[p for block in (stop_supports or [scene['goalBlock']])
+                          for p in _landing_prefixes(scene,child,block)]
+                if arrivals:
+                    child=min(arrivals,key=lambda p:(p['profile']['airtime'],p['terminalSupport']))
             accepted = child is not None and entry_possible(child['profile'], initial_bounds)
             if accepted and program_filter is not None and not program_filter(child):
                 state['policyRejections'] += 1
@@ -166,10 +199,24 @@ def persistent_programs(scene, *, settings, report, continuation=None, deadline=
                     state['exclusions'].append(dict(id=digest(identity), ticks=child['profile']['airtime'], proof=proof))
                     accepted = False
             if accepted:
+                if node_evaluator is not None:
+                    from .cell_routes.node_feasibility import meaningful_choice, node_identity
+                    parent=e['program']; meaningful=meaningful_choice(e['choice'])
+                    child.setdefault('decisionDepth',parent.get('decisionDepth',0)+int(meaningful))
+                    child.setdefault('lastSolvedDepth',parent.get('lastSolvedDepth',0))
+                    child.setdefault('decisionParent',parent.get('decisionNode') if meaningful else parent.get('decisionParent'))
+                    child.setdefault('decisionNode',node_identity(child,policy_context) if meaningful else parent.get('decisionNode'))
+                    for field in ('decisionPoint','decisionPointSource','decisionPointTick','decisionTurnaround','restoredRun'):
+                        if field in parent:child.setdefault(field,copy.deepcopy(parent[field]))
+                    child.setdefault('priorityTurnaround',parent.get('decisionTurnaround',False))
+                    if meaningful and not complete(child):
+                        child['needsNodeSolve']=True
+                identity = program_search_key(child)
                 seen.add(identity)
                 state['seen'].append(identity)
                 (state['ready'] if complete(child) else state['pending']).append(child)
             e.pop('choice', None)
+            e.pop('child', None)
             update()
         state['exhausted'] = True
         update('exhausted')

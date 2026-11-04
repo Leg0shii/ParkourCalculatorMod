@@ -1,0 +1,32 @@
+[
+  {
+    "file": "matched-2026-11-04/guided_early_stop.json.gz",
+    "uncompressedSha256": "2ec26edc1d0f1ec50cc5310c14ae878036bebc3f8e6d1c9ca18abd812e656bab",
+    "beforeBytes": 61041669,
+    "afterBytes": 45398772
+  },
+  {
+    "file": "matched-2026-11-04/guided_polish_control.json.gz",
+    "uncompressedSha256": "063d3ffeaa98499761b2ed8c859c4206fe74dc8c4ce822a10d52ca3125f430dc",
+    "beforeBytes": 61900149,
+    "afterBytes": 46215796
+  },
+  {
+    "file": "generic-2026-11-04/same-block-chain.json.gz",
+    "uncompressedSha256": "b4c5467e6626a5de9b9da5b14977b96f2461cc27b23f93f4407015b774b99353",
+    "beforeBytes": 169180,
+    "afterBytes": 126775
+  },
+  {
+    "file": "generic-2026-11-04/turn-negative-x.json.gz",
+    "uncompressedSha256": "2dab6d964d3d9762dd8be532265f41c4d5c72ab67a1de1f6a44f50ca66473646",
+    "beforeBytes": 23018308,
+    "afterBytes": 14068122
+  },
+  {
+    "file": "generic-2026-11-04/turn-positive-x.json.gz",
+    "uncompressedSha256": "8020e068b55789f270811ddebc7bcfee04b6c51b2bded094a4d2179c95368610",
+    "beforeBytes": 22365175,
+    "afterBytes": 13895243
+  }
+]

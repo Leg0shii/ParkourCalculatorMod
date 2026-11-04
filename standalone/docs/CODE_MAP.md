@@ -169,6 +169,11 @@ Maintain this map when public modules change. Index generation uses Python AST a
 | --- | --- |
 | [event_routes.py](../autonomy/cell_routes/event_routes.py) | Immutable domain and physical feature/surface provenance; cyclic connector language; residual next-goal cursors; untimed semantic prefixes and observed physical passage evidence. |
 | [guides.py](../autonomy/cell_routes/guides.py) | Local finite witness anchors, resumable shortest witness, checked shortcuts and outgoing objectives. |
+| [anchor_policy.py](../autonomy/cell_routes/anchor_policy.py) | Ordered anchor audit, physical-owner visit scope, local J/R/A keys, explicit caps and single-jump structure. |
+| [anchor_guides.py](../autonomy/cell_routes/anchor_guides.py) | Backward finite projections, onward objectives, physical approach-edge turns and binary decision labels. |
+| [anchor_adapter.py](../autonomy/cell_routes/anchor_adapter.py) | Required-anchor/open-span stages on the existing event DFS; internal nodes omit pending anchor predicates. |
+| [node_feasibility.py](../autonomy/cell_routes/node_feasibility.py) | Explicit solver intent, stable exact-node identity, outcomes and completed-decision cadence. |
+| [turn_observability.py](../autonomy/cell_routes/turn_observability.py) | Resume-safe decision/query/replay observations, aggregate metrics and boundary/decision diagram export. |
 | [event_adapter.py](../autonomy/cell_routes/event_adapter.py) | Explicit dynamic stage provider and required physical contact-region predicates, with no inherited raw-cell filtering. |
 | [event_search.py](../autonomy/cell_routes/event_search.py) | Automatic configuration/state cutover, one shared domain/DFS and bounded fair owner allocation. |
 | [event_coverage_audit.py](../autonomy/cell_routes/event_coverage_audit.py) | Unseeded graph/guide discovery, then separate raw/semantic/materialized coverage and archived replay. |

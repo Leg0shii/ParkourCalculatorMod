@@ -220,7 +220,7 @@ class SemanticNumericalTests(unittest.TestCase):
             self.assertEqual(result['status'],'feasible',result['termination'])
             self.assertTrue(replay_witness(scene,result['best'],compiler)['passed'])
             self.assertEqual(result['searchState']['kind'],'event_route_search')
-            self.assertEqual(result['searchState']['dfs']['version'],7)
+            self.assertEqual(result['searchState']['dfs']['version'],8)
             self.assertLessEqual(result['work']['solverCalls'],3)
             self.assertLessEqual(result['expandedPrefixes'],scene['movementSearch']['maxPrefixes'])
             saved=json.loads(json.dumps(result['searchState'],allow_nan=False))

@@ -61,13 +61,15 @@ def _motion_bound(scene, compiler, seconds):
 def evaluate_program(scene, program, compiler, adapter, work, motion_bound, *, checkpoint=None,
                      seconds=3, candidate_seconds=1, solver_calls=8, python_executable=None, cancel_event=None,
                      partial_corridor=False, required_landing=None, scope=None, on_progress=None, retry_unresolved=True, first_witness=False,
-                     guide_objective=None):
+                     guide_objective=None, solve_policy=None):
     timings={}
     marked=time.monotonic()
     def mark(name):
         nonlocal marked
         now=time.monotonic();timings[name]=now-marked;marked=now
-    complete = checkpoint is None
+    complete = checkpoint is None and not getattr(adapter,'node_query',False)
+    from .node_feasibility import policy_spec, outcome
+    policy = policy_spec(solve_policy, first_witness=first_witness)
     virtual=program.get('terminalGoal')
     if virtual is not None:
         from standalone.autonomy.terminal_goals import prepare_goal, height_clock
@@ -141,8 +143,9 @@ def evaluate_program(scene, program, compiler, adapter, work, motion_bound, *, c
               if c['block']['solidIndex'] in active and c['offset'] < scope['through']]
     signature = checkpoint.required_signature if checkpoint is not None else (
         scoped_adapter.corridor.signature if hasattr(scoped_adapter, 'corridor') and not partial_corridor else ())
+    adapter_identity=getattr(scoped_adapter,'corridor',None).to_dict() if hasattr(scoped_adapter,'corridor') else None
     identity = solve_identity(scene, program, route.get('guideObjective', route['objective']), scope,
-        getattr(scoped_adapter, 'corridor', None).to_dict() if hasattr(scoped_adapter, 'corridor') else None, coefficients)
+        dict(adapter=adapter_identity,policy=policy,nodeQuery=getattr(scoped_adapter,'node_query',False)), coefficients)
     variants = ConstraintVariants(route, profiles[0], plan, scene['collisionScene'], envelopes, scope,
         checks=checks, gates=scoped_adapter.gates, signature=signature,
         state=program.get('repairState', {}).get('constraintGeneration'), deadline=scoped.deadline, reference=reference,
@@ -153,15 +156,23 @@ def evaluate_program(scene, program, compiler, adapter, work, motion_bound, *, c
     mark('eligibilityAndVariantConstruction')
     result = solve_contact_branches(route, profiles, checks,
         compiler, seconds=seconds, candidate_seconds=candidate_seconds, retries=0,
-        max_branches=scene['maxContactBranches'], improve=True, rank_equal_cost=not first_witness, optimize_goal=True,
+        max_branches=scene['maxContactBranches'], improve=True, rank_equal_cost=policy['rankEqualCost'], optimize_goal=True,
+        stop_on_feasible=policy['stopOnFeasible'], oracle_rejection=policy['oracleRejection'],
         python_executable=python_executable, cancel_event=cancel_event, geometry=scene['collisionScene'],
         motion_bound=motion_bound, max_blockages=scene['maxBlockagesPerObstacle'],
         max_horizontal=scene['maxHorizontalBlockagesPerObstacle'], max_vertical=scene['maxVerticalBlockagesPerObstacle'],
         max_passage_candidates=scene['maxPassageCandidates'], solid_blocks=owners, max_wall_hits=0,
         candidate_filter=candidate_filter, work=scoped, resume_state=program.get('repairState'),
-        repair_scope=dict(solveIdentity=identity, scope=scope, assemblyVersion=8),
+        repair_scope=dict(solveIdentity=identity, scope=scope, solvePolicy=policy, assemblyVersion=9),
         validation_scope=scope, initial_variants=variants, on_progress=on_progress, retry_unresolved=retry_unresolved)
     mark('physicalSearchAndValidation')
+    diagnostics=[d for a in result.get('attempts',[]) for d in a.get('diagnostics',[])]
+    parent_work=work
+    while not hasattr(parent_work,'counts'):
+        parent_work=parent_work.parent
+    for counter in (parent_work.counts,scoped.local.counts):
+        counter['workerLaunches']+=sum(d.get('workerLaunched') is True for d in diagnostics)
+        counter['feasibleSeedReturns']+=sum(d.get('workerLaunched') is False and d.get('status')=='feasible' for d in diagnostics)
     result['timings']=dict(timings,**variants.state['timings'])
     if result['best'] is not None:
         if checkpoint is not None and scope['purpose'] == 'complete':
@@ -175,6 +186,7 @@ def evaluate_program(scene, program, compiler, adapter, work, motion_bound, *, c
             work.accepted(result['best'])
     result['work'] = scoped.local.summary()
     result.update(solveScope=scope, solveIdentity=identity,
+                  solvePolicy=policy, nodeFeasibility=outcome(result, identity, policy),
                   fullSceneValidated=result['best'] is not None and scope['purpose'] == 'complete',
                   reachability=dict(excludedSolids=variants.exclusions, interactionGroups=len(variants.items)))
     if result['best'] is not None:
@@ -196,7 +208,7 @@ def find_checkpoint_route(request, compiler, *, checkpoints=None, corridor=None,
                           time_margin=1, progress_margin=None, rescue_passes=1, terminal_checkpoint=None, program_filter=None,
                           on_window=None, spatial_goals=None, program_priority=None, resume_state=None, on_progress=None,
                           retry_unknown=False, minimum_run_pruning=True, task_goal=None, spatial_settings=None,
-                          discovery_settings=None):
+                          discovery_settings=None, anchor_search=None):
     entry_options = locals().copy()
     if type(minimum_run_pruning) is not bool:raise ValueError('minimum_run_pruning must be boolean')
     integer(rescue_passes,'rescue passes',0,100)
@@ -259,7 +271,7 @@ def find_checkpoint_route(request, compiler, *, checkpoints=None, corridor=None,
             return search_event_routes(request,compiler,task_goal=task_goal,discovery=discovery_settings,**entry_options)
         except TimeoutError as error:
             return unfinished(str(error))
-    if task_goal is not None or spatial_settings is not None or discovery_settings is not None:
+    if task_goal is not None or spatial_settings is not None or discovery_settings is not None or anchor_search is not None:
         raise ValueError('task_goal/discovery_settings apply to automatic discovery; a supplied typed corridor embeds its task')
     try:
         d, gates = decompose(scene, deadline=deadline), landmarks(scene)

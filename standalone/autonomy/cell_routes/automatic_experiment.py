@@ -23,6 +23,7 @@ def source_hashes():
     root=Path(__file__).resolve().parents[3]
     sources=sorted((root/'standalone/autonomy/cell_routes').glob('*.py'))
     sources += sorted((root/'standalone/autonomy').glob('*.py'))
+    sources += sorted((root/'standalone/ipopt').glob('*.py'))
     return {str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for p in sources}
 
 
@@ -34,6 +35,7 @@ def run(fixture,compiler,*,python_executable=None,resume_state=None,on_progress=
     cfg=movement_settings(prepare_scene(request))
     policy=InitialJumpDomain(fixture.get('initialJumpInputs'),max_inputs=cfg['maxInputs'])
     result=find_checkpoint_route(request,compiler,task_goal=fixture.get('terminalGoal'),
+        anchor_search=fixture.get('anchorSearch'),
         discovery_settings=fixture.get('discoverySettings'),program_filter=policy,
         resume_state=resume_state,on_progress=on_progress,cancel_event=cancel_event,
         python_executable=python_executable,**fixture.get('settings',{}))

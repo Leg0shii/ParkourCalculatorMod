@@ -5,8 +5,12 @@ All tracked standalone Markdown plus this consolidation. Read [AGENTS](../AGENTS
 | Document | Topic | Authority/status |
 | --- | --- | --- |
 | [AGENTS.md](../AGENTS.md) | Standalone agent entry point | Current navigation/guidance |
+| [docs/ANCHOR_IMPLEMENTATION_RESUME.md](ANCHOR_IMPLEMENTATION_RESUME.md) | Self-contained authorized implementation resume: exact worktree, settled contract, implementation status, native environment and checks | Start here after compaction; current worktree/status and validation |
 | [CONSOLIDATION.md](../CONSOLIDATION.md) | Standalone branch consolidation | Historical; contains superseded branch/policy/status |
 | [README.md](../README.md) | Standalone route search and IPOPT | Current navigation/guidance |
+| [autonomy/ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md](../autonomy/ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md) | Exact-node DFS cadence, global hard latches, regional turns, same-block setup and finite extended B7 | Implemented anchor policy; physical returns deferred; new evidence separate |
+| [autonomy/ANCHOR_POLICY_DECISIONS.md](../autonomy/ANCHOR_POLICY_DECISIONS.md) | Exact-node rejection/cadence, binary edge-plus-margin decision mode, observability and current visit scope | Latest contract: preliminary binary decision mode with required observability; current visit scope |
+| [autonomy/REVISIT_DISCOVERY_DEFERRED_PLAN.md](../autonomy/REVISIT_DISCOVERY_DEFERRED_PLAN.md) | Preserved revisit complexity, lazy repetition design, future module map, tests and resume steps | Explicitly deferred; do not generate inter-block returns now |
 | [autonomy/BLOCK_ROUTE_SEARCH.md](../autonomy/BLOCK_ROUTE_SEARCH.md) | Block-route selection prototype | Mechanics/research reference; current decisions control scope |
 | [autonomy/BLOCK_SOLVER_PLAN.md](../autonomy/BLOCK_SOLVER_PLAN.md) | Block solver: continuous-model orchestration | Prior plan/design reference; check decisions index for implemented/superseded scope |
 | [autonomy/CELL_ROUTE_EXPERIMENT_PLAN.md](../autonomy/CELL_ROUTE_EXPERIMENT_PLAN.md) | Cell-route experiment plan | Prior plan/design reference; check decisions index for implemented/superseded scope |
@@ -20,8 +24,8 @@ All tracked standalone Markdown plus this consolidation. Read [AGENTS](../AGENTS
 | [autonomy/DYNAMIC_CONTACT_DECISIONS.md](../autonomy/DYNAMIC_CONTACT_DECISIONS.md) | Ceiling and stepping decisions change the transition law | Mechanics/research reference; current decisions control scope |
 | [autonomy/GENERATION_PERFORMANCE_PLAN.md](../autonomy/GENERATION_PERFORMANCE_PLAN.md) | Schedule-generation performance follow-ups | Prior plan/design reference; check decisions index for implemented/superseded scope |
 | [autonomy/GENERATION_RELEVANCE_PLAN.md](../autonomy/GENERATION_RELEVANCE_PLAN.md) | Preliminary plan: generate only relevant, distinct interaction models | Implemented interaction design; consolidated plan/results control status |
-| [autonomy/GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md](../autonomy/GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md) | Concrete next route-discovery refactor: event language, interaction normalization, DFS owners, migration and gates | Controlling next implementation plan; runtime remains the implemented baseline |
-| [autonomy/GENERIC_ROUTE_DISCOVERY_RESEARCH.md](../autonomy/GENERIC_ROUTE_DISCOVERY_RESEARCH.md) | Generic potential-route coverage, decomposition/roadmap comparison, contact/approach semantics and early relevance/merge rules | Cited research and proposed architecture; implementation unchanged |
+| [autonomy/GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md](../autonomy/GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md) | Completed event route-discovery refactor: event language, interaction normalization, DFS owners, migration and gates | Implemented/accepted baseline; anchor-feasibility plan controls the current extension |
+| [autonomy/GENERIC_ROUTE_DISCOVERY_RESEARCH.md](../autonomy/GENERIC_ROUTE_DISCOVERY_RESEARCH.md) | Generic potential-route coverage, decomposition/roadmap comparison, contact/approach semantics and early relevance/merge rules | Cited research; event implementation and current next-change plan have separate authority |
 | [autonomy/GENERIC_COMPOSITION.md](../autonomy/GENERIC_COMPOSITION.md) | Generic movement programs | Existing API/mechanics reference; check current scope |
 | [autonomy/GENERIC_COMPOSITION_PLAN.md](../autonomy/GENERIC_COMPOSITION_PLAN.md) | Generic movement composition | Prior plan/design reference; check decisions index for implemented/superseded scope |
 | [autonomy/GEOMETRIC_DECISION_GUIDANCE.md](../autonomy/GEOMETRIC_DECISION_GUIDANCE.md) | Use the existing cell route as the first decision guide | Mechanics/research reference; current decisions control scope |
@@ -55,7 +59,7 @@ All tracked standalone Markdown plus this consolidation. Read [AGENTS](../AGENTS
 | [autonomy/RUN_TICKS_PLAN.md](../autonomy/RUN_TICKS_PLAN.md) | Run-ticks prototype: status and remaining work | Prior plan/design reference; check decisions index for implemented/superseded scope |
 | [autonomy/SEARCH_CONTINUATION_FIX_PLAN.md](../autonomy/SEARCH_CONTINUATION_FIX_PLAN.md) | Resume unfinished solves and reject provably dead prefixes | Prior plan/design reference; check decisions index for implemented/superseded scope |
 | [autonomy/SEARCH_OBJECTIVE.md](../autonomy/SEARCH_OBJECTIVE.md) | Search order: total ticks, then objective | Mechanics/research reference; current decisions control scope |
-| [autonomy/SPATIAL_CORRIDOR_REFACTOR_PLAN.md](../autonomy/SPATIAL_CORRIDOR_REFACTOR_PLAN.md) | Typed support/air regions, 3D route identity, discovery, staged constraints and DFS integration | Pending spatial proposal, reconciled with imported DFS/virtual-finish/local-run implementation through `61355976` |
+| [autonomy/SPATIAL_CORRIDOR_REFACTOR_PLAN.md](../autonomy/SPATIAL_CORRIDOR_REFACTOR_PLAN.md) | Typed support/air regions, 3D route identity, discovery, staged constraints and DFS integration | Implemented spatial baseline; later event implementation and anchor-feasibility plan supersede the stated parts |
 | [autonomy/SPATIAL_ROUTE_RESEARCH.md](../autonomy/SPATIAL_ROUTE_RESEARCH.md) | From collision geometry to spatial route families | Mechanics/research reference; current decisions control scope |
 | [autonomy/STATE_PROTECTION_IMPLEMENTATION_PLAN.md](../autonomy/STATE_PROTECTION_IMPLEMENTATION_PLAN.md) | Implementation plan: velocity and schedule protection | Prior plan/design reference; check decisions index for implemented/superseded scope |
 | [autonomy/STEPPING_CASES.md](../autonomy/STEPPING_CASES.md) | Stepping terminology and cases | Mechanics/research reference; current decisions control scope |
@@ -137,6 +141,12 @@ All tracked standalone Markdown plus this consolidation. Read [AGENTS](../AGENTS
 | [ipopt/RECENT_REPLAY_HANDOFF.md](../ipopt/RECENT_REPLAY_HANDOFF.md) | Replay and movement handoff, updated 2026-10-28 | Historical handoff; current AGENTS supersedes task/branch instructions |
 | [ipopt/REPLAY.md](../ipopt/REPLAY.md) | Local Minecraft movement replay | Existing API/mechanics reference; check current scope |
 | [ipopt/RUN_TICKS_PHYSICS_HANDOFF.md](../ipopt/RUN_TICKS_PHYSICS_HANDOFF.md) | Block-sequence and minimum-run-ticks physics handoff | Historical handoff; current AGENTS supersedes task/branch instructions |
+
+Current feature evidence: [anchor-feasibility README](../autonomy/experiments/anchor-feasibility/README.md), [new finite Real11 fixture](../autonomy/experiments/anchor-feasibility/real11-anchors.json), and fresh native/matched-run artifacts in that directory.
+
+## Current next-change plan
+
+- [Current decisions/cadence advice](../autonomy/ANCHOR_POLICY_DECISIONS.md), [implementation plan](../autonomy/ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md), [deferred revisit design](../autonomy/REVISIT_DISCOVERY_DEFERRED_PLAN.md). Normal exact-node DFS solves, no ancestor-negative inference, same-block jumps supported; physical returns after another block deferred. The physical-task anchor extension is implemented; see new evidence for acceptance.
 
 ## Automatic semantic corridor implementation
 

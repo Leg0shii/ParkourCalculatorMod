@@ -81,7 +81,7 @@ class EventSearchTests(unittest.TestCase):
         self.assertEqual(set(ctx),{'program','supportAllowed'})
         self.assertNotIn('geometry',view.corridor.to_dict())
 
-    def test_default_dynamic_goals_share_prefix_and_publish_actual_child_atomically(self):
+    def test_declared_anchor_goals_share_prefix_and_publish_actual_child_atomically(self):
         scene=prepare_scene(dict(version=1,sceneModel='collision_boxes',maxWallHits=0,
             initial=dict(position=[.5,1,.5],velocity=[0,-.0784000015258789,0],yaw=0),
             startBlock='start',goalBlock='goal',geometryBounds=[-5,-5,-5,10,10,5],blocks=[
@@ -112,12 +112,12 @@ class EventSearchTests(unittest.TestCase):
         with patch('standalone.autonomy.cell_routes.checkpoint_search._motion_bound',return_value=dict(movementAfterSupportCheck=.5)), \
              patch('standalone.autonomy.cell_routes.depth_first.iter_movement_programs',side_effect=generate), \
              patch('standalone.autonomy.cell_routes.checkpoint_search.evaluate_program',side_effect=evaluate):
-            result=find_checkpoint_route(scene,object(),seconds=2,score_seconds=1,max_solver_calls=1,
+            result=find_checkpoint_route(scene,object(),anchor_search=dict(anchors=['mid']),seconds=2,score_seconds=1,max_solver_calls=1,
                                          score_call_limit=1,on_progress=progress)
         self.assertEqual(dispatched,[('mid',10)])
         self.assertTrue(published)
         dfs=result['searchState']['dfs']
-        self.assertEqual(dfs['version'],7)
+        self.assertEqual(dfs['version'],8)
         child_owner=dfs['discovery'][dfs['pendingGoalOwner']]
         self.assertEqual(child_owner['index'],1)
         self.assertEqual(child_owner['parents'][0]['profile']['airtime'],10)

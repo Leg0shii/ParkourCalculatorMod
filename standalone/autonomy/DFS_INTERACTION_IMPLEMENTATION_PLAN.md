@@ -1,6 +1,22 @@
 # Consolidated plan: depth-first decisions and shared interaction eligibility
 
+> **Current extension (2026-11-04):** [anchor plan](ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md) M1–M5 is implemented in the isolated worktree; [new evidence](experiments/anchor-feasibility/README.md) records validation. Physical tasks default to required-anchor/open-span DFS with schema8; virtual/supplied source controls remain separate. Binary turnaround/observability, exact-node solves, global hard latches, run recovery and same-block setup are active. Inter-block revisits remain [deferred](REVISIT_DISCOVERY_DEFERRED_PLAN.md). [Resume](../docs/ANCHOR_IMPLEMENTATION_RESUME.md).
+
 > Current automatic implementation: [GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md](GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md) controls the implemented event-language/stage-provider refactor at `08b00185`. Its dynamic `GoalRequest` stages use the existing DFS with schema7, event-stage policy3, separate score contexts, pending-child owners and retained siblings/unknowns. Constraint generation is state2/policy7 and repair assembly8.447 selected native checks pass with stable source hashes; automatic stored-Real11 cold search finds T67 at16.09s and all24 independent post-run replays pass. See [current evidence](experiments/event-route-discovery/README.md) for the matched-control status. The remainder records the source-specific `a28e5b71` baseline and its original design history.
+
+## Anchor DFS extension obligations (implemented; acceptance below)
+
+The [new file map](ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md#12-file-by-file-implementation-map) extends this engine:
+
+- Coupled required-anchor frames, local requested J/R/A, original-state prior physical history with earlier facings free.
+- Normal exact-node feasibility at selected decision cadence; only a query through that node and no later choices can mark it infeasible. Failed descendants never invalidate unqueried ancestors. No separate ancestor-testing pass.
+- Recommended interval1 per completed jump/contact decision, not per input/raw one-input hold; anchor/final solves mandatory, later2/4 diagnostics. Persist actual query depth/outcome and avoid duplicate exact queries.
+- Backward/onward POSITION/early-stop intermediate work, finite extended physical B7/final MAXZ, no slack/new constant objective.
+- Global monotone hard-jump latch and preliminary110° approach-edge classifier: current decision point vs one edge+margin gives one boolean and selects the whole ordinary/momentum key. Diagonal uses an imaginary diagonal edge. Record geometry/distances/label/key/pruning/replayed flips and two-label diagrams; no blended score or uncertain mode.
+- Active departed-owner filter excludes A→C→A but permits A→A→A→B and optional acyclic supports. Preserve all local jump inputs/physical cases. Deferred [revisit design](REVISIT_DISCOVERY_DEFERRED_PLAN.md) is not an active milestone.
+- Actual one-edge earlier preparation/run recovery with scoped bypass, hard-latch restriction and atomic source/child publication.
+
+The implemented sections below describe the accepted baseline, not these planned changes.
 
 ## Implemented automatic integration contract
 

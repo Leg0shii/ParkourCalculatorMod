@@ -1,5 +1,11 @@
 # Tests and fixtures
 
+## Anchor DFS and finite terminal task
+
+`test_anchor_policy`, `test_anchor_search` and `test_anchor_dfs` cover backward finite guides, axis/diagonal binary boundaries, local requested-impulse counts, explicit caps, exact-node versus ancestor outcomes, physical repair exhaustion, current-owner hops, departure exclusions, selected-descent feasibility, source-owned suspension/resume, global hard latches across incoming histories, run restoration, logging parity and native cold physical landing. Updated event/semantic integration assertions use physical-task schema8. The finite landing clock is bound before an unused suffix; owned future rows are removed through the existing truncation path.
+
+Run the [new native driver and matched finite-task measurement](../autonomy/experiments/anchor-feasibility/README.md) to a fresh directory. Their source-specific manifests and replay scope supersede older virtual-task timing as evidence for this feature.
+
 [Runbook](RUNBOOK.md) supplies commands/environment. [File index](FILE_INDEX.md) lists every tracked test and fixture; [function index](FUNCTION_INDEX.md) indexes production definitions. Tests use `unittest`; many require explicit compiler/worker environment variables. Always report skips. No new test runner or formatting tool is required.
 
 ## Choose tests by contract

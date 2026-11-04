@@ -1,8 +1,10 @@
 # Implementation plan: potential routes, relevant interactions, and shared progress guides
 
+> **Next-change authority (2026-11-04, implementation authorized):** resume from [the current anchor handoff](../docs/ANCHOR_IMPLEMENTATION_RESUME.md) and implement [the controlling plan](ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md). The user explicitly authorized implementation before compaction. The current anchor extension is implemented; see its new evidence for source-specific acceptance. Binary per-decision turnaround/observability, exact-node DFS and same-block setup are settled; inter-block revisits remain [deferred](REVISIT_DISCOVERY_DEFERRED_PLAN.md). Preserve historical evidence and other-agent isolation.
+
 2026-11-03. Concrete follow-up to [the cited research](GENERIC_ROUTE_DISCOVERY_RESEARCH.md). Baseline: `a28e5b71`, isolated checkout `/private/tmp/parkour-real11-initial-run-ticks`, branch `research/real11-initial-run-ticks`. Implementation authorized after compaction. The event-domain, lazy physical preparation and shared dynamic DFS architecture is implemented; the planned release acceptance gates have passed, as recorded in the implementation ledger. New APIs and schemas below remain proposed unless recorded in the status ledger; links to existing functions describe the verified baseline. The existing uncommitted research, navigation updates and routing-review figures must be preserved.
 
-This is the controlling plan for the **next** route-discovery implementation. It supersedes the earlier spatial plan where that plan makes an ordered transit-box walk the route identity or requires every input to follow that walk. The implemented [spatial baseline](SPATIAL_CORRIDOR_REFACTOR_PLAN.md) and [DFS contract](DFS_INTERACTION_IMPLEMENTATION_PLAN.md) remain the source of existing behavior and protections to preserve.
+This records the controlling plan for the **completed** event route-discovery implementation. It supersedes the earlier spatial plan where that plan makes an ordered transit-box walk the route identity or requires every input to follow that walk. The implemented [spatial baseline](SPATIAL_CORRIDOR_REFACTOR_PLAN.md) and [DFS contract](DFS_INTERACTION_IMPLEMENTATION_PLAN.md) remain the source of existing behavior and protections to preserve.
 
 ## 1. Result we are implementing
 
