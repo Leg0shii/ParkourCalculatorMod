@@ -91,6 +91,7 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
         terminal=terminal_plan.to_dict() if terminal_plan else None, corridor=adapter.corridor.to_dict(),
         windows=window_plan, filter=getattr(program_filter, 'checkpoint_identity', None),
         margins=[time_margin,progress_margin], physics=motion,
+        **({'eventStagePolicy':2} if event_route else {}),
         minimumRunPolicy=POLICY_VERSION if minimum_run_pruning else None,
         **({'routeStagePolicy':2,'routeCommitPolicy':1,'routeProposalPolicy':1} if typed_route else {})))
     if resume_state is not None and (resume_state.get('version') != schema or
@@ -177,6 +178,11 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
         used['expansions']+=report['expansions'];used['materializations']+=report['materializations']
         discovery.update(continuation=continuation,exhausted=continuation['exhausted'])
         for request in requests:
+            if request.get('localSetupAlias'):
+                # Current-support hops/runs remain in the movement source for
+                # every next goal. They do not need an extra comparison frame.
+                state.setdefault('localSetupAliases',[]).append(dict(owner=discovery['owner'],request=request['id']))
+                continue
             f=make_frame(discovery['index'],discovery['parents'],discovery['parent'],request['goal'],
                 goalRequest=request,semanticCursor=copy.deepcopy(discovery['cursor']),owner=discovery['owner'])
             state['goalOwners'][discovery['owner']].append(f['id'])
@@ -509,10 +515,10 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
             state['suspended'].append(f)
         transition('backtrack',f,parent=f['parent'])
 
-    def support_episodes_for_child(record):
+    def support_episodes_for_child(record, frame):
         from .event_routes import observed_route
         return observed_route(adapter.data,record['child']['profile'],record['witness'],
-                              after=stage_adapter(f).request['afterTick'])
+                              after=stage_adapter(frame).request['afterTick'])
 
     if event_route:
         state['discoveryWork'] = dict(expansions=0,materializations=0)
@@ -626,7 +632,7 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
                     generation=copy.deepcopy(f['generation']),retention=dict(policy='saved_dfs_siblings_no_cap_eviction'))
                 state['windows'].append(window)
                 if event_route:
-                    observed=support_episodes_for_child(chosen)
+                    observed=support_episodes_for_child(chosen,f)
                     cursor=adapter.advance(f['semanticCursor'],chosen['child'],observed,f['goalRequest'])
                     frame(f['index']+1,[chosen['child']],parent=dict(frame=f['id'],candidate=chosen['id']),cursor=cursor)
                 elif typed_route:

@@ -95,6 +95,9 @@ class EventGuideAdapter:
         requests.sort(key=rank)
         for request in requests:
             request['afterTick']=min(p['profile']['airtime'] for p in parents)
+            event=next(e for e in self.graph['events'] if e['id']==request['event'])
+            request['localSetupAlias']=not request['terminal'] and bool(
+                set(event['attachments']).intersection(cursor['attachments']))
         return requests,state,report
 
     def for_goal(self, request, cursor):
@@ -143,13 +146,15 @@ class EventGuideAdapter:
         if self.program is None or self.request is None:
             raise ValueError('Event validation requires a physical program and goal request')
         self.counts['eventAudits']+=1
-        episodes=support_episodes(self.data,self.program['profile'])
         goal=self.request['goal']
+        target_owners=[b.get('sourceBlock',b['id']) for b in self.scene['blocks']
+                       if goal['kind']=='landing' and b['id'] in goal.get('blocks',[goal['block']])]
+        episodes=support_episodes(self.data,self.program['profile'],required_owners=target_owners)
         required=True
         if goal['kind']=='landing':
             blocks=[b for b in self.scene['blocks'] if b['id'] in goal.get('blocks',[goal['block']])]
-            owners={b.get('sourceBlock',b['id']) for b in blocks}
-            required=any(set(e['owners']).intersection(owners) and e['input'] >= self.request['afterTick']
+            solids={b['solidIndex'] for b in blocks}
+            required=any(set(e['solids']).intersection(solids) and e['input'] >= self.request['afterTick']
                          for e in episodes if e['kind'] in ('support_visit','named_contact'))
         else:
             from ..terminal_goals import satisfied

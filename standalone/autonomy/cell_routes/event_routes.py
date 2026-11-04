@@ -154,15 +154,16 @@ def support_episodes(domain, profile, *, required_owners=()):
     for tick, named, event in sorted(events, key=lambda x: (x[0], x[1], _json(x[2]))):
         blocks = by_box.get(tuple(event.get('box', ())), [])
         owners = sorted({b.get('sourceBlock', b['id']) for b in blocks})
+        solids = sorted({b['solidIndex'] for b in blocks})
         surfaces = sorted(s['id'] for s in groups if any(b['solidIndex'] in s['solids'] for b in blocks)
                           and abs(s['height']-profile['position'][min(tick+1, profile['airtime'])]) <= 1e-7)
         if named:
             result.append(dict(kind='named_contact', input=tick, case=event.get('case'),
-                owners=owners, surfaces=surfaces, event=event, classification='observed_program'))
+                owners=owners, solids=solids, surfaces=surfaces, event=event, classification='observed_program'))
         elif not (profile['grounded'][tick] and not profile['jump'][tick] and
                   current.intersection(surfaces) and not set(owners).intersection(required_owners)):
             result.append(dict(kind='support_visit', input=tick, tick=tick+1, owners=owners,
-                surfaces=surfaces, classification='observed_program' if surfaces else 'unknown'))
+                solids=solids, surfaces=surfaces, classification='observed_program' if surfaces else 'unknown'))
         if surfaces and profile['grounded'][min(tick+1, profile['airtime'])]:
             current = set(surfaces)
     return result
@@ -199,8 +200,19 @@ def build_event_graph(domain):
 
 def initial_cursor(domain, roots=None):
     data = domain.to_dict() if isinstance(domain, RouteDomain) else domain
+    attachments=data['geometry']['starts']
+    if roots and any(p['profile']['airtime'] for p in roots):
+        attachments=set()
+        for program in roots:
+            if not program['profile']['grounded'][-1]:
+                attachments.update(r['key'] for r in data['geometry']['regions'] if r['kind']=='air_volume')
+            else:
+                solid=next((b['solidIndex'] for b in data['scene']['blocks'] if b['id']==program['terminalSupport']),None)
+                attachments.update(s['key'] for s in data['geometry']['supports'] if solid in s['solids'] and
+                    abs(s['height']-program['profile']['position'][-1])<=1e-7)
+        attachments=sorted(attachments)
     return dict(schema=CURSOR_SCHEMA, domainId=data['domainId'], occurrences=[],
-        attachments=data['geometry']['starts'], commitments=[], outsideUnresolved=True)
+        attachments=attachments, commitments=[], outsideUnresolved=True)
 
 
 def next_goals(domain, graph, cursor, continuation=None, *, max_expansions=5000, max_materializations=50, check=None):
@@ -258,13 +270,26 @@ def next_goals(domain, graph, cursor, continuation=None, *, max_expansions=5000,
             outsideUnresolved=not discovered, refinement='unresolved', selectedWalk=None)
         request = dict(schema=1, id='request:'+geometry_key((key,event['id'])), event=event['id'],
             goal=event['goal'], terminal=event['terminal'], connector=connector,
-            commitments=cursor['commitments'], semanticPrefix=cursor['occurrences'])
+            commitments=cursor['commitments'], semanticPrefix=semantic_prefix(cursor))
         requests.append(request); state['emitted'].append(event['id'])
     eligible = [e for e in graph['events'] if cursor['outsideUnresolved'] or
                 set(e['attachments']).intersection(reachable)]
     state['exhausted'] = not state['pending'] and all(e['id'] in state['emitted'] for e in eligible)
     return requests, state, dict(expansions=work, materializations=len(requests),
         termination='exhausted' if state['exhausted'] else 'graph_limit' if state['pending'] else 'guide_limit')
+
+
+def semantic_prefix(cursor):
+    """Untimed route meaning, separate from the exact execution-owner cursor."""
+    result=[]
+    for occurrence in cursor['occurrences']:
+        observed=occurrence.get('observed',{})
+        if not isinstance(observed,dict):
+            observed={}
+        result.append(dict(event=occurrence['event'],occurrence=occurrence['occurrence'],
+            named=[dict(case=e['case'],owners=e['owners']) for e in observed.get('events',[]) if e['kind']=='named_contact'],
+            passages=[[p['features'] for p in option] for option in observed.get('passageAlternatives',[])]))
+    return json.loads(_json(result))
 
 
 def advance_cursor(domain, graph, cursor, request, observed):

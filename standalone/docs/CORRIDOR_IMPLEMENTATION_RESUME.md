@@ -1,10 +1,29 @@
-Implementation authorized after compaction. Start with the [generic discovery plan](../autonomy/GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md) and its implementation ledger. M1 domain groundwork is implemented; automatic entry is not switched yet. Continue M2 onward in `/private/tmp/parkour-real11-initial-run-ticks`, preserving all earlier research and figures. Shared worker/helper dependencies remain read-only.
+# Resume generic event route discovery
 
-# Resume the spatial corridor implementation
+The user authorized implementation after compaction. Work is in `/private/tmp/parkour-real11-initial-run-ticks`, branch `research/real11-initial-run-ticks`. Start with the [controlling plan](../autonomy/GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md) and its implementation ledger. Do not return to the old complete-air-walk design. The old source-specific baseline is preserved below.
 
-Latest request (2026-11-03): make the generic route-discovery implementation plan concrete. Read [GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md](../autonomy/GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md) first: it contains the proposed records/APIs, raw-geometry backing graph, lazy contact/interaction language, role/phase-scoped pruning, exact/optimistic merging, DFS call-site edits, score/objective ownership, cache/resume policies, milestones and acceptance matrix. The user-authorized subagent's [cited research](../autonomy/GENERIC_ROUTE_DISCOVERY_RESEARCH.md) supplies the rationale. This turn changes planning/navigation only; runtime remains `a28e5b71`. On a later implementation request start at M0/M1, preserve all uncommitted research/figures/docs and do not restart conceptual research or implement the old air-walk contract again.
+## Current implementation
 
-Updated2026-11-03 after the semantic corridor feature and final source-stable checks. The implementation is complete to the scope below; automatic cold Real11 completion remains a measured performance limit. Read this status before treating the original plan as unimplemented work.
+Feature commits: `24b787e8` (M1 immutable raw geometry/domain), `5c4e2e36` (M2 scoped interactions and resumable physical preparation), `6bc187fd` (M3 cyclic event language and local guide witnesses), `1d1e320c` (M4/M5 dynamic DFS integration/default automatic cutover). Use `git log` and `git status` for later acceptance fixes.
+
+- No-corridor `find_checkpoint_route` selects `event_goals_v1`; its outer state is `event_route_search` schema1, inner DFS schema7. The domain/graph is stored once. Frame references are compact event/guide IDs.
+- Dynamic next-contact/finish goals replace complete support/air itineraries. Raw cells remain a covering substrate and geometric witness source. There are no automatic `RouteGuards`, box/projection/prefix filters, or first-corridor support-order checks.
+- Compatible actual prefixes own future goal alternatives before their preferences split. In-flight work, pending next-goal owners, generation/repair cursors, numeric variants, siblings and unknowns persist. Objectives have explicit score contexts. Newly committed child work continues first; stalled owners can yield. No sibling solution transfer.
+- Unwanted physical interior absence is screened before face/corner construction. Required contacts and named prerequisites remain owned physical obligations. Constraint generation is state2/context6 with resumable phases, masks and O(n) chain-cost tables. Both supplied DFS modes fingerprint the changed shared policy.
+- Optional guide classification is separate from required physical/task validation. Selected physical passage/resource alternatives remain in evidence; raw witness paths are never hard movement constraints. Unknown probe heights and unknown query enclosure remain explicit.
+- `discoverySettings` version1 replaces legacy automatic catalogue settings:5000 graph expansions/50 guide materializations per session with residual cursors. Physical task/input/call/time limits retain their meaning. Old automatic settings/states are rejected, not silently migrated. Supplied corridors stay controls.
+
+## Validation and next action
+
+The focused native gate passes62 tests without skips. The generic flat gap finishes at tick14 and independently replays; finite and free virtual-finish regressions pass. Broad native, stored-Real11 coverage and matched cold acceptance are being recorded under [event-route-discovery](../autonomy/experiments/event-route-discovery/README.md). Read that evidence directory and the plan ledger for final results; do not reuse the old420-test report as coverage of new runtime.
+
+The initial interrupted Real11 diagnostic is **not** acceptance: it had7 calls and accepted B2/B3 stages, exposed loose long-skip scheduling hints, and was stopped deliberately. Ordinary-flight ordering now uses existing per-flight coefficients; it remains only a scheduling hint. The saved-context M0 profile identifies raw-route guard enumeration and copying, not eager constructor cost, as the dominant work in those two contexts.
+
+Continue M6: require source-stable native results, distinguish raw/semantic/materialized-guide coverage from cold discovery, and run matched automatic/supplied300-second controls with independent replays and the unchanged physical task. No fixed64 requirement or optimality claim. If the cold performance goal is unmet, preserve unknown work and profile rather than widen caps. Keep docs/manifest/report source claims exact.
+
+## Historical a28e5b71 baseline
+
+Everything below records the previous semantic-corridor feature and its original evidence. Its automatic route identity/guard behavior is superseded by the implementation above. Historical measurements/files remain unchanged.
 
 ## Checkout and preservation
 

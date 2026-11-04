@@ -1,7 +1,7 @@
 import json
 import unittest
 
-from standalone.autonomy.cell_routes.event_routes import build_route_domain, build_event_graph, initial_cursor, next_goals, advance_cursor
+from standalone.autonomy.cell_routes.event_routes import build_route_domain, build_event_graph, initial_cursor, next_goals, advance_cursor, semantic_prefix
 from standalone.autonomy.tests.test_route_regions import task_scene
 
 
@@ -55,6 +55,16 @@ class EventRouteTests(unittest.TestCase):
         requests,_,_=next_goals(data,graph,cursor)
         self.assertEqual(len(requests),len(graph['events']))
         self.assertTrue(all(r['connector']['outsideUnresolved'] for r in requests))
+
+    def test_route_semantics_exclude_absolute_timing_but_keep_physical_feature_order(self):
+        observed=dict(events=[dict(kind='named_contact',case='blip',owners=['floor'],input=3)],
+            passageAlternatives=[[dict(features=[['face:left'],['face:top']],gates=[5],resources=dict(total=1))]])
+        cursor=dict(occurrences=[dict(event='visit:target',occurrence=0,observed=observed)])
+        before=semantic_prefix(cursor)
+        observed['events'][0]['input']=9;observed['passageAlternatives'][0][0]['gates']=[12]
+        self.assertEqual(semantic_prefix(cursor),before)
+        observed['passageAlternatives'][0][0]['features'].reverse()
+        self.assertNotEqual(semantic_prefix(cursor),before)
 
 
 if __name__=='__main__':unittest.main()

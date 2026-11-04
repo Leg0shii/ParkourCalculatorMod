@@ -65,9 +65,14 @@ def query_interaction(request, context, *, session=None, budget=None, context_ke
 def normalize_alternatives(alternatives, proofs):
     """Remove absent unwanted items; absent prerequisites reject their owner."""
     kept, audit = [], []
+    rejected = {item.get('owner') for item in alternatives if
+                proofs[item['requestId']]['status']=='absent' and
+                proofs[item['requestId']]['role']!='unwanted_contact'}
     for item in alternatives:
         proof = proofs[item['requestId']]
         action = ('omit' if proof['role'] == 'unwanted_contact' else 'reject_owner') if proof['status'] == 'absent' else 'retain'
+        if item.get('owner') in rejected and action=='retain':
+            action='reject_owner'
         audit.append(dict(requestId=item['requestId'], proof=proof['id'], action=action))
         if action == 'retain':
             kept.append(item)

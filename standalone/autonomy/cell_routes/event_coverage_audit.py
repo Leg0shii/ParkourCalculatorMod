@@ -55,22 +55,31 @@ def audit(fixture, compiler, witness):
     phases=phase_trace(witness['candidate'])
     raw=all(segment_covered(d,p['start'],p['end']) for p in phases)
     episodes=support_episodes(data,witness['movementProgram']['profile'])
-    source='initial';word=[];checks=[]
+    source='initial';word=[];checks=[];finished=False
     for episode in episodes:
         if episode['kind']!='support_visit':
             continue
         event=next((e for e in graph['events'] if e.get('surface') in episode['surfaces']),None)
+        final=next(e for e in graph['events'] if e['terminal'])
+        if final['goal']['kind']=='landing':
+            solid=next(b['solidIndex'] for b in scene['blocks'] if b['id']==final['goal']['block'])
+            if solid in episode['solids']:
+                event=final
         if event is None:
             checks.append(dict(episode=episode,represented=False,materialized=False));continue
         matches=[m for m in discovery['materialized'] if m['source']==source and m['request']['event']==event['id']]
         checks.append(dict(event=event['id'],tick=episode['tick'],represented=True,
             materialized=any(m['guide']['status']=='witness' for m in matches),
             guides=[m['guide']['id'] for m in matches]))
-        source=event['id'];word.append(event['id'])
+        source=('initial' if set(event['attachments'])==set(data['geometry']['starts']) else event['id'])
+        word.append(event['id'])
+        if event['terminal']:
+            finished=True;break
     final=next(e for e in graph['events'] if e['terminal'])
     matches=[m for m in discovery['materialized'] if m['source']==source and m['request']['event']==final['id']]
-    checks.append(dict(event=final['id'],represented=True,materialized=any(m['guide']['status']=='witness' for m in matches),
-        guides=[m['guide']['id'] for m in matches]))
+    if not finished:
+        checks.append(dict(event=final['id'],represented=True,materialized=any(m['guide']['status']=='witness' for m in matches),
+            guides=[m['guide']['id'] for m in matches]))
     return dict(discovery=discovery,witnessReplay=replay,rawGeometryAdmitted=raw,
         semanticProjectionRepresented=all(c['represented'] for c in checks),
         usefulGuidesMaterialized=all(c['materialized'] for c in checks),

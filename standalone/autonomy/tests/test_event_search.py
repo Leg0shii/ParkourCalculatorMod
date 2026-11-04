@@ -10,9 +10,24 @@ from standalone.autonomy.cell_routes.event_adapter import EventGuideAdapter
 from standalone.autonomy.cell_routes.event_search import discovery_settings
 from standalone.autonomy.tests.test_checkpoint_guidance import flat_scene
 from standalone.autonomy.tests.test_depth_first import program
+from standalone.autonomy.movement_composition import empty_program, boundary_state
+from standalone.autonomy.movement_generation import generate_choices
 
 
 class EventSearchTests(unittest.TestCase):
+    def test_same_support_setup_is_local_without_removing_its_physical_choices(self):
+        scene=flat_scene();data=build_route_domain(scene,dict(kind='landing',block='goal')).to_dict()
+        adapter=EventGuideAdapter(data,build_event_graph(data))
+        root=empty_program(scene['initial'],threshold=0.);root['terminalSupport']='start'
+        cursor=adapter.initial_cursor([root])
+        requests,_,_=adapter.next_goals(cursor,[root])
+        self.assertTrue(any(r['localSetupAlias'] for r in requests))
+        view=adapter.for_goal(next(r for r in requests if r['terminal']),cursor)
+        ctx=dict(mode='open',scene=scene,program=root,state=boundary_state(root),maxInputs=20,threshold=0.)
+        view.context(ctx)
+        choices=list(generate_choices('normal',ctx))
+        self.assertIn('start',[c['terminalSupport'] for c in choices])
+        self.assertIn('goal',[c['terminalSupport'] for c in choices])
     def test_adapter_has_no_inherited_raw_cell_rejection_paths(self):
         scene=flat_scene();data=build_route_domain(scene,dict(kind='landing',block='goal')).to_dict()
         adapter=EventGuideAdapter(data,build_event_graph(data))

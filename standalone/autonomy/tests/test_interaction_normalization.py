@@ -82,6 +82,15 @@ class InteractionNormalizationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'Incompatible constraint'):
             source(saved)
 
+    def test_absent_prerequisite_rejects_the_whole_owned_alternative(self):
+        proofs=dict(a=dict(id='a',status='absent',role='approach_prerequisite'),
+                    b=dict(id='b',status='unknown',role='required_contact'),
+                    c=dict(id='c',status='unknown',role='required_contact'))
+        kept,audit=normalize_alternatives([dict(requestId='a',owner='case1'),dict(requestId='b',owner='case1'),
+                                           dict(requestId='c',owner='case2')],proofs)
+        self.assertEqual(kept,[dict(requestId='c',owner='case2')])
+        self.assertEqual([v['action'] for v in audit],['reject_owner','reject_owner','retain'])
+
 
 if __name__ == '__main__':
     unittest.main()
