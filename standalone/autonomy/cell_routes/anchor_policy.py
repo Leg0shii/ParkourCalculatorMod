@@ -5,6 +5,9 @@ import copy
 from ..solve_spec import digest
 
 
+HARD_JUMP_POLICY_VERSION = 2
+
+
 def settings(value, scene):
     result = dict(version=1, anchors=[], turnaround=dict(degrees=110., spatialMargin=.3),
                   solveEveryDecisionLevels=1, feasibilityPolicy='ipopt_oracle', observability=True)
@@ -38,7 +41,8 @@ def settings(value, scene):
 
 
 def semantic_settings(policy):
-    return {k:v for k,v in policy.items() if k!='observability'}
+    return dict({k:v for k,v in policy.items() if k!='observability'},
+                hardJumpPolicyVersion=HARD_JUMP_POLICY_VERSION)
 
 
 def owner(scene, block):
@@ -135,14 +139,37 @@ def within_caps(request, program):
     return True
 
 
-def single_jump_structure(scene, program, start, source, target, *, complete=False):
+def transfer_structure(scene, program, start, source, target, *, complete=False):
+    """Separate source-local momentum preparation from the transfer flight.
+
+    Each actual return to the source closes a setup hop. The pending/complete
+    flight after the last source contact has at most/exactly one requested
+    jump. A source contact during the target's arrival input belongs to that
+    transfer's physical case, not an earlier setup boundary.
+    """
     p=program['profile'];n=p['airtime']
-    jumps=[t for t in range(start,n) if p['grounded'][t] and p['jump'][t]]
-    if len(jumps)>1 or complete and len(jumps)!=1:
-        return False
+    launches=[t for t in range(start,n) if p['grounded'][t] and p['jump'][t]]
     source,target=owner(scene,source),owner(scene,target)
-    for tick,name in visits(scene,program):
-        if tick<=start:continue
-        if name not in (source,target):return False
-        if jumps and tick>jumps[0] and name==source:return False
-    return True
+    contacts=[(t,name) for t,name in visits(scene,program) if start<t<=n]
+    arrival=min((t for t,name in contacts if name==target),default=None)
+    boundary=max([start]+[t for t,name in contacts if name==source and (arrival is None or t<arrival)])
+    preparation=[t for t in launches if t<boundary]
+    transfer=[t for t in launches if t>=boundary and (arrival is None or t<arrival)]
+    reason=None
+    if any(name not in (source,target) for _,name in contacts):
+        reason='intermediate_support_between_anchors'
+    elif arrival is not None and any(t>arrival and name==source for t,name in contacts):
+        reason='return_after_target_arrival'
+    elif arrival is not None and any(t>=arrival for t in launches):
+        reason='jump_after_target_arrival'
+    elif len(transfer)>1:
+        reason='multiple_transfer_impulses'
+    elif complete and (arrival is None or len(transfer)!=1):
+        reason='missing_transfer_jump'
+    return dict(version=HARD_JUMP_POLICY_VERSION,valid=reason is None,reason=reason,
+                source=source,target=target,spanStart=start,preparationThrough=boundary,
+                preparationJumps=preparation,transferJumps=transfer,arrival=arrival)
+
+
+def single_jump_structure(scene, program, start, source, target, *, complete=False):
+    return transfer_structure(scene,program,start,source,target,complete=complete)['valid']

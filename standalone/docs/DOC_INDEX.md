@@ -144,6 +144,8 @@ All tracked standalone Markdown plus this consolidation. Read [AGENTS](../AGENTS
 
 Current feature evidence: [anchor-feasibility README](../autonomy/experiments/anchor-feasibility/README.md), [new finite Real11 fixture](../autonomy/experiments/anchor-feasibility/real11-anchors.json), and fresh native/matched-run artifacts in that directory.
 
+Latest correction: [hard-transfer preparation evidence](../autonomy/experiments/anchor-transfer-preparation/README.md). Policy2 preserves source-local setup after latching;535 native checks pass. Initial0-only cold finds64; the combined arm remains limited by root service order. [Earlier seeded diagnosis](../autonomy/experiments/anchor-initial0-audit-2026-11-04/README.md) is distinct from these cold results.
+
 ## Current next-change plan
 
 - [Current decisions/cadence advice](../autonomy/ANCHOR_POLICY_DECISIONS.md), [implementation plan](../autonomy/ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md), [deferred revisit design](../autonomy/REVISIT_DISCOVERY_DEFERRED_PLAN.md). Normal exact-node DFS solves, no ancestor-negative inference, same-block jumps supported; physical returns after another block deferred. The physical-task anchor extension is implemented; see new evidence for acceptance.

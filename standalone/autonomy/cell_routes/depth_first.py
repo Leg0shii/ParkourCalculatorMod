@@ -227,12 +227,14 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
 
     def hard_bound(program,f):
         if not anchor_route or latch_key(f) not in state['hardLatches']:return None
-        from .anchor_policy import single_jump_structure
+        from .anchor_policy import transfer_structure
         _,start=span_info(f)
         names=adapter.guide_plan['anchors'];i=span_info(f)[0]
         completed=program.get('terminalSupport') in f['goal'].get('blocks',[f['goal']['block']])
-        if not single_jump_structure(scene,program,start,names[i],names[i+1],complete=completed):
-            return dict(reason='global_single_jump_latch',span=latch_key(f),revision=state['latchRevision'])
+        transfer=transfer_structure(scene,program,start,names[i],names[i+1],complete=completed)
+        if not transfer['valid']:
+            return dict(reason='global_single_jump_latch',span=latch_key(f),revision=state['latchRevision'],
+                        transfer=transfer)
         return None
 
     def score_key(program,f):
@@ -634,14 +636,17 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
             record.pop('child',None)
             record.update(status='unknown',termination='preliminary_scope_not_a_terminal_witness')
         if anchor_route and record.get('witness') and final_validated:
-            from .anchor_policy import single_jump_structure
+            from .anchor_policy import transfer_structure
             span,start=span_info(f);names=adapter.guide_plan['anchors']
-            if single_jump_structure(scene,program,start,names[span],names[span+1],complete=True):
+            transfer=transfer_structure(scene,program,start,names[span],names[span+1],complete=True)
+            record['transferStructure']=transfer
+            if transfer['valid']:
                 key=latch_key(f)
                 if key not in state['hardLatches']:
                     state['latchRevision']+=1
-                    state['hardLatches'][key]=dict(version=1,revision=state['latchRevision'],candidate=identity,
-                        frame=f['id'],model=result.get('solveIdentity'),inputs=program['profile']['airtime'])
+                    state['hardLatches'][key]=dict(version=transfer['version'],revision=state['latchRevision'],candidate=identity,
+                        frame=f['id'],model=result.get('solveIdentity'),inputs=program['profile']['airtime'],
+                        transferStructure=transfer)
                     transition('hard_jump_latched',f,span=key,revision=state['latchRevision'])
         if minimum_run_pruning and record.get('witness') and final_validated:
             remember(f.setdefault('minimumRuns',{}),latest_jump(program,scene),identity,record['arrival'])

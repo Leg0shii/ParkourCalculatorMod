@@ -9,7 +9,7 @@ from unittest.mock import patch
 from standalone.autonomy.movement_composition import empty_program
 from standalone.autonomy.movement_search import movement_settings
 from standalone.autonomy.movement_frontier import persistent_programs
-from standalone.autonomy.cell_routes.anchor_policy import local_counts
+from standalone.autonomy.cell_routes.anchor_policy import local_counts, single_jump_structure
 from standalone.autonomy.cell_routes.node_feasibility import meaningful_choice
 from standalone.autonomy.cell_routes.automatic_experiment import run
 from standalone.autonomy.tests.test_checkpoint_guidance import flat_scene
@@ -18,12 +18,13 @@ from standalone.autonomy.block_contacts import solve_contact_branches
 
 
 class AnchorSearchTests(unittest.TestCase):
-    def frontier(self, evaluator, *, continuation=None, report=None, limit=15):
+    def frontier(self, evaluator, *, continuation=None, report=None, limit=15, latched=None):
         s=flat_scene()
         cfg=dict(movement_settings(s),maxPrefixes=limit,maxInputs=60)
         return persistent_programs(s,settings=cfg,report=report if report is not None else {},
             continuation=continuation,threshold=0.,node_evaluator=evaluator,
-            program_filter=lambda p:local_counts(p)['R']<=2,
+            program_filter=lambda p:local_counts(p)['R']<=2 and (not latched or not latched() or
+                single_jump_structure(s,p,0,'start','goal',complete=p['terminalSupport']=='goal')),
             policy_context=dict(version=1,span=0),deadline=time.monotonic()+3)
 
     def test_multiple_same_block_jumps_generated_and_no_solve_for_run_hold(self):
@@ -52,6 +53,22 @@ class AnchorSearchTests(unittest.TestCase):
         self.assertGreater(len(queried),1)
         self.assertTrue(programs,'Rejected local-hop child swallowed the direct goal sibling')
         self.assertNotIn('status',report['continuation']['pending'][0] if report['continuation']['pending'] else {})
+
+    def test_learned_latch_and_resume_keep_source_setup_hops_in_the_actual_source(self):
+        report={};latched=False;calls=[]
+        def evaluate(p,nodes,forced):
+            calls.append(copy.deepcopy(p))
+            return dict(status='feasible',program=p)
+        source=self.frontier(evaluate,report=report,latched=lambda:latched)
+        first=next(source);source.close()
+        self.assertEqual(local_counts(first)['J'],1)
+        latched=True
+        saved=json.loads(json.dumps(report['continuation']))
+        resumed=self.frontier(evaluate,report={},continuation=saved,limit=30,latched=lambda:latched)
+        try:programs=list(resumed)
+        finally:resumed.close()
+        self.assertTrue(any(local_counts(p)['J']>=2 for p in programs))
+        self.assertTrue(any(p['terminalSupport']=='start' and local_counts(p)['J']>=1 for p in calls))
 
     def test_suspended_exact_child_resumes_same_choice_before_siblings(self):
         calls=[];report={}

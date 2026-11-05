@@ -2,6 +2,8 @@
 
 ## Anchor DFS and finite terminal task
 
+Hard-transfer policy2 adds source-hop chains after learning/backtracking/resume, noninitial source boundaries, owner aliases, same-input source/target contact, explicit caps and the actual Real11 initial0 prefix. [Corrected-source evidence](../autonomy/experiments/anchor-transfer-preparation/README.md) records535 native passes and source-stable cold controls. Setup impulses remain in J, while only the transfer is restricted to one jump. The normal0/8 cold run's remaining branch-service limit is recorded separately from eligibility.
+
 `test_anchor_policy`, `test_anchor_search` and `test_anchor_dfs` cover backward finite guides, axis/diagonal binary boundaries, local requested-impulse counts, explicit caps, exact-node versus ancestor outcomes, physical repair exhaustion, current-owner hops, departure exclusions, selected-descent feasibility, source-owned suspension/resume, global hard latches across incoming histories, run restoration, logging parity and native cold physical landing. Updated event/semantic integration assertions use physical-task schema8. The finite landing clock is bound before an unused suffix; owned future rows are removed through the existing truncation path.
 
 Run the [new native driver and matched finite-task measurement](../autonomy/experiments/anchor-feasibility/README.md) to a fresh directory. Their source-specific manifests and replay scope supersede older virtual-task timing as evidence for this feature.

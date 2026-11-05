@@ -25,7 +25,7 @@ def extend(s,parent,target,n,extra=False):
 
 
 class AnchorDFSTests(unittest.TestCase):
-    def run_tree(self, *, logging=True, resume=None, calls=20, interval=1):
+    def run_tree(self, *, logging=True, resume=None, calls=20, interval=1, setup=False):
         s=scene();s['maxTotalRunTicks']=60;s['maxRunTicksPerJump']=60;dispatched=[]
         def generate(target_scene,*,report,initial_programs,continuation=None,node_evaluator,**kwargs):
             saved=copy.deepcopy(continuation) if continuation else dict(expanded=1,cursor=0,exhausted=False)
@@ -33,6 +33,13 @@ class AnchorDFSTests(unittest.TestCase):
             parent=initial_programs[0];target=target_scene['goalBlock']
             if target=='mid':
                 choices=[extend(s,parent,'mid',10),extend(s,parent,'mid',11)]
+                if setup:
+                    prepared=extend(s,parent,'mid',11)
+                    prepared['profile']['jump'][1]=True
+                    start=next(b for b in s['blocks'] if b['id']=='start')
+                    prepared['profile']['contactEvents'].insert(0,dict(offset=0,axis='Y',direction=-1,
+                        box=s['collisionScene']['solids'][start['solidIndex']]))
+                    choices.append(prepared)
             else:
                 # Certifying subtree learns the global hard latch. A later
                 # incoming history must not reopen a two-jump local structure.
@@ -85,6 +92,22 @@ class AnchorDFSTests(unittest.TestCase):
         second,calls2=self.run_tree(resume=saved)
         self.assertEqual([(b,t) for b,t,_ in calls1+calls2],[('mid',10),('goal',20),('mid',11)])
         self.assertEqual(first['searchState']['dfs']['hardLatches'],second['searchState']['dfs']['hardLatches'])
+
+    def test_global_latch_accepts_setup_after_certifier_and_backtracking(self):
+        result,calls=self.run_tree(setup=True)
+        frames=result['searchState']['dfs']['frames']
+        prepared=[r for f in frames if f['index']==0 for r in f['records']
+                  if r.get('transferStructure',{}).get('preparationJumps')]
+        self.assertEqual(len(prepared),1)
+        self.assertEqual(prepared[0]['status'],'feasible')
+        self.assertEqual(prepared[0]['transferStructure']['transferJumps'],[1])
+        self.assertEqual(result['searchState']['dfs']['hardLatches']['start→mid']['version'],2)
+
+    def test_incompatible_old_latch_policy_is_rejected_on_resume(self):
+        first,_=self.run_tree(calls=2)
+        with patch('standalone.autonomy.cell_routes.anchor_policy.HARD_JUMP_POLICY_VERSION',1):
+            with self.assertRaisesRegex(ValueError,'Incompatible automatic event'):
+                self.run_tree(resume=first['searchState'])
 
     def test_completed_decision_cadence_and_forced_anchor_or_terminal(self):
         for interval,expected in ((1,[1,2,3,4]),(2,[2,4]),(4,[4])):

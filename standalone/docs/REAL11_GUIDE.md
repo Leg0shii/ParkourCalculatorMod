@@ -1,5 +1,7 @@
 # Linkcraft Real11 opening: agent guide
 
+**Current hard-jump correction:** source-local setup hops remain legal even after a global one-transfer latch. Initial-0 jump0→B1@12 then jump12→B2@21 is one setup plus one hard transfer. The old implementation incorrectly excluded it. [Corrected policy/validation](../autonomy/experiments/anchor-transfer-preparation/README.md).
+
 ## Physical B7 and anchor implementation (2026-11-04)
 
 The [fresh fixture](../autonomy/experiments/anchor-feasibility/real11-anchors.json) extends B7 one block +Z to `[729,0,-1095,730,7,-1093]` and requires actual B7 landing. It minimizes achieved T, then maximizes Z; terminal guide is `(729.5,7,-1093)`. Normal body-overlap support still applies. The old virtual target/extra X<729.7 row is absent from the new fixture.

@@ -4,7 +4,7 @@ import math
 import unittest
 
 from standalone.autonomy.block_search import prepare_scene
-from standalone.autonomy.cell_routes.anchor_policy import audit, local_counts, priority, settings, visit_state, within_caps, single_jump_structure
+from standalone.autonomy.cell_routes.anchor_policy import audit, local_counts, priority, settings, visit_state, within_caps, single_jump_structure, transfer_structure
 from standalone.autonomy.cell_routes.anchor_guides import build_guides, classify, nearest, onward_objective
 from standalone.autonomy.cell_routes.anchor_adapter import AnchorAdapter
 from standalone.autonomy.cell_routes.event_routes import build_route_domain, build_event_graph
@@ -170,6 +170,66 @@ class AnchorPolicyTests(unittest.TestCase):
         self.assertFalse(single_jump_structure(s,p,0,'start','mid',complete=True))
         p=history(s,['start','mid']);p['profile']['jump']=[True,False]
         self.assertFalse(single_jump_structure(s,p,0,'start','mid',complete=True))
+
+    def test_hard_transfer_keeps_arbitrary_source_setup_jumps_and_counts_them(self):
+        s=scene()
+        for hops in (1,2,4):
+            p=history(s,['start']*hops+['mid'])
+            result=transfer_structure(s,p,0,'start','mid',complete=True)
+            self.assertTrue(result['valid'],result)
+            self.assertEqual(result['preparationJumps'],list(range(hops)))
+            self.assertEqual(result['transferJumps'],[hops])
+            self.assertEqual(local_counts(p)['J'],hops+1)
+            self.assertTrue(single_jump_structure(s,history(s,['start']*hops),0,'start','mid'))
+            self.assertFalse(within_caps(dict(maxJumps=hops),p))
+
+    def test_setup_does_not_admit_an_intermediate_block_or_two_transfer_impulses(self):
+        s=scene()
+        self.assertFalse(single_jump_structure(s,history(s,['start','optional','mid']),0,'start','mid',complete=True))
+        p=history(s,['start','start','mid'])
+        p['profile']['contactEvents']=p['profile']['contactEvents'][:1]+p['profile']['contactEvents'][2:]
+        result=transfer_structure(s,p,0,'start','mid',complete=True)
+        self.assertFalse(result['valid'])
+        self.assertEqual(result['reason'],'multiple_transfer_impulses')
+        self.assertFalse(single_jump_structure(s,history(s,['mid','start']),0,'start','mid'))
+        self.assertFalse(single_jump_structure(s,history(s,['mid','mid']),0,'start','mid',complete=True))
+
+    def test_transfer_uses_current_anchor_boundary_and_physical_owner_aliases(self):
+        s=scene();p=history(s,['mid','mid','goal'])
+        result=transfer_structure(s,p,1,'mid','goal',complete=True)
+        self.assertTrue(result['valid'])
+        self.assertEqual(result['preparationJumps'],[1])
+        self.assertEqual(result['transferJumps'],[2])
+        next(b for b in s['blocks'] if b['id']=='optional')['sourceBlock']='start'
+        self.assertTrue(single_jump_structure(s,history(s,['optional','mid']),0,'start','mid',complete=True))
+
+    def test_source_contact_at_target_arrival_is_part_of_the_same_transfer(self):
+        s=scene();p=history(s,['start','mid'])
+        # A named landing case can report its lower source and higher target
+        # in one input; that is not a completed setup hop before this flight.
+        p['profile']['contactEvents'][0]['offset']=1
+        p['profile']['jump']=[True,False]
+        result=transfer_structure(s,p,0,'start','mid',complete=True)
+        self.assertTrue(result['valid'],result)
+        self.assertEqual(result['transferJumps'],[0])
+
+    def test_real11_initial0_setup_and_transfer_are_distinct(self):
+        import gzip
+        from pathlib import Path
+        from standalone.autonomy.movement_composition import truncate_program
+        base=Path(__file__).parents[1]/'experiments'
+        fixture=json.loads((base/'anchor-feasibility/real11-anchors.json').read_text())
+        s=prepare_scene(fixture['request'])
+        saved=json.loads(gzip.decompress((base/'virtual-finish/evidence/initial0-cold.json.gz').read_bytes()))
+        program=saved['result']['best']['movementProgram']
+        setup=truncate_program(program,12)
+        self.assertTrue(single_jump_structure(s,setup,0,'b1','b2'))
+        landing=truncate_program(program,21)
+        result=transfer_structure(s,landing,0,'b1','b2',complete=True)
+        self.assertTrue(result['valid'])
+        self.assertEqual(result['preparationJumps'],[0])
+        self.assertEqual(result['transferJumps'],[12])
+        self.assertEqual(local_counts(landing)['J'],2)
 
     def test_declared_caps_are_not_widened_during_recovery(self):
         p=history(scene(),['start']*11);p['profile']['jump']=[False]*11

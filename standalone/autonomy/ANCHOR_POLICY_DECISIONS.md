@@ -8,33 +8,26 @@ Feasibility scheduling advice is in [O4: exact DFS node feasibility and cadence]
 
 ## O1 — Hard-jump status is a solve-wide latch
 
-**Settled:** once a direct hard jump between consecutive anchors has succeeded anywhere in the solve, keep that anchor transition restricted to a single jump for the rest of the solve. This is intentional even when backtracking changes its incoming discrete history.
+**Corrected hard-jump contract (user clarification,2026-11-04):** a hard jump has one transfer jump between S and E. It can have any allowed number of setup jumps that land back on S before that transfer. This applies to every starting anchor, including the implicit opening support. The earlier implementation counted all span impulses and rejected same-source returns; that was an implementation/design-record error, not the user's intended restriction.
 
-Use a monotone table keyed by the ordered anchor occurrence pair in this scene/task/anchor-plan context:
+A validated one-transfer S→E witness latches the ordered pair globally for the solve, across changed incoming histories/backtracking. Preparatory S→S hops remain legal after the latch. Ordinary runs and setup jumps remain subject to the original domain/caps, and all requested grounded impulses still count in J for ordering. No initial-span exception is needed.
+
+The transfer starts after the last completed source contact before the target arrival. Earlier impulses are preparation; the final transfer has exactly one requested grounded impulse. An unfinished prefix can be preparing or in flight without already committing to target versus source landing. A source contact in the target-arrival input belongs to that same physical transfer case rather than resetting preparation. Aliased patches use physical owners.
+
+Examples after a latch:
 
 ```text
-hardJump[S→E] = false initially
-fully validated single-jump S→E witness anywhere → hardJump[S→E] = true
-backtracking or failure on another incoming history does not reset it
+S → S → S → E    allowed: setup hops on S, one transfer to E
+S → air → S → E allowed when the final S→E transfer jumps
+S → C → E        outside the hard transfer domain: intermediate support C
+S → S → E        excluded if the final transfer is only a run-off, without a jump
 ```
 
-Store the certifying witness and its provenance, but **do not scope the active restriction to that witness's parent prefix**. A successful route with several setup jumps does not itself certify the single-jump latch. A failed or unattempted direct solve does not establish the latch.
+Initial-0 Real11 jumps at0 back onto B1@12 and at12 to B2@21. The first is preparation; the second is the hard transfer. A latch learned from jump8→B2@17 must preserve that initial-0 program. Preparatory hops on later anchors receive exactly the same treatment.
 
-Once latched:
+Global latches still survive certifier abandonment. Run-family normalization keeps the complete earlier preparation history, so an extra-run representative from one setup history cannot suppress another. Deferred ordinary runs are restored with their actual parent/rows and scoped bypass. Optional inter-block revisits remain deferred; same-source setup does not consume the required-anchor cursor.
 
-- Future attempts through S→E, including restored/backtracked attempts, keep the single-jump structure.
-- Ordinary run preparation can vary within that structure. Minimum-run deferral remains recoverable under the selected regional policy.
-- Do not reopen local multijump/bounce structures inside S→E when another parent cannot realize it. Recover earlier arrival/preparation decisions, including more favorable incoming momentum at S, while keeping S→E single-jump.
-- A successful latch found inside a later-abandoned subtree survives the abandonment.
-- Existing queued multijump S→E programs become outside the selected policy domain. Preserve an audit of the transition, but they do not remain a hidden recovery escape from the latch.
-
-Before a span is latched, harder-jump recovery may add setup jumps on the departure block, restore runs and move preparation farther back. Chained jumps with no intervening runs remain a preferred preparation pattern. The latch can be learned at any later iteration and then applies globally within this solve.
-
-This intentionally restricts the search domain. We optimize within that chosen domain; we need not keep proposing unrestricted multijump alternatives as a safeguard against the user's stated assumption.
-
-**Implementation:** persist `hardJumpLatches` outside individual DFS frames, include a monotone policy revision, and recheck source eligibility before expanding/scoring/promoting queued work. Learning a latch does not erase other spans' pending sources, unknowns or recoverable run alternatives. A changed scene/task/anchor plan starts a new context, not a continuation of the old latch table.
-
-Current [`minimum_runs.py`](cell_routes/minimum_runs.py) already supplies matching-family normalization and feasible representatives; [`depth_first.py`](cell_routes/depth_first.py) saves excluded programs. Neither implements the requested global structural latch or targeted restoration yet. Recovery still needs actual programs/recipes, physical owners/rows and residual generators, with a scoped bypass so restored runs are not immediately deferred again.
+Hard-jump policy version2 is part of the outer/DFS/stage/movement semantic context. Old exact checkpoints are rejected because the wrong policy may already have discarded setup choices. Latch/arrival records expose preparation impulses, transfer impulses and the source-contact boundary. No movement physics or continuous objective equation changes.
 
 ## O2 — Requested grounded impulses are the jump count
 
@@ -224,7 +217,7 @@ Track departed owners: the current owner remains eligible for repeated local jum
 
 A required-anchor cursor advances only on its next actual required contact, never from a same-block setup hop. Optional supports are not globally disabled. Required order remains enforced; do not enter a later required anchor prematurely if that would require a currently unsupported return to fulfill the required sequence.
 
-Global hard latches still intentionally restrict a latched span to its single jump. Same-block multijump preparation remains available in unlatched spans and recovery where that structure is permitted. Do not accidentally remove all same-block hops from the generator while enforcing no inter-block returns.
+Global hard latches intentionally restrict the transfer to one jump. Same-block setup preparation remains available on the departure anchor in both latched and unlatched spans, including recovery. Do not accidentally remove all same-block hops from the generator while enforcing no inter-block returns.
 
 Current tests must assert both sides: several legal same-block jumps are generated/validated, while A→C→A is excluded as deferred feature scope. Logical DFS backtracking is allowed and is not a physical revisit. No revisit-pair source/family cursor is implemented now; positive-duration horizon and ordinary source limits still bound local chains.
 
@@ -238,7 +231,7 @@ No O7 follow-up remains. Global hard topology and regional momentum ordering are
 
 ## Settled versus remaining implementation choices
 
-Settled: DFS; solve-wide single-jump hard latch; requested grounded impulses; extended finite B7/onward guides/early stop;110° turn with approach-facing boundary and regional margin; no separate ancestor-testing subsystem; a failed descendant cannot invalidate an untested ancestor; inter-block revisit generation deferred; multiple jumps on the current block supported where no hard latch forbids them.
+Settled: DFS; solve-wide single-jump hard latch; requested grounded impulses; extended finite B7/onward guides/early stop;110° turn with approach-facing boundary and regional margin; no separate ancestor-testing subsystem; a failed descendant cannot invalidate an untested ancestor; inter-block revisit generation deferred; multiple setup jumps on the current block preserved even after a hard-transfer latch.
 
 Starting implementation default: normal feasibility after each completed movement decision, with anchors/final mandatory; benchmark 2/4 later if solving dominates. Turn mode is a preliminary binary edge-plus-margin decision using its current point, with compact diagnostics, plots and outcome counters. The blended regional-score and uncertain-membership proposals are removed; no new turn-policy question needs reopening.
 

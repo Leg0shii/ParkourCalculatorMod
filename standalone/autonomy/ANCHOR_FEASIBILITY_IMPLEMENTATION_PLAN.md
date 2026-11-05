@@ -1,5 +1,7 @@
 # Plan: anchor DFS, global hard latches and observable binary turn heuristics
 
+**Hard-jump correction (2026-11-04):** “single jump” means a single S→E transfer; S→S momentum/setup hops remain eligible before that transfer, even after a global latch. This applies to every anchor span and the opening. The initial implementation/document wording that forbade local setup after a latch was wrong. The [corrected decisions](ANCHOR_POLICY_DECISIONS.md#o1--hard-jump-status-is-a-solve-wide-latch) and [transfer-preparation implementation](experiments/anchor-transfer-preparation/README.md) supersede that wording. Policy2 is fingerprinted for exact continuation.
+
 **Implementation status (2026-11-04):** M1–M6 is implemented;527 final-source native tests pass without failures/errors/skips, with101 runtime hashes stable. M7 matched finite-task cold arms both find T67/Y7/grounded, with43/43 independent accepted-witness replays and stable source. First14.02s early stop versus13.56s polish shows similar timing; no global optimality claim. See [implementation evidence](experiments/anchor-feasibility/README.md). The following authorization history is preserved. **Implementation authorization / compaction checkpoint:** the user explicitly said "go ahead and implement", then requested a handoff before compaction. Resume from [ANCHOR_IMPLEMENTATION_RESUME.md](../docs/ANCHOR_IMPLEMENTATION_RESUME.md) and start M1. No runtime tool call/source change occurred before interruption; implementation is authorized and still to do. Older planning-only wording below records document history, not revoked authorization.
 
 2026-11-04, revised after the binary-decision turnaround/observability clarification. **Planning only; runtime/fixtures unchanged.** Worktree `/private/tmp/parkour-real11-initial-run-ticks`, branch `research/real11-initial-run-ticks`, baseline `4cf39caa`, measured algorithm `08b00185`. Preserve the other checkout/shared native dependencies. Commit only implemented features with their related docs/tests/fixtures, not this planning-only turn.
@@ -13,13 +15,13 @@ Read [ANCHOR_POLICY_DECISIONS.md](ANCHOR_POLICY_DECISIONS.md) for the current ex
 | Anchors/coupling | Ordered required anchors; Real11 B2/B3/B4/B5. All movement choices between anchors are coupled. Comparisons/promotions only at required anchors/final task. |
 | Counts | Absolute T; requested grounded J and grounded nonjump R/air A local to the current anchor span. Named jump cancels still have their horizontal impulse and count J. |
 | Default/turn preference | At each decision choose ordinary T,−J,R or turnaround T,−J,A from current point versus edge+margin. One boolean, no blended counts or uncertain label; progress never ranks decisions. |
-| Hard jump | A fully validated direct jump anywhere latches that anchor transition to single-jump structure for the rest of the solve, across backtracking/changed incoming histories. This is intentional domain restriction. |
-| Recovery | Restore/reconstruct deferred run alternatives and earlier preparation, walking actual tree edges. Additional same-block setup jumps are allowed where they do not violate a global hard latch; inter-block returns are deferred. |
+| Hard jump | A fully validated direct jump anywhere latches that anchor transition to single-transfer structure for the rest of the solve, preserving starting-anchor setup hops, across backtracking/changed incoming histories. This is intentional domain restriction. |
+| Recovery | Restore/reconstruct deferred run alternatives and earlier preparation, walking actual tree edges. Additional same-block setup jumps remain allowed even with a global hard-transfer latch; inter-block returns are deferred. |
 | Guides/solver | Backward guide inference; optimize onward toward the next point with existing POSITION objective and stop-on-feasible. User reports another agent measured similar speed. No slack/new constant objective. |
 | Finish | Extend physical B7 one block in +Z and require actual B7 landing. Minimize achieved landing T then maximize Z. Terminal guide is +Z physical edge, X midpoint. |
 | Exact-node feasibility | Adopt IPOPT accuracy operationally: only a solve of the exact current node, with no later decisions, can mark that node/model infeasible. Child failure does not mark ancestors infeasible. No separate ancestor-testing subsystem. |
 | Turn inference | Preprocess >110° guide turns and approach-facing axis/imaginary diagonal edge; initial spatial margin≈0.3 toward S/N. Each decision selects one heuristic from that boundary; preliminary/tunable and observable. |
-| Visits | Inter-block returns are not generated now. Same-block setup jumps/chains remain supported where global hard structure permits them. Future revisit plan persisted separately. |
+| Visits | Inter-block returns are not generated now. Same-block setup jumps/chains remain supported after global hard-transfer latching. Future revisit plan persisted separately. |
 | Preserved invariants | Original-state continuous re-solves/all earlier facings free, normal momentum/zero thresholds, finite physical contacts, owned prerequisites, caps, physical validation, exact siblings/repair/source ownership. |
 
 Required anchor occurrences remain ordered. Same-block hops and permitted acyclic optional support visits do not advance/reset the cursor except on the next required milestone. Supporting repeated mandatory IDs and physical returns after another support are deferred features. Intentional wall hits and new water/ladder/actual-world mechanics are not added by this change.
@@ -90,7 +92,7 @@ SolvePolicy purpose is distinct from existing preliminary/complete solve_scope v
 
 Current scope does not generate inter-block returns. Track initial/current physical owner and departed owners. A→A→A→B and A→air→A→B are valid local setup; A→C→B can be a valid acyclic optional route; A→C→A is deferred and excluded before expensive generation. Current-owner repeated jumps remain eligible. Compress consecutive same-owner contacts only for this check; preserve every actual input, contact event, component and physical branch in the program.
 
-Apply departed-owner eligibility via supportAllowed and audit emitted programs. Reconstruct from actual history on resume, including original support. Use sourceBlock/physical owner provenance across fragments/coplanar groups; do not reject a same-block hop merely because its decomposed patch changed. Required order remains; do not use later required anchors early if completion would demand an unsupported return. Global hard latches still restrict latched spans to one jump; unlatched setup/recovery must generate multiple same-block jumps.
+Apply departed-owner eligibility via supportAllowed and audit emitted programs. Reconstruct from actual history on resume, including original support. Use sourceBlock/physical owner provenance across fragments/coplanar groups; do not reject a same-block hop merely because its decomposed patch changed. Required order remains; do not use later required anchors early if completion would demand an unsupported return. Global hard latches restrict the actual transfer to one jump; setup/recovery must generate multiple same-source jumps even in a latched span.
 
 The complete future revisit mechanism, lazy repetition families, complexity analysis and tests are persisted in [the deferred plan](REVISIT_DISCOVERY_DEFERRED_PLAN.md). Do not implement those families/cursors/benchmarks now. This is explicit feature scope, not a claim that return trajectories are physically impossible.
 
@@ -171,9 +173,9 @@ The rule is preliminary: log position/edge/margin/distances, label, selected key
 
 Bind actual achieved event before comparing unused proposal suffix length. Changing an earlier decision creates another prefix and is not excluded by its old child's time/oracle rejection.
 
-Global latch learning is a solve transaction, survives frame removal, and revises eligibility of all queued/deferred work. Retire now-ineligible local multijump structures with audit; preserve other sources and run variants. Do not scope the latch to the certifying parent or silently reopen it on downstream failure.
+Global latch learning is a solve transaction, survives frame removal, and revises eligibility of all queued/deferred work. Retire ineligible multi-transfer/intermediate-support structures with audit; preserve same-source setup hops, other sources and run variants. Do not scope the latch to the certifying parent or silently reopen it on downstream failure.
 
-Recover earlier arrival/run decisions one actual edge at a time. Within unlatched spans, generate extra current-block setup jumps and earlier runs for chaining; do not generate inter-block return preparation now. Within latched spans only restore permitted single-jump/run choices; move extra jumping preparation into earlier admissible decisions. Never graft a sibling's selected constraints or yaw state. Stable request/action IDs prevent immediate redo/re-deferral loops.
+Recover earlier arrival/run decisions one actual edge at a time. Generate extra current-block setup jumps and earlier runs for chaining both before and after a latch; do not generate inter-block return preparation now. A latched transfer remains one jump, with its source-local setup preserved during recovery. Never graft a sibling's selected constraints or yaw state. Stable request/action IDs prevent immediate redo/re-deferral loops.
 
 ## 10. Normal exact-node solves and decision cadence
 
@@ -266,7 +268,7 @@ Required-anchor frames/actual prior-contact audit, acyclic optional supports and
 
 Shared binary-selected ordinary/momentum comparator across generation/selection. Learn/latch one-jump anchor transition globally, preserve across changed parents/backtracking, recheck queued structures. Ordinary-decision-only recoverable run deferral, disabled for turnaround decisions. Full-finish T bound prunes/backtracks unchanged prefix; equal actual finishes still MAXZ.
 
-**Exit:** latch learned in discarded subtree remains; new incoming history never reopens local multijump; permitted run choices/recovery remain; turn changes ordering but not global structure.
+**Exit:** latch learned in discarded subtree remains; new incoming histories retain source-local setup while never reopening multi-transfer/intermediate-support routes; permitted run choices/recovery remain; turn changes ordering but not global structure.
 
 ### M4 — DFS solve cadence, outcomes and recovery
 

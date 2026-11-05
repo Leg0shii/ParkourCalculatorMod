@@ -19,16 +19,17 @@ Source snapshot: anchor DFS and generic event discovery implementation, includin
 
 ## [autonomy/cell_routes/anchor_policy.py](../autonomy/cell_routes/anchor_policy.py)
 
-- `settings` — def, line 8.
-- `semantic_settings` — def, line 40.
-- `owner` — def, line 44.
-- `visits` — def, line 49.
-- `visit_state` — def, line 77.
-- `audit` — def, line 92.
-- `local_counts` — def, line 110.
-- `priority` — def, line 119.
-- `within_caps` — def, line 124.
-- `single_jump_structure` — def, line 138.
+- `settings` — def, line 11.
+- `semantic_settings` — def, line 43.
+- `owner` — def, line 48.
+- `visits` — def, line 53.
+- `visit_state` — def, line 81.
+- `audit` — def, line 96.
+- `local_counts` — def, line 114.
+- `priority` — def, line 123.
+- `within_caps` — def, line 128.
+- `transfer_structure` — def, line 142.
+- `single_jump_structure` — def, line 174.
 
 ## [autonomy/cell_routes/anchor_guides.py](../autonomy/cell_routes/anchor_guides.py)
 
@@ -72,32 +73,40 @@ Source snapshot: anchor DFS and generic event discovery implementation, includin
 - `AnchorPolicyTests.test_dynamic_repair_progress_does_not_change_node_identity_but_scope_does` — method, line 147.
 - `AnchorPolicyTests.test_ceiling_and_corner_cancel_are_impulses_without_invented_support_visits` — method, line 153.
 - `AnchorPolicyTests.test_hard_structure_excludes_setup_hop_runoff_and_zero_jump_finish` — method, line 165.
-- `AnchorPolicyTests.test_declared_caps_are_not_widened_during_recovery` — method, line 174.
-- `AnchorPolicyTests.test_repair_exhaustion_backtracks_without_oracle_or_ancestor_rejection` — method, line 182.
+- `AnchorPolicyTests.test_hard_transfer_keeps_arbitrary_source_setup_jumps_and_counts_them` — method, line 174.
+- `AnchorPolicyTests.test_setup_does_not_admit_an_intermediate_block_or_two_transfer_impulses` — method, line 186.
+- `AnchorPolicyTests.test_transfer_uses_current_anchor_boundary_and_physical_owner_aliases` — method, line 197.
+- `AnchorPolicyTests.test_source_contact_at_target_arrival_is_part_of_the_same_transfer` — method, line 206.
+- `AnchorPolicyTests.test_real11_initial0_setup_and_transfer_are_distinct` — method, line 216.
+- `AnchorPolicyTests.test_declared_caps_are_not_widened_during_recovery` — method, line 234.
+- `AnchorPolicyTests.test_repair_exhaustion_backtracks_without_oracle_or_ancestor_rejection` — method, line 242.
 
 ## [autonomy/tests/test_anchor_dfs.py](../autonomy/tests/test_anchor_dfs.py)
 
 - `extend` — def, line 11.
 - `AnchorDFSTests` — class, line 27.
 - `AnchorDFSTests.run_tree` — method, line 28.
-- `AnchorDFSTests.test_global_latch_survives_abandoned_certifier_and_changed_incoming_prefix` — method, line 61.
-- `AnchorDFSTests.test_logging_does_not_change_solver_allocation_and_anchors_force_queries` — method, line 71.
-- `AnchorDFSTests.test_latch_resume_keeps_exact_parent_and_does_not_repeat_scored_nodes` — method, line 82.
-- `AnchorDFSTests.test_completed_decision_cadence_and_forced_anchor_or_terminal` — method, line 89.
-- `AnchorDFSTests.test_failed_finish_restores_deferred_runs_on_actual_parent_without_redeferring` — method, line 99.
+- `AnchorDFSTests.test_global_latch_survives_abandoned_certifier_and_changed_incoming_prefix` — method, line 68.
+- `AnchorDFSTests.test_logging_does_not_change_solver_allocation_and_anchors_force_queries` — method, line 78.
+- `AnchorDFSTests.test_latch_resume_keeps_exact_parent_and_does_not_repeat_scored_nodes` — method, line 89.
+- `AnchorDFSTests.test_global_latch_accepts_setup_after_certifier_and_backtracking` — method, line 96.
+- `AnchorDFSTests.test_incompatible_old_latch_policy_is_rejected_on_resume` — method, line 106.
+- `AnchorDFSTests.test_completed_decision_cadence_and_forced_anchor_or_terminal` — method, line 112.
+- `AnchorDFSTests.test_failed_finish_restores_deferred_runs_on_actual_parent_without_redeferring` — method, line 122.
 
 ## [autonomy/tests/test_anchor_search.py](../autonomy/tests/test_anchor_search.py)
 
 - `AnchorSearchTests` — class, line 20.
 - `AnchorSearchTests.frontier` — method, line 21.
-- `AnchorSearchTests.test_multiple_same_block_jumps_generated_and_no_solve_for_run_hold` — method, line 29.
-- `AnchorSearchTests.test_rejected_child_preserves_parent_and_other_children` — method, line 44.
-- `AnchorSearchTests.test_suspended_exact_child_resumes_same_choice_before_siblings` — method, line 56.
-- `AnchorSearchTests.test_stop_policy_keeps_native_validation_and_cannot_reuse_polished_context` — method, line 74.
-- `AnchorSearchTests.test_completed_oracle_rejects_only_selected_model_and_limits_stay_pending` — method, line 89.
-- `AnchorSearchTests.test_actual_landing_clock_binds_before_unused_suffix_and_drops_owned_future_rows` — method, line 103.
-- `AnchorNativeTests` — class, line 127.
-- `AnchorNativeTests.test_cold_finite_landing_with_observable_internal_queries` — method, line 128.
+- `AnchorSearchTests.test_multiple_same_block_jumps_generated_and_no_solve_for_run_hold` — method, line 30.
+- `AnchorSearchTests.test_rejected_child_preserves_parent_and_other_children` — method, line 45.
+- `AnchorSearchTests.test_learned_latch_and_resume_keep_source_setup_hops_in_the_actual_source` — method, line 57.
+- `AnchorSearchTests.test_suspended_exact_child_resumes_same_choice_before_siblings` — method, line 73.
+- `AnchorSearchTests.test_stop_policy_keeps_native_validation_and_cannot_reuse_polished_context` — method, line 91.
+- `AnchorSearchTests.test_completed_oracle_rejects_only_selected_model_and_limits_stay_pending` — method, line 106.
+- `AnchorSearchTests.test_actual_landing_clock_binds_before_unused_suffix_and_drops_owned_future_rows` — method, line 120.
+- `AnchorNativeTests` — class, line 144.
+- `AnchorNativeTests.test_cold_finite_landing_with_observable_internal_queries` — method, line 145.
 
 ## [autonomy/block_contacts.py](../autonomy/block_contacts.py)
 
@@ -2171,3 +2180,17 @@ Source snapshot: anchor DFS and generic event discovery implementation, includin
 ## [autonomy/experiments/anchor-feasibility/render_full_scene.py](../autonomy/experiments/anchor-feasibility/render_full_scene.py)
 
 - `main` — def, line 13.
+
+## [autonomy/experiments/anchor-transfer-preparation/cold.py](../autonomy/experiments/anchor-transfer-preparation/cold.py)
+
+- `witnesses` — def, line 20.
+- `main` — def, line 32.
+
+## [autonomy/experiments/anchor-transfer-preparation/verify.py](../autonomy/experiments/anchor-transfer-preparation/verify.py)
+
+- `main` — def, line 11.
+
+## [autonomy/experiments/anchor-initial0-audit-2026-11-04/check.py](../autonomy/experiments/anchor-initial0-audit-2026-11-04/check.py)
+
+- `jumps` — def, line 27.
+- `main` — def, line 31.

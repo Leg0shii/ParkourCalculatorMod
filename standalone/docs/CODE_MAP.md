@@ -169,7 +169,7 @@ Maintain this map when public modules change. Index generation uses Python AST a
 | --- | --- |
 | [event_routes.py](../autonomy/cell_routes/event_routes.py) | Immutable domain and physical feature/surface provenance; cyclic connector language; residual next-goal cursors; untimed semantic prefixes and observed physical passage evidence. |
 | [guides.py](../autonomy/cell_routes/guides.py) | Local finite witness anchors, resumable shortest witness, checked shortcuts and outgoing objectives. |
-| [anchor_policy.py](../autonomy/cell_routes/anchor_policy.py) | Ordered anchor audit, physical-owner visit scope, local J/R/A keys, explicit caps and single-jump structure. |
+| [anchor_policy.py](../autonomy/cell_routes/anchor_policy.py) | Ordered anchor audit, physical-owner visits, local J/R/A keys/caps, and policy2 source-preparation versus one-transfer structure. |
 | [anchor_guides.py](../autonomy/cell_routes/anchor_guides.py) | Backward finite projections, onward objectives, physical approach-edge turns and binary decision labels. |
 | [anchor_adapter.py](../autonomy/cell_routes/anchor_adapter.py) | Required-anchor/open-span stages on the existing event DFS; internal nodes omit pending anchor predicates. |
 | [node_feasibility.py](../autonomy/cell_routes/node_feasibility.py) | Explicit solver intent, stable exact-node identity, outcomes and completed-decision cadence. |
