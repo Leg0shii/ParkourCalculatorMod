@@ -126,7 +126,5 @@ processResources {
 	}
 	exclude { it.name.endsWith('_at.cfg') && it.name != versionedAtFileName }
 	rename java.util.regex.Pattern.quote(versionedAtFileName), atFileName
-	if (stonecutter.eval(mc, '<1.9')) {
-		rename 'en_us.lang', 'en_US.lang'
-	}
+	rename 'en_us.lang', 'en_US.lang'
 }
