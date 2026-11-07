@@ -202,7 +202,11 @@ public class SimulatorEntity extends Player {
         int z0 = Mth.floor(bb.minZ);
         int z1 = Mth.ceil(bb.maxZ);
         Level level = this.level();
+        //? if >=26.1 {
         double entityY = this.getBoundingBox().minY;
+        //?} else {
+        /*double entityY = bb.minY;
+        *///?}
         double depth = 0.0;
         Vec3 sum = Vec3.ZERO;
         int count = 0;
