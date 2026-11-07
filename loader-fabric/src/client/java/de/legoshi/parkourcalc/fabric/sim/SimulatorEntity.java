@@ -217,7 +217,11 @@ public class SimulatorEntity extends Player {
                     pos.set(x, y, z);
                     FluidState fs = level.getFluidState(pos);
                     if (!fs.is(fluid)) continue;
+                    //? if >=26.1 {
                     double top = (double) y + fs.getHeight(level, pos);
+                    //?} else {
+                    /*double top = y + fs.getHeight(level, pos);
+                    *///?}
                     if (top < bb.minY) continue;
                     depth = Math.max(top - entityY, depth);
                     Vec3 f = fs.getFlow(level, pos);
