@@ -377,6 +377,11 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
     }
 
     @Override
+    protected boolean isTickInWater(SimulatorEntity e) {
+        return e.capturedTickInWater();
+    }
+
+    @Override
     protected double getTickGroundFriction(SimulatorEntity e) {
         return e.capturedTickGroundFriction();
     }

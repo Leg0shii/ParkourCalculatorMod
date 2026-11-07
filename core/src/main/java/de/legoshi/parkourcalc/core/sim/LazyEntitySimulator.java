@@ -133,6 +133,11 @@ public abstract class LazyEntitySimulator<E> implements Simulator {
     }
 
     @Override
+    public final boolean isCurrentTickInWater() {
+        return isTickInWater(ensureEntity());
+    }
+
+    @Override
     public final int getCurrentTickSoulsandCells() {
         return getTickSoulsandCells(ensureEntity());
     }
@@ -303,6 +308,10 @@ public abstract class LazyEntitySimulator<E> implements Simulator {
 
     protected FlowVector getTickFlow(E entity) {
         return FlowVector.NONE;
+    }
+
+    protected boolean isTickInWater(E entity) {
+        return false;
     }
 
     protected abstract float getYaw(E entity);

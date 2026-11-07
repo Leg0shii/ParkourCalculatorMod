@@ -261,39 +261,11 @@ public final class ExactJumpModel implements ForwardModel {
             boolean water = kind == SurfaceKind.WATER;
             boolean fluid = water || kind == SurfaceKind.LAVA;
             FlowVector flow = scenario.flowAt(t);
-            boolean pushes = flow.pushes() && !(sine262 && flow.x * flow.x + flow.z * flow.z < MIN_FLOW_LENGTH_SQ_262);
-            if (pushes && (modern || water)) {
+            if (flow.pushes() && (modern || water)) {
                 boolean lavaFlow = kind == SurfaceKind.LAVA || (!water && flow.lava);
-                double scale = !lavaFlow ? WATER_PUSH : scenario.ultrawarm ? LAVA_PUSH_ULTRAWARM : LAVA_PUSH;
-                double px;
-                double pz;
-                if (modern) {
-                    px = flow.x * scale;
-                    pz = flow.z * scale;
-                    if (Math.abs(vx) < MIN_FLUID_PUSH_BELOW && Math.abs(vz) < MIN_FLUID_PUSH_BELOW) {
-                        double len = Math.sqrt(px * px + pz * pz);
-                        if (len < MIN_FLUID_PUSH) {
-                            if (len < NORMALIZE_EPSILON) {
-                                px = 0.0;
-                                pz = 0.0;
-                            } else {
-                                px = px / len * MIN_FLUID_PUSH;
-                                pz = pz / len * MIN_FLUID_PUSH;
-                            }
-                        }
-                    }
-                } else {
-                    double len = Math.sqrt(flow.x * flow.x + flow.z * flow.z);
-                    if (len < NORMALIZE_EPSILON) {
-                        px = 0.0;
-                        pz = 0.0;
-                    } else {
-                        px = flow.x / len * scale;
-                        pz = flow.z / len * scale;
-                    }
-                }
-                vx += px;
-                vz += pz;
+                double[] push = fluidPush(flow, lavaFlow, scenario.ultrawarm, vx, vz);
+                vx += push[0];
+                vz += push[1];
             }
 
             // (1) momentum cancellation, top of tick, on the post-friction carry from last tick.
@@ -463,6 +435,13 @@ public final class ExactJumpModel implements ForwardModel {
                 }
             }
 
+            FlowVector endFlow = scenario.endFlowAt(t);
+            if (endFlow.pushes() && (modern || !endFlow.lava)) {
+                double[] push = fluidPush(endFlow, endFlow.lava, scenario.ultrawarm, vx, vz);
+                vx += push[0];
+                vz += push[1];
+            }
+
             // (6) gravity then friction multiply, carried into next tick.
             if (fluid) {
                 if (!modern) {
@@ -509,6 +488,39 @@ public final class ExactJumpModel implements ForwardModel {
                 serverTravel(scenario, t, server);
             }
         }
+    }
+
+    private double[] fluidPush(FlowVector flow, boolean lavaFlow, boolean ultrawarm, double vx, double vz) {
+        double scale = !lavaFlow ? WATER_PUSH : ultrawarm ? LAVA_PUSH_ULTRAWARM : LAVA_PUSH;
+        double px;
+        double pz;
+        if (modern) {
+            if (sine262 && flow.x * flow.x + flow.z * flow.z < MIN_FLOW_LENGTH_SQ_262) return new double[] {0.0, 0.0};
+            px = flow.x * scale;
+            pz = flow.z * scale;
+            if (Math.abs(vx) < MIN_FLUID_PUSH_BELOW && Math.abs(vz) < MIN_FLUID_PUSH_BELOW) {
+                double len = Math.sqrt(px * px + pz * pz);
+                if (len < MIN_FLUID_PUSH) {
+                    if (len < NORMALIZE_EPSILON) {
+                        px = 0.0;
+                        pz = 0.0;
+                    } else {
+                        px = px / len * MIN_FLUID_PUSH;
+                        pz = pz / len * MIN_FLUID_PUSH;
+                    }
+                }
+            }
+        } else {
+            double len = Math.sqrt(flow.x * flow.x + flow.z * flow.z);
+            if (len < NORMALIZE_EPSILON) {
+                px = 0.0;
+                pz = 0.0;
+            } else {
+                px = flow.x / len * scale;
+                pz = flow.z / len * scale;
+            }
+        }
+        return new double[] {px, pz};
     }
 
     public double[] serverCarry(JumpPhysicsInputs scenario, double[] yawAbsDeg, int upTo) {

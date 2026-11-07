@@ -739,6 +739,7 @@ public final class AngleSolverEngine {
         SurfaceKind[] surfacePerTick = new SurfaceKind[numTicks];
         int[] soulsandCellsPerTick = new int[numTicks];
         FlowVector[] flowPerTick = new FlowVector[numTicks];
+        FlowVector[] endFlowPerTick = new FlowVector[numTicks];
         boolean modernWaterSprint = exactModel() != null && exactModel().modern();
         boolean[] sneakPerTick = new boolean[numTicks];
         boolean[] dolphinsGrace = new boolean[numTicks];
@@ -773,6 +774,7 @@ public final class AngleSolverEngine {
             surfacePerTick[k] = effMedium(t).kind;
             soulsandCellsPerTick[k] = effSoulsandCells(t);
             flowPerTick[k] = effFlow(t);
+            endFlowPerTick[k] = effEndFlow(t);
             sneakPerTick[k] = row.isKeyActive(InputRow.Key.SNEAK);
             dolphinsGrace[k] = row.getEffectLevel(MovementEffect.DOLPHINS_GRACE) > 0;
             weaving[k] = row.getEffectLevel(MovementEffect.WEAVING) > 0;
@@ -826,6 +828,7 @@ public final class AngleSolverEngine {
         phys.surfacePerTick = surfacePerTick;
         phys.soulsandCellsPerTick = soulsandCellsPerTick;
         phys.flowPerTick = flowPerTick;
+        phys.endFlowPerTick = endFlowPerTick;
         phys.ultrawarm = ultrawarm.getAsBoolean();
         phys.sneakPerTick = sneakPerTick;
         phys.dolphinsGracePerTick = dolphinsGrace;
@@ -1743,6 +1746,15 @@ public final class AngleSolverEngine {
     private FlowVector effFlow(int tick) {
         StateOverride ov = overrideAt(tick);
         return ov != null ? ov.getFlowVector() : FlowVector.NONE;
+    }
+
+    private FlowVector effEndFlow(int tick) {
+        TickState startState = boxes.getState(tick);
+        if (startState != null && startState.inWater) return FlowVector.NONE;
+        StateOverride next = overrideAt(tick + 1);
+        if (next != null && next.overridesFlow()) return next.getFlowVector();
+        TickState endState = boxes.getState(tick + 1);
+        return endState != null ? endState.flow : FlowVector.NONE;
     }
 
     private int effSoulsandCells(int tick) {

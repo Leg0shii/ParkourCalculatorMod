@@ -120,6 +120,7 @@ public final class SimulationRunner {
                 simulator.getCurrentTickGroundFriction(),
                 simulator.getCurrentTickSoulsandCells(),
                 simulator.getCurrentTickFlow(),
+                simulator.isCurrentTickInWater(),
                 simulator.getCurrentServerSample()
         );
     }

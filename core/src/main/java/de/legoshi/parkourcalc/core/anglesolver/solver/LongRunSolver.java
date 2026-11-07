@@ -442,6 +442,7 @@ public final class LongRunSolver {
         p.surfacePerTick = sliceKind(sc.surfacePerTick, a, len);
         p.soulsandCellsPerTick = sliceInt(sc.soulsandCellsPerTick, a, len);
         p.flowPerTick = sliceFlow(sc.flowPerTick, a, len);
+        p.endFlowPerTick = sliceFlow(sc.endFlowPerTick, a, len);
         p.ultrawarm = sc.ultrawarm;
         p.sneakPerTick = sliceBool(sc.sneakPerTick, a, len);
         p.dolphinsGracePerTick = sliceBool(sc.dolphinsGracePerTick, a, len);

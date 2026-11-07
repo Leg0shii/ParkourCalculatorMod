@@ -52,6 +52,8 @@ public final class JumpPhysicsInputs {
 
     public FlowVector[] flowPerTick = null;
 
+    public FlowVector[] endFlowPerTick = null;
+
     public boolean ultrawarm = false;
 
     public boolean[] sneakPerTick = null;
@@ -122,6 +124,7 @@ public final class JumpPhysicsInputs {
         c.surfacePerTick = surfacePerTick;
         c.soulsandCellsPerTick = soulsandCellsPerTick;
         c.flowPerTick = flowPerTick;
+        c.endFlowPerTick = endFlowPerTick;
         c.ultrawarm = ultrawarm;
         c.sneakPerTick = sneakPerTick;
         c.dolphinsGracePerTick = dolphinsGracePerTick;
@@ -164,6 +167,7 @@ public final class JumpPhysicsInputs {
         SurfaceKind[] surface = new SurfaceKind[m];
         int[] soulsand = new int[m];
         FlowVector[] flow = new FlowVector[m];
+        FlowVector[] endFlow = new FlowVector[m];
         boolean[] sneak = new boolean[m];
         boolean[] dolphin = new boolean[m];
         boolean[] weaving = new boolean[m];
@@ -185,6 +189,7 @@ public final class JumpPhysicsInputs {
             surface[k] = surfaceAt(i);
             soulsand[k] = soulsandCellsAt(i);
             flow[k] = flowAt(i);
+            endFlow[k] = endFlowAt(i);
             sneak[k] = sneakAt(i);
             dolphin[k] = dolphinsGraceAt(i);
             weaving[k] = weavingAt(i);
@@ -205,6 +210,7 @@ public final class JumpPhysicsInputs {
         c.surfacePerTick = surface;
         c.soulsandCellsPerTick = soulsand;
         c.flowPerTick = flow;
+        c.endFlowPerTick = endFlow;
         c.ultrawarm = ultrawarm;
         c.sneakPerTick = sneak;
         c.dolphinsGracePerTick = dolphin;
@@ -360,6 +366,12 @@ public final class JumpPhysicsInputs {
     public FlowVector flowAt(int tick) {
         if (flowPerTick == null || tick < 0 || tick >= flowPerTick.length) return FlowVector.NONE;
         FlowVector flow = flowPerTick[tick];
+        return flow == null ? FlowVector.NONE : flow;
+    }
+
+    public FlowVector endFlowAt(int tick) {
+        if (endFlowPerTick == null || tick < 0 || tick >= endFlowPerTick.length) return FlowVector.NONE;
+        FlowVector flow = endFlowPerTick[tick];
         return flow == null ? FlowVector.NONE : flow;
     }
 

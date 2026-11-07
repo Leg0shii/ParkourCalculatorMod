@@ -60,6 +60,10 @@ public interface Simulator {
         return FlowVector.NONE;
     }
 
+    default boolean isCurrentTickInWater() {
+        return false;
+    }
+
     default ServerTickSample getCurrentServerSample() {
         return null;
     }

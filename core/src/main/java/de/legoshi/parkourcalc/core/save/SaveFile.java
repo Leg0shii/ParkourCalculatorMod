@@ -222,5 +222,9 @@ public final class SaveFile {
         public double[] serverVel;
         public Boolean serverJump;
         public double[] serverPacket;
+        public Double flowX;
+        public Double flowZ;
+        public Boolean flowLava;
+        public Boolean inWater;
     }
 }

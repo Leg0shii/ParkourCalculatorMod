@@ -67,6 +67,7 @@ public class SimulatorEntity extends Player {
     private double tickGroundFriction = Double.NaN;
     private int tickSoulsandCells;
     private FlowVector tickFlow = FlowVector.NONE;
+    private boolean tickInWater;
 
     public double getLastCollisionAngleDegrees() {
         return lastCollisionAngleDegrees;
@@ -138,6 +139,7 @@ public class SimulatorEntity extends Player {
         this.tickGroundFriction = Double.NaN;
         this.tickSoulsandCells = 0;
         this.tickFlow = currentFlow();
+        this.tickInWater = this.isInWater();
         if (resume != null) {
             applyResume(resume);
         }
@@ -181,6 +183,7 @@ public class SimulatorEntity extends Player {
                 : Double.NaN;
         super.travel(input);
         tickFlow = currentFlow();
+        tickInWater = this.isInWater();
         tickSoulsandCells = this.getBlockSpeedFactor() != 1.0F ? 1 : 0;
         tickMedium = Medium.fromFlags(web, water, lava, ladder, tickSoulsandCells > 0);
     }
@@ -199,6 +202,7 @@ public class SimulatorEntity extends Player {
         int z0 = Mth.floor(bb.minZ);
         int z1 = Mth.ceil(bb.maxZ);
         Level level = this.level();
+        double entityY = this.getBoundingBox().minY;
         double depth = 0.0;
         Vec3 sum = Vec3.ZERO;
         int count = 0;
@@ -211,7 +215,7 @@ public class SimulatorEntity extends Player {
                     if (!fs.is(fluid)) continue;
                     double top = y + fs.getHeight(level, pos);
                     if (top < bb.minY) continue;
-                    depth = Math.max(top - bb.minY, depth);
+                    depth = Math.max(top - entityY, depth);
                     Vec3 f = fs.getFlow(level, pos);
                     if (depth < 0.4) f = f.scale(depth);
                     sum = sum.add(f);
@@ -226,6 +230,10 @@ public class SimulatorEntity extends Player {
 
     public FlowVector capturedTickFlow() {
         return tickFlow;
+    }
+
+    public boolean capturedTickInWater() {
+        return tickInWater;
     }
 
     public Medium capturedTickMedium() {

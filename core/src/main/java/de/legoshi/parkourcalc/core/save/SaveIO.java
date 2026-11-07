@@ -459,6 +459,12 @@ public final class SaveIO {
             d.moveForward = s.moveForward;
             d.moveStrafe = s.moveStrafe;
         }
+        if (s.flow.pushes()) {
+            d.flowX = s.flow.x;
+            d.flowZ = s.flow.z;
+            d.flowLava = s.flow.lava ? Boolean.TRUE : null;
+        }
+        d.inWater = s.inWater ? Boolean.TRUE : null;
         if (s.server != null) {
             d.serverVel = new double[] { s.server.velocity.x, s.server.velocity.y, s.server.velocity.z };
             d.serverJump = s.server.jumpedOnPreviousMove;

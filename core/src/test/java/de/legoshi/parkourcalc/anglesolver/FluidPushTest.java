@@ -109,6 +109,21 @@ public class FluidPushTest {
     }
 
     @Test
+    public void endOfTickPushLandsAfterTheMoveAndBeforeFriction() {
+        JumpPhysicsInputs sc = scenario(SurfaceKind.NORMAL, FlowVector.NONE, new Vec3dCore(0.0, 0.0, 0.15));
+        sc.endFlowPerTick = new FlowVector[]{new FlowVector(0.11, 0.0)};
+        ForwardPath p = run(MODERN, sc);
+        assertEquals(0.0, p.posX[1] - p.posX[0], 0.0);
+        assertEquals(0.11 * 0.014 * (double) 0.91F, p.velX[1], 0.0);
+        JumpPhysicsInputs legacy = scenario(SurfaceKind.NORMAL, FlowVector.NONE, new Vec3dCore(0.0, 0.0, 0.15));
+        legacy.endFlowPerTick = new FlowVector[]{new FlowVector(0.5, 0.0)};
+        ForwardPath q = run(LEGACY, legacy);
+        assertEquals(0.014 * (double) 0.91F, q.velX[1], 0.0);
+        JumpPhysicsInputs sliced = sc.slice(0, 0.0, 64.0, 0.0, 0.0, 0.0, 0.0, 0.0F);
+        assertEquals(new FlowVector(0.11, 0.0), sliced.endFlowAt(0));
+    }
+
+    @Test
     public void modernLavaPushesWhenMoving() {
         ForwardPath p = run(MODERN, scenario(SurfaceKind.LAVA, FlowDirection.POS_X, new Vec3dCore(0.1, 0.0, 0.0)));
         assertEquals(0.1 + LAVA, p.posX[1] - p.posX[0], 0.0);

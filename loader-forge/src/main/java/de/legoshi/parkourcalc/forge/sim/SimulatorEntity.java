@@ -62,6 +62,7 @@ public class SimulatorEntity extends EntityPlayer {
     private double tickGroundFriction = Double.NaN;
     private int tickSoulsandCells;
     private FlowVector tickFlow = FlowVector.NONE;
+    private boolean tickInWater;
 
     private final ArrayList<Vec3dCore> subtickBuf = new ArrayList<Vec3dCore>(8);
     private boolean capturing = false;
@@ -160,6 +161,7 @@ public class SimulatorEntity extends EntityPlayer {
         this.tickGroundFriction = Double.NaN;
         this.tickSoulsandCells = 0;
         this.tickFlow = captureFlow();
+        this.tickInWater = this.isInWater();
         if (resume != null) {
             applyResume(resume);
         }
@@ -232,6 +234,7 @@ public class SimulatorEntity extends EntityPlayer {
         super.moveEntityWithHeading(strafe, forward);
         *///?}
         tickFlow = captureFlow();
+        tickInWater = this.isInWater();
         tickSoulsandCells = countSoulsandCells();
         tickMedium = Medium.fromFlags(web, water, lava, ladder, tickSoulsandCells > 0);
     }
@@ -257,13 +260,11 @@ public class SimulatorEntity extends EntityPlayer {
                     BlockPos pos = new BlockPos(x, y, z);
                     //? if >=1.12 {
                     IBlockState state = this.world.getBlockState(pos);
-                    Material material = state.getMaterial();
-                    if (material != Material.WATER && material != Material.LAVA) continue;
+                    if (state.getMaterial() != Material.WATER) continue;
                     flow = state.getBlock().modifyAcceleration(this.world, pos, this, flow);
                     //?} else {
                     /*Block block = this.worldObj.getBlockState(pos).getBlock();
-                    Material material = block.getMaterial();
-                    if (material != Material.water && material != Material.lava) continue;
+                    if (block.getMaterial() != Material.water) continue;
                     flow = block.modifyAcceleration(this.worldObj, pos, this, flow);
                     *///?}
                 }
@@ -280,6 +281,10 @@ public class SimulatorEntity extends EntityPlayer {
         double len = Math.sqrt(x * x + z * z);
         if (len < 1.0E-4) return FlowVector.NONE;
         return new FlowVector(x / len, z / len);
+    }
+
+    public boolean capturedTickInWater() {
+        return tickInWater;
     }
 
     public FlowVector capturedTickFlow() {
