@@ -6,10 +6,16 @@ public final class FlowVector {
 
     public final double x;
     public final double z;
+    public final boolean lava;
 
     public FlowVector(double x, double z) {
+        this(x, z, false);
+    }
+
+    public FlowVector(double x, double z, boolean lava) {
         this.x = x;
         this.z = z;
+        this.lava = lava;
     }
 
     public static FlowVector of(FlowDirection direction) {
@@ -26,7 +32,7 @@ public final class FlowVector {
     }
 
     public boolean isUnitOf(FlowDirection direction) {
-        return x == direction.dx && z == direction.dz;
+        return x == direction.dx && z == direction.dz && !lava;
     }
 
     @Override
@@ -34,16 +40,16 @@ public final class FlowVector {
         if (this == o) return true;
         if (!(o instanceof FlowVector)) return false;
         FlowVector v = (FlowVector) o;
-        return Double.compare(x, v.x) == 0 && Double.compare(z, v.z) == 0;
+        return Double.compare(x, v.x) == 0 && Double.compare(z, v.z) == 0 && lava == v.lava;
     }
 
     @Override
     public int hashCode() {
-        return 31 * Double.hashCode(x) + Double.hashCode(z);
+        return 31 * (31 * Double.hashCode(x) + Double.hashCode(z)) + (lava ? 1 : 0);
     }
 
     @Override
     public String toString() {
-        return "FlowVector(" + x + ", " + z + ")";
+        return "FlowVector(" + x + ", " + z + (lava ? ", lava)" : ")");
     }
 }

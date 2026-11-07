@@ -773,6 +773,7 @@ public final class SaveIO {
         boolean unitFlow = !ov.overridesFlow() || flowVector.isUnitOf(ov.getFlow());
         out.flowX = unitFlow ? null : flowVector.x;
         out.flowZ = unitFlow ? null : flowVector.z;
+        out.flowLava = flowVector.lava ? Boolean.TRUE : null;
         out.damage = ov.overridesDamage() ? Boolean.TRUE : null;
         for (PotionDose d : ov.getAdded()) {
             out.added.add(toSaveDose(d));
@@ -796,8 +797,11 @@ public final class SaveIO {
         if (medium != null && medium != Medium.NONE) dst.setMedium(medium);
         if (src.soulsandCells != null && dst.getMedium() == Medium.SOULSAND) dst.setSoulsandCells(src.soulsandCells);
         FlowDirection flow = parseEnumOrNull(FlowDirection.class, src.flow);
-        if (src.flowX != null && src.flowZ != null) dst.setFlowVector(new FlowVector(src.flowX, src.flowZ));
-        else if (flow != null) dst.setFlow(flow);
+        if (src.flowX != null && src.flowZ != null) {
+            dst.setFlowVector(new FlowVector(src.flowX, src.flowZ, src.flowLava != null && src.flowLava));
+        } else if (flow != null) {
+            dst.setFlow(flow);
+        }
         if (src.damage != null && src.damage) dst.setDamage(true);
         if (src.added != null) {
             for (SaveFile.Dose d : src.added) {

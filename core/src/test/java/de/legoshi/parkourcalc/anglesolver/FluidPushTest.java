@@ -141,10 +141,14 @@ public class FluidPushTest {
     }
 
     @Test
-    public void flowOutsideAFluidIsIgnored() {
-        JumpPhysicsInputs sc = scenario(SurfaceKind.NORMAL, FlowDirection.POS_X, Vec3dCore.ZERO);
+    public void modernFlowPushesOnALandTickWhoseHitboxTouchesTheFluid() {
+        JumpPhysicsInputs sc = scenario(SurfaceKind.NORMAL, new FlowVector(0.11, 0.0), new Vec3dCore(0.0, 0.0, 0.15));
         ForwardPath p = run(MODERN, sc);
-        assertEquals(0.0, p.posX[1] - p.posX[0], 0.0);
+        assertEquals(0.11 * 0.014, p.posX[1] - p.posX[0], 0.0);
+        ForwardPath lava = run(MODERN, scenario(SurfaceKind.NORMAL, new FlowVector(0.11, 0.0, true), new Vec3dCore(0.0, 0.0, 0.15)));
+        assertEquals(0.11 * LAVA, lava.posX[1] - lava.posX[0], 0.0);
+        ForwardPath q = run(LEGACY, scenario(SurfaceKind.NORMAL, FlowDirection.POS_X, Vec3dCore.ZERO));
+        assertEquals(0.0, q.posX[1] - q.posX[0], 0.0);
     }
 
     @Test
@@ -163,22 +167,21 @@ public class FluidPushTest {
     }
 
     @Test
-    public void overrideKeepsFlowOnlyForFluids() {
+    public void overrideCarriesTheFlowIndependentlyOfTheMedium() {
         StateOverride ov = new StateOverride();
         ov.setFlow(FlowDirection.POS_X);
-        assertEquals(FlowDirection.NONE, ov.getFlow());
+        assertEquals(FlowDirection.POS_X, ov.getFlow());
+        assertEquals(false, ov.isEmpty());
         ov.setMedium(Medium.LAVA);
-        ov.setFlow(FlowDirection.POS_X);
-        assertEquals(FlowDirection.POS_X, ov.getFlow());
         assertEquals(FlowVector.of(FlowDirection.POS_X), ov.getFlowVector());
-        ov.setMedium(Medium.WATER);
-        assertEquals(FlowDirection.POS_X, ov.getFlow());
         ov.setFlowVector(new FlowVector(0.05, 0.01));
         assertEquals(FlowDirection.POS_X, ov.getFlow());
         assertEquals(new FlowVector(0.05, 0.01), ov.getFlowVector());
-        ov.setMedium(Medium.SOULSAND);
-        assertEquals(FlowDirection.NONE, ov.getFlow());
+        ov.clearMedium();
+        assertEquals(new FlowVector(0.05, 0.01), ov.getFlowVector());
+        ov.clearFlow();
         assertEquals(FlowVector.NONE, ov.getFlowVector());
+        assertEquals(true, ov.isEmpty());
     }
 
     @Test
@@ -195,7 +198,7 @@ public class FluidPushTest {
         SaveIO.applyAngleSolverTo(file, state);
         assertEquals(FlowDirection.NEG_X_POS_Z, state.tickConstraints(0).getOverride().getFlow());
         assertEquals(FlowDirection.NONE, state.tickConstraints(1).getOverride().getFlow());
-        assertEquals(FlowDirection.NONE, state.tickConstraints(2).getOverride().getFlow());
+        assertEquals(FlowDirection.POS_X, state.tickConstraints(2).getOverride().getFlow());
         assertEquals(new FlowVector(0.08, 0.0), state.tickConstraints(3).getOverride().getFlowVector());
         SaveFile out = SaveIO.buildUndoSnapshot(new InputData(), Vec3dCore.ZERO, Vec3dCore.ZERO, 0.0F, 0.0F, null, state);
         assertEquals("NEG_X_POS_Z", out.angleSolver.ticks.get(0).override.flow);

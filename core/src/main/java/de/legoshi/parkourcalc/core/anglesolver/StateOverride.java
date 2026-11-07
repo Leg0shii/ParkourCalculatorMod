@@ -79,7 +79,6 @@ public final class StateOverride {
     public void setMedium(Medium medium) {
         this.medium = medium;
         if (medium != Medium.SOULSAND) soulsandCells = 1;
-        if (!flows(medium)) flow = FlowVector.NONE;
     }
 
     public static boolean flows(Medium medium) {
@@ -93,7 +92,6 @@ public final class StateOverride {
     public void clearMedium() {
         medium = null;
         soulsandCells = 1;
-        flow = FlowVector.NONE;
     }
 
     public FlowDirection getFlow() {
@@ -101,7 +99,7 @@ public final class StateOverride {
     }
 
     public void setFlow(FlowDirection flow) {
-        this.flow = flows(medium) ? FlowVector.of(flow) : FlowVector.NONE;
+        this.flow = FlowVector.of(flow);
     }
 
     public FlowVector getFlowVector() {
@@ -109,7 +107,11 @@ public final class StateOverride {
     }
 
     public void setFlowVector(FlowVector flow) {
-        this.flow = flows(medium) && flow != null ? flow : FlowVector.NONE;
+        this.flow = flow != null ? flow : FlowVector.NONE;
+    }
+
+    public void clearFlow() {
+        flow = FlowVector.NONE;
     }
 
     public boolean overridesFlow() {
@@ -169,7 +171,7 @@ public final class StateOverride {
 
     public boolean isEmpty() {
         return !overridesInputs() && !overridesSprint() && !overridesSlipperiness() && !overridesMedium() && !overridesPotion()
-                && !overridesDamage();
+                && !overridesDamage() && !overridesFlow();
     }
 
     /** Make this override an independent copy of {@code other} (doses deep-copied: they are mutable). */

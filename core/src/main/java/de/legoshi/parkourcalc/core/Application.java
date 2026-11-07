@@ -885,8 +885,9 @@ public final class Application {
             boolean slipDefault = slip == angleSolverState.getDefaultSlipperiness();
             boolean mediumNone = medium == Medium.NONE;
             boolean damage = damageTicks.contains(t);
+            boolean flows = s.flow.pushes();
             TickConstraints tc = angleSolverState.tickConstraintsOrNull(t);
-            if (tc == null && slipDefault && mediumNone && !damage) continue;
+            if (tc == null && slipDefault && mediumNone && !damage && !flows) continue;
             StateOverride ov = angleSolverState.tickConstraints(t).getOverride();
             ov.setDamage(damage);
             if (slipDefault) ov.clearSlipperiness();
@@ -896,8 +897,8 @@ public final class Application {
             } else {
                 ov.setMedium(medium);
                 if (medium == Medium.SOULSAND) ov.setSoulsandCells(Math.max(1, s.soulsandCells));
-                ov.setFlowVector(s.flow);
             }
+            ov.setFlowVector(s.flow);
             changed = true;
         }
         if (changed) saveController.markDirty();

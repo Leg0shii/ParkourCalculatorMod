@@ -739,6 +739,7 @@ public final class AngleSolverEngine {
         SurfaceKind[] surfacePerTick = new SurfaceKind[numTicks];
         int[] soulsandCellsPerTick = new int[numTicks];
         FlowVector[] flowPerTick = new FlowVector[numTicks];
+        boolean modernWaterSprint = exactModel() != null && exactModel().modern();
         boolean[] sneakPerTick = new boolean[numTicks];
         boolean[] dolphinsGrace = new boolean[numTicks];
         boolean[] weaving = new boolean[numTicks];
@@ -799,6 +800,10 @@ public final class AngleSolverEngine {
                     strafeIn[k] = 0.98F * ((row.isKeyActive(InputRow.Key.A) ? 1 : 0) - (row.isKeyActive(InputRow.Key.D) ? 1 : 0));
                     sprintArr[k] = true;
                 }
+            }
+            if (modernWaterSprint && surfacePerTick[k] == SurfaceKind.WATER && !deriveSprint) {
+                TickState waterSample = boxes.getState(t + 1);
+                sprintArr[k] = waterSample != null && waterSample.hasMovementSample() && waterSample.sprinting;
             }
             yawLocked[k] = row.isYawLocked();
             speedAmp[k] = effSpeedLevel(t, rows);
@@ -1737,8 +1742,7 @@ public final class AngleSolverEngine {
 
     private FlowVector effFlow(int tick) {
         StateOverride ov = overrideAt(tick);
-        if (ov != null && StateOverride.flows(ov.getMedium())) return ov.getFlowVector();
-        return FlowVector.NONE;
+        return ov != null ? ov.getFlowVector() : FlowVector.NONE;
     }
 
     private int effSoulsandCells(int tick) {

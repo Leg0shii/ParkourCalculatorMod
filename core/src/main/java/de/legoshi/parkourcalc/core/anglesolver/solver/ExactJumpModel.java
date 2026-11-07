@@ -262,8 +262,9 @@ public final class ExactJumpModel implements ForwardModel {
             boolean fluid = water || kind == SurfaceKind.LAVA;
             FlowVector flow = scenario.flowAt(t);
             boolean pushes = flow.pushes() && !(sine262 && flow.x * flow.x + flow.z * flow.z < MIN_FLOW_LENGTH_SQ_262);
-            if (fluid && pushes && (modern || water)) {
-                double scale = water ? WATER_PUSH : scenario.ultrawarm ? LAVA_PUSH_ULTRAWARM : LAVA_PUSH;
+            if (pushes && (modern || water)) {
+                boolean lavaFlow = kind == SurfaceKind.LAVA || (!water && flow.lava);
+                double scale = !lavaFlow ? WATER_PUSH : scenario.ultrawarm ? LAVA_PUSH_ULTRAWARM : LAVA_PUSH;
                 double px;
                 double pz;
                 if (modern) {

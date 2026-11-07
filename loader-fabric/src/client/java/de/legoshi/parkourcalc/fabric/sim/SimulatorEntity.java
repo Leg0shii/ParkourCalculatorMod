@@ -175,7 +175,8 @@ public class SimulatorEntity extends Player {
         boolean water = fluid && this.isInWater();
         boolean lava = fluid && !water && this.isInLava();
         boolean ladder = this.onClimbable();
-        tickFlow = water ? captureFlow(FluidTags.WATER) : lava ? captureFlow(FluidTags.LAVA) : FlowVector.NONE;
+        tickFlow = captureFlow(FluidTags.WATER, false);
+        if (!tickFlow.pushes()) tickFlow = captureFlow(FluidTags.LAVA, true);
         tickGroundFriction = this.onGround()
                 ? (double) this.level().getBlockState(this.getBlockPosBelowThatAffectsMyMovement()).getBlock().getFriction()
                 : Double.NaN;
@@ -184,7 +185,7 @@ public class SimulatorEntity extends Player {
         tickMedium = Medium.fromFlags(web, water, lava, ladder, tickSoulsandCells > 0);
     }
 
-    private FlowVector captureFlow(TagKey<Fluid> fluid) {
+    private FlowVector captureFlow(TagKey<Fluid> fluid, boolean lava) {
         AABB bb = this.getBoundingBox().deflate(0.001);
         int x0 = Mth.floor(bb.minX);
         int x1 = Mth.ceil(bb.maxX);
@@ -215,7 +216,7 @@ public class SimulatorEntity extends Player {
         }
         if (count == 0) return FlowVector.NONE;
         Vec3 avg = sum.scale(1.0 / count);
-        return new FlowVector(avg.x, avg.z);
+        return new FlowVector(avg.x, avg.z, lava);
     }
 
     public FlowVector capturedTickFlow() {

@@ -788,6 +788,8 @@ public final class AngleSolverTable {
                     : ov.overridesFlow() ? ov.getMedium().label + " " + ov.getFlow().label
                     : ov.getMedium().label;
             specs.add(new StateChipSpec(DragKind.STATE_MEDIUM, null, "Medium", mediumLabel, false));
+        } else if (ov.overridesFlow()) {
+            specs.add(new StateChipSpec(DragKind.STATE_MEDIUM, null, "Medium", "Flow " + ov.getFlow().label, false));
         }
         if (ov.overridesDamage()) {
             specs.add(new StateChipSpec(DragKind.STATE_DAMAGE, null, "Damage", "Fall", false));
@@ -1229,7 +1231,7 @@ public final class AngleSolverTable {
         ImGui.tableNextColumn();
         overrideTrailing(ov.overridesMedium(), "inherits default (" + Medium.NONE.label + ")", "ovmdr", ov::clearMedium);
 
-        if (StateOverride.flows(ov.getMedium())) {
+        if (StateOverride.flows(ov.getMedium()) || ov.overridesFlow()) {
             ovRowStart("Flow", false);
             flowBuf.set(ov.getFlow().ordinal());
             if (Controls.combo("##ovflow", flowBuf, flowItems, ImGui.getContentRegionAvail().x)) {
