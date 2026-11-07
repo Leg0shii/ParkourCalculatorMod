@@ -577,6 +577,7 @@ public final class GateFoldFinder {
     }
 
     private static void addBit(List<int[]> bits, ForwardPath path, int t, int axis, double thr, boolean zero) {
+        if (thr == 0.0) return;
         double v = Math.abs(axis == 0 ? path.velX[t] : path.velZ[t]);
         boolean flip = false;
         double pv = axis == 0 ? path.velX[t - 1] : path.velZ[t - 1];

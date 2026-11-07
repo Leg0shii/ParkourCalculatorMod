@@ -205,6 +205,7 @@ public final class AnchorSlp {
                                     List<double[]> rowList, List<Double> violList, double yawScale) {
         int n = lin.n;
         double thr = exact.inertiaThreshold();
+        if (thr == 0.0) return;
         boolean perAxis = exact.perAxisInertia();
         for (int a = 0; a < 2; a++) {
             if (!perAxis && a == 1) break;
