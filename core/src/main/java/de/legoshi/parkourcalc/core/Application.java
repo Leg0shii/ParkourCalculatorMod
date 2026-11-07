@@ -113,6 +113,8 @@ public final class Application {
     private final OsSystemBridge systemBridge = new OsSystemBridge();
 
     private de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel forwardModel;
+    private de.legoshi.parkourcalc.core.anglesolver.solver.PhysicsVariant physicsVariant =
+            de.legoshi.parkourcalc.core.anglesolver.solver.PhysicsVariant.VANILLA;
     private de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverWindow angleSolverWindow;
     private NoTurnSearchController noTurnSearch;
     private SenseSearchController senseSearch;
@@ -190,6 +192,14 @@ public final class Application {
         fileMenu.promptSaveSelectionAsTas(copied, sourceRows, pos, vel, yaw, pitch, resume);
     }
 
+    public void setPhysicsVariant(de.legoshi.parkourcalc.core.anglesolver.solver.PhysicsVariant variant) {
+        physicsVariant = variant == null ? de.legoshi.parkourcalc.core.anglesolver.solver.PhysicsVariant.VANILLA : variant;
+    }
+
+    public de.legoshi.parkourcalc.core.anglesolver.solver.PhysicsVariant getPhysicsVariant() {
+        return physicsVariant;
+    }
+
     public void setModVersion(String modVersion) {
         this.modVersion = modVersion;
     }
@@ -222,7 +232,7 @@ public final class Application {
         angleSolverState = new AngleSolverState();
         FileSystemSaveStore saveStore = saveController.getSaveStore();
         String mcVersion = saveStore != null ? saveStore.getMcVersion() : null;
-        forwardModel = ExactJumpModel.forMcVersion(mcVersion).withVelocityCodec(mc.velocityPacketCodec());
+        forwardModel = ExactJumpModel.forMcVersion(mcVersion, physicsVariant).withVelocityCodec(mc.velocityPacketCodec());
         inputOverlay.setMcVersion(mcVersion);
         constraintKeyController = new ConstraintKeyController(
                 mc, angleSolverState, selection, constraintSelection, saveController::markDirty,

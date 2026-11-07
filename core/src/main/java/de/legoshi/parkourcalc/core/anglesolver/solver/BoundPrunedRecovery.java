@@ -368,6 +368,7 @@ public final class BoundPrunedRecovery {
             out.add(new Pattern("free", free, new ArrayList<JumpLinearModel.Wall>(), false, freeBound, -1, -1, null, null));
         }
         double thr = exact.inertiaThreshold();
+        if (thr == 0.0) return out;
         boolean perAxis = exact.perAxisInertia();
         List<Pattern> cands = new ArrayList<>();
         for (int k = 1; k < n; k++) {
@@ -421,6 +422,7 @@ public final class BoundPrunedRecovery {
         double[] vel = axis == 0 ? path.velX : path.velZ;
         if (vel == null) return out;
         double thr = exact.inertiaThreshold();
+        if (thr == 0.0) return out;
         for (int k = 1; k < free.n && out.size() < MAX_KEEP_ALIVE; k++) {
             if (Math.abs(vel[k]) >= thr && vel[k - 1] * vel[k] >= 0.0) continue;
             JumpLinearModel.Wall w = free.keepAliveWall(axis, k, thr, positive);
