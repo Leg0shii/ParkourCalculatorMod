@@ -1,6 +1,7 @@
 package de.legoshi.parkourcalc.forge.sim;
 
 import de.legoshi.parkourcalc.core.PlaybackController;
+import de.legoshi.parkourcalc.core.anglesolver.FlowDirection;
 import de.legoshi.parkourcalc.core.anglesolver.Medium;
 import de.legoshi.parkourcalc.core.sim.Checkpoint;
 import de.legoshi.parkourcalc.core.sim.ChunkRange;
@@ -417,6 +418,11 @@ public final class ForgeSimulator extends LazyEntitySimulator<SimulatorEntity> {
     @Override
     protected Medium getTickMedium(SimulatorEntity e) {
         return e.capturedTickMedium();
+    }
+
+    @Override
+    protected FlowDirection getTickFlow(SimulatorEntity e) {
+        return e.capturedTickFlow();
     }
 
     @Override

@@ -1,13 +1,13 @@
 package de.legoshi.parkourcalc.fabric.sim;
 
 import com.mojang.authlib.GameProfile;
+import de.legoshi.parkourcalc.core.anglesolver.FlowDirection;
 import de.legoshi.parkourcalc.core.anglesolver.Medium;
 import de.legoshi.parkourcalc.core.sim.StartResumeState;
 import de.legoshi.parkourcalc.core.sim.SubtickPath;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
-//? if <26.1
-//import net.minecraft.core.BlockPos;
+import net.minecraft.core.BlockPos;
 //? if >=1.21.2
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.FluidTags;
@@ -29,6 +29,8 @@ import net.minecraft.world.entity.player.Player;
 //import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.phys.AABB;
 //? if >=26.1
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
@@ -62,6 +64,7 @@ public class SimulatorEntity extends Player {
     private Medium tickMedium;
     private double tickGroundFriction = Double.NaN;
     private int tickSoulsandCells;
+    private FlowDirection tickFlow = FlowDirection.NONE;
 
     public double getLastCollisionAngleDegrees() {
         return lastCollisionAngleDegrees;
@@ -170,12 +173,45 @@ public class SimulatorEntity extends Player {
         boolean water = fluid && this.isInWater();
         boolean lava = fluid && !water && this.isInLava();
         boolean ladder = this.onClimbable();
+        tickFlow = water || lava ? captureFlow() : FlowDirection.NONE;
         tickGroundFriction = this.onGround()
                 ? (double) this.level().getBlockState(this.getBlockPosBelowThatAffectsMyMovement()).getBlock().getFriction()
                 : Double.NaN;
         super.travel(input);
         tickSoulsandCells = this.getBlockSpeedFactor() != 1.0F ? 1 : 0;
         tickMedium = Medium.fromFlags(web, water, lava, ladder, tickSoulsandCells > 0);
+    }
+
+    private FlowDirection captureFlow() {
+        AABB bb = this.getBoundingBox().deflate(0.001);
+        int x0 = Mth.floor(bb.minX);
+        int x1 = Mth.ceil(bb.maxX);
+        int y0 = Mth.floor(bb.minY);
+        int y1 = Mth.ceil(bb.maxY);
+        int z0 = Mth.floor(bb.minZ);
+        int z1 = Mth.ceil(bb.maxZ);
+        Level level = this.level();
+        double fx = 0.0;
+        double fz = 0.0;
+        BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
+        for (int x = x0; x < x1; x++) {
+            for (int y = y0; y < y1; y++) {
+                for (int z = z0; z < z1; z++) {
+                    pos.set(x, y, z);
+                    FluidState fs = level.getFluidState(pos);
+                    if (!fs.is(FluidTags.WATER) && !fs.is(FluidTags.LAVA)) continue;
+                    if (y + fs.getHeight(level, pos) < bb.minY) continue;
+                    Vec3 f = fs.getFlow(level, pos);
+                    fx += f.x;
+                    fz += f.z;
+                }
+            }
+        }
+        return FlowDirection.nearest(fx, fz);
+    }
+
+    public FlowDirection capturedTickFlow() {
+        return tickFlow;
     }
 
     public Medium capturedTickMedium() {

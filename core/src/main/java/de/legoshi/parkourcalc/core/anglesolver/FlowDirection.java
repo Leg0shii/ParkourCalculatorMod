@@ -32,6 +32,20 @@ public enum FlowDirection {
         return this != NONE;
     }
 
+    public static FlowDirection nearest(double x, double z) {
+        if (x * x + z * z < 1.0e-12) return NONE;
+        FlowDirection best = NONE;
+        double bestDot = 0.0;
+        for (FlowDirection d : values()) {
+            double dot = d.dx * x + d.dz * z;
+            if (dot > bestDot) {
+                bestDot = dot;
+                best = d;
+            }
+        }
+        return best;
+    }
+
     public static String[] comboItems() {
         FlowDirection[] all = values();
         String[] items = new String[all.length];

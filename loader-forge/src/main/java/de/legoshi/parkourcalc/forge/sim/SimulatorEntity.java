@@ -1,12 +1,16 @@
 package de.legoshi.parkourcalc.forge.sim;
 
 import com.mojang.authlib.GameProfile;
+import de.legoshi.parkourcalc.core.anglesolver.FlowDirection;
 import de.legoshi.parkourcalc.core.anglesolver.Medium;
 import de.legoshi.parkourcalc.core.sim.StartResumeState;
 import de.legoshi.parkourcalc.core.sim.SubtickPath;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 import de.legoshi.parkourcalc.forge.core.sim.PlayerSprintMachine;
+//? if <1.12
+//import net.minecraft.block.Block;
+import net.minecraft.block.material.Material;
 //? if >=1.12
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
@@ -57,6 +61,7 @@ public class SimulatorEntity extends EntityPlayer {
     private Medium tickMedium;
     private double tickGroundFriction = Double.NaN;
     private int tickSoulsandCells;
+    private FlowDirection tickFlow = FlowDirection.NONE;
 
     private final ArrayList<Vec3dCore> subtickBuf = new ArrayList<Vec3dCore>(8);
     private boolean capturing = false;
@@ -207,6 +212,7 @@ public class SimulatorEntity extends EntityPlayer {
         boolean water = this.isInWater();
         boolean lava = this.isInLava();
         boolean ladder = this.isOnLadder();
+        tickFlow = water || lava ? captureFlow() : FlowDirection.NONE;
         //? if >=1.12 {
         if (this.onGround) {
             BlockPos below = new BlockPos(this.posX, this.getEntityBoundingBox().minY - 1.0D, this.posZ);
@@ -227,6 +233,50 @@ public class SimulatorEntity extends EntityPlayer {
         *///?}
         tickSoulsandCells = countSoulsandCells();
         tickMedium = Medium.fromFlags(web, water, lava, ladder, tickSoulsandCells > 0);
+    }
+
+    private FlowDirection captureFlow() {
+        AxisAlignedBB bb = this.getEntityBoundingBox();
+        int x0 = (int) Math.floor(bb.minX + 0.001);
+        int y0 = (int) Math.floor(bb.minY + 0.401);
+        int z0 = (int) Math.floor(bb.minZ + 0.001);
+        int x1 = (int) Math.floor(bb.maxX - 0.001);
+        int y1 = (int) Math.floor(bb.maxY - 0.401);
+        int z1 = (int) Math.floor(bb.maxZ - 0.001);
+        //? if >=1.12 {
+        if (!this.world.isAreaLoaded(new BlockPos(x0, y0, z0), new BlockPos(x1, y1, z1))) return FlowDirection.NONE;
+        Vec3d flow = Vec3d.ZERO;
+        //?} else {
+        /*if (!this.worldObj.isAreaLoaded(new BlockPos(x0, y0, z0), new BlockPos(x1, y1, z1))) return FlowDirection.NONE;
+        Vec3 flow = new Vec3(0.0, 0.0, 0.0);
+        *///?}
+        for (int x = x0; x <= x1; x++) {
+            for (int y = y0; y <= y1; y++) {
+                for (int z = z0; z <= z1; z++) {
+                    BlockPos pos = new BlockPos(x, y, z);
+                    //? if >=1.12 {
+                    IBlockState state = this.world.getBlockState(pos);
+                    Material material = state.getMaterial();
+                    if (material != Material.WATER && material != Material.LAVA) continue;
+                    flow = state.getBlock().modifyAcceleration(this.world, pos, this, flow);
+                    //?} else {
+                    /*Block block = this.worldObj.getBlockState(pos).getBlock();
+                    Material material = block.getMaterial();
+                    if (material != Material.water && material != Material.lava) continue;
+                    flow = block.modifyAcceleration(this.worldObj, pos, this, flow);
+                    *///?}
+                }
+            }
+        }
+        //? if >=1.12 {
+        return FlowDirection.nearest(flow.x, flow.z);
+        //?} else {
+        /*return FlowDirection.nearest(flow.xCoord, flow.zCoord);
+        *///?}
+    }
+
+    public FlowDirection capturedTickFlow() {
+        return tickFlow;
     }
 
     private int countSoulsandCells() {

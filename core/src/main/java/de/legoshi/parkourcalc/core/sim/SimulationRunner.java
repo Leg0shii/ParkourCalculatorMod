@@ -119,6 +119,7 @@ public final class SimulationRunner {
                 simulator.getCurrentTickMedium(),
                 simulator.getCurrentTickGroundFriction(),
                 simulator.getCurrentTickSoulsandCells(),
+                simulator.getCurrentTickFlow(),
                 simulator.getCurrentServerSample()
         );
     }

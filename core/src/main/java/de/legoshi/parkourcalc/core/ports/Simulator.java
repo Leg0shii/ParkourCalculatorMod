@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.core.ports;
 
+import de.legoshi.parkourcalc.core.anglesolver.FlowDirection;
 import de.legoshi.parkourcalc.core.anglesolver.Medium;
 import de.legoshi.parkourcalc.core.sim.Checkpoint;
 import de.legoshi.parkourcalc.core.sim.ServerSimEvent;
@@ -53,6 +54,10 @@ public interface Simulator {
 
     default int getCurrentTickSoulsandCells() {
         return 0;
+    }
+
+    default FlowDirection getCurrentTickFlow() {
+        return FlowDirection.NONE;
     }
 
     default ServerTickSample getCurrentServerSample() {

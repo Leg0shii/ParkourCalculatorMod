@@ -377,6 +377,7 @@ public final class AngleSolverTable {
             case STATE_MEDIUM:
                 dst.setMedium(src.getMedium());
                 dst.setSoulsandCells(src.getSoulsandCells());
+                dst.setFlow(src.getFlow());
                 if (!dragAlt) src.clearMedium();
                 break;
             case STATE_DAMAGE:
