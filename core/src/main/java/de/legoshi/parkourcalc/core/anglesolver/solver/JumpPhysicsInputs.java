@@ -1,5 +1,7 @@
 package de.legoshi.parkourcalc.core.anglesolver.solver;
 
+import de.legoshi.parkourcalc.core.anglesolver.FlowVector;
+
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 
 /** MC-free per-tick physics inputs the model's forward reads. Seeded from a selected TAS tick:
@@ -47,6 +49,12 @@ public final class JumpPhysicsInputs {
     public SurfaceKind[] surfacePerTick = null;
 
     public int[] soulsandCellsPerTick = null;
+
+    public FlowVector[] flowPerTick = null;
+
+    public FlowVector[] endFlowPerTick = null;
+
+    public boolean ultrawarm = false;
 
     public boolean[] sneakPerTick = null;
 
@@ -115,6 +123,9 @@ public final class JumpPhysicsInputs {
         c.slipPerTick = slipPerTick;
         c.surfacePerTick = surfacePerTick;
         c.soulsandCellsPerTick = soulsandCellsPerTick;
+        c.flowPerTick = flowPerTick;
+        c.endFlowPerTick = endFlowPerTick;
+        c.ultrawarm = ultrawarm;
         c.sneakPerTick = sneakPerTick;
         c.dolphinsGracePerTick = dolphinsGracePerTick;
         c.weavingPerTick = weavingPerTick;
@@ -155,6 +166,8 @@ public final class JumpPhysicsInputs {
         double[] slip = new double[m];
         SurfaceKind[] surface = new SurfaceKind[m];
         int[] soulsand = new int[m];
+        FlowVector[] flow = new FlowVector[m];
+        FlowVector[] endFlow = new FlowVector[m];
         boolean[] sneak = new boolean[m];
         boolean[] dolphin = new boolean[m];
         boolean[] weaving = new boolean[m];
@@ -175,6 +188,8 @@ public final class JumpPhysicsInputs {
             slip[k] = slipAt(i);
             surface[k] = surfaceAt(i);
             soulsand[k] = soulsandCellsAt(i);
+            flow[k] = flowAt(i);
+            endFlow[k] = endFlowAt(i);
             sneak[k] = sneakAt(i);
             dolphin[k] = dolphinsGraceAt(i);
             weaving[k] = weavingAt(i);
@@ -194,6 +209,9 @@ public final class JumpPhysicsInputs {
         c.slipPerTick = slip;
         c.surfacePerTick = surface;
         c.soulsandCellsPerTick = soulsand;
+        c.flowPerTick = flow;
+        c.endFlowPerTick = endFlow;
+        c.ultrawarm = ultrawarm;
         c.sneakPerTick = sneak;
         c.dolphinsGracePerTick = dolphin;
         c.weavingPerTick = weaving;
@@ -343,6 +361,18 @@ public final class JumpPhysicsInputs {
     public int soulsandCellsAt(int tick) {
         if (soulsandCellsPerTick == null || tick < 0 || tick >= soulsandCellsPerTick.length) return 1;
         return Math.max(1, soulsandCellsPerTick[tick]);
+    }
+
+    public FlowVector flowAt(int tick) {
+        if (flowPerTick == null || tick < 0 || tick >= flowPerTick.length) return FlowVector.NONE;
+        FlowVector flow = flowPerTick[tick];
+        return flow == null ? FlowVector.NONE : flow;
+    }
+
+    public FlowVector endFlowAt(int tick) {
+        if (endFlowPerTick == null || tick < 0 || tick >= endFlowPerTick.length) return FlowVector.NONE;
+        FlowVector flow = endFlowPerTick[tick];
+        return flow == null ? FlowVector.NONE : flow;
     }
 
     public boolean sneakAt(int tick) {

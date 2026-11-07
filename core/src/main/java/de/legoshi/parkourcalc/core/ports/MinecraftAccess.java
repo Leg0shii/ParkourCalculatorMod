@@ -179,6 +179,10 @@ public interface MinecraftAccess {
     /** True when the client owns the integrated server (singleplayer or LAN host). */
     boolean isSinglePlayer();
 
+    default boolean isUltrawarm() {
+        return false;
+    }
+
     default boolean isChunkLoaded(int chunkX, int chunkZ) {
         return true;
     }

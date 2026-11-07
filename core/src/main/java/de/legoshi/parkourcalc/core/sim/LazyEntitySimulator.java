@@ -2,6 +2,7 @@ package de.legoshi.parkourcalc.core.sim;
 
 import de.legoshi.parkourcalc.core.DebugFlags;
 import de.legoshi.parkourcalc.core.PlaybackController;
+import de.legoshi.parkourcalc.core.anglesolver.FlowVector;
 import de.legoshi.parkourcalc.core.anglesolver.Medium;
 import de.legoshi.parkourcalc.core.ports.Simulator;
 import de.legoshi.parkourcalc.core.ui.InputRow;
@@ -124,6 +125,16 @@ public abstract class LazyEntitySimulator<E> implements Simulator {
     @Override
     public final double getCurrentTickGroundFriction() {
         return getTickGroundFriction(ensureEntity());
+    }
+
+    @Override
+    public final FlowVector getCurrentTickFlow() {
+        return getTickFlow(ensureEntity());
+    }
+
+    @Override
+    public final boolean isCurrentTickInWater() {
+        return isTickInWater(ensureEntity());
     }
 
     @Override
@@ -294,6 +305,14 @@ public abstract class LazyEntitySimulator<E> implements Simulator {
     protected abstract double getTickGroundFriction(E entity);
 
     protected abstract int getTickSoulsandCells(E entity);
+
+    protected FlowVector getTickFlow(E entity) {
+        return FlowVector.NONE;
+    }
+
+    protected boolean isTickInWater(E entity) {
+        return false;
+    }
 
     protected abstract float getYaw(E entity);
 

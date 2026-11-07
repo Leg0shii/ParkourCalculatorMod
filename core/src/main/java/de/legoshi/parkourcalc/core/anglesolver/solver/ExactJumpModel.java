@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.core.anglesolver.solver;
 
+import de.legoshi.parkourcalc.core.anglesolver.FlowVector;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.MovementEffect;
 
@@ -29,6 +30,13 @@ public final class ExactJumpModel implements ForwardModel {
     private static final double FLUID_JUMP_BOOST = (double) 0.04F;
     private static final double WATER_DRAG = (double) 0.8F;
     private static final double WATER_SPRINT_DRAG = (double) 0.9F;
+    private static final double WATER_PUSH = 0.014;
+    private static final double LAVA_PUSH = 0.0023333333333333335;
+    private static final double MIN_FLOW_LENGTH_SQ_262 = (double) 1.0E-5F;
+    private static final double LAVA_PUSH_ULTRAWARM = 0.007;
+    private static final double MIN_FLUID_PUSH = 0.0045000000000000005;
+    private static final double MIN_FLUID_PUSH_BELOW = 0.003;
+    private static final double NORMALIZE_EPSILON = 1.0E-4;
     private static final double MODERN_FLUID_GRAVITY = Constants.GRAVITY / 16.0;
     private static final double WEB_Y_SCALE = (double) 0.05F;
     private static final double WEAVING_WEB_XZ_SCALE = 0.5;
@@ -249,6 +257,17 @@ public final class ExactJumpModel implements ForwardModel {
             double vy = velY[t];
             double vz = velZ[t];
 
+            SurfaceKind kind = scenario.surfaceAt(t);
+            boolean water = kind == SurfaceKind.WATER;
+            boolean fluid = water || kind == SurfaceKind.LAVA;
+            FlowVector flow = scenario.flowAt(t);
+            if (flow.pushes() && (modern || water)) {
+                boolean lavaFlow = kind == SurfaceKind.LAVA || (!water && flow.lava);
+                double[] push = fluidPush(flow, lavaFlow, scenario.ultrawarm, vx, vz);
+                vx += push[0];
+                vz += push[1];
+            }
+
             // (1) momentum cancellation, top of tick, on the post-friction carry from last tick.
             if (perAxisInertia) {
                 if (Math.abs(vx) < thr) vx = 0.0;
@@ -267,9 +286,6 @@ public final class ExactJumpModel implements ForwardModel {
             int slow = scenario.factorSlownessAt(t);
             double slipOv = scenario.slipAt(t);
             boolean contact = !Double.isNaN(slipOv);
-            SurfaceKind kind = scenario.surfaceAt(t);
-            boolean water = kind == SurfaceKind.WATER;
-            boolean fluid = water || kind == SurfaceKind.LAVA;
             float slipF = contact ? (float) slipOv : Constants.SLIP_F;
             boolean fluidGroundJump = modern && fluid && contact && scenario.jumpAt(t);
             boolean isJumpTick = fluidGroundJump || (!fluid && scenario.jumpAt(t) && contact);
@@ -419,6 +435,13 @@ public final class ExactJumpModel implements ForwardModel {
                 }
             }
 
+            FlowVector endFlow = scenario.endFlowAt(t);
+            if (endFlow.pushes() && (modern || !endFlow.lava)) {
+                double[] push = fluidPush(endFlow, endFlow.lava, scenario.ultrawarm, vx, vz);
+                vx += push[0];
+                vz += push[1];
+            }
+
             // (6) gravity then friction multiply, carried into next tick.
             if (fluid) {
                 if (!modern) {
@@ -465,6 +488,39 @@ public final class ExactJumpModel implements ForwardModel {
                 serverTravel(scenario, t, server);
             }
         }
+    }
+
+    private double[] fluidPush(FlowVector flow, boolean lavaFlow, boolean ultrawarm, double vx, double vz) {
+        double scale = !lavaFlow ? WATER_PUSH : ultrawarm ? LAVA_PUSH_ULTRAWARM : LAVA_PUSH;
+        double px;
+        double pz;
+        if (modern) {
+            if (sine262 && flow.x * flow.x + flow.z * flow.z < MIN_FLOW_LENGTH_SQ_262) return new double[] {0.0, 0.0};
+            px = flow.x * scale;
+            pz = flow.z * scale;
+            if (Math.abs(vx) < MIN_FLUID_PUSH_BELOW && Math.abs(vz) < MIN_FLUID_PUSH_BELOW) {
+                double len = Math.sqrt(px * px + pz * pz);
+                if (len < MIN_FLUID_PUSH) {
+                    if (len < NORMALIZE_EPSILON) {
+                        px = 0.0;
+                        pz = 0.0;
+                    } else {
+                        px = px / len * MIN_FLUID_PUSH;
+                        pz = pz / len * MIN_FLUID_PUSH;
+                    }
+                }
+            }
+        } else {
+            double len = Math.sqrt(flow.x * flow.x + flow.z * flow.z);
+            if (len < NORMALIZE_EPSILON) {
+                px = 0.0;
+                pz = 0.0;
+            } else {
+                px = flow.x / len * scale;
+                pz = flow.z / len * scale;
+            }
+        }
+        return new double[] {px, pz};
     }
 
     public double[] serverCarry(JumpPhysicsInputs scenario, double[] yawAbsDeg, int upTo) {

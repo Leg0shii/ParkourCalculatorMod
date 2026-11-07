@@ -49,6 +49,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
 
@@ -151,6 +152,7 @@ public final class AngleSolverEngine {
      *  Stateless/immutable, so a single instance is shared read-only across the restart threads. */
     private final ForwardModel model;
     private final boolean modernCollision;
+    private BooleanSupplier ultrawarm = () -> false;
 
     private Plan lastPlan;
     private Plan smoothBase;
@@ -265,6 +267,10 @@ public final class AngleSolverEngine {
         this.onApplied = onApplied;
         this.model = model;
         this.modernCollision = model instanceof ExactJumpModel && ((ExactJumpModel) model).modern();
+    }
+
+    public void setUltrawarm(BooleanSupplier ultrawarm) {
+        this.ultrawarm = ultrawarm == null ? () -> false : ultrawarm;
     }
 
     private static final class Plan {
@@ -732,6 +738,9 @@ public final class AngleSolverEngine {
         double[] slipPerTick = new double[numTicks];
         SurfaceKind[] surfacePerTick = new SurfaceKind[numTicks];
         int[] soulsandCellsPerTick = new int[numTicks];
+        FlowVector[] flowPerTick = new FlowVector[numTicks];
+        FlowVector[] endFlowPerTick = new FlowVector[numTicks];
+        boolean modernWaterSprint = exactModel() != null && exactModel().modern();
         boolean[] sneakPerTick = new boolean[numTicks];
         boolean[] dolphinsGrace = new boolean[numTicks];
         boolean[] weaving = new boolean[numTicks];
@@ -764,6 +773,8 @@ public final class AngleSolverEngine {
             slipPerTick[k] = ground ? slip : Double.NaN;
             surfacePerTick[k] = effMedium(t).kind;
             soulsandCellsPerTick[k] = effSoulsandCells(t);
+            flowPerTick[k] = effFlow(t);
+            endFlowPerTick[k] = effEndFlow(t);
             sneakPerTick[k] = row.isKeyActive(InputRow.Key.SNEAK);
             dolphinsGrace[k] = row.getEffectLevel(MovementEffect.DOLPHINS_GRACE) > 0;
             weaving[k] = row.getEffectLevel(MovementEffect.WEAVING) > 0;
@@ -792,6 +803,10 @@ public final class AngleSolverEngine {
                     sprintArr[k] = true;
                 }
             }
+            if (modernWaterSprint && surfacePerTick[k] == SurfaceKind.WATER && !deriveSprint) {
+                TickState waterSample = boxes.getState(t + 1);
+                sprintArr[k] = waterSample != null && waterSample.hasMovementSample() && waterSample.sprinting;
+            }
             yawLocked[k] = row.isYawLocked();
             speedAmp[k] = effSpeedLevel(t, rows);
             slowAmp[k] = effSlownessLevel(t, rows);
@@ -812,6 +827,9 @@ public final class AngleSolverEngine {
         phys.slipPerTick = slipPerTick;
         phys.surfacePerTick = surfacePerTick;
         phys.soulsandCellsPerTick = soulsandCellsPerTick;
+        phys.flowPerTick = flowPerTick;
+        phys.endFlowPerTick = endFlowPerTick;
+        phys.ultrawarm = ultrawarm.getAsBoolean();
         phys.sneakPerTick = sneakPerTick;
         phys.dolphinsGracePerTick = dolphinsGrace;
         phys.weavingPerTick = weaving;
@@ -1723,6 +1741,20 @@ public final class AngleSolverEngine {
     private boolean effDamage(int tick) {
         StateOverride ov = overrideAt(tick);
         return ov != null && ov.isDamage();
+    }
+
+    private FlowVector effFlow(int tick) {
+        StateOverride ov = overrideAt(tick);
+        return ov != null ? ov.getFlowVector() : FlowVector.NONE;
+    }
+
+    private FlowVector effEndFlow(int tick) {
+        TickState startState = boxes.getState(tick);
+        if (startState != null && startState.inWater) return FlowVector.NONE;
+        StateOverride next = overrideAt(tick + 1);
+        if (next != null && next.overridesFlow()) return next.getFlowVector();
+        TickState endState = boxes.getState(tick + 1);
+        return endState != null ? endState.flow : FlowVector.NONE;
     }
 
     private int effSoulsandCells(int tick) {

@@ -46,6 +46,7 @@ import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.BlockSelection;
 import de.legoshi.parkourcalc.core.anglesolver.ConstraintText;
+import de.legoshi.parkourcalc.core.anglesolver.FlowVector;
 import de.legoshi.parkourcalc.core.anglesolver.Medium;
 import de.legoshi.parkourcalc.core.anglesolver.Slipperiness;
 import de.legoshi.parkourcalc.core.anglesolver.SolveResult;
@@ -242,6 +243,7 @@ public final class Application {
         AngleSolverEngine angleSolverEngine = new AngleSolverEngine(angleSolverState, boxController, inputData, this::onUserChange, forwardModel);
         angleSolverEngine.setOnStartMoved(runner::setStartPosition);
         angleSolverEngine.setOnStartYawChanged(runner::setStartYaw);
+        angleSolverEngine.setUltrawarm(mc::isUltrawarm);
         this.solverEngine = angleSolverEngine;
         if (saveStore != null) {
             angleSolverEngine.setRunLog(new SolveRunLog(saveStore.getSaveDir().resolve("runs"),
@@ -886,8 +888,11 @@ public final class Application {
             boolean slipDefault = slip == angleSolverState.getDefaultSlipperiness();
             boolean mediumNone = medium == Medium.NONE;
             boolean damage = damageTicks.contains(t);
+            TickState pre = boxController.getState(t);
+            FlowVector flow = pre != null ? pre.flow : FlowVector.NONE;
+            boolean flows = flow.pushes();
             TickConstraints tc = angleSolverState.tickConstraintsOrNull(t);
-            if (tc == null && slipDefault && mediumNone && !damage) continue;
+            if (tc == null && slipDefault && mediumNone && !damage && !flows) continue;
             StateOverride ov = angleSolverState.tickConstraints(t).getOverride();
             ov.setDamage(damage);
             if (slipDefault) ov.clearSlipperiness();
@@ -898,6 +903,7 @@ public final class Application {
                 ov.setMedium(medium);
                 if (medium == Medium.SOULSAND) ov.setSoulsandCells(Math.max(1, s.soulsandCells));
             }
+            ov.setFlowVector(flow);
             changed = true;
         }
         if (changed) saveController.markDirty();

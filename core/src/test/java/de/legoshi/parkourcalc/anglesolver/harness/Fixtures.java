@@ -2,6 +2,7 @@ package de.legoshi.parkourcalc.anglesolver.harness;
 
 import de.legoshi.parkourcalc.core.save.SaveFile;
 import de.legoshi.parkourcalc.core.save.SaveIO;
+import de.legoshi.parkourcalc.core.anglesolver.FlowVector;
 import de.legoshi.parkourcalc.core.sim.ServerTickSample;
 import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
@@ -46,8 +47,12 @@ public final class Fixtures {
             float moveForward = Float.NaN;
             float moveStrafe = Float.NaN;
             ServerTickSample server = null;
+            FlowVector flow = FlowVector.NONE;
+            boolean inWater = false;
             SaveFile.DebugTick d = debug != null && i < debug.size() ? debug.get(i) : null;
             if (d != null) {
+                if (d.flowX != null && d.flowZ != null) flow = new FlowVector(d.flowX, d.flowZ, d.flowLava != null && d.flowLava);
+                inWater = d.inWater != null && d.inWater;
                 if (d.pos != null && d.pos.length >= 3) pos = new Vec3dCore(d.pos[0], d.pos[1], d.pos[2]);
                 if (d.vel != null && d.vel.length >= 3) vel = new Vec3dCore(d.vel[0], d.vel[1], d.vel[2]);
                 yaw = d.yaw;
@@ -73,7 +78,7 @@ public final class Fixtures {
             }
             boxes.add(new TickState(pos, onGround, sneaking, wallCollision, yaw,
                     Collections.<Vec3dCore>emptyList(), vel, softCollision, collisionAngle,
-                    sprinting, moveForward, moveStrafe, null, Double.NaN, 0, server));
+                    sprinting, moveForward, moveStrafe, null, Double.NaN, 0, flow, inWater, server));
         }
         return boxes;
     }
