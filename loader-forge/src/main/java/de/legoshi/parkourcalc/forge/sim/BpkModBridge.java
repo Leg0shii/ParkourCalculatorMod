@@ -74,7 +74,6 @@ public final class BpkModBridge {
         public List<String> unsupported() {
             List<String> out = new ArrayList<String>();
             if (newTouch && byPitch) out.add("new touch by pitch");
-            if (bedrockSneak) out.add("Bedrock sneak");
             if (sprintDelayOnGround) out.add("sprint delay on ground");
             return out;
         }
@@ -94,6 +93,7 @@ public final class BpkModBridge {
     private static Field delayGroundField;
     private static Field nonSprintingStrafeField;
     private static Field bedrockSneakField;
+    private static Field sneakHeightField;
 
     private BpkModBridge() {
     }
@@ -134,6 +134,17 @@ public final class BpkModBridge {
         return PRESENT ? rules().sprintRules() : PlayerSprintMachine.Rules.VANILLA;
     }
 
+    public static float sneakPoseInputScale(boolean sneakKey, float height, boolean flying) {
+        if (!PRESENT || sneakKey || flying || !resolve()) return 1.0F;
+        try {
+            if (!bedrockSneakField.getBoolean(null)) return 1.0F;
+            return height == sneakHeightField.getFloat(null) ? 0.3F : 1.0F;
+        } catch (ReflectiveOperationException | RuntimeException e) {
+            broken = true;
+            return 1.0F;
+        }
+    }
+
     private static synchronized boolean resolve() {
         if (resolved) return !broken;
         resolved = true;
@@ -149,6 +160,7 @@ public final class BpkModBridge {
             delayGroundField = accessible(cfg, "sprintDelayOnGround");
             nonSprintingStrafeField = accessible(cfg, "nonSprintingStrafe");
             bedrockSneakField = accessible(cfg, "isBESneak");
+            sneakHeightField = accessible(cfg, "sneakHeight");
             return true;
         } catch (ReflectiveOperationException | RuntimeException e) {
             broken = true;

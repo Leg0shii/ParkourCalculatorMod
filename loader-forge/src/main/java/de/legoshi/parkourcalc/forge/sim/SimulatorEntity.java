@@ -298,11 +298,12 @@ public class SimulatorEntity extends EntityPlayer {
 
         this.setSprinting(out.next.isSprinting);
         this.setSneaking(in.sneak);
-        this.moveForward = out.moveForward;
+        float poseScale = BpkModBridge.sneakPoseInputScale(in.sneak, this.height, this.capabilities.isFlying);
+        this.moveForward = out.moveForward * poseScale;
         //? if >=1.12 {
         this.moveVertical = 0.0F;
         //?}
-        this.moveStrafing = out.moveStrafe;
+        this.moveStrafing = out.moveStrafe * poseScale;
         this.isJumping = out.isJumping;
     }
 
