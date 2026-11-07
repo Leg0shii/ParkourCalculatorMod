@@ -1,6 +1,6 @@
 package de.legoshi.parkourcalc.core.anglesolver.solver;
 
-import de.legoshi.parkourcalc.core.anglesolver.FlowDirection;
+import de.legoshi.parkourcalc.core.anglesolver.FlowVector;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.MovementEffect;
 
@@ -31,7 +31,8 @@ public final class ExactJumpModel implements ForwardModel {
     private static final double WATER_DRAG = (double) 0.8F;
     private static final double WATER_SPRINT_DRAG = (double) 0.9F;
     private static final double WATER_PUSH = 0.014;
-    private static final double LAVA_PUSH = 0.0023;
+    private static final double LAVA_PUSH = 0.0023333333333333335;
+    private static final double MIN_FLOW_LENGTH_SQ_262 = (double) 1.0E-5F;
     private static final double LAVA_PUSH_ULTRAWARM = 0.007;
     private static final double MIN_FLUID_PUSH = 0.0045000000000000005;
     private static final double MIN_FLUID_PUSH_BELOW = 0.003;
@@ -259,14 +260,15 @@ public final class ExactJumpModel implements ForwardModel {
             SurfaceKind kind = scenario.surfaceAt(t);
             boolean water = kind == SurfaceKind.WATER;
             boolean fluid = water || kind == SurfaceKind.LAVA;
-            FlowDirection flow = scenario.flowAt(t);
-            if (fluid && flow.pushes() && (modern || water)) {
+            FlowVector flow = scenario.flowAt(t);
+            boolean pushes = flow.pushes() && !(sine262 && flow.x * flow.x + flow.z * flow.z < MIN_FLOW_LENGTH_SQ_262);
+            if (fluid && pushes && (modern || water)) {
                 double scale = water ? WATER_PUSH : scenario.ultrawarm ? LAVA_PUSH_ULTRAWARM : LAVA_PUSH;
                 double px;
                 double pz;
                 if (modern) {
-                    px = flow.dx * scale;
-                    pz = flow.dz * scale;
+                    px = flow.x * scale;
+                    pz = flow.z * scale;
                     if (Math.abs(vx) < MIN_FLUID_PUSH_BELOW && Math.abs(vz) < MIN_FLUID_PUSH_BELOW) {
                         double len = Math.sqrt(px * px + pz * pz);
                         if (len < MIN_FLUID_PUSH) {
@@ -280,13 +282,13 @@ public final class ExactJumpModel implements ForwardModel {
                         }
                     }
                 } else {
-                    double len = Math.sqrt(flow.dx * flow.dx + flow.dz * flow.dz);
+                    double len = Math.sqrt(flow.x * flow.x + flow.z * flow.z);
                     if (len < NORMALIZE_EPSILON) {
                         px = 0.0;
                         pz = 0.0;
                     } else {
-                        px = flow.dx / len * scale;
-                        pz = flow.dz / len * scale;
+                        px = flow.x / len * scale;
+                        pz = flow.z / len * scale;
                     }
                 }
                 vx += px;

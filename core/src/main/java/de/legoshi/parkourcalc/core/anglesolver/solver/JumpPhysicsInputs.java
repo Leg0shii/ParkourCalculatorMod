@@ -1,6 +1,6 @@
 package de.legoshi.parkourcalc.core.anglesolver.solver;
 
-import de.legoshi.parkourcalc.core.anglesolver.FlowDirection;
+import de.legoshi.parkourcalc.core.anglesolver.FlowVector;
 
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 
@@ -50,7 +50,7 @@ public final class JumpPhysicsInputs {
 
     public int[] soulsandCellsPerTick = null;
 
-    public FlowDirection[] flowPerTick = null;
+    public FlowVector[] flowPerTick = null;
 
     public boolean ultrawarm = false;
 
@@ -163,7 +163,7 @@ public final class JumpPhysicsInputs {
         double[] slip = new double[m];
         SurfaceKind[] surface = new SurfaceKind[m];
         int[] soulsand = new int[m];
-        FlowDirection[] flow = new FlowDirection[m];
+        FlowVector[] flow = new FlowVector[m];
         boolean[] sneak = new boolean[m];
         boolean[] dolphin = new boolean[m];
         boolean[] weaving = new boolean[m];
@@ -357,10 +357,10 @@ public final class JumpPhysicsInputs {
         return Math.max(1, soulsandCellsPerTick[tick]);
     }
 
-    public FlowDirection flowAt(int tick) {
-        if (flowPerTick == null || tick < 0 || tick >= flowPerTick.length) return FlowDirection.NONE;
-        FlowDirection flow = flowPerTick[tick];
-        return flow == null ? FlowDirection.NONE : flow;
+    public FlowVector flowAt(int tick) {
+        if (flowPerTick == null || tick < 0 || tick >= flowPerTick.length) return FlowVector.NONE;
+        FlowVector flow = flowPerTick[tick];
+        return flow == null ? FlowVector.NONE : flow;
     }
 
     public boolean sneakAt(int tick) {

@@ -81,9 +81,11 @@ public final class AngleSolverTable {
     // constraint (dragIndex into the tick's list) or one facet of the tick's state override.
     private enum DragKind { CONSTRAINT, STATE_INPUTS, STATE_SPRINT, STATE_SLIP, STATE_MEDIUM, STATE_DAMAGE, STATE_ADD, STATE_REMOVE }
 
-    private static final String FLOW_TIP = "Direction the fluid flows at this tick. Flowing water pushes 0.014b per tick,"
-            + " flowing lava 0.0023b (0.007b in the Nether) on 1.13+ and nothing on 1.8.9/1.12.2, added to the motion"
-            + " before the momentum cancellation. Diagonals are the normalized corner flow.";
+    private static final String FLOW_TIP = "Direction the fluid flows at this tick. Flowing water pushes up to 0.014b per tick,"
+            + " flowing lava 0.00233b (0.007b in the Nether) on 1.13+ and nothing on 1.8.9/1.12.2, added to the motion"
+            + " before the momentum cancellation. On 1.13+ the push shrinks with the fluid depth over the feet below 0.4b;"
+            + " H records that real depth-scaled flow, a direction picked here is the full-strength flow."
+            + " Diagonals are the normalized corner flow.";
     private static final String DAMAGE_TIP = "Fall damage is ruled on this tick's landing: the server's velocity packet"
             + " replaces the motion of the next tick in the solver model. Apply state fills this from the paired simulation.";
 
@@ -377,7 +379,7 @@ public final class AngleSolverTable {
             case STATE_MEDIUM:
                 dst.setMedium(src.getMedium());
                 dst.setSoulsandCells(src.getSoulsandCells());
-                dst.setFlow(src.getFlow());
+                dst.setFlowVector(src.getFlowVector());
                 if (!dragAlt) src.clearMedium();
                 break;
             case STATE_DAMAGE:

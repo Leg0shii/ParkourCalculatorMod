@@ -14,6 +14,7 @@ import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.BlockSelection;
 import de.legoshi.parkourcalc.core.anglesolver.Constraint;
 import de.legoshi.parkourcalc.core.anglesolver.FlowDirection;
+import de.legoshi.parkourcalc.core.anglesolver.FlowVector;
 import de.legoshi.parkourcalc.core.anglesolver.Medium;
 import de.legoshi.parkourcalc.core.anglesolver.Potion;
 import de.legoshi.parkourcalc.core.anglesolver.PotionDose;
@@ -768,6 +769,10 @@ public final class SaveIO {
         out.medium = ov.overridesMedium() ? ov.getMedium().name() : null;
         out.soulsandCells = ov.getMedium() == Medium.SOULSAND && ov.getSoulsandCells() > 1 ? ov.getSoulsandCells() : null;
         out.flow = ov.overridesFlow() ? ov.getFlow().name() : null;
+        FlowVector flowVector = ov.getFlowVector();
+        boolean unitFlow = !ov.overridesFlow() || flowVector.isUnitOf(ov.getFlow());
+        out.flowX = unitFlow ? null : flowVector.x;
+        out.flowZ = unitFlow ? null : flowVector.z;
         out.damage = ov.overridesDamage() ? Boolean.TRUE : null;
         for (PotionDose d : ov.getAdded()) {
             out.added.add(toSaveDose(d));
@@ -791,7 +796,8 @@ public final class SaveIO {
         if (medium != null && medium != Medium.NONE) dst.setMedium(medium);
         if (src.soulsandCells != null && dst.getMedium() == Medium.SOULSAND) dst.setSoulsandCells(src.soulsandCells);
         FlowDirection flow = parseEnumOrNull(FlowDirection.class, src.flow);
-        if (flow != null) dst.setFlow(flow);
+        if (src.flowX != null && src.flowZ != null) dst.setFlowVector(new FlowVector(src.flowX, src.flowZ));
+        else if (flow != null) dst.setFlow(flow);
         if (src.damage != null && src.damage) dst.setDamage(true);
         if (src.added != null) {
             for (SaveFile.Dose d : src.added) {

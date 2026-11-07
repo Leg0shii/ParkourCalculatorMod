@@ -1,6 +1,6 @@
 package de.legoshi.parkourcalc.core.anglesolver.solver;
 
-import de.legoshi.parkourcalc.core.anglesolver.FlowDirection;
+import de.legoshi.parkourcalc.core.anglesolver.FlowVector;
 
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 
@@ -500,10 +500,10 @@ public final class LongRunSolver {
         return o;
     }
 
-    private static FlowDirection[] sliceFlow(FlowDirection[] x, int from, int len) {
+    private static FlowVector[] sliceFlow(FlowVector[] x, int from, int len) {
         if (x == null) return null;
-        FlowDirection[] o = new FlowDirection[len];
-        for (int i = 0; i < len; i++) o[i] = from + i < x.length && x[from + i] != null ? x[from + i] : FlowDirection.NONE;
+        FlowVector[] o = new FlowVector[len];
+        for (int i = 0; i < len; i++) o[i] = from + i < x.length && x[from + i] != null ? x[from + i] : FlowVector.NONE;
         return o;
     }
 

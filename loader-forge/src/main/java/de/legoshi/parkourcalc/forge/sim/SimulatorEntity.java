@@ -1,7 +1,7 @@
 package de.legoshi.parkourcalc.forge.sim;
 
 import com.mojang.authlib.GameProfile;
-import de.legoshi.parkourcalc.core.anglesolver.FlowDirection;
+import de.legoshi.parkourcalc.core.anglesolver.FlowVector;
 import de.legoshi.parkourcalc.core.anglesolver.Medium;
 import de.legoshi.parkourcalc.core.sim.StartResumeState;
 import de.legoshi.parkourcalc.core.sim.SubtickPath;
@@ -61,7 +61,7 @@ public class SimulatorEntity extends EntityPlayer {
     private Medium tickMedium;
     private double tickGroundFriction = Double.NaN;
     private int tickSoulsandCells;
-    private FlowDirection tickFlow = FlowDirection.NONE;
+    private FlowVector tickFlow = FlowVector.NONE;
 
     private final ArrayList<Vec3dCore> subtickBuf = new ArrayList<Vec3dCore>(8);
     private boolean capturing = false;
@@ -212,7 +212,7 @@ public class SimulatorEntity extends EntityPlayer {
         boolean water = this.isInWater();
         boolean lava = this.isInLava();
         boolean ladder = this.isOnLadder();
-        tickFlow = water || lava ? captureFlow() : FlowDirection.NONE;
+        tickFlow = water || lava ? captureFlow() : FlowVector.NONE;
         //? if >=1.12 {
         if (this.onGround) {
             BlockPos below = new BlockPos(this.posX, this.getEntityBoundingBox().minY - 1.0D, this.posZ);
@@ -235,7 +235,7 @@ public class SimulatorEntity extends EntityPlayer {
         tickMedium = Medium.fromFlags(web, water, lava, ladder, tickSoulsandCells > 0);
     }
 
-    private FlowDirection captureFlow() {
+    private FlowVector captureFlow() {
         AxisAlignedBB bb = this.getEntityBoundingBox();
         int x0 = (int) Math.floor(bb.minX + 0.001);
         int y0 = (int) Math.floor(bb.minY + 0.401);
@@ -244,10 +244,10 @@ public class SimulatorEntity extends EntityPlayer {
         int y1 = (int) Math.floor(bb.maxY - 0.401);
         int z1 = (int) Math.floor(bb.maxZ - 0.001);
         //? if >=1.12 {
-        if (!this.world.isAreaLoaded(new BlockPos(x0, y0, z0), new BlockPos(x1, y1, z1))) return FlowDirection.NONE;
+        if (!this.world.isAreaLoaded(new BlockPos(x0, y0, z0), new BlockPos(x1, y1, z1))) return FlowVector.NONE;
         Vec3d flow = Vec3d.ZERO;
         //?} else {
-        /*if (!this.worldObj.isAreaLoaded(new BlockPos(x0, y0, z0), new BlockPos(x1, y1, z1))) return FlowDirection.NONE;
+        /*if (!this.worldObj.isAreaLoaded(new BlockPos(x0, y0, z0), new BlockPos(x1, y1, z1))) return FlowVector.NONE;
         Vec3 flow = new Vec3(0.0, 0.0, 0.0);
         *///?}
         for (int x = x0; x <= x1; x++) {
@@ -269,13 +269,19 @@ public class SimulatorEntity extends EntityPlayer {
             }
         }
         //? if >=1.12 {
-        return FlowDirection.nearest(flow.x, flow.z);
+        return normalizedFlow(flow.x, flow.z);
         //?} else {
-        /*return FlowDirection.nearest(flow.xCoord, flow.zCoord);
+        /*return normalizedFlow(flow.xCoord, flow.zCoord);
         *///?}
     }
 
-    public FlowDirection capturedTickFlow() {
+    private static FlowVector normalizedFlow(double x, double z) {
+        double len = Math.sqrt(x * x + z * z);
+        if (len < 1.0E-4) return FlowVector.NONE;
+        return new FlowVector(x / len, z / len);
+    }
+
+    public FlowVector capturedTickFlow() {
         return tickFlow;
     }
 

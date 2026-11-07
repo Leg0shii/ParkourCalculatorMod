@@ -896,7 +896,7 @@ public final class Application {
             } else {
                 ov.setMedium(medium);
                 if (medium == Medium.SOULSAND) ov.setSoulsandCells(Math.max(1, s.soulsandCells));
-                ov.setFlow(s.flow);
+                ov.setFlowVector(s.flow);
             }
             changed = true;
         }

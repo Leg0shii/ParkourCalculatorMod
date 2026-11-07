@@ -1,7 +1,7 @@
 package de.legoshi.parkourcalc.fabric.sim;
 
 import com.mojang.authlib.GameProfile;
-import de.legoshi.parkourcalc.core.anglesolver.FlowDirection;
+import de.legoshi.parkourcalc.core.anglesolver.FlowVector;
 import de.legoshi.parkourcalc.core.anglesolver.Medium;
 import de.legoshi.parkourcalc.core.sim.StartResumeState;
 import de.legoshi.parkourcalc.core.sim.SubtickPath;
@@ -11,6 +11,7 @@ import net.minecraft.core.BlockPos;
 //? if >=1.21.2
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.FluidTags;
+import net.minecraft.tags.TagKey;
 import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffect;
@@ -29,6 +30,7 @@ import net.minecraft.world.entity.player.Player;
 //import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.AABB;
 //? if >=26.1
@@ -64,7 +66,7 @@ public class SimulatorEntity extends Player {
     private Medium tickMedium;
     private double tickGroundFriction = Double.NaN;
     private int tickSoulsandCells;
-    private FlowDirection tickFlow = FlowDirection.NONE;
+    private FlowVector tickFlow = FlowVector.NONE;
 
     public double getLastCollisionAngleDegrees() {
         return lastCollisionAngleDegrees;
@@ -173,7 +175,7 @@ public class SimulatorEntity extends Player {
         boolean water = fluid && this.isInWater();
         boolean lava = fluid && !water && this.isInLava();
         boolean ladder = this.onClimbable();
-        tickFlow = water || lava ? captureFlow() : FlowDirection.NONE;
+        tickFlow = water ? captureFlow(FluidTags.WATER) : lava ? captureFlow(FluidTags.LAVA) : FlowVector.NONE;
         tickGroundFriction = this.onGround()
                 ? (double) this.level().getBlockState(this.getBlockPosBelowThatAffectsMyMovement()).getBlock().getFriction()
                 : Double.NaN;
@@ -182,7 +184,7 @@ public class SimulatorEntity extends Player {
         tickMedium = Medium.fromFlags(web, water, lava, ladder, tickSoulsandCells > 0);
     }
 
-    private FlowDirection captureFlow() {
+    private FlowVector captureFlow(TagKey<Fluid> fluid) {
         AABB bb = this.getBoundingBox().deflate(0.001);
         int x0 = Mth.floor(bb.minX);
         int x1 = Mth.ceil(bb.maxX);
@@ -191,26 +193,32 @@ public class SimulatorEntity extends Player {
         int z0 = Mth.floor(bb.minZ);
         int z1 = Mth.ceil(bb.maxZ);
         Level level = this.level();
-        double fx = 0.0;
-        double fz = 0.0;
+        double depth = 0.0;
+        Vec3 sum = Vec3.ZERO;
+        int count = 0;
         BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
         for (int x = x0; x < x1; x++) {
             for (int y = y0; y < y1; y++) {
                 for (int z = z0; z < z1; z++) {
                     pos.set(x, y, z);
                     FluidState fs = level.getFluidState(pos);
-                    if (!fs.is(FluidTags.WATER) && !fs.is(FluidTags.LAVA)) continue;
-                    if (y + fs.getHeight(level, pos) < bb.minY) continue;
+                    if (!fs.is(fluid)) continue;
+                    double top = y + fs.getHeight(level, pos);
+                    if (top < bb.minY) continue;
+                    depth = Math.max(top - bb.minY, depth);
                     Vec3 f = fs.getFlow(level, pos);
-                    fx += f.x;
-                    fz += f.z;
+                    if (depth < 0.4) f = f.scale(depth);
+                    sum = sum.add(f);
+                    count++;
                 }
             }
         }
-        return FlowDirection.nearest(fx, fz);
+        if (count == 0) return FlowVector.NONE;
+        Vec3 avg = sum.scale(1.0 / count);
+        return new FlowVector(avg.x, avg.z);
     }
 
-    public FlowDirection capturedTickFlow() {
+    public FlowVector capturedTickFlow() {
         return tickFlow;
     }
 

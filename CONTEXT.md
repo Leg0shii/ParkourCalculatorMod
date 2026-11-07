@@ -209,7 +209,7 @@ An axis-aligned cuboid given by min/max on each axis. The player's is 0.6 x 1.8 
 The volume of a block the player physically collides with (one or more bounding boxes). The player's bounding box is not allowed to intersect a collision box.
 
 **Flow push**:
-The motion a flowing fluid adds to the player every tick its bounding box overlaps the fluid, before the momentum cancellation: 0.014b per tick in water on every version, 0.0023b in lava (0.007b in the Nether) from 1.13 on and nothing in 1.8.9 or 1.12.2 lava. From 1.13 a standing player (motion under 0.003b on both axes) gets at least 0.0045b. The solver authors the flow direction per tick on the Water/Lava medium (+X, -X, +Z, -Z, or a normalized diagonal for a corner flow); the geometry that produces it stays with the game.
+The motion a flowing fluid adds to the player every tick its bounding box overlaps the fluid, before the momentum cancellation: 0.014b per tick in water on every version, 0.0023333333333333335b in lava (0.007b in the Nether) from 1.13 on and nothing in 1.8.9 or 1.12.2 lava. From 1.13 the flow of each overlapped fluid block is scaled by the fluid depth over the feet while that depth is under 0.4b, and the player takes the average over the overlapped blocks (not renormalized); the H key records that per-tick vector, an authored direction is the full-strength flow. From 1.13 a standing player (motion under 0.003b on both axes) gets at least 0.0045b. The solver authors the flow direction per tick on the Water/Lava medium (+X, -X, +Z, -Z, or a normalized diagonal for a corner flow); the geometry that produces it stays with the game.
 
 ## Map terminology
 

@@ -738,7 +738,7 @@ public final class AngleSolverEngine {
         double[] slipPerTick = new double[numTicks];
         SurfaceKind[] surfacePerTick = new SurfaceKind[numTicks];
         int[] soulsandCellsPerTick = new int[numTicks];
-        FlowDirection[] flowPerTick = new FlowDirection[numTicks];
+        FlowVector[] flowPerTick = new FlowVector[numTicks];
         boolean[] sneakPerTick = new boolean[numTicks];
         boolean[] dolphinsGrace = new boolean[numTicks];
         boolean[] weaving = new boolean[numTicks];
@@ -1735,10 +1735,10 @@ public final class AngleSolverEngine {
         return ov != null && ov.isDamage();
     }
 
-    private FlowDirection effFlow(int tick) {
+    private FlowVector effFlow(int tick) {
         StateOverride ov = overrideAt(tick);
-        if (ov != null && StateOverride.flows(ov.getMedium())) return ov.getFlow();
-        return FlowDirection.NONE;
+        if (ov != null && StateOverride.flows(ov.getMedium())) return ov.getFlowVector();
+        return FlowVector.NONE;
     }
 
     private int effSoulsandCells(int tick) {

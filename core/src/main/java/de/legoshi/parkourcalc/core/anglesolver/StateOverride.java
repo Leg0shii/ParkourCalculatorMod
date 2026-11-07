@@ -19,7 +19,7 @@ public final class StateOverride {
     private Slipperiness slipperiness;
     private Medium medium;
     private int soulsandCells = 1;
-    private FlowDirection flow = FlowDirection.NONE;
+    private FlowVector flow = FlowVector.NONE;
     private boolean damage;
     private final List<PotionDose> added = new ArrayList<>();
     private final Set<Potion> removed = EnumSet.noneOf(Potion.class);
@@ -79,7 +79,7 @@ public final class StateOverride {
     public void setMedium(Medium medium) {
         this.medium = medium;
         if (medium != Medium.SOULSAND) soulsandCells = 1;
-        if (!flows(medium)) flow = FlowDirection.NONE;
+        if (!flows(medium)) flow = FlowVector.NONE;
     }
 
     public static boolean flows(Medium medium) {
@@ -93,19 +93,27 @@ public final class StateOverride {
     public void clearMedium() {
         medium = null;
         soulsandCells = 1;
-        flow = FlowDirection.NONE;
+        flow = FlowVector.NONE;
     }
 
     public FlowDirection getFlow() {
-        return flow;
+        return flow.direction();
     }
 
     public void setFlow(FlowDirection flow) {
-        this.flow = flows(medium) && flow != null ? flow : FlowDirection.NONE;
+        this.flow = flows(medium) ? FlowVector.of(flow) : FlowVector.NONE;
+    }
+
+    public FlowVector getFlowVector() {
+        return flow;
+    }
+
+    public void setFlowVector(FlowVector flow) {
+        this.flow = flows(medium) && flow != null ? flow : FlowVector.NONE;
     }
 
     public boolean overridesFlow() {
-        return flow != FlowDirection.NONE;
+        return flow.pushes();
     }
 
     public int getSoulsandCells() {
