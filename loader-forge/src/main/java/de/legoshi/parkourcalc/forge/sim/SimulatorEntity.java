@@ -159,6 +159,7 @@ public class SimulatorEntity extends EntityPlayer {
         this.tickMedium = null;
         this.tickGroundFriction = Double.NaN;
         this.tickSoulsandCells = 0;
+        this.tickFlow = captureFlow();
         if (resume != null) {
             applyResume(resume);
         }
@@ -212,7 +213,6 @@ public class SimulatorEntity extends EntityPlayer {
         boolean water = this.isInWater();
         boolean lava = this.isInLava();
         boolean ladder = this.isOnLadder();
-        tickFlow = water || lava ? captureFlow() : FlowVector.NONE;
         //? if >=1.12 {
         if (this.onGround) {
             BlockPos below = new BlockPos(this.posX, this.getEntityBoundingBox().minY - 1.0D, this.posZ);
@@ -231,6 +231,7 @@ public class SimulatorEntity extends EntityPlayer {
                 : Double.NaN;
         super.moveEntityWithHeading(strafe, forward);
         *///?}
+        tickFlow = captureFlow();
         tickSoulsandCells = countSoulsandCells();
         tickMedium = Medium.fromFlags(web, water, lava, ladder, tickSoulsandCells > 0);
     }
