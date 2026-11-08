@@ -98,6 +98,7 @@ public final class Application {
 
     private Path settingsPath;
     private boolean startInitialized;
+    private boolean blockCheckWaitingForChunks;
     private String modVersion = "?";
     private InputOverlay inputOverlay;
     private FilePickerPort filePicker;
@@ -552,8 +553,14 @@ public final class Application {
             selection.retainBelow(boxController.size());
         }
         if (turnProfile != null) turnProfile.refresh();
-        blockOverrideWorld.setSimProblems(BlockOverrideCheck.run(inputData, boxController, BlockOverrideCheck.reachOf(mc)));
+        checkBlockOverrides();
         Perf.stop("runSimulation", t0);
+    }
+
+    private void checkBlockOverrides() {
+        List<BlockOverride> waiting = new ArrayList<>();
+        blockOverrideWorld.setSimProblems(BlockOverrideCheck.run(inputData, boxController, BlockOverrideCheck.reachOf(mc), waiting));
+        blockCheckWaitingForChunks = !waiting.isEmpty();
     }
 
     private float[] foldPitches(int count) {
@@ -585,6 +592,7 @@ public final class Application {
         if (attemptTracker != null) attemptTracker.reset();
         if (recorder.isRecording()) recorder.stop();
         simulatedInUnloadedChunks = false;
+        blockCheckWaitingForChunks = false;
         hudMessages.clearStatus();
         startInitialized = false;
     }
@@ -738,6 +746,7 @@ public final class Application {
             undoController.tick(System.nanoTime());
         }
         pollSolver();
+        if (blockCheckWaitingForChunks) checkBlockOverrides();
         blockPlacing.tick();
         if (noTurnSearch != null) noTurnSearch.poll();
         if (senseSearch != null) senseSearch.poll();

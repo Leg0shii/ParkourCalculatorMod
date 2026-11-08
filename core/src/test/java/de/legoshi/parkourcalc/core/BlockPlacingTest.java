@@ -16,6 +16,7 @@ import de.legoshi.parkourcalc.core.ui.Settings;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -174,6 +175,10 @@ public class BlockPlacingTest {
     }
 
     private static BlockOverrideCheck.Reach reach(final FakeMinecraftAccess mc, final float pitch) {
+        return reach(mc, pitch, true);
+    }
+
+    private static BlockOverrideCheck.Reach reach(final FakeMinecraftAccess mc, final float pitch, final boolean chunksLoaded) {
         return new BlockOverrideCheck.Reach() {
             @Override
             public double eyeHeight(boolean sneaking) {
@@ -193,6 +198,11 @@ public class BlockPlacingTest {
             @Override
             public List<AABB> collisionBoxes(int x, int y, int z) {
                 return mc.getBlockCollisionBoxes(x, y, z);
+            }
+
+            @Override
+            public boolean chunkLoaded(int blockX, int blockZ) {
+                return chunksLoaded;
             }
         };
     }
@@ -222,6 +232,11 @@ public class BlockPlacingTest {
 
         Map<BlockOverride, String> missed = BlockOverrideCheck.run(data, boxes, reach(mc, -30f));
         assertEquals("Not placed at tick 2: the right click hits nothing in reach", missed.get(onTop));
+
+        List<BlockOverride> waiting = new ArrayList<BlockOverride>();
+        Map<BlockOverride, String> unloaded = BlockOverrideCheck.run(data, boxes, reach(mc, -30f, false), waiting);
+        assertTrue(unloaded.isEmpty());
+        assertEquals(Arrays.asList(onTop, elsewhere), waiting);
     }
 
     @Test

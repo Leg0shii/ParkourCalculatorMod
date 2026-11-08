@@ -28,6 +28,8 @@ public final class BlockOverrideCheck {
         double blockReach();
 
         List<AABB> collisionBoxes(int x, int y, int z);
+
+        boolean chunkLoaded(int blockX, int blockZ);
     }
 
     private BlockOverrideCheck() {
@@ -54,10 +56,19 @@ public final class BlockOverrideCheck {
             public List<AABB> collisionBoxes(int x, int y, int z) {
                 return mc.getBlockCollisionBoxes(x, y, z);
             }
+
+            @Override
+            public boolean chunkLoaded(int blockX, int blockZ) {
+                return mc.isChunkLoaded(blockX >> 4, blockZ >> 4);
+            }
         };
     }
 
     public static Map<BlockOverride, String> run(InputData inputData, BoxController boxes, Reach reach) {
+        return run(inputData, boxes, reach, null);
+    }
+
+    public static Map<BlockOverride, String> run(InputData inputData, BoxController boxes, Reach reach, List<BlockOverride> waitingForChunks) {
         Map<BlockOverride, String> out = new LinkedHashMap<BlockOverride, String>();
         List<InputRow> rows = inputData.getRows();
         List<TickState> states = boxes.getStates();
@@ -72,6 +83,10 @@ public final class BlockOverrideCheck {
             if (row + 1 >= states.size()) continue;
             Vec3dCore p = boxes.getPosition(row);
             Vec3dCore eye = new Vec3dCore(p.x, p.y + reach.eyeHeight(states.get(row).sneaking), p.z);
+            if (!reach.chunkLoaded((int) Math.floor(eye.x), (int) Math.floor(eye.z)) || !reach.chunkLoaded(b.x, b.z)) {
+                if (waitingForChunks != null) waitingForChunks.add(b);
+                continue;
+            }
             Vec3dCore look = reach.look(states.get(row + 1).yaw, boxes.getPitch(row + 1));
             BlockHit hit = CollisionRayTrace.trace(worldAt(inputData, row, reach), eye, look, reach.blockReach());
             if (hit == null) {
