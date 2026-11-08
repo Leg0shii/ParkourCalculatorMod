@@ -33,14 +33,19 @@ public final class BlockOverridesWindow implements RenderInterface {
     private static final int BLOCK_CHARS = 256;
     private static final int TICK_CHARS = 8;
     private static final String END_HINT = "stays";
-    private static final String[] HEADERS = {"Start", "End", "X", "Y", "Z", "Before", "Block", ""};
+    private static final String[] HEADERS = {"Start", "End", "X", "Y", "Z", "Before", "Block", "Placed by", ""};
+    private static final String AUTO_LABEL = "Auto";
+    private static final String PLAYER_LABEL = "Player";
     private static final String HELP = "Each row is a block at X Y Z that appears at the Start tick and goes away after "
             + "the End tick (input table ticks, both included; an empty End means it stays). Before is the block that is "
-            + "there otherwise, usually air. The world shows the rows of the selected tick as real blocks, the simulation "
-            + "sees every tick's own state, and the replay places and removes them as it goes. Singleplayer only.";
+            + "there otherwise, usually air. The world shows the rows of the selected tick as real blocks and the simulation "
+            + "sees every tick's own state. Placed by Auto: the replay places and removes the block as it goes. Placed by "
+            + "Player: the TAS player does it with the mouse, the replay only clears the spot before it starts and warns "
+            + "when the block is not there after its tick. Singleplayer only.";
     private static final String MULTIPLAYER_NOTE = "Block overrides work in singleplayer only. On a server the rows are "
             + "kept but the world, the simulation and the replay ignore them.";
-    private static final String FOOTNOTE = "Rows ahead of the shown tick are dim; their blocks are not in the world yet.";
+    private static final String FOOTNOTE = "Rows ahead of the shown tick are dim; their blocks are not in the world yet. "
+            + "A red row was not placed by the player in the last replay.";
 
     private final InputData inputData;
     private final MinecraftAccess mc;
@@ -133,7 +138,8 @@ public final class BlockOverridesWindow implements RenderInterface {
         String before = mc.isReady() ? mc.describeBlockState(pos[0], pos[1], pos[2]) : null;
         if (before == null) before = BlockOverride.AIR;
         int start = Math.max(1, Math.min(world.viewRow() + 2, Math.max(1, inputData.size())));
-        blocks.add(new BlockOverride(start, BlockOverride.NO_END, pos[0], pos[1], pos[2], block, before));
+        boolean player = start - 1 < inputData.size() && inputData.getRows().get(start - 1).isKeyActive(InputRow.Key.RIGHT_CLICK);
+        blocks.add(new BlockOverride(start, BlockOverride.NO_END, pos[0], pos[1], pos[2], block, before, player));
         changed(0);
     }
 
@@ -163,7 +169,8 @@ public final class BlockOverridesWindow implements RenderInterface {
         ImGui.tableSetupColumn(HEADERS[4], fixed, coordW);
         ImGui.tableSetupColumn(HEADERS[5], ImGuiTableColumnFlags.WidthStretch);
         ImGui.tableSetupColumn(HEADERS[6], ImGuiTableColumnFlags.WidthStretch);
-        ImGui.tableSetupColumn(HEADERS[7], fixed, actionsWidth());
+        ImGui.tableSetupColumn(HEADERS[7], fixed, Controls.buttonWidth(PLAYER_LABEL));
+        ImGui.tableSetupColumn(HEADERS[8], fixed, actionsWidth());
         ImGui.tableSetupScrollFreeze(0, 1);
         ThemeManager.tableHeaderRow();
         ThemeManager.paintTableHeader();
@@ -176,10 +183,12 @@ public final class BlockOverridesWindow implements RenderInterface {
         for (int i = 0; i < blocks.size(); i++) {
             ImGui.tableNextRow();
             ImGui.pushID(i);
-            boolean dim = !blocks.get(i).activeAtRow(viewRow);
+            boolean missing = world.isMissing(blocks.get(i));
+            boolean dim = !missing && !blocks.get(i).activeAtRow(viewRow);
+            if (missing) ThemeManager.pushTextColor(ThemeManager.dangerColor());
             if (dim) ThemeManager.pushTextColor(ThemeManager.textDimColor());
             boolean remove = row(blocks, i);
-            if (dim) ThemeManager.popTextColor();
+            if (dim || missing) ThemeManager.popTextColor();
             if (remove) removeAt = i;
             ImGui.popID();
         }
@@ -219,7 +228,20 @@ public final class BlockOverridesWindow implements RenderInterface {
         ImGui.tableSetColumnIndex(6);
         specCell(blocks, i, 1);
         ImGui.tableSetColumnIndex(7);
+        placedByCell(blocks, i);
+        ImGui.tableSetColumnIndex(8);
         return actions(blocks, i);
+    }
+
+    private void placedByCell(BlockOverrides blocks, int i) {
+        BlockOverride b = blocks.get(i);
+        if (Controls.secondaryButton(b.player ? PLAYER_LABEL : AUTO_LABEL, -1f)) {
+            update(blocks, i, b.withPlayer(!b.player), b);
+        }
+        TooltipUtil.onHover(b.player
+                ? "Player: the TAS player places or removes this block with the mouse. The replay leaves it alone and "
+                + "warns when the block is not there after the Start tick. Click for Auto."
+                : "Auto: the replay places this block at Start and takes it away after End. Click for Player.");
     }
 
     private Integer intCell(String id, int value) {
@@ -333,9 +355,9 @@ public final class BlockOverridesWindow implements RenderInterface {
     private void update(BlockOverrides blocks, int i, BlockOverride next, BlockOverride prev) {
         if (next.equals(prev)) return;
         blocks.set(i, next);
-        boolean ticksOnly = next.x == prev.x && next.y == prev.y && next.z == prev.z
+        boolean samePlace = next.x == prev.x && next.y == prev.y && next.z == prev.z
                 && next.block.equals(prev.block) && next.before.equals(prev.before);
-        changed(ticksOnly ? Math.min(next.startTick, prev.startTick) - 1 : 0);
+        changed(samePlace ? Math.min(next.startTick, prev.startTick) - 1 : 0);
     }
 
     private void changed(int dirtyRow) {

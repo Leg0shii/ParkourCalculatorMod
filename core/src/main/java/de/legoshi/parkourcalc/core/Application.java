@@ -143,6 +143,10 @@ public final class Application {
         this.playback.setStartRangeResolver(this::resolvePlaybackStartRange);
         this.blockOverrideWorld = new BlockOverrideWorld(inputData, selection);
         this.playback.setOnReplayRow(blockOverrideWorld::setReplayRow);
+        this.blockOverrideWorld.setBlockReader(mc::describeBlockState);
+        this.blockOverrideWorld.setOnDesync((row, tick, expectedPlaced) -> pushHudMessage(
+                "Tick " + tick + ": block at " + row.x + " " + row.y + " " + row.z
+                        + (expectedPlaced ? " not placed" : " still there"), HudMessageStyle.COLOR_WARN));
         this.recorder = new de.legoshi.parkourcalc.core.record.HumanRecorder(saveController::getSaveStore, mc::getMouseSensitivity);
     }
 

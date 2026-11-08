@@ -10,15 +10,25 @@ import de.legoshi.parkourcalc.core.ui.SelectionManager;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public final class BlockOverrideWorld {
 
     private final InputData inputData;
     private final SelectionManager selection;
     private BlockPatcher patcher;
+    private BlockReader reader;
+    private DesyncListener onDesync = new DesyncListener() {
+        @Override
+        public void desync(BlockOverride row, int tick, boolean expectedPlaced) {
+        }
+    };
     private int replayRow = -1;
+    private boolean replayStepped;
+    private final Set<Long> missing = new LinkedHashSet<Long>();
     private int appliedRow = Integer.MIN_VALUE;
     private int appliedModCount = -1;
     private final Map<Long, String> appliedBefore = new LinkedHashMap<Long, String>();
@@ -28,8 +38,28 @@ public final class BlockOverrideWorld {
         this.selection = selection;
     }
 
+    public interface BlockReader {
+        String blockAt(int x, int y, int z);
+    }
+
+    public interface DesyncListener {
+        void desync(BlockOverride row, int tick, boolean expectedPlaced);
+    }
+
     public void setPatcher(BlockPatcher patcher) {
         this.patcher = patcher;
+    }
+
+    public void setBlockReader(BlockReader reader) {
+        this.reader = reader;
+    }
+
+    public void setOnDesync(DesyncListener listener) {
+        this.onDesync = listener;
+    }
+
+    public boolean isMissing(BlockOverride row) {
+        return missing.contains(BlockPatch.posKey(row.x, row.y, row.z));
     }
 
     public boolean isAvailable() {
@@ -54,7 +84,10 @@ public final class BlockOverrideWorld {
     }
 
     public void setReplayRow(int row) {
-        replayRow = Math.max(-1, row);
+        int next = Math.max(-1, row);
+        replayStepped = next >= 0 && replayRow >= 0;
+        if (replayRow < 0 || next < 0) missing.clear();
+        replayRow = next;
         refresh(true);
     }
 
@@ -64,6 +97,30 @@ public final class BlockOverrideWorld {
 
     public void tick() {
         refresh(false);
+        if (replayStepped) checkPlayerRows();
+    }
+
+    private void checkPlayerRows() {
+        if (reader == null || replayRow < 1) return;
+        int row = replayRow - 1;
+        for (BlockOverride b : rows()) {
+            if (!b.player || b.aheadOfRow(row) || isMissing(b)) continue;
+            String expected = b.activeAtRow(row) ? b.block : b.before;
+            BlockOverride.Spec want = BlockOverride.Spec.parse(expected);
+            if (!want.valid()) continue;
+            String actual = reader.blockAt(b.x, b.y, b.z);
+            if (actual == null || matches(want, BlockOverride.Spec.parse(actual))) continue;
+            missing.add(BlockPatch.posKey(b.x, b.y, b.z));
+            onDesync.desync(b, row + 1, b.activeAtRow(row));
+        }
+    }
+
+    static boolean matches(BlockOverride.Spec want, BlockOverride.Spec have) {
+        if (!have.valid() || !want.id.equals(have.id)) return false;
+        for (Map.Entry<String, String> e : want.properties.entrySet()) {
+            if (!e.getValue().equals(have.properties.get(e.getKey()))) return false;
+        }
+        return true;
     }
 
     public void refresh(boolean force) {
@@ -73,7 +130,7 @@ public final class BlockOverrideWorld {
         if (!force && row == appliedRow && overrides.modCount() == appliedModCount && appliedBefore.size() == overrides.size()) return;
         appliedRow = row;
         appliedModCount = overrides.modCount();
-        apply(overrides.patchesAtRow(row), overrides.all());
+        apply(overrides.patchesAtRow(row, !replayStepped), overrides.all());
     }
 
     public void releaseAll() {

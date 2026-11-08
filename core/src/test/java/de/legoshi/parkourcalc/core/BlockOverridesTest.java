@@ -199,6 +199,59 @@ public class BlockOverridesTest {
     }
 
     @Test
+    public void playerRowsAreLeftToThePlayerDuringTheReplayAndCheckedAfterTheirTick() {
+        InputData data = rows(6);
+        BlockOverride placed = new BlockOverride(3, BlockOverride.NO_END, 1, 64, 1, "stone", "air", true);
+        data.getBlockOverrides().add(placed);
+        data.getBlockOverrides().add(new BlockOverride(4, BlockOverride.NO_END, 2, 64, 2, "stone", "air"));
+        assertEquals(Collections.singletonList(patch(2, 64, 2, "air")), data.getBlockOverrides().patchesAtRow(0, false));
+        assertEquals(Arrays.asList(patch(1, 64, 1, "stone"), patch(2, 64, 2, "stone")), data.getBlockOverrides().patchesAtRow(5));
+
+        SelectionManager selection = new SelectionManager(new FakeMinecraftAccess());
+        selection.selectOnly(5);
+        BlockOverrideWorld world = new BlockOverrideWorld(data, selection);
+        FakePatcher patcher = new FakePatcher();
+        world.setPatcher(patcher);
+        final String[] worldBlock = {"minecraft:air"};
+        world.setBlockReader((x, y, z) -> x == 1 && y == 64 && z == 1 ? worldBlock[0] : "minecraft:air");
+        final List<String> warnings = new ArrayList<String>();
+        world.setOnDesync((row, tick, expectedPlaced) -> warnings.add(tick + ":" + row.x + ":" + expectedPlaced));
+        world.tick();
+        assertEquals(Arrays.asList(patch(1, 64, 1, "stone"), patch(2, 64, 2, "stone")), patcher.last());
+
+        world.setReplayRow(0);
+        assertEquals(Arrays.asList(patch(1, 64, 1, "air"), patch(2, 64, 2, "air")), patcher.last());
+        world.tick();
+        world.setReplayRow(1);
+        world.tick();
+        assertTrue(warnings.isEmpty());
+        world.setReplayRow(2);
+        world.tick();
+        assertEquals(Collections.singletonList(patch(2, 64, 2, "air")), patcher.last());
+        assertTrue(warnings.isEmpty());
+        world.setReplayRow(3);
+        world.tick();
+        assertEquals(Collections.singletonList(patch(2, 64, 2, "stone")), patcher.last());
+        assertEquals(Collections.singletonList("3:1:true"), warnings);
+        assertTrue(world.isMissing(placed));
+        world.setReplayRow(4);
+        world.tick();
+        assertEquals(1, warnings.size());
+
+        world.setReplayRow(-1);
+        assertFalse(world.isMissing(placed));
+        assertEquals(Arrays.asList(patch(1, 64, 1, "stone"), patch(2, 64, 2, "stone")), patcher.last());
+
+        worldBlock[0] = "minecraft:stone[extra=yes]";
+        world.setReplayRow(0);
+        world.setReplayRow(1);
+        world.setReplayRow(2);
+        world.setReplayRow(3);
+        world.tick();
+        assertTrue(warnings.size() == 1);
+    }
+
+    @Test
     public void nothingIsPlacedWithoutAnIntegratedServer() {
         InputData data = rows(3);
         data.getBlockOverrides().add(new BlockOverride(1, BlockOverride.NO_END, 1, 64, 1, "stone", "air"));
@@ -218,7 +271,7 @@ public class BlockOverridesTest {
         InputData in = rows(3);
         String before = SaveIO.undoSignature(in, Vec3dCore.ZERO, Vec3dCore.ZERO, 0f, 0f, null, null);
         in.getBlockOverrides().add(new BlockOverride(1, 3, -5, 70, 12, "minecraft:oak_trapdoor[open=true]", "minecraft:oak_trapdoor[open=false]"));
-        in.getBlockOverrides().add(new BlockOverride(2, BlockOverride.NO_END, -5, 71, 12, "minecraft:stone", ""));
+        in.getBlockOverrides().add(new BlockOverride(2, BlockOverride.NO_END, -5, 71, 12, "minecraft:stone", "", true));
         String after = SaveIO.undoSignature(in, Vec3dCore.ZERO, Vec3dCore.ZERO, 0f, 0f, null, null);
         assertNotEquals(before, after);
 

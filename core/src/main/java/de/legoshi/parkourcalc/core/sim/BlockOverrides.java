@@ -60,9 +60,14 @@ public final class BlockOverrides {
     }
 
     public List<BlockPatch> patchesAtRow(int row) {
+        return patchesAtRow(row, true);
+    }
+
+    public List<BlockPatch> patchesAtRow(int row, boolean includePlayer) {
         if (blocks.isEmpty()) return Collections.emptyList();
         List<BlockPatch> patches = new ArrayList<BlockPatch>(blocks.size());
         for (BlockOverride b : blocks) {
+            if (b.player && !includePlayer) continue;
             BlockPatch p = b.patchAtRow(row);
             if (p != null) patches.add(p);
         }
