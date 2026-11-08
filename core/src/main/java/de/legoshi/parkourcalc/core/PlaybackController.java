@@ -13,6 +13,7 @@ import de.legoshi.parkourcalc.core.ui.Settings;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.IntConsumer;
 import java.util.function.Supplier;
 
 public final class PlaybackController {
@@ -50,6 +51,7 @@ public final class PlaybackController {
     private int[] lastEffectLevels = new int[MovementEffect.count()];
 
     private Supplier<StartRange> startRangeResolver;
+    private IntConsumer onReplayRow = row -> {};
     private Runnable onStart = () -> { };
     private boolean firstTickOnGround;
 
@@ -185,6 +187,10 @@ public final class PlaybackController {
         start(startIndex, stopExclusive, pos, vel, yaw, null);
     }
 
+    public void setOnReplayRow(IntConsumer onReplayRow) {
+        this.onReplayRow = onReplayRow == null ? row -> {} : onReplayRow;
+    }
+
     public void setOnStart(Runnable onStart) {
         this.onStart = onStart;
     }
@@ -212,6 +218,7 @@ public final class PlaybackController {
             }
         }
         firstTickOnGround = runner.firstTickOnGround();
+        onReplayRow.accept(from);
         bridge.beginReplayLockstep();
         bridge.teleport(pos, vel, yaw, carry);
         // Drop any user-held key so the warmup runs with an empty InputRow like the simulator does.
@@ -270,6 +277,7 @@ public final class PlaybackController {
         pausedAtNanos = 0L;
         if (bridge != null) {
             bridge.releaseAllKeys();
+            onReplayRow.accept(-1);
             bridge.applyEffects(new int[MovementEffect.count()]);
             if (DebugFlags.PAIRED_DIAGNOSTICS) {
                 bridge.finishPlaybackCapture();
@@ -406,6 +414,7 @@ public final class PlaybackController {
         prevTickPitch = currentTickPitch;
         currentTickPitch = applyPitch(currentTickPitch, motion);
         bridge.setPitch(currentTickPitch);
+        onReplayRow.accept(nextTick);
         turnYaw = displayTargetYaw - prevTickYaw;
         turnPitch = currentTickPitch - prevTickPitch;
         appliedTicks++;

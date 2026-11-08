@@ -5,10 +5,10 @@ import de.legoshi.parkourcalc.core.sim.AABB;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.forge.core.lwjgl2.Lwjgl2InputState;
 import de.legoshi.parkourcalc.forge.sim.ForgeSimulator;
+import de.legoshi.parkourcalc.forge.sim.BlockOverridePlacer;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockBasePressurePlate;
-//? if <1.12
-//import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.multiplayer.PlayerControllerMP;
@@ -23,16 +23,22 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 //?} else {
-/*import net.minecraft.util.AxisAlignedBB;
+/*import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
+import net.minecraft.world.IBlockAccess;
+import net.minecraft.world.WorldType;
+import net.minecraft.world.biome.BiomeGenBase;
 *///?}
 import net.minecraft.world.World;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
@@ -144,6 +150,67 @@ public final class ForgeMinecraftAccess implements MinecraftAccess {
         //?} else {
         /*return world.getBlockState(new BlockPos(x, y, z)).getBlock() == Blocks.web;
         *///?}
+    }
+
+    @Override
+    public String describeBlockState(int x, int y, int z) {
+        World world = McClient.world();
+        if (world == null) return null;
+        //? if >=1.12 {
+        if (world.getChunk(x >> 4, z >> 4).isEmpty()) return null;
+        //?} else {
+        /*if (world.getChunkFromChunkCoords(x >> 4, z >> 4).isEmpty()) return null;
+        *///?}
+        return BlockOverridePlacer.describe(world.getBlockState(new BlockPos(x, y, z)));
+    }
+
+    @Override
+    public String blockOverrideError(String spec) {
+        return BlockOverridePlacer.error(spec);
+    }
+
+    @Override
+    public String getHeldBlock() {
+        EntityPlayerSP player = McClient.player();
+        if (player == null) return null;
+        //? if >=1.12 {
+        return BlockOverridePlacer.heldBlock(player.getHeldItemMainhand());
+        //?} else {
+        /*return BlockOverridePlacer.heldBlock(player.getCurrentEquippedItem());
+        *///?}
+    }
+
+    @Override
+    public List<String> blockIds() {
+        return BlockOverridePlacer.ids();
+    }
+
+    @Override
+    public String defaultBlockState(String id) {
+        return BlockOverridePlacer.defaultState(id);
+    }
+
+    @Override
+    public Map<String, List<String>> blockStateOptions(String id) {
+        return BlockOverridePlacer.stateOptions(id);
+    }
+
+    @Override
+    public List<AABB> blockShape(String spec) {
+        List<AABB> out = new ArrayList<AABB>();
+        IBlockState state = BlockOverridePlacer.state(spec);
+        World world = McClient.world();
+        if (state == null || world == null) return out;
+        //? if >=1.12 {
+        AxisAlignedBB bb = state.getBoundingBox(world, BlockPos.ORIGIN);
+        //?} else {
+        /*Block block = state.getBlock();
+        block.setBlockBoundsBasedOnState(new StateAtOrigin(world, state), BlockPos.ORIGIN);
+        AxisAlignedBB bb = new AxisAlignedBB(block.getBlockBoundsMinX(), block.getBlockBoundsMinY(), block.getBlockBoundsMinZ(),
+                block.getBlockBoundsMaxX(), block.getBlockBoundsMaxY(), block.getBlockBoundsMaxZ());
+        *///?}
+        out.add(new AABB(new Vec3dCore(bb.minX, bb.minY, bb.minZ), new Vec3dCore(bb.maxX, bb.maxY, bb.maxZ)));
+        return out;
     }
 
     @Override
@@ -393,4 +460,61 @@ public final class ForgeMinecraftAccess implements MinecraftAccess {
             throw new RuntimeException(cause);
         }
     }
+
+    //? if <1.12 {
+    /*private static final class StateAtOrigin implements IBlockAccess {
+        private final World world;
+        private final IBlockState state;
+
+        StateAtOrigin(World world, IBlockState state) {
+            this.world = world;
+            this.state = state;
+        }
+
+        @Override
+        public TileEntity getTileEntity(BlockPos pos) {
+            return pos.equals(BlockPos.ORIGIN) ? null : world.getTileEntity(pos);
+        }
+
+        @Override
+        public int getCombinedLight(BlockPos pos, int lightValue) {
+            return world.getCombinedLight(pos, lightValue);
+        }
+
+        @Override
+        public IBlockState getBlockState(BlockPos pos) {
+            return pos.equals(BlockPos.ORIGIN) ? state : world.getBlockState(pos);
+        }
+
+        @Override
+        public boolean isAirBlock(BlockPos pos) {
+            return getBlockState(pos).getBlock().getMaterial() == net.minecraft.block.material.Material.air;
+        }
+
+        @Override
+        public BiomeGenBase getBiomeGenForCoords(BlockPos pos) {
+            return world.getBiomeGenForCoords(pos);
+        }
+
+        @Override
+        public boolean extendedLevelsInChunkCache() {
+            return false;
+        }
+
+        @Override
+        public int getStrongPower(BlockPos pos, EnumFacing direction) {
+            return 0;
+        }
+
+        @Override
+        public WorldType getWorldType() {
+            return world.getWorldType();
+        }
+
+        @Override
+        public boolean isSideSolid(BlockPos pos, EnumFacing side, boolean defaultValue) {
+            return getBlockState(pos).getBlock().isSideSolid(this, pos, side);
+        }
+    }
+    *///?}
 }

@@ -5,6 +5,7 @@ import de.legoshi.parkourcalc.core.anglesolver.FlowVector;
 import de.legoshi.parkourcalc.core.anglesolver.Medium;
 import de.legoshi.parkourcalc.core.sim.Checkpoint;
 import de.legoshi.parkourcalc.core.sim.ChunkRange;
+import de.legoshi.parkourcalc.core.sim.BlockPatch;
 import de.legoshi.parkourcalc.core.sim.LazyEntitySimulator;
 import de.legoshi.parkourcalc.core.sim.ServerSimEvent;
 import de.legoshi.parkourcalc.core.sim.StartResumeState;
@@ -275,6 +276,12 @@ public final class ForgeSimulator extends LazyEntitySimulator<SimulatorEntity> {
         for (PotionEffect effect : MovementEffects.instances(effectLevels, 2)) {
             e.addPotionEffect(effect);
         }
+    }
+
+    @Override
+    protected Runnable placeBlockPatches(SimulatorEntity e, List<BlockPatch> patches) {
+        if (!(e.getEntityWorld() instanceof WorldServer)) return null;
+        return BlockOverridePlacer.place(e.getEntityWorld(), patches);
     }
 
     @Override

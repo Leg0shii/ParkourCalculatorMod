@@ -5,6 +5,7 @@ import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
 import de.legoshi.parkourcalc.core.sim.AABB;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.fabric.input.FabricInput;
+import de.legoshi.parkourcalc.fabric.sim.BlockOverridePlacer;
 import de.legoshi.parkourcalc.fabric.sim.paired.PairedServerSim;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Camera;
@@ -21,12 +22,14 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.EmptyBlockGetter;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import com.mojang.blaze3d.platform.InputConstants;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
@@ -114,6 +117,52 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
         ClientLevel world = Minecraft.getInstance().level;
         if (world == null) return false;
         return world.getBlockState(new BlockPos(x, y, z)).is(Blocks.COBWEB);
+    }
+
+    @Override
+    public String describeBlockState(int x, int y, int z) {
+        ClientLevel world = Minecraft.getInstance().level;
+        if (world == null) return null;
+        BlockPos pos = new BlockPos(x, y, z);
+        if (!world.hasChunk(x >> 4, z >> 4)) return null;
+        return BlockOverridePlacer.describe(world.getBlockState(pos));
+    }
+
+    @Override
+    public String blockOverrideError(String spec) {
+        return BlockOverridePlacer.error(spec);
+    }
+
+    @Override
+    public String getHeldBlock() {
+        LocalPlayer player = Minecraft.getInstance().player;
+        return player == null ? null : BlockOverridePlacer.heldBlock(player.getMainHandItem());
+    }
+
+    @Override
+    public List<String> blockIds() {
+        return BlockOverridePlacer.ids();
+    }
+
+    @Override
+    public String defaultBlockState(String id) {
+        return BlockOverridePlacer.defaultState(id);
+    }
+
+    @Override
+    public Map<String, List<String>> blockStateOptions(String id) {
+        return BlockOverridePlacer.stateOptions(id);
+    }
+
+    @Override
+    public List<AABB> blockShape(String spec) {
+        List<AABB> out = new ArrayList<>();
+        BlockState state = BlockOverridePlacer.state(spec);
+        if (state == null) return out;
+        for (net.minecraft.world.phys.AABB bb : state.getShape(EmptyBlockGetter.INSTANCE, BlockPos.ZERO).toAabbs()) {
+            out.add(new AABB(new Vec3dCore(bb.minX, bb.minY, bb.minZ), new Vec3dCore(bb.maxX, bb.maxY, bb.maxZ)));
+        }
+        return out;
     }
 
     @Override

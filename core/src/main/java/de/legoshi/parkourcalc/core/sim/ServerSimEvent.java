@@ -6,8 +6,7 @@ public final class ServerSimEvent {
         VELOCITY_SET("velocity-set"),
         POSITION_CORRECTION("position-correction"),
         DAMAGE_RULED("damage-ruled"),
-        BLOCK_CHANGED("block-changed"),
-        INTERACTION_REJECTED("interaction-rejected");
+        BLOCK_CHANGED("block-changed");
 
         public final String label;
 

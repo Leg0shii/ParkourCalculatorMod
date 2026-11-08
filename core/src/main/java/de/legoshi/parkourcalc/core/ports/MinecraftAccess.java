@@ -8,6 +8,7 @@ import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 
 /**
@@ -58,6 +59,30 @@ public interface MinecraftAccess {
         return false;
     }
 
+    default String describeBlockState(int x, int y, int z) {
+        return null;
+    }
+
+    default String blockOverrideError(String spec) {
+        return null;
+    }
+
+    default String getHeldBlock() {
+        return null;
+    }
+
+    default List<String> blockIds() {
+        return Collections.emptyList();
+    }
+
+    default String defaultBlockState(String id) {
+        return null;
+    }
+
+    default Map<String, List<String>> blockStateOptions(String id) {
+        return Collections.emptyMap();
+    }
+
     double getInsideBlockInset();
 
     default VelocityPacketCodec velocityPacketCodec() {
@@ -96,6 +121,10 @@ public interface MinecraftAccess {
 
     default List<AABB> getBlockCollisionBoxes(int x, int y, int z) {
         return getCollisionBoxes(x, y, z, x, y, z);
+    }
+
+    default List<AABB> blockShape(String spec) {
+        return Collections.singletonList(new AABB(new Vec3dCore(0, 0, 0), new Vec3dCore(1, 1, 1)));
     }
 
     default double getEyeHeight(boolean sneaking) {

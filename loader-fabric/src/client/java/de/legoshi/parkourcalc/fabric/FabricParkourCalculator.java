@@ -9,6 +9,7 @@ import com.mojang.renderpearl.api.commands.RenderPass;
 /*import com.mojang.blaze3d.vertex.PoseStack;
 *///?}
 import de.legoshi.parkourcalc.core.Application;
+import de.legoshi.parkourcalc.core.BlockPlacing;
 import de.legoshi.parkourcalc.core.anglesolver.noturn.PoolScreenAccelerator;
 import de.legoshi.parkourcalc.gpu.OpenClPoolScreen;
 import de.legoshi.parkourcalc.core.PlaybackController;
@@ -86,6 +87,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
     private static KeyMapping captureLandBlockKeyBinding;
     private static KeyMapping clearBlocksKeyBinding;
     private static KeyMapping selectTickKeyBinding;
+    private static KeyMapping placeBlockKeyBinding;
     private static boolean blockCaptureEnabled;
 
     //? if <26.1 {
@@ -104,7 +106,8 @@ public class FabricParkourCalculator implements ClientModInitializer {
                     application.getSettings(),
                     application.getSelection(),
                     application.getYawGizmo(),
-                    application::getAngleSolverState
+                    application::getAngleSolverState,
+                    application.getBlockOverrideWorld()
             );
     private static final FabricHudOverlayRenderer hudRenderer = new FabricHudOverlayRenderer();
 
@@ -137,6 +140,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
         togglePathKeyBinding = key("key.parkourcalculator.toggle_path", InputConstants.KEY_Y);
         copyTeleportKeyBinding = key("key.parkourcalculator.copy_teleport", InputConstants.KEY_K);
         selectTickKeyBinding = key("key.parkourcalculator.select_tick", InputConstants.UNKNOWN.getValue());
+        placeBlockKeyBinding = key("key.parkourcalculator.place_block", InputConstants.UNKNOWN.getValue());
         if (blockCaptureEnabled) {
             captureMomentumBlockKeyBinding = key("key.parkourcalculator.capture_momentum_block", InputConstants.KEY_M);
             captureCollisionBlockKeyBinding = key("key.parkourcalculator.capture_collision_block", InputConstants.KEY_N);
@@ -170,6 +174,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
         togglePathKeyBinding = register("key.parkourcalculator.toggle_path", InputConstants.KEY_Y, category);
         copyTeleportKeyBinding = register("key.parkourcalculator.copy_teleport", InputConstants.KEY_K, category);
         selectTickKeyBinding = register("key.parkourcalculator.select_tick", InputConstants.UNKNOWN.getValue(), category);
+        placeBlockKeyBinding = register("key.parkourcalculator.place_block", InputConstants.UNKNOWN.getValue(), category);
         //?}
 
         PoolScreenAccelerator.register(new OpenClPoolScreen.Factory());
@@ -189,6 +194,9 @@ public class FabricParkourCalculator implements ClientModInitializer {
         *///?}
 
         application.setModVersion(modVersion());
+        application.setOverlayOpener(open -> {
+            if (open != application.isControlPanelOpen()) setOverlayOpen(open);
+        });
         OsSystemBridge.setPlatformOpeners(
                 //? if >=26.1 {
                 Blaze3D::openPath,
@@ -210,6 +218,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
                 FabricWorldDescriptors::current
         ));
         application.setPlaybackBridge(playbackBridge);
+        application.setBlockPatcher(new de.legoshi.parkourcalc.fabric.sim.FabricBlockPatcher());
         application.getRecorder().setKeyCodes("glfw");
         application.setBlockPicker(new FabricBlockPicker());
         application.setPhysicsVariant(de.legoshi.parkourcalc.fabric.sim.BpkModBridge.physicsVariant());
@@ -529,6 +538,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
         while (copyTeleportKeyBinding.consumeClick()) {
             copyTeleportPressed = true;
         }
+        boolean placeBlockPressed = false;
+        while (placeBlockKeyBinding.consumeClick()) {
+            placeBlockPressed = true;
+        }
         boolean captureMomentum = false;
         boolean captureCollision = false;
         boolean captureLand = false;
@@ -595,6 +608,9 @@ public class FabricParkourCalculator implements ClientModInitializer {
         }
         if (copyTeleportPressed && chordFree) {
             application.copyTeleportCommand();
+        }
+        if (placeBlockPressed && chordFree) {
+            application.togglePlacing();
         }
         if (captureMomentum && chordFree) {
             application.captureAngleSolverBlock(BlockSelection.Kind.MOMENTUM);
@@ -709,6 +725,17 @@ public class FabricParkourCalculator implements ClientModInitializer {
         if (application.isControlPanelOpen()) {
             setOverlayOpen(false);
         }
+    }
+
+    public static boolean placingMouse(int button, int action) {
+        if (action != InputConstants.PRESS) return false;
+        int core = button == InputConstants.MOUSE_BUTTON_LEFT ? BlockPlacing.LEFT
+                : button == InputConstants.MOUSE_BUTTON_RIGHT ? BlockPlacing.RIGHT : -1;
+        return application.placingMouse(core, true);
+    }
+
+    public static boolean placingEscape() {
+        return application.placingEscape();
     }
 
     private static void setOverlayOpen(boolean open) {

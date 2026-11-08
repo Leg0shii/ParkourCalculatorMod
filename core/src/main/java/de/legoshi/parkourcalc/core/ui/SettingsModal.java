@@ -32,6 +32,7 @@ public final class SettingsModal {
     private static final String TT_HIT_DISTANCE_SELECTED = "Limits the hit distance line to the currently selected ticks. Selected-tick lines re-cast every frame, so they also track world edits instantly.";
     private static final String TT_HIT_DISTANCE_GAME_REACH = "Uses the current game mode's block reach for the hit distance line (5.0 in creative) instead of the survival reach of 4.5.";
     private static final String TT_HITBOX = "Draws the player's hitbox at the currently selected tick.";
+    private static final String TT_BLOCK_OUTLINES_REPLAY = "Keeps the Block Overrides outlines in the world while a replay runs. Off by default so the recording shows only the blocks.";
     private static final String TT_FULL_HITBOX = "Draws hitboxes for every tick in the TAS, not just the active one. Heavy on long TASes.";
     private static final String TT_SUBTICK = "Renders the interpolated path between adjacent ticks, exposing collision moments inside a tick.";
     private static final String TT_COL_EFFECTS = "Adds a per-tick Effects column to the input table (Speed, Slowness, Jump Boost and the other movement effects this version has). Click a cell to edit it.";
@@ -60,6 +61,8 @@ public final class SettingsModal {
     private static final String TT_SHOW_PATH = "Draws the simulated path (tick boxes, gizmos and constraints) in-world. Also toggled by the Toggle Path hotkey.";
     private static final String TT_SAVE_DEBUG_VALUES = "Writes the per-tick simulation state (position, velocity, ground and collision flags) into the TAS file on every save.";
     private static final String TT_COLOR_GENERIC = "Color used for this overlay. Alpha applies in-world.";
+    private static final String TT_BLOCK_OVERRIDE_WIDTH = "Edge thickness of the block override outlines, in blocks.";
+    private static final float BLOCK_OVERRIDE_WIDTH_SLIDER_W = 180f;
     private static final String TT_KEEP_INPUT_TABLE = "Keeps the input table window drawn as a display-only overlay even when the main UI is closed. It cannot be edited while closed.";
     private static final String TT_KEEP_TICK_INFO = "Keeps the Tick Info window drawn even when the main UI is closed.";
     private static final String TT_UNDO_REDO_WITHOUT_UI = "Ctrl+Z / Ctrl+Y (or Ctrl+Shift+Z) undo and redo TAS edits even while the main UI is closed. Disabled while a Minecraft screen such as chat or the inventory is open.";
@@ -104,6 +107,7 @@ public final class SettingsModal {
     private final float[] scrollbarGrabBuf = new float[1];
     private final int[] solverPrecisionBuf = new int[1];
     private final float[] constraintDimBuf = new float[1];
+    private final float[] outlineWidthBuf = new float[1];
     private final int[] hudMessageCountBuf = new int[1];
     private final float[] hudMessageScaleBuf = new float[1];
     private final ImInt hudMessageOrderBuf = new ImInt();
@@ -383,6 +387,7 @@ public final class SettingsModal {
             checkboxRow("Lockstep replay", "##lockstep_replay", settings.lockstepReplay, TT_LOCKSTEP_REPLAY, v -> settings.lockstepReplay = v);
             checkboxRow("Disable creative flight", "##disable_flight_playback", settings.disableFlightDuringPlayback, TT_DISABLE_FLIGHT_PLAYBACK, v -> settings.disableFlightDuringPlayback = v);
             checkboxRow("Keep tick boxes shown", "##keep_boxes_playback", settings.keepBoxesDuringPlayback, TT_KEEP_BOXES_PLAYBACK, v -> settings.keepBoxesDuringPlayback = v);
+            checkboxRow("Block outlines during replay", "##block_outlines_playback", settings.blockOverrideOutlinesDuringReplay, TT_BLOCK_OUTLINES_REPLAY, v -> settings.blockOverrideOutlinesDuringReplay = v);
             ThemeManager.endStandardFormTable();
         }
     }
@@ -641,6 +646,21 @@ public final class SettingsModal {
         renderColor("hit distance line (in reach)", settings.hitDistanceLineHit, flags);
         renderColor("yaw gizmo circle", settings.yawGizmoCircle, flags);
         renderColor("yaw gizmo direction", settings.yawGizmoDirection, flags);
+
+        ThemeManager.sectionSpacing();
+        sectionHeader("Block overrides");
+        renderColor("block override placed", settings.blockOverridePlaced, flags);
+        renderColor("block override ahead", settings.blockOverrideAhead, flags);
+        renderColor("block override selected", settings.blockOverrideSelected, flags);
+        renderColor("block override selected row tint", settings.blockOverrideSelectedRow, flags);
+        outlineWidthBuf[0] = settings.blockOverrideOutlineWidth;
+        ImGui.setNextItemWidth(BLOCK_OVERRIDE_WIDTH_SLIDER_W * ThemeManager.uiScale());
+        if (Controls.sliderFloat("block override outline thickness", outlineWidthBuf,
+                Settings.MIN_BLOCK_OVERRIDE_OUTLINE_WIDTH, Settings.MAX_BLOCK_OVERRIDE_OUTLINE_WIDTH, "%.3f blocks")) {
+            settings.blockOverrideOutlineWidth = outlineWidthBuf[0];
+        }
+        if (ImGui.isItemDeactivatedAfterEdit()) onChanged.run();
+        tooltipForLastItem(TT_BLOCK_OVERRIDE_WIDTH);
 
         ThemeManager.sectionSpacing();
         sectionHeader("Hitbox");

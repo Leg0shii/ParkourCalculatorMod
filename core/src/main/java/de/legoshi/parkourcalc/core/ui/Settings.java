@@ -30,6 +30,13 @@ public final class Settings {
     private static final float[] DEFAULT_CONSTRAINT_FILL = {0.329f, 0.000f, 0.255f, 0.451f};      // #54004173
     private static final float[] DEFAULT_CONSTRAINT_BACK = {0.627f, 0.008f, 0.627f, 0.118f};
     private static final float[] DEFAULT_CONSTRAINT_HIGHLIGHT = {0.996f, 0.996f, 0.996f, 1.000f};
+    private static final float[] DEFAULT_BLOCK_OVERRIDE_PLACED = {0.796f, 0.651f, 0.969f, 0.55f};
+    private static final float[] DEFAULT_BLOCK_OVERRIDE_AHEAD = {0.796f, 0.651f, 0.969f, 0.80f};
+    private static final float[] DEFAULT_BLOCK_OVERRIDE_SELECTED = {0.976f, 0.886f, 0.686f, 0.95f};
+    private static final float[] DEFAULT_BLOCK_OVERRIDE_SELECTED_ROW = {0.976f, 0.886f, 0.686f, 0.30f};
+    public static final float DEFAULT_BLOCK_OVERRIDE_OUTLINE_WIDTH = 0.015f;
+    public static final float MIN_BLOCK_OVERRIDE_OUTLINE_WIDTH = 0.01f;
+    public static final float MAX_BLOCK_OVERRIDE_OUTLINE_WIDTH = 0.15f;
 
     private static final boolean DEFAULT_CONSTRAINT_EXPAND_BY_HITBOX = true;
     private static final boolean DEFAULT_PRESSURE_PLATE_FULL_BLOCK = false;
@@ -84,6 +91,8 @@ public final class Settings {
     private static final boolean DEFAULT_VIEW_SENSE_FINDER = false;
     private static final boolean DEFAULT_SENSE_FINDER_COUNT_VIEW = false;
     private static final boolean DEFAULT_VIEW_RECORDER = false;
+    private static final boolean DEFAULT_VIEW_BLOCK_OVERRIDES = false;
+    private static final boolean DEFAULT_BLOCK_OVERRIDE_OUTLINES_DURING_REPLAY = false;
     private static final boolean DEFAULT_VIEW_KEYSTROKES = false;
     private static final int DEFAULT_TURN_PROFILE_ATTEMPTS = 20_000;
     private static final int DEFAULT_ONEJUMP_SPREAD_ATTEMPTS = 1000;
@@ -165,6 +174,11 @@ public final class Settings {
     public final float[] constraintFill = DEFAULT_CONSTRAINT_FILL.clone();
     public final float[] constraintBack = DEFAULT_CONSTRAINT_BACK.clone();
     public final float[] constraintHighlight = DEFAULT_CONSTRAINT_HIGHLIGHT.clone();
+    public final float[] blockOverridePlaced = DEFAULT_BLOCK_OVERRIDE_PLACED.clone();
+    public final float[] blockOverrideAhead = DEFAULT_BLOCK_OVERRIDE_AHEAD.clone();
+    public final float[] blockOverrideSelected = DEFAULT_BLOCK_OVERRIDE_SELECTED.clone();
+    public final float[] blockOverrideSelectedRow = DEFAULT_BLOCK_OVERRIDE_SELECTED_ROW.clone();
+    public float blockOverrideOutlineWidth = DEFAULT_BLOCK_OVERRIDE_OUTLINE_WIDTH;
 
     public boolean constraintExpandByHitbox = DEFAULT_CONSTRAINT_EXPAND_BY_HITBOX;
     public boolean pressurePlateFullBlock = DEFAULT_PRESSURE_PLATE_FULL_BLOCK;
@@ -237,6 +251,8 @@ public final class Settings {
     public boolean onejumpStopKeysOnFail = false;
     public boolean onejumpStopTurnOnFail = false;
     public boolean viewRecorder = DEFAULT_VIEW_RECORDER;
+    public boolean viewBlockOverrides = DEFAULT_VIEW_BLOCK_OVERRIDES;
+    public boolean blockOverrideOutlinesDuringReplay = DEFAULT_BLOCK_OVERRIDE_OUTLINES_DURING_REPLAY;
     public boolean viewKeystrokes = DEFAULT_VIEW_KEYSTROKES;
     public boolean viewMouseStrokes = DEFAULT_VIEW_KEYSTROKES;
     public boolean viewMouseMovement = DEFAULT_VIEW_KEYSTROKES;
@@ -307,6 +323,11 @@ public final class Settings {
         System.arraycopy(DEFAULT_CONSTRAINT_FILL, 0, constraintFill, 0, 4);
         System.arraycopy(DEFAULT_CONSTRAINT_BACK, 0, constraintBack, 0, 4);
         System.arraycopy(DEFAULT_CONSTRAINT_HIGHLIGHT, 0, constraintHighlight, 0, 4);
+        System.arraycopy(DEFAULT_BLOCK_OVERRIDE_PLACED, 0, blockOverridePlaced, 0, 4);
+        System.arraycopy(DEFAULT_BLOCK_OVERRIDE_AHEAD, 0, blockOverrideAhead, 0, 4);
+        System.arraycopy(DEFAULT_BLOCK_OVERRIDE_SELECTED, 0, blockOverrideSelected, 0, 4);
+        System.arraycopy(DEFAULT_BLOCK_OVERRIDE_SELECTED_ROW, 0, blockOverrideSelectedRow, 0, 4);
+        blockOverrideOutlineWidth = DEFAULT_BLOCK_OVERRIDE_OUTLINE_WIDTH;
         constraintExpandByHitbox = DEFAULT_CONSTRAINT_EXPAND_BY_HITBOX;
         pressurePlateFullBlock = DEFAULT_PRESSURE_PLATE_FULL_BLOCK;
         constraintFrontWidth = DEFAULT_CONSTRAINT_FRONT_WIDTH;
@@ -369,6 +390,8 @@ public final class Settings {
         onejumpStopKeysOnFail = false;
         onejumpStopTurnOnFail = false;
         viewRecorder = DEFAULT_VIEW_RECORDER;
+        viewBlockOverrides = DEFAULT_VIEW_BLOCK_OVERRIDES;
+        blockOverrideOutlinesDuringReplay = DEFAULT_BLOCK_OVERRIDE_OUTLINES_DURING_REPLAY;
         viewKeystrokes = DEFAULT_VIEW_KEYSTROKES;
         viewMouseStrokes = DEFAULT_VIEW_KEYSTROKES;
         viewMouseMovement = DEFAULT_VIEW_KEYSTROKES;
