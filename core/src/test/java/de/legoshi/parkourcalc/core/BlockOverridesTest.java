@@ -13,6 +13,8 @@ import de.legoshi.parkourcalc.core.sim.BlockOverrides;
 import de.legoshi.parkourcalc.core.sim.BlockPatch;
 import de.legoshi.parkourcalc.core.sim.SimulationRunner;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
+import de.legoshi.parkourcalc.core.ui.BoxSelectController;
+import de.legoshi.parkourcalc.core.ui.WorldPick;
 import de.legoshi.parkourcalc.core.ui.InputData;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 import de.legoshi.parkourcalc.core.ui.SelectionManager;
@@ -263,6 +265,28 @@ public class BlockOverridesTest {
         assertEquals(far, world.rowAlong(new Vec3dCore(6.5, 64.5, 0.5), east, 6.0));
         assertNull(world.rowAlong(eye, east, 4.0));
         assertNull(world.rowAlong(eye, new Vec3dCore(0, 0, 1), 6.0));
+    }
+
+    @Test
+    public void theWorldPickCommitsOnThePressEvenWhileTheMouseMoves() {
+        final List<WorldPick> picks = new ArrayList<WorldPick>();
+        final int[] pickCalls = {0};
+        BoxSelectController controller = new BoxSelectController((o, d) -> {
+            pickCalls[0]++;
+            return WorldPick.blockOverride(2);
+        }, picks::add, true);
+        Vec3dCore eye = new Vec3dCore(0, 64, 0);
+        Vec3dCore dir = new Vec3dCore(1, 0, 0);
+        controller.tick(eye, dir, false, 0, 0, false);
+        controller.tick(eye, dir, true, 0, 0, false);
+        assertEquals(1, picks.size());
+        assertEquals(2, picks.get(0).index);
+        controller.tick(eye, dir, true, 40, 30, false);
+        controller.tick(eye, dir, false, 80, 60, false);
+        assertEquals(1, picks.size());
+        assertEquals(1, pickCalls[0]);
+        controller.tick(eye, dir, true, 80, 60, true);
+        assertEquals(1, picks.size());
     }
 
     @Test

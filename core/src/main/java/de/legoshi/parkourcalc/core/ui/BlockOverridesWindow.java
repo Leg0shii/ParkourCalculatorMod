@@ -46,12 +46,10 @@ public final class BlockOverridesWindow implements RenderInterface {
     private static final float MIN_W = 600f;
     private static final float MIN_H = 160f;
     private static final float TICK_W = 62f;
-    private static final float POS_W = 186f;
+    private static final float POS_W = 154f;
     private static final float PLACED_W = 154f;
     private static final float DELETE_COL_W = 42f;
     private static final float DELETE_W = 34f;
-    private static final float CROSS_W = 28f;
-    private static final float POS_GAP = 4f;
     private static final float FRAME_H = 26f;
     private static final float BUTTON_PAD_X = 10f;
     private static final float TOOLBAR_GAP = 10f;
@@ -482,7 +480,7 @@ public final class BlockOverridesWindow implements RenderInterface {
         BlockOverride b = blocks.get(i);
         ImString buf = posBuffers.get(i);
         if (!(editingRow == i && editingField == 2)) buf.set(b.x + " " + b.y + " " + b.z);
-        ImGui.setNextItemWidth(ImGui.getContentRegionAvailX() - (CROSS_W + POS_GAP) * ThemeManager.uiScale());
+        ImGui.setNextItemWidth(-1);
         ImGui.inputText("##pos", buf);
         rowTooltip(b);
         if (ImGui.isItemActivated()) {
@@ -496,18 +494,6 @@ public final class BlockOverridesWindow implements RenderInterface {
         } else if (ImGui.isItemDeactivated()) {
             editingRow = -1;
         }
-        ImGui.sameLine(0f, POS_GAP * ThemeManager.uiScale());
-        if (crosshairButton("##pick")) {
-            BlockHit hit = mc.isReady() ? mc.getLookedAtHit() : null;
-            if (hit != null) {
-                b = blocks.get(i);
-                String before = mc.describeBlockState(hit.x, hit.y, hit.z);
-                BlockOverride next = b.withPos(hit.x, hit.y, hit.z);
-                if (before != null) next = next.withBefore(before);
-                update(blocks, i, next, b);
-            }
-        }
-        TooltipUtil.onHover("Move to the looked-at block");
     }
 
     private static int[] parsePosition(String text) {
@@ -518,31 +504,6 @@ public final class BlockOverridesWindow implements RenderInterface {
         } catch (NumberFormatException e) {
             return null;
         }
-    }
-
-    private boolean crosshairButton(String id) {
-        float scale = ThemeManager.uiScale();
-        float h = ImGui.getFrameHeight();
-        float w = CROSS_W * scale;
-        boolean clicked = ImGui.invisibleButton(id, w, h);
-        boolean hover = ImGui.isItemHovered();
-        ImVec2 mn = ImGui.getItemRectMin();
-        ImDrawList dl = ImGui.getWindowDrawList();
-        int bg = hover ? ThemeManager.accentTintColor(0.18f) : ThemeManager.panelColor();
-        float rounding = ImGui.getStyle().getFrameRounding();
-        dl.addRectFilled(mn.x, mn.y, mn.x + w, mn.y + h, bg, rounding);
-        dl.addRect(mn.x, mn.y, mn.x + w, mn.y + h, ThemeManager.borderColor(), rounding);
-        int col = hover ? ThemeManager.textColor() : ThemeManager.textMutedColor();
-        float cx = mn.x + w * 0.5f;
-        float cy = mn.y + h * 0.5f;
-        float r = 3.2f * scale;
-        float tick = 2.6f * scale;
-        dl.addCircle(cx, cy, r, col, 16, 1.2f * scale);
-        dl.addLine(cx - r - tick, cy, cx - r + tick, cy, col, 1.2f * scale);
-        dl.addLine(cx + r - tick, cy, cx + r + tick, cy, col, 1.2f * scale);
-        dl.addLine(cx, cy - r - tick, cx, cy - r + tick, col, 1.2f * scale);
-        dl.addLine(cx, cy + r - tick, cx, cy + r + tick, col, 1.2f * scale);
-        return clicked;
     }
 
     private void blockCell(BlockOverrides blocks, int i) {

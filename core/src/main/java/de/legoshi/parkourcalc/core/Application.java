@@ -136,7 +136,7 @@ public final class Application {
         // Start box is the "Start" anchor: draggable to reposition, and tap-selectable as path index 0.
         this.dragController = new BoxDragController(boxController, startDragController, this::commitStartTap);
         this.selectController = new BoxSelectController(this::pickWorld, this::commitWorldTap);
-        this.blockPickController = new BoxSelectController(this::pickBlockOverride, this::commitWorldTap);
+        this.blockPickController = new BoxSelectController(this::pickBlockOverride, this::commitWorldTap, true);
         this.yawGizmo = new YawGizmoController(
                 boxController,
                 this::handleStartYawChange,
