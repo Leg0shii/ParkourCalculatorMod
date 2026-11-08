@@ -33,6 +33,13 @@ public final class Controls {
         return inputTextHint(label, hint, holder, width, 0);
     }
 
+    public static boolean tableInputTextHint(String label, String hint, ImString holder, float width) {
+        beginLabeled(label, width);
+        boolean changed = ImGui.inputTextWithHint(idFor(label), hint, holder);
+        drawFocusRingIfActive();
+        return changed;
+    }
+
     public static boolean inputTextHint(String label, String hint, ImString holder, float width, int flags) {
         pushInputFrameHeight();
         beginLabeled(label, width);

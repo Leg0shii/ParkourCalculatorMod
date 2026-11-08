@@ -167,7 +167,6 @@ public final class BlockOverridesWindow implements RenderInterface {
     private void table(BlockOverrides blocks) {
         syncBuffers(blocks);
         float scale = ThemeManager.uiScale();
-        Controls.pushInputFrameHeight();
         float rowH = ThemeManager.tableRowHeight();
         float headerH = ThemeManager.tableHeaderRowHeight();
         float wanted = headerH + blocks.size() * rowH + 2f * scale;
@@ -175,10 +174,7 @@ public final class BlockOverridesWindow implements RenderInterface {
         int flags = ThemeManager.standardTableFlags();
         if (wanted <= height) flags &= ~ImGuiTableFlags.ScrollY;
         boolean ok = ThemeManager.beginStandardTableWithFlags(TABLE_ID, HEADERS.length, flags, 0f, height);
-        if (!ok) {
-            Controls.popInputFrameHeight();
-            return;
-        }
+        if (!ok) return;
         int fixed = ImGuiTableColumnFlags.WidthFixed;
         ImGui.tableSetupColumn(HEADERS[0], fixed, ThemeManager.tableLeftmostColumnWidth(HEADERS[0], TICK_W * scale));
         ImGui.tableSetupColumn(HEADERS[1], fixed, ThemeManager.tableColumnWidth(HEADERS[1], TICK_W * scale));
@@ -196,7 +192,7 @@ public final class BlockOverridesWindow implements RenderInterface {
                 && ImGui.isWindowHovered(ImGuiHoveredFlags.ChildWindows | ImGuiHoveredFlags.AllowWhenBlockedByActiveItem);
         float padY = ImGui.getStyle().getCellPaddingY();
         for (int i = 0; i < blocks.size(); i++) {
-            ImGui.tableNextRow();
+            ImGui.tableNextRow(0, rowH);
             ThemeManager.paintTableRowBg(i);
             ImGui.pushID(i);
             BlockOverride b = blocks.get(i);
@@ -214,7 +210,6 @@ public final class BlockOverridesWindow implements RenderInterface {
             ImGui.popID();
         }
         ThemeManager.endStandardTable();
-        Controls.popInputFrameHeight();
         if (removeAt >= 0) {
             blocks.remove(removeAt);
             posBuffers.remove(removeAt);
@@ -231,7 +226,7 @@ public final class BlockOverridesWindow implements RenderInterface {
         ThemeManager.paintTableHeader();
         for (int c = 0; c < HEADERS.length; c++) {
             ImGui.tableSetColumnIndex(c);
-            ThemeManager.tableHeader(HEADERS[c]);
+            ThemeManager.tableHeaderCentered(HEADERS[c]);
         }
     }
 
@@ -351,7 +346,7 @@ public final class BlockOverridesWindow implements RenderInterface {
         ImString buf = endBuffers.get(i);
         if (!(editingRow == i && editingField == 1)) buf.set(b.endTick == BlockOverride.NO_END ? "" : String.valueOf(b.endTick));
         ImGui.setNextItemWidth(-1f);
-        Controls.inputTextHint("##end", END_HINT, buf, 0f);
+        Controls.tableInputTextHint("##end", END_HINT, buf, 0f);
         if (ImGui.isItemActivated()) {
             editingRow = i;
             editingField = 1;
