@@ -127,7 +127,7 @@ public final class BlockOverrideWorld {
         for (int row : selection.getSelectedRows()) {
             if (row > highest) highest = row;
         }
-        return highest >= 0 ? highest : inputData.size() - 1;
+        return highest >= 0 ? highest : 0;
     }
 
     public List<BlockOverride> rows() {

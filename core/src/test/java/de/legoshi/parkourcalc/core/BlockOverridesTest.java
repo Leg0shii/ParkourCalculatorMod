@@ -140,6 +140,11 @@ public class BlockOverridesTest {
         data.getBlockOverrides().add(new BlockOverride(7, 8, 5, 64, 5, "oak_door[open=true]", "oak_door[open=false]"));
 
         world.tick();
+        assertEquals(0, world.viewRow());
+        assertEquals(Arrays.asList(patch(1, 64, 1, "air"), patch(5, 64, 5, "oak_door[open=false]")), patcher.last());
+
+        selection.selectOnly(10);
+        world.tick();
         assertEquals(9, world.viewRow());
         assertEquals(Arrays.asList(patch(1, 64, 1, "stone"), patch(5, 64, 5, "oak_door[open=false]")), patcher.last());
 
