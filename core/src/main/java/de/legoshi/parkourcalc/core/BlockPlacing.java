@@ -22,7 +22,8 @@ public final class BlockPlacing {
 
     public static final int LEFT = 0;
     public static final int RIGHT = 1;
-    private static final String STOP_HINT = "Esc stop";
+    private static final String PLACE_HINT = "LMB place · RMB change the looked-at block · Esc stop";
+    private static final String CHANGE_HINT = "RMB change · LMB place the block in hand · Esc stop";
 
     private final MinecraftAccess mc;
     private final InputData inputData;
@@ -36,8 +37,8 @@ public final class BlockPlacing {
         }
     };
     private Mode mode = Mode.OFF;
-    private int[] target;
-    private String targetBlock;
+    private BlockHit hit;
+    private String held;
 
     public BlockPlacing(MinecraftAccess mc, InputData inputData, BlockOverrideWorld world, Settings settings,
                         HudMessages hud, IntConsumer onChanged) {
@@ -93,8 +94,8 @@ public final class BlockPlacing {
 
     private void stop(boolean reopenUi) {
         mode = Mode.OFF;
-        target = null;
-        targetBlock = null;
+        hit = null;
+        held = null;
         world.setPreview(null, 0);
         hud.clearStatus();
         if (reopenUi) uiOpener.accept(true);
@@ -106,20 +107,25 @@ public final class BlockPlacing {
             stop(false);
             return;
         }
-        target = null;
-        targetBlock = null;
-        BlockHit hit = mc.getLookedAtHit();
-        if (hit != null && inReach(hit)) {
-            if (mode == Mode.PLACE) {
-                targetBlock = mc.getHeldBlock();
-                if (targetBlock != null) target = placementTarget(hit);
-            } else {
-                targetBlock = mc.describeBlockState(hit.x, hit.y, hit.z);
-                if (targetBlock != null) target = new int[] {hit.x, hit.y, hit.z};
-            }
-        }
+        held = mc.getHeldBlock();
+        BlockHit looked = mc.getLookedAtHit();
+        hit = looked != null && inReach(looked) ? looked : null;
+        int[] target = mode == Mode.PLACE ? placeTarget() : changeTarget();
         world.setPreview(target, BoxStyle.blockOverridePlacedArgb(settings));
-        hud.setStatus(banner(), HudMessages.COLOR_DEFAULT);
+        String banner = banner(target);
+        hud.setStatus(banner, HudMessages.COLOR_DEFAULT, boldPrefix(), 1);
+    }
+
+    private int[] placeTarget() {
+        return hit != null && held != null ? placementTarget(hit) : null;
+    }
+
+    private int[] changeTarget() {
+        return hit != null && lookedAtBlock() != null ? new int[] {hit.x, hit.y, hit.z} : null;
+    }
+
+    private String lookedAtBlock() {
+        return hit == null ? null : mc.describeBlockState(hit.x, hit.y, hit.z);
     }
 
     private boolean inReach(BlockHit hit) {
@@ -131,24 +137,51 @@ public final class BlockPlacing {
         return dx * dx + dy * dy + dz * dz <= reach * reach;
     }
 
-    private String banner() {
-        String action = mode == Mode.PLACE ? "LMB place" : "RMB change";
-        if (target == null) {
-            return (mode == Mode.PLACE && mc.getHeldBlock() == null ? "Hold a block" : "Aim at a block") + "\n" + action + " · " + STOP_HINT;
+    private String boldPrefix() {
+        if (mode == Mode.PLACE) return held == null ? "Hold a block" : "Placing " + name(held);
+        String looked = lookedAtBlock();
+        return looked == null ? "Aim at a block" : "Changing " + name(looked);
+    }
+
+    private String banner(int[] target) {
+        StringBuilder sb = new StringBuilder(boldPrefix());
+        if (mode == Mode.PLACE) {
+            if (held != null) sb.append(" from the main hand");
+            sb.append('\n');
+            sb.append(target == null ? "Aim at a block" : "at " + where(target) + ", tick " + startTick() + " onward");
+            sb.append('\n').append(PLACE_HINT);
+        } else {
+            if (target != null) sb.append(" at the crosshair");
+            sb.append('\n');
+            sb.append(target == null ? "The looked-at block becomes the row" : "at " + where(target) + ", tick " + startTick() + " onward");
+            sb.append('\n').append(CHANGE_HINT);
         }
- BlockOverride.Spec spec = BlockOverride.Spec.parse(targetBlock);
-        String name = spec.displayName(BlockOverride.Spec.parse(mc.defaultBlockState(spec.id)));
-        return name + " at " + target[0] + " " + target[1] + " " + target[2] + " from tick " + startTick()
-                + "\n" + action + " · " + STOP_HINT;
+        return sb.toString();
+    }
+
+    private static String where(int[] target) {
+        return target[0] + " " + target[1] + " " + target[2];
+    }
+
+    private String name(String block) {
+        BlockOverride.Spec spec = BlockOverride.Spec.parse(block);
+        if (!spec.valid()) return block;
+        return spec.displayName(BlockOverride.Spec.parse(mc.defaultBlockState(spec.id)));
     }
 
     public boolean onMouse(int button, boolean down) {
         if (!isActive()) return false;
         if (!down) return false;
         if (button != LEFT && button != RIGHT) return false;
-        boolean confirm = mode == Mode.PLACE ? button == LEFT : button == RIGHT;
-        if (!confirm) return true;
-        if (target != null && targetBlock != null) addRow();
+        if (button == LEFT) {
+            int[] target = placeTarget();
+            if (target == null) return true;
+            addRow(target, held, true);
+        } else {
+            int[] target = changeTarget();
+            if (target == null) return true;
+            addRow(target, lookedAtBlock(), false);
+        }
         stop(true);
         return true;
     }
@@ -163,14 +196,14 @@ public final class BlockPlacing {
         return Math.max(1, Math.min(world.viewRow() + 2, Math.max(1, inputData.size())));
     }
 
-    private void addRow() {
+    private void addRow(int[] target, String block, boolean placed) {
         int start = startTick();
         String before = mc.describeBlockState(target[0], target[1], target[2]);
         if (before == null) before = BlockOverride.AIR;
-        boolean player = mode == Mode.PLACE && start - 1 < inputData.size()
+        boolean player = placed && start - 1 < inputData.size()
                 && inputData.getRows().get(start - 1).isKeyActive(InputRow.Key.RIGHT_CLICK);
         BlockOverrides blocks = inputData.getBlockOverrides();
-        blocks.add(new BlockOverride(start, BlockOverride.NO_END, target[0], target[1], target[2], targetBlock, before, player));
+        blocks.add(new BlockOverride(start, BlockOverride.NO_END, target[0], target[1], target[2], block, before, player));
         onChanged.accept(0);
     }
 

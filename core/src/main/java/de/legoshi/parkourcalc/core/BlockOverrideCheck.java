@@ -75,19 +75,19 @@ public final class BlockOverrideCheck {
             Vec3dCore look = reach.look(states.get(row + 1).yaw, boxes.getPitch(row + 1));
             BlockHit hit = CollisionRayTrace.trace(worldAt(inputData, row, reach), eye, look, reach.blockReach());
             if (hit == null) {
-                out.put(b, problem(b, "nothing in reach"));
+                out.put(b, problem(b, "the right click hits nothing in reach"));
                 continue;
             }
             int[] lands = BlockPlacing.placementTarget(hit);
             if (lands[0] != b.x || lands[1] != b.y || lands[2] != b.z) {
-                out.put(b, problem(b, "lands at " + lands[0] + " " + lands[1] + " " + lands[2]));
+                out.put(b, problem(b, "the right click lands at " + lands[0] + " " + lands[1] + " " + lands[2]));
             }
         }
         return out.isEmpty() ? Collections.<BlockOverride, String>emptyMap() : out;
     }
 
     private static String problem(BlockOverride b, String reason) {
-        return "Tick " + b.startTick + ": " + reason;
+        return "Not placed at tick " + b.startTick + ": " + reason;
     }
 
     private static CollisionRayTrace.World worldAt(InputData inputData, int row, final Reach reach) {

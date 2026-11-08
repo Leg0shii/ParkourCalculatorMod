@@ -91,8 +91,6 @@ public class BlockPlacingTest {
         assertEquals(35, world.preview()[0]);
         assertEquals(-60, world.preview()[1]);
         assertEquals(9, world.preview()[2]);
-        assertTrue(placing.onMouse(BlockPlacing.RIGHT, true));
-        assertTrue(placing.isActive());
         assertTrue(placing.onMouse(BlockPlacing.LEFT, true));
 
         assertEquals(1, data.getBlockOverrides().size());
@@ -201,17 +199,17 @@ public class BlockPlacingTest {
         data.getBlockOverrides().add(auto);
 
         Map<BlockOverride, String> noClick = BlockOverrideCheck.run(data, boxes, reach(mc, 27f));
-        assertEquals("Tick 2: no right click", noClick.get(onTop));
-        assertEquals("Tick 2: no right click", noClick.get(elsewhere));
+        assertEquals("Not placed at tick 2: no right click", noClick.get(onTop));
+        assertEquals("Not placed at tick 2: no right click", noClick.get(elsewhere));
         assertNull(noClick.get(auto));
 
         data.getRows().get(1).setKeyActive(InputRow.Key.RIGHT_CLICK, true);
         Map<BlockOverride, String> aimed = BlockOverrideCheck.run(data, boxes, reach(mc, 27f));
         assertNull(aimed.get(onTop));
-        assertEquals("Tick 2: lands at 0 0 3", aimed.get(elsewhere));
+        assertEquals("Not placed at tick 2: the right click lands at 0 0 3", aimed.get(elsewhere));
 
         Map<BlockOverride, String> missed = BlockOverrideCheck.run(data, boxes, reach(mc, -30f));
-        assertEquals("Tick 2: nothing in reach", missed.get(onTop));
+        assertEquals("Not placed at tick 2: the right click hits nothing in reach", missed.get(onTop));
     }
 
     @Test
@@ -226,7 +224,7 @@ public class BlockPlacingTest {
         world.tick();
         world.setReplayRow(2);
         world.tick();
-        assertEquals("Tick 2: not placed", world.replayProblem(row));
+        assertEquals("Not placed at tick 2", world.replayProblem(row));
         assertTrue(world.hasProblem(row));
         world.setReplayRow(-1);
         world.setReplayRow(0);

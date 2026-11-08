@@ -1,5 +1,7 @@
 package de.legoshi.parkourcalc.core.ui;
 
+import de.legoshi.parkourcalc.core.ui.theme.Fonts;
+import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
 import imgui.ImGui;
 import imgui.ImGuiIO;
 import imgui.flag.ImGuiCol;
@@ -75,9 +77,28 @@ public final class HudMessagesPanel {
     private void renderStatus(String status) {
         if (status == null) return;
         float[] c = colorOf(messages.getStatusColor());
-        ImGui.pushStyleColor(ImGuiCol.Text, c[0], c[1], c[2], c[3]);
-        ImGui.text(status);
-        ImGui.popStyleColor();
+        String[] lines = status.split("\n", -1);
+        String bold = messages.getStatusBoldPrefix();
+        int muted = messages.getStatusMutedLines();
+        for (int i = 0; i < lines.length; i++) {
+            boolean dim = i >= lines.length - muted;
+            if (dim) {
+                ThemeManager.pushTextColor(ThemeManager.textMutedColor());
+            } else {
+                ImGui.pushStyleColor(ImGuiCol.Text, c[0], c[1], c[2], c[3]);
+            }
+            if (i == 0 && bold != null && !bold.isEmpty() && lines[0].startsWith(bold)) {
+                Fonts.pushBold();
+                ImGui.text(bold);
+                Fonts.popBold();
+                ImGui.sameLine(0f, 0f);
+                ImGui.text(lines[0].substring(bold.length()));
+            } else {
+                ImGui.text(lines[i]);
+            }
+            if (dim) ThemeManager.popTextColor();
+            else ImGui.popStyleColor();
+        }
     }
 
     private float[] colorOf(int colorArgb) {

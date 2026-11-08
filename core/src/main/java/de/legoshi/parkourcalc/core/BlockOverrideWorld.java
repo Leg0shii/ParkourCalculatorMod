@@ -141,7 +141,7 @@ public final class BlockOverrideWorld {
             String actual = reader.blockAt(b.x, b.y, b.z);
             if (actual == null || matches(want, BlockOverride.Spec.parse(actual))) continue;
             boolean expectedPlaced = b.activeAtRow(row);
-            replayProblems.put(BlockPatch.posKey(b.x, b.y, b.z), "Tick " + (row + 1) + (expectedPlaced ? ": not placed" : ": still there"));
+            replayProblems.put(BlockPatch.posKey(b.x, b.y, b.z), (expectedPlaced ? "Not placed at tick " : "Still there at tick ") + (row + 1));
             onDesync.desync(b, row + 1, expectedPlaced);
         }
     }
