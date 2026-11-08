@@ -23,11 +23,16 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 //?} else {
-/*import net.minecraft.util.AxisAlignedBB;
+/*import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
+import net.minecraft.world.IBlockAccess;
+import net.minecraft.world.WorldType;
+import net.minecraft.world.biome.BiomeGenBase;
 *///?}
 import net.minecraft.world.World;
 
@@ -200,7 +205,7 @@ public final class ForgeMinecraftAccess implements MinecraftAccess {
         AxisAlignedBB bb = state.getBoundingBox(world, BlockPos.ORIGIN);
         //?} else {
         /*Block block = state.getBlock();
-        block.setBlockBoundsForItemRender();
+        block.setBlockBoundsBasedOnState(new StateAtOrigin(world, state), BlockPos.ORIGIN);
         AxisAlignedBB bb = new AxisAlignedBB(block.getBlockBoundsMinX(), block.getBlockBoundsMinY(), block.getBlockBoundsMinZ(),
                 block.getBlockBoundsMaxX(), block.getBlockBoundsMaxY(), block.getBlockBoundsMaxZ());
         *///?}
@@ -455,4 +460,61 @@ public final class ForgeMinecraftAccess implements MinecraftAccess {
             throw new RuntimeException(cause);
         }
     }
+
+    //? if <1.12 {
+    /*private static final class StateAtOrigin implements IBlockAccess {
+        private final World world;
+        private final IBlockState state;
+
+        StateAtOrigin(World world, IBlockState state) {
+            this.world = world;
+            this.state = state;
+        }
+
+        @Override
+        public TileEntity getTileEntity(BlockPos pos) {
+            return pos.equals(BlockPos.ORIGIN) ? null : world.getTileEntity(pos);
+        }
+
+        @Override
+        public int getCombinedLight(BlockPos pos, int lightValue) {
+            return world.getCombinedLight(pos, lightValue);
+        }
+
+        @Override
+        public IBlockState getBlockState(BlockPos pos) {
+            return pos.equals(BlockPos.ORIGIN) ? state : world.getBlockState(pos);
+        }
+
+        @Override
+        public boolean isAirBlock(BlockPos pos) {
+            return getBlockState(pos).getBlock().getMaterial() == net.minecraft.block.material.Material.air;
+        }
+
+        @Override
+        public BiomeGenBase getBiomeGenForCoords(BlockPos pos) {
+            return world.getBiomeGenForCoords(pos);
+        }
+
+        @Override
+        public boolean extendedLevelsInChunkCache() {
+            return false;
+        }
+
+        @Override
+        public int getStrongPower(BlockPos pos, EnumFacing direction) {
+            return 0;
+        }
+
+        @Override
+        public WorldType getWorldType() {
+            return world.getWorldType();
+        }
+
+        @Override
+        public boolean isSideSolid(BlockPos pos, EnumFacing side, boolean defaultValue) {
+            return getBlockState(pos).getBlock().isSideSolid(this, pos, side);
+        }
+    }
+    *///?}
 }
