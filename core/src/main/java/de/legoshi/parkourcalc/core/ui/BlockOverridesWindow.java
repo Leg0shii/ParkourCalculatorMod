@@ -167,6 +167,8 @@ public final class BlockOverridesWindow implements RenderInterface {
     private void table(BlockOverrides blocks) {
         syncBuffers(blocks);
         float scale = ThemeManager.uiScale();
+        Controls.pushInputFrameHeight();
+        ThemeManager.pushFormRowCellPadding();
         float rowH = ThemeManager.tableRowHeight();
         float headerH = ThemeManager.tableHeaderRowHeight();
         float wanted = headerH + blocks.size() * rowH + 2f * scale;
@@ -174,7 +176,11 @@ public final class BlockOverridesWindow implements RenderInterface {
         int flags = ThemeManager.standardTableFlags();
         if (wanted <= height) flags &= ~ImGuiTableFlags.ScrollY;
         boolean ok = ThemeManager.beginStandardTableWithFlags(TABLE_ID, HEADERS.length, flags, 0f, height);
-        if (!ok) return;
+        if (!ok) {
+            ThemeManager.popFormRowCellPadding();
+            Controls.popInputFrameHeight();
+            return;
+        }
         int fixed = ImGuiTableColumnFlags.WidthFixed;
         ImGui.tableSetupColumn(HEADERS[0], fixed, ThemeManager.tableLeftmostColumnWidth(HEADERS[0], TICK_W * scale));
         ImGui.tableSetupColumn(HEADERS[1], fixed, ThemeManager.tableColumnWidth(HEADERS[1], TICK_W * scale));
@@ -210,6 +216,8 @@ public final class BlockOverridesWindow implements RenderInterface {
             ImGui.popID();
         }
         ThemeManager.endStandardTable();
+        ThemeManager.popFormRowCellPadding();
+        Controls.popInputFrameHeight();
         if (removeAt >= 0) {
             blocks.remove(removeAt);
             posBuffers.remove(removeAt);

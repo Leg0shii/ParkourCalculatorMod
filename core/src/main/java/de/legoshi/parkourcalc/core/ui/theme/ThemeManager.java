@@ -558,6 +558,14 @@ public final class ThemeManager {
         return ImGui.getFrameHeight() + ImGui.getStyle().getCellPadding().y * 2f;
     }
 
+    public static void pushFormRowCellPadding() {
+        ImGui.pushStyleVar(ImGuiStyleVar.CellPadding, ImGui.getStyle().getCellPadding().x, XXS * appliedScale);
+    }
+
+    public static void popFormRowCellPadding() {
+        ImGui.popStyleVar();
+    }
+
     /** Scrollbar-width reservation for tables that never scroll; anchored to the default token so a wider user scrollbar doesn't inflate their right padding. */
     public static float tableFixedScrollbarSlack() {
         return SCROLLBAR_SIZE * appliedScale;
