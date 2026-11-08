@@ -239,6 +239,27 @@ public class BlockOverridesTest {
     }
 
     @Test
+    public void aRayPicksTheNearestOverridePositionEvenWhenItIsAir() {
+        InputData data = new InputData();
+        data.addRows(0, 10);
+        BlockOverrides overrides = data.getBlockOverrides();
+        BlockOverride removed = new BlockOverride(2, 4, 5, 64, 0, "air", "stone");
+        BlockOverride far = new BlockOverride(1, BlockOverride.NO_END, 8, 64, 0, "dirt", "air");
+        overrides.add(removed);
+        overrides.add(far);
+        SelectionManager selection = new SelectionManager(new FakeMinecraftAccess());
+        selection.selectOnly(2);
+        BlockOverrideWorld world = new BlockOverrideWorld(data, selection);
+        Vec3dCore eye = new Vec3dCore(0.5, 64.5, 0.5);
+        Vec3dCore east = new Vec3dCore(1, 0, 0);
+        assertEquals(removed, world.rowAlong(eye, east, 6.0));
+        assertEquals(4.5, world.distanceAlong(eye, east, removed, 6.0), 1e-9);
+        assertEquals(far, world.rowAlong(new Vec3dCore(6.5, 64.5, 0.5), east, 6.0));
+        assertNull(world.rowAlong(eye, east, 4.0));
+        assertNull(world.rowAlong(eye, new Vec3dCore(0, 0, 1), 6.0));
+    }
+
+    @Test
     public void rowsOnTheSamePositionResolveToOneBlockPerTick() {
         BlockOverrides overrides = new BlockOverrides();
         overrides.add(new BlockOverride(15, BlockOverride.NO_END, 36, -60, 9, "acacia_trapdoor[half=top]", "air"));

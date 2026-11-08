@@ -642,9 +642,17 @@ public final class Application {
 
     private WorldPick pickBlockOverride(Vec3dCore rayOrigin, Vec3dCore rayDirection) {
         if (!settings.viewBlockOverrides || !blockOverrideWorld.isAvailable()) return null;
+        double reach = mc.getBlockReach();
+        BlockOverride picked = blockOverrideWorld.rowAlong(rayOrigin, rayDirection, reach);
+        if (picked == null) return null;
         BlockHit hit = mc.getLookedAtHit();
-        if (hit == null) return null;
-        int row = inputData.getBlockOverrides().indexOf(blockOverrideWorld.rowAt(hit.x, hit.y, hit.z));
+        if (hit != null && (hit.x != picked.x || hit.y != picked.y || hit.z != picked.z)) {
+            Vec3dCore toHit = hit.hitVec == null ? null : hit.hitVec.sub(rayOrigin);
+            double world = toHit == null ? -1 : Math.sqrt(toHit.x * toHit.x + toHit.y * toHit.y + toHit.z * toHit.z);
+            double own = blockOverrideWorld.distanceAlong(rayOrigin, rayDirection, picked, reach);
+            if (world >= 0 && world + 1.0e-6 < own) return null;
+        }
+        int row = inputData.getBlockOverrides().indexOf(picked);
         return row < 0 ? null : WorldPick.blockOverride(row);
     }
 

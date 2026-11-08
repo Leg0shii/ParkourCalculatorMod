@@ -159,6 +159,42 @@ public final class BlockOverrideWorld {
         return active != null ? active : first;
     }
 
+    public BlockOverride rowAlong(Vec3dCore origin, Vec3dCore direction, double reach) {
+        BlockOverride best = null;
+        double bestT = reach;
+        for (BlockOverride b : rows()) {
+            double t = cubeHit(origin, direction, b.x, b.y, b.z, bestT);
+            if (t < 0 || (best != null && b.x == best.x && b.y == best.y && b.z == best.z)) continue;
+            bestT = t;
+            best = b;
+        }
+        return best == null ? null : rowAt(best.x, best.y, best.z);
+    }
+
+    public double distanceAlong(Vec3dCore origin, Vec3dCore direction, BlockOverride row, double reach) {
+        return row == null ? -1 : cubeHit(origin, direction, row.x, row.y, row.z, reach);
+    }
+
+    private static double cubeHit(Vec3dCore o, Vec3dCore d, int x, int y, int z, double maxT) {
+        double tmin = 0.0;
+        double tmax = maxT;
+        double[] mins = {x, y, z};
+        double[] os = {o.x, o.y, o.z};
+        double[] ds = {d.x, d.y, d.z};
+        for (int i = 0; i < 3; i++) {
+            if (Math.abs(ds[i]) < 1.0e-12) {
+                if (os[i] < mins[i] || os[i] > mins[i] + 1) return -1;
+                continue;
+            }
+            double t1 = (mins[i] - os[i]) / ds[i];
+            double t2 = (mins[i] + 1 - os[i]) / ds[i];
+            tmin = Math.max(tmin, Math.min(t1, t2));
+            tmax = Math.min(tmax, Math.max(t1, t2));
+            if (tmax < tmin) return -1;
+        }
+        return tmin;
+    }
+
     public boolean isReplaying() {
         return replayRow >= 0;
     }
