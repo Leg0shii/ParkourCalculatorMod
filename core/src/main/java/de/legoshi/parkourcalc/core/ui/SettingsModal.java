@@ -32,6 +32,7 @@ public final class SettingsModal {
     private static final String TT_HIT_DISTANCE_SELECTED = "Limits the hit distance line to the currently selected ticks. Selected-tick lines re-cast every frame, so they also track world edits instantly.";
     private static final String TT_HIT_DISTANCE_GAME_REACH = "Uses the current game mode's block reach for the hit distance line (5.0 in creative) instead of the survival reach of 4.5.";
     private static final String TT_HITBOX = "Draws the player's hitbox at the currently selected tick.";
+    private static final String TT_BLOCK_OUTLINES_REPLAY = "Keeps the Block Overrides outlines in the world while a replay runs. Off by default so the recording shows only the blocks.";
     private static final String TT_FULL_HITBOX = "Draws hitboxes for every tick in the TAS, not just the active one. Heavy on long TASes.";
     private static final String TT_SUBTICK = "Renders the interpolated path between adjacent ticks, exposing collision moments inside a tick.";
     private static final String TT_COL_EFFECTS = "Adds a per-tick Effects column to the input table (Speed, Slowness, Jump Boost and the other movement effects this version has). Click a cell to edit it.";
@@ -386,6 +387,7 @@ public final class SettingsModal {
             checkboxRow("Lockstep replay", "##lockstep_replay", settings.lockstepReplay, TT_LOCKSTEP_REPLAY, v -> settings.lockstepReplay = v);
             checkboxRow("Disable creative flight", "##disable_flight_playback", settings.disableFlightDuringPlayback, TT_DISABLE_FLIGHT_PLAYBACK, v -> settings.disableFlightDuringPlayback = v);
             checkboxRow("Keep tick boxes shown", "##keep_boxes_playback", settings.keepBoxesDuringPlayback, TT_KEEP_BOXES_PLAYBACK, v -> settings.keepBoxesDuringPlayback = v);
+            checkboxRow("Block outlines during replay", "##block_outlines_playback", settings.blockOverrideOutlinesDuringReplay, TT_BLOCK_OUTLINES_REPLAY, v -> settings.blockOverrideOutlinesDuringReplay = v);
             ThemeManager.endStandardFormTable();
         }
     }

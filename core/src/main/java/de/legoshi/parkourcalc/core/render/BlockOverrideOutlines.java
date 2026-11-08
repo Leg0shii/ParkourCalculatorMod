@@ -28,6 +28,7 @@ public final class BlockOverrideOutlines {
 
     public static boolean shouldRender(Settings settings, BlockOverrideWorld world) {
         if (world == null || !world.isAvailable()) return false;
+        if (world.isReplaying() && !settings.blockOverrideOutlinesDuringReplay) return false;
         return world.preview() != null || (settings.viewBlockOverrides && !world.rows().isEmpty());
     }
 

@@ -92,6 +92,7 @@ public final class Settings {
     private static final boolean DEFAULT_SENSE_FINDER_COUNT_VIEW = false;
     private static final boolean DEFAULT_VIEW_RECORDER = false;
     private static final boolean DEFAULT_VIEW_BLOCK_OVERRIDES = false;
+    private static final boolean DEFAULT_BLOCK_OVERRIDE_OUTLINES_DURING_REPLAY = false;
     private static final boolean DEFAULT_VIEW_KEYSTROKES = false;
     private static final int DEFAULT_TURN_PROFILE_ATTEMPTS = 20_000;
     private static final int DEFAULT_ONEJUMP_SPREAD_ATTEMPTS = 1000;
@@ -251,6 +252,7 @@ public final class Settings {
     public boolean onejumpStopTurnOnFail = false;
     public boolean viewRecorder = DEFAULT_VIEW_RECORDER;
     public boolean viewBlockOverrides = DEFAULT_VIEW_BLOCK_OVERRIDES;
+    public boolean blockOverrideOutlinesDuringReplay = DEFAULT_BLOCK_OVERRIDE_OUTLINES_DURING_REPLAY;
     public boolean viewKeystrokes = DEFAULT_VIEW_KEYSTROKES;
     public boolean viewMouseStrokes = DEFAULT_VIEW_KEYSTROKES;
     public boolean viewMouseMovement = DEFAULT_VIEW_KEYSTROKES;
@@ -389,6 +391,7 @@ public final class Settings {
         onejumpStopTurnOnFail = false;
         viewRecorder = DEFAULT_VIEW_RECORDER;
         viewBlockOverrides = DEFAULT_VIEW_BLOCK_OVERRIDES;
+        blockOverrideOutlinesDuringReplay = DEFAULT_BLOCK_OVERRIDE_OUTLINES_DURING_REPLAY;
         viewKeystrokes = DEFAULT_VIEW_KEYSTROKES;
         viewMouseStrokes = DEFAULT_VIEW_KEYSTROKES;
         viewMouseMovement = DEFAULT_VIEW_KEYSTROKES;

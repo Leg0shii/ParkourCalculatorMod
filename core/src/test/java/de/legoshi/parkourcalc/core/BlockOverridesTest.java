@@ -189,6 +189,11 @@ public class BlockOverridesTest {
         pc.start(0, data.size(), Vec3dCore.ZERO, Vec3dCore.ZERO, 0f, new de.legoshi.parkourcalc.core.sim.Checkpoint() {
         });
         assertTrue(world.isReplaying());
+        settings.viewBlockOverrides = true;
+        assertFalse(BlockOverrideOutlines.shouldRender(settings, world));
+        settings.blockOverrideOutlinesDuringReplay = true;
+        assertTrue(BlockOverrideOutlines.shouldRender(settings, world));
+        settings.blockOverrideOutlinesDuringReplay = false;
         assertEquals(0, world.viewRow());
         pc.tick();
         assertEquals(0, world.viewRow());
@@ -200,6 +205,7 @@ public class BlockOverridesTest {
         assertEquals(Collections.singletonList(patch(1, 64, 1, "stone")), patcher.last());
         pc.stop();
         assertFalse(world.isReplaying());
+        assertTrue(BlockOverrideOutlines.shouldRender(settings, world));
         assertEquals(0, world.viewRow());
         assertEquals(Collections.singletonList(patch(1, 64, 1, "stone")), patcher.last());
     }
