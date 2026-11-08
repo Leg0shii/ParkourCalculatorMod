@@ -22,6 +22,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.EmptyBlockGetter;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -151,6 +152,17 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
     @Override
     public Map<String, List<String>> blockStateOptions(String id) {
         return BlockOverridePlacer.stateOptions(id);
+    }
+
+    @Override
+    public List<AABB> blockShape(String spec) {
+        List<AABB> out = new ArrayList<>();
+        BlockState state = BlockOverridePlacer.state(spec);
+        if (state == null) return out;
+        for (net.minecraft.world.phys.AABB bb : state.getShape(EmptyBlockGetter.INSTANCE, BlockPos.ZERO).toAabbs()) {
+            out.add(new AABB(new Vec3dCore(bb.minX, bb.minY, bb.minZ), new Vec3dCore(bb.maxX, bb.maxY, bb.maxZ)));
+        }
+        return out;
     }
 
     @Override

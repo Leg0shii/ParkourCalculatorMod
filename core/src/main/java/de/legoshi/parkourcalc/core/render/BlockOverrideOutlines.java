@@ -8,6 +8,8 @@ import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.BoxStyle;
 import de.legoshi.parkourcalc.core.ui.Settings;
 
+import java.util.List;
+
 public final class BlockOverrideOutlines {
 
     public static final double EDGE_THICKNESS = 0.04;
@@ -43,20 +45,32 @@ public final class BlockOverrideOutlines {
         for (BlockOverride b : world.rows()) {
             if (!b.spec().valid()) continue;
             if (b.activeAtRow(row)) {
-                cube(faces, b.x, b.y, b.z, placed, false, EDGE_THICKNESS);
+                shape(faces, world.shape(b.block), b.x, b.y, b.z, placed, false, EDGE_THICKNESS);
             } else if (b.aheadOfRow(row)) {
-                cube(faces, b.x, b.y, b.z, ahead, true, EDGE_THICKNESS);
+                shape(faces, world.shape(b.block), b.x, b.y, b.z, ahead, true, EDGE_THICKNESS);
             }
         }
     }
 
+    private static void shape(BoxRenderer faces, List<AABB> boxes, int bx, int by, int bz, int argb, boolean dashed, double thickness) {
+        for (AABB box : boxes) {
+            edges(faces, bx + box.min.x, by + box.min.y, bz + box.min.z, bx + box.max.x, by + box.max.y, bz + box.max.z,
+                    argb, dashed, thickness);
+        }
+    }
+
     private static void cube(BoxRenderer faces, int bx, int by, int bz, int argb, boolean dashed, double thickness) {
-        double x0 = bx - INSET;
-        double y0 = by - INSET;
-        double z0 = bz - INSET;
-        double x1 = bx + 1 + INSET;
-        double y1 = by + 1 + INSET;
-        double z1 = bz + 1 + INSET;
+        edges(faces, bx, by, bz, bx + 1, by + 1, bz + 1, argb, dashed, thickness);
+    }
+
+    private static void edges(BoxRenderer faces, double minX, double minY, double minZ, double maxX, double maxY, double maxZ,
+                              int argb, boolean dashed, double thickness) {
+        double x0 = minX - INSET;
+        double y0 = minY - INSET;
+        double z0 = minZ - INSET;
+        double x1 = maxX + INSET;
+        double y1 = maxY + INSET;
+        double z1 = maxZ + INSET;
         double[][] c = {
                 {x0, y0, z0}, {x1, y0, z0}, {x0, y1, z0}, {x1, y1, z0},
                 {x0, y0, z1}, {x1, y0, z1}, {x0, y1, z1}, {x1, y1, z1}

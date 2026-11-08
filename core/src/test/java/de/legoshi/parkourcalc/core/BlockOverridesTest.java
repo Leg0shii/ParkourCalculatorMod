@@ -1,10 +1,13 @@
 package de.legoshi.parkourcalc.core;
 
 import de.legoshi.parkourcalc.core.ports.BlockPatcher;
+import de.legoshi.parkourcalc.core.ports.BoxRenderer;
+import de.legoshi.parkourcalc.core.render.BlockOverrideOutlines;
 import de.legoshi.parkourcalc.core.save.FileSystemSaveStore;
 import de.legoshi.parkourcalc.core.save.Result;
 import de.legoshi.parkourcalc.core.save.SaveFile;
 import de.legoshi.parkourcalc.core.save.SaveIO;
+import de.legoshi.parkourcalc.core.sim.AABB;
 import de.legoshi.parkourcalc.core.sim.BlockOverride;
 import de.legoshi.parkourcalc.core.sim.BlockPatch;
 import de.legoshi.parkourcalc.core.sim.SimulationRunner;
@@ -291,5 +294,51 @@ public class BlockOverridesTest {
         assertNull(plainFile.blockOverrides);
         SaveIO.applyBlockOverridesTo(plainFile, out);
         assertTrue(out.getBlockOverrides().isEmpty());
+    }
+
+    @Test
+    public void outlinesFollowTheBlockShape() {
+        InputData data = rows(10);
+        SelectionManager selection = new SelectionManager(new FakeMinecraftAccess());
+        BlockOverrideWorld world = new BlockOverrideWorld(data, selection);
+        world.setPatcher(new FakePatcher());
+        world.setShapeSource(new BlockOverrideWorld.ShapeSource() {
+            @Override
+            public List<AABB> shape(String spec) {
+                if (spec.startsWith("player_head")) {
+                    return Collections.singletonList(new AABB(new Vec3dCore(0.25, 0, 0.25), new Vec3dCore(0.75, 0.5, 0.75)));
+                }
+                return Collections.<AABB>emptyList();
+            }
+        });
+        data.getBlockOverrides().add(new BlockOverride(1, BlockOverride.NO_END, 10, 64, 10, "player_head", "air"));
+        data.getBlockOverrides().add(new BlockOverride(1, BlockOverride.NO_END, 20, 64, 20, "stone", "air"));
+        Settings settings = new Settings();
+        settings.viewBlockOverrides = true;
+        final List<AABB> drawn = new ArrayList<AABB>();
+        BlockOverrideOutlines.render(new BoxRenderer() {
+            @Override
+            public void drawBox(AABB box, int argb) {
+                drawn.add(box);
+            }
+
+            @Override
+            public void drawLine(double x1, double y1, double z1, double x2, double y2, double z2, int argb) {
+            }
+
+            @Override
+            public void drawTriangle(double x1, double y1, double z1, double x2, double y2, double z2,
+                                     double x3, double y3, double z3, int argb) {
+            }
+        }, settings, world);
+
+        double headTop = Double.NEGATIVE_INFINITY;
+        double stoneTop = Double.NEGATIVE_INFINITY;
+        for (AABB box : drawn) {
+            if (box.min.x >= 10 && box.max.x <= 11) headTop = Math.max(headTop, box.max.y);
+            if (box.min.x >= 19.9 && box.max.x <= 21.1) stoneTop = Math.max(stoneTop, box.max.y);
+        }
+        assertEquals(64.5, headTop, 0.05);
+        assertEquals(65, stoneTop, 0.05);
     }
 }

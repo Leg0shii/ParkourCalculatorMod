@@ -145,6 +145,7 @@ public final class Application {
         this.blockOverrideWorld = new BlockOverrideWorld(inputData, selection);
         this.playback.setOnReplayRow(blockOverrideWorld::setReplayRow);
         this.blockOverrideWorld.setBlockReader(mc::describeBlockState);
+        this.blockOverrideWorld.setShapeSource(mc::blockShape);
         this.blockOverrideWorld.setOnDesync((row, tick, expectedPlaced) -> pushHudMessage(
                 "Tick " + tick + ": block at " + row.x + " " + row.y + " " + row.z
                         + (expectedPlaced ? " not placed" : " still there"), HudMessageStyle.COLOR_WARN));

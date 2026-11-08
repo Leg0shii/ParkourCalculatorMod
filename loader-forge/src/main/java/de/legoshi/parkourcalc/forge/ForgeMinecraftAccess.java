@@ -8,8 +8,7 @@ import de.legoshi.parkourcalc.forge.sim.ForgeSimulator;
 import de.legoshi.parkourcalc.forge.sim.BlockOverridePlacer;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockBasePressurePlate;
-//? if <1.12
-//import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.multiplayer.PlayerControllerMP;
@@ -189,6 +188,24 @@ public final class ForgeMinecraftAccess implements MinecraftAccess {
     @Override
     public Map<String, List<String>> blockStateOptions(String id) {
         return BlockOverridePlacer.stateOptions(id);
+    }
+
+    @Override
+    public List<AABB> blockShape(String spec) {
+        List<AABB> out = new ArrayList<AABB>();
+        IBlockState state = BlockOverridePlacer.state(spec);
+        World world = McClient.world();
+        if (state == null || world == null) return out;
+        //? if >=1.12 {
+        AxisAlignedBB bb = state.getBoundingBox(world, BlockPos.ORIGIN);
+        //?} else {
+        /*Block block = state.getBlock();
+        block.setBlockBoundsForItemRender();
+        AxisAlignedBB bb = new AxisAlignedBB(block.getBlockBoundsMinX(), block.getBlockBoundsMinY(), block.getBlockBoundsMinZ(),
+                block.getBlockBoundsMaxX(), block.getBlockBoundsMaxY(), block.getBlockBoundsMaxZ());
+        *///?}
+        out.add(new AABB(new Vec3dCore(bb.minX, bb.minY, bb.minZ), new Vec3dCore(bb.maxX, bb.maxY, bb.maxZ)));
+        return out;
     }
 
     @Override

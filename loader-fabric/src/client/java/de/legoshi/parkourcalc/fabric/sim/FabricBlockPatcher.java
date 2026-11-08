@@ -11,11 +11,14 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public final class FabricBlockPatcher implements BlockPatcher {
 
     private static final int SET_FLAGS = 2 | 16;
+    private static final Set<BlockPos> OWN_BLOCK_ENTITIES = new HashSet<>();
 
     @Override
     public boolean isAvailable() {
@@ -51,8 +54,13 @@ public final class FabricBlockPatcher implements BlockPatcher {
             BlockState state = (BlockState) r[1];
             if (!level.hasChunk(pos.getX() >> 4, pos.getZ() >> 4)) continue;
             if (level.getBlockState(pos) == state) continue;
-            if (level.getBlockEntity(pos) != null) continue;
+            if (level.getBlockEntity(pos) != null && !OWN_BLOCK_ENTITIES.contains(pos)) continue;
             level.setBlock(pos, state, SET_FLAGS);
+            if (level.getBlockEntity(pos) != null) {
+                OWN_BLOCK_ENTITIES.add(pos.immutable());
+            } else {
+                OWN_BLOCK_ENTITIES.remove(pos);
+            }
         }
     }
 }

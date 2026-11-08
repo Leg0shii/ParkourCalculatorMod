@@ -123,6 +123,10 @@ public interface MinecraftAccess {
         return getCollisionBoxes(x, y, z, x, y, z);
     }
 
+    default List<AABB> blockShape(String spec) {
+        return Collections.singletonList(new AABB(new Vec3dCore(0, 0, 0), new Vec3dCore(1, 1, 1)));
+    }
+
     default double getEyeHeight(boolean sneaking) {
         return 1.62;
     }

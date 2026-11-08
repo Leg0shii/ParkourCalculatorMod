@@ -1,9 +1,11 @@
 package de.legoshi.parkourcalc.core;
 
 import de.legoshi.parkourcalc.core.ports.BlockPatcher;
+import de.legoshi.parkourcalc.core.sim.AABB;
 import de.legoshi.parkourcalc.core.sim.BlockOverride;
 import de.legoshi.parkourcalc.core.sim.BlockOverrides;
 import de.legoshi.parkourcalc.core.sim.BlockPatch;
+import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputData;
 import de.legoshi.parkourcalc.core.ui.SelectionManager;
 
@@ -19,6 +21,12 @@ public final class BlockOverrideWorld {
     private final SelectionManager selection;
     private BlockPatcher patcher;
     private BlockReader reader;
+    private ShapeSource shapes = new ShapeSource() {
+        @Override
+        public List<AABB> shape(String spec) {
+            return Collections.singletonList(FULL_CUBE);
+        }
+    };
     private DesyncListener onDesync = new DesyncListener() {
         @Override
         public void desync(BlockOverride row, int tick, boolean expectedPlaced) {
@@ -41,6 +49,22 @@ public final class BlockOverrideWorld {
 
     public interface BlockReader {
         String blockAt(int x, int y, int z);
+    }
+
+    public interface ShapeSource {
+        List<AABB> shape(String spec);
+    }
+
+    public static final AABB FULL_CUBE = new AABB(new Vec3dCore(0, 0, 0), new Vec3dCore(1, 1, 1));
+
+    public void setShapeSource(ShapeSource source) {
+        this.shapes = source;
+    }
+
+    public List<AABB> shape(String spec) {
+        List<AABB> boxes = shapes.shape(spec);
+        if (boxes == null || boxes.isEmpty()) return Collections.singletonList(FULL_CUBE);
+        return boxes;
     }
 
     public interface DesyncListener {

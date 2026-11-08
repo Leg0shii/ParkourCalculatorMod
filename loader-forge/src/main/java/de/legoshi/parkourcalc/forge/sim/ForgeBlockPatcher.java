@@ -16,12 +16,15 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public final class ForgeBlockPatcher implements BlockPatcher {
 
     //? if >=1.12 {
     private static final int SET_FLAGS = 2 | 16;
+    private static final Set<BlockPos> OWN_TILE_ENTITIES = new HashSet<BlockPos>();
     //?} else {
     /*private static final int SET_FLAGS = 2;
     *///?}
@@ -71,8 +74,13 @@ public final class ForgeBlockPatcher implements BlockPatcher {
             /*if (world.getChunkFromChunkCoords(pos.getX() >> 4, pos.getZ() >> 4).isEmpty()) continue;
             *///?}
             if (world.getBlockState(pos) == state) continue;
-            if (world.getTileEntity(pos) != null) continue;
+            if (world.getTileEntity(pos) != null && !OWN_TILE_ENTITIES.contains(pos)) continue;
             world.setBlockState(pos, state, SET_FLAGS);
+            if (world.getTileEntity(pos) != null) {
+                OWN_TILE_ENTITIES.add(pos);
+            } else {
+                OWN_TILE_ENTITIES.remove(pos);
+            }
         }
     }
 }
