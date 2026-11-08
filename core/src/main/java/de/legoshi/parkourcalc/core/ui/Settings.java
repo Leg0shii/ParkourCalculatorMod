@@ -34,7 +34,7 @@ public final class Settings {
     private static final float[] DEFAULT_BLOCK_OVERRIDE_AHEAD = {0.796f, 0.651f, 0.969f, 0.80f};
     private static final float[] DEFAULT_BLOCK_OVERRIDE_SELECTED = {0.976f, 0.886f, 0.686f, 0.95f};
     private static final float[] DEFAULT_BLOCK_OVERRIDE_SELECTED_ROW = {0.976f, 0.886f, 0.686f, 0.30f};
-    public static final float DEFAULT_BLOCK_OVERRIDE_OUTLINE_WIDTH = 0.04f;
+    public static final float DEFAULT_BLOCK_OVERRIDE_OUTLINE_WIDTH = 0.015f;
     public static final float MIN_BLOCK_OVERRIDE_OUTLINE_WIDTH = 0.01f;
     public static final float MAX_BLOCK_OVERRIDE_OUTLINE_WIDTH = 0.15f;
 
