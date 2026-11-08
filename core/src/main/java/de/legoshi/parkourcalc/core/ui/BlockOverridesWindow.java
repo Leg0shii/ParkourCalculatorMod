@@ -8,7 +8,6 @@ import de.legoshi.parkourcalc.core.sim.BlockHit;
 import de.legoshi.parkourcalc.core.sim.BlockOverride;
 import de.legoshi.parkourcalc.core.sim.BlockOverrides;
 import de.legoshi.parkourcalc.core.ui.anglesolver.SolverWidgets;
-import de.legoshi.parkourcalc.core.ui.theme.Controls;
 import de.legoshi.parkourcalc.core.ui.theme.Fonts;
 import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
 import de.legoshi.parkourcalc.core.ui.util.TooltipUtil;
@@ -53,17 +52,22 @@ public final class BlockOverridesWindow implements RenderInterface {
     private static final float DELETE_W = 34f;
     private static final float CROSS_W = 28f;
     private static final float POS_GAP = 4f;
-    private static final float FRAME_H = 24f;
+    private static final float FRAME_H = 26f;
+    private static final float BUTTON_PAD_X = 10f;
+    private static final float TOOLBAR_GAP = 10f;
     private static final float ROW_H = 32f;
     private static final float HEADER_H = 26f;
     private static final float CELL_PAD_X = 3f;
-    private static final float CELL_PAD_Y = 4f;
+    private static final float CELL_PAD_Y = 3f;
     private static final float FRAME_PAD_X = 6f;
     private static final float PICKER_W = 300f;
     private static final float PICKER_PAD = 8f;
     private static final float PICKER_ROW_H = 24f;
-    private static final float SEARCH_H = 26f;
-    private static final float STATE_H = 22f;
+    private static final float SEARCH_H = 28f;
+    private static final float STATE_H = 24f;
+    private static final float STATE_LABEL_GAP = 8f;
+    private static final float COMBO_PAD_X = 8f;
+    private static final float COMBO_PAD_Y = 4f;
     private static final float STATE_GAP_Y = 6f;
     private static final float STATE_GAP_X = 8f;
     private static final float STATE_PAD_X = 4f;
@@ -143,18 +147,13 @@ public final class BlockOverridesWindow implements RenderInterface {
     private void body() {
         BlockOverrides blocks = inputData.getBlockOverrides();
         boolean available = world.isAvailable();
-        if (available) {
-            if (Controls.primaryButton("Place block")) placing.startPlace();
-            TooltipUtil.onHover("Aim at a face and left click. Uses the block in your hand.");
-            ImGui.sameLine();
-            if (Controls.secondaryButton("Change block")) placing.startChange();
-            TooltipUtil.onHover("Aim at a block and right click. The row starts with that block.");
-        } else {
-            Controls.disabledButton("Place block");
-            ImGui.sameLine();
-            Controls.disabledButton("Change block");
-        }
+        if (toolbarButton("Place block", available ? 1 : -1)) placing.startPlace();
+        if (available) TooltipUtil.onHover("Aim at a face and left click. Uses the block in your hand.");
         ImGui.sameLine();
+        if (toolbarButton("Change block", available ? 0 : -1)) placing.startChange();
+        if (available) TooltipUtil.onHover("Aim at a block and right click. The row starts with that block.");
+        ImGui.sameLine();
+        ImGui.alignTextToFramePadding();
         ImGui.textDisabled("(?)");
         TooltipUtil.onHover(HELP);
         if (!available) {
@@ -167,15 +166,36 @@ public final class BlockOverridesWindow implements RenderInterface {
             float w = ImGui.calcTextSize(shown).x;
             ImGui.sameLine(ImGui.getWindowContentRegionMaxX() - w);
             ThemeManager.pushTextColor(ThemeManager.textMutedColor());
+            ImGui.alignTextToFramePadding();
             ImGui.text(shown);
             ThemeManager.popTextColor();
         }
-        ImGui.spacing();
+        ImGui.setCursorPosY(ImGui.getCursorPosY() - ImGui.getStyle().getItemSpacingY() + TOOLBAR_GAP * ThemeManager.uiScale());
         if (blocks.isEmpty()) {
             ImGui.textDisabled("No blocks.");
             return;
         }
         table(blocks);
+    }
+
+    private boolean toolbarButton(String label, int kind) {
+        float scale = ThemeManager.uiScale();
+        float h = FRAME_H * scale;
+        float w = ImGui.calcTextSize(label).x + 2f * BUTTON_PAD_X * scale;
+        ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, BUTTON_PAD_X * scale, Math.max(0f, (h - ImGui.getFontSize()) * 0.5f));
+        if (kind > 0) ThemeManager.pushPrimaryButton();
+        if (kind < 0) {
+            ThemeManager.pushDisabledButton();
+            ImGui.beginDisabled();
+        }
+        boolean clicked = ImGui.button(label, w, h);
+        if (kind < 0) {
+            ImGui.endDisabled();
+            ThemeManager.popDisabledButton();
+        }
+        if (kind > 0) ThemeManager.popPrimaryButton();
+        ImGui.popStyleVar();
+        return clicked && kind >= 0;
     }
 
     private void table(BlockOverrides blocks) {
@@ -184,7 +204,7 @@ public final class BlockOverridesWindow implements RenderInterface {
         float rowH = ROW_H * scale;
         float headerH = HEADER_H * scale;
         float wanted = headerH + blocks.size() * rowH + 2f * scale;
-        float height = Math.min(wanted, Math.max(headerH + rowH, ImGui.getContentRegionAvailY()));
+        float height = Math.max(headerH + rowH, ImGui.getContentRegionAvailY());
         int flags = ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.BordersOuter
                 | (wanted > height ? ImGuiTableFlags.ScrollY : 0);
         ImGui.pushStyleVar(ImGuiStyleVar.CellPadding, CELL_PAD_X * scale, CELL_PAD_Y * scale);
@@ -660,7 +680,7 @@ public final class BlockOverridesWindow implements RenderInterface {
         if (selected) {
             dl.addRectFilled(mn.x, mn.y, mx.x, mx.y, ThemeManager.accentTintColor(0.45f));
         } else if (hover) {
-            dl.addRectFilled(mn.x, mn.y, mx.x, mx.y, ThemeManager.accentTintColor(0.18f));
+            dl.addRectFilled(mn.x, mn.y, mx.x, mx.y, ThemeManager.accentTintColor(0.25f));
         }
         float padX = 8f * scale;
         float ty = mn.y + (rowH - ImGui.getFontSize()) * 0.5f;
@@ -687,6 +707,11 @@ public final class BlockOverridesWindow implements RenderInterface {
         float labelX = ImGui.getCursorPosX() + STATE_PAD_X * scale;
         float right = ImGui.getCursorPosX() + ImGui.getContentRegionAvailX() - STATE_PAD_X * scale;
         float arrowW = 20f * scale;
+        float labelW = PICKER_LABEL_W * scale;
+        for (String key : options.keySet()) {
+            labelW = Math.max(labelW, ImGui.calcTextSize(key).x + STATE_LABEL_GAP * scale);
+        }
+        float rowH = PICKER_ROW_H * scale;
         for (Map.Entry<String, List<String>> e : options.entrySet()) {
             String key = e.getKey();
             String current = spec.properties.get(key);
@@ -697,25 +722,55 @@ public final class BlockOverridesWindow implements RenderInterface {
             ThemeManager.pushTextColor(ThemeManager.textMutedColor());
             ImGui.text(key);
             ThemeManager.popTextColor();
-            ImGui.sameLine(labelX + PICKER_LABEL_W * scale);
+            ImGui.sameLine(labelX + labelW);
             ImGui.setNextItemWidth(right - ImGui.getCursorPosX());
+            ImGui.pushStyleVar(ImGuiStyleVar.WindowPadding, 0f, COMBO_PAD_Y * scale);
+            ImGui.pushStyleVar(ImGuiStyleVar.PopupBorderSize, 1f);
+            ImGui.pushStyleColor(ImGuiCol.PopupBg, rgba(LIST_BG));
+            ImGui.pushStyleColor(ImGuiCol.Header, ThemeManager.accentTintColor(0.45f));
+            ImGui.pushStyleColor(ImGuiCol.HeaderHovered, ThemeManager.accentTintColor(0.25f));
+            ImGui.pushStyleColor(ImGuiCol.HeaderActive, ThemeManager.accentTintColor(0.35f));
             boolean open = ImGui.beginCombo("##" + key, current, ImGuiComboFlags.NoArrowButton);
             ImVec2 mx = ImGui.getItemRectMax();
             ImVec2 mn = ImGui.getItemRectMin();
             SolverWidgets.triangleDown(ImGui.getWindowDrawList(), mx.x - arrowW * 0.5f, (mn.y + mx.y) * 0.5f,
                     3.3f * scale, ThemeManager.textMutedColor());
             if (open) {
+                ImGui.pushStyleVar(ImGuiStyleVar.ItemSpacing, 0f, 0f);
+                ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, COMBO_PAD_X * scale, (rowH - ImGui.getFontSize()) * 0.5f);
                 for (String value : e.getValue()) {
-                    if (ImGui.selectable(value, value.equals(current)) && !value.equals(current)) {
+                    boolean picked = comboEntry(value, value.equals(current), rowH);
+                    if (picked && !value.equals(current)) {
                         update(blocks, i, b.withBlock(spec.withProperty(key, value).text()), b);
                         b = blocks.get(i);
                         spec = b.spec();
                     }
                 }
+                ImGui.popStyleVar(2);
                 ImGui.endCombo();
             }
+            ImGui.popStyleColor(4);
+            ImGui.popStyleVar(2);
         }
         ImGui.popStyleVar(2);
+    }
+
+    private boolean comboEntry(String value, boolean selected, float rowH) {
+        float scale = ThemeManager.uiScale();
+        float w = ImGui.getContentRegionAvailX();
+        boolean clicked = ImGui.invisibleButton("##v" + value, Math.max(1f, w), rowH);
+        boolean hover = ImGui.isItemHovered();
+        ImVec2 mn = ImGui.getItemRectMin();
+        ImVec2 mx = ImGui.getItemRectMax();
+        ImDrawList dl = ImGui.getWindowDrawList();
+        if (selected) {
+            dl.addRectFilled(mn.x, mn.y, mx.x, mx.y, ThemeManager.accentTintColor(0.45f));
+        } else if (hover) {
+            dl.addRectFilled(mn.x, mn.y, mx.x, mx.y, ThemeManager.accentTintColor(0.25f));
+        }
+        dl.addText(mn.x + COMBO_PAD_X * scale, mn.y + (rowH - ImGui.getFontSize()) * 0.5f, ThemeManager.textColor(), value);
+        if (clicked) ImGui.closeCurrentPopup();
+        return clicked;
     }
 
     private String errorOf(String spec) {
