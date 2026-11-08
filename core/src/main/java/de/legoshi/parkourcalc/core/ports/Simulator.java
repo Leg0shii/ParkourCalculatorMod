@@ -3,7 +3,7 @@ package de.legoshi.parkourcalc.core.ports;
 import de.legoshi.parkourcalc.core.anglesolver.FlowVector;
 import de.legoshi.parkourcalc.core.anglesolver.Medium;
 import de.legoshi.parkourcalc.core.sim.Checkpoint;
-import de.legoshi.parkourcalc.core.sim.BlockOverride;
+import de.legoshi.parkourcalc.core.sim.BlockPatch;
 import de.legoshi.parkourcalc.core.sim.ServerSimEvent;
 import de.legoshi.parkourcalc.core.sim.StartResumeState;
 import de.legoshi.parkourcalc.core.sim.ServerTickSample;
@@ -24,7 +24,7 @@ public interface Simulator {
 
     void tick();
 
-    default void setBlockOverrides(List<BlockOverride> active) {
+    default void setBlockPatches(List<BlockPatch> patches) {
     }
 
     Vec3dCore getCurrentPosition();

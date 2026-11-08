@@ -76,14 +76,14 @@ public final class SimulationRunner {
         try {
             replayRows(startRow, rows, blockOverrides);
         } finally {
-            simulator.setBlockOverrides(Collections.<BlockOverride>emptyList());
+            simulator.setBlockPatches(Collections.<BlockPatch>emptyList());
         }
     }
 
     private void replayRows(int startRow, List<InputRow> rows, BlockOverrides blockOverrides) {
         for (int i = startRow; i < rows.size(); i++) {
             InputRow row = rows.get(i);
-            simulator.setBlockOverrides(blockOverrides.activeAtRow(i));
+            simulator.setBlockPatches(blockOverrides.patchesAtRow(i));
             if (row.isTeleportEnabled()) {
                 simulator.teleport(
                         new Vec3dCore(row.getTeleportX(), row.getTeleportY(), row.getTeleportZ()),

@@ -60,6 +60,14 @@ public final class BoxStyle {
         return toArgb(c[0], c[1], c[2], c[3]);
     }
 
+    public static int blockOverridePlacedArgb(Settings settings) {
+        return toArgb(settings.blockOverridePlaced);
+    }
+
+    public static int blockOverrideAheadArgb(Settings settings) {
+        return toArgb(settings.blockOverrideAhead);
+    }
+
     public static int yawGizmoCircleArgb(Settings settings) {
         float[] c = settings.yawGizmoCircle;
         return toArgb(c[0], c[1], c[2], c[3]);

@@ -1,6 +1,7 @@
 package de.legoshi.parkourcalc.forge.sim;
 
 import de.legoshi.parkourcalc.core.sim.BlockOverride;
+import de.legoshi.parkourcalc.core.sim.BlockPatch;
 import net.minecraft.block.Block;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.state.IBlockState;
@@ -45,10 +46,10 @@ public final class BlockOverridePlacer {
         }
     }
 
-    public static Runnable place(World world, List<BlockOverride> blocks) {
+    public static Runnable place(World world, List<BlockPatch> blocks) {
         if (world == null || blocks.isEmpty()) return null;
         final List<Placed> placed = new ArrayList<Placed>();
-        for (BlockOverride b : blocks) {
+        for (BlockPatch b : blocks) {
             IBlockState state = state(b.block);
             if (state == null) continue;
             //? if >=1.12 {

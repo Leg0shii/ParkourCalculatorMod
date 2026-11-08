@@ -59,13 +59,13 @@ public final class BlockOverrides {
         modCount++;
     }
 
-    public List<BlockOverride> activeAtRow(int row) {
-        List<BlockOverride> active = null;
+    public List<BlockPatch> patchesAtRow(int row) {
+        if (blocks.isEmpty()) return Collections.emptyList();
+        List<BlockPatch> patches = new ArrayList<BlockPatch>(blocks.size());
         for (BlockOverride b : blocks) {
-            if (!b.activeAtRow(row) || !b.spec().valid()) continue;
-            if (active == null) active = new ArrayList<BlockOverride>();
-            active.add(b);
+            BlockPatch p = b.patchAtRow(row);
+            if (p != null) patches.add(p);
         }
-        return active == null ? Collections.<BlockOverride>emptyList() : active;
+        return patches;
     }
 }

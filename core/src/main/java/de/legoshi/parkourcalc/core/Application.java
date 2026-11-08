@@ -118,6 +118,7 @@ public final class Application {
     private de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverWindow angleSolverWindow;
     private NoTurnSearchController noTurnSearch;
     private SenseSearchController senseSearch;
+    private final BlockOverrideWorld blockOverrideWorld;
 
     public Application(Simulator simulator, MinecraftAccess mc) {
         this.mc = mc;
@@ -140,6 +141,8 @@ public final class Application {
         );
         this.playback = new PlaybackController(inputData, runner, settings);
         this.playback.setStartRangeResolver(this::resolvePlaybackStartRange);
+        this.blockOverrideWorld = new BlockOverrideWorld(inputData, selection);
+        this.playback.setOnReplayRow(blockOverrideWorld::setReplayRow);
         this.recorder = new de.legoshi.parkourcalc.core.record.HumanRecorder(saveController::getSaveStore, mc::getMouseSensitivity);
     }
 
@@ -311,6 +314,7 @@ public final class Application {
 
             @Override
             public void replaced() {
+                blockOverrideWorld.refresh(true);
                 turnProfile.onTasReplaced();
                 practiceMacro.stop();
             }
@@ -405,7 +409,7 @@ public final class Application {
         overlayManager.register(onejumpKeysWindow);
         overlayManager.register(onejumpSetupWindow);
         overlayManager.register(new de.legoshi.parkourcalc.core.ui.BlockOverridesWindow(inputData, mc, settings,
-                this::saveSettings, this::onUserChange));
+                blockOverrideWorld, this::saveSettings, this::onUserChange));
         overlayManager.register(new de.legoshi.parkourcalc.core.ui.RecorderWindow(recorder, settings, this::toggleRecording,
                 this::saveSettings, systemBridge));
     }
@@ -554,6 +558,7 @@ public final class Application {
 
     /** Fired by the loader on disconnect / world join. */
     public void onWorldChange() {
+        blockOverrideWorld.releaseAll();
         runner.invalidate();
         boxController.clearAll();
         inputData.clear();
@@ -1015,6 +1020,14 @@ public final class Application {
         if (practiceMacro != null) practiceMacro.setBridge(bridge);
     }
 
+    public void setBlockPatcher(de.legoshi.parkourcalc.core.ports.BlockPatcher patcher) {
+        blockOverrideWorld.setPatcher(patcher);
+    }
+
+    public BlockOverrideWorld getBlockOverrideWorld() {
+        return blockOverrideWorld;
+    }
+
     public PlaybackController getPlayback() {
         return playback;
     }
@@ -1025,6 +1038,7 @@ public final class Application {
 
     public void tickPlayback() {
         playback.tick();
+        blockOverrideWorld.tick();
         if (practiceMacro != null && !playback.isRunning()) practiceMacro.tick();
         if (turnProfile != null) turnProfile.tick();
     }

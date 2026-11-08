@@ -30,6 +30,8 @@ public final class Settings {
     private static final float[] DEFAULT_CONSTRAINT_FILL = {0.329f, 0.000f, 0.255f, 0.451f};      // #54004173
     private static final float[] DEFAULT_CONSTRAINT_BACK = {0.627f, 0.008f, 0.627f, 0.118f};
     private static final float[] DEFAULT_CONSTRAINT_HIGHLIGHT = {0.996f, 0.996f, 0.996f, 1.000f};
+    private static final float[] DEFAULT_BLOCK_OVERRIDE_PLACED = {0.796f, 0.651f, 0.969f, 0.55f};
+    private static final float[] DEFAULT_BLOCK_OVERRIDE_AHEAD = {0.796f, 0.651f, 0.969f, 0.80f};
 
     private static final boolean DEFAULT_CONSTRAINT_EXPAND_BY_HITBOX = true;
     private static final boolean DEFAULT_PRESSURE_PLATE_FULL_BLOCK = false;
@@ -166,6 +168,8 @@ public final class Settings {
     public final float[] constraintFill = DEFAULT_CONSTRAINT_FILL.clone();
     public final float[] constraintBack = DEFAULT_CONSTRAINT_BACK.clone();
     public final float[] constraintHighlight = DEFAULT_CONSTRAINT_HIGHLIGHT.clone();
+    public final float[] blockOverridePlaced = DEFAULT_BLOCK_OVERRIDE_PLACED.clone();
+    public final float[] blockOverrideAhead = DEFAULT_BLOCK_OVERRIDE_AHEAD.clone();
 
     public boolean constraintExpandByHitbox = DEFAULT_CONSTRAINT_EXPAND_BY_HITBOX;
     public boolean pressurePlateFullBlock = DEFAULT_PRESSURE_PLATE_FULL_BLOCK;
@@ -309,6 +313,8 @@ public final class Settings {
         System.arraycopy(DEFAULT_CONSTRAINT_FILL, 0, constraintFill, 0, 4);
         System.arraycopy(DEFAULT_CONSTRAINT_BACK, 0, constraintBack, 0, 4);
         System.arraycopy(DEFAULT_CONSTRAINT_HIGHLIGHT, 0, constraintHighlight, 0, 4);
+        System.arraycopy(DEFAULT_BLOCK_OVERRIDE_PLACED, 0, blockOverridePlaced, 0, 4);
+        System.arraycopy(DEFAULT_BLOCK_OVERRIDE_AHEAD, 0, blockOverrideAhead, 0, 4);
         constraintExpandByHitbox = DEFAULT_CONSTRAINT_EXPAND_BY_HITBOX;
         pressurePlateFullBlock = DEFAULT_PRESSURE_PLATE_FULL_BLOCK;
         constraintFrontWidth = DEFAULT_CONSTRAINT_FRONT_WIDTH;

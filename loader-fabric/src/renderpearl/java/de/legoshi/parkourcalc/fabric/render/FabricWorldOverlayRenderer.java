@@ -1,6 +1,8 @@
 package de.legoshi.parkourcalc.fabric.render;
 
+import de.legoshi.parkourcalc.core.BlockOverrideWorld;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
+import de.legoshi.parkourcalc.core.render.BlockOverrideOutlines;
 import de.legoshi.parkourcalc.core.anglesolver.BlockSelection;
 import de.legoshi.parkourcalc.core.perf.Perf;
 import de.legoshi.parkourcalc.core.ports.BoxRenderer;
@@ -37,16 +39,19 @@ public final class FabricWorldOverlayRenderer {
     private final SelectionManager selection;
     private final YawGizmoController yawGizmo;
     private final Supplier<AngleSolverState> angleSolver;
+    private final BlockOverrideWorld blockOverrides;
     private final CachedBoxGeometry cached = new CachedBoxGeometry();
     private boolean platesAfterTranslucent;
 
     public FabricWorldOverlayRenderer(BoxController boxController, Settings settings, SelectionManager selection,
-                                      YawGizmoController yawGizmo, Supplier<AngleSolverState> angleSolver) {
+                                      YawGizmoController yawGizmo, Supplier<AngleSolverState> angleSolver,
+                                      BlockOverrideWorld blockOverrides) {
         this.boxController = boxController;
         this.settings = settings;
         this.selection = selection;
         this.yawGizmo = yawGizmo;
         this.angleSolver = angleSolver;
+        this.blockOverrides = blockOverrides;
     }
 
     public void prepare(LevelRenderContext context) {
@@ -103,6 +108,7 @@ public final class FabricWorldOverlayRenderer {
 
     public void submitGizmo(LevelRenderContext context) {
         submitSelectionBlocks(context);
+        submitBlockOverrideOutlines(context);
         submitSelectedHitDistance(context);
 
         int gizmoIdx = yawGizmo.getSelectedIndex();
@@ -136,6 +142,19 @@ public final class FabricWorldOverlayRenderer {
                 boxController.renderYawGizmo(linesRenderer, center, yawDeg, radius, circleArgb, directionArgb);
             }
         });
+        poseStack.popPose();
+    }
+
+    private void submitBlockOverrideOutlines(LevelRenderContext context) {
+        if (!BlockOverrideOutlines.shouldRender(settings, blockOverrides)) return;
+        CameraRenderState camera = context.levelState().cameraRenderState;
+        Vec3 cameraPos = camera.pos;
+        PoseStack poseStack = new PoseStack();
+        poseStack.pushPose();
+        poseStack.translate(-cameraPos.x, -cameraPos.y, -cameraPos.z);
+        context.submitNodeCollector().submitCustomGeometry(poseStack, FabricRenderLayers.THIN_LINES, (pose, buffer) ->
+                BlockOverrideOutlines.render(new FabricBoxRenderer(pose.pose(), buffer, BoxRenderer.Mode.LINES), settings, blockOverrides)
+        );
         poseStack.popPose();
     }
 

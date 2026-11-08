@@ -104,7 +104,8 @@ public class FabricParkourCalculator implements ClientModInitializer {
                     application.getSettings(),
                     application.getSelection(),
                     application.getYawGizmo(),
-                    application::getAngleSolverState
+                    application::getAngleSolverState,
+                    application.getBlockOverrideWorld()
             );
     private static final FabricHudOverlayRenderer hudRenderer = new FabricHudOverlayRenderer();
 
@@ -210,6 +211,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
                 FabricWorldDescriptors::current
         ));
         application.setPlaybackBridge(playbackBridge);
+        application.setBlockPatcher(new de.legoshi.parkourcalc.fabric.sim.FabricBlockPatcher());
         application.getRecorder().setKeyCodes("glfw");
         application.setBlockPicker(new FabricBlockPicker());
         application.setPhysicsVariant(de.legoshi.parkourcalc.fabric.sim.BpkModBridge.physicsVariant());

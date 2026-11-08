@@ -5,7 +5,7 @@ import de.legoshi.parkourcalc.core.anglesolver.FlowVector;
 import de.legoshi.parkourcalc.core.anglesolver.Medium;
 import de.legoshi.parkourcalc.core.sim.Checkpoint;
 import de.legoshi.parkourcalc.core.sim.ChunkRange;
-import de.legoshi.parkourcalc.core.sim.BlockOverride;
+import de.legoshi.parkourcalc.core.sim.BlockPatch;
 import de.legoshi.parkourcalc.core.sim.LazyEntitySimulator;
 import de.legoshi.parkourcalc.core.sim.ServerSimEvent;
 import de.legoshi.parkourcalc.core.sim.StartResumeState;
@@ -242,8 +242,9 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
     }
 
     @Override
-    protected Runnable placeBlockOverrides(SimulatorEntity e, List<BlockOverride> active) {
-        return BlockOverridePlacer.place(e.level(), active);
+    protected Runnable placeBlockPatches(SimulatorEntity e, List<BlockPatch> patches) {
+        if (!(e.level() instanceof ServerLevel)) return null;
+        return BlockOverridePlacer.place(e.level(), patches);
     }
 
     @Override

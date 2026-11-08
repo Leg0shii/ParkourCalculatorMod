@@ -1,6 +1,7 @@
 package de.legoshi.parkourcalc.fabric.sim;
 
 import de.legoshi.parkourcalc.core.sim.BlockOverride;
+import de.legoshi.parkourcalc.core.sim.BlockPatch;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -26,10 +27,10 @@ public final class BlockOverridePlacer {
     private record Placed(LevelChunkSection section, int x, int y, int z, BlockState previous) {
     }
 
-    public static Runnable place(Level level, List<BlockOverride> blocks) {
+    public static Runnable place(Level level, List<BlockPatch> blocks) {
         if (level == null || blocks.isEmpty()) return null;
         List<Placed> placed = new ArrayList<>();
-        for (BlockOverride b : blocks) {
+        for (BlockPatch b : blocks) {
             BlockState state = state(b.block);
             if (state == null) continue;
             int cx = b.x >> 4;

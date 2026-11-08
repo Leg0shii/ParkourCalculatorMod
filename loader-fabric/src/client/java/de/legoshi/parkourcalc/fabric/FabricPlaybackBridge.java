@@ -1,7 +1,6 @@
 package de.legoshi.parkourcalc.fabric;
 
 import de.legoshi.parkourcalc.core.ports.PlaybackBridge;
-import de.legoshi.parkourcalc.core.sim.BlockOverride;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 import de.legoshi.parkourcalc.core.ui.MovementEffect;
@@ -53,7 +52,6 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
     private boolean ghostMode;
     private GhostPlayerEntity ghost;
     private final java.util.List<ReplaySample> replaySamples = new java.util.ArrayList<>();
-    private java.util.List<BlockOverride> blockOverrides = java.util.List.of();
 
     private record ReplaySample(int tick, Vec3 pos, Vec3 vel, boolean onGround, double fallDistance, float health,
                                 Vec3 serverVel, String serverDesc) {
@@ -94,12 +92,6 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
     }
 
     @Override
-    public void setBlockOverrides(java.util.List<BlockOverride> active) {
-        blockOverrides = active;
-        if (ghost != null) ghost.setBlockOverrides(active);
-    }
-
-    @Override
     public boolean isSingleplayer() {
         Minecraft mc = Minecraft.getInstance();
         if (mc.getCurrentServer() != null) return false;
@@ -124,7 +116,6 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
         GhostPlayerEntity g = new GhostPlayerEntity(level, client.getGameProfile());
         g.setId(GHOST_ENTITY_ID);
         g.setInput(currentRow);
-        g.setBlockOverrides(blockOverrides);
         snapTo(g, pos.x, pos.y, pos.z, yaw, client.getXRot());
         g.setYBodyRot(yaw);
         g.yBodyRotO = yaw;

@@ -74,6 +74,7 @@ public final class SaveFile {
         public int y;
         public int z;
         public String block;
+        public String before;
     }
 
     /** Angle Solver problem: defaults, per-tick constraints/overrides, and last solve result. */

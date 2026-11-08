@@ -7,7 +7,9 @@ import java.util.Map;
 
 public final class BlockOverride {
 
-    public static final String DEFAULT_BLOCK = "minecraft:air";
+    public static final String DEFAULT_BLOCK = "minecraft:stone";
+    public static final String AIR = "minecraft:air";
+    public static final int NO_END = 0;
 
     public final int startTick;
     public final int endTick;
@@ -15,35 +17,55 @@ public final class BlockOverride {
     public final int y;
     public final int z;
     public final String block;
+    public final String before;
 
-    public BlockOverride(int startTick, int endTick, int x, int y, int z, String block) {
+    public BlockOverride(int startTick, int endTick, int x, int y, int z, String block, String before) {
         this.startTick = startTick;
         this.endTick = endTick;
         this.x = x;
         this.y = y;
         this.z = z;
         this.block = block == null ? "" : block.trim();
+        this.before = before == null ? "" : before.trim();
     }
 
     public boolean activeAtRow(int row) {
         int tick = row + 1;
-        return tick >= startTick && tick <= endTick;
+        return tick >= startTick && (endTick == NO_END || tick <= endTick);
+    }
+
+    public boolean aheadOfRow(int row) {
+        return startTick > row + 1;
+    }
+
+    public BlockPatch patchAtRow(int row) {
+        String spec = activeAtRow(row) ? block : before;
+        if (!Spec.parse(spec).valid()) return null;
+        return new BlockPatch(x, y, z, spec);
     }
 
     public BlockOverride withTicks(int start, int end) {
-        return new BlockOverride(start, end, x, y, z, block);
+        return new BlockOverride(start, end, x, y, z, block, before);
     }
 
     public BlockOverride withPos(int nx, int ny, int nz) {
-        return new BlockOverride(startTick, endTick, nx, ny, nz, block);
+        return new BlockOverride(startTick, endTick, nx, ny, nz, block, before);
     }
 
     public BlockOverride withBlock(String spec) {
-        return new BlockOverride(startTick, endTick, x, y, z, spec);
+        return new BlockOverride(startTick, endTick, x, y, z, spec, before);
+    }
+
+    public BlockOverride withBefore(String spec) {
+        return new BlockOverride(startTick, endTick, x, y, z, block, spec);
     }
 
     public Spec spec() {
         return Spec.parse(block);
+    }
+
+    public Spec beforeSpec() {
+        return Spec.parse(before);
     }
 
     @Override
@@ -51,7 +73,7 @@ public final class BlockOverride {
         if (!(o instanceof BlockOverride)) return false;
         BlockOverride g = (BlockOverride) o;
         return startTick == g.startTick && endTick == g.endTick && x == g.x && y == g.y && z == g.z
-                && block.equals(g.block);
+                && block.equals(g.block) && before.equals(g.before);
     }
 
     @Override
@@ -61,7 +83,8 @@ public final class BlockOverride {
         h = h * 31 + x;
         h = h * 31 + y;
         h = h * 31 + z;
-        return h * 31 + block.hashCode();
+        h = h * 31 + block.hashCode();
+        return h * 31 + before.hashCode();
     }
 
     public static final class Spec {

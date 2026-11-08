@@ -196,7 +196,7 @@ public final class SaveIO {
         if (file == null || file.blockOverrides == null) return out;
         for (SaveFile.BlockOverride g : file.blockOverrides) {
             if (g == null) continue;
-            out.add(new BlockOverride(g.startTick, g.endTick, g.x, g.y, g.z, g.block));
+            out.add(new BlockOverride(g.startTick, g.endTick, g.x, g.y, g.z, g.block, g.before));
         }
         return out;
     }
@@ -212,6 +212,7 @@ public final class SaveIO {
             g.y = b.y;
             g.z = b.z;
             g.block = b.block;
+            g.before = b.before.isEmpty() ? null : b.before;
             out.add(g);
         }
         return out;

@@ -641,6 +641,8 @@ public final class SettingsModal {
         renderColor("hit distance line (in reach)", settings.hitDistanceLineHit, flags);
         renderColor("yaw gizmo circle", settings.yawGizmoCircle, flags);
         renderColor("yaw gizmo direction", settings.yawGizmoDirection, flags);
+        renderColor("block override placed", settings.blockOverridePlaced, flags);
+        renderColor("block override ahead", settings.blockOverrideAhead, flags);
 
         ThemeManager.sectionSpacing();
         sectionHeader("Hitbox");

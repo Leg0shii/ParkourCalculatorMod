@@ -80,7 +80,8 @@ public class ForgeParkourCalculator {
             application.getSettings(),
             application.getSelection(),
             application.getYawGizmo(),
-            application::getAngleSolverState);
+            application::getAngleSolverState,
+            application.getBlockOverrideWorld());
     private final ForgeHudOverlayRenderer hudRenderer = new ForgeHudOverlayRenderer();
     private final ForgePlaybackBridge playbackBridge = new ForgePlaybackBridge();
 
@@ -134,6 +135,7 @@ public class ForgeParkourCalculator {
                 ForgeWorldDescriptors::current
         ));
         application.setPlaybackBridge(playbackBridge);
+        application.setBlockPatcher(new de.legoshi.parkourcalc.forge.sim.ForgeBlockPatcher());
         application.getRecorder().setKeyCodes("lwjgl2");
         application.setBlockPicker(new ForgeBlockPicker());
         PoolScreenAccelerator.register(new OpenClPoolScreen.Factory());

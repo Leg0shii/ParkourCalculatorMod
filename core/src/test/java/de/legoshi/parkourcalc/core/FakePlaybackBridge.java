@@ -2,7 +2,6 @@ package de.legoshi.parkourcalc.core;
 
 import de.legoshi.parkourcalc.core.ports.PlaybackBridge;
 import de.legoshi.parkourcalc.core.sim.Checkpoint;
-import de.legoshi.parkourcalc.core.sim.BlockOverride;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 import de.legoshi.parkourcalc.core.ui.MovementEffect;
@@ -43,12 +42,6 @@ public class FakePlaybackBridge implements PlaybackBridge {
     public int beginReplicaCalls;
     public int endReplicaCalls;
     public int playerKeyMask;
-    public List<BlockOverride> blockOverrides = Collections.emptyList();
-
-    @Override
-    public void setBlockOverrides(List<BlockOverride> active) {
-        blockOverrides = active;
-    }
 
     @Override public boolean isSingleplayer() { return singleplayer; }
     @Override public boolean supportsMultiplayerPlayback() { return multiplayerPlayback; }
