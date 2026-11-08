@@ -182,10 +182,10 @@ public final class BlockOverrideWorld {
         if (!isAvailable()) return;
         BlockOverrides overrides = inputData.getBlockOverrides();
         int row = viewRow();
-        if (!force && row == appliedRow && overrides.modCount() == appliedModCount && appliedBefore.size() == overrides.size()) return;
+        if (!force && row == appliedRow && overrides.modCount() == appliedModCount && appliedBefore.size() == overrides.positionCount()) return;
         appliedRow = row;
         appliedModCount = overrides.modCount();
-        if (!apply(overrides.patchesAtRow(row, !replayStepped), overrides.all())) appliedRow = Integer.MIN_VALUE;
+        if (!apply(overrides.patchesAtRow(row, !replayStepped), overrides.basesByPosition())) appliedRow = Integer.MIN_VALUE;
     }
 
     public void releaseAll() {
@@ -204,11 +204,12 @@ public final class BlockOverrideWorld {
         if (!restore.isEmpty()) patcher.apply(restore);
     }
 
-    private boolean apply(List<BlockPatch> patches, List<BlockOverride> rows) {
+    private boolean apply(List<BlockPatch> patches, Map<Long, BlockOverride> bases) {
         Map<Long, String[]> nextBefore = new LinkedHashMap<Long, String[]>();
-        for (BlockOverride b : rows) {
+        for (Map.Entry<Long, BlockOverride> e : bases.entrySet()) {
+            BlockOverride b = e.getValue();
             if (!b.beforeSpec().valid()) continue;
-            nextBefore.put(BlockPatch.posKey(b.x, b.y, b.z), new String[] {b.before, b.block});
+            nextBefore.put(e.getKey(), new String[] {b.before, b.block});
         }
         List<BlockPatch> out = new ArrayList<BlockPatch>();
         for (Map.Entry<Long, String[]> e : appliedBefore.entrySet()) {

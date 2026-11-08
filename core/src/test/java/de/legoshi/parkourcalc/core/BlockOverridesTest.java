@@ -9,6 +9,7 @@ import de.legoshi.parkourcalc.core.save.SaveFile;
 import de.legoshi.parkourcalc.core.save.SaveIO;
 import de.legoshi.parkourcalc.core.sim.AABB;
 import de.legoshi.parkourcalc.core.sim.BlockOverride;
+import de.legoshi.parkourcalc.core.sim.BlockOverrides;
 import de.legoshi.parkourcalc.core.sim.BlockPatch;
 import de.legoshi.parkourcalc.core.sim.SimulationRunner;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
@@ -201,6 +202,31 @@ public class BlockOverridesTest {
         assertFalse(world.isReplaying());
         assertEquals(0, world.viewRow());
         assertEquals(Collections.singletonList(patch(1, 64, 1, "stone")), patcher.last());
+    }
+
+    @Test
+    public void rowsOnTheSamePositionResolveToOneBlockPerTick() {
+        BlockOverrides overrides = new BlockOverrides();
+        overrides.add(new BlockOverride(15, BlockOverride.NO_END, 36, -60, 9, "acacia_trapdoor[half=top]", "air"));
+        overrides.add(new BlockOverride(30, BlockOverride.NO_END, 36, -60, 9, "acacia_trapdoor[half=top,open=true]", "acacia_trapdoor[half=top]"));
+        assertEquals(Collections.singletonList(patch(36, -60, 9, "air")), overrides.patchesAtRow(0));
+        assertEquals(Collections.singletonList(patch(36, -60, 9, "acacia_trapdoor[half=top]")), overrides.patchesAtRow(14));
+        assertEquals(Collections.singletonList(patch(36, -60, 9, "acacia_trapdoor[half=top,open=true]")), overrides.patchesAtRow(29));
+        assertEquals(1, overrides.positionCount());
+        assertEquals("air", overrides.basesByPosition().values().iterator().next().before);
+
+        InputData data = rows(40);
+        data.getBlockOverrides().replaceAll(overrides.all());
+        SelectionManager selection = new SelectionManager(new FakeMinecraftAccess());
+        selection.selectOnly(1);
+        BlockOverrideWorld world = new BlockOverrideWorld(data, selection);
+        FakePatcher patcher = new FakePatcher();
+        world.setPatcher(patcher);
+        world.tick();
+        assertEquals(Collections.singletonList(patch(36, -60, 9, "air")), patcher.last());
+        data.getBlockOverrides().clear();
+        world.tick();
+        assertEquals(Collections.singletonList(patch(36, -60, 9, "air")), patcher.last());
     }
 
     @Test
