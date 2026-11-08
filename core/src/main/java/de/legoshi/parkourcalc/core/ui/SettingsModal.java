@@ -60,6 +60,8 @@ public final class SettingsModal {
     private static final String TT_SHOW_PATH = "Draws the simulated path (tick boxes, gizmos and constraints) in-world. Also toggled by the Toggle Path hotkey.";
     private static final String TT_SAVE_DEBUG_VALUES = "Writes the per-tick simulation state (position, velocity, ground and collision flags) into the TAS file on every save.";
     private static final String TT_COLOR_GENERIC = "Color used for this overlay. Alpha applies in-world.";
+    private static final String TT_BLOCK_OVERRIDE_WIDTH = "Edge thickness of the block override outlines, in blocks.";
+    private static final float BLOCK_OVERRIDE_WIDTH_SLIDER_W = 180f;
     private static final String TT_KEEP_INPUT_TABLE = "Keeps the input table window drawn as a display-only overlay even when the main UI is closed. It cannot be edited while closed.";
     private static final String TT_KEEP_TICK_INFO = "Keeps the Tick Info window drawn even when the main UI is closed.";
     private static final String TT_UNDO_REDO_WITHOUT_UI = "Ctrl+Z / Ctrl+Y (or Ctrl+Shift+Z) undo and redo TAS edits even while the main UI is closed. Disabled while a Minecraft screen such as chat or the inventory is open.";
@@ -104,6 +106,7 @@ public final class SettingsModal {
     private final float[] scrollbarGrabBuf = new float[1];
     private final int[] solverPrecisionBuf = new int[1];
     private final float[] constraintDimBuf = new float[1];
+    private final float[] outlineWidthBuf = new float[1];
     private final int[] hudMessageCountBuf = new int[1];
     private final float[] hudMessageScaleBuf = new float[1];
     private final ImInt hudMessageOrderBuf = new ImInt();
@@ -641,8 +644,21 @@ public final class SettingsModal {
         renderColor("hit distance line (in reach)", settings.hitDistanceLineHit, flags);
         renderColor("yaw gizmo circle", settings.yawGizmoCircle, flags);
         renderColor("yaw gizmo direction", settings.yawGizmoDirection, flags);
+
+        ThemeManager.sectionSpacing();
+        sectionHeader("Block overrides");
         renderColor("block override placed", settings.blockOverridePlaced, flags);
         renderColor("block override ahead", settings.blockOverrideAhead, flags);
+        renderColor("block override selected", settings.blockOverrideSelected, flags);
+        renderColor("block override selected row tint", settings.blockOverrideSelectedRow, flags);
+        outlineWidthBuf[0] = settings.blockOverrideOutlineWidth;
+        ImGui.setNextItemWidth(BLOCK_OVERRIDE_WIDTH_SLIDER_W * ThemeManager.uiScale());
+        if (Controls.sliderFloat("block override outline thickness", outlineWidthBuf,
+                Settings.MIN_BLOCK_OVERRIDE_OUTLINE_WIDTH, Settings.MAX_BLOCK_OVERRIDE_OUTLINE_WIDTH, "%.3f blocks")) {
+            settings.blockOverrideOutlineWidth = outlineWidthBuf[0];
+        }
+        if (ImGui.isItemDeactivatedAfterEdit()) onChanged.run();
+        tooltipForLastItem(TT_BLOCK_OVERRIDE_WIDTH);
 
         ThemeManager.sectionSpacing();
         sectionHeader("Hitbox");

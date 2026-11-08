@@ -2,6 +2,7 @@ package de.legoshi.parkourcalc.core.sim;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,14 +34,40 @@ public final class BlockOverrides {
 
     public void add(BlockOverride block) {
         blocks.add(block);
+        sort(blocks);
         modCount++;
     }
 
     public void set(int index, BlockOverride block) {
         if (index < 0 || index >= blocks.size() || blocks.get(index).equals(block)) return;
         blocks.set(index, block);
+        sort(blocks);
         modCount++;
     }
+
+    public int indexOf(BlockOverride block) {
+        for (int i = 0; i < blocks.size(); i++) {
+            if (blocks.get(i) == block) return i;
+        }
+        return -1;
+    }
+
+    public static List<BlockOverride> sorted(List<BlockOverride> rows) {
+        List<BlockOverride> out = new ArrayList<BlockOverride>(rows);
+        sort(out);
+        return out;
+    }
+
+    private static void sort(List<BlockOverride> rows) {
+        Collections.sort(rows, BY_START);
+    }
+
+    private static final Comparator<BlockOverride> BY_START = new Comparator<BlockOverride>() {
+        @Override
+        public int compare(BlockOverride a, BlockOverride b) {
+            return a.startTick < b.startTick ? -1 : a.startTick == b.startTick ? 0 : 1;
+        }
+    };
 
     public void remove(int index) {
         if (index < 0 || index >= blocks.size()) return;
@@ -49,9 +76,10 @@ public final class BlockOverrides {
     }
 
     public void replaceAll(List<BlockOverride> next) {
-        if (blocks.equals(next)) return;
+        List<BlockOverride> ordered = next == null ? Collections.<BlockOverride>emptyList() : sorted(next);
+        if (blocks.equals(ordered)) return;
         blocks.clear();
-        if (next != null) blocks.addAll(next);
+        blocks.addAll(ordered);
         modCount++;
     }
 

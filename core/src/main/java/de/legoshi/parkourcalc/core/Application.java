@@ -2,6 +2,8 @@ package de.legoshi.parkourcalc.core;
 
 import de.legoshi.parkourcalc.core.ports.BlockPicker;
 import de.legoshi.parkourcalc.core.sim.BlockHit;
+import de.legoshi.parkourcalc.core.sim.BlockOverride;
+import de.legoshi.parkourcalc.core.sim.BlockOverrides;
 import de.legoshi.parkourcalc.core.ports.FilePickerPort;
 import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
 import de.legoshi.parkourcalc.core.ports.PickedBlock;
@@ -633,11 +635,21 @@ public final class Application {
     }
 
     private WorldPick pickWorld(Vec3dCore rayOrigin, Vec3dCore rayDirection) {
-        return boxController.pickWorld(rayOrigin, rayDirection, constraintSource);
+        WorldPick pick = boxController.pickWorld(rayOrigin, rayDirection, constraintSource);
+        if (pick != null || !settings.viewBlockOverrides || !blockOverrideWorld.isAvailable()) return pick;
+        BlockHit hit = mc.getLookedAtHit();
+        if (hit == null) return null;
+        int row = inputData.getBlockOverrides().indexOf(blockOverrideWorld.rowAt(hit.x, hit.y, hit.z));
+        return row < 0 ? null : WorldPick.blockOverride(row);
     }
 
     private void commitWorldTap(WorldPick pick) {
         if (pick == null) return;
+        if (pick.kind == WorldPick.Kind.BLOCK_OVERRIDE) {
+            BlockOverrides blocks = inputData.getBlockOverrides();
+            if (pick.index < blocks.size()) blockOverrideWorld.select(blocks.get(pick.index));
+            return;
+        }
         if (pick.kind == WorldPick.Kind.CONSTRAINT) {
             if (pick.index >= boxController.size() - 1) return;
             selection.selectOnly(pick.index + 1);

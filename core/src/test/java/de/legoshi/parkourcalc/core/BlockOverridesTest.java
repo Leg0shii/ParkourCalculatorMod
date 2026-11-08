@@ -205,6 +205,40 @@ public class BlockOverridesTest {
     }
 
     @Test
+    public void tableStaysSortedByStartAndKeepsTheSelectedRow() {
+        InputData data = rows(40);
+        BlockOverrides overrides = data.getBlockOverrides();
+        BlockOverride late = new BlockOverride(30, BlockOverride.NO_END, 1, 64, 1, "stone", "air");
+        BlockOverride early = new BlockOverride(3, BlockOverride.NO_END, 2, 64, 2, "stone", "air");
+        BlockOverride mid = new BlockOverride(10, BlockOverride.NO_END, 3, 64, 3, "stone", "air");
+        overrides.add(late);
+        overrides.add(early);
+        overrides.add(mid);
+        assertEquals(Arrays.asList(early, mid, late), overrides.all());
+        BlockOverride moved = mid.withTicks(35, BlockOverride.NO_END);
+        overrides.set(1, moved);
+        assertEquals(Arrays.asList(early, late, moved), overrides.all());
+        assertEquals(Arrays.asList(early, late, moved), BlockOverrides.sorted(Arrays.asList(moved, late, early)));
+
+        SelectionManager selection = new SelectionManager(new FakeMinecraftAccess());
+        selection.selectOnly(1);
+        BlockOverrideWorld world = new BlockOverrideWorld(data, selection);
+        assertNull(world.selected());
+        world.select(late);
+        assertTrue(world.isSelected(late));
+        assertEquals(late, world.rowAt(1, 64, 1));
+        assertNull(world.rowAt(9, 9, 9));
+        overrides.remove(overrides.indexOf(late));
+        assertNull(world.selected());
+
+        overrides.add(new BlockOverride(3, 5, 2, 64, 2, "dirt", "air"));
+        selection.selectOnly(4);
+        assertEquals("dirt", world.rowAt(2, 64, 2).block);
+        selection.selectOnly(8);
+        assertEquals(early, world.rowAt(2, 64, 2));
+    }
+
+    @Test
     public void rowsOnTheSamePositionResolveToOneBlockPerTick() {
         BlockOverrides overrides = new BlockOverrides();
         overrides.add(new BlockOverride(15, BlockOverride.NO_END, 36, -60, 9, "acacia_trapdoor[half=top]", "air"));

@@ -19,6 +19,7 @@ import imgui.flag.ImDrawFlags;
 import imgui.flag.ImGuiCol;
 import imgui.flag.ImGuiComboFlags;
 import imgui.flag.ImGuiCond;
+import imgui.flag.ImGuiHoveredFlags;
 import imgui.flag.ImGuiStyleVar;
 import imgui.flag.ImGuiTableBgTarget;
 import imgui.flag.ImGuiTableColumnFlags;
@@ -26,7 +27,6 @@ import imgui.flag.ImGuiTableFlags;
 import imgui.flag.ImGuiTableRowFlags;
 import imgui.flag.ImGuiWindowFlags;
 import imgui.type.ImBoolean;
-import imgui.type.ImInt;
 import imgui.type.ImString;
 
 import java.util.ArrayList;
@@ -103,10 +103,10 @@ public final class BlockOverridesWindow implements RenderInterface {
     private final Runnable onSettingsChanged;
     private final IntConsumer onChanged;
     private final ImBoolean open = new ImBoolean(false);
-    private final ImInt intHolder = new ImInt();
     private final ImString search = new ImString(SEARCH_CHARS);
     private final List<ImString> posBuffers = new ArrayList<ImString>();
     private final List<ImString> endBuffers = new ArrayList<ImString>();
+    private final List<ImString> startBuffers = new ArrayList<ImString>();
     private int editingRow = -1;
     private int editingField = -1;
     private int pickerRow = -1;
@@ -225,11 +225,17 @@ public final class BlockOverridesWindow implements RenderInterface {
         int viewRow = world.viewRow();
         int removeAt = -1;
         float framePadY = Math.max(0f, (FRAME_H * scale - ImGui.getFontSize()) * 0.5f);
+        float left = ImGui.getWindowPosX();
+        float right = left + ImGui.getWindowWidth();
+        boolean click = ImGui.isMouseClicked(0) && ImGui.isWindowHovered(ImGuiHoveredFlags.ChildWindows);
         for (int i = 0; i < blocks.size(); i++) {
             ImGui.tableNextRow(0, rowH);
             ImGui.tableSetBgColor(ImGuiTableBgTarget.RowBg0, rgba((i & 1) == 0 ? ROW_BASE : ROW_ALT));
             ImGui.pushID(i);
             BlockOverride b = blocks.get(i);
+            if (world.isSelected(b)) ThemeManager.paintTableRowTint(ThemeManager.rgbaTintColor(settings.blockOverrideSelectedRow));
+            float top = ImGui.getCursorScreenPosY() - ImGui.getStyle().getCellPaddingY();
+            if (click && ImGui.isMouseHoveringRect(left, top, right, top + rowH)) world.select(b);
             boolean problem = world.hasProblem(b);
             boolean dim = !problem && !b.activeAtRow(viewRow);
             if (problem) ThemeManager.pushTextColor(ThemeManager.dangerColor());
@@ -252,6 +258,7 @@ public final class BlockOverridesWindow implements RenderInterface {
             blocks.remove(removeAt);
             posBuffers.remove(removeAt);
             endBuffers.remove(removeAt);
+            startBuffers.remove(removeAt);
             if (editingRow == removeAt) editingRow = -1;
             if (pickerRow == removeAt) pickerRow = -1;
             changed(0);
@@ -281,7 +288,7 @@ public final class BlockOverridesWindow implements RenderInterface {
     private boolean row(BlockOverrides blocks, int i) {
         BlockOverride b = blocks.get(i);
         ImGui.tableSetColumnIndex(0);
-        Integer start = intCell("##start", b.startTick);
+        Integer start = startCell(i, b);
         rowTooltip(b);
         ImGui.tableSetColumnIndex(1);
         Integer end = endCell(i, b);
@@ -291,7 +298,7 @@ public final class BlockOverridesWindow implements RenderInterface {
             int e = end != null ? end : b.endTick;
             if (e != BlockOverride.NO_END && e < s) e = s;
             update(blocks, i, b.withTicks(s, e), b);
-            b = blocks.get(i);
+            return false;
         }
         ImGui.tableSetColumnIndex(2);
         positionCell(blocks, i);
@@ -410,11 +417,31 @@ public final class BlockOverridesWindow implements RenderInterface {
         return parsed.displayName(BlockOverride.Spec.parse(mc.defaultBlockState(parsed.id)));
     }
 
-    private Integer intCell(String id, int value) {
-        intHolder.set(value);
+    private Integer startCell(int i, BlockOverride b) {
+        ImString buf = startBuffers.get(i);
+        if (!(editingRow == i && editingField == 0)) buf.set(String.valueOf(b.startTick));
         ImGui.setNextItemWidth(-1f);
-        boolean changed = ImGui.inputInt(id, intHolder, 0, 0);
-        return changed && intHolder.get() != value ? intHolder.get() : null;
+        ImGui.inputText("##start", buf);
+        if (ImGui.isItemActivated()) {
+            editingRow = i;
+            editingField = 0;
+        }
+        Integer result = null;
+        if (ImGui.isItemDeactivatedAfterEdit()) {
+            result = parseStart(buf.get(), b.startTick);
+            editingRow = -1;
+        } else if (ImGui.isItemDeactivated()) {
+            editingRow = -1;
+        }
+        return result != null && result != b.startTick ? result : null;
+    }
+
+    private static Integer parseStart(String text, int fallback) {
+        try {
+            return Math.max(1, Integer.parseInt(text.trim()));
+        } catch (NumberFormatException e) {
+            return fallback;
+        }
     }
 
     private Integer endCell(int i, BlockOverride b) {
@@ -785,6 +812,7 @@ public final class BlockOverridesWindow implements RenderInterface {
     private void update(BlockOverrides blocks, int i, BlockOverride next, BlockOverride prev) {
         if (next.equals(prev)) return;
         blocks.set(i, next);
+        if (world.isSelected(prev)) world.select(next);
         boolean samePlace = next.x == prev.x && next.y == prev.y && next.z == prev.z
                 && next.block.equals(prev.block) && next.before.equals(prev.before);
         changed(samePlace ? Math.min(next.startTick, prev.startTick) - 1 : 0);
@@ -799,6 +827,8 @@ public final class BlockOverridesWindow implements RenderInterface {
         while (posBuffers.size() > blocks.size()) posBuffers.remove(posBuffers.size() - 1);
         while (endBuffers.size() < blocks.size()) endBuffers.add(new ImString(TICK_CHARS));
         while (endBuffers.size() > blocks.size()) endBuffers.remove(endBuffers.size() - 1);
+        while (startBuffers.size() < blocks.size()) startBuffers.add(new ImString(TICK_CHARS));
+        while (startBuffers.size() > blocks.size()) startBuffers.remove(startBuffers.size() - 1);
         if (editingRow >= blocks.size()) editingRow = -1;
         if (pickerRow >= blocks.size()) pickerRow = -1;
     }

@@ -203,7 +203,9 @@ public final class BlockPlacing {
         boolean player = placed && start - 1 < inputData.size()
                 && inputData.getRows().get(start - 1).isKeyActive(InputRow.Key.RIGHT_CLICK);
         BlockOverrides blocks = inputData.getBlockOverrides();
-        blocks.add(new BlockOverride(start, BlockOverride.NO_END, target[0], target[1], target[2], block, before, player));
+        BlockOverride row = new BlockOverride(start, BlockOverride.NO_END, target[0], target[1], target[2], block, before, player);
+        blocks.add(row);
+        world.select(row);
         onChanged.accept(0);
     }
 

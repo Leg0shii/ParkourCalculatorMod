@@ -199,7 +199,7 @@ public final class SaveIO {
             out.add(new BlockOverride(g.startTick, g.endTick, g.x, g.y, g.z, g.block, g.before,
                     BlockOverride.PLAYER.equals(g.placedBy)));
         }
-        return out;
+        return BlockOverrides.sorted(out);
     }
 
     private static List<SaveFile.BlockOverride> toSaveBlockOverrides(BlockOverrides blocks) {

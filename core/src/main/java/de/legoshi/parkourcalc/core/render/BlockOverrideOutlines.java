@@ -12,8 +12,7 @@ import java.util.List;
 
 public final class BlockOverrideOutlines {
 
-    public static final double EDGE_THICKNESS = 0.04;
-    public static final double PREVIEW_THICKNESS = 0.07;
+    public static final double PREVIEW_SCALE = 1.75;
     private static final double INSET = 0.002;
     private static final int DASHES_PER_EDGE = 4;
     private static final double DASH_FILL = 0.55;
@@ -34,21 +33,22 @@ public final class BlockOverrideOutlines {
 
     public static void render(BoxRenderer faces, Settings settings, BlockOverrideWorld world) {
         if (!shouldRender(settings, world)) return;
+        double thickness = BoxStyle.blockOverrideOutlineWidth(settings);
         int[] preview = world.preview();
         if (preview != null) {
-            cube(faces, preview[0], preview[1], preview[2], world.previewArgb(), false, PREVIEW_THICKNESS);
+            cube(faces, preview[0], preview[1], preview[2], world.previewArgb(), false, thickness * PREVIEW_SCALE);
         }
         if (!settings.viewBlockOverrides) return;
         int row = world.viewRow();
         int placed = BoxStyle.blockOverridePlacedArgb(settings);
         int ahead = BoxStyle.blockOverrideAheadArgb(settings);
+        int selected = BoxStyle.blockOverrideSelectedArgb(settings);
+        BlockOverride chosen = world.selected();
         for (BlockOverride b : world.rows()) {
             if (!b.spec().valid()) continue;
-            if (b.activeAtRow(row)) {
-                shape(faces, world.shape(b.block), b.x, b.y, b.z, placed, false, EDGE_THICKNESS);
-            } else {
-                shape(faces, world.shape(b.block), b.x, b.y, b.z, ahead, true, EDGE_THICKNESS);
-            }
+            boolean active = b.activeAtRow(row);
+            int argb = b == chosen ? selected : active ? placed : ahead;
+            shape(faces, world.shape(b.block), b.x, b.y, b.z, argb, !active, thickness);
         }
     }
 

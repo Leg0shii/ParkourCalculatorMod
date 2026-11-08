@@ -68,6 +68,16 @@ public final class BoxStyle {
         return toArgb(settings.blockOverrideAhead);
     }
 
+    public static int blockOverrideSelectedArgb(Settings settings) {
+        return toArgb(settings.blockOverrideSelected);
+    }
+
+    public static double blockOverrideOutlineWidth(Settings settings) {
+        float w = settings.blockOverrideOutlineWidth;
+        if (!(w >= Settings.MIN_BLOCK_OVERRIDE_OUTLINE_WIDTH)) return Settings.DEFAULT_BLOCK_OVERRIDE_OUTLINE_WIDTH;
+        return Math.min(w, Settings.MAX_BLOCK_OVERRIDE_OUTLINE_WIDTH);
+    }
+
     public static int yawGizmoCircleArgb(Settings settings) {
         float[] c = settings.yawGizmoCircle;
         return toArgb(c[0], c[1], c[2], c[3]);

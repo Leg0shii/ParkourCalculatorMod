@@ -38,6 +38,7 @@ public final class BlockOverrideWorld {
     private Map<BlockOverride, String> simProblems = Collections.emptyMap();
     private int[] preview;
     private int previewArgb;
+    private BlockOverride selected;
     private int appliedRow = Integer.MIN_VALUE;
     private int appliedModCount = -1;
     private final Map<Long, String[]> appliedBefore = new LinkedHashMap<Long, String[]>();
@@ -131,6 +132,31 @@ public final class BlockOverrideWorld {
 
     public List<BlockOverride> rows() {
         return inputData.getBlockOverrides().all();
+    }
+
+    public void select(BlockOverride row) {
+        selected = row;
+    }
+
+    public BlockOverride selected() {
+        if (selected != null && inputData.getBlockOverrides().indexOf(selected) < 0) selected = null;
+        return selected;
+    }
+
+    public boolean isSelected(BlockOverride row) {
+        return row != null && selected() == row;
+    }
+
+    public BlockOverride rowAt(int x, int y, int z) {
+        BlockOverride first = null;
+        BlockOverride active = null;
+        int row = viewRow();
+        for (BlockOverride b : rows()) {
+            if (b.x != x || b.y != y || b.z != z) continue;
+            if (first == null) first = b;
+            if (b.activeAtRow(row) && (active == null || b.startTick >= active.startTick)) active = b;
+        }
+        return active != null ? active : first;
     }
 
     public boolean isReplaying() {
