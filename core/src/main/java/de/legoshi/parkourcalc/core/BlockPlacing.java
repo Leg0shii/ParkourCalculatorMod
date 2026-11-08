@@ -22,8 +22,8 @@ public final class BlockPlacing {
 
     public static final int LEFT = 0;
     public static final int RIGHT = 1;
-    private static final String PLACE_HINT = "LMB place · RMB change the looked-at block · Esc stop";
-    private static final String CHANGE_HINT = "RMB change · LMB place the block in hand · Esc stop";
+    private static final String PLACE_HINT = "Click to place · Esc stop";
+    private static final String CHANGE_HINT = "Click to change · Esc stop";
 
     private final MinecraftAccess mc;
     private final InputData inputData;
@@ -173,7 +173,7 @@ public final class BlockPlacing {
         if (!isActive()) return false;
         if (!down) return false;
         if (button != LEFT && button != RIGHT) return false;
-        if (button == LEFT) {
+        if (mode == Mode.PLACE) {
             int[] target = placeTarget();
             if (target == null) return true;
             addRow(target, held, true);

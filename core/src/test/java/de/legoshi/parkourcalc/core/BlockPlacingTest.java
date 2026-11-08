@@ -101,10 +101,16 @@ public class BlockPlacingTest {
         assertNull(world.preview());
         assertEquals(0, changed[0]);
         assertEquals(true, ui.get(1));
+
+        assertTrue(placing.startPlace());
+        placing.tick();
+        assertTrue(placing.onMouse(BlockPlacing.RIGHT, true));
+        assertEquals(2, data.getBlockOverrides().size());
+        assertEquals(row, data.getBlockOverrides().get(1));
     }
 
     @Test
-    public void changeTakesTheLookedAtBlockAsBeforeAndBlockOnRightClickAndEscapeStops() {
+    public void changeTakesTheLookedAtBlockAsBeforeAndBlockWithEitherButtonAndEscapeStops() {
         InputData data = rows(3);
         PlacingAccess mc = new PlacingAccess();
         mc.worldBlock = "minecraft:oak_door[open=false]";
@@ -115,20 +121,25 @@ public class BlockPlacingTest {
         BlockPlacing placing = new BlockPlacing(mc, data, world(data), new Settings(), new HudMessages(), tick -> { });
 
         assertTrue(placing.startChange());
-        placing.tick();
-        assertTrue(placing.onMouse(BlockPlacing.LEFT, true));
-        assertTrue(placing.isActive());
         assertTrue(placing.onEscape());
         assertFalse(placing.isActive());
         assertEquals(0, data.getBlockOverrides().size());
 
         placing.startChange();
         placing.tick();
-        placing.onMouse(BlockPlacing.RIGHT, true);
+        assertTrue(placing.onMouse(BlockPlacing.LEFT, true));
+        assertFalse(placing.isActive());
         BlockOverride row = data.getBlockOverrides().get(0);
         assertEquals("minecraft:oak_door[open=false]", row.block);
         assertEquals("minecraft:oak_door[open=false]", row.before);
+        assertEquals(1, row.x);
+        assertEquals(3, row.z);
         assertFalse(row.player);
+
+        placing.startChange();
+        placing.tick();
+        assertTrue(placing.onMouse(BlockPlacing.RIGHT, true));
+        assertEquals(2, data.getBlockOverrides().size());
     }
 
     @Test

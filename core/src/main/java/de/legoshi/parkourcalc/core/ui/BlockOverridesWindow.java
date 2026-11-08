@@ -91,7 +91,7 @@ public final class BlockOverridesWindow implements RenderInterface {
     private static final String[] HEADERS = {"Start", "End", "Position", "Block", "Placed by", ""};
     private static final String[] PLACED_BY = {"Auto", "Player"};
     private static final String[] PLACED_BY_TIPS = {"The replay places it", "The TAS player places it"};
-    private static final String HELP = "Place block: aim at a face, LMB. Change block: aim at a block, RMB.\n"
+    private static final String HELP = "Place block: aim at a face and click. Change block: aim at a block and click.\n"
             + "Auto rows the replay places. Player rows the TAS player places with a right click.";
     private static final String SINGLEPLAYER_ONLY = "Singleplayer only";
 
