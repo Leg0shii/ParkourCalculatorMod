@@ -138,8 +138,8 @@ public final class ForgeWorldOverlayRenderer {
             //?} else {
             /*WorldRenderer buf = tess.getWorldRenderer();
             *///?}
-            buf.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
-            BlockOverrideOutlines.render(new ForgeBoxRenderer(buf, camX, camY, camZ, BoxRenderer.Mode.LINES), settings, blockOverrides);
+            buf.begin(GL11.GL_TRIANGLES, DefaultVertexFormats.POSITION_COLOR);
+            BlockOverrideOutlines.render(new ForgeBoxRenderer(buf, camX, camY, camZ, BoxRenderer.Mode.FACES), settings, blockOverrides);
             tess.draw();
         }
 

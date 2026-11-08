@@ -152,8 +152,8 @@ public final class FabricWorldOverlayRenderer {
         PoseStack poseStack = new PoseStack();
         poseStack.pushPose();
         poseStack.translate(-cameraPos.x, -cameraPos.y, -cameraPos.z);
-        context.submitNodeCollector().submitCustomGeometry(poseStack, FabricRenderLayers.THIN_LINES, (pose, buffer) ->
-                BlockOverrideOutlines.render(new FabricBoxRenderer(pose.pose(), buffer, BoxRenderer.Mode.LINES), settings, blockOverrides)
+        context.submitNodeCollector().submitCustomGeometry(poseStack, FabricRenderLayers.TRANSLUCENT_FACES, (pose, buffer) ->
+                BlockOverrideOutlines.render(new FabricBoxRenderer(pose.pose(), buffer, BoxRenderer.Mode.FACES), settings, blockOverrides)
         );
         poseStack.popPose();
     }

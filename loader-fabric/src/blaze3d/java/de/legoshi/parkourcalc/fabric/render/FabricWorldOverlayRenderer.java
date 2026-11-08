@@ -74,10 +74,10 @@ public final class FabricWorldOverlayRenderer {
 
         FabricBoxRenderer faces = new FabricBoxRenderer(pose, buffers.getBuffer(FabricRenderLayers.TRANSLUCENT_FACES), BoxRenderer.Mode.FACES);
         emitSelectionFaces(faces);
+        BlockOverrideOutlines.render(faces, settings, blockOverrides);
 
         FabricBoxRenderer lines = new FabricBoxRenderer(pose, buffers.getBuffer(FabricRenderLayers.LINES), BoxRenderer.Mode.LINES);
         emitSelectionLines(lines);
-        BlockOverrideOutlines.render(lines, settings, blockOverrides);
         if (!boxController.isEmpty()) {
             emitGizmo(lines, camPos);
             emitSelectedHitDistance(lines);
