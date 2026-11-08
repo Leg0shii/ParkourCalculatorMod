@@ -41,6 +41,7 @@ public class BlockOverridesTest {
     private static final class FakePatcher implements BlockPatcher {
         final List<List<BlockPatch>> calls = new ArrayList<List<BlockPatch>>();
         boolean available = true;
+        boolean complete = true;
 
         @Override
         public boolean isAvailable() {
@@ -48,8 +49,9 @@ public class BlockOverridesTest {
         }
 
         @Override
-        public void apply(List<BlockPatch> patches) {
+        public boolean apply(List<BlockPatch> patches) {
             calls.add(new ArrayList<BlockPatch>(patches));
+            return complete;
         }
 
         List<BlockPatch> last() {
@@ -340,5 +342,63 @@ public class BlockOverridesTest {
         }
         assertEquals(64.5, headTop, 0.05);
         assertEquals(65, stoneTop, 0.05);
+    }
+
+    @Test
+    public void worldRetriesUntilTheChunkTookThePatchesAndNamesTheBlockItReplaces() {
+        InputData data = rows(10);
+        SelectionManager selection = new SelectionManager(new FakeMinecraftAccess());
+        BlockOverrideWorld world = new BlockOverrideWorld(data, selection);
+        FakePatcher patcher = new FakePatcher();
+        patcher.complete = false;
+        world.setPatcher(patcher);
+        data.getBlockOverrides().add(new BlockOverride(4, 6, 1, 64, 1, "creeper_wall_head[facing=south]", "air"));
+
+        world.tick();
+        world.tick();
+        assertEquals(2, patcher.calls.size());
+        assertEquals(patch(1, 64, 1, "air"), patcher.last().get(0));
+        assertEquals("creeper_wall_head[facing=south]", patcher.last().get(0).replaces);
+
+        patcher.complete = true;
+        world.tick();
+        assertEquals(3, patcher.calls.size());
+        world.tick();
+        assertEquals(3, patcher.calls.size());
+
+        selection.selectOnly(5);
+        world.tick();
+        assertEquals(patch(1, 64, 1, "creeper_wall_head[facing=south]"), patcher.last().get(0));
+        assertEquals("air", patcher.last().get(0).replaces);
+    }
+
+    @Test
+    public void outlinesAreDashedOnEveryRowNotActiveAtTheViewTick() {
+        InputData data = rows(30);
+        SelectionManager selection = new SelectionManager(new FakeMinecraftAccess());
+        BlockOverrideWorld world = new BlockOverrideWorld(data, selection);
+        world.setPatcher(new FakePatcher());
+        data.getBlockOverrides().add(new BlockOverride(5, 16, 10, 64, 10, "stone", "air"));
+        Settings settings = new Settings();
+        settings.viewBlockOverrides = true;
+        selection.selectOnly(17);
+        final List<AABB> drawn = new ArrayList<AABB>();
+        BlockOverrideOutlines.render(new BoxRenderer() {
+            @Override
+            public void drawBox(AABB box, int argb) {
+                drawn.add(box);
+            }
+
+            @Override
+            public void drawLine(double x1, double y1, double z1, double x2, double y2, double z2, int argb) {
+            }
+
+            @Override
+            public void drawTriangle(double x1, double y1, double z1, double x2, double y2, double z2,
+                                     double x3, double y3, double z3, int argb) {
+            }
+        }, settings, world);
+        assertEquals(17, world.viewRow() + 1);
+        assertEquals(12 * 4, drawn.size());
     }
 }

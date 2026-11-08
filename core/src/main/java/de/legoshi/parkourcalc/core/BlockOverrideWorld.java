@@ -40,7 +40,7 @@ public final class BlockOverrideWorld {
     private int previewArgb;
     private int appliedRow = Integer.MIN_VALUE;
     private int appliedModCount = -1;
-    private final Map<Long, String> appliedBefore = new LinkedHashMap<Long, String>();
+    private final Map<Long, String[]> appliedBefore = new LinkedHashMap<Long, String[]>();
 
     public BlockOverrideWorld(InputData inputData, SelectionManager selection) {
         this.inputData = inputData;
@@ -185,7 +185,7 @@ public final class BlockOverrideWorld {
         if (!force && row == appliedRow && overrides.modCount() == appliedModCount && appliedBefore.size() == overrides.size()) return;
         appliedRow = row;
         appliedModCount = overrides.modCount();
-        apply(overrides.patchesAtRow(row, !replayStepped), overrides.all());
+        if (!apply(overrides.patchesAtRow(row, !replayStepped), overrides.all())) appliedRow = Integer.MIN_VALUE;
     }
 
     public void releaseAll() {
@@ -195,9 +195,8 @@ public final class BlockOverrideWorld {
             return;
         }
         List<BlockPatch> restore = new ArrayList<BlockPatch>();
-        for (Map.Entry<Long, String> e : appliedBefore.entrySet()) {
-            BlockPatch p = unpack(e.getKey(), e.getValue());
-            if (p != null) restore.add(p);
+        for (Map.Entry<Long, String[]> e : appliedBefore.entrySet()) {
+            restore.add(unpack(e.getKey(), e.getValue()));
         }
         appliedBefore.clear();
         appliedRow = Integer.MIN_VALUE;
@@ -205,34 +204,33 @@ public final class BlockOverrideWorld {
         if (!restore.isEmpty()) patcher.apply(restore);
     }
 
-    private void apply(List<BlockPatch> patches, List<BlockOverride> rows) {
-        Map<Long, String> nextBefore = new LinkedHashMap<Long, String>();
+    private boolean apply(List<BlockPatch> patches, List<BlockOverride> rows) {
+        Map<Long, String[]> nextBefore = new LinkedHashMap<Long, String[]>();
         for (BlockOverride b : rows) {
             if (!b.beforeSpec().valid()) continue;
-            nextBefore.put(BlockPatch.posKey(b.x, b.y, b.z), b.before);
+            nextBefore.put(BlockPatch.posKey(b.x, b.y, b.z), new String[] {b.before, b.block});
         }
         List<BlockPatch> out = new ArrayList<BlockPatch>();
-        for (Map.Entry<Long, String> e : appliedBefore.entrySet()) {
+        for (Map.Entry<Long, String[]> e : appliedBefore.entrySet()) {
             if (nextBefore.containsKey(e.getKey())) continue;
-            BlockPatch p = unpack(e.getKey(), e.getValue());
-            if (p != null) out.add(p);
+            out.add(unpack(e.getKey(), e.getValue()));
         }
         out.addAll(patches);
         appliedBefore.clear();
         appliedBefore.putAll(nextBefore);
-        if (!out.isEmpty()) patcher.apply(out);
+        return out.isEmpty() || patcher.apply(out);
     }
 
-    private static BlockPatch unpack(long key, String spec) {
+    private static BlockPatch unpack(long key, String[] specs) {
         int x = (int) (key >> 38);
         int y = (int) ((key << 26) >> 52);
         int z = (int) ((key << 38) >> 38);
-        return new BlockPatch(x, y, z, spec);
+        return new BlockPatch(x, y, z, specs[0], specs[1]);
     }
 
     public List<BlockPatch> appliedPositions() {
         List<BlockPatch> out = new ArrayList<BlockPatch>();
-        for (Map.Entry<Long, String> e : appliedBefore.entrySet()) {
+        for (Map.Entry<Long, String[]> e : appliedBefore.entrySet()) {
             out.add(unpack(e.getKey(), e.getValue()));
         }
         return Collections.unmodifiableList(out);

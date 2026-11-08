@@ -46,9 +46,10 @@ public final class BlockOverride {
     }
 
     public BlockPatch patchAtRow(int row) {
-        String spec = activeAtRow(row) ? block : before;
+        boolean active = activeAtRow(row);
+        String spec = active ? block : before;
         if (!Spec.parse(spec).valid()) return null;
-        return new BlockPatch(x, y, z, spec);
+        return new BlockPatch(x, y, z, spec, active ? before : block);
     }
 
     public BlockOverride withTicks(int start, int end) {

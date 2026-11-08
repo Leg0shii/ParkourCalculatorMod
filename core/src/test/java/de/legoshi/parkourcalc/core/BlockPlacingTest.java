@@ -62,7 +62,8 @@ public class BlockPlacingTest {
             }
 
             @Override
-            public void apply(List<BlockPatch> patches) {
+            public boolean apply(List<BlockPatch> patches) {
+                return true;
             }
         });
         return world;

@@ -46,7 +46,7 @@ public final class BlockOverrideOutlines {
             if (!b.spec().valid()) continue;
             if (b.activeAtRow(row)) {
                 shape(faces, world.shape(b.block), b.x, b.y, b.z, placed, false, EDGE_THICKNESS);
-            } else if (b.aheadOfRow(row)) {
+            } else {
                 shape(faces, world.shape(b.block), b.x, b.y, b.z, ahead, true, EDGE_THICKNESS);
             }
         }

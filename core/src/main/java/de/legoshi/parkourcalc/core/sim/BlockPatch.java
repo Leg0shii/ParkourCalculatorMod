@@ -6,12 +6,18 @@ public final class BlockPatch {
     public final int y;
     public final int z;
     public final String block;
+    public final String replaces;
 
     public BlockPatch(int x, int y, int z, String block) {
+        this(x, y, z, block, null);
+    }
+
+    public BlockPatch(int x, int y, int z, String block, String replaces) {
         this.x = x;
         this.y = y;
         this.z = z;
         this.block = block;
+        this.replaces = replaces;
     }
 
     public long posKey() {

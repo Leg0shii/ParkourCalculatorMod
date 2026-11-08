@@ -8,5 +8,5 @@ public interface BlockPatcher {
 
     boolean isAvailable();
 
-    void apply(List<BlockPatch> patches);
+    boolean apply(List<BlockPatch> patches);
 }

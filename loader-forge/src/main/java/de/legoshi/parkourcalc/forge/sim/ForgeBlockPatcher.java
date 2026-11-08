@@ -38,19 +38,20 @@ public final class ForgeBlockPatcher implements BlockPatcher {
     }
 
     @Override
-    public void apply(List<BlockPatch> patches) {
+    public boolean apply(List<BlockPatch> patches) {
         Minecraft mc = Minecraft.getMinecraft();
         final WorldClient clientWorld = McClient.world();
         final IntegratedServer server = mc.getIntegratedServer();
-        if (clientWorld == null || server == null || patches.isEmpty()) return;
+        if (clientWorld == null || server == null || patches.isEmpty()) return true;
         final List<Object[]> resolved = new ArrayList<Object[]>(patches.size());
         for (BlockPatch p : patches) {
             IBlockState state = BlockOverridePlacer.state(p.block);
             if (state == null) continue;
-            resolved.add(new Object[] {new BlockPos(p.x, p.y, p.z), state});
+            IBlockState replaces = p.replaces == null ? null : BlockOverridePlacer.state(p.replaces);
+            resolved.add(new Object[] {new BlockPos(p.x, p.y, p.z), state, replaces});
         }
-        if (resolved.isEmpty()) return;
-        set(clientWorld, resolved);
+        if (resolved.isEmpty()) return true;
+        boolean complete = set(clientWorld, resolved);
         server.addScheduledTask(new Runnable() {
             @Override
             public void run() {
@@ -62,19 +63,28 @@ public final class ForgeBlockPatcher implements BlockPatcher {
                 if (serverWorld != null) set(serverWorld, resolved);
             }
         });
+        return complete;
     }
 
-    private static void set(World world, List<Object[]> resolved) {
+    private static boolean set(World world, List<Object[]> resolved) {
+        boolean complete = true;
         for (Object[] r : resolved) {
             BlockPos pos = (BlockPos) r[0];
             IBlockState state = (IBlockState) r[1];
+            IBlockState replaces = (IBlockState) r[2];
             //? if >=1.12 {
-            if (world.getChunk(pos.getX() >> 4, pos.getZ() >> 4).isEmpty()) continue;
+            boolean loaded = !world.getChunk(pos.getX() >> 4, pos.getZ() >> 4).isEmpty();
             //?} else {
-            /*if (world.getChunkFromChunkCoords(pos.getX() >> 4, pos.getZ() >> 4).isEmpty()) continue;
+            /*boolean loaded = !world.getChunkFromChunkCoords(pos.getX() >> 4, pos.getZ() >> 4).isEmpty();
             *///?}
-            if (world.getBlockState(pos) == state) continue;
-            if (world.getTileEntity(pos) != null && !OWN_TILE_ENTITIES.contains(pos)) continue;
+            if (!loaded) {
+                complete = false;
+                continue;
+            }
+            IBlockState current = world.getBlockState(pos);
+            if (current == state) continue;
+            boolean own = OWN_TILE_ENTITIES.contains(pos) || (replaces != null && current == replaces);
+            if (world.getTileEntity(pos) != null && !own) continue;
             world.setBlockState(pos, state, SET_FLAGS);
             if (world.getTileEntity(pos) != null) {
                 OWN_TILE_ENTITIES.add(pos);
@@ -82,5 +92,6 @@ public final class ForgeBlockPatcher implements BlockPatcher {
                 OWN_TILE_ENTITIES.remove(pos);
             }
         }
+        return complete;
     }
 }
