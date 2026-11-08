@@ -193,7 +193,7 @@ public final class BlockPlacing {
     }
 
     private int startTick() {
-        return Math.max(1, Math.min(world.viewRow() + 2, Math.max(1, inputData.size())));
+        return Math.max(1, Math.min(world.viewRow() + 1, Math.max(1, inputData.size())));
     }
 
     private void addRow(int[] target, String block, boolean placed) {

@@ -70,9 +70,9 @@ public class BlockPlacingTest {
     }
 
     @Test
-    public void placingAddsAPlayerRowOnTheClickedFaceFromTheTickAfterTheView() {
+    public void placingAddsAPlayerRowOnTheClickedFaceAtTheShownTick() {
         InputData data = rows(6);
-        data.getRows().get(3).setKeyActive(InputRow.Key.RIGHT_CLICK, true);
+        data.getRows().get(2).setKeyActive(InputRow.Key.RIGHT_CLICK, true);
         PlacingAccess mc = new PlacingAccess();
         mc.held = "minecraft:stone";
         mc.lookedAtBlock = new int[] {35, -61, 9};
@@ -96,7 +96,7 @@ public class BlockPlacingTest {
 
         assertEquals(1, data.getBlockOverrides().size());
         BlockOverride row = data.getBlockOverrides().get(0);
-        assertEquals(new BlockOverride(4, BlockOverride.NO_END, 35, -60, 9, "minecraft:stone", BlockOverride.AIR, true), row);
+        assertEquals(new BlockOverride(3, BlockOverride.NO_END, 35, -60, 9, "minecraft:stone", BlockOverride.AIR, true), row);
         assertFalse(placing.isActive());
         assertNull(world.preview());
         assertEquals(0, changed[0]);
