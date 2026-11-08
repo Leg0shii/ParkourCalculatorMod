@@ -9,16 +9,21 @@ import de.legoshi.parkourcalc.core.sim.BlockOverride;
 import de.legoshi.parkourcalc.core.sim.BlockOverrides;
 import de.legoshi.parkourcalc.core.ui.anglesolver.SolverWidgets;
 import de.legoshi.parkourcalc.core.ui.theme.Controls;
+import de.legoshi.parkourcalc.core.ui.theme.Fonts;
 import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
 import de.legoshi.parkourcalc.core.ui.util.TooltipUtil;
 import imgui.ImDrawList;
 import imgui.ImGui;
 import imgui.ImGuiIO;
 import imgui.ImVec2;
+import imgui.flag.ImDrawFlags;
 import imgui.flag.ImGuiCol;
 import imgui.flag.ImGuiCond;
+import imgui.flag.ImGuiStyleVar;
+import imgui.flag.ImGuiTableBgTarget;
 import imgui.flag.ImGuiTableColumnFlags;
 import imgui.flag.ImGuiTableFlags;
+import imgui.flag.ImGuiTableRowFlags;
 import imgui.flag.ImGuiWindowFlags;
 import imgui.type.ImBoolean;
 import imgui.type.ImInt;
@@ -43,10 +48,24 @@ public final class BlockOverridesWindow implements RenderInterface {
     private static final float TICK_W = 62f;
     private static final float POS_W = 186f;
     private static final float PLACED_W = 154f;
+    private static final float DELETE_COL_W = 42f;
     private static final float DELETE_W = 34f;
+    private static final float CROSS_W = 28f;
     private static final float POS_GAP = 4f;
+    private static final float FRAME_H = 24f;
+    private static final float ROW_H = 32f;
+    private static final float HEADER_H = 26f;
+    private static final float CELL_PAD_X = 3f;
+    private static final float CELL_PAD_Y = 4f;
+    private static final float FRAME_PAD_X = 6f;
     private static final float PICKER_W = 300f;
-    private static final float PICKER_LABEL_W = 96f;
+    private static final float PICKER_PAD = 8f;
+    private static final float PICKER_ROW_H = 24f;
+    private static final float PICKER_LABEL_W = 70f;
+    private static final float[] ROW_BASE = {0x1e / 255f, 0x1e / 255f, 0x2e / 255f};
+    private static final float[] ROW_ALT = {0x23 / 255f, 0x23 / 255f, 0x34 / 255f};
+    private static final float[] POPUP_BG = {0x18 / 255f, 0x18 / 255f, 0x25 / 255f};
+    private static final float[] LIST_BG = {0x1e / 255f, 0x1e / 255f, 0x2e / 255f};
     private static final int PICKER_ROWS = 6;
     private static final int PICKER_MAX_IDS = 200;
     private static final int POS_CHARS = 40;
@@ -75,6 +94,8 @@ public final class BlockOverridesWindow implements RenderInterface {
     private int editingRow = -1;
     private int editingField = -1;
     private int pickerRow = -1;
+    private float pickerX;
+    private float pickerY;
 
     public BlockOverridesWindow(InputData inputData, MinecraftAccess mc, Settings settings, BlockOverrideWorld world,
                                 BlockPlacing placing, Runnable onSettingsChanged, IntConsumer onChanged) {
@@ -148,45 +169,53 @@ public final class BlockOverridesWindow implements RenderInterface {
     private void table(BlockOverrides blocks) {
         syncBuffers(blocks);
         float scale = ThemeManager.uiScale();
-        int flags = ThemeManager.standardTableFlags() & ~ImGuiTableFlags.BordersInnerV;
-        if (!ThemeManager.beginStandardTableWithFlags(TABLE_ID, HEADERS.length, flags, 0f, 0f)) return;
+        float rowH = ROW_H * scale;
+        float headerH = HEADER_H * scale;
+        float wanted = headerH + blocks.size() * rowH + 2f * scale;
+        float height = Math.min(wanted, Math.max(headerH + rowH, ImGui.getContentRegionAvailY()));
+        int flags = ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.BordersOuter
+                | (wanted > height ? ImGuiTableFlags.ScrollY : 0);
+        ImGui.pushStyleVar(ImGuiStyleVar.CellPadding, CELL_PAD_X * scale, CELL_PAD_Y * scale);
+        boolean ok = ThemeManager.beginStandardTableWithFlags(TABLE_ID, HEADERS.length, flags, 0f, height);
+        if (!ok) {
+            ImGui.popStyleVar();
+            return;
+        }
         int fixed = ImGuiTableColumnFlags.WidthFixed;
         ImGui.tableSetupColumn(HEADERS[0], fixed, TICK_W * scale);
         ImGui.tableSetupColumn(HEADERS[1], fixed, TICK_W * scale);
         ImGui.tableSetupColumn(HEADERS[2], fixed, POS_W * scale);
         ImGui.tableSetupColumn(HEADERS[3], ImGuiTableColumnFlags.WidthStretch);
         ImGui.tableSetupColumn(HEADERS[4], fixed, PLACED_W * scale);
-        ImGui.tableSetupColumn(HEADERS[5], fixed, DELETE_W * scale);
+        ImGui.tableSetupColumn(HEADERS[5], fixed, DELETE_COL_W * scale);
         ImGui.tableSetupScrollFreeze(0, 1);
-        ThemeManager.tableHeaderRow();
-        ThemeManager.paintTableHeader();
-        ImDrawList headerDl = ImGui.getWindowDrawList();
-        for (int c = 0; c < HEADERS.length; c++) {
-            ImGui.tableSetColumnIndex(c);
-            if (c > 0) {
-                float x = ImGui.getCursorScreenPosX() - ImGui.getStyle().getCellPaddingX();
-                float y0 = ImGui.getCursorScreenPosY() - ImGui.getStyle().getCellPaddingY();
-                headerDl.addLine(x, y0, x, y0 + ThemeManager.tableHeaderRowHeight(), ThemeManager.borderColor(), 1f);
-            }
-            ThemeManager.tableHeader(HEADERS[c]);
-        }
+        header(headerH);
         int viewRow = world.viewRow();
         int removeAt = -1;
+        float framePadY = Math.max(0f, (FRAME_H * scale - ImGui.getFontSize()) * 0.5f);
         for (int i = 0; i < blocks.size(); i++) {
-            ImGui.tableNextRow();
-            ThemeManager.paintTableRowBg(i);
+            ImGui.tableNextRow(0, rowH);
+            ImGui.tableSetBgColor(ImGuiTableBgTarget.RowBg0, rgba((i & 1) == 0 ? ROW_BASE : ROW_ALT));
             ImGui.pushID(i);
             BlockOverride b = blocks.get(i);
             boolean problem = world.hasProblem(b);
             boolean dim = !problem && !b.activeAtRow(viewRow);
             if (problem) ThemeManager.pushTextColor(ThemeManager.dangerColor());
             if (dim) ThemeManager.pushTextColor(ThemeManager.textDimColor());
+            ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, FRAME_PAD_X * scale, framePadY);
+            ImGui.pushStyleVar(ImGuiStyleVar.FrameBorderSize, 1f);
+            ImGui.pushStyleColor(ImGuiCol.FrameBg, ThemeManager.panelColor());
+            ImGui.pushStyleColor(ImGuiCol.Border, ThemeManager.borderColor());
             boolean remove = row(blocks, i);
+            ImGui.popStyleColor(2);
+            ImGui.popStyleVar(2);
             if (dim || problem) ThemeManager.popTextColor();
+            if (pickerRow == i) picker(blocks, i);
             if (remove) removeAt = i;
             ImGui.popID();
         }
         ThemeManager.endStandardTable();
+        ImGui.popStyleVar();
         if (removeAt >= 0) {
             blocks.remove(removeAt);
             posBuffers.remove(removeAt);
@@ -195,6 +224,26 @@ public final class BlockOverridesWindow implements RenderInterface {
             if (pickerRow == removeAt) pickerRow = -1;
             changed(0);
         }
+    }
+
+    private void header(float headerH) {
+        ImGui.tableNextRow(ImGuiTableRowFlags.Headers, headerH);
+        ImGui.tableSetBgColor(ImGuiTableBgTarget.RowBg0, ThemeManager.bgDarkColor());
+        ImDrawList dl = ImGui.getWindowDrawList();
+        float padX = ImGui.getStyle().getCellPaddingX();
+        float padY = ImGui.getStyle().getCellPaddingY();
+        for (int c = 0; c < HEADERS.length; c++) {
+            ImGui.tableSetColumnIndex(c);
+            float x = ImGui.getCursorScreenPosX();
+            float y = ImGui.getCursorScreenPosY() - padY;
+            if (c > 0) dl.addLine(x - padX, y, x - padX, y + headerH, ThemeManager.borderColor(), 1f);
+            dl.addText(x + 3f * ThemeManager.uiScale(), y + (headerH - ImGui.getFontSize()) * 0.5f,
+                    ThemeManager.textMutedColor(), HEADERS[c]);
+        }
+    }
+
+    private static int rgba(float[] c) {
+        return ImGui.colorConvertFloat4ToU32(c[0], c[1], c[2], 1f);
     }
 
     private boolean row(BlockOverrides blocks, int i) {
@@ -220,15 +269,68 @@ public final class BlockOverridesWindow implements RenderInterface {
         blockCell(blocks, i, info);
         b = blocks.get(i);
         ImGui.tableSetColumnIndex(4);
-        int clicked = SolverWidgets.segmented("##placedBy", PLACED_BY, PLACED_BY_TIPS, b.player ? 1 : 0,
-                ImGui.getContentRegionAvailX());
+        int clicked = placedBy(b.player ? 1 : 0);
         if (clicked >= 0 && (clicked == 1) != b.player) update(blocks, i, b.withPlayer(clicked == 1), b);
         ImGui.tableSetColumnIndex(5);
-        Controls.pushInputFrameHeight();
-        boolean remove = Controls.dangerButton("×", DELETE_W * ThemeManager.uiScale());
-        Controls.popInputFrameHeight();
+        boolean remove = deleteButton();
         TooltipUtil.onHover(info);
         return remove;
+    }
+
+    private int placedBy(int selected) {
+        float h = ImGui.getFrameHeight();
+        float w = ImGui.getContentRegionAvailX();
+        float segW = w / PLACED_BY.length;
+        ImDrawList dl = ImGui.getWindowDrawList();
+        float rounding = ImGui.getStyle().getFrameRounding();
+        int textCol = ImGui.getColorU32(ImGuiCol.Text);
+        int clicked = -1;
+        float left = ImGui.getCursorScreenPosX();
+        float top = ImGui.getCursorScreenPosY();
+        dl.addRectFilled(left, top, left + w, top + h, ThemeManager.panelColor(), rounding);
+        for (int k = 0; k < PLACED_BY.length; k++) {
+            if (k > 0) ImGui.sameLine(0f, 0f);
+            if (ImGui.invisibleButton("##seg" + k, segW, h)) clicked = k;
+            boolean hover = ImGui.isItemHovered();
+            if (hover) ImGui.setTooltip(PLACED_BY_TIPS[k]);
+            ImVec2 mn = ImGui.getItemRectMin();
+            ImVec2 mx = ImGui.getItemRectMax();
+            boolean on = k == selected;
+            if (on) {
+                dl.addRectFilled(mn.x, mn.y, mx.x, mx.y, ThemeManager.accentColor(), rounding,
+                        k == 0 ? ImDrawFlags.RoundCornersLeft : ImDrawFlags.RoundCornersRight);
+            } else if (hover) {
+                dl.addRectFilled(mn.x, mn.y, mx.x, mx.y, ThemeManager.accentTintColor(0.18f), 0f);
+            }
+            if (k > 0) dl.addLine(mn.x, mn.y, mn.x, mx.y, ThemeManager.borderColor(), 1f);
+            if (on) Fonts.pushBold();
+            ImVec2 ts = ImGui.calcTextSize(PLACED_BY[k]);
+            dl.addText(mn.x + (segW - ts.x) * 0.5f, mn.y + (h - ImGui.getFontSize()) * 0.5f,
+                    on ? ThemeManager.bgDarkColor() : textCol, PLACED_BY[k]);
+            if (on) Fonts.popBold();
+        }
+        dl.addRect(left, top, left + w, top + h, ThemeManager.borderColor(), rounding, 0, 1f);
+        return clicked;
+    }
+
+    private boolean deleteButton() {
+        float scale = ThemeManager.uiScale();
+        float h = ImGui.getFrameHeight();
+        float w = DELETE_W * scale;
+        boolean clicked = ImGui.invisibleButton("##delete", w, h);
+        boolean hover = ImGui.isItemHovered();
+        ImVec2 mn = ImGui.getItemRectMin();
+        ImDrawList dl = ImGui.getWindowDrawList();
+        float rounding = ImGui.getStyle().getFrameRounding();
+        dl.addRectFilled(mn.x, mn.y, mn.x + w, mn.y + h, ThemeManager.dangerColor(), rounding);
+        if (hover) dl.addRectFilled(mn.x, mn.y, mn.x + w, mn.y + h, ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.12f), rounding);
+        float cx = mn.x + w * 0.5f;
+        float cy = mn.y + h * 0.5f;
+        float r = 3.5f * scale;
+        int col = ThemeManager.bgDarkColor();
+        dl.addLine(cx - r, cy - r, cx + r, cy + r, col, 1.8f * scale);
+        dl.addLine(cx + r, cy - r, cx - r, cy + r, col, 1.8f * scale);
+        return clicked;
     }
 
     private String rowInfo(BlockOverride b) {
@@ -237,6 +339,7 @@ public final class BlockOverridesWindow implements RenderInterface {
         if (sim != null) sb.append(sim).append('\n');
         String replay = world.replayProblem(b);
         if (replay != null) sb.append(replay).append(" (replay)\n");
+        if (sb.length() > 0) return sb.substring(0, sb.length() - 1);
         sb.append("Before: ").append(displayName(b.before));
         return sb.toString();
     }
@@ -250,9 +353,7 @@ public final class BlockOverridesWindow implements RenderInterface {
     private Integer intCell(String id, int value) {
         intHolder.set(value);
         ImGui.setNextItemWidth(-1f);
-        Controls.pushInputFrameHeight();
         boolean changed = ImGui.inputInt(id, intHolder, 0, 0);
-        Controls.popInputFrameHeight();
         return changed && intHolder.get() != value ? intHolder.get() : null;
     }
 
@@ -260,9 +361,7 @@ public final class BlockOverridesWindow implements RenderInterface {
         ImString buf = endBuffers.get(i);
         if (!(editingRow == i && editingField == 1)) buf.set(b.endTick == BlockOverride.NO_END ? "" : String.valueOf(b.endTick));
         ImGui.setNextItemWidth(-1f);
-        Controls.pushInputFrameHeight();
         ImGui.inputTextWithHint("##end", END_HINT, buf);
-        Controls.popInputFrameHeight();
         if (ImGui.isItemActivated()) {
             editingRow = i;
             editingField = 1;
@@ -291,11 +390,8 @@ public final class BlockOverridesWindow implements RenderInterface {
         BlockOverride b = blocks.get(i);
         ImString buf = posBuffers.get(i);
         if (!(editingRow == i && editingField == 2)) buf.set(b.x + " " + b.y + " " + b.z);
-        float h = ImGui.getFrameHeight();
-        ImGui.setNextItemWidth(ImGui.getContentRegionAvailX() - h - POS_GAP * ThemeManager.uiScale());
-        Controls.pushInputFrameHeight();
+        ImGui.setNextItemWidth(ImGui.getContentRegionAvailX() - (CROSS_W + POS_GAP) * ThemeManager.uiScale());
         ImGui.inputText("##pos", buf);
-        Controls.popInputFrameHeight();
         TooltipUtil.onHover(info);
         if (ImGui.isItemActivated()) {
             editingRow = i;
@@ -335,19 +431,20 @@ public final class BlockOverridesWindow implements RenderInterface {
     private boolean crosshairButton(String id) {
         float scale = ThemeManager.uiScale();
         float h = ImGui.getFrameHeight();
-        boolean clicked = ImGui.invisibleButton(id, h, h);
+        float w = CROSS_W * scale;
+        boolean clicked = ImGui.invisibleButton(id, w, h);
         boolean hover = ImGui.isItemHovered();
         ImVec2 mn = ImGui.getItemRectMin();
         ImDrawList dl = ImGui.getWindowDrawList();
         int bg = hover ? ThemeManager.accentTintColor(0.18f) : ThemeManager.panelColor();
         float rounding = ImGui.getStyle().getFrameRounding();
-        dl.addRectFilled(mn.x, mn.y, mn.x + h, mn.y + h, bg, rounding);
-        dl.addRect(mn.x, mn.y, mn.x + h, mn.y + h, ThemeManager.borderColor(), rounding);
+        dl.addRectFilled(mn.x, mn.y, mn.x + w, mn.y + h, bg, rounding);
+        dl.addRect(mn.x, mn.y, mn.x + w, mn.y + h, ThemeManager.borderColor(), rounding);
         int col = hover ? ThemeManager.textColor() : ThemeManager.textMutedColor();
-        float cx = mn.x + h * 0.5f;
+        float cx = mn.x + w * 0.5f;
         float cy = mn.y + h * 0.5f;
-        float r = h * 0.26f;
-        float tick = 3f * scale;
+        float r = 3.2f * scale;
+        float tick = 2.6f * scale;
         dl.addCircle(cx, cy, r, col, 16, 1.2f * scale);
         dl.addLine(cx - r - tick, cy, cx - r + tick, cy, col, 1.2f * scale);
         dl.addLine(cx + r - tick, cy, cx + r + tick, cy, col, 1.2f * scale);
@@ -378,7 +475,7 @@ public final class BlockOverridesWindow implements RenderInterface {
         String name = error != null ? b.block : spec.shortName();
         String states = error != null ? "" : displayName(b.block).substring(name.length());
         float padX = ImGui.getStyle().getFramePaddingX();
-        float arrowW = h;
+        float arrowW = 20f * scale;
         float textY = mn.y + (h - ImGui.getFontSize()) * 0.5f;
         float x = mn.x + padX;
         dl.pushClipRect(mn.x, mn.y, mx.x - arrowW, mx.y, true);
@@ -394,10 +491,11 @@ public final class BlockOverridesWindow implements RenderInterface {
         if (hover) TooltipUtil.onHover((error != null ? error : b.block) + "\n" + info);
         if (clicked) {
             pickerRow = i;
+            pickerX = mn.x;
+            pickerY = mx.y + 2f * scale;
             search.set("");
             ImGui.openPopup(PICKER_ID);
         }
-        if (pickerRow == i) picker(blocks, i);
     }
 
     private static float warningGlyph(ImDrawList dl, float x, float cy, float scale) {
@@ -413,17 +511,69 @@ public final class BlockOverridesWindow implements RenderInterface {
 
     private void picker(BlockOverrides blocks, int i) {
         float scale = ThemeManager.uiScale();
+        float pad = PICKER_PAD * scale;
+        float framePadY = Math.max(0f, (FRAME_H * scale - ImGui.getFontSize()) * 0.5f);
+        ImGui.setNextWindowPos(pickerX, pickerY, ImGuiCond.Appearing);
         ImGui.setNextWindowSize(PICKER_W * scale, 0f);
-        if (!ImGui.beginPopup(PICKER_ID)) {
+        ImGui.pushStyleVar(ImGuiStyleVar.WindowPadding, pad, pad);
+        ImGui.pushStyleVar(ImGuiStyleVar.ItemSpacing, ImGui.getStyle().getItemSpacingX(), pad);
+        ImGui.pushStyleVar(ImGuiStyleVar.PopupBorderSize, 1f);
+        ImGui.pushStyleColor(ImGuiCol.PopupBg, rgba(POPUP_BG));
+        ImGui.pushStyleColor(ImGuiCol.Border, ThemeManager.borderColor());
+        boolean open = ImGui.beginPopup(PICKER_ID);
+        ImGui.popStyleColor(2);
+        ImGui.popStyleVar(3);
+        if (!open) {
             pickerRow = -1;
             return;
         }
+        ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, FRAME_PAD_X * scale, framePadY);
+        ImGui.pushStyleVar(ImGuiStyleVar.FrameBorderSize, 1f);
+        ImGui.pushStyleColor(ImGuiCol.FrameBg, ThemeManager.panelColor());
+        ImGui.pushStyleColor(ImGuiCol.Border, ThemeManager.borderColor());
         BlockOverride b = blocks.get(i);
-        if (ImGui.isWindowAppearing()) ImGui.setKeyboardFocusHere();
-        Controls.inputTextHint("##search", "Search", search, -1f);
+        searchField();
         String query = search.get().trim().toLowerCase(Locale.ROOT).replace(' ', '_');
-        float rowH = ImGui.getTextLineHeightWithSpacing();
-        ImGui.beginChild("##list", -1f, rowH * PICKER_ROWS, false);
+        String chosen = blockList(b, query, scale);
+        if (chosen != null) {
+            update(blocks, i, b.withBlock(chosen), b);
+        }
+        states(blocks, i);
+        ImGui.popStyleColor(2);
+        ImGui.popStyleVar(2);
+        ImGui.endPopup();
+    }
+
+    private void searchField() {
+        float scale = ThemeManager.uiScale();
+        float iconW = 18f * scale;
+        float padX = FRAME_PAD_X * scale;
+        float padY = ImGui.getStyle().getFramePaddingY();
+        ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, padX + iconW, padY);
+        if (ImGui.isWindowAppearing()) ImGui.setKeyboardFocusHere();
+        ImGui.setNextItemWidth(ImGui.getContentRegionAvailX());
+        ImGui.inputTextWithHint("##search", "Search", search);
+        ImGui.popStyleVar();
+        ImVec2 mn = ImGui.getItemRectMin();
+        ImVec2 mx = ImGui.getItemRectMax();
+        ImDrawList dl = ImGui.getWindowDrawList();
+        int col = ThemeManager.textMutedColor();
+        float cx = mn.x + padX + 5f * scale;
+        float cy = (mn.y + mx.y) * 0.5f - 1f * scale;
+        float r = 3.6f * scale;
+        dl.addCircle(cx, cy, r, col, 16, 1.4f * scale);
+        dl.addLine(cx + r * 0.72f, cy + r * 0.72f, cx + r * 1.9f, cy + r * 1.9f, col, 1.4f * scale);
+    }
+
+    private String blockList(BlockOverride b, String query, float scale) {
+        float rowH = PICKER_ROW_H * scale;
+        ImGui.pushStyleColor(ImGuiCol.ChildBg, rgba(LIST_BG));
+        ImGui.pushStyleColor(ImGuiCol.Border, ThemeManager.borderColor());
+        ImGui.pushStyleVar(ImGuiStyleVar.ChildBorderSize, 1f);
+        ImGui.pushStyleVar(ImGuiStyleVar.ChildRounding, ImGui.getStyle().getFrameRounding());
+        ImGui.pushStyleVar(ImGuiStyleVar.WindowPadding, 0f, 0f);
+        ImGui.pushStyleVar(ImGuiStyleVar.ItemSpacing, 0f, 0f);
+        ImGui.beginChild("##list", -1f, rowH * PICKER_ROWS + 2f, true);
         String held = mc.isReady() ? mc.getHeldBlock() : null;
         String looked = null;
         if (mc.isReady()) {
@@ -431,24 +581,27 @@ public final class BlockOverridesWindow implements RenderInterface {
             if (hit != null) looked = mc.describeBlockState(hit.x, hit.y, hit.z);
         }
         String chosen = null;
-        if (held != null && matches(held, query) && pickerEntry(displayName(held), "in hand", held.equals(b.block))) chosen = held;
-        if (looked != null && matches(looked, query) && pickerEntry(displayName(looked), "looked at", looked.equals(b.block))) chosen = looked;
-        int shown = 0;
         String currentId = b.spec().valid() ? b.spec().id : "";
+        if (held != null && matches(held, query) && pickerEntry("h", displayName(held), "in hand", sameId(held, currentId), rowH)) chosen = held;
+        if (looked != null && matches(looked, query) && pickerEntry("l", displayName(looked), "looked at", sameId(looked, currentId), rowH)) chosen = looked;
+        int shown = 0;
         for (String id : mc.blockIds()) {
             if (!matches(id, query)) continue;
             if (shown++ >= PICKER_MAX_IDS) break;
-            String def = mc.defaultBlockState(id);
-            String spec = def != null ? def : id;
-            if (pickerEntry(BlockOverride.Spec.parse(id).shortName(), null, id.equals(currentId))) chosen = spec;
+            if (pickerEntry(id, BlockOverride.Spec.parse(id).shortName(), null, id.equals(currentId), rowH)) {
+                String def = mc.defaultBlockState(id);
+                chosen = def != null ? def : id;
+            }
         }
         ImGui.endChild();
-        if (chosen != null) {
-            update(blocks, i, b.withBlock(chosen), b);
-            b = blocks.get(i);
-        }
-        states(blocks, i);
-        ImGui.endPopup();
+        ImGui.popStyleVar(4);
+        ImGui.popStyleColor(2);
+        return chosen;
+    }
+
+    private static boolean sameId(String spec, String id) {
+        BlockOverride.Spec parsed = BlockOverride.Spec.parse(spec);
+        return parsed.valid() && parsed.id.equals(id);
     }
 
     private static boolean matches(String spec, String query) {
@@ -457,14 +610,25 @@ public final class BlockOverridesWindow implements RenderInterface {
         return id.contains(query);
     }
 
-    private boolean pickerEntry(String label, String tag, boolean selected) {
-        boolean clicked = ImGui.selectable(label, selected);
+    private boolean pickerEntry(String id, String label, String tag, boolean selected, float rowH) {
+        float scale = ThemeManager.uiScale();
+        float w = ImGui.getContentRegionAvailX();
+        boolean clicked = ImGui.invisibleButton("##e" + id, Math.max(1f, w), rowH);
+        boolean hover = ImGui.isItemHovered();
+        ImVec2 mn = ImGui.getItemRectMin();
+        ImVec2 mx = ImGui.getItemRectMax();
+        ImDrawList dl = ImGui.getWindowDrawList();
+        if (selected) {
+            dl.addRectFilled(mn.x, mn.y, mx.x, mx.y, ThemeManager.accentTintColor(0.45f));
+        } else if (hover) {
+            dl.addRectFilled(mn.x, mn.y, mx.x, mx.y, ThemeManager.accentTintColor(0.18f));
+        }
+        float padX = 8f * scale;
+        float ty = mn.y + (rowH - ImGui.getFontSize()) * 0.5f;
+        dl.addText(mn.x + padX, ty, ThemeManager.textColor(), label);
         if (tag != null) {
             float tagW = ImGui.calcTextSize(tag).x;
-            ImGui.sameLine(ImGui.getWindowContentRegionMaxX() - tagW);
-            ThemeManager.pushTextColor(ThemeManager.textDimColor());
-            ImGui.text(tag);
-            ThemeManager.popTextColor();
+            dl.addText(mx.x - padX - tagW, ty, ThemeManager.textDimColor(), tag);
         }
         return clicked;
     }
@@ -477,7 +641,7 @@ public final class BlockOverridesWindow implements RenderInterface {
         if (options.isEmpty()) return;
         float scale = ThemeManager.uiScale();
         BlockOverride.Spec defaults = BlockOverride.Spec.parse(mc.defaultBlockState(spec.id));
-        ImGui.spacing();
+        float labelX = ImGui.getCursorPosX();
         for (Map.Entry<String, List<String>> e : options.entrySet()) {
             String key = e.getKey();
             String current = spec.properties.get(key);
@@ -487,9 +651,8 @@ public final class BlockOverridesWindow implements RenderInterface {
             ThemeManager.pushTextColor(ThemeManager.textMutedColor());
             ImGui.text(key);
             ThemeManager.popTextColor();
-            ImGui.sameLine(PICKER_LABEL_W * scale);
-            ImGui.setNextItemWidth(-1f);
-            Controls.pushInputFrameHeight();
+            ImGui.sameLine(labelX + PICKER_LABEL_W * scale);
+            ImGui.setNextItemWidth(ImGui.getContentRegionAvailX());
             if (ImGui.beginCombo("##" + key, current)) {
                 for (String value : e.getValue()) {
                     if (ImGui.selectable(value, value.equals(current)) && !value.equals(current)) {
@@ -500,7 +663,6 @@ public final class BlockOverridesWindow implements RenderInterface {
                 }
                 ImGui.endCombo();
             }
-            Controls.popInputFrameHeight();
         }
     }
 
