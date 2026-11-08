@@ -1,5 +1,7 @@
 package de.legoshi.parkourcalc.core.anglesolver.solver;
 
+import de.legoshi.parkourcalc.core.anglesolver.FlowVector;
+
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 
 import java.util.ArrayList;
@@ -439,12 +441,16 @@ public final class LongRunSolver {
         p.slipPerTick = sliceDouble(sc.slipPerTick, a, len);
         p.surfacePerTick = sliceKind(sc.surfacePerTick, a, len);
         p.soulsandCellsPerTick = sliceInt(sc.soulsandCellsPerTick, a, len);
+        p.flowPerTick = sliceFlow(sc.flowPerTick, a, len);
+        p.endFlowPerTick = sliceFlow(sc.endFlowPerTick, a, len);
+        p.ultrawarm = sc.ultrawarm;
         p.sneakPerTick = sliceBool(sc.sneakPerTick, a, len);
         p.dolphinsGracePerTick = sliceBool(sc.dolphinsGracePerTick, a, len);
         p.weavingPerTick = sliceBool(sc.weavingPerTick, a, len);
         // null arrays stay null so the slice keeps the source's legacy fallbacks (always-sprint, W held).
         p.sprintPerTick = sliceBool(sc.sprintPerTick, a, len);
         p.liveMovementFactor = sc.liveMovementFactor;
+        p.variant = sc.variant;
         p.forwardInputPerTick = sliceFloat(sc.forwardInputPerTick, a, len, 1.0F * 0.98F);
         p.strafeInputPerTick = sliceFloat(sc.strafeInputPerTick, a, len, 0.0F);
         p.damagePerTick = sliceBool(sc.damagePerTick, a, len);
@@ -493,6 +499,13 @@ public final class LongRunSolver {
         if (x == null) return null;
         double[] o = new double[len];
         for (int i = 0; i < len; i++) o[i] = from + i < x.length ? x[from + i] : Double.NaN;
+        return o;
+    }
+
+    private static FlowVector[] sliceFlow(FlowVector[] x, int from, int len) {
+        if (x == null) return null;
+        FlowVector[] o = new FlowVector[len];
+        for (int i = 0; i < len; i++) o[i] = from + i < x.length && x[from + i] != null ? x[from + i] : FlowVector.NONE;
         return o;
     }
 

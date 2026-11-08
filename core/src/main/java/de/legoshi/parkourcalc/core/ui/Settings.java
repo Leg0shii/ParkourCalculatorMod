@@ -85,6 +85,7 @@ public final class Settings {
     private static final boolean DEFAULT_SENSE_FINDER_COUNT_VIEW = false;
     private static final boolean DEFAULT_VIEW_RECORDER = false;
     private static final boolean DEFAULT_VIEW_BLOCK_OVERRIDES = false;
+    private static final boolean DEFAULT_VIEW_KEYSTROKES = false;
     private static final int DEFAULT_TURN_PROFILE_ATTEMPTS = 20_000;
     private static final int DEFAULT_ONEJUMP_SPREAD_ATTEMPTS = 1000;
     private static final boolean DEFAULT_SAVE_DEBUG_VALUES = false;
@@ -125,6 +126,8 @@ public final class Settings {
     private static final int DEFAULT_REPLAY_START_DELAY_TICKS = 0;
     public static final int MIN_REPLAY_START_DELAY_TICKS = 0;
     public static final int MAX_REPLAY_START_DELAY_TICKS = 20;
+
+    private static final boolean DEFAULT_REPLAY_KEYSTROKES_SCROLL = false;
 
     private static final int DEFAULT_TICK_INFO_PRECISION = 5;
     public static final int DEFAULT_SOLVER_STATS_PRECISION = 5;
@@ -236,6 +239,9 @@ public final class Settings {
     public boolean onejumpStopTurnOnFail = false;
     public boolean viewRecorder = DEFAULT_VIEW_RECORDER;
     public boolean viewBlockOverrides = DEFAULT_VIEW_BLOCK_OVERRIDES;
+    public boolean viewKeystrokes = DEFAULT_VIEW_KEYSTROKES;
+    public boolean viewMouseStrokes = DEFAULT_VIEW_KEYSTROKES;
+    public boolean viewMouseMovement = DEFAULT_VIEW_KEYSTROKES;
     public int turnProfileAttempts = DEFAULT_TURN_PROFILE_ATTEMPTS;
     public int onejumpSpreadAttempts = DEFAULT_ONEJUMP_SPREAD_ATTEMPTS;
     public boolean turnProfileShowRating = true;
@@ -264,6 +270,7 @@ public final class Settings {
     public boolean pairedDamage = DEFAULT_PAIRED_DAMAGE;
     public boolean lockstepReplay = DEFAULT_LOCKSTEP_REPLAY;
     public int replayStartDelayTicks = DEFAULT_REPLAY_START_DELAY_TICKS;
+    public boolean replayKeystrokesScroll = DEFAULT_REPLAY_KEYSTROKES_SCROLL;
 
     public static int defaultTickInfoPrecision() {
         return DEFAULT_TICK_INFO_PRECISION;
@@ -365,6 +372,9 @@ public final class Settings {
         onejumpStopTurnOnFail = false;
         viewRecorder = DEFAULT_VIEW_RECORDER;
         viewBlockOverrides = DEFAULT_VIEW_BLOCK_OVERRIDES;
+        viewKeystrokes = DEFAULT_VIEW_KEYSTROKES;
+        viewMouseStrokes = DEFAULT_VIEW_KEYSTROKES;
+        viewMouseMovement = DEFAULT_VIEW_KEYSTROKES;
         turnProfileAttempts = DEFAULT_TURN_PROFILE_ATTEMPTS;
         onejumpSpreadAttempts = DEFAULT_ONEJUMP_SPREAD_ATTEMPTS;
         turnProfileShowRating = true;
@@ -383,5 +393,6 @@ public final class Settings {
         pairedDamage = DEFAULT_PAIRED_DAMAGE;
         lockstepReplay = DEFAULT_LOCKSTEP_REPLAY;
         replayStartDelayTicks = DEFAULT_REPLAY_START_DELAY_TICKS;
+        replayKeystrokesScroll = DEFAULT_REPLAY_KEYSTROKES_SCROLL;
     }
 }

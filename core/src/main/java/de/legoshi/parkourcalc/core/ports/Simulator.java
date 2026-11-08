@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.core.ports;
 
+import de.legoshi.parkourcalc.core.anglesolver.FlowVector;
 import de.legoshi.parkourcalc.core.anglesolver.Medium;
 import de.legoshi.parkourcalc.core.sim.Checkpoint;
 import de.legoshi.parkourcalc.core.sim.BlockOverride;
@@ -57,6 +58,14 @@ public interface Simulator {
 
     default int getCurrentTickSoulsandCells() {
         return 0;
+    }
+
+    default FlowVector getCurrentTickFlow() {
+        return FlowVector.NONE;
+    }
+
+    default boolean isCurrentTickInWater() {
+        return false;
     }
 
     default ServerTickSample getCurrentServerSample() {

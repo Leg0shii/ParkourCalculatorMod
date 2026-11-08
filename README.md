@@ -88,7 +88,7 @@ Press `G` to open the calculator. Every hotkey below is rebindable in Minecraft'
 
 - Click to select, Ctrl+Click to toggle, Shift+Click for a range
 - `Delete` removes the selected rows, `Insert` adds rows at the selection
-- Drag rows to reorder; right-click for duplicate, lock yaw/pitch, teleport and copy options
+- Drag rows to reorder; right-click for duplicate, lock yaw/pitch, teleport and copy options; with the Angle Solver open it also sets dF >= 0, dF <= 0 or dF = 0 on the selected rows
 
 ### Moving the start position
 
@@ -133,6 +133,8 @@ Releases ship one jar per loader, on [Modrinth](https://modrinth.com/mod/parkour
 2. Install [Fabric API](https://modrinth.com/mod/fabric-api) into your `mods` folder.
 3. Drop `pkc-fabric-<version>.jar` into the same `mods` folder.
 4. Launch the Fabric profile for that Minecraft version.
+
+Runs next to [BPKMod](https://github.com/xiaozi233/BPKMod) (Bedrock-style movement on Java): the simulation follows BPKMod's config live, the angle solver reads it at launch, and a HUD line on world join says which rules it saw. Restart the game after changing BPKMod's config so the solver follows. The same holds on Forge 1.12.2 next to BPKMod 1.5.7.
 
 ### Fabric 1.21.3
 

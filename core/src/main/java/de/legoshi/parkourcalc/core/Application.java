@@ -23,6 +23,7 @@ import de.legoshi.parkourcalc.core.ui.ConstraintSelection;
 import de.legoshi.parkourcalc.core.ui.FileMenu;
 import de.legoshi.parkourcalc.core.ui.HudMessages;
 import de.legoshi.parkourcalc.core.ui.HudMessagesPanel;
+import de.legoshi.parkourcalc.core.ui.ReplayKeystrokesPanel;
 import de.legoshi.parkourcalc.core.ui.InputData;
 import de.legoshi.parkourcalc.core.ui.InputOverlay;
 import de.legoshi.parkourcalc.core.ui.InputRow;
@@ -45,6 +46,7 @@ import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.BlockSelection;
 import de.legoshi.parkourcalc.core.anglesolver.ConstraintText;
+import de.legoshi.parkourcalc.core.anglesolver.FlowVector;
 import de.legoshi.parkourcalc.core.anglesolver.Medium;
 import de.legoshi.parkourcalc.core.anglesolver.Slipperiness;
 import de.legoshi.parkourcalc.core.anglesolver.SolveResult;
@@ -111,6 +113,8 @@ public final class Application {
     private final OsSystemBridge systemBridge = new OsSystemBridge();
 
     private de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel forwardModel;
+    private de.legoshi.parkourcalc.core.anglesolver.solver.PhysicsVariant physicsVariant =
+            de.legoshi.parkourcalc.core.anglesolver.solver.PhysicsVariant.VANILLA;
     private de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverWindow angleSolverWindow;
     private NoTurnSearchController noTurnSearch;
     private SenseSearchController senseSearch;
@@ -188,6 +192,14 @@ public final class Application {
         fileMenu.promptSaveSelectionAsTas(copied, sourceRows, pos, vel, yaw, pitch, resume);
     }
 
+    public void setPhysicsVariant(de.legoshi.parkourcalc.core.anglesolver.solver.PhysicsVariant variant) {
+        physicsVariant = variant == null ? de.legoshi.parkourcalc.core.anglesolver.solver.PhysicsVariant.VANILLA : variant;
+    }
+
+    public de.legoshi.parkourcalc.core.anglesolver.solver.PhysicsVariant getPhysicsVariant() {
+        return physicsVariant;
+    }
+
     public void setModVersion(String modVersion) {
         this.modVersion = modVersion;
     }
@@ -220,7 +232,7 @@ public final class Application {
         angleSolverState = new AngleSolverState();
         FileSystemSaveStore saveStore = saveController.getSaveStore();
         String mcVersion = saveStore != null ? saveStore.getMcVersion() : null;
-        forwardModel = ExactJumpModel.forMcVersion(mcVersion).withVelocityCodec(mc.velocityPacketCodec());
+        forwardModel = ExactJumpModel.forMcVersion(mcVersion, physicsVariant).withVelocityCodec(mc.velocityPacketCodec());
         inputOverlay.setMcVersion(mcVersion);
         constraintKeyController = new ConstraintKeyController(
                 mc, angleSolverState, selection, constraintSelection, saveController::markDirty,
@@ -241,6 +253,7 @@ public final class Application {
         AngleSolverEngine angleSolverEngine = new AngleSolverEngine(angleSolverState, boxController, inputData, this::onUserChange, forwardModel);
         angleSolverEngine.setOnStartMoved(runner::setStartPosition);
         angleSolverEngine.setOnStartYawChanged(runner::setStartYaw);
+        angleSolverEngine.setUltrawarm(mc::isUltrawarm);
         this.solverEngine = angleSolverEngine;
         if (saveStore != null) {
             angleSolverEngine.setRunLog(new SolveRunLog(saveStore.getSaveDir().resolve("runs"),
@@ -370,6 +383,7 @@ public final class Application {
                 hudMessagesPanel
         );
         mainWindow.setServerEventLogPanel(serverEventLogPanel);
+        mainWindow.setReplayKeystrokesPanel(new ReplayKeystrokesPanel(playback, settings));
         mainWindow.setStratfinderMenu(stratfinderWindow::isOpen, () -> {
             if (stratfinderWindow.isOpen()) {
                 stratfinderWindow.close();
@@ -887,8 +901,11 @@ public final class Application {
             boolean slipDefault = slip == angleSolverState.getDefaultSlipperiness();
             boolean mediumNone = medium == Medium.NONE;
             boolean damage = damageTicks.contains(t);
+            TickState pre = boxController.getState(t);
+            FlowVector flow = pre != null ? pre.flow : FlowVector.NONE;
+            boolean flows = flow.pushes();
             TickConstraints tc = angleSolverState.tickConstraintsOrNull(t);
-            if (tc == null && slipDefault && mediumNone && !damage) continue;
+            if (tc == null && slipDefault && mediumNone && !damage && !flows) continue;
             StateOverride ov = angleSolverState.tickConstraints(t).getOverride();
             ov.setDamage(damage);
             if (slipDefault) ov.clearSlipperiness();
@@ -899,6 +916,7 @@ public final class Application {
                 ov.setMedium(medium);
                 if (medium == Medium.SOULSAND) ov.setSoulsandCells(Math.max(1, s.soulsandCells));
             }
+            ov.setFlowVector(flow);
             changed = true;
         }
         if (changed) saveController.markDirty();

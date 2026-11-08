@@ -15,6 +15,8 @@ import java.util.Map;
 public class FakePlaybackBridge implements PlaybackBridge {
 
     public boolean paused;
+    public boolean singleplayer = true;
+    public boolean multiplayerPlayback;
     public int releaseAllCalls;
     public int suppressFlightCalls;
     public int teleportCalls;
@@ -48,7 +50,8 @@ public class FakePlaybackBridge implements PlaybackBridge {
         blockOverrides = active;
     }
 
-    @Override public boolean isSingleplayer() { return true; }
+    @Override public boolean isSingleplayer() { return singleplayer; }
+    @Override public boolean supportsMultiplayerPlayback() { return multiplayerPlayback; }
     @Override public boolean isGamePaused() { return paused; }
 
     @Override

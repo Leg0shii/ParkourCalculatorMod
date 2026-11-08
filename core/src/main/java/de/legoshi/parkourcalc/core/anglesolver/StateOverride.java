@@ -19,6 +19,7 @@ public final class StateOverride {
     private Slipperiness slipperiness;
     private Medium medium;
     private int soulsandCells = 1;
+    private FlowVector flow = FlowVector.NONE;
     private boolean damage;
     private final List<PotionDose> added = new ArrayList<>();
     private final Set<Potion> removed = EnumSet.noneOf(Potion.class);
@@ -80,6 +81,10 @@ public final class StateOverride {
         if (medium != Medium.SOULSAND) soulsandCells = 1;
     }
 
+    public static boolean flows(Medium medium) {
+        return medium == Medium.WATER || medium == Medium.LAVA;
+    }
+
     public boolean overridesMedium() {
         return medium != null;
     }
@@ -87,6 +92,30 @@ public final class StateOverride {
     public void clearMedium() {
         medium = null;
         soulsandCells = 1;
+    }
+
+    public FlowDirection getFlow() {
+        return flow.direction();
+    }
+
+    public void setFlow(FlowDirection flow) {
+        this.flow = FlowVector.of(flow);
+    }
+
+    public FlowVector getFlowVector() {
+        return flow;
+    }
+
+    public void setFlowVector(FlowVector flow) {
+        this.flow = flow != null ? flow : FlowVector.NONE;
+    }
+
+    public void clearFlow() {
+        flow = FlowVector.NONE;
+    }
+
+    public boolean overridesFlow() {
+        return flow.pushes();
     }
 
     public int getSoulsandCells() {
@@ -142,7 +171,7 @@ public final class StateOverride {
 
     public boolean isEmpty() {
         return !overridesInputs() && !overridesSprint() && !overridesSlipperiness() && !overridesMedium() && !overridesPotion()
-                && !overridesDamage();
+                && !overridesDamage() && !overridesFlow();
     }
 
     /** Make this override an independent copy of {@code other} (doses deep-copied: they are mutable). */
@@ -152,6 +181,7 @@ public final class StateOverride {
         slipperiness = other.slipperiness;
         medium = other.medium;
         soulsandCells = other.soulsandCells;
+        flow = other.flow;
         damage = other.damage;
         added.clear();
         for (PotionDose d : other.added) added.add(new PotionDose(d.potion, d.level));

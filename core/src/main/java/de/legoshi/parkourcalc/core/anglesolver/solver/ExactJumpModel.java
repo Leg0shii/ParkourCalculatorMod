@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.core.anglesolver.solver;
 
+import de.legoshi.parkourcalc.core.anglesolver.FlowVector;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.MovementEffect;
 
@@ -29,6 +30,13 @@ public final class ExactJumpModel implements ForwardModel {
     private static final double FLUID_JUMP_BOOST = (double) 0.04F;
     private static final double WATER_DRAG = (double) 0.8F;
     private static final double WATER_SPRINT_DRAG = (double) 0.9F;
+    private static final double WATER_PUSH = 0.014;
+    private static final double LAVA_PUSH = 0.0023333333333333335;
+    private static final double MIN_FLOW_LENGTH_SQ_262 = (double) 1.0E-5F;
+    private static final double LAVA_PUSH_ULTRAWARM = 0.007;
+    private static final double MIN_FLUID_PUSH = 0.0045000000000000005;
+    private static final double MIN_FLUID_PUSH_BELOW = 0.003;
+    private static final double NORMALIZE_EPSILON = 1.0E-4;
     private static final double MODERN_FLUID_GRAVITY = Constants.GRAVITY / 16.0;
     private static final double WEB_Y_SCALE = (double) 0.05F;
     private static final double WEAVING_WEB_XZ_SCALE = 0.5;
@@ -37,6 +45,13 @@ public final class ExactJumpModel implements ForwardModel {
     private static final double COLLIDE_EPSILON = 1.0E-7;
 
     private static final float SQUARE_DIAG_INPUT = squareDiagInput();
+    private static final float RAW_DIAG_INPUT = rawDiagInput();
+
+    private static float rawDiagInput() {
+        float dist = (float) Math.sqrt(2.0F);
+        float n = 1.0F / dist;
+        return n * 0.98F;
+    }
 
     private static float squareDiagInput() {
         float dist = (float) Math.sqrt(2.0F);
@@ -61,6 +76,7 @@ public final class ExactJumpModel implements ForwardModel {
     private final boolean floatSprintBoost;
     private final boolean byteAmplifier;
     private final VelocityPacketCodec velocityCodec;
+    private final PhysicsVariant variant;
 
     public ExactJumpModel(double inertiaThreshold, boolean perAxisInertia, boolean modern) {
         this(inertiaThreshold, perAxisInertia, modern, false);
@@ -89,6 +105,13 @@ public final class ExactJumpModel implements ForwardModel {
     public ExactJumpModel(double inertiaThreshold, boolean perAxisInertia, boolean modern, boolean sine262,
                           boolean foldedInputRad, boolean floatSprintBoost, boolean byteAmplifier,
                           VelocityPacketCodec velocityCodec) {
+        this(inertiaThreshold, perAxisInertia, modern, sine262, foldedInputRad, floatSprintBoost, byteAmplifier,
+                velocityCodec, PhysicsVariant.VANILLA);
+    }
+
+    public ExactJumpModel(double inertiaThreshold, boolean perAxisInertia, boolean modern, boolean sine262,
+                          boolean foldedInputRad, boolean floatSprintBoost, boolean byteAmplifier,
+                          VelocityPacketCodec velocityCodec, PhysicsVariant variant) {
         this.inertiaThreshold = inertiaThreshold;
         this.perAxisInertia = perAxisInertia;
         this.modern = modern;
@@ -97,16 +120,17 @@ public final class ExactJumpModel implements ForwardModel {
         this.floatSprintBoost = floatSprintBoost;
         this.byteAmplifier = byteAmplifier;
         this.velocityCodec = velocityCodec == null ? VelocityPacketCodec.FIXED_POINT : velocityCodec;
+        this.variant = variant;
     }
 
     public ExactJumpModel withByteAmplifier(boolean byteAmplifier) {
         return new ExactJumpModel(inertiaThreshold, perAxisInertia, modern, sine262, foldedInputRad, floatSprintBoost,
-                byteAmplifier, velocityCodec);
+                byteAmplifier, velocityCodec, variant);
     }
 
     public ExactJumpModel withVelocityCodec(VelocityPacketCodec codec) {
         return new ExactJumpModel(inertiaThreshold, perAxisInertia, modern, sine262, foldedInputRad, floatSprintBoost,
-                byteAmplifier, codec);
+                byteAmplifier, codec, variant);
     }
 
     public boolean byteAmplifier() {
@@ -115,6 +139,14 @@ public final class ExactJumpModel implements ForwardModel {
 
     public VelocityPacketCodec velocityCodec() {
         return velocityCodec;
+    }
+
+    public ExactJumpModel withVariant(PhysicsVariant variant) {
+        if (variant == null || variant.isVanilla()) return this;
+        double thr = variant.inertiaThreshold != null ? variant.inertiaThreshold : inertiaThreshold;
+        boolean perAxis = variant.perAxisInertia != null ? variant.perAxisInertia : perAxisInertia;
+        return new ExactJumpModel(thr, perAxis, modern, sine262, foldedInputRad, floatSprintBoost, byteAmplifier,
+                velocityCodec, variant);
     }
 
     private float tableSin(float rad) {
@@ -162,6 +194,23 @@ public final class ExactJumpModel implements ForwardModel {
         return floatSprintBoost;
     }
 
+    public boolean strafeBoost() {
+        return variant.strafeBoost;
+    }
+
+    @Override
+    public PhysicsVariant variant() {
+        return variant;
+    }
+
+    public static float rawDiagonalInput() {
+        return RAW_DIAG_INPUT;
+    }
+
+    public static boolean isTypedDiagonal(float forward, float strafe) {
+        return Math.abs(forward) == 0.98F && Math.abs(strafe) == 0.98F;
+    }
+
     /** Inertia rule for a loader's MC version. 1.8.x: per-axis 0.005, legacy float chain.
      *  1.12.x: per-axis 0.003, legacy float chain. 1.9 to 1.21.4: per-axis 0.003 on the modern
      *  double pipeline (1.21.5 is where the player switched to the combined-XZ gate); up to 1.20.4
@@ -207,6 +256,10 @@ public final class ExactJumpModel implements ForwardModel {
         return end == 0 ? 0 : Integer.parseInt(parts[index].substring(0, end));
     }
 
+    public static ExactJumpModel forMcVersion(String mcVersion, PhysicsVariant variant) {
+        return forMcVersion(mcVersion).withVariant(variant);
+    }
+
     @Override
     public ForwardPath forward(JumpPhysicsInputs scenario, double[] yawAbsDeg) {
         int n = yawAbsDeg.length;
@@ -249,6 +302,17 @@ public final class ExactJumpModel implements ForwardModel {
             double vy = velY[t];
             double vz = velZ[t];
 
+            SurfaceKind kind = scenario.surfaceAt(t);
+            boolean water = kind == SurfaceKind.WATER;
+            boolean fluid = water || kind == SurfaceKind.LAVA;
+            FlowVector flow = scenario.flowAt(t);
+            if (flow.pushes() && (modern || water)) {
+                boolean lavaFlow = kind == SurfaceKind.LAVA || (!water && flow.lava);
+                double[] push = fluidPush(flow, lavaFlow, scenario.ultrawarm, vx, vz);
+                vx += push[0];
+                vz += push[1];
+            }
+
             // (1) momentum cancellation, top of tick, on the post-friction carry from last tick.
             if (perAxisInertia) {
                 if (Math.abs(vx) < thr) vx = 0.0;
@@ -267,14 +331,11 @@ public final class ExactJumpModel implements ForwardModel {
             int slow = scenario.factorSlownessAt(t);
             double slipOv = scenario.slipAt(t);
             boolean contact = !Double.isNaN(slipOv);
-            SurfaceKind kind = scenario.surfaceAt(t);
-            boolean water = kind == SurfaceKind.WATER;
-            boolean fluid = water || kind == SurfaceKind.LAVA;
             float slipF = contact ? (float) slipOv : Constants.SLIP_F;
             boolean fluidGroundJump = modern && fluid && contact && scenario.jumpAt(t);
             boolean isJumpTick = fluidGroundJump || (!fluid && scenario.jumpAt(t) && contact);
             boolean sprint = scenario.sprintAt(t);
-            boolean airSprint = modern ? sprint : scenario.factorSprintAt(t);
+            boolean airSprint = modern || scenario.variant.liveAirSprintFactor ? sprint : scenario.factorSprintAt(t);
             if (modern && water && scenario.sneakAt(t)) {
                 vy -= FLUID_JUMP_BOOST;
             }
@@ -327,7 +388,10 @@ public final class ExactJumpModel implements ForwardModel {
             float forward = scenario.forwardAt(t);
             float strafe;
             if (scenario.strafeAt(t) && !isJumpTick) {
-                if (sine262) {
+                if (!variant.strafeBoost) {
+                    forward = Math.signum(forward) * RAW_DIAG_INPUT;
+                    strafe = scenario.strafeSignAt(t) * RAW_DIAG_INPUT;
+                } else if (sine262) {
                     forward = Math.signum(forward) * SQUARE_DIAG_INPUT;
                     strafe = scenario.strafeSignAt(t) * SQUARE_DIAG_INPUT;
                 } else {
@@ -335,6 +399,10 @@ public final class ExactJumpModel implements ForwardModel {
                 }
             } else {
                 strafe = scenario.strafeInputAt(t);
+                if (!variant.strafeBoost && isTypedDiagonal(forward, strafe)) {
+                    forward = Math.signum(forward) * RAW_DIAG_INPUT;
+                    strafe = Math.signum(strafe) * RAW_DIAG_INPUT;
+                }
             }
             if (modern) {
                 // Entity.movementInputToVelocity: double pipeline, double 1e-7 gate, Vec3d.normalize only
@@ -366,6 +434,11 @@ public final class ExactJumpModel implements ForwardModel {
                     fm = accelSpeed / fm;
                     strafe *= fm;
                     forward *= fm;
+                    if (variant.newTouch && BpkNewTouch.applies(strafe, forward)) {
+                        float s = strafe;
+                        strafe = BpkNewTouch.strafeAfter(s, forward);
+                        forward = BpkNewTouch.forwardAfter(s, forward);
+                    }
                     float rad = foldedInputRad ? yawF * (float) (Math.PI / 180.0) : yawF * (float) Math.PI / 180.0F;
                     float sinD = tableSin(rad);
                     float cosD = tableCos(rad);
@@ -419,6 +492,13 @@ public final class ExactJumpModel implements ForwardModel {
                 }
             }
 
+            FlowVector endFlow = scenario.endFlowAt(t);
+            if (endFlow.pushes() && (modern || !endFlow.lava)) {
+                double[] push = fluidPush(endFlow, endFlow.lava, scenario.ultrawarm, vx, vz);
+                vx += push[0];
+                vz += push[1];
+            }
+
             // (6) gravity then friction multiply, carried into next tick.
             if (fluid) {
                 if (!modern) {
@@ -465,6 +545,39 @@ public final class ExactJumpModel implements ForwardModel {
                 serverTravel(scenario, t, server);
             }
         }
+    }
+
+    private double[] fluidPush(FlowVector flow, boolean lavaFlow, boolean ultrawarm, double vx, double vz) {
+        double scale = !lavaFlow ? WATER_PUSH : ultrawarm ? LAVA_PUSH_ULTRAWARM : LAVA_PUSH;
+        double px;
+        double pz;
+        if (modern) {
+            if (sine262 && flow.x * flow.x + flow.z * flow.z < MIN_FLOW_LENGTH_SQ_262) return new double[] {0.0, 0.0};
+            px = flow.x * scale;
+            pz = flow.z * scale;
+            if (Math.abs(vx) < MIN_FLUID_PUSH_BELOW && Math.abs(vz) < MIN_FLUID_PUSH_BELOW) {
+                double len = Math.sqrt(px * px + pz * pz);
+                if (len < MIN_FLUID_PUSH) {
+                    if (len < NORMALIZE_EPSILON) {
+                        px = 0.0;
+                        pz = 0.0;
+                    } else {
+                        px = px / len * MIN_FLUID_PUSH;
+                        pz = pz / len * MIN_FLUID_PUSH;
+                    }
+                }
+            }
+        } else {
+            double len = Math.sqrt(flow.x * flow.x + flow.z * flow.z);
+            if (len < NORMALIZE_EPSILON) {
+                px = 0.0;
+                pz = 0.0;
+            } else {
+                px = flow.x / len * scale;
+                pz = flow.z / len * scale;
+            }
+        }
+        return new double[] {px, pz};
     }
 
     public double[] serverCarry(JumpPhysicsInputs scenario, double[] yawAbsDeg, int upTo) {

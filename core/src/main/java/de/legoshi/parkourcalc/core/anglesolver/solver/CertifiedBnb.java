@@ -480,6 +480,7 @@ public final class CertifiedBnb {
 
     private static byte resolveAxis(Search s, byte fixed, double lo, double hi) {
         double thr = s.thr;
+        if (thr == 0.0) return fixed == FREE ? OPEN_ANY : fixed;
         if (fixed == ZERO) {
             if (lo >= thr || hi <= -thr) return (byte) -1;
             return ZERO;
@@ -499,6 +500,7 @@ public final class CertifiedBnb {
     }
 
     private static double[] applyAxis(byte state, double lo, double hi, double thr) {
+        if (state == OPEN_ANY) return new double[]{lo, hi};
         if (state == ZERO) return new double[]{0.0, 0.0};
         if (state == POS) {
             double nl = Math.max(lo, thr);

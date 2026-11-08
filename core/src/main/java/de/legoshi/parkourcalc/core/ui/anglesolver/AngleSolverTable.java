@@ -3,6 +3,7 @@ package de.legoshi.parkourcalc.core.ui.anglesolver;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.Constraint;
 import de.legoshi.parkourcalc.core.anglesolver.ConstraintText;
+import de.legoshi.parkourcalc.core.anglesolver.FlowDirection;
 import de.legoshi.parkourcalc.core.anglesolver.Medium;
 import de.legoshi.parkourcalc.core.anglesolver.Potion;
 import de.legoshi.parkourcalc.core.anglesolver.PotionDose;
@@ -80,6 +81,11 @@ public final class AngleSolverTable {
     // constraint (dragIndex into the tick's list) or one facet of the tick's state override.
     private enum DragKind { CONSTRAINT, STATE_INPUTS, STATE_SPRINT, STATE_SLIP, STATE_MEDIUM, STATE_DAMAGE, STATE_ADD, STATE_REMOVE }
 
+    private static final String FLOW_TIP = "Direction the fluid flows at this tick. Flowing water pushes up to 0.014b per tick,"
+            + " flowing lava 0.00233b (0.007b in the Nether) on 1.13+ and nothing on 1.8.9/1.12.2, added to the motion"
+            + " before the momentum cancellation. On 1.13+ the push shrinks with the fluid depth over the feet below 0.4b;"
+            + " H records that real depth-scaled flow, a direction picked here is the full-strength flow."
+            + " Diagonals are the normalized corner flow.";
     private static final String DAMAGE_TIP = "Fall damage is ruled on this tick's landing: the server's velocity packet"
             + " replaces the motion of the next tick in the solver model. Apply state fills this from the paired simulation.";
 
@@ -114,6 +120,8 @@ public final class AngleSolverTable {
     private final ImInt wholeBuf = new ImInt();
     private final String[] slipItems = Slipperiness.comboItems();
     private final String[] mediumItems = Medium.comboItems();
+    private final String[] flowItems = FlowDirection.comboItems();
+    private final ImInt flowBuf = new ImInt();
     private static final String[] FIELD_ITEMS = buildFieldItems();
     private static final Constraint.Op[] SCALAR_OPS =
             {Constraint.Op.GT, Constraint.Op.LT, Constraint.Op.GE, Constraint.Op.LE, Constraint.Op.EQ};
@@ -371,6 +379,7 @@ public final class AngleSolverTable {
             case STATE_MEDIUM:
                 dst.setMedium(src.getMedium());
                 dst.setSoulsandCells(src.getSoulsandCells());
+                dst.setFlowVector(src.getFlowVector());
                 if (!dragAlt) src.clearMedium();
                 break;
             case STATE_DAMAGE:
@@ -776,8 +785,11 @@ public final class AngleSolverTable {
         if (ov.overridesMedium()) {
             String mediumLabel = ov.getMedium() == Medium.SOULSAND && ov.getSoulsandCells() > 1
                     ? ov.getMedium().label + " x" + ov.getSoulsandCells()
+                    : ov.overridesFlow() ? ov.getMedium().label + " " + ov.getFlow().label
                     : ov.getMedium().label;
             specs.add(new StateChipSpec(DragKind.STATE_MEDIUM, null, "Medium", mediumLabel, false));
+        } else if (ov.overridesFlow()) {
+            specs.add(new StateChipSpec(DragKind.STATE_MEDIUM, null, "Medium", "Flow " + ov.getFlow().label, false));
         }
         if (ov.overridesDamage()) {
             specs.add(new StateChipSpec(DragKind.STATE_DAMAGE, null, "Damage", "Fall", false));
@@ -1218,6 +1230,18 @@ public final class AngleSolverTable {
         }
         ImGui.tableNextColumn();
         overrideTrailing(ov.overridesMedium(), "inherits default (" + Medium.NONE.label + ")", "ovmdr", ov::clearMedium);
+
+        if (StateOverride.flows(ov.getMedium()) || ov.overridesFlow()) {
+            ovRowStart("Flow", false);
+            flowBuf.set(ov.getFlow().ordinal());
+            if (Controls.combo("##ovflow", flowBuf, flowItems, ImGui.getContentRegionAvail().x)) {
+                ov.setFlow(FlowDirection.values()[flowBuf.get()]);
+            }
+            if (ImGui.isItemHovered()) {
+                ImGui.setTooltip(FLOW_TIP);
+            }
+            ImGui.tableNextColumn();
+        }
 
         if (ov.getMedium() == Medium.SOULSAND) {
             ovRowStart("Sand cells", false);

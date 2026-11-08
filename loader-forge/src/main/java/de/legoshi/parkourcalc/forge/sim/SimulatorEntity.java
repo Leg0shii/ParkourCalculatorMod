@@ -1,12 +1,16 @@
 package de.legoshi.parkourcalc.forge.sim;
 
 import com.mojang.authlib.GameProfile;
+import de.legoshi.parkourcalc.core.anglesolver.FlowVector;
 import de.legoshi.parkourcalc.core.anglesolver.Medium;
 import de.legoshi.parkourcalc.core.sim.StartResumeState;
 import de.legoshi.parkourcalc.core.sim.SubtickPath;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 import de.legoshi.parkourcalc.forge.core.sim.PlayerSprintMachine;
+//? if <1.12
+//import net.minecraft.block.Block;
+import net.minecraft.block.material.Material;
 //? if >=1.12
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
@@ -57,6 +61,8 @@ public class SimulatorEntity extends EntityPlayer {
     private Medium tickMedium;
     private double tickGroundFriction = Double.NaN;
     private int tickSoulsandCells;
+    private FlowVector tickFlow = FlowVector.NONE;
+    private boolean tickInWater;
 
     private final ArrayList<Vec3dCore> subtickBuf = new ArrayList<Vec3dCore>(8);
     private boolean capturing = false;
@@ -154,6 +160,8 @@ public class SimulatorEntity extends EntityPlayer {
         this.tickMedium = null;
         this.tickGroundFriction = Double.NaN;
         this.tickSoulsandCells = 0;
+        this.tickFlow = captureFlow();
+        this.tickInWater = this.isInWater();
         if (resume != null) {
             applyResume(resume);
         }
@@ -225,8 +233,62 @@ public class SimulatorEntity extends EntityPlayer {
                 : Double.NaN;
         super.moveEntityWithHeading(strafe, forward);
         *///?}
+        tickFlow = captureFlow();
+        tickInWater = this.isInWater();
         tickSoulsandCells = countSoulsandCells();
         tickMedium = Medium.fromFlags(web, water, lava, ladder, tickSoulsandCells > 0);
+    }
+
+    private FlowVector captureFlow() {
+        AxisAlignedBB bb = this.getEntityBoundingBox();
+        int x0 = (int) Math.floor(bb.minX + 0.001);
+        int y0 = (int) Math.floor(bb.minY + 0.401);
+        int z0 = (int) Math.floor(bb.minZ + 0.001);
+        int x1 = (int) Math.floor(bb.maxX - 0.001);
+        int y1 = (int) Math.floor(bb.maxY - 0.401);
+        int z1 = (int) Math.floor(bb.maxZ - 0.001);
+        //? if >=1.12 {
+        if (!this.world.isAreaLoaded(new BlockPos(x0, y0, z0), new BlockPos(x1, y1, z1))) return FlowVector.NONE;
+        Vec3d flow = Vec3d.ZERO;
+        //?} else {
+        /*if (!this.worldObj.isAreaLoaded(new BlockPos(x0, y0, z0), new BlockPos(x1, y1, z1))) return FlowVector.NONE;
+        Vec3 flow = new Vec3(0.0, 0.0, 0.0);
+        *///?}
+        for (int x = x0; x <= x1; x++) {
+            for (int y = y0; y <= y1; y++) {
+                for (int z = z0; z <= z1; z++) {
+                    BlockPos pos = new BlockPos(x, y, z);
+                    //? if >=1.12 {
+                    IBlockState state = this.world.getBlockState(pos);
+                    if (state.getMaterial() != Material.WATER) continue;
+                    flow = state.getBlock().modifyAcceleration(this.world, pos, this, flow);
+                    //?} else {
+                    /*Block block = this.worldObj.getBlockState(pos).getBlock();
+                    if (block.getMaterial() != Material.water) continue;
+                    flow = block.modifyAcceleration(this.worldObj, pos, this, flow);
+                    *///?}
+                }
+            }
+        }
+        //? if >=1.12 {
+        return normalizedFlow(flow.x, flow.z);
+        //?} else {
+        /*return normalizedFlow(flow.xCoord, flow.zCoord);
+        *///?}
+    }
+
+    private static FlowVector normalizedFlow(double x, double z) {
+        double len = Math.sqrt(x * x + z * z);
+        if (len < 1.0E-4) return FlowVector.NONE;
+        return new FlowVector(x / len, z / len);
+    }
+
+    public boolean capturedTickInWater() {
+        return tickInWater;
+    }
+
+    public FlowVector capturedTickFlow() {
+        return tickFlow;
     }
 
     private int countSoulsandCells() {
@@ -293,16 +355,17 @@ public class SimulatorEntity extends EntityPlayer {
         );
 
         PlayerSprintMachine.State seed = sprintState.withIsSprinting(this.isSprinting());
-        PlayerSprintMachine.Outputs out = PlayerSprintMachine.tick(in, seed);
+        PlayerSprintMachine.Outputs out = PlayerSprintMachine.tick(in, seed, BpkModBridge.sprintRules());
         sprintState = out.next;
 
         this.setSprinting(out.next.isSprinting);
         this.setSneaking(in.sneak);
-        this.moveForward = out.moveForward;
+        float poseScale = BpkModBridge.sneakPoseInputScale(in.sneak, this.height, this.capabilities.isFlying);
+        this.moveForward = out.moveForward * poseScale;
         //? if >=1.12 {
         this.moveVertical = 0.0F;
         //?}
-        this.moveStrafing = out.moveStrafe;
+        this.moveStrafing = out.moveStrafe * poseScale;
         this.isJumping = out.isJumping;
     }
 

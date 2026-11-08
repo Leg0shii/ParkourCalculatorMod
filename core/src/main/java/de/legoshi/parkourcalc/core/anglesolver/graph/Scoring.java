@@ -116,6 +116,9 @@ public final class Scoring {
         a.slipPerTick = b.slipPerTick;
         a.surfacePerTick = b.surfacePerTick;
         a.soulsandCellsPerTick = b.soulsandCellsPerTick;
+        a.flowPerTick = b.flowPerTick;
+        a.endFlowPerTick = b.endFlowPerTick;
+        a.ultrawarm = b.ultrawarm;
         a.sneakPerTick = b.sneakPerTick;
         a.dolphinsGracePerTick = b.dolphinsGracePerTick;
         a.weavingPerTick = b.weavingPerTick;
@@ -125,6 +128,7 @@ public final class Scoring {
         a.incomingAmp = b.incomingAmp;
         a.incomingSlowness = b.incomingSlowness;
         a.liveMovementFactor = b.liveMovementFactor;
+        a.variant = b.variant;
         a.forwardInputPerTick = b.forwardInputPerTick;
         a.strafeInputPerTick = b.strafeInputPerTick;
         return a;

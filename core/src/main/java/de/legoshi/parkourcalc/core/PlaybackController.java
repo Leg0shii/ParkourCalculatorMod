@@ -82,6 +82,11 @@ public final class PlaybackController {
 
     private long teleportNoticeNanos;
 
+    private InputRow pressedRow;
+    private float turnYaw;
+    private float turnPitch;
+    private long appliedTicks;
+
     private final List<String> simTickDumps = new ArrayList<String>();
 
     public PlaybackController(InputData inputData, SimulationRunner runner, Settings settings) {
@@ -125,6 +130,22 @@ public final class PlaybackController {
         if (warmupRemaining > 0) return -1;
         if (nextTick <= startTick) return -1;
         return nextTick - 1;
+    }
+
+    public boolean isKeyPressed(InputRow.Key key) {
+        return running && pressedRow != null && pressedRow.isKeyActive(key);
+    }
+
+    public float tickTurnYaw() {
+        return running && pressedRow != null ? turnYaw : 0f;
+    }
+
+    public float tickTurnPitch() {
+        return running && pressedRow != null ? turnPitch : 0f;
+    }
+
+    public long appliedTicks() {
+        return appliedTicks;
     }
 
     public boolean firstTickOnGround() {
@@ -197,6 +218,7 @@ public final class PlaybackController {
         bridge.teleport(pos, vel, yaw, carry);
         // Drop any user-held key so the warmup runs with an empty InputRow like the simulator does.
         bridge.releaseAllKeys();
+        pressedRow = null;
         startTick = from;
         nextTick = from;
         stopTick = to;
@@ -241,6 +263,7 @@ public final class PlaybackController {
     public void stop() {
         if (!running) return;
         running = false;
+        pressedRow = null;
         warmupRemaining = 0;
         holdRemaining = 0;
         restorePending = false;
@@ -295,6 +318,7 @@ public final class PlaybackController {
             if (pausedAtNanos == 0L) {
                 pausedAtNanos = System.nanoTime();
                 bridge.releaseAllKeys();
+                pressedRow = null;
             }
             return;
         }
@@ -317,6 +341,7 @@ public final class PlaybackController {
                 stop();
             } else {
                 bridge.releaseAllKeys();
+                pressedRow = null;
             }
             return;
         }
@@ -352,6 +377,7 @@ public final class PlaybackController {
             teleportNoticeNanos = System.nanoTime();
         }
         InputRow motion = teleportTick ? TELEPORT_NOOP_ROW : row;
+        pressedRow = motion;
         for (InputRow.Key key : InputRow.Key.values()) {
             if (key == InputRow.Key.CLOSE_INVENTORY) continue;
             bridge.setKey(key, motion.isKeyActive(key));
@@ -387,6 +413,9 @@ public final class PlaybackController {
         currentTickPitch = applyPitch(currentTickPitch, motion);
         bridge.setPitch(currentTickPitch);
         bridge.setBlockOverrides(inputData.getBlockOverrides().activeAtRow(nextTick));
+        turnYaw = displayTargetYaw - prevTickYaw;
+        turnPitch = currentTickPitch - prevTickPitch;
+        appliedTicks++;
         tickEndNanos = System.nanoTime();
         nextTick++;
         bridge.releaseReplayLockstep();

@@ -159,6 +159,10 @@ public final class SaveFile {
         public String slipperiness;                      // null = inherit
         public String medium;                            // null = inherit
         public Integer soulsandCells;                    // null = 1
+        public String flow;
+        public Double flowX;
+        public Double flowZ;
+        public Boolean flowLava;
         public Boolean damage;
         public List<Dose> added = new ArrayList<Dose>();
         public List<String> removed = new ArrayList<String>(); // Potion enum names
@@ -228,5 +232,9 @@ public final class SaveFile {
         public double[] serverVel;
         public Boolean serverJump;
         public double[] serverPacket;
+        public Double flowX;
+        public Double flowZ;
+        public Boolean flowLava;
+        public Boolean inWater;
     }
 }
