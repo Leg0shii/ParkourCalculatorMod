@@ -48,6 +48,10 @@ public class MouseHandlerMixin {
     private void onMouseButton(long window, MouseButtonInfo input, int action, CallbackInfo ci) {
         boolean replicaBefore = FabricParkourCalculator.hasReplica();
         FabricParkourCalculator.recordButton(input.button(), action);
+        if (!FabricParkourCalculator.isUiFocused() && FabricParkourCalculator.placingMouse(input.button(), action)) {
+            ci.cancel();
+            return;
+        }
         if ((replicaBefore || FabricParkourCalculator.hasReplica()) && Minecraft.getInstance().gui.screen() == null
                 && !FabricParkourCalculator.isUiFocused()) {
             ci.cancel();

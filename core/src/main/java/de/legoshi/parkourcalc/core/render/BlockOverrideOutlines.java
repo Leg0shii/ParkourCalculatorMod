@@ -11,6 +11,7 @@ import de.legoshi.parkourcalc.core.ui.Settings;
 public final class BlockOverrideOutlines {
 
     public static final double EDGE_THICKNESS = 0.04;
+    public static final double PREVIEW_THICKNESS = 0.07;
     private static final double INSET = 0.002;
     private static final int DASHES_PER_EDGE = 4;
     private static final double DASH_FILL = 0.55;
@@ -25,31 +26,37 @@ public final class BlockOverrideOutlines {
     }
 
     public static boolean shouldRender(Settings settings, BlockOverrideWorld world) {
-        return settings.viewBlockOverrides && world != null && world.isAvailable() && !world.rows().isEmpty();
+        if (world == null || !world.isAvailable()) return false;
+        return world.preview() != null || (settings.viewBlockOverrides && !world.rows().isEmpty());
     }
 
     public static void render(BoxRenderer faces, Settings settings, BlockOverrideWorld world) {
         if (!shouldRender(settings, world)) return;
+        int[] preview = world.preview();
+        if (preview != null) {
+            cube(faces, preview[0], preview[1], preview[2], world.previewArgb(), false, PREVIEW_THICKNESS);
+        }
+        if (!settings.viewBlockOverrides) return;
         int row = world.viewRow();
         int placed = BoxStyle.blockOverridePlacedArgb(settings);
         int ahead = BoxStyle.blockOverrideAheadArgb(settings);
         for (BlockOverride b : world.rows()) {
             if (!b.spec().valid()) continue;
             if (b.activeAtRow(row)) {
-                cube(faces, b, placed, false);
+                cube(faces, b.x, b.y, b.z, placed, false, EDGE_THICKNESS);
             } else if (b.aheadOfRow(row)) {
-                cube(faces, b, ahead, true);
+                cube(faces, b.x, b.y, b.z, ahead, true, EDGE_THICKNESS);
             }
         }
     }
 
-    private static void cube(BoxRenderer faces, BlockOverride b, int argb, boolean dashed) {
-        double x0 = b.x - INSET;
-        double y0 = b.y - INSET;
-        double z0 = b.z - INSET;
-        double x1 = b.x + 1 + INSET;
-        double y1 = b.y + 1 + INSET;
-        double z1 = b.z + 1 + INSET;
+    private static void cube(BoxRenderer faces, int bx, int by, int bz, int argb, boolean dashed, double thickness) {
+        double x0 = bx - INSET;
+        double y0 = by - INSET;
+        double z0 = bz - INSET;
+        double x1 = bx + 1 + INSET;
+        double y1 = by + 1 + INSET;
+        double z1 = bz + 1 + INSET;
         double[][] c = {
                 {x0, y0, z0}, {x1, y0, z0}, {x0, y1, z0}, {x1, y1, z0},
                 {x0, y0, z1}, {x1, y0, z1}, {x0, y1, z1}, {x1, y1, z1}
@@ -58,18 +65,18 @@ public final class BlockOverrideOutlines {
             double[] a = c[e[0]];
             double[] d = c[e[1]];
             if (!dashed) {
-                segment(faces, a, d, 0, 1, argb);
+                segment(faces, a, d, 0, 1, argb, thickness);
                 continue;
             }
             for (int i = 0; i < DASHES_PER_EDGE; i++) {
                 double t0 = (double) i / DASHES_PER_EDGE;
-                segment(faces, a, d, t0, t0 + DASH_FILL / DASHES_PER_EDGE, argb);
+                segment(faces, a, d, t0, t0 + DASH_FILL / DASHES_PER_EDGE, argb, thickness);
             }
         }
     }
 
-    private static void segment(BoxRenderer faces, double[] a, double[] d, double t0, double t1, int argb) {
-        double h = EDGE_THICKNESS * 0.5;
+    private static void segment(BoxRenderer faces, double[] a, double[] d, double t0, double t1, int argb, double thickness) {
+        double h = thickness * 0.5;
         double[] p = new double[3];
         double[] q = new double[3];
         for (int k = 0; k < 3; k++) {

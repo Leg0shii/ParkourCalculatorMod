@@ -34,6 +34,7 @@ import net.minecraft.world.World;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
@@ -162,6 +163,32 @@ public final class ForgeMinecraftAccess implements MinecraftAccess {
     @Override
     public String blockOverrideError(String spec) {
         return BlockOverridePlacer.error(spec);
+    }
+
+    @Override
+    public String getHeldBlock() {
+        EntityPlayerSP player = McClient.player();
+        if (player == null) return null;
+        //? if >=1.12 {
+        return BlockOverridePlacer.heldBlock(player.getHeldItemMainhand());
+        //?} else {
+        /*return BlockOverridePlacer.heldBlock(player.getCurrentEquippedItem());
+        *///?}
+    }
+
+    @Override
+    public List<String> blockIds() {
+        return BlockOverridePlacer.ids();
+    }
+
+    @Override
+    public String defaultBlockState(String id) {
+        return BlockOverridePlacer.defaultState(id);
+    }
+
+    @Override
+    public Map<String, List<String>> blockStateOptions(String id) {
+        return BlockOverridePlacer.stateOptions(id);
     }
 
     @Override

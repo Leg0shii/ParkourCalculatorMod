@@ -8,6 +8,7 @@ import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 
 /**
@@ -64,6 +65,22 @@ public interface MinecraftAccess {
 
     default String blockOverrideError(String spec) {
         return null;
+    }
+
+    default String getHeldBlock() {
+        return null;
+    }
+
+    default List<String> blockIds() {
+        return Collections.emptyList();
+    }
+
+    default String defaultBlockState(String id) {
+        return null;
+    }
+
+    default Map<String, List<String>> blockStateOptions(String id) {
+        return Collections.emptyMap();
     }
 
     double getInsideBlockInset();

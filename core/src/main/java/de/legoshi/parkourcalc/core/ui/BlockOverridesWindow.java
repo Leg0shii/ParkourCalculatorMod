@@ -1,18 +1,21 @@
 package de.legoshi.parkourcalc.core.ui;
 
 import de.legoshi.parkourcalc.core.BlockOverrideWorld;
+import de.legoshi.parkourcalc.core.BlockPlacing;
 import de.legoshi.parkourcalc.core.imgui.RenderInterface;
 import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
 import de.legoshi.parkourcalc.core.sim.BlockHit;
 import de.legoshi.parkourcalc.core.sim.BlockOverride;
 import de.legoshi.parkourcalc.core.sim.BlockOverrides;
-import de.legoshi.parkourcalc.core.sim.Face;
-import de.legoshi.parkourcalc.core.sim.Vec3dCore;
+import de.legoshi.parkourcalc.core.ui.anglesolver.SolverWidgets;
 import de.legoshi.parkourcalc.core.ui.theme.Controls;
 import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
 import de.legoshi.parkourcalc.core.ui.util.TooltipUtil;
+import imgui.ImDrawList;
 import imgui.ImGui;
 import imgui.ImGuiIO;
+import imgui.ImVec2;
+import imgui.flag.ImGuiCol;
 import imgui.flag.ImGuiCond;
 import imgui.flag.ImGuiTableColumnFlags;
 import imgui.flag.ImGuiWindowFlags;
@@ -22,51 +25,61 @@ import imgui.type.ImString;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.function.IntConsumer;
 
 public final class BlockOverridesWindow implements RenderInterface {
 
     private static final String WINDOW_ID = "Block Overrides";
+    private static final String TITLE = "Block Overrides";
     private static final String TABLE_ID = "##blockOverrides";
-    private static final float WIN_W = 820f;
+    private static final String PICKER_ID = "##blockPicker";
+    private static final float WIN_W = 760f;
     private static final float WIN_H = 300f;
-    private static final int BLOCK_CHARS = 256;
+    private static final float MIN_W = 600f;
+    private static final float MIN_H = 160f;
+    private static final float TICK_W = 62f;
+    private static final float POS_W = 186f;
+    private static final float PLACED_W = 154f;
+    private static final float PICKER_W = 300f;
+    private static final float PICKER_LABEL_W = 96f;
+    private static final int PICKER_ROWS = 6;
+    private static final int PICKER_MAX_IDS = 200;
+    private static final int POS_CHARS = 40;
     private static final int TICK_CHARS = 8;
+    private static final int SEARCH_CHARS = 64;
     private static final String END_HINT = "stays";
-    private static final String[] HEADERS = {"Start", "End", "X", "Y", "Z", "Before", "Block", "Placed by", ""};
-    private static final String AUTO_LABEL = "Auto";
-    private static final String PLAYER_LABEL = "Player";
-    private static final String HELP = "Each row is a block at X Y Z that appears at the Start tick and goes away after "
-            + "the End tick (input table ticks, both included; an empty End means it stays). Before is the block that is "
-            + "there otherwise, usually air. The world shows the rows of the selected tick as real blocks and the simulation "
-            + "sees every tick's own state. Placed by Auto: the replay places and removes the block as it goes. Placed by "
-            + "Player: the TAS player does it with the mouse, the replay only clears the spot before it starts and warns "
-            + "when the block is not there after its tick. Singleplayer only.";
-    private static final String MULTIPLAYER_NOTE = "Block overrides work in singleplayer only. On a server the rows are "
-            + "kept but the world, the simulation and the replay ignore them.";
-    private static final String FOOTNOTE = "Rows ahead of the shown tick are dim; their blocks are not in the world yet. "
-            + "A red row was not placed by the player in the last replay.";
+    private static final String[] HEADERS = {"Start", "End", "Position", "Block", "Placed by", ""};
+    private static final String[] PLACED_BY = {"Auto", "Player"};
+    private static final String[] PLACED_BY_TIPS = {"The replay places it", "The TAS player places it"};
+    private static final String HELP = "Place block: aim at a face, LMB. Change block: aim at a block, RMB.\n"
+            + "Auto rows the replay places. Player rows the TAS player places with a right click.";
+    private static final String SINGLEPLAYER_ONLY = "Singleplayer only";
 
     private final InputData inputData;
     private final MinecraftAccess mc;
     private final Settings settings;
     private final BlockOverrideWorld world;
+    private final BlockPlacing placing;
     private final Runnable onSettingsChanged;
     private final IntConsumer onChanged;
     private final ImBoolean open = new ImBoolean(false);
     private final ImInt intHolder = new ImInt();
-    private final List<ImString> blockBuffers = new ArrayList<ImString>();
-    private final List<ImString> beforeBuffers = new ArrayList<ImString>();
+    private final ImString search = new ImString(SEARCH_CHARS);
+    private final List<ImString> posBuffers = new ArrayList<ImString>();
     private final List<ImString> endBuffers = new ArrayList<ImString>();
     private int editingRow = -1;
     private int editingField = -1;
+    private int pickerRow = -1;
 
     public BlockOverridesWindow(InputData inputData, MinecraftAccess mc, Settings settings, BlockOverrideWorld world,
-                                Runnable onSettingsChanged, IntConsumer onChanged) {
+                                BlockPlacing placing, Runnable onSettingsChanged, IntConsumer onChanged) {
         this.inputData = inputData;
         this.mc = mc;
         this.settings = settings;
         this.world = world;
+        this.placing = placing;
         this.onSettingsChanged = onSettingsChanged;
         this.onChanged = onChanged;
     }
@@ -77,9 +90,13 @@ public final class BlockOverridesWindow implements RenderInterface {
         if (!open.get()) return;
         float scale = ThemeManager.uiScale();
         ImGui.setNextWindowSize(WIN_W * scale, WIN_H * scale, ImGuiCond.FirstUseEver);
-        if (ImGui.begin(WINDOW_ID, open, ImGuiWindowFlags.NoCollapse)) {
-            body();
-        }
+        ImGui.setNextWindowSizeConstraints(MIN_W * scale, MIN_H * scale, Float.MAX_VALUE, Float.MAX_VALUE);
+        int flags = ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse;
+        ThemeManager.pushHeaderChrome();
+        boolean visible = ImGui.begin(WINDOW_ID, open, flags);
+        if (visible) ThemeManager.drawModalTitle(TITLE);
+        ThemeManager.popHeaderChrome();
+        if (visible) body();
         ImGui.end();
         if (settings.viewBlockOverrides != open.get()) {
             settings.viewBlockOverrides = open.get();
@@ -91,86 +108,51 @@ public final class BlockOverridesWindow implements RenderInterface {
         BlockOverrides blocks = inputData.getBlockOverrides();
         boolean available = world.isAvailable();
         if (available) {
-            if (Controls.primaryButton("Add block")) addBlock(blocks);
-            TooltipUtil.onHover("Adds a block where a right click would place it on the face you look at, with the "
-                    + "looked-at block's type, from the tick after the selected one. With nothing in reach it uses the "
-                    + "block at your feet.");
+            if (Controls.primaryButton("Place block")) placing.startPlace();
+            TooltipUtil.onHover("Aim at a face and left click. Uses the block in your hand.");
+            ImGui.sameLine();
+            if (Controls.secondaryButton("Change block")) placing.startChange();
+            TooltipUtil.onHover("Aim at a block and right click. The row starts with that block.");
         } else {
-            Controls.disabledButton("Add block");
+            Controls.disabledButton("Place block");
+            ImGui.sameLine();
+            Controls.disabledButton("Change block");
         }
         ImGui.sameLine();
         ImGui.textDisabled("(?)");
         TooltipUtil.onHover(HELP);
-        if (available && !blocks.isEmpty()) {
+        if (!available) {
+            ImGui.sameLine();
+            ThemeManager.pushTextColor(ThemeManager.warningColor());
+            ImGui.text(SINGLEPLAYER_ONLY);
+            ThemeManager.popTextColor();
+        } else if (!blocks.isEmpty()) {
             String shown = "World shows tick " + (world.viewRow() + 1);
             float w = ImGui.calcTextSize(shown).x;
             ImGui.sameLine(ImGui.getWindowContentRegionMaxX() - w);
+            ThemeManager.pushTextColor(ThemeManager.textMutedColor());
             ImGui.text(shown);
+            ThemeManager.popTextColor();
         }
         ImGui.spacing();
-        if (!available) {
-            ThemeManager.pushTextColor(ThemeManager.warningColor());
-            ImGui.textWrapped(MULTIPLAYER_NOTE);
-            ThemeManager.popTextColor();
-            ImGui.spacing();
-        }
         if (blocks.isEmpty()) {
-            ImGui.textDisabled("No block overrides.");
+            ImGui.textDisabled("No blocks.");
             return;
         }
         table(blocks);
-        ImGui.textDisabled(FOOTNOTE);
-    }
-
-    private void addBlock(BlockOverrides blocks) {
-        BlockHit hit = mc.isReady() ? mc.getLookedAtHit() : null;
-        int[] pos;
-        String block;
-        if (hit != null) {
-            pos = placementTarget(hit);
-            String looked = mc.describeBlockState(hit.x, hit.y, hit.z);
-            block = looked != null ? looked : BlockOverride.DEFAULT_BLOCK;
-        } else {
-            Vec3dCore p = mc.isReady() ? mc.getPlayerPosition() : Vec3dCore.ZERO;
-            pos = new int[] {(int) Math.floor(p.x), (int) Math.floor(p.y), (int) Math.floor(p.z)};
-            block = BlockOverride.DEFAULT_BLOCK;
-        }
-        String before = mc.isReady() ? mc.describeBlockState(pos[0], pos[1], pos[2]) : null;
-        if (before == null) before = BlockOverride.AIR;
-        int start = Math.max(1, Math.min(world.viewRow() + 2, Math.max(1, inputData.size())));
-        boolean player = start - 1 < inputData.size() && inputData.getRows().get(start - 1).isKeyActive(InputRow.Key.RIGHT_CLICK);
-        blocks.add(new BlockOverride(start, BlockOverride.NO_END, pos[0], pos[1], pos[2], block, before, player));
-        changed(0);
-    }
-
-    private static int[] placementTarget(BlockHit hit) {
-        int x = hit.x;
-        int y = hit.y;
-        int z = hit.z;
-        if (hit.face == Face.POS_X) x++;
-        if (hit.face == Face.NEG_X) x--;
-        if (hit.face == Face.POS_Y) y++;
-        if (hit.face == Face.NEG_Y) y--;
-        if (hit.face == Face.POS_Z) z++;
-        if (hit.face == Face.NEG_Z) z--;
-        return new int[] {x, y, z};
     }
 
     private void table(BlockOverrides blocks) {
         syncBuffers(blocks);
+        float scale = ThemeManager.uiScale();
         if (!ThemeManager.beginStandardTable(TABLE_ID, HEADERS.length)) return;
         int fixed = ImGuiTableColumnFlags.WidthFixed;
-        float tickW = ImGui.calcTextSize("999999").x + 2f * ImGui.getStyle().getFramePaddingX();
-        float coordW = ImGui.calcTextSize("-3000000").x + 2f * ImGui.getStyle().getFramePaddingX();
-        ImGui.tableSetupColumn(HEADERS[0], fixed, tickW);
-        ImGui.tableSetupColumn(HEADERS[1], fixed, tickW);
-        ImGui.tableSetupColumn(HEADERS[2], fixed, coordW);
-        ImGui.tableSetupColumn(HEADERS[3], fixed, coordW);
-        ImGui.tableSetupColumn(HEADERS[4], fixed, coordW);
-        ImGui.tableSetupColumn(HEADERS[5], ImGuiTableColumnFlags.WidthStretch);
-        ImGui.tableSetupColumn(HEADERS[6], ImGuiTableColumnFlags.WidthStretch);
-        ImGui.tableSetupColumn(HEADERS[7], fixed, Controls.buttonWidth(PLAYER_LABEL));
-        ImGui.tableSetupColumn(HEADERS[8], fixed, actionsWidth());
+        ImGui.tableSetupColumn(HEADERS[0], fixed, TICK_W * scale);
+        ImGui.tableSetupColumn(HEADERS[1], fixed, TICK_W * scale);
+        ImGui.tableSetupColumn(HEADERS[2], fixed, POS_W * scale);
+        ImGui.tableSetupColumn(HEADERS[3], ImGuiTableColumnFlags.WidthStretch);
+        ImGui.tableSetupColumn(HEADERS[4], fixed, PLACED_W * scale);
+        ImGui.tableSetupColumn(HEADERS[5], fixed, SolverWidgets.deleteXWidth());
         ImGui.tableSetupScrollFreeze(0, 1);
         ThemeManager.tableHeaderRow();
         ThemeManager.paintTableHeader();
@@ -183,65 +165,73 @@ public final class BlockOverridesWindow implements RenderInterface {
         for (int i = 0; i < blocks.size(); i++) {
             ImGui.tableNextRow();
             ImGui.pushID(i);
-            boolean missing = world.isMissing(blocks.get(i));
-            boolean dim = !missing && !blocks.get(i).activeAtRow(viewRow);
-            if (missing) ThemeManager.pushTextColor(ThemeManager.dangerColor());
+            BlockOverride b = blocks.get(i);
+            boolean problem = world.hasProblem(b);
+            boolean dim = !problem && !b.activeAtRow(viewRow);
+            if (problem) ThemeManager.pushTextColor(ThemeManager.dangerColor());
             if (dim) ThemeManager.pushTextColor(ThemeManager.textDimColor());
             boolean remove = row(blocks, i);
-            if (dim || missing) ThemeManager.popTextColor();
+            if (dim || problem) ThemeManager.popTextColor();
             if (remove) removeAt = i;
             ImGui.popID();
         }
         ThemeManager.endStandardTable();
         if (removeAt >= 0) {
             blocks.remove(removeAt);
-            blockBuffers.remove(removeAt);
-            beforeBuffers.remove(removeAt);
+            posBuffers.remove(removeAt);
             endBuffers.remove(removeAt);
             if (editingRow == removeAt) editingRow = -1;
+            if (pickerRow == removeAt) pickerRow = -1;
             changed(0);
         }
     }
 
     private boolean row(BlockOverrides blocks, int i) {
         BlockOverride b = blocks.get(i);
+        String info = rowInfo(b);
         ImGui.tableSetColumnIndex(0);
         Integer start = intCell("##start", b.startTick);
+        TooltipUtil.onHover(info);
         ImGui.tableSetColumnIndex(1);
         Integer end = endCell(i, b);
-        ImGui.tableSetColumnIndex(2);
-        Integer x = intCell("##x", b.x);
-        ImGui.tableSetColumnIndex(3);
-        Integer y = intCell("##y", b.y);
-        ImGui.tableSetColumnIndex(4);
-        Integer z = intCell("##z", b.z);
+        TooltipUtil.onHover(info);
         if (start != null || end != null) {
             int s = Math.max(1, start != null ? start : b.startTick);
             int e = end != null ? end : b.endTick;
             if (e != BlockOverride.NO_END && e < s) e = s;
             update(blocks, i, b.withTicks(s, e), b);
-        } else if (x != null || y != null || z != null) {
-            update(blocks, i, b.withPos(x != null ? x : b.x, y != null ? y : b.y, z != null ? z : b.z), b);
+            b = blocks.get(i);
         }
+        ImGui.tableSetColumnIndex(2);
+        positionCell(blocks, i, info);
+        b = blocks.get(i);
+        ImGui.tableSetColumnIndex(3);
+        blockCell(blocks, i, info);
+        b = blocks.get(i);
+        ImGui.tableSetColumnIndex(4);
+        int clicked = SolverWidgets.segmented("##placedBy", PLACED_BY, PLACED_BY_TIPS, b.player ? 1 : 0,
+                ImGui.getContentRegionAvailX());
+        if (clicked >= 0 && (clicked == 1) != b.player) update(blocks, i, b.withPlayer(clicked == 1), b);
         ImGui.tableSetColumnIndex(5);
-        specCell(blocks, i, 0);
-        ImGui.tableSetColumnIndex(6);
-        specCell(blocks, i, 1);
-        ImGui.tableSetColumnIndex(7);
-        placedByCell(blocks, i);
-        ImGui.tableSetColumnIndex(8);
-        return actions(blocks, i);
+        boolean remove = SolverWidgets.deleteX("##delete");
+        TooltipUtil.onHover(info);
+        return remove;
     }
 
-    private void placedByCell(BlockOverrides blocks, int i) {
-        BlockOverride b = blocks.get(i);
-        if (Controls.secondaryButton(b.player ? PLAYER_LABEL : AUTO_LABEL, -1f)) {
-            update(blocks, i, b.withPlayer(!b.player), b);
-        }
-        TooltipUtil.onHover(b.player
-                ? "Player: the TAS player places or removes this block with the mouse. The replay leaves it alone and "
-                + "warns when the block is not there after the Start tick. Click for Auto."
-                : "Auto: the replay places this block at Start and takes it away after End. Click for Player.");
+    private String rowInfo(BlockOverride b) {
+        StringBuilder sb = new StringBuilder();
+        String sim = world.simProblem(b);
+        if (sim != null) sb.append(sim).append('\n');
+        String replay = world.replayProblem(b);
+        if (replay != null) sb.append(replay).append(" (replay)\n");
+        sb.append("Before: ").append(displayName(b.before));
+        return sb.toString();
+    }
+
+    private String displayName(String spec) {
+        BlockOverride.Spec parsed = BlockOverride.Spec.parse(spec);
+        if (!parsed.valid()) return spec.isEmpty() ? "?" : spec;
+        return parsed.displayName(BlockOverride.Spec.parse(mc.defaultBlockState(parsed.id)));
     }
 
     private Integer intCell(String id, int value) {
@@ -255,15 +245,14 @@ public final class BlockOverridesWindow implements RenderInterface {
 
     private Integer endCell(int i, BlockOverride b) {
         ImString buf = endBuffers.get(i);
-        if (!(editingRow == i && editingField == 2)) buf.set(b.endTick == BlockOverride.NO_END ? "" : String.valueOf(b.endTick));
+        if (!(editingRow == i && editingField == 1)) buf.set(b.endTick == BlockOverride.NO_END ? "" : String.valueOf(b.endTick));
         ImGui.setNextItemWidth(-1f);
         Controls.pushInputFrameHeight();
         ImGui.inputTextWithHint("##end", END_HINT, buf);
         Controls.popInputFrameHeight();
-        TooltipUtil.onHover("Last tick the block is there. Leave it empty and the block stays until the end of the TAS.");
         if (ImGui.isItemActivated()) {
             editingRow = i;
-            editingField = 2;
+            editingField = 1;
         }
         Integer result = null;
         if (ImGui.isItemDeactivatedAfterEdit()) {
@@ -285,65 +274,195 @@ public final class BlockOverridesWindow implements RenderInterface {
         }
     }
 
-    private void specCell(BlockOverrides blocks, int i, int field) {
+    private void positionCell(BlockOverrides blocks, int i, String info) {
         BlockOverride b = blocks.get(i);
-        boolean beforeField = field == 0;
-        ImString buf = (beforeField ? beforeBuffers : blockBuffers).get(i);
-        String value = beforeField ? b.before : b.block;
-        if (!(editingRow == i && editingField == field)) buf.set(value);
-        String error = errorOf(value);
-        if (error != null) ThemeManager.pushTextColor(ThemeManager.dangerColor());
-        ImGui.setNextItemWidth(-1f);
+        ImString buf = posBuffers.get(i);
+        if (!(editingRow == i && editingField == 2)) buf.set(b.x + " " + b.y + " " + b.z);
+        float h = ImGui.getFrameHeight();
+        float gap = ImGui.getStyle().getItemSpacingX();
+        ImGui.setNextItemWidth(ImGui.getContentRegionAvailX() - h - gap);
         Controls.pushInputFrameHeight();
-        ImGui.inputTextWithHint(beforeField ? "##before" : "##block", beforeField ? BlockOverride.AIR : BlockOverride.DEFAULT_BLOCK, buf);
+        ImGui.inputText("##pos", buf);
         Controls.popInputFrameHeight();
-        if (error != null) ThemeManager.popTextColor();
+        TooltipUtil.onHover(info);
         if (ImGui.isItemActivated()) {
             editingRow = i;
-            editingField = field;
+            editingField = 2;
         }
         if (ImGui.isItemDeactivatedAfterEdit()) {
             editingRow = -1;
-            update(blocks, i, beforeField ? b.withBefore(buf.get()) : b.withBlock(buf.get()), b);
+            int[] pos = parsePosition(buf.get());
+            if (pos != null) update(blocks, i, b.withPos(pos[0], pos[1], pos[2]), b);
         } else if (ImGui.isItemDeactivated()) {
             editingRow = -1;
         }
-        String hint = beforeField
-                ? "The block that is there outside the Start to End range, usually air."
-                : "Block id with optional states, like minecraft:oak_door[open=true]. A missing state keeps the block's default.";
-        TooltipUtil.onHover(error != null ? error : hint);
-    }
-
-    private boolean actions(BlockOverrides blocks, int i) {
-        BlockOverride b = blocks.get(i);
-        if (Controls.secondaryButton("Pick")) {
+        ImGui.sameLine();
+        if (crosshairButton("##pick")) {
             BlockHit hit = mc.isReady() ? mc.getLookedAtHit() : null;
             if (hit != null) {
+                b = blocks.get(i);
                 String before = mc.describeBlockState(hit.x, hit.y, hit.z);
                 BlockOverride next = b.withPos(hit.x, hit.y, hit.z);
                 if (before != null) next = next.withBefore(before);
                 update(blocks, i, next, b);
-                b = blocks.get(i);
             }
         }
-        TooltipUtil.onHover("Moves this row onto the block you look at and takes that block as Before.");
-        ImGui.sameLine();
-        if (Controls.secondaryButton("Copy")) {
-            String current = mc.isReady() ? mc.describeBlockState(b.x, b.y, b.z) : null;
-            if (current != null) {
-                if (editingRow == i) editingRow = -1;
-                update(blocks, i, b.withBlock(current), b);
-            }
-        }
-        TooltipUtil.onHover("Copies the block that is in the world at X Y Z with all its states into Block, so you only "
-                + "have to change the state you need (open=true, powered=true, ...).");
-        ImGui.sameLine();
-        return Controls.dangerButton("X");
+        TooltipUtil.onHover("Move to the looked-at block");
     }
 
-    private float actionsWidth() {
-        float gap = ImGui.getStyle().getItemSpacingX();
-        return Controls.buttonWidth("Pick") + Controls.buttonWidth("Copy") + Controls.buttonWidth("X") + 2f * gap;
+    private static int[] parsePosition(String text) {
+        String[] parts = text.trim().split("[\\s,]+");
+        if (parts.length != 3) return null;
+        try {
+            return new int[] {Integer.parseInt(parts[0]), Integer.parseInt(parts[1]), Integer.parseInt(parts[2])};
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private boolean crosshairButton(String id) {
+        float scale = ThemeManager.uiScale();
+        float h = ImGui.getFrameHeight();
+        boolean clicked = ImGui.invisibleButton(id, h, h);
+        boolean hover = ImGui.isItemHovered();
+        ImVec2 mn = ImGui.getItemRectMin();
+        ImDrawList dl = ImGui.getWindowDrawList();
+        int bg = hover ? ThemeManager.accentTintColor(0.18f) : ThemeManager.panelColor();
+        dl.addRectFilled(mn.x, mn.y, mn.x + h, mn.y + h, bg, ImGui.getStyle().getFrameRounding());
+        int col = hover ? ThemeManager.textColor() : ThemeManager.textMutedColor();
+        float cx = mn.x + h * 0.5f;
+        float cy = mn.y + h * 0.5f;
+        float r = h * 0.26f;
+        float tick = 3f * scale;
+        dl.addCircle(cx, cy, r, col, 16, 1.2f * scale);
+        dl.addLine(cx - r - tick, cy, cx - r + tick, cy, col, 1.2f * scale);
+        dl.addLine(cx + r - tick, cy, cx + r + tick, cy, col, 1.2f * scale);
+        dl.addLine(cx, cy - r - tick, cx, cy - r + tick, col, 1.2f * scale);
+        dl.addLine(cx, cy + r - tick, cx, cy + r + tick, col, 1.2f * scale);
+        return clicked;
+    }
+
+    private void blockCell(BlockOverrides blocks, int i, String info) {
+        BlockOverride b = blocks.get(i);
+        float scale = ThemeManager.uiScale();
+        float h = ImGui.getFrameHeight();
+        float w = ImGui.getContentRegionAvailX();
+        boolean clicked = ImGui.invisibleButton("##block", Math.max(1f, w), h);
+        boolean hover = ImGui.isItemHovered();
+        ImVec2 mn = ImGui.getItemRectMin();
+        ImVec2 mx = ImGui.getItemRectMax();
+        ImDrawList dl = ImGui.getWindowDrawList();
+        int bg = hover ? ThemeManager.accentTintColor(0.18f) : ThemeManager.panelColor();
+        dl.addRectFilled(mn.x, mn.y, mx.x, mx.y, bg, ImGui.getStyle().getFrameRounding());
+        String error = errorOf(b.block);
+        int textCol = error != null ? ThemeManager.dangerColor() : ImGui.getColorU32(ImGuiCol.Text);
+        String label = error != null ? b.block : displayName(b.block);
+        float padX = ImGui.getStyle().getFramePaddingX();
+        float arrowW = h;
+        dl.pushClipRect(mn.x, mn.y, mx.x - arrowW, mx.y, true);
+        dl.addText(mn.x + padX, mn.y + (h - ImGui.getFontSize()) * 0.5f, textCol, label);
+        dl.popClipRect();
+        SolverWidgets.triangleDown(dl, mx.x - arrowW * 0.5f, mn.y + h * 0.5f, 3.3f * scale, ThemeManager.textMutedColor());
+        if (hover) TooltipUtil.onHover((error != null ? error : b.block) + "\n" + info);
+        if (clicked) {
+            pickerRow = i;
+            search.set("");
+            ImGui.openPopup(PICKER_ID);
+        }
+        if (pickerRow == i) picker(blocks, i);
+    }
+
+    private void picker(BlockOverrides blocks, int i) {
+        float scale = ThemeManager.uiScale();
+        ImGui.setNextWindowSize(PICKER_W * scale, 0f);
+        if (!ImGui.beginPopup(PICKER_ID)) {
+            pickerRow = -1;
+            return;
+        }
+        BlockOverride b = blocks.get(i);
+        if (ImGui.isWindowAppearing()) ImGui.setKeyboardFocusHere();
+        Controls.inputTextHint("##search", "Search", search, -1f);
+        String query = search.get().trim().toLowerCase(Locale.ROOT).replace(' ', '_');
+        float rowH = ImGui.getTextLineHeightWithSpacing();
+        ImGui.beginChild("##list", -1f, rowH * PICKER_ROWS, false);
+        String held = mc.isReady() ? mc.getHeldBlock() : null;
+        String looked = null;
+        if (mc.isReady()) {
+            BlockHit hit = mc.getLookedAtHit();
+            if (hit != null) looked = mc.describeBlockState(hit.x, hit.y, hit.z);
+        }
+        String chosen = null;
+        if (held != null && matches(held, query) && pickerEntry(displayName(held), "in hand", held.equals(b.block))) chosen = held;
+        if (looked != null && matches(looked, query) && pickerEntry(displayName(looked), "looked at", looked.equals(b.block))) chosen = looked;
+        int shown = 0;
+        String currentId = b.spec().valid() ? b.spec().id : "";
+        for (String id : mc.blockIds()) {
+            if (!matches(id, query)) continue;
+            if (shown++ >= PICKER_MAX_IDS) break;
+            String def = mc.defaultBlockState(id);
+            String spec = def != null ? def : id;
+            if (pickerEntry(BlockOverride.Spec.parse(id).shortName(), null, id.equals(currentId))) chosen = spec;
+        }
+        ImGui.endChild();
+        if (chosen != null) {
+            update(blocks, i, b.withBlock(chosen), b);
+            b = blocks.get(i);
+        }
+        states(blocks, i);
+        ImGui.endPopup();
+    }
+
+    private static boolean matches(String spec, String query) {
+        if (query.isEmpty()) return true;
+        String id = BlockOverride.Spec.parse(spec).id;
+        return id.contains(query);
+    }
+
+    private boolean pickerEntry(String label, String tag, boolean selected) {
+        boolean clicked = ImGui.selectable(label, selected);
+        if (tag != null) {
+            float tagW = ImGui.calcTextSize(tag).x;
+            ImGui.sameLine(ImGui.getWindowContentRegionMaxX() - tagW);
+            ThemeManager.pushTextColor(ThemeManager.textDimColor());
+            ImGui.text(tag);
+            ThemeManager.popTextColor();
+        }
+        return clicked;
+    }
+
+    private void states(BlockOverrides blocks, int i) {
+        BlockOverride b = blocks.get(i);
+        BlockOverride.Spec spec = b.spec();
+        if (!spec.valid()) return;
+        Map<String, List<String>> options = mc.blockStateOptions(spec.id);
+        if (options.isEmpty()) return;
+        float scale = ThemeManager.uiScale();
+        BlockOverride.Spec defaults = BlockOverride.Spec.parse(mc.defaultBlockState(spec.id));
+        ImGui.spacing();
+        for (Map.Entry<String, List<String>> e : options.entrySet()) {
+            String key = e.getKey();
+            String current = spec.properties.get(key);
+            if (current == null && defaults.valid()) current = defaults.properties.get(key);
+            if (current == null) current = "";
+            ImGui.alignTextToFramePadding();
+            ThemeManager.pushTextColor(ThemeManager.textMutedColor());
+            ImGui.text(key);
+            ThemeManager.popTextColor();
+            ImGui.sameLine(PICKER_LABEL_W * scale);
+            ImGui.setNextItemWidth(-1f);
+            Controls.pushInputFrameHeight();
+            if (ImGui.beginCombo("##" + key, current)) {
+                for (String value : e.getValue()) {
+                    if (ImGui.selectable(value, value.equals(current)) && !value.equals(current)) {
+                        update(blocks, i, b.withBlock(spec.withProperty(key, value).text()), b);
+                        b = blocks.get(i);
+                        spec = b.spec();
+                    }
+                }
+                ImGui.endCombo();
+            }
+            Controls.popInputFrameHeight();
+        }
     }
 
     private String errorOf(String spec) {
@@ -365,12 +484,11 @@ public final class BlockOverridesWindow implements RenderInterface {
     }
 
     private void syncBuffers(BlockOverrides blocks) {
-        while (blockBuffers.size() < blocks.size()) blockBuffers.add(new ImString(BLOCK_CHARS));
-        while (blockBuffers.size() > blocks.size()) blockBuffers.remove(blockBuffers.size() - 1);
-        while (beforeBuffers.size() < blocks.size()) beforeBuffers.add(new ImString(BLOCK_CHARS));
-        while (beforeBuffers.size() > blocks.size()) beforeBuffers.remove(beforeBuffers.size() - 1);
+        while (posBuffers.size() < blocks.size()) posBuffers.add(new ImString(POS_CHARS));
+        while (posBuffers.size() > blocks.size()) posBuffers.remove(posBuffers.size() - 1);
         while (endBuffers.size() < blocks.size()) endBuffers.add(new ImString(TICK_CHARS));
         while (endBuffers.size() > blocks.size()) endBuffers.remove(endBuffers.size() - 1);
         if (editingRow >= blocks.size()) editingRow = -1;
+        if (pickerRow >= blocks.size()) pickerRow = -1;
     }
 }

@@ -115,6 +115,44 @@ public final class BlockOverride {
             return error == null;
         }
 
+        public boolean isAir() {
+            return AIR.equals(id);
+        }
+
+        public String shortName() {
+            int colon = id.indexOf(':');
+            String name = colon >= 0 ? id.substring(colon + 1) : id;
+            name = name.replace('_', ' ');
+            if (name.isEmpty()) return name;
+            return Character.toUpperCase(name.charAt(0)) + name.substring(1);
+        }
+
+        public String displayName(Spec defaults) {
+            StringBuilder sb = new StringBuilder(shortName());
+            for (Map.Entry<String, String> e : properties.entrySet()) {
+                String base = defaults != null && defaults.valid() ? defaults.properties.get(e.getKey()) : null;
+                if (e.getValue().equals(base)) continue;
+                if ("true".equals(e.getValue())) {
+                    sb.append(' ').append(e.getKey());
+                } else if ("false".equals(e.getValue())) {
+                    if (base != null) sb.append(" not ").append(e.getKey());
+                } else {
+                    sb.append(' ').append(e.getKey()).append(' ').append(e.getValue());
+                }
+            }
+            return sb.toString();
+        }
+
+        public Spec withProperty(String key, String value) {
+            Map<String, String> next = new LinkedHashMap<String, String>(properties);
+            next.put(key, value);
+            return new Spec(id, next, error);
+        }
+
+        public String text() {
+            return format(id, properties);
+        }
+
         public static Spec parse(String text) {
             Map<String, String> props = new LinkedHashMap<String, String>();
             String s = text == null ? "" : text.trim();

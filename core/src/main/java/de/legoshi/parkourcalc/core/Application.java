@@ -119,6 +119,7 @@ public final class Application {
     private NoTurnSearchController noTurnSearch;
     private SenseSearchController senseSearch;
     private final BlockOverrideWorld blockOverrideWorld;
+    private final BlockPlacing blockPlacing;
 
     public Application(Simulator simulator, MinecraftAccess mc) {
         this.mc = mc;
@@ -147,6 +148,8 @@ public final class Application {
         this.blockOverrideWorld.setOnDesync((row, tick, expectedPlaced) -> pushHudMessage(
                 "Tick " + tick + ": block at " + row.x + " " + row.y + " " + row.z
                         + (expectedPlaced ? " not placed" : " still there"), HudMessageStyle.COLOR_WARN));
+        this.blockPlacing = new BlockPlacing(mc, inputData, blockOverrideWorld, settings, hudMessages, this::onUserChange);
+        this.blockPlacing.setUiOpener(this::setControlPanelOpen);
         this.recorder = new de.legoshi.parkourcalc.core.record.HumanRecorder(saveController::getSaveStore, mc::getMouseSensitivity);
     }
 
@@ -413,7 +416,7 @@ public final class Application {
         overlayManager.register(onejumpKeysWindow);
         overlayManager.register(onejumpSetupWindow);
         overlayManager.register(new de.legoshi.parkourcalc.core.ui.BlockOverridesWindow(inputData, mc, settings,
-                blockOverrideWorld, this::saveSettings, this::onUserChange));
+                blockOverrideWorld, blockPlacing, this::saveSettings, this::onUserChange));
         overlayManager.register(new de.legoshi.parkourcalc.core.ui.RecorderWindow(recorder, settings, this::toggleRecording,
                 this::saveSettings, systemBridge));
     }
@@ -544,6 +547,7 @@ public final class Application {
             selection.retainBelow(boxController.size());
         }
         if (turnProfile != null) turnProfile.refresh();
+        blockOverrideWorld.setSimProblems(BlockOverrideCheck.run(inputData, boxController, BlockOverrideCheck.reachOf(mc)));
         Perf.stop("runSimulation", t0);
     }
 
@@ -562,6 +566,7 @@ public final class Application {
 
     /** Fired by the loader on disconnect / world join. */
     public void onWorldChange() {
+        blockPlacing.reset();
         blockOverrideWorld.releaseAll();
         runner.invalidate();
         boxController.clearAll();
@@ -707,6 +712,7 @@ public final class Application {
             undoController.tick(System.nanoTime());
         }
         pollSolver();
+        blockPlacing.tick();
         if (noTurnSearch != null) noTurnSearch.poll();
         if (senseSearch != null) senseSearch.poll();
         boolean pathInert = isControlPanelOpen() || !settings.showPath;
@@ -957,7 +963,32 @@ public final class Application {
         overlayManager.setControlPanelOpen(open);
     }
 
+    public void setOverlayOpener(java.util.function.Consumer<Boolean> opener) {
+        blockPlacing.setUiOpener(opener);
+    }
+
+    public BlockPlacing getBlockPlacing() {
+        return blockPlacing;
+    }
+
+    public boolean isPlacingBlock() {
+        return blockPlacing.isActive();
+    }
+
+    public boolean placingMouse(int button, boolean down) {
+        return blockPlacing.onMouse(button, down);
+    }
+
+    public boolean placingEscape() {
+        return blockPlacing.onEscape();
+    }
+
+    public void togglePlacing() {
+        blockPlacing.toggle();
+    }
+
     public boolean shouldSuppressLeftClick() {
+        if (blockPlacing.isActive()) return true;
         if (isPlaybackRunning()) return false;
         if (isControlPanelOpen() || !settings.showPath) return false;
         if (dragController.isDragging()) return true;
@@ -967,6 +998,7 @@ public final class Application {
     }
 
     public boolean shouldSuppressRightClick() {
+        if (blockPlacing.isActive()) return true;
         if (isPlaybackRunning()) return false;
         if (isControlPanelOpen() || !settings.showPath) return false;
         if (yawGizmo.isEngaged()) return true;

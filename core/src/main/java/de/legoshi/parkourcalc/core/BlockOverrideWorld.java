@@ -10,10 +10,8 @@ import de.legoshi.parkourcalc.core.ui.SelectionManager;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public final class BlockOverrideWorld {
 
@@ -28,7 +26,10 @@ public final class BlockOverrideWorld {
     };
     private int replayRow = -1;
     private boolean replayStepped;
-    private final Set<Long> missing = new LinkedHashSet<Long>();
+    private final Map<Long, String> replayProblems = new LinkedHashMap<Long, String>();
+    private Map<BlockOverride, String> simProblems = Collections.emptyMap();
+    private int[] preview;
+    private int previewArgb;
     private int appliedRow = Integer.MIN_VALUE;
     private int appliedModCount = -1;
     private final Map<Long, String> appliedBefore = new LinkedHashMap<Long, String>();
@@ -59,7 +60,36 @@ public final class BlockOverrideWorld {
     }
 
     public boolean isMissing(BlockOverride row) {
-        return missing.contains(BlockPatch.posKey(row.x, row.y, row.z));
+        return replayProblems.containsKey(BlockPatch.posKey(row.x, row.y, row.z));
+    }
+
+    public String replayProblem(BlockOverride row) {
+        return replayProblems.get(BlockPatch.posKey(row.x, row.y, row.z));
+    }
+
+    public String simProblem(BlockOverride row) {
+        return simProblems.get(row);
+    }
+
+    public boolean hasProblem(BlockOverride row) {
+        return simProblem(row) != null || isMissing(row);
+    }
+
+    public void setSimProblems(Map<BlockOverride, String> problems) {
+        simProblems = problems == null ? Collections.<BlockOverride, String>emptyMap() : problems;
+    }
+
+    public void setPreview(int[] pos, int argb) {
+        preview = pos == null ? null : pos.clone();
+        previewArgb = argb;
+    }
+
+    public int[] preview() {
+        return preview;
+    }
+
+    public int previewArgb() {
+        return previewArgb;
     }
 
     public boolean isAvailable() {
@@ -86,7 +116,7 @@ public final class BlockOverrideWorld {
     public void setReplayRow(int row) {
         int next = Math.max(-1, row);
         replayStepped = next >= 0 && replayRow >= 0;
-        if (replayRow < 0 || next < 0) missing.clear();
+        if (replayRow < 0 || next < 0) replayProblems.clear();
         replayRow = next;
         refresh(true);
     }
@@ -110,8 +140,9 @@ public final class BlockOverrideWorld {
             if (!want.valid()) continue;
             String actual = reader.blockAt(b.x, b.y, b.z);
             if (actual == null || matches(want, BlockOverride.Spec.parse(actual))) continue;
-            missing.add(BlockPatch.posKey(b.x, b.y, b.z));
-            onDesync.desync(b, row + 1, b.activeAtRow(row));
+            boolean expectedPlaced = b.activeAtRow(row);
+            replayProblems.put(BlockPatch.posKey(b.x, b.y, b.z), "Tick " + (row + 1) + (expectedPlaced ? ": not placed" : ": still there"));
+            onDesync.desync(b, row + 1, expectedPlaced);
         }
     }
 

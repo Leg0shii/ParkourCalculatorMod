@@ -28,6 +28,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
@@ -129,6 +130,27 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
     @Override
     public String blockOverrideError(String spec) {
         return BlockOverridePlacer.error(spec);
+    }
+
+    @Override
+    public String getHeldBlock() {
+        LocalPlayer player = Minecraft.getInstance().player;
+        return player == null ? null : BlockOverridePlacer.heldBlock(player.getMainHandItem());
+    }
+
+    @Override
+    public List<String> blockIds() {
+        return BlockOverridePlacer.ids();
+    }
+
+    @Override
+    public String defaultBlockState(String id) {
+        return BlockOverridePlacer.defaultState(id);
+    }
+
+    @Override
+    public Map<String, List<String>> blockStateOptions(String id) {
+        return BlockOverridePlacer.stateOptions(id);
     }
 
     @Override

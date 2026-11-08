@@ -104,6 +104,7 @@ public class ForgeParkourCalculator {
     private KeyBinding captureLandBlockKeyBinding;
     private KeyBinding clearBlocksKeyBinding;
     private static KeyBinding selectTickKeyBinding;
+    private static KeyBinding placeBlockKeyBinding;
     private boolean blockCaptureEnabled;
     private Path configPath;
     private Path saveDir;
@@ -143,6 +144,15 @@ public class ForgeParkourCalculator {
         blockCaptureEnabled = application.getSettings().experimentalBlockCapture;
         application.setPhysicsVariant(BpkModBridge.physicsVariant());
         application.setupUi();
+        application.setOverlayOpener(open -> {
+            Minecraft client = Minecraft.getMinecraft();
+            if (open) {
+                if (!application.isControlPanelOpen()) openOverlay(client);
+            } else if (client.currentScreen instanceof ParkourCalcGuiScreen) {
+                client.displayGuiScreen(null);
+                if (client.currentScreen == null) client.setIngameFocus();
+            }
+        });
         imguiHost.setEditingYawSupplier(application::isEditingYaw);
         imguiHost.setAllowDetachedSupplier(() -> Minecraft.getMinecraft().currentScreen == null);
 
@@ -176,6 +186,8 @@ public class ForgeParkourCalculator {
         ClientRegistry.registerKeyBinding(copyTeleportKeyBinding);
         selectTickKeyBinding = new KeyBinding("key.parkourcalculator.select_tick", Keyboard.KEY_NONE, "key.categories.parkourcalculator");
         ClientRegistry.registerKeyBinding(selectTickKeyBinding);
+        placeBlockKeyBinding = new KeyBinding("key.parkourcalculator.place_block", Keyboard.KEY_NONE, "key.categories.parkourcalculator");
+        ClientRegistry.registerKeyBinding(placeBlockKeyBinding);
         if (blockCaptureEnabled) {
             captureMomentumBlockKeyBinding = new KeyBinding("key.parkourcalculator.capture_momentum_block", Keyboard.KEY_M, "key.categories.parkourcalculator");
             ClientRegistry.registerKeyBinding(captureMomentumBlockKeyBinding);
@@ -263,6 +275,7 @@ public class ForgeParkourCalculator {
         int key = Keyboard.getEventKey();
         if (key == Keyboard.KEY_NONE) return;
         boolean down = Keyboard.getEventKeyState();
+        if (down && key == Keyboard.KEY_ESCAPE && application.placingEscape()) return;
         if (down && Minecraft.getMinecraft().currentScreen == null && application.getSettings().undoRedoWithoutUi
                 && Lwjgl2InputState.isEditChordPress(key)) {
             swallowChatOpen(key);
@@ -479,6 +492,10 @@ public class ForgeParkourCalculator {
         while (copyTeleportKeyBinding.isPressed()) {
             copyTeleportPressed = true;
         }
+        boolean placeBlockPressed = false;
+        while (placeBlockKeyBinding.isPressed()) {
+            placeBlockPressed = true;
+        }
         boolean captureMomentum = false;
         boolean captureCollision = false;
         boolean captureLand = false;
@@ -543,6 +560,9 @@ public class ForgeParkourCalculator {
             }
             if (copyTeleportPressed && chordFree) {
                 application.copyTeleportCommand();
+            }
+            if (placeBlockPressed && chordFree) {
+                application.togglePlacing();
             }
             if (captureMomentum && chordFree) {
                 application.captureAngleSolverBlock(BlockSelection.Kind.MOMENTUM);
@@ -663,12 +683,20 @@ public class ForgeParkourCalculator {
             return;
         }
         //? if >=1.12 {
+        if (Minecraft.getMinecraft().currentScreen == null && application.placingMouse(event.getButton(), true)) {
+            event.setCanceled(true);
+            return;
+        }
         if (event.getButton() == 0 && application.shouldSuppressLeftClick()) {
             event.setCanceled(true);
         }
         if (event.getButton() == 1 && application.shouldSuppressRightClick()) {
         //?} else {
-        /*if (event.button == 0 && application.shouldSuppressLeftClick()) {
+        /*if (Minecraft.getMinecraft().currentScreen == null && application.placingMouse(event.button, true)) {
+            event.setCanceled(true);
+            return;
+        }
+        if (event.button == 0 && application.shouldSuppressLeftClick()) {
             event.setCanceled(true);
         }
         if (event.button == 1 && application.shouldSuppressRightClick()) {

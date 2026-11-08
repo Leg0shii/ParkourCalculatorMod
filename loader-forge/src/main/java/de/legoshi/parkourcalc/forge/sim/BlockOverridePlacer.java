@@ -5,11 +5,14 @@ import de.legoshi.parkourcalc.core.sim.BlockPatch;
 import net.minecraft.block.Block;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.item.ItemBlock;
+import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -19,6 +22,7 @@ import java.util.Map;
 public final class BlockOverridePlacer {
 
     private static final Map<String, Object> RESOLVED = new HashMap<String, Object>();
+    private static List<String> sortedIds;
 
     private BlockOverridePlacer() {
     }
@@ -95,6 +99,43 @@ public final class BlockOverridePlacer {
     public static String error(String spec) {
         Object r = resolve(spec);
         return r instanceof String ? (String) r : null;
+    }
+
+    public static List<String> ids() {
+        if (sortedIds == null) {
+            List<String> ids = new ArrayList<String>();
+            //? if >=1.12 {
+            for (Object key : Block.REGISTRY.getKeys()) ids.add(String.valueOf(key));
+            //?} else {
+            /*for (Object key : Block.blockRegistry.getKeys()) ids.add(String.valueOf(key));
+            *///?}
+            Collections.sort(ids);
+            sortedIds = Collections.unmodifiableList(ids);
+        }
+        return sortedIds;
+    }
+
+    public static String defaultState(String id) {
+        Block block = Block.getBlockFromName(BlockOverride.Spec.parse(id).id);
+        return block == null ? null : describe(block.getDefaultState());
+    }
+
+    public static Map<String, List<String>> stateOptions(String id) {
+        Block block = Block.getBlockFromName(BlockOverride.Spec.parse(id).id);
+        if (block == null) return Collections.emptyMap();
+        Map<String, List<String>> out = new LinkedHashMap<String, List<String>>();
+        for (Object o : block.getBlockState().getProperties()) {
+            IProperty p = (IProperty) o;
+            List<String> names = new ArrayList<String>();
+            for (Object v : p.getAllowedValues()) names.add(p.getName((Comparable) v));
+            out.put(p.getName(), names);
+        }
+        return out;
+    }
+
+    public static String heldBlock(ItemStack stack) {
+        if (stack == null || !(stack.getItem() instanceof ItemBlock)) return null;
+        return describe(((ItemBlock) stack.getItem()).getBlock().getDefaultState());
     }
 
     public static String describe(IBlockState state) {
