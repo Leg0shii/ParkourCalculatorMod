@@ -43,6 +43,7 @@ public final class ForgeWorldOverlayRenderer {
     private final SelectionManager selection;
     private final YawGizmoController yawGizmo;
     private final Supplier<AngleSolverState> angleSolver;
+    private final BlockOverrideWorld blockOverrides;
     private final ForgeCachedBoxGeometry cached = new ForgeCachedBoxGeometry();
 
     public ForgeWorldOverlayRenderer(BoxController boxController, Settings settings, SelectionManager selection,
