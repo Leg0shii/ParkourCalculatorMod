@@ -33,12 +33,10 @@ import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
 import net.minecraft.network.protocol.game.ServerboundPlayerInputPacket;
 //? if >=1.21.4
 import net.minecraft.network.protocol.game.ServerboundPlayerLoadedPacket;
-import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
 //? if >=1.21.2 {
 import net.minecraft.world.entity.PositionMoveRotation;
@@ -46,11 +44,8 @@ import net.minecraft.world.entity.player.Input;
 //?} else {
 /*import net.minecraft.world.entity.RelativeMovement;
 *///?}
-import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
 import java.nio.charset.StandardCharsets;
@@ -65,7 +60,6 @@ public final class PairedServerSim {
 
     private static final UUID PROFILE_UUID = UUID.nameUUIDFromBytes("pkc-paired-sim".getBytes(StandardCharsets.UTF_8));
     private static final String PROFILE_NAME = "PKCPairedSim";
-    private static final int RIGHT_CLICK_DELAY_TICKS = 4;
     private static final int WARMUP_SERVER_TICKS = 2;
 
     private final ServerLevel level;
@@ -93,9 +87,6 @@ public final class PairedServerSim {
     //? if <26.1
     //private boolean lastShiftKeyDown;
     private boolean lastSprinting;
-    private boolean prevRightClick;
-    private int rightClickDelay;
-    private int useSequence;
     private int journalSizeAtTickStart;
     private boolean lastMoveJumped;
     private boolean shutdownDone;
@@ -219,9 +210,6 @@ public final class PairedServerSim {
         //? if <26.1
         //lastShiftKeyDown = false;
         lastSprinting = false;
-        prevRightClick = false;
-        rightClickDelay = 0;
-        useSequence = 0;
     }
 
     private void snapServerPlayer(double x, double y, double z, float yRot, float xRot) {
@@ -262,7 +250,6 @@ public final class PairedServerSim {
         if (row != null) {
             pitch = PlaybackController.applyPitch(pitch, row);
         }
-        synthesizeUseItem(e, row);
     }
 
     static int motionEntityId(ClientboundSetEntityMotionPacket motion) {
@@ -441,44 +428,6 @@ public final class PairedServerSim {
         }
         lastOnGround = onGround;
         lastHorizontalCollision = horizontalCollision;
-    }
-
-    private void synthesizeUseItem(SimulatorEntity e, InputRow row) {
-        boolean rightClick = row != null && row.isKeyActive(InputRow.Key.RIGHT_CLICK);
-        if (rightClickDelay > 0) rightClickDelay--;
-        boolean fire = rightClick && (!prevRightClick || rightClickDelay == 0);
-        prevRightClick = rightClick;
-        if (!fire) return;
-        rightClickDelay = RIGHT_CLICK_DELAY_TICKS;
-        Vec3 eye = new Vec3(e.getX(), e.getEyeY(), e.getZ());
-        Vec3 dir = pickViewVector(pitch, e.getYRot());
-        //? if >=1.20.5 {
-        double range = e.blockInteractionRange();
-        //?} else {
-        /*double range = 4.5;
-        *///?}
-        HitResult hit = level.clip(new ClipContext(eye, eye.add(dir.scale(range)),
-                ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, e));
-        if (hit.getType() != HitResult.Type.BLOCK || !(hit instanceof BlockHitResult blockHit)) {
-            addEvent(ServerSimEvent.Kind.INTERACTION_REJECTED, "no block in reach");
-            return;
-        }
-        drainServerbound();
-        int sizeBefore = journal.size();
-        handler.handleUseItemOn(new ServerboundUseItemOnPacket(InteractionHand.MAIN_HAND, blockHit, ++useSequence));
-        if (journal.size() == sizeBefore) {
-            addEvent(ServerSimEvent.Kind.INTERACTION_REJECTED, "use had no effect");
-        }
-    }
-
-    private static Vec3 pickViewVector(float pitch, float yaw) {
-        float f = pitch * ((float) Math.PI / 180F);
-        float f1 = -yaw * ((float) Math.PI / 180F);
-        float f2 = Mth.cos(f1);
-        float f3 = Mth.sin(f1);
-        float f4 = Mth.cos(f);
-        float f5 = Mth.sin(f);
-        return new Vec3(f3 * f4, -f5, f2 * f4);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -701,9 +650,6 @@ public final class PairedServerSim {
         //? if <26.1
         //c.lastShiftKeyDown = lastShiftKeyDown;
         c.lastSprinting = lastSprinting;
-        c.prevRightClick = prevRightClick;
-        c.rightClickDelay = rightClickDelay;
-        c.useSequence = useSequence;
         c.pitch = pitch;
         c.tickIndex = tickIndex;
         c.journalSize = journal.size();
@@ -767,9 +713,6 @@ public final class PairedServerSim {
         //? if <26.1
         //lastShiftKeyDown = c.lastShiftKeyDown;
         lastSprinting = c.lastSprinting;
-        prevRightClick = c.prevRightClick;
-        rightClickDelay = c.rightClickDelay;
-        useSequence = c.useSequence;
         pitch = c.pitch;
         tickIndex = c.tickIndex;
     }
@@ -830,9 +773,6 @@ public final class PairedServerSim {
         //? if <26.1
         //boolean lastShiftKeyDown;
         boolean lastSprinting;
-        boolean prevRightClick;
-        int rightClickDelay;
-        int useSequence;
         float pitch;
         int tickIndex;
         int journalSize;
