@@ -24,10 +24,10 @@ public final class ForgeBlockPatcher implements BlockPatcher {
 
     //? if >=1.12 {
     private static final int SET_FLAGS = 2 | 16;
-    private static final Set<BlockPos> OWN_TILE_ENTITIES = new HashSet<BlockPos>();
     //?} else {
     /*private static final int SET_FLAGS = 2;
     *///?}
+    private static final Set<BlockPos> OWN_TILE_ENTITIES = new HashSet<BlockPos>();
 
     @Override
     public boolean isAvailable() {
