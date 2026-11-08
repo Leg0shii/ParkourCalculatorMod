@@ -91,6 +91,7 @@ public final class Application {
     private final BoxDragController dragController;
     private final StartDragController startDragController;
     private final BoxSelectController selectController;
+    private final BoxSelectController blockPickController;
     private final YawGizmoController yawGizmo;
     private final SaveController saveController;
     private final PlaybackController playback;
@@ -135,6 +136,7 @@ public final class Application {
         // Start box is the "Start" anchor: draggable to reposition, and tap-selectable as path index 0.
         this.dragController = new BoxDragController(boxController, startDragController, this::commitStartTap);
         this.selectController = new BoxSelectController(this::pickWorld, this::commitWorldTap);
+        this.blockPickController = new BoxSelectController(this::pickBlockOverride, this::commitWorldTap);
         this.yawGizmo = new YawGizmoController(
                 boxController,
                 this::handleStartYawChange,
@@ -635,8 +637,11 @@ public final class Application {
     }
 
     private WorldPick pickWorld(Vec3dCore rayOrigin, Vec3dCore rayDirection) {
-        WorldPick pick = boxController.pickWorld(rayOrigin, rayDirection, constraintSource);
-        if (pick != null || !settings.viewBlockOverrides || !blockOverrideWorld.isAvailable()) return pick;
+        return boxController.pickWorld(rayOrigin, rayDirection, constraintSource);
+    }
+
+    private WorldPick pickBlockOverride(Vec3dCore rayOrigin, Vec3dCore rayDirection) {
+        if (!settings.viewBlockOverrides || !blockOverrideWorld.isAvailable()) return null;
         BlockHit hit = mc.getLookedAtHit();
         if (hit == null) return null;
         int row = inputData.getBlockOverrides().indexOf(blockOverrideWorld.rowAt(hit.x, hit.y, hit.z));
@@ -745,6 +750,14 @@ public final class Application {
                 mc.getCursorScreenX(),
                 mc.getCursorScreenY(),
                 pathInert
+        );
+        blockPickController.tick(
+                mc.getEyePosition(),
+                mc.getLookDirection(),
+                mc.isMousePressedRight(),
+                mc.getCursorScreenX(),
+                mc.getCursorScreenY(),
+                pathInert || !settings.viewBlockOverrides || blockPlacing.isActive()
         );
         yawGizmo.tick(
                 mc.getEyePosition(),

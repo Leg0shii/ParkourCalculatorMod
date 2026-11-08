@@ -227,15 +227,15 @@ public final class BlockOverridesWindow implements RenderInterface {
         float framePadY = Math.max(0f, (FRAME_H * scale - ImGui.getFontSize()) * 0.5f);
         float left = ImGui.getWindowPosX();
         float right = left + ImGui.getWindowWidth();
-        boolean click = ImGui.isMouseClicked(0) && ImGui.isWindowHovered(ImGuiHoveredFlags.ChildWindows);
+        boolean click = (ImGui.isMouseClicked(0) || ImGui.isMouseClicked(1))
+                && ImGui.isWindowHovered(ImGuiHoveredFlags.ChildWindows | ImGuiHoveredFlags.AllowWhenBlockedByActiveItem);
+        float padY = ImGui.getStyle().getCellPaddingY();
         for (int i = 0; i < blocks.size(); i++) {
             ImGui.tableNextRow(0, rowH);
             ImGui.tableSetBgColor(ImGuiTableBgTarget.RowBg0, rgba((i & 1) == 0 ? ROW_BASE : ROW_ALT));
             ImGui.pushID(i);
             BlockOverride b = blocks.get(i);
             if (world.isSelected(b)) ThemeManager.paintTableRowTint(ThemeManager.rgbaTintColor(settings.blockOverrideSelectedRow));
-            float top = ImGui.getCursorScreenPosY() - ImGui.getStyle().getCellPaddingY();
-            if (click && ImGui.isMouseHoveringRect(left, top, right, top + rowH)) world.select(b);
             boolean problem = world.hasProblem(b);
             boolean dim = !problem && !b.activeAtRow(viewRow);
             if (problem) ThemeManager.pushTextColor(ThemeManager.dangerColor());
@@ -245,6 +245,8 @@ public final class BlockOverridesWindow implements RenderInterface {
             ImGui.pushStyleColor(ImGuiCol.FrameBg, ThemeManager.panelColor());
             ImGui.pushStyleColor(ImGuiCol.Border, ThemeManager.borderColor());
             boolean remove = row(blocks, i);
+            float top = rowTop - padY;
+            if (click && ImGui.isMouseHoveringRect(left, top, right, top + rowH, false)) world.select(blocks.get(Math.min(i, blocks.size() - 1)));
             ImGui.popStyleColor(2);
             ImGui.popStyleVar(2);
             if (dim || problem) ThemeManager.popTextColor();
@@ -285,9 +287,12 @@ public final class BlockOverridesWindow implements RenderInterface {
         return ImGui.colorConvertFloat4ToU32(c[0], c[1], c[2], 1f);
     }
 
+    private float rowTop;
+
     private boolean row(BlockOverrides blocks, int i) {
         BlockOverride b = blocks.get(i);
         ImGui.tableSetColumnIndex(0);
+        rowTop = ImGui.getCursorScreenPosY();
         Integer start = startCell(i, b);
         rowTooltip(b);
         ImGui.tableSetColumnIndex(1);
