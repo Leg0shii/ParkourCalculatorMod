@@ -9,6 +9,7 @@ import com.mojang.renderpearl.api.commands.RenderPass;
 /*import com.mojang.blaze3d.vertex.PoseStack;
 *///?}
 import de.legoshi.parkourcalc.core.Application;
+import de.legoshi.parkourcalc.core.BlockPlacing;
 import de.legoshi.parkourcalc.core.anglesolver.noturn.PoolScreenAccelerator;
 import de.legoshi.parkourcalc.gpu.OpenClPoolScreen;
 import de.legoshi.parkourcalc.core.PlaybackController;
@@ -727,7 +728,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
     }
 
     public static boolean placingMouse(int button, int action) {
-        return action == InputConstants.PRESS && application.placingMouse(button, true);
+        if (action != InputConstants.PRESS) return false;
+        int core = button == InputConstants.MOUSE_BUTTON_LEFT ? BlockPlacing.LEFT
+                : button == InputConstants.MOUSE_BUTTON_RIGHT ? BlockPlacing.RIGHT : -1;
+        return application.placingMouse(core, true);
     }
 
     public static boolean placingEscape() {
