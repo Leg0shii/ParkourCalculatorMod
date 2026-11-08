@@ -372,13 +372,15 @@ public final class BlockOverridesWindow implements RenderInterface {
         ImGui.pushStyleColor(ImGuiCol.PopupBg, rgba(POPUP_BG));
         ImGui.pushStyleColor(ImGuiCol.Border, ThemeManager.borderColor());
         ImGui.beginTooltip();
-        ImGui.pushTextWrapPos(ImGui.getCursorPosX() + TIP_W * scale - 2f * TIP_PAD_X * scale);
+        float wrapX = ImGui.getCursorPosX() + TIP_W * scale - 2f * TIP_PAD_X * scale;
+        ImGui.pushTextWrapPos(wrapX);
         problemLine(world.simProblem(b), scale);
         String replay = world.replayProblem(b);
         if (replay != null) problemLine(replay + " (replay)", scale);
         ThemeManager.pushTextColor(ThemeManager.textMutedColor());
         ImGui.text("Before: " + displayName(b.before));
         ImGui.sameLine();
+        if (ImGui.getCursorPosX() + ImGui.calcTextSize(BEFORE_NOTE).x > wrapX) ImGui.newLine();
         ThemeManager.pushTextColor(ThemeManager.textDimColor());
         ImGui.text(BEFORE_NOTE);
         ThemeManager.popTextColor();
@@ -528,6 +530,7 @@ public final class BlockOverridesWindow implements RenderInterface {
         String error = errorOf(b.block);
         int textCol = ImGui.getColorU32(ImGuiCol.Text);
         boolean problem = world.hasProblem(b);
+        boolean dim = !problem && !b.activeAtRow(world.viewRow());
         if (error != null) textCol = ThemeManager.dangerColor();
         BlockOverride.Spec spec = b.spec();
         String name = error != null ? b.block : spec.shortName();
@@ -542,7 +545,7 @@ public final class BlockOverridesWindow implements RenderInterface {
         }
         dl.addText(x, textY, textCol, name);
         if (!states.isEmpty()) {
-            dl.addText(x + ImGui.calcTextSize(name).x, textY, problem ? textCol : ThemeManager.textMutedColor(), states);
+            dl.addText(x + ImGui.calcTextSize(name).x, textY, problem || dim ? textCol : ThemeManager.textMutedColor(), states);
         }
         dl.popClipRect();
         SolverWidgets.triangleDown(dl, mx.x - arrowW * 0.5f, mn.y + h * 0.5f, 3.3f * scale, ThemeManager.textMutedColor());
