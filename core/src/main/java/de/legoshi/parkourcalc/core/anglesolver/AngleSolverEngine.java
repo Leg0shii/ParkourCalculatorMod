@@ -625,14 +625,32 @@ public final class AngleSolverEngine {
         Job job = buildJob(effort, graph);
         if (job == null) return;
         job = job.withDeadline(smoothBudgetNanos());
-        if (base.strafeSigns != null) {
-            job.spec.asScenario().strafeSignPerTick = base.strafeSigns.clone();
-            job.incumbentYaws = base.yaws.clone();
-        } else {
-            job.incumbentYaws = base.solverYaws.clone();
+        JumpPhysicsInputs sc = job.spec.asScenario();
+        if (base.strafeSigns != null) sc.strafeSignPerTick = base.strafeSigns.clone();
+        double[] incumbent = base.strafeSigns != null ? base.yaws.clone() : base.solverYaws.clone();
+        Vec3dCore incumbentStart = base.start;
+        if (!verifiesOnScenario(job, sc, incumbent)) {
+            double[] current = currentRowYaws(job.startTick, job.numTicks);
+            if (current == null || !verifiesOnScenario(job, sc, current)) {
+                SolveResult stale = new SolveResult(false, 0, job.uiConstraints.size(), job.startTick + 1, job.landingTick + 1);
+                stale.setNoticeLabel(STALE_SMOOTH_LABEL);
+                stale.setNotice("The last solve no longer lands on the TAS as it is now. Solve again, then smooth.");
+                state.setResult(stale);
+                return;
+            }
+            incumbent = current;
+            incumbentStart = null;
         }
-        job.incumbentStart = base.start;
+        job.incumbentYaws = incumbent;
+        job.incumbentStart = incumbentStart;
         start(job, effort);
+    }
+
+    public static final String STALE_SMOOTH_LABEL = "Nothing to smooth";
+
+    private boolean verifiesOnScenario(Job job, JumpPhysicsInputs sc, double[] yaws) {
+        if (yaws == null || yaws.length != sc.numTicks) return false;
+        return !Double.isNaN(Scoring.verifiedObjectiveAt(model, sc, job.spec, yaws, sc.startPos.x, sc.startPos.z, FEAS_TOL));
     }
 
     private static boolean isSmoothJob(Job job) {
