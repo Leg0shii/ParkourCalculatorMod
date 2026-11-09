@@ -55,8 +55,8 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
     private GhostPlayerEntity ghost;
     private final java.util.List<ReplaySample> replaySamples = new java.util.ArrayList<>();
 
-    private record ReplaySample(int tick, Vec3 pos, Vec3 vel, boolean onGround, double fallDistance, float health,
-                                Vec3 serverVel, String serverDesc) {
+    private record ReplaySample(int tick, Vec3 pos, Vec3 vel, boolean onGround, boolean sprinting,
+                                double fallDistance, float health, Vec3 serverVel, String serverDesc) {
     }
 
     InputRow getCurrentRow() {
@@ -175,9 +175,10 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
     public void capturePlaybackSample(int tickIndex) {
         net.minecraft.world.entity.player.Player subject = ghostMode ? ghost : Minecraft.getInstance().player;
         if (subject == null) return;
-        ServerPlayer sp = serverSideSelf();
+        boolean diagnostics = de.legoshi.parkourcalc.core.DebugFlags.PAIRED_DIAGNOSTICS;
+        ServerPlayer sp = diagnostics ? serverSideSelf() : null;
         replaySamples.add(new ReplaySample(tickIndex, subject.position(), subject.getDeltaMovement(),
-                subject.onGround(), subject.fallDistance, subject.getHealth(),
+                subject.onGround(), subject.isSprinting(), subject.fallDistance, subject.getHealth(),
                 sp == null ? Vec3.ZERO : sp.getDeltaMovement(),
                 sp == null ? "realSrv=unavailable" : describeRealServer(sp)));
         if (de.legoshi.parkourcalc.core.DebugFlags.PAIRED_DIAGNOSTICS && tickIndex <= 4) {
@@ -266,7 +267,10 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
                 break;
             }
         }
-        reportAccumulator();
+        boolean diagnostics = de.legoshi.parkourcalc.core.DebugFlags.PAIRED_DIAGNOSTICS;
+        if (diagnostics) {
+            reportAccumulator();
+        }
         if (firstDiverged < 0) {
             LOG.info("[PC-REPLAY] no divergence across " + replaySamples.size() + " replayed ticks (eps 1e-6)");
             replaySamples.clear();
@@ -281,7 +285,8 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
                 de.legoshi.parkourcalc.core.sim.TickState sim = states.get(idx);
                 simPart = "sim=" + sim.position.x + "," + sim.position.y + "," + sim.position.z
                         + " v=" + sim.velocity.x + "," + sim.velocity.y + "," + sim.velocity.z
-                        + " g=" + sim.onGround;
+                        + " g=" + sim.onGround
+                        + " spr=" + sim.sprinting;
             } else {
                 simPart = "sim=out-of-range";
             }
@@ -289,10 +294,13 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
                     + " real=" + sample.pos().x + "," + sample.pos().y + "," + sample.pos().z
                     + " v=" + sample.vel().x + "," + sample.vel().y + "," + sample.vel().z
                     + " g=" + sample.onGround()
+                    + " spr=" + sample.sprinting()
                     + " fall=" + sample.fallDistance()
                     + " hp=" + sample.health()
                     + " | " + simPart);
-            printAccumulatorLine(sample);
+            if (diagnostics) {
+                printAccumulatorLine(sample);
+            }
         }
         replaySamples.clear();
     }

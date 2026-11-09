@@ -249,10 +249,8 @@ public final class PlaybackController {
         InputRow firstRow = inputData.get(from);
         lastEffectLevels = firstRow.getEffectLevels();
         bridge.applyEffects(lastEffectLevels);
-        if (DebugFlags.PAIRED_DIAGNOSTICS) {
-            lastCapturedTick = -1;
-            bridge.beginPlaybackCapture();
-        }
+        lastCapturedTick = -1;
+        bridge.beginPlaybackCapture();
         if (settings.pairedSimulation) {
             runner.onReplayStart(from);
         }
@@ -279,9 +277,7 @@ public final class PlaybackController {
             bridge.releaseAllKeys();
             onReplayRow.accept(-1);
             bridge.applyEffects(new int[MovementEffect.count()]);
-            if (DebugFlags.PAIRED_DIAGNOSTICS) {
-                bridge.finishPlaybackCapture();
-            }
+            bridge.finishPlaybackCapture();
             if (settings.pairedSimulation) {
                 runner.onReplayEnd();
             }
@@ -467,12 +463,10 @@ public final class PlaybackController {
             }
             bridge.dumpPlayerState(t);
         }
-        if (DebugFlags.PAIRED_DIAGNOSTICS) {
-            int t = nextTick - 1 - warmupRemaining;
-            if (t >= 0 && t != lastCapturedTick) {
-                lastCapturedTick = t;
-                bridge.capturePlaybackSample(t);
-            }
+        int captureTick = nextTick - 1 - warmupRemaining;
+        if (captureTick >= 0 && captureTick != lastCapturedTick) {
+            lastCapturedTick = captureTick;
+            bridge.capturePlaybackSample(captureTick);
         }
     }
 
