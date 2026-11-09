@@ -107,8 +107,8 @@ public final class InputSmooth {
         long plainDeadline = t0 + (long) (total * PLAIN_SHARE);
         TrendFilterSmooth.Report plain = TrendFilterSmooth.smoothReport(exact, spec, seed, giveBack, plainDeadline, cancel);
         double[] plainYaws = plain.yaws;
-        TurnShape plainShape = TurnShape.of(anchor, plainYaws);
         JumpPhysicsInputs editable = TickInputs.editable(base);
+        TurnShape plainShape = TurnShape.of(anchor, plainYaws).withEdges(edges(editable));
         State inc = new State(editable, plainYaws, plainShape, new TickInputs[n],
                 objectiveOf(exact, editable, spec, plainYaws));
         TickInputs[] original = new TickInputs[n];
@@ -167,7 +167,7 @@ public final class InputSmooth {
             TrendFilterSmooth.Report polish = TrendFilterSmooth.smoothReport(exact, finalSpec, inc.yaws, remaining,
                     deadlineNanos, cancel);
             if (polish.yaws != null && accepts(exact, finalSpec, comp, polish.yaws, max, reference, giveBack)) {
-                TurnShape shape = TurnShape.of(anchor, polish.yaws);
+                TurnShape shape = TurnShape.of(anchor, polish.yaws).withEdges(edges(inc.scenario));
                 if (shape.betterThan(bestShape)) {
                     best = polish.yaws;
                     bestShape = shape;
@@ -291,7 +291,19 @@ public final class InputSmooth {
                 ? r.yaws : yaws;
         TickInputs[] inputs = inc.inputs.clone();
         inputs[m.tick] = m.inputs.equals(m.original) ? null : m.inputs;
-        return new State(sc, smoothed, TurnShape.of(anchor, smoothed), inputs, objectiveOf(exact, sc, spec, smoothed));
+        return new State(sc, smoothed, TurnShape.of(anchor, smoothed).withEdges(edges(sc)), inputs,
+                objectiveOf(exact, sc, spec, smoothed));
+    }
+
+    public static int edges(JumpPhysicsInputs sc) {
+        int edges = 0;
+        TickInputs prev = TickInputs.of(sc, 0);
+        for (int t = 1; t < sc.numTicks; t++) {
+            TickInputs cur = TickInputs.of(sc, t);
+            if (cur == null ? prev != null : !cur.equals(prev)) edges++;
+            prev = cur;
+        }
+        return edges;
     }
 
     private static boolean accepts(ExactJumpModel exact, JumpSpec spec, JumpConstraintCompiler.Compiled comp,

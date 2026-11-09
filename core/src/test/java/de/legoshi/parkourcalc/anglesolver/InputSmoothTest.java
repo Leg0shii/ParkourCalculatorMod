@@ -127,4 +127,14 @@ public class InputSmoothTest {
         sc.sprintKeyPerTick[3] = true;
         assertArrayEquals(new int[0], InputSmooth.sprintKeyTicks(sc));
     }
+
+    @Test
+    public void countsEveryKeyChangeBetweenNeighbouringTicksAsAnEdge() {
+        JumpPhysicsInputs sc = TickInputs.editable(force45());
+        assertEquals("W then five W A ticks", 1, InputSmooth.edges(sc));
+        sc.strafeSignPerTick = new int[] {1, 1, -1, 1, 1, 1};
+        assertEquals("the lone D in the middle adds two edges", 3, InputSmooth.edges(sc));
+        sc.sprintPerTick[5] = false;
+        assertEquals("a sprint drop is an edge too", 4, InputSmooth.edges(sc));
+    }
 }
