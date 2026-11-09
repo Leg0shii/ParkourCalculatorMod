@@ -300,6 +300,7 @@ public final class NodeCatalog {
                 .param(ParamSpec.decimal("giveBack", "Give-back share of the offset", 0.0, 1.0, 1.0))
                 .param(ParamSpec.bool("allowA", "May strafe with A", true))
                 .param(ParamSpec.bool("allowD", "May strafe with D", true))
+                .param(ParamSpec.bool("keepSprint", "Keep sprinting (W and sprint held on every tick)", false))
                 .param(ParamSpec.decimal(GraphRunner.RESERVE_FRACTION_PARAM, "Reserved share of the solve time", 0.0, 1.0,
                         BuiltinGraphs.SMOOTH_RESERVE_FRACTION))
                 .param(ParamSpec.integer(GraphRunner.RESERVE_CAP_PARAM, "Reserve cap (s, 0 = none)", 0, 600,

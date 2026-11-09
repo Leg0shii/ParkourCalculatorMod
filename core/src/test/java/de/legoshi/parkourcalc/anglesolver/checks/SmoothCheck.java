@@ -190,6 +190,9 @@ final class SmoothCheck implements ProblemCheck {
             AngleSolverState.SprintMode sprint = ov != null && ov.overridesSprint() ? ov.getSprint() : rig.state.getDefaultSprint();
             assertEquals(at + "runs its own keys from now on", AngleSolverState.InputMode.KEEP, inputs);
             assertEquals(at + "derives its sprint from now on", AngleSolverState.SprintMode.DERIVE, sprint);
+            assertFalse(at + "no per-tick pin, the defaults switched instead", ov != null && (ov.overridesInputs() || ov.overridesSprint()));
+            assertEquals(name + ": Apply switches the solver to Keep", AngleSolverState.InputMode.KEEP, rig.state.getDefaultInputs());
+            assertEquals(name + ": Apply switches the solver to Derive", AngleSolverState.SprintMode.DERIVE, rig.state.getDefaultSprint());
         }
         double[] yaws = Paths.resultYaws(smoothed);
         boolean freeStart = rig.engine.debugFreeStartYaw();

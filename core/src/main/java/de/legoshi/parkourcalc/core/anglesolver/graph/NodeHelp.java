@@ -261,6 +261,7 @@ public final class NodeHelp {
                 + " 0 to 1, shared by the key changes and the turn.");
         param("inputSmooth", "allowA", "Whether a changed tick may strafe with A.");
         param("inputSmooth", "allowD", "Whether a changed tick may strafe with D.");
+        param("inputSmooth", "keepSprint", "Only W, W A and W D with sprint held: no empty tick, no S, no lone A or D, no sprint drop.");
         param("inputSmooth", "reserveFraction", "The share of the whole solve time held back for this stage,"
                 + " which is also how long it may run. With no overall solve time it gets a fixed 1.2 s.");
         param("inputSmooth", "reserveCapSec", "The most seconds the stage may take. 0 means no cap.");

@@ -626,7 +626,7 @@ public final class AngleSolverEngine {
         AngleSolverState.StrafeSide side = state.getStrafeSide();
         SolverGraph graph = inputsToo
                 ? BuiltinGraphs.smoothInputs(state.getSmoothGiveBack(), side != AngleSolverState.StrafeSide.D,
-                        side != AngleSolverState.StrafeSide.A)
+                        side != AngleSolverState.StrafeSide.A, state.isSmoothKeepSprint())
                 : BuiltinGraphs.smooth(state.getSmoothGiveBack());
         Job job = buildJob(effort, graph);
         if (job == null) return;
@@ -1686,14 +1686,12 @@ public final class AngleSolverEngine {
         }
         writeYaws(rows, p.startTick, p.yaws, p.freeStartYaw);
         boolean overridesChanged = false;
+        boolean inputsChanged = false;
         for (int k = 0; k < p.yaws.length && p.startTick + k < rows.size(); k++) {
             TickInputs changed = p.inputsAt(k);
             if (changed != null) {
                 writeInputs(rows.get(p.startTick + k), changed);
-                StateOverride ov = state.tickConstraints(p.startTick + k).getOverride();
-                ov.setInputs(AngleSolverState.InputMode.KEEP);
-                ov.setSprint(AngleSolverState.SprintMode.DERIVE);
-                overridesChanged = true;
+                inputsChanged = true;
             } else if (p.force45Mask[k]) {
                 // A Force-45 tick realizes its solve assumption in the rows (gh-104): W + sprint held
                 // on every tick, strafe per the mask (the grounded jump tick stays W-only). Keep ticks
@@ -1705,6 +1703,16 @@ public final class AngleSolverEngine {
             for (int k : p.sprintKeyTicks) {
                 if (p.startTick + k < rows.size()) rows.get(p.startTick + k).setKeyActive(InputRow.Key.SPRINT, true);
             }
+        }
+        if (inputsChanged) {
+            for (int k = 0; k < p.yaws.length && p.startTick + k < rows.size(); k++) {
+                if (p.force45Mask[k] && p.inputsAt(k) == null) {
+                    rows.get(p.startTick + k).applyForce45(p.strafeMask[k], p.strafeSignAt(k));
+                }
+            }
+            state.setDefaultInputs(AngleSolverState.InputMode.KEEP);
+            state.setDefaultSprint(AngleSolverState.SprintMode.DERIVE);
+            overridesChanged = true;
         }
         if (overridesChanged) state.pruneRedundantOverrides();
         onApplied.accept(p.startTick);

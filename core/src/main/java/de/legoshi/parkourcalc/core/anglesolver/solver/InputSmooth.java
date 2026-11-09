@@ -21,6 +21,7 @@ public final class InputSmooth {
     public static final class Options {
         public boolean allowA = true;
         public boolean allowD = true;
+        public boolean keepSprint;
         public Resolver resolver;
     }
 
@@ -219,12 +220,13 @@ public final class InputSmooth {
         return true;
     }
 
-    private static List<TickInputs> alphabet(Options opt) {
+    public static List<TickInputs> alphabet(Options opt) {
         List<TickInputs> out = new ArrayList<>();
-        out.add(TickInputs.NONE);
+        if (!opt.keepSprint) out.add(TickInputs.NONE);
         out.add(new TickInputs(true, false, false, false, true));
         if (opt.allowA) out.add(new TickInputs(true, true, false, false, true));
         if (opt.allowD) out.add(new TickInputs(true, false, false, true, true));
+        if (opt.keepSprint) return out;
         if (opt.allowA) out.add(new TickInputs(false, true, false, false, false));
         if (opt.allowD) out.add(new TickInputs(false, false, false, true, false));
         out.add(new TickInputs(false, false, true, false, false));

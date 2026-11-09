@@ -173,7 +173,7 @@ public class BuiltinGraphsTest {
 
     @Test
     public void smoothInputsIsTheInputsStageAloneWithTheWholeBudget() {
-        SolverGraph g = BuiltinGraphs.smoothInputs(0.4, true, false);
+        SolverGraph g = BuiltinGraphs.smoothInputs(0.4, true, false, false);
         assertFalse(GraphValidator.hasErrors(GraphValidator.validate(g)));
         assertEquals(Arrays.asList("entry", "smooth", "emit"), nodeIds(g));
         assertEquals("inputSmooth", g.node("smooth").type.id);

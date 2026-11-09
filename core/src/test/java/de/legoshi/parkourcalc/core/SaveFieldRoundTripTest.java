@@ -177,6 +177,16 @@ public class SaveFieldRoundTripTest {
     }
 
     @Test
+    public void smoothKeepSprintRoundTripsAndDefaultsToOff() throws Exception {
+        AngleSolverState state = load("{\"version\":1,\"angleSolver\":{\"smoothKeepSprint\":true}}");
+        assertTrue(state.isSmoothKeepSprint());
+        assertTrue(saveAndReload(state).isSmoothKeepSprint());
+        state.setSmoothKeepSprint(false);
+        assertTrue("off is not written", snapshot(state).indexOf("smoothKeepSprint") < 0);
+        assertTrue(!load("{\"version\":1,\"angleSolver\":{}}").isSmoothKeepSprint());
+    }
+
+    @Test
     public void absentGiveBackLoadsAsTheWholeOffset() {
         SaveFile f = SaveIO.parseSafe("{\"version\":1,\"angleSolver\":{\"smoothLambda\":0.01}}");
         assertNotNull(f);

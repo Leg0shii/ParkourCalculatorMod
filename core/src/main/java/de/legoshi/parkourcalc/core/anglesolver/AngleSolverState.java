@@ -176,6 +176,7 @@ public final class AngleSolverState {
     private InputMode defaultInputs = InputMode.FORCE_45;
     private StrafeSide strafeSide = StrafeSide.A;
     private SmoothMode smoothMode = SmoothMode.TURN;
+    private boolean smoothKeepSprint;
     private SprintMode defaultSprint = SprintMode.ALWAYS;
     private Slipperiness defaultSlipperiness = Slipperiness.AIR;
 
@@ -427,6 +428,14 @@ public final class AngleSolverState {
 
     public void setSmoothMode(SmoothMode mode) {
         this.smoothMode = mode == null ? SmoothMode.TURN : mode;
+    }
+
+    public boolean isSmoothKeepSprint() {
+        return smoothKeepSprint;
+    }
+
+    public void setSmoothKeepSprint(boolean keep) {
+        this.smoothKeepSprint = keep;
     }
 
     public void setDefaultInputs(InputMode mode) {

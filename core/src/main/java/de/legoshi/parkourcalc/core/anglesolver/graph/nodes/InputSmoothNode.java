@@ -32,11 +32,13 @@ public final class InputSmoothNode implements NodeRuntime {
     private final double giveBackRatio;
     private final boolean allowA;
     private final boolean allowD;
+    private final boolean keepSprint;
 
     public InputSmoothNode(ParamValues params) {
         this.giveBackRatio = params.getDouble("giveBack");
         this.allowA = params.getBool("allowA");
         this.allowD = params.getBool("allowD");
+        this.keepSprint = params.getBool("keepSprint");
     }
 
     @Override
@@ -56,6 +58,7 @@ public final class InputSmoothNode implements NodeRuntime {
         InputSmooth.Options opt = new InputSmooth.Options();
         opt.allowA = allowA;
         opt.allowD = allowD;
+        opt.keepSprint = keepSprint;
         opt.resolver = resolver(ctx);
         InputSmooth.Report report;
         try {

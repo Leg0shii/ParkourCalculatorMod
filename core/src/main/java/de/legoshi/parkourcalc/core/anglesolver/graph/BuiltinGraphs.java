@@ -45,13 +45,14 @@ public final class BuiltinGraphs {
         return SMOOTH_PRESET.equals(name) || SMOOTH_INPUTS_PRESET.equals(name);
     }
 
-    public static SolverGraph smoothInputs(double giveBack, boolean allowA, boolean allowD) {
+    public static SolverGraph smoothInputs(double giveBack, boolean allowA, boolean allowD, boolean keepSprint) {
         GraphBuilder g = new GraphBuilder(SMOOTH_INPUTS_PRESET, true);
         g.add("entry", "entry");
         g.add("smooth", "inputSmooth")
                 .set("smooth", "giveBack", giveBack)
                 .set("smooth", "allowA", allowA)
                 .set("smooth", "allowD", allowD)
+                .set("smooth", "keepSprint", keepSprint)
                 .set("smooth", GraphRunner.RESERVE_FRACTION_PARAM, 1.0)
                 .set("smooth", GraphRunner.RESERVE_CAP_PARAM, 0);
         g.add("emit", "emit");

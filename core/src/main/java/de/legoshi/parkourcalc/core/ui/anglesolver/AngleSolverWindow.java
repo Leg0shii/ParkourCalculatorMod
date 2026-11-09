@@ -623,6 +623,10 @@ public final class AngleSolverWindow implements RenderInterface {
             "The keys of single ticks may change too (W, A, S, D, sprint, empty ticks) where that gives a"
             + " calmer turn. Takes up to three times as long as Turn only and is never less smooth.";
 
+    private static final String SMOOTH_KEEP_SPRINT_TIP =
+            "Turn and inputs only chooses between W, W A and W D with sprint held, for maps that forbid"
+            + " releasing W, pressing S or dropping the sprint.";
+
     private static final String SMOOTH_GIVE_BACK_TIP =
             "How much of the landing offset the Smooth button may trade for a smoother turn. The offset is"
             + " the margin past the goal wall at the goal tick, the + value in the result table of the"
@@ -962,6 +966,11 @@ public final class AngleSolverWindow implements RenderInterface {
                 if (ImGui.menuItem(mode.label, "", mode == state.getSmoothMode())) state.setSmoothMode(mode);
                 TooltipUtil.onHover(mode == AngleSolverState.SmoothMode.TURN ? SMOOTH_MODE_TURN_TIP : SMOOTH_MODE_INPUTS_TIP);
             }
+            ImGui.separator();
+            if (ImGui.menuItem("Keep sprinting", "", state.isSmoothKeepSprint())) {
+                state.setSmoothKeepSprint(!state.isSmoothKeepSprint());
+            }
+            TooltipUtil.onHover(SMOOTH_KEEP_SPRINT_TIP);
             ImGui.endPopup();
         }
     }

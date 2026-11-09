@@ -129,6 +129,22 @@ public class InputSmoothTest {
     }
 
     @Test
+    public void keepSprintShrinksTheAlphabetToSprintingForwardCombos() {
+        InputSmooth.Options opt = new InputSmooth.Options();
+        opt.keepSprint = true;
+        for (TickInputs c : InputSmooth.alphabet(opt)) {
+            assertTrue(c.label() + " holds W", c.w);
+            assertTrue(c.label() + " holds sprint", c.sprint);
+            assertFalse(c.label() + " never presses S", c.s);
+        }
+        assertEquals(3, InputSmooth.alphabet(opt).size());
+        opt.allowD = false;
+        assertEquals(2, InputSmooth.alphabet(opt).size());
+        opt.keepSprint = false;
+        assertTrue(InputSmooth.alphabet(opt).contains(TickInputs.NONE));
+    }
+
+    @Test
     public void countsEveryKeyChangeBetweenNeighbouringTicksAsAnEdge() {
         JumpPhysicsInputs sc = TickInputs.editable(force45());
         assertEquals("W then five W A ticks", 1, InputSmooth.edges(sc));
