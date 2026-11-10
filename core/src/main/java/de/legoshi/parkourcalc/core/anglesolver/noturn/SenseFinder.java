@@ -566,34 +566,20 @@ public final class SenseFinder {
         }
         AtomicInteger done = new AtomicInteger();
         int total = facings.size();
-        ExecutorService pool = Executors.newFixedThreadPool(Math.max(1, Math.min(threads, total)), r -> {
-            Thread t = new Thread(r, "sense-finder-anchor");
-            t.setDaemon(true);
-            t.setPriority(Thread.MIN_PRIORITY);
-            return t;
+        Anchor[] solved = new Anchor[total];
+        parallel(threads, total, i -> {
+            if (cancel != null && cancel.get()) return;
+            double f = facings.get(i);
+            Anchor a = anchorAt(turn, f, probeNanos, cancel);
+            int n = done.incrementAndGet();
+            if (progress != null) {
+                progress.update(String.format(Locale.ROOT, "re-solving the rest at jump angle %.3f°, %d of %d",
+                        f, n, total), (double) n / Math.max(1, total));
+            }
+            solved[i] = a;
         });
-        try {
-            List<Future<Anchor>> futures = new ArrayList<>();
-            for (double f : facings) {
-                futures.add(pool.submit(() -> {
-                    if (cancel != null && cancel.get()) return null;
-                    Anchor a = anchorAt(turn, f, probeNanos, cancel);
-                    int n = done.incrementAndGet();
-                    if (progress != null) {
-                        progress.update(String.format(Locale.ROOT, "re-solving the rest at jump angle %.3f°, %d of %d",
-                                f, n, total), (double) n / Math.max(1, total));
-                    }
-                    return a;
-                }));
-            }
-            for (Future<Anchor> fu : futures) {
-                Anchor a = fu.get();
-                if (a != null) out.add(a);
-            }
-        } catch (Exception ex) {
-            throw new IllegalStateException(ex);
-        } finally {
-            pool.shutdownNow();
+        for (Anchor a : solved) {
+            if (a != null) out.add(a);
         }
         out.sort(Comparator.comparingDouble(a -> unwrapNear(a.jumpFacing, f0)));
         return out;
