@@ -799,6 +799,8 @@ public final class AngleSolverState {
         applyDeviationKind = null;
         applyDeviationTick = -1;
         runTicks.resetToDefaults();
+        smoothLambda = 0.0;
+        smoothGiveBack = 1.0;
     }
 
 }

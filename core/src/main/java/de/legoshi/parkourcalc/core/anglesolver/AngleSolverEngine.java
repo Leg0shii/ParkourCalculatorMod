@@ -427,7 +427,7 @@ public final class AngleSolverEngine {
             r.markCertifiedInfeasible();
             r.setNoticeLabel(INFEASIBLE_LABEL);
             r.setNotice(conflict);
-            state.setResult(r);
+            if (publishFailure) state.setResult(r);
             return null;
         }
 
@@ -1023,6 +1023,12 @@ public final class AngleSolverEngine {
         Outcome o = pending;
         if (o == null) return;
         pending = null;
+        if (o.plan != null && rangeMovedSince(o.plan)) {
+            SolveResult moved = new SolveResult(false, 0, o.result.getTotal(), state.getStartTick() + 1,
+                    state.getLandingTick() + 1);
+            moved.setNotice(RANGE_MOVED_NOTICE);
+            o = new Outcome(moved, null);
+        }
         state.setResult(o.result);
         lastPlan = o.plan;
         if (!isSmoothJob(currentJob) && o.plan != null && o.result.isSuccess()) smoothBase = o.plan;
@@ -1032,6 +1038,11 @@ public final class AngleSolverEngine {
         liveResult = null;
         liveVersion = -1;
         recording = null;
+    }
+
+    private boolean rangeMovedSince(Plan plan) {
+        return plan.startTick != state.getStartTick()
+                || plan.yaws.length != state.getLandingTick() - state.getStartTick();
     }
 
     public boolean isSolving() {
@@ -1154,7 +1165,7 @@ public final class AngleSolverEngine {
                 cand = GraphRunner.run(job.graph, ctx, initial);
             }
         } finally {
-            currentGraphContext = null;
+            if (currentGraphContext == ctx) currentGraphContext = null;
         }
         if (cancel.get()) return null;
         String proof = ctx.infeasibilityProof();
@@ -1362,6 +1373,10 @@ public final class AngleSolverEngine {
                 : " Clear the dF = 0 on the tick where the turn should happen.";
         return head + miss + tail;
     }
+
+    public static final String RANGE_MOVED_NOTICE =
+            "Rows or the solve range changed while the solve ran, so its result no longer fits the rows."
+            + " Solve again.";
 
     public static final String DF_UNSUPPORTED_NOTICE =
             "This jump carries a delta-facing (dF) band constraint. dF supports = 0 (hold the facing),"
