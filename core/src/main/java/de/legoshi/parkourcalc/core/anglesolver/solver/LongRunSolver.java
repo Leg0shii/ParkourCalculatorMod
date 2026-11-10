@@ -109,10 +109,6 @@ public final class LongRunSolver {
 
     private static final double[] WINDOW_MISS = new double[0];
 
-    public static double[] solve(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel) {
-        return solve(exact, spec, feasTol, cancel, LongRunConfig.defaults());
-    }
-
     public static final class FreeRun {
         public final double[] gf;
         public final double startX;

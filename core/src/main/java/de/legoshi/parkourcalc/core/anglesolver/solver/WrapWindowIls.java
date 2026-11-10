@@ -394,10 +394,6 @@ public final class WrapWindowIls {
         return toArray(map);
     }
 
-    static int applyKick(Random rng, double[] gf, boolean[] prio, int span, boolean modern, boolean[] boostTick) {
-        return applyKick(rng, gf, prio, span, modern, boostTick, MAX_ABS_GF);
-    }
-
     static int applyKick(Random rng, double[] gf, boolean[] prio, int span, boolean modern, boolean[] boostTick,
                          double cap) {
         int n = gf.length;

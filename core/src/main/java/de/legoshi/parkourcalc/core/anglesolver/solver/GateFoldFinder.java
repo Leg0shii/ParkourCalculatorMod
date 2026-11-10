@@ -56,16 +56,6 @@ public final class GateFoldFinder {
     }
 
     public static Result solve(ExactJumpModel exact, JumpSpec spec, YawTies ties,
-                               AtomicBoolean cancel, long deadlineNanos) {
-        return solve(exact, spec, ties, cancel, deadlineNanos, false, false);
-    }
-
-    public static Result solve(ExactJumpModel exact, JumpSpec spec, YawTies ties,
-                               AtomicBoolean cancel, long deadlineNanos, boolean stopOnFeasible) {
-        return solve(exact, spec, ties, cancel, deadlineNanos, stopOnFeasible, false);
-    }
-
-    public static Result solve(ExactJumpModel exact, JumpSpec spec, YawTies ties,
                                AtomicBoolean cancel, long deadlineNanos, boolean stopOnFeasible, boolean homotopy) {
         return solve(exact, spec, ties, cancel, deadlineNanos, stopOnFeasible, homotopy, null);
     }
