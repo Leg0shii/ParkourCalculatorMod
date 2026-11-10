@@ -187,10 +187,6 @@ public final class DiskSocpKernel {
             this.failIter = failIter;
             this.failMu = failMu;
         }
-
-        public boolean infeasible() {
-            return failCode == FAIL_UNBOUNDED;
-        }
     }
 
     public static Result solve(int n, double[] cx, double[] cz, double[] mMag,
@@ -378,10 +374,6 @@ public final class DiskSocpKernel {
         r.uxRef = uRefX;
         r.uzRef = uRefZ;
         return r;
-    }
-
-    public String rowNameAt(int j) {
-        return rowName[j];
     }
 
     private Result trivial() {

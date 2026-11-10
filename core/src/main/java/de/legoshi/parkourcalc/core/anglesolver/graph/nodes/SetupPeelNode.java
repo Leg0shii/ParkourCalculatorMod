@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.core.anglesolver.graph.nodes;
 
+import de.legoshi.parkourcalc.core.anglesolver.graph.BudgetWatchdog;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Candidate;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphContext;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Guarantee;
@@ -77,10 +78,7 @@ public final class SetupPeelNode implements NodeRuntime {
         int steps = (int) Math.round(360.0 / stepDeg);
         double[] best = null;
         double bestViol = Double.POSITIVE_INFINITY;
-        PeelWatchdog watchdog = new PeelWatchdog(cancel);
-        Thread watchdogThread = new Thread(watchdog, "angle-solver-peel-watchdog");
-        watchdogThread.setDaemon(true);
-        watchdogThread.start();
+        BudgetWatchdog watchdog = new BudgetWatchdog(cancel);
         try {
             for (int k = 0; k < steps; k++) {
                 if (cancel.get() || System.nanoTime() > stageDeadline) break;
@@ -96,7 +94,7 @@ public final class SetupPeelNode implements NodeRuntime {
                 AtomicBoolean candCancel = watchdog.arm(
                         Math.min(stageDeadline, System.nanoTime() + candidateMs * 1_000_000L));
                 double[] tailYaws = LongRunSolver.solve(em, tail, ctx.feasTol, candCancel, cfg);
-                watchdog.current = null;
+                watchdog.disarm();
                 if (tailYaws == null) {
                     if (SolverTrace.on()) SolverTrace.log("ENGINE", "peel cand=%.1f tail miss", yaws[0]);
                     continue;
@@ -113,44 +111,11 @@ public final class SetupPeelNode implements NodeRuntime {
                 }
             }
         } finally {
-            watchdog.done = true;
-            watchdogThread.interrupt();
+            watchdog.shutdown();
         }
         if (SolverTrace.on()) {
             SolverTrace.log("ENGINE", "setup peel %s", best == null ? "miss" : "best viol=" + bestViol);
         }
         return best;
-    }
-
-    private static final class PeelWatchdog implements Runnable {
-        private final AtomicBoolean outer;
-        volatile AtomicBoolean current;
-        volatile long deadlineNanos;
-        volatile boolean done;
-
-        PeelWatchdog(AtomicBoolean outer) {
-            this.outer = outer;
-        }
-
-        AtomicBoolean arm(long deadline) {
-            current = null;
-            AtomicBoolean token = new AtomicBoolean(false);
-            deadlineNanos = deadline;
-            current = token;
-            return token;
-        }
-
-        @Override
-        public void run() {
-            while (!done) {
-                AtomicBoolean c = current;
-                if (c != null && (outer.get() || System.nanoTime() > deadlineNanos)) c.set(true);
-                try {
-                    Thread.sleep(20L);
-                } catch (InterruptedException e) {
-                    return;
-                }
-            }
-        }
     }
 }

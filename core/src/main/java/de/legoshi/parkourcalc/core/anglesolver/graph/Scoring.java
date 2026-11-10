@@ -72,11 +72,6 @@ public final class Scoring {
     }
 
     public static boolean reachHeadroom(ForwardModel model, JumpPhysicsInputs sc, JumpSpec spec,
-                                        double[] yaws, double dualBound, double feasTol) {
-        return reachHeadroom(model, sc, spec, yaws, dualBound, feasTol, 0.0);
-    }
-
-    public static boolean reachHeadroom(ForwardModel model, JumpPhysicsInputs sc, JumpSpec spec,
                                         double[] yaws, double dualBound, double feasTol, double epsilon) {
         if (yaws == null || Double.isNaN(dualBound)) return false;
         if (violationOf(model, sc, spec, yaws) > feasTol) return false;

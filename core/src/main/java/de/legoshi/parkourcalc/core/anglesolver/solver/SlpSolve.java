@@ -13,8 +13,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *  at margin 0. Returns absolute wrapped feasible facings, or {@code null} (caller falls back). */
 public final class SlpSolve {
 
-    public static boolean DEBUG = false;
-
     /** Inward clearance required after phase 1 (~ the sine-bucket lattice spacing); phase 2 may hug back to a quarter. */
     private static final double CLEARANCE = 1.0e-6;
     private static final double RAD = Math.PI / 180.0;
@@ -62,12 +60,6 @@ public final class SlpSolve {
     public static double[] optimize(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
                                     double[] seedAbsWrapped, int phase1Calls, int totalCalls) {
         return optimize(exact, spec, feasTol, cancel, CLEARANCE, true, seedAbsWrapped, false, false,
-                withCalls(phase1Calls, totalCalls), null);
-    }
-
-    public static double[] optimizeBestEffort(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
-                                              double[] seedAbsWrapped, int phase1Calls, int totalCalls) {
-        return optimize(exact, spec, feasTol, cancel, CLEARANCE, true, seedAbsWrapped, true, true,
                 withCalls(phase1Calls, totalCalls), null);
     }
 
@@ -354,8 +346,6 @@ public final class SlpSolve {
                 // be shallower than CLEARANCE); a centered solve keeps the demand, its result seeds windows.
                 double phase1Gate = hugObjective ? feasTol : -CLEARANCE;
                 if (endViol > phase1Gate) {
-                    if (DEBUG) System.out.printf("  SLP infeasible: viol=%.3e after %d LPs (%.1f ms)%n",
-                            endViol, lpCalls, (System.nanoTime() - t0) / 1e6);
                     if (SolverTrace.on()) {
                         SolverTrace.log("SLP", "phase1 infeasible viol=%.3e lps=%d ms=%.1f%s",
                                 endViol, lpCalls, (System.nanoTime() - t0) / 1e6, bestEffort ? " (best effort kept)" : "");
@@ -376,8 +366,6 @@ public final class SlpSolve {
         double[] gf = sc.toGameFacings(yaws);
         ForwardPath path = exact.forward(sc, gf);
         double finalViol = compiled.maxViolation(gf, path);
-        if (DEBUG) System.out.printf("  SLP viol=%.3e obj=%.7f lps=%d (%.1f ms)%n", finalViol,
-                spec.objective.evaluate(path), lpCalls, (System.nanoTime() - t0) / 1e6);
         if (SolverTrace.on()) {
             SolverTrace.log("SLP", "end viol=%.3e obj=%.9f lps=%d ms=%.1f %s", finalViol,
                     spec.objective.evaluate(path), lpCalls,

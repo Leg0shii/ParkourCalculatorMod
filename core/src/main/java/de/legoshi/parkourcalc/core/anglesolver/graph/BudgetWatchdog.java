@@ -2,7 +2,7 @@ package de.legoshi.parkourcalc.core.anglesolver.graph;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-final class BudgetWatchdog implements Runnable {
+public final class BudgetWatchdog implements Runnable {
 
     private final AtomicBoolean outer;
     private volatile AtomicBoolean current;
@@ -10,14 +10,14 @@ final class BudgetWatchdog implements Runnable {
     private volatile boolean done;
     private final Thread thread;
 
-    BudgetWatchdog(AtomicBoolean outer) {
+    public BudgetWatchdog(AtomicBoolean outer) {
         this.outer = outer;
         this.thread = new Thread(this, "solver-graph-watchdog");
         this.thread.setDaemon(true);
         this.thread.start();
     }
 
-    AtomicBoolean arm(long deadline) {
+    public AtomicBoolean arm(long deadline) {
         current = null;
         AtomicBoolean token = new AtomicBoolean(false);
         deadlineNanos = deadline;
@@ -25,11 +25,11 @@ final class BudgetWatchdog implements Runnable {
         return token;
     }
 
-    void disarm() {
+    public void disarm() {
         current = null;
     }
 
-    void shutdown() {
+    public void shutdown() {
         done = true;
         thread.interrupt();
     }

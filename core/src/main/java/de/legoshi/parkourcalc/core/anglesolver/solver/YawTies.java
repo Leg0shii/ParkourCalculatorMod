@@ -46,10 +46,6 @@ public final class YawTies {
         return pinYaw[t];
     }
 
-    public int fullLength() {
-        return n;
-    }
-
     public double[] expand(double[] reduced) {
         double[] f = new double[n];
         for (int t = 0; t < n; t++) {

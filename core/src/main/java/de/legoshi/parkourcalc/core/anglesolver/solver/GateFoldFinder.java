@@ -6,8 +6,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class GateFoldFinder {
 
-    public static boolean DEBUG = false;
-
     private static final double RAD = Math.PI / 180.0;
     private static final double START_SCALE = 0.03;
     private static final double BAND_LO = 0.2;
@@ -562,14 +560,6 @@ public final class GateFoldFinder {
             if (!perAxis) for (int t = 0; t < n; t++) { boolean z = zx[t] || zz[t]; zx[t] = z; zz[t] = z; }
             Result r = solvePattern(exact, spec, sc, compiled, ties, zx, zz, seed, box, free, max,
                     optimize, cancel, deadline);
-            if (DEBUG && r != null) {
-                StringBuilder sb = new StringBuilder();
-                for (int i = 0; i < k; i++) if ((combo & (1 << i)) != 0) {
-                    int[] b = bits.get(i);
-                    sb.append(b[1] == 0 ? 'X' : 'Z').append(b[0]).append(' ');
-                }
-                System.out.printf("  combo forced[%s] viol=%.6e obj=%.5f%n", sb.toString().trim(), r.viol, r.objective);
-            }
             best = betterFeas(best, r, max);
             if (stopOnFeasible && best != null && best.feasible()) break;
         }

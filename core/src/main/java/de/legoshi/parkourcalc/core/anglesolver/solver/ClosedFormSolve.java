@@ -30,8 +30,6 @@ public final class ClosedFormSolve {
     private ClosedFormSolve() {
     }
 
-    public static boolean DEBUG = false;
-
     public static final class Config {
         /** Inward wall margins (blocks) tried in order; the first that yields exact feasibility wins. The
          *  smallest feasible margin gives the best objective. 0 is tried first in case quantization happens to
@@ -98,7 +96,7 @@ public final class ClosedFormSolve {
         JumpConstraintCompiler.Compiled compiled = JumpConstraintCompiler.compile(spec);
         for (int[] signs : crossSignCombos(spec.constraints)) {
             Result rs = runLadder(exact, spec, sc, compiled, feasTol, cancel, cfg.margins, true, zeroX, zeroZ,
-                    System.nanoTime(), cfg, pre, signs);
+                    cfg, pre, signs);
             if (rs != null && rs.feasible) return rs;
             if (cancel.get()) break;
         }
@@ -485,7 +483,7 @@ public final class ClosedFormSolve {
             }
             Result r = null;
             for (int[] signs : crossSignCombos(spec.constraints)) {
-                Result rs = runLadder(exact, spec, sc, compiled, feasTol, cancel, margins, ascending, zeroX, zeroZ, t0, cfg, pre, signs);
+                Result rs = runLadder(exact, spec, sc, compiled, feasTol, cancel, margins, ascending, zeroX, zeroZ, cfg, pre, signs);
                 if (rs != null && (r == null || rs.feasible || rs.violation < r.violation)) r = rs;
                 if ((r != null && r.feasible) || cancel.get()) break;
             }
@@ -553,7 +551,7 @@ public final class ClosedFormSolve {
 
     private static Result runLadder(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc,
                                     JumpConstraintCompiler.Compiled compiled, double feasTol, AtomicBoolean cancel,
-                                    double[] margins, boolean ascending, boolean[] zeroX, boolean[] zeroZ, long t0,
+                                    double[] margins, boolean ascending, boolean[] zeroX, boolean[] zeroZ,
                                     Config cfg, FacingPrefold pre, int[] crossSigns) {
         JumpLinearModel lin = new JumpLinearModel(sc, zeroX, zeroZ);
         double[] cx = new double[lin.n];
@@ -599,12 +597,6 @@ public final class ClosedFormSolve {
                         margin, solver.lastIters, solver.lastPgres, r.value, viol,
                         viol <= feasTol ? " certified" : "");
             }
-            if (DEBUG) {
-                double[] gf = sc.toGameFacings(yaws);
-                double o = spec.objective.evaluate(exact.forward(sc, gf));
-                System.out.printf("  CLOSED margin=%.2e iters=%d pg=%.3e viol=%.2e obj=%.6f%n",
-                        margin, solver.lastIters, solver.lastPgres, viol, o);
-            }
             if (viol < bestViol) {
                 bestViol = viol;
                 bestYaws = yaws;
@@ -614,7 +606,6 @@ public final class ClosedFormSolve {
                 rungStall++;
             }
             if (viol <= feasTol) {
-                if (DEBUG) System.out.printf("  CLOSED -> %.2fus (margin=%.1e)%n", (System.nanoTime() - t0) / 1e3, margin);
                 return withCostates(new Result(yaws, viol, true), lin, cx, cz, walls, r.lambda);
             }
             if (ascending && rungStall >= cfg.rungStallLimit) {
@@ -622,8 +613,6 @@ public final class ClosedFormSolve {
                 break;
             }
         }
-        if (DEBUG) System.out.printf("  CLOSED FALLBACK %.2fus bestViol=%.2e%n",
-                (System.nanoTime() - t0) / 1e3, bestViol);
         if (bestYaws == null) return null;
         return withCostates(new Result(bestYaws, bestViol, false), lin, cx, cz, walls, bestLambda);
     }

@@ -9,7 +9,6 @@ public final class GraphPresetFile {
 
     public int version;
     public String name;
-    public String description;
     public String createdAt;
     public String modVersion;
     public List<Node> nodes = new ArrayList<Node>();

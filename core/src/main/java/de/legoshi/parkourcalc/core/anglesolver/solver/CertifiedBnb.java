@@ -16,7 +16,6 @@ public final class CertifiedBnb {
     private static final double INTERVAL_ABS = 1.0e-12;
     private static final double POLISH_VIOL_CAP = 5.0e-2;
     private static final double FREE_START_SMOOTH = 5.0e-4;
-    private static final int GAP_REPORT_STRIDE = 16;
     private static final double MODERN_THR_SQ = 9.0e-6;
     private static final byte FREE = 0;
     private static final byte ZERO = 1;
@@ -49,10 +48,6 @@ public final class CertifiedBnb {
 
     public enum Mode { FIRST_FEASIBLE, OPTIMIZE }
 
-    public interface GapSink {
-        void report(double incumbentObjective, double boundObjective, double gap);
-    }
-
     public static final class Config {
         public Mode mode = Mode.FIRST_FEASIBLE;
         public int nodeCap = 64;
@@ -62,7 +57,6 @@ public final class CertifiedBnb {
         public double[] seedYaws;
         public Double seedPx;
         public Double seedPz;
-        public GapSink gapSink;
         public boolean homotopy;
     }
 
@@ -319,9 +313,6 @@ public final class CertifiedBnb {
             if (children != null) {
                 for (Node c : children) open.add(c);
             }
-            if (s.cfg.gapSink != null && (s.nodes % GAP_REPORT_STRIDE == 0)) {
-                reportGap(s, open);
-            }
         }
         Node top = open.peek();
         double bestOpenScore = exhausted || top == null ? s.incScore : Math.max(top.score, s.incScore);
@@ -330,7 +321,6 @@ public final class CertifiedBnb {
                 : Math.max(0.0, bestOpenScore - s.incScore);
         boolean certified = s.incYaws != null && gap <= CERT_EPS;
         if (certified) gap = Math.min(gap, CERT_EPS);
-        if (s.cfg.gapSink != null) reportGap(s, open);
         double boundObj = s.max ? bestOpenScore : -bestOpenScore;
         boolean certifiedInfeasible = exhausted && s.incYaws == null && s.unresolved == 0;
         return new Result(false, s.incYaws, s.incPx, s.incPz, s.incObj, s.incYaws != null,
@@ -341,13 +331,6 @@ public final class CertifiedBnb {
     private static Result declined() {
         return new Result(true, null, 0, 0, Double.NaN, false, Double.NaN, Double.NaN, false,
                 0, 0, 0L, null, Double.POSITIVE_INFINITY, false, 0);
-    }
-
-    private static void reportGap(Search s, PriorityQueue<Node> open) {
-        Node top = open.peek();
-        double bestOpen = top == null ? s.incScore : Math.max(top.score, s.incScore);
-        double gap = s.incYaws == null ? Double.NaN : Math.max(0.0, bestOpen - s.incScore);
-        s.cfg.gapSink.report(s.incObj, s.max ? bestOpen : -bestOpen, gap);
     }
 
     private static final class Intervals {

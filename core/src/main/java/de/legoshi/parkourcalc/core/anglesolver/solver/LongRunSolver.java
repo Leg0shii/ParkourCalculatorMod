@@ -52,8 +52,6 @@ public final class LongRunSolver {
     private static final int[] WINDOW_LADDER = {WINDOW, 7, 5, 3, 2, 1};
     private static final int[] FALLBACK_RUNGS = {7, 5, 3, 2, 1};
 
-    public static boolean DEBUG = false;
-
     public static final class LongRunConfig {
         final int[] windowLadder;
         final int[] commitLadder;
@@ -171,7 +169,6 @@ public final class LongRunSolver {
         int[] bounds = jumpBoundaries(sc);
         int jumps = bounds.length - 1;
         if (jumps < 1) return null;
-        if (DEBUG) System.err.printf("LRS receding-horizon: %d jumps, %d ticks%n", jumps, sc.numTicks);
 
         for (int commit : cfg.commitLadder) {
             if (cancel != null && cancel.get()) return null;
@@ -187,7 +184,6 @@ public final class LongRunSolver {
             // Apply both recompute exactly toGameFacings(wrapAll(gf)).
             double[] replay = sc.toGameFacings(Angles.wrapAll(gf));
             double viol = compiled.maxViolation(replay, exact.forward(sc, replay));
-            if (DEBUG) System.err.printf("LRS commit=%d -> full viol=%.6f%n", commit, viol);
             if (viol <= feasTol) return gf;
         }
         return null;
@@ -300,7 +296,6 @@ public final class LongRunSolver {
                 break;
             }
             if (!advanced) {
-                if (DEBUG) System.err.printf("  commit=%d stuck at jump %d (tick %d)%n", commitJumps, i, bounds[i]);
                 return null;
             }
         }
