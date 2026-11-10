@@ -410,17 +410,23 @@ public final class TurnProfileController {
         lastCheck = result;
         lastCheckSignature = currentSignature;
         checkedSignature = result.ok ? currentSignature : null;
-        if (result.ok) worker.submit(this::backfillForecasts);
+        if (result.ok) {
+            final List<TurnAttempt> attempts = new ArrayList<TurnAttempt>(document.attempts());
+            worker.submit(() -> backfillForecasts(attempts));
+        }
         return result;
     }
 
     public int backfillForecasts() {
+        return backfillForecasts(new ArrayList<TurnAttempt>(document.attempts()));
+    }
+
+    private int backfillForecasts(List<TurnAttempt> all) {
         Current cur = current.get();
         if (cur == null || cur.snapshot == null || cur.landing == null) return 0;
         LandingForecast forecast = LandingForecast.of(engine.forwardModel(), cur);
         if (forecast == null) return 0;
         int done = 0;
-        List<TurnAttempt> all = new ArrayList<TurnAttempt>(document.attempts());
         for (int i = all.size() - 1; i >= 0 && done < BACKFILL_LIMIT; i--) {
             TurnAttempt a = all.get(i);
             if (a.isMacro() || a.hasForecast() || !a.hasState() || !a.alignedTo(cur) || a.firstTick != cur.startTick) continue;
@@ -443,10 +449,7 @@ public final class TurnProfileController {
             a.forecast = new TurnAttempt.Forecast(held, best, offset, failed, f.x, f.z, f.vx, f.vz, f.ground);
             done++;
         }
-        if (done > 0) {
-            deepDirty = true;
-            document.markDirty();
-        }
+        if (done > 0) deepDirty = true;
         return done;
     }
 
