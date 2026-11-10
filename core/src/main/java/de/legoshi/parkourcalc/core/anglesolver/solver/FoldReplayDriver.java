@@ -741,44 +741,11 @@ public final class FoldReplayDriver {
                                          JumpConstraintCompiler.Compiled compiled, JumpPhysicsInputs sc,
                                          StartBox box, double[] yaws, double[] gf, ForwardPath path,
                                          double px, double pz, boolean[] zeroX, boolean[] zeroZ, int index) {
-        double loX = box.pxLo - px;
-        double hiX = box.pxHi - px;
-        double loZ = box.pzLo - pz;
-        double hiZ = box.pzHi - pz;
-        for (JumpConstraint c : spec.constraints) {
-            if (c.mode != JumpConstraint.Mode.X && c.mode != JumpConstraint.Mode.Z) {
-                if (JumpConstraintCompiler.slack(c, gf, path) > 0.0) return null;
-                continue;
-            }
-            int tc = c.t2 == null ? 1 : (c.op == JumpConstraint.Op.PLUS ? 2 : 0);
-            if (tc == 0) {
-                if (JumpConstraintCompiler.slack(c, gf, path) > 0.0) return null;
-                continue;
-            }
-            double e = JumpConstraintCompiler.evaluate(c, gf, path);
-            boolean axisX = c.mode == JumpConstraint.Mode.X;
-            if (c.cmp == JumpConstraint.Cmp.GE) {
-                double lo = -e / tc;
-                if (axisX) loX = Math.max(loX, lo);
-                else loZ = Math.max(loZ, lo);
-            } else if (c.cmp == JumpConstraint.Cmp.LE) {
-                double hi = -e / tc;
-                if (axisX) hiX = Math.min(hiX, hi);
-                else hiZ = Math.min(hiZ, hi);
-            } else {
-                if (e != 0.0) return null;
-                if (axisX) {
-                    loX = Math.max(loX, 0.0);
-                    hiX = Math.min(hiX, 0.0);
-                } else {
-                    loZ = Math.max(loZ, 0.0);
-                    hiZ = Math.min(hiZ, 0.0);
-                }
-            }
-        }
-        if (loX > hiX || loZ > hiZ) return null;
-        double dpx = 0.5 * (loX + hiX);
-        double dpz = 0.5 * (loZ + hiZ);
+        double[] iv = PathTranslation.hardInterval(spec.constraints, gf, path,
+                box.pxLo - px, box.pxHi - px, box.pzLo - pz, box.pzHi - pz);
+        if (iv == null) return null;
+        double dpx = 0.5 * (iv[0] + iv[1]);
+        double dpz = 0.5 * (iv[2] + iv[3]);
         double npx = px + dpx;
         double npz = pz + dpz;
         JumpPhysicsInputs scRep = sc.pinnedAt(npx, npz);

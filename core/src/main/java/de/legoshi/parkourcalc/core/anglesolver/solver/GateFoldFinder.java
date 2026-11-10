@@ -793,35 +793,14 @@ public final class GateFoldFinder {
         double refPx = box.px;
         double refPz = box.pz;
         double[] yaws = Angles.wrapAll(theta);
-        double[] gf0 = sc.pinnedAt(refPx, refPz).toGameFacings(yaws);
-        ForwardPath path0 = exact.forward(sc.pinnedAt(refPx, refPz), gf0);
-        double loX = box.pxLo - refPx, hiX = box.pxHi - refPx;
-        double loZ = box.pzLo - refPz, hiZ = box.pzHi - refPz;
-        for (JumpConstraint c : spec.constraints) {
-            if (c.mode != JumpConstraint.Mode.X && c.mode != JumpConstraint.Mode.Z) {
-                if (JumpConstraintCompiler.slack(c, gf0, path0) > 0.0) return null;
-                continue;
-            }
-            int tc = c.t2 == null ? 1 : (c.op == JumpConstraint.Op.PLUS ? 2 : 0);
-            if (tc == 0) {
-                if (JumpConstraintCompiler.slack(c, gf0, path0) > 0.0) return null;
-                continue;
-            }
-            double e = JumpConstraintCompiler.evaluate(c, gf0, path0);
-            boolean axisX = c.mode == JumpConstraint.Mode.X;
-            if (c.cmp == JumpConstraint.Cmp.GE) {
-                double lo = -e / tc;
-                if (axisX) loX = Math.max(loX, lo); else loZ = Math.max(loZ, lo);
-            } else if (c.cmp == JumpConstraint.Cmp.LE) {
-                double hi = -e / tc;
-                if (axisX) hiX = Math.min(hiX, hi); else hiZ = Math.min(hiZ, hi);
-            } else {
-                if (e != 0.0) return null;
-                if (axisX) { loX = Math.max(loX, 0.0); hiX = Math.min(hiX, 0.0); }
-                else { loZ = Math.max(loZ, 0.0); hiZ = Math.min(hiZ, 0.0); }
-            }
-        }
-        if (loX > hiX || loZ > hiZ) return null;
+        JumpPhysicsInputs ref = sc.pinnedAt(refPx, refPz);
+        double[] gf0 = ref.toGameFacings(yaws);
+        ForwardPath path0 = exact.forward(ref, gf0);
+        double[] iv = PathTranslation.hardInterval(spec.constraints, gf0, path0,
+                box.pxLo - refPx, box.pxHi - refPx, box.pzLo - refPz, box.pzHi - refPz);
+        if (iv == null) return null;
+        double loX = iv[0], hiX = iv[1];
+        double loZ = iv[2], hiZ = iv[3];
         double npx = refPx + 0.5 * (loX + hiX);
         double npz = refPz + 0.5 * (loZ + hiZ);
         if (optimize && !spec.objective.isCustomAngle() && !spec.objective.isMotion()) {
