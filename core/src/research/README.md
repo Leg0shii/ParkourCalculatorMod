@@ -108,6 +108,13 @@ anglesolver/
                            and counts a CONTRADICTION whenever it says INFEASIBLE while the main impl
                            returned a byte-verified FEASIBLE witness (the real-pool soundness audit of
                            a rejection check: feed it pool dumps plus the in-game found lines)
+  core/anglesolver/noturn/fastcheck/NoTurnJointFastCheck.java, LpFeas.java
+                           the joint sound rejection FastCheck and its small simplex (bench-only, not in
+                           the mod jar); select with -Dpkc.fc.impl or -Dpkc.fc.audit =
+                           de.legoshi.parkourcalc.core.anglesolver.noturn.fastcheck.NoTurnJointFastCheck
+  core/anglesolver/noturn/OptimizeGraphCheck.java
+                           FastCheck that certifies with the 6 s Optimize graph; select with
+                           -Dpkc.fc.impl=de.legoshi.parkourcalc.core.anglesolver.noturn.OptimizeGraphCheck
   RunUpSweepProbe.java     free-start run-up sweep on one save; PKC_SOLVE_FILE=<save.json> plus
                            PKC_GRAPH_FILE=<graph.json> (docs/research/freestart-runup-sweep-2026-09-05.md)
   HpkStartBenchmark.java   cold-solve benchmark over the hpk_human corpus against reference
