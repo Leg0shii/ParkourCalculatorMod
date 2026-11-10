@@ -345,6 +345,7 @@ public final class TurnProfileController {
                 h = h * 31 + c.getField().ordinal();
                 h = h * 31 + c.getOp().ordinal();
                 h = h * 31 + (c.isEnabled() ? 1 : 0);
+                h = h * 31 + (c.getRefTick() == null ? -1 : c.getRefTick().intValue());
                 h = h * 31 + Double.doubleToLongBits(c.isRange() ? c.getLo() : c.getValue());
                 h = h * 31 + Double.doubleToLongBits(c.isRange() ? c.getHi() : 0.0);
             }
@@ -708,7 +709,7 @@ public final class TurnProfileController {
             if (tc == null) continue;
             double xLo = Double.NaN, xHi = Double.NaN, zLo = Double.NaN, zHi = Double.NaN;
             for (Constraint c : tc.getConstraints()) {
-                if (!c.isEnabled()) continue;
+                if (!c.isEnabled() || c.isRelative()) continue;
                 boolean x = c.getField() == Constraint.Field.X;
                 if (!x && c.getField() != Constraint.Field.Z) continue;
                 double lo = Double.NaN, hi = Double.NaN;
