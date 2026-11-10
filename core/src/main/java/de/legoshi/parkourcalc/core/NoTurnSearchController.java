@@ -75,6 +75,7 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
     private volatile List<NoTurnResult> ranked = Collections.emptyList();
     private volatile boolean reapplySelected;
     private volatile boolean documentReplaced;
+    private volatile String deepNotice;
     private volatile boolean optimizeQueued;
     private volatile NoTurnResult selected;
     private volatile NoTurnProblem problem;
@@ -339,6 +340,7 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
     @Override
     public void cancel() {
         if (thread == null) return;
+        optimizeQueued = false;
         cancel.set(true);
         stage = "cancelling";
         pushMessage.accept("No-turn " + (phase == Phase.OPTIMIZE ? "optimize" : "search") + " cancelled",
@@ -371,6 +373,11 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
 
     public void poll() {
         if (thread == null) return;
+        String notice = deepNotice;
+        if (notice != null) {
+            deepNotice = null;
+            if (!documentReplaced) pushMessage.accept(notice, HudMessages.COLOR_DEFAULT);
+        }
         if (reapplySelected) {
             reapplySelected = false;
             NoTurnResult s = selected;
@@ -454,8 +461,7 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
         long deepStart = System.nanoTime();
         stage = "deep search: starting";
         fraction = 0.0;
-        pushMessage.accept("No-turn: deep search for " + budgetNanos / 60_000_000_000L + " min",
-                HudMessages.COLOR_DEFAULT);
+        deepNotice = "No-turn: deep search for " + budgetNanos / 60_000_000_000L + " min";
         BendersMaster.Config cfg = deepConfig(p, budgetNanos);
         BendersMaster master = new BendersMaster(model, cfg, cancel, (s, f) -> {
             int cut = s.indexOf(" (");

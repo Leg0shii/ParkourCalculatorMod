@@ -571,7 +571,7 @@ public final class Application {
         pitches[0] = runner.getStartPitch();
         List<InputRow> rows = inputData.getRows();
         for (int i = 1; i < count; i++) {
-            pitches[i] = i - 1 < rows.size()
+            pitches[i] = i - 1 < rows.size() && !rows.get(i - 1).isTeleportEnabled()
                     ? PlaybackController.applyPitch(pitches[i - 1], rows.get(i - 1))
                     : pitches[i - 1];
         }
