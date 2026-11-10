@@ -12,6 +12,8 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.PathTranslation;
 import de.legoshi.parkourcalc.core.anglesolver.solver.StartBox;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 
+import java.util.ArrayList;
+
 public final class Scoring {
 
     public static final double CAP_GAP_TOL = 1.0e-6;
@@ -104,6 +106,12 @@ public final class Scoring {
         return spec.objective.evaluate(path);
     }
 
+    public static JumpSpec freeBoxSpec(GraphContext ctx) {
+        JumpPhysicsInputs sc = ctx.scenario.copy();
+        if (ctx.freeStart && !ctx.stageLocked()) sc.startBox = ctx.freeBox;
+        return new JumpSpec(sc, new ArrayList<>(ctx.spec.constraints), ctx.spec.objective);
+    }
+
     public static void adoptPinnedStart(JumpPhysicsInputs sc, double px, double pz) {
         if (px != sc.startPos.x || pz != sc.startPos.z) {
             sc.startPos = new Vec3dCore(px, sc.startPos.y, pz);
@@ -142,10 +150,7 @@ public final class Scoring {
             double z = sc.startPos.z + tr.tz;
             JumpPhysicsInputs at = sc.pinnedAt(x, z);
             if (compiled.maxViolation(gf, model.forward(at, gf)) > feasTol) continue;
-            if (tr.tx != 0.0 || tr.tz != 0.0) {
-                sc.startPos = new Vec3dCore(x, sc.startPos.y, z);
-            }
-            sc.startBox = StartBox.pinned(x, z, sc.initialVelocity.x, sc.initialVelocity.z);
+            adoptPinnedStart(sc, x, z);
             return true;
         }
         return false;
@@ -165,8 +170,7 @@ public final class Scoring {
             double obj = spec.objective.evaluate(p);
             if (!(objMax ? obj > curObj : obj < curObj)) return false;
         }
-        sc.startPos = new Vec3dCore(x, sc.startPos.y, z);
-        sc.startBox = StartBox.pinned(x, z, sc.initialVelocity.x, sc.initialVelocity.z);
+        adoptPinnedStart(sc, x, z);
         return true;
     }
 }

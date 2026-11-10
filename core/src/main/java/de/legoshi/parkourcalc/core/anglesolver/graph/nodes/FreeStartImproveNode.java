@@ -16,7 +16,6 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.RecoveryLadder;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolverTrace;
 import de.legoshi.parkourcalc.core.anglesolver.solver.StartBox;
-import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -92,15 +91,13 @@ public final class FreeStartImproveNode implements NodeRuntime {
             }
         }
         if (adoptYaws != null) {
-            sc.startPos = new Vec3dCore(adoptX, sc.startPos.y, adoptZ);
-            sc.startBox = StartBox.pinned(adoptX, adoptZ, sc.initialVelocity.x, sc.initialVelocity.z);
+            Scoring.adoptPinnedStart(sc, adoptX, adoptZ);
             if (SolverTrace.on()) {
                 SolverTrace.log("ENGINE", "free rescue adopted start=(%.5f,%.5f)", adoptX, adoptZ);
             }
             return Angles.wrapAll(adoptYaws);
         }
-        sc.startPos = new Vec3dCore(seedX, sc.startPos.y, seedZ);
-        sc.startBox = StartBox.pinned(seedX, seedZ, sc.initialVelocity.x, sc.initialVelocity.z);
+        Scoring.adoptPinnedStart(sc, seedX, seedZ);
         return null;
     }
 
@@ -159,8 +156,7 @@ public final class FreeStartImproveNode implements NodeRuntime {
             double convObj = spec.objective.scored(Scoring.exactObjective(ctx.model,
                     sc.pinnedAt(conv.startX, conv.startZ), spec, convYaws), sc.startYaw, convYaws);
             if (!seedFeasible || (max ? convObj > seedObj : convObj < seedObj)) {
-                sc.startPos = new Vec3dCore(conv.startX, sc.startPos.y, conv.startZ);
-                sc.startBox = StartBox.pinned(conv.startX, conv.startZ, sc.initialVelocity.x, sc.initialVelocity.z);
+                Scoring.adoptPinnedStart(sc, conv.startX, conv.startZ);
                 return convYaws;
             }
         }
@@ -179,12 +175,10 @@ public final class FreeStartImproveNode implements NodeRuntime {
             }
         }
         if (adopt) {
-            sc.startPos = new Vec3dCore(foundX, sc.startPos.y, foundZ);
-            sc.startBox = StartBox.pinned(foundX, foundZ, sc.initialVelocity.x, sc.initialVelocity.z);
+            Scoring.adoptPinnedStart(sc, foundX, foundZ);
             return Angles.wrapAll(foundYaws);
         }
-        sc.startPos = new Vec3dCore(seedX, sc.startPos.y, seedZ);
-        sc.startBox = StartBox.pinned(seedX, seedZ, sc.initialVelocity.x, sc.initialVelocity.z);
+        Scoring.adoptPinnedStart(sc, seedX, seedZ);
         return null;
     }
 }

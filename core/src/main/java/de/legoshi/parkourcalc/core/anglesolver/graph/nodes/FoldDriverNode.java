@@ -10,7 +10,6 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.Scoring;
 import de.legoshi.parkourcalc.core.anglesolver.solver.DegenerateTickAscent;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.FoldReplayDriver;
-import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpLinearModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
@@ -130,7 +129,7 @@ public final class FoldDriverNode implements NodeRuntime {
     private FoldReplayDriver.Round runMultiStarts(GraphContext ctx, ExactJumpModel exact,
                                                   FoldReplayDriver.Params p, FoldReplayDriver.Round best,
                                                   AtomicBoolean nodeToken, long deadlineNanos) {
-        if (multiStart <= 0 || !ctx.freeStart || ctx.freeBox == null) return best;
+        if (multiStart <= 0 || !ctx.freeStart) return best;
         if (ctx.scenario.numTicks > MULTI_START_TICK_CAP) return best;
         StartBox box = ctx.freeBox;
         List<double[]> refs = new ArrayList<>();
@@ -166,16 +165,11 @@ public final class FoldDriverNode implements NodeRuntime {
     }
 
     private JumpSpec driverSpec(GraphContext ctx, StartBox boxOverride) {
+        if (boxOverride == null) return Scoring.freeBoxSpec(ctx);
         JumpPhysicsInputs sc = ctx.scenario.copy();
-        if (boxOverride != null) {
-            sc.startBox = boxOverride;
-            sc.startPos = new Vec3dCore(boxOverride.px, sc.startPos.y, boxOverride.pz);
-        } else if (ctx.freeStart && ctx.freeBox != null && !ctx.stageLocked()) {
-            sc.startBox = ctx.freeBox;
-        }
-        List<de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint> cons =
-                new ArrayList<>(ctx.spec.constraints);
-        return new JumpSpec(sc, cons, ctx.spec.objective);
+        sc.startBox = boxOverride;
+        sc.startPos = new Vec3dCore(boxOverride.px, sc.startPos.y, boxOverride.pz);
+        return new JumpSpec(sc, new ArrayList<>(ctx.spec.constraints), ctx.spec.objective);
     }
 
     static void traceRounds(FoldReplayDriver.Result res) {
