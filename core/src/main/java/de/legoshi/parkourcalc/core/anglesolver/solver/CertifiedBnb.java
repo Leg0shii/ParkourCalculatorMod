@@ -1116,7 +1116,7 @@ public final class CertifiedBnb {
             float target = cands[t][picks[t]];
             boolean locked = s.sc.yawLockedPerTick != null && t < s.sc.yawLockedPerTick.length
                     && s.sc.yawLockedPerTick[t];
-            long want = s262 ? cell262(s, t, target) : FacingLattice.jointCellId(target, modern, boostTick(s, t));
+            long want = FacingLattice.jointCellId(target, modern, s262, BucketWalk.boostTick(s.exact, s.sc, t));
             boolean landed = false;
             double base = Angles.wrap((double) target);
             for (int k = 0; k <= 8 && !landed; k++) {
@@ -1129,7 +1129,7 @@ public final class CertifiedBnb {
                         double delta = Angles.wrapDelta(cand - prevAbs);
                         ent = entity + (float) delta;
                     }
-                    long got = s262 ? cell262f(s, t, ent) : FacingLattice.jointCellId(ent, modern, boostTick(s, t));
+                    long got = FacingLattice.jointCellId(ent, modern, s262, BucketWalk.boostTick(s.exact, s.sc, t));
                     if (got == want) {
                         yaws[t] = cand;
                         entity = ent;
@@ -1143,22 +1143,6 @@ public final class CertifiedBnb {
             if (!landed) return null;
         }
         return yaws;
-    }
-
-    private static boolean boostTick(Search s, int t) {
-        boolean grounded = !Double.isNaN(s.sc.slipAt(t));
-        return !s.exact.modern() && grounded && s.sc.jumpAt(t) && s.sc.sprintAt(t);
-    }
-
-    private static long cell262(Search s, int t, float gf) {
-        return cell262f(s, t, gf);
-    }
-
-    private static long cell262f(Search s, int t, float gf) {
-        float rad = gf * (float) (Math.PI / 180.0);
-        long sin = (long) ((double) rad * McSineTable.INDEX_FROM_RAD_262) & 65535L;
-        long cos = (long) ((double) rad * McSineTable.INDEX_FROM_RAD_262 + McSineTable.COS_INDEX_OFFSET_262) & 65535L;
-        return (sin << 16) | cos;
     }
 
     private static void leafDfs(Search s, LeafState st, int t, double prefix, double[][] wallPref) {
@@ -1196,23 +1180,9 @@ public final class CertifiedBnb {
 
     private static float[] leafCandidates(Search s, int t, double lo, double hi) {
         double mid = 0.5 * (lo + hi);
-        float center = (float) mid;
-        if (!s.exact.sine262()) {
-            boolean grounded = !Double.isNaN(s.sc.slipAt(t));
-            boolean boostTick = !s.exact.modern() && grounded && s.sc.jumpAt(t) && s.sc.sprintAt(t);
-            int half = Math.max(1, (int) Math.ceil((hi - lo) * 0.5 * SineTableGeometry.IDX_PER_DEG)
-                    + SineTableGeometry.SLOP_IDX);
-            return FacingLattice.cellRepresentatives(center, -half, half, s.exact.modern(), boostTick);
-        }
         int half = Math.max(1, (int) Math.ceil((hi - lo) * 0.5 * SineTableGeometry.IDX_PER_DEG)
                 + SineTableGeometry.SLOP_IDX);
-        float[] out = new float[2 * half + 1];
-        for (int i = 0; i < out.length; i++) {
-            int k = i - half;
-            double adj = BucketWalk.centerAdjustDeg(center, s.exact.modern(), true) + k * BucketWalk.BUCKET_DEG;
-            out[i] = (float) (mid + adj);
-        }
-        return out;
+        return BucketWalk.candidates(s.exact, s.sc, t, (float) mid, mid, half);
     }
 
     private static List<Node> branch(Search s, Node nd, Intervals iv, JumpLinearModel lin,

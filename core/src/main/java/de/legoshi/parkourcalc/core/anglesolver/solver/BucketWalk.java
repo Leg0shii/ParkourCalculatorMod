@@ -579,17 +579,26 @@ public final class BucketWalk {
         return new AnchorSlp.Outcome(null, yaws, gf, path, px, pz, viol);
     }
 
+    static boolean boostTick(ExactJumpModel exact, JumpPhysicsInputs sc, int t) {
+        boolean grounded = !Double.isNaN(sc.slipAt(t));
+        return !exact.modern() && grounded && sc.jumpAt(t) && sc.sprintAt(t);
+    }
+
     static float[] candidates(ExactJumpModel exact, JumpPhysicsInputs sc, int t, float gf, int window) {
+        return candidates(exact, sc, t, gf, (double) gf, window);
+    }
+
+    static float[] candidates(ExactJumpModel exact, JumpPhysicsInputs sc, int t, float center, double base,
+                              int window) {
         if (!exact.sine262()) {
-            boolean grounded = !Double.isNaN(sc.slipAt(t));
-            boolean boost = !exact.modern() && grounded && sc.jumpAt(t) && sc.sprintAt(t);
-            return FacingLattice.cellRepresentatives(gf, -window, window, exact.modern(), boost);
+            return FacingLattice.cellRepresentatives(center, -window, window, exact.modern(), boostTick(exact, sc, t));
         }
         float[] out = new float[2 * window + 1];
+        double adj0 = centerAdjustDeg(center, exact.modern(), true);
         for (int i = 0; i < out.length; i++) {
             int k = i - window;
-            double adj = centerAdjustDeg(gf, exact.modern(), true) + k * BUCKET_DEG;
-            out[i] = (float) ((double) gf + adj);
+            double adj = adj0 + k * BUCKET_DEG;
+            out[i] = (float) (base + adj);
         }
         return out;
     }
