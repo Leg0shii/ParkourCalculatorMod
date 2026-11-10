@@ -520,6 +520,16 @@ public final class JumpLinearModel {
         return compileWalls(constraints, margin, trivialInfeasible, crossSignsAll(constraints, 1));
     }
 
+    public List<Wall> compileAxisWalls(List<JumpConstraint> constraints, double margin, boolean[] trivialInfeasible) {
+        List<Wall> walls = new ArrayList<>();
+        for (JumpConstraint c : constraints) {
+            if (isCrossAxis(c)) continue;
+            Wall w = compileWall(c, margin, trivialInfeasible);
+            if (w != null) walls.add(w);
+        }
+        return walls;
+    }
+
     public List<Wall> compileWalls(List<JumpConstraint> constraints, double margin, boolean[] trivialInfeasible, int[] crossSigns) {
         List<Wall> walls = new ArrayList<>();
         int j = 0;

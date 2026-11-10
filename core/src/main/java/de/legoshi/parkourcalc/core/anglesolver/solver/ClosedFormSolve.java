@@ -366,7 +366,7 @@ public final class ClosedFormSolve {
     static double[] candidateThetas(JumpSpec spec, JumpLinearModel lin, FacingPrefold.ChainScan scan,
                                     StartBox translationBox) {
         boolean[] trivialInfeasible = {false};
-        List<JumpLinearModel.Wall> walls = lin.compileWalls(spec.constraints, 0.0, trivialInfeasible);
+        List<JumpLinearModel.Wall> walls = lin.compileAxisWalls(spec.constraints, 0.0, trivialInfeasible);
         if (trivialInfeasible[0]) return null;
         double halfX = translationBox == null ? 0.0 : 0.5 * (translationBox.pxHi - translationBox.pxLo);
         double halfZ = translationBox == null ? 0.0 : 0.5 * (translationBox.pzHi - translationBox.pzLo);
@@ -662,7 +662,7 @@ public final class ClosedFormSolve {
         double[] cz = new double[lin.n];
         lin.objectiveVectors(spec.objective, cx, cz);
         boolean[] trivialInfeasible = {false};
-        List<JumpLinearModel.Wall> walls = lin.compileWalls(spec.constraints, 0.0, trivialInfeasible);
+        List<JumpLinearModel.Wall> walls = lin.compileAxisWalls(spec.constraints, 0.0, trivialInfeasible);
         if (trivialInfeasible[0]) return Double.NaN;
         double value;
         if (pre != null && !pre.isIdentity()) {

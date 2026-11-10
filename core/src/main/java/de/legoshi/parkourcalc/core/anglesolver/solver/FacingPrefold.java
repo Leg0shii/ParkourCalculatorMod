@@ -372,7 +372,7 @@ public final class FacingPrefold {
 
     public Reduced reduce(double[] cx, double[] cz, double[] mMagAll, List<JumpLinearModel.Wall> walls) {
         if (identity) return new Reduced(n, cx, cz, mMagAll, walls);
-        if (rotated()) return reduceRotated(cx, cz, walls);
+        if (rotated() || hasPlanarWall(walls)) return reduceRotated(cx, cz, walls);
         double[] rcx = new double[vars];
         double[] rcz = new double[vars];
         for (int t = 0; t < n; t++) {
@@ -397,6 +397,11 @@ public final class FacingPrefold {
         double[] ones = new double[vars];
         Arrays.fill(ones, 1.0);
         return new Reduced(vars, rcx, rcz, ones, reduced);
+    }
+
+    private static boolean hasPlanarWall(List<JumpLinearModel.Wall> walls) {
+        for (JumpLinearModel.Wall w : walls) if (w.axis == 2) return true;
+        return false;
     }
 
     private Reduced reduceRotated(double[] cx, double[] cz, List<JumpLinearModel.Wall> walls) {

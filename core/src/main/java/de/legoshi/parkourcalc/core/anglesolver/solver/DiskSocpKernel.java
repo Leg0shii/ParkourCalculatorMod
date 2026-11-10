@@ -79,23 +79,27 @@ public final class DiskSocpKernel {
             eq[j] = w.eq;
             orthOf[j] = w.eq ? -1 : po++;
             rowName[j] = w.name;
-            int lim = Math.min(w.coef.length, n);
+            double[] wx = w.axis == 2 ? w.coefX : (w.axis == 0 ? w.coef : null);
+            double[] wz = w.axis == 2 ? w.coefZ : (w.axis == 0 ? null : w.coef);
             double s = Math.abs(w.bPrime);
-            for (int t = 0; t < lim; t++) s = Math.max(s, Math.abs(w.coef[t]));
+            if (wx != null) for (int t = 0; t < Math.min(wx.length, n); t++) s = Math.max(s, Math.abs(wx[t]));
+            if (wz != null) for (int t = 0; t < Math.min(wz.length, n); t++) s = Math.max(s, Math.abs(wz[t]));
             if (s <= 0.0) s = 1.0;
             scale[j] = s;
-            double[] cj = new double[n];
             int last = -1;
-            for (int t = 0; t < lim; t++) {
-                cj[t] = w.coef[t] / s;
-                if (cj[t] != 0.0) last = t;
+            coefX[j] = wx == null ? null : new double[n];
+            coefZ[j] = wz == null ? null : new double[n];
+            if (wx != null) {
+                for (int t = 0; t < Math.min(wx.length, n); t++) {
+                    coefX[j][t] = wx[t] / s;
+                    if (coefX[j][t] != 0.0) last = Math.max(last, t);
+                }
             }
-            if (w.axis == 0) {
-                coefX[j] = cj;
-                coefZ[j] = null;
-            } else {
-                coefX[j] = null;
-                coefZ[j] = cj;
+            if (wz != null) {
+                for (int t = 0; t < Math.min(wz.length, n); t++) {
+                    coefZ[j][t] = wz[t] / s;
+                    if (coefZ[j][t] != 0.0) last = Math.max(last, t);
+                }
             }
             bPrime[j] = w.bPrime / s;
             lastCoupled[j] = last;

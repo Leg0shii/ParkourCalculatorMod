@@ -554,7 +554,7 @@ public final class CertifiedBnb {
         double[] cz = new double[s.n];
         lin.objectiveVectors(s.spec.objective, cx, cz);
         boolean[] trivialFlag = {false};
-        List<JumpLinearModel.Wall> specWalls = lin.compileWalls(s.spec.constraints, 0.0, trivialFlag);
+        List<JumpLinearModel.Wall> specWalls = lin.compileAxisWalls(s.spec.constraints, 0.0, trivialFlag);
         if (trivialFlag[0]) {
             s.trivialInfeasible = true;
             return null;
