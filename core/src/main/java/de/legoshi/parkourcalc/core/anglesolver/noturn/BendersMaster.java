@@ -197,12 +197,9 @@ public final class BendersMaster {
             }
 
             Screen sc = screens.get(NoTurnKeys.key(sigma));
-            if (cfg.screenSkip && sc != null) {
-                boolean skip = !sc.diskFeasible || (sc.screened && sc.viol > cfg.screenKeep);
-                if (skip) {
-                    trace.screenSkipped++;
-                    continue;
-                }
+            if (screenSkips(sc)) {
+                trace.screenSkipped++;
+                continue;
             }
 
             boolean isV6Anc = isV6Ancestor(sigma, setupEnd);
@@ -212,7 +209,7 @@ public final class BendersMaster {
                         + " edges=" + edges + " screenViol=" + (sc == null ? "-" : sc.viol));
             }
 
-            int engage = (sc != null && sc.engage != Integer.MAX_VALUE) ? sc.engage : 0;
+            int engage = engageOf(sc);
             NoTurnResult survivor = slave(problem, wp0, wpFat, delta0Graph, fatGraph, finalGraph,
                     sigma, engage, isV6Anc, iis, master, deadline);
             if (survivor != null) {
@@ -257,14 +254,11 @@ public final class BendersMaster {
             trace.masterIterations++;
             trace.smallestEdgeReached = Math.min(trace.smallestEdgeReached, NoTurnKeys.countEdges(sigma));
             Screen sc = screens.get(NoTurnKeys.key(sigma));
-            if (cfg.screenSkip && sc != null) {
-                boolean skip = !sc.diskFeasible || (sc.screened && sc.viol > cfg.screenKeep);
-                if (skip) {
-                    trace.screenSkipped++;
-                    continue;
-                }
+            if (screenSkips(sc)) {
+                trace.screenSkipped++;
+                continue;
             }
-            int engage = (sc != null && sc.engage != Integer.MAX_VALUE) ? sc.engage : 0;
+            int engage = engageOf(sc);
             boolean[] sprint = NoTurnKeys.latchSprint(sigma, engage);
             NoTurnCertifier.Result rf = certify(wpFat, sigma, sprint, fatGraph, cfg.fatCertifyNanos);
             trace.certifies++;
@@ -401,19 +395,16 @@ public final class BendersMaster {
                 trace.smallestEdgeReached = Math.min(trace.smallestEdgeReached, edges);
 
                 Screen sc = screens.get(NoTurnKeys.key(sigma));
-                if (cfg.screenSkip && sc != null) {
-                    boolean skip = !sc.diskFeasible || (sc.screened && sc.viol > cfg.screenKeep);
-                    if (skip) {
-                        trace.screenSkipped++;
-                        continue;
-                    }
+                if (screenSkips(sc)) {
+                    trace.screenSkipped++;
+                    continue;
                 }
                 boolean isV6Anc = isV6Ancestor(sigma, problem.setupEnd);
                 if (isV6Anc) {
                     trace.v6AncestorProposed = true;
                     log("*** V6 ancestor proposed at iter " + trace.masterIterations + " edges=" + edges);
                 }
-                int engage = (sc != null && sc.engage != Integer.MAX_VALUE) ? sc.engage : 0;
+                int engage = engageOf(sc);
                 boolean[] sprint = NoTurnKeys.latchSprint(sigma, engage);
                 NoTurnCertifier.Result rf = fatCertifyOrCut(problem, wpFat, fatGraph, master, iis, sigma, sprint, null);
                 if (rf == null) continue;
@@ -845,8 +836,7 @@ public final class BendersMaster {
     }
 
     private NoTurnResult bind(int[] combos, boolean[] sprint, int edges, NoTurnCertifier.Result r) {
-        int engage = -1;
-        for (int t = 0; t < sprint.length; t++) if (sprint[t]) { engage = t; break; }
+        int engage = NoTurnKeys.firstSprint(sprint);
         return new NoTurnResult(combos.clone(), sprint.clone(), cfg.turnCombo, cfg.ja, edges, engage,
                 r.objective, r.violation, r.startX, r.startZ, r.yaws);
     }
@@ -873,6 +863,15 @@ public final class BendersMaster {
             }
         }
         return null;
+    }
+
+    private boolean screenSkips(Screen sc) {
+        if (!cfg.screenSkip || sc == null) return false;
+        return !sc.diskFeasible || (sc.screened && sc.viol > cfg.screenKeep);
+    }
+
+    private static int engageOf(Screen sc) {
+        return (sc != null && sc.engage != Integer.MAX_VALUE) ? sc.engage : 0;
     }
 
     private static int firstRun(int[] combos) {
