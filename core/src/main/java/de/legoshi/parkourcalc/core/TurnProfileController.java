@@ -178,7 +178,6 @@ public final class TurnProfileController {
     private int ratedChunkSetting = -1;
     private volatile int ratedSpread;
     private volatile double[][] ratePool;
-    private volatile boolean rateMore;
     private static final int RATE_TARGET_LANDINGS = 100;
     private static final long RATE_MAX_SAMPLES = 5_000_000L;
     private boolean loaded;
@@ -336,9 +335,7 @@ public final class TurnProfileController {
 
     private long constraintSignature() {
         long h = 17;
-        List<Integer> ticks = new ArrayList<Integer>(state.populatedTicks());
-        java.util.Collections.sort(ticks);
-        for (int tick : ticks) {
+        for (int tick : sortedConstraintTicks()) {
             TickConstraints tc = state.tickConstraintsOrNull(tick);
             if (tc == null) continue;
             h = h * 31 + tick;
@@ -369,14 +366,9 @@ public final class TurnProfileController {
 
     public SetupCheck check() {
         refresh();
-        List<InputRow> rows = inputs.getRows();
-        int first = -1;
-        int last = -1;
-        for (int t = 0; t < rows.size(); t++) {
-            if (!rows.get(t).isOnejumpFlagged()) continue;
-            if (first < 0) first = t;
-            last = t;
-        }
+        int[] span = flaggedSpan();
+        int first = span[0];
+        int last = span[1];
         boolean flagged = first >= 0;
         TurnReference ref = document.reference();
         TurnReference.Landing stored = flagged ? ref.landing() : null;
@@ -465,9 +457,7 @@ public final class TurnProfileController {
     }
 
     private String simulationViolation(int from, int to) {
-        List<Integer> ticks = new ArrayList<Integer>(state.populatedTicks());
-        java.util.Collections.sort(ticks);
-        for (int tick : ticks) {
+        for (int tick : sortedConstraintTicks()) {
             if (tick <= from || tick > to) continue;
             TickConstraints tc = state.tickConstraintsOrNull(tick);
             if (tc == null) continue;
@@ -625,13 +615,9 @@ public final class TurnProfileController {
         Built built = new Built();
         TurnReference ref = built.ref;
         List<InputRow> rows = inputs.getRows();
-        int first = -1;
-        int last = -1;
-        for (int t = 0; t < rows.size(); t++) {
-            if (!rows.get(t).isOnejumpFlagged()) continue;
-            if (first < 0) first = t;
-            last = t;
-        }
+        int[] span = flaggedSpan();
+        int first = span[0];
+        int last = span[1];
         if (first < 0) {
             lastError = null;
             return built;
@@ -675,27 +661,40 @@ public final class TurnProfileController {
     }
 
     public TurnReference.Landing tasLanding() {
+        return landingFor(Math.max(0, flaggedSpan()[0]));
+    }
+
+    private int[] flaggedSpan() {
         List<InputRow> rows = inputs.getRows();
         int first = -1;
-        for (int t = 0; t < rows.size() && first < 0; t++) if (rows.get(t).isOnejumpFlagged()) first = t;
-        return landingFor(Math.max(0, first));
+        int last = -1;
+        for (int t = 0; t < rows.size(); t++) {
+            if (!rows.get(t).isOnejumpFlagged()) continue;
+            if (first < 0) first = t;
+            last = t;
+        }
+        return new int[] {first, last};
+    }
+
+    private List<Integer> sortedConstraintTicks() {
+        List<Integer> ticks = new ArrayList<Integer>(state.populatedTicks());
+        java.util.Collections.sort(ticks);
+        return ticks;
     }
 
     private TurnReference.Landing landingFor(int first) {
         int lb = landRow();
         if (lb >= 0) {
-            List<TurnReference.Landing> at = solverLandings(lb, lb, 0);
+            List<TurnReference.Landing> at = solverLandings(lb, lb);
             return at.isEmpty() ? null : at.get(0);
         }
-        List<TurnReference.Landing> all = solverLandings(first, inputs.getRows().size(), 0);
+        List<TurnReference.Landing> all = solverLandings(first, inputs.getRows().size());
         return all.isEmpty() ? null : all.get(all.size() - 1);
     }
 
-    private List<TurnReference.Landing> solverLandings(int from, int to, int base) {
+    private List<TurnReference.Landing> solverLandings(int from, int to) {
         List<TurnReference.Landing> out = new ArrayList<TurnReference.Landing>();
-        List<Integer> ticks = new ArrayList<Integer>(state.populatedTicks());
-        java.util.Collections.sort(ticks);
-        for (int tick : ticks) {
+        for (int tick : sortedConstraintTicks()) {
             if (tick < from || tick > to) continue;
             TickConstraints tc = state.tickConstraintsOrNull(tick);
             if (tc == null) continue;
@@ -719,7 +718,7 @@ public final class TurnProfileController {
                     if (!Double.isNaN(hi)) zHi = Double.isNaN(zHi) ? hi : Math.min(zHi, hi);
                 }
             }
-            TurnReference.Landing l = new TurnReference.Landing(tick - base, xLo, xHi, zLo, zHi);
+            TurnReference.Landing l = new TurnReference.Landing(tick, xLo, xHi, zLo, zHi);
             if (!l.isEmpty()) out.add(l);
         }
         return out;
@@ -740,12 +739,8 @@ public final class TurnProfileController {
         ratedSpreadSetting = spreadLimit;
         ratedChunkSetting = chunk;
         synchronized (rateLock) {
-            if (rating) {
-                rateMore = true;
-                return;
-            }
+            if (rating) return;
             rating = true;
-            rateMore = false;
         }
         double pixelDeg = TurnProfile.pixelDeg(sensitivity.get());
         ForwardModel model = engine.forwardModel();
@@ -756,7 +751,6 @@ public final class TurnProfileController {
             long seed = AttemptSampler.SEED + (total == null ? 0L : total.attempts);
             Current published = cur;
             while (!cancel.get() && gen == generation.get()) {
-                rateMore = false;
                 AttemptSampler.Stats part = AttemptSampler.sample(model, cur.snapshot.spec, cur.facing, ratePool, chunk, seed, cancel);
                 if (cancel.get() || gen != generation.get()) return;
                 seed += part.attempts;
@@ -767,7 +761,6 @@ public final class TurnProfileController {
                 boolean enough = total.landings >= RATE_TARGET_LANDINGS || total.attempts >= RATE_MAX_SAMPLES;
                 if (!enough) continue;
                 synchronized (rateLock) {
-                    if (rateMore) continue;
                     rating = false;
                     return;
                 }

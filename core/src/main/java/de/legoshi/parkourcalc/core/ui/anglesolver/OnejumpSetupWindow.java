@@ -211,12 +211,7 @@ public final class OnejumpSetupWindow implements RenderInterface {
         boolean checked = controller.isChecked();
         TurnProfileController.SetupCheck check = controller.lastCheck();
         boolean current = controller.lastCheckCurrent();
-        float startX = ImGui.getCursorPosX();
-        Fonts.pushBold();
-        ImGui.text("Live offset");
-        Fonts.popBold();
-        ImGui.sameLine();
-        ImGui.setCursorPosX(startX + labelW);
+        overviewLabel("Live offset", labelW);
         if (checked) {
             ThemeManager.pushTextColor(ThemeManager.okColor());
             ImGui.text("on");
@@ -301,12 +296,7 @@ public final class OnejumpSetupWindow implements RenderInterface {
                     controller.ratedSpread(), compact(rs.attempts));
             dim = false;
         }
-        float startX = ImGui.getCursorPosX();
-        Fonts.pushBold();
-        ImGui.text("Landing chance");
-        Fonts.popBold();
-        ImGui.sameLine();
-        ImGui.setCursorPosX(startX + labelW);
+        overviewLabel("Landing chance", labelW);
         if (dim) ImGui.textDisabled(value);
         else ImGui.text(value);
         if (help == null) return;
@@ -394,14 +384,18 @@ public final class OnejumpSetupWindow implements RenderInterface {
     }
 
     private static void overviewRow(String label, String value, float labelW, boolean dim) {
+        overviewLabel(label, labelW);
+        if (dim) ImGui.textDisabled(value);
+        else ImGui.text(value);
+    }
+
+    private static void overviewLabel(String label, float labelW) {
         float startX = ImGui.getCursorPosX();
         Fonts.pushBold();
         ImGui.text(label);
         Fonts.popBold();
         ImGui.sameLine();
         ImGui.setCursorPosX(startX + labelW);
-        if (dim) ImGui.textDisabled(value);
-        else ImGui.text(value);
     }
 
     private static float minTableH(float scale) {
@@ -508,9 +502,7 @@ public final class OnejumpSetupWindow implements RenderInterface {
                 ThemeManager.popTextColor();
                 if (!cell.isEmpty()) ImGui.sameLine();
                 else ImGui.alignTextToFramePadding();
-                ThemeManager.pushTextColor(ThemeManager.textMutedColor());
-                ImGui.text("(?)");
-                ThemeManager.popTextColor();
+                helpMarker();
                 TooltipUtil.onHover(a.macro == PracticeMacro.INPUTS ? PracticeMacro.LABEL_INPUTS : PracticeMacro.LABEL_TURN);
             }
         }
