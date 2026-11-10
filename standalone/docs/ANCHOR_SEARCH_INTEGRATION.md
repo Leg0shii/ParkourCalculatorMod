@@ -37,6 +37,23 @@ manifest/database companions must be kept together.
 
 ## The three coordinated search changes
 
+The later lazy-bound follow-up keeps the same pruning rule but evaluates it only
+for the candidate currently being considered. Arrival selection and refinement
+selection no longer call the bound while filtering every queued record. After
+choosing a candidate using the existing priority, compare its optimistic finish
+with the current best finish and discard it if strictly later. Equal finishes
+remain eligible. An excluded fixed refinement is marked so future slices do not
+retry it; the saved program and exclusion proof remain available. New proposals
+are still checked when examined during generation. There is no queue-wide
+time-bound refresh when the incumbent changes.
+
+This follow-up passes [51 focused checks](../autonomy/experiments/anchor-runtime-profile/lazy-bounds-2026-11-10/report.json),
+including assertions that unselected arrivals/refinements are not checked and
+equal optimistic finishes remain eligible. The571-test gate and300s profile below
+describe integration revision `91381e5a`; they have not been rerun to claim a new
+timing result for this follow-up. Checkpoint shape and the bound formula are
+unchanged.
+
 ### Ordinary extra runs versus explicit recovery
 
 Exhausting a generator no longer automatically restores saved greater-run

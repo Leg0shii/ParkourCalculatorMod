@@ -1,5 +1,11 @@
 # Current standalone state
 
+2026-11-10 follow-up: time bounds are checked lazily for the selected arrival or
+refinement against the current best finish, rather than evaluated across queued
+records. Equality remains eligible. [Implementation and51 focused checks](ANCHOR_SEARCH_INTEGRATION.md)
+record this update; the full integration/cold measurements below describe the
+preceding `91381e5a` revision, not a new performance measurement.
+
 ## Coordinated solver/anchor integration (2026-11-10)
 
 The [integration contract](ANCHOR_SEARCH_INTEGRATION.md) supersedes the older

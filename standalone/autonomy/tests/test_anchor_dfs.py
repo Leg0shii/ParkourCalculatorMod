@@ -1,5 +1,6 @@
 import copy
 import json
+import threading
 import unittest
 from unittest.mock import patch
 
@@ -25,7 +26,8 @@ def extend(s,parent,target,n,extra=False):
 
 
 class AnchorDFSTests(unittest.TestCase):
-    def run_tree(self, *, logging=True, resume=None, calls=20, interval=1, setup=False, seconds=3):
+    def run_tree(self, *, logging=True, resume=None, calls=20, interval=1, setup=False, seconds=3,
+                 on_progress=None,cancel_event=None):
         s=scene();s['maxTotalRunTicks']=60;s['maxRunTicksPerJump']=60;dispatched=[]
         def generate(target_scene,*,report,initial_programs,continuation=None,node_evaluator,**kwargs):
             saved=copy.deepcopy(continuation) if continuation else dict(expanded=1,cursor=0,exhausted=False)
@@ -62,7 +64,7 @@ class AnchorDFSTests(unittest.TestCase):
              patch('standalone.autonomy.cell_routes.checkpoint_experiment.replay_witness',return_value=dict(passed=True)):
             result=find_checkpoint_route(s,object(),anchor_search=dict(anchors=['mid'],observability=logging,
                 solveEveryDecisionLevels=interval),minimum_run_pruning=False,seconds=seconds,score_seconds=2,
-                max_solver_calls=calls,resume_state=resume)
+                max_solver_calls=calls,resume_state=resume,on_progress=on_progress,cancel_event=cancel_event)
         return result,dispatched
 
     def test_global_latch_survives_abandoned_certifier_and_changed_incoming_prefix(self):
@@ -101,6 +103,54 @@ class AnchorDFSTests(unittest.TestCase):
         self.assertEqual(result['best']['plan']['ticks'],20)
         self.assertEqual(calls,[])
         self.assertIsNone(saved['best'])
+
+    def queued_tree(self, refinement=False):
+        first,_=self.run_tree(calls=2)
+        saved=json.loads(json.dumps(first['searchState']))
+        root=saved['dfs']['stack'][0]
+        template=root['records'][0]
+        for n in (11,12,13):
+            p=extend(scene(),history(scene(),[]),'mid',n)
+            record=copy.deepcopy(template)
+            record.update(id='queued-'+str(n),program=p,child=copy.deepcopy(p),arrival=n,ticks=n,tried=False,
+                witness=dict(plan=dict(ticks=n,walls=[]),allocation=[0],cost=0,
+                    candidate=dict(yaw=[0.]*n,positions=[[.5,.5]]*(n+1),velocity=[[0.,0.]]*(n+1),objective=0.)))
+            if refinement:
+                record.pop('witness')
+                record['program']['repairState']=dict(pending=[dict(branch='unfinished')])
+            root['records'].append(record)
+        root.update(phase='select',ready=[],sourceExhausted=True)
+        return saved
+
+    def check_lazy_queue_bound(self, *, refinement=False, remaining=15):
+        saved=self.queued_tree(refinement)
+        checked=[];cancel=threading.Event()
+        def bound(guides,span,program,motion):
+            checked.append(program['profile']['airtime'])
+            return dict(remainingTicks=remaining)
+        def progress(state):
+            last=state['dfs']['transitions'][-1]
+            if last['kind']=='candidate_exclusion' or last['kind']=='open' and last['depth']==1:
+                cancel.set()
+        with patch('standalone.autonomy.cell_routes.anchor_time_bound.remaining_bound',side_effect=bound):
+            result,calls=self.run_tree(resume=saved,on_progress=progress,cancel_event=cancel)
+        self.assertEqual(checked,[11])
+        self.assertEqual(calls,[])
+        root=result['searchState']['dfs']['stack'][0]
+        unselected=[r for r in root['records'] if r['id'] in ('queued-12','queued-13')]
+        self.assertTrue(all(not r['tried'] and not r.get('timeBoundExclusion') and not r.get('refinementTimeExclusion') for r in unselected))
+        return result
+
+    def test_time_bound_checks_only_selected_arrival_not_other_queued_records(self):
+        result=self.check_lazy_queue_bound()
+        self.assertEqual(result['searchState']['dfs']['transitions'][-1]['kind'],'candidate_exclusion')
+
+    def test_time_bound_checks_only_selected_refinement_not_other_pending_records(self):
+        self.check_lazy_queue_bound(refinement=True)
+
+    def test_equal_optimistic_finish_is_kept_without_checking_other_queued_records(self):
+        result=self.check_lazy_queue_bound(remaining=9)
+        self.assertEqual(result['searchState']['dfs']['stack'][-1]['parents'][0]['profile']['airtime'],11)
 
     def test_global_latch_accepts_setup_after_certifier_and_backtracking(self):
         result,calls=self.run_tree(setup=True)

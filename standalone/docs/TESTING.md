@@ -1,5 +1,9 @@
 # Tests and fixtures
 
+Lazy queue time-bound follow-up: [51 focused checks](../autonomy/experiments/anchor-runtime-profile/lazy-bounds-2026-11-10/report.json)
+pass with native dependencies/no skips. They cover selected-only arrival and
+refinement checks, equality, original-state DFS, external resume and persistence.
+
 Current integration acceptance (2026-11-10): [571 native-enabled selected tests](../autonomy/experiments/anchor-runtime-profile/integrated-2026-11-10/native-final/report.json)
 pass with zero failures/errors/skips and105 runtime hashes matching the cold
 profile. Five additional profiler tests pass. The selected non-ladder autonomy

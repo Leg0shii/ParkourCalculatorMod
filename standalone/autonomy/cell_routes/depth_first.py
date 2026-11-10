@@ -285,12 +285,16 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
         return proof
 
     def eligible(program, f=None):
-        proof=time_bound(program,f)
-        if proof is not None:
-            state['timeBoundExclusions'].append(dict(id=candidate_key(program),proof=proof))
+        if reject_time(program,f) is not None:
             return False
         return (not (anchor_route and hard_bound(program,f)) and run_bound(program,f) is None and accepted_program(program) and
                 (not typed_route or stage_adapter(f).program_allowed(program)))
+
+    def reject_time(program,f):
+        proof=time_bound(program,f)
+        if proof is not None:
+            state['timeBoundExclusions'].append(dict(id=candidate_key(program),proof=proof))
+        return proof
 
     def screen(program, f=None):
         bounded=program
@@ -814,10 +818,15 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
                         continue
                     score(f,program,previous)
                 f['phase'] = 'select'
-            options = [r for r in f['records'] if r.get('witness') and not r['tried'] and time_bound(r['child'],f) is None and run_bound(r['program'],f) is None and (not anchor_route or hard_bound(r['program'],f) is None)]
+            options = [r for r in f['records'] if r.get('witness') and not r['tried'] and run_bound(r['program'],f) is None and (not anchor_route or hard_bound(r['program'],f) is None)]
             if options:
                 chosen = min(options,key=lambda r:record_priority(r,f))
                 chosen['tried'] = True
+                proof=reject_time(chosen['child'],f)
+                if proof is not None:
+                    chosen['timeBoundExclusion']=proof
+                    transition('candidate_exclusion',f,candidate=chosen['id'],proof=proof)
+                    continue
                 if anchor_route:
                     event=state['observations']['decisions'].get(chosen['program'].get('decisionNode'))
                     if event is not None:event['selected']=event.get('selected',0)+1
@@ -860,10 +869,15 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
             if f['ready']:
                 f['phase'] = 'score'
                 continue
-            pending = next((r for r in f['records'] if time_bound(r['program'],f) is None and run_bound(r['program'],f) is None and numerical_pending(r) and
+            pending = next((r for r in f['records'] if not r.get('refinementTimeExclusion') and run_bound(r['program'],f) is None and numerical_pending(r) and
                 r.get('refinementSession')!=state['session']),None)
             if pending is not None:
                 pending['refinementSession'] = state['session']
+                proof=reject_time(pending['program'],f)
+                if proof is not None:
+                    pending['refinementTimeExclusion']=proof
+                    transition('candidate_exclusion',f,candidate=pending['id'],proof=proof,refinement=True)
+                    continue
                 score(f,pending['program'],pending)
                 continue
             if not f['sourceExhausted']:

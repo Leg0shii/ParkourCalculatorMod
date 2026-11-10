@@ -42,6 +42,11 @@ observed work rather than guaranteeing a global search speedup or optimality.
 
 ## Validation status
 
+The subsequent [lazy-bound update](lazy-bounds-2026-11-10/report.json) passes51
+focused checks. It removes time-bound evaluation from queue-wide filtering.
+The full regression and cold-profile numbers below describe `91381e5a` and
+remain immutable historical measurements; no new speedup is claimed here.
+
 The [final native gate](integrated-2026-11-10/native-final/report.json) passes
 571 tests with zero failures/errors/skips in248.27s. All105 runtime hashes match
 the cold run and remain unchanged. Historical event artifacts remain unchanged.
