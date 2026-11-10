@@ -432,6 +432,8 @@ public final class FoldReplayDriver {
                         yaws, gf, path, px, pz, viol, rounds);
                 best = foldRounds(best, rounds, pre, max);
                 yaws = wo2.landed != null ? wo2.landed.yawsDeg : wo2.yaws;
+                gf = wo2.gf;
+                path = wo2.path;
                 px = wo2.landed != null ? wo2.landed.px : wo2.px;
                 pz = wo2.landed != null ? wo2.landed.pz : wo2.pz;
                 viol = wo2.viol;
