@@ -59,9 +59,7 @@ public final class BendersMaster {
         public int refineExtraAfterIncumbent = 8;
         public long deadlineNanos = 480_000_000_000L;
 
-        public int fatOptimizeSec = 4;
         public long delta0CertifyNanos = 12_000_000_000L;
-        public long fatCertifyNanos = 6_000_000_000L;
         public long searchBudgetNanos = 2_000_000_000L;
         public long continuationBudgetNanos = 90_000_000_000L;
         public int threads = 0;

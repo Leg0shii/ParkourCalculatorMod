@@ -478,8 +478,6 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
         cfg.screenOrder = false;
         cfg.screenSkip = false;
         cfg.useCuts = false;
-        cfg.fatOptimizeSec = 4;
-        cfg.fatCertifyNanos = 6_000_000_000L;
         cfg.continuationLead = 25;
         cfg.continuationCap = 12;
         cfg.openingTaps = true;
