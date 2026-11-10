@@ -542,7 +542,7 @@ public final class DiskSocpKernel {
                 if (axis[j] < 0 || p0coef[j] == 0.0) continue;
                 double cv = axis[j] == 0 ? curvX : curvZ;
                 if (cv == 0.0) continue;
-                for (int k = 0; k < m; k++) {
+                for (int k = 0; k <= j; k++) {
                     if (axis[k] != axis[j] || p0coef[k] == 0.0) continue;
                     S[j][k] += p0coef[j] * p0coef[k] * cv;
                 }
@@ -561,7 +561,7 @@ public final class DiskSocpKernel {
                 if (ajx != 0.0) ajg += ajx * gx[t];
                 if (ajz != 0.0) ajg += ajz * gz[t];
                 Mlt[j * n + t] = 4.0 * mu * tau[t] * ajg * invd2;
-                for (int k = 0; k < m; k++) {
+                for (int k = 0; k <= j; k++) {
                     if (t > lastCoupled[k]) continue;
                     double akx = coefX[k] != null ? coefX[k][t] : 0.0;
                     double akz = coefZ[k] != null ? coefZ[k][t] : 0.0;
@@ -581,7 +581,7 @@ public final class DiskSocpKernel {
                 double mlt = Mlt[j * n + t];
                 if (mlt == 0.0) continue;
                 double f = mlt / Dtt[t];
-                for (int k = 0; k < m; k++) {
+                for (int k = 0; k <= j; k++) {
                     double mlk = Mlt[k * n + t];
                     if (mlk != 0.0) S[j][k] -= f * mlk;
                 }
