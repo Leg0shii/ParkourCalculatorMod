@@ -126,10 +126,6 @@ public final class VelocityFinder {
         return new FastSolve(null, res);
     }
 
-    private double[] solveFast(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc) {
-        return solveFastCapturing(exact, spec, sc).yaws;
-    }
-
     private final ProblemFactory problem;
     private final ForwardModel model;
     private final Anchor anchor;
@@ -140,10 +136,6 @@ public final class VelocityFinder {
     private volatile boolean objectiveMax = true;
     private volatile double objConstraint = Double.NaN;
     private volatile int objEdgeTick = -1;
-
-    public JumpPhysicsInputs.Axis objectiveAxis() {
-        return objectiveAxis;
-    }
 
     public boolean objectiveIsX() {
         return objectiveAxis != JumpPhysicsInputs.Axis.Z;
@@ -181,7 +173,7 @@ public final class VelocityFinder {
         if (accuracy == Accuracy.HYPER) return evaluateViaEngine(vx, vz, cancel);
         JumpSpec tmpl = template();
         if (tmpl != null && model instanceof ExactJumpModel) {
-            return evaluateFast((ExactJumpModel) model, tmpl, vx, vz);
+            return evaluateFastWithField((ExactJumpModel) model, tmpl, vx, vz).cand;
         }
         return evaluateViaEngine(vx, vz, cancel);
     }
@@ -288,28 +280,8 @@ public final class VelocityFinder {
         return -Math.abs(m);
     }
 
-    public boolean objectiveIsMax() {
-        return objectiveMax;
-    }
-
     public Candidate evaluateThorough(double vx, double vz) {
         return evaluateViaEngine(vx, vz, new AtomicBoolean(false));
-    }
-
-    private Candidate evaluateFast(ExactJumpModel exact, JumpSpec tmpl, double vx, double vz) {
-        JumpPhysicsInputs base = tmpl.asScenario();
-        JumpPhysicsInputs sc = copyWithVelocity(base, new Vec3dCore(vx, base.initialVelocity.y, vz));
-
-        JumpSpec spec = new JumpSpec(sc, tmpl.constraints, tmpl.objective);
-
-        double[] yaws = solveFast(exact, spec, sc);
-        if (yaws == null) {
-            objectiveAxis = spec.objective.axis;
-            objectiveMax = spec.objective.sense == Objective.Sense.MAX;
-            return new Candidate(vx, vz, false, false, Double.NaN, Double.NaN, Double.NaN, Double.NaN, null, null, null, 0);
-        }
-        return landingCandidate(vx, vz, sc, yaws, templateForce45Mask, templateStrafeMask, templateStrafeSign,
-                spec.objective.axis, spec.objective.sense == Objective.Sense.MAX);
     }
 
     private Candidate landingCandidate(double vx, double vz, JumpPhysicsInputs sc, double[] absYaws,
