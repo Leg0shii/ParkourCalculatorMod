@@ -207,6 +207,10 @@ public final class ExactJumpModel implements ForwardModel {
         return RAW_DIAG_INPUT;
     }
 
+    public static float squareDiagonalInput() {
+        return SQUARE_DIAG_INPUT;
+    }
+
     public static boolean isTypedDiagonal(float forward, float strafe) {
         return Math.abs(forward) == 0.98F && Math.abs(strafe) == 0.98F;
     }
