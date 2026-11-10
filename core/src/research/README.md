@@ -75,6 +75,19 @@ anglesolver/
   CertBnbProbe.java        env-gated certified-B&B probe: PKC_CERTBNB_CAPTURES (comma list),
                            PKC_CERTBNB_OUT/NODES/MS/MODE; nodeCap=1 dumps root bounds for the COPT
                            root-bound validation (research/copt/certbnb_rootcheck.py, gitignored)
+  CertBnbRunSet.java       before/after run set for the fold driver, the wall-homotopy ladder and
+                           the certified B&B: every problems/solve capture (PKC_RUNSET_EFFORTS,
+                           default FAST,THOROUGH, "-" for none) and PKC_RUNSET_WITNESS oracle
+                           instances per capture (WitnessProblem, PKC_RUNSET_WITNESS_SEED, default 5)
+                           through the kinds driver, ladder, ff (first feasible), seed (Optimize
+                           with node cap 0) and opt (Optimize, PKC_RUNSET_NODES nodes, default
+                           1500), unseeded and without a deadline (PKC_RUNSET_WATCHDOG_MS cancels
+                           a run, default 60000, flagged in the cancelled column); one TSV line
+                           per run with a signature of the raw bits of landing, bound, gap, node
+                           and kernel solve counts, then wall and kernel milliseconds;
+                           PKC_RUNSET=1 to run, PKC_RUNSET_OUT/FILTER/KINDS/REPEATS tune it. A
+                           change that must not alter results is proven by `diff` over the
+                           first six columns of two runs
   FoldDriverProbe.java     run the fold driver headlessly on any capture; PKC_FOLD_CAPTURE=<path or
                            pool name>, optional PKC_FOLD_OUT/PKC_FOLD_DEBUG/PKC_FOLD_SEED/
                            PKC_FOLD_REF (box-reference multi-start override); prints per-round

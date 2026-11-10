@@ -7,14 +7,17 @@ final class SpdCholesky {
 
     static boolean factor(double[][] a, double[][] l, int n, double diagAdd) {
         for (int i = 0; i < n; i++) {
+            double[] ai = a[i];
+            double[] li = l[i];
             for (int j = 0; j <= i; j++) {
-                double s = a[i][j] + (i == j ? diagAdd : 0.0);
-                for (int k = 0; k < j; k++) s -= l[i][k] * l[j][k];
+                double[] lj = l[j];
+                double s = ai[j] + (i == j ? diagAdd : 0.0);
+                for (int k = 0; k < j; k++) s -= li[k] * lj[k];
                 if (i == j) {
                     if (s <= 0.0) return false;
-                    l[i][i] = StrictMath.sqrt(s);
+                    li[i] = StrictMath.sqrt(s);
                 } else {
-                    l[i][j] = s / l[j][j];
+                    li[j] = s / lj[j];
                 }
             }
         }
@@ -23,9 +26,10 @@ final class SpdCholesky {
 
     static void solveInPlace(double[][] l, double[] x, int n) {
         for (int i = 0; i < n; i++) {
+            double[] li = l[i];
             double s = x[i];
-            for (int k = 0; k < i; k++) s -= l[i][k] * x[k];
-            x[i] = s / l[i][i];
+            for (int k = 0; k < i; k++) s -= li[k] * x[k];
+            x[i] = s / li[i];
         }
         for (int i = n - 1; i >= 0; i--) {
             double s = x[i];

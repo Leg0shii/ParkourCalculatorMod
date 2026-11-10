@@ -79,7 +79,9 @@ anglesolver/
   FoldReplayDriverTest.java  #422 M1 fold driver: thousand-1-dup2 warm replay bit-exact
                            (6523.307720901059, viol 0.0), cold driver byte-exact >= 6523.30 and
                            bit-identical across 5 in-process runs, loopmm fold lands byte-exact,
-                           j003 chord-narrowed FAST/objective-rounds gates
+                           j003 chord-narrowed FAST/objective-rounds gates; over every solve
+                           capture of up to 60 ticks the driver never runs the same kernel round
+                           a third time (a round whose start state repeats ends the loop)
   WallHomotopyLadderTest.java  #422 M1 wall-homotopy ladder (rungs 0.05/0.01/0.002/0, warm-chained,
                            true-spec scoring) and the era-aware bucket machinery behind its anchor
                            polish: hpk_precise witness replays bit-exact, j154 cold ladder lands

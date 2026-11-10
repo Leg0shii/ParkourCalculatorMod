@@ -95,6 +95,31 @@ public final class FoldReplayDriver {
         }
     }
 
+    private static final class RoundStart {
+        final boolean[] zeroX;
+        final boolean[] zeroZ;
+        final int pins;
+        final int keepAliveRetries;
+        final Map<String, Double> margins;
+        final double[] prevYaws;
+
+        RoundStart(boolean[] zeroX, boolean[] zeroZ, int pins, int keepAliveRetries,
+                   Map<String, Double> margins, double[] prevYaws) {
+            this.zeroX = zeroX;
+            this.zeroZ = zeroZ;
+            this.pins = pins;
+            this.keepAliveRetries = keepAliveRetries;
+            this.margins = margins;
+            this.prevYaws = prevYaws == null ? null : prevYaws.clone();
+        }
+
+        boolean sameAs(RoundStart o) {
+            return pins == o.pins && keepAliveRetries == o.keepAliveRetries
+                    && Arrays.equals(zeroX, o.zeroX) && Arrays.equals(zeroZ, o.zeroZ)
+                    && Arrays.equals(prevYaws, o.prevYaws) && margins.equals(o.margins);
+        }
+    }
+
     public static final class Params {
         public double specWallRelax;
         public double clearance;
@@ -140,10 +165,14 @@ public final class FoldReplayDriver {
         boolean trivial = false;
         Round best = null;
         Map<String, Double> margins = new HashMap<>();
+        List<RoundStart> roundStarts = new ArrayList<>();
 
         for (int round = 0; round < MAX_ROUNDS; round++) {
             if (cancel != null && cancel.get()) break;
             if (deadlineNanos != 0L && System.nanoTime() >= deadlineNanos) break;
+            RoundStart start = new RoundStart(curZeroX, curZeroZ, pins.size(), keepAliveRetries, margins, prevYaws);
+            if (repeats(roundStarts, start)) break;
+            roundStarts.add(start);
 
             JumpLinearModel lin = curZeroX == null
                     ? new JumpLinearModel(sc)
@@ -794,6 +823,13 @@ public final class FoldReplayDriver {
                                                      ForwardPath path, double viol) {
         if (viol > MARGIN_ANCHOR_CAP) return new HashMap<>();
         return AnchorSlp.margins(lin, spec.constraints, yaws, box, px, pz, gf, path);
+    }
+
+    private static boolean repeats(List<RoundStart> seen, RoundStart start) {
+        for (RoundStart s : seen) {
+            if (s.sameAs(start)) return true;
+        }
+        return false;
     }
 
     private static boolean containsPattern(List<boolean[][]> seen, boolean[] zx, boolean[] zz) {
