@@ -117,6 +117,19 @@ anglesolver/
                            instance's certified optimum is certified infeasible (exhausted tree, no
                            unresolved drop), a feasible instance never carries one, an expired
                            deadline or a zero node cap leaves infeasibility uncertified
+  WitnessOracleTest.java   soundness oracle (SlowSolverTests, one case per solve/ capture): a random yaw path
+                           is forwarded byte-exactly from a launch turned by a random quarter turn, and
+                           1 to 4 UI constraints of every kind (X, Z, ranges, tick references, dX, dZ,
+                           dX vs dZ, F, dF) are derived from it with margins from 0 to 0.05, so a path
+                           exists by construction; the certified B&B must never certify infeasible, its
+                           landing must verify, its bound and a certified optimum must not lie short of
+                           the hill-climbed path, the closed form bound neither (pinned starts, 1e-4);
+                           the engine on FAST must solve every instance with margins of 1e-6 or more
+                           and never return INFEASIBLE on the tight ones; harness/WitnessProblem builds
+                           the instances
+  LinearModelLongRunTest.java  JumpLinearModel on a synthetic 400 tick hop chain: late ticks keep their
+                           coupling coefficients and the linear path stays within the sine table
+                           residual of the exact path (the prefix sum cancellation the oracle found)
   SolveFailureDiagnosticsTest.java  what a failed j004 solve reports: every constraint and the missed tick, the
                            closest attempt's values, the dF-band decline, the same-tick conflict; #462
                            the verdict end to end through the engine: the conflict and a wall half a
@@ -225,6 +238,7 @@ resources/
 | `ProblemFixture` | load a capture + drive the engine (solve / directed); times it; `rig()` is a live engine over the capture for checks that solve more than once |
 | `Expect` | parse `<name>.expect.json`; supply defaults |
 | `ProblemCatalog` | discover check folders and the captures in them |
+| `WitnessProblem` | build a solve/ capture into an instance with a known path: random yaws forwarded byte-exactly, UI constraints derived from that path, the hill-climbed path as the objective reference |
 
 ## hpk_precise fixtures (#422 M1)
 
