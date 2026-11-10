@@ -126,10 +126,12 @@ changed nothing.
 - The stage stays inside the base wrap window. The cosine index of 1.8.9 can slip against the sine index at
   facings 360 degrees apart, which is worth another 1e-5 to 7e-5 on diagonal jumps; that needs locked absolute
   facings per tick in the closure tables.
-- Tied facings along a flat valley. On j828 three tied facings and the start can trade against each other at almost
-  no smooth loss, and the grid quality differs along that valley: Fast lands at 4978.0131219, a cold Optimize in
-  another part of the valley at 4978.0131182, the smooth optimum is 4978.0131230. The tied steps are enumerated by
-  distance from the rounded smooth optimum, which does not follow the valley. The matching method is a closest
-  vector search in the metric of the reduced Hessian (the sphere decoding idea above), ranked before the re-solves.
+- Tied facings on j828. Fast lands at 4978.0131219, a cold Optimize at 4978.0131182, the smooth optimum is
+  4978.0131230. The jump has three tied facings: one is stiff (its grid step decides the loss, and most of its
+  neighbouring steps leave no feasible re-solve), two barely matter. Tried and dropped: ranking the tied steps by a
+  closest vector search in the metric of the reduced augmented Lagrangian Hessian instead of by distance. The penalty
+  curvature overstates the loss of the stiff facing by two orders of magnitude, the ranking then spends the whole
+  budget on the two facings that do not matter, and the result was equal or worse than distance shells (Fast
+  4978.0131216 at the default size). A ranking by measured per-facing loss profiles is the next candidate.
 - A cold search for other landing basins (j335) is a different problem: this stage polishes a basin, it does not
   find one.
