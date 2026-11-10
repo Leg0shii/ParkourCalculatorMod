@@ -16,6 +16,7 @@ import java.nio.file.Path;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -78,6 +79,17 @@ public class AutoSaveTest {
         assertTrue(unnamed.controller.isDirty());
         assertEquals("nothing written for an unnamed session", 0,
                 unnamed.store.list().size());
+    }
+
+    @Test
+    public void aSaveThatCannotBeSerializedReportsAWriteError() throws Exception {
+        Rig rig = new Rig(Files.createTempDirectory("pkc-autosave-nan"));
+        rig.data.get(0).setYaw(Float.NaN);
+        assertTrue(rig.controller.save("nanrun").ok);
+        rig.controller.flushPendingWrites();
+        assertFalse(Files.exists(rig.store.getSaveDir().resolve("nanrun.json")));
+        assertNotNull(rig.controller.drainWriteError());
+        assertTrue("a failed write leaves the session dirty", rig.controller.isDirty());
     }
 
     @Test

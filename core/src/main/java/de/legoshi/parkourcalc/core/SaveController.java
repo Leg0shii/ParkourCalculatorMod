@@ -233,7 +233,7 @@ public final class SaveController {
         writeExecutor().execute(() -> {
             try {
                 target.write(sanitized, SaveIO.saveJson(file));
-            } catch (IOException e) {
+            } catch (IOException | RuntimeException e) {
                 pendingWriteError = "Failed to write save: " + e.getMessage();
             }
         });
