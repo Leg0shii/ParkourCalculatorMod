@@ -98,7 +98,8 @@ public final class Application {
 
     private Path settingsPath;
     private boolean startInitialized;
-    private boolean blockCheckWaitingForChunks;
+    private BlockOverrideCheck.Pending blockCheckPending = BlockOverrideCheck.pending(Collections.<int[]>emptyList());
+    private final BlockOverrideCheck.Reach blockReach;
     private String modVersion = "?";
     private InputOverlay inputOverlay;
     private FilePickerPort filePicker;
@@ -154,7 +155,8 @@ public final class Application {
         this.blockOverrideWorld.setOnDesync((row, tick, expectedPlaced) -> pushHudMessage(
                 "Tick " + tick + ": block at " + row.x + " " + row.y + " " + row.z
                         + (expectedPlaced ? " not placed" : " still there"), HudMessageStyle.COLOR_WARN));
-        this.blockPlacing = new BlockPlacing(mc, inputData, blockOverrideWorld, settings, hudMessages, this::onUserChange);
+        this.blockReach = BlockOverrideCheck.reachOf(mc);
+        this.blockPlacing = new BlockPlacing(mc, inputData, blockOverrideWorld, settings, hudMessages, this::onBlockOverridesChanged);
         this.blockPlacing.setUiOpener(this::setControlPanelOpen);
         this.recorder = new de.legoshi.parkourcalc.core.record.HumanRecorder(saveController::getSaveStore, mc::getMouseSensitivity);
     }
@@ -424,7 +426,7 @@ public final class Application {
         overlayManager.register(onejumpKeysWindow);
         overlayManager.register(onejumpSetupWindow);
         overlayManager.register(new de.legoshi.parkourcalc.core.ui.BlockOverridesWindow(inputData, mc, settings,
-                blockOverrideWorld, blockPlacing, this::saveSettings, this::onUserChange));
+                blockOverrideWorld, blockPlacing, this::saveSettings, this::onBlockOverridesChanged));
         overlayManager.register(new de.legoshi.parkourcalc.core.ui.RecorderWindow(recorder, settings, this::toggleRecording,
                 this::saveSettings, systemBridge));
     }
@@ -517,11 +519,14 @@ public final class Application {
         runSimulation(-1);
     }
 
-    private void runSimulation(int dirtyTick) {
+    private void runSimulation(int requestedDirtyTick) {
         if (senseSearch != null) senseSearch.invalidate();
         if (!mc.isReady()) return;
         if (!saveController.isSessionActive()) return;
         long t0 = Perf.now();
+        int overrideRow = runner.firstRowChangedBy(inputData.getBlockOverrides());
+        final int dirtyTick = requestedDirtyTick >= 0 && overrideRow >= 0
+                ? Math.min(requestedDirtyTick, overrideRow) : requestedDirtyTick;
         boolean incremental = dirtyTick > 0 && runner.canResumeFrom(dirtyTick)
                 && boxController.size() > dirtyTick && !DebugFlags.COMPARE_PARTIAL_SIM;
         List<TickState> path = mc.runOnServerThread(() -> dirtyTick < 0
@@ -560,9 +565,21 @@ public final class Application {
     }
 
     private void checkBlockOverrides() {
-        List<BlockOverride> waiting = new ArrayList<>();
-        blockOverrideWorld.setSimProblems(BlockOverrideCheck.run(inputData, boxController, BlockOverrideCheck.reachOf(mc), waiting));
-        blockCheckWaitingForChunks = !waiting.isEmpty();
+        long t0 = Perf.now();
+        List<int[]> waiting = new ArrayList<>();
+        blockOverrideWorld.setSimProblems(BlockOverrideCheck.run(inputData, boxController, blockReach, waiting));
+        blockCheckPending = BlockOverrideCheck.pending(waiting);
+        Perf.stop("blockOverrideCheck", t0);
+    }
+
+    private void onBlockOverridesChanged(int hint) {
+        saveController.markDirty();
+        int row = runner.firstRowChangedBy(inputData.getBlockOverrides());
+        if (row < 0 || row >= inputData.size()) {
+            checkBlockOverrides();
+            return;
+        }
+        runSimulation(row);
     }
 
     private float[] foldPitches(int count) {
@@ -594,7 +611,7 @@ public final class Application {
         if (attemptTracker != null) attemptTracker.reset();
         if (recorder.isRecording()) recorder.stop();
         simulatedInUnloadedChunks = false;
-        blockCheckWaitingForChunks = false;
+        blockCheckPending = BlockOverrideCheck.pending(Collections.<int[]>emptyList());
         hudMessages.clearStatus();
         startInitialized = false;
     }
@@ -748,7 +765,6 @@ public final class Application {
             undoController.tick(System.nanoTime());
         }
         pollSolver();
-        if (blockCheckWaitingForChunks) checkBlockOverrides();
         blockPlacing.tick();
         if (noTurnSearch != null) noTurnSearch.poll();
         if (senseSearch != null) senseSearch.poll();
@@ -1095,6 +1111,7 @@ public final class Application {
     public void tickPlayback() {
         playback.tick();
         blockOverrideWorld.tick();
+        if (!blockCheckPending.isEmpty() && mc.isReady() && blockCheckPending.anyLoaded(blockReach)) checkBlockOverrides();
         if (practiceMacro != null && !playback.isRunning()) practiceMacro.tick();
         if (turnProfile != null) turnProfile.tick();
     }

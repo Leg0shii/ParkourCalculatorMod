@@ -9,6 +9,7 @@ import de.legoshi.parkourcalc.core.save.SaveFile;
 import de.legoshi.parkourcalc.core.save.SaveIO;
 import de.legoshi.parkourcalc.core.save.SaveInfo;
 import de.legoshi.parkourcalc.core.save.WorldDescriptor;
+import de.legoshi.parkourcalc.core.sim.BlockOverrides;
 import de.legoshi.parkourcalc.core.sim.SimulationRunner;
 import de.legoshi.parkourcalc.core.sim.StartResumeState;
 import de.legoshi.parkourcalc.core.sim.TickState;
@@ -215,6 +216,7 @@ public final class SaveController {
         if (rows == null || rows.isEmpty()) return Result.failure("No ticks selected.");
         InputData slice = new InputData();
         for (InputRow row : rows) slice.getRows().add(row);
+        slice.getBlockOverrides().replaceAll(BlockOverrides.slice(inputData.getBlockOverrides().all(), sourceRows));
         AngleSolverState sliceSolver = SaveIO.sliceAngleSolverState(angleSolver, sourceRows);
         return SaveIO.save(store, rawName, slice, startPos, startVel, startYaw, startPitch, resume, sliceSolver, null, false);
     }
