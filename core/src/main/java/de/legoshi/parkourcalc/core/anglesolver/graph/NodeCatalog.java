@@ -9,6 +9,7 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.FreeStartImproveNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.HomotopyLadderNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.IlsPolishNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.LabelNode;
+import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.LatticePolishNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.LeafSnapNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.MarkSettledNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.ReportNode;
@@ -279,6 +280,23 @@ public final class NodeCatalog {
                 .param(ParamSpec.integer("pairPass", "Pair pass", 0, 1, 0))
                 .fallback(Guarantee.REJECTED)
                 .factory(LeafSnapNode::new)
+                .build());
+        register(NodeType.builder("latticePolish", "Lattice polish", NodeCategory.POLISH)
+                .requires(InputRequirement.ANY)
+                .branch(Branch.feasible(Guarantee.IMPROVED))
+                .branch(Branch.preserves(Guarantee.UNCHANGED))
+                .param(ParamSpec.integer("facings", "Tied facing steps tried", 1, 1000, 5))
+                .param(ParamSpec.integer("searches", "Lattice searches", 1, 1000, 3))
+                .param(ParamSpec.integer("adjusters", "Ticks adjusted together", 2, 12, 8))
+                .param(ParamSpec.integer("tableSize", "Combinations per half", 9, 200000, 2200))
+                .param(ParamSpec.integer("window", "Neighbours scanned", 1, 4096, 24))
+                .param(ParamSpec.integer("work", "Smooth solve work limit (millions)", 1, 1000000, 100))
+                .param(ParamSpec.decimal(GraphRunner.RESERVE_FRACTION_PARAM, "Reserved share of the solve time", 0.0, 1.0,
+                        BuiltinGraphs.POLISH_RESERVE_FRACTION))
+                .param(ParamSpec.integer(GraphRunner.RESERVE_CAP_PARAM, "Reserve cap (s, 0 = none)", 0, 600,
+                        BuiltinGraphs.POLISH_RESERVE_CAP_SEC))
+                .fallback(Guarantee.UNCHANGED)
+                .factory(LatticePolishNode::new)
                 .build());
         register(NodeType.builder("smooth", "Smoothing", NodeCategory.POLISH)
                 .requires(InputRequirement.ANY)

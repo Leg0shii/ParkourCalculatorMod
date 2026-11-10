@@ -256,6 +256,27 @@ public final class NodeHelp {
         param("leafSnap", "pairPass", "Turn on a second, more thorough snapping pass that adjusts angles in"
                 + " pairs. 0 off, 1 on. Slower but can land a cleaner result.");
 
+        node("latticePolish", "Takes a jump that already lands to the best nearby solution the game's angle"
+                + " grid allows. It first finds the exact smooth optimum for the start spot and every aim"
+                + " angle together, then searches the grid angles around it for the combination that keeps"
+                + " every wall and loses the least. Keeps the result only when it is strictly better.");
+        param("latticePolish", "facings", "How many grid steps of a facing that several ticks share (for"
+                + " example a run-up held on one angle) it tries around the smooth optimum.");
+        param("latticePolish", "searches", "How many of those tried facings get the full grid search, best"
+                + " first.");
+        param("latticePolish", "adjusters", "How many free ticks the grid search moves together. The other"
+                + " free ticks take their single best grid step.");
+        param("latticePolish", "tableSize", "How many angle combinations each half of the grid search may"
+                + " list. More reaches a finer result and takes longer.");
+        param("latticePolish", "window", "How many of the closest partner combinations it checks for each"
+                + " listed combination.");
+        param("latticePolish", "work", "How much work the smooth solves may spend before the stage gives up,"
+                + " counted in steps so the same jump always gets the same result. A long jump with many"
+                + " free ticks needs more.");
+        param("latticePolish", "reserveFraction", "The share of the whole solve time held back for this stage, so"
+                + " the stages before it cannot use up the budget. Only matters when the solve has a time budget.");
+        param("latticePolish", "reserveCapSec", "The most seconds the reserve may hold back. 0 means no cap.");
+
         node("translatedStart", "Only with a free start block: slides the whole solution's start spot to the"
                 + " best position that still lands the jump.");
     }
