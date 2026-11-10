@@ -209,6 +209,18 @@ public final class Constraint {
         this.enabled = enabled;
     }
 
+    public Constraint resolvedAgainst(double base) {
+        if (refTick == null) return this;
+        Constraint r = copy();
+        r.setRefTick(null);
+        r.setValue(r.getValue() + base);
+        double lo = r.getLo() + base;
+        double hi = r.getHi() + base;
+        r.setLo(lo);
+        r.setHi(hi);
+        return r;
+    }
+
     public Constraint copy() {
         Constraint c = new Constraint(field, op, value);
         c.lo = lo;

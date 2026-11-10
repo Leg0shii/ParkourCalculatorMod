@@ -480,14 +480,7 @@ public final class TurnProfileController {
                 if (c.isRelative()) {
                     TickState refState = tickState.apply(c.getRefTick());
                     if (refState == null) return "tick " + (tick + 1) + ": relative constraint without a simulated reference tick";
-                    double baseValue = c.getField() == Constraint.Field.X ? refState.position.x : refState.position.z;
-                    r = c.copy();
-                    r.setRefTick(null);
-                    r.setValue(r.getValue() + baseValue);
-                    double lo = r.getLo() + baseValue;
-                    double hi = r.getHi() + baseValue;
-                    r.setLo(lo);
-                    r.setHi(hi);
+                    r = c.resolvedAgainst(c.getField() == Constraint.Field.X ? refState.position.x : refState.position.z);
                 }
                 if (!ConstraintShapes.satisfied(r, st.position)) {
                     double v = c.getField() == Constraint.Field.X ? st.position.x : st.position.z;
