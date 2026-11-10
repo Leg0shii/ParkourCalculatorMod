@@ -119,6 +119,9 @@ anglesolver/
                            FAST solves (feasibility only, FAST has no objective bar), j154 FAST
                            re-solve determinism; the j154 FAST and j1150 THOROUGH gates live in
                            problems/solve
+  CertifiedBnbRoundingTest.java  the certified search's second candidate per node: an oracle instance
+                           (j022-1bmhbfly) whose relaxation leaves a tick inside its disk lands
+                           within 40 nodes only when that tick is also rounded to the opposite side
   CertifiedBnbTest.java    #422 M2a certified B&B fast units: SineTableGeometry containment (realized
                            inputs inside boxes/chords/supports across all four eras incl. the legacy
                            jump-tick double cast), a tiny 2-tick instance certifying at the enumerated

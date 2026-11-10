@@ -13,6 +13,7 @@ public final class CertifiedBnb {
     private static final double INTERVAL_REL = 2.0e-7;
     private static final double INTERVAL_ABS = 1.0e-12;
     private static final double POLISH_VIOL_CAP = 5.0e-2;
+    private static final double ROUNDING_MIN_CHANCE = 1.0e-3;
     private static final double FREE_START_SMOOTH = 5.0e-4;
     private static final double MODERN_THR_SQ = 9.0e-6;
     private static final byte FREE = 0;
@@ -686,6 +687,14 @@ public final class CertifiedBnb {
             decPath = replayCandidate(s, decoded, leafPx, leafPz, true);
             if (decPath != null) FoldReplayDriver.extractPattern(s.exact, decPath, s.n, decZx, decZz);
         }
+        if (ux != null && decoded != null && !(s.cfg.mode == Mode.FIRST_FEASIBLE && s.incYaws != null)) {
+            double[] roundX = dirX.clone();
+            double[] roundZ = dirZ.clone();
+            if (flipInteriorTicks(s, nd.id, roundX, roundZ)) {
+                double[] rounded = decode(s, nd, lin, roundX, roundZ);
+                if (!Arrays.equals(rounded, decoded)) replayCandidate(s, rounded, leafPx, leafPz, true);
+            }
+        }
         if (s.cfg.mode == Mode.FIRST_FEASIBLE && s.incYaws != null) return null;
 
         if (s.ties == null) {
@@ -802,6 +811,32 @@ public final class CertifiedBnb {
         JumpLinearModel.Wall hiW = lin.keepAliveWall(axis, t, -b, false);
         if (loW != null) rows.add(loW);
         if (hiW != null) rows.add(hiW);
+    }
+
+    private static boolean flipInteriorTicks(Search s, long nodeId, double[] ux, double[] uz) {
+        boolean any = false;
+        for (int t = 0; t < s.n; t++) {
+            if (!s.geom.hasInput(t)) continue;
+            double radius = s.geom.radiusUpper(t);
+            if (radius <= 0.0) continue;
+            double fill = Math.min(1.0, StrictMath.hypot(ux[t], uz[t]) / radius);
+            double chance = 0.5 * (1.0 - fill);
+            if (chance < ROUNDING_MIN_CHANCE) continue;
+            if (unitDraw(nodeId, t) < chance) {
+                ux[t] = -ux[t];
+                uz[t] = -uz[t];
+                any = true;
+            }
+        }
+        return any;
+    }
+
+    private static double unitDraw(long nodeId, int tick) {
+        long h = nodeId * 0x9E3779B97F4A7C15L + (tick + 1) * 0xBF58476D1CE4E5B9L;
+        h = (h ^ (h >>> 30)) * 0xBF58476D1CE4E5B9L;
+        h = (h ^ (h >>> 27)) * 0x94D049BB133111EBL;
+        h ^= h >>> 31;
+        return (h >>> 11) * (1.0 / 9007199254740992.0);
     }
 
     private static void alignWithCostate(int n, double[] gx, double[] gz, double[] ux, double[] uz) {
