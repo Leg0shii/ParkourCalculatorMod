@@ -44,10 +44,11 @@ public final class NoTurnProblem {
     private static final int DEFAULT_AIR_COMBO = NoTurnKeys.WA;
 
     private NoTurnProblem(JumpSpec baseSpec, ExactJumpModel model) {
-        this(baseSpec, model, false, false);
+        this(baseSpec, model, false, false, true);
     }
 
-    private NoTurnProblem(JumpSpec baseSpec, ExactJumpModel model, boolean jaAll, boolean jaLast) {
+    private NoTurnProblem(JumpSpec baseSpec, ExactJumpModel model, boolean jaAll, boolean jaLast,
+                          boolean fillIdleAir) {
         this.jaAll = jaAll;
         this.jaLast = jaLast && !jaAll;
         this.baseSpec = baseSpec;
@@ -127,7 +128,7 @@ public final class NoTurnProblem {
         this.unitCount = count;
         this.mainUnit = main;
         this.tiedUnits = tiedRoots;
-        if (base.forwardInputPerTick != null && base.strafeInputPerTick != null) {
+        if (fillIdleAir && base.forwardInputPerTick != null && base.strafeInputPerTick != null) {
             for (int t = setupEnd + 1; t < n; t++) {
                 boolean idle = Math.abs(base.forwardInputPerTick[t]) < 1.0e-4
                         && Math.abs(base.strafeInputPerTick[t]) < 1.0e-4;
@@ -223,6 +224,10 @@ public final class NoTurnProblem {
         return from(baseSpec, model, false, true);
     }
 
+    static NoTurnProblem ofCandidate(JumpSpec candidateSpec, ExactJumpModel model) {
+        return new NoTurnProblem(candidateSpec, model, false, false, false);
+    }
+
     private static NoTurnProblem from(JumpSpec baseSpec, ExactJumpModel model, boolean jaAll, boolean jaLast) {
         if (baseSpec == null) {
             NoTurnProblem p = new NoTurnProblem(new JumpSpec(new JumpPhysicsInputs(1), new ArrayList<>(),
@@ -230,7 +235,7 @@ public final class NoTurnProblem {
             p.issue = "no solver problem is set up (start tick, landing tick, objective)";
             return p;
         }
-        NoTurnProblem p = new NoTurnProblem(baseSpec, model, jaAll, jaLast);
+        NoTurnProblem p = new NoTurnProblem(baseSpec, model, jaAll, jaLast, true);
         if (p.setupEnd < 1 && !(p.setupEnd == 0 && p.jump[0])) p.issue = "the run-up is too short to search (need at least one setup tick)";
         if (p.walls.isEmpty()) p.issue = "no landing constraints found; add X/Z landing walls first";
         return p;

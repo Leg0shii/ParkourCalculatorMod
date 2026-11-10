@@ -108,7 +108,7 @@ public final class NoTurnCertifier {
     public Result certifySearch(JumpSpec spec, long budgetNanos, AtomicBoolean cancel) {
         JumpPhysicsInputs scFree = spec.asScenario();
         Vec3dCore ref = NoTurnProblem.refStart(scFree);
-        NoTurnProblem problem = NoTurnProblem.from(spec, model);
+        NoTurnProblem problem = NoTurnProblem.ofCandidate(spec, model);
         FastCheckVerdict v = new CascadeCheck(playable).check(problem, spec, model, budgetNanos, cancel);
         if (v.kind != FastCheckVerdict.Kind.FEASIBLE || v.yaws == null) return miss(ref);
         double px = Double.isNaN(v.px) ? ref.x : v.px;
