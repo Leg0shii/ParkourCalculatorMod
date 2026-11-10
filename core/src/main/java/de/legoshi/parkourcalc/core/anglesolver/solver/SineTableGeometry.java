@@ -17,6 +17,7 @@ public final class SineTableGeometry {
     private static final double INDEX_STEP = 2.0 * Math.PI / SIZE;
 
     private final boolean sine262;
+    private final boolean foldedRad;
     private final float[] table;
     private final int n;
     private final TickPart[] fly;
@@ -49,6 +50,7 @@ public final class SineTableGeometry {
 
     public SineTableGeometry(ExactJumpModel exact, JumpPhysicsInputs sc) {
         this.sine262 = exact.sine262();
+        this.foldedRad = exact.foldedInputRad();
         this.table = sine262 ? McSineTable.TABLE_262 : McSineTable.TABLE;
         this.n = sc.numTicks;
         this.fly = new TickPart[n];
@@ -443,11 +445,8 @@ public final class SineTableGeometry {
     }
 
     private int flyIndex(float gfDeg) {
-        if (sine262) {
-            float rad = gfDeg * (float) (Math.PI / 180.0);
-            return (int) ((long) ((double) rad * McSineTable.INDEX_FROM_RAD_262) & 65535L);
-        }
-        float rad = gfDeg * (float) Math.PI / 180.0F;
+        float rad = foldedRad ? gfDeg * (float) (Math.PI / 180.0) : gfDeg * (float) Math.PI / 180.0F;
+        if (sine262) return (int) ((long) ((double) rad * McSineTable.INDEX_FROM_RAD_262) & 65535L);
         return (int) (rad * McSineTable.INDEX_FROM_RAD) & MASK;
     }
 
@@ -460,7 +459,7 @@ public final class SineTableGeometry {
     }
 
     private int cosSlip(float gfDeg, boolean boostCast) {
-        float rad = boostCast || sine262 ? gfDeg * (float) (Math.PI / 180.0) : gfDeg * (float) Math.PI / 180.0F;
+        float rad = boostCast || foldedRad ? gfDeg * (float) (Math.PI / 180.0) : gfDeg * (float) Math.PI / 180.0F;
         int sinIdx;
         int cosIdx;
         if (sine262) {
