@@ -42,6 +42,11 @@ public final class DiskSocpKernel {
     private final double[] scale;
     private final double[] p0coef;
     private final String[] rowName;
+    private final int[][] rowsAt;
+    private final double[][] coefXAt;
+    private final double[][] coefZAt;
+    private final double[] rowDotG;
+    private final double[] rowMlt;
     private final CostateDualSolver.FreeP0 freeP0;
     private final Map<String, Double> warmLambda;
 
@@ -128,6 +133,45 @@ public final class DiskSocpKernel {
             p0coef[j] = 0.0;
         }
         this.p = po;
+        this.rowsAt = rowsPerTick();
+        this.coefXAt = new double[n][];
+        this.coefZAt = new double[n][];
+        for (int t = 0; t < n; t++) {
+            int[] rows = rowsAt[t];
+            coefXAt[t] = new double[rows.length];
+            coefZAt[t] = new double[rows.length];
+            for (int a = 0; a < rows.length; a++) {
+                int j = rows[a];
+                coefXAt[t][a] = coefX[j] != null ? coefX[j][t] : 0.0;
+                coefZAt[t][a] = coefZ[j] != null ? coefZ[j][t] : 0.0;
+            }
+        }
+        this.rowDotG = new double[m];
+        this.rowMlt = new double[m];
+    }
+
+    private int[][] rowsPerTick() {
+        int[] count = new int[n];
+        for (int j = 0; j < m; j++) {
+            for (int t = 0; t <= lastCoupled[j]; t++) {
+                if (couples(j, t)) count[t]++;
+            }
+        }
+        int[][] out = new int[n][];
+        for (int t = 0; t < n; t++) out[t] = new int[count[t]];
+        int[] fill = new int[n];
+        for (int j = 0; j < m; j++) {
+            for (int t = 0; t <= lastCoupled[j]; t++) {
+                if (couples(j, t)) out[t][fill[t]++] = j;
+            }
+        }
+        return out;
+    }
+
+    private boolean couples(int j, int t) {
+        double ax = coefX[j] != null ? coefX[j][t] : 0.0;
+        double az = coefZ[j] != null ? coefZ[j][t] : 0.0;
+        return !(ax == 0.0 && az == 0.0);
     }
 
     public static final class ChordRow {
@@ -553,42 +597,50 @@ public final class DiskSocpKernel {
                 }
             }
         }
+        double twoMu = 2.0 * mu;
         for (int t = 0; t < n; t++) {
             double det = tau[t] * tau[t] - gx[t] * gx[t] - gz[t] * gz[t];
             double invd = 1.0 / det;
             double invd2 = invd * invd;
-            for (int j = 0; j < m; j++) {
-                if (t > lastCoupled[j]) continue;
-                double ajx = coefX[j] != null ? coefX[j][t] : 0.0;
-                double ajz = coefZ[j] != null ? coefZ[j][t] : 0.0;
-                if (ajx == 0.0 && ajz == 0.0) continue;
+            double gxt = gx[t];
+            double gzt = gz[t];
+            double mltScale = 4.0 * mu * tau[t];
+            int[] rows = rowsAt[t];
+            double[] rowX = coefXAt[t];
+            double[] rowZ = coefZAt[t];
+            for (int a = 0; a < rows.length; a++) {
+                int j = rows[a];
+                double ajx = rowX[a];
+                double ajz = rowZ[a];
                 double ajg = 0.0;
-                if (ajx != 0.0) ajg += ajx * gx[t];
-                if (ajz != 0.0) ajg += ajz * gz[t];
-                Mlt[j * n + t] = 4.0 * mu * tau[t] * ajg * invd2;
-                for (int k = 0; k <= j; k++) {
-                    if (t > lastCoupled[k]) continue;
-                    double akx = coefX[k] != null ? coefX[k][t] : 0.0;
-                    double akz = coefZ[k] != null ? coefZ[k][t] : 0.0;
-                    if (akx == 0.0 && akz == 0.0) continue;
-                    double akg = 0.0;
-                    if (akx != 0.0) akg += akx * gx[t];
-                    if (akz != 0.0) akg += akz * gz[t];
+                if (ajx != 0.0) ajg += ajx * gxt;
+                if (ajz != 0.0) ajg += ajz * gzt;
+                rowDotG[a] = ajg;
+                Mlt[j * n + t] = mltScale * ajg * invd2;
+                double twoAjg = 2.0 * ajg;
+                double[] sj = S[j];
+                for (int b = 0; b <= a; b++) {
+                    double akx = rowX[b];
+                    double akz = rowZ[b];
                     double dotA = 0.0;
                     if (ajx != 0.0 && akx != 0.0) dotA += ajx * akx;
                     if (ajz != 0.0 && akz != 0.0) dotA += ajz * akz;
-                    S[j][k] += 2.0 * mu * (dotA * invd + 2.0 * ajg * akg * invd2);
+                    sj[rows[b]] += twoMu * (dotA * invd + twoAjg * rowDotG[b] * invd2);
                 }
             }
         }
-        for (int j = 0; j < m; j++) {
-            for (int t = 0; t < n; t++) {
-                double mlt = Mlt[j * n + t];
+        for (int t = 0; t < n; t++) {
+            int[] rows = rowsAt[t];
+            double dtt = Dtt[t];
+            for (int a = 0; a < rows.length; a++) rowMlt[a] = Mlt[rows[a] * n + t];
+            for (int a = 0; a < rows.length; a++) {
+                double mlt = rowMlt[a];
                 if (mlt == 0.0) continue;
-                double f = mlt / Dtt[t];
-                for (int k = 0; k <= j; k++) {
-                    double mlk = Mlt[k * n + t];
-                    if (mlk != 0.0) S[j][k] -= f * mlk;
+                double f = mlt / dtt;
+                double[] sj = S[rows[a]];
+                for (int b = 0; b <= a; b++) {
+                    double mlk = rowMlt[b];
+                    if (mlk != 0.0) sj[rows[b]] -= f * mlk;
                 }
             }
         }
