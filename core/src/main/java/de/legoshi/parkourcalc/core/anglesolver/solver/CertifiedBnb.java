@@ -557,6 +557,7 @@ public final class CertifiedBnb {
             }
         }
         addGateRows(s, nd, iv, lin, rows);
+        int boxStart = rows.size();
         List<DiskSocpKernel.ChordRow> chords = new ArrayList<DiskSocpKernel.ChordRow>();
         for (int t = 0; t < s.n; t++) {
             if (nd.iLo[t] == FULL) continue;
@@ -688,7 +689,7 @@ public final class CertifiedBnb {
                 }
             }
             boolean closeBound = !iv.anyFree && !s.free;
-            if (allNarrow && leafClose(s, nd, lin, cx, cz, rows, leafPx, leafPz, closeBound)) {
+            if (allNarrow && leafClose(s, nd, lin, cx, cz, rows.subList(0, boxStart), leafPx, leafPz, closeBound)) {
                 return null;
             }
         }
@@ -1026,8 +1027,6 @@ public final class CertifiedBnb {
         }
         List<JumpLinearModel.Wall> kept = new ArrayList<JumpLinearModel.Wall>();
         for (JumpLinearModel.Wall w : rows) {
-            if (w.name != null && (w.name.startsWith("bxh@") || w.name.startsWith("bxl@")
-                    || w.name.startsWith("bzh@") || w.name.startsWith("bzl@"))) continue;
             if (w.eq) return false;
             kept.add(w);
         }
