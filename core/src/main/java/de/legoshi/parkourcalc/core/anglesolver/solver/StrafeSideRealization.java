@@ -154,10 +154,10 @@ public final class StrafeSideRealization {
                     if (cost[a][b] == Double.POSITIVE_INFINITY) continue;
                     double prevDelta = t == 1
                             ? firstDelta(facing[b][0], anchor, freeStartYaw)
-                            : delta(facing[b][t - 1], facing[a][t - 2]);
+                            : Angles.turn(facing[a][t - 2], facing[b][t - 1]);
                     for (int c = 0; c < 2; c++) {
                         if (c == 1 && !free[t]) continue;
-                        double d = delta(facing[c][t], facing[b][t - 1]);
+                        double d = Angles.turn(facing[b][t - 1], facing[c][t]);
                         double total = cost[a][b] + Math.abs(d - prevDelta);
                         int f = flips[a][b] + c;
                         if (better(total, f, next[b][c], nextFlips[b][c])) {
@@ -212,12 +212,6 @@ public final class StrafeSideRealization {
     }
 
     private static double firstDelta(double facing0, double anchor, boolean freeStartYaw) {
-        return freeStartYaw ? 0.0 : delta(facing0, anchor);
-    }
-
-    private static double delta(double to, double from) {
-        double d = to - from;
-        d -= 360.0 * Math.round(d / 360.0);
-        return d;
+        return freeStartYaw ? 0.0 : Angles.turn(anchor, facing0);
     }
 }

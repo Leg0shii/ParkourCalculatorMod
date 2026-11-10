@@ -11,7 +11,7 @@ public final class FacingPrefold {
     private static final double PIN_MATCH_TOL = 1.0e-9;
     private static final double OFFSET_ZERO_TOL = 1.0e-12;
     private static final double BASE_ARG_TOL = 1.0e-12;
-    private static final double RAD = Math.PI / 180.0;
+    private static final double RAD = Angles.RAD_PER_DEG;
 
     public static final class Reduced {
         public final int n;

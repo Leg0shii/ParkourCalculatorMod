@@ -25,8 +25,8 @@ import java.util.List;
  *  pattern into the couplings; the pattern-free constructor keeps the clamp-free model. */
 public final class JumpLinearModel {
 
-    private static final double RAD = Math.PI / 180.0;
-    private static final double DEG = 180.0 / Math.PI;
+    private static final double RAD = Angles.RAD_PER_DEG;
+    private static final double DEG = Angles.DEG_PER_RAD;
 
     public final int n;
     private final JumpPhysicsInputs sc;

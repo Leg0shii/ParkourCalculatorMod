@@ -16,7 +16,7 @@ public final class BucketWalk {
     public static final int WINDOW_LEGACY = 50;
     public static final int WINDOW_262 = 3;
 
-    private static final double RAD = Math.PI / 180.0;
+    private static final double RAD = Angles.RAD_PER_DEG;
     private static final int LP_MAX_ITER = 2000;
     private static final double LP_FRAC_EPS = 0.05;
     private static final int ENUM_TICKS = 6;

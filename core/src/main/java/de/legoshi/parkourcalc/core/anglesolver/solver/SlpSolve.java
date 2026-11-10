@@ -15,7 +15,7 @@ public final class SlpSolve {
 
     /** Inward clearance required after phase 1 (~ the sine-bucket lattice spacing); phase 2 may hug back to a quarter. */
     private static final double CLEARANCE = 1.0e-6;
-    private static final double RAD = Math.PI / 180.0;
+    private static final double RAD = Angles.RAD_PER_DEG;
 
     public static final class Config {
         /** Phase-1 share of the LP budget; not restoring feasibility within it means infeasible. */

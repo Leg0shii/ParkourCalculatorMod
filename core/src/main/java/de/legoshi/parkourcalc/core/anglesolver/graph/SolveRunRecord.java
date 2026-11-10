@@ -188,8 +188,7 @@ public final class SolveRunRecord {
         double travel = 0.0;
         double maxStep = 0.0;
         for (int t = 1; t < yaws.length; t++) {
-            double d = yaws[t] - yaws[t - 1];
-            d -= 360.0 * Math.round(d / 360.0);
+            double d = Angles.turn(yaws[t - 1], yaws[t]);
             double a = Math.abs(d);
             travel += a;
             if (a > maxStep) maxStep = a;

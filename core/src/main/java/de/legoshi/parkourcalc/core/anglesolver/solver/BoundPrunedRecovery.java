@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public final class BoundPrunedRecovery {
 
     private static final double SYNTH_PAD = 1.0e-3;
-    private static final double RAD = Math.PI / 180.0;
+    private static final double RAD = Angles.RAD_PER_DEG;
     private static final double RESTORE_AIM = 1.0e-4;
     private static final double RESTORE_ACTIVE_BAND = 5.0e-3;
     private static final double RESTORE_STEP_CAP_DEG = 20.0;

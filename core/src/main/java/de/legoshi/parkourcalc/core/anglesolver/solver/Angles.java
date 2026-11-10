@@ -37,11 +37,16 @@ public final class Angles {
         return delta;
     }
 
+    public static double turn(double from, double to) {
+        double d = to - from;
+        d -= 360.0 * Math.round(d / 360.0);
+        return d;
+    }
+
     public static double travelDeg(double[] f) {
         double travel = 0.0;
         for (int i = 1; i < f.length; i++) {
-            double d = f[i] - f[i - 1];
-            d -= 360.0 * Math.round(d / 360.0);
+            double d = turn(f[i - 1], f[i]);
             travel += Math.abs(d);
         }
         return travel;
@@ -53,8 +58,7 @@ public final class Angles {
         int count = 0;
         int lastSign = 0;
         for (int i = 1; i < f.length; i++) {
-            double d = f[i] - f[i - 1];
-            d -= 360.0 * Math.round(d / 360.0);
+            double d = turn(f[i - 1], f[i]);
             if (Math.abs(d) <= floorDeg) continue;
             int sign = d > 0.0 ? 1 : -1;
             if (lastSign != 0 && sign != lastSign) count++;
@@ -66,11 +70,9 @@ public final class Angles {
     public static double wiggleDeg(double[] f) {
         if (f.length < 3) return 0.0;
         double jerk = 0.0;
-        double prev = f[1] - f[0];
-        prev -= 360.0 * Math.round(prev / 360.0);
+        double prev = turn(f[0], f[1]);
         for (int i = 2; i < f.length; i++) {
-            double d = f[i] - f[i - 1];
-            d -= 360.0 * Math.round(d / 360.0);
+            double d = turn(f[i - 1], f[i]);
             jerk += Math.abs(d - prev);
             prev = d;
         }
@@ -85,8 +87,7 @@ public final class Angles {
         int lastSign = 0;
         double prev = anchorYaw;
         for (double v : f) {
-            double d = v - prev;
-            d -= 360.0 * Math.round(d / 360.0);
+            double d = turn(prev, v);
             prev = v;
             if (Math.abs(d) <= floorDeg) continue;
             int sign = d > 0.0 ? 1 : -1;
@@ -107,11 +108,9 @@ public final class Angles {
     public static double wiggleDeg(double anchorYaw, double[] f) {
         if (f.length < 2) return 0.0;
         double jerk = 0.0;
-        double prev = f[0] - anchorYaw;
-        prev -= 360.0 * Math.round(prev / 360.0);
+        double prev = turn(anchorYaw, f[0]);
         for (int i = 1; i < f.length; i++) {
-            double d = f[i] - f[i - 1];
-            d -= 360.0 * Math.round(d / 360.0);
+            double d = turn(f[i - 1], f[i]);
             jerk += Math.abs(d - prev);
             prev = d;
         }

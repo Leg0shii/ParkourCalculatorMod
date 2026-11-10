@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class GateFoldFinder {
 
-    private static final double RAD = Math.PI / 180.0;
+    private static final double RAD = Angles.RAD_PER_DEG;
     private static final double START_SCALE = 0.03;
     private static final double BAND_LO = 0.2;
     private static final double BAND_HI = 5.0;

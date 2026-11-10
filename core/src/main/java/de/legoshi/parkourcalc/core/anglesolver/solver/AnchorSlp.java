@@ -18,7 +18,7 @@ public final class AnchorSlp {
     private static final double BAND_SCALE = 1.0e3;
     private static final double DIRECTION_EPS = 1.0e-9;
     private static final int LP_MAX_ITER = 2000;
-    private static final double RAD = Math.PI / 180.0;
+    private static final double RAD = Angles.RAD_PER_DEG;
 
     private AnchorSlp() {
     }
