@@ -18,13 +18,11 @@ public final class BnbNode implements NodeRuntime {
     private final int ffSec;
     private final int tickCap;
     private final String labelSuffix;
-    private final BoundPrunedRecovery.Config cfg;
 
     public BnbNode(ParamValues params) {
         this.ffSec = params.getInt("ffSec");
         this.tickCap = params.getInt("tickCap");
         this.labelSuffix = params.getString("labelSuffix");
-        this.cfg = new BoundPrunedRecovery.Config();
     }
 
     @Override
@@ -63,7 +61,7 @@ public final class BnbNode implements NodeRuntime {
         }
         double[] warm = in != null ? in.yaws : null;
         double[] bnb = BoundPrunedRecovery.solve(ctx.exactModel, ctx.spec, ctx.feasTol, nodeToken,
-                budgetNanos, stopAt, cfg, ctx.closestMiss(), warm);
+                budgetNanos, stopAt, ctx.closestMiss(), warm);
         if (SolverTrace.on()) SolverTrace.log("ENGINE", "bnb %s", bnb != null ? "solved" : "miss");
         if (bnb == null) return NodeOutcome.of(miss, in);
         double[] yaws = Angles.wrapAll(bnb);
