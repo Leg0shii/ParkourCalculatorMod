@@ -118,7 +118,7 @@ public final class VelocityMapWidget {
     private volatile int refineCols, refineRows;
     private volatile VelocityFinder.Grid refineGrid;
     private Thread refineWorker;
-    private final AtomicBoolean refineCancel = new AtomicBoolean();
+    private volatile AtomicBoolean refineCancel = new AtomicBoolean();
 
     private static final class FieldSnap {
         final float[] z;
@@ -181,6 +181,7 @@ public final class VelocityMapWidget {
     private void renderTempBanner(float scale) {
         if (tempActive == null || !tempActive.getAsBoolean()) {
             copyStatus = null;
+            markerV0Applied = null;
             return;
         }
         ThemeManager.paddedSeparator();
@@ -795,10 +796,14 @@ public final class VelocityMapWidget {
         dl.addRect(xL, yTop, xR, yBot, ThemeManager.textColor(), 0f, 0, 1f);
     }
 
+    private double[] markerVelocity() {
+        boolean temp = tempActive != null && tempActive.getAsBoolean();
+        if (temp && markerV0Applied != null) return markerV0Applied;
+        return markerV0 != null ? markerV0.get() : null;
+    }
+
     private void drawMarker(ImDrawList dl, float x0, float y0, float cw, float ch) {
-        double[] applied = markerV0Applied;
-        double[] entry = markerV0 != null ? markerV0.get() : null;
-        double[] m = applied != null ? applied : entry;
+        double[] m = markerVelocity();
         if (m == null) return;
         double[] cell = snapCell(m[0], m[1]);
         if (cell == null) return;
@@ -864,7 +869,7 @@ public final class VelocityMapWidget {
     }
 
     private String fmt(double v) {
-        return String.format("%.3f", v);
+        return String.format(Locale.ROOT, "%.3f", v);
     }
 
     private void init3DView(float cw, float ch) {
@@ -1048,8 +1053,7 @@ public final class VelocityMapWidget {
 
     private void drawMarker3D(ImDrawList dl, FieldSnap s, double cx, double cyc, double cp, double sp,
                              double cyaw, double syaw, double halfX, double halfZ, double vxMid, double vzMid) {
-        if (markerV0 == null) return;
-        double[] m = markerV0.get();
+        double[] m = markerVelocity();
         if (m == null) return;
         double nx = halfX > 0 ? Math.max(-1.05, Math.min(1.05, (m[0] - vxMid) / halfX)) : 0;
         double ny = halfZ > 0 ? Math.max(-1.05, Math.min(1.05, (m[1] - vzMid) / halfZ)) : 0;
@@ -1136,14 +1140,9 @@ public final class VelocityMapWidget {
     private void startRefine(double vxLo, double vxHi, double vzLo, double vzHi) {
         if (finder == null) return;
         refineCancel.set(true);
-        if (refineWorker != null) {
-            try {
-                refineWorker.join(60);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        }
-        refineCancel.set(false);
+        final AtomicBoolean cancel = new AtomicBoolean(false);
+        refineCancel = cancel;
+        final VelocityFinder runFinder = finder;
         double vxStep = (vxHi - vxLo) / (REFINE_CELLS - 1);
         double vzStep = (vzHi - vzLo) / (REFINE_CELLS - 1);
         VelocityFinder.Grid g = new VelocityFinder.Grid(vxLo, vxHi, vxStep, vzLo, vzHi, vzStep);
@@ -1153,7 +1152,7 @@ public final class VelocityMapWidget {
         refineRows = rows;
         refineGrid = g;
         refineCells = buf;
-        refineWorker = new Thread(() -> finder.sweepParallel(g, threads, refineCancel,
+        refineWorker = new Thread(() -> runFinder.sweepParallel(g, threads, cancel,
                 (r, c, cand) -> buf[r * cols + c] = cand), "velocity-refine");
         refineWorker.setDaemon(true);
         refineWorker.start();
@@ -1233,7 +1232,7 @@ public final class VelocityMapWidget {
         VelocityFinder.Candidate cell = fieldCellAt(field, vx, vz);
         Float f = sampleField(field, vx, vz);
         StringBuilder sb = new StringBuilder();
-        sb.append(String.format("v0 = (%+.4f, %+.4f)%n", vx, vz));
+        sb.append(v0Line(vx, vz));
         if (cell != null && cell.constraintsMet) {
             appendLanding(sb, cell);
         } else if (f == null || Float.isNaN(f)) {
@@ -1242,6 +1241,10 @@ public final class VelocityMapWidget {
             sb.append("infeasible");
         }
         ImGui.setTooltip(sb.toString());
+    }
+
+    private static String v0Line(double vx, double vz) {
+        return String.format(Locale.ROOT, "v0 = (%+.4f, %+.4f)\n", vx, vz);
     }
 
     private String objAxisName() {
@@ -1273,7 +1276,7 @@ public final class VelocityMapWidget {
 
     private void showTooltip(double vx, double vz, VelocityFinder.Candidate c) {
         StringBuilder sb = new StringBuilder();
-        sb.append(String.format("v0 = (%+.4f, %+.4f)%n", vx, vz));
+        sb.append(v0Line(vx, vz));
         if (c == null || !c.constraintsMet) sb.append("no solution");
         else appendLanding(sb, c);
         ImGui.setTooltip(sb.toString());
