@@ -1,7 +1,6 @@
 package de.legoshi.parkourcalc.anglesolver.checks;
 
 import de.legoshi.parkourcalc.anglesolver.harness.ProblemFixture;
-import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.BoundPrunedRecovery;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
@@ -10,6 +9,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Objective;
+import de.legoshi.parkourcalc.core.anglesolver.solver.RecoveryLadder;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -33,7 +33,7 @@ final class DualRecoveryCheck implements ProblemCheck {
         Double target = pf.expect.refObjective;
         long t0 = System.nanoTime();
         String[] chain = new String[1];
-        double[] yaws = AngleSolverEngine.dualChain(exact, spec, sc, cancel, chain);
+        double[] yaws = RecoveryLadder.solve(exact, spec, sc, cancel, chain);
         boolean shortOfTarget = false;
         if (yaws != null && target != null) {
             double o = Paths.objective(exact, sc, spec, yaws);

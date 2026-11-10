@@ -1,6 +1,5 @@
 package de.legoshi.parkourcalc.core.anglesolver.graph.nodes;
 
-import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.ConstraintText;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Candidate;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphContext;
@@ -11,6 +10,7 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.ParamValues;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Scoring;
 import de.legoshi.parkourcalc.core.anglesolver.solver.CertifiedBnb;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
+import de.legoshi.parkourcalc.core.anglesolver.solver.FacingPrefold;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpLinearModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
@@ -52,7 +52,7 @@ public final class CertifiedBnbNode implements NodeRuntime {
         AtomicBoolean cancelToken = nodeToken;
         if (exhaust) {
             if (optimize || deadlineNanos <= 0 || now >= deadlineNanos) return NodeOutcome.of(miss, in);
-            if (AngleSolverEngine.overconstrainedChain(ctx.spec, ctx.scenario)) return NodeOutcome.of(miss, in);
+            if (FacingPrefold.overconstrainedChain(ctx.spec, ctx.scenario)) return NodeOutcome.of(miss, in);
             cap = OPT_SAFETY_NODE_CAP;
             solveDeadline = deadlineNanos;
         } else if (optimize) {

@@ -7,6 +7,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.CertifiedBnb;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardPath;
+import de.legoshi.parkourcalc.core.anglesolver.solver.GoalWall;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
@@ -524,7 +525,7 @@ public final class SenseFinder {
         }
         Objective o = turn.objective;
         Objective objective = new Objective(o.axis, o.sense, o.tick - from, 0.0, null, o.type);
-        JumpConstraint goal = AngleSolverEngine.selectLegalGoalWall(rest, objective, new String[1]);
+        JumpConstraint goal = GoalWall.selectLegal(rest, objective, new String[1]);
         if (goal == null) return null;
         List<JumpConstraint> solved = rest;
         if (mode == CertifiedBnb.Mode.OPTIMIZE) {

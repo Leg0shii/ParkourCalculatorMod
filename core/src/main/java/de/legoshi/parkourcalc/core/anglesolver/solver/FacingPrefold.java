@@ -483,4 +483,23 @@ public final class FacingPrefold {
         Arrays.fill(a, v);
         return a;
     }
+
+    public static FacingPrefold chainPrefold(JumpSpec spec, JumpPhysicsInputs sc) {
+        if (!JumpLinearModel.hasFacingWall(spec.constraints)) return null;
+        FacingPrefold pre = analyze(spec.constraints, new JumpLinearModel(sc));
+        if (pre == null || pre.isIdentity()) return null;
+        return pre;
+    }
+
+    public static boolean overconstrainedChain(JumpSpec spec, JumpPhysicsInputs sc) {
+        FacingPrefold pre = chainPrefold(spec, sc);
+        return (pre != null && pre.pinnedYaws() != null) || singleHeadingChain(spec, sc, pre);
+    }
+
+    public static boolean singleHeadingChain(JumpSpec spec, JumpPhysicsInputs sc, FacingPrefold pre) {
+        if (!JumpLinearModel.hasFacingWall(spec.constraints)) return false;
+        if (pre != null) return pre.varCount() == 1 && pre.pinnedTicks() == 0;
+        ChainScan scan = scannable(spec.constraints, new JumpLinearModel(sc));
+        return scan != null && scan.singleHeading();
+    }
 }

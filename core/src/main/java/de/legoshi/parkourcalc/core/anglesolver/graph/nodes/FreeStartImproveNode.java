@@ -13,6 +13,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.FreeStartSolve;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
+import de.legoshi.parkourcalc.core.anglesolver.solver.RecoveryLadder;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolverTrace;
 import de.legoshi.parkourcalc.core.anglesolver.solver.StartBox;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
@@ -108,7 +109,7 @@ public final class FreeStartImproveNode implements NodeRuntime {
         JumpPhysicsInputs pinned = sc.pinnedAt(centerX, centerZ);
         JumpSpec pinnedSpec = new JumpSpec(pinned, ctx.spec.constraints, ctx.spec.objective);
         String[] via = new String[1];
-        double[] chainYaws = de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine.dualChain(
+        double[] chainYaws = RecoveryLadder.solve(
                 ctx.exactModel, pinnedSpec, pinned, cancel, via);
         if (chainYaws == null
                 || FreeStartSolve.violationAt(ctx.exactModel, ctx.spec, chainYaws, centerX, centerZ) > ctx.feasTol) {

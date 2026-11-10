@@ -19,16 +19,12 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.SmoothOutcome;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolveRunRecord;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
-import de.legoshi.parkourcalc.core.anglesolver.solver.ClosedFormSolve;
-import de.legoshi.parkourcalc.core.anglesolver.solver.ClosestMiss;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.FacingPrefold;
 import de.legoshi.parkourcalc.core.anglesolver.solver.FacingLattice;
 import de.legoshi.parkourcalc.core.anglesolver.solver.LongRunSolver;
-import de.legoshi.parkourcalc.core.anglesolver.solver.RecoveryLadder;
-import de.legoshi.parkourcalc.core.anglesolver.solver.RelaxationRecovery;
+import de.legoshi.parkourcalc.core.anglesolver.solver.GoalWall;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardModel;
-import de.legoshi.parkourcalc.core.anglesolver.solver.SlpSolve;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpLinearModel;
@@ -521,49 +517,11 @@ public final class AngleSolverEngine {
     }
 
     public static JumpConstraint tightestGoalWall(List<JumpConstraint> constraints, Objective objective) {
-        return selectLegalGoalWall(constraints, objective, new String[1], true);
+        return GoalWall.tightest(constraints, objective);
     }
 
     public static JumpConstraint selectLegalGoalWall(List<JumpConstraint> constraints, Objective objective, String[] whyNot) {
-        return selectLegalGoalWall(constraints, objective, whyNot, false);
-    }
-
-    private static JumpConstraint selectLegalGoalWall(List<JumpConstraint> constraints, Objective objective,
-                                                      String[] whyNot, boolean allowTies) {
-        if (objective.isCustomAngle()) {
-            whyNot[0] = "the Angle goal has no goal wall on an axis";
-            return null;
-        }
-        boolean max = objective.sense == Objective.Sense.MAX;
-        JumpConstraint.Cmp want = max ? JumpConstraint.Cmp.GE : JumpConstraint.Cmp.LE;
-        JumpConstraint.Mode wantMode = objective.axis == JumpPhysicsInputs.Axis.X
-                ? JumpConstraint.Mode.X : JumpConstraint.Mode.Z;
-        List<JumpConstraint> cands = new ArrayList<>();
-        for (JumpConstraint c : constraints) {
-            if (c.t2 != null) continue;
-            if (c.mode != wantMode) continue;
-            if (c.t1 != objective.tick) continue;
-            if (c.cmp != want) continue;
-            if (c.name != null && (c.name.endsWith("eqLo") || c.name.endsWith("eqHi"))) continue;
-            cands.add(c);
-        }
-        if (cands.isEmpty()) {
-            whyNot[0] = "no qualifying goal wall on the objective axis at the objective tick";
-            return null;
-        }
-        JumpConstraint tight = cands.get(0);
-        for (JumpConstraint c : cands) {
-            if (max ? c.rhs > tight.rhs : c.rhs < tight.rhs) tight = c;
-        }
-        int ties = 0;
-        for (JumpConstraint c : cands) {
-            if (c.rhs == tight.rhs) ties++;
-        }
-        if (ties != 1 && !allowTies) {
-            whyNot[0] = "ambiguous goal wall: " + ties + " walls tie at " + tight.rhs;
-            return null;
-        }
-        return tight;
+        return GoalWall.selectLegal(constraints, objective, whyNot);
     }
 
     /** Test-only: the compiled spec for the current UI state, built synchronously (no worker thread). */
@@ -1147,9 +1105,9 @@ public final class AngleSolverEngine {
         currentGraphContext = ctx;
         progress.setStartSource(() -> new double[] {sc.startPos.x, sc.startPos.z});
         Candidate initial = adoptIncumbent(job, sc, spec, freeBox, ctx);
-        FacingPrefold chainPrefold = chainPrefold(spec, sc);
+        FacingPrefold chainPrefold = FacingPrefold.chainPrefold(spec, sc);
         double[] pinnedYaws = chainPrefold == null ? null : chainPrefold.pinnedYaws();
-        boolean singleHeading = singleHeadingChain(spec, sc, chainPrefold);
+        boolean singleHeading = FacingPrefold.singleHeadingChain(spec, sc, chainPrefold);
         Candidate cand;
         try {
             if (pinnedYaws != null && freeBox == null) {
@@ -1323,25 +1281,6 @@ public final class AngleSolverEngine {
     private static boolean hasUnsupportedDf(Job job) {
         for (ConstraintAt ca : job.uiConstraints) if (ca.c.isUnsupportedDf()) return true;
         return false;
-    }
-
-    private static FacingPrefold chainPrefold(JumpSpec spec, JumpPhysicsInputs sc) {
-        if (!JumpLinearModel.hasFacingWall(spec.constraints)) return null;
-        FacingPrefold pre = FacingPrefold.analyze(spec.constraints, new JumpLinearModel(sc));
-        if (pre == null || pre.isIdentity()) return null;
-        return pre;
-    }
-
-    public static boolean overconstrainedChain(JumpSpec spec, JumpPhysicsInputs sc) {
-        FacingPrefold pre = chainPrefold(spec, sc);
-        return (pre != null && pre.pinnedYaws() != null) || singleHeadingChain(spec, sc, pre);
-    }
-
-    private static boolean singleHeadingChain(JumpSpec spec, JumpPhysicsInputs sc, FacingPrefold pre) {
-        if (!JumpLinearModel.hasFacingWall(spec.constraints)) return false;
-        if (pre != null) return pre.varCount() == 1 && pre.pinnedTicks() == 0;
-        FacingPrefold.ChainScan scan = FacingPrefold.scannable(spec.constraints, new JumpLinearModel(sc));
-        return scan != null && scan.singleHeading();
     }
 
     public static final String OVERCONSTRAINED_LABEL = "Overconstrained";
@@ -2076,28 +2015,5 @@ public final class AngleSolverEngine {
 
     private static Objective.Sense sense(AngleSolverState.Goal g) {
         return g == AngleSolverState.Goal.MAX ? Objective.Sense.MAX : Objective.Sense.MIN;
-    }
-
-    public static double[] dualChain(ExactJumpModel em, JumpSpec spec, JumpPhysicsInputs sc,
-                                     AtomicBoolean cancel, String[] nameOut) {
-        return dualChain(em, spec, sc, cancel, nameOut, 0L);
-    }
-
-    public static double[] dualChain(ExactJumpModel em, JumpSpec spec, JumpPhysicsInputs sc,
-                                     AtomicBoolean cancel, String[] nameOut, long deadlineNanos) {
-        return dualChain(em, spec, sc, cancel, nameOut, deadlineNanos, new SlpSolve.Config());
-    }
-
-    public static double[] dualChain(ExactJumpModel em, JumpSpec spec, JumpPhysicsInputs sc,
-                                     AtomicBoolean cancel, String[] nameOut, long deadlineNanos,
-                                     SlpSolve.Config slpCfg) {
-        return dualChain(em, spec, sc, cancel, nameOut, deadlineNanos, slpCfg, new ClosedFormSolve.Config(), null);
-    }
-
-    public static double[] dualChain(ExactJumpModel em, JumpSpec spec, JumpPhysicsInputs sc,
-                                     AtomicBoolean cancel, String[] nameOut, long deadlineNanos,
-                                     SlpSolve.Config slpCfg, ClosedFormSolve.Config cfCfg, ClosestMiss miss) {
-        return RecoveryLadder.solve(em, spec, sc, cancel, nameOut, deadlineNanos, slpCfg, cfCfg,
-                new RelaxationRecovery.Config(), miss);
     }
 }
