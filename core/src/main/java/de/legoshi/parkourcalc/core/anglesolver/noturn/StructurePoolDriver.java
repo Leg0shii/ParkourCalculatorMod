@@ -96,14 +96,11 @@ public final class StructurePoolDriver {
     private final Progress progress;
 
     NoTurnProblem problem;
-    private NoTurnModel nt;
     private int n;
     boolean maximize;
     boolean objAxisX;
     int objTick;
-    private int objAxis;
 
-    private double refX, refZ;
     double loShiftX, hiShiftX, loShiftZ, hiShiftZ;
 
     private Group[] groups;
@@ -127,11 +124,6 @@ public final class StructurePoolDriver {
 
     private double[] cosG;
     private double[] sinG;
-
-    private int[] evG;
-    private double[] evV;
-    private double[] evO;
-    private int evCount;
 
     private int[] slotRun;
     private int[] slotNo;
@@ -233,7 +225,7 @@ public final class StructurePoolDriver {
 
     public void prepare(NoTurnProblem problem) {
         this.problem = problem;
-        this.nt = new NoTurnModel(problem);
+        NoTurnModel nt = new NoTurnModel(problem);
         this.n = problem.n;
         this.baseCombos = problem.baseCombos();
         this.baseSprint = problem.baseSprint();
@@ -241,10 +233,10 @@ public final class StructurePoolDriver {
         this.maximize = obj.sense == Objective.Sense.MAX;
         this.objAxisX = obj.axis == JumpPhysicsInputs.Axis.X;
         this.objTick = obj.tick;
-        this.objAxis = objAxisX ? 0 : 1;
+        int objAxis = objAxisX ? 0 : 1;
 
-        this.refX = problem.refStart().x;
-        this.refZ = problem.refStart().z;
+        double refX = problem.refStart().x;
+        double refZ = problem.refStart().z;
         if (problem.freeBox != null) {
             loShiftX = problem.freeBox.pxLo - refX;
             hiShiftX = problem.freeBox.pxHi - refX;
@@ -338,11 +330,6 @@ public final class StructurePoolDriver {
             cosG[g] = StrictMath.cos(th);
             sinG[g] = StrictMath.sin(th);
         }
-
-        int cap = 3 * cfg.diskGrid + 16;
-        this.evG = new int[cap];
-        this.evV = new double[cap];
-        this.evO = new double[cap];
 
         this.slotRun = new int[NoTurnKeys.COUNT];
         this.slotNo = new int[NoTurnKeys.COUNT];
@@ -729,23 +716,17 @@ public final class StructurePoolDriver {
 
     private void evalAt(int g, double objA, double objB) {
         double v = evalTheta(cosG[g], sinG[g], objA, objB);
-        int i = evCount++;
-        evG[i] = g;
-        evV[i] = v;
         if (v < lastMinViol || (v == lastMinViol && g < minViolCenter)) {
             lastMinViol = v;
             minViolCenter = g;
         }
         if (v <= 0.0) {
             double o = diskLastObj;
-            evO[i] = o;
             boolean better = maximize ? o > bestObjVal : o < bestObjVal;
             if (better || (o == bestObjVal && (bestObjCenter < 0 || g < bestObjCenter))) {
                 bestObjVal = o;
                 bestObjCenter = g;
             }
-        } else {
-            evO[i] = Double.NaN;
         }
     }
 
@@ -775,7 +756,6 @@ public final class StructurePoolDriver {
         int N = cfg.diskGrid;
         int s1 = Math.max(1, cfg.diskCoarseStride);
         int s2 = Math.max(1, cfg.diskMidStride);
-        evCount = 0;
         resetCenters();
         for (int g = 0; g < N; g += s1) evalAt(g, objA, objB);
         if (lastMinViol <= cfg.diskEarlyOutViol) {
@@ -927,10 +907,6 @@ public final class StructurePoolDriver {
 
     private int effMaxEdges() {
         return scoreLevel >= 0 ? scoreLevel : cfg.maxEdges;
-    }
-
-    private boolean freeChange(int combo) {
-        return freeChange(cfg, combo);
     }
 
     private static boolean freeChange(Config cfg, int combo) {
@@ -1801,7 +1777,6 @@ public final class StructurePoolDriver {
             "jump angle on every jump"};
 
     private NoTurnResult runRounds(NoTurnProblem problem, SolverGraph graph, long start) {
-        prepare(problem);
         NoTurnProblem[] structures = {problem, NoTurnProblem.fromJaLast(problem.baseSpec, model),
                 NoTurnProblem.from(problem.baseSpec, model, true)};
         int threads = Math.max(1, NoTurnParallel.resolveThreads(cfg.threads));
