@@ -59,6 +59,7 @@ public final class CertifiedBnb {
         public Double seedPx;
         public Double seedPz;
         public boolean homotopy;
+        public boolean probeGates = true;
     }
 
     public static final class Result {
@@ -601,8 +602,10 @@ public final class CertifiedBnb {
 
         double val = 0.0;
         double magnitude = 0.0;
+        double[] supports = new double[s.n];
         for (int t = 0; t < s.n; t++) {
             double sup = s.geom.support(t, gxv[t], gzv[t], loDeg(nd, t), hiDeg(nd, t));
+            supports[t] = sup;
             val += sup;
             magnitude += Math.abs(sup);
         }
@@ -637,7 +640,8 @@ public final class CertifiedBnb {
             magnitude += allowance;
         }
         boolean empty = val < floor - (CERT_EPS * (1.0 + Math.abs(floor)) + EMPTY_ROUNDING_REL * magnitude);
-        double score = val + (s.max ? cp : -cp);
+        double dualValue = val + (s.max ? cp : -cp);
+        double score = dualValue;
         if (score > nd.score) score = nd.score;
         nd.score = score;
         if (SolverTrace.on()) {
@@ -685,6 +689,16 @@ public final class CertifiedBnb {
             }
         }
         if (s.cfg.mode == Mode.FIRST_FEASIBLE && s.incYaws != null) return null;
+
+        if (s.cfg.probeGates && iv.anyFree && s.incYaws != null && decPath != null && nd.depth == 0) {
+            Node settled = settleGates(s, nd, iv, lin, cx, cz, rows, boxStart, lambda, gxv, gzv, supports,
+                    dualValue, decPath, decZx, decZz);
+            if (settled != null) {
+                List<Node> requeued = new ArrayList<Node>(1);
+                requeued.add(settled);
+                return requeued;
+            }
+        }
 
         if (s.ties == null) {
             boolean allNarrow = true;
@@ -758,8 +772,18 @@ public final class CertifiedBnb {
 
     private static double impulseAllowance(Search s, Intervals iv, double[] cx, double[] cz,
                                            List<JumpLinearModel.Wall> rows, int trajectoryRows, double[] lambda) {
-        double[] tx = cx.clone();
-        double[] tz = cz.clone();
+        double[] tx = new double[s.n];
+        double[] tz = new double[s.n];
+        trajectoryCostates(s, cx, cz, rows, trajectoryRows, lambda, tx, tz);
+        double allowance = 0.0;
+        for (int t = 0; t < s.n; t++) allowance += impulseReach(s, iv, t, tx[t], tz[t]);
+        return allowance;
+    }
+
+    private static void trajectoryCostates(Search s, double[] cx, double[] cz, List<JumpLinearModel.Wall> rows,
+                                           int trajectoryRows, double[] lambda, double[] tx, double[] tz) {
+        System.arraycopy(cx, 0, tx, 0, s.n);
+        System.arraycopy(cz, 0, tz, 0, s.n);
         for (int j = 0; j < trajectoryRows && j < lambda.length; j++) {
             JumpLinearModel.Wall w = rows.get(j);
             double lj = w.eq ? lambda[j] : Math.max(lambda[j], 0.0);
@@ -767,9 +791,79 @@ public final class CertifiedBnb {
             if (w.coefX != null) for (int t = 0; t < w.coefX.length && t < s.n; t++) tx[t] -= lj * w.coefX[t];
             if (w.coefZ != null) for (int t = 0; t < w.coefZ.length && t < s.n; t++) tz[t] -= lj * w.coefZ[t];
         }
-        double allowance = 0.0;
-        for (int t = 0; t < s.n; t++) allowance += impulseReach(s, iv, t, tx[t], tz[t]);
-        return allowance;
+    }
+
+    private static Node settleGates(Search s, Node nd, Intervals iv, JumpLinearModel lin, double[] cx, double[] cz,
+                                    List<JumpLinearModel.Wall> rows, int trajectoryRows, double[] lambda,
+                                    double[] gxv, double[] gzv, double[] supports, double dualValue,
+                                    ForwardPath decPath, boolean[] decZx, boolean[] decZz) {
+        double[] tx = new double[s.n];
+        double[] tz = new double[s.n];
+        trajectoryCostates(s, cx, cz, rows, trajectoryRows, lambda, tx, tz);
+        double[] lo = new double[s.n];
+        double[] hi = new double[s.n];
+        double firstStep = 1.0e-3;
+        for (int t = 0; t < s.n; t++) {
+            lo[t] = loDeg(nd, t);
+            hi[t] = hiDeg(nd, t);
+            firstStep = Math.max(firstStep, Math.max(Math.abs(cx[t]), Math.abs(cz[t])));
+        }
+        GateProbe probe = new GateProbe(s.geom, (t, ax, az) -> impulseReach(s, iv, t, ax, az), lo, hi, gxv, gzv,
+                tx, tz, supports, dualValue, s.incScore + CERT_EPS, firstStep);
+        byte[] ngx = null;
+        byte[] ngz = null;
+        double sector = s.thr / StrictMath.sqrt(2.0);
+        for (int t = 1; t < s.n; t++) {
+            if (s.perAxis) {
+                for (int axis = 0; axis < 2; axis++) {
+                    if (!(axis == 0 ? iv.freeX[t] : iv.freeZ[t])) continue;
+                    double d = axis == 0 ? iv.slackDx[t] : iv.slackDz[t];
+                    double v = axis == 0 ? decPath.velX[t] : decPath.velZ[t];
+                    byte natural = (axis == 0 ? decZx[t] : decZz[t]) ? ZERO : (v >= 0.0 ? POS : NEG);
+                    boolean settled;
+                    if (natural == ZERO) {
+                        double b = s.thr - d;
+                        settled = b > 1.0e-12 && probe.excludes(lin.keepAliveWall(axis, t, b, true))
+                                && probe.excludes(lin.keepAliveWall(axis, t, b, false));
+                    } else {
+                        settled = probe.excludes(lin.keepAliveWall(axis, t, -(s.thr + d), natural == NEG));
+                    }
+                    if (!settled) continue;
+                    if (ngx == null) {
+                        ngx = nd.gx.clone();
+                        ngz = nd.gz.clone();
+                    }
+                    if (axis == 0) ngx[t] = natural;
+                    else ngz[t] = natural;
+                }
+            } else if (iv.effX[t] == FREE) {
+                double vx = decPath.velX[t];
+                double vz = decPath.velZ[t];
+                byte natural;
+                boolean settled;
+                if (decZx[t]) {
+                    natural = ZERO;
+                    double bx = sector - iv.slackDx[t];
+                    double bz = sector - iv.slackDz[t];
+                    settled = bx > 1.0e-12 && bz > 1.0e-12
+                            && probe.excludes(lin.keepAliveWall(0, t, bx, true))
+                            && probe.excludes(lin.keepAliveWall(0, t, bx, false))
+                            && probe.excludes(lin.keepAliveWall(1, t, bz, true))
+                            && probe.excludes(lin.keepAliveWall(1, t, bz, false));
+                } else if (Math.abs(vx) >= Math.abs(vz)) {
+                    natural = vx >= 0.0 ? SECTOR_XP : SECTOR_XN;
+                    settled = probe.excludes(lin.keepAliveWall(0, t, -(s.thr + iv.slackDx[t]), vx < 0.0));
+                } else {
+                    natural = vz >= 0.0 ? SECTOR_ZP : SECTOR_ZN;
+                    settled = probe.excludes(lin.keepAliveWall(1, t, -(s.thr + iv.slackDz[t]), vz < 0.0));
+                }
+                if (!settled) continue;
+                if (ngx == null) ngx = nd.gx.clone();
+                ngx[t] = natural;
+            }
+        }
+        if (ngx == null) return null;
+        return new Node(s.nextId++, nd.iLo, nd.iHi, ngx, ngz, nd.depth, nd.score);
     }
 
     private static void addGateRows(Search s, Node nd, Intervals iv, JumpLinearModel lin,

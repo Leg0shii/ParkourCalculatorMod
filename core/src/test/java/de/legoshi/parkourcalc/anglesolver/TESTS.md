@@ -129,7 +129,17 @@ anglesolver/
                            #462 the infeasibility certificate: a wall 0.5 and 1e-3 past the tiny
                            instance's certified optimum is certified infeasible (exhausted tree, no
                            unresolved drop), a feasible instance never carries one, an expired
-                           deadline or a zero node cap leaves infeasibility uncertified
+                           deadline or a zero node cap leaves infeasibility uncertified;
+                           gate probing (SlowSolverTests): six seeded 3-tick jumps with carries near the
+                           inertia threshold certify the same optimum with and without probing (cases
+                           picked so that a wrong probe row, target or sector moves it), and on j021,
+                           loopmm-3jump-lands and j002 probing cuts the 150-node gap to under a quarter
+                           without the bound falling below a landing either run found
+  GateProbeTest.java       the one-row dual probe behind CertifiedBnb.settleGates: for random directions on
+                           1.8.9 and 1.21.5 the probe value at any multiplier is at least the objective of
+                           every sampled cell path on the row's side, and a side that holds a path is never
+                           excluded; the multiplier search reaches a drop a dense scan finds; the convex
+                           floor that stops a hopeless probe early never exceeds a convex function
   InertiaImpulseModelTest.java  the premise of the certified bound's inertia allowance and of the leaf's
                            exact inputs: on every solve capture without damage or flow, for random yaw
                            paths (constant, drifting, random, reversing), the byte-exact position at
