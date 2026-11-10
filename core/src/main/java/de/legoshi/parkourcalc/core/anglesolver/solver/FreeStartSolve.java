@@ -16,14 +16,15 @@ public final class FreeStartSolve {
         public double intervalMargin = 1.0e-3;
         public double invariantTol = 1.0e-6;
         public double[] jointMargins = {0.0, 1.0e-4, 3.0e-4, 6.0e-4, 1.2e-3, 2.5e-3, 5.0e-3, 1.0e-2};
-        public int jointPatternCap = 8;
-        public double jointPatternViolGate = 0.25;
-        public double jointMarginMax = 0.25;
-        public int jointBisectIters = 8;
-        public double jointWrapCloseGate = 0.01;
         public boolean jointWrapClose = true;
-        public double[] jointP0Ladder = {2.0e-3, 5.0e-4};
     }
+
+    private static final int JOINT_PATTERN_CAP = 8;
+    private static final double JOINT_PATTERN_VIOL_GATE = 0.25;
+    private static final double JOINT_MARGIN_MAX = 0.25;
+    private static final int JOINT_BISECT_ITERS = 8;
+    private static final double JOINT_WRAP_CLOSE_GATE = 0.01;
+    private static final double[] JOINT_P0_LADDER = {2.0e-3, 5.0e-4};
 
     private static final double[] JOINT_RECOVERY_FRACTIONS = {0.5, 0.25, 0.75, 0.0};
     private static final long JOINT_WRAP_CLOSE_NANOS = 6_000_000_000L;
@@ -231,10 +232,10 @@ public final class FreeStartSolve {
         if (scan0 != null) arcThetas = prefixArcThetas(exact, spec, refSc, box, scan0);
 
         JointBest overall = new JointBest();
-        for (int rung = 0; rung <= cfg.jointP0Ladder.length; rung++) {
+        for (int rung = 0; rung <= JOINT_P0_LADDER.length; rung++) {
             if (cancel != null && cancel.get()) return null;
             if (past(deadlineNanos)) break;
-            double smooth = rung == 0 ? CostateDualSolver.P0_SMOOTH_DEFAULT : cfg.jointP0Ladder[rung - 1];
+            double smooth = rung == 0 ? CostateDualSolver.P0_SMOOTH_DEFAULT : JOINT_P0_LADDER[rung - 1];
             if (rung > 0 && SolverTrace.on()) SolverTrace.log("FREE", "joint p0 rung smooth=%.1e", smooth);
             Result r = jointAttempt(exact, spec, base, box, cbox, refSc, refX, refZ, feasTol, cancel, cfg,
                     arcThetas, smooth, overall, deadlineNanos);
@@ -257,11 +258,11 @@ public final class FreeStartSolve {
                             overall.viol);
                 }
                 if (rv <= 0.1 && !past(deadlineNanos)) {
-                    Result rot = anchorRotationScan(exact, spec, base, box, overall.yaws, rv, feasTol, cancel,
+                    Result rot = anchorRotationScan(exact, spec, base, overall.yaws, rv, feasTol, cancel,
                             deadlineNanos);
                     if (rot != null) return rot;
                 }
-                if (cfg.jointWrapClose && overall.viol <= cfg.jointWrapCloseGate && !past(deadlineNanos)) {
+                if (cfg.jointWrapClose && overall.viol <= JOINT_WRAP_CLOSE_GATE && !past(deadlineNanos)) {
                     Result wr = jointWrapClose(exact, base, spec, box, overall.yaws, rs, feasTol, cancel,
                             deadlineNanos);
                     if (wr != null) return wr;
@@ -273,7 +274,7 @@ public final class FreeStartSolve {
     }
 
     private static Result anchorRotationScan(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs base,
-                                             StartBox box, double[] yaws, double rv0, double feasTol,
+                                             double[] yaws, double rv0, double feasTol,
                                              AtomicBoolean cancel, long deadlineNanos) {
         for (JumpConstraint c : spec.constraints) {
             if (c.mode == JumpConstraint.Mode.F && c.t2 == null) return null;
@@ -285,7 +286,7 @@ public final class FreeStartSolve {
         for (double d = -45.0; d <= 45.0; d += 0.25) {
             if (cancel != null && cancel.get()) return null;
             if (past(deadlineNanos)) return null;
-            Result r = rotatedCertify(exact, spec, base, box, yaws, d, feasTol, cancel, cfg, scan);
+            Result r = rotatedCertify(exact, spec, base, yaws, d, feasTol, cancel, cfg, scan);
             if (r != null && r.feasible) return r;
             if (scan[0] < bestRv) {
                 bestRv = scan[0];
@@ -297,7 +298,7 @@ public final class FreeStartSolve {
             for (int k = -10; k <= 10; k++) {
                 if (cancel != null && cancel.get()) return null;
                 if (past(deadlineNanos)) return null;
-                Result r = rotatedCertify(exact, spec, base, box, yaws, center + k * refine, feasTol, cancel, cfg, scan);
+                Result r = rotatedCertify(exact, spec, base, yaws, center + k * refine, feasTol, cancel, cfg, scan);
                 if (r != null && r.feasible) return r;
                 if (scan[0] < bestRv) {
                     bestRv = scan[0];
@@ -311,7 +312,7 @@ public final class FreeStartSolve {
         return null;
     }
 
-    private static Result rotatedCertify(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs base, StartBox box,
+    private static Result rotatedCertify(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs base,
                                          double[] yaws, double d, double feasTol, AtomicBoolean cancel,
                                          Config cfg, double[] scan) {
         scan[0] = Double.POSITIVE_INFINITY;
@@ -352,13 +353,13 @@ public final class FreeStartSolve {
             overall.viol = freeBest.viol;
             overall.yaws = freeBest.yaws;
         }
-        if (freeBest.yaws == null || freeBest.viol > cfg.jointPatternViolGate) return null;
+        if (freeBest.yaws == null || freeBest.viol > JOINT_PATTERN_VIOL_GATE) return null;
 
         java.util.ArrayDeque<boolean[][]> queue = new java.util.ArrayDeque<boolean[][]>();
         java.util.Set<String> seen = new java.util.HashSet<String>();
         enqueuePattern(queue, seen, refSc, exact, freeBest.yaws);
         int tried = 0;
-        while (!queue.isEmpty() && tried < cfg.jointPatternCap) {
+        while (!queue.isEmpty() && tried < JOINT_PATTERN_CAP) {
             if (cancel != null && cancel.get()) return null;
             if (past(deadlineNanos)) return null;
             boolean[][] pat = queue.poll();
@@ -378,7 +379,7 @@ public final class FreeStartSolve {
                     overall.viol = best.viol;
                     overall.yaws = best.yaws;
                 }
-                if (best.viol <= cfg.jointPatternViolGate) {
+                if (best.viol <= JOINT_PATTERN_VIOL_GATE) {
                     enqueuePattern(queue, seen, refSc, exact, best.yaws);
                 }
             }
@@ -655,13 +656,13 @@ public final class FreeStartSolve {
         }
         double[] warm = probe.lambda;
         double lo = 0.0;
-        double hi = Math.min(cfg.jointMarginMax, Math.max(0.0, pairCap));
+        double hi = Math.min(JOINT_MARGIN_MAX, Math.max(0.0, pairCap));
         CostateDualSolver.Result rHi = solver.solve(hi, warm);
         if (rHi != null && !solver.lastStalled) {
             lo = hi;
             warm = rHi.lambda;
         } else {
-            for (int i = 0; i < cfg.jointBisectIters; i++) {
+            for (int i = 0; i < JOINT_BISECT_ITERS; i++) {
                 if (cancel != null && cancel.get()) return null;
                 double mid = 0.5 * (lo + hi);
                 CostateDualSolver.Result rm = solver.solve(mid, warm);
@@ -728,7 +729,7 @@ public final class FreeStartSolve {
                 bestViol = viol;
                 bestYaws = yaws;
             }
-            if (passBest != null && viol < passBest.viol) {
+            if (viol < passBest.viol) {
                 passBest.viol = viol;
                 passBest.yaws = yaws;
             }
@@ -758,11 +759,11 @@ public final class FreeStartSolve {
 
     public static volatile String lastJointDebug = "";
 
-    public static double[] bestTranslate(JumpSpec spec, double[] gf, ForwardPath path, StartBox box) {
+    private static double[] bestTranslate(JumpSpec spec, double[] gf, ForwardPath path, StartBox box) {
         return bestTranslate(spec, gf, path, box, 0.0);
     }
 
-    public static double[] bestTranslate(JumpSpec spec, double[] gf, ForwardPath path, StartBox box, double margin) {
+    private static double[] bestTranslate(JumpSpec spec, double[] gf, ForwardPath path, StartBox box, double margin) {
         double loX = Double.NEGATIVE_INFINITY, hiX = Double.POSITIVE_INFINITY;
         double loZ = Double.NEGATIVE_INFINITY, hiZ = Double.POSITIVE_INFINITY;
         for (JumpConstraint c : spec.constraints) {
@@ -783,13 +784,12 @@ public final class FreeStartSolve {
                 else { loZ = Math.max(loZ, b); hiZ = Math.min(hiZ, b); }
             }
         }
-        Objective obj = spec.objective;
-        double dx = pickBest(loX, hiX, box.pxLo - path.posX[0], box.pxHi - path.posX[0], obj.translationGradX());
-        double dz = pickBest(loZ, hiZ, box.pzLo - path.posZ[0], box.pzHi - path.posZ[0], obj.translationGradZ());
+        double dx = pickBest(loX, hiX, box.pxLo - path.posX[0], box.pxHi - path.posX[0]);
+        double dz = pickBest(loZ, hiZ, box.pzLo - path.posZ[0], box.pzHi - path.posZ[0]);
         return new double[] {dx, dz};
     }
 
-    private static double pickBest(double lo, double hi, double bLo, double bHi, double grad) {
+    private static double pickBest(double lo, double hi, double bLo, double bHi) {
         double flo = Math.max(lo, bLo);
         double fhi = Math.min(hi, bHi);
         if (flo <= fhi) return 0.5 * (flo + fhi);

@@ -108,7 +108,7 @@ public final class GateFoldFinder {
                     ties, box, free, max, perAxis, thr, false, true, cancel, deadline.capIn(WARM_PROBE_NANOS));
             if (best.feasible()) return best;
             best = homotopyIncremental(best, exact, spec, sc, compiled, ties, baseline, box, free, max, perAxis,
-                    thr, false, cancel, deadline.capIn(HOMO_BUDGET_NANOS));
+                    thr, cancel, deadline.capIn(HOMO_BUDGET_NANOS));
             if (best.feasible()) return best;
         }
         List<double[]> seeds = buildSeeds(exact, spec, sc, ties, baseline, cancel, deadline);
@@ -128,15 +128,15 @@ public final class GateFoldFinder {
         Result best = evalSeed(exact, sc, compiled, spec, baseline, box, free, optimize, max);
         List<double[]> seeds = buildSeeds(exact, spec, sc, ties, baseline, cancel, deadline);
         if (canHomo) {
-            List<double[]> homo = homotopySeeds(exact, spec, sc, ties, baseline, box, free, perAxis, thr,
+            List<double[]> homo = homotopySeeds(spec, sc, ties, baseline, box, free, perAxis, thr,
                     cancel, deadline.capIn(HOMO_BUDGET_NANOS));
             for (double[] hy : homo) {
                 best = betterFeas(best, evalSeed(exact, sc, compiled, spec, hy, box, free, optimize, max), max);
             }
             if (stopOnFeasible && !homo.isEmpty()) {
                 homo.sort((a, b) -> Double.compare(
-                        evalAbsolute(exact, sc, compiled, spec, a, box, free).viol,
-                        evalAbsolute(exact, sc, compiled, spec, b, box, free).viol));
+                        evalAbsolute(exact, sc, compiled, spec, a, box).viol,
+                        evalAbsolute(exact, sc, compiled, spec, b, box).viol));
                 int cap = Math.min(homo.size(), HOMO_SEED_CAP);
                 seeds.addAll(0, new ArrayList<double[]>(homo.subList(0, cap)));
             }
@@ -148,7 +148,7 @@ public final class GateFoldFinder {
     private static Result evalSeed(ExactJumpModel exact, JumpPhysicsInputs sc, JumpConstraintCompiler.Compiled compiled,
                                    JumpSpec spec, double[] yaws, StartBox box, boolean free, boolean optimize,
                                    boolean max) {
-        Result r = evalAbsolute(exact, sc, compiled, spec, yaws, box, free);
+        Result r = evalAbsolute(exact, sc, compiled, spec, yaws, box);
         return betterFeas(r, translatePolish(exact, sc, compiled, spec, yaws, box, free, optimize, max), max);
     }
 
@@ -213,7 +213,6 @@ public final class GateFoldFinder {
                                         JumpConstraintCompiler.Compiled compiled, YawTies ties, Result start,
                                         StartBox box, boolean free, boolean max, boolean optimize,
                                         AtomicBoolean cancel, WorkDeadline deadline) {
-        int n = sc.numTicks;
         int dims = ties.dims();
         double[] red = ties.reduce(start.yawsDeg);
         double px = start.px;
@@ -353,7 +352,7 @@ public final class GateFoldFinder {
         return Angles.wrapAll(theta);
     }
 
-    private static List<double[]> homotopySeeds(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc,
+    private static List<double[]> homotopySeeds(JumpSpec spec, JumpPhysicsInputs sc,
                                                 YawTies ties, double[] baseline, StartBox box, boolean free,
                                                 boolean perAxis, double realThr, AtomicBoolean cancel,
                                                 WorkDeadline deadline) {
@@ -380,7 +379,7 @@ public final class GateFoldFinder {
     private static Result homotopyIncremental(Result best, ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc,
                                               JumpConstraintCompiler.Compiled compiled, YawTies ties, double[] baseline,
                                               StartBox box, boolean free, boolean max, boolean perAxis, double thr,
-                                              boolean optimize, AtomicBoolean cancel, WorkDeadline deadline) {
+                                              AtomicBoolean cancel, WorkDeadline deadline) {
         double refPx = box != null ? box.px : sc.startPos.x;
         double refPz = box != null ? box.pz : sc.startPos.z;
         JumpLinearModel linFull = new JumpLinearModel(sc, null, null);
@@ -395,20 +394,20 @@ public final class GateFoldFinder {
             double[] red = ties.reduce(wrapped);
             if (isNovel(reducedKept, red)) {
                 reducedKept.add(red);
-                best = betterFeas(best, evalSeed(exact, sc, compiled, spec, wrapped, box, free, optimize, max), max);
+                best = betterFeas(best, evalSeed(exact, sc, compiled, spec, wrapped, box, free, false, max), max);
                 if (best != null && best.feasible()) return best;
                 pending.add(wrapped);
             }
             boolean checkpoint = si + 1 == HOMO_WARM_STARTS || si + 1 == starts.size();
             if (checkpoint && !pending.isEmpty()) {
                 pending.sort((a, b) -> Double.compare(
-                        evalAbsolute(exact, sc, compiled, spec, a, box, free).viol,
-                        evalAbsolute(exact, sc, compiled, spec, b, box, free).viol));
+                        evalAbsolute(exact, sc, compiled, spec, a, box).viol,
+                        evalAbsolute(exact, sc, compiled, spec, b, box).viol));
                 int cap = Math.min(pending.size(), HOMO_SEED_CAP);
                 List<double[]> top = new ArrayList<double[]>(pending.subList(0, cap));
                 pending.subList(0, cap).clear();
                 best = enumerateSeeds(top, best, exact, spec, sc, compiled, ties, box, free, max, perAxis, thr,
-                        optimize, true, cancel, deadline);
+                        false, true, cancel, deadline);
                 if (best != null && best.feasible()) return best;
             }
         }
@@ -598,7 +597,7 @@ public final class GateFoldFinder {
         double tr = TR_START;
         Result best = null;
         double bestSpec = Double.POSITIVE_INFINITY;
-        double curMerit = merit(exact, sc, compiled, spec, theta, px, pz, forcedTicks, exact.inertiaThreshold());
+        double curMerit = merit(exact, sc, compiled, theta, px, pz, forcedTicks, exact.inertiaThreshold());
         int stall = 0;
 
         for (int it = 0; it < SLP_ITERS; it++) {
@@ -625,7 +624,7 @@ public final class GateFoldFinder {
                 cpx = box.clampX(px + d[dims] * START_SCALE);
                 cpz = box.clampZ(pz + d[dims + 1] * START_SCALE);
             }
-            double candMerit = merit(exact, sc, compiled, spec, cand, cpx, cpz, forcedTicks, exact.inertiaThreshold());
+            double candMerit = merit(exact, sc, compiled, cand, cpx, cpz, forcedTicks, exact.inertiaThreshold());
             double step = maxStep(d, vars);
             if (candMerit < curMerit - 1.0e-12) {
                 theta = cand;
@@ -747,7 +746,7 @@ public final class GateFoldFinder {
     }
 
     private static double merit(ExactJumpModel exact, JumpPhysicsInputs sc,
-                                JumpConstraintCompiler.Compiled compiled, JumpSpec spec, double[] theta,
+                                JumpConstraintCompiler.Compiled compiled, double[] theta,
                                 double px, double pz, int[] forced, double thr) {
         JumpPhysicsInputs rep = sc.pinnedAt(px, pz);
         double[] gf = rep.toGameFacings(Angles.wrapAll(theta));
@@ -779,9 +778,9 @@ public final class GateFoldFinder {
 
     private static Result evalAbsolute(ExactJumpModel exact, JumpPhysicsInputs sc,
                                        JumpConstraintCompiler.Compiled compiled, JumpSpec spec, double[] yaws,
-                                       StartBox box, boolean free) {
-        double px = free ? box.px : (box != null ? box.px : sc.startPos.x);
-        double pz = free ? box.pz : (box != null ? box.pz : sc.startPos.z);
+                                       StartBox box) {
+        double px = box != null ? box.px : sc.startPos.x;
+        double pz = box != null ? box.pz : sc.startPos.z;
         double v = specViol(exact, sc, compiled, yaws, px, pz);
         return new Result(Angles.wrapAll(yaws), px, pz, objOf(exact, sc, spec, yaws, px, pz), v);
     }
