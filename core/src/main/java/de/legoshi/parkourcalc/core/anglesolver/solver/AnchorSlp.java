@@ -98,6 +98,10 @@ public final class AnchorSlp {
             this.trustUnits = trustUnits;
             this.names = names;
         }
+
+        RowSet withViol(double[] replaced) {
+            return new RowSet(rows, replaced, free, cx0, wx0, cz0, wz0, n, cols, ux, uz, yawScale, trustUnits, names);
+        }
     }
 
     static RowSet assembleRows(ExactJumpModel exact, JumpLinearModel lin, JumpSpec spec,
@@ -304,7 +308,7 @@ public final class AnchorSlp {
     public static Outcome polish(ExactJumpModel exact, JumpSpec spec, JumpConstraintCompiler.Compiled compiled,
                           JumpPhysicsInputs sc, JumpLinearModel lin, double[] yaws0, double[] gf0,
                           ForwardPath path0, double px0, double pz0, double viol0,
-                          List<FoldReplayDriver.Round> roundsSink, boolean max) {
+                          List<FoldReplayDriver.Round> roundsSink) {
         StartBox box = sc.startBox;
         boolean free = box != null && box.startFree();
         int n = lin.n;

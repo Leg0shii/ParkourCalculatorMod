@@ -236,7 +236,7 @@ public final class FoldReplayDriver {
                 if (viol >= SLP_TRIGGER) {
                     int pre = rounds.size();
                     AnchorSlp.Outcome oc = AnchorSlp.polish(exact, spec, compiled, sc, lin,
-                            yaws, gf, path, px, pz, viol, rounds, max);
+                            yaws, gf, path, px, pz, viol, rounds);
                     for (int i = pre; i < rounds.size(); i++) best = pickBetter(best, rounds.get(i), max);
                     if (oc.landed != null) {
                         landed = true;
@@ -412,7 +412,7 @@ public final class FoldReplayDriver {
         if (viol > 0.0) {
             int pre = rounds.size();
             AnchorSlp.Outcome oc = AnchorSlp.polish(exact, spec, compiled, sc, lin, yaws, gf, path,
-                    px, pz, viol, rounds, max);
+                    px, pz, viol, rounds);
             for (int i = pre; i < rounds.size(); i++) best = pickBetter(best, rounds.get(i), max);
             yaws = oc.landed != null ? oc.landed.yawsDeg : oc.yaws;
             gf = oc.gf;

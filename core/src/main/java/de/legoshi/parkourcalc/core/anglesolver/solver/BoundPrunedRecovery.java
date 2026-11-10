@@ -379,7 +379,7 @@ public final class BoundPrunedRecovery {
         if (vel.isEmpty()) return;
         Double bound = rootBound(spec, lin, vel);
         if (bound == null) return;
-        cands.add(new Pattern(label, lin, vel, true, bound, k, zx && zz ? 0 : (zx ? 0 : 1), zeroX, zeroZ));
+        cands.add(new Pattern(label, lin, vel, true, bound, k, zx ? 0 : 1, zeroX, zeroZ));
     }
 
     /** Patterns that hold the objective axis out of the inertia band at a momentum reversal, the branch

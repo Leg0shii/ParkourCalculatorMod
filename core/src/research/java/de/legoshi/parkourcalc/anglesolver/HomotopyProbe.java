@@ -154,8 +154,7 @@ public class HomotopyProbe {
                 java.util.List<FoldReplayDriver.Round> sink = new java.util.ArrayList<>();
                 de.legoshi.parkourcalc.core.anglesolver.solver.AnchorSlp.Outcome oc =
                         de.legoshi.parkourcalc.core.anglesolver.solver.AnchorSlp.polish(model, spec, comp,
-                                sc, plin2, pert, pgf, pfp, px, pz, pviol, sink,
-                                spec.objective.sense == de.legoshi.parkourcalc.core.anglesolver.solver.Objective.Sense.MAX);
+                                sc, plin2, pert, pgf, pfp, px, pz, pviol, sink);
                 for (FoldReplayDriver.Round r : sink) {
                     System.out.printf("HOM POLISH slp[%d] obj=%.9f viol=%.6g%n", r.index, r.objective, r.maxViolation);
                 }

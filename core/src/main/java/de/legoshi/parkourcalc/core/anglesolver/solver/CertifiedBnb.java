@@ -524,13 +524,8 @@ public final class CertifiedBnb {
         boolean[] zx = new boolean[s.n];
         boolean[] zz = new boolean[s.n];
         for (int t = 0; t < s.n; t++) {
-            if (s.perAxis) {
-                zx[t] = iv.effX[t] == ZERO;
-                zz[t] = iv.effZ[t] == ZERO;
-            } else {
-                zx[t] = iv.effX[t] == ZERO;
-                zz[t] = zx[t];
-            }
+            zx[t] = iv.effX[t] == ZERO;
+            zz[t] = s.perAxis ? iv.effZ[t] == ZERO : zx[t];
         }
         JumpLinearModel lin = new JumpLinearModel(s.sc, zx, zz, true);
         double[] cx = new double[s.n];
@@ -745,8 +740,8 @@ public final class CertifiedBnb {
         double sector = s.thr / StrictMath.sqrt(2.0);
         for (int t = 1; t < s.n; t++) {
             if (s.perAxis) {
-                addAxisGateRows(s, iv, lin, rows, 0, t, iv.effX[t], nd.gx[t], iv.slackDx[t]);
-                addAxisGateRows(s, iv, lin, rows, 1, t, iv.effZ[t], nd.gz[t], iv.slackDz[t]);
+                addAxisGateRows(s, lin, rows, 0, t, iv.effX[t], nd.gx[t], iv.slackDx[t]);
+                addAxisGateRows(s, lin, rows, 1, t, iv.effZ[t], nd.gz[t], iv.slackDz[t]);
             } else {
                 byte st = iv.effX[t];
                 byte fixed = nd.gx[t];
@@ -772,7 +767,7 @@ public final class CertifiedBnb {
         }
     }
 
-    private static void addAxisGateRows(Search s, Intervals iv, JumpLinearModel lin,
+    private static void addAxisGateRows(Search s, JumpLinearModel lin,
                                         List<JumpLinearModel.Wall> rows, int axis, int t, byte st,
                                         byte fixed, double d) {
         if (st == ZERO) {
@@ -1195,7 +1190,7 @@ public final class CertifiedBnb {
         for (int t = 1; t < s.n; t++) {
             if (s.perAxis) {
                 if (iv.freeX[t]) {
-                    double imp = gateImpactOf(s, iv.injX[t], lin, t, 0, decPath, decZx, nd.gx[t]);
+                    double imp = gateImpactOf(s, iv.injX[t], lin, t, 0, decPath);
                     if (imp > gateImpact) {
                         gateImpact = imp;
                         gateAxis = 0;
@@ -1203,7 +1198,7 @@ public final class CertifiedBnb {
                     }
                 }
                 if (iv.freeZ[t]) {
-                    double imp = gateImpactOf(s, iv.injZ[t], lin, t, 1, decPath, decZz, nd.gz[t]);
+                    double imp = gateImpactOf(s, iv.injZ[t], lin, t, 1, decPath);
                     if (imp > gateImpact) {
                         gateImpact = imp;
                         gateAxis = 1;
@@ -1211,7 +1206,7 @@ public final class CertifiedBnb {
                     }
                 }
             } else if (iv.effX[t] == FREE) {
-                double imp = gateImpactOf(s, iv.injX[t] + iv.injZ[t], lin, t, 0, decPath, decZx, nd.gx[t]);
+                double imp = gateImpactOf(s, iv.injX[t] + iv.injZ[t], lin, t, 0, decPath);
                 if (imp > gateImpact) {
                     gateImpact = imp;
                     gateAxis = 0;
@@ -1310,16 +1305,14 @@ public final class CertifiedBnb {
     }
 
     private static double gateImpactOf(Search s, double inj, JumpLinearModel lin, int t, int axis,
-                                       ForwardPath decPath, boolean[] decZero, byte fixedState) {
+                                       ForwardPath decPath) {
         double band = 0.0;
         if (decPath != null) {
             double v = axis == 0 ? decPath.velX[t] : decPath.velZ[t];
             double av = Math.abs(v);
             if (av >= 0.25 * s.thr && av <= 4.0 * s.thr) band = 1.0;
-            if (t > 0) {
-                double pv = axis == 0 ? decPath.velX[t - 1] : decPath.velZ[t - 1];
-                if (pv * v < 0.0) band = Math.max(band, 1.0);
-            }
+            double pv = axis == 0 ? decPath.velX[t - 1] : decPath.velZ[t - 1];
+            if (pv * v < 0.0) band = Math.max(band, 1.0);
         }
         double coefScale = Math.abs(lin.coefAxis(axis, t, s.spec.objective.tick));
         return inj * (1.0 + coefScale) * (1.0 + band);

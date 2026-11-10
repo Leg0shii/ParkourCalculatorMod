@@ -243,7 +243,7 @@ public class WallHomotopyLadderTest {
         JumpLinearModel lin = new JumpLinearModel(sc2, zx, zz);
         List<FoldReplayDriver.Round> sink = new ArrayList<>();
         AnchorSlp.Outcome oc = AnchorSlp.polish(l.model, l.spec, comp, sc, lin, w.yaws, pgf, pfp,
-                w.px, w.pz, pviol, sink, l.spec.objective.sense == Objective.Sense.MAX);
+                w.px, w.pz, pviol, sink);
         assertNotNull(capture + " perturb " + perturbBuckets
                 + ": margins+SLP must land byte-exact from the perturbed witness anchor, best viol "
                 + oc.viol + " after " + sink.size() + " steps", oc.landed);

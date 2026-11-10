@@ -86,7 +86,7 @@ public final class BucketWalk {
         if (rs == null) return null;
         TrustRegionLp.Result p1 = TrustRegionLp.solve(rs.rows, rs.viol, null, WALK_W, true, 0.0, LP_MAX_ITER);
         if (p1 == null) return null;
-        return roundGuided(rs, p1.d, budget, Double.NaN, null);
+        return roundGuided(rs, p1.d, budget, null);
     }
 
     static IntStep objStep(ExactJumpModel exact, JumpLinearModel lin, JumpSpec spec, double[] yaws,
@@ -132,13 +132,10 @@ public final class BucketWalk {
         }
         double[] objMax = new double[rs.cols];
         for (int i = 0; i < rs.cols; i++) objMax[i] = -objRowNeg[i];
-        return roundGuided(new AnchorSlp.RowSet(rs.rows, shifted, rs.free, rs.cx0, rs.wx0, rs.cz0,
-                rs.wz0, rs.n, rs.cols, rs.ux, rs.uz, rs.yawScale, rs.trustUnits, rs.names),
-                p2.d, budget, 0.0, objMax);
+        return roundGuided(rs.withViol(shifted), p2.d, budget, objMax);
     }
 
-    private static IntStep roundGuided(AnchorSlp.RowSet rs, double[] d, int budget,
-                                       double minSlackReq, double[] objMax) {
+    private static IntStep roundGuided(AnchorSlp.RowSet rs, double[] d, int budget, double[] objMax) {
         int n = rs.n;
         int m = rs.rows.length;
         Integer[] order = new Integer[n];
@@ -255,7 +252,7 @@ public final class BucketWalk {
             if (objMax == null) {
                 score = smin - MOVE_TIE * cost;
             } else {
-                if (smin < minSlackReq) continue;
+                if (smin < 0.0) continue;
                 ds = 0.0;
                 if (rs.free) {
                     double dxCur = rs.wx0 != 0.0 ? -rs.cx0 * rs.trustUnits / rs.wx0 : 0.0;
