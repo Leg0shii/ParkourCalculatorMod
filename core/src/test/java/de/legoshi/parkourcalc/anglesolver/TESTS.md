@@ -104,6 +104,9 @@ anglesolver/
   DiskSocpKernelChordTest.java  fast-suite kernel coverage: two-axis ChordRow solves, the hardened
                            IPM jitter ladder, and the weak-duality infeasibility certificate
                            (FAIL_UNBOUNDED) that replaced the old fake-convergence
+  DiskSocpKernelCutoffTest.java  the dual cutoff of the certified B&B: a cutoff below the optimum leaves the
+                           solve bit-identical, one above it stops early (FAIL_CUTOFF) on a dual
+                           feasible point whose value is under the cutoff and still above the optimum
   FoldDriverEngineTest.java  #422 M1 engine-level gates through engine.solve() (driver wired as
                            primary recovery): j003 THOROUGH-10s in-deadline, j1150-noturn-inner
                            FAST solves (feasibility only, FAST has no objective bar), j154 FAST

@@ -30,6 +30,8 @@ public final class CertifiedBnb {
     private static final int HALF_TURN_IDX = McSineTable.SIZE / 2;
     private static final int ORDER_PASSES = 4;
     private static final double EMPTY_ROUNDING_REL = 1.0e-13;
+    private static final double CUTOFF_MARGIN = 1.0e-9;
+    private static final double FLOOR_CUTOFF_REL = 1.0e-6;
 
     private CertifiedBnb() {
     }
@@ -577,7 +579,18 @@ public final class CertifiedBnb {
         for (int t = 0; t < s.n; t++) mMagB[t] = s.geom.radiusUpper(t);
 
         long k0 = System.nanoTime();
-        DiskSocpKernel.Outcome oc = DiskSocpKernel.solveChords(s.n, cx, cz, mMagB, rows, s.freeP0, chords, nd.warm);
+        double cp = lin.objectiveConst(s.spec.objective);
+        double floor = relaxationFloor(s, cx, cz, mMagB);
+        double cutoff = floor - FLOOR_CUTOFF_REL * (1.0 + Math.abs(floor));
+        if (s.incYaws != null) {
+            double target = s.incScore + CERT_EPS - (s.max ? cp : -cp);
+            for (int t = 0; t < s.n; t++) {
+                if (iv.freeX[t]) target -= iv.injX[t] * Math.abs(cx[t]);
+                if (iv.freeZ[t]) target -= iv.injZ[t] * Math.abs(cz[t]);
+            }
+            cutoff = Math.max(cutoff, target - CUTOFF_MARGIN * (1.0 + Math.abs(target)));
+        }
+        DiskSocpKernel.Outcome oc = DiskSocpKernel.solveChords(s.n, cx, cz, mMagB, rows, s.freeP0, chords, nd.warm, cutoff);
         s.kernelSolves++;
         s.kernelNanos += System.nanoTime() - k0;
         double[] gxv;
@@ -586,7 +599,7 @@ public final class CertifiedBnb {
         double[] ux = null;
         double[] uz = null;
         int chordCount = chords.size();
-        boolean unbounded = oc.failCode == DiskSocpKernel.FAIL_UNBOUNDED;
+        boolean unbounded = oc.failCode == DiskSocpKernel.FAIL_UNBOUNDED || oc.failCode == DiskSocpKernel.FAIL_CUTOFF;
         if (oc.result != null) {
             gxv = oc.result.gx;
             gzv = oc.result.gz;
@@ -638,12 +651,11 @@ public final class CertifiedBnb {
             val += startX + startZ;
             magnitude += Math.abs(startX) + Math.abs(startZ);
         }
-        boolean empty = relaxationEmpty(s, cx, cz, mMagB, val, magnitude);
+        boolean empty = val < floor - (CERT_EPS * (1.0 + Math.abs(floor)) + EMPTY_ROUNDING_REL * magnitude);
         for (int t = 0; t < s.n; t++) {
             if (iv.freeX[t]) val += iv.injX[t] * Math.abs(cx[t]);
             if (iv.freeZ[t]) val += iv.injZ[t] * Math.abs(cz[t]);
         }
-        double cp = lin.objectiveConst(s.spec.objective);
         double score = val + (s.max ? cp : -cp);
         if (score > nd.score) score = nd.score;
         nd.score = score;
@@ -717,8 +729,7 @@ public final class CertifiedBnb {
         s.stuckScore = Math.max(s.stuckScore, nd.score);
     }
 
-    private static boolean relaxationEmpty(Search s, double[] cx, double[] cz, double[] mMagB, double dualValue,
-                                           double magnitude) {
+    private static double relaxationFloor(Search s, double[] cx, double[] cz, double[] mMagB) {
         double floor = 0.0;
         for (int t = 0; t < s.n; t++) floor -= mMagB[t] * StrictMath.hypot(cx[t], cz[t]);
         if (s.freeP0 != null) {
@@ -727,8 +738,7 @@ public final class CertifiedBnb {
             floor += hx >= 0.0 ? hx * s.freeP0.dvLoX : hx * s.freeP0.dvHiX;
             floor += hz >= 0.0 ? hz * s.freeP0.dvLoZ : hz * s.freeP0.dvHiZ;
         }
-        double margin = CERT_EPS * (1.0 + Math.abs(floor)) + EMPTY_ROUNDING_REL * magnitude;
-        return dualValue < floor - margin;
+        return floor;
     }
 
     private static JumpLinearModel.Wall boxRow(int n, int axis, int t, double sign, double bound, String name) {
