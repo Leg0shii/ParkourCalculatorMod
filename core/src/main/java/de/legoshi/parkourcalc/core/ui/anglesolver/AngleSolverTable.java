@@ -17,6 +17,7 @@ import de.legoshi.parkourcalc.core.ui.theme.ChipFlow;
 import de.legoshi.parkourcalc.core.ui.theme.Controls;
 import de.legoshi.parkourcalc.core.ui.theme.Fonts;
 import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
+import de.legoshi.parkourcalc.core.ui.util.TooltipUtil;
 import imgui.ImDrawList;
 import imgui.ImGui;
 import imgui.ImVec2;
@@ -50,9 +51,9 @@ public final class AngleSolverTable {
     private static final String[] INPUTS = {"Keep", "Force 45"};
     private static final String[] SPRINTS = {"Always", "Derive"};
     private static final String[] SPRINT_TIPS = {null,
-            "WARNING: derives this tick's sprint state from the current recorded path."
-                    + "The path is the source of truth here: a recording that hits a wall loses"
-                    + "sprint from that tick on, and the solve inherits it, so a broken path can"
+            "WARNING: derives this tick's sprint state from the current recorded path.\n"
+                    + "The path is the source of truth here: a recording that hits a wall loses\n"
+                    + "sprint from that tick on, and the solve inherits it, so a broken path can\n"
                     + "make a solvable segment report no solution until the route is re-recorded."};
 
     private final AngleSolverState state;
@@ -377,10 +378,15 @@ public final class AngleSolverTable {
                 if (!dragAlt) src.clearSlipperiness();
                 break;
             case STATE_MEDIUM:
-                dst.setMedium(src.getMedium());
-                dst.setSoulsandCells(src.getSoulsandCells());
+                if (src.overridesMedium()) {
+                    dst.setMedium(src.getMedium());
+                    dst.setSoulsandCells(src.getSoulsandCells());
+                }
                 dst.setFlowVector(src.getFlowVector());
-                if (!dragAlt) src.clearMedium();
+                if (!dragAlt) {
+                    src.clearMedium();
+                    src.clearFlow();
+                }
                 break;
             case STATE_DAMAGE:
                 dst.setDamage(true);
@@ -881,7 +887,10 @@ public final class AngleSolverTable {
                         case STATE_INPUTS: ov.clearInputs(); break;
                         case STATE_SPRINT: ov.clearSprint(); break;
                         case STATE_SLIP: ov.clearSlipperiness(); break;
-                        case STATE_MEDIUM: ov.clearMedium(); break;
+                        case STATE_MEDIUM:
+                            ov.clearMedium();
+                            ov.clearFlow();
+                            break;
                         case STATE_DAMAGE: ov.clearDamage(); break;
                         case STATE_ADD: ov.removeAdded(potion); break;
                         case STATE_REMOVE: ov.getRemoved().remove(potion); break;
@@ -1001,7 +1010,7 @@ public final class AngleSolverTable {
                 editorGrip(tick, i, c);
                 ImGui.tableNextColumn();
                 if (ImGui.checkbox("##on", c.isEnabled())) c.setEnabled(!c.isEnabled());
-                if (ImGui.isItemHovered()) ImGui.setTooltip(c.isEnabled() ? "Disable (kept, ignored by Solve)" : "Enable");
+                TooltipUtil.onHover(c.isEnabled() ? "Disable (kept, ignored by Solve)" : "Enable");
                 boolean dim = !c.isEnabled();
                 if (dim) ImGui.pushStyleVar(ImGuiStyleVar.Alpha, ImGui.getStyle().getAlpha() * 0.45f);
                 ImGui.tableNextColumn();
@@ -1012,13 +1021,13 @@ public final class AngleSolverTable {
                 ImGui.tableNextColumn();
                 if (c.getField() == Constraint.Field.DF && c.isUnsupportedDf()) {
                     ImGui.textDisabled(dfOpGlyph(c));
-                    if (ImGui.isItemHovered()) ImGui.setTooltip(dfTooltip(c));
+                    TooltipUtil.onHover(dfTooltip(c));
                 } else if (c.getField() == Constraint.Field.DF) {
                     opCombo.set(dfOpItemIndex(c));
                     if (Controls.combo("##dfop", opCombo, DF_OP_ITEMS, ImGui.getContentRegionAvail().x)) {
                         c.setOp(DF_OPS[opCombo.get()]);
                     }
-                    if (ImGui.isItemHovered()) ImGui.setTooltip(dfTooltip(c));
+                    TooltipUtil.onHover(dfTooltip(c));
                 } else {
                     opCombo.set(opItemIndex(c));
                     if (Controls.combo("##op", opCombo, OP_ITEMS, ImGui.getContentRegionAvail().x)) {
@@ -1035,7 +1044,7 @@ public final class AngleSolverTable {
                 ImGui.tableNextColumn();
                 if (c.getField() == Constraint.Field.DF && !c.isDirectionalDf()) {
                     ImGui.textDisabled(c.isUnsupportedDf() ? dfValueLabel(c) : "0");
-                    if (ImGui.isItemHovered()) ImGui.setTooltip(dfTooltip(c));
+                    TooltipUtil.onHover(dfTooltip(c));
                 } else {
                     renderConstraintValues(c);
                 }
@@ -1065,10 +1074,8 @@ public final class AngleSolverTable {
                 int v = refBuf.get();
                 c.setRefTick(v <= 0 ? null : v - 1);
             }
-            if (ImGui.isItemHovered()) {
-                ImGui.setTooltip("Reference tick: value is relative to " + c.getField().label
-                        + " at T# (0 = absolute)");
-            }
+            TooltipUtil.onHover("Reference tick: value is relative to " + c.getField().label
+                    + " at T# (0 = absolute)");
             ImGui.sameLine();
             if (c.isRelative()) {
                 ThemeManager.pushTextColor(ThemeManager.textMutedColor());
@@ -1083,10 +1090,8 @@ public final class AngleSolverTable {
             String otherName = c.getField() == Constraint.Field.DX ? "dZ" : "dX";
             String selfName = c.getField() == Constraint.Field.DX ? "dX" : "dZ";
             if (ImGui.checkbox(otherLabel, c.isVsOther())) c.setVsOther(!c.isVsOther());
-            if (ImGui.isItemHovered()) {
-                ImGui.setTooltip("Compare against " + otherName + " as magnitudes: |" + selfName + "| vs |" + otherName + "| + value."
-                        + " Collision resolves the larger-delta axis first (26.x).");
-            }
+            TooltipUtil.onHover("Compare against " + otherName + " as magnitudes: |" + selfName + "| vs |" + otherName + "| + value."
+                    + " Collision resolves the larger-delta axis first (26.x).");
             ImGui.sameLine();
             if (c.isVsOther()) {
                 ThemeManager.pushTextColor(ThemeManager.textMutedColor());
@@ -1237,9 +1242,7 @@ public final class AngleSolverTable {
             if (Controls.combo("##ovflow", flowBuf, flowItems, ImGui.getContentRegionAvail().x)) {
                 ov.setFlow(FlowDirection.values()[flowBuf.get()]);
             }
-            if (ImGui.isItemHovered()) {
-                ImGui.setTooltip(FLOW_TIP);
-            }
+            TooltipUtil.onHover(FLOW_TIP);
             ImGui.tableNextColumn();
         }
 
@@ -1249,9 +1252,7 @@ public final class AngleSolverTable {
             if (Controls.inputInt("##ovsandcells", soulsandCellsBuf, ImGui.getContentRegionAvail().x)) {
                 ov.setSoulsandCells(soulsandCellsBuf.get());
             }
-            if (ImGui.isItemHovered()) {
-                ImGui.setTooltip("Soulsand blocks the hitbox overlaps at the end of the tick; each one multiplies motion by 0.4 on 1.8.9/1.12.2. H fills this from the simulation.");
-            }
+            TooltipUtil.onHover("Soulsand blocks the hitbox overlaps at the end of the tick; each one multiplies motion by 0.4 on 1.8.9/1.12.2. H fills this from the simulation.");
             ImGui.tableNextColumn();
         }
 
@@ -1259,9 +1260,7 @@ public final class AngleSolverTable {
         if (Controls.checkbox("##ovdamage", ov.isDamage())) {
             ov.setDamage(!ov.isDamage());
         }
-        if (ImGui.isItemHovered()) {
-            ImGui.setTooltip(DAMAGE_TIP);
-        }
+        TooltipUtil.onHover(DAMAGE_TIP);
         ImGui.tableNextColumn();
         overrideTrailing(ov.overridesDamage(), "inherits default (none)", "ovdmr", ov::clearDamage);
 
