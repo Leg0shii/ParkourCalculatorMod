@@ -174,10 +174,10 @@ public final class FacingPrefold {
         for (JumpConstraint c : constraints) {
             if (c.mode != JumpConstraint.Mode.F) continue;
             if (c.t2 != null) {
-                if (c.cmp != JumpConstraint.Cmp.EQ && !(c.name != null && (c.name.endsWith("eqLo") || c.name.endsWith("eqHi")))) return false;
+                if (c.cmp != JumpConstraint.Cmp.EQ && !c.isEqHalf()) return false;
                 continue;
             }
-            if (c.name == null || !(c.name.endsWith("eqLo") || c.name.endsWith("eqHi"))) return false;
+            if (!c.isEqHalf()) return false;
         }
         return true;
     }
