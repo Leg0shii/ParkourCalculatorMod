@@ -128,8 +128,6 @@ public final class FreeStartSolve {
         return deadlineNanos > 0L && System.nanoTime() >= deadlineNanos;
     }
 
-    private static final int ORDER_ROUNDS = 16;
-
     public static Result solveJointBest(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
                                         Config cfg, long deadlineNanos) {
         JumpPhysicsInputs base = spec.asScenario();
@@ -153,7 +151,7 @@ public final class FreeStartSolve {
         boolean[] pinHi = new boolean[order.bounds().size()];
         Result least = null;
         double leastViol = Double.POSITIVE_INFINITY;
-        for (int round = 0; round < ORDER_ROUNDS; round++) {
+        for (int round = 0; round < YawOrder.ORDER_ROUNDS; round++) {
             if (cancel != null && cancel.get()) break;
             if (past(deadlineNanos)) break;
             JumpSpec work = new JumpSpec(base, order.withTies(stripped, tie, pinLo, pinHi), spec.objective);
@@ -167,7 +165,7 @@ public final class FreeStartSolve {
             }
             if (SolverTrace.on()) {
                 SolverTrace.log("FREE", "joint ordered round=%d ties=%s viol=%.3e feasible=%s worst=%s n=%d yaws=%d", round,
-                        flags(tie), viol, r.feasible, worstConstraint(exact, spec, r.yaws, r.startX, r.startZ),
+                        YawOrder.flags(tie), viol, r.feasible, worstConstraint(exact, spec, r.yaws, r.startX, r.startZ),
                         base.numTicks, r.yaws.length);
             }
             if (viol <= feasTol) return new Result(r.yaws, r.startX, r.startZ, true);
@@ -216,12 +214,6 @@ public final class FreeStartSolve {
             }
         }
         return name;
-    }
-
-    private static String flags(boolean[] f) {
-        StringBuilder sb = new StringBuilder();
-        for (boolean b : f) sb.append(b ? '1' : '0');
-        return sb.toString();
     }
 
     private static Result solveJointUnordered(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,

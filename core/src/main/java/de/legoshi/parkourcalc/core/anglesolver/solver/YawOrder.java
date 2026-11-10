@@ -9,6 +9,7 @@ public final class YawOrder {
     public static final double PIN_HALF_WIDTH = 1.0e-4;
     public static final double FLOAT_MARGIN_DEG = 3.0e-5;
     public static final double TIE_TOL = 1.5 * YawOrderDp.H;
+    static final int ORDER_ROUNDS = 16;
 
     public static final class Link {
         public final int hiTick;
@@ -114,6 +115,12 @@ public final class YawOrder {
             prev = y[t];
         }
         return y;
+    }
+
+    static String flags(boolean[] f) {
+        StringBuilder sb = new StringBuilder();
+        for (boolean b : f) sb.append(b ? '1' : '0');
+        return sb.toString();
     }
 
     public List<JumpConstraint> stripped(List<JumpConstraint> constraints) {

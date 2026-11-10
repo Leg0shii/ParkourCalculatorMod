@@ -122,8 +122,6 @@ public final class ClosedFormSolve {
     private static final double SCAN_ARC_TOL = 2.0e-3;
     private static final int SCAN_MAX_CANDIDATES = 240;
 
-    private static final int ORDER_ROUNDS = 16;
-
     private static Result optimizeReturning(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
                                             double[] margins, boolean ascending, Config cfg) {
         JumpPhysicsInputs sc = spec.asScenario();
@@ -155,11 +153,10 @@ public final class ClosedFormSolve {
         double bestObj = 0.0;
         Result least = null;
         int rounds = 0;
-        for (int round = 0; round < ORDER_ROUNDS; round++) {
+        for (int round = 0; round < YawOrder.ORDER_ROUNDS; round++) {
             if (cancel.get()) break;
             rounds++;
-            List<JumpConstraint> active = new ArrayList<JumpConstraint>(base);
-            addTies(active, order, tie, pinLo, pinHi);
+            List<JumpConstraint> active = order.withTies(base, tie, pinLo, pinHi);
             JumpSpec work = new JumpSpec(sc, active, spec.objective);
             Result r = zeroX == null
                     ? solveStripped(exact, work, sc, feasTol, cancel, margins, ascending, cfg, false)
@@ -173,6 +170,7 @@ public final class ClosedFormSolve {
             boolean[] nextLo = pinLo.clone();
             boolean[] nextHi = pinHi.clone();
             boolean fixedPoint = false;
+            double[] ordered = null;
             if (feasible) {
                 double o = objectiveOf(exact, spec, sc, r.yaws);
                 if (best == null || (spec.objective.sense == Objective.Sense.MAX ? o > bestObj : o < bestObj)) {
@@ -182,26 +180,24 @@ public final class ClosedFormSolve {
             }
             if (r.amp != null) {
                 YawTies ties = JumpLinearModel.hasFacingWall(active) ? YawTies.of(active, n) : null;
-                double[] ordered = YawOrderDp.orderedYaws(order, ties, n, r.amp, r.phase);
+                ordered = YawOrderDp.orderedYaws(order, ties, n, r.amp, r.phase);
                 if (ordered == null) {
                     if (SolverTrace.on()) SolverTrace.log("CF", "ordered round=%d dp declined", round);
                     break;
                 }
-                structureOf(order, ordered, nextTie, nextLo, nextHi);
+                order.structureOf(ordered, nextTie, nextLo, nextHi);
                 fixedPoint = Arrays.equals(nextTie, tie) && Arrays.equals(nextLo, pinLo) && Arrays.equals(nextHi, pinHi);
             } else {
                 fixedPoint = true;
             }
             if (SolverTrace.on()) {
                 SolverTrace.log("CF", "ordered round=%d ties=%s viol=%.3e feasible=%s next=%s fixed=%s dp=%s fold=%s",
-                        round, flags(tie), viol, feasible, flags(nextTie), fixedPoint,
-                        r.amp == null ? "-" : turns(order, YawOrderDp.orderedYaws(order,
-                                JumpLinearModel.hasFacingWall(active) ? YawTies.of(active, n) : null, n, r.amp, r.phase)),
-                        turns(order, r.yaws));
+                        round, YawOrder.flags(tie), viol, feasible, YawOrder.flags(nextTie), fixedPoint,
+                        r.amp == null ? "-" : turns(order, ordered), turns(order, r.yaws));
             }
             if (fixedPoint && feasible) break;
             if (fixedPoint) {
-                structureOf(order, r.yaws, nextTie, nextLo, nextHi);
+                order.structureOf(r.yaws, nextTie, nextLo, nextHi);
                 for (int l = 0; l < links; l++) nextTie[l] |= tie[l];
                 for (int b = 0; b < bounds; b++) {
                     nextLo[b] |= pinLo[b];
@@ -221,12 +217,6 @@ public final class ClosedFormSolve {
         return best != null ? best : least;
     }
 
-    private static String flags(boolean[] f) {
-        StringBuilder sb = new StringBuilder();
-        for (boolean b : f) sb.append(b ? '1' : '0');
-        return sb.toString();
-    }
-
     private static String turns(YawOrder order, double[] yaws) {
         if (yaws == null) return "null";
         StringBuilder sb = new StringBuilder();
@@ -235,17 +225,6 @@ public final class ClosedFormSolve {
             sb.append(SolverTrace.fmt("%.3f", Angles.wrapDelta(yaws[l.hiTick] - yaws[l.loTick]))).append(' ');
         }
         return sb.toString().trim();
-    }
-
-    private static void addTies(List<JumpConstraint> active, YawOrder order, boolean[] tie, boolean[] pinLo,
-                                boolean[] pinHi) {
-        List<JumpConstraint> base = new ArrayList<JumpConstraint>(active);
-        active.clear();
-        active.addAll(order.withTies(base, tie, pinLo, pinHi));
-    }
-
-    private static void structureOf(YawOrder order, double[] yaws, boolean[] tie, boolean[] pinLo, boolean[] pinHi) {
-        order.structureOf(yaws, tie, pinLo, pinHi);
     }
 
     private static double objectiveOf(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc, double[] yaws) {
