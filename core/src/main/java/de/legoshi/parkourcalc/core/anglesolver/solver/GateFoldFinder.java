@@ -759,7 +759,7 @@ public final class GateFoldFinder {
     private static double merit(ExactJumpModel exact, JumpPhysicsInputs sc,
                                 JumpConstraintCompiler.Compiled compiled, JumpSpec spec, double[] theta,
                                 double px, double pz, int[] forced, double thr) {
-        JumpPhysicsInputs rep = pinned(sc, px, pz);
+        JumpPhysicsInputs rep = sc.pinnedAt(px, pz);
         double[] gf = rep.toGameFacings(Angles.wrapAll(theta));
         ForwardPath path = exact.forward(rep, gf);
         double sv = compiled.maxViolation(gf, path);
@@ -775,14 +775,14 @@ public final class GateFoldFinder {
 
     private static double specViol(ExactJumpModel exact, JumpPhysicsInputs sc,
                                    JumpConstraintCompiler.Compiled compiled, double[] theta, double px, double pz) {
-        JumpPhysicsInputs rep = pinned(sc, px, pz);
+        JumpPhysicsInputs rep = sc.pinnedAt(px, pz);
         double[] gf = rep.toGameFacings(Angles.wrapAll(theta));
         return compiled.maxViolation(gf, exact.forward(rep, gf));
     }
 
     private static double objOf(ExactJumpModel exact, JumpPhysicsInputs sc, JumpSpec spec,
                                 double[] theta, double px, double pz) {
-        JumpPhysicsInputs rep = pinned(sc, px, pz);
+        JumpPhysicsInputs rep = sc.pinnedAt(px, pz);
         double[] gf = rep.toGameFacings(Angles.wrapAll(theta));
         return spec.objective.evaluate(exact.forward(rep, gf));
     }
@@ -803,8 +803,8 @@ public final class GateFoldFinder {
         double refPx = box.px;
         double refPz = box.pz;
         double[] yaws = Angles.wrapAll(theta);
-        double[] gf0 = pinned(sc, refPx, refPz).toGameFacings(yaws);
-        ForwardPath path0 = exact.forward(pinned(sc, refPx, refPz), gf0);
+        double[] gf0 = sc.pinnedAt(refPx, refPz).toGameFacings(yaws);
+        ForwardPath path0 = exact.forward(sc.pinnedAt(refPx, refPz), gf0);
         double loX = box.pxLo - refPx, hiX = box.pxHi - refPx;
         double loZ = box.pzLo - refPz, hiZ = box.pzHi - refPz;
         for (JumpConstraint c : spec.constraints) {
@@ -865,13 +865,6 @@ public final class GateFoldFinder {
         if (a.feasible() != b.feasible()) return a.feasible() ? a : b;
         if (a.feasible()) return (max ? b.objective > a.objective : b.objective < a.objective) ? b : a;
         return b.viol < a.viol ? b : a;
-    }
-
-    private static JumpPhysicsInputs pinned(JumpPhysicsInputs sc, double px, double pz) {
-        JumpPhysicsInputs c = sc.copy();
-        c.startPos = new de.legoshi.parkourcalc.core.sim.Vec3dCore(px, sc.startPos.y, pz);
-        c.startBox = StartBox.pinned(px, pz, sc.initialVelocity.x, sc.initialVelocity.z);
-        return c;
     }
 
     private static void linearizeWalls(List<JumpLinearModel.Wall> walls, int n, int dims, int[] col, double[] ux,
