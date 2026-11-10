@@ -716,7 +716,7 @@ public final class BendersMaster {
             int fr = firstRun(c);
             sc.engage = fr >= 0 ? fr : Integer.MAX_VALUE;
             boolean[] spr0 = NoTurnKeys.latchSprint(c, 0);
-            double diskTheta = screen.diskFeasibleTheta(c, spr0, null);
+            double diskTheta = screen.diskFeasibleTheta(c, spr0);
             if (!Double.isNaN(diskTheta)) {
                 sc.diskFeasible = true;
                 trace.diskFeasibleCount++;

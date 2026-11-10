@@ -74,11 +74,10 @@ public final class StructurePoolDriver {
         public final double diskTheta;
         public final double byteTheta;
         public final double byteViol;
-        public final double byteObjective;
         boolean flash;
 
         Candidate(int[] combos, boolean[] sprint, int engage, int edges, int presses, double diskTheta,
-                  double byteTheta, double byteViol, double byteObjective) {
+                  double byteTheta, double byteViol) {
             this.combos = combos;
             this.sprint = sprint;
             this.engage = engage;
@@ -88,7 +87,6 @@ public final class StructurePoolDriver {
             this.diskTheta = diskTheta;
             this.byteTheta = byteTheta;
             this.byteViol = byteViol;
-            this.byteObjective = byteObjective;
         }
     }
 
@@ -535,7 +533,7 @@ public final class StructurePoolDriver {
                 double diskTheta = r[base + 1];
                 int engageTick = NoTurnKeys.firstSprint(sprint);
                 Candidate c = new Candidate(combos.clone(), sprint.clone(), engageTick, countEdges(combos),
-                        countPresses(combos), diskTheta, r[base + 3], sViol, r[base + 4]);
+                        countPresses(combos), diskTheta, r[base + 3], sViol);
                 if (watchHash != null && watched(combos) >= 0) System.out.println("[watch] gpu scored v=" + v + " diskViol=" + diskViol
                         + " sViol=" + sViol + " engage=" + engageTick + " beamWants=" + (beamHeap != null && beamHeap.wants(sViol)) + " keys=" + NoTurnKeys.describe(combos));
                 if (beamHeap != null) beamHeap.offer(c);
@@ -549,7 +547,7 @@ public final class StructurePoolDriver {
     private Candidate rescreen(Candidate c) {
         double[] bs = byteScreen(c.combos, c.sprint, c.diskTheta);
         byteScreened++;
-        return new Candidate(c.combos, c.sprint, c.engage, c.edges, c.presses, c.diskTheta, bs[1], bs[0], bs[2]);
+        return new Candidate(c.combos, c.sprint, c.engage, c.edges, c.presses, c.diskTheta, bs[1], bs[0]);
     }
 
     private static void rescreenRange(StructurePoolDriver w, List<Candidate> list, int from, int to) {
@@ -724,14 +722,10 @@ public final class StructurePoolDriver {
         return s * cfg.slackScale;
     }
 
-    public double diskFeasibleTheta(int[] combos, boolean[] sprint, double[] outBestObj) {
+    public double diskFeasibleTheta(int[] combos, boolean[] sprint) {
         computeGroupCoefs(fullCombos(combos), fullSprint(sprint));
-        double bestTheta = scanGrid(curObjA, curObjB);
-        if (outBestObj != null) outBestObj[0] = diskScanObj;
-        return bestTheta;
+        return scanGrid(curObjA, curObjB);
     }
-
-    private double diskScanObj;
 
     private void evalAt(int g, double objA, double objB) {
         double v = evalTheta(cosG[g], sinG[g], objA, objB);
@@ -797,14 +791,11 @@ public final class StructurePoolDriver {
 
         double step = 2.0 * Math.PI / N;
         if (bestObjCenter >= 0) {
-            diskScanObj = bestObjVal;
             return Angles.deg(-Math.PI + bestObjCenter * step);
         }
         if (lastMinViol <= cfg.diskKeep && minViolCenter >= 0) {
-            diskScanObj = Double.NaN;
             return Angles.deg(-Math.PI + minViolCenter * step);
         }
-        diskScanObj = maximize ? Double.NEGATIVE_INFINITY : Double.POSITIVE_INFINITY;
         return Double.NaN;
     }
 
@@ -1211,7 +1202,7 @@ public final class StructurePoolDriver {
                     + " diskTheta=" + diskTheta + " viol=" + bs[0]);
         }
         Candidate c = new Candidate(combos.clone(), sprint.clone(), engageTick, countEdges(combos), countPresses(combos),
-                diskTheta, bs[1], bs[0], bs[2]);
+                diskTheta, bs[1], bs[0]);
         if (beamHeap != null) beamHeap.offer(c);
         pool.add(c);
         if (certifyTier(cfg, c) < SCREEN_MISS_TIER) goodInPool++;

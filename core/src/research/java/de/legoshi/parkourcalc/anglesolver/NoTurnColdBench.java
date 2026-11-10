@@ -255,7 +255,7 @@ public class NoTurnColdBench {
             if (Boolean.getBoolean("pkc.bench.screenExact")) {
                 StructurePoolDriver sdrv = new StructurePoolDriver(model, new StructurePoolDriver.Config(), cancel, null);
                 sdrv.prepare(p);
-                double center = sdrv.diskFeasibleTheta(combos, sprint, null);
+                double center = sdrv.diskFeasibleTheta(combos, sprint);
                 String thetaOverride = System.getProperty("pkc.bench.screenTheta");
                 if (thetaOverride != null) center = Double.parseDouble(thetaOverride);
                 double[] se = sdrv.screenExact(combos, sprint, center);

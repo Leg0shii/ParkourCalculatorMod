@@ -87,8 +87,6 @@ final class UnitScreen {
     private final int[] freeGroups;
     private final double[] shiftJoint;
     private final double[] ab = new double[2];
-    private double objBase;
-    private double bestObj;
     private double bestLoX;
     private double bestHiX;
     private double bestLoZ;
@@ -374,16 +372,11 @@ final class UnitScreen {
             viol = fullViol(true);
         }
         for (int g = 0; g < groups; g++) bestFacing[g] = StrictMath.atan2(unitSin[g], unitCos[g]);
-        double dp;
-        if (d.maximize) dp = d.objAxisX ? Math.min(bestHiX, d.hiShiftX) : Math.min(bestHiZ, d.hiShiftZ);
-        else dp = d.objAxisX ? Math.max(bestLoX, d.loShiftX) : Math.max(bestLoZ, d.loShiftZ);
-        if (viol > 0.0) dp = 0.0;
-        bestObj = objBase + dp;
         d.witnessLoX = bestLoX;
         d.witnessHiX = bestHiX;
         d.witnessLoZ = bestLoZ;
         d.witnessHiZ = bestHiZ;
-        return new double[]{viol, Angles.wrap(Angles.deg(bestTheta)), bestObj};
+        return new double[]{viol, Angles.wrap(Angles.deg(bestTheta))};
     }
 
     double[] evalFacings(double[] yawsDeg, double dx, double dz) {
@@ -472,7 +465,6 @@ final class UnitScreen {
             JumpConstraint wc = d.byteWalls.get(order[i]);
             shiftBase[i] = wc.rhs - bf.wallPos(wc);
         }
-        objBase = bf.pos(d.objTick, d.objAxisX);
     }
 
     private double solveFrom(double theta, double startCos, double startSin, double[] fromCos, double[] fromSin,
