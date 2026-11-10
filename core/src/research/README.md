@@ -26,8 +26,9 @@ anglesolver/
   CorpusBench.java         manual OLD-vs-NEW full-corpus bench (STEP 9): all captures at FAST/THOROUGH,
                            external wall-clock + engine shipped objective + independent recompute (yaw-lock
                            flag). PKC_CORPUS=1 to run; PKC_CORPUS_TIER/RUNS/OPT_SEC/FILTER/TAG/TIMEOUT_MS
-                           tune it. Drop into a git worktree at the OLD commit to bench both trees; compare
-                           with docs/research/solver-rework-2026-08/benchmark/compare.py
+                           tune it. Drop into a git worktree at the OLD commit to bench both trees (the compare.py
+                           it was paired with sat in docs/research/solver-rework-2026-08/, which is
+                           gitignored and not in the repository)
   FreeStartSweepBench.java manual free-start sweep over captures/hpk/ (synthesized tick-0 box, base +
                            (+2.3,+1.7)-shifted seed variants, FAST, per-node timing from the run
                            record); -Dpkc.sweep=1 to run, -Dpkc.sweep.{tag,variants,filter,timeoutMs,
@@ -42,11 +43,11 @@ anglesolver/
                            optional PKC_SOLVE_EFFORT and PKC_SOLVE_TIMEOUT_MS
   StructureDump.java       export a capture's compiled linear structure (walls, objective vectors,
                            per-tick mMag/baseArg/friction, start box, warm replay) as json for the
-                           research/copt harness; PKC_STRUCT_FILE=<capture>, PKC_STRUCT_OUT=<json>,
+                           research/copt harness (gitignored, not in the repository); PKC_STRUCT_FILE=<capture>, PKC_STRUCT_OUT=<json>,
                            optional PKC_STRUCT_ZERO=<pattern json> folds an inertia-gate zeroing
                            pattern (pattern-aware JumpLinearModel + velocityWalls); run --no-daemon
   NoTurnReplay.java        byte-exact replay of a no-turn decode (keys + yaws + sprint + start) from
-                           research/copt through ExactJumpModel against a capture's compiled spec;
+                           research/copt (gitignored) through ExactJumpModel against a capture's compiled spec;
                            PKC_NOTURN_CAPTURE, PKC_NOTURN_FILE, PKC_NOTURN_OUT; reports objective,
                            per-constraint violations, positions and carry velocities (gate patterns)
   SolveNodeStatsScreen.java  per-node timing dump over problems/solve at expect efforts;
@@ -66,14 +67,14 @@ anglesolver/
                            base:key=v1,v2;key2=... cross-producted per entry: taser<sec> takes l
                            (engine path via setSmoothLambda), and a bare entry with no params
                            reuses the static preset of that exact id
-                           (parse coverage: RunMatrixSweepTest)
+                           (parse coverage: RunMatrixSweepTest, which runs only through :core:research)
   RazorColdT1.java         THE HEADLINE GATE: cold 5.4375 from t1 (razor-proof-t1 capture, free
                            start, no yaw seeds) through the live engine; PKC_RAZORT1=1 +
                            PKC_RAZORT1_TAG to run; PASS = success + fresh-reparse viol <= 0;
                            report at build/reports/razort1-<tag>.txt
   CertBnbProbe.java        env-gated certified-B&B probe: PKC_CERTBNB_CAPTURES (comma list),
                            PKC_CERTBNB_OUT/NODES/MS/MODE; nodeCap=1 dumps root bounds for the COPT
-                           root-bound validation (research/copt/certbnb_rootcheck.py)
+                           root-bound validation (research/copt/certbnb_rootcheck.py, gitignored)
   FoldDriverProbe.java     run the fold driver headlessly on any capture; PKC_FOLD_CAPTURE=<path or
                            pool name>, optional PKC_FOLD_OUT/PKC_FOLD_DEBUG/PKC_FOLD_SEED/
                            PKC_FOLD_REF (box-reference multi-start override); prints per-round
@@ -107,6 +108,13 @@ anglesolver/
                            and counts a CONTRADICTION whenever it says INFEASIBLE while the main impl
                            returned a byte-verified FEASIBLE witness (the real-pool soundness audit of
                            a rejection check: feed it pool dumps plus the in-game found lines)
+  core/anglesolver/noturn/fastcheck/NoTurnJointFastCheck.java, LpFeas.java
+                           the joint sound rejection FastCheck and its small simplex (bench-only, not in
+                           the mod jar); select with -Dpkc.fc.impl or -Dpkc.fc.audit =
+                           de.legoshi.parkourcalc.core.anglesolver.noturn.fastcheck.NoTurnJointFastCheck
+  core/anglesolver/noturn/OptimizeGraphCheck.java
+                           FastCheck that certifies with the 6 s Optimize graph; select with
+                           -Dpkc.fc.impl=de.legoshi.parkourcalc.core.anglesolver.noturn.OptimizeGraphCheck
   RunUpSweepProbe.java     free-start run-up sweep on one save; PKC_SOLVE_FILE=<save.json> plus
                            PKC_GRAPH_FILE=<graph.json> (docs/research/freestart-runup-sweep-2026-09-05.md)
   HpkStartBenchmark.java   cold-solve benchmark over the hpk_human corpus against reference

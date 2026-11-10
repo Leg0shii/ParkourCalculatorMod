@@ -25,8 +25,10 @@ import java.util.List;
  *  pattern into the couplings; the pattern-free constructor keeps the clamp-free model. */
 public final class JumpLinearModel {
 
-    private static final double RAD = Math.PI / 180.0;
-    private static final double DEG = 180.0 / Math.PI;
+    private static final double RAD = Angles.RAD_PER_DEG;
+    private static final double DEG = Angles.DEG_PER_RAD;
+
+    private static final double PREFIX_RATIO_FLOOR = 0x1.0p-20;
 
     public final int n;
     private final JumpPhysicsInputs sc;
@@ -41,6 +43,8 @@ public final class JumpLinearModel {
     private final double[] f4;      // per-tick friction multiplier
     private final double[] fPre;    // fPre[k] = prod_{i<k} f4[i]
     private final double[] sPre;    // sPre[k] = sum_{t<k} fPre[t]
+    private final double[] logPre;
+    private final double[] tailSum;
 
     private final boolean[][] zero;
     private final int[][] zNext;
@@ -116,6 +120,8 @@ public final class JumpLinearModel {
         this.f4 = new double[n];
         this.fPre = new double[n + 1];
         this.sPre = new double[n + 1];
+        this.logPre = new double[n + 1];
+        this.tailSum = new double[n + 1];
         precompute();
         this.zero = new boolean[2][];
         this.zero[0] = zeroX;
@@ -195,7 +201,7 @@ public final class JumpLinearModel {
             if (d < tau) continue;
             if (d + 1 >= k) break;
             int end = packetEnd(axis, d, k);
-            c += boostGain[s] * (fsPre[d] / fsPre[tau]) * (sPre[end] - sPre[d + 1]) / fPre[d + 1];
+            c += boostGain[s] * (fsPre[d] / fsPre[tau]) * frictionSpan(d + 1, end);
         }
         return c;
     }
@@ -206,13 +212,9 @@ public final class JumpLinearModel {
             int d = dmgTicks[i];
             if (d + 1 >= k) break;
             int end = packetEnd(axis, d, k);
-            p += packetConst[axis][i] * (sPre[end] - sPre[d + 1]) / fPre[d + 1];
+            p += packetConst[axis][i] * frictionSpan(d + 1, end);
         }
         return p;
-    }
-
-    public boolean hasDamage() {
-        return dmgTicks.length > 0;
     }
 
     private void precompute() {
@@ -277,7 +279,19 @@ public final class JumpLinearModel {
         for (int t = 0; t < n; t++) {
             sPre[t + 1] = sPre[t] + fPre[t];
             fPre[t + 1] = fPre[t] * f4[t];
+            logPre[t + 1] = logPre[t] + StrictMath.log(f4[t]);
         }
+        for (int t = n - 1; t >= 0; t--) tailSum[t] = 1.0 + f4[t] * tailSum[t + 1];
+    }
+
+    private double decay(int from, int to) {
+        if (fPre[from] >= PREFIX_RATIO_FLOOR) return fPre[to] / fPre[from];
+        return StrictMath.exp(logPre[to] - logPre[from]);
+    }
+
+    private double frictionSpan(int from, int end) {
+        if (fPre[from] >= PREFIX_RATIO_FLOOR) return (sPre[end] - sPre[from]) / fPre[from];
+        return tailSum[from] - decay(from, end) * tailSum[end];
     }
 
     public double mMag(int t) {
@@ -304,6 +318,14 @@ public final class JumpLinearModel {
         return baseArg[t];
     }
 
+    public void inputVectors(double[] yawsDeg, double[] ux, double[] uz) {
+        for (int t = 0; t < n; t++) {
+            double phi = baseArg[t] + yawsDeg[t] * RAD;
+            ux[t] = mMag[t] * StrictMath.cos(phi);
+            uz[t] = mMag[t] * StrictMath.sin(phi);
+        }
+    }
+
     public double friction(int t) {
         return f4[t];
     }
@@ -318,7 +340,7 @@ public final class JumpLinearModel {
         if (s >= k) return 0.0;
         int stop = dmgCut[s];
         int end = k < stop ? k : stop;
-        double c = (sPre[end] - sPre[s]) / fPre[s];
+        double c = frictionSpan(s, end);
         if (boostFrom[s] >= 0) c += boostCoupling(-1, s, k);
         return c;
     }
@@ -328,7 +350,7 @@ public final class JumpLinearModel {
         int stop = zNext[axis][s];
         if (dmgCut[s] < stop) stop = dmgCut[s];
         int end = k < stop ? k : stop;
-        double c = (sPre[end] - sPre[s]) / fPre[s];
+        double c = frictionSpan(s, end);
         if (boostFrom[s] >= 0) c += boostCoupling(axis, s, k);
         return c;
     }
@@ -360,19 +382,9 @@ public final class JumpLinearModel {
      *  contribution to {@code objDir·pos_objTick}. objDir is the direction to MAXIMIZE (MIN is negated). */
     public void objectiveVectors(Objective obj, double[] cx, double[] cz) {
         int objTick = obj.tick;
-        double dx, dz;
-        boolean max = obj.sense == Objective.Sense.MAX;
-        if (obj.isCustomAngle()) {
-            double rad = Angles.rad(obj.customYaw);
-            dx = (max ? 1.0 : -1.0) * -StrictMath.sin(rad);
-            dz = (max ? 1.0 : -1.0) * StrictMath.cos(rad);
-        } else if (obj.axis == JumpPhysicsInputs.Axis.X) {
-            dx = max ? 1.0 : -1.0;
-            dz = 0.0;
-        } else {
-            dx = 0.0;
-            dz = max ? 1.0 : -1.0;
-        }
+        double[] dir = objectiveDirection(obj);
+        double dx = dir[0];
+        double dz = dir[1];
 
         if (obj.isMotion()) {
             for (int t = 0; t < n; t++) {
@@ -520,6 +532,16 @@ public final class JumpLinearModel {
         return compileWalls(constraints, margin, trivialInfeasible, crossSignsAll(constraints, 1));
     }
 
+    public List<Wall> compileAxisWalls(List<JumpConstraint> constraints, double margin, boolean[] trivialInfeasible) {
+        List<Wall> walls = new ArrayList<>();
+        for (JumpConstraint c : constraints) {
+            if (isCrossAxis(c)) continue;
+            Wall w = compileWall(c, margin, trivialInfeasible);
+            if (w != null) walls.add(w);
+        }
+        return walls;
+    }
+
     public List<Wall> compileWalls(List<JumpConstraint> constraints, double margin, boolean[] trivialInfeasible, int[] crossSigns) {
         List<Wall> walls = new ArrayList<>();
         int j = 0;
@@ -546,7 +568,7 @@ public final class JumpLinearModel {
                 boolean any = false;
                 for (int s = 0; s < t; s++) {
                     if (zNext[a][s] < t) continue;
-                    coefHi[s] = fPre[t] / fPre[s];
+                    coefHi[s] = decay(s, t);
                     any = true;
                 }
                 if (!any) continue;
@@ -571,7 +593,7 @@ public final class JumpLinearModel {
         boolean any = false;
         for (int s = 0; s < tick; s++) {
             if (zNext[axis][s] < tick) continue;
-            coef[s] = positive ? -(fPre[tick] / fPre[s]) : (fPre[tick] / fPre[s]);
+            coef[s] = positive ? -decay(s, tick) : decay(s, tick);
             any = true;
         }
         if (!any) return null;
@@ -585,7 +607,7 @@ public final class JumpLinearModel {
     public double velocityCoef(int axis, int s, int t) {
         if (s >= t) return 0.0;
         if (zNext[axis][s] < t) return 0.0;
-        return fPre[t] / fPre[s];
+        return decay(s, t);
     }
 
     public void zeroingPattern(double[] yawsAbsWrapped, double threshold, boolean perAxis,
@@ -625,22 +647,25 @@ public final class JumpLinearModel {
         return Angles.wrap((StrictMath.atan2(gz, gx) - baseArg[t]) * DEG);
     }
 
-    public double[] recoverAlongCostate(Objective obj, double[] gx, double[] gz) {
+    static double[] objectiveDirection(Objective obj) {
         boolean max = obj.sense == Objective.Sense.MAX;
-        boolean axisX = obj.axis == JumpPhysicsInputs.Axis.X;
+        if (obj.isCustomAngle()) {
+            double rad = Angles.rad(obj.customYaw);
+            return new double[]{(max ? 1.0 : -1.0) * -StrictMath.sin(rad), (max ? 1.0 : -1.0) * StrictMath.cos(rad)};
+        }
+        if (obj.axis == JumpPhysicsInputs.Axis.X) return new double[]{max ? 1.0 : -1.0, 0.0};
+        return new double[]{0.0, max ? 1.0 : -1.0};
+    }
+
+    public double[] recoverAlongCostate(Objective obj, double[] gx, double[] gz) {
+        double[] dir = objectiveDirection(obj);
         double[] yaws = new double[n];
         for (int t = 0; t < n; t++) {
             double x = gx[t];
             double z = gz[t];
             if (x * x + z * z < 1.0e-18) {
-                if (obj.isCustomAngle()) {
-                    double rad = Angles.rad(obj.customYaw);
-                    x = (max ? 1.0 : -1.0) * -StrictMath.sin(rad);
-                    z = (max ? 1.0 : -1.0) * StrictMath.cos(rad);
-                } else {
-                    x = axisX ? (max ? 1.0 : -1.0) : 0.0;
-                    z = axisX ? 0.0 : (max ? 1.0 : -1.0);
-                }
+                x = dir[0];
+                z = dir[1];
             }
             yaws[t] = recoverYawDeg(t, x, z);
         }

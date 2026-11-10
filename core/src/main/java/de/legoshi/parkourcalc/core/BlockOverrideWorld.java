@@ -207,10 +207,6 @@ public final class BlockOverrideWorld {
         refresh(true);
     }
 
-    public void clearReplayRow() {
-        setReplayRow(-1);
-    }
-
     public void tick() {
         refresh(false);
         if (replayStepped) checkPlayerRows();
@@ -291,13 +287,5 @@ public final class BlockOverrideWorld {
         int y = (int) ((key << 26) >> 52);
         int z = (int) ((key << 38) >> 38);
         return new BlockPatch(x, y, z, specs[0], specs[1]);
-    }
-
-    public List<BlockPatch> appliedPositions() {
-        List<BlockPatch> out = new ArrayList<BlockPatch>();
-        for (Map.Entry<Long, String[]> e : appliedBefore.entrySet()) {
-            out.add(unpack(e.getKey(), e.getValue()));
-        }
-        return Collections.unmodifiableList(out);
     }
 }

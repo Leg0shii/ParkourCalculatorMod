@@ -1,7 +1,5 @@
 package de.legoshi.parkourcalc.core.anglesolver.noturn;
 
-import java.util.Arrays;
-
 public final class NoGoodCut {
 
     public final int[] ticks;
@@ -37,18 +35,5 @@ public final class NoGoodCut {
         sb.append("} wall@").append(bindingWallTick)
                 .append(" viol=").append(String.format(java.util.Locale.ROOT, "%.3e", violation));
         return sb.toString();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof NoGoodCut)) return false;
-        NoGoodCut c = (NoGoodCut) o;
-        return Arrays.equals(ticks, c.ticks) && Arrays.equals(combos, c.combos);
-    }
-
-    @Override
-    public int hashCode() {
-        return 31 * Arrays.hashCode(ticks) + Arrays.hashCode(combos);
     }
 }

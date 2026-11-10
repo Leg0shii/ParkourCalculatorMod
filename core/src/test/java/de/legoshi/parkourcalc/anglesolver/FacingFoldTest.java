@@ -248,24 +248,9 @@ public class FacingFoldTest {
 
     private static JumpPhysicsInputs withStart(JumpPhysicsInputs b, double px, double pz,
                                                de.legoshi.parkourcalc.core.anglesolver.solver.StartBox box) {
-        JumpPhysicsInputs a = new JumpPhysicsInputs(b.numTicks);
+        JumpPhysicsInputs a = b.copy();
         a.startPos = new de.legoshi.parkourcalc.core.sim.Vec3dCore(px, b.startPos.y, pz);
-        a.startYaw = b.startYaw;
-        a.initialVelocity = b.initialVelocity;
         a.startBox = box;
-        a.jumpTick = b.jumpTick;
-        a.jumpPerTick = b.jumpPerTick;
-        a.strafeSign = b.strafeSign;
-        a.strafeSignPerTick = b.strafeSignPerTick;
-        a.strafePerTick = b.strafePerTick;
-        a.speedAmplifier = b.speedAmplifier;
-        a.slipPerTick = b.slipPerTick;
-        a.yawLockedPerTick = b.yawLockedPerTick;
-        a.sprintPerTick = b.sprintPerTick;
-        a.incomingSprint = b.incomingSprint;
-        a.incomingAmp = b.incomingAmp;
-        a.forwardInputPerTick = b.forwardInputPerTick;
-        a.strafeInputPerTick = b.strafeInputPerTick;
         return a;
     }
 

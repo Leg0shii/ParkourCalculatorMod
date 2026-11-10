@@ -13,6 +13,18 @@ public final class RecoveryLadder {
     }
 
     public static double[] solve(ExactJumpModel em, JumpSpec spec, JumpPhysicsInputs sc,
+                                 AtomicBoolean cancel, String[] nameOut) {
+        return solve(em, spec, sc, cancel, nameOut, 0L, new SlpSolve.Config(), new ClosedFormSolve.Config(), null);
+    }
+
+    public static double[] solve(ExactJumpModel em, JumpSpec spec, JumpPhysicsInputs sc,
+                                 AtomicBoolean cancel, String[] nameOut, long deadlineNanos,
+                                 SlpSolve.Config slpCfg, ClosedFormSolve.Config cfCfg, ClosestMiss miss) {
+        return solve(em, spec, sc, cancel, nameOut, deadlineNanos, slpCfg, cfCfg,
+                new RelaxationRecovery.Config(), miss);
+    }
+
+    public static double[] solve(ExactJumpModel em, JumpSpec spec, JumpPhysicsInputs sc,
                                  AtomicBoolean cancel, String[] nameOut, long deadlineNanos,
                                  SlpSolve.Config slpCfg, ClosedFormSolve.Config cfCfg,
                                  RelaxationRecovery.Config rrCfg, ClosestMiss miss) {

@@ -8,11 +8,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class BoundPrunedRecovery {
 
-    public static boolean DEBUG = false;
-    static volatile long debugEpoch;
-
     private static final double SYNTH_PAD = 1.0e-3;
-    private static final double RAD = Math.PI / 180.0;
+    private static final double RAD = Angles.RAD_PER_DEG;
     private static final double RESTORE_AIM = 1.0e-4;
     private static final double RESTORE_ACTIVE_BAND = 5.0e-3;
     private static final double RESTORE_STEP_CAP_DEG = 20.0;
@@ -20,20 +17,18 @@ public final class BoundPrunedRecovery {
     private static final double TARGET_CONVERT_MAX_CORRIDOR = 2.0e-3;
     private static final int MAX_KEEP_ALIVE = 4;
 
-    public static final class Config {
-        public double searchShare = 0.8;
-        public double pruneTol = 1.0e-6;
-        public double slpViolTrigger = 0.02;
-        public double[] seedMargins = {3.0e-4, 1.2e-3, 5.0e-3, 2.0e-2};
-        public int maxPatterns = 64;
-        public double minSeamWidth = 0.04;
-        public int restoreIters = 45;
-        public int treeSlpPhase1Calls = 40;
-        public int treeSlpTotalCalls = 60;
-        public double treeSlpTrMinDeg = 1.0e-3;
-        public int polishSlpPhase1Calls = 160;
-        public int polishSlpTotalCalls = 220;
-    }
+    private static final double SEARCH_SHARE = 0.8;
+    private static final double PRUNE_TOL = 1.0e-6;
+    private static final double SLP_VIOL_TRIGGER = 0.02;
+    private static final double[] SEED_MARGINS = {3.0e-4, 1.2e-3, 5.0e-3, 2.0e-2};
+    private static final int MAX_PATTERNS = 64;
+    private static final double MIN_SEAM_WIDTH = 0.04;
+    private static final int RESTORE_ITERS = 45;
+    private static final int TREE_SLP_PHASE1_CALLS = 40;
+    private static final int TREE_SLP_TOTAL_CALLS = 60;
+    private static final double TREE_SLP_TR_MIN_DEG = 1.0e-3;
+    private static final int POLISH_SLP_PHASE1_CALLS = 160;
+    private static final int POLISH_SLP_TOTAL_CALLS = 220;
 
     private BoundPrunedRecovery() {
     }
@@ -45,28 +40,16 @@ public final class BoundPrunedRecovery {
 
     public static double[] solve(ExactJumpModel exact, JumpSpec spec, double feasTol,
                                  AtomicBoolean cancel, long budgetNanos, double stopAtObjective) {
-        return solve(exact, spec, feasTol, cancel, budgetNanos, stopAtObjective, new Config());
+        return solve(exact, spec, feasTol, cancel, budgetNanos, stopAtObjective, null, null);
     }
 
     public static double[] solve(ExactJumpModel exact, JumpSpec spec, double feasTol,
-                                 AtomicBoolean cancel, long budgetNanos, double stopAtObjective, Config cfg) {
-        return solve(exact, spec, feasTol, cancel, budgetNanos, stopAtObjective, cfg, null);
-    }
-
-    public static double[] solve(ExactJumpModel exact, JumpSpec spec, double feasTol,
-                                 AtomicBoolean cancel, long budgetNanos, double stopAtObjective, Config cfg,
-                                 ClosestMiss miss) {
-        return solve(exact, spec, feasTol, cancel, budgetNanos, stopAtObjective, cfg, miss, null);
-    }
-
-    public static double[] solve(ExactJumpModel exact, JumpSpec spec, double feasTol,
-                                 AtomicBoolean cancel, long budgetNanos, double stopAtObjective, Config cfg,
+                                 AtomicBoolean cancel, long budgetNanos, double stopAtObjective,
                                  ClosestMiss miss, double[] warmIncumbent) {
         if (spec == null) return null;
         if (!accepts(spec)) return null;
         long start = System.nanoTime();
-        debugEpoch = start;
-        long searchDeadline = start + (long) (budgetNanos * cfg.searchShare);
+        long searchDeadline = start + (long) (budgetNanos * SEARCH_SHARE);
         long fullDeadline = start + budgetNanos;
         AtomicBoolean outer = cancel != null ? cancel : new AtomicBoolean(false);
         AtomicBoolean searchCancel = new AtomicBoolean(false);
@@ -75,11 +58,12 @@ public final class BoundPrunedRecovery {
         Thread watchdog = startWatchdog(outer, finished, searchCancel, searchDeadline, polishCancel, fullDeadline);
         try {
             JumpPhysicsInputs sc = spec.asScenario();
+            JumpLinearModel free = new JumpLinearModel(sc);
             boolean max = spec.objective.sense == Objective.Sense.MAX;
             double targetNorm = targetWallNorm(spec, max);
             JumpSpec searchSpec = spec;
             if (!Double.isNaN(targetNorm)) {
-                Double freeBound = rootBound(spec, new JumpLinearModel(sc), null);
+                Double freeBound = rootBound(spec, free, null);
                 if (freeBound == null || freeBound - targetNorm >= TARGET_CONVERT_MAX_CORRIDOR) {
                     targetNorm = Double.NaN;
                 } else {
@@ -92,9 +76,8 @@ public final class BoundPrunedRecovery {
                         Double.isNaN(stopAtObjective) ? "-" : SolverTrace.fmt("%.6f", stopAtObjective),
                         Double.isNaN(targetNorm) ? "-" : SolverTrace.fmt("%.6f", targetNorm));
             }
-            List<Pattern> patterns = enumeratePatterns(exact, searchSpec, sc, cfg.maxPatterns, searchCancel);
+            List<Pattern> patterns = enumeratePatterns(exact, searchSpec, sc, free, MAX_PATTERNS, searchCancel);
             if (patterns.isEmpty()) {
-                if (DEBUG) System.out.println("  BNB no viable pattern (trivial infeasible)");
                 if (SolverTrace.on()) SolverTrace.log("BNB", "no viable pattern (trivial infeasible)");
                 return null;
             }
@@ -124,7 +107,6 @@ public final class BoundPrunedRecovery {
                 }
             }
             if (!searchCancel.get()) {
-                JumpLinearModel free = new JumpLinearModel(sc);
                 double[] gateRef = rankYaws != null ? rankYaws : freeDualSeed(searchSpec, free);
                 List<Pattern> keepAlive = keepAlivePatterns(exact, searchSpec, sc, free, gateRef);
                 if (SolverTrace.on()) {
@@ -144,21 +126,20 @@ public final class BoundPrunedRecovery {
                 }
             }
             if (!Double.isNaN(stopNorm) && incumbentNorm >= stopNorm) return incumbentYaws;
-            double floorNorm = Double.isNaN(targetNorm) ? Double.NEGATIVE_INFINITY : targetNorm - cfg.pruneTol;
+            double floorNorm = Double.isNaN(targetNorm) ? Double.NEGATIVE_INFINITY : targetNorm - PRUNE_TOL;
             final double seedNorm = Math.max(incumbentNorm, floorNorm);
             final double[] seedYaws = incumbentYaws;
             final double[] profileYaws = rankYaws;
             List<Pattern> viable = new ArrayList<>();
             for (Pattern p : patterns) {
-                if (p.normBound > seedNorm + cfg.pruneTol) {
+                if (p.normBound > seedNorm + PRUNE_TOL) {
                     viable.add(p);
                 } else {
-                    if (DEBUG) System.out.printf("  BNB pattern %s pruned (bound=%.6f)%n", p.label, p.normBound);
                     if (SolverTrace.on()) SolverTrace.log("BNB", "pattern %s pruned at root (bound=%.9f <= seed=%.9f)", p.label, p.normBound, seedNorm);
                 }
             }
             if (profileYaws != null && viable.size() > 1) {
-                double[][] carry = carryProfile(new JumpLinearModel(sc), sc, Angles.wrapAll(profileYaws));
+                double[][] carry = carryProfile(free, sc, Angles.wrapAll(profileYaws));
                 double thr = exact.inertiaThreshold();
                 boolean perAxis = exact.perAxisInertia();
                 int[] bandMin = new int[2];
@@ -204,7 +185,7 @@ public final class BoundPrunedRecovery {
                                     ? Math.min(searchDeadline, System.nanoTime() + sliceNanos)
                                     : searchDeadline;
                             Search search = Search.build(exact, treeSpec, compiled, feasTol, searchCancel, deadline,
-                                    p.lin, p.velWalls, p.patterned, stopNorm, p.label, searchFloor, cfg, miss);
+                                    p.lin, p.velWalls, p.patterned, stopNorm, p.label, searchFloor, miss);
                             if (search == null) return null;
                             if (seedYaws != null) search.offer(seedYaws);
                             search.run();
@@ -223,12 +204,6 @@ public final class BoundPrunedRecovery {
                             continue;
                         }
                         if (search == null) continue;
-                        if (DEBUG) {
-                            System.out.printf("  BNB pattern %s bound=%.6f nodes=%d pruned=%d restoreHits=%d slp=%d slpHits=%d incumbent=%s%n",
-                                    viable.get(i).label, viable.get(i).normBound, search.statNodes, search.statPruned,
-                                    search.statRestoreHits, search.statSlpCalls, search.statSlpHits,
-                                    search.incumbentYaws == null ? "none" : String.valueOf(search.incumbentNorm));
-                        }
                         if (SolverTrace.on()) {
                             SolverTrace.log("BNB", "pattern %s done bound=%.9f nodes=%d pruned=%d restoreHits=%d slp=%d slpHits=%d incumbent=%s",
                                     viable.get(i).label, viable.get(i).normBound, search.statNodes, search.statPruned,
@@ -246,7 +221,7 @@ public final class BoundPrunedRecovery {
             }
             if (incumbentYaws != null && !polishCancel.get()) {
                 double[] polished = SlpSolve.optimize(exact, spec, feasTol, polishCancel, incumbentYaws,
-                        cfg.polishSlpPhase1Calls, cfg.polishSlpTotalCalls);
+                        POLISH_SLP_PHASE1_CALLS, POLISH_SLP_TOTAL_CALLS);
                 double polishedNorm = normIfFeasible(exact, sc, compiled, spec, max, polished);
                 if (!Double.isNaN(polishedNorm) && polishedNorm > incumbentNorm) {
                     incumbentYaws = Angles.wrapAll(polished);
@@ -359,10 +334,9 @@ public final class BoundPrunedRecovery {
     }
 
     private static List<Pattern> enumeratePatterns(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc,
-                                                   int maxPatterns, AtomicBoolean cancel) {
+                                                   JumpLinearModel free, int maxPatterns, AtomicBoolean cancel) {
         int n = sc.numTicks;
         List<Pattern> out = new ArrayList<>();
-        JumpLinearModel free = new JumpLinearModel(sc);
         Double freeBound = rootBound(spec, free, null);
         if (freeBound != null) {
             out.add(new Pattern("free", free, new ArrayList<JumpLinearModel.Wall>(), false, freeBound, -1, -1, null, null));
@@ -405,7 +379,7 @@ public final class BoundPrunedRecovery {
         if (vel.isEmpty()) return;
         Double bound = rootBound(spec, lin, vel);
         if (bound == null) return;
-        cands.add(new Pattern(label, lin, vel, true, bound, k, zx && zz ? 0 : (zx ? 0 : 1), zeroX, zeroZ));
+        cands.add(new Pattern(label, lin, vel, true, bound, k, zx ? 0 : 1, zeroX, zeroZ));
     }
 
     /** Patterns that hold the objective axis out of the inertia band at a momentum reversal, the branch
@@ -439,19 +413,13 @@ public final class BoundPrunedRecovery {
     /** The margin-0 dual recovery of the unpatterned model: the always-available reference trajectory when
      *  the closed form found nothing to rank by. */
     private static double[] freeDualSeed(JumpSpec spec, JumpLinearModel lin) {
-        boolean[] trivial = {false};
-        List<JumpLinearModel.Wall> walls = lin.compileWalls(spec.constraints, 0.0, trivial);
-        if (trivial[0]) return null;
-        int n = lin.n;
-        double[] cx = new double[n];
-        double[] cz = new double[n];
-        lin.objectiveVectors(spec.objective, cx, cz);
-        CostateDualSolver.Result r = new CostateDualSolver(n, cx, cz, lin.mMagAll(), walls).solve(0.0, null);
+        CostateDualSolver.Result r = dualAtRoot(spec, lin, null);
         if (r == null) return null;
         return lin.recoverAlongCostate(spec.objective, r.gx, r.gz);
     }
 
-    private static Double rootBound(JumpSpec spec, JumpLinearModel lin, List<JumpLinearModel.Wall> vel) {
+    private static CostateDualSolver.Result dualAtRoot(JumpSpec spec, JumpLinearModel lin,
+                                                       List<JumpLinearModel.Wall> vel) {
         boolean[] trivial = {false};
         List<JumpLinearModel.Wall> walls = lin.compileWalls(spec.constraints, 0.0, trivial);
         if (trivial[0]) return null;
@@ -460,7 +428,11 @@ public final class BoundPrunedRecovery {
         double[] cx = new double[n];
         double[] cz = new double[n];
         lin.objectiveVectors(spec.objective, cx, cz);
-        CostateDualSolver.Result r = new CostateDualSolver(n, cx, cz, lin.mMagAll(), walls).solve(0.0, null);
+        return new CostateDualSolver(n, cx, cz, lin.mMagAll(), walls).solve(0.0, null);
+    }
+
+    private static Double rootBound(JumpSpec spec, JumpLinearModel lin, List<JumpLinearModel.Wall> vel) {
+        CostateDualSolver.Result r = dualAtRoot(spec, lin, vel);
         if (r == null) return null;
         boolean max = spec.objective.sense == Objective.Sense.MAX;
         double cp = lin.objectiveConst(spec.objective);
@@ -558,18 +530,15 @@ public final class BoundPrunedRecovery {
         long seq;
         double[] incumbentYaws;
         double incumbentNorm = Double.NEGATIVE_INFINITY;
-        boolean traceRestore;
         int statNodes;
         int statPruned;
         int statRestoreHits;
         int statSlpCalls;
         int statSlpHits;
 
-        final int consWallCount;
         final boolean patterned;
         final double stopNorm;
         final String label;
-        final Config cfg;
         final ClosestMiss miss;
         int lastRestoreIters;
 
@@ -578,13 +547,10 @@ public final class BoundPrunedRecovery {
                        double[] cx, double[] cz, List<JumpConstraint> canonical, List<JumpLinearModel.Wall> baseWalls,
                        int[] consOfWall, int[] seamTick, int[] seamAxis, int[] seamGeWall, int[] seamLeWall,
                        int[] seamGeCons, int[] seamLeCons, double[] seamConst, double[] baseLo, double[] baseHi,
-                       int consWallCount, boolean patterned, double stopNorm, String label, double floorNorm,
-                       Config cfg, ClosestMiss miss) {
-            this.consWallCount = consWallCount;
+                       boolean patterned, double stopNorm, String label, double floorNorm, ClosestMiss miss) {
             this.patterned = patterned;
             this.stopNorm = stopNorm;
             this.label = label;
-            this.cfg = cfg;
             this.miss = miss;
             this.incumbentNorm = floorNorm;
             this.exact = exact;
@@ -625,7 +591,7 @@ public final class BoundPrunedRecovery {
         static Search build(ExactJumpModel exact, JumpSpec spec, JumpConstraintCompiler.Compiled acceptCompiled,
                             double feasTol, AtomicBoolean cancel, long deadline,
                             JumpLinearModel lin, List<JumpLinearModel.Wall> velWalls, boolean patterned,
-                            double stopNorm, String label, double floorNorm, Config cfg, ClosestMiss miss) {
+                            double stopNorm, String label, double floorNorm, ClosestMiss miss) {
             JumpPhysicsInputs sc = spec.asScenario();
             int objTick = spec.objective.tick;
 
@@ -731,14 +697,13 @@ public final class BoundPrunedRecovery {
                 baseHi[i] = band[1];
             }
 
-            int consWallCount = walls.size();
             if (velWalls != null) walls.addAll(velWalls);
             double[] cx = new double[lin.n];
             double[] cz = new double[lin.n];
             lin.objectiveVectors(spec.objective, cx, cz);
             return new Search(exact, spec, feasTol, cancel, deadline, sc, lin, acceptCompiled, cx, cz, canonical, walls,
                     consOfWall, seamTick, seamAxis, seamGeWall, seamLeWall, seamGeCons, seamLeCons, seamConst,
-                    baseLo, baseHi, consWallCount, patterned, stopNorm, label, floorNorm, cfg, miss);
+                    baseLo, baseHi, patterned, stopNorm, label, floorNorm, miss);
         }
 
         private static double reach(JumpLinearModel lin, int tick) {
@@ -761,29 +726,25 @@ public final class BoundPrunedRecovery {
             while (!open.isEmpty()) {
                 if (expired()) return;
                 Node nd = open.poll();
-                if (nd.bound <= incumbentNorm + cfg.pruneTol) {
+                if (nd.bound <= incumbentNorm + PRUNE_TOL) {
                     statPruned++;
                     continue;
                 }
                 int si = chooseSeam(nd);
-                if (nd.depth == 0 || si < 0 || nd.seedViol <= cfg.slpViolTrigger) {
+                if (nd.depth == 0 || si < 0 || nd.seedViol <= SLP_VIOL_TRIGGER) {
                     if (!expired()) {
                         statSlpCalls++;
-                        if (DEBUG && statSlpCalls <= 12) {
-                            System.out.printf("  BNB slp#%d depth=%d viol=%.5f bound=%.6f%n",
-                                    statSlpCalls, nd.depth, nd.seedViol, nd.bound);
-                        }
                         if (SolverTrace.on()) {
                             SolverTrace.log("BNB", "%s slp#%d depth=%d seedViol=%.3e bound=%.9f", label, statSlpCalls, nd.depth, nd.seedViol, nd.bound);
                         }
                         double[] slp = patterned
                                 ? SlpSolve.optimizeBestEffort(exact, pinnedSpec(nd.lo, nd.hi), feasTol, cancel, nd.seed,
-                                        cfg.treeSlpPhase1Calls, cfg.treeSlpTotalCalls, true, cfg.treeSlpTrMinDeg)
+                                        TREE_SLP_PHASE1_CALLS, TREE_SLP_TOTAL_CALLS, true, TREE_SLP_TR_MIN_DEG)
                                 : SlpSolve.optimize(exact, pinnedSpec(nd.lo, nd.hi), feasTol, cancel, nd.seed,
-                                        cfg.treeSlpPhase1Calls, cfg.treeSlpTotalCalls);
+                                        TREE_SLP_PHASE1_CALLS, TREE_SLP_TOTAL_CALLS);
                         if (slp != null && !Double.isNaN(offer(slp))) statSlpHits++;
                     }
-                    if (nd.bound <= incumbentNorm + cfg.pruneTol) continue;
+                    if (nd.bound <= incumbentNorm + PRUNE_TOL) continue;
                 }
                 if (si < 0) continue;
                 double w = nd.hi[si] - nd.lo[si];
@@ -814,7 +775,7 @@ public final class BoundPrunedRecovery {
                 return null;
             }
             double bound = r0.value + normConst;
-            if (Double.isNaN(bound) || bound <= incumbentNorm + cfg.pruneTol) {
+            if (Double.isNaN(bound) || bound <= incumbentNorm + PRUNE_TOL) {
                 statPruned++;
                 if (SolverTrace.on()) SolverTrace.log("BNB", "%s node#%d depth=%d bound=%.9f pruned vs incumbent=%.9f", label, statNodes, depth, bound, incumbentNorm);
                 return null;
@@ -827,7 +788,7 @@ public final class BoundPrunedRecovery {
             double bestSeedViol = seedViolOf(aligned, nodeWalls, bestSeed, slackScratch, residScratch);
             if (bestSeedViol > feasTol) {
                 double[] rungWarm = r0.lambda;
-                for (double margin : cfg.seedMargins) {
+                for (double margin : SEED_MARGINS) {
                     if (expired()) break;
                     CostateDualSolver.Result rm = dual.solve(margin, rungWarm);
                     if (rm == null) break;
@@ -841,28 +802,18 @@ public final class BoundPrunedRecovery {
                     if (v <= feasTol) break;
                 }
             }
-            traceRestore = DEBUG && depth == 0;
             Restored rest = restore(aligned, nodeWalls, bestSeed);
-            traceRestore = false;
             if (SolverTrace.on()) {
                 SolverTrace.log("BNB", "%s node#%d depth=%d bound=%.9f seedViol=%.3e restoreViol=%.3e restoreIters=%d",
                         label, statNodes, depth, bound, bestSeedViol, rest.viol, lastRestoreIters);
             }
             if (rest.viol <= feasTol && !Double.isNaN(offer(rest.theta))) statRestoreHits++;
-            if (DEBUG && depth == 0 && rest.viol > feasTol) {
-                double[] dgf = sc.toGameFacings(rest.theta);
-                for (int j = 0; j < aligned.size(); j++) {
-                    JumpConstraint c = aligned.get(j);
-                    double s = JumpConstraintCompiler.slack(c, dgf, rest.path);
-                    if (s > 0) System.out.printf("  BNB root residual %s slack=%.3e%n", c.name, s);
-                }
-            }
 
             double[] seamPos = new double[seamCount];
             for (int i = 0; i < seamCount; i++) {
                 seamPos[i] = seamAxis[i] == 0 ? rest.path.posX[seamTick[i]] : rest.path.posZ[seamTick[i]];
             }
-            if (bound <= incumbentNorm + cfg.pruneTol) {
+            if (bound <= incumbentNorm + PRUNE_TOL) {
                 statPruned++;
                 return null;
             }
@@ -890,14 +841,10 @@ public final class BoundPrunedRecovery {
             double[][] a = new double[n][n];
             double[] b = new double[n];
             double[] d = new double[n];
-            for (int iter = 0; iter < cfg.restoreIters; iter++) {
+            for (int iter = 0; iter < RESTORE_ITERS; iter++) {
                 if (expired()) break;
                 lastRestoreIters = iter + 1;
-                for (int t = 0; t < n; t++) {
-                    double phi = lin.baseArg(t) + theta[t] * RAD;
-                    ux[t] = lin.mMag(t) * StrictMath.cos(phi);
-                    uz[t] = lin.mMag(t) * StrictMath.sin(phi);
-                }
+                lin.inputVectors(theta, ux, uz);
                 for (int p = 0; p < n; p++) {
                     java.util.Arrays.fill(a[p], 0.0);
                     b[p] = 0.0;
@@ -960,10 +907,6 @@ public final class BoundPrunedRecovery {
                     cResid = cResid2;
                     cViol = cViol2;
                     grow *= 2.0;
-                }
-                if (traceRestore) {
-                    System.out.printf("    restore iter=%d cur=%.3e cand=%.3e step=%.4f damp=%.2e grow=%.1f%n",
-                            iter, cur, cViol, step, damp, grow);
                 }
                 if (cViol < cur) {
                     theta = cand;
@@ -1078,11 +1021,7 @@ public final class BoundPrunedRecovery {
                         int n = lin.n;
                         ux = new double[n];
                         uz = new double[n];
-                        for (int t = 0; t < n; t++) {
-                            double phi = lin.baseArg(t) + theta[t] * RAD;
-                            ux[t] = lin.mMag(t) * StrictMath.cos(phi);
-                            uz[t] = lin.mMag(t) * StrictMath.sin(phi);
-                        }
+                        lin.inputVectors(theta, ux, uz);
                     }
                     JumpLinearModel.Wall w = walls.get(j);
                     double au = 0.0;
@@ -1113,7 +1052,7 @@ public final class BoundPrunedRecovery {
             double bestWidth = -1.0;
             for (int i = 0; i < seamCount; i++) {
                 double w = nd.hi[i] - nd.lo[i];
-                if (w <= cfg.minSeamWidth) continue;
+                if (w <= MIN_SEAM_WIDTH) continue;
                 double out = Math.max(0.0, Math.max(nd.lo[i] - nd.seamPos[i], nd.seamPos[i] - nd.hi[i]));
                 if (best < 0 || out > bestOut || (out == bestOut && w > bestWidth)) {
                     best = i;
@@ -1177,11 +1116,6 @@ public final class BoundPrunedRecovery {
                 incumbentNorm = normed;
                 incumbentYaws = wrapped;
                 if (!Double.isNaN(stopNorm) && normed >= stopNorm) cancel.set(true);
-                if (DEBUG) {
-                    System.out.printf("  BNB incumbent %.9f at %.1f s (%s, %d nodes)%n",
-                            normed, (System.nanoTime() - debugEpoch) / 1e9,
-                            patterned ? "patterned" : "free", statNodes);
-                }
                 if (SolverTrace.on()) {
                     SolverTrace.log("BNB", "%s incumbent=%.9f nodes=%d%s", label, normed, statNodes,
                             !Double.isNaN(stopNorm) && normed >= stopNorm ? " stopAt reached" : "");

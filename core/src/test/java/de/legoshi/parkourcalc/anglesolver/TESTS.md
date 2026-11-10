@@ -104,6 +104,9 @@ anglesolver/
   DiskSocpKernelChordTest.java  fast-suite kernel coverage: two-axis ChordRow solves, the hardened
                            IPM jitter ladder, and the weak-duality infeasibility certificate
                            (FAIL_UNBOUNDED) that replaced the old fake-convergence
+  DiskSocpKernelCutoffTest.java  the dual cutoff of the certified B&B: a cutoff below the optimum leaves the
+                           solve bit-identical, one above it stops early (FAIL_CUTOFF) on a dual
+                           feasible point whose value is under the cutoff and still above the optimum
   FoldDriverEngineTest.java  #422 M1 engine-level gates through engine.solve() (driver wired as
                            primary recovery): j003 THOROUGH-10s in-deadline, j1150-noturn-inner
                            FAST solves (feasibility only, FAST has no objective bar), j154 FAST
@@ -117,6 +120,19 @@ anglesolver/
                            instance's certified optimum is certified infeasible (exhausted tree, no
                            unresolved drop), a feasible instance never carries one, an expired
                            deadline or a zero node cap leaves infeasibility uncertified
+  WitnessOracleTest.java   soundness oracle (SlowSolverTests, one case per solve/ capture): a random yaw path
+                           is forwarded byte-exactly from a launch turned by a random quarter turn, and
+                           1 to 4 UI constraints of every kind (X, Z, ranges, tick references, dX, dZ,
+                           dX vs dZ, F, dF) are derived from it with margins from 0 to 0.05, so a path
+                           exists by construction; the certified B&B must never certify infeasible, its
+                           landing must verify, its bound and a certified optimum must not lie short of
+                           the hill-climbed path, the closed form bound neither (pinned starts, 1e-4);
+                           the engine on FAST must solve every instance with margins of 1e-6 or more
+                           and never return INFEASIBLE on the tight ones; harness/WitnessProblem builds
+                           the instances
+  LinearModelLongRunTest.java  JumpLinearModel on a synthetic 400 tick hop chain: late ticks keep their
+                           coupling coefficients and the linear path stays within the sine table
+                           residual of the exact path (the prefix sum cancellation the oracle found)
   SolveFailureDiagnosticsTest.java  what a failed j004 solve reports: every constraint and the missed tick, the
                            closest attempt's values, the dF-band decline, the same-tick conflict; #462
                            the verdict end to end through the engine: the conflict and a wall half a
@@ -126,8 +142,7 @@ anglesolver/
                            is FEASIBLE
   CertifiedBnbEngineTest.java  #422 M2a certified-search gates (VerySlowSolverTests, -PverySlowTests; PRs to main only): all 5 small
                            captures reach certified gap <= 1.5e-4 with dominating bounds and
-                           feasible incumbents (per-capture numbers printed; the 1e-9 plateau
-                           mechanism is in ARCH2-M2A-CERTIFIED-BNB.md), foldable dF chains are
+                           feasible incumbents (per-capture numbers printed), foldable dF chains are
                            handled, not declined
   PipelineShapeTest.java   #422 M2b G3 enforcement (VerySlowSolverTests, -PverySlowTests; PRs to main only):
                            every corpus capture visits the one linear
@@ -226,16 +241,17 @@ resources/
 | `ProblemFixture` | load a capture + drive the engine (solve / directed); times it; `rig()` is a live engine over the capture for checks that solve more than once |
 | `Expect` | parse `<name>.expect.json`; supply defaults |
 | `ProblemCatalog` | discover check folders and the captures in them |
+| `WitnessProblem` | build a solve/ capture into an instance with a known path: random yaws forwarded byte-exactly, UI constraints derived from that path, the hill-climbed path as the objective reference |
 
 ## hpk_precise fixtures (#422 M1)
 
-PRECISE-spec knife-edge fixtures under `resources/captures/hpk_precise/`, each a triple
-`{orig,inner,witness}`; the `inner` variants are wired to `solve/` acceptance expects:
+PRECISE-spec knife-edge fixtures under `resources/captures/hpk_precise/`, each a pair
+`{inner,witness}`; the `inner` variants are wired to `solve/` acceptance expects:
 
 - `j1150-noturn-*`: the PRECISE j1150 inputs_gone spec with the solved pure no-turn schedule
   (#422 M0/M1). `inner` is the fixed-schedule inner problem (startTick 0, DF constraints
   stripped); `witness` is the p2 decode that replays byte-exact at X@49 = -2805.2990460856336,
-  viol 0.0; `orig` is the untouched save. Wired via solve/j1150-noturn-inner.expect.json.
+  viol 0.0. Wired via solve/j1150-noturn-inner.expect.json.
 - `j154-noturn-ja-*`: the corrected j154 spec with the X GE -1599.2 plate at t34 (user ruling
   2026-08-27; the deeper D2 result is invalid against it). `inner` is the fixed-schedule inner
   problem (DF stripped, debug synthesized from the solve artifacts); `witness` is the F3 decode,

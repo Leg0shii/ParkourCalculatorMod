@@ -84,7 +84,7 @@ public final class SineTableGeometry {
                 forward = Math.signum(forward) * raw;
                 strafe = sc.strafeSignAt(t) * raw;
             } else if (sine262) {
-                float sq = squareDiagInput();
+                float sq = ExactJumpModel.squareDiagonalInput();
                 forward = Math.signum(forward) * sq;
                 strafe = sc.strafeSignAt(t) * sq;
             } else {
@@ -135,18 +135,6 @@ public final class SineTableGeometry {
                 boost[t] = part(true, 0F, 0.2F, 0.0, 0.0);
             }
         }
-    }
-
-    private static float squareDiagInput() {
-        float dist = (float) Math.sqrt(2.0F);
-        float nn = 1.0F / dist;
-        float s = nn * 0.98F;
-        float len = (float) Math.sqrt(s * s + s * s);
-        float dirComp = s * (1.0F / len);
-        float tan = 1.0F;
-        float dtus = (float) Math.sqrt(1.0F + tan * tan);
-        float modLen = Math.min(len * dtus, 1.0F);
-        return dirComp * modLen;
     }
 
     private TickPart part(boolean legacyFloat, float sf, float ff, double sd, double fd) {

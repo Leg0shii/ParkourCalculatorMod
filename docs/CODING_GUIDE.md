@@ -1,6 +1,6 @@
 # Coding Guide
 
-How code is split across modules and how to decide where a new file goes. `CLAUDE.md` is the day-to-day map (and a "where to find what" table); this is the rulebook for the multi-module split. When in doubt, pick the simpler rule.
+How code is split across modules and how to decide where a new file goes. `AGENTS.md` is the day-to-day map (and a "where to find what" table); this is the rulebook for the multi-module split. When in doubt, pick the simpler rule.
 
 
 ## Modules at a glance
@@ -15,7 +15,7 @@ loader-fabric/         Stonecutter tree for every Fabric target (26.3 on Java 25
 loader-forge/          Stonecutter tree for both Forge targets (1.12.2, 1.8.9). Java 8, Unimined, LWJGL 2. MC-touching code.
 ```
 
-One root Gradle build covers `core`, `forge-core`, and one Gradle subproject per loader target (`:loader-fabric:26.3`, `:loader-fabric:1.21.3`, `:loader-fabric:1.20.4`, `:loader-forge:1.12.2`, `:loader-forge:1.8.9`); each target pins its own toolchain in `loader-<x>/versions/<mc>/gradle.properties`. Build tasks and JDK requirements are in `CLAUDE.md` § Build & Run.
+One root Gradle build covers `core`, `forge-core`, `gpu`, and one Gradle subproject per loader target (`:loader-fabric:26.3`, `:loader-fabric:1.21.3`, `:loader-fabric:1.20.4`, `:loader-forge:1.12.2`, `:loader-forge:1.8.9`); each target pins its own toolchain in `loader-<x>/versions/<mc>/gradle.properties`. Build tasks and JDK requirements are in `AGENTS.md` § Build & Run.
 
 
 ## Where does X go?
@@ -38,7 +38,7 @@ If none fit, you probably do not need the file. Re-check.
 
 - **Java 8 source** (`options.release = 8` on the JDK 21 daemon). No `var`, `record`, `getFirst`, `Math.clamp(int,int,int)`, switch expressions, or other Java 9+ API/syntax. The Forge loaders run on JDK 8 and will reject anything newer at runtime.
 - **No `net.minecraft.*`, `net.fabricmc.*`, `net.minecraftforge.*`, or `org.lwjgl.*` imports.** The build passes either way (ImGui compiles), but the Forge 1.8.9 jar explodes at class-load. Enforce in review.
-- **imgui-java is `compileOnly`, pinned to 1.86.12.** Every loader bundles that exact runtime, so core's compile version must match. 1.86.12 is the floor (its macOS native is universal x86_64 + arm64; 1.86.11 was x86_64-only and crashed Apple Silicon) and the ceiling (the koxx12-dev LWJGL 2 shim was built against 1.86.11's native surface, of which 1.86.12 is a strict superset; higher versions throw `NoSuchMethodError`). Do not change it. See `CLAUDE.md` § Don't.
+- **imgui-java is `compileOnly`, pinned to 1.86.12.** Every loader bundles that exact runtime, so core's compile version must match. 1.86.12 is the floor (its macOS native is universal x86_64 + arm64; 1.86.11 was x86_64-only and crashed Apple Silicon) and the ceiling (the koxx12-dev LWJGL 2 shim was built against 1.86.11's native surface, of which 1.86.12 is a strict superset; higher versions throw `NoSuchMethodError`). Do not change it. See `AGENTS.md` § Don't.
 - **No logging framework.** Forge 1.8.9 ships no SLF4J. Core surfaces errors via exceptions or return values for the loader to log; verbose debug dumps go through `System.out` gated behind `DebugFlags`.
 - **No MC-filesystem I/O.** The save/config location is a loader concern (run-dir layout differs per version). Core takes a `Path` or stream from the loader.
 
@@ -66,7 +66,7 @@ One Stonecutter tree for 1.12.2 (active, the raw source) and 1.8.9 (processed co
 
 Shared by both Forge loaders, **no Minecraft or Forge imports** (it only knows ImGui, the shim, and core's `OverlayManager` / `Settings`). Packages:
 
-- `lwjgl2/`: the ImGui-on-LWJGL 2 host (`Lwjgl2ImGuiHost`, `ImGuiGl3Compat`, `Lwjgl2InputState`); exposes a per-frame `renderFrame(...)` and applies `Settings.SCALE` at init.
+- `lwjgl2/`: the ImGui-on-LWJGL 2 host (`Lwjgl2ImGuiHost`, `ImGuiGl3Compat`, `Lwjgl2InputState`); exposes a per-frame `renderFrame(...)` and applies the UI scale preset `Settings.scaleIndex` (an index into `Settings.PRESET_SCALES`) at init.
 - `sim/`: `PlayerSprintMachine` (the pure-Java sprint state machine both Forge `SimulatorEntity`s share) and `PlaybackMoveState`. Lives here, not in `core/`, because its input field set is shaped after `EntityPlayerSP`'s 1.8/1.12 read set. Tested under `forge-core/src/test/` (`:forge-core:test`), including `SprintMachineCaptureParityTest`, which replays the Forge captures' recorded sprint and move state through the machine.
 - `render/`: `CountingBoxRenderer` (shared box-draw counting).
 - `io/`: `OsFilePicker` (the `FilePickerPort` impl both Forge loaders use).
@@ -86,7 +86,7 @@ The graphics-card implementation of core's `SchedulePoolScreen` port (the stratf
 
 ## Ports (port-and-adapter pattern)
 
-When core needs something only the loader has, define a small interface in `core/.../ports/` and let the loader implement it. The live ports are `Simulator`, `MinecraftAccess`, `BoxRenderer`, `PlaybackBridge`, and `FilePickerPort`.
+When core needs something only the loader has, define a small interface in `core/.../ports/` and let the loader implement it. The live ports are `Simulator`, `MinecraftAccess`, `BoxRenderer`, `PlaybackBridge`, `FilePickerPort`, `BlockPatcher`, and `BlockPicker`.
 
 Interfaces use core's own value types, never Minecraft ones:
 
@@ -102,7 +102,7 @@ public interface Simulator {
 }
 ```
 
-`FabricSimulator` (Fabric) and the Forge `SimulatorEntity` adapters implement it, translating MC types to `Vec3dCore` / `InputRow` at the boundary. Core never sees an MC type.
+Core's `LazyEntitySimulator` implements it once; `FabricSimulator` and `ForgeSimulator` extend it with their `SimulatorEntity`, translating MC types to `Vec3dCore` / `InputRow` at the boundary. Core never sees an MC type.
 
 Rules:
 - **Define the type once in `core/.../ports/`** using core value types (`Vec3dCore`, `InputRow`, ...). If MC types are handy at the call site, the loader translates; core cannot import them.
@@ -110,7 +110,7 @@ Rules:
 - **One interface per concern.** Do not lump everything the loader provides into one mega-interface.
 - **Defer the abstraction.** Do not add a port until some core code actually calls it. Speculative ports are dead weight.
 
-We use this manual pattern rather than Architectury's `@ExpectPlatform` because Architectury solves a different problem. It shares code between loaders on the *same* Minecraft version (for example Fabric and NeoForge on 1.21); our variation is across Minecraft *eras* (1.8.9, 1.12.2, 26.2), each with a single loader, where the APIs differ by generation (`Vec3` vs `Vec3d`, LWJGL 2 vs 3, whole render rewrites) and no unified API bridges them. Architectury's API and Loom also do not support 1.8.9 or 1.12.2 at all, and adopting Architectury Loom would displace Unimined, the toolchain those versions rely on. Revisit only if a second loader ever ships on the same MC version (for example NeoForge 26.2 beside Fabric 26.2).
+We use this manual pattern rather than Architectury's `@ExpectPlatform` because Architectury solves a different problem. It shares code between loaders on the *same* Minecraft version (for example Fabric and NeoForge on 1.21); our variation is across Minecraft *eras* (1.8.9, 1.12.2, 26.3), each with a single loader, where the APIs differ by generation (`Vec3` vs `Vec3d`, LWJGL 2 vs 3, whole render rewrites) and no unified API bridges them. Architectury's API and Loom also do not support 1.8.9 or 1.12.2 at all, and adopting Architectury Loom would displace Unimined, the toolchain those versions rely on. Revisit only if a second loader ever ships on the same MC version (for example NeoForge 26.3 beside Fabric 26.3).
 
 
 ## What we deliberately don't do

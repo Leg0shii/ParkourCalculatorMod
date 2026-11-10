@@ -17,14 +17,7 @@ public final class RelaxationRecovery {
         public int slpTotalCalls = 220;
     }
 
-    public static boolean DEBUG = false;
-    public static double[] debugLastStalled;
-
     private RelaxationRecovery() {
-    }
-
-    public static double[] solve(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel) {
-        return solve(exact, spec, feasTol, cancel, new Config());
     }
 
     public static double[] solve(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
@@ -49,7 +42,6 @@ public final class RelaxationRecovery {
 
         Seed base = seedAtMargin(exact, spec, sc, lin, cx, cz, mMag, walls, dual, 0.0, null, feasTol, cancel, cfg);
         double[] best = base.landed;
-        if (DEBUG && base.stalled != null) debugLastStalled = base.stalled.clone();
 
         double[] warmLambda = base.warm;
         for (int mi = 1; mi < cfg.seedMargins.length && best == null && !cancel.get(); mi++) {
@@ -61,7 +53,6 @@ public final class RelaxationRecovery {
             }
         }
         if (SolverTrace.on()) SolverTrace.log("RXT", "seedLadder done best=%s ms=%.1f", best != null, (System.nanoTime() - tSeed) / 1e6);
-        if (DEBUG) System.out.printf("  RELAX seedSlp=%s%n", best != null ? "OK" : "null");
         return best;
     }
 

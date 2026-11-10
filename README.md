@@ -24,8 +24,9 @@ A TAS input planning mod for Minecraft parkour. Plan inputs tick by tick, simula
 
 | Jar | Minecraft | Loader | Java | Extra dependency |
 |-----|-----------|--------|------|------------------|
-| `pkc-fabric-<version>.jar` | 26.3 (tracks the latest release) | Fabric | 25 | Fabric API |
+| `pkc-fabric-26.3-<version>.jar` | 26.3 (tracks the latest release) | Fabric | 25 | Fabric API |
 | `pkc-fabric-1.21.3-<version>.jar` | 1.21.3 | Fabric | 21 | none |
+| `pkc-fabric-1.20.4-<version>.jar` | 1.20.4 | Fabric | 17 | none |
 | `pkc-forge-1.8.9-<version>.jar` | 1.8.9 | Forge | 8 | none |
 | `pkc-forge-1.12.2-<version>.jar` | 1.12.2 | Forge | 8 | none |
 
@@ -34,13 +35,14 @@ Every jar ships the same core: the input table, the simulation, the angle solver
 ## Features
 
 ### Planning and simulation
-- **Tick-by-tick inputs**: W/A/S/D, jump, sneak, sprint, left/right click, close inventory, hotbar slot, yaw and pitch per tick, plus Speed, Jump Boost and Slowness amplifiers (up to 255) and per-tick teleport destinations. Hide the columns you do not use.
+- **Tick-by-tick inputs**: W/A/S/D, jump, sneak, sprint, left/right click, close inventory, hotbar slot, yaw and pitch per tick, plus the movement effects the game version has (Speed, Slowness, Jump Boost and Levitation with amplifiers up to 255, Slow Falling, Dolphin's Grace, Blindness and Weaving as on/off) and per-tick teleport destinations. Hide the columns you do not use.
 - **Real Minecraft physics**: the path is produced by a real player entity running the game's own movement code, so what you see is what the game does. No approximation, no drift.
 - **Live path in the world**: every tick is a box; edit an input and the path updates immediately. Yaw arrows, hitboxes, sub-tick positions, hit distance lines and constraint plates can each be toggled and recolored.
 - **In-world editing**: drag the start box to move the setup, Shift+drag to move it rigidly along collision-free ground, right-drag a box to set that tick's yaw, Ctrl+right-drag to set its pitch. Tapping a box selects the tick.
 - **Editable start state**: position, velocity, rotation, on-ground, sprinting, wall contact, jump cooldown and sprint window are all editable; a resume state lets a TAS continue from a mid-run checkpoint.
 - **Tick Info**: a configurable panel showing motion, speed, position, acceleration, in-game yaw, collision flags and more for the selected tick.
 - **Paired client-server simulation** (singleplayer): a server-side player runs the same inputs through the real server code, so fall damage, velocity packets, rubber-banding and block interactions show up in the path and in the Server Events log.
+- **Block Overrides** (singleplayer): a per-TAS table of blocks that appear or go at a set tick, so the path and the replay see a block that is placed or removed mid-run.
 - **Undo/redo** (Ctrl+Z / Ctrl+Y), optionally also while the UI is closed.
 
 ### Angle solver
@@ -62,8 +64,15 @@ Every jar ships the same core: the input table, the simulation, the angle solver
 ### Velocity map
 - Sweep launch velocities against a jump and see which ones land it, as a 2D heatmap or an orbitable 3D surface. Apply a cell to the start state with one click.
 
+### Sense Finder
+- Finds the mouse sensitivities at which the solved turn lands in whole mouse pixels and shows how many pixels of slack each turn tick has. Click a row to write its facings into the TAS; Apply sets the game sensitivity to that row.
+
+### Onejump
+- Practise one jump of the TAS in game: every real attempt is compared tick by tick against the TAS keys and turn, with the landing offset, the tick where it failed and a landing chance from your own attempts.
+
 ### Playback
 - **Singleplayer replay**: play your inputs from the start, from a selected tick or over a range, with a configurable start delay and optional lockstep with the server. The replay freezes while the game is paused, the input table follows the active tick, and the path can stay visible during the replay.
+- **Keystrokes**: optional HUD panels show the replay's keys, mouse buttons and mouse movement.
 - **Client-sided multiplayer replay**: on a server a ghost player replays the TAS for you alone. Your own player never moves and nothing is sent to the server.
 
 ### Files
@@ -125,13 +134,13 @@ Click and drag the first box in the world. Hold Shift to move the whole path rig
 
 ## Installation
 
-Releases ship one jar per loader, on [Modrinth](https://modrinth.com/mod/parkourcalculator) and on the [GitHub releases page](https://github.com/Leg0shii/ParkourCalculatorMod/releases/latest). `<version>` is the release tag without the `v` prefix (e.g. `1.12.0`).
+Releases ship one jar per row of the table above, on [Modrinth](https://modrinth.com/mod/parkourcalculator) and on the [GitHub releases page](https://github.com/Leg0shii/ParkourCalculatorMod/releases/latest). `<version>` is the release tag without the `v` prefix (e.g. `1.12.0`).
 
 ### Fabric (latest Minecraft, currently 26.3)
 
 1. Install the [Fabric Loader](https://fabricmc.net/use/installer/) for the Minecraft version named in the release notes.
 2. Install [Fabric API](https://modrinth.com/mod/fabric-api) into your `mods` folder.
-3. Drop `pkc-fabric-<version>.jar` into the same `mods` folder.
+3. Drop `pkc-fabric-26.3-<version>.jar` into the same `mods` folder.
 4. Launch the Fabric profile for that Minecraft version.
 
 Runs next to [BPKMod](https://github.com/xiaozi233/BPKMod) (Bedrock-style movement on Java): the simulation follows BPKMod's config live, the angle solver reads it at launch, and a HUD line on world join says which rules it saw. Restart the game after changing BPKMod's config so the solver follows. The same holds on Forge 1.12.2 next to BPKMod 1.5.7.
@@ -141,6 +150,12 @@ Runs next to [BPKMod](https://github.com/xiaozi233/BPKMod) (Bedrock-style moveme
 1. Install the [Fabric Loader](https://fabricmc.net/use/installer/) for 1.21.3 (no additional APIs required).
 2. Drop `pkc-fabric-1.21.3-<version>.jar` into your `mods` folder.
 3. Launch the 1.21.3 Fabric profile.
+
+### Fabric 1.20.4
+
+1. Install the [Fabric Loader](https://fabricmc.net/use/installer/) for 1.20.4 (no additional APIs required).
+2. Drop `pkc-fabric-1.20.4-<version>.jar` into your `mods` folder.
+3. Launch the 1.20.4 Fabric profile.
 
 ### Forge 1.8.9
 
@@ -158,7 +173,7 @@ After launch, open the in-game **Mods** menu to confirm Parkour Calculator is li
 
 ## Building from source
 
-The Gradle daemon runs on JDK 21. The Fabric targets use auto-provisioned JDK 25 (26.3), JDK 21 (1.21.3) and JDK 17 (1.20.4) toolchains; the Forge targets need a local JDK 8.
+The Gradle daemon runs on JDK 21. The Fabric targets use auto-provisioned JDK 25 (26.3) and JDK 21 (1.21.3, and 1.20.4 at Java 17 release level) toolchains; the Forge targets need a local JDK 8. `gradle.properties` pins the daemon to a Windows JDK path (`org.gradle.java.home`); anywhere else append `-Dorg.gradle.java.home="$JAVA_HOME"` with `JAVA_HOME` on a JDK 21, as CI does.
 
 ```bash
 ./gradlew :core:test                      # fast test suite (no Minecraft needed)
@@ -171,7 +186,7 @@ Modules: `core/` is the Minecraft-free UI, data and solver code (Java 8), `forge
 
 ## Contributing
 
-See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the full workflow. Quick summary: `main` holds released code and `dev` is the integration branch. Feature branches come off `dev` and are squash-merged into it with a [Conventional Commits](https://www.conventionalcommits.org/) PR title (`feat:`, `fix:`, `feat!:`); a weekly train merges `dev` into `main` as a merge commit. Versioning, tagging, the CHANGELOG and the publication of the four loader jars to GitHub and Modrinth are automated via [release-please](https://github.com/googleapis/release-please).
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the full workflow. Quick summary: `main` holds released code and `dev` is the integration branch. Feature branches come off `dev` and are squash-merged into it with a [Conventional Commits](https://www.conventionalcommits.org/) PR title (`feat:`, `fix:`, `feat!:`); a weekly train merges `dev` into `main` as a merge commit. Versioning, tagging, the CHANGELOG and the publication of the five loader jars to GitHub and Modrinth are automated via [release-please](https://github.com/googleapis/release-please).
 
 ## Community
 

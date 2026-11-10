@@ -216,6 +216,6 @@ public final class ReplayKeystrokesPanel {
 
     private static int withAlpha(int color, float alpha) {
         int a = (int) (((color >>> 24) & 0xFF) * alpha);
-        return (color & 0x00FFFFFF) | (a << 24);
+        return (color & 0xFFFFFF) | (a << 24);
     }
 }

@@ -58,8 +58,6 @@ public final class SenseFinderWindow implements RenderInterface {
 
         SenseFinder.Turn searchedTurn();
 
-        SenseFinder.Window window();
-
         SenseFinder.Mode rankMode();
 
         void setRankMode(SenseFinder.Mode mode);
@@ -69,10 +67,6 @@ public final class SenseFinderWindow implements RenderInterface {
         float maxPercent();
 
         void setRange(float min, float max);
-
-        int firstTick();
-
-        int lastTick();
 
         void setTicks(int first, int last);
 
@@ -94,6 +88,7 @@ public final class SenseFinderWindow implements RenderInterface {
     private static final float WIN_H = 520f;
     private static final float MIN_W = 480f;
     private static final float MIN_H = 300f;
+    private static final int MAX_TICK_COLUMNS = 60;
     private static final String SEARCH_TIP = "Round the solved turn to whole mouse pixels at every sense in the range"
             + " and list the pixel counts that still land.";
     private static final String TICKS_TIP = "Turn ticks whose turn range is measured. The Margin column sums"
@@ -262,7 +257,7 @@ public final class SenseFinderWindow implements RenderInterface {
     }
 
     private void rows(SenseFinder.Turn turn, float height) {
-        int ticks = turn.angles();
+        int ticks = Math.min(turn.angles(), MAX_TICK_COLUMNS);
         int cols = 4 + ticks;
         int flags = ImGuiTableFlags.ScrollX;
         if (!ThemeManager.beginStandardClickableRowsTable(TABLE_ID, cols, flags, 0f, height)) return;
@@ -355,12 +350,12 @@ public final class SenseFinderWindow implements RenderInterface {
         ImGui.tableSetColumnIndex(1);
         ThemeManager.textRight(senseText(c.sens) + "%");
         ImGui.tableSetColumnIndex(2);
-        ThemeManager.textRight(offsetText(c.offset));
+        ThemeManager.textRight(ConstraintText.signedStat(c.offset));
         ImGui.tableSetColumnIndex(3);
         ThemeManager.textRight(c.weakestTick() < 0 ? "-" : c.marginsComplete() ? marginText(c.totalTarget()) : "...");
         if (game) ThemeManager.popTextColor();
         int weakest = c.weakestTick();
-        for (int k = 0; k < c.pixels.length; k++) {
+        for (int k = 0; k < Math.min(c.pixels.length, MAX_TICK_COLUMNS); k++) {
             ImGui.tableSetColumnIndex(4 + k);
             cell(c, k, k == weakest && c.marginsComplete(), settings.senseFinderCountView);
         }
@@ -373,7 +368,7 @@ public final class SenseFinderWindow implements RenderInterface {
         if (weakest) ThemeManager.popTextColor();
         if (!ImGui.isItemHovered()) return;
         ImGui.beginTooltip();
-        if (ImGui.beginTable("##cell_tip", 2)) {
+        if (ThemeManager.beginStandardFormTable("##cell_tip", 2)) {
             if (c.hasMargin(k)) {
                 tipHeading("Turn range");
                 tipValue("Pixels", rangeText(c.landingRange(k)));
@@ -382,7 +377,7 @@ public final class SenseFinderWindow implements RenderInterface {
             tipHeading("Turn");
             tipValue("Pixels", Integer.toString(c.pixels[k]));
             tipValue("Degrees", String.format(Locale.ROOT, "%.2f°", c.turnDeg(k)));
-            ImGui.endTable();
+            ThemeManager.endStandardFormTable();
         }
         ImGui.endTooltip();
     }
@@ -418,7 +413,7 @@ public final class SenseFinderWindow implements RenderInterface {
 
     private static float parse(String text, float fallback) {
         try {
-            return Float.parseFloat(text.replace("%", "").replace("T", "").trim());
+            return Float.parseFloat(text.trim());
         } catch (NumberFormatException ex) {
             return fallback;
         }
@@ -430,10 +425,5 @@ public final class SenseFinderWindow implements RenderInterface {
 
     private static String percentText(double percent) {
         return String.format(Locale.ROOT, "%.2f", percent);
-    }
-
-    private static String offsetText(double offset) {
-        if (Double.isNaN(offset)) return "-";
-        return (offset >= 0 ? "+" : "") + ConstraintText.fixedStat(offset);
     }
 }

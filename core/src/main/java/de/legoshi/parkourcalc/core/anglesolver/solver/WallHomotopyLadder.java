@@ -78,7 +78,7 @@ public final class WallHomotopyLadder {
             if (c.cmp != JumpConstraint.Cmp.GE && c.cmp != JumpConstraint.Cmp.LE) continue;
             String n = c.name;
             if (n == null) continue;
-            if (n.endsWith("lo") || n.endsWith("hi") || n.endsWith("eqLo") || n.endsWith("eqHi")) continue;
+            if (n.endsWith("lo") || n.endsWith("hi") || c.isEqHalf()) continue;
             out.add(n);
         }
         return out;

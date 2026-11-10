@@ -7,11 +7,10 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.NodeOutcome;
 import de.legoshi.parkourcalc.core.anglesolver.graph.NodeRuntime;
 import de.legoshi.parkourcalc.core.anglesolver.graph.ParamParse;
 import de.legoshi.parkourcalc.core.anglesolver.graph.ParamValues;
+import de.legoshi.parkourcalc.core.anglesolver.graph.Scoring;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.LongRunSolver;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolverTrace;
-import de.legoshi.parkourcalc.core.anglesolver.solver.StartBox;
-import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -42,8 +41,7 @@ public final class RecedingHorizonNode implements NodeRuntime {
                 : null;
         if (free != null) {
             JumpPhysicsInputs sc = ctx.scenario;
-            sc.startPos = new Vec3dCore(free.startX, sc.startPos.y, free.startZ);
-            sc.startBox = StartBox.pinned(free.startX, free.startZ, sc.initialVelocity.x, sc.initialVelocity.z);
+            Scoring.adoptPinnedStart(sc, free.startX, free.startZ);
             ctx.chainAppend("free window");
             if (SolverTrace.on()) {
                 SolverTrace.log("ENGINE", "receding horizon free window start=(%.5f,%.5f)",

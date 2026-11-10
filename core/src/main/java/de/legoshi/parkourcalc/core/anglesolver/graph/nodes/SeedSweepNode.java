@@ -50,7 +50,7 @@ public final class SeedSweepNode implements NodeRuntime {
 
     @Override
     public NodeOutcome execute(GraphContext ctx, Candidate in, AtomicBoolean nodeToken, long deadlineNanos) {
-        if (!ctx.exact() || !ctx.freeStart || ctx.freeBox == null || ctx.stageLocked() || seeds <= 0) {
+        if (!ctx.exact() || !ctx.freeStart || ctx.stageLocked() || seeds <= 0) {
             return NodeOutcome.of(Guarantee.NONE, in);
         }
         List<double[]> refs = seedPoints(ctx.freeBox, seeds);

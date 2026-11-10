@@ -41,8 +41,4 @@ public final class BlockSelection {
         AABB box = new AABB(new Vec3dCore(x, y, z), new Vec3dCore(x + 1.0, y + 1.0, z + 1.0));
         return new BlockSelection(kind, x, y, z, box);
     }
-
-    public String coordLabel() {
-        return x + ", " + y + ", " + z;
-    }
 }

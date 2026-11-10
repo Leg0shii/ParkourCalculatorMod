@@ -231,7 +231,7 @@ public class WallHomotopyLadderTest {
         JumpPhysicsInputs sc = l.spec.asScenario();
         int n = sc.numTicks;
         Witness w = witness(witness, n, perturbBuckets);
-        JumpPhysicsInputs sc2 = Scoring.pinnedScenario(sc, w.px, w.pz);
+        JumpPhysicsInputs sc2 = sc.pinnedAt(w.px, w.pz);
         double[] pgf = sc2.toGameFacings(w.yaws);
         ForwardPath pfp = l.model.forward(sc2, pgf);
         JumpConstraintCompiler.Compiled comp = JumpConstraintCompiler.compile(l.spec);
@@ -243,7 +243,7 @@ public class WallHomotopyLadderTest {
         JumpLinearModel lin = new JumpLinearModel(sc2, zx, zz);
         List<FoldReplayDriver.Round> sink = new ArrayList<>();
         AnchorSlp.Outcome oc = AnchorSlp.polish(l.model, l.spec, comp, sc, lin, w.yaws, pgf, pfp,
-                w.px, w.pz, pviol, sink, l.spec.objective.sense == Objective.Sense.MAX);
+                w.px, w.pz, pviol, sink);
         assertNotNull(capture + " perturb " + perturbBuckets
                 + ": margins+SLP must land byte-exact from the perturbed witness anchor, best viol "
                 + oc.viol + " after " + sink.size() + " steps", oc.landed);
@@ -255,7 +255,7 @@ public class WallHomotopyLadderTest {
         JumpPhysicsInputs sc = l.spec.asScenario();
         int n = sc.numTicks;
         Witness w = witness(witness, n, 0);
-        JumpPhysicsInputs sc2 = Scoring.pinnedScenario(sc, w.px, w.pz);
+        JumpPhysicsInputs sc2 = sc.pinnedAt(w.px, w.pz);
         double[] gf = sc2.toGameFacings(w.yaws);
         ForwardPath fp = l.model.forward(sc2, gf);
         boolean[] zx = new boolean[n];
@@ -274,7 +274,7 @@ public class WallHomotopyLadderTest {
         Loaded l = load(capture);
         JumpPhysicsInputs sc = l.spec.asScenario();
         Witness w = witness(witness, sc.numTicks, 0);
-        JumpPhysicsInputs sc2 = Scoring.pinnedScenario(sc, w.px, w.pz);
+        JumpPhysicsInputs sc2 = sc.pinnedAt(w.px, w.pz);
         double[] gf = sc2.toGameFacings(w.yaws);
         ForwardPath fp = l.model.forward(sc2, gf);
         double obj = l.spec.objective.evaluate(fp);

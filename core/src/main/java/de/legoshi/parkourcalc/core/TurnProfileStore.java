@@ -3,6 +3,7 @@ package de.legoshi.parkourcalc.core;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.SerializedName;
+import de.legoshi.parkourcalc.core.io.AtomicFiles;
 import de.legoshi.parkourcalc.core.save.FileSystemSaveStore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 
@@ -10,9 +11,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
@@ -196,11 +195,7 @@ public final class TurnProfileStore {
                     out.write('\n');
                 }
             }
-            try {
-                Files.move(tmp, p, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
-            } catch (AtomicMoveNotSupportedException e) {
-                Files.move(tmp, p, StandardCopyOption.REPLACE_EXISTING);
-            }
+            AtomicFiles.replace(tmp, p);
             lastError = null;
             return true;
         } catch (Exception e) {

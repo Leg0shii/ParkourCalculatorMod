@@ -170,6 +170,7 @@ public class SelectionManager {
         }
         selectedRows.clear();
         selectedRows.addAll(adjusted);
+        if (lastClickedRow >= insertIndex) lastClickedRow += count;
     }
 
     private ModifierState getModifierState() {

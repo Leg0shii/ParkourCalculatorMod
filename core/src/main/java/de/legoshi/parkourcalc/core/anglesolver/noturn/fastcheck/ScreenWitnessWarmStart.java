@@ -37,7 +37,7 @@ public final class ScreenWitnessWarmStart implements FastCheck {
         int[] combos = NoTurnProblem.combosOf(sc, n - 1);
         boolean[] sprint = NoTurnProblem.sprintOf(sc, n - 1);
 
-        double center = driver.diskFeasibleTheta(combos, sprint, null);
+        double center = driver.diskFeasibleTheta(combos, sprint);
         double[] witness = driver.screenExact(combos, sprint, center);
         double[] warmSeed = new double[n];
         driver.fillSeed(warmSeed);

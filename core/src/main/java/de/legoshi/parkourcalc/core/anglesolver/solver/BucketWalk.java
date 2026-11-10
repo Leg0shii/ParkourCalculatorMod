@@ -16,7 +16,7 @@ public final class BucketWalk {
     public static final int WINDOW_LEGACY = 50;
     public static final int WINDOW_262 = 3;
 
-    private static final double RAD = Math.PI / 180.0;
+    private static final double RAD = Angles.RAD_PER_DEG;
     private static final int LP_MAX_ITER = 2000;
     private static final double LP_FRAC_EPS = 0.05;
     private static final int ENUM_TICKS = 6;
@@ -86,7 +86,7 @@ public final class BucketWalk {
         if (rs == null) return null;
         TrustRegionLp.Result p1 = TrustRegionLp.solve(rs.rows, rs.viol, null, WALK_W, true, 0.0, LP_MAX_ITER);
         if (p1 == null) return null;
-        return roundGuided(rs, p1.d, budget, Double.NaN, null);
+        return roundGuided(rs, p1.d, budget, null);
     }
 
     static IntStep objStep(ExactJumpModel exact, JumpLinearModel lin, JumpSpec spec, double[] yaws,
@@ -132,13 +132,10 @@ public final class BucketWalk {
         }
         double[] objMax = new double[rs.cols];
         for (int i = 0; i < rs.cols; i++) objMax[i] = -objRowNeg[i];
-        return roundGuided(new AnchorSlp.RowSet(rs.rows, shifted, rs.free, rs.cx0, rs.wx0, rs.cz0,
-                rs.wz0, rs.n, rs.cols, rs.ux, rs.uz, rs.yawScale, rs.trustUnits, rs.names),
-                p2.d, budget, 0.0, objMax);
+        return roundGuided(rs.withViol(shifted), p2.d, budget, objMax);
     }
 
-    private static IntStep roundGuided(AnchorSlp.RowSet rs, double[] d, int budget,
-                                       double minSlackReq, double[] objMax) {
+    private static IntStep roundGuided(AnchorSlp.RowSet rs, double[] d, int budget, double[] objMax) {
         int n = rs.n;
         int m = rs.rows.length;
         Integer[] order = new Integer[n];
@@ -255,7 +252,7 @@ public final class BucketWalk {
             if (objMax == null) {
                 score = smin - MOVE_TIE * cost;
             } else {
-                if (smin < minSlackReq) continue;
+                if (smin < 0.0) continue;
                 ds = 0.0;
                 if (rs.free) {
                     double dxCur = rs.wx0 != 0.0 ? -rs.cx0 * rs.trustUnits / rs.wx0 : 0.0;
@@ -350,8 +347,8 @@ public final class BucketWalk {
         double pz = pz0;
         double bestViol = viol0;
 
-        double[] snapped = snapToBucketCenters(FoldReplayDriver.pinnedCopy(sc, px0, pz0), exact, yaws0);
-        JumpPhysicsInputs scSnap = FoldReplayDriver.pinnedCopy(sc, px0, pz0);
+        double[] snapped = snapToBucketCenters(sc.pinnedAt(px0, pz0), exact, yaws0);
+        JumpPhysicsInputs scSnap = sc.pinnedAt(px0, pz0);
         double[] sgf = scSnap.toGameFacings(snapped);
         ForwardPath spath = exact.forward(scSnap, sgf);
         double sviol = compiled.maxViolation(sgf, spath);
@@ -381,9 +378,9 @@ public final class BucketWalk {
             double[] cand = new double[n];
             for (int t = 0; t < n; t++) cand[t] = yaws[t] + st.b[t] * BUCKET_DEG;
             cand = Angles.wrapAll(cand);
-            double npx = free ? clamp(px + st.dpx, box.pxLo, box.pxHi) : px;
-            double npz = free ? clamp(pz + st.dpz, box.pzLo, box.pzHi) : pz;
-            JumpPhysicsInputs scRep = FoldReplayDriver.pinnedCopy(sc, npx, npz);
+            double npx = free ? box.clampX(px + st.dpx) : px;
+            double npz = free ? box.clampZ(pz + st.dpz) : pz;
+            JumpPhysicsInputs scRep = sc.pinnedAt(npx, npz);
             double[] cgf = scRep.toGameFacings(cand);
             ForwardPath cpath = exact.forward(scRep, cgf);
             double cViol = compiled.maxViolation(cgf, cpath);
@@ -431,7 +428,7 @@ public final class BucketWalk {
         double[] yaws = start.yawsDeg;
         double px = start.px;
         double pz = start.pz;
-        JumpPhysicsInputs scCur = FoldReplayDriver.pinnedCopy(sc, px, pz);
+        JumpPhysicsInputs scCur = sc.pinnedAt(px, pz);
         double[] gf = scCur.toGameFacings(yaws);
         ForwardPath path = exact.forward(scCur, gf);
         int budget = OBJ_BUDGET;
@@ -454,9 +451,9 @@ public final class BucketWalk {
             double[] cand = new double[n];
             for (int t = 0; t < n; t++) cand[t] = yaws[t] + st.b[t] * BUCKET_DEG;
             cand = Angles.wrapAll(cand);
-            double npx = free ? clamp(px + st.dpx, box.pxLo, box.pxHi) : px;
-            double npz = free ? clamp(pz + st.dpz, box.pzLo, box.pzHi) : pz;
-            JumpPhysicsInputs scRep = FoldReplayDriver.pinnedCopy(sc, npx, npz);
+            double npx = free ? box.clampX(px + st.dpx) : px;
+            double npz = free ? box.clampZ(pz + st.dpz) : pz;
+            JumpPhysicsInputs scRep = sc.pinnedAt(npx, npz);
             double[] cgf = scRep.toGameFacings(cand);
             ForwardPath cpath = exact.forward(scRep, cgf);
             double cViol = compiled.maxViolation(cgf, cpath);
@@ -494,7 +491,7 @@ public final class BucketWalk {
                                         double viol0, boolean max, List<FoldReplayDriver.Round> roundsSink) {
         int n = lin.n;
         int window = exact.sine262() ? WINDOW_262 : WINDOW_LEGACY;
-        JumpPhysicsInputs scRep = FoldReplayDriver.pinnedCopy(sc, px, pz);
+        JumpPhysicsInputs scRep = sc.pinnedAt(px, pz);
         double[] yaws = Angles.wrapAll(yaws0);
         double[] gf = scRep.toGameFacings(yaws);
         ForwardPath path = exact.forward(scRep, gf);
@@ -579,17 +576,26 @@ public final class BucketWalk {
         return new AnchorSlp.Outcome(null, yaws, gf, path, px, pz, viol);
     }
 
+    static boolean boostTick(ExactJumpModel exact, JumpPhysicsInputs sc, int t) {
+        boolean grounded = !Double.isNaN(sc.slipAt(t));
+        return !exact.modern() && grounded && sc.jumpAt(t) && sc.sprintAt(t);
+    }
+
     static float[] candidates(ExactJumpModel exact, JumpPhysicsInputs sc, int t, float gf, int window) {
+        return candidates(exact, sc, t, gf, (double) gf, window);
+    }
+
+    static float[] candidates(ExactJumpModel exact, JumpPhysicsInputs sc, int t, float center, double base,
+                              int window) {
         if (!exact.sine262()) {
-            boolean grounded = !Double.isNaN(sc.slipAt(t));
-            boolean boost = !exact.modern() && grounded && sc.jumpAt(t) && sc.sprintAt(t);
-            return FacingLattice.cellRepresentatives(gf, -window, window, exact.modern(), boost);
+            return FacingLattice.cellRepresentatives(center, -window, window, exact.modern(), boostTick(exact, sc, t));
         }
         float[] out = new float[2 * window + 1];
+        double adj0 = centerAdjustDeg(center, exact.modern(), true);
         for (int i = 0; i < out.length; i++) {
             int k = i - window;
-            double adj = centerAdjustDeg(gf, exact.modern(), true) + k * BUCKET_DEG;
-            out[i] = (float) ((double) gf + adj);
+            double adj = adj0 + k * BUCKET_DEG;
+            out[i] = (float) (base + adj);
         }
         return out;
     }
@@ -618,10 +624,10 @@ public final class BucketWalk {
             deltas.add(new double[]{-m, -m});
         }
         for (double[] d : deltas) {
-            double npx = clamp(px + d[0], box.pxLo, box.pxHi);
-            double npz = clamp(pz + d[1], box.pzLo, box.pzHi);
+            double npx = box.clampX(px + d[0]);
+            double npz = box.clampZ(pz + d[1]);
             if (npx == px && npz == pz) continue;
-            JumpPhysicsInputs scRep = FoldReplayDriver.pinnedCopy(sc, npx, npz);
+            JumpPhysicsInputs scRep = sc.pinnedAt(npx, npz);
             double[] gf = scRep.toGameFacings(yaws);
             ForwardPath p = exact.forward(scRep, gf);
             double v = compiled.maxViolation(gf, p);
@@ -647,9 +653,5 @@ public final class BucketWalk {
     private static ForwardPath copyPath(ForwardPath p) {
         return new ForwardPath(p.posX.clone(), p.posY.clone(), p.posZ.clone(),
                 p.velX.clone(), p.velY.clone(), p.velZ.clone());
-    }
-
-    private static double clamp(double v, double lo, double hi) {
-        return v < lo ? lo : (v > hi ? hi : v);
     }
 }

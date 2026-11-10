@@ -153,7 +153,7 @@ public final class DegenerateTickAscent {
         ForwardPath path = exact.forward(sc, gf);
         double viol = compiled.maxViolation(gf, path);
         double obj = spec.objective.evaluate(path);
-        return new Cand(yaws, obj, viol <= feasTol, viol, Angles.wrap(theta));
+        return new Cand(yaws, obj, viol <= feasTol, Angles.wrap(theta));
     }
 
     private static void addPin(List<JumpConstraint> cons, int tick, double theta) {
@@ -178,14 +178,12 @@ public final class DegenerateTickAscent {
         final double[] yaws;
         final double obj;
         final boolean feasible;
-        final double violation;
         final double theta;
 
-        Cand(double[] yaws, double obj, boolean feasible, double violation, double theta) {
+        Cand(double[] yaws, double obj, boolean feasible, double theta) {
             this.yaws = yaws;
             this.obj = obj;
             this.feasible = feasible;
-            this.violation = violation;
             this.theta = theta;
         }
     }
