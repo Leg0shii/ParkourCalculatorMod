@@ -12,6 +12,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardPath;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
+import de.legoshi.parkourcalc.core.io.WriterThread;
 import de.legoshi.parkourcalc.core.render.ConstraintShapes;
 import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
@@ -153,11 +154,7 @@ public final class TurnProfileController {
         t.setDaemon(true);
         return t;
     });
-    private final ExecutorService io = Executors.newSingleThreadExecutor(r -> {
-        Thread t = new Thread(r, "pkc-onejump-io");
-        t.setDaemon(true);
-        return t;
-    });
+    private ExecutorService io;
     private final ExecutorService deep = Executors.newSingleThreadExecutor(r -> {
         Thread t = new Thread(r, "pkc-onejump-deep");
         t.setDaemon(true);
@@ -260,17 +257,22 @@ public final class TurnProfileController {
             final TurnReference ref = document.reference().copy();
             final List<TurnAttempt> all = new ArrayList<TurnAttempt>(document.attempts());
             document.markClean();
-            io.submit(() -> {
+            io().submit(() -> {
                 if (!store.save(name, ref, all)) storeError = writeError();
             });
         } else if (document.hasPending()) {
             final List<TurnAttempt> added = document.drainPending();
             final TurnReference ref = document.reference().copy();
             final List<TurnAttempt> all = new ArrayList<TurnAttempt>(document.attempts());
-            io.submit(() -> {
+            io().submit(() -> {
                 if (!store.append(name, added) && !store.save(name, ref, all)) storeError = writeError();
             });
         }
+    }
+
+    private ExecutorService io() {
+        if (io == null) io = WriterThread.create("pkc-onejump-io", "pkc-onejump-flush");
+        return io;
     }
 
     private String writeError() {
