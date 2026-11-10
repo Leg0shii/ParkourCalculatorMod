@@ -211,10 +211,6 @@ public final class JumpLinearModel {
         return p;
     }
 
-    public boolean hasDamage() {
-        return dmgTicks.length > 0;
-    }
-
     private void precompute() {
         for (int t = 0; t < n; t++) {
             // Ground/air + jump authored per tick, matching ExactJumpModel: a tick is grounded iff its slip

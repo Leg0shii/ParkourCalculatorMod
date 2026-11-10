@@ -46,8 +46,6 @@ public final class SolveProgress {
     private String bestSolver;
     private Supplier<String> activeNodeSource;
     private Supplier<double[]> startSource;
-    private SolveProgress forwardTarget;
-    private String forwardNode;
 
     public SolveProgress(boolean maximize, boolean stopOnFeasible) {
         this(maximize, stopOnFeasible, 0.0, 0.0);
@@ -72,11 +70,6 @@ public final class SolveProgress {
         this.startSource = source;
     }
 
-    public synchronized void forwardTo(SolveProgress target, String nodeLabel) {
-        this.forwardTarget = target;
-        this.forwardNode = nodeLabel;
-    }
-
     public boolean stopOnFeasible() {
         return stopOnFeasible;
     }
@@ -92,16 +85,7 @@ public final class SolveProgress {
     public synchronized void report(double[] absWrappedYaws, double objective, double violation, boolean feasible) {
         if (absWrappedYaws == null) return;
         String node = activeNodeSource != null ? activeNodeSource.get() : null;
-        boolean accepted = accept(absWrappedYaws, objective, violation, feasible, stage, node);
-        if (accepted && forwardTarget != null) {
-            forwardTarget.reportForwarded(absWrappedYaws, objective, violation, feasible, stage, forwardNode);
-        }
-    }
-
-    synchronized void reportForwarded(double[] yaws, double objective, double violation, boolean feasible,
-                                      String fromStage, String node) {
-        if (yaws == null) return;
-        accept(yaws, objective, violation, feasible, fromStage, node);
+        accept(absWrappedYaws, objective, violation, feasible, stage, node);
     }
 
     private boolean accept(double[] yaws, double objective, double violation, boolean feasible,
