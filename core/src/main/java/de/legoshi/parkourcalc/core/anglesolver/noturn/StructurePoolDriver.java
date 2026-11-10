@@ -1241,8 +1241,8 @@ public final class StructurePoolDriver {
         int ra = NoTurnCertifier.reversals(a.yaws);
         int rb = NoTurnCertifier.reversals(b.yaws);
         if (ra != rb) return ra < rb;
-        long turnA = Math.round(maxTurnDeg(a.yaws));
-        long turnB = Math.round(maxTurnDeg(b.yaws));
+        long turnA = Math.round(NoTurnRanking.turnDeg(a));
+        long turnB = Math.round(NoTurnRanking.turnDeg(b));
         if (turnA != turnB) return turnA < turnB;
         if (a.jaAll != b.jaAll) return !a.jaAll;
         if (a.ja != b.ja) return !a.ja;
@@ -1962,14 +1962,5 @@ public final class StructurePoolDriver {
             pr += w.pruned;
         }
         return new LevelResult(out, sc, bs, pr, levelBeam);
-    }
-
-    static double maxTurnDeg(double[] yaws) {
-        if (yaws == null || yaws.length < 2) return 0.0;
-        double m = 0.0;
-        for (int t = 1; t < yaws.length; t++) {
-            m = Math.max(m, Math.abs(Angles.wrapDelta(yaws[t] - yaws[t - 1])));
-        }
-        return m;
     }
 }
