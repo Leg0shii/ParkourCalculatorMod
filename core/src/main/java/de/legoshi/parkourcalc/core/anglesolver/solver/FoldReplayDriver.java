@@ -221,7 +221,7 @@ public final class FoldReplayDriver {
                     int pre = rounds.size();
                     AnchorSlp.Outcome oc = AnchorSlp.polish(exact, spec, compiled, sc, lin,
                             yaws, gf, path, px, pz, viol, rounds);
-                    for (int i = pre; i < rounds.size(); i++) best = pickBetter(best, rounds.get(i), max);
+                    best = foldRounds(best, rounds, pre, max);
                     if (oc.landed != null) {
                         landed = true;
                     } else {
@@ -249,7 +249,7 @@ public final class FoldReplayDriver {
                     int pre = rounds.size();
                     AnchorSlp.Outcome wo = BucketWalk.walkPolish(exact, spec, compiled, sc, lin,
                             curYaws, curGf, curPath, curPx, curPz, curViol, rounds);
-                    for (int i = pre; i < rounds.size(); i++) best = pickBetter(best, rounds.get(i), max);
+                    best = foldRounds(best, rounds, pre, max);
                     if (wo.landed != null) {
                         landed = true;
                     } else {
@@ -286,7 +286,7 @@ public final class FoldReplayDriver {
                         tailGateEnumeration(exact, spec, compiled, sc, box, free, freeP0, refPx, refPz,
                                 params, margins, curZeroX, curZeroZ,
                                 flips, path, prevYaws, rounds, cancel, deadlineNanos);
-                        for (int i = pre; i < rounds.size(); i++) best = pickBetter(best, rounds.get(i), max);
+                        best = foldRounds(best, rounds, pre, max);
                     }
                     break;
                 }
@@ -397,7 +397,7 @@ public final class FoldReplayDriver {
             int pre = rounds.size();
             AnchorSlp.Outcome oc = AnchorSlp.polish(exact, spec, compiled, sc, lin, yaws, gf, path,
                     px, pz, viol, rounds);
-            for (int i = pre; i < rounds.size(); i++) best = pickBetter(best, rounds.get(i), max);
+            best = foldRounds(best, rounds, pre, max);
             yaws = oc.landed != null ? oc.landed.yawsDeg : oc.yaws;
             gf = oc.gf;
             path = oc.path;
@@ -409,7 +409,7 @@ public final class FoldReplayDriver {
             int pre = rounds.size();
             AnchorSlp.Outcome wo = BucketWalk.walkPolish(exact, spec, compiled, sc, lin,
                     yaws, gf, path, px, pz, viol, rounds);
-            for (int i = pre; i < rounds.size(); i++) best = pickBetter(best, rounds.get(i), max);
+            best = foldRounds(best, rounds, pre, max);
             yaws = wo.landed != null ? wo.landed.yawsDeg : wo.yaws;
             gf = wo.gf;
             path = wo.path;
@@ -421,7 +421,7 @@ public final class FoldReplayDriver {
             int pre = rounds.size();
             AnchorSlp.Outcome so = BucketWalk.windowScan(exact, spec, compiled, sc, lin,
                     yaws, px, pz, viol, max, rounds);
-            for (int i = pre; i < rounds.size(); i++) best = pickBetter(best, rounds.get(i), max);
+            best = foldRounds(best, rounds, pre, max);
             yaws = so.landed != null ? so.landed.yawsDeg : so.yaws;
             gf = so.gf;
             path = so.path;
@@ -430,7 +430,7 @@ public final class FoldReplayDriver {
                 pre = rounds.size();
                 AnchorSlp.Outcome wo2 = BucketWalk.walkPolish(exact, spec, compiled, sc, lin,
                         yaws, gf, path, px, pz, viol, rounds);
-                for (int i = pre; i < rounds.size(); i++) best = pickBetter(best, rounds.get(i), max);
+                best = foldRounds(best, rounds, pre, max);
                 yaws = wo2.landed != null ? wo2.landed.yawsDeg : wo2.yaws;
                 px = wo2.landed != null ? wo2.landed.px : wo2.px;
                 pz = wo2.landed != null ? wo2.landed.pz : wo2.pz;
@@ -464,7 +464,7 @@ public final class FoldReplayDriver {
                 int pre = rounds.size();
                 AnchorSlp.Outcome so = BucketWalk.windowScan(exact, spec, compiled, sc, olin,
                         improved.yawsDeg, improved.px, improved.pz, 0.0, max, rounds);
-                for (int i = pre; i < rounds.size(); i++) best = pickBetter(best, rounds.get(i), max);
+                best = foldRounds(best, rounds, pre, max);
                 if (so.landed == null) {
                     feas = improved;
                     break;
@@ -806,6 +806,11 @@ public final class FoldReplayDriver {
         for (boolean b : zx) if (b) c++;
         for (boolean b : zz) if (b) c++;
         return c;
+    }
+
+    private static Round foldRounds(Round best, List<Round> rounds, int from, boolean max) {
+        for (int i = from; i < rounds.size(); i++) best = pickBetter(best, rounds.get(i), max);
+        return best;
     }
 
     static Round pickBetter(Round a, Round b, boolean max) {
