@@ -146,7 +146,7 @@ public final class LongRunSolver {
             double[] gf = runHorizon(exact, sc, spec, bounds, jumps, commit, cfg.windowLadder, cancel,
                     freeBox, chosen, retryCache, windows, deadlineNanos);
             if (gf == null || Double.isNaN(chosen[0])) continue;
-            JumpPhysicsInputs at = FreeStartSolve.copyWithStart(sc, chosen[0], chosen[1]);
+            JumpPhysicsInputs at = sc.pinnedAt(chosen[0], chosen[1]);
             double[] replay = at.toGameFacings(Angles.wrapAll(gf));
             double viol = compiled.maxViolation(replay, exact.forward(at, replay));
             if (viol <= feasTol) return new FreeRun(gf, chosen[0], chosen[1]);
@@ -257,7 +257,7 @@ public final class LongRunSolver {
                     if (cached != null) {
                         fr = cached == FREE_RETRY_MISS ? null : (FreeStartSolve.Result) cached;
                     } else {
-                        JumpPhysicsInputs freeSc = FreeStartSolve.copyWithStart(sc, seedPos.x, seedPos.z);
+                        JumpPhysicsInputs freeSc = sc.pinnedAt(seedPos.x, seedPos.z);
                         freeSc.startBox = new StartBox(seedPos.x, seedPos.z, seedVel.x, seedVel.z,
                                 freeBox.pxLo, freeBox.pxHi, freeBox.pzLo, freeBox.pzHi,
                                 seedVel.x, seedVel.x, seedVel.z, seedVel.z);
@@ -280,7 +280,7 @@ public final class LongRunSolver {
                     if (fr != null && fr.feasible) {
                         chosenStart[0] = fr.startX;
                         chosenStart[1] = fr.startZ;
-                        win = FreeStartSolve.copyWithStart(sc, fr.startX, fr.startZ);
+                        win = sc.pinnedAt(fr.startX, fr.startZ);
                         yaws = Angles.wrapAll(fr.yaws);
                     }
                 }
@@ -413,9 +413,6 @@ public final class LongRunSolver {
     public static JumpSpec suffixSpec(JumpSpec full, int from, Vec3dCore pos, Vec3dCore vel, float yaw) {
         JumpPhysicsInputs sc = full.asScenario();
         JumpPhysicsInputs win = sliceScenario(sc, from, sc.numTicks, pos, vel, yaw);
-        win.incomingSprint = from == 0 ? sc.incomingSprint : sc.sprintAt(from - 1);
-        win.incomingAmp = from == 0 ? sc.incomingAmp : sc.speedAmplifierAt(from - 1);
-        win.incomingSlowness = from == 0 ? sc.incomingSlowness : Integer.valueOf(sc.slownessAmplifierAt(from - 1));
         List<JumpConstraint> cons = sliceConstraints(full, from, sc.numTicks, yaw);
         Objective obj = full.objective.tick > from
                 ? full.objective.withTick(full.objective.tick - from)
@@ -456,6 +453,9 @@ public final class LongRunSolver {
         p.damagePerTick = sliceBool(sc.damagePerTick, a, len);
         p.serverJumpPerTick = sliceBool(sc.serverJumpPerTick, a, len);
         p.packetYPerTick = sliceDouble(sc.packetYPerTick, a, len);
+        p.incomingSprint = a == 0 ? sc.incomingSprint : Boolean.valueOf(sc.sprintAt(a - 1));
+        p.incomingAmp = a == 0 ? sc.incomingAmp : Integer.valueOf(sc.speedAmplifierAt(a - 1));
+        p.incomingSlowness = a == 0 ? sc.incomingSlowness : Integer.valueOf(sc.slownessAmplifierAt(a - 1));
         p.incomingServerVelocity = a == 0 ? sc.incomingServerVelocity : null;
         return p;
     }

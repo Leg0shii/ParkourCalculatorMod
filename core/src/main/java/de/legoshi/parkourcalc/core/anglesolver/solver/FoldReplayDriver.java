@@ -1,6 +1,5 @@
 package de.legoshi.parkourcalc.core.anglesolver.solver;
 
-import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -194,7 +193,7 @@ public final class FoldReplayDriver {
             double px = free ? clamp(refPx + dvx, box.pxLo, box.pxHi) : refPx;
             double pz = free ? clamp(refPz + dvz, box.pzLo, box.pzHi) : refPz;
 
-            JumpPhysicsInputs scRep = pinnedCopy(sc, px, pz);
+            JumpPhysicsInputs scRep = sc.pinnedAt(px, pz);
             double[] gf = scRep.toGameFacings(yaws);
             ForwardPath path = exact.forward(scRep, gf);
             double obj = spec.objective.evaluate(path);
@@ -383,7 +382,7 @@ public final class FoldReplayDriver {
         double[] yaws = Angles.wrapAll(anchorYawsAbs);
 
         List<Round> rounds = new ArrayList<>();
-        JumpPhysicsInputs scRep = pinnedCopy(sc, px, pz);
+        JumpPhysicsInputs scRep = sc.pinnedAt(px, pz);
         double[] gf = scRep.toGameFacings(yaws);
         ForwardPath path = exact.forward(scRep, gf);
         double viol = compiled.maxViolation(gf, path);
@@ -404,7 +403,7 @@ public final class FoldReplayDriver {
                 best = pickBetter(best, pol, max);
                 px = pol.px;
                 pz = pol.pz;
-                scRep = pinnedCopy(sc, px, pz);
+                scRep = sc.pinnedAt(px, pz);
                 gf = scRep.toGameFacings(yaws);
                 path = exact.forward(scRep, gf);
                 viol = pol.maxViolation;
@@ -541,7 +540,7 @@ public final class FoldReplayDriver {
             double[] yaws = decodeYaws(lin, sol.ux, sol.uz, prevYaws);
             double px = free ? clamp(refPx + sol.dvx, box.pxLo, box.pxHi) : refPx;
             double pz = free ? clamp(refPz + sol.dvz, box.pzLo, box.pzHi) : refPz;
-            JumpPhysicsInputs scRep = pinnedCopy(sc, px, pz);
+            JumpPhysicsInputs scRep = sc.pinnedAt(px, pz);
             double[] gf = scRep.toGameFacings(yaws);
             ForwardPath path = exact.forward(scRep, gf);
             double obj = spec.objective.evaluate(path);
@@ -809,7 +808,7 @@ public final class FoldReplayDriver {
         double dpz = 0.5 * (loZ + hiZ);
         double npx = px + dpx;
         double npz = pz + dpz;
-        JumpPhysicsInputs scRep = pinnedCopy(sc, npx, npz);
+        JumpPhysicsInputs scRep = sc.pinnedAt(npx, npz);
         double[] gf2 = scRep.toGameFacings(yaws);
         ForwardPath path2 = exact.forward(scRep, gf2);
         double viol = compiled.maxViolation(gf2, path2);
@@ -820,13 +819,6 @@ public final class FoldReplayDriver {
         }
         return new Round(index, Double.NaN, obj, viol, yaws.clone(), npx, npz,
                 zeroX.clone(), zeroZ.clone(), countEvents(zeroX, zeroZ), true);
-    }
-
-    static JumpPhysicsInputs pinnedCopy(JumpPhysicsInputs sc, double px, double pz) {
-        JumpPhysicsInputs c = sc.copy();
-        c.startPos = new Vec3dCore(px, sc.startPos.y, pz);
-        c.startBox = StartBox.pinned(px, pz, sc.initialVelocity.x, sc.initialVelocity.z);
-        return c;
     }
 
     private static List<JumpLinearModel.Wall> adjustWalls(List<JumpLinearModel.Wall> walls,

@@ -302,7 +302,7 @@ public final class SenseFinder {
 
     public static Turn turnOf(ExactJumpModel model, JumpSpec spec, double[] yawsAbs, double px, double pz,
                               boolean turnsOnFirstTick) {
-        JumpPhysicsInputs sc = Scoring.pinnedScenario(spec.asScenario(), px, pz);
+        JumpPhysicsInputs sc = spec.asScenario().pinnedAt(px, pz);
         List<JumpConstraint> kept = new ArrayList<>();
         for (JumpConstraint c : spec.constraints) if (c.mode != JumpConstraint.Mode.F) kept.add(c);
         JumpConstraintCompiler.Compiled compiled = JumpConstraintCompiler.compile(new JumpSpec(sc, kept, spec.objective));

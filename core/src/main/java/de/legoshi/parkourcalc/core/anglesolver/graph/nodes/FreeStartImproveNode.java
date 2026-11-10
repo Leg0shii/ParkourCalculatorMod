@@ -105,7 +105,7 @@ public final class FreeStartImproveNode implements NodeRuntime {
 
     private static double[] centerChain(GraphContext ctx, JumpPhysicsInputs sc, double centerX, double centerZ,
                                         AtomicBoolean cancel) {
-        JumpPhysicsInputs pinned = Scoring.pinnedScenario(sc, centerX, centerZ);
+        JumpPhysicsInputs pinned = sc.pinnedAt(centerX, centerZ);
         JumpSpec pinnedSpec = new JumpSpec(pinned, ctx.spec.constraints, ctx.spec.objective);
         String[] via = new String[1];
         double[] chainYaws = de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine.dualChain(
@@ -156,7 +156,7 @@ public final class FreeStartImproveNode implements NodeRuntime {
                 && FreeStartSolve.violationAt(exact, spec, conv.yaws, conv.startX, conv.startZ) <= feasTol) {
             double[] convYaws = Angles.wrapAll(conv.yaws);
             double convObj = spec.objective.scored(Scoring.exactObjective(ctx.model,
-                    Scoring.pinnedScenario(sc, conv.startX, conv.startZ), spec, convYaws), sc.startYaw, convYaws);
+                    sc.pinnedAt(conv.startX, conv.startZ), spec, convYaws), sc.startYaw, convYaws);
             if (!seedFeasible || (max ? convObj > seedObj : convObj < seedObj)) {
                 sc.startPos = new Vec3dCore(conv.startX, sc.startPos.y, conv.startZ);
                 sc.startBox = StartBox.pinned(conv.startX, conv.startZ, sc.initialVelocity.x, sc.initialVelocity.z);
@@ -171,7 +171,7 @@ public final class FreeStartImproveNode implements NodeRuntime {
                 adopt = true;
             } else if (foundFeasible) {
                 double freeObj = spec.objective.scored(Scoring.exactObjective(ctx.model,
-                        Scoring.pinnedScenario(sc, foundX, foundZ), spec, foundYaws), sc.startYaw, foundYaws);
+                        sc.pinnedAt(foundX, foundZ), spec, foundYaws), sc.startYaw, foundYaws);
                 adopt = max ? freeObj > seedObj : freeObj < seedObj;
             } else if (!seedFeasible) {
                 adopt = foundViol < seedViol;

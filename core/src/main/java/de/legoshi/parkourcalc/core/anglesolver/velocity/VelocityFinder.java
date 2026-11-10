@@ -402,32 +402,9 @@ public final class VelocityFinder {
     }
 
     private static JumpPhysicsInputs copyWithVelocity(JumpPhysicsInputs s, Vec3dCore vel) {
-        JumpPhysicsInputs c = new JumpPhysicsInputs(s.numTicks);
-        c.startPos = s.startPos;
-        c.startYaw = s.startYaw;
+        JumpPhysicsInputs c = s.copy();
         c.initialVelocity = vel;
-        c.jumpTick = s.jumpTick;
-        c.jumpPerTick = s.jumpPerTick;
-        c.strafeSign = s.strafeSign;
-        c.strafeSignPerTick = s.strafeSignPerTick;
-        c.strafePerTick = s.strafePerTick;
-        c.speedAmplifier = s.speedAmplifier;
-        c.slownessAmplifier = s.slownessAmplifier;
-        c.slipPerTick = s.slipPerTick;
-        c.surfacePerTick = s.surfacePerTick;
-        c.soulsandCellsPerTick = s.soulsandCellsPerTick;
-        c.flowPerTick = s.flowPerTick;
-        c.endFlowPerTick = s.endFlowPerTick;
-        c.ultrawarm = s.ultrawarm;
-        c.sneakPerTick = s.sneakPerTick;
-        c.dolphinsGracePerTick = s.dolphinsGracePerTick;
-        c.weavingPerTick = s.weavingPerTick;
-        c.yawLockedPerTick = s.yawLockedPerTick;
-        c.sprintPerTick = s.sprintPerTick;
-        c.liveMovementFactor = s.liveMovementFactor;
-        c.variant = s.variant;
-        c.forwardInputPerTick = s.forwardInputPerTick;
-        c.strafeInputPerTick = s.strafeInputPerTick;
+        c.startBox = null;
         return c;
     }
 

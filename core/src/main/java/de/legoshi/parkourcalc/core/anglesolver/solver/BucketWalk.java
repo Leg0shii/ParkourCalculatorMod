@@ -350,8 +350,8 @@ public final class BucketWalk {
         double pz = pz0;
         double bestViol = viol0;
 
-        double[] snapped = snapToBucketCenters(FoldReplayDriver.pinnedCopy(sc, px0, pz0), exact, yaws0);
-        JumpPhysicsInputs scSnap = FoldReplayDriver.pinnedCopy(sc, px0, pz0);
+        double[] snapped = snapToBucketCenters(sc.pinnedAt(px0, pz0), exact, yaws0);
+        JumpPhysicsInputs scSnap = sc.pinnedAt(px0, pz0);
         double[] sgf = scSnap.toGameFacings(snapped);
         ForwardPath spath = exact.forward(scSnap, sgf);
         double sviol = compiled.maxViolation(sgf, spath);
@@ -383,7 +383,7 @@ public final class BucketWalk {
             cand = Angles.wrapAll(cand);
             double npx = free ? clamp(px + st.dpx, box.pxLo, box.pxHi) : px;
             double npz = free ? clamp(pz + st.dpz, box.pzLo, box.pzHi) : pz;
-            JumpPhysicsInputs scRep = FoldReplayDriver.pinnedCopy(sc, npx, npz);
+            JumpPhysicsInputs scRep = sc.pinnedAt(npx, npz);
             double[] cgf = scRep.toGameFacings(cand);
             ForwardPath cpath = exact.forward(scRep, cgf);
             double cViol = compiled.maxViolation(cgf, cpath);
@@ -431,7 +431,7 @@ public final class BucketWalk {
         double[] yaws = start.yawsDeg;
         double px = start.px;
         double pz = start.pz;
-        JumpPhysicsInputs scCur = FoldReplayDriver.pinnedCopy(sc, px, pz);
+        JumpPhysicsInputs scCur = sc.pinnedAt(px, pz);
         double[] gf = scCur.toGameFacings(yaws);
         ForwardPath path = exact.forward(scCur, gf);
         int budget = OBJ_BUDGET;
@@ -456,7 +456,7 @@ public final class BucketWalk {
             cand = Angles.wrapAll(cand);
             double npx = free ? clamp(px + st.dpx, box.pxLo, box.pxHi) : px;
             double npz = free ? clamp(pz + st.dpz, box.pzLo, box.pzHi) : pz;
-            JumpPhysicsInputs scRep = FoldReplayDriver.pinnedCopy(sc, npx, npz);
+            JumpPhysicsInputs scRep = sc.pinnedAt(npx, npz);
             double[] cgf = scRep.toGameFacings(cand);
             ForwardPath cpath = exact.forward(scRep, cgf);
             double cViol = compiled.maxViolation(cgf, cpath);
@@ -494,7 +494,7 @@ public final class BucketWalk {
                                         double viol0, boolean max, List<FoldReplayDriver.Round> roundsSink) {
         int n = lin.n;
         int window = exact.sine262() ? WINDOW_262 : WINDOW_LEGACY;
-        JumpPhysicsInputs scRep = FoldReplayDriver.pinnedCopy(sc, px, pz);
+        JumpPhysicsInputs scRep = sc.pinnedAt(px, pz);
         double[] yaws = Angles.wrapAll(yaws0);
         double[] gf = scRep.toGameFacings(yaws);
         ForwardPath path = exact.forward(scRep, gf);
@@ -621,7 +621,7 @@ public final class BucketWalk {
             double npx = clamp(px + d[0], box.pxLo, box.pxHi);
             double npz = clamp(pz + d[1], box.pzLo, box.pzHi);
             if (npx == px && npz == pz) continue;
-            JumpPhysicsInputs scRep = FoldReplayDriver.pinnedCopy(sc, npx, npz);
+            JumpPhysicsInputs scRep = sc.pinnedAt(npx, npz);
             double[] gf = scRep.toGameFacings(yaws);
             ForwardPath p = exact.forward(scRep, gf);
             double v = compiled.maxViolation(gf, p);

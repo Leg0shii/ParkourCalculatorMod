@@ -157,7 +157,7 @@ public final class NoTurnCertifier {
 
     public static ForwardPath forwardAt(ExactJumpModel model, JumpPhysicsInputs sc, double[] yaws, double px,
                                         double pz, double[] gfOut) {
-        JumpPhysicsInputs scPin = Scoring.pinnedScenario(sc, px, pz);
+        JumpPhysicsInputs scPin = sc.pinnedAt(px, pz);
         double[] gf = scPin.toGameFacings(Angles.wrapAll(yaws));
         if (gfOut != null) System.arraycopy(gf, 0, gfOut, 0, gf.length);
         return model.forward(scPin, gf);
@@ -172,7 +172,7 @@ public final class NoTurnCertifier {
 
     private Result verified(JumpSpec spec, JumpPhysicsInputs scFree, double[] yaws, double px, double pz,
                             AtomicBoolean cancel) {
-        if (playable) yaws = playableLine(spec, Scoring.pinnedScenario(scFree, px, pz), yaws, cancel);
+        if (playable) yaws = playableLine(spec, scFree.pinnedAt(px, pz), yaws, cancel);
         double[] gf = new double[scFree.numTicks];
         ForwardPath fp = forwardAt(model, scFree, yaws, px, pz, gf);
         double viol = JumpConstraintCompiler.compile(spec).maxViolation(gf, fp);

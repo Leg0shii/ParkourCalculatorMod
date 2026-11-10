@@ -79,7 +79,7 @@ public class HomotopyProbe {
             for (int i = 0; i < n; i++) yaws[i] = ya.get(i).getAsDouble();
             double px = dec.has("px") ? dec.get("px").getAsDouble() : sc.startPos.x;
             double pz = dec.has("pz") ? dec.get("pz").getAsDouble() : sc.startPos.z;
-            JumpPhysicsInputs sc2 = Scoring.pinnedScenario(sc, px, pz);
+            JumpPhysicsInputs sc2 = sc.pinnedAt(px, pz);
             double[] gf = sc2.toGameFacings(Angles.wrapAll(yaws));
             ForwardPath fp = model.forward(sc2, gf);
             double pos = fp.getPos(spec.objective.tick, spec.objective.axis);

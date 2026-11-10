@@ -1,6 +1,5 @@
 package de.legoshi.parkourcalc.core.anglesolver.solver;
 
-import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 
 import java.util.Arrays;
 import java.util.List;
@@ -234,7 +233,7 @@ public final class FreeStartSolve {
         double refZ = 0.5 * (box.pzLo + box.pzHi);
         StartBox cbox = new StartBox(refX, refZ, box.vx, box.vz, box.pxLo, box.pxHi, box.pzLo, box.pzHi,
                 box.vxLo, box.vxHi, box.vzLo, box.vzHi);
-        JumpPhysicsInputs refSc = copyWithStart(base, refX, refZ);
+        JumpPhysicsInputs refSc = base.pinnedAt(refX, refZ);
         double[] arcThetas = null;
         FacingPrefold.ChainScan scan0 = FacingPrefold.scannable(spec.constraints, new JumpLinearModel(refSc));
         if (scan0 != null) arcThetas = prefixArcThetas(exact, spec, refSc, box, scan0);
@@ -822,7 +821,7 @@ public final class FreeStartSolve {
         JumpPhysicsInputs base = spec.asScenario();
         StartBox box = base.startBox;
         if (box == null || !box.startFree() || yaws == null) return null;
-        JumpPhysicsInputs refSc = copyWithStart(base, box.px, box.pz);
+        JumpPhysicsInputs refSc = base.pinnedAt(box.px, box.pz);
         double[] wrapped = Angles.wrapAll(yaws);
         double[] gf = refSc.toGameFacings(wrapped);
         ForwardPath path = exact.forward(refSc, gf);
@@ -888,45 +887,7 @@ public final class FreeStartSolve {
     }
 
     private static JumpSpec specAtStart(JumpPhysicsInputs base, JumpSpec spec, double p0x, double p0z) {
-        return new JumpSpec(copyWithStart(base, p0x, p0z), spec.constraints, spec.objective);
-    }
-
-    static JumpPhysicsInputs copyWithStart(JumpPhysicsInputs b, double p0x, double p0z) {
-        JumpPhysicsInputs a = new JumpPhysicsInputs(b.numTicks);
-        a.startPos = new Vec3dCore(p0x, b.startPos.y, p0z);
-        a.startYaw = b.startYaw;
-        a.initialVelocity = b.initialVelocity;
-        a.startBox = StartBox.pinned(p0x, p0z, b.initialVelocity.x, b.initialVelocity.z);
-        a.jumpTick = b.jumpTick;
-        a.jumpPerTick = b.jumpPerTick;
-        a.strafeSign = b.strafeSign;
-        a.strafeSignPerTick = b.strafeSignPerTick;
-        a.strafePerTick = b.strafePerTick;
-        a.speedAmplifier = b.speedAmplifier;
-        a.slownessAmplifier = b.slownessAmplifier;
-        a.slipPerTick = b.slipPerTick;
-        a.surfacePerTick = b.surfacePerTick;
-        a.soulsandCellsPerTick = b.soulsandCellsPerTick;
-        a.flowPerTick = b.flowPerTick;
-        a.endFlowPerTick = b.endFlowPerTick;
-        a.ultrawarm = b.ultrawarm;
-        a.sneakPerTick = b.sneakPerTick;
-        a.dolphinsGracePerTick = b.dolphinsGracePerTick;
-        a.weavingPerTick = b.weavingPerTick;
-        a.yawLockedPerTick = b.yawLockedPerTick;
-        a.sprintPerTick = b.sprintPerTick;
-        a.damagePerTick = b.damagePerTick;
-        a.serverJumpPerTick = b.serverJumpPerTick;
-        a.packetYPerTick = b.packetYPerTick;
-        a.incomingServerVelocity = b.incomingServerVelocity;
-        a.incomingSprint = b.incomingSprint;
-        a.incomingAmp = b.incomingAmp;
-        a.incomingSlowness = b.incomingSlowness;
-        a.liveMovementFactor = b.liveMovementFactor;
-        a.variant = b.variant;
-        a.forwardInputPerTick = b.forwardInputPerTick;
-        a.strafeInputPerTick = b.strafeInputPerTick;
-        return a;
+        return new JumpSpec(base.pinnedAt(p0x, p0z), spec.constraints, spec.objective);
     }
 
     private static double clamp(double v, double lo, double hi) {

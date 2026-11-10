@@ -889,7 +889,7 @@ public final class CertifiedBnb {
     }
 
     private static ForwardPath replayCandidate(Search s, double[] yaws, double px, double pz, boolean allowPolish) {
-        JumpPhysicsInputs scRep = FoldReplayDriver.pinnedCopy(s.sc, px, pz);
+        JumpPhysicsInputs scRep = s.sc.pinnedAt(px, pz);
         double[] gf = scRep.toGameFacings(yaws);
         ForwardPath path = s.exact.forward(scRep, gf);
         double viol = s.compiled.maxViolation(gf, path);
@@ -937,7 +937,7 @@ public final class CertifiedBnb {
         if (s.incYaws == null || s.ties != null) return;
         int window = s.exact.sine262() ? 4 : 64;
         double[] yaws = s.incYaws.clone();
-        JumpPhysicsInputs scRep = FoldReplayDriver.pinnedCopy(s.sc, s.incPx, s.incPz);
+        JumpPhysicsInputs scRep = s.sc.pinnedAt(s.incPx, s.incPz);
         double[] gf = scRep.toGameFacings(yaws);
         ForwardPath path = s.exact.forward(scRep, gf);
         double bestObj = s.spec.objective.evaluate(path);
@@ -1095,7 +1095,7 @@ public final class CertifiedBnb {
         if (st.bestVal > Double.NEGATIVE_INFINITY) {
             double[] yaws = realizeCombo(s, cands, st.bestPick);
             if (yaws != null) {
-                JumpPhysicsInputs scRep = FoldReplayDriver.pinnedCopy(s.sc, px, pz);
+                JumpPhysicsInputs scRep = s.sc.pinnedAt(px, pz);
                 double[] gf = scRep.toGameFacings(yaws);
                 ForwardPath rp = s.exact.forward(scRep, gf);
                 double rv = s.compiled.maxViolation(gf, rp);

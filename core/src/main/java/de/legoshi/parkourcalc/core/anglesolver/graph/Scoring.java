@@ -100,43 +100,9 @@ public final class Scoring {
         return cap;
     }
 
-    public static JumpPhysicsInputs pinnedScenario(JumpPhysicsInputs b, double x, double z) {
-        JumpPhysicsInputs a = new JumpPhysicsInputs(b.numTicks);
-        a.startPos = new Vec3dCore(x, b.startPos.y, z);
-        a.startYaw = b.startYaw;
-        a.initialVelocity = b.initialVelocity;
-        a.startBox = StartBox.pinned(x, z, b.initialVelocity.x, b.initialVelocity.z);
-        a.jumpTick = b.jumpTick;
-        a.jumpPerTick = b.jumpPerTick;
-        a.strafeSign = b.strafeSign;
-        a.strafeSignPerTick = b.strafeSignPerTick;
-        a.strafePerTick = b.strafePerTick;
-        a.speedAmplifier = b.speedAmplifier;
-        a.slownessAmplifier = b.slownessAmplifier;
-        a.slipPerTick = b.slipPerTick;
-        a.surfacePerTick = b.surfacePerTick;
-        a.soulsandCellsPerTick = b.soulsandCellsPerTick;
-        a.flowPerTick = b.flowPerTick;
-        a.endFlowPerTick = b.endFlowPerTick;
-        a.ultrawarm = b.ultrawarm;
-        a.sneakPerTick = b.sneakPerTick;
-        a.dolphinsGracePerTick = b.dolphinsGracePerTick;
-        a.weavingPerTick = b.weavingPerTick;
-        a.yawLockedPerTick = b.yawLockedPerTick;
-        a.sprintPerTick = b.sprintPerTick;
-        a.incomingSprint = b.incomingSprint;
-        a.incomingAmp = b.incomingAmp;
-        a.incomingSlowness = b.incomingSlowness;
-        a.liveMovementFactor = b.liveMovementFactor;
-        a.variant = b.variant;
-        a.forwardInputPerTick = b.forwardInputPerTick;
-        a.strafeInputPerTick = b.strafeInputPerTick;
-        return a;
-    }
-
     public static double verifiedObjectiveAt(ForwardModel model, JumpPhysicsInputs base, JumpSpec spec,
                                              double[] yaws, double px, double pz, double feasTol) {
-        JumpPhysicsInputs at = pinnedScenario(base, px, pz);
+        JumpPhysicsInputs at = base.pinnedAt(px, pz);
         double[] gf = at.toGameFacings(yaws);
         ForwardPath path = model.forward(at, gf);
         if (JumpConstraintCompiler.compile(spec).maxViolation(gf, path) > feasTol) return Double.NaN;
@@ -179,7 +145,7 @@ public final class Scoring {
         for (PathTranslation.Trans tr : cands) {
             double x = sc.startPos.x + tr.tx;
             double z = sc.startPos.z + tr.tz;
-            JumpPhysicsInputs at = pinnedScenario(sc, x, z);
+            JumpPhysicsInputs at = sc.pinnedAt(x, z);
             if (compiled.maxViolation(gf, model.forward(at, gf)) > feasTol) continue;
             if (tr.tx != 0.0 || tr.tz != 0.0) {
                 sc.startPos = new Vec3dCore(x, sc.startPos.y, z);
@@ -196,7 +162,7 @@ public final class Scoring {
         if (tr.tx == 0.0 && tr.tz == 0.0) return false;
         double x = sc.startPos.x + tr.tx;
         double z = sc.startPos.z + tr.tz;
-        JumpPhysicsInputs cand = pinnedScenario(sc, x, z);
+        JumpPhysicsInputs cand = sc.pinnedAt(x, z);
         double[] gf = cand.toGameFacings(yaws);
         ForwardPath p = model.forward(cand, gf);
         if (JumpConstraintCompiler.compile(spec).maxViolation(gf, p) > feasTol) return false;

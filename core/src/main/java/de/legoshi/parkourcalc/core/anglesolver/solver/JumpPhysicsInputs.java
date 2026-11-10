@@ -229,6 +229,13 @@ public final class JumpPhysicsInputs {
         return c;
     }
 
+    public JumpPhysicsInputs pinnedAt(double x, double z) {
+        JumpPhysicsInputs c = copy();
+        c.startPos = new Vec3dCore(x, startPos.y, z);
+        c.startBox = StartBox.pinned(x, z, initialVelocity.x, initialVelocity.z);
+        return c;
+    }
+
     public boolean damageAt(int tick) {
         return damagePerTick != null && tick >= 0 && tick < damagePerTick.length && damagePerTick[tick];
     }

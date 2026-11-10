@@ -71,7 +71,7 @@ public class NoTurnReplay {
         double px = dec.has("px") ? dec.get("px").getAsDouble() : sc.startPos.x;
         double pz = dec.has("pz") ? dec.get("pz").getAsDouble() : sc.startPos.z;
 
-        JumpPhysicsInputs sc2 = Scoring.pinnedScenario(sc, px, pz);
+        JumpPhysicsInputs sc2 = sc.pinnedAt(px, pz);
         sc2.forwardInputPerTick = fwd;
         sc2.strafeInputPerTick = strafe;
         sc2.sprintPerTick = sprint;

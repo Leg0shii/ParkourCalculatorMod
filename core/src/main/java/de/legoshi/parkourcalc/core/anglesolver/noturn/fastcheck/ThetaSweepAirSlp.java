@@ -51,7 +51,7 @@ public final class ThetaSweepAirSlp implements FastCheck {
         JumpSpec runSpec = NoTurnProblem.pinnedAtRef(spec);
 
         JumpConstraintCompiler.Compiled compiled = JumpConstraintCompiler.compile(spec);
-        JumpPhysicsInputs verifyBase = Scoring.pinnedScenario(scFree, refX, refZ);
+        JumpPhysicsInputs verifyBase = scFree.pinnedAt(refX, refZ);
         JumpPhysicsInputs runScenario = runSpec.asScenario();
 
         double[] singleAim = new double[n];

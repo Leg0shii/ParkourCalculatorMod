@@ -337,7 +337,7 @@ public final class AnchorSlp {
             cand = Angles.wrapAll(cand);
             double npx = free ? clamp(px + st.dpx, box.pxLo, box.pxHi) : px;
             double npz = free ? clamp(pz + st.dpz, box.pzLo, box.pzHi) : pz;
-            JumpPhysicsInputs scRep = FoldReplayDriver.pinnedCopy(sc, npx, npz);
+            JumpPhysicsInputs scRep = sc.pinnedAt(npx, npz);
             double[] cgf = scRep.toGameFacings(cand);
             ForwardPath cpath = exact.forward(scRep, cgf);
             double cViol = compiled.maxViolation(cgf, cpath);
