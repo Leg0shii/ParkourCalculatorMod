@@ -587,7 +587,6 @@ public final class CertifiedBnb {
         double[] uz = null;
         int chordCount = chords.size();
         boolean unbounded = oc.failCode == DiskSocpKernel.FAIL_UNBOUNDED;
-        if (unbounded && s.incYaws != null) return null;
         if (oc.result != null) {
             gxv = oc.result.gx;
             gzv = oc.result.gz;
@@ -597,7 +596,7 @@ public final class CertifiedBnb {
         } else {
             CostateDualSolver.Result dr = new CostateDualSolver(s.n, cx, cz, mMagB, rows, s.freeP0).solve(0.0, null);
             if (dr == null) {
-                s.unresolved++;
+                dropUnresolved(s, nd);
                 return null;
             }
             gxv = dr.gx;
@@ -663,7 +662,7 @@ public final class CertifiedBnb {
         if (score <= s.incScore + CERT_EPS) return null;
         if (empty) return null;
         if (unbounded) {
-            s.unresolved++;
+            dropUnresolved(s, nd);
             return null;
         }
 
@@ -699,8 +698,7 @@ public final class CertifiedBnb {
         }
         List<Node> children = branch(s, nd, iv, lin, gxv, gzv, ux, uz, decoded, decPath, decZx, decZz);
         if (children == null || children.isEmpty()) {
-            s.stuckScore = Math.max(s.stuckScore, nd.score);
-            s.unresolved++;
+            dropUnresolved(s, nd);
             if (SolverTrace.on()) {
                 StringBuilder sb = new StringBuilder();
                 for (int t = 0; t < s.n; t++) {
@@ -712,6 +710,11 @@ public final class CertifiedBnb {
             return null;
         }
         return children;
+    }
+
+    private static void dropUnresolved(Search s, Node nd) {
+        s.unresolved++;
+        s.stuckScore = Math.max(s.stuckScore, nd.score);
     }
 
     private static boolean relaxationEmpty(Search s, double[] cx, double[] cz, double[] mMagB, double dualValue,
