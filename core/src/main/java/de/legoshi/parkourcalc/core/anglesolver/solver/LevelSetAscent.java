@@ -15,22 +15,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *  wall leaves the dual bound undefined), leaving the caller to keep the witness and inform the user. */
 public final class LevelSetAscent {
 
-    public static final class Config {
-        public int iters = 12;
-        public int slpPhase1Calls = 40;
-        public int slpTotalCalls = 60;
-    }
+    private static final int ITERS = 12;
+    private static final int SLP_PHASE1_CALLS = 40;
+    private static final int SLP_TOTAL_CALLS = 60;
 
     private LevelSetAscent() {
     }
 
     public static double[] improve(ExactJumpModel exact, JumpSpec spec, double[] witness,
                                    double feasTol, AtomicBoolean cancel) {
-        return improve(exact, spec, witness, feasTol, cancel, new Config());
-    }
-
-    public static double[] improve(ExactJumpModel exact, JumpSpec spec, double[] witness,
-                                   double feasTol, AtomicBoolean cancel, Config cfg) {
         if (witness == null) return null;
         if (spec.objective.isCustomAngle()) return witness;
         if (JumpLinearModel.hasFacingWall(spec.constraints)) return null;
@@ -51,13 +44,13 @@ public final class LevelSetAscent {
         double bestObj = baseObj;
         double feasibleEnd = baseObj;   // best objective known achievable
         double optimisticEnd = bound;   // no feasible point is beyond the dual bound
-        for (int i = 0; i < cfg.iters; i++) {
+        for (int i = 0; i < ITERS; i++) {
             if (cancel != null && cancel.get()) break;
             double level = 0.5 * (feasibleEnd + optimisticEnd);
             List<JumpConstraint> aug = new ArrayList<>(spec.constraints);
             aug.add(new JumpConstraint(mode, spec.objective.tick, null, JumpConstraint.Op.PLUS, cmp, level, "levelset"));
             double[] y = SlpSolve.optimize(exact, new JumpSpec(sc, aug, spec.objective), feasTol, cancel,
-                    best, cfg.slpPhase1Calls, cfg.slpTotalCalls);
+                    best, SLP_PHASE1_CALLS, SLP_TOTAL_CALLS);
             if (y != null) {
                 double o = objectiveOf(exact, sc, spec, y);
                 if (max ? o > bestObj : o < bestObj) {
