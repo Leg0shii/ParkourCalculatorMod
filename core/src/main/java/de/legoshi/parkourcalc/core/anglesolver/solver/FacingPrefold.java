@@ -445,6 +445,7 @@ public final class FacingPrefold {
     }
 
     public double[] expand(JumpLinearModel lin, Objective obj, double[] costateX, double[] costateZ) {
+        double[] dir = JumpLinearModel.objectiveDirection(obj);
         double[] yaws = new double[n];
         for (int t = 0; t < n; t++) {
             int v = identity ? t : varOf[t];
@@ -455,18 +456,8 @@ public final class FacingPrefold {
             double gx = costateX[v];
             double gz = costateZ[v];
             if (gx * gx + gz * gz < 1.0e-18) {
-                boolean max = obj.sense == Objective.Sense.MAX;
-                if (obj.isCustomAngle()) {
-                    double rad = Angles.rad(obj.customYaw);
-                    gx = (max ? 1.0 : -1.0) * -StrictMath.sin(rad);
-                    gz = (max ? 1.0 : -1.0) * StrictMath.cos(rad);
-                } else if (obj.axis == JumpPhysicsInputs.Axis.X) {
-                    gx = max ? 1.0 : -1.0;
-                    gz = 0.0;
-                } else {
-                    gx = 0.0;
-                    gz = max ? 1.0 : -1.0;
-                }
+                gx = dir[0];
+                gz = dir[1];
             }
             yaws[t] = lin.recoverYawDeg(identity ? t : repOf[v], gx, gz);
             if (!identity) {

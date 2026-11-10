@@ -360,19 +360,9 @@ public final class JumpLinearModel {
      *  contribution to {@code objDir·pos_objTick}. objDir is the direction to MAXIMIZE (MIN is negated). */
     public void objectiveVectors(Objective obj, double[] cx, double[] cz) {
         int objTick = obj.tick;
-        double dx, dz;
-        boolean max = obj.sense == Objective.Sense.MAX;
-        if (obj.isCustomAngle()) {
-            double rad = Angles.rad(obj.customYaw);
-            dx = (max ? 1.0 : -1.0) * -StrictMath.sin(rad);
-            dz = (max ? 1.0 : -1.0) * StrictMath.cos(rad);
-        } else if (obj.axis == JumpPhysicsInputs.Axis.X) {
-            dx = max ? 1.0 : -1.0;
-            dz = 0.0;
-        } else {
-            dx = 0.0;
-            dz = max ? 1.0 : -1.0;
-        }
+        double[] dir = objectiveDirection(obj);
+        double dx = dir[0];
+        double dz = dir[1];
 
         if (obj.isMotion()) {
             for (int t = 0; t < n; t++) {
@@ -635,22 +625,25 @@ public final class JumpLinearModel {
         return Angles.wrap((StrictMath.atan2(gz, gx) - baseArg[t]) * DEG);
     }
 
-    public double[] recoverAlongCostate(Objective obj, double[] gx, double[] gz) {
+    static double[] objectiveDirection(Objective obj) {
         boolean max = obj.sense == Objective.Sense.MAX;
-        boolean axisX = obj.axis == JumpPhysicsInputs.Axis.X;
+        if (obj.isCustomAngle()) {
+            double rad = Angles.rad(obj.customYaw);
+            return new double[]{(max ? 1.0 : -1.0) * -StrictMath.sin(rad), (max ? 1.0 : -1.0) * StrictMath.cos(rad)};
+        }
+        if (obj.axis == JumpPhysicsInputs.Axis.X) return new double[]{max ? 1.0 : -1.0, 0.0};
+        return new double[]{0.0, max ? 1.0 : -1.0};
+    }
+
+    public double[] recoverAlongCostate(Objective obj, double[] gx, double[] gz) {
+        double[] dir = objectiveDirection(obj);
         double[] yaws = new double[n];
         for (int t = 0; t < n; t++) {
             double x = gx[t];
             double z = gz[t];
             if (x * x + z * z < 1.0e-18) {
-                if (obj.isCustomAngle()) {
-                    double rad = Angles.rad(obj.customYaw);
-                    x = (max ? 1.0 : -1.0) * -StrictMath.sin(rad);
-                    z = (max ? 1.0 : -1.0) * StrictMath.cos(rad);
-                } else {
-                    x = axisX ? (max ? 1.0 : -1.0) : 0.0;
-                    z = axisX ? 0.0 : (max ? 1.0 : -1.0);
-                }
+                x = dir[0];
+                z = dir[1];
             }
             yaws[t] = recoverYawDeg(t, x, z);
         }
