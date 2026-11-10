@@ -74,6 +74,7 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
     private volatile String outcome = "";
     private volatile List<NoTurnResult> ranked = Collections.emptyList();
     private volatile boolean reapplySelected;
+    private volatile boolean documentReplaced;
     private volatile boolean optimizeQueued;
     private volatile NoTurnResult selected;
     private volatile NoTurnProblem problem;
@@ -352,6 +353,22 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
         apply(r);
     }
 
+    public void onDocumentReplaced() {
+        documentReplaced = true;
+        cancel.set(true);
+        optimizeQueued = false;
+        reapplySelected = false;
+        selected = null;
+        synchronized (results) {
+            results.clear();
+            ranked = Collections.emptyList();
+        }
+        if (thread == null) {
+            ending = Ending.NONE;
+            outcome = "";
+        }
+    }
+
     public void poll() {
         if (thread == null) return;
         if (reapplySelected) {
@@ -365,6 +382,11 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
         fraction = 1.0;
         Phase finished = phase;
         phase = Phase.IDLE;
+        if (documentReplaced) {
+            ending = Ending.NONE;
+            outcome = "";
+            return;
+        }
         List<NoTurnResult> list = ranked;
         if (cancel.get()) {
             ending = list.isEmpty() ? Ending.EMPTY : Ending.CANCELLED;
@@ -400,6 +422,7 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
 
     private void beginRun(Phase p, String firstStage) {
         cancel.set(false);
+        documentReplaced = false;
         optimizeQueued = false;
         done = false;
         phase = p;
@@ -498,7 +521,7 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
     }
 
     private void onFound(NoTurnResult r) {
-        if (r == null) return;
+        if (r == null || documentReplaced) return;
         synchronized (results) {
             int same = -1;
             for (int i = 0; i < results.size(); i++) {
@@ -522,6 +545,7 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
     }
 
     private void onOptimized(NoTurnResult before, NoTurnResult after) {
+        if (documentReplaced) return;
         synchronized (results) {
             int at = -1;
             for (int i = 0; i < results.size(); i++) {
@@ -555,6 +579,7 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
 
     private void apply(NoTurnResult r) {
         int start = startTick;
+        if (start < 0 || start >= inputData.size()) return;
         if (!r.warm) {
             for (int t = 0; t < r.combos.length; t++) {
                 int idx = start + t;
@@ -569,8 +594,10 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
             }
         }
         if (r.yaws != null) engine.writeYaws(inputData.getRows(), start, r.yaws, freeStartYaw);
-        Vec3dCore cur = runner.getStartPosition();
-        runner.setStartPosition(new Vec3dCore(r.startX, cur.y, r.startZ));
+        if (start == 0) {
+            Vec3dCore cur = runner.getStartPosition();
+            runner.setStartPosition(new Vec3dCore(r.startX, cur.y, r.startZ));
+        }
         saveController.markDirty();
         onUserChange.accept(start);
     }

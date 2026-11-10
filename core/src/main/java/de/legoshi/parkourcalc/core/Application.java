@@ -330,6 +330,8 @@ public final class Application {
                 blockOverrideWorld.refresh(true);
                 turnProfile.onTasReplaced();
                 practiceMacro.stop();
+                noTurnSearch.onDocumentReplaced();
+                senseSearch.onDocumentReplaced();
             }
 
             @Override
