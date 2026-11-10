@@ -28,6 +28,7 @@ import imgui.type.ImString;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Locale;
@@ -579,6 +580,7 @@ public final class InputOverlay {
         flagMenuHovered = false;
         teleportDropRow = -1;
         effectDropRow = -1;
+        pruneEffectRowHeights();
         if (solverActive) angleSolver.beginRows(clipMin.x, clipMin.y, clipMin.x + clipSize.x, clipMin.y + clipSize.y);
 
         handleAutoScroll();
@@ -917,9 +919,16 @@ public final class InputOverlay {
 
     private float rowHeight(int rowIndex, float baseRowH, boolean solverActive) {
         float h = solverActive ? angleSolver.rowHeight(rowIndex, baseRowH) : baseRowH;
-        if (!isEffectsColumnVisible()) return h;
-        Float fx = effectsRowH.get(rowIndex);
+        if (!isEffectsColumnVisible() || rowIndex < 0 || rowIndex >= data.size()) return h;
+        Float fx = effectsRowH.get(data.get(rowIndex).getId());
         return fx == null ? h : Math.max(h, fx);
+    }
+
+    private void pruneEffectRowHeights() {
+        if (effectsRowH.size() <= 2 * data.size()) return;
+        Set<Integer> live = new HashSet<>();
+        for (InputRow r : data.getRows()) live.add(r.getId());
+        effectsRowH.keySet().retainAll(live);
     }
 
     private boolean hasStartRow() {
@@ -1435,14 +1444,14 @@ public final class InputOverlay {
         float baseRowH = ThemeManager.tableRowHeight();
         final List<MovementEffect> shown = activeEffects(row);
         if (shown.isEmpty()) {
-            effectsRowH.remove(rowIndex);
+            effectsRowH.remove(row.getId());
             ChipFlow.Layout layout = ChipFlow.compute(cellW, baseRowH, new float[] { effectAddChipWidth() });
             ChipFlow.place(origin, cellW, grownRowH, layout, i -> renderEffectAddChip());
         } else {
             float[] widths = new float[shown.size()];
             for (int i = 0; i < widths.length; i++) widths[i] = effectChipWidth(shown.get(i), row.getEffectLevel(shown.get(i)));
             ChipFlow.Layout layout = ChipFlow.compute(cellW, baseRowH, widths);
-            effectsRowH.put(rowIndex, layout.cellH);
+            effectsRowH.put(row.getId(), layout.cellH);
             ChipFlow.place(origin, cellW, grownRowH, layout, i -> renderEffectChip(row, rowIndex, shown.get(i)));
         }
         renderEffectsPopup(row, rowIndex);
