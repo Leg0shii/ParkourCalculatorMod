@@ -24,6 +24,7 @@ public final class DiskSocpKernel {
     public static final int FAIL_NAN = 3;
     public static final int FAIL_UNBOUNDED = 4;
     public static final int FAIL_DET = 5;
+    public static final int FAIL_CUTOFF = 6;
 
     private final int n;
     private final int m;
@@ -49,6 +50,7 @@ public final class DiskSocpKernel {
     private double failMu = Double.NaN;
     private double[] uRefX;
     private double[] uRefZ;
+    private double cutoff = Double.NEGATIVE_INFINITY;
 
     private DiskSocpKernel(int n, double[] cx, double[] cz, double[] mMag, List<JumpLinearModel.Wall> walls,
                            CostateDualSolver.FreeP0 freeP0, List<ChordRow> chords,
@@ -204,7 +206,14 @@ public final class DiskSocpKernel {
     public static Outcome solveChords(int n, double[] cx, double[] cz, double[] mMag,
                                       List<JumpLinearModel.Wall> walls, CostateDualSolver.FreeP0 freeP0,
                                       List<ChordRow> chords, Map<String, Double> warmLambda) {
+        return solveChords(n, cx, cz, mMag, walls, freeP0, chords, warmLambda, Double.NEGATIVE_INFINITY);
+    }
+
+    public static Outcome solveChords(int n, double[] cx, double[] cz, double[] mMag,
+                                      List<JumpLinearModel.Wall> walls, CostateDualSolver.FreeP0 freeP0,
+                                      List<ChordRow> chords, Map<String, Double> warmLambda, double cutoff) {
         DiskSocpKernel k = new DiskSocpKernel(n, cx, cz, mMag, walls, freeP0, chords, warmLambda);
+        k.cutoff = cutoff;
         Result r = k.run();
         return new Outcome(r, k.failCode, k.failIter, k.failMu);
     }
@@ -293,6 +302,11 @@ public final class DiskSocpKernel {
                         break outer;
                     }
                 }
+                if (cutoff > Double.NEGATIVE_INFINITY && boundValue(lambda, gx, gz) <= cutoff) {
+                    fail(FAIL_CUTOFF, iters, mu);
+                    aborted = true;
+                    break outer;
+                }
             }
             bestLambda = lambda.clone();
             bestTau = tau.clone();
@@ -321,7 +335,7 @@ public final class DiskSocpKernel {
             failMu = Double.NaN;
         }
         if (aborted) {
-            if (failCode == FAIL_UNBOUNDED) return emit(lambda, tau, gx, gz, false, iters, mu * nu);
+            if (failCode == FAIL_UNBOUNDED || failCode == FAIL_CUTOFF) return emit(lambda, tau, gx, gz, false, iters, mu * nu);
             if (bestLambda == null) return null;
             lambda = bestLambda;
             tau = bestTau;
@@ -334,6 +348,19 @@ public final class DiskSocpKernel {
             fail(FAIL_UNBOUNDED, iters, mu);
         }
         return r;
+    }
+
+    private double boundValue(double[] lambda, double[] gx, double[] gz) {
+        double value = 0.0;
+        for (int t = 0; t < n; t++) value += mMag[t] * StrictMath.hypot(gx[t], gz[t]);
+        for (int j = 0; j < m; j++) value += lambda[j] * bPrime[j];
+        if (freeP0 != null) {
+            double hx = hAxis(lambda, 0);
+            double hz = hAxis(lambda, 1);
+            value += hx >= 0.0 ? hx * freeP0.dvHiX : hx * freeP0.dvLoX;
+            value += hz >= 0.0 ? hz * freeP0.dvHiZ : hz * freeP0.dvLoZ;
+        }
+        return value;
     }
 
     private double primalLowBound() {
