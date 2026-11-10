@@ -2409,7 +2409,9 @@ public final class InputOverlay {
 
         ThemeManager.paddedSeparator();
         renderDeleteConstraintsOption();
-        String label = String.format(MENU_DELETE, selection.size()) + " (" + MENU_DELETE_SHORTCUT + ")";
+        int rowCount = selection.getSelectedRows().size();
+        if (rowCount == 0) return;
+        String label = String.format(MENU_DELETE, rowCount) + " (" + MENU_DELETE_SHORTCUT + ")";
         if (contextDangerButton(label)) {
             deleteSelectedRows();
         }
@@ -2444,7 +2446,11 @@ public final class InputOverlay {
 
     public void deleteSelectedRows() {
         Set<Integer> rows = selection.getSelectedRows();
-        int dirtyTick = rows.isEmpty() ? -1 : java.util.Collections.min(rows);
+        if (rows.isEmpty()) {
+            selection.clear();
+            return;
+        }
+        int dirtyTick = java.util.Collections.min(rows);
         List<Integer> descending = selection.getSelectedRowsDescending();
         data.removeRows(descending);
         if (angleSolver != null) angleSolver.onRowsRemoved(descending);
