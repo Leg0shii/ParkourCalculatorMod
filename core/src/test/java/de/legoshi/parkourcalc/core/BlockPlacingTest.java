@@ -201,6 +201,16 @@ public class BlockPlacingTest {
             }
 
             @Override
+            public List<AABB> shape(String spec) {
+                return mc.blockShape(spec);
+            }
+
+            @Override
+            public String blockAt(int x, int y, int z) {
+                return mc.describeBlockState(x, y, z);
+            }
+
+            @Override
             public boolean chunkLoaded(int blockX, int blockZ) {
                 return chunksLoaded;
             }
@@ -233,10 +243,94 @@ public class BlockPlacingTest {
         Map<BlockOverride, String> missed = BlockOverrideCheck.run(data, boxes, reach(mc, -30f));
         assertEquals("Not placed at tick 2: the right click hits nothing in reach", missed.get(onTop));
 
-        List<BlockOverride> waiting = new ArrayList<BlockOverride>();
+        List<int[]> waiting = new ArrayList<int[]>();
         Map<BlockOverride, String> unloaded = BlockOverrideCheck.run(data, boxes, reach(mc, -30f, false), waiting);
         assertTrue(unloaded.isEmpty());
-        assertEquals(Arrays.asList(onTop, elsewhere), waiting);
+        assertEquals(4, waiting.size());
+        BlockOverrideCheck.Pending pending = BlockOverrideCheck.pending(waiting);
+        assertFalse(pending.isEmpty());
+        assertFalse(pending.anyLoaded(reach(mc, -30f, false)));
+        assertTrue(pending.anyLoaded(reach(mc, -30f, true)));
+        assertTrue(BlockOverrideCheck.pending(new ArrayList<int[]>()).isEmpty());
+    }
+
+    private static final String TRAPDOOR_OPEN = "minecraft:trapdoor[facing=east,half=bottom,open=true]";
+    private static final String TRAPDOOR_CLOSED = "minecraft:trapdoor[facing=east,half=bottom,open=false]";
+
+    private static final class ShapedAccess extends FakeMinecraftAccess {
+        final Map<List<Integer>, String> states = new java.util.HashMap<List<Integer>, String>();
+
+        @Override
+        public List<AABB> blockShape(String spec) {
+            if (spec.equals(TRAPDOOR_OPEN)) {
+                return Collections.singletonList(new AABB(new Vec3dCore(0, 0, 0.8125), new Vec3dCore(1, 1, 1)));
+            }
+            if (spec.equals(TRAPDOOR_CLOSED)) {
+                return Collections.singletonList(new AABB(new Vec3dCore(0, 0, 0), new Vec3dCore(1, 0.1875, 1)));
+            }
+            return super.blockShape(spec);
+        }
+
+        @Override
+        public String describeBlockState(int x, int y, int z) {
+            String state = states.get(Arrays.asList(x, y, z));
+            return state == null ? BlockOverride.AIR : state;
+        }
+    }
+
+    @Test
+    public void aPlayerRowThatChangesABlockIsCheckedAgainstTheBlockItClicks() {
+        InputData data = rows(4);
+        ShapedAccess mc = new ShapedAccess();
+        mc.addBlock(0, -1, 3, new AABB(new Vec3dCore(0, -1, 3), new Vec3dCore(1, 0, 4)));
+        BoxController boxes = path(new double[][] {{0.5, 0, 0.5}, {0.5, 0, 0.5}, {0.5, 0, 0.5}, {0.5, 0, 0.5}}, 0f);
+        data.getRows().get(1).setKeyActive(InputRow.Key.RIGHT_CLICK, true);
+        BlockOverride closes = new BlockOverride(2, BlockOverride.NO_END, 0, 0, 3, TRAPDOOR_CLOSED, TRAPDOOR_OPEN, true);
+        data.getBlockOverrides().add(closes);
+
+        assertTrue(BlockOverrideCheck.run(data, boxes, reach(mc, 24f)).isEmpty());
+        assertEquals("Not placed at tick 2: the right click hits 0 -1 3",
+                BlockOverrideCheck.run(data, boxes, reach(mc, 27f)).get(closes));
+
+        data.getBlockOverrides().add(new BlockOverride(1, BlockOverride.NO_END, 0, 0, 3, TRAPDOOR_OPEN, TRAPDOOR_OPEN, false));
+        assertTrue(BlockOverrideCheck.run(data, boxes, reach(mc, 24f)).isEmpty());
+        assertEquals("Not placed at tick 2: the right click hits 0 -1 3",
+                BlockOverrideCheck.run(data, boxes, reach(mc, 27f)).get(closes));
+    }
+
+    @Test
+    public void anOverriddenBlockInTheWayStopsTheClickAtItsOwnShape() {
+        InputData data = rows(4);
+        ShapedAccess mc = new ShapedAccess();
+        mc.addBlock(0, -1, 3, new AABB(new Vec3dCore(0, -1, 3), new Vec3dCore(1, 0, 4)));
+        BoxController boxes = path(new double[][] {{0.5, 0, 0.5}, {0.5, 0, 0.5}, {0.5, 0, 0.5}, {0.5, 0, 0.5}}, 0f);
+        data.getRows().get(1).setKeyActive(InputRow.Key.RIGHT_CLICK, true);
+        BlockOverride placed = new BlockOverride(2, BlockOverride.NO_END, 0, 0, 3, "minecraft:stone", BlockOverride.AIR, true);
+        data.getBlockOverrides().add(placed);
+        data.getBlockOverrides().add(new BlockOverride(1, BlockOverride.NO_END, 0, 0, 2, TRAPDOOR_CLOSED, BlockOverride.AIR, false));
+        assertTrue(BlockOverrideCheck.run(data, boxes, reach(mc, 27f)).isEmpty());
+
+        data.getBlockOverrides().add(new BlockOverride(1, BlockOverride.NO_END, 0, 1, 1, "minecraft:stone", BlockOverride.AIR, false));
+        assertEquals("Not placed at tick 2: the right click lands at 0 1 0",
+                BlockOverrideCheck.run(data, boxes, reach(mc, 27f)).get(placed));
+    }
+
+    @Test
+    public void aDoorRowAcceptsAClickOnItsOtherHalf() {
+        InputData data = rows(4);
+        ShapedAccess mc = new ShapedAccess();
+        mc.addBlock(0, 1, 3, new AABB(new Vec3dCore(0, 1, 3), new Vec3dCore(1, 2, 3.1875)));
+        mc.states.put(Arrays.asList(0, 1, 3), "minecraft:wooden_door[half=upper,hinge=left]");
+        BoxController boxes = path(new double[][] {{0.5, 0, 0.5}, {0.5, 0, 0.5}, {0.5, 0, 0.5}, {0.5, 0, 0.5}}, 0f);
+        data.getRows().get(1).setKeyActive(InputRow.Key.RIGHT_CLICK, true);
+        BlockOverride opens = new BlockOverride(2, BlockOverride.NO_END, 0, 0, 3,
+                "minecraft:wooden_door[facing=east,half=lower,open=true]", "minecraft:wooden_door[facing=east,half=lower,open=false]", true);
+        data.getBlockOverrides().add(opens);
+        assertTrue(BlockOverrideCheck.run(data, boxes, reach(mc, 5f)).isEmpty());
+
+        mc.states.put(Arrays.asList(0, 1, 3), "minecraft:stone");
+        assertEquals("Not placed at tick 2: the right click hits 0 1 3",
+                BlockOverrideCheck.run(data, boxes, reach(mc, 5f)).get(opens));
     }
 
     @Test

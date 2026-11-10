@@ -517,4 +517,197 @@ public class BlockOverridesTest {
         assertEquals(17, world.viewRow() + 1);
         assertEquals(12 * 4, drawn.size());
     }
+
+    private static final String OPEN = "minecraft:trapdoor[facing=east,half=bottom,open=true]";
+    private static final String CLOSED = "minecraft:trapdoor[facing=east,half=bottom,open=false]";
+
+    @Test
+    public void anAutoRowLeavesTheBlockAloneOnceAPlayerRowHasChangedIt() {
+        InputData data = rows(40);
+        BlockOverrides overrides = data.getBlockOverrides();
+        overrides.add(new BlockOverride(1, BlockOverride.NO_END, 5, 36, 5, OPEN, OPEN));
+        overrides.add(new BlockOverride(20, BlockOverride.NO_END, 5, 36, 5, CLOSED, OPEN, true));
+        overrides.add(new BlockOverride(26, BlockOverride.NO_END, 5, 36, 5, OPEN, CLOSED, true));
+        List<BlockPatch> open = Collections.singletonList(patch(5, 36, 5, OPEN));
+        List<BlockPatch> closed = Collections.singletonList(patch(5, 36, 5, CLOSED));
+        assertEquals(open, overrides.patchesAtRow(18));
+        assertEquals(closed, overrides.patchesAtRow(19));
+        assertEquals(closed, overrides.patchesAtRow(24));
+        assertEquals(open, overrides.patchesAtRow(25));
+        assertEquals(open, overrides.patchesAtRow(0, false));
+        assertEquals(open, overrides.patchesAtRow(18, false));
+        assertTrue(overrides.patchesAtRow(19, false).isEmpty());
+        assertTrue(overrides.patchesAtRow(25, false).isEmpty());
+        assertTrue(overrides.patchesAtRow(39, false).isEmpty());
+
+        SelectionManager selection = new SelectionManager(new FakeMinecraftAccess());
+        BlockOverrideWorld world = new BlockOverrideWorld(data, selection);
+        FakePatcher patcher = new FakePatcher();
+        world.setPatcher(patcher);
+        final String[] worldBlock = {OPEN};
+        world.setBlockReader((x, y, z) -> worldBlock[0]);
+        final List<String> warnings = new ArrayList<String>();
+        world.setOnDesync((row, tick, expectedPlaced) -> warnings.add(tick + ":" + expectedPlaced));
+        world.setReplayRow(17);
+        world.tick();
+        world.setReplayRow(18);
+        world.tick();
+        assertEquals(open, patcher.last());
+        int calls = patcher.calls.size();
+        world.setReplayRow(19);
+        world.tick();
+        worldBlock[0] = CLOSED;
+        world.setReplayRow(20);
+        world.tick();
+        world.setReplayRow(21);
+        world.tick();
+        assertEquals(calls, patcher.calls.size());
+        assertTrue(warnings.isEmpty());
+    }
+
+    @Test
+    public void aPlayerRowThatEndsIsNotPutBackByAnAutoRowButAnAutoRowThatEndsIs() {
+        BlockOverrides overrides = new BlockOverrides();
+        overrides.add(new BlockOverride(1, BlockOverride.NO_END, 5, 36, 5, OPEN, OPEN));
+        overrides.add(new BlockOverride(20, 25, 5, 36, 5, CLOSED, OPEN, true));
+        assertTrue(overrides.patchesAtRow(24, false).isEmpty());
+        assertTrue(overrides.patchesAtRow(25, false).isEmpty());
+        assertEquals(Collections.singletonList(patch(5, 36, 5, OPEN)), overrides.patchesAtRow(25));
+
+        BlockOverrides auto = new BlockOverrides();
+        auto.add(new BlockOverride(10, BlockOverride.NO_END, 5, 36, 5, CLOSED, OPEN, true));
+        auto.add(new BlockOverride(20, 25, 5, 36, 5, OPEN, CLOSED));
+        assertTrue(auto.patchesAtRow(8, false).isEmpty());
+        assertTrue(auto.patchesAtRow(15, false).isEmpty());
+        assertEquals(Collections.singletonList(patch(5, 36, 5, OPEN)), auto.patchesAtRow(19, false));
+        assertEquals(Collections.singletonList(patch(5, 36, 5, CLOSED)), auto.patchesAtRow(25, false));
+    }
+
+    @Test
+    public void aReplayThatStartsOnAClickTickShowsTheBlockBeforeTheClick() {
+        InputData data = rows(40);
+        data.getBlockOverrides().add(new BlockOverride(20, BlockOverride.NO_END, 5, 36, 5, CLOSED, OPEN, true));
+        data.getBlockOverrides().add(new BlockOverride(20, BlockOverride.NO_END, 6, 36, 5, "stone", "air"));
+        SelectionManager selection = new SelectionManager(new FakeMinecraftAccess());
+        BlockOverrideWorld world = new BlockOverrideWorld(data, selection);
+        FakePatcher patcher = new FakePatcher();
+        world.setPatcher(patcher);
+        selection.selectOnly(20);
+        world.tick();
+        assertEquals(Arrays.asList(patch(5, 36, 5, CLOSED), patch(6, 36, 5, "stone")), patcher.last());
+        world.setReplayRow(19);
+        assertEquals(Arrays.asList(patch(5, 36, 5, OPEN), patch(6, 36, 5, "stone")), patcher.last());
+        world.setReplayRow(-1);
+        world.setReplayRow(20);
+        assertEquals(Arrays.asList(patch(5, 36, 5, CLOSED), patch(6, 36, 5, "stone")), patcher.last());
+    }
+
+    private static BlockPatch rowByRow(List<BlockOverride> all, int x, int y, int z, int row) {
+        BlockOverride base = null;
+        BlockOverride active = null;
+        for (BlockOverride b : all) {
+            if (b.x != x || b.y != y || b.z != z) continue;
+            if (base == null || b.startTick < base.startTick) base = b;
+            if (b.activeAtRow(row) && (active == null || b.startTick >= active.startTick)) active = b;
+        }
+        if (base == null) return null;
+        String spec = active != null ? active.block : base.before;
+        return BlockOverride.Spec.parse(spec).valid() ? patch(x, y, z, spec) : null;
+    }
+
+    @Test
+    public void theCachedTimelineMatchesTheRowByRowResolution() {
+        java.util.Random random = new java.util.Random(20261110L);
+        String[] specs = {"stone", "air", OPEN, CLOSED, "["};
+        for (int round = 0; round < 200; round++) {
+            BlockOverrides overrides = new BlockOverrides();
+            int count = 1 + random.nextInt(8);
+            for (int i = 0; i < count; i++) {
+                int start = 1 + random.nextInt(12);
+                int end = random.nextInt(3) == 0 ? BlockOverride.NO_END : start + random.nextInt(6);
+                overrides.add(new BlockOverride(start, end, random.nextInt(3), 64, 0,
+                        specs[random.nextInt(specs.length)], specs[random.nextInt(specs.length)], random.nextBoolean()));
+            }
+            for (int row = -2; row < 24; row++) {
+                List<BlockPatch> expected = new ArrayList<BlockPatch>();
+                for (int x = 0; x < 3; x++) {
+                    BlockPatch p = rowByRow(overrides.all(), x, 64, 0, row);
+                    if (p != null) expected.add(p);
+                }
+                List<BlockPatch> actual = overrides.patchesAtRow(row);
+                assertEquals(expected.size(), actual.size());
+                assertTrue(actual.containsAll(expected));
+                for (int x = 0; x < 3; x++) {
+                    assertEquals(rowByRow(overrides.all(), x, 64, 0, row), patchAt(overrides, x, 64, 0, row));
+                }
+            }
+            assertTrue(overrides.patchesAtRow(5) == overrides.patchesAtRow(5));
+        }
+    }
+
+    @Test
+    public void anEditReportsTheFirstTickWhoseBlocksChange() {
+        BlockOverride door = new BlockOverride(10, 20, 1, 64, 1, "stone", "air");
+        BlockOverride other = new BlockOverride(30, BlockOverride.NO_END, 2, 64, 2, "stone", "air");
+        List<BlockOverride> before = Arrays.asList(door, other);
+        assertEquals(-1, BlockOverrides.firstChangedRow(before, Arrays.asList(door, other)));
+        assertEquals(-1, BlockOverrides.firstChangedRow(before, Arrays.asList(door.withPlayer(true), other)));
+        assertEquals(20, BlockOverrides.firstChangedRow(before, Arrays.asList(door.withTicks(10, 25), other)));
+        assertEquals(15, BlockOverrides.firstChangedRow(before, Arrays.asList(door.withTicks(10, 15), other)));
+        assertEquals(4, BlockOverrides.firstChangedRow(before, Arrays.asList(door.withTicks(5, 20), other)));
+        assertEquals(9, BlockOverrides.firstChangedRow(before, Arrays.asList(door.withBlock("dirt"), other)));
+        assertEquals(0, BlockOverrides.firstChangedRow(before, Arrays.asList(door.withBefore("dirt"), other)));
+        assertEquals(0, BlockOverrides.firstChangedRow(before, Collections.singletonList(door)));
+        assertEquals(0, BlockOverrides.firstChangedRow(before, Arrays.asList(door.withPos(3, 64, 3), other)));
+        assertEquals(39, BlockOverrides.firstChangedRow(before,
+                Arrays.asList(door, other, new BlockOverride(40, BlockOverride.NO_END, 2, 64, 2, "dirt", "stone"))));
+
+        InputData data = rows(50);
+        data.getBlockOverrides().replaceAll(before);
+        SimulationRunner runner = new SimulationRunner(new FakeSimulator());
+        assertEquals(0, runner.firstRowChangedBy(data.getBlockOverrides()));
+        runner.simulate(data);
+        assertEquals(-1, runner.firstRowChangedBy(data.getBlockOverrides()));
+        data.getBlockOverrides().set(1, other.withTicks(35, BlockOverride.NO_END));
+        assertEquals(29, runner.firstRowChangedBy(data.getBlockOverrides()));
+        runner.simulateFrom(29, data);
+        assertEquals(-1, runner.firstRowChangedBy(data.getBlockOverrides()));
+        runner.invalidate();
+        assertEquals(0, runner.firstRowChangedBy(data.getBlockOverrides()));
+    }
+
+    @Test
+    public void aSliceKeepsTheOverridesOnItsOwnTicks() {
+        BlockOverride before = new BlockOverride(3, BlockOverride.NO_END, 1, 64, 1, CLOSED, OPEN, true);
+        BlockOverride inside = new BlockOverride(12, 14, 2, 64, 2, "stone", "air", true);
+        BlockOverride ended = new BlockOverride(2, 8, 3, 64, 3, "stone", "air");
+        BlockOverride later = new BlockOverride(30, BlockOverride.NO_END, 4, 64, 4, "stone", "air");
+        BlockOverride across = new BlockOverride(5, 11, 5, 64, 5, "stone", "air");
+        List<Integer> sourceRows = Arrays.asList(9, 10, 11, 12, 13, 14, 15);
+        List<BlockOverride> sliced = BlockOverrides.slice(Arrays.asList(ended, before, across, inside, later), sourceRows);
+        assertEquals(Arrays.asList(
+                new BlockOverride(1, BlockOverride.NO_END, 1, 64, 1, CLOSED, OPEN, false),
+                new BlockOverride(1, 2, 5, 64, 5, "stone", "air", false),
+                new BlockOverride(3, 5, 2, 64, 2, "stone", "air", true)), sliced);
+
+        BlockOverrides source = new BlockOverrides();
+        source.replaceAll(Arrays.asList(ended, before, across, inside, later));
+        BlockOverrides target = new BlockOverrides();
+        target.replaceAll(sliced);
+        for (int j = 0; j < sourceRows.size(); j++) {
+            List<BlockPatch> expected = new ArrayList<BlockPatch>();
+            for (BlockPatch p : source.patchesAtRow(sourceRows.get(j))) {
+                if (patchAt(target, p.x, p.y, p.z, j) != null) expected.add(p);
+            }
+            assertEquals(expected, target.patchesAtRow(j));
+        }
+        assertTrue(BlockOverrides.slice(Arrays.asList(ended, later), sourceRows).isEmpty());
+    }
+
+    private static BlockPatch patchAt(BlockOverrides overrides, int x, int y, int z, int row) {
+        for (BlockPatch p : overrides.patchesAtRow(row)) {
+            if (p.x == x && p.y == y && p.z == z) return p;
+        }
+        return null;
+    }
 }

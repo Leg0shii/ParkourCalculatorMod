@@ -247,7 +247,9 @@ public final class BlockOverrideWorld {
         if (!force && row == appliedRow && overrides.modCount() == appliedModCount && appliedBefore.size() == overrides.positionCount()) return;
         appliedRow = row;
         appliedModCount = overrides.modCount();
-        if (!apply(overrides.patchesAtRow(row, !replayStepped), overrides.basesByPosition())) appliedRow = Integer.MIN_VALUE;
+        List<BlockPatch> patches = replayRow >= 0 && !replayStepped
+                ? overrides.patchesBeforeClicksAtRow(row) : overrides.patchesAtRow(row, !replayStepped);
+        if (!apply(patches, overrides.basesByPosition())) appliedRow = Integer.MIN_VALUE;
     }
 
     public void releaseAll() {

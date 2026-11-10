@@ -21,6 +21,9 @@ public final class SimulationRunner {
     private final List<TickState> path = new ArrayList<>();
     private final List<Checkpoint> checkpoints = new ArrayList<>();
     private final List<ServerSimEvent> serverEvents = new ArrayList<>();
+    private List<BlockOverride> simulatedOverrides = Collections.emptyList();
+    private BlockOverrides simulatedTable;
+    private int simulatedModCount;
 
     private float startPitch = PlaybackController.DEFAULT_PITCH;
 
@@ -78,6 +81,14 @@ public final class SimulationRunner {
         } finally {
             simulator.setBlockPatches(Collections.<BlockPatch>emptyList());
         }
+        simulatedOverrides = new ArrayList<>(blockOverrides.all());
+        simulatedTable = blockOverrides;
+        simulatedModCount = blockOverrides.modCount();
+    }
+
+    public int firstRowChangedBy(BlockOverrides blockOverrides) {
+        if (blockOverrides == simulatedTable && blockOverrides.modCount() == simulatedModCount) return -1;
+        return BlockOverrides.firstChangedRow(simulatedOverrides, blockOverrides.all());
     }
 
     private void replayRows(int startRow, List<InputRow> rows, BlockOverrides blockOverrides) {
@@ -149,6 +160,8 @@ public final class SimulationRunner {
         path.clear();
         checkpoints.clear();
         serverEvents.clear();
+        simulatedOverrides = Collections.emptyList();
+        simulatedTable = null;
         simulator.invalidate();
     }
 

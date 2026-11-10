@@ -20,6 +20,8 @@ public final class BlockOverride {
     public final String block;
     public final String before;
     public final boolean player;
+    private Spec parsedBlock;
+    private Spec parsedBefore;
 
     public BlockOverride(int startTick, int endTick, int x, int y, int z, String block, String before) {
         this(startTick, endTick, x, y, z, block, before, false);
@@ -48,7 +50,7 @@ public final class BlockOverride {
     public BlockPatch patchAtRow(int row) {
         boolean active = activeAtRow(row);
         String spec = active ? block : before;
-        if (!Spec.parse(spec).valid()) return null;
+        if (!(active ? spec() : beforeSpec()).valid()) return null;
         return new BlockPatch(x, y, z, spec, active ? before : block);
     }
 
@@ -73,11 +75,21 @@ public final class BlockOverride {
     }
 
     public Spec spec() {
-        return Spec.parse(block);
+        Spec parsed = parsedBlock;
+        if (parsed == null) {
+            parsed = Spec.parse(block);
+            parsedBlock = parsed;
+        }
+        return parsed;
     }
 
     public Spec beforeSpec() {
-        return Spec.parse(before);
+        Spec parsed = parsedBefore;
+        if (parsed == null) {
+            parsed = Spec.parse(before);
+            parsedBefore = parsed;
+        }
+        return parsed;
     }
 
     @Override
