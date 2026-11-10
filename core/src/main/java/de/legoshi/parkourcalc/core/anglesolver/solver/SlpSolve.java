@@ -262,11 +262,7 @@ public final class SlpSolve {
                     JumpConstraint c = ineq.get(j);
                     lpWalls.set(j, lpLin.crossAxisHalfWall(c, JumpLinearModel.dominantSignOnPath(c, path), halfSign[j], 0.0));
                 }
-                for (int t = 0; t < n; t++) {
-                    double phi = lin.baseArg(t) + theta[t] * RAD;
-                    ux[t] = lin.mMag(t) * StrictMath.cos(phi);
-                    uz[t] = lin.mMag(t) * StrictMath.sin(phi);
-                }
+                lin.inputVectors(theta, ux, uz);
                 double[][] rows = new double[m][dims];
                 for (int j = mPos; j < m; j++) {
                     JumpConstraint c = ineq.get(j);

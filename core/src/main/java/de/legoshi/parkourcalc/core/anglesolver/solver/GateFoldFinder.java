@@ -466,7 +466,7 @@ public final class GateFoldFinder {
             if (cancel != null && cancel.get()) break;
             if (deadline.over()) break;
             if (curViol <= 0.0) break;
-            inputVectors(lin, theta, ux, uz);
+            lin.inputVectors(theta, ux, uz);
             double[][] rows = new double[m][vars];
             double[] wv = new double[m];
             linearizeWalls(walls, n, dims, col, ux, uz, free, px, pz, refPx, refPz, rows, wv);
@@ -505,7 +505,7 @@ public final class GateFoldFinder {
                                       double px, double pz, double refPx, double refPz, boolean free,
                                       double[] ux, double[] uz) {
         int n = theta.length;
-        inputVectors(lin, theta, ux, uz);
+        lin.inputVectors(theta, ux, uz);
         double worst = 0.0;
         for (JumpLinearModel.Wall w : walls) {
             double val = -w.bPrime;
@@ -614,7 +614,7 @@ public final class GateFoldFinder {
         for (int it = 0; it < SLP_ITERS; it++) {
             if (cancel != null && cancel.get()) break;
             if (deadline.over()) break;
-            inputVectors(lin, theta, ux, uz);
+            lin.inputVectors(theta, ux, uz);
             double[][] rows = new double[m][vars];
             double[] wv = new double[m];
             linearizeWalls(walls, n, dims, col, ux, uz, free, px, pz, refPx, refPz, rows, wv);
@@ -691,7 +691,7 @@ public final class GateFoldFinder {
         for (int it = 0; it < OBJ_ITERS; it++) {
             if (cancel != null && cancel.get()) break;
             if (deadline.over()) break;
-            inputVectors(lin, theta, ux, uz);
+            lin.inputVectors(theta, ux, uz);
             double[][] rows = new double[m][vars];
             double[] wv = new double[m];
             linearizeWalls(walls, n, dims, col, ux, uz, free, px, pz, refPx, refPz, rows, wv);
@@ -872,14 +872,6 @@ public final class GateFoldFinder {
         c.startPos = new de.legoshi.parkourcalc.core.sim.Vec3dCore(px, sc.startPos.y, pz);
         c.startBox = StartBox.pinned(px, pz, sc.initialVelocity.x, sc.initialVelocity.z);
         return c;
-    }
-
-    private static void inputVectors(JumpLinearModel lin, double[] theta, double[] ux, double[] uz) {
-        for (int t = 0; t < theta.length; t++) {
-            double phi = lin.baseArg(t) + theta[t] * RAD;
-            ux[t] = lin.mMag(t) * StrictMath.cos(phi);
-            uz[t] = lin.mMag(t) * StrictMath.sin(phi);
-        }
     }
 
     private static void linearizeWalls(List<JumpLinearModel.Wall> walls, int n, int dims, int[] col, double[] ux,

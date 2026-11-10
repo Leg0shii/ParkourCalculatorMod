@@ -304,6 +304,14 @@ public final class JumpLinearModel {
         return baseArg[t];
     }
 
+    public void inputVectors(double[] yawsDeg, double[] ux, double[] uz) {
+        for (int t = 0; t < n; t++) {
+            double phi = baseArg[t] + yawsDeg[t] * RAD;
+            ux[t] = mMag[t] * StrictMath.cos(phi);
+            uz[t] = mMag[t] * StrictMath.sin(phi);
+        }
+    }
+
     public double friction(int t) {
         return f4[t];
     }

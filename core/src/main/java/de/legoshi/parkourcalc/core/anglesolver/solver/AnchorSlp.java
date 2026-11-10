@@ -29,7 +29,7 @@ public final class AnchorSlp {
         int n = lin.n;
         double[] ux = new double[n];
         double[] uz = new double[n];
-        realizedU(lin, yaws, ux, uz);
+        lin.inputVectors(yaws, ux, uz);
         double dpx = box != null ? px - box.px : 0.0;
         double dpz = box != null ? pz - box.pz : 0.0;
         Map<String, Double> out = new HashMap<>();
@@ -109,7 +109,7 @@ public final class AnchorSlp {
         int cols = n + (free ? 2 : 0);
         double[] ux = new double[n];
         double[] uz = new double[n];
-        realizedU(lin, yaws, ux, uz);
+        lin.inputVectors(yaws, ux, uz);
         double cx0 = 0.0, wx0 = 0.0, cz0 = 0.0, wz0 = 0.0;
         if (free) {
             double loX = box.pxLo - px, hiX = box.pxHi - px;
@@ -278,15 +278,6 @@ public final class AnchorSlp {
             if (d != 0.0) row[s] = sign * BAND_SCALE * d * yawScale;
         }
         return row;
-    }
-
-    static void realizedU(JumpLinearModel lin, double[] yaws, double[] outUx, double[] outUz) {
-        for (int t = 0; t < lin.n; t++) {
-            double mm = lin.mMag(t);
-            double phi = lin.baseArg(t) + yaws[t] * RAD;
-            outUx[t] = mm * StrictMath.cos(phi);
-            outUz[t] = mm * StrictMath.sin(phi);
-        }
     }
 
     public static final class Outcome {

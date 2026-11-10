@@ -847,11 +847,7 @@ public final class BoundPrunedRecovery {
             for (int iter = 0; iter < RESTORE_ITERS; iter++) {
                 if (expired()) break;
                 lastRestoreIters = iter + 1;
-                for (int t = 0; t < n; t++) {
-                    double phi = lin.baseArg(t) + theta[t] * RAD;
-                    ux[t] = lin.mMag(t) * StrictMath.cos(phi);
-                    uz[t] = lin.mMag(t) * StrictMath.sin(phi);
-                }
+                lin.inputVectors(theta, ux, uz);
                 for (int p = 0; p < n; p++) {
                     java.util.Arrays.fill(a[p], 0.0);
                     b[p] = 0.0;
@@ -1028,11 +1024,7 @@ public final class BoundPrunedRecovery {
                         int n = lin.n;
                         ux = new double[n];
                         uz = new double[n];
-                        for (int t = 0; t < n; t++) {
-                            double phi = lin.baseArg(t) + theta[t] * RAD;
-                            ux[t] = lin.mMag(t) * StrictMath.cos(phi);
-                            uz[t] = lin.mMag(t) * StrictMath.sin(phi);
-                        }
+                        lin.inputVectors(theta, ux, uz);
                     }
                     JumpLinearModel.Wall w = walls.get(j);
                     double au = 0.0;
