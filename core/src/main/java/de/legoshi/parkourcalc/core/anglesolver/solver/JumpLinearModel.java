@@ -28,6 +28,8 @@ public final class JumpLinearModel {
     private static final double RAD = Angles.RAD_PER_DEG;
     private static final double DEG = Angles.DEG_PER_RAD;
 
+    private static final double PREFIX_RATIO_FLOOR = 0x1.0p-20;
+
     public final int n;
     private final JumpPhysicsInputs sc;
     private final boolean floatFriction;
@@ -41,6 +43,8 @@ public final class JumpLinearModel {
     private final double[] f4;      // per-tick friction multiplier
     private final double[] fPre;    // fPre[k] = prod_{i<k} f4[i]
     private final double[] sPre;    // sPre[k] = sum_{t<k} fPre[t]
+    private final double[] logPre;
+    private final double[] tailSum;
 
     private final boolean[][] zero;
     private final int[][] zNext;
@@ -116,6 +120,8 @@ public final class JumpLinearModel {
         this.f4 = new double[n];
         this.fPre = new double[n + 1];
         this.sPre = new double[n + 1];
+        this.logPre = new double[n + 1];
+        this.tailSum = new double[n + 1];
         precompute();
         this.zero = new boolean[2][];
         this.zero[0] = zeroX;
@@ -195,7 +201,7 @@ public final class JumpLinearModel {
             if (d < tau) continue;
             if (d + 1 >= k) break;
             int end = packetEnd(axis, d, k);
-            c += boostGain[s] * (fsPre[d] / fsPre[tau]) * (sPre[end] - sPre[d + 1]) / fPre[d + 1];
+            c += boostGain[s] * (fsPre[d] / fsPre[tau]) * frictionSpan(d + 1, end);
         }
         return c;
     }
@@ -206,7 +212,7 @@ public final class JumpLinearModel {
             int d = dmgTicks[i];
             if (d + 1 >= k) break;
             int end = packetEnd(axis, d, k);
-            p += packetConst[axis][i] * (sPre[end] - sPre[d + 1]) / fPre[d + 1];
+            p += packetConst[axis][i] * frictionSpan(d + 1, end);
         }
         return p;
     }
@@ -273,7 +279,19 @@ public final class JumpLinearModel {
         for (int t = 0; t < n; t++) {
             sPre[t + 1] = sPre[t] + fPre[t];
             fPre[t + 1] = fPre[t] * f4[t];
+            logPre[t + 1] = logPre[t] + StrictMath.log(f4[t]);
         }
+        for (int t = n - 1; t >= 0; t--) tailSum[t] = 1.0 + f4[t] * tailSum[t + 1];
+    }
+
+    private double decay(int from, int to) {
+        if (fPre[from] >= PREFIX_RATIO_FLOOR) return fPre[to] / fPre[from];
+        return StrictMath.exp(logPre[to] - logPre[from]);
+    }
+
+    private double frictionSpan(int from, int end) {
+        if (fPre[from] >= PREFIX_RATIO_FLOOR) return (sPre[end] - sPre[from]) / fPre[from];
+        return tailSum[from] - decay(from, end) * tailSum[end];
     }
 
     public double mMag(int t) {
@@ -322,7 +340,7 @@ public final class JumpLinearModel {
         if (s >= k) return 0.0;
         int stop = dmgCut[s];
         int end = k < stop ? k : stop;
-        double c = (sPre[end] - sPre[s]) / fPre[s];
+        double c = frictionSpan(s, end);
         if (boostFrom[s] >= 0) c += boostCoupling(-1, s, k);
         return c;
     }
@@ -332,7 +350,7 @@ public final class JumpLinearModel {
         int stop = zNext[axis][s];
         if (dmgCut[s] < stop) stop = dmgCut[s];
         int end = k < stop ? k : stop;
-        double c = (sPre[end] - sPre[s]) / fPre[s];
+        double c = frictionSpan(s, end);
         if (boostFrom[s] >= 0) c += boostCoupling(axis, s, k);
         return c;
     }
@@ -550,7 +568,7 @@ public final class JumpLinearModel {
                 boolean any = false;
                 for (int s = 0; s < t; s++) {
                     if (zNext[a][s] < t) continue;
-                    coefHi[s] = fPre[t] / fPre[s];
+                    coefHi[s] = decay(s, t);
                     any = true;
                 }
                 if (!any) continue;
@@ -575,7 +593,7 @@ public final class JumpLinearModel {
         boolean any = false;
         for (int s = 0; s < tick; s++) {
             if (zNext[axis][s] < tick) continue;
-            coef[s] = positive ? -(fPre[tick] / fPre[s]) : (fPre[tick] / fPre[s]);
+            coef[s] = positive ? -decay(s, tick) : decay(s, tick);
             any = true;
         }
         if (!any) return null;
@@ -589,7 +607,7 @@ public final class JumpLinearModel {
     public double velocityCoef(int axis, int s, int t) {
         if (s >= t) return 0.0;
         if (zNext[axis][s] < t) return 0.0;
-        return fPre[t] / fPre[s];
+        return decay(s, t);
     }
 
     public void zeroingPattern(double[] yawsAbsWrapped, double threshold, boolean perAxis,
