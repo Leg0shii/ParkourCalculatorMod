@@ -131,24 +131,7 @@ public final class GraphPresetIO {
             node.x = n.x;
             node.y = n.y;
             for (ParamSpec spec : n.type.params) {
-                GraphPresetFile.Param p = new GraphPresetFile.Param();
-                p.key = spec.key;
-                switch (spec.kind) {
-                    case INT:
-                        p.num = (double) n.params.getInt(spec.key);
-                        break;
-                    case DOUBLE:
-                        p.num = n.params.getDouble(spec.key);
-                        break;
-                    case BOOL:
-                        p.flag = n.params.getBool(spec.key);
-                        break;
-                    case ENUM:
-                    case STRING:
-                        p.str = n.params.getString(spec.key);
-                        break;
-                }
-                node.params.add(p);
+                node.params.add(GraphPresetFile.Param.of(n, spec));
             }
             file.nodes.add(node);
         }

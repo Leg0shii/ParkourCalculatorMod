@@ -33,17 +33,10 @@ public final class SolveRunRecord {
         public double smoothLambda;
     }
 
-    public static final class Param {
-        public String key;
-        public Double num;
-        public Boolean flag;
-        public String str;
-    }
-
     public static final class NodeConfig {
         public String id;
         public String type;
-        public List<Param> params = new ArrayList<Param>();
+        public List<GraphPresetFile.Param> params = new ArrayList<GraphPresetFile.Param>();
     }
 
     public static final class Config {
@@ -139,32 +132,11 @@ public final class SolveRunRecord {
             nc.id = n.id;
             nc.type = n.type.id;
             for (ParamSpec spec : n.type.params) {
-                nc.params.add(paramOf(n, spec));
+                nc.params.add(GraphPresetFile.Param.of(n, spec));
             }
             c.nodes.add(nc);
         }
         return c;
-    }
-
-    private static Param paramOf(GraphNode n, ParamSpec spec) {
-        Param p = new Param();
-        p.key = spec.key;
-        switch (spec.kind) {
-            case INT:
-                p.num = (double) n.params.getInt(spec.key);
-                break;
-            case DOUBLE:
-                p.num = n.params.getDouble(spec.key);
-                break;
-            case BOOL:
-                p.flag = n.params.getBool(spec.key);
-                break;
-            case ENUM:
-            case STRING:
-                p.str = n.params.getString(spec.key);
-                break;
-        }
-        return p;
     }
 
     public static Problem problemOf(JumpSpec spec, int jumps) {

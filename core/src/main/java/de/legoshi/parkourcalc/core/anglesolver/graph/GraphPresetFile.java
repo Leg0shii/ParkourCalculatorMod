@@ -28,6 +28,27 @@ public final class GraphPresetFile {
         public Double num;
         public String str;
         public Boolean flag;
+
+        static Param of(GraphNode n, ParamSpec spec) {
+            Param p = new Param();
+            p.key = spec.key;
+            switch (spec.kind) {
+                case INT:
+                    p.num = (double) n.params.getInt(spec.key);
+                    break;
+                case DOUBLE:
+                    p.num = n.params.getDouble(spec.key);
+                    break;
+                case BOOL:
+                    p.flag = n.params.getBool(spec.key);
+                    break;
+                case ENUM:
+                case STRING:
+                    p.str = n.params.getString(spec.key);
+                    break;
+            }
+            return p;
+        }
     }
 
     public static final class Edge {
