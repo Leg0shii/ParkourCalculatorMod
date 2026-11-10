@@ -2,6 +2,7 @@ package de.legoshi.parkourcalc.anglesolver;
 
 import de.legoshi.parkourcalc.SlowSolverTests;
 import de.legoshi.parkourcalc.anglesolver.harness.ProblemFixture;
+import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.FlowVector;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Scoring;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
@@ -406,6 +407,42 @@ public class CertifiedBnbTest {
             assertTrue(name + " gap " + withProbe.gap + " with probing against " + plain.gap + " without",
                     withProbe.gap < 0.25 * plain.gap);
         }
+    }
+
+    private static CertifiedBnb.Result optimizeWithLandingPolish(ExactJumpModel model, JumpSpec spec,
+                                                                 int incumbentPolishCap) {
+        CertifiedBnb.Config cfg = new CertifiedBnb.Config();
+        cfg.mode = CertifiedBnb.Mode.OPTIMIZE;
+        cfg.nodeCap = 300;
+        cfg.polishCap = 12;
+        cfg.incumbentPolishCap = incumbentPolishCap;
+        cfg.deadlineNanos = System.nanoTime() + 120_000_000_000L;
+        return CertifiedBnb.solve(model, spec, cfg);
+    }
+
+    @Test
+    @Category(SlowSolverTests.class)
+    public void polishingEveryNewLandingReachesFurtherAndStaysUnderTheBound() {
+        ProblemFixture pf = ProblemFixture.load("solve", "j016-X2jmmp2p");
+        ProblemFixture.Rig rig = pf.rig();
+        rig.state.setEffort(AngleSolverState.Effort.THOROUGH);
+        JumpSpec spec = rig.spec();
+        double sign = spec.objective.sense == Objective.Sense.MAX ? 1.0 : -1.0;
+        CertifiedBnb.Result plain = optimizeWithLandingPolish(pf.model, spec, 0);
+        CertifiedBnb.Result polished = optimizeWithLandingPolish(pf.model, spec, 12);
+        assertTrue("j016 must land without the landing polish", plain.feasible);
+        assertTrue("j016 must land with the landing polish", polished.feasible);
+        double verified = Scoring.verifiedObjectiveAt(pf.model, spec.asScenario(), spec,
+                polished.yawsDeg, polished.px, polished.pz, 0.0);
+        assertEquals("the polished landing must equal its byte-exact re-simulation",
+                polished.objective, verified, 1.0e-9);
+        assertTrue("polished landing " + polished.objective + " against " + plain.objective
+                        + " without: the polish must gain more than 5e-5 on j016",
+                sign * polished.objective > sign * plain.objective + 5.0e-5);
+        assertTrue("bound " + polished.boundObjective + " cuts below the polished landing " + polished.objective,
+                sign * polished.boundObjective >= sign * polished.objective - CertifiedBnb.CERT_EPS);
+        assertTrue("bound " + polished.boundObjective + " cuts below the landing found without the polish "
+                + plain.objective, sign * polished.boundObjective >= sign * plain.objective - CertifiedBnb.CERT_EPS);
     }
 
     @Test
