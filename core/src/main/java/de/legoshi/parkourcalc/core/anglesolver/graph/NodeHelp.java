@@ -273,6 +273,11 @@ public final class NodeHelp {
         param("latticePolish", "work", "How much work the smooth solves may spend before the stage gives up,"
                 + " counted in steps so the same jump always gets the same result. A long jump with many"
                 + " free ticks needs more.");
+        param("latticePolish", "turns", "Also tries the same jump with the start facing one full turn away, for"
+                + " example 315 instead of -45, and Apply then sets the start facing there. The game's angle table"
+                + " has longer steps there for some directions, so the jump can reach further. Only when the solve"
+                + " starts on the first tick of the TAS and no row has a locked yaw or an absolute F constraint."
+                + " The start facing never sits more than one turn away.");
         param("latticePolish", "reserveFraction", "The share of the whole solve time held back for this stage, so"
                 + " the stages before it cannot use up the budget. Only matters when the solve has a time budget.");
         param("latticePolish", "reserveCapSec", "The most seconds the reserve may hold back. 0 means no cap.");

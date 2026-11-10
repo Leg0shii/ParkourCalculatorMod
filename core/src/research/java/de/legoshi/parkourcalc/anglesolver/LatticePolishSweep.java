@@ -51,6 +51,7 @@ public class LatticePolishSweep {
         int seeded = 0;
         int improved = 0;
         int bad = 0;
+        int turned = 0;
         for (Path p : files) {
             String name = root.relativize(p).toString().replace(".json", "");
             if (!only.isEmpty() && !name.contains(only)) continue;
@@ -104,6 +105,7 @@ public class LatticePolishSweep {
                     ? r.startX >= box.pxLo && r.startX <= box.pxHi && r.startZ >= box.pzLo && r.startZ <= box.pzHi
                     : r.startX == sc.startPos.x && r.startZ == sc.startPos.z;
             JumpPhysicsInputs at = sc.pinnedAt(r.startX, r.startZ);
+            at.startYaw = r.startYaw;
             double[] facings = at.toGameFacings(r.yaws);
             ForwardPath path = model.forward(at, facings);
             double violation = JumpConstraintCompiler.compile(spec).maxViolation(facings, path);
@@ -112,10 +114,13 @@ public class LatticePolishSweep {
             boolean ok = violation <= 0.0 && inBox && gain > 0.0 && after == r.objective;
             if (ok) improved++;
             else bad++;
-            print("%-62s seed=%.9f -> %.9f gain=%.3e smooth=%.9f %.1f ms%s", name, before, after, gain,
-                    r.continuous, ms, ok ? "" : " BAD violation=" + violation + " inBox=" + inBox);
+            double turn = Angles.wholeTurns(r.startYaw) - Angles.wholeTurns(sc.startYaw);
+            if (turn != 0.0) turned++;
+            print("%-62s seed=%.9f -> %.9f gain=%.3e smooth=%.9f %.1f ms%s%s", name, before, after, gain,
+                    r.continuous, ms, turn != 0.0 ? String.format(Locale.ROOT, " turn=%+.0f", turn) : "",
+                    ok ? "" : " BAD violation=" + violation + " inBox=" + inBox);
         }
-        print("specs=%d declined=%d seeded=%d improved=%d bad=%d", specs, declined, seeded, improved, bad);
+        print("specs=%d declined=%d seeded=%d improved=%d turned=%d bad=%d", specs, declined, seeded, improved, turned, bad);
         assertEquals("results that fail the byte-exact replay", 0, bad);
     }
 

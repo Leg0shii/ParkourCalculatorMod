@@ -7,6 +7,7 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.NodeOutcome;
 import de.legoshi.parkourcalc.core.anglesolver.graph.NodeRuntime;
 import de.legoshi.parkourcalc.core.anglesolver.graph.ParamValues;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Scoring;
+import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.LatticePolish;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolverTrace;
@@ -28,6 +29,7 @@ public final class LatticePolishNode implements NodeRuntime {
         cfg.halfCap = params.getInt("tableSize");
         cfg.window = params.getInt("window");
         cfg.workUnits = params.getInt("work") * WORK_UNITS_PER_MILLION;
+        cfg.turns = params.getBool("turns");
     }
 
     @Override
@@ -39,20 +41,23 @@ public final class LatticePolishNode implements NodeRuntime {
         JumpPhysicsInputs sc = ctx.scenario;
         double startX = sc.startPos.x;
         double startZ = sc.startPos.z;
+        float startYaw = sc.startYaw;
         LatticePolish.Result r = LatticePolish.polish(ctx.exactModel, Scoring.freeBoxSpec(ctx), in.yaws,
                 startX, startZ, cfg, deadline, nodeToken);
         if (r == null) return NodeOutcome.of(Guarantee.UNCHANGED, in);
         boolean moved = r.startX != startX || r.startZ != startZ;
         if (moved) Scoring.adoptPinnedStart(sc, r.startX, r.startZ);
+        sc.startYaw = r.startYaw;
         Candidate out = Candidate.of(ctx, r.yaws);
         boolean better = out.feasible && (ctx.maximize() ? out.objective > in.objective : out.objective < in.objective);
         if (!better) {
             if (moved) Scoring.adoptPinnedStart(sc, startX, startZ);
+            sc.startYaw = startYaw;
             return NodeOutcome.of(Guarantee.UNCHANGED, in);
         }
         if (SolverTrace.on()) {
-            SolverTrace.log("ENGINE", "lattice polish %.9f -> %.9f continuous=%.9f searches=%d",
-                    in.objective, out.objective, r.continuous, r.closures);
+            SolverTrace.log("ENGINE", "lattice polish %.9f -> %.9f continuous=%.9f searches=%d start facing turns=%+.0f",
+                    in.objective, out.objective, r.continuous, r.closures, Angles.wholeTurns(sc.startYaw));
         }
         ctx.chainAppend("lattice polish");
         return NodeOutcome.of(Guarantee.IMPROVED, out);

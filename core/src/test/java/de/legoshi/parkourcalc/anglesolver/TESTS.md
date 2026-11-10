@@ -55,6 +55,14 @@ anglesolver/
                            eval cap; wrap-class results survive locked-rows JSON round trip
                            byte-exact; PKC_WRAPILS_FULL=1 + PKC_WRAPILS_TAG runs the env-gated full
                            replication with kicks (1.5e-5 bar on rung)
+  StartTurnTest.java       the start facing turn of the lattice polish: Angles.wholeTurns, when the engine
+                           marks a jump's start turn as free (first tick of the TAS, with or without a
+                           free start facing; not inside the run, with a locked row, an absolute F
+                           constraint or a one-way turn on tick 1), a copy carries the flag and a slice
+                           drops it, a start yaw one turn away carries every game facing there and comes
+                           back bit for bit, the locked first tick of a free start facing takes the turn
+                           of the start yaw, and rows written from another turn replay the same facings.
+                           The gains and the Apply round trip are problems/polish/ sidecars with `turns`
   LegalModeTest.java       legal/record goal-wall selection on synthetic constraint lists: velocity, EQ, cap,
                            off-tick and off-axis walls are never selected, the tightest reach wall wins, ties and
                            an empty set refuse (the capture-backed legal gates are problems/legal/ and the
@@ -212,7 +220,7 @@ resources/
 | `translation/`    | translation-aware free-start scoring: the zero-width translated score byte-equals the pinned score, and with `cap` the closed-form best translation matches a brute-force grid |
 | `gapattribution/` | a cold Optimize's reported dual-bound gap is honest: credited yaws re-simulate to the reported objective, the gap never prints negative and is never tighter than the true shortfall to a byte-exact-attainable `refObjective` (the hpk_human j1150 and j155 strats) |
 | `strafeside/`     | a Force 45 flick capture solves FAST, the strafe side pass puts at least `minFlipped` ticks on the other A/D side with less anchored yaw jerk than the solved facings, the realized path is feasible byte-exact with the shipped objective, and Apply writes the chosen key and the shifted yaw per tick (gh-338) |
-| `polish/`         | the lattice polish strictly improves a deterministic incumbent (closed form seed, or a live Fast solve with `mode` `engine`) by `minGain`, its result replays byte-exact feasible with the start inside the box, a second run returns the same facings, an infeasible incumbent and an unsupported spec (`unsupported`) come back without a result |
+| `polish/`         | the lattice polish strictly improves a deterministic incumbent (closed form seed, or a live Fast solve with `mode` `engine`) by `minGain`, its result replays byte-exact feasible with the start inside the box, a second run returns the same facings, an infeasible incumbent and an unsupported spec (`unsupported`) come back without a result; `turns` pins a start facing one full turn away, in `engine` mode through Apply and a second solve |
 
 ## Notes on individual solve/ cases
 
