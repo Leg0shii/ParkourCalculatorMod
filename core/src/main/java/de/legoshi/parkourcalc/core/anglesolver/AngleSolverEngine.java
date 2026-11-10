@@ -1103,12 +1103,14 @@ public final class AngleSolverEngine {
     private Outcome runLegalFallback(Job fallback, AtomicBoolean cancel, SolveProgress progress, RunRecording rec) {
         RunRecording fallbackRec = new RunRecording(rec.config,
                 SolveRunRecord.problemOf(fallback.spec, countJumps(fallback.spec.asScenario())), progress, rec.startNanos);
+        if (cancel.get()) return null;
         currentJob = fallback;
         recording = fallbackRec;
         return runJob(fallback, cancel, progress, fallbackRec);
     }
 
     private Outcome runJob(Job job, AtomicBoolean cancel, SolveProgress progress, RunRecording rec) {
+        if (cancel.get()) return null;
         JumpSpec spec = job.spec;
         lastSpecDebug = spec;
         JumpPhysicsInputs sc = spec.asScenario();
