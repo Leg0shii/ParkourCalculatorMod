@@ -313,7 +313,10 @@ public final class VelocityMapWidget {
         Controls.pushInputFrameHeight();
         SolverWidgets.rowLabel("Resolution", labelW);
         ImGui.setNextItemWidth(controlW);
-        if (ImGui.sliderInt("##velres", resBuf, RES_MIN, RES_MAX)) fieldRes = resBuf[0];
+        if (ImGui.sliderInt("##velres", resBuf, RES_MIN, RES_MAX)) {
+            fieldRes = Math.max(RES_MIN, Math.min(RES_MAX, resBuf[0]));
+            resBuf[0] = fieldRes;
+        }
         boolean deactivated = ImGui.isItemDeactivatedAfterEdit();
         TooltipUtil.onHover(RES_TIP);
         Controls.popInputFrameHeight();

@@ -94,6 +94,7 @@ public final class SenseFinderWindow implements RenderInterface {
     private static final float WIN_H = 520f;
     private static final float MIN_W = 480f;
     private static final float MIN_H = 300f;
+    private static final int MAX_TICK_COLUMNS = 60;
     private static final String SEARCH_TIP = "Round the solved turn to whole mouse pixels at every sense in the range"
             + " and list the pixel counts that still land.";
     private static final String TICKS_TIP = "Turn ticks whose turn range is measured. The Margin column sums"
@@ -262,7 +263,7 @@ public final class SenseFinderWindow implements RenderInterface {
     }
 
     private void rows(SenseFinder.Turn turn, float height) {
-        int ticks = turn.angles();
+        int ticks = Math.min(turn.angles(), MAX_TICK_COLUMNS);
         int cols = 4 + ticks;
         int flags = ImGuiTableFlags.ScrollX;
         if (!ThemeManager.beginStandardClickableRowsTable(TABLE_ID, cols, flags, 0f, height)) return;
@@ -360,7 +361,7 @@ public final class SenseFinderWindow implements RenderInterface {
         ThemeManager.textRight(c.weakestTick() < 0 ? "-" : c.marginsComplete() ? marginText(c.totalTarget()) : "...");
         if (game) ThemeManager.popTextColor();
         int weakest = c.weakestTick();
-        for (int k = 0; k < c.pixels.length; k++) {
+        for (int k = 0; k < Math.min(c.pixels.length, MAX_TICK_COLUMNS); k++) {
             ImGui.tableSetColumnIndex(4 + k);
             cell(c, k, k == weakest && c.marginsComplete(), settings.senseFinderCountView);
         }

@@ -1944,7 +1944,8 @@ public final class InputOverlay {
             row.setYaw(null);
         } else {
             try {
-                row.setYaw(Float.parseFloat(text));
+                float y = Float.parseFloat(text);
+                if (!Float.isNaN(y) && !Float.isInfinite(y)) row.setYaw(y);
             } catch (NumberFormatException ignored) {
             }
         }
@@ -1960,7 +1961,7 @@ public final class InputOverlay {
                 float p = Float.parseFloat(text);
                 if (p < -limit) p = -limit;
                 if (p > limit) p = limit;
-                row.setPitch(p);
+                if (!Float.isNaN(p)) row.setPitch(p);
             } catch (NumberFormatException ignored) {
             }
         }

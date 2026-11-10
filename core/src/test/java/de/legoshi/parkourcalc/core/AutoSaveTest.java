@@ -143,4 +143,13 @@ public class AutoSaveTest {
         assertEquals("save-copy left the dirty flag untouched", dirtyBefore, rig.controller.isDirty());
         assertTrue("save-copy kept the temp trajectory active", rig.controller.isTempActive());
     }
+
+    @Test
+    public void existsSeesASaveInASubfolder() throws Exception {
+        Rig rig = new Rig(Files.createTempDirectory("pkc-exists-sub"));
+        assertTrue(rig.controller.save("maps/run").ok);
+        assertTrue("the overwrite prompt relies on this", rig.controller.exists("maps/run"));
+        assertTrue(rig.controller.exists("maps\\run"));
+        assertFalse(rig.controller.exists("maps/other"));
+    }
 }

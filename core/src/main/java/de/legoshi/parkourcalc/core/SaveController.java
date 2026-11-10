@@ -441,7 +441,7 @@ public final class SaveController {
 
     public boolean exists(String name) {
         if (store == null) return false;
-        String sanitized = SaveIO.sanitize(name);
+        String sanitized = SaveIO.sanitizeRelative(name);
         if (sanitized == null) return false;
         flushPendingWrites();
         return store.exists(sanitized);
