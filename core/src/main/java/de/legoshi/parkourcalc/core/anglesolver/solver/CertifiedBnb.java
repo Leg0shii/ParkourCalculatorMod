@@ -319,13 +319,22 @@ public final class CertifiedBnb {
         bestOpenScore = Math.max(bestOpenScore, s.stuckScore);
         double gap = s.incYaws == null ? Double.POSITIVE_INFINITY
                 : Math.max(0.0, bestOpenScore - s.incScore);
-        boolean certified = s.incYaws != null && gap <= CERT_EPS;
+        boolean modelled = relaxationCoversScenario(sc);
+        boolean certified = modelled && s.incYaws != null && gap <= CERT_EPS;
         if (certified) gap = Math.min(gap, CERT_EPS);
         double boundObj = s.max ? bestOpenScore : -bestOpenScore;
-        boolean certifiedInfeasible = exhausted && s.incYaws == null && s.unresolved == 0;
+        boolean certifiedInfeasible = modelled && exhausted && s.incYaws == null && s.unresolved == 0;
         return new Result(false, s.incYaws, s.incPx, s.incPz, s.incObj, s.incYaws != null,
                 boundObj, s.incYaws == null ? Double.NaN : gap, certified, s.nodes, s.kernelSolves,
                 s.kernelNanos, s.bestInfeasYaws, s.bestInfeasViol, certifiedInfeasible, s.unresolved);
+    }
+
+    private static boolean relaxationCoversScenario(JumpPhysicsInputs sc) {
+        if (sc.lastDamageTick() >= 0) return false;
+        for (int t = 0; t < sc.numTicks; t++) {
+            if (sc.flowAt(t).pushes() || sc.endFlowAt(t).pushes()) return false;
+        }
+        return true;
     }
 
     private static Result declined() {
