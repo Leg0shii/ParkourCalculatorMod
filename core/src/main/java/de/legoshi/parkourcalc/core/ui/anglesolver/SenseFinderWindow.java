@@ -374,7 +374,7 @@ public final class SenseFinderWindow implements RenderInterface {
         if (weakest) ThemeManager.popTextColor();
         if (!ImGui.isItemHovered()) return;
         ImGui.beginTooltip();
-        if (ImGui.beginTable("##cell_tip", 2)) {
+        if (ThemeManager.beginStandardFormTable("##cell_tip", 2)) {
             if (c.hasMargin(k)) {
                 tipHeading("Turn range");
                 tipValue("Pixels", rangeText(c.landingRange(k)));
@@ -383,7 +383,7 @@ public final class SenseFinderWindow implements RenderInterface {
             tipHeading("Turn");
             tipValue("Pixels", Integer.toString(c.pixels[k]));
             tipValue("Degrees", String.format(Locale.ROOT, "%.2f°", c.turnDeg(k)));
-            ImGui.endTable();
+            ThemeManager.endStandardFormTable();
         }
         ImGui.endTooltip();
     }
