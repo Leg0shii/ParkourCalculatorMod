@@ -51,7 +51,6 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
     private final InputData inputData;
     private final SimulationRunner runner;
     private final BoxController boxController;
-    private final SaveController saveController;
     private final AngleSolverState state;
     private final AngleSolverEngine engine;
     private final ExactJumpModel model;
@@ -92,14 +91,13 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
     private boolean freeStartYaw;
 
     public NoTurnSearchController(InputData inputData, SimulationRunner runner, BoxController boxController,
-                                  SaveController saveController, AngleSolverState state, AngleSolverEngine engine,
+                                  AngleSolverState state, AngleSolverEngine engine,
                                   ExactJumpModel model, MinecraftAccess mc, IntConsumer onUserChange,
                                   ObjIntConsumer<String> pushMessage, BooleanSupplier otherSolveRunning,
                                   Settings settings, Runnable saveSettings) {
         this.inputData = inputData;
         this.runner = runner;
         this.boxController = boxController;
-        this.saveController = saveController;
         this.state = state;
         this.engine = engine;
         this.model = model;
@@ -604,7 +602,6 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
             Vec3dCore cur = runner.getStartPosition();
             runner.setStartPosition(new Vec3dCore(r.startX, cur.y, r.startZ));
         }
-        saveController.markDirty();
         onUserChange.accept(start);
     }
 }

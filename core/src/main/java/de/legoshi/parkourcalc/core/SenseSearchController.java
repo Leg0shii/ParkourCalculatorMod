@@ -26,7 +26,6 @@ public final class SenseSearchController implements SenseFinderWindow.Host {
     private static final long RERANK_NANOS = 250_000_000L;
 
     private final InputData inputData;
-    private final SaveController saveController;
     private final AngleSolverState state;
     private final AngleSolverEngine engine;
     private final ExactJumpModel model;
@@ -66,11 +65,10 @@ public final class SenseSearchController implements SenseFinderWindow.Host {
     private long endNanos;
     private long lastRerank;
 
-    public SenseSearchController(InputData inputData, SaveController saveController, AngleSolverState state,
+    public SenseSearchController(InputData inputData, AngleSolverState state,
                                  AngleSolverEngine engine, ExactJumpModel model, IntConsumer onUserChange,
                                  DoubleSupplier gameSense, Consumer<Float> setGameSense) {
         this.inputData = inputData;
-        this.saveController = saveController;
         this.state = state;
         this.engine = engine;
         this.model = model;
@@ -335,7 +333,6 @@ public final class SenseSearchController implements SenseFinderWindow.Host {
         if (searchedStartTick < 0 || searchedStartTick >= inputData.size()) return;
         selected = c;
         engine.writeYaws(inputData.getRows(), searchedStartTick, c.yaws, searchedFreeStartYaw);
-        saveController.markDirty();
         onUserChange.accept(searchedStartTick);
         applied = String.format(java.util.Locale.ROOT, "Wrote the %.2f%% row into the TAS, lands %+.5f", c.percent(), c.offset);
     }

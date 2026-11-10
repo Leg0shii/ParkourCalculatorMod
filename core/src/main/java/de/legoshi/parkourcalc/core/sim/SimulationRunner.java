@@ -140,10 +140,6 @@ public final class SimulationRunner {
         return checkpoints.get(index);
     }
 
-    public List<TickState> getPath() {
-        return java.util.Collections.unmodifiableList(path);
-    }
-
     /** Drop the cached entity and any state captured against the old world. */
     public void invalidate() {
         path.clear();
