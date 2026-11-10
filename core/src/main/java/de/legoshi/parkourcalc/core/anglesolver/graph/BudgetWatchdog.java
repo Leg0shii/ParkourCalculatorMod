@@ -9,15 +9,19 @@ public final class BudgetWatchdog implements Runnable {
     private volatile long deadlineNanos;
     private volatile boolean done;
     private final Thread thread;
+    private boolean started;
 
     public BudgetWatchdog(AtomicBoolean outer) {
         this.outer = outer;
         this.thread = new Thread(this, "solver-graph-watchdog");
         this.thread.setDaemon(true);
-        this.thread.start();
     }
 
     public AtomicBoolean arm(long deadline) {
+        if (!started) {
+            started = true;
+            thread.start();
+        }
         current = null;
         AtomicBoolean token = new AtomicBoolean(false);
         deadlineNanos = deadline;

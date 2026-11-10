@@ -11,7 +11,7 @@ public final class ParamValues {
 
     private final List<ParamSpec> specs;
     private final Map<String, Object> values = new LinkedHashMap<>();
-    private final Set<String> readKeys = new LinkedHashSet<>();
+    private final Set<String> readKeys = Collections.synchronizedSet(new LinkedHashSet<>());
 
     public ParamValues(List<ParamSpec> specs) {
         this.specs = specs;
