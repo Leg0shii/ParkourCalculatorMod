@@ -328,7 +328,7 @@ public final class CertifiedBnb {
         bestOpenScore = Math.max(bestOpenScore, s.stuckScore);
         double gap = s.incYaws == null ? Double.POSITIVE_INFINITY
                 : Math.max(0.0, bestOpenScore - s.incScore);
-        boolean certified = s.incYaws != null && (exhausted || gap <= CERT_EPS);
+        boolean certified = s.incYaws != null && gap <= CERT_EPS;
         if (certified) gap = Math.min(gap, CERT_EPS);
         if (s.cfg.gapSink != null) reportGap(s, open);
         double boundObj = s.max ? bestOpenScore : -bestOpenScore;
@@ -1095,12 +1095,12 @@ public final class CertifiedBnb {
         if (st.bestVal > Double.NEGATIVE_INFINITY) {
             double[] yaws = realizeCombo(s, cands, st.bestPick);
             if (yaws != null) {
-                JumpPhysicsInputs scRep = s.sc.pinnedAt(px, pz);
-                double[] gf = scRep.toGameFacings(yaws);
-                ForwardPath rp = s.exact.forward(scRep, gf);
-                double rv = s.compiled.maxViolation(gf, rp);
-                double ro = s.spec.objective.evaluate(rp);
                 if (SolverTrace.on()) {
+                    JumpPhysicsInputs scRep = s.sc.pinnedAt(px, pz);
+                    double[] gf = scRep.toGameFacings(yaws);
+                    ForwardPath rp = s.exact.forward(scRep, gf);
+                    double rv = s.compiled.maxViolation(gf, rp);
+                    double ro = s.spec.objective.evaluate(rp);
                     double cpv = lin.objectiveConst(s.spec.objective);
                     SolverTrace.log("CERT", "leaf argmax lin=%.12f replayObj=%.12f viol=%.3e",
                             st.bestVal + (s.max ? cpv : -cpv), ro, rv);
@@ -1186,6 +1186,9 @@ public final class CertifiedBnb {
         }
         st.steps++;
         int n = st.scores.length;
+        for (int j = 0; j < st.walls.length; j++) {
+            if (wallPref[t][j] + st.wallSuffixMin[j][t] > st.wallRhs[j]) return;
+        }
         if (t == n) {
             if (prefix > st.bestVal) {
                 st.bestVal = prefix;
@@ -1194,9 +1197,6 @@ public final class CertifiedBnb {
             return;
         }
         if (prefix + st.suffix[t] <= st.bestVal) return;
-        for (int j = 0; j < st.walls.length; j++) {
-            if (wallPref[t][j] + st.wallSuffixMin[j][t] > st.wallRhs[j]) return;
-        }
         int[] order = st.order[t];
         for (int oi = 0; oi < order.length; oi++) {
             int i = order[oi];
