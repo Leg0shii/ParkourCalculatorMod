@@ -24,7 +24,6 @@ public final class FoldReplayDriver {
     private static final double NARROW_DELTA_FLOOR = 2.0e-5;
     private static final int NARROW_MAX_ITER = 30;
     private static final int TAIL_GATE_MAX_PAIRS = 3;
-    private static final double GNOISE = 1.0e-9;
     private static final double END_POLISH_CAP = 0.1;
     private static final double FREE_START_SMOOTH = 5.0e-4;
     private static final double COMBINED_INERTIA_SQ = 9.0e-6;
@@ -97,8 +96,6 @@ public final class FoldReplayDriver {
     }
 
     public static final class Params {
-        public Map<String, Double> wallTighten;
-        public List<JumpLinearModel.Wall> extraWalls;
         public double specWallRelax;
         public double clearance;
         public Set<String> clearanceWalls;
@@ -111,22 +108,10 @@ public final class FoldReplayDriver {
     }
 
     public static Result solve(ExactJumpModel exact, JumpSpec spec) {
-        return solve(exact, spec, null, null, null, 0L);
-    }
-
-    public static Result solve(ExactJumpModel exact, JumpSpec spec, Map<String, Double> wallTighten,
-                               List<JumpLinearModel.Wall> extraWalls, AtomicBoolean cancel, long deadlineNanos) {
-        Params p = new Params();
-        p.wallTighten = wallTighten;
-        p.extraWalls = extraWalls;
-        p.cancel = cancel;
-        p.deadlineNanos = deadlineNanos;
-        return solve(exact, spec, p);
+        return solve(exact, spec, new Params());
     }
 
     public static Result solve(ExactJumpModel exact, JumpSpec spec, Params params) {
-        Map<String, Double> wallTighten = params.wallTighten;
-        List<JumpLinearModel.Wall> extraWalls = params.extraWalls;
         AtomicBoolean cancel = params.cancel;
         long deadlineNanos = params.deadlineNanos;
         JumpPhysicsInputs sc = spec.asScenario();
@@ -172,10 +157,9 @@ public final class FoldReplayDriver {
                 trivial = true;
                 break;
             }
-            walls = adjustWalls(walls, combineTighten(wallTighten, margins), params.specWallRelax,
+            walls = adjustWalls(walls, margins, params.specWallRelax,
                     params.clearance, params.clearanceWalls);
             if (curZeroX != null) walls.addAll(lin.velocityWalls(exact.inertiaThreshold()));
-            if (extraWalls != null) walls.addAll(extraWalls);
             for (KeepAlivePin pin : pins) {
                 JumpLinearModel.Wall w = lin.keepAliveWall(pin.axis, pin.tick, exact.inertiaThreshold(), pin.positive);
                 if (w != null) walls.add(w);
@@ -300,7 +284,7 @@ public final class FoldReplayDriver {
                     if (!flips.isEmpty()) {
                         int pre = rounds.size();
                         tailGateEnumeration(exact, spec, compiled, sc, box, free, freeP0, refPx, refPz,
-                                params, combineTighten(wallTighten, margins), extraWalls, curZeroX, curZeroZ,
+                                params, margins, curZeroX, curZeroZ,
                                 flips, path, prevYaws, rounds, cancel, deadlineNanos);
                         for (int i = pre; i < rounds.size(); i++) best = pickBetter(best, rounds.get(i), max);
                     }
@@ -498,7 +482,6 @@ public final class FoldReplayDriver {
                                             StartBox box, boolean free, CostateDualSolver.FreeP0 freeP0,
                                             double refPx, double refPz, Params params,
                                             Map<String, Double> tighten,
-                                            List<JumpLinearModel.Wall> extraWalls,
                                             boolean[] baseZeroX, boolean[] baseZeroZ, List<int[]> flips,
                                             ForwardPath lastPath, double[] prevYaws, List<Round> rounds,
                                             AtomicBoolean cancel, long deadlineNanos) {
@@ -525,7 +508,6 @@ public final class FoldReplayDriver {
             if (trivialFlag[0]) continue;
             walls = adjustWalls(walls, tighten, params.specWallRelax, params.clearance, params.clearanceWalls);
             walls.addAll(lin.velocityWalls(exact.inertiaThreshold()));
-            if (extraWalls != null) walls.addAll(extraWalls);
             for (int i = 0; i < k; i++) {
                 boolean zero = (combo & (1 << i)) != 0;
                 if (zero) continue;
@@ -557,18 +539,13 @@ public final class FoldReplayDriver {
     }
 
     private static final class ContinuousSolution {
-        final double[] gx;
-        final double[] gz;
         final double[] ux;
         final double[] uz;
         final double value;
         final double dvx;
         final double dvz;
 
-        ContinuousSolution(double[] gx, double[] gz, double[] ux, double[] uz, double value,
-                           double dvx, double dvz) {
-            this.gx = gx;
-            this.gz = gz;
+        ContinuousSolution(double[] ux, double[] uz, double value, double dvx, double dvz) {
             this.ux = ux;
             this.uz = uz;
             this.value = value;
@@ -579,8 +556,6 @@ public final class FoldReplayDriver {
 
     static final class KernelStats {
         int solves;
-        int chordTicks;
-        boolean infeasible;
     }
 
     private static boolean usable(DiskSocpKernel.Outcome oc) {
@@ -631,7 +606,6 @@ public final class FoldReplayDriver {
         if (stats != null) stats.solves++;
         if (!usable(base)) {
             if (infeasibleSignal(base)) {
-                if (stats != null) stats.infeasible = true;
                 if (DEBUG) System.out.printf("    KERNEL infeasible walls=%d%n", walls.size());
                 return null;
             }
@@ -652,7 +626,7 @@ public final class FoldReplayDriver {
                     uz[t] = mMag[t] * dr.gz[t] / norm;
                 }
             }
-            return new ContinuousSolution(dr.gx, dr.gz, ux, uz, dr.value, dr.dvx, dr.dvz);
+            return new ContinuousSolution(ux, uz, dr.value, dr.dvx, dr.dvz);
         }
 
         DiskSocpKernel.Result sol = base.result;
@@ -719,11 +693,10 @@ public final class FoldReplayDriver {
             sol = cand.result;
             warm = lambdaMap(walls, curRows, sol);
         }
-        if (stats != null) stats.chordTicks = chords.size();
         if (DEBUG && !chords.isEmpty()) {
             System.out.printf("    NARROW ticks=%d solves=%d%n", chords.size(), stats == null ? -1 : stats.solves);
         }
-        return new ContinuousSolution(sol.gx, sol.gz, sol.ux, sol.uz, sol.value, sol.dvx, sol.dvz);
+        return new ContinuousSolution(sol.ux, sol.uz, sol.value, sol.dvx, sol.dvz);
     }
 
     private static CostateDualSolver.FreeP0 freeStartTerm(StartBox box, Objective obj) {
@@ -852,19 +825,6 @@ public final class FoldReplayDriver {
                                                      ForwardPath path, double viol) {
         if (viol > MARGIN_ANCHOR_CAP) return new HashMap<>();
         return AnchorSlp.margins(lin, spec.constraints, yaws, box, px, pz, gf, path);
-    }
-
-    private static Map<String, Double> combineTighten(Map<String, Double> caller, Map<String, Double> margins) {
-        boolean noMargins = margins == null || margins.isEmpty();
-        boolean noCaller = caller == null || caller.isEmpty();
-        if (noMargins) return caller;
-        if (noCaller) return margins;
-        Map<String, Double> out = new HashMap<>(margins);
-        for (Map.Entry<String, Double> e : caller.entrySet()) {
-            Double prev = out.get(e.getKey());
-            out.put(e.getKey(), prev == null ? e.getValue() : prev + e.getValue());
-        }
-        return out;
     }
 
     private static boolean containsPattern(List<boolean[][]> seen, boolean[] zx, boolean[] zz) {
