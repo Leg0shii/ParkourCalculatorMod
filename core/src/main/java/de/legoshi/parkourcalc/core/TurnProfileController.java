@@ -344,6 +344,9 @@ public final class TurnProfileController {
                 h = h * 31 + c.getOp().ordinal();
                 h = h * 31 + (c.isEnabled() ? 1 : 0);
                 h = h * 31 + (c.getRefTick() == null ? -1 : c.getRefTick().intValue());
+                h = h * 31 + (c.isLoInclusive() ? 1 : 0);
+                h = h * 31 + (c.isHiInclusive() ? 1 : 0);
+                h = h * 31 + (c.isVsOther() ? 1 : 0);
                 h = h * 31 + Double.doubleToLongBits(c.isRange() ? c.getLo() : c.getValue());
                 h = h * 31 + Double.doubleToLongBits(c.isRange() ? c.getHi() : 0.0);
             }
