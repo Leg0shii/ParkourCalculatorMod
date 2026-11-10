@@ -180,7 +180,7 @@ public final class OnejumpSetupWindow implements RenderInterface {
             TurnTiming.Onset onset = mainTurn < 0 ? null
                     : onset(doc, cur.startTick + mainTurn, Math.max(1, settings.onejumpSpreadAttempts));
             overviewRow("Turn onset", onset == null ? "-" : String.format(Locale.ROOT, "%s into tick %d  (%d attempts)",
-                    TurnTiming.ms(onset.median), mainTurn + 1, onset.attempts), labelW, onset == null);
+                    TurnTiming.ms(onset.median), cur.tasTick(mainTurn) + 1, onset.attempts), labelW, onset == null);
         }
         if (st.mouseAttempts > 0) overviewRow(PracticeMacro.LABEL_INPUTS, practiceText(st.mouseAttempts, st.mouseClears), labelW, false);
         if (st.inputAttempts > 0) overviewRow(PracticeMacro.LABEL_TURN, practiceText(st.inputAttempts, st.inputClears), labelW, false);

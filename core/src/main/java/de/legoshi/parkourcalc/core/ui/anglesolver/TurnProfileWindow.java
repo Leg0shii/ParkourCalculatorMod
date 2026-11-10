@@ -422,7 +422,7 @@ public final class TurnProfileWindow implements RenderInterface {
         int abs = cur.startTick + t;
         ImGui.beginTooltip();
         Fonts.pushBold();
-        ImGui.text(String.format(Locale.ROOT, "T%d%s", abs + 1, cur.still[t] ? "   still" : ""));
+        ImGui.text(String.format(Locale.ROOT, "T%d%s", cur.tasTick(t) + 1, cur.still[t] ? "   still" : ""));
         Fonts.popBold();
         float labelW = ImGui.calcTextSize("Window").x + ImGui.getStyle().getItemSpacing().x * 3f;
         tooltipRow("Ref", String.format(Locale.ROOT, "%.2f°", cur.facing[t]), ThemeManager.textColor(), labelW);
