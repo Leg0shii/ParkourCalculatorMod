@@ -1002,9 +1002,7 @@ public final class AngleSolverEngine {
         if (liveResult == null || v != liveVersion) {
             double[] yaws = p.bestYaws();
             if (yaws == null) return liveResult;
-            liveResult = p.hasBestStart()
-                    ? buildLiveResult(job, yaws, p.bestStartX(), p.bestStartZ())
-                    : buildLiveResult(job, yaws);
+            liveResult = buildLiveResult(job, yaws, scenarioAtBestStart(job, p));
             liveVersion = v;
         }
         return liveResult;
@@ -1094,12 +1092,7 @@ public final class AngleSolverEngine {
         if (liveTraj == null || v != liveTrajVersion) {
             double[] yaws = p.bestYaws();
             if (yaws == null) return liveTraj;
-            JumpPhysicsInputs sc = job.spec.asScenario();
-            if (p.hasBestStart() && !Double.isNaN(p.bestStartX()) && !Double.isNaN(p.bestStartZ())
-                    && (p.bestStartX() != sc.startPos.x || p.bestStartZ() != sc.startPos.z)) {
-                sc = sc.copy();
-                sc.startPos = new Vec3dCore(p.bestStartX(), sc.startPos.y, p.bestStartZ());
-            }
+            JumpPhysicsInputs sc = scenarioAtBestStart(job, p);
             ForwardPath path = model.forward(sc, sc.toGameFacings(yaws));
             liveTraj = new LiveTrajectory(++liveTrajSeq, job.startTick, path.posX, path.posZ, p.isBestFeasible());
             liveTrajVersion = v;
@@ -1404,20 +1397,21 @@ public final class AngleSolverEngine {
         return Scoring.violationOf(model, sc, spec, yawsAbsWrapped);
     }
 
-    private SolveResult buildLiveResult(Job job, double[] yaws) {
-        JumpPhysicsInputs sc = job.spec.asScenario();
-        double[] gameFacings = sc.toGameFacings(yaws);
-        return buildResultWithObjective(job, yaws, gameFacings, model.forward(sc, gameFacings));
-    }
-
-    private SolveResult buildLiveResult(Job job, double[] yaws, double startX, double startZ) {
+    private static JumpPhysicsInputs scenarioAtBestStart(Job job, SolveProgress p) {
         JumpPhysicsInputs base = job.spec.asScenario();
+        if (!p.hasBestStart()) return base;
+        double startX = p.bestStartX();
+        double startZ = p.bestStartZ();
         if (Double.isNaN(startX) || Double.isNaN(startZ)
                 || (startX == base.startPos.x && startZ == base.startPos.z)) {
-            return buildLiveResult(job, yaws);
+            return base;
         }
         JumpPhysicsInputs sc = base.copy();
         sc.startPos = new Vec3dCore(startX, base.startPos.y, startZ);
+        return sc;
+    }
+
+    private SolveResult buildLiveResult(Job job, double[] yaws, JumpPhysicsInputs sc) {
         double[] gameFacings = sc.toGameFacings(yaws);
         return buildResultWithObjective(job, yaws, gameFacings, model.forward(sc, gameFacings));
     }
