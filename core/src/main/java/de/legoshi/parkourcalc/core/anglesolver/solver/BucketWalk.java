@@ -381,8 +381,8 @@ public final class BucketWalk {
             double[] cand = new double[n];
             for (int t = 0; t < n; t++) cand[t] = yaws[t] + st.b[t] * BUCKET_DEG;
             cand = Angles.wrapAll(cand);
-            double npx = free ? clamp(px + st.dpx, box.pxLo, box.pxHi) : px;
-            double npz = free ? clamp(pz + st.dpz, box.pzLo, box.pzHi) : pz;
+            double npx = free ? box.clampX(px + st.dpx) : px;
+            double npz = free ? box.clampZ(pz + st.dpz) : pz;
             JumpPhysicsInputs scRep = sc.pinnedAt(npx, npz);
             double[] cgf = scRep.toGameFacings(cand);
             ForwardPath cpath = exact.forward(scRep, cgf);
@@ -454,8 +454,8 @@ public final class BucketWalk {
             double[] cand = new double[n];
             for (int t = 0; t < n; t++) cand[t] = yaws[t] + st.b[t] * BUCKET_DEG;
             cand = Angles.wrapAll(cand);
-            double npx = free ? clamp(px + st.dpx, box.pxLo, box.pxHi) : px;
-            double npz = free ? clamp(pz + st.dpz, box.pzLo, box.pzHi) : pz;
+            double npx = free ? box.clampX(px + st.dpx) : px;
+            double npz = free ? box.clampZ(pz + st.dpz) : pz;
             JumpPhysicsInputs scRep = sc.pinnedAt(npx, npz);
             double[] cgf = scRep.toGameFacings(cand);
             ForwardPath cpath = exact.forward(scRep, cgf);
@@ -618,8 +618,8 @@ public final class BucketWalk {
             deltas.add(new double[]{-m, -m});
         }
         for (double[] d : deltas) {
-            double npx = clamp(px + d[0], box.pxLo, box.pxHi);
-            double npz = clamp(pz + d[1], box.pzLo, box.pzHi);
+            double npx = box.clampX(px + d[0]);
+            double npz = box.clampZ(pz + d[1]);
             if (npx == px && npz == pz) continue;
             JumpPhysicsInputs scRep = sc.pinnedAt(npx, npz);
             double[] gf = scRep.toGameFacings(yaws);
@@ -647,9 +647,5 @@ public final class BucketWalk {
     private static ForwardPath copyPath(ForwardPath p) {
         return new ForwardPath(p.posX.clone(), p.posY.clone(), p.posZ.clone(),
                 p.velX.clone(), p.velY.clone(), p.velZ.clone());
-    }
-
-    private static double clamp(double v, double lo, double hi) {
-        return v < lo ? lo : (v > hi ? hi : v);
     }
 }

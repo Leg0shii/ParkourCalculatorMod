@@ -665,8 +665,8 @@ public final class CertifiedBnb {
         double leafPx = s.refPx;
         double leafPz = s.refPz;
         if (s.free && oc.result != null) {
-            leafPx = clamp(s.refPx + oc.result.dvx, s.box.pxLo, s.box.pxHi);
-            leafPz = clamp(s.refPz + oc.result.dvz, s.box.pzLo, s.box.pzHi);
+            leafPx = s.box.clampX(s.refPx + oc.result.dvx);
+            leafPz = s.box.clampZ(s.refPz + oc.result.dvz);
         }
         double[] decoded = decode(s, nd, lin, ux != null ? ux : gxv, uz != null ? uz : gzv);
         ForwardPath decPath = null;
@@ -1530,9 +1530,5 @@ public final class CertifiedBnb {
 
     private static CostateDualSolver.FreeP0 freeStartTerm(StartBox box, Objective obj) {
         return CostateDualSolver.FreeP0.forObjective(box, obj, FREE_START_SMOOTH);
-    }
-
-    private static double clamp(double v, double lo, double hi) {
-        return v < lo ? lo : (v > hi ? hi : v);
     }
 }

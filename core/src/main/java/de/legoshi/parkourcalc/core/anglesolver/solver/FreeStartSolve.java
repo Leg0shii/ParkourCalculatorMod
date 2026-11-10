@@ -409,8 +409,8 @@ public final class FreeStartSolve {
         }
         double[] chain = atSc.toGameFacings(Angles.wrapAll(w.gf));
         double[] d = bestTranslate(atSpec, chain, exact.forward(atSc, chain), box);
-        double px = clamp(rs[0] + d[0], box.pxLo, box.pxHi);
-        double pz = clamp(rs[1] + d[1], box.pzLo, box.pzHi);
+        double px = box.clampX(rs[0] + d[0]);
+        double pz = box.clampZ(rs[1] + d[1]);
         double v = violationAt(exact, spec, w.gf, px, pz);
         if (SolverTrace.on()) {
             SolverTrace.log("FREE", "joint wrap close ils=%.3e reaccum=%.3e start=(%.5f,%.5f)", w.viol, v, px, pz);
@@ -697,8 +697,8 @@ public final class FreeStartSolve {
             double p0x = refX;
             double p0z = refZ;
             if (delta != null) {
-                p0x = clamp(refX + delta[0], box.pxLo, box.pxHi);
-                p0z = clamp(refZ + delta[1], box.pzLo, box.pzHi);
+                p0x = box.clampX(refX + delta[0]);
+                p0z = box.clampZ(refZ + delta[1]);
             }
             JumpSpec atSpec = specAtStart(base, spec, p0x, p0z);
             JumpPhysicsInputs atSc = atSpec.asScenario();
@@ -818,8 +818,8 @@ public final class FreeStartSolve {
         double[] gf = refSc.toGameFacings(wrapped);
         ForwardPath path = exact.forward(refSc, gf);
         double[] d = bestTranslate(spec, gf, path, box, cfg.jointMargins.length > 0 ? cfg.jointMargins[0] : 0.0);
-        double p0x = clamp(box.px + d[0], box.pxLo, box.pxHi);
-        double p0z = clamp(box.pz + d[1], box.pzLo, box.pzHi);
+        double p0x = box.clampX(box.px + d[0]);
+        double p0z = box.clampZ(box.pz + d[1]);
         return new double[] {p0x, p0z};
     }
 

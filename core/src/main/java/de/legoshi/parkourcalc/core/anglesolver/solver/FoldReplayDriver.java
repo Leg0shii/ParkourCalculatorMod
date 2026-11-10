@@ -190,8 +190,8 @@ public final class FoldReplayDriver {
             double dvz = sol.dvz;
 
             double[] yaws = decodeYaws(lin, sol.ux, sol.uz, prevYaws);
-            double px = free ? clamp(refPx + dvx, box.pxLo, box.pxHi) : refPx;
-            double pz = free ? clamp(refPz + dvz, box.pzLo, box.pzHi) : refPz;
+            double px = free ? box.clampX(refPx + dvx) : refPx;
+            double pz = free ? box.clampZ(refPz + dvz) : refPz;
 
             JumpPhysicsInputs scRep = sc.pinnedAt(px, pz);
             double[] gf = scRep.toGameFacings(yaws);
@@ -376,8 +376,8 @@ public final class FoldReplayDriver {
         double px = anchorPx != null ? anchorPx : refPx;
         double pz = anchorPz != null ? anchorPz : refPz;
         if (free) {
-            px = clamp(px, box.pxLo, box.pxHi);
-            pz = clamp(pz, box.pzLo, box.pzHi);
+            px = box.clampX(px);
+            pz = box.clampZ(pz);
         }
         double[] yaws = Angles.wrapAll(anchorYawsAbs);
 
@@ -538,8 +538,8 @@ public final class FoldReplayDriver {
                     lin, cancel, deadlineNanos, null);
             if (sol == null) continue;
             double[] yaws = decodeYaws(lin, sol.ux, sol.uz, prevYaws);
-            double px = free ? clamp(refPx + sol.dvx, box.pxLo, box.pxHi) : refPx;
-            double pz = free ? clamp(refPz + sol.dvz, box.pzLo, box.pzHi) : refPz;
+            double px = free ? box.clampX(refPx + sol.dvx) : refPx;
+            double pz = free ? box.clampZ(refPz + sol.dvz) : refPz;
             JumpPhysicsInputs scRep = sc.pinnedAt(px, pz);
             double[] gf = scRep.toGameFacings(yaws);
             ForwardPath path = exact.forward(scRep, gf);
@@ -895,9 +895,5 @@ public final class FoldReplayDriver {
 
     private static boolean betterObj(double a, double b, boolean max) {
         return max ? a > b : a < b;
-    }
-
-    private static double clamp(double v, double lo, double hi) {
-        return v < lo ? lo : (v > hi ? hi : v);
     }
 }

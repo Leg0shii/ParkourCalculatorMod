@@ -477,8 +477,8 @@ public final class GateFoldFinder {
             double cpx = px;
             double cpz = pz;
             if (free) {
-                cpx = clamp(px + d[dims] * START_SCALE, box.pxLo, box.pxHi);
-                cpz = clamp(pz + d[dims + 1] * START_SCALE, box.pzLo, box.pzHi);
+                cpx = box.clampX(px + d[dims] * START_SCALE);
+                cpz = box.clampZ(pz + d[dims + 1] * START_SCALE);
             }
             double candViol = linResidual(lin, walls, cand, cpx, cpz, refPx, refPz, free, ux, uz);
             double step = maxStep(d, vars);
@@ -632,8 +632,8 @@ public final class GateFoldFinder {
             double cpx = px;
             double cpz = pz;
             if (free) {
-                cpx = clamp(px + d[dims] * START_SCALE, box.pxLo, box.pxHi);
-                cpz = clamp(pz + d[dims + 1] * START_SCALE, box.pzLo, box.pzHi);
+                cpx = box.clampX(px + d[dims] * START_SCALE);
+                cpz = box.clampZ(pz + d[dims + 1] * START_SCALE);
             }
             double candMerit = merit(exact, sc, compiled, spec, cand, cpx, cpz, forcedTicks, exact.inertiaThreshold());
             double step = maxStep(d, vars);
@@ -712,8 +712,8 @@ public final class GateFoldFinder {
             double cpx = px;
             double cpz = pz;
             if (free) {
-                cpx = clamp(px + d[dims] * START_SCALE, box.pxLo, box.pxHi);
-                cpz = clamp(pz + d[dims + 1] * START_SCALE, box.pzLo, box.pzHi);
+                cpx = box.clampX(px + d[dims] * START_SCALE);
+                cpz = box.clampZ(pz + d[dims + 1] * START_SCALE);
             }
             double cViol = specViol(exact, sc, compiled, cand, cpx, cpz);
             double cObj = objOf(exact, sc, spec, cand, cpx, cpz);

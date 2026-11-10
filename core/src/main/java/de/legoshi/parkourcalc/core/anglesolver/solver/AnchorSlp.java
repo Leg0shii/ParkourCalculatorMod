@@ -335,8 +335,8 @@ public final class AnchorSlp {
             double[] cand = new double[n];
             for (int t = 0; t < n; t++) cand[t] = yaws[t] + st.dyDeg[t];
             cand = Angles.wrapAll(cand);
-            double npx = free ? clamp(px + st.dpx, box.pxLo, box.pxHi) : px;
-            double npz = free ? clamp(pz + st.dpz, box.pzLo, box.pzHi) : pz;
+            double npx = free ? box.clampX(px + st.dpx) : px;
+            double npz = free ? box.clampZ(pz + st.dpz) : pz;
             JumpPhysicsInputs scRep = sc.pinnedAt(npx, npz);
             double[] cgf = scRep.toGameFacings(cand);
             ForwardPath cpath = exact.forward(scRep, cgf);
@@ -377,9 +377,5 @@ public final class AnchorSlp {
             }
         }
         return new Outcome(null, bestYaws, bestGf, bestPath, bestPx, bestPz, bestViol);
-    }
-
-    private static double clamp(double v, double lo, double hi) {
-        return v < lo ? lo : (v > hi ? hi : v);
     }
 }
