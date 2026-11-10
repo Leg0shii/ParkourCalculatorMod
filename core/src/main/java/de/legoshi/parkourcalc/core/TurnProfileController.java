@@ -580,7 +580,7 @@ public final class TurnProfileController {
             checkYaw[k] = ref.checkYaw(r);
             still[k] = ref.still(r);
             jumps[k] = (keys[k] & TurnReference.KEY_JUMP) != 0 && (sc == null || !Double.isNaN(sc.slipAt(k)));
-            effects[k] = r.getEffectLevels();
+            effects[k] = built.ref.row(k).getEffectLevels();
         }
         TurnProfile profile = null;
         if (snap != null) {

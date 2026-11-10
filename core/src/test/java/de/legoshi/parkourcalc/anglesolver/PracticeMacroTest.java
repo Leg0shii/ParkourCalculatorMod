@@ -6,12 +6,14 @@ import de.legoshi.parkourcalc.core.FakePlaybackBridge;
 import de.legoshi.parkourcalc.core.PracticeMacro;
 import de.legoshi.parkourcalc.core.TurnAttempt;
 import de.legoshi.parkourcalc.core.TurnProfileController;
+import de.legoshi.parkourcalc.core.TurnProfileStore;
 import de.legoshi.parkourcalc.core.TurnReference;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardPath;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
+import de.legoshi.parkourcalc.core.save.FileSystemSaveStore;
 import de.legoshi.parkourcalc.core.save.SaveFile;
 import de.legoshi.parkourcalc.core.save.SaveIO;
 import de.legoshi.parkourcalc.core.ui.InputData;
@@ -19,6 +21,8 @@ import de.legoshi.parkourcalc.core.ui.InputRow;
 import de.legoshi.parkourcalc.core.ui.MovementEffect;
 import de.legoshi.parkourcalc.core.ui.Settings;
 import org.junit.Test;
+
+import java.nio.file.Files;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -298,6 +302,41 @@ public class PracticeMacroTest {
         assertEquals(2, rig.bridge.beginReplicaCalls);
         int first = rig.cur.leadKeys.length > 0 ? rig.cur.leadKeys[0] : rig.cur.keys[0];
         assertEquals(first, rig.bridge.keyMask());
+    }
+
+    @Test
+    public void theReplayTakesTheEffectLevelsFromTheTasRows() throws Exception {
+        SaveFile file = Fixtures.hpkHuman("d10", J335);
+        ExactJumpModel model = ExactJumpModel.forMcVersion(file.mcVersion);
+        InputData inputs = new InputData();
+        SaveIO.applyRowsTo(file, inputs);
+        AngleSolverState state = new AngleSolverState();
+        SaveIO.applyAngleSolverTo(file, state);
+        AngleSolverEngine engine = new AngleSolverEngine(state, Fixtures.buildBoxes(file), inputs, t -> { }, model);
+        OnejumpRigs.flag(inputs, state.getStartTick(), state.getLandingTick() - 1);
+        int speed = MovementEffect.SPEED.ordinal();
+        for (int t = state.getStartTick(); t < state.getLandingTick(); t++) {
+            inputs.getRows().get(t).setEffectLevel(MovementEffect.SPEED, 2);
+        }
+        TurnProfileController first = new TurnProfileController(engine, state, inputs, () -> true, () -> 0.5f,
+                () -> 1000, () -> 1000, null, () -> null);
+        first.refresh();
+        assertEquals(2, first.current().effects[0][speed]);
+
+        FileSystemSaveStore fs = new FileSystemSaveStore(Files.createTempDirectory("pkc-onejump-effects"), "test",
+                file.mcVersion, () -> null);
+        TurnProfileStore store = new TurnProfileStore(() -> fs);
+        assertTrue(store.save("effects", first.document().reference(), first.document().attempts()));
+        TurnProfileController second = new TurnProfileController(engine, state, inputs, () -> true, () -> 0.5f,
+                () -> 1000, () -> 1000, store, () -> "effects");
+        second.refresh();
+        assertNull(second.storeError(), second.storeError());
+        assertEquals(2, second.current().effects[0][speed]);
+
+        inputs.getRows().get(state.getStartTick()).setEffectLevel(MovementEffect.SPEED, 4);
+        first.refresh();
+        assertEquals(4, first.current().effects[0][speed]);
+        assertEquals(2, first.current().effects[1][speed]);
     }
 
     @Test
