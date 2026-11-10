@@ -207,11 +207,6 @@ public final class NoTurnProblem {
         return t;
     }
 
-    private int mainSegment() {
-        for (int t = 0; t <= setupEnd; t++) if (tied[t]) return segment[t];
-        return -1;
-    }
-
     public static NoTurnProblem from(JumpSpec baseSpec, ExactJumpModel model) {
         return from(baseSpec, model, false);
     }
@@ -247,12 +242,6 @@ public final class NoTurnProblem {
 
     public boolean jaAllowed() {
         return !explicitTies;
-    }
-
-    public boolean freeDirection(int t) {
-        if (t < 0 || t >= n) return false;
-        if (explicitTies) return !tied[t] || segment[t] != mainSegment();
-        return t <= setupEnd && !tied[t];
     }
 
     public boolean assignsCombo(int t) {
