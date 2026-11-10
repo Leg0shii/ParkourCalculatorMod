@@ -118,6 +118,37 @@ In Optimize the stage needs its own share of the time budget (`reserveFraction` 
 before it run up to the reserve of the wrap stage, so without a reserve the polish started with no time left and
 changed nothing.
 
+## How much the start point still matters
+
+Fast from nine start points on a 3 x 3 grid across the start box (10 %, 50 %, 90 % per axis), spread = best minus
+worst objective over the points that land:
+
+| jump | landed | spread before | spread with the stage |
+| --- | --- | --- | --- |
+| j140 | 9 of 9 | 0 | 0 |
+| j345 | 9 of 9 | 1.4e-3 | 0 |
+| j1099 | 2 of 9 | 3.8e-5 | 0 |
+| j1149 | 9 of 9 | 0 | 0 |
+| j1150 | 9 of 9 | 0 | 0 |
+| j155 | 9 of 9 | 3.6e-4 | 3.6e-4 |
+| j716 | 1 of 9 | 0 | 0 |
+| j718 | 9 of 9 | 0 | 0 |
+| j828 | 9 of 9 | 4.4e-4 | 2.1e-4 |
+| j925 | 9 of 9 | 0 | 0 |
+| j154 | 7 of 9 | 1.4e-5 | 0 |
+
+Where a zero stood before the stage, the nine points agreed with each other but not with the optimum: on j140 all
+nine gave -826.2356294, with the stage all nine give -826.2318733. Three readings:
+
+- On 9 of 11 jumps every start point that lands now ends in the same result, so inside one landing basin the start
+  search is closed by the joint solve.
+- j155 and j828 have several basins (four distinct values each). That is the multi-start problem, and the existing
+  seed sweep already runs the whole Fast graph per seed, so with the stage it ranks polished results. The
+  `Fast (multi-start)` preset reaches the best of the nine points on j155, j828 and j718 (j718 gains 5.9e-6 over the
+  capture's own start).
+- j1099, j716 and j154 do not land from every start point, with or without the stage. That is a first landing
+  problem, not a polish problem.
+
 ## Limits and open work
 
 - The remaining distance to the smooth optimum is 3e-7 to 4e-5 on these jumps and comes from the grid, for example
