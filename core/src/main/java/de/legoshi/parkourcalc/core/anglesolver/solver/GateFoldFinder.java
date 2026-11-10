@@ -663,8 +663,8 @@ public final class GateFoldFinder {
         double[] objCx = new double[n];
         double[] objCz = new double[n];
         lin.objectiveVectors(spec.objective, objCx, objCz);
-        double objStartX = objStartGrad(spec.objective, 0);
-        double objStartZ = objStartGrad(spec.objective, 1);
+        double objStartX = spec.objective.translationGradX();
+        double objStartZ = spec.objective.translationGradZ();
 
         double[] theta = ties.expand(ties.reduce(seedYaws.clone()));
         double px = px0;
@@ -721,17 +721,6 @@ public final class GateFoldFinder {
             }
         }
         return best;
-    }
-
-    private static double objStartGrad(Objective obj, int axis) {
-        if (obj.isMotion()) return 0.0;
-        double s = obj.sense == Objective.Sense.MAX ? 1.0 : -1.0;
-        if (obj.isCustomAngle()) {
-            double rad = Angles.rad(obj.customYaw);
-            return axis == 0 ? s * -StrictMath.sin(rad) : s * StrictMath.cos(rad);
-        }
-        if (obj.axis == JumpPhysicsInputs.Axis.X) return axis == 0 ? s : 0.0;
-        return axis == 1 ? s : 0.0;
     }
 
     private static int[] forcedList(boolean[] zx, boolean[] zz, boolean perAxis) {
