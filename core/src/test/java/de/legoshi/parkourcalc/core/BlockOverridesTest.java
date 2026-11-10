@@ -563,6 +563,49 @@ public class BlockOverridesTest {
         world.tick();
         assertEquals(calls, patcher.calls.size());
         assertTrue(warnings.isEmpty());
+        world.setReplayRow(25);
+        world.tick();
+        worldBlock[0] = OPEN;
+        for (int row = 26; row < 32; row++) {
+            world.setReplayRow(row);
+            world.tick();
+        }
+        assertEquals(calls, patcher.calls.size());
+        assertTrue(warnings.isEmpty());
+        assertFalse(world.hasProblem(overrides.get(1)));
+        assertFalse(world.hasProblem(overrides.get(2)));
+    }
+
+    @Test
+    public void aMissedClickOnAChainOfPlayerRowsIsReportedOnceOnTheRowThatMissed() {
+        InputData data = rows(40);
+        BlockOverrides overrides = data.getBlockOverrides();
+        overrides.add(new BlockOverride(1, BlockOverride.NO_END, 5, 36, 5, OPEN, OPEN));
+        overrides.add(new BlockOverride(20, BlockOverride.NO_END, 5, 36, 5, CLOSED, OPEN, true));
+        overrides.add(new BlockOverride(26, 30, 5, 36, 5, OPEN, CLOSED, true));
+        BlockOverride second = overrides.get(2);
+        assertTrue(overrides.playerChangesAtRow(18).isEmpty());
+        assertEquals(Collections.singletonMap(overrides.get(1), patch(5, 36, 5, CLOSED)), overrides.playerChangesAtRow(24));
+        assertEquals(Collections.singletonMap(second, patch(5, 36, 5, OPEN)), overrides.playerChangesAtRow(25));
+        assertEquals(Collections.singletonMap(second, patch(5, 36, 5, CLOSED)), overrides.playerChangesAtRow(30));
+
+        BlockOverrideWorld world = new BlockOverrideWorld(data, new SelectionManager(new FakeMinecraftAccess()));
+        world.setPatcher(new FakePatcher());
+        final String[] worldBlock = {OPEN};
+        world.setBlockReader((x, y, z) -> worldBlock[0]);
+        final List<String> warnings = new ArrayList<String>();
+        world.setOnDesync((row, tick, expectedPlaced) -> warnings.add(tick + ":" + row.startTick + ":" + expectedPlaced));
+        world.setReplayRow(18);
+        world.tick();
+        world.setReplayRow(19);
+        world.tick();
+        worldBlock[0] = CLOSED;
+        for (int row = 20; row < 29; row++) {
+            world.setReplayRow(row);
+            world.tick();
+        }
+        assertEquals(Collections.singletonList("26:26:true"), warnings);
+        assertTrue(world.isMissing(second));
     }
 
     @Test

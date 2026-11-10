@@ -139,6 +139,18 @@ public final class BlockOverrides {
         return patchAtRow(rows, clicked ? row - 1 : row, true);
     }
 
+    public Map<BlockOverride, BlockPatch> playerChangesAtRow(int row) {
+        if (blocks.isEmpty()) return Collections.emptyMap();
+        Map<BlockOverride, BlockPatch> out = new LinkedHashMap<BlockOverride, BlockPatch>();
+        for (List<BlockOverride> position : byPosition().values()) {
+            BlockOverride changed = lastChange(position, row, activeAtRow(position, row));
+            if (changed == null || !changed.player) continue;
+            BlockPatch expected = patchAtRow(position, row, true);
+            if (expected != null) out.put(changed, expected);
+        }
+        return out;
+    }
+
     public Map<Long, BlockOverride> basesByPosition() {
         Map<Long, BlockOverride> bases = new LinkedHashMap<Long, BlockOverride>();
         for (Map.Entry<Long, List<BlockOverride>> e : byPosition().entrySet()) {
@@ -264,22 +276,32 @@ public final class BlockOverrides {
     }
 
     private static boolean leftToThePlayer(List<BlockOverride> rows, int row, BlockOverride active, BlockOverride base) {
+        BlockOverride changed = lastChange(rows, row, active);
+        return changed != null ? changed.player : base.player;
+    }
+
+    private static BlockOverride lastChange(List<BlockOverride> rows, int row, BlockOverride active) {
         long tick = (long) row + 1;
         long lastEnd = Long.MIN_VALUE;
-        boolean playerEnded = false;
+        BlockOverride ended = null;
         for (BlockOverride b : rows) {
             if (b.endTick == BlockOverride.NO_END || b.endTick < b.startTick || tick <= b.endTick) continue;
-            long ended = (long) b.endTick + 1;
-            if (ended > lastEnd) {
-                lastEnd = ended;
-                playerEnded = b.player;
-            } else if (ended == lastEnd && b.player) {
-                playerEnded = true;
+            long end = (long) b.endTick + 1;
+            if (end > lastEnd || (end == lastEnd && b.player && !ended.player)) {
+                lastEnd = end;
+                ended = b;
             }
         }
-        if (active != null && active.startTick >= lastEnd) return active.player;
-        if (lastEnd != Long.MIN_VALUE) return playerEnded;
-        return base.player;
+        if (active != null && active.startTick >= lastEnd) return active;
+        return ended;
+    }
+
+    private static BlockOverride activeAtRow(List<BlockOverride> rows, int row) {
+        BlockOverride active = null;
+        for (BlockOverride b : rows) {
+            if (b.activeAtRow(row) && (active == null || b.startTick >= active.startTick)) active = b;
+        }
+        return active;
     }
 
     private static BlockOverride base(List<BlockOverride> rows) {

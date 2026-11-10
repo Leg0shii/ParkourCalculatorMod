@@ -219,10 +219,10 @@ public final class BlockOverrideWorld {
     private void checkPlayerRows() {
         if (reader == null || replayRow < 1) return;
         int row = replayRow - 1;
-        for (BlockOverride b : rows()) {
-            if (!b.player || b.aheadOfRow(row) || isMissing(b)) continue;
-            String expected = b.activeAtRow(row) ? b.block : b.before;
-            BlockOverride.Spec want = BlockOverride.Spec.parse(expected);
+        for (Map.Entry<BlockOverride, BlockPatch> e : inputData.getBlockOverrides().playerChangesAtRow(row).entrySet()) {
+            BlockOverride b = e.getKey();
+            if (isMissing(b)) continue;
+            BlockOverride.Spec want = BlockOverride.Spec.parse(e.getValue().block);
             if (!want.valid()) continue;
             String actual = reader.blockAt(b.x, b.y, b.z);
             if (actual == null || matches(want, BlockOverride.Spec.parse(actual))) continue;
