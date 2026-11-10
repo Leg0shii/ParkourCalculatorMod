@@ -10,6 +10,8 @@ public final class LatticePolish {
     private static final int OUTER_ROUNDS = 40;
     private static final double BOUND_SLOP = 1.0e-7;
     private static final int MAX_SHELL = 400;
+    private static final int PATTERN_BISECTIONS = 12;
+    private static final double[] BACK_OFF = {1.0e-6, 4.0e-6, 1.6e-5};
 
     public static final class Config {
         public int maxVars = 160;
@@ -80,6 +82,7 @@ public final class LatticePolish {
 
         joint.build(yaws, startX, startZ);
         joint.calibrate(yaws, startX, startZ);
+        if (joint.onWrap) return null;
         double[] z = joint.pointOf(joint.effective(yaws, startX, startZ));
         double[] mu = new double[joint.rowCount];
         double[] centreYaws = yaws;
@@ -104,7 +107,7 @@ public final class LatticePolish {
         List<double[]> combos = heavyCombos(joint, heavy, centreYaws, yaws, cfg.heavyCombos);
         for (double[] combo : combos) {
             if (work.left < 0 || expired(deadlineNanos, cancel)) break;
-            Sub sub = subproblem(exact, spec, heavy, combo, centreX, centreZ, warm, work);
+            Sub sub = subproblem(joint, heavy, combo, centreX, centreZ, yaws, startX, startZ, warm, work);
             if (sub != null) subs.add(sub);
             if (SolverTrace.on()) {
                 SolverTrace.log("POLISH", "tied step %d smooth=%s", subs.size(),
@@ -130,6 +133,16 @@ public final class LatticePolish {
             double bar = best != null ? sign * best.objective : sign * incumbent;
             if (sub.value - BOUND_SLOP >= bar) break;
             LatticeClosure.Result r = LatticeClosure.run(sub.model, sub.z, sub.mu, sub.yaws, closure, deadlineNanos);
+            for (int rung = 0; r == null && rung < BACK_OFF.length; rung++) {
+                if (work.left < 0 || expired(deadlineNanos, cancel)) break;
+                Sub eased = backedOff(sub, BACK_OFF[rung], work);
+                if (eased == null) break;
+                r = LatticeClosure.run(eased.model, eased.z, eased.mu, eased.yaws, closure, deadlineNanos);
+                if (SolverTrace.on()) {
+                    SolverTrace.log("POLISH", "search %d backed off %.1e smooth=%.9f exact=%s", ran + 1, BACK_OFF[rung],
+                            sign * eased.value, r == null ? "none" : String.format(java.util.Locale.ROOT, "%.9f", r.objective));
+                }
+            }
             ran++;
             if (SolverTrace.on()) {
                 SolverTrace.log("POLISH", "search %d smooth=%.9f exact=%s", ran, sign * sub.value,
@@ -219,12 +232,39 @@ public final class LatticePolish {
         offset[index] = 0;
     }
 
-    private static Sub subproblem(ExactJumpModel exact, JumpSpec spec, List<Integer> heavy, double[] yaws,
-                                  double x, double zStart, double[] warm, TrigRowModel.Work work) {
-        TrigRowModel model = new TrigRowModel(exact, spec);
-        model.build(yaws, x, zStart);
+    private static Sub subproblem(TrigRowModel joint, List<Integer> heavy, double[] target, double targetX,
+                                  double targetZ, double[] incumbent, double incumbentX, double incumbentZ,
+                                  double[] warm, TrigRowModel.Work work) {
+        TrigRowModel model = new TrigRowModel(joint.exact, joint.spec);
         for (int v : heavy) model.fixed[v] = true;
+        double[] yaws = target;
+        double x = targetX;
+        double zStart = targetZ;
+        if (!joint.sameStoppedAxes(yaws, x, zStart)) {
+            double reached = -1.0;
+            double lo = 0.0;
+            double hi = 1.0;
+            for (int i = 0; i <= PATTERN_BISECTIONS; i++) {
+                double share = i == 0 ? 0.0 : 0.5 * (lo + hi);
+                double[] y = between(model, incumbent, target, share);
+                double bx = incumbentX + share * (targetX - incumbentX);
+                double bz = incumbentZ + share * (targetZ - incumbentZ);
+                if (joint.sameStoppedAxes(y, bx, bz)) {
+                    reached = share;
+                    lo = share;
+                } else if (i == 0) {
+                    return null;
+                } else {
+                    hi = share;
+                }
+            }
+            yaws = between(model, incumbent, target, reached);
+            x = incumbentX + reached * (targetX - incumbentX);
+            zStart = incumbentZ + reached * (targetZ - incumbentZ);
+        }
+        model.build(yaws, x, zStart);
         model.calibrate(yaws, x, zStart);
+        if (model.onWrap) return null;
         double[] z = model.pointOf(model.effective(yaws, x, zStart));
         double[] mu = new double[model.rowCount];
         boolean warmed = warm != null && warm.length == mu.length;
@@ -236,5 +276,29 @@ public final class LatticePolish {
             if (v < 0 || model.fixed[v]) solved[t] = yaws[t];
         }
         return new Sub(model, z, mu, solved, model.objectiveAt(z));
+    }
+
+    private static Sub backedOff(Sub sub, double by, TrigRowModel.Work work) {
+        TrigRowModel model = sub.model;
+        double[] z = sub.z.clone();
+        double[] mu = sub.mu.clone();
+        model.backOff(by);
+        if (!model.solve(z, mu, OUTER_ROUNDS, true, work)) return null;
+        double[] solved = model.yawsOf(z);
+        for (int t = 0; t < model.n; t++) {
+            int v = model.varOfTick[t];
+            if (v < 0 || model.fixed[v]) solved[t] = sub.yaws[t];
+        }
+        return new Sub(model, z, mu, solved, model.objectiveAt(z));
+    }
+
+    private static double[] between(TrigRowModel shape, double[] from, double[] to, double share) {
+        double[] y = to.clone();
+        for (int t = 0; t < shape.n; t++) {
+            int v = shape.varOfTick[t];
+            if (v < 0 || shape.fixed[v]) continue;
+            y[t] = Angles.wrap(from[t] + share * Angles.wrapDelta(to[t] - from[t]));
+        }
+        return y;
     }
 }

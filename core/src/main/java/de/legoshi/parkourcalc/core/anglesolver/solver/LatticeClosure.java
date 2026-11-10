@@ -2,6 +2,7 @@ package de.legoshi.parkourcalc.core.anglesolver.solver;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -12,6 +13,10 @@ final class LatticeClosure {
     private static final double MU_ACTIVE = 1.0e-9;
     private static final double PRUNE_SLOP = 1.0e-7;
     private static final double VERIFY_SLOP = 2.0e-9;
+    private static final int GATE_ROUNDS = 12;
+    private static final int GATE_REACH = 3;
+    private static final int LEVEL_SLACK = 8;
+    private static final int SCAN_DEPTH = 32;
 
     static final class Config {
         int maxAdjusters = 8;
@@ -103,6 +108,7 @@ final class LatticeClosure {
             lights.add(t);
             base[t] = Angles.wrap(TrigRowModel.centre(base[t]));
         }
+        if (!settleFacingRows(base, lights)) return null;
         int rows = m.rows.length;
         double[] g = m.rowValues(z);
         boolean[] tight = new boolean[m.rowCount];
@@ -139,9 +145,10 @@ final class LatticeClosure {
             loose.addAll(coupled.subList(high, coupled.size() - low));
         }
 
+        if (!settleGates(base, lights, mu)) return null;
         ForwardPath p0 = m.exact.forward(at, at.toGameFacings(base));
         double[] e0 = new double[rows];
-        for (int r = 0; r < rows; r++) e0[r] = m.rows[r].excess(p0);
+        for (int r = 0; r < rows; r++) e0[r] = m.rows[r].excess(p0, base);
         double o0 = sign * m.objective.value(p0);
         for (int t : loose) {
             double bestCost = 0.0;
@@ -151,10 +158,13 @@ final class LatticeClosure {
                 y[t] = Angles.wrap(base[t] + j * TrigRowModel.STEP_DEG);
                 ForwardPath p = m.exact.forward(at, at.toGameFacings(y));
                 double cost = sign * m.objective.value(p) - o0;
+                boolean leaves = false;
                 for (int r = 0; r < rows; r++) {
-                    if (mu[r] > 0.0) cost += mu[r] * (m.rows[r].excess(p) - e0[r]);
+                    double e = m.rows[r].excess(p, y);
+                    if ((m.rows[r].facing || m.rows[r].gate) && e > 0.0 && e > e0[r]) leaves = true;
+                    if (mu[r] > 0.0) cost += mu[r] * (e - e0[r]);
                 }
-                if (cost < bestCost) {
+                if (!leaves && cost < bestCost) {
                     bestCost = cost;
                     bestStep = j;
                 }
@@ -162,26 +172,22 @@ final class LatticeClosure {
             if (bestStep != 0) {
                 base[t] = Angles.wrap(base[t] + bestStep * TrigRowModel.STEP_DEG);
                 p0 = m.exact.forward(at, at.toGameFacings(base));
-                for (int r = 0; r < rows; r++) e0[r] = m.rows[r].excess(p0);
+                for (int r = 0; r < rows; r++) e0[r] = m.rows[r].excess(p0, base);
                 o0 = sign * m.objective.value(p0);
             }
         }
 
+        Collections.sort(adjusters);
         int count = adjusters.size();
         int sizeA = (count + 1) / 2;
         int sizeB = count - sizeA;
         int[] ticksA = new int[sizeA];
         int[] ticksB = new int[sizeB];
         for (int i = 0; i < count; i++) {
-            if ((i & 1) == 0) ticksA[i / 2] = adjusters.get(i);
-            else ticksB[i / 2] = adjusters.get(i);
+            if (i < sizeA) ticksA[i] = adjusters.get(i);
+            else ticksB[i - sizeA] = adjusters.get(i);
         }
-        int reach = 0;
-        if (count > 0) {
-            reach = 1;
-            while (reach < cfg.maxOffset && StrictMath.pow(2 * (reach + 1) + 1, sizeA) <= cfg.halfCap) reach++;
-        }
-        int options = 2 * reach + 1;
+        int reach = count > 0 ? cfg.maxOffset : 0;
 
         double[][][] tableA = table(base, p0, e0, o0, ticksA, reach);
         double[][][] tableB = table(base, p0, e0, o0, ticksB, reach);
@@ -208,14 +214,21 @@ final class LatticeClosure {
             tzHi = m.box.pzHi - startZ;
         }
 
-        double[] seedA = new double[width + 1];
-        for (int i = 0; i < width; i++) seedA[i] = e0[rel[i]];
-        seedA[width] = o0;
-        double[] sumsA = expand(seedA, tableA, options, width);
-        double[] sumsB = expand(new double[width + 1], tableB, options, width);
         int stride = width + 1;
-        int countA = sumsA.length / stride;
-        int countB = sumsB.length / stride;
+        double[] seedA = new double[stride];
+        double[] carriedB = new double[width];
+        for (int i = 0; i < width; i++) {
+            seedA[i] = e0[rel[i]];
+            carriedB[i] = e0[rel[i]];
+        }
+        seedA[width] = o0;
+        Half halfA = widest(tableA, tableB, seedA, new double[width], reach);
+        Half halfB = widest(tableB, tableA, new double[stride], carriedB, reach);
+        if (halfA == null || halfB == null || halfA.count == 0 || halfB.count == 0) return null;
+        double[] sumsA = halfA.sums;
+        double[] sumsB = halfB.sums;
+        int countA = halfA.count;
+        int countB = halfB.count;
 
         Key key = chooseKey(mu, tight, sumsA, countA, stride);
         final double[] keyA = new double[countA];
@@ -236,25 +249,26 @@ final class LatticeClosure {
         topB = new int[cfg.verify];
         topCount = 0;
         double floor = m.objectiveAt(z) - PRUNE_SLOP;
+        int scanned = cfg.window * SCAN_DEPTH;
         for (int ib = 0; ib < countB; ib++) {
             if ((ib & 255) == 0 && deadline > 0 && System.nanoTime() > deadline) break;
             int offB = ib * stride;
             if (key.separable) {
-                for (int i = 0; i < countA && i < cfg.window; i++) {
-                    consider(sumsA, order[i] * stride, sumsB, offB, order[i], ib, width);
+                for (int i = 0, fits = 0; i < countA && i < scanned && fits < cfg.window; i++) {
+                    if (consider(sumsA, order[i] * stride, sumsB, offB, order[i], ib, width)) fits++;
                 }
                 continue;
             }
             double target = -keyOf(key, sumsB, offB);
             int pos = upperBound(sorted, target);
-            for (int i = pos - 1, steps = 0; i >= 0 && steps < cfg.window; i--, steps++) {
+            for (int i = pos - 1, steps = 0, fits = 0; i >= 0 && steps < scanned && fits < cfg.window; i--, steps++) {
                 if (floor + key.lossBelow * (target - sorted[i]) > worst()) break;
-                consider(sumsA, order[i] * stride, sumsB, offB, order[i], ib, width);
+                if (consider(sumsA, order[i] * stride, sumsB, offB, order[i], ib, width)) fits++;
             }
             if (key.lossAbove < Double.POSITIVE_INFINITY) {
-                for (int i = pos, steps = 0; i < countA && steps < cfg.window; i++, steps++) {
+                for (int i = pos, steps = 0, fits = 0; i < countA && steps < scanned && fits < cfg.window; i++, steps++) {
                     if (floor + key.lossAbove * (sorted[i] - target) > worst()) break;
-                    consider(sumsA, order[i] * stride, sumsB, offB, order[i], ib, width);
+                    if (consider(sumsA, order[i] * stride, sumsB, offB, order[i], ib, width)) fits++;
                 }
             }
         }
@@ -264,8 +278,8 @@ final class LatticeClosure {
         for (int i = 0; i < topCount; i++) {
             if (best != null && topScore[i] > sign * best.objective + VERIFY_SLOP) break;
             double[] y = base.clone();
-            decode(y, base, ticksA, topA[i], options, reach);
-            decode(y, base, ticksB, topB[i], options, reach);
+            place(y, base, ticksA, halfA, topA[i], reach);
+            place(y, base, ticksB, halfB, topB[i], reach);
             double[] gf = at.toGameFacings(y);
             ForwardPath p = m.exact.forward(at, gf);
             PathTranslation.Trans tr = PathTranslation.bestTranslationObj(compiled, gf, p,
@@ -283,6 +297,83 @@ final class LatticeClosure {
         return best;
     }
 
+    private boolean settleFacingRows(double[] base, List<Integer> lights) {
+        boolean any = false;
+        for (TrigRowModel.Row row : m.rows) any |= row.facing;
+        if (!any) return true;
+        boolean[] movable = new boolean[n];
+        for (int t : lights) movable[t] = true;
+        for (int pass = 0; pass <= n; pass++) {
+            boolean moved = false;
+            for (TrigRowModel.Row row : m.rows) {
+                if (!row.facing) continue;
+                double e = row.excess(null, base);
+                if (e <= 0.0) continue;
+                int pick = -1;
+                for (int i = 0; i < row.ticks.length; i++) {
+                    if (movable[row.ticks[i]] && (pick < 0 || row.ticks[i] > row.ticks[pick])) pick = i;
+                }
+                if (pick < 0 || row.wrapSide) return false;
+                double steps = StrictMath.ceil(e / TrigRowModel.STEP_RAD - 1.0e-6);
+                int t = row.ticks[pick];
+                base[t] = Angles.wrap(base[t] - row.sign * row.weights[pick] * steps * TrigRowModel.STEP_DEG);
+                moved = true;
+            }
+            if (!moved) return true;
+        }
+        return false;
+    }
+
+    private boolean settleGates(double[] base, List<Integer> lights, double[] mu) {
+        int rows = m.rows.length;
+        double[] e0 = new double[rows];
+        double[] e = new double[rows];
+        for (int round = 0; round < GATE_ROUNDS; round++) {
+            ForwardPath p0 = m.exact.forward(at, at.toGameFacings(base));
+            int open = -1;
+            for (int r = 0; r < rows; r++) {
+                e0[r] = m.rows[r].excess(p0, base);
+                if (open < 0 && m.rows[r].gate && e0[r] > 0.0) open = r;
+            }
+            if (open < 0) return true;
+            double o0 = sign * m.objective.value(p0);
+            int gateTick = m.rows[open].ticks[0];
+            int bestTick = -1;
+            int bestStep = 0;
+            boolean bestCloses = false;
+            double bestCost = Double.POSITIVE_INFINITY;
+            for (int t : lights) {
+                if (t >= gateTick) continue;
+                for (int j = -GATE_REACH; j <= GATE_REACH; j++) {
+                    if (j == 0) continue;
+                    double[] y = base.clone();
+                    y[t] = Angles.wrap(base[t] + j * TrigRowModel.STEP_DEG);
+                    ForwardPath p = m.exact.forward(at, at.toGameFacings(y));
+                    boolean leaves = false;
+                    double cost = sign * m.objective.value(p) - o0;
+                    for (int r = 0; r < rows; r++) {
+                        e[r] = m.rows[r].excess(p, y);
+                        boolean held = m.rows[r].facing || (m.rows[r].gate && r < open);
+                        if (held && e[r] > 0.0) leaves = true;
+                        if (r != open) cost += Math.max(mu[r], MU_FLOOR) * Math.max(0.0, e[r] - Math.max(e0[r], 0.0));
+                    }
+                    if (leaves || e[open] >= e0[open]) continue;
+                    boolean closes = e[open] <= 0.0;
+                    double rated = closes ? cost : e[open];
+                    if ((closes && !bestCloses) || (closes == bestCloses && rated < bestCost)) {
+                        bestCloses = closes;
+                        bestCost = rated;
+                        bestTick = t;
+                        bestStep = j;
+                    }
+                }
+            }
+            if (bestTick < 0) return false;
+            base[bestTick] = Angles.wrap(base[bestTick] + bestStep * TrigRowModel.STEP_DEG);
+        }
+        return false;
+    }
+
     private double[][][] table(double[] base, ForwardPath p0, double[] e0, double o0, int[] ticks, int reach) {
         int rows = m.rows.length;
         int options = 2 * reach + 1;
@@ -295,7 +386,7 @@ final class LatticeClosure {
                 y[t] = Angles.wrap(base[t] + (c - reach) * TrigRowModel.STEP_DEG);
                 ForwardPath p = m.exact.forward(at, at.toGameFacings(y));
                 double[] d = out[i][c];
-                for (int r = 0; r < rows; r++) d[r] = m.rows[r].excess(p) - e0[r];
+                for (int r = 0; r < rows; r++) d[r] = m.rows[r].excess(p, y) - e0[r];
                 d[rows] = sign * m.objective.value(p) - o0;
             }
         }
@@ -312,31 +403,98 @@ final class LatticeClosure {
         }
     }
 
-    private double[] expand(double[] seed, double[][][] table, int options, int width) {
+    private static final class Half {
+        double[] sums;
+        int[] picks;
+        int count;
+        int reach;
+    }
+
+    private Half widest(double[][][] own, double[][][] other, double[] seed, double[] carried, int reach) {
+        Half best = null;
+        for (int r = Math.min(1, reach); r <= reach; r++) {
+            Half h = enumerate(own, other, seed, carried, reach, r);
+            if (h == null) break;
+            best = h;
+            if (own.length == 0) break;
+        }
+        return best;
+    }
+
+    private Half enumerate(double[][][] own, double[][][] other, double[] seed, double[] carried, int reach,
+                           int used) {
         int rows = m.rows.length;
+        int width = rel.length;
         int stride = width + 1;
-        double[] cur = seed;
-        for (double[][] tick : table) {
-            int have = cur.length / stride;
-            double[] next = new double[have * options * stride];
-            for (int i = 0; i < have; i++) {
-                for (int c = 0; c < options; c++) {
-                    double[] d = tick[c];
-                    int to = (i * options + c) * stride;
-                    int from = i * stride;
-                    for (int k = 0; k < width; k++) next[to + k] = cur[from + k] + d[rel[k]];
-                    next[to + width] = cur[from + width] + d[rows];
+        int size = own.length;
+        boolean pinned = !m.freeStart;
+        int[] closesAt = new int[width];
+        for (int k = 0; k < width; k++) {
+            boolean fixable = touches(other, rel[k]) || (!pinned && (qx[k] != 0.0 || qz[k] != 0.0));
+            int last = -1;
+            for (int d = 0; d < size; d++) {
+                if (touches(own[d], rel[k])) last = d;
+            }
+            closesAt[k] = fixable ? size : last;
+        }
+        Half cur = new Half();
+        cur.sums = seed.clone();
+        cur.picks = new int[0];
+        cur.count = 1;
+        cur.reach = used;
+        for (int k = 0; k < width; k++) {
+            if (closesAt[k] < 0 && carried[k] + seed[k] > 0.0) cur.count = 0;
+        }
+        int span = 2 * used + 1;
+        for (int d = 0; d < size; d++) {
+            double[][] tick = own[d];
+            if ((long) cur.count * span > (long) cfg.halfCap * LEVEL_SLACK) return null;
+            Half next = new Half();
+            next.reach = used;
+            next.sums = new double[cur.count * span * stride];
+            next.picks = new int[cur.count * span * (d + 1)];
+            for (int i = 0; i < cur.count; i++) {
+                int from = i * stride;
+                for (int c = reach - used; c <= reach + used; c++) {
+                    double[] delta = tick[c];
+                    int to = next.count * stride;
+                    boolean open = true;
+                    for (int k = 0; k < width && open; k++) {
+                        double v = cur.sums[from + k] + delta[rel[k]];
+                        next.sums[to + k] = v;
+                        if (closesAt[k] == d) open = carried[k] + v <= 0.0;
+                    }
+                    if (!open) continue;
+                    next.sums[to + width] = cur.sums[from + width] + delta[rows];
+                    System.arraycopy(cur.picks, i * d, next.picks, next.count * (d + 1), d);
+                    next.picks[next.count * (d + 1) + d] = c;
+                    next.count++;
                 }
             }
+            if (d == size - 1 && next.count > cfg.halfCap) return null;
             cur = next;
         }
+        if (cur.sums.length != cur.count * stride) cur.sums = Arrays.copyOf(cur.sums, cur.count * stride);
         return cur;
     }
 
-    private void decode(double[] y, double[] base, int[] ticks, int index, int options, int reach) {
-        for (int i = ticks.length - 1; i >= 0; i--) {
-            int c = index % options;
-            index /= options;
+    private static boolean touches(double[][][] table, int row) {
+        for (double[][] tick : table) {
+            if (touches(tick, row)) return true;
+        }
+        return false;
+    }
+
+    private static boolean touches(double[][] tick, int row) {
+        for (double[] delta : tick) {
+            if (delta[row] != 0.0) return true;
+        }
+        return false;
+    }
+
+    private void place(double[] y, double[] base, int[] ticks, Half half, int index, int reach) {
+        for (int i = 0; i < ticks.length; i++) {
+            int c = half.picks[index * ticks.length + i];
             y[ticks[i]] = Angles.wrap(base[ticks[i]] + (c - reach) * TrigRowModel.STEP_DEG);
         }
     }
@@ -346,7 +504,7 @@ final class LatticeClosure {
         int rows = m.rows.length;
         List<Key> keys = new ArrayList<>();
         for (int i = 0; i < width; i++) {
-            if (!tight[rel[i]] || qx[i] != 0.0 || qz[i] != 0.0) continue;
+            if (!tight[rel[i]] || qx[i] != 0.0 || qz[i] != 0.0 || m.rows[rel[i]].facing) continue;
             double[] coef = new double[width];
             coef[i] = 1.0;
             keys.add(new Key(coef, 0.0, Math.max(mu[rel[i]], MU_FLOOR), Double.POSITIVE_INFINITY));
@@ -491,7 +649,7 @@ final class LatticeClosure {
         return topCount < topScore.length ? Double.POSITIVE_INFINITY : topScore[topCount - 1];
     }
 
-    private void consider(double[] sumsA, int offA, double[] sumsB, int offB, int ia, int ib, int width) {
+    private boolean consider(double[] sumsA, int offA, double[] sumsB, int offB, int ia, int ib, int width) {
         double loX = txLo;
         double hiX = txHi;
         double loZ = tzLo;
@@ -511,14 +669,14 @@ final class LatticeClosure {
                 double lim = -e / qz[k];
                 if (lim > loZ) loZ = lim;
             } else if (e > 0.0) {
-                return;
+                return false;
             }
         }
-        if (loX > hiX || loZ > hiZ) return;
+        if (loX > hiX || loZ > hiZ) return false;
         double tx = m.opx > 0.0 ? loX : m.opx < 0.0 ? hiX : 0.5 * (loX + hiX);
         double tz = m.opz > 0.0 ? loZ : m.opz < 0.0 ? hiZ : 0.5 * (loZ + hiZ);
         double score = sumsA[offA + width] + sumsB[offB + width] + m.opx * tx + m.opz * tz;
-        if (score >= worst()) return;
+        if (score >= worst()) return true;
         int slot = topCount < topScore.length ? topCount++ : topCount - 1;
         while (slot > 0 && topScore[slot - 1] > score) {
             topScore[slot] = topScore[slot - 1];
@@ -529,5 +687,6 @@ final class LatticeClosure {
         topScore[slot] = score;
         topA[slot] = ia;
         topB[slot] = ib;
+        return true;
     }
 }

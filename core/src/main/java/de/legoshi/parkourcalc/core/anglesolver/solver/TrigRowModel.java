@@ -12,6 +12,8 @@ final class TrigRowModel {
     static final int POS_Z = 1;
     static final int VEL_X = 2;
     static final int VEL_Z = 3;
+    static final int FACING = 4;
+    static final double WRAP_GUARD_DEG = 0.02;
 
     private static final double GATE_MARGIN = 1.0e-9;
     private static final double FEASIBLE_VIOLATION = 1.0e-9;
@@ -30,10 +32,18 @@ final class TrigRowModel {
         final double rhs;
         final double sign;
         final boolean gate;
+        final boolean facing;
+        final boolean wrapSide;
+        final double centre;
         final double shiftX;
         final double shiftZ;
 
         Row(String name, int[] ticks, int[] kinds, double[] weights, double rhs, double sign, boolean gate) {
+            this(name, ticks, kinds, weights, rhs, sign, gate, false, false, 0.0);
+        }
+
+        private Row(String name, int[] ticks, int[] kinds, double[] weights, double rhs, double sign, boolean gate,
+                    boolean facing, boolean wrapSide, double centre) {
             this.name = name;
             this.ticks = ticks;
             this.kinds = kinds;
@@ -41,6 +51,9 @@ final class TrigRowModel {
             this.rhs = rhs;
             this.sign = sign;
             this.gate = gate;
+            this.facing = facing;
+            this.wrapSide = wrapSide;
+            this.centre = centre;
             double sx = 0.0;
             double sz = 0.0;
             for (int i = 0; i < ticks.length; i++) {
@@ -57,8 +70,18 @@ final class TrigRowModel {
             return v;
         }
 
-        double excess(ForwardPath p) {
-            return sign * (value(p) - rhs);
+        static Row facing(String name, int[] ticks, double[] weights, double centre, double rhs, double sign,
+                          boolean wrapSide) {
+            int[] kinds = new int[ticks.length];
+            Arrays.fill(kinds, FACING);
+            return new Row(name, ticks, kinds, weights, rhs, sign, false, true, wrapSide, centre);
+        }
+
+        double excess(ForwardPath p, double[] yaws) {
+            if (!facing) return sign * (value(p) - rhs);
+            double v = 0.0;
+            for (int i = 0; i < ticks.length; i++) v += weights[i] * yaws[ticks[i]];
+            return sign * Angles.rad(centre + Angles.wrapDelta(v - centre) - rhs);
         }
     }
 
@@ -75,6 +98,7 @@ final class TrigRowModel {
     final int[] ticksInVar;
     final int[] firstTickOfVar;
     final boolean[] fixed;
+    final YawOrder order;
 
     Row[] rows;
     Row objective;
@@ -82,6 +106,7 @@ final class TrigRowModel {
     double[] c0;
     double[][] a;
     double[][] b;
+    double[][] f;
     double[] px;
     double[] pz;
     double oc0;
@@ -91,6 +116,10 @@ final class TrigRowModel {
     double opz;
     double refX;
     double refZ;
+    boolean onWrap;
+    double backedOff;
+    boolean[] stoppedX;
+    boolean[] stoppedZ;
 
     private JumpLinearModel lin;
 
@@ -102,6 +131,7 @@ final class TrigRowModel {
         this.box = scenario.startBox;
         this.freeStart = box != null && box.startFree();
         YawTies ties = YawTies.of(spec.constraints, n);
+        this.order = YawOrder.carry(spec.constraints, ties, n);
         this.varOfTick = new int[n];
         this.offsetOfTick = new double[n];
         this.pinOfTick = new double[n];
@@ -142,15 +172,11 @@ final class TrigRowModel {
             SurfaceKind kind = sc.surfaceAt(t);
             if (kind == SurfaceKind.WATER || kind == SurfaceKind.LAVA) return "fluid";
         }
-        YawTies ties = YawTies.of(spec.constraints, n);
         for (JumpConstraint c : spec.constraints) {
-            if (c.mode == JumpConstraint.Mode.DXZ || c.mode == JumpConstraint.Mode.DZX) return "cross-axis constraint";
-            if (c.mode == JumpConstraint.Mode.F) {
-                if (!YawOrder.absorbed(c, ties)) return "facing inequality";
-                continue;
-            }
+            if (c.mode == JumpConstraint.Mode.F) continue;
             if (c.cmp == JumpConstraint.Cmp.EQ) return "position equality";
         }
+        if (!YawOrder.accepts(spec.constraints, YawTies.of(spec.constraints, n), n)) return "facing constraint";
         return null;
     }
 
@@ -167,13 +193,9 @@ final class TrigRowModel {
         return (StrictMath.floor(yawDeg / STEP_DEG) + 0.5) * STEP_DEG;
     }
 
-    void build(double[] yawsWrapped, double sx, double sz) {
-        refX = sx;
-        refZ = sz;
+    private ForwardPath stoppedAxes(double[] yawsWrapped, double sx, double sz, boolean[] zeroX, boolean[] zeroZ) {
         JumpPhysicsInputs at = scenario.pinnedAt(sx, sz);
         ForwardPath path = exact.forward(at, at.toGameFacings(yawsWrapped));
-        boolean[] zeroX = new boolean[n];
-        boolean[] zeroZ = new boolean[n];
         double thr = exact.inertiaThreshold();
         for (int t = 0; t < n; t++) {
             double vx = path.velX[t];
@@ -187,10 +209,34 @@ final class TrigRowModel {
                 zeroZ[t] = z;
             }
         }
+        return path;
+    }
+
+    boolean sameStoppedAxes(double[] yawsWrapped, double sx, double sz) {
+        boolean[] zeroX = new boolean[n];
+        boolean[] zeroZ = new boolean[n];
+        stoppedAxes(yawsWrapped, sx, sz, zeroX, zeroZ);
+        for (int t = 1; t < n; t++) {
+            if (zeroX[t] != stoppedX[t] || zeroZ[t] != stoppedZ[t]) return false;
+        }
+        return true;
+    }
+
+    void build(double[] yawsWrapped, double sx, double sz) {
+        refX = sx;
+        refZ = sz;
+        JumpPhysicsInputs at = scenario.pinnedAt(sx, sz);
+        boolean[] zeroX = new boolean[n];
+        boolean[] zeroZ = new boolean[n];
+        ForwardPath path = stoppedAxes(yawsWrapped, sx, sz, zeroX, zeroZ);
+        stoppedX = zeroX;
+        stoppedZ = zeroZ;
+        double thr = exact.inertiaThreshold();
         lin = new JumpLinearModel(at, zeroX, zeroZ, true);
 
         List<Row> list = new ArrayList<>();
         for (JumpConstraint c : spec.constraints) {
+            if (c.mode == JumpConstraint.Mode.DXZ || c.mode == JumpConstraint.Mode.DZX) crossAxisRows(list, c, path);
             if (c.mode != JumpConstraint.Mode.X && c.mode != JumpConstraint.Mode.Z) continue;
             int kind = c.mode == JumpConstraint.Mode.X ? POS_X : POS_Z;
             double sign = c.cmp == JumpConstraint.Cmp.GE ? -1.0 : 1.0;
@@ -210,17 +256,28 @@ final class TrigRowModel {
                 combinedGate(list, t, path.velX[t], path.velZ[t], zeroX[t], thr);
             }
         }
+        facingRows(list);
 
         int boxRows = freeStart ? 4 : 0;
         double[] cst = new double[list.size()];
         double[][] ra = new double[list.size()][vars];
         double[][] rb = new double[list.size()][vars];
+        double[][] rf = new double[list.size()][];
         List<Integer> keep = new ArrayList<>();
         for (int r = 0; r < list.size(); r++) {
             Row row = list.get(r);
-            cst[r] = row.sign * (terms(row, row.sign, ra[r], rb[r]) - row.rhs);
             boolean depends = row.shiftX != 0.0 || row.shiftZ != 0.0;
-            for (int v = 0; v < vars && !depends; v++) depends = ra[r][v] != 0.0 || rb[r][v] != 0.0;
+            if (row.facing) {
+                rf[r] = new double[vars];
+                for (int i = 0; i < row.ticks.length; i++) {
+                    int v = varOfTick[row.ticks[i]];
+                    if (v >= 0) rf[r][v] += row.sign * row.weights[i];
+                }
+                for (int v = 0; v < vars && !depends; v++) depends = rf[r][v] != 0.0;
+            } else {
+                cst[r] = row.sign * (terms(row, row.sign, ra[r], rb[r]) - row.rhs);
+                for (int v = 0; v < vars && !depends; v++) depends = ra[r][v] != 0.0 || rb[r][v] != 0.0;
+            }
             if (depends) keep.add(r);
         }
         rows = new Row[keep.size()];
@@ -228,6 +285,7 @@ final class TrigRowModel {
         c0 = new double[rowCount];
         a = new double[rowCount][];
         b = new double[rowCount][];
+        f = new double[rowCount][];
         px = new double[rowCount];
         pz = new double[rowCount];
         for (int i = 0; i < rows.length; i++) {
@@ -236,6 +294,7 @@ final class TrigRowModel {
             c0[i] = cst[r];
             a[i] = ra[r];
             b[i] = rb[r];
+            f[i] = rf[r];
             px[i] = rows[i].sign * rows[i].shiftX;
             pz[i] = rows[i].sign * rows[i].shiftZ;
         }
@@ -261,6 +320,41 @@ final class TrigRowModel {
         oc0 = objective.sign * terms(objective, objective.sign, oa, ob);
         opx = objective.sign * objective.shiftX;
         opz = objective.sign * objective.shiftZ;
+    }
+
+    private static void crossAxisRows(List<Row> out, JumpConstraint c, ForwardPath path) {
+        double sx = path.posX[c.t1] - path.posX[c.t2] >= 0.0 ? 1.0 : -1.0;
+        double sz = path.posZ[c.t1] - path.posZ[c.t2] >= 0.0 ? 1.0 : -1.0;
+        double lead = c.mode == JumpConstraint.Mode.DXZ ? 1.0 : -1.0;
+        int[] ticks = {c.t1, c.t2, c.t1, c.t2};
+        int[] kinds = {POS_X, POS_X, POS_Z, POS_Z};
+        double[] weights = {lead * sx, -lead * sx, -lead * sz, lead * sz};
+        out.add(new Row(c.name, ticks, kinds, weights, c.rhs, c.cmp == JumpConstraint.Cmp.GE ? -1.0 : 1.0, false));
+        int[] pair = {c.t1, c.t2};
+        out.add(new Row(c.name, pair, new int[] {POS_X, POS_X}, new double[] {sx, -sx}, 0.0, -1.0, false));
+        out.add(new Row(c.name, pair, new int[] {POS_Z, POS_Z}, new double[] {sz, -sz}, 0.0, -1.0, false));
+    }
+
+    private void facingRows(List<Row> out) {
+        if (order == null) return;
+        for (YawOrder.Link l : order.links()) {
+            int[] ticks = {l.hiTick, l.loTick};
+            double[] weights = {1.0, -1.0};
+            double need = l.minTurnDeg == 0.0 ? 0.0 : l.minTurnDeg + YawOrder.FLOAT_MARGIN_DEG;
+            out.add(Row.facing(l.source.name, ticks, weights, 0.0, need, -1.0, false));
+            out.add(Row.facing(l.source.name, ticks, weights, 0.0, 180.0 - WRAP_GUARD_DEG, 1.0, true));
+        }
+        for (YawOrder.Bound bd : order.bounds()) {
+            int[] ticks = {bd.tick};
+            double[] weights = {1.0};
+            double mid = 0.5 * (bd.loDeg + bd.hiDeg);
+            boolean wallBelow = bd.source.cmp == JumpConstraint.Cmp.GE;
+            double margin = bd.source.rhs == 0.0 ? 0.0 : YawOrder.FLOAT_MARGIN_DEG;
+            double lo = bd.loDeg + (wallBelow ? margin : WRAP_GUARD_DEG);
+            double hi = bd.hiDeg - (wallBelow ? WRAP_GUARD_DEG : margin);
+            out.add(Row.facing(bd.source.name, ticks, weights, mid, lo, -1.0, !wallBelow));
+            out.add(Row.facing(bd.source.name, ticks, weights, mid, hi, 1.0, wallBelow));
+        }
     }
 
     private static Row objectiveRow(Objective o) {
@@ -376,8 +470,21 @@ final class TrigRowModel {
         double[] sn = new double[vars];
         double[] cs = new double[vars];
         trig(z, sn, cs);
-        for (int r = 0; r < rows.length; r++) c0[r] += rows[r].excess(p) - row(r, z, sn, cs);
+        onWrap = false;
+        backedOff = 0.0;
+        for (int r = 0; r < rows.length; r++) {
+            double exact = rows[r].excess(p, yaws);
+            if (rows[r].wrapSide && exact > 0.0) onWrap = true;
+            c0[r] += exact - row(r, z, sn, cs);
+        }
         oc0 += objective.sign * objective.value(p) - objectiveAt(z, sn, cs);
+    }
+
+    void backOff(double by) {
+        for (int r = 0; r < rows.length; r++) {
+            if (!rows[r].facing) c0[r] += by - backedOff;
+        }
+        backedOff = by;
     }
 
     void trig(double[] z, double[] sn, double[] cs) {
@@ -392,6 +499,10 @@ final class TrigRowModel {
         double[] ra = a[r];
         double[] rb = b[r];
         for (int g = 0; g < vars; g++) v += ra[g] * cs[g] + rb[g] * sn[g];
+        double[] rf = f[r];
+        if (rf != null) {
+            for (int g = 0; g < vars; g++) v += rf[g] * z[g];
+        }
         return v;
     }
 
@@ -418,7 +529,8 @@ final class TrigRowModel {
     }
 
     double rowSlope(int r, int v, double[] z) {
-        return -a[r][v] * StrictMath.sin(z[v]) + b[r][v] * StrictMath.cos(z[v]);
+        double slope = -a[r][v] * StrictMath.sin(z[v]) + b[r][v] * StrictMath.cos(z[v]);
+        return f[r] == null ? slope : slope + f[r][v];
     }
 
     static final class Work {
@@ -463,9 +575,13 @@ final class TrigRowModel {
                     if (w <= 0.0) continue;
                     double[] ra = a[r];
                     double[] rb = b[r];
+                    double[] rf = f[r];
                     for (int v = 0; v < vars; v++) {
                         jac[v] = -ra[v] * sn[v] + rb[v] * cs[v];
                         hess[v][v] += w * (-ra[v] * cs[v] - rb[v] * sn[v]);
+                    }
+                    if (rf != null) {
+                        for (int v = 0; v < vars; v++) jac[v] += rf[v];
                     }
                     jac[vars] = px[r];
                     jac[vars + 1] = pz[r];

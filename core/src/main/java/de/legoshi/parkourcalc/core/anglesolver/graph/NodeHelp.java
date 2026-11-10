@@ -268,8 +268,8 @@ public final class NodeHelp {
                 + " free ticks take their single best grid step.");
         param("latticePolish", "tableSize", "How many angle combinations each half of the grid search may"
                 + " list. More reaches a finer result and takes longer.");
-        param("latticePolish", "window", "How many of the closest partner combinations it checks for each"
-                + " listed combination.");
+        param("latticePolish", "window", "How many fitting partner combinations it collects for each listed"
+                + " combination, closest first.");
         param("latticePolish", "work", "How much work the smooth solves may spend before the stage gives up,"
                 + " counted in steps so the same jump always gets the same result. A long jump with many"
                 + " free ticks needs more.");
