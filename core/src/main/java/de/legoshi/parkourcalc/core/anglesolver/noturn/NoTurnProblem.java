@@ -244,10 +244,6 @@ public final class NoTurnProblem {
         return !explicitTies;
     }
 
-    public boolean assignsCombo(int t) {
-        return t >= 0 && t <= setupEnd;
-    }
-
     public boolean multiTied() {
         return explicitTies && tiedUnits >= 2;
     }

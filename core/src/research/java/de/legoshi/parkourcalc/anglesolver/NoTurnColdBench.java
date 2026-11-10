@@ -380,10 +380,7 @@ public class NoTurnColdBench {
                 cfg.alphabet = new int[]{NoTurnKeys.SD, NoTurnKeys.S, NoTurnKeys.WA, NoTurnKeys.W, NoTurnKeys.WD,
                         NoTurnKeys.SA, NoTurnKeys.A, NoTurnKeys.D, NoTurnKeys.NONE};
             }
-            if (certifySec > 0) {
-                cfg.delta0CertifyNanos = certifySec * 1_000_000_000L;
-                cfg.fatCertifyNanos = certifySec * 1_000_000_000L;
-            }
+            if (certifySec > 0) cfg.delta0CertifyNanos = certifySec * 1_000_000_000L;
             cfg.deepPairRepair = Boolean.parseBoolean(System.getProperty("pkc.bench.deepPairRepair", "true"));
             if (cfg.deepPairRepair) cfg.maxCertifies = Math.max(cfg.maxCertifies, 100000);
             line("benders cfg: ja=" + cfg.ja + " mode=" + cfg.mode + " minDwell=" + cfg.minDwell + " maxEdges="

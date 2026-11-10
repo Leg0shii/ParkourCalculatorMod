@@ -39,7 +39,6 @@ public class NoTurnBendersTest {
         cfg.screenSkip = true;
         cfg.screenKeep = 0.22;
         cfg.useCuts = false;
-        cfg.delta0OptimizeSec = 8;
         cfg.maxCertifies = 24;
         cfg.refineExtraAfterIncumbent = 3;
         cfg.deadlineNanos = 300_000_000_000L;
@@ -86,8 +85,6 @@ public class NoTurnBendersTest {
         cfg.screenOrder = false;
         cfg.screenSkip = false;
         cfg.useCuts = false;
-        cfg.fatOptimizeSec = 4;
-        cfg.fatCertifyNanos = 6_000_000_000L;
         cfg.continuationLead = 25;
         cfg.continuationCap = 12;
         cfg.openingTaps = true;
@@ -114,7 +111,7 @@ public class NoTurnBendersTest {
                 + " v6AncestorContinued=" + m.trace().v6AncestorContinued
                 + " ancestorContinuationIndex=" + m.trace().ancestorContinuationIndex
                 + " closedContinuationIndex=" + m.trace().closedContinuationIndex
-                + " v6Closed=" + m.trace().v6Closed + " wallSec=" + wallSec);
+                + " wallSec=" + wallSec);
         if (best != null) {
             System.out.println("  survivor edges=" + best.edges + " keys=" + NoTurnKeys.describe(best.combos)
                     + " ja=" + best.ja + " obj=" + best.objective + " viol=" + best.violation
