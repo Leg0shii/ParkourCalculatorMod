@@ -168,6 +168,7 @@ public final class TurnProfileController {
     private volatile boolean deepDirty;
     private final AtomicInteger generation = new AtomicInteger();
     private final AtomicInteger deepGeneration = new AtomicInteger();
+    private volatile AtomicBoolean deepCancel = new AtomicBoolean(false);
     private volatile AtomicBoolean cancelToken = new AtomicBoolean(false);
     private final AtomicReference<Current> current = new AtomicReference<Current>();
     private final Object rateLock = new Object();
@@ -608,6 +609,8 @@ public final class TurnProfileController {
 
     private void invalidateDeepChecks() {
         deepGeneration.incrementAndGet();
+        deepCancel.set(true);
+        deepCancel = new AtomicBoolean(false);
         deepDone.clear();
     }
 
@@ -837,11 +840,13 @@ public final class TurnProfileController {
         List<TurnAttempt> candidates = new ArrayList<TurnAttempt>(document.top());
         candidates.addAll(document.favourites());
         int gen = deepGeneration.get();
+        AtomicBoolean cancel = deepCancel;
         for (TurnAttempt a : candidates) {
             if (a.solved() || !a.hasState() || !a.alignedTo(cur) || deepDone.contains(a) || !deepQueue.add(a)) continue;
             deep.submit(() -> {
                 try {
-                    double[] result = DeepCheck.solve(exact, cur, a, DeepCheck.BUDGET_NANOS, null);
+                    if (gen != deepGeneration.get()) return;
+                    double[] result = DeepCheck.solve(exact, cur, a, DeepCheck.BUDGET_NANOS, cancel);
                     if (gen != deepGeneration.get()) return;
                     if (result != null) {
                         a.solvedOffset = result;
