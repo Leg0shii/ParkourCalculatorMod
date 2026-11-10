@@ -58,11 +58,12 @@ public final class BoundPrunedRecovery {
         Thread watchdog = startWatchdog(outer, finished, searchCancel, searchDeadline, polishCancel, fullDeadline);
         try {
             JumpPhysicsInputs sc = spec.asScenario();
+            JumpLinearModel free = new JumpLinearModel(sc);
             boolean max = spec.objective.sense == Objective.Sense.MAX;
             double targetNorm = targetWallNorm(spec, max);
             JumpSpec searchSpec = spec;
             if (!Double.isNaN(targetNorm)) {
-                Double freeBound = rootBound(spec, new JumpLinearModel(sc), null);
+                Double freeBound = rootBound(spec, free, null);
                 if (freeBound == null || freeBound - targetNorm >= TARGET_CONVERT_MAX_CORRIDOR) {
                     targetNorm = Double.NaN;
                 } else {
@@ -75,7 +76,7 @@ public final class BoundPrunedRecovery {
                         Double.isNaN(stopAtObjective) ? "-" : SolverTrace.fmt("%.6f", stopAtObjective),
                         Double.isNaN(targetNorm) ? "-" : SolverTrace.fmt("%.6f", targetNorm));
             }
-            List<Pattern> patterns = enumeratePatterns(exact, searchSpec, sc, MAX_PATTERNS, searchCancel);
+            List<Pattern> patterns = enumeratePatterns(exact, searchSpec, sc, free, MAX_PATTERNS, searchCancel);
             if (patterns.isEmpty()) {
                 if (SolverTrace.on()) SolverTrace.log("BNB", "no viable pattern (trivial infeasible)");
                 return null;
@@ -106,7 +107,6 @@ public final class BoundPrunedRecovery {
                 }
             }
             if (!searchCancel.get()) {
-                JumpLinearModel free = new JumpLinearModel(sc);
                 double[] gateRef = rankYaws != null ? rankYaws : freeDualSeed(searchSpec, free);
                 List<Pattern> keepAlive = keepAlivePatterns(exact, searchSpec, sc, free, gateRef);
                 if (SolverTrace.on()) {
@@ -139,7 +139,7 @@ public final class BoundPrunedRecovery {
                 }
             }
             if (profileYaws != null && viable.size() > 1) {
-                double[][] carry = carryProfile(new JumpLinearModel(sc), sc, Angles.wrapAll(profileYaws));
+                double[][] carry = carryProfile(free, sc, Angles.wrapAll(profileYaws));
                 double thr = exact.inertiaThreshold();
                 boolean perAxis = exact.perAxisInertia();
                 int[] bandMin = new int[2];
@@ -334,10 +334,9 @@ public final class BoundPrunedRecovery {
     }
 
     private static List<Pattern> enumeratePatterns(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc,
-                                                   int maxPatterns, AtomicBoolean cancel) {
+                                                   JumpLinearModel free, int maxPatterns, AtomicBoolean cancel) {
         int n = sc.numTicks;
         List<Pattern> out = new ArrayList<>();
-        JumpLinearModel free = new JumpLinearModel(sc);
         Double freeBound = rootBound(spec, free, null);
         if (freeBound != null) {
             out.add(new Pattern("free", free, new ArrayList<JumpLinearModel.Wall>(), false, freeBound, -1, -1, null, null));
@@ -414,19 +413,13 @@ public final class BoundPrunedRecovery {
     /** The margin-0 dual recovery of the unpatterned model: the always-available reference trajectory when
      *  the closed form found nothing to rank by. */
     private static double[] freeDualSeed(JumpSpec spec, JumpLinearModel lin) {
-        boolean[] trivial = {false};
-        List<JumpLinearModel.Wall> walls = lin.compileWalls(spec.constraints, 0.0, trivial);
-        if (trivial[0]) return null;
-        int n = lin.n;
-        double[] cx = new double[n];
-        double[] cz = new double[n];
-        lin.objectiveVectors(spec.objective, cx, cz);
-        CostateDualSolver.Result r = new CostateDualSolver(n, cx, cz, lin.mMagAll(), walls).solve(0.0, null);
+        CostateDualSolver.Result r = dualAtRoot(spec, lin, null);
         if (r == null) return null;
         return lin.recoverAlongCostate(spec.objective, r.gx, r.gz);
     }
 
-    private static Double rootBound(JumpSpec spec, JumpLinearModel lin, List<JumpLinearModel.Wall> vel) {
+    private static CostateDualSolver.Result dualAtRoot(JumpSpec spec, JumpLinearModel lin,
+                                                       List<JumpLinearModel.Wall> vel) {
         boolean[] trivial = {false};
         List<JumpLinearModel.Wall> walls = lin.compileWalls(spec.constraints, 0.0, trivial);
         if (trivial[0]) return null;
@@ -435,7 +428,11 @@ public final class BoundPrunedRecovery {
         double[] cx = new double[n];
         double[] cz = new double[n];
         lin.objectiveVectors(spec.objective, cx, cz);
-        CostateDualSolver.Result r = new CostateDualSolver(n, cx, cz, lin.mMagAll(), walls).solve(0.0, null);
+        return new CostateDualSolver(n, cx, cz, lin.mMagAll(), walls).solve(0.0, null);
+    }
+
+    private static Double rootBound(JumpSpec spec, JumpLinearModel lin, List<JumpLinearModel.Wall> vel) {
+        CostateDualSolver.Result r = dualAtRoot(spec, lin, vel);
         if (r == null) return null;
         boolean max = spec.objective.sense == Objective.Sense.MAX;
         double cp = lin.objectiveConst(spec.objective);
