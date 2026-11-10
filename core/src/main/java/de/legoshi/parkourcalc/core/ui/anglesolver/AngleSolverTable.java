@@ -313,13 +313,9 @@ public final class AngleSolverTable {
 
     // ---- per-frame drag lifecycle ----------------------------------------------
 
-    public void beginRows() {
+    public void beginRows(float viewMinX, float viewMinY, float viewMaxX, float viewMaxY) {
         constraintCellRects.clear();
         stateCellRects.clear();
-    }
-
-    public void beginRows(float viewMinX, float viewMinY, float viewMaxX, float viewMaxY) {
-        beginRows();
         this.viewMinX = viewMinX;
         this.viewMinY = viewMinY;
         this.viewMaxX = viewMaxX;
@@ -434,8 +430,8 @@ public final class AngleSolverTable {
         float w = pad + labelW + tailW + pad;
         boolean stateDrag = dragKind != DragKind.CONSTRAINT;
         int family = stateDrag ? ThemeManager.peachColor() : ThemeManager.accentColor();
-        dl.addRectFilled(x, y, x + w, y + h, ThemeManager.panelColor(), 3f * s);
-        dl.addRect(x, y, x + w, y + h, family, 3f * s, 0, 1f);
+        dl.addRectFilled(x, y, x + w, y + h, ThemeManager.panelColor(), ChipFlow.CHIP_ROUNDING * s);
+        dl.addRect(x, y, x + w, y + h, family, ChipFlow.CHIP_ROUNDING * s, 0, 1f);
         float ty = y + (h - ImGui.getFontSize()) * 0.5f;
         dl.addText(x + pad, ty, ThemeManager.textColor(), dragLabel);
         dl.addText(x + pad + labelW, ty, dragAlt ? ThemeManager.okColor() : family, tail);
@@ -545,12 +541,12 @@ public final class AngleSolverTable {
         int n = list.size();
         float[] chipW = new float[n];
         for (int i = 0; i < n; i++) chipW[i] = constraintChipWidth(list.get(i));
-        ChipFlow.Layout layout = computeChipLayout(cellW, baseRowH, chipW);
+        ChipFlow.Layout layout = ChipFlow.compute(cellW, baseRowH, chipW);
 
         constraintCellRects.put(rowIndex, cellRect(origin, cellW, grownRowH));
         rowContentH.put(rowIndex, layout.cellH);
         drawDropHighlight(rowIndex, origin, cellW, grownRowH, true);
-        placeChips(origin, cellW, grownRowH, layout, i -> renderConstraintChip(rowIndex, i, list.get(i)));
+        ChipFlow.place(origin, cellW, grownRowH, layout, i -> renderConstraintChip(rowIndex, i, list.get(i), chipW[i]));
     }
 
     public void renderStateCell(int rowIndex, float grownRowH) {
@@ -571,14 +567,14 @@ public final class AngleSolverTable {
         int n = specs.size();
         float[] chipW = new float[n];
         for (int i = 0; i < n; i++) chipW[i] = stateChipWidth(specs.get(i).key, specs.get(i).value);
-        ChipFlow.Layout layout = computeChipLayout(cellW, baseRowH, chipW);
+        ChipFlow.Layout layout = ChipFlow.compute(cellW, baseRowH, chipW);
 
         stateCellRects.put(rowIndex, cellRect(origin, cellW, grownRowH));
         mergeRowContentHeight(rowIndex, layout.cellH);
         drawDropHighlight(rowIndex, origin, cellW, grownRowH, false);
-        placeChips(origin, cellW, grownRowH, layout, i -> {
+        ChipFlow.place(origin, cellW, grownRowH, layout, i -> {
             StateChipSpec sp = specs.get(i);
-            stateChip(rowIndex, sp.kind, sp.potion, sp.key, sp.value, sp.struck);
+            stateChip(rowIndex, sp.kind, sp.potion, sp.key, sp.value, sp.struck, chipW[i]);
         });
     }
 
@@ -611,25 +607,13 @@ public final class AngleSolverTable {
 
     // ---- chip layout: wrap onto new lines and center each line in the cell -------
 
-    private interface ChipRenderer {
-        void render(int index);
-    }
-
-    private ChipFlow.Layout computeChipLayout(float cellW, float rowH, float[] chipW) {
-        return ChipFlow.compute(cellW, rowH, chipW);
-    }
-
-    private void placeChips(ImVec2 origin, float cellW, float grownRowH, ChipFlow.Layout layout, ChipRenderer renderer) {
-        ChipFlow.place(origin, cellW, grownRowH, layout, renderer::render);
-    }
-
     private float constraintChipWidth(Constraint c) {
         float s = ThemeManager.uiScale();
         String field = ConstraintText.fieldLabel(c);
         String op = c.isRange() ? "" : c.getOp().glyph;
         String val = ConstraintText.chip(c);
-        float pad = 5f * s;
-        float gap = 4f * s;
+        float pad = ChipFlow.CHIP_PAD * s;
+        float gap = ChipFlow.CHIP_GAP * s;
         float grip = SolverWidgets.gripWidth();
         Fonts.pushBold();
         float fieldW = ImGui.calcTextSize(field).x;
@@ -639,11 +623,12 @@ public final class AngleSolverTable {
         return pad + grip + gap + fieldW + gap + opW + valW + pad;
     }
 
-    private void chipDropShadow(ImDrawList dl, ImVec2 mn, ImVec2 mx, float s) {
-        ChipFlow.dropShadow(dl, mn, mx);
+    private static String constraintDragLabel(Constraint c) {
+        String op = c.isRange() ? "" : c.getOp().glyph;
+        return ConstraintText.fieldLabel(c) + (op.isEmpty() ? " " : " " + op + " ") + ConstraintText.chip(c);
     }
 
-    private void renderConstraintChip(int tick, int index, Constraint c) {
+    private void renderConstraintChip(int tick, int index, Constraint c, float w) {
         float s = ThemeManager.uiScale();
         float h = ImGui.getFrameHeight();
         ImDrawList dl = ImGui.getWindowDrawList();
@@ -651,15 +636,14 @@ public final class AngleSolverTable {
         String field = ConstraintText.fieldLabel(c);
         String op = c.isRange() ? "" : c.getOp().glyph;
         String val = ConstraintText.chip(c);
-        float pad = 5f * s;
-        float gap = 4f * s;
+        float pad = ChipFlow.CHIP_PAD * s;
+        float gap = ChipFlow.CHIP_GAP * s;
         float grip = SolverWidgets.gripWidth();
         Fonts.pushBold();
         float fieldW = ImGui.calcTextSize(field).x;
         Fonts.popBold();
         float opW = op.isEmpty() ? 0f : ImGui.calcTextSize(op).x + gap;
         float valW = ImGui.calcTextSize(val).x;
-        float w = constraintChipWidth(c);
 
         ImGui.invisibleButton("chip" + tick + "_" + index, w, h);
         ImVec2 mn = ImGui.getItemRectMin();
@@ -668,13 +652,11 @@ public final class AngleSolverTable {
         boolean selected = constraintSelection.highlights(tick, index, selection);
 
         boolean off = !c.isEnabled();
-        chipDropShadow(dl, mn, mx, s);
-        dl.addRectFilled(mn.x, mn.y, mx.x, mx.y, ThemeManager.panelColor(), 3f * s); // opaque base sits above the row highlight
-        dl.addRectFilled(mn.x, mn.y, mx.x, mx.y,
-                off ? ThemeManager.bgTintColor(0.25f) : ThemeManager.accentTintColor(selected ? 0.22f : 0.12f), 3f * s);
+        ChipFlow.dropShadow(dl, mn, mx);
+        int fill = off ? ThemeManager.bgTintColor(0.25f) : ThemeManager.accentTintColor(selected ? 0.22f : 0.12f);
         int border = off ? ThemeManager.textDimColor()
                 : (hover || selected) ? ThemeManager.accentColor() : ThemeManager.accentTintColor(0.55f);
-        dl.addRect(mn.x, mn.y, mx.x, mx.y, border, 3f * s, 0, selected ? 1.5f : 1f);
+        ChipFlow.body(dl, mn, mx, fill, border, selected ? 1.5f : 1f);
 
         float cy = mn.y + h * 0.5f;
         float ty = mn.y + (h - ImGui.getFontSize()) * 0.5f;
@@ -694,7 +676,7 @@ public final class AngleSolverTable {
         if (off) dl.addLine(textStart, cy, x + valW, cy, ThemeManager.textDimColor(), 1f * s);
 
         boolean isSource = dragging && dragTick == tick && dragIndex == index;
-        if (isSource) dl.addRectFilled(mn.x, mn.y, mx.x, mx.y, ThemeManager.bgTintColor(0.6f), 3f * s);
+        if (isSource) ChipFlow.dimSource(dl, mn, mx);
 
         if (!dragging && ImGui.isItemActive() && ImGui.isMouseDragging(0)) {
             dragging = true;
@@ -702,7 +684,7 @@ public final class AngleSolverTable {
             dragTick = tick;
             dragIndex = index;
             dragPotion = null;
-            dragLabel = field + (op.isEmpty() ? " " : " " + op + " ") + val;
+            dragLabel = constraintDragLabel(c);
         }
 
         // A plain click (pressed and released on the chip without dragging) opens the tick and selects it.
@@ -811,8 +793,8 @@ public final class AngleSolverTable {
 
     private float stateChipWidth(String key, String value) {
         float s = ThemeManager.uiScale();
-        float pad = 5f * s;
-        float gap = 4f * s;
+        float pad = ChipFlow.CHIP_PAD * s;
+        float gap = ChipFlow.CHIP_GAP * s;
         float grip = SolverWidgets.gripWidth();
         float keyW = ImGui.calcTextSize(key).x;
         Fonts.pushBold();
@@ -822,18 +804,17 @@ public final class AngleSolverTable {
     }
 
     /** Peach state-override chip: a grip + key + value, draggable to move/copy the facet onto another tick (Alt copies). */
-    private void stateChip(int tick, DragKind kind, Potion potion, String key, String value, boolean struck) {
+    private void stateChip(int tick, DragKind kind, Potion potion, String key, String value, boolean struck, float w) {
         float s = ThemeManager.uiScale();
         float h = ImGui.getFrameHeight();
         ImDrawList dl = ImGui.getWindowDrawList();
-        float pad = 5f * s;
-        float gap = 4f * s;
+        float pad = ChipFlow.CHIP_PAD * s;
+        float gap = ChipFlow.CHIP_GAP * s;
         float grip = SolverWidgets.gripWidth();
         float keyW = ImGui.calcTextSize(key).x;
         Fonts.pushBold();
         float valW = ImGui.calcTextSize(value).x;
         Fonts.popBold();
-        float w = pad + grip + gap + keyW + gap + valW + pad;
 
         String id = "schip" + tick + "_" + kind.name() + (potion == null ? "" : potion.name());
         ImGui.invisibleButton(id, w, h);
@@ -842,10 +823,9 @@ public final class AngleSolverTable {
         boolean hover = ImGui.isItemHovered();
         boolean selected = isStateSelected(tick, kind, potion);
 
-        chipDropShadow(dl, mn, mx, s);
-        dl.addRectFilled(mn.x, mn.y, mx.x, mx.y, ThemeManager.panelColor(), 3f * s);
-        dl.addRectFilled(mn.x, mn.y, mx.x, mx.y, ThemeManager.peachTintColor(selected ? 0.22f : 0.12f), 3f * s);
-        dl.addRect(mn.x, mn.y, mx.x, mx.y, (hover || selected) ? ThemeManager.peachColor() : ThemeManager.peachTintColor(0.55f), 3f * s, 0, selected ? 1.5f : 1f);
+        ChipFlow.dropShadow(dl, mn, mx);
+        ChipFlow.body(dl, mn, mx, ThemeManager.peachTintColor(selected ? 0.22f : 0.12f),
+                (hover || selected) ? ThemeManager.peachColor() : ThemeManager.peachTintColor(0.55f), selected ? 1.5f : 1f);
 
         float cy = mn.y + h * 0.5f;
         float ty = mn.y + (h - ImGui.getFontSize()) * 0.5f;
@@ -860,7 +840,7 @@ public final class AngleSolverTable {
         if (struck) dl.addLine(x, cy, x + valW, cy, ThemeManager.textDimColor(), 1f);
 
         boolean isSource = dragging && dragKind == kind && dragTick == tick && dragPotion == potion;
-        if (isSource) dl.addRectFilled(mn.x, mn.y, mx.x, mx.y, ThemeManager.bgTintColor(0.6f), 3f * s);
+        if (isSource) ChipFlow.dimSource(dl, mn, mx);
 
         if (!dragging && ImGui.isItemActive() && ImGui.isMouseDragging(0)) {
             dragging = true;
@@ -918,7 +898,7 @@ public final class AngleSolverTable {
 
     // ---- editor drawer ----------------------------------------------------------
 
-    public float drawerHeight(int tick) {
+    private float drawerHeight(int tick) {
         float s = ThemeManager.uiScale();
         float fhs = ImGui.getFrameHeightWithSpacing();
         float inputRow = fhs + 8f * s; // table rows push framePadding.y from XXS(2) to BUTTON_PAD_Y(6)
@@ -999,7 +979,7 @@ public final class AngleSolverTable {
             ImGui.tableSetupColumn("f", ImGuiTableColumnFlags.WidthFixed, 72f * s);
             ImGui.tableSetupColumn("o", ImGuiTableColumnFlags.WidthFixed, 72f * s);
             ImGui.tableSetupColumn("v", ImGuiTableColumnFlags.WidthStretch);
-            ImGui.tableSetupColumn("x", ImGuiTableColumnFlags.WidthFixed, deleteXWidth());
+            ImGui.tableSetupColumn("x", ImGuiTableColumnFlags.WidthFixed, SolverWidgets.deleteXWidth());
             Controls.pushInputFrameHeight();
             for (int i = 0; i < list.size(); i++) {
                 Constraint c = list.get(i);
@@ -1049,7 +1029,7 @@ public final class AngleSolverTable {
                     renderConstraintValues(c);
                 }
                 ImGui.tableNextColumn();
-                if (deleteX("del")) delete = i;
+                if (SolverWidgets.deleteX("del")) delete = i;
                 if (dim) ImGui.popStyleVar();
                 ImGui.popID();
             }
@@ -1158,23 +1138,13 @@ public final class AngleSolverTable {
                 hover ? ThemeManager.textMutedColor() : ThemeManager.textDimColor());
 
         if (!dragging && ImGui.isItemActive() && ImGui.isMouseDragging(0)) {
-            String op = c.isRange() ? "" : c.getOp().glyph;
-            String val = ConstraintText.chip(c);
             dragging = true;
             dragKind = DragKind.CONSTRAINT;
             dragTick = tick;
             dragIndex = index;
             dragPotion = null;
-            dragLabel = ConstraintText.fieldLabel(c) + (op.isEmpty() ? " " : " " + op + " ") + val;
+            dragLabel = constraintDragLabel(c);
         }
-    }
-
-    private float deleteXWidth() {
-        return SolverWidgets.deleteXWidth();
-    }
-
-    private boolean deleteX(String id) {
-        return SolverWidgets.deleteX(id);
     }
 
     // ---- state override editor (aligned table: label | control | trailing) -----
@@ -1327,7 +1297,7 @@ public final class AngleSolverTable {
             }
             ImGui.tableNextColumn();
             cursorToRightDeleteX();
-            if (deleteX("povx")) removeP = d.potion;
+            if (SolverWidgets.deleteX("povx")) removeP = d.potion;
             ImGui.popID();
         }
         if (removeP != null) ov.removeAdded(removeP);
@@ -1371,7 +1341,7 @@ public final class AngleSolverTable {
     private void overrideTrailing(boolean overriding, String inheritHint, String resetId, Runnable reset) {
         if (overriding) {
             cursorToRightDeleteX();
-            if (deleteX(resetId)) reset.run();
+            if (SolverWidgets.deleteX(resetId)) reset.run();
         } else {
             ThemeManager.pushTextColor(ThemeManager.textDimColor());
             ImGui.alignTextToFramePadding();
@@ -1382,7 +1352,7 @@ public final class AngleSolverTable {
 
     private void cursorToRightDeleteX() {
         float avail = ImGui.getContentRegionAvail().x;
-        float w = deleteXWidth();
+        float w = SolverWidgets.deleteXWidth();
         if (avail > w) ImGui.setCursorPosX(ImGui.getCursorPosX() + avail - w);
     }
 
