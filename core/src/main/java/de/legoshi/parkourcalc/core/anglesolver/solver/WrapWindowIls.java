@@ -107,28 +107,29 @@ public final class WrapWindowIls {
         State st = new State();
         st.deadline = deadlineNanos;
         st.evalCap = cfg.evalCap;
-        double curViol = score(model, sc, compiled, gf, transDomain, st, cfg);
-        double[] bestGf = gf.clone();
-        double bestViol = curViol;
-        Random rng = new Random(cfg.rngSeed);
         float[][] cands = new float[n][];
+        Sweep sw = new Sweep(model, sc, compiled, transDomain, cfg, cancel, st, gf, inc, cands, gate, boostTick,
+                full, modern);
+        sw.curViol = score(model, sc, compiled, gf, transDomain, st, cfg);
+        double[] bestGf = gf.clone();
+        double bestViol = sw.curViol;
+        Random rng = new Random(cfg.rngSeed);
         int rounds = 0;
-        int accepts = 0;
         int kickCycles = 0;
 
-        while (!stopped(st, cancel) && curViol > 0.0 && (cfg.roundCap <= 0 || rounds < cfg.roundCap)) {
+        while (!stopped(st, cancel) && sw.curViol > 0.0 && (cfg.roundCap <= 0 || rounds < cfg.roundCap)) {
             for (int t = 0; t < n; t++) {
-                if (prio[t] && cands[t] == null) cands[t] = candsFor(gf, inc, t, full || gate[t], cfg, modern, boostTick[t]);
+                if (prio[t] && cands[t] == null) cands[t] = sw.candsOf(t);
             }
-            boolean accepted = false;
+            sw.accepted = false;
             boolean oneOptAccepted;
             do {
                 oneOptAccepted = false;
                 for (int t = 0; t < n && !stopped(st, cancel); t++) {
                     if (!prio[t]) continue;
-                    if (cands[t] == null) cands[t] = candsFor(gf, inc, t, full || gate[t], cfg, modern, boostTick[t]);
+                    if (cands[t] == null) cands[t] = sw.candsOf(t);
                     double cur = gf[t];
-                    double bestV = curViol;
+                    double bestV = sw.curViol;
                     double bestRep = cur;
                     for (float r : cands[t]) {
                         if (stopped(st, cancel)) break;
@@ -140,170 +141,51 @@ public final class WrapWindowIls {
                         }
                     }
                     gf[t] = cur;
-                    if (bestV < curViol) {
+                    if (bestV < sw.curViol) {
                         gf[t] = bestRep;
-                        curViol = bestV;
+                        sw.curViol = bestV;
                         cands[t] = null;
-                        accepted = true;
+                        sw.accepted = true;
                         oneOptAccepted = true;
-                        accepts++;
-                        if (curViol <= 0.0) break;
+                        sw.accepts++;
+                        if (sw.curViol <= 0.0) break;
                     }
                 }
-            } while (oneOptAccepted && curViol > 0.0 && !stopped(st, cancel));
-            if (curViol <= 0.0 || stopped(st, cancel)) break;
+            } while (oneOptAccepted && sw.curViol > 0.0 && !stopped(st, cancel));
+            if (sw.curViol <= 0.0 || stopped(st, cancel)) break;
             for (int t = 0; t < n; t++) {
-                if (prio[t] && cands[t] == null) cands[t] = candsFor(gf, inc, t, full || gate[t], cfg, modern, boostTick[t]);
+                if (prio[t] && cands[t] == null) cands[t] = sw.candsOf(t);
             }
             if (cfg.gateFlipMoves) {
-                flipOuter:
-                for (int i = 0; i < n; i++) {
-                    if (!gate[i] || cands[i] == null || cands[i].length == 0) continue;
-                    for (int j = 0; j < n; j++) {
-                        if (j == i || !gate[j] || cands[j] == null || cands[j].length == 0) continue;
-                        if (stopped(st, cancel)) break flipOuter;
-                        double si = gf[i];
-                        double sj = gf[j];
-                        double bestV = curViol;
-                        double bi = si;
-                        double bj = sj;
-                        boolean found = false;
-                        for (float ci : cands[i]) {
-                            gf[i] = ci;
-                            for (float cj : cands[j]) {
-                                if (stopped(st, cancel)) break;
-                                gf[j] = cj;
-                                double v = score(model, sc, compiled, gf, transDomain, st, cfg);
-                                if (v < bestV) {
-                                    bestV = v;
-                                    bi = ci;
-                                    bj = cj;
-                                    found = true;
-                                }
-                            }
-                        }
-                        gf[i] = si;
-                        gf[j] = sj;
-                        if (found && bestV < curViol) {
-                            gf[i] = bi;
-                            gf[j] = bj;
-                            curViol = bestV;
-                            accepted = true;
-                            accepts++;
-                            if (curViol <= 0.0) break flipOuter;
-                            cands[i] = candsFor(gf, inc, i, full || gate[i], cfg, modern, boostTick[i]);
-                            cands[j] = candsFor(gf, inc, j, full || gate[j], cfg, modern, boostTick[j]);
-                        }
-                    }
-                }
-                if (curViol <= 0.0 || stopped(st, cancel)) break;
+                sw.pairSweep(gate, false);
+                if (sw.curViol <= 0.0 || stopped(st, cancel)) break;
             }
-            outer:
-            for (int i = 0; i < n; i++) {
-                if (!prio[i] || cands[i] == null || cands[i].length == 0) continue;
-                for (int j = 0; j < n; j++) {
-                    if (j == i || !prio[j] || cands[j] == null || cands[j].length == 0) continue;
-                    if (stopped(st, cancel)) break outer;
-                    double si = gf[i];
-                    double sj = gf[j];
-                    double bestV = curViol;
-                    double bi = si;
-                    double bj = sj;
-                    boolean found = false;
-                    for (float ci : cands[i]) {
-                        gf[i] = ci;
-                        for (float cj : cands[j]) {
-                            if (stopped(st, cancel)) break;
-                            gf[j] = cj;
-                            double v = score(model, sc, compiled, gf, transDomain, st, cfg);
-                            if (v < bestV) {
-                                bestV = v;
-                                bi = ci;
-                                bj = cj;
-                                found = true;
-                            }
-                        }
-                    }
-                    gf[i] = si;
-                    gf[j] = sj;
-                    if (found && bestV < curViol) {
-                        gf[i] = bi;
-                        gf[j] = bj;
-                        curViol = bestV;
-                        accepted = true;
-                        accepts++;
-                        if (curViol <= 0.0) break outer;
-                        cands[i] = candsFor(gf, inc, i, full || gate[i], cfg, modern, boostTick[i]);
-                        cands[j] = candsFor(gf, inc, j, full || gate[j], cfg, modern, boostTick[j]);
-                    }
-                }
-            }
-            if (curViol <= 0.0 || stopped(st, cancel)) break;
-            outerB:
-            for (int i = 0; i < n; i++) {
-                if (!prio[i] || cands[i] == null || cands[i].length == 0) continue;
-                for (int j = 0; j < n; j++) {
-                    if (j == i || !prio[j]) continue;
-                    if (stopped(st, cancel)) break outerB;
-                    float[] rj = capFilter(FacingLattice.cellRepresentatives((float) gf[j], -cfg.span, cfg.span,
-                            modern, boostTick[j]), cap);
-                    double si = gf[i];
-                    double sj = gf[j];
-                    double bestV = curViol;
-                    double bi = si;
-                    double bj = sj;
-                    boolean found = false;
-                    for (float ci : cands[i]) {
-                        gf[i] = ci;
-                        for (float cj : rj) {
-                            if (stopped(st, cancel)) break;
-                            gf[j] = cj;
-                            double v = score(model, sc, compiled, gf, transDomain, st, cfg);
-                            if (v < bestV) {
-                                bestV = v;
-                                bi = ci;
-                                bj = cj;
-                                found = true;
-                            }
-                        }
-                    }
-                    gf[i] = si;
-                    gf[j] = sj;
-                    if (found && bestV < curViol) {
-                        gf[i] = bi;
-                        gf[j] = bj;
-                        curViol = bestV;
-                        accepted = true;
-                        accepts++;
-                        if (curViol <= 0.0) break outerB;
-                        cands[i] = candsFor(gf, inc, i, full || gate[i], cfg, modern, boostTick[i]);
-                        cands[j] = candsFor(gf, inc, j, full || gate[j], cfg, modern, boostTick[j]);
-                    }
-                }
-            }
+            sw.pairSweep(prio, false);
+            if (sw.curViol <= 0.0 || stopped(st, cancel)) break;
+            sw.pairSweep(prio, true);
             rounds++;
-            if (curViol < bestViol) {
-                bestViol = curViol;
+            if (sw.curViol < bestViol) {
+                bestViol = sw.curViol;
                 bestGf = gf.clone();
             }
-            if (!accepted) {
-                if (!cfg.kicks || stopped(st, cancel) || curViol <= 0.0) break;
+            if (!sw.accepted) {
+                if (!cfg.kicks || stopped(st, cancel) || sw.curViol <= 0.0) break;
                 kickCycles++;
                 System.arraycopy(bestGf, 0, gf, 0, n);
                 int applied = applyKick(rng, gf, prio, cfg.span, modern, boostTick, cap);
                 if (applied == 0) break;
-                curViol = score(model, sc, compiled, gf, transDomain, st, cfg);
+                sw.curViol = score(model, sc, compiled, gf, transDomain, st, cfg);
                 Arrays.fill(cands, null);
             }
         }
-        if (curViol < bestViol) {
-            bestViol = curViol;
+        if (sw.curViol < bestViol) {
+            bestViol = sw.curViol;
             bestGf = gf.clone();
         }
         for (double g : bestGf) {
             if (Math.abs(g) > cfg.maxAbsGf) throw new IllegalStateException("stage produced gf beyond the wrap cap: " + g);
         }
-        return new Result(bestGf, bestViol, st.evals, rounds, accepts, kickCycles);
+        return new Result(bestGf, bestViol, st.evals, rounds, sw.accepts, kickCycles);
     }
 
     public static float[] candSetFor(float cur, float incCell, int baseSpan, int maxSpan,
@@ -464,6 +346,97 @@ public final class WrapWindowIls {
         return out;
     }
 
+    private static final class Sweep {
+        final ExactJumpModel model;
+        final JumpPhysicsInputs sc;
+        final JumpConstraintCompiler.Compiled compiled;
+        final double[] transDomain;
+        final Config cfg;
+        final AtomicBoolean cancel;
+        final State st;
+        final double[] gf;
+        final double[] inc;
+        final float[][] cands;
+        final boolean[] gate;
+        final boolean[] boostTick;
+        final boolean full;
+        final boolean modern;
+        double curViol;
+        boolean accepted;
+        int accepts;
+
+        Sweep(ExactJumpModel model, JumpPhysicsInputs sc, JumpConstraintCompiler.Compiled compiled,
+              double[] transDomain, Config cfg, AtomicBoolean cancel, State st, double[] gf, double[] inc,
+              float[][] cands, boolean[] gate, boolean[] boostTick, boolean full, boolean modern) {
+            this.model = model;
+            this.sc = sc;
+            this.compiled = compiled;
+            this.transDomain = transDomain;
+            this.cfg = cfg;
+            this.cancel = cancel;
+            this.st = st;
+            this.gf = gf;
+            this.inc = inc;
+            this.cands = cands;
+            this.gate = gate;
+            this.boostTick = boostTick;
+            this.full = full;
+            this.modern = modern;
+        }
+
+        float[] candsOf(int t) {
+            return candsFor(gf, inc, t, full || gate[t], cfg, modern, boostTick[t]);
+        }
+
+        void pairSweep(boolean[] mask, boolean latticeJ) {
+            int n = gf.length;
+            for (int i = 0; i < n; i++) {
+                if (!mask[i] || cands[i] == null || cands[i].length == 0) continue;
+                for (int j = 0; j < n; j++) {
+                    if (j == i || !mask[j]) continue;
+                    if (!latticeJ && (cands[j] == null || cands[j].length == 0)) continue;
+                    if (stopped(st, cancel)) return;
+                    float[] rj = latticeJ
+                            ? capFilter(FacingLattice.cellRepresentatives((float) gf[j], -cfg.span, cfg.span,
+                                    modern, boostTick[j]), cfg.maxAbsGf)
+                            : cands[j];
+                    double si = gf[i];
+                    double sj = gf[j];
+                    double bestV = curViol;
+                    double bi = si;
+                    double bj = sj;
+                    boolean found = false;
+                    for (float ci : cands[i]) {
+                        gf[i] = ci;
+                        for (float cj : rj) {
+                            if (stopped(st, cancel)) break;
+                            gf[j] = cj;
+                            double v = score(model, sc, compiled, gf, transDomain, st, cfg);
+                            if (v < bestV) {
+                                bestV = v;
+                                bi = ci;
+                                bj = cj;
+                                found = true;
+                            }
+                        }
+                    }
+                    gf[i] = si;
+                    gf[j] = sj;
+                    if (found && bestV < curViol) {
+                        gf[i] = bi;
+                        gf[j] = bj;
+                        curViol = bestV;
+                        accepted = true;
+                        accepts++;
+                        if (curViol <= 0.0) return;
+                        cands[i] = candsOf(i);
+                        cands[j] = candsOf(j);
+                    }
+                }
+            }
+        }
+    }
+
     private static final class State {
         long deadline;
         long evalCap;
@@ -484,13 +457,9 @@ public final class WrapWindowIls {
         if (st.evalCap > 0 && st.evals >= st.evalCap) st.hitCap = true;
         double[] eff = cfg.reaccumScore ? sc.toGameFacings(Angles.wrapAll(gf)) : gf;
         ForwardPath p = model.forward(sc, eff);
-        if (cfg.legalObjective == null) {
-            PathTranslation.Trans tr = PathTranslation.bestTranslation(compiled, eff, p,
-                    transDomain[0], transDomain[1], transDomain[2], transDomain[3]);
-            return tr.viol;
-        }
         PathTranslation.Trans tf = PathTranslation.bestTranslation(compiled, eff, p,
                 transDomain[0], transDomain[1], transDomain[2], transDomain[3]);
+        if (cfg.legalObjective == null) return tf.viol;
         if (tf.viol > 0.0) return LEGAL_HARD_INFEASIBLE + tf.viol;
         Objective obj = cfg.legalObjective;
         boolean max = obj.sense == Objective.Sense.MAX;
