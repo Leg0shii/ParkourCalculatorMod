@@ -5,7 +5,6 @@ import java.util.List;
 
 public final class YawTies {
 
-    private static final double WIDTH_MAX = 2.5e-4;
     private static final double PIN_MATCH_TOL = 1.0e-6;
 
     private final int n;
@@ -46,10 +45,6 @@ public final class YawTies {
         return pinYaw[t];
     }
 
-    public int fullLength() {
-        return n;
-    }
-
     public double[] expand(double[] reduced) {
         double[] f = new double[n];
         for (int t = 0; t < n; t++) {
@@ -67,11 +62,11 @@ public final class YawTies {
     }
 
     public static YawTies of(List<JumpConstraint> constraints, int n) {
-        double[] absLo = filled(n, Double.NEGATIVE_INFINITY);
-        double[] absHi = filled(n, Double.POSITIVE_INFINITY);
-        double[] absPin = filled(n, Double.NaN);
-        double[] linkLo = filled(n, Double.NEGATIVE_INFINITY);
-        double[] linkHi = filled(n, Double.POSITIVE_INFINITY);
+        double[] absLo = FacingPrefold.filled(n, Double.NEGATIVE_INFINITY);
+        double[] absHi = FacingPrefold.filled(n, Double.POSITIVE_INFINITY);
+        double[] absPin = FacingPrefold.filled(n, Double.NaN);
+        double[] linkLo = FacingPrefold.filled(n, Double.NEGATIVE_INFINITY);
+        double[] linkHi = FacingPrefold.filled(n, Double.POSITIVE_INFINITY);
         int[] linkTo = new int[n];
         Arrays.fill(linkTo, -1);
         boolean anyF = false;
@@ -80,21 +75,21 @@ public final class YawTies {
             if (c.t1 < 0 || c.t1 >= n) continue;
             anyF = true;
             if (c.t2 == null) {
-                tighten(absLo, absHi, c.t1, c.cmp, c.rhs);
+                FacingPrefold.tighten(absLo, absHi, c.t1, c.cmp, c.rhs);
                 if (c.pin != null && Double.isNaN(absPin[c.t1])) absPin[c.t1] = c.pin;
             } else if (c.op == JumpConstraint.Op.MINUS && c.t2 >= 0 && c.t2 < c.t1
                     && (linkTo[c.t1] < 0 || linkTo[c.t1] == c.t2)) {
-                tighten(linkLo, linkHi, c.t1, c.cmp, c.rhs);
+                FacingPrefold.tighten(linkLo, linkHi, c.t1, c.cmp, c.rhs);
                 linkTo[c.t1] = c.t2;
             }
         }
         if (!anyF) return null;
 
-        double[] pin = filled(n, Double.NaN);
+        double[] pin = FacingPrefold.filled(n, Double.NaN);
         for (int t = 0; t < n; t++) {
             if (absLo[t] == Double.NEGATIVE_INFINITY || absHi[t] == Double.POSITIVE_INFINITY) continue;
             double width = absHi[t] - absLo[t];
-            double widthMax = Double.isNaN(absPin[t]) ? WIDTH_MAX : FacingPrefold.PIN_WIDTH_MAX;
+            double widthMax = Double.isNaN(absPin[t]) ? FacingPrefold.RANGE_PIN_WIDTH_MAX : FacingPrefold.PIN_WIDTH_MAX;
             if (width >= 0.0 && width <= widthMax) {
                 pin[t] = Angles.wrap(Double.isNaN(absPin[t]) ? 0.5 * (absLo[t] + absHi[t]) : absPin[t]);
             }
@@ -105,7 +100,7 @@ public final class YawTies {
         for (int t = 0; t < n; t++) {
             if (linkLo[t] == Double.NEGATIVE_INFINITY || linkHi[t] == Double.POSITIVE_INFINITY) continue;
             double width = linkHi[t] - linkLo[t];
-            if (width >= 0.0 && width <= WIDTH_MAX) {
+            if (width >= 0.0 && width <= FacingPrefold.RANGE_PIN_WIDTH_MAX) {
                 link[t] = true;
                 linkOffset[t] = 0.5 * (linkLo[t] + linkHi[t]);
                 anyLink = true;
@@ -134,7 +129,7 @@ public final class YawTies {
         }
         int groups = last + 1;
 
-        double[] rootPin = filled(groups, Double.NaN);
+        double[] rootPin = FacingPrefold.filled(groups, Double.NaN);
         boolean[] conflicted = new boolean[groups];
         for (int t = 0; t < n; t++) {
             if (Double.isNaN(pin[t])) continue;
@@ -151,7 +146,7 @@ public final class YawTies {
         Arrays.fill(varOfGroup, -1);
         int[] varOf = new int[n];
         int[] rep = new int[n];
-        double[] pinYaw = filled(n, Double.NaN);
+        double[] pinYaw = FacingPrefold.filled(n, Double.NaN);
         int dims = 0;
         for (int t = 0; t < n; t++) {
             int g = group[t];
@@ -170,16 +165,5 @@ public final class YawTies {
         }
         if (dims == n) return null;
         return new YawTies(n, dims, varOf, offset, pinYaw, Arrays.copyOf(rep, dims), group);
-    }
-
-    private static void tighten(double[] lo, double[] hi, int t, JumpConstraint.Cmp cmp, double rhs) {
-        if (cmp != JumpConstraint.Cmp.LE && rhs > lo[t]) lo[t] = rhs;
-        if (cmp != JumpConstraint.Cmp.GE && rhs < hi[t]) hi[t] = rhs;
-    }
-
-    private static double[] filled(int n, double v) {
-        double[] a = new double[n];
-        Arrays.fill(a, v);
-        return a;
     }
 }

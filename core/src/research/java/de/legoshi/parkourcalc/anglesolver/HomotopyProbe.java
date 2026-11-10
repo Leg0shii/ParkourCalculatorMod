@@ -79,7 +79,7 @@ public class HomotopyProbe {
             for (int i = 0; i < n; i++) yaws[i] = ya.get(i).getAsDouble();
             double px = dec.has("px") ? dec.get("px").getAsDouble() : sc.startPos.x;
             double pz = dec.has("pz") ? dec.get("pz").getAsDouble() : sc.startPos.z;
-            JumpPhysicsInputs sc2 = Scoring.pinnedScenario(sc, px, pz);
+            JumpPhysicsInputs sc2 = sc.pinnedAt(px, pz);
             double[] gf = sc2.toGameFacings(Angles.wrapAll(yaws));
             ForwardPath fp = model.forward(sc2, gf);
             double pos = fp.getPos(spec.objective.tick, spec.objective.axis);
@@ -154,8 +154,7 @@ public class HomotopyProbe {
                 java.util.List<FoldReplayDriver.Round> sink = new java.util.ArrayList<>();
                 de.legoshi.parkourcalc.core.anglesolver.solver.AnchorSlp.Outcome oc =
                         de.legoshi.parkourcalc.core.anglesolver.solver.AnchorSlp.polish(model, spec, comp,
-                                sc, plin2, pert, pgf, pfp, px, pz, pviol, sink,
-                                spec.objective.sense == de.legoshi.parkourcalc.core.anglesolver.solver.Objective.Sense.MAX);
+                                sc, plin2, pert, pgf, pfp, px, pz, pviol, sink);
                 for (FoldReplayDriver.Round r : sink) {
                     System.out.printf("HOM POLISH slp[%d] obj=%.9f viol=%.6g%n", r.index, r.objective, r.maxViolation);
                 }

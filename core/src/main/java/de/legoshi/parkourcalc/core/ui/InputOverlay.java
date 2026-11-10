@@ -18,19 +18,17 @@ import de.legoshi.parkourcalc.core.ui.util.TooltipUtil;
 import imgui.ImDrawList;
 import imgui.ImGui;
 import imgui.ImGuiInputTextCallbackData;
-import imgui.ImGuiListClipper;
 import imgui.ImGuiStyle;
 import imgui.ImVec2;
 import imgui.callback.ImGuiInputTextCallback;
-import imgui.callback.ImListClipperCallback;
 import imgui.flag.*;
 import imgui.type.ImInt;
 import imgui.type.ImString;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Locale;
@@ -44,7 +42,6 @@ import java.util.function.Supplier;
 
 public final class InputOverlay {
 
-    private static final String ID_TABLE = "tas-table";
     private static final String ID_CONTEXT_MENU = "context_menu";
     private static final String ID_YAW_INPUT = "##yaw";
 
@@ -68,7 +65,6 @@ public final class InputOverlay {
             InputRow.Key.LEFT_CLICK, InputRow.Key.RIGHT_CLICK, InputRow.Key.CLOSE_INVENTORY
     };
 
-    private static final String ID_EFFECTS_SUFFIX = "effects";
     private static final String ID_EFFECTS_POPUP = "effects_popup";
     private static final String ID_HOTBAR_SUFFIX = "##hotbar";
     private static final String ID_PITCH_INPUT = "##pitch";
@@ -190,8 +186,6 @@ public final class InputOverlay {
     private float tpCellMinX;
     private float tpCellMaxX;
     private int editingYawRow = -1;
-    private int editingPitchRow = -1;
-    private int pendingPitchFocusRow = -1;
     private int pendingYawFocusRow = -1;
     private int collapseYawSelectionRow = -1;
     private int collapseYawFramesLeft;
@@ -586,6 +580,7 @@ public final class InputOverlay {
         flagMenuHovered = false;
         teleportDropRow = -1;
         effectDropRow = -1;
+        pruneEffectRowHeights();
         if (solverActive) angleSolver.beginRows(clipMin.x, clipMin.y, clipMin.x + clipSize.x, clipMin.y + clipSize.y);
 
         handleAutoScroll();
@@ -924,9 +919,16 @@ public final class InputOverlay {
 
     private float rowHeight(int rowIndex, float baseRowH, boolean solverActive) {
         float h = solverActive ? angleSolver.rowHeight(rowIndex, baseRowH) : baseRowH;
-        if (!isEffectsColumnVisible()) return h;
-        Float fx = effectsRowH.get(rowIndex);
+        if (!isEffectsColumnVisible() || rowIndex < 0 || rowIndex >= data.size()) return h;
+        Float fx = effectsRowH.get(data.get(rowIndex).getId());
         return fx == null ? h : Math.max(h, fx);
+    }
+
+    private void pruneEffectRowHeights() {
+        if (effectsRowH.size() <= 2 * data.size()) return;
+        Set<Integer> live = new HashSet<>();
+        for (InputRow r : data.getRows()) live.add(r.getId());
+        effectsRowH.keySet().retainAll(live);
     }
 
     private boolean hasStartRow() {
@@ -1358,19 +1360,9 @@ public final class InputOverlay {
         float inputW = yawInputWidth();
         float lockStripX = ImGui.getCursorScreenPos().x;
         ImGui.setCursorPosX(ImGui.getCursorPosX() + yawLockStripWidth());
-        if (pendingPitchFocusRow == rowIndex) {
-            ImGui.setKeyboardFocusHere();
-            pendingPitchFocusRow = -1;
-        }
         pitchCallbackRow = rowIndex;
         boolean changed = Controls.tableInputText(ID_PITCH_INPUT, pitchInput, inputW, CALLBACK_CHAR_FILTER, pitchLockCallback);
         if (locked) drawLockIcon(lockStripX);
-        if (ImGui.isItemActivated()) {
-            editingPitchRow = rowIndex;
-        }
-        if (editingPitchRow == rowIndex && ImGui.isItemDeactivated()) {
-            editingPitchRow = -1;
-        }
         if (populated) ThemeManager.popPopulatedFrameBorder();
         if (selectedRow) ThemeManager.popSelectedFrameBg();
 
@@ -1392,10 +1384,6 @@ public final class InputOverlay {
 
     public String playbackStatusHint() {
         return playback != null ? playback.statusHint() : "";
-    }
-
-    public boolean isEditingPitch() {
-        return editingPitchRow >= 0;
     }
 
 
@@ -1456,14 +1444,14 @@ public final class InputOverlay {
         float baseRowH = ThemeManager.tableRowHeight();
         final List<MovementEffect> shown = activeEffects(row);
         if (shown.isEmpty()) {
-            effectsRowH.remove(rowIndex);
+            effectsRowH.remove(row.getId());
             ChipFlow.Layout layout = ChipFlow.compute(cellW, baseRowH, new float[] { effectAddChipWidth() });
             ChipFlow.place(origin, cellW, grownRowH, layout, i -> renderEffectAddChip());
         } else {
             float[] widths = new float[shown.size()];
             for (int i = 0; i < widths.length; i++) widths[i] = effectChipWidth(shown.get(i), row.getEffectLevel(shown.get(i)));
             ChipFlow.Layout layout = ChipFlow.compute(cellW, baseRowH, widths);
-            effectsRowH.put(rowIndex, layout.cellH);
+            effectsRowH.put(row.getId(), layout.cellH);
             ChipFlow.place(origin, cellW, grownRowH, layout, i -> renderEffectChip(row, rowIndex, shown.get(i)));
         }
         renderEffectsPopup(row, rowIndex);
@@ -1944,7 +1932,8 @@ public final class InputOverlay {
             row.setYaw(null);
         } else {
             try {
-                row.setYaw(Float.parseFloat(text));
+                float y = Float.parseFloat(text);
+                if (!Float.isNaN(y) && !Float.isInfinite(y)) row.setYaw(y);
             } catch (NumberFormatException ignored) {
             }
         }
@@ -1960,18 +1949,22 @@ public final class InputOverlay {
                 float p = Float.parseFloat(text);
                 if (p < -limit) p = -limit;
                 if (p > limit) p = limit;
-                row.setPitch(p);
+                if (!Float.isNaN(p)) row.setPitch(p);
             } catch (NumberFormatException ignored) {
             }
         }
     }
 
     public void addRowsAtEnd(int count) {
+        insertRowsAt(data.size(), count);
+    }
+
+    private void insertRowsAt(int index, int count) {
         if (count <= 0) return;
-        int dirtyTick = data.size();
-        data.addRows(data.size(), count);
-        solverRowsInserted(dirtyTick, count);
-        notifyChange(dirtyTick);
+        data.addRows(index, count);
+        solverRowsInserted(index, count);
+        selection.adjustForInsert(index + 1, count);
+        notifyChange(index);
     }
 
     public void duplicateSelectedRows() {
@@ -2376,28 +2369,13 @@ public final class InputOverlay {
     private void renderAddRowOptions() {
         int count = rowsToAdd.get();
 
-        if (contextButton(String.format(MENU_ADD_AT_END, count))) {
-            int dirtyTick = data.size();
-            data.addRows(data.size(), count);
-            solverRowsInserted(dirtyTick, count);
-            notifyChange(dirtyTick);
-        }
+        if (contextButton(String.format(MENU_ADD_AT_END, count))) addRowsAtEnd(count);
 
         int selectedRow = selection.singleSelectedRow();
         if (selectedRow >= 0) {
-            if (contextButton(String.format(MENU_ADD_ABOVE, count))) {
-                data.addRows(selectedRow, count);
-                solverRowsInserted(selectedRow, count);
-                selection.adjustForInsert(selectedRow + 1, count);
-                notifyChange(selectedRow);
-            }
+            if (contextButton(String.format(MENU_ADD_ABOVE, count))) insertRowsAt(selectedRow, count);
 
-            if (contextButton(String.format(MENU_ADD_BELOW, count))) {
-                data.addRows(selectedRow + 1, count);
-                solverRowsInserted(selectedRow + 1, count);
-                selection.adjustForInsert(selectedRow + 2, count);
-                notifyChange(selectedRow + 1);
-            }
+            if (contextButton(String.format(MENU_ADD_BELOW, count))) insertRowsAt(selectedRow + 1, count);
         }
     }
 
@@ -2408,7 +2386,9 @@ public final class InputOverlay {
 
         ThemeManager.paddedSeparator();
         renderDeleteConstraintsOption();
-        String label = String.format(MENU_DELETE, selection.size()) + " (" + MENU_DELETE_SHORTCUT + ")";
+        int rowCount = selection.getSelectedRows().size();
+        if (rowCount == 0) return;
+        String label = String.format(MENU_DELETE, rowCount) + " (" + MENU_DELETE_SHORTCUT + ")";
         if (contextDangerButton(label)) {
             deleteSelectedRows();
         }
@@ -2443,7 +2423,11 @@ public final class InputOverlay {
 
     public void deleteSelectedRows() {
         Set<Integer> rows = selection.getSelectedRows();
-        int dirtyTick = rows.isEmpty() ? -1 : java.util.Collections.min(rows);
+        if (rows.isEmpty()) {
+            selection.clear();
+            return;
+        }
+        int dirtyTick = java.util.Collections.min(rows);
         List<Integer> descending = selection.getSelectedRowsDescending();
         data.removeRows(descending);
         if (angleSolver != null) angleSolver.onRowsRemoved(descending);
@@ -2464,16 +2448,8 @@ public final class InputOverlay {
     }
 
     private void insertRowsAtSelectionOrEnd(int count) {
-        if (count <= 0) return;
         int selectedRow = selection.singleSelectedRow();
-        if (selectedRow >= 0) {
-            data.addRows(selectedRow, count);
-            solverRowsInserted(selectedRow, count);
-            selection.adjustForInsert(selectedRow + 1, count);
-            notifyChange(selectedRow);
-        } else {
-            addRowsAtEnd(count);
-        }
+        insertRowsAt(selectedRow >= 0 ? selectedRow : data.size(), count);
     }
 
     private static class DragDropState {

@@ -9,12 +9,10 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.ParamValues;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Scoring;
 import de.legoshi.parkourcalc.core.anglesolver.solver.FoldReplayDriver;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpLinearModel;
-import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolverTrace;
 import de.legoshi.parkourcalc.core.anglesolver.solver.WallHomotopyLadder;
 
-import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class HomotopyLadderNode implements NodeRuntime {
@@ -32,9 +30,7 @@ public final class HomotopyLadderNode implements NodeRuntime {
         if (tickCap > 0 && ctx.scenario.numTicks > tickCap) return NodeOutcome.of(Guarantee.NONE, in);
         if (JumpLinearModel.hasFacingWall(ctx.spec.constraints)) return NodeOutcome.of(Guarantee.NONE, in);
 
-        JumpPhysicsInputs sc = ctx.scenario.copy();
-        if (ctx.freeStart && ctx.freeBox != null) sc.startBox = ctx.freeBox;
-        JumpSpec dspec = new JumpSpec(sc, new ArrayList<>(ctx.spec.constraints), ctx.spec.objective);
+        JumpSpec dspec = Scoring.freeBoxSpec(ctx);
         WallHomotopyLadder.Result lr = WallHomotopyLadder.solve(ctx.exactModel, dspec, nodeToken, deadlineNanos);
         if (SolverTrace.on()) {
             for (WallHomotopyLadder.Rung rung : lr.rungs) {

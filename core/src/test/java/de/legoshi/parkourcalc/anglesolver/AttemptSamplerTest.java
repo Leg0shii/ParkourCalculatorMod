@@ -27,13 +27,11 @@ public class AttemptSamplerTest {
         final ExactJumpModel model;
         final JumpSpec spec;
         final double[] recorded;
-        final boolean[] held;
 
-        Loaded(ExactJumpModel model, JumpSpec spec, double[] recorded, boolean[] held) {
+        Loaded(ExactJumpModel model, JumpSpec spec, double[] recorded) {
             this.model = model;
             this.spec = spec;
             this.recorded = recorded;
-            this.held = held;
         }
     }
 
@@ -50,7 +48,7 @@ public class AttemptSamplerTest {
         int n = spec.asScenario().numTicks;
         double[] recorded = new double[n];
         for (int t = 0; t < n; t++) recorded[t] = Angles.wrap(file.debug.get(t + 1).yaw);
-        return new Loaded(model, spec, recorded, TurnProfile.heldTicks(spec, n));
+        return new Loaded(model, spec, recorded);
     }
 
     private static double[][] spread(int n, double px, int from) {

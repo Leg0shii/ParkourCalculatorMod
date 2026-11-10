@@ -258,8 +258,5 @@ The velocity of a player standing at rest on the ground: horizontally zero, with
 **Constraint**:
 A positional requirement the solved path must satisfy at a given tick: land within these X/Z bounds, stay clear of this collision box, pass through this point. Constraints can be hand-entered or derived from picked blocks. A constraint on tick n affects the position at the start of tick n; to constrain what tick n's input produces, place it on tick n+1.
 
-**Mothball-string**:
-The save/load notation, shared with the Mothball and Stratfinder community tooling, that lets setups roundtrip between this tool and those.
-
 **Interactable block**:
-A block whose collision the player toggles mid-run by clicking it, most commonly a trapdoor flipped open or shut. The flip exists only during TAS replay; the simulation reads the world's current block state and has no per-tick history of it, so a run that opens a trapdoor relies on the world being set up by hand to match, tick by tick.
+A block whose collision the player toggles mid-run by clicking it, most commonly a trapdoor flipped open or shut. The click itself happens only during TAS replay. The simulation reads the world's block state; in singleplayer the rows of the Block Overrides table give it a per-tick history (a row's block is there from its Start tick to its End tick), so a run that opens a trapdoor gets a row for it. On a server the rows are ignored and the world has to be set up by hand to match.

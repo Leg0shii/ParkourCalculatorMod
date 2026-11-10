@@ -1,6 +1,5 @@
 package de.legoshi.parkourcalc.core.anglesolver.graph.nodes;
 
-import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.ConstraintText;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Candidate;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphContext;
@@ -11,14 +10,11 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.ParamValues;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Scoring;
 import de.legoshi.parkourcalc.core.anglesolver.solver.CertifiedBnb;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
-import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
-import de.legoshi.parkourcalc.core.anglesolver.solver.JumpLinearModel;
+import de.legoshi.parkourcalc.core.anglesolver.solver.FacingPrefold;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolverTrace;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class CertifiedBnbNode implements NodeRuntime {
@@ -52,7 +48,7 @@ public final class CertifiedBnbNode implements NodeRuntime {
         AtomicBoolean cancelToken = nodeToken;
         if (exhaust) {
             if (optimize || deadlineNanos <= 0 || now >= deadlineNanos) return NodeOutcome.of(miss, in);
-            if (AngleSolverEngine.overconstrainedChain(ctx.spec, ctx.scenario)) return NodeOutcome.of(miss, in);
+            if (FacingPrefold.overconstrainedChain(ctx.spec, ctx.scenario)) return NodeOutcome.of(miss, in);
             cap = OPT_SAFETY_NODE_CAP;
             solveDeadline = deadlineNanos;
         } else if (optimize) {
@@ -77,7 +73,7 @@ public final class CertifiedBnbNode implements NodeRuntime {
         if (!ctx.exact() || ctx.stageLocked()) return NodeOutcome.of(miss, in);
         if (tickCap > 0 && ctx.scenario.numTicks > tickCap) return NodeOutcome.of(miss, in);
         ExactJumpModel exact = ctx.exactModel;
-        JumpSpec dspec = bnbSpec(ctx);
+        JumpSpec dspec = Scoring.freeBoxSpec(ctx);
         if (!optimize && CertifiedBnb.carriesOrder(dspec)) cap = Math.max(cap, ORDER_FF_NODE_CAP);
 
         CertifiedBnb.Config cfg = new CertifiedBnb.Config();
@@ -135,15 +131,6 @@ public final class CertifiedBnbNode implements NodeRuntime {
                 + (res.nodes == 1 ? " node" : " nodes") + " (" + ConstraintText.duration(solveNanos)
                 + ") and found no path that meets every constraint, so none exists. Loosen or remove a"
                 + " constraint, or change the inputs.";
-    }
-
-    private JumpSpec bnbSpec(GraphContext ctx) {
-        JumpPhysicsInputs sc = ctx.scenario.copy();
-        if (ctx.freeStart && ctx.freeBox != null && !ctx.stageLocked()) {
-            sc.startBox = ctx.freeBox;
-        }
-        List<JumpConstraint> cons = new ArrayList<JumpConstraint>(ctx.spec.constraints);
-        return new JumpSpec(sc, cons, ctx.spec.objective);
     }
 
 }

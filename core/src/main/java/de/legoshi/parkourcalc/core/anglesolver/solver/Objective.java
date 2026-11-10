@@ -100,14 +100,6 @@ public final class Objective {
         return evaluate(path) + dirX() * tx + dirZ() * tz;
     }
 
-    public double better(double a, double b) {
-        return sense == Sense.MAX ? Math.max(a, b) : Math.min(a, b);
-    }
-
-    public boolean isBetter(double candidate, double incumbent) {
-        return sense == Sense.MAX ? candidate > incumbent : candidate < incumbent;
-    }
-
     public double smoothPenalty(double anchorYaw, double[] yawsAbs) {
         if (smoothLambda <= 0.0 || yawsAbs == null || yawsAbs.length < 2) return 0.0;
         double lambda = (isCustomAngle() && isMotion()) ? smoothLambda * 0.05 : smoothLambda;

@@ -54,6 +54,7 @@ public class RunTicksRollbackTest {
         state.tickConstraints(1).getOverride().setSlipperiness(Slipperiness.DEFAULT);
         state.setStartTick(0);
         state.setLandingTick(3);
+        state.setObjectiveTick(3);
         state.getRunTicks().setEnabled(true);
         state.getRunTicks().setMaxTicks(0);
     }
@@ -75,6 +76,7 @@ public class RunTicksRollbackTest {
                 state.tickConstraints(1).getOverride().overridesSlipperiness());
         assertEquals(0, state.getStartTick());
         assertEquals("the goal tick must not stay shifted", 3, state.getLandingTick());
+        assertEquals("the objective tick must not stay shifted", 3, state.getObjectiveTick());
     }
 
     @Test

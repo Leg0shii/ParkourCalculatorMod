@@ -9,6 +9,7 @@ public final class YawOrder {
     public static final double PIN_HALF_WIDTH = 1.0e-4;
     public static final double FLOAT_MARGIN_DEG = 3.0e-5;
     public static final double TIE_TOL = 1.5 * YawOrderDp.H;
+    static final int ORDER_ROUNDS = 16;
 
     public static final class Link {
         public final int hiTick;
@@ -116,6 +117,12 @@ public final class YawOrder {
         return y;
     }
 
+    static String flags(boolean[] f) {
+        StringBuilder sb = new StringBuilder();
+        for (boolean b : f) sb.append(b ? '1' : '0');
+        return sb.toString();
+    }
+
     public List<JumpConstraint> stripped(List<JumpConstraint> constraints) {
         List<JumpConstraint> base = new ArrayList<JumpConstraint>(constraints.size());
         for (JumpConstraint c : constraints) {
@@ -139,18 +146,18 @@ public final class YawOrder {
             double at = s.rhs == 0.0 ? 0.0
                     : s.rhs + (s.cmp == JumpConstraint.Cmp.GE ? PIN_HALF_WIDTH : -PIN_HALF_WIDTH);
             active.add(new JumpConstraint(JumpConstraint.Mode.F, s.t1, s.t2, JumpConstraint.Op.MINUS,
-                    JumpConstraint.Cmp.GE, at - PIN_HALF_WIDTH, s.name + "eqLo"));
+                    JumpConstraint.Cmp.GE, at - PIN_HALF_WIDTH, s.name + JumpConstraint.EQ_LO_SUFFIX));
             active.add(new JumpConstraint(JumpConstraint.Mode.F, s.t1, s.t2, JumpConstraint.Op.MINUS,
-                    JumpConstraint.Cmp.LE, at + PIN_HALF_WIDTH, s.name + "eqHi"));
+                    JumpConstraint.Cmp.LE, at + PIN_HALF_WIDTH, s.name + JumpConstraint.EQ_HI_SUFFIX));
         }
         for (int b = 0; b < pinLo.length; b++) {
             if (!pinLo[b] && !pinHi[b]) continue;
             Bound bd = bounds.get(b);
             double edge = pinLo[b] ? bd.loDeg + PIN_HALF_WIDTH : bd.hiDeg - PIN_HALF_WIDTH;
             active.add(new JumpConstraint(JumpConstraint.Mode.F, bd.tick, null, JumpConstraint.Op.PLUS,
-                    JumpConstraint.Cmp.GE, edge - PIN_HALF_WIDTH, bd.source.name + "eqLo"));
+                    JumpConstraint.Cmp.GE, edge - PIN_HALF_WIDTH, bd.source.name + JumpConstraint.EQ_LO_SUFFIX));
             active.add(new JumpConstraint(JumpConstraint.Mode.F, bd.tick, null, JumpConstraint.Op.PLUS,
-                    JumpConstraint.Cmp.LE, edge + PIN_HALF_WIDTH, bd.source.name + "eqHi"));
+                    JumpConstraint.Cmp.LE, edge + PIN_HALF_WIDTH, bd.source.name + JumpConstraint.EQ_HI_SUFFIX));
         }
         return active;
     }

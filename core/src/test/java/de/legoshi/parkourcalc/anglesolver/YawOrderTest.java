@@ -13,6 +13,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpLinearModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.LevelSetAscent;
+import de.legoshi.parkourcalc.core.anglesolver.solver.RecoveryLadder;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SlpSolve;
 import de.legoshi.parkourcalc.core.anglesolver.solver.YawOrder;
 import de.legoshi.parkourcalc.core.anglesolver.solver.YawTies;
@@ -134,7 +135,7 @@ public class YawOrderTest {
     private static Run longestOneWayRun(ProblemFixture pf) {
         JumpSpec base = stripped(pf.specFor(AngleSolverState.Axis.X, AngleSolverState.Goal.MAX));
         String[] name = new String[1];
-        double[] yaws = AngleSolverEngine.dualChain(pf.model, base, base.asScenario(), new AtomicBoolean(false), name);
+        double[] yaws = RecoveryLadder.solve(pf.model, base, base.asScenario(), new AtomicBoolean(false), name);
         if (yaws == null) {
             CertifiedBnb.Config cfg = new CertifiedBnb.Config();
             cfg.mode = CertifiedBnb.Mode.FIRST_FEASIBLE;

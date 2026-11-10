@@ -26,7 +26,6 @@ public final class SenseSearchController implements SenseFinderWindow.Host {
     private static final long RERANK_NANOS = 250_000_000L;
 
     private final InputData inputData;
-    private final SaveController saveController;
     private final AngleSolverState state;
     private final AngleSolverEngine engine;
     private final ExactJumpModel model;
@@ -66,11 +65,10 @@ public final class SenseSearchController implements SenseFinderWindow.Host {
     private long endNanos;
     private long lastRerank;
 
-    public SenseSearchController(InputData inputData, SaveController saveController, AngleSolverState state,
+    public SenseSearchController(InputData inputData, AngleSolverState state,
                                  AngleSolverEngine engine, ExactJumpModel model, IntConsumer onUserChange,
                                  DoubleSupplier gameSense, Consumer<Float> setGameSense) {
         this.inputData = inputData;
-        this.saveController = saveController;
         this.state = state;
         this.engine = engine;
         this.model = model;
@@ -175,11 +173,6 @@ public final class SenseSearchController implements SenseFinderWindow.Host {
     }
 
     @Override
-    public SenseFinder.Window window() {
-        return window;
-    }
-
-    @Override
     public SenseFinder.Mode rankMode() {
         return rankMode;
     }
@@ -205,16 +198,6 @@ public final class SenseSearchController implements SenseFinderWindow.Host {
     public void setRange(float min, float max) {
         minPercent = Math.max(0f, Math.min(200f, min));
         maxPercent = Math.max(0f, Math.min(200f, max));
-    }
-
-    @Override
-    public int firstTick() {
-        return firstTick;
-    }
-
-    @Override
-    public int lastTick() {
-        return lastTick;
     }
 
     @Override
@@ -332,9 +315,9 @@ public final class SenseSearchController implements SenseFinderWindow.Host {
     public void select(SenseFinder.Candidate c) {
         SenseFinder.Turn t = searched;
         if (c == null || t == null || engine.isSolving()) return;
+        if (searchedStartTick < 0 || searchedStartTick >= inputData.size()) return;
         selected = c;
         engine.writeYaws(inputData.getRows(), searchedStartTick, c.yaws, searchedFreeStartYaw);
-        saveController.markDirty();
         onUserChange.accept(searchedStartTick);
         applied = String.format(java.util.Locale.ROOT, "Wrote the %.2f%% row into the TAS, lands %+.5f", c.percent(), c.offset);
     }
@@ -353,6 +336,24 @@ public final class SenseSearchController implements SenseFinderWindow.Host {
         applied = String.format(java.util.Locale.ROOT, "Game sense set to %.2f%%", c.percent());
     }
 
+    public void onDocumentReplaced() {
+        cancel.set(true);
+        searched = null;
+        selected = null;
+        applied = "";
+        stale = true;
+        if (thread == null) clearRows();
+    }
+
+    private void clearRows() {
+        found = Collections.emptyList();
+        ranked = Collections.emptyList();
+        gameRow = null;
+        gameRowSens = Float.NaN;
+        outcome = "";
+        stage = "";
+    }
+
     public void poll() {
         if (thread == null) return;
         long now = System.nanoTime();
@@ -364,6 +365,10 @@ public final class SenseSearchController implements SenseFinderWindow.Host {
         thread = null;
         endNanos = now;
         fraction = 1.0;
+        if (searched == null) {
+            clearRows();
+            return;
+        }
         rerank();
         int n = ranked.size();
         if (cancel.get()) outcome = n == 0 ? "cancelled" : "cancelled, " + countText(n);
@@ -373,6 +378,10 @@ public final class SenseSearchController implements SenseFinderWindow.Host {
     }
 
     private void rerank() {
+        if (searched == null) {
+            ranked = Collections.emptyList();
+            return;
+        }
         ranked = SenseFinder.ranked(found, rankMode);
     }
 

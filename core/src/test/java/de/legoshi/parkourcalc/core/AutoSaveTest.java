@@ -16,6 +16,7 @@ import java.nio.file.Path;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -81,6 +82,17 @@ public class AutoSaveTest {
     }
 
     @Test
+    public void aSaveThatCannotBeSerializedReportsAWriteError() throws Exception {
+        Rig rig = new Rig(Files.createTempDirectory("pkc-autosave-nan"));
+        rig.data.get(0).setYaw(Float.NaN);
+        assertTrue(rig.controller.save("nanrun").ok);
+        rig.controller.flushPendingWrites();
+        assertFalse(Files.exists(rig.store.getSaveDir().resolve("nanrun.json")));
+        assertNotNull(rig.controller.drainWriteError());
+        assertTrue("a failed write leaves the session dirty", rig.controller.isDirty());
+    }
+
+    @Test
     public void tempApplySuppressesAutoSaveAndRestoresInitialTrajectory() throws Exception {
         Rig rig = new Rig(Files.createTempDirectory("pkc-temp"));
         rig.controller.setAngleSolver(new AngleSolverState());
@@ -142,5 +154,14 @@ public class AutoSaveTest {
         assertEquals("save-copy did not switch the active save", "run", rig.controller.currentName());
         assertEquals("save-copy left the dirty flag untouched", dirtyBefore, rig.controller.isDirty());
         assertTrue("save-copy kept the temp trajectory active", rig.controller.isTempActive());
+    }
+
+    @Test
+    public void existsSeesASaveInASubfolder() throws Exception {
+        Rig rig = new Rig(Files.createTempDirectory("pkc-exists-sub"));
+        assertTrue(rig.controller.save("maps/run").ok);
+        assertTrue("the overwrite prompt relies on this", rig.controller.exists("maps/run"));
+        assertTrue(rig.controller.exists("maps\\run"));
+        assertFalse(rig.controller.exists("maps/other"));
     }
 }

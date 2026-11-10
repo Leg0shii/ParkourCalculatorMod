@@ -723,10 +723,6 @@ public final class AngleSolverState {
         return !momentumBlocks.isEmpty() || !collisionBlocks.isEmpty() || !landBlocks.isEmpty();
     }
 
-    public boolean hasRequiredBlocks() {
-        return !landBlocks.isEmpty();
-    }
-
     public void clearBlocks() {
         momentumBlocks.clear();
         collisionBlocks.clear();
@@ -794,11 +790,10 @@ public final class AngleSolverState {
         defaultSlipperiness = Slipperiness.AIR;
         ticks.clear();
         clearBlocks();
-        result = null;
-        applyDeviation = null;
-        applyDeviationKind = null;
-        applyDeviationTick = -1;
+        clearResult();
         runTicks.resetToDefaults();
+        smoothLambda = 0.0;
+        smoothGiveBack = 1.0;
     }
 
 }

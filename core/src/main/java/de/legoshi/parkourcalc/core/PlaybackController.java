@@ -4,7 +4,6 @@ import de.legoshi.parkourcalc.core.ports.PlaybackBridge;
 import de.legoshi.parkourcalc.core.sim.Checkpoint;
 import de.legoshi.parkourcalc.core.sim.SimulationRunner;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
-import de.legoshi.parkourcalc.core.DebugFlags;
 import de.legoshi.parkourcalc.core.ui.InputData;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 import de.legoshi.parkourcalc.core.ui.MovementEffect;
@@ -154,13 +153,6 @@ public final class PlaybackController {
 
     public boolean canStart() {
         return bridge != null && (bridge.isSingleplayer() || bridge.supportsMultiplayerPlayback()) && inputData.size() > 0;
-    }
-
-    public String disabledReason() {
-        if (bridge == null) return "Playback unavailable.";
-        if (!bridge.isSingleplayer() && !bridge.supportsMultiplayerPlayback()) return "Playback is disabled in multiplayer.";
-        if (inputData.size() == 0) return "Input list is empty.";
-        return "";
     }
 
     public boolean canTeleportToTick() {
@@ -336,7 +328,7 @@ public final class PlaybackController {
         if (settings.disableFlightDuringPlayback) {
             bridge.suppressFlight();
         }
-        if (nextTick >= stopTick) {
+        if (nextTick >= Math.min(stopTick, inputData.size())) {
             // Stop only once the visual has caught up to the final yaw and a tick
             // window has elapsed; a low cap can keep the ease running past the final input.
             boolean caughtUp = displayedYaw == displayTargetYaw;

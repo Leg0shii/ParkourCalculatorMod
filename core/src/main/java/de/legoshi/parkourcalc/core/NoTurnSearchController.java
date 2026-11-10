@@ -41,17 +41,12 @@ import java.util.function.ObjIntConsumer;
 
 public final class NoTurnSearchController implements StratfinderWindow.Host {
 
-    public static final int MIN_BUDGET_SECONDS = 1;
-    public static final int MAX_BUDGET_SECONDS = 120;
     public static final int DEFAULT_BUDGET_SECONDS = 10;
-    public static final int MIN_DEEP_MINUTES = 1;
-    public static final int MAX_DEEP_MINUTES = 180;
     public static final int DEFAULT_DEEP_MINUTES = 60;
 
     private final InputData inputData;
     private final SimulationRunner runner;
     private final BoxController boxController;
-    private final SaveController saveController;
     private final AngleSolverState state;
     private final AngleSolverEngine engine;
     private final ExactJumpModel model;
@@ -74,6 +69,8 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
     private volatile String outcome = "";
     private volatile List<NoTurnResult> ranked = Collections.emptyList();
     private volatile boolean reapplySelected;
+    private volatile boolean documentReplaced;
+    private volatile String deepNotice;
     private volatile boolean optimizeQueued;
     private volatile NoTurnResult selected;
     private volatile NoTurnProblem problem;
@@ -90,14 +87,13 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
     private boolean freeStartYaw;
 
     public NoTurnSearchController(InputData inputData, SimulationRunner runner, BoxController boxController,
-                                  SaveController saveController, AngleSolverState state, AngleSolverEngine engine,
+                                  AngleSolverState state, AngleSolverEngine engine,
                                   ExactJumpModel model, MinecraftAccess mc, IntConsumer onUserChange,
                                   ObjIntConsumer<String> pushMessage, BooleanSupplier otherSolveRunning,
                                   Settings settings, Runnable saveSettings) {
         this.inputData = inputData;
         this.runner = runner;
         this.boxController = boxController;
-        this.saveController = saveController;
         this.state = state;
         this.engine = engine;
         this.model = model;
@@ -338,6 +334,7 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
     @Override
     public void cancel() {
         if (thread == null) return;
+        optimizeQueued = false;
         cancel.set(true);
         stage = "cancelling";
         pushMessage.accept("No-turn " + (phase == Phase.OPTIMIZE ? "optimize" : "search") + " cancelled",
@@ -352,8 +349,29 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
         apply(r);
     }
 
+    public void onDocumentReplaced() {
+        documentReplaced = true;
+        cancel.set(true);
+        optimizeQueued = false;
+        reapplySelected = false;
+        selected = null;
+        synchronized (results) {
+            results.clear();
+            ranked = Collections.emptyList();
+        }
+        if (thread == null) {
+            ending = Ending.NONE;
+            outcome = "";
+        }
+    }
+
     public void poll() {
         if (thread == null) return;
+        String notice = deepNotice;
+        if (notice != null) {
+            deepNotice = null;
+            if (!documentReplaced) pushMessage.accept(notice, HudMessages.COLOR_DEFAULT);
+        }
         if (reapplySelected) {
             reapplySelected = false;
             NoTurnResult s = selected;
@@ -365,6 +383,11 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
         fraction = 1.0;
         Phase finished = phase;
         phase = Phase.IDLE;
+        if (documentReplaced) {
+            ending = Ending.NONE;
+            outcome = "";
+            return;
+        }
         List<NoTurnResult> list = ranked;
         if (cancel.get()) {
             ending = list.isEmpty() ? Ending.EMPTY : Ending.CANCELLED;
@@ -400,6 +423,7 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
 
     private void beginRun(Phase p, String firstStage) {
         cancel.set(false);
+        documentReplaced = false;
         optimizeQueued = false;
         done = false;
         phase = p;
@@ -431,8 +455,7 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
         long deepStart = System.nanoTime();
         stage = "deep search: starting";
         fraction = 0.0;
-        pushMessage.accept("No-turn: deep search for " + budgetNanos / 60_000_000_000L + " min",
-                HudMessages.COLOR_DEFAULT);
+        deepNotice = "No-turn: deep search for " + budgetNanos / 60_000_000_000L + " min";
         BendersMaster.Config cfg = deepConfig(p, budgetNanos);
         BendersMaster master = new BendersMaster(model, cfg, cancel, (s, f) -> {
             int cut = s.indexOf(" (");
@@ -455,8 +478,6 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
         cfg.screenOrder = false;
         cfg.screenSkip = false;
         cfg.useCuts = false;
-        cfg.fatOptimizeSec = 4;
-        cfg.fatCertifyNanos = 6_000_000_000L;
         cfg.continuationLead = 25;
         cfg.continuationCap = 12;
         cfg.openingTaps = true;
@@ -498,7 +519,7 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
     }
 
     private void onFound(NoTurnResult r) {
-        if (r == null) return;
+        if (r == null || documentReplaced) return;
         synchronized (results) {
             int same = -1;
             for (int i = 0; i < results.size(); i++) {
@@ -522,6 +543,7 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
     }
 
     private void onOptimized(NoTurnResult before, NoTurnResult after) {
+        if (documentReplaced) return;
         synchronized (results) {
             int at = -1;
             for (int i = 0; i < results.size(); i++) {
@@ -555,6 +577,7 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
 
     private void apply(NoTurnResult r) {
         int start = startTick;
+        if (start < 0 || start >= inputData.size()) return;
         if (!r.warm) {
             for (int t = 0; t < r.combos.length; t++) {
                 int idx = start + t;
@@ -569,9 +592,10 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
             }
         }
         if (r.yaws != null) engine.writeYaws(inputData.getRows(), start, r.yaws, freeStartYaw);
-        Vec3dCore cur = runner.getStartPosition();
-        runner.setStartPosition(new Vec3dCore(r.startX, cur.y, r.startZ));
-        saveController.markDirty();
+        if (start == 0) {
+            Vec3dCore cur = runner.getStartPosition();
+            runner.setStartPosition(new Vec3dCore(r.startX, cur.y, r.startZ));
+        }
         onUserChange.accept(start);
     }
 }

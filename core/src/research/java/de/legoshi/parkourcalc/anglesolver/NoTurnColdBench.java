@@ -255,7 +255,7 @@ public class NoTurnColdBench {
             if (Boolean.getBoolean("pkc.bench.screenExact")) {
                 StructurePoolDriver sdrv = new StructurePoolDriver(model, new StructurePoolDriver.Config(), cancel, null);
                 sdrv.prepare(p);
-                double center = sdrv.diskFeasibleTheta(combos, sprint, null);
+                double center = sdrv.diskFeasibleTheta(combos, sprint);
                 String thetaOverride = System.getProperty("pkc.bench.screenTheta");
                 if (thetaOverride != null) center = Double.parseDouble(thetaOverride);
                 double[] se = sdrv.screenExact(combos, sprint, center);
@@ -380,10 +380,7 @@ public class NoTurnColdBench {
                 cfg.alphabet = new int[]{NoTurnKeys.SD, NoTurnKeys.S, NoTurnKeys.WA, NoTurnKeys.W, NoTurnKeys.WD,
                         NoTurnKeys.SA, NoTurnKeys.A, NoTurnKeys.D, NoTurnKeys.NONE};
             }
-            if (certifySec > 0) {
-                cfg.delta0CertifyNanos = certifySec * 1_000_000_000L;
-                cfg.fatCertifyNanos = certifySec * 1_000_000_000L;
-            }
+            if (certifySec > 0) cfg.delta0CertifyNanos = certifySec * 1_000_000_000L;
             cfg.deepPairRepair = Boolean.parseBoolean(System.getProperty("pkc.bench.deepPairRepair", "true"));
             if (cfg.deepPairRepair) cfg.maxCertifies = Math.max(cfg.maxCertifies, 100000);
             line("benders cfg: ja=" + cfg.ja + " mode=" + cfg.mode + " minDwell=" + cfg.minDwell + " maxEdges="

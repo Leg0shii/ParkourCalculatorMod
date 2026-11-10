@@ -360,7 +360,6 @@ public final class AttemptTracker {
     }
 
     private void turnFailure(int k, double turned) {
-        int failTick = cur.startTick + k;
         String verdict = "tick " + (cur.tasTick(k) + 1) + ": turned " + TurnAttempt.turnText(turned, cur.pixelDeg)
                 + ", expected still";
         publish(attempt(k + 1, true, false, verdict, Double.NaN, -1, true, turned));

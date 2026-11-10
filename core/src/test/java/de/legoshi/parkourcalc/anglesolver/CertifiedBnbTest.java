@@ -2,6 +2,7 @@ package de.legoshi.parkourcalc.anglesolver;
 
 import de.legoshi.parkourcalc.SlowSolverTests;
 import de.legoshi.parkourcalc.anglesolver.harness.ProblemFixture;
+import de.legoshi.parkourcalc.core.anglesolver.FlowVector;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Scoring;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.CertifiedBnb;
@@ -19,6 +20,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -219,6 +221,37 @@ public class CertifiedBnbTest {
         CertifiedBnb.Result res = CertifiedBnb.solve(model, tinySpec(sc), cfg);
         assertTrue(res.feasible);
         assertFalse(res.certifiedInfeasible);
+    }
+
+    @Test
+    public void aFlowPushedJumpNeverCarriesAnInfeasibilityCertificate() {
+        ExactJumpModel model = ExactJumpModel.forMcVersion("1.21.3");
+        int n = 4;
+        JumpPhysicsInputs pushed = scenario(n, false, 0.0, 0.2);
+        FlowVector[] flow = new FlowVector[n];
+        Arrays.fill(flow, new FlowVector(0.0, 1.0));
+        pushed.flowPerTick = flow;
+        JumpPhysicsInputs still = scenario(n, false, 0.0, 0.2);
+        double[] straight = new double[n];
+        double[] facings = pushed.toGameFacings(straight);
+        ForwardPath path = model.forward(pushed, facings);
+        double reachPushed = path.posZ[n];
+        double reachStill = model.forward(still, still.toGameFacings(straight)).posZ[n];
+        assertTrue("the push must carry the jump further", reachPushed > reachStill);
+
+        List<JumpConstraint> cons = new ArrayList<JumpConstraint>();
+        cons.add(new JumpConstraint(JumpConstraint.Mode.Z, n, null,
+                JumpConstraint.Op.PLUS, JumpConstraint.Cmp.GE, 0.5 * (reachPushed + reachStill), "reach"));
+        JumpSpec spec = new JumpSpec(pushed, cons, new Objective(JumpPhysicsInputs.Axis.X, Objective.Sense.MAX, n));
+        assertEquals("walking straight meets the wall", 0.0,
+                JumpConstraintCompiler.compile(spec).maxViolation(facings, path), 0.0);
+
+        CertifiedBnb.Config cfg = new CertifiedBnb.Config();
+        cfg.mode = CertifiedBnb.Mode.FIRST_FEASIBLE;
+        cfg.nodeCap = 200000;
+        CertifiedBnb.Result res = CertifiedBnb.solve(model, spec, cfg);
+        assertFalse("the search does not model the push, so it cannot certify", res.certifiedInfeasible);
+        assertFalse(res.certified);
     }
 
     @Test

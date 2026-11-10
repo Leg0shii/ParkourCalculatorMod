@@ -38,6 +38,14 @@ public final class StartBox {
         return new StartBox(px, pz, vx, vz, px, px, pz, pz, vx, vx, vz, vz);
     }
 
+    public double clampX(double x) {
+        return x < pxLo ? pxLo : (x > pxHi ? pxHi : x);
+    }
+
+    public double clampZ(double z) {
+        return z < pzLo ? pzLo : (z > pzHi ? pzHi : z);
+    }
+
     public boolean startFree() {
         return pxHi > pxLo || pzHi > pzLo;
     }

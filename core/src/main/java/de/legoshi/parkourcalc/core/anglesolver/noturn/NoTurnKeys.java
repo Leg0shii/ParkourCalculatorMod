@@ -46,10 +46,6 @@ public final class NoTurnKeys {
         return STRAFE_SIGN[combo];
     }
 
-    public static boolean isDiagonal(int combo) {
-        return FORWARD_SIGN[combo] != 0 && STRAFE_SIGN[combo] != 0;
-    }
-
     public static String label(int combo) {
         return LABEL[combo];
     }

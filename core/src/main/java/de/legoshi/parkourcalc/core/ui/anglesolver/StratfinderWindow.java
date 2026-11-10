@@ -13,7 +13,9 @@ import de.legoshi.parkourcalc.core.ui.util.TooltipUtil;
 import imgui.ImDrawList;
 import imgui.ImGui;
 import imgui.ImGuiIO;
+import imgui.ImGuiListClipper;
 import imgui.ImVec2;
+import imgui.callback.ImListClipperCallback;
 import imgui.flag.ImGuiCond;
 import imgui.flag.ImGuiSelectableFlags;
 import imgui.flag.ImGuiTableColumnFlags;
@@ -29,6 +31,11 @@ public final class StratfinderWindow implements RenderInterface {
     public enum Ending { NONE, FOUND, CANCELLED, EMPTY }
 
     public interface Host {
+        int MIN_BUDGET_SECONDS = 1;
+        int MAX_BUDGET_SECONDS = 120;
+        int MIN_DEEP_MINUTES = 1;
+        int MAX_DEEP_MINUTES = 180;
+
         boolean isBusy();
 
         Phase phase();
@@ -116,7 +123,7 @@ public final class StratfinderWindow implements RenderInterface {
             + " key changes (the butterfly and winged neos). Slow; off, the search ends as before.";
     private static final String DEEP_BUDGET_TIP = "Minutes the deep search may run after the ordinary search."
             + " Cancel stops it early and keeps what was found.";
-    public static final String GPU_TIP = "Screens the Stratfinder's key schedules on the graphics card through"
+    private static final String GPU_TIP = "Screens the Stratfinder's key schedules on the graphics card through"
             + " OpenCL instead of the CPU. Needs an OpenCL runtime (any NVIDIA or AMD driver on Windows). The CPU still"
             + " certifies every strat byte-exactly; when the GPU cannot be used the search falls back to the CPU and the"
             + " Stratfinder window says so.";
@@ -214,7 +221,8 @@ public final class StratfinderWindow implements RenderInterface {
             ImGui.setCursorPosY(rowY);
             deepBuf[0] = host.deepMinutes();
             ImGui.setNextItemWidth(Math.max(1f, sliderEndX - ImGui.getCursorPosX()));
-            boolean deepChanged = Controls.sliderInt("##strat_deep", deepBuf, 1, 180, "%d min deep search");
+            boolean deepChanged = Controls.sliderInt("##strat_deep", deepBuf, Host.MIN_DEEP_MINUTES, Host.MAX_DEEP_MINUTES,
+                    "%d min deep search");
             TooltipUtil.onHover(DEEP_BUDGET_TIP);
             if (deepChanged) host.setDeepMinutes(deepBuf[0]);
         }
@@ -243,7 +251,8 @@ public final class StratfinderWindow implements RenderInterface {
         budgetBuf[0] = host.budgetSeconds();
         ImGui.setNextItemWidth(Math.max(1f, sliderEndX - ImGui.getCursorPosX()));
         if (lockBudget) ImGui.beginDisabled(true);
-        boolean changed = Controls.sliderInt("##strat_budget", budgetBuf, 1, 120, "%d s per strat");
+        boolean changed = Controls.sliderInt("##strat_budget", budgetBuf, Host.MIN_BUDGET_SECONDS, Host.MAX_BUDGET_SECONDS,
+                "%d s per strat");
         if (lockBudget) ImGui.endDisabled();
         Controls.popInputFrameHeight();
         TooltipUtil.onHover(BUDGET_TIP);
@@ -320,30 +329,36 @@ public final class StratfinderWindow implements RenderInterface {
         renderHeader();
         float rowH = ThemeManager.tableRowHeight();
         int startTick = host.startTick();
-        for (int i = 0; i < results.size(); i++) {
-            NoTurnResult r = results.get(i);
-            boolean isSelected = r == selected;
-            ImGui.tableNextRow(0, rowH);
-            ThemeManager.paintTableRowBg(i);
-            ImGui.tableSetColumnIndex(0);
-            ThemeManager.tableLeftmostCellPad();
-            ImGui.alignTextToFramePadding();
-            if (ImGui.selectable((i + 1) + "##strat" + i, isSelected, ImGuiSelectableFlags.SpanAllColumns)) {
-                host.select(r);
+        ImGuiListClipper.forEach(results.size(), new ImListClipperCallback() {
+            @Override
+            public void accept(int i) {
+                stratRow(results.get(i), i, selected, rowH, startTick);
             }
-            if (ImGui.isItemHovered()) TooltipUtil.wrappedTooltip(rowTip(r));
-            ImGui.tableSetColumnIndex(1);
-            ThemeManager.textRight(Integer.toString(NoTurnRanking.inputChanges(r)));
-            ImGui.tableSetColumnIndex(2);
-            ThemeManager.textLeft(r.sprintEngage >= 0 ? "T" + (startTick + r.sprintEngage + 1) : "-");
-            ImGui.tableSetColumnIndex(3);
-            ThemeManager.pushTextColor(r.optimized ? ThemeManager.okColor() : ThemeManager.textMutedColor());
-            ThemeManager.textRight(offsetText(host.offsetOf(r)));
-            ThemeManager.popTextColor();
-            ImGui.tableSetColumnIndex(4);
-            ThemeManager.textLeft(NoTurnKeys.describe(r.combos) + (r.warm ? "  (current)" : ""));
-        }
+        });
         ThemeManager.endStandardTable();
+    }
+
+    private void stratRow(NoTurnResult r, int i, NoTurnResult selected, float rowH, int startTick) {
+        boolean isSelected = r == selected;
+        ImGui.tableNextRow(0, rowH);
+        ThemeManager.paintTableRowBg(i);
+        ImGui.tableSetColumnIndex(0);
+        ThemeManager.tableLeftmostCellPad();
+        ImGui.alignTextToFramePadding();
+        if (ImGui.selectable((i + 1) + "##strat" + i, isSelected, ImGuiSelectableFlags.SpanAllColumns)) {
+            host.select(r);
+        }
+        if (ImGui.isItemHovered()) TooltipUtil.wrappedTooltip(rowTip(r));
+        ImGui.tableSetColumnIndex(1);
+        ThemeManager.textRight(Integer.toString(NoTurnRanking.inputChanges(r)));
+        ImGui.tableSetColumnIndex(2);
+        ThemeManager.textLeft(r.sprintEngage >= 0 ? "T" + (startTick + r.sprintEngage + 1) : "-");
+        ImGui.tableSetColumnIndex(3);
+        ThemeManager.pushTextColor(r.optimized ? ThemeManager.okColor() : ThemeManager.textMutedColor());
+        ThemeManager.textRight(ConstraintText.signedStat(host.offsetOf(r)));
+        ThemeManager.popTextColor();
+        ImGui.tableSetColumnIndex(4);
+        ThemeManager.textLeft(NoTurnKeys.describe(r.combos) + (r.warm ? "  (current)" : ""));
     }
 
     private void renderHeader() {
@@ -382,7 +397,7 @@ public final class StratfinderWindow implements RenderInterface {
         }
         int startTick = host.startTick();
         String wall = host.goalWallLabel();
-        String offset = offsetText(host.offsetOf(r)) + (wall != null ? "  vs " + wall : "");
+        String offset = ConstraintText.signedStat(host.offsetOf(r)) + (wall != null ? "  vs " + wall : "");
         String inputs = NoTurnRanking.inputChanges(r) + "  (" + NoTurnRanking.keyChanges(r) + " key, "
                 + NoTurnRanking.sprintToggles(r) + " sprint)";
         String start = "X " + ConstraintText.fixedStat(r.startX) + "   Z " + ConstraintText.fixedStat(r.startZ);
@@ -429,11 +444,6 @@ public final class StratfinderWindow implements RenderInterface {
     private static String countText(int count, boolean busy) {
         if (count == 0) return busy ? "none yet" : "none";
         return count + (busy ? " so far" : "");
-    }
-
-    private static String offsetText(double offset) {
-        if (Double.isNaN(offset)) return "-";
-        return (offset >= 0 ? "+" : "") + ConstraintText.fixedStat(offset);
     }
 
     private static String rowTip(NoTurnResult r) {

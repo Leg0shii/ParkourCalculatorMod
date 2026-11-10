@@ -7,46 +7,12 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class FacingLatticeTest {
 
     private static int signed16(int diff) {
         return ((diff & 0xffff) << 16) >> 16;
-    }
-
-    private static void runStepBand(Random rnd, float lo, float hi, boolean modern, long[] counters) {
-        for (int i = 0; i < 100_000; i++) {
-            float f = lo + (float) (rnd.nextDouble() * (hi - lo));
-            int delta = rnd.nextInt(13) - 6;
-            if (delta == 0) {
-                delta = 1;
-            }
-            int cur = FacingLattice.sinIndex(f, modern, false);
-            int target = (cur + delta) & 0xffff;
-            float stepped = FacingLattice.stepToSinBucket(f, target, modern);
-            counters[0]++;
-            if (Float.isNaN(stepped)) {
-                counters[1]++;
-                continue;
-            }
-            assertEquals("stepToSinBucket must land on the exact requested sin bucket",
-                    target, FacingLattice.sinIndex(stepped, modern, false));
-        }
-    }
-
-    @Test
-    public void stepToSinBucketHitsTargetExactly() {
-        Random rnd = new Random(0xC0FFEEL);
-        long[] counters = new long[2];
-        runStepBand(rnd, -360.0f, 360.0f, false, counters);
-        runStepBand(rnd, -360.0f, 360.0f, true, counters);
-        runStepBand(rnd, -20000.0f, 20000.0f, false, counters);
-        runStepBand(rnd, -20000.0f, 20000.0f, true, counters);
-        System.out.println("[stepToSinBucket] calls=" + counters[0] + " no-representative=" + counters[1]
-                + " (" + ((double) counters[1] / counters[0]) + ")");
-        assertTrue("stepToSinBucket exercised", counters[0] == 400_000L);
     }
 
     @Test

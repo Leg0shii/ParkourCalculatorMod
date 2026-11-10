@@ -18,7 +18,7 @@ public final class AnchorSlp {
     private static final double BAND_SCALE = 1.0e3;
     private static final double DIRECTION_EPS = 1.0e-9;
     private static final int LP_MAX_ITER = 2000;
-    private static final double RAD = Math.PI / 180.0;
+    private static final double RAD = Angles.RAD_PER_DEG;
 
     private AnchorSlp() {
     }
@@ -29,7 +29,7 @@ public final class AnchorSlp {
         int n = lin.n;
         double[] ux = new double[n];
         double[] uz = new double[n];
-        realizedU(lin, yaws, ux, uz);
+        lin.inputVectors(yaws, ux, uz);
         double dpx = box != null ? px - box.px : 0.0;
         double dpz = box != null ? pz - box.pz : 0.0;
         Map<String, Double> out = new HashMap<>();
@@ -98,6 +98,10 @@ public final class AnchorSlp {
             this.trustUnits = trustUnits;
             this.names = names;
         }
+
+        RowSet withViol(double[] replaced) {
+            return new RowSet(rows, replaced, free, cx0, wx0, cz0, wz0, n, cols, ux, uz, yawScale, trustUnits, names);
+        }
     }
 
     static RowSet assembleRows(ExactJumpModel exact, JumpLinearModel lin, JumpSpec spec,
@@ -109,7 +113,7 @@ public final class AnchorSlp {
         int cols = n + (free ? 2 : 0);
         double[] ux = new double[n];
         double[] uz = new double[n];
-        realizedU(lin, yaws, ux, uz);
+        lin.inputVectors(yaws, ux, uz);
         double cx0 = 0.0, wx0 = 0.0, cz0 = 0.0, wz0 = 0.0;
         if (free) {
             double loX = box.pxLo - px, hiX = box.pxHi - px;
@@ -280,15 +284,6 @@ public final class AnchorSlp {
         return row;
     }
 
-    static void realizedU(JumpLinearModel lin, double[] yaws, double[] outUx, double[] outUz) {
-        for (int t = 0; t < lin.n; t++) {
-            double mm = lin.mMag(t);
-            double phi = lin.baseArg(t) + yaws[t] * RAD;
-            outUx[t] = mm * StrictMath.cos(phi);
-            outUz[t] = mm * StrictMath.sin(phi);
-        }
-    }
-
     public static final class Outcome {
         public final FoldReplayDriver.Round landed;
         public final double[] yaws;
@@ -313,7 +308,7 @@ public final class AnchorSlp {
     public static Outcome polish(ExactJumpModel exact, JumpSpec spec, JumpConstraintCompiler.Compiled compiled,
                           JumpPhysicsInputs sc, JumpLinearModel lin, double[] yaws0, double[] gf0,
                           ForwardPath path0, double px0, double pz0, double viol0,
-                          List<FoldReplayDriver.Round> roundsSink, boolean max) {
+                          List<FoldReplayDriver.Round> roundsSink) {
         StartBox box = sc.startBox;
         boolean free = box != null && box.startFree();
         int n = lin.n;
@@ -335,9 +330,9 @@ public final class AnchorSlp {
             double[] cand = new double[n];
             for (int t = 0; t < n; t++) cand[t] = yaws[t] + st.dyDeg[t];
             cand = Angles.wrapAll(cand);
-            double npx = free ? clamp(px + st.dpx, box.pxLo, box.pxHi) : px;
-            double npz = free ? clamp(pz + st.dpz, box.pzLo, box.pzHi) : pz;
-            JumpPhysicsInputs scRep = FoldReplayDriver.pinnedCopy(sc, npx, npz);
+            double npx = free ? box.clampX(px + st.dpx) : px;
+            double npz = free ? box.clampZ(pz + st.dpz) : pz;
+            JumpPhysicsInputs scRep = sc.pinnedAt(npx, npz);
             double[] cgf = scRep.toGameFacings(cand);
             ForwardPath cpath = exact.forward(scRep, cgf);
             double cViol = compiled.maxViolation(cgf, cpath);
@@ -377,9 +372,5 @@ public final class AnchorSlp {
             }
         }
         return new Outcome(null, bestYaws, bestGf, bestPath, bestPx, bestPz, bestViol);
-    }
-
-    private static double clamp(double v, double lo, double hi) {
-        return v < lo ? lo : (v > hi ? hi : v);
     }
 }

@@ -20,10 +20,6 @@ public final class SolveRunLog {
         this.mcVersion = mcVersion;
     }
 
-    public Path getRunsDir() {
-        return runsDir;
-    }
-
     public synchronized void append(SolveRunRecord record) {
         record.modVersion = modVersion;
         record.mcVersion = mcVersion;

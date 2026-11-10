@@ -24,7 +24,7 @@ public final class StructurePoolDriver {
         }
     }
 
-    public static final class Config {
+    public static final class Config implements Cloneable {
         public int maxEdges = 3;
         public int minDwell = 3;
         public int[] alphabet = {NoTurnKeys.NONE, NoTurnKeys.W, NoTurnKeys.WA, NoTurnKeys.WD,
@@ -62,6 +62,14 @@ public final class StructurePoolDriver {
         public int minLevel = 0;
         public boolean playable = false;
         public int threads = 0;
+
+        Config copy() {
+            try {
+                return (Config) super.clone();
+            } catch (CloneNotSupportedException e) {
+                throw new AssertionError(e);
+            }
+        }
     }
 
     public static final class Candidate {
@@ -74,11 +82,10 @@ public final class StructurePoolDriver {
         public final double diskTheta;
         public final double byteTheta;
         public final double byteViol;
-        public final double byteObjective;
         boolean flash;
 
         Candidate(int[] combos, boolean[] sprint, int engage, int edges, int presses, double diskTheta,
-                  double byteTheta, double byteViol, double byteObjective) {
+                  double byteTheta, double byteViol) {
             this.combos = combos;
             this.sprint = sprint;
             this.engage = engage;
@@ -88,7 +95,6 @@ public final class StructurePoolDriver {
             this.diskTheta = diskTheta;
             this.byteTheta = byteTheta;
             this.byteViol = byteViol;
-            this.byteObjective = byteObjective;
         }
     }
 
@@ -98,14 +104,11 @@ public final class StructurePoolDriver {
     private final Progress progress;
 
     NoTurnProblem problem;
-    private NoTurnModel nt;
     private int n;
     boolean maximize;
     boolean objAxisX;
     int objTick;
-    private int objAxis;
 
-    private double refX, refZ;
     double loShiftX, hiShiftX, loShiftZ, hiShiftZ;
 
     private Group[] groups;
@@ -129,11 +132,6 @@ public final class StructurePoolDriver {
 
     private double[] cosG;
     private double[] sinG;
-
-    private int[] evG;
-    private double[] evV;
-    private double[] evO;
-    private int evCount;
 
     private int[] slotRun;
     private int[] slotNo;
@@ -235,7 +233,7 @@ public final class StructurePoolDriver {
 
     public void prepare(NoTurnProblem problem) {
         this.problem = problem;
-        this.nt = new NoTurnModel(problem);
+        NoTurnModel nt = new NoTurnModel(problem);
         this.n = problem.n;
         this.baseCombos = problem.baseCombos();
         this.baseSprint = problem.baseSprint();
@@ -243,10 +241,10 @@ public final class StructurePoolDriver {
         this.maximize = obj.sense == Objective.Sense.MAX;
         this.objAxisX = obj.axis == JumpPhysicsInputs.Axis.X;
         this.objTick = obj.tick;
-        this.objAxis = objAxisX ? 0 : 1;
+        int objAxis = objAxisX ? 0 : 1;
 
-        this.refX = problem.refStart().x;
-        this.refZ = problem.refStart().z;
+        double refX = problem.refStart().x;
+        double refZ = problem.refStart().z;
         if (problem.freeBox != null) {
             loShiftX = problem.freeBox.pxLo - refX;
             hiShiftX = problem.freeBox.pxHi - refX;
@@ -340,11 +338,6 @@ public final class StructurePoolDriver {
             cosG[g] = StrictMath.cos(th);
             sinG[g] = StrictMath.sin(th);
         }
-
-        int cap = 3 * cfg.diskGrid + 16;
-        this.evG = new int[cap];
-        this.evV = new double[cap];
-        this.evO = new double[cap];
 
         this.slotRun = new int[NoTurnKeys.COUNT];
         this.slotNo = new int[NoTurnKeys.COUNT];
@@ -535,7 +528,7 @@ public final class StructurePoolDriver {
                 double diskTheta = r[base + 1];
                 int engageTick = NoTurnKeys.firstSprint(sprint);
                 Candidate c = new Candidate(combos.clone(), sprint.clone(), engageTick, countEdges(combos),
-                        countPresses(combos), diskTheta, r[base + 3], sViol, r[base + 4]);
+                        countPresses(combos), diskTheta, r[base + 3], sViol);
                 if (watchHash != null && watched(combos) >= 0) System.out.println("[watch] gpu scored v=" + v + " diskViol=" + diskViol
                         + " sViol=" + sViol + " engage=" + engageTick + " beamWants=" + (beamHeap != null && beamHeap.wants(sViol)) + " keys=" + NoTurnKeys.describe(combos));
                 if (beamHeap != null) beamHeap.offer(c);
@@ -549,7 +542,7 @@ public final class StructurePoolDriver {
     private Candidate rescreen(Candidate c) {
         double[] bs = byteScreen(c.combos, c.sprint, c.diskTheta);
         byteScreened++;
-        return new Candidate(c.combos, c.sprint, c.engage, c.edges, c.presses, c.diskTheta, bs[1], bs[0], bs[2]);
+        return new Candidate(c.combos, c.sprint, c.engage, c.edges, c.presses, c.diskTheta, bs[1], bs[0]);
     }
 
     private static void rescreenRange(StructurePoolDriver w, List<Candidate> list, int from, int to) {
@@ -724,34 +717,24 @@ public final class StructurePoolDriver {
         return s * cfg.slackScale;
     }
 
-    public double diskFeasibleTheta(int[] combos, boolean[] sprint, double[] outBestObj) {
+    public double diskFeasibleTheta(int[] combos, boolean[] sprint) {
         computeGroupCoefs(fullCombos(combos), fullSprint(sprint));
-        double bestTheta = scanGrid(curObjA, curObjB);
-        if (outBestObj != null) outBestObj[0] = diskScanObj;
-        return bestTheta;
+        return scanGrid(curObjA, curObjB);
     }
-
-    private double diskScanObj;
 
     private void evalAt(int g, double objA, double objB) {
         double v = evalTheta(cosG[g], sinG[g], objA, objB);
-        int i = evCount++;
-        evG[i] = g;
-        evV[i] = v;
         if (v < lastMinViol || (v == lastMinViol && g < minViolCenter)) {
             lastMinViol = v;
             minViolCenter = g;
         }
         if (v <= 0.0) {
             double o = diskLastObj;
-            evO[i] = o;
             boolean better = maximize ? o > bestObjVal : o < bestObjVal;
             if (better || (o == bestObjVal && (bestObjCenter < 0 || g < bestObjCenter))) {
                 bestObjVal = o;
                 bestObjCenter = g;
             }
-        } else {
-            evO[i] = Double.NaN;
         }
     }
 
@@ -781,7 +764,6 @@ public final class StructurePoolDriver {
         int N = cfg.diskGrid;
         int s1 = Math.max(1, cfg.diskCoarseStride);
         int s2 = Math.max(1, cfg.diskMidStride);
-        evCount = 0;
         resetCenters();
         for (int g = 0; g < N; g += s1) evalAt(g, objA, objB);
         if (lastMinViol <= cfg.diskEarlyOutViol) {
@@ -797,14 +779,11 @@ public final class StructurePoolDriver {
 
         double step = 2.0 * Math.PI / N;
         if (bestObjCenter >= 0) {
-            diskScanObj = bestObjVal;
             return Angles.deg(-Math.PI + bestObjCenter * step);
         }
         if (lastMinViol <= cfg.diskKeep && minViolCenter >= 0) {
-            diskScanObj = Double.NaN;
             return Angles.deg(-Math.PI + minViolCenter * step);
         }
-        diskScanObj = maximize ? Double.NEGATIVE_INFINITY : Double.POSITIVE_INFINITY;
         return Double.NaN;
     }
 
@@ -936,10 +915,6 @@ public final class StructurePoolDriver {
 
     private int effMaxEdges() {
         return scoreLevel >= 0 ? scoreLevel : cfg.maxEdges;
-    }
-
-    private boolean freeChange(int combo) {
-        return freeChange(cfg, combo);
     }
 
     private static boolean freeChange(Config cfg, int combo) {
@@ -1211,7 +1186,7 @@ public final class StructurePoolDriver {
                     + " diskTheta=" + diskTheta + " viol=" + bs[0]);
         }
         Candidate c = new Candidate(combos.clone(), sprint.clone(), engageTick, countEdges(combos), countPresses(combos),
-                diskTheta, bs[1], bs[0], bs[2]);
+                diskTheta, bs[1], bs[0]);
         if (beamHeap != null) beamHeap.offer(c);
         pool.add(c);
         if (certifyTier(cfg, c) < SCREEN_MISS_TIER) goodInPool++;
@@ -1266,8 +1241,8 @@ public final class StructurePoolDriver {
         int ra = NoTurnCertifier.reversals(a.yaws);
         int rb = NoTurnCertifier.reversals(b.yaws);
         if (ra != rb) return ra < rb;
-        long turnA = Math.round(maxTurnDeg(a.yaws));
-        long turnB = Math.round(maxTurnDeg(b.yaws));
+        long turnA = Math.round(NoTurnRanking.turnDeg(a));
+        long turnB = Math.round(NoTurnRanking.turnDeg(b));
         if (turnA != turnB) return turnA < turnB;
         if (a.jaAll != b.jaAll) return !a.jaAll;
         if (a.ja != b.ja) return !a.ja;
@@ -1810,14 +1785,13 @@ public final class StructurePoolDriver {
             "jump angle on every jump"};
 
     private NoTurnResult runRounds(NoTurnProblem problem, SolverGraph graph, long start) {
-        prepare(problem);
         NoTurnProblem[] structures = {problem, NoTurnProblem.fromJaLast(problem.baseSpec, model),
                 NoTurnProblem.from(problem.baseSpec, model, true)};
         int threads = Math.max(1, NoTurnParallel.resolveThreads(cfg.threads));
         int per = Math.max(1, threads / structures.length);
         List<StructurePoolDriver> drivers = new ArrayList<>();
         for (int si = 0; si < structures.length; si++) {
-            Config cfg2 = copyConfig(cfg);
+            Config cfg2 = cfg.copy();
             cfg2.threads = per;
             cfg2.allowJa = false;
             cfg2.jaAllPass = false;
@@ -1865,47 +1839,6 @@ public final class StructurePoolDriver {
         }
     }
 
-
-    private static Config copyConfig(Config c) {
-        Config o = new Config();
-        o.maxEdges = c.maxEdges;
-        o.minDwell = c.minDwell;
-        o.alphabet = c.alphabet;
-        o.takeoffCombos = c.takeoffCombos;
-        o.tapsStage = c.tapsStage;
-        o.repairStage = c.repairStage;
-        o.repairAfterLevel = c.repairAfterLevel;
-        o.repairWidth = c.repairWidth;
-        o.repairPairs = c.repairPairs;
-        o.repairRounds = c.repairRounds;
-        o.repairBudgetNanos = c.repairBudgetNanos;
-        o.repairPoolCap = c.repairPoolCap;
-        o.repairFlashNanos = c.repairFlashNanos;
-        o.diskGrid = c.diskGrid;
-        o.diskCoarseStride = c.diskCoarseStride;
-        o.diskMidStride = c.diskMidStride;
-        o.diskEarlyOutViol = c.diskEarlyOutViol;
-        o.diskKeep = c.diskKeep;
-        o.slackScale = c.slackScale;
-        o.byteExact = c.byteExact;
-        o.byteFeasible = c.byteFeasible;
-        o.poolCap = c.poolCap;
-        o.perEdgeCertify = c.perEdgeCertify;
-        o.maxCertify = c.maxCertify;
-        o.extraCertify = c.extraCertify;
-        o.extraCertifyNanos = c.extraCertifyNanos;
-        o.certifyBudgetNanos = c.certifyBudgetNanos;
-        o.searchBudgetNanos = c.searchBudgetNanos;
-        o.nearSearchBudgetNanos = c.nearSearchBudgetNanos;
-        o.totalBudgetNanos = c.totalBudgetNanos;
-        o.turnCombo = c.turnCombo;
-        o.allowJa = c.allowJa;
-        o.jaAllPass = c.jaAllPass;
-        o.minLevel = c.minLevel;
-        o.playable = c.playable;
-        o.threads = c.threads;
-        return o;
-    }
 
     private static LevelResult awaitLevel(java.util.concurrent.Future<LevelResult> f) {
         try {
@@ -2029,14 +1962,5 @@ public final class StructurePoolDriver {
             pr += w.pruned;
         }
         return new LevelResult(out, sc, bs, pr, levelBeam);
-    }
-
-    static double maxTurnDeg(double[] yaws) {
-        if (yaws == null || yaws.length < 2) return 0.0;
-        double m = 0.0;
-        for (int t = 1; t < yaws.length; t++) {
-            m = Math.max(m, Math.abs(Angles.wrapDelta(yaws[t] - yaws[t - 1])));
-        }
-        return m;
     }
 }

@@ -10,7 +10,6 @@ import java.util.List;
 
 final class UnitScreen {
 
-    private static final int OUTER = 1;
     private static final int REF = 36;
     private static final int UNIT_STEPS = 12;
     private static final int UNIT_REFINE = 4;
@@ -81,14 +80,11 @@ final class UnitScreen {
     private final double[][] coarseSin;
     private final double[] coarseViol;
     private final double[] thetas = new double[REF + 1];
-    private final boolean[] skip = new boolean[REF + 1];
     private final boolean[] done = new boolean[REF + 1];
     private final double[] bestFacing;
     private final int[] freeGroups;
     private final double[] shiftJoint;
     private final double[] ab = new double[2];
-    private double objBase;
-    private double bestObj;
     private double bestLoX;
     private double bestHiX;
     private double bestLoZ;
@@ -283,12 +279,8 @@ final class UnitScreen {
                 thetas[count++] = refRad + w * coarse;
             }
         }
+        for (int k = 0; k < count; k++) coarseViol[k] = Double.POSITIVE_INFINITY;
         for (int k = 0; k < count; k++) {
-            coarseViol[k] = Double.POSITIVE_INFINITY;
-            skip[k] = false;
-        }
-        for (int k = 0; k < count; k++) {
-            if (skip[k]) continue;
             double theta = thetas[k];
             double best = Double.POSITIVE_INFINITY;
             int from = nearestDone(k, count);
@@ -317,7 +309,7 @@ final class UnitScreen {
         double best = Double.POSITIVE_INFINITY;
         double bestTheta = refRad;
         boolean any = false;
-        for (int k = 0; k < count; k++) done[k] = skip[k];
+        for (int k = 0; k < count; k++) done[k] = false;
         for (int refined = 0; refined < REFINE_BEST; refined++) {
             int bk = -1;
             double bv = Double.POSITIVE_INFINITY;
@@ -362,10 +354,8 @@ final class UnitScreen {
         System.arraycopy(winSin, 0, unitSin, 0, groups);
         double viol;
         if (best <= POLISH_MAX_DEFICIT) {
-            for (int outer = 0; outer < OUTER; outer++) {
-                linearize();
-                bestTheta = polish(bestTheta, coarse / 32.0);
-            }
+            linearize();
+            bestTheta = polish(bestTheta, coarse / 32.0);
             resetShift();
             viol = fullViol(true);
         } else {
@@ -374,16 +364,11 @@ final class UnitScreen {
             viol = fullViol(true);
         }
         for (int g = 0; g < groups; g++) bestFacing[g] = StrictMath.atan2(unitSin[g], unitCos[g]);
-        double dp;
-        if (d.maximize) dp = d.objAxisX ? Math.min(bestHiX, d.hiShiftX) : Math.min(bestHiZ, d.hiShiftZ);
-        else dp = d.objAxisX ? Math.max(bestLoX, d.loShiftX) : Math.max(bestLoZ, d.loShiftZ);
-        if (viol > 0.0) dp = 0.0;
-        bestObj = objBase + dp;
         d.witnessLoX = bestLoX;
         d.witnessHiX = bestHiX;
         d.witnessLoZ = bestLoZ;
         d.witnessHiZ = bestHiZ;
-        return new double[]{viol, Angles.wrap(Angles.deg(bestTheta)), bestObj};
+        return new double[]{viol, Angles.wrap(Angles.deg(bestTheta))};
     }
 
     double[] evalFacings(double[] yawsDeg, double dx, double dz) {
@@ -416,7 +401,7 @@ final class UnitScreen {
         int best = -1;
         double bestDist = Double.POSITIVE_INFINITY;
         for (int j = 0; j < count; j++) {
-            if (j == k || skip[j] || coarseViol[j] == Double.POSITIVE_INFINITY) continue;
+            if (j == k || coarseViol[j] == Double.POSITIVE_INFINITY) continue;
             double dist = Math.abs(Angles.wrapDelta(Angles.deg(thetas[j] - thetas[k])));
             if (dist < bestDist) {
                 bestDist = dist;
@@ -472,7 +457,6 @@ final class UnitScreen {
             JumpConstraint wc = d.byteWalls.get(order[i]);
             shiftBase[i] = wc.rhs - bf.wallPos(wc);
         }
-        objBase = bf.pos(d.objTick, d.objAxisX);
     }
 
     private double solveFrom(double theta, double startCos, double startSin, double[] fromCos, double[] fromSin,
@@ -605,8 +589,7 @@ final class UnitScreen {
                     }
                 }
             }
-            int maxLevels = Math.min(levels, UNIT_LEVELS_FINE);
-            for (int level = 0; level < maxLevels && bestV > 0.0; level++) {
+            for (int level = 0; level < levels && bestV > 0.0; level++) {
                 double centerC = bestC;
                 double centerS = bestS;
                 double[] rc = REFINE_COS[level];

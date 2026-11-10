@@ -103,51 +103,6 @@ public final class FacingLattice {
         return ((diff & 0xffff) << 16) >> 16;
     }
 
-    public static float stepToSinBucket(float gfDeg, int targetIndex, boolean modern) {
-        targetIndex &= McSineTable.MASK;
-        int curRaw = rawSinIndex(gfDeg, modern, false);
-        if ((curRaw & McSineTable.MASK) == targetIndex) {
-            return gfDeg;
-        }
-        int sd = signed16(targetIndex - (curRaw & McSineTable.MASK));
-        int targetRaw = curRaw + sd;
-        double estD = (double) gfDeg + (double) sd * DEG_PER_BUCKET;
-
-        float a;
-        float b;
-        if (targetRaw > curRaw) {
-            a = gfDeg;
-            b = (float) (estD + 4.0 * DEG_PER_BUCKET);
-            int guard = 0;
-            while (rawSinIndex(b, modern, false) < targetRaw && guard++ < 256) {
-                b = (float) ((double) b + 8.0 * DEG_PER_BUCKET);
-            }
-            if (rawSinIndex(b, modern, false) < targetRaw) {
-                return Float.NaN;
-            }
-        } else {
-            b = gfDeg;
-            a = (float) (estD - 4.0 * DEG_PER_BUCKET);
-            int guard = 0;
-            while (rawSinIndex(a, modern, false) >= targetRaw && guard++ < 256) {
-                a = (float) ((double) a - 8.0 * DEG_PER_BUCKET);
-            }
-            if (rawSinIndex(a, modern, false) >= targetRaw) {
-                return Float.NaN;
-            }
-        }
-
-        while (Math.nextUp(a) < b) {
-            float m = midFloat(a, b);
-            if (rawSinIndex(m, modern, false) >= targetRaw) {
-                b = m;
-            } else {
-                a = m;
-            }
-        }
-        return rawSinIndex(b, modern, false) == targetRaw ? b : Float.NaN;
-    }
-
     public static float[] cellRepresentatives(float gfDeg, int sinDeltaLo, int sinDeltaHi,
                                               boolean modern, boolean jumpBoostTick) {
         int curSin = sinIndex(gfDeg, modern, false);

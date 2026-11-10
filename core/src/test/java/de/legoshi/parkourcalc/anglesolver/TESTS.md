@@ -126,8 +126,7 @@ anglesolver/
                            is FEASIBLE
   CertifiedBnbEngineTest.java  #422 M2a certified-search gates (VerySlowSolverTests, -PverySlowTests; PRs to main only): all 5 small
                            captures reach certified gap <= 1.5e-4 with dominating bounds and
-                           feasible incumbents (per-capture numbers printed; the 1e-9 plateau
-                           mechanism is in ARCH2-M2A-CERTIFIED-BNB.md), foldable dF chains are
+                           feasible incumbents (per-capture numbers printed), foldable dF chains are
                            handled, not declined
   PipelineShapeTest.java   #422 M2b G3 enforcement (VerySlowSolverTests, -PverySlowTests; PRs to main only):
                            every corpus capture visits the one linear
@@ -229,13 +228,13 @@ resources/
 
 ## hpk_precise fixtures (#422 M1)
 
-PRECISE-spec knife-edge fixtures under `resources/captures/hpk_precise/`, each a triple
-`{orig,inner,witness}`; the `inner` variants are wired to `solve/` acceptance expects:
+PRECISE-spec knife-edge fixtures under `resources/captures/hpk_precise/`, each a pair
+`{inner,witness}`; the `inner` variants are wired to `solve/` acceptance expects:
 
 - `j1150-noturn-*`: the PRECISE j1150 inputs_gone spec with the solved pure no-turn schedule
   (#422 M0/M1). `inner` is the fixed-schedule inner problem (startTick 0, DF constraints
   stripped); `witness` is the p2 decode that replays byte-exact at X@49 = -2805.2990460856336,
-  viol 0.0; `orig` is the untouched save. Wired via solve/j1150-noturn-inner.expect.json.
+  viol 0.0. Wired via solve/j1150-noturn-inner.expect.json.
 - `j154-noturn-ja-*`: the corrected j154 spec with the X GE -1599.2 plate at t34 (user ruling
   2026-08-27; the deeper D2 result is invalid against it). `inner` is the fixed-schedule inner
   problem (DF stripped, debug synthesized from the solve artifacts); `witness` is the F3 decode,

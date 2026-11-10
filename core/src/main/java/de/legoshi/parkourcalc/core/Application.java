@@ -296,10 +296,10 @@ public final class Application {
         runTicks = new RunTicksController(angleSolverState, angleSolverEngine, inputData, constraintSelection,
                 hudMessages, this::runSimulation, saveController::markDirty, this::pushHudMessage);
         angleSolverWindow.setRunTicksControls(runTicks);
-        noTurnSearch = new NoTurnSearchController(inputData, runner, boxController, saveController, angleSolverState,
+        noTurnSearch = new NoTurnSearchController(inputData, runner, boxController, angleSolverState,
                 angleSolverEngine, forwardModel, mc, this::onUserChange, this::pushHudMessage, runTicks::isRunning,
                 settings, this::saveSettings);
-        senseSearch = new SenseSearchController(inputData, saveController, angleSolverState, angleSolverEngine,
+        senseSearch = new SenseSearchController(inputData, angleSolverState, angleSolverEngine,
                 forwardModel, this::onUserChange, mc::getMouseSensitivity, mc::setMouseSensitivity);
         de.legoshi.parkourcalc.core.ui.anglesolver.StratfinderWindow stratfinderWindow =
                 new de.legoshi.parkourcalc.core.ui.anglesolver.StratfinderWindow(noTurnSearch);
@@ -330,6 +330,8 @@ public final class Application {
                 blockOverrideWorld.refresh(true);
                 turnProfile.onTasReplaced();
                 practiceMacro.stop();
+                noTurnSearch.onDocumentReplaced();
+                senseSearch.onDocumentReplaced();
             }
 
             @Override
@@ -569,7 +571,7 @@ public final class Application {
         pitches[0] = runner.getStartPitch();
         List<InputRow> rows = inputData.getRows();
         for (int i = 1; i < count; i++) {
-            pitches[i] = i - 1 < rows.size()
+            pitches[i] = i - 1 < rows.size() && !rows.get(i - 1).isTeleportEnabled()
                     ? PlaybackController.applyPitch(pitches[i - 1], rows.get(i - 1))
                     : pitches[i - 1];
         }
@@ -981,19 +983,6 @@ public final class Application {
         if (notify) pushHudMessage("Surface state applied · T" + (start + 1) + "-T" + end);
     }
 
-    private boolean isWalledSide(int neighborX, int blockY, int neighborZ) {
-        return mc.isBlockSolid(neighborX, blockY + 1, neighborZ)
-                || mc.isBlockSolid(neighborX, blockY + 2, neighborZ);
-    }
-
-    private int selectedSolverTick() {
-        Set<Integer> rows = selection.getSelectedRows();
-        if (!rows.isEmpty()) {
-            return rows.iterator().next();
-        }
-        return angleSolverState.getLandingTick();
-    }
-
     public boolean isControlPanelOpen() {
         return overlayManager.isControlPanelOpen();
     }
@@ -1008,14 +997,6 @@ public final class Application {
 
     public void setOverlayOpener(java.util.function.Consumer<Boolean> opener) {
         blockPlacing.setUiOpener(opener);
-    }
-
-    public BlockPlacing getBlockPlacing() {
-        return blockPlacing;
-    }
-
-    public boolean isPlacingBlock() {
-        return blockPlacing.isActive();
     }
 
     public boolean placingMouse(int button, boolean down) {
@@ -1059,10 +1040,6 @@ public final class Application {
 
     public boolean isEditingYaw() {
         return inputOverlay != null && inputOverlay.isEditingYaw();
-    }
-
-    public boolean isEditingPitch() {
-        return inputOverlay != null && inputOverlay.isEditingPitch();
     }
 
     public void navigateYaw(boolean forward) {

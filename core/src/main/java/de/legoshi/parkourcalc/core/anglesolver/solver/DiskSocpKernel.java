@@ -79,23 +79,27 @@ public final class DiskSocpKernel {
             eq[j] = w.eq;
             orthOf[j] = w.eq ? -1 : po++;
             rowName[j] = w.name;
-            int lim = Math.min(w.coef.length, n);
+            double[] wx = w.axis == 2 ? w.coefX : (w.axis == 0 ? w.coef : null);
+            double[] wz = w.axis == 2 ? w.coefZ : (w.axis == 0 ? null : w.coef);
             double s = Math.abs(w.bPrime);
-            for (int t = 0; t < lim; t++) s = Math.max(s, Math.abs(w.coef[t]));
+            if (wx != null) for (int t = 0; t < Math.min(wx.length, n); t++) s = Math.max(s, Math.abs(wx[t]));
+            if (wz != null) for (int t = 0; t < Math.min(wz.length, n); t++) s = Math.max(s, Math.abs(wz[t]));
             if (s <= 0.0) s = 1.0;
             scale[j] = s;
-            double[] cj = new double[n];
             int last = -1;
-            for (int t = 0; t < lim; t++) {
-                cj[t] = w.coef[t] / s;
-                if (cj[t] != 0.0) last = t;
+            coefX[j] = wx == null ? null : new double[n];
+            coefZ[j] = wz == null ? null : new double[n];
+            if (wx != null) {
+                for (int t = 0; t < Math.min(wx.length, n); t++) {
+                    coefX[j][t] = wx[t] / s;
+                    if (coefX[j][t] != 0.0) last = Math.max(last, t);
+                }
             }
-            if (w.axis == 0) {
-                coefX[j] = cj;
-                coefZ[j] = null;
-            } else {
-                coefX[j] = null;
-                coefZ[j] = cj;
+            if (wz != null) {
+                for (int t = 0; t < Math.min(wz.length, n); t++) {
+                    coefZ[j][t] = wz[t] / s;
+                    if (coefZ[j][t] != 0.0) last = Math.max(last, t);
+                }
             }
             bPrime[j] = w.bPrime / s;
             lastCoupled[j] = last;
@@ -183,10 +187,6 @@ public final class DiskSocpKernel {
             this.failIter = failIter;
             this.failMu = failMu;
         }
-
-        public boolean infeasible() {
-            return failCode == FAIL_UNBOUNDED;
-        }
     }
 
     public static Result solve(int n, double[] cx, double[] cz, double[] mMag,
@@ -239,6 +239,10 @@ public final class DiskSocpKernel {
         double[] dLam = new double[m];
         double[] dTau = new double[n];
         double[] rhsLam = new double[m];
+        double[] candLam = new double[m];
+        double[] candTau = new double[n];
+        double[] candGx = new double[n];
+        double[] candGz = new double[n];
         double[] bestLambda = null;
         double[] bestTau = null;
         double bestMu = Double.NaN;
@@ -270,12 +274,13 @@ public final class DiskSocpKernel {
                 for (int j = 0; j < m; j++) dec -= gLam[j] * dLam[j];
                 for (int t = 0; t < n; t++) dec -= gTau[t] * dTau[t];
                 if (dec <= INNER_TOL) break;
-                double step = lineSearch(lambda, tau, gx, gz, mu, gLam, gTau, dLam, dTau, dec);
+                double step = lineSearch(lambda, tau, gx, gz, mu, dLam, dTau, dec, candLam, candTau, candGx, candGz);
                 if (DEBUG) System.out.printf("  outer=%d inner=%d mu=%.3e dec=%.3e step=%.3e%n", outer, inner, mu, dec, step);
                 if (step <= 0.0) break;
-                for (int j = 0; j < m; j++) lambda[j] += step * dLam[j];
-                for (int t = 0; t < n; t++) tau[t] += step * dTau[t];
-                costates(lambda, gx, gz);
+                System.arraycopy(candLam, 0, lambda, 0, m);
+                System.arraycopy(candTau, 0, tau, 0, n);
+                System.arraycopy(candGx, 0, gx, 0, n);
+                System.arraycopy(candGz, 0, gz, 0, n);
                 for (int j = 0; j < m; j++) {
                     if (Double.isNaN(lambda[j])) {
                         fail(FAIL_NAN, iters, mu);
@@ -364,9 +369,9 @@ public final class DiskSocpKernel {
         if (freeP0 != null) {
             double hx = hAxis(lambda, 0);
             double hz = hAxis(lambda, 1);
-            value += supportOf(hx, 0) + supportOf(hz, 1);
-            dvx = deltaOf(hx, 0);
-            dvz = deltaOf(hz, 1);
+            value += freeP0.support(hx, 0) + freeP0.support(hz, 1);
+            dvx = freeP0.delta(hx, 0);
+            dvz = freeP0.delta(hz, 1);
         }
         double[] lambdaOut = new double[m];
         for (int j = 0; j < m; j++) lambdaOut[j] = lambda[j] / scale[j];
@@ -374,10 +379,6 @@ public final class DiskSocpKernel {
         r.uxRef = uRefX;
         r.uzRef = uRefZ;
         return r;
-    }
-
-    public String rowNameAt(int j) {
-        return rowName[j];
     }
 
     private Result trivial() {
@@ -399,9 +400,9 @@ public final class DiskSocpKernel {
         if (freeP0 != null) {
             double hx = hAxis(EMPTY, 0);
             double hz = hAxis(EMPTY, 1);
-            value += supportOf(hx, 0) + supportOf(hz, 1);
-            dvx = deltaOf(hx, 0);
-            dvz = deltaOf(hz, 1);
+            value += freeP0.support(hx, 0) + freeP0.support(hz, 1);
+            dvx = freeP0.delta(hx, 0);
+            dvz = freeP0.delta(hz, 1);
         }
         return new Result(gx, gz, ux, uz, new double[0], value, true, 0, 0.0, dvx, dvz);
     }
@@ -414,25 +415,6 @@ public final class DiskSocpKernel {
             if (axis[j] == a) h += lambda[j] * p0coef[j];
         }
         return h;
-    }
-
-    private double deltaOf(double h, int a) {
-        double lo = a == 0 ? freeP0.dvLoX : freeP0.dvLoZ;
-        double hi = a == 0 ? freeP0.dvHiX : freeP0.dvHiZ;
-        double d = h / freeP0.smooth;
-        return d < lo ? lo : (d > hi ? hi : d);
-    }
-
-    private double supportOf(double h, int a) {
-        double d = deltaOf(h, a);
-        return h * d - 0.5 * freeP0.smooth * d * d;
-    }
-
-    private double supportCurv(double h, int a) {
-        double lo = a == 0 ? freeP0.dvLoX : freeP0.dvLoZ;
-        double hi = a == 0 ? freeP0.dvHiX : freeP0.dvHiZ;
-        double d = h / freeP0.smooth;
-        return (d > lo && d < hi) ? 1.0 / freeP0.smooth : 0.0;
     }
 
     private double centeringMu(double[] lambda, double[] tau, double[] gx, double[] gz) {
@@ -512,8 +494,8 @@ public final class DiskSocpKernel {
             gLam[j] = acc + REG_FACTOR * mu * lambda[j];
         }
         if (freeP0 != null) {
-            double dsx = deltaOf(hAxis(lambda, 0), 0);
-            double dsz = deltaOf(hAxis(lambda, 1), 1);
+            double dsx = freeP0.delta(hAxis(lambda, 0), 0);
+            double dsz = freeP0.delta(hAxis(lambda, 1), 1);
             for (int j = 0; j < m; j++) gLam[j] += p0coef[j] * (axis[j] == 0 ? dsx : (axis[j] == 1 ? dsz : 0.0));
         }
     }
@@ -532,13 +514,13 @@ public final class DiskSocpKernel {
             if (orthOf[j] >= 0) S[j][j] += mu / (lambda[j] * lambda[j]);
         }
         if (freeP0 != null) {
-            double curvX = supportCurv(hAxis(lambda, 0), 0);
-            double curvZ = supportCurv(hAxis(lambda, 1), 1);
+            double curvX = freeP0.curvature(hAxis(lambda, 0), 0);
+            double curvZ = freeP0.curvature(hAxis(lambda, 1), 1);
             for (int j = 0; j < m; j++) {
                 if (axis[j] < 0 || p0coef[j] == 0.0) continue;
                 double cv = axis[j] == 0 ? curvX : curvZ;
                 if (cv == 0.0) continue;
-                for (int k = 0; k < m; k++) {
+                for (int k = 0; k <= j; k++) {
                     if (axis[k] != axis[j] || p0coef[k] == 0.0) continue;
                     S[j][k] += p0coef[j] * p0coef[k] * cv;
                 }
@@ -557,7 +539,7 @@ public final class DiskSocpKernel {
                 if (ajx != 0.0) ajg += ajx * gx[t];
                 if (ajz != 0.0) ajg += ajz * gz[t];
                 Mlt[j * n + t] = 4.0 * mu * tau[t] * ajg * invd2;
-                for (int k = 0; k < m; k++) {
+                for (int k = 0; k <= j; k++) {
                     if (t > lastCoupled[k]) continue;
                     double akx = coefX[k] != null ? coefX[k][t] : 0.0;
                     double akz = coefZ[k] != null ? coefZ[k][t] : 0.0;
@@ -577,7 +559,7 @@ public final class DiskSocpKernel {
                 double mlt = Mlt[j * n + t];
                 if (mlt == 0.0) continue;
                 double f = mlt / Dtt[t];
-                for (int k = 0; k < m; k++) {
+                for (int k = 0; k <= j; k++) {
                     double mlk = Mlt[k * n + t];
                     if (mlk != 0.0) S[j][k] -= f * mlk;
                 }
@@ -609,7 +591,8 @@ public final class DiskSocpKernel {
     }
 
     private double lineSearch(double[] lambda, double[] tau, double[] gx, double[] gz, double mu,
-                              double[] gLam, double[] gTau, double[] dLam, double[] dTau, double dec) {
+                              double[] dLam, double[] dTau, double dec,
+                              double[] candLam, double[] candTau, double[] candGx, double[] candGz) {
         double amax = INF;
         for (int j = 0; j < m; j++) {
             if (orthOf[j] >= 0 && dLam[j] < 0.0) amax = Math.min(amax, -lambda[j] / dLam[j]);
@@ -621,31 +604,21 @@ public final class DiskSocpKernel {
         }
         double a = Math.min(1.0, FRAC * amax);
         double phi0 = barrier(lambda, tau, gx, gz, mu);
-        double[] tmpGx = new double[n];
-        double[] tmpGz = new double[n];
         for (int ls = 0; ls < 40; ls++) {
             boolean ok = true;
-            for (int j = 0; j < m && ok; j++) {
-                if (orthOf[j] >= 0 && lambda[j] + a * dLam[j] <= 0.0) ok = false;
+            for (int j = 0; j < m; j++) {
+                candLam[j] = lambda[j] + a * dLam[j];
+                if (orthOf[j] >= 0 && candLam[j] <= 0.0) ok = false;
             }
             if (ok) {
-                for (int t = 0; t < n; t++) { tmpGx[t] = cx[t]; tmpGz[t] = cz[t]; }
-                for (int j = 0; j < m; j++) {
-                    double lj = lambda[j] + a * dLam[j];
-                    if (lj == 0.0) continue;
-                    double[] cxj = coefX[j];
-                    double[] czj = coefZ[j];
-                    int last = lastCoupled[j];
-                    if (cxj != null) for (int t = 0; t <= last; t++) tmpGx[t] -= lj * cxj[t];
-                    if (czj != null) for (int t = 0; t <= last; t++) tmpGz[t] -= lj * czj[t];
-                }
+                costates(candLam, candGx, candGz);
                 boolean feas = true;
-                for (int t = 0; t < n && feas; t++) {
-                    double tt = tau[t] + a * dTau[t];
-                    if (tt * tt - tmpGx[t] * tmpGx[t] - tmpGz[t] * tmpGz[t] <= 0.0) feas = false;
+                for (int t = 0; t < n; t++) {
+                    candTau[t] = tau[t] + a * dTau[t];
+                    if (candTau[t] * candTau[t] - candGx[t] * candGx[t] - candGz[t] * candGz[t] <= 0.0) feas = false;
                 }
                 if (feas) {
-                    double phi = barrierWith(lambda, tau, a, dLam, dTau, tmpGx, tmpGz, mu);
+                    double phi = barrier(candLam, candTau, candGx, candGz, mu);
                     if (phi <= phi0 - ARMIJO * a * dec) return a;
                 }
             }
@@ -677,35 +650,7 @@ public final class DiskSocpKernel {
             v -= mu * StrictMath.log(det);
         }
         for (int j = 0; j < m; j++) if (orthOf[j] >= 0) v -= mu * StrictMath.log(lambda[j]);
-        if (freeP0 != null) v += supportOf(hAxis(lambda, 0), 0) + supportOf(hAxis(lambda, 1), 1);
-        return v;
-    }
-
-    private double barrierWith(double[] lambda, double[] tau, double a, double[] dLam, double[] dTau,
-                               double[] gx, double[] gz, double mu) {
-        double v = 0.0;
-        double reg = REG_FACTOR * mu;
-        for (int j = 0; j < m; j++) {
-            double lj = lambda[j] + a * dLam[j];
-            v += bPrime[j] * lj + 0.5 * reg * lj * lj;
-        }
-        for (int t = 0; t < n; t++) {
-            double tt = tau[t] + a * dTau[t];
-            v += mMag[t] * tt;
-            double det = tt * tt - gx[t] * gx[t] - gz[t] * gz[t];
-            v -= mu * StrictMath.log(det);
-        }
-        for (int j = 0; j < m; j++) if (orthOf[j] >= 0) v -= mu * StrictMath.log(lambda[j] + a * dLam[j]);
-        if (freeP0 != null) {
-            double hx = freeP0.objDevX;
-            double hz = freeP0.objDevZ;
-            for (int j = 0; j < m; j++) {
-                double lj = lambda[j] + a * dLam[j];
-                if (axis[j] == 0) hx += lj * p0coef[j];
-                else if (axis[j] == 1) hz += lj * p0coef[j];
-            }
-            v += supportOf(hx, 0) + supportOf(hz, 1);
-        }
+        if (freeP0 != null) v += freeP0.support(hAxis(lambda, 0), 0) + freeP0.support(hAxis(lambda, 1), 1);
         return v;
     }
 

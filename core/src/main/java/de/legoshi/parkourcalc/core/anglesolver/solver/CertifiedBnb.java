@@ -16,7 +16,6 @@ public final class CertifiedBnb {
     private static final double INTERVAL_ABS = 1.0e-12;
     private static final double POLISH_VIOL_CAP = 5.0e-2;
     private static final double FREE_START_SMOOTH = 5.0e-4;
-    private static final int GAP_REPORT_STRIDE = 16;
     private static final double MODERN_THR_SQ = 9.0e-6;
     private static final byte FREE = 0;
     private static final byte ZERO = 1;
@@ -49,10 +48,6 @@ public final class CertifiedBnb {
 
     public enum Mode { FIRST_FEASIBLE, OPTIMIZE }
 
-    public interface GapSink {
-        void report(double incumbentObjective, double boundObjective, double gap);
-    }
-
     public static final class Config {
         public Mode mode = Mode.FIRST_FEASIBLE;
         public int nodeCap = 64;
@@ -62,7 +57,6 @@ public final class CertifiedBnb {
         public double[] seedYaws;
         public Double seedPx;
         public Double seedPz;
-        public GapSink gapSink;
         public boolean homotopy;
     }
 
@@ -319,35 +313,33 @@ public final class CertifiedBnb {
             if (children != null) {
                 for (Node c : children) open.add(c);
             }
-            if (s.cfg.gapSink != null && (s.nodes % GAP_REPORT_STRIDE == 0)) {
-                reportGap(s, open);
-            }
         }
         Node top = open.peek();
         double bestOpenScore = exhausted || top == null ? s.incScore : Math.max(top.score, s.incScore);
         bestOpenScore = Math.max(bestOpenScore, s.stuckScore);
         double gap = s.incYaws == null ? Double.POSITIVE_INFINITY
                 : Math.max(0.0, bestOpenScore - s.incScore);
-        boolean certified = s.incYaws != null && (exhausted || gap <= CERT_EPS);
+        boolean modelled = relaxationCoversScenario(sc);
+        boolean certified = modelled && s.incYaws != null && gap <= CERT_EPS;
         if (certified) gap = Math.min(gap, CERT_EPS);
-        if (s.cfg.gapSink != null) reportGap(s, open);
         double boundObj = s.max ? bestOpenScore : -bestOpenScore;
-        boolean certifiedInfeasible = exhausted && s.incYaws == null && s.unresolved == 0;
+        boolean certifiedInfeasible = modelled && exhausted && s.incYaws == null && s.unresolved == 0;
         return new Result(false, s.incYaws, s.incPx, s.incPz, s.incObj, s.incYaws != null,
                 boundObj, s.incYaws == null ? Double.NaN : gap, certified, s.nodes, s.kernelSolves,
                 s.kernelNanos, s.bestInfeasYaws, s.bestInfeasViol, certifiedInfeasible, s.unresolved);
     }
 
+    private static boolean relaxationCoversScenario(JumpPhysicsInputs sc) {
+        if (sc.lastDamageTick() >= 0) return false;
+        for (int t = 0; t < sc.numTicks; t++) {
+            if (sc.flowAt(t).pushes() || sc.endFlowAt(t).pushes()) return false;
+        }
+        return true;
+    }
+
     private static Result declined() {
         return new Result(true, null, 0, 0, Double.NaN, false, Double.NaN, Double.NaN, false,
                 0, 0, 0L, null, Double.POSITIVE_INFINITY, false, 0);
-    }
-
-    private static void reportGap(Search s, PriorityQueue<Node> open) {
-        Node top = open.peek();
-        double bestOpen = top == null ? s.incScore : Math.max(top.score, s.incScore);
-        double gap = s.incYaws == null ? Double.NaN : Math.max(0.0, bestOpen - s.incScore);
-        s.cfg.gapSink.report(s.incObj, s.max ? bestOpen : -bestOpen, gap);
     }
 
     private static final class Intervals {
@@ -541,20 +533,15 @@ public final class CertifiedBnb {
         boolean[] zx = new boolean[s.n];
         boolean[] zz = new boolean[s.n];
         for (int t = 0; t < s.n; t++) {
-            if (s.perAxis) {
-                zx[t] = iv.effX[t] == ZERO;
-                zz[t] = iv.effZ[t] == ZERO;
-            } else {
-                zx[t] = iv.effX[t] == ZERO;
-                zz[t] = zx[t];
-            }
+            zx[t] = iv.effX[t] == ZERO;
+            zz[t] = s.perAxis ? iv.effZ[t] == ZERO : zx[t];
         }
         JumpLinearModel lin = new JumpLinearModel(s.sc, zx, zz, true);
         double[] cx = new double[s.n];
         double[] cz = new double[s.n];
         lin.objectiveVectors(s.spec.objective, cx, cz);
         boolean[] trivialFlag = {false};
-        List<JumpLinearModel.Wall> specWalls = lin.compileWalls(s.spec.constraints, 0.0, trivialFlag);
+        List<JumpLinearModel.Wall> specWalls = lin.compileAxisWalls(s.spec.constraints, 0.0, trivialFlag);
         if (trivialFlag[0]) {
             s.trivialInfeasible = true;
             return null;
@@ -574,6 +561,7 @@ public final class CertifiedBnb {
             }
         }
         addGateRows(s, nd, iv, lin, rows);
+        int boxStart = rows.size();
         List<DiskSocpKernel.ChordRow> chords = new ArrayList<DiskSocpKernel.ChordRow>();
         for (int t = 0; t < s.n; t++) {
             if (nd.iLo[t] == FULL) continue;
@@ -682,8 +670,8 @@ public final class CertifiedBnb {
         double leafPx = s.refPx;
         double leafPz = s.refPz;
         if (s.free && oc.result != null) {
-            leafPx = clamp(s.refPx + oc.result.dvx, s.box.pxLo, s.box.pxHi);
-            leafPz = clamp(s.refPz + oc.result.dvz, s.box.pzLo, s.box.pzHi);
+            leafPx = s.box.clampX(s.refPx + oc.result.dvx);
+            leafPz = s.box.clampZ(s.refPz + oc.result.dvz);
         }
         double[] decoded = decode(s, nd, lin, ux != null ? ux : gxv, uz != null ? uz : gzv);
         ForwardPath decPath = null;
@@ -705,7 +693,7 @@ public final class CertifiedBnb {
                 }
             }
             boolean closeBound = !iv.anyFree && !s.free;
-            if (allNarrow && leafClose(s, nd, lin, cx, cz, rows, leafPx, leafPz, closeBound)) {
+            if (allNarrow && leafClose(s, nd, lin, cx, cz, rows.subList(0, boxStart), leafPx, leafPz, closeBound)) {
                 return null;
             }
         }
@@ -761,8 +749,8 @@ public final class CertifiedBnb {
         double sector = s.thr / StrictMath.sqrt(2.0);
         for (int t = 1; t < s.n; t++) {
             if (s.perAxis) {
-                addAxisGateRows(s, iv, lin, rows, 0, t, iv.effX[t], nd.gx[t], iv.slackDx[t]);
-                addAxisGateRows(s, iv, lin, rows, 1, t, iv.effZ[t], nd.gz[t], iv.slackDz[t]);
+                addAxisGateRows(s, lin, rows, 0, t, iv.effX[t], nd.gx[t], iv.slackDx[t]);
+                addAxisGateRows(s, lin, rows, 1, t, iv.effZ[t], nd.gz[t], iv.slackDz[t]);
             } else {
                 byte st = iv.effX[t];
                 byte fixed = nd.gx[t];
@@ -788,7 +776,7 @@ public final class CertifiedBnb {
         }
     }
 
-    private static void addAxisGateRows(Search s, Intervals iv, JumpLinearModel lin,
+    private static void addAxisGateRows(Search s, JumpLinearModel lin,
                                         List<JumpLinearModel.Wall> rows, int axis, int t, byte st,
                                         byte fixed, double d) {
         if (st == ZERO) {
@@ -889,7 +877,7 @@ public final class CertifiedBnb {
     }
 
     private static ForwardPath replayCandidate(Search s, double[] yaws, double px, double pz, boolean allowPolish) {
-        JumpPhysicsInputs scRep = FoldReplayDriver.pinnedCopy(s.sc, px, pz);
+        JumpPhysicsInputs scRep = s.sc.pinnedAt(px, pz);
         double[] gf = scRep.toGameFacings(yaws);
         ForwardPath path = s.exact.forward(scRep, gf);
         double viol = s.compiled.maxViolation(gf, path);
@@ -937,7 +925,7 @@ public final class CertifiedBnb {
         if (s.incYaws == null || s.ties != null) return;
         int window = s.exact.sine262() ? 4 : 64;
         double[] yaws = s.incYaws.clone();
-        JumpPhysicsInputs scRep = FoldReplayDriver.pinnedCopy(s.sc, s.incPx, s.incPz);
+        JumpPhysicsInputs scRep = s.sc.pinnedAt(s.incPx, s.incPz);
         double[] gf = scRep.toGameFacings(yaws);
         ForwardPath path = s.exact.forward(scRep, gf);
         double bestObj = s.spec.objective.evaluate(path);
@@ -1043,8 +1031,6 @@ public final class CertifiedBnb {
         }
         List<JumpLinearModel.Wall> kept = new ArrayList<JumpLinearModel.Wall>();
         for (JumpLinearModel.Wall w : rows) {
-            if (w.name != null && (w.name.startsWith("bxh@") || w.name.startsWith("bxl@")
-                    || w.name.startsWith("bzh@") || w.name.startsWith("bzl@"))) continue;
             if (w.eq) return false;
             kept.add(w);
         }
@@ -1095,12 +1081,12 @@ public final class CertifiedBnb {
         if (st.bestVal > Double.NEGATIVE_INFINITY) {
             double[] yaws = realizeCombo(s, cands, st.bestPick);
             if (yaws != null) {
-                JumpPhysicsInputs scRep = FoldReplayDriver.pinnedCopy(s.sc, px, pz);
-                double[] gf = scRep.toGameFacings(yaws);
-                ForwardPath rp = s.exact.forward(scRep, gf);
-                double rv = s.compiled.maxViolation(gf, rp);
-                double ro = s.spec.objective.evaluate(rp);
                 if (SolverTrace.on()) {
+                    JumpPhysicsInputs scRep = s.sc.pinnedAt(px, pz);
+                    double[] gf = scRep.toGameFacings(yaws);
+                    ForwardPath rp = s.exact.forward(scRep, gf);
+                    double rv = s.compiled.maxViolation(gf, rp);
+                    double ro = s.spec.objective.evaluate(rp);
                     double cpv = lin.objectiveConst(s.spec.objective);
                     SolverTrace.log("CERT", "leaf argmax lin=%.12f replayObj=%.12f viol=%.3e",
                             st.bestVal + (s.max ? cpv : -cpv), ro, rv);
@@ -1133,7 +1119,7 @@ public final class CertifiedBnb {
             float target = cands[t][picks[t]];
             boolean locked = s.sc.yawLockedPerTick != null && t < s.sc.yawLockedPerTick.length
                     && s.sc.yawLockedPerTick[t];
-            long want = s262 ? cell262(s, t, target) : FacingLattice.jointCellId(target, modern, boostTick(s, t));
+            long want = FacingLattice.jointCellId(target, modern, s262, BucketWalk.boostTick(s.exact, s.sc, t));
             boolean landed = false;
             double base = Angles.wrap((double) target);
             for (int k = 0; k <= 8 && !landed; k++) {
@@ -1146,7 +1132,7 @@ public final class CertifiedBnb {
                         double delta = Angles.wrapDelta(cand - prevAbs);
                         ent = entity + (float) delta;
                     }
-                    long got = s262 ? cell262f(s, t, ent) : FacingLattice.jointCellId(ent, modern, boostTick(s, t));
+                    long got = FacingLattice.jointCellId(ent, modern, s262, BucketWalk.boostTick(s.exact, s.sc, t));
                     if (got == want) {
                         yaws[t] = cand;
                         entity = ent;
@@ -1162,22 +1148,6 @@ public final class CertifiedBnb {
         return yaws;
     }
 
-    private static boolean boostTick(Search s, int t) {
-        boolean grounded = !Double.isNaN(s.sc.slipAt(t));
-        return !s.exact.modern() && grounded && s.sc.jumpAt(t) && s.sc.sprintAt(t);
-    }
-
-    private static long cell262(Search s, int t, float gf) {
-        return cell262f(s, t, gf);
-    }
-
-    private static long cell262f(Search s, int t, float gf) {
-        float rad = gf * (float) (Math.PI / 180.0);
-        long sin = (long) ((double) rad * McSineTable.INDEX_FROM_RAD_262) & 65535L;
-        long cos = (long) ((double) rad * McSineTable.INDEX_FROM_RAD_262 + McSineTable.COS_INDEX_OFFSET_262) & 65535L;
-        return (sin << 16) | cos;
-    }
-
     private static void leafDfs(Search s, LeafState st, int t, double prefix, double[][] wallPref) {
         if (st.steps >= LEAF_DFS_CAP) return;
         if ((st.steps & 4095L) == 0L && s.stopped()) {
@@ -1186,6 +1156,9 @@ public final class CertifiedBnb {
         }
         st.steps++;
         int n = st.scores.length;
+        for (int j = 0; j < st.walls.length; j++) {
+            if (wallPref[t][j] + st.wallSuffixMin[j][t] > st.wallRhs[j]) return;
+        }
         if (t == n) {
             if (prefix > st.bestVal) {
                 st.bestVal = prefix;
@@ -1194,9 +1167,6 @@ public final class CertifiedBnb {
             return;
         }
         if (prefix + st.suffix[t] <= st.bestVal) return;
-        for (int j = 0; j < st.walls.length; j++) {
-            if (wallPref[t][j] + st.wallSuffixMin[j][t] > st.wallRhs[j]) return;
-        }
         int[] order = st.order[t];
         for (int oi = 0; oi < order.length; oi++) {
             int i = order[oi];
@@ -1213,23 +1183,9 @@ public final class CertifiedBnb {
 
     private static float[] leafCandidates(Search s, int t, double lo, double hi) {
         double mid = 0.5 * (lo + hi);
-        float center = (float) mid;
-        if (!s.exact.sine262()) {
-            boolean grounded = !Double.isNaN(s.sc.slipAt(t));
-            boolean boostTick = !s.exact.modern() && grounded && s.sc.jumpAt(t) && s.sc.sprintAt(t);
-            int half = Math.max(1, (int) Math.ceil((hi - lo) * 0.5 * SineTableGeometry.IDX_PER_DEG)
-                    + SineTableGeometry.SLOP_IDX);
-            return FacingLattice.cellRepresentatives(center, -half, half, s.exact.modern(), boostTick);
-        }
         int half = Math.max(1, (int) Math.ceil((hi - lo) * 0.5 * SineTableGeometry.IDX_PER_DEG)
                 + SineTableGeometry.SLOP_IDX);
-        float[] out = new float[2 * half + 1];
-        for (int i = 0; i < out.length; i++) {
-            int k = i - half;
-            double adj = BucketWalk.centerAdjustDeg(center, s.exact.modern(), true) + k * BucketWalk.BUCKET_DEG;
-            out[i] = (float) (mid + adj);
-        }
-        return out;
+        return BucketWalk.candidates(s.exact, s.sc, t, (float) mid, mid, half);
     }
 
     private static List<Node> branch(Search s, Node nd, Intervals iv, JumpLinearModel lin,
@@ -1243,7 +1199,7 @@ public final class CertifiedBnb {
         for (int t = 1; t < s.n; t++) {
             if (s.perAxis) {
                 if (iv.freeX[t]) {
-                    double imp = gateImpactOf(s, iv.injX[t], lin, t, 0, decPath, decZx, nd.gx[t]);
+                    double imp = gateImpactOf(s, iv.injX[t], lin, t, 0, decPath);
                     if (imp > gateImpact) {
                         gateImpact = imp;
                         gateAxis = 0;
@@ -1251,7 +1207,7 @@ public final class CertifiedBnb {
                     }
                 }
                 if (iv.freeZ[t]) {
-                    double imp = gateImpactOf(s, iv.injZ[t], lin, t, 1, decPath, decZz, nd.gz[t]);
+                    double imp = gateImpactOf(s, iv.injZ[t], lin, t, 1, decPath);
                     if (imp > gateImpact) {
                         gateImpact = imp;
                         gateAxis = 1;
@@ -1259,7 +1215,7 @@ public final class CertifiedBnb {
                     }
                 }
             } else if (iv.effX[t] == FREE) {
-                double imp = gateImpactOf(s, iv.injX[t] + iv.injZ[t], lin, t, 0, decPath, decZx, nd.gx[t]);
+                double imp = gateImpactOf(s, iv.injX[t] + iv.injZ[t], lin, t, 0, decPath);
                 if (imp > gateImpact) {
                     gateImpact = imp;
                     gateAxis = 0;
@@ -1358,16 +1314,14 @@ public final class CertifiedBnb {
     }
 
     private static double gateImpactOf(Search s, double inj, JumpLinearModel lin, int t, int axis,
-                                       ForwardPath decPath, boolean[] decZero, byte fixedState) {
+                                       ForwardPath decPath) {
         double band = 0.0;
         if (decPath != null) {
             double v = axis == 0 ? decPath.velX[t] : decPath.velZ[t];
             double av = Math.abs(v);
             if (av >= 0.25 * s.thr && av <= 4.0 * s.thr) band = 1.0;
-            if (t > 0) {
-                double pv = axis == 0 ? decPath.velX[t - 1] : decPath.velZ[t - 1];
-                if (pv * v < 0.0) band = Math.max(band, 1.0);
-            }
+            double pv = axis == 0 ? decPath.velX[t - 1] : decPath.velZ[t - 1];
+            if (pv * v < 0.0) band = Math.max(band, 1.0);
         }
         double coefScale = Math.abs(lin.coefAxis(axis, t, s.spec.objective.tick));
         return inj * (1.0 + coefScale) * (1.0 + band);
@@ -1547,9 +1501,5 @@ public final class CertifiedBnb {
 
     private static CostateDualSolver.FreeP0 freeStartTerm(StartBox box, Objective obj) {
         return CostateDualSolver.FreeP0.forObjective(box, obj, FREE_START_SMOOTH);
-    }
-
-    private static double clamp(double v, double lo, double hi) {
-        return v < lo ? lo : (v > hi ? hi : v);
     }
 }

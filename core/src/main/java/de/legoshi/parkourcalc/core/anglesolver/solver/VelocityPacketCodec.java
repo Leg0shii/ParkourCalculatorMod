@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.core.anglesolver.solver;
 
+import de.legoshi.parkourcalc.core.McVersion;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 
 public interface VelocityPacketCodec {
@@ -49,6 +50,6 @@ public interface VelocityPacketCodec {
     }
 
     static VelocityPacketCodec forMcVersion(String mcVersion) {
-        return mcVersion != null && !mcVersion.startsWith("1.") ? LP_VEC3 : FIXED_POINT;
+        return McVersion.isYearVersioned(mcVersion) ? LP_VEC3 : FIXED_POINT;
     }
 }
