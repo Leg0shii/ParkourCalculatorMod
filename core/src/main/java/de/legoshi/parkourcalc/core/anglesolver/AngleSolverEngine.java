@@ -351,6 +351,12 @@ public final class AngleSolverEngine {
                     freeStartYaw, bothStrafeSides);
         }
 
+        Job withSpec(JumpSpec spec) {
+            return new Job(spec, sense, startTick, landingTick, numTicks, strafeMask, force45Mask, uiConstraints,
+                    deadlineNanos, longRun, useWindowSolver, stopOnFeasible, ilsExhaustive, legalGoal, graph,
+                    freeStartYaw, bothStrafeSides);
+        }
+
         Job(JumpSpec spec, Objective.Sense sense, int startTick, int landingTick,
             int numTicks, boolean[] strafeMask, boolean[] force45Mask, List<ConstraintAt> uiConstraints,
             long deadlineNanos, LongRunSolver.LongRunConfig longRun, boolean useWindowSolver,
@@ -407,10 +413,10 @@ public final class AngleSolverEngine {
 
     private Job buildJob(AngleSolverState.Effort effort, SolverGraph graphOverride, boolean publishFailure,
                          int startTick, int landingTick) {
-        int total = segmentConstraintCount(startTick, landingTick);
-
         List<InputRow> rows = inputs.getRows();
         int numTicks = landingTick - startTick;
+        List<ConstraintAt> uiCons = collectUiConstraints(startTick, numTicks);
+        int total = uiCons.size();
         if (numTicks <= 0 || startTick < 0 || startTick >= boxes.size()
                 || landingTick > rows.size() || startTick >= rows.size()) {
             if (publishFailure) state.setResult(new SolveResult(false, 0, total, startTick + 1, landingTick + 1));
@@ -420,7 +426,6 @@ public final class AngleSolverEngine {
         Phys ph = buildPhys(startTick, numTicks);
         lastForce45MaskDebug = ph.force45Mask;
         lastStrafeMaskDebug = ph.strafeMask;
-        List<ConstraintAt> uiCons = collectUiConstraints(startTick, numTicks);
         String conflict = firstConflict(uiCons);
         if (conflict != null) {
             SolveResult r = new SolveResult(false, 0, total, startTick + 1, landingTick + 1);
@@ -482,11 +487,7 @@ public final class AngleSolverEngine {
             List<JumpConstraint> reduced = new ArrayList<>(constraints);
             reduced.remove(legalGoal);
             JumpSpec fallbackSpec = new JumpSpec(ph.inputs.copy(), reduced, objective);
-            job.legalFallback = new Job(fallbackSpec, objective.sense, startTick, landingTick, numTicks,
-                    ph.strafeMask, ph.force45Mask, uiCons,
-                    deadlineNanosFor(state, effort), longRunConfigFor(state, effort),
-                    useWindowSolverFor(state, effort), stopOnFeasible, ilsExhaustiveFor(state, effort),
-                    legalGoal, graph, freeStartYaw, bothStrafeSides);
+            job.legalFallback = job.withSpec(fallbackSpec);
         }
         return job;
     }
@@ -647,7 +648,7 @@ public final class AngleSolverEngine {
         String presetName = effort == AngleSolverState.Effort.CUSTOM ? state.getGraphPresetName() : null;
         RunRecording rec = new RunRecording(
                 SolveRunRecord.configOf(job.graph, presetName, effort.name(), FEAS_TOL, job.spec.objective),
-                SolveRunRecord.problemOf(job.spec, countJumps(job.spec.asScenario())),
+                SolveRunRecord.problemOf(job.spec, Scoring.countJumps(job.spec.asScenario())),
                 progress, t0);
         recording = rec;
         solving = true;
@@ -1102,7 +1103,7 @@ public final class AngleSolverEngine {
 
     private Outcome runLegalFallback(Job fallback, AtomicBoolean cancel, SolveProgress progress, RunRecording rec) {
         RunRecording fallbackRec = new RunRecording(rec.config,
-                SolveRunRecord.problemOf(fallback.spec, countJumps(fallback.spec.asScenario())), progress, rec.startNanos);
+                SolveRunRecord.problemOf(fallback.spec, Scoring.countJumps(fallback.spec.asScenario())), progress, rec.startNanos);
         if (cancel.get()) return null;
         currentJob = fallback;
         recording = fallbackRec;
@@ -1135,7 +1136,7 @@ public final class AngleSolverEngine {
         if (SolverTrace.on()) {
             SolverTrace.solveStart(String.format(
                     "n=%d m=%d jumps=%d budgetS=%d window=%s exhaustive=%s stopOnFeasible=%s",
-                    sc.numTicks, spec.constraints.size(), countJumps(sc),
+                    sc.numTicks, spec.constraints.size(), Scoring.countJumps(sc),
                     job.deadlineNanos / 1_000_000_000L, job.useWindowSolver, job.ilsExhaustive, job.stopOnFeasible));
         }
         GraphContext ctx = new GraphContext(spec, model, freeBox, job.legalFallback != null ? null : job.legalGoal,
@@ -1454,8 +1455,8 @@ public final class AngleSolverEngine {
         result.setSolver(solver);
         addBaseDetails(result, solveNanos);
         if (!Double.isNaN(dualGap)) result.addDetail("Dual bound gap", ConstraintText.fixedStat(dualGap));
-        result.addDetail("Jumps", Integer.toString(countJumps(sc)));
-        if (countJumps(sc) > 1 && job.useWindowSolver) {
+        result.addDetail("Jumps", Integer.toString(Scoring.countJumps(sc)));
+        if (Scoring.countJumps(sc) > 1 && job.useWindowSolver) {
             result.addDetail("Window", Integer.toString(job.longRun.window()));
             result.addDetail("Commit", Integer.toString(job.longRun.commit()));
         }
@@ -2061,34 +2062,6 @@ public final class AngleSolverEngine {
     }
 
     // ---- helpers --------------------------------------------------------------
-
-    private int segmentConstraintCount(int startTick, int landingTick) {
-        int n = 0;
-        for (Integer tickKey : state.populatedTicks()) {
-            int seg = tickKey - startTick;
-            if (seg < 0 || seg > landingTick - startTick) continue;
-            TickConstraints tc = state.tickConstraintsOrNull(tickKey);
-            if (tc == null) continue;
-            for (Constraint c : tc.getConstraints()) {
-                if (c.isEnabled() && c.getField() != Constraint.Field.RT) n++;
-            }
-        }
-        return n;
-    }
-
-    /** Number of distinct jumps in the span: rising edges of a grounded JUMP press. Used to gate the
-     *  long-run feasibility fallback to genuine multi-jump spans (single jumps stay on the fast path). */
-    private static int countJumps(JumpPhysicsInputs sc) {
-        int count = 0;
-        boolean prev = false;
-        for (int t = 0; t < sc.numTicks; t++) {
-            boolean grounded = !Double.isNaN(sc.slipAt(t));
-            boolean jump = sc.jumpAt(t) && grounded;
-            if (jump && !prev) count++;
-            prev = jump;
-        }
-        return count;
-    }
 
     private static int firstJumpTick(List<InputRow> rows, int startTick, int numTicks) {
         for (int k = 0; k < numTicks && startTick + k < rows.size(); k++) {
