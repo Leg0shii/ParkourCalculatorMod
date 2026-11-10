@@ -70,7 +70,7 @@ public final class SaveIO {
     }
 
     public static String saveJson(SaveFile file) {
-        return new GsonBuilder().setPrettyPrinting().create().toJson(file);
+        return PRETTY_GSON.toJson(file);
     }
 
     public static String snapshotJson(FileSystemSaveStore store, InputData inputData, Vec3dCore startPos,
@@ -142,6 +142,7 @@ public final class SaveIO {
     }
 
     private static final Gson COMPACT_GSON = new Gson();
+    private static final Gson PRETTY_GSON = new GsonBuilder().setPrettyPrinting().create();
 
     public static Result<SaveFile> load(FileSystemSaveStore store, String rawName) {
         String name = sanitizeRelative(rawName);
@@ -158,7 +159,7 @@ public final class SaveIO {
 
         SaveFile file;
         try {
-            file = new Gson().fromJson(contents, SaveFile.class);
+            file = COMPACT_GSON.fromJson(contents, SaveFile.class);
         } catch (JsonSyntaxException e) {
             return Result.failure("Save file is not valid JSON.");
         }
@@ -396,7 +397,7 @@ public final class SaveIO {
 
     public static SaveFile parseSafe(String contents) {
         try {
-            return new Gson().fromJson(contents, SaveFile.class);
+            return COMPACT_GSON.fromJson(contents, SaveFile.class);
         } catch (JsonSyntaxException e) {
             return null;
         }
