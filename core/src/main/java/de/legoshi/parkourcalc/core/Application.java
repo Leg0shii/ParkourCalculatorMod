@@ -1042,10 +1042,6 @@ public final class Application {
         return inputOverlay != null && inputOverlay.isEditingYaw();
     }
 
-    public boolean isEditingPitch() {
-        return inputOverlay != null && inputOverlay.isEditingPitch();
-    }
-
     public void navigateYaw(boolean forward) {
         if (inputOverlay != null) inputOverlay.navigateYaw(forward);
     }

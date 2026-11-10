@@ -18,17 +18,14 @@ import de.legoshi.parkourcalc.core.ui.util.TooltipUtil;
 import imgui.ImDrawList;
 import imgui.ImGui;
 import imgui.ImGuiInputTextCallbackData;
-import imgui.ImGuiListClipper;
 import imgui.ImGuiStyle;
 import imgui.ImVec2;
 import imgui.callback.ImGuiInputTextCallback;
-import imgui.callback.ImListClipperCallback;
 import imgui.flag.*;
 import imgui.type.ImInt;
 import imgui.type.ImString;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -44,7 +41,6 @@ import java.util.function.Supplier;
 
 public final class InputOverlay {
 
-    private static final String ID_TABLE = "tas-table";
     private static final String ID_CONTEXT_MENU = "context_menu";
     private static final String ID_YAW_INPUT = "##yaw";
 
@@ -68,7 +64,6 @@ public final class InputOverlay {
             InputRow.Key.LEFT_CLICK, InputRow.Key.RIGHT_CLICK, InputRow.Key.CLOSE_INVENTORY
     };
 
-    private static final String ID_EFFECTS_SUFFIX = "effects";
     private static final String ID_EFFECTS_POPUP = "effects_popup";
     private static final String ID_HOTBAR_SUFFIX = "##hotbar";
     private static final String ID_PITCH_INPUT = "##pitch";
@@ -190,8 +185,6 @@ public final class InputOverlay {
     private float tpCellMinX;
     private float tpCellMaxX;
     private int editingYawRow = -1;
-    private int editingPitchRow = -1;
-    private int pendingPitchFocusRow = -1;
     private int pendingYawFocusRow = -1;
     private int collapseYawSelectionRow = -1;
     private int collapseYawFramesLeft;
@@ -1358,19 +1351,9 @@ public final class InputOverlay {
         float inputW = yawInputWidth();
         float lockStripX = ImGui.getCursorScreenPos().x;
         ImGui.setCursorPosX(ImGui.getCursorPosX() + yawLockStripWidth());
-        if (pendingPitchFocusRow == rowIndex) {
-            ImGui.setKeyboardFocusHere();
-            pendingPitchFocusRow = -1;
-        }
         pitchCallbackRow = rowIndex;
         boolean changed = Controls.tableInputText(ID_PITCH_INPUT, pitchInput, inputW, CALLBACK_CHAR_FILTER, pitchLockCallback);
         if (locked) drawLockIcon(lockStripX);
-        if (ImGui.isItemActivated()) {
-            editingPitchRow = rowIndex;
-        }
-        if (editingPitchRow == rowIndex && ImGui.isItemDeactivated()) {
-            editingPitchRow = -1;
-        }
         if (populated) ThemeManager.popPopulatedFrameBorder();
         if (selectedRow) ThemeManager.popSelectedFrameBg();
 
@@ -1392,10 +1375,6 @@ public final class InputOverlay {
 
     public String playbackStatusHint() {
         return playback != null ? playback.statusHint() : "";
-    }
-
-    public boolean isEditingPitch() {
-        return editingPitchRow >= 0;
     }
 
 
@@ -1968,11 +1947,15 @@ public final class InputOverlay {
     }
 
     public void addRowsAtEnd(int count) {
+        insertRowsAt(data.size(), count);
+    }
+
+    private void insertRowsAt(int index, int count) {
         if (count <= 0) return;
-        int dirtyTick = data.size();
-        data.addRows(data.size(), count);
-        solverRowsInserted(dirtyTick, count);
-        notifyChange(dirtyTick);
+        data.addRows(index, count);
+        solverRowsInserted(index, count);
+        selection.adjustForInsert(index + 1, count);
+        notifyChange(index);
     }
 
     public void duplicateSelectedRows() {
@@ -2377,28 +2360,13 @@ public final class InputOverlay {
     private void renderAddRowOptions() {
         int count = rowsToAdd.get();
 
-        if (contextButton(String.format(MENU_ADD_AT_END, count))) {
-            int dirtyTick = data.size();
-            data.addRows(data.size(), count);
-            solverRowsInserted(dirtyTick, count);
-            notifyChange(dirtyTick);
-        }
+        if (contextButton(String.format(MENU_ADD_AT_END, count))) addRowsAtEnd(count);
 
         int selectedRow = selection.singleSelectedRow();
         if (selectedRow >= 0) {
-            if (contextButton(String.format(MENU_ADD_ABOVE, count))) {
-                data.addRows(selectedRow, count);
-                solverRowsInserted(selectedRow, count);
-                selection.adjustForInsert(selectedRow + 1, count);
-                notifyChange(selectedRow);
-            }
+            if (contextButton(String.format(MENU_ADD_ABOVE, count))) insertRowsAt(selectedRow, count);
 
-            if (contextButton(String.format(MENU_ADD_BELOW, count))) {
-                data.addRows(selectedRow + 1, count);
-                solverRowsInserted(selectedRow + 1, count);
-                selection.adjustForInsert(selectedRow + 2, count);
-                notifyChange(selectedRow + 1);
-            }
+            if (contextButton(String.format(MENU_ADD_BELOW, count))) insertRowsAt(selectedRow + 1, count);
         }
     }
 
@@ -2471,16 +2439,8 @@ public final class InputOverlay {
     }
 
     private void insertRowsAtSelectionOrEnd(int count) {
-        if (count <= 0) return;
         int selectedRow = selection.singleSelectedRow();
-        if (selectedRow >= 0) {
-            data.addRows(selectedRow, count);
-            solverRowsInserted(selectedRow, count);
-            selection.adjustForInsert(selectedRow + 1, count);
-            notifyChange(selectedRow);
-        } else {
-            addRowsAtEnd(count);
-        }
+        insertRowsAt(selectedRow >= 0 ? selectedRow : data.size(), count);
     }
 
     private static class DragDropState {
