@@ -173,11 +173,6 @@ public final class SenseSearchController implements SenseFinderWindow.Host {
     }
 
     @Override
-    public SenseFinder.Window window() {
-        return window;
-    }
-
-    @Override
     public SenseFinder.Mode rankMode() {
         return rankMode;
     }
@@ -203,16 +198,6 @@ public final class SenseSearchController implements SenseFinderWindow.Host {
     public void setRange(float min, float max) {
         minPercent = Math.max(0f, Math.min(200f, min));
         maxPercent = Math.max(0f, Math.min(200f, max));
-    }
-
-    @Override
-    public int firstTick() {
-        return firstTick;
-    }
-
-    @Override
-    public int lastTick() {
-        return lastTick;
     }
 
     @Override

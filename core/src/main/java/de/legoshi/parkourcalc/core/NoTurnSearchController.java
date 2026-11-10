@@ -41,11 +41,7 @@ import java.util.function.ObjIntConsumer;
 
 public final class NoTurnSearchController implements StratfinderWindow.Host {
 
-    public static final int MIN_BUDGET_SECONDS = 1;
-    public static final int MAX_BUDGET_SECONDS = 120;
     public static final int DEFAULT_BUDGET_SECONDS = 10;
-    public static final int MIN_DEEP_MINUTES = 1;
-    public static final int MAX_DEEP_MINUTES = 180;
     public static final int DEFAULT_DEEP_MINUTES = 60;
 
     private final InputData inputData;

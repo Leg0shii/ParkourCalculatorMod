@@ -58,8 +58,6 @@ public final class SenseFinderWindow implements RenderInterface {
 
         SenseFinder.Turn searchedTurn();
 
-        SenseFinder.Window window();
-
         SenseFinder.Mode rankMode();
 
         void setRankMode(SenseFinder.Mode mode);
@@ -69,10 +67,6 @@ public final class SenseFinderWindow implements RenderInterface {
         float maxPercent();
 
         void setRange(float min, float max);
-
-        int firstTick();
-
-        int lastTick();
 
         void setTicks(int first, int last);
 
@@ -356,7 +350,7 @@ public final class SenseFinderWindow implements RenderInterface {
         ImGui.tableSetColumnIndex(1);
         ThemeManager.textRight(senseText(c.sens) + "%");
         ImGui.tableSetColumnIndex(2);
-        ThemeManager.textRight(offsetText(c.offset));
+        ThemeManager.textRight(ConstraintText.signedStat(c.offset));
         ImGui.tableSetColumnIndex(3);
         ThemeManager.textRight(c.weakestTick() < 0 ? "-" : c.marginsComplete() ? marginText(c.totalTarget()) : "...");
         if (game) ThemeManager.popTextColor();
@@ -419,7 +413,7 @@ public final class SenseFinderWindow implements RenderInterface {
 
     private static float parse(String text, float fallback) {
         try {
-            return Float.parseFloat(text.replace("%", "").replace("T", "").trim());
+            return Float.parseFloat(text.trim());
         } catch (NumberFormatException ex) {
             return fallback;
         }
@@ -431,10 +425,5 @@ public final class SenseFinderWindow implements RenderInterface {
 
     private static String percentText(double percent) {
         return String.format(Locale.ROOT, "%.2f", percent);
-    }
-
-    private static String offsetText(double offset) {
-        if (Double.isNaN(offset)) return "-";
-        return (offset >= 0 ? "+" : "") + ConstraintText.fixedStat(offset);
     }
 }
