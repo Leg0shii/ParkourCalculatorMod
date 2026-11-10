@@ -1,8 +1,8 @@
 package de.legoshi.parkourcalc.core.anglesolver.solver;
 
+import de.legoshi.parkourcalc.core.McVersion;
 import de.legoshi.parkourcalc.core.anglesolver.FlowVector;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
-import de.legoshi.parkourcalc.core.ui.MovementEffect;
 
 /** Byte-exact MC sprint-jump forward: a direct port of the real movement float chain (hard
  *  thresholds + exact MathHelper sine table + per-axis momentum cancellation). Reproduces the live
@@ -222,7 +222,7 @@ public final class ExactJumpModel implements ForwardModel {
      *  players (the modern default here): combined-XZ |v|^2 &lt; 9.0E-6. Year-versioned MC (26.x
      *  onward) additionally runs the rewritten double-indexed sine lookup. */
     public static ExactJumpModel forMcVersion(String mcVersion) {
-        return eraModel(mcVersion).withByteAmplifier(MovementEffect.wrapsAmplifier(mcVersion))
+        return eraModel(mcVersion).withByteAmplifier(McVersion.atMost(mcVersion, 20, 4))
                 .withVelocityCodec(VelocityPacketCodec.forMcVersion(mcVersion));
     }
 
@@ -232,32 +232,15 @@ public final class ExactJumpModel implements ForwardModel {
         if (isPerAxisModernEra(mcVersion)) {
             return new ExactJumpModel(0.003, true, true, false, false, isFloatSprintBoostEra(mcVersion));
         }
-        boolean sine262 = mcVersion != null && !mcVersion.startsWith("1.");
-        return new ExactJumpModel(0.003, false, true, sine262);
+        return new ExactJumpModel(0.003, false, true, McVersion.isYearVersioned(mcVersion));
     }
 
     static boolean isPerAxisModernEra(String mcVersion) {
-        if (mcVersion == null || !mcVersion.startsWith("1.")) return false;
-        String[] parts = mcVersion.split("\\.");
-        int minor = parseVersionPart(parts, 1);
-        int patch = parseVersionPart(parts, 2);
-        if (minor < 9) return false;
-        return minor < 21 || (minor == 21 && patch <= 4);
+        return McVersion.atMost(mcVersion, 21, 4) && McVersion.atLeast(mcVersion, 9, 0);
     }
 
     static boolean isFloatSprintBoostEra(String mcVersion) {
-        if (mcVersion == null || !mcVersion.startsWith("1.")) return false;
-        String[] parts = mcVersion.split("\\.");
-        int minor = parseVersionPart(parts, 1);
-        int patch = parseVersionPart(parts, 2);
-        return minor < 20 || (minor == 20 && patch <= 4);
-    }
-
-    private static int parseVersionPart(String[] parts, int index) {
-        if (index >= parts.length) return 0;
-        int end = 0;
-        while (end < parts[index].length() && Character.isDigit(parts[index].charAt(end))) end++;
-        return end == 0 ? 0 : Integer.parseInt(parts[index].substring(0, end));
+        return McVersion.atMost(mcVersion, 20, 4);
     }
 
     public static ExactJumpModel forMcVersion(String mcVersion, PhysicsVariant variant) {
