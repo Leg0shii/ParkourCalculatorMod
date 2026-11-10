@@ -446,7 +446,7 @@ public final class OnejumpSetupWindow implements RenderInterface {
         ThemeManager.tableHeaderRight("Attempt");
         ImGui.tableSetColumnIndex(1 + extra);
         ThemeManager.tableHeaderCentered("Fav");
-        TooltipUtil.onHover("Click to keep an attempt in the Favourites list of the Overview.");
+        TooltipUtil.onHover("Click to keep an attempt in the Favourites tab.");
         ImGui.tableSetColumnIndex(2 + extra);
         ThemeManager.tableHeaderRight("Offset");
         ImGui.tableSetColumnIndex(3 + extra);
