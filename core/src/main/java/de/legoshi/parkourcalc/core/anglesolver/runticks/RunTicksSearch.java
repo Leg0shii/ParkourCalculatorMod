@@ -107,32 +107,22 @@ public final class RunTicksSearch<P> {
 
     public boolean nextRung() {
         if (!minimize) return false;
-        int prefixCap = prefixCapFor(furthestDepthReached);
-        int maxTotal = maxRemaining(0);
-        int cap = Math.min(prefixCap, maxTotal);
+        int cap = maxAllowedSum(0, Math.min(furthestDepthReached + 1, jumpCount));
         while (target < cap && target < MAX_UNCONSTRAINED_TICKS) {
             target++;
-            if (target > prefixCap) return false;
             seed();
             if (!queue.isEmpty()) return true;
         }
         return false;
     }
 
-    private int prefixCapFor(int depth) {
-        long sum = 0;
-        for (int j = 0; j <= depth && j < jumpCount; j++) {
-            int m = options.maxAllowed(j);
-            if (m == Integer.MAX_VALUE) return Integer.MAX_VALUE;
-            sum += m;
-            if (sum >= Integer.MAX_VALUE) return Integer.MAX_VALUE;
-        }
-        return (int) Math.min(Integer.MAX_VALUE, sum);
+    private int maxRemaining(int fromJumpIndex) {
+        return maxAllowedSum(fromJumpIndex, jumpCount);
     }
 
-    private int maxRemaining(int fromJumpIndex) {
+    private int maxAllowedSum(int fromJumpIndex, int toJumpIndex) {
         long sum = 0;
-        for (int j = fromJumpIndex; j < jumpCount; j++) {
+        for (int j = fromJumpIndex; j < toJumpIndex; j++) {
             int m = options.maxAllowed(j);
             if (m == Integer.MAX_VALUE) return Integer.MAX_VALUE;
             sum += m;
