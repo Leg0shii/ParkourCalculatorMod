@@ -191,7 +191,7 @@ public final class FacingPrefold {
     }
 
     public static FacingPrefold analyze(List<JumpConstraint> constraints, JumpLinearModel lin) {
-        if (!hasFacing(constraints)) {
+        if (!JumpLinearModel.hasFacingWall(constraints)) {
             return new FacingPrefold(lin.n, true, lin.n, null, null, null, null, null);
         }
         Parsed p = parse(constraints, lin);
@@ -200,7 +200,7 @@ public final class FacingPrefold {
     }
 
     public static ChainScan scannable(List<JumpConstraint> constraints, JumpLinearModel lin) {
-        if (!hasFacing(constraints)) return null;
+        if (!JumpLinearModel.hasFacingWall(constraints)) return null;
         Parsed p = parse(constraints, lin);
         if (p == null) return null;
         int open = -1;
@@ -211,13 +211,6 @@ public final class FacingPrefold {
             }
         }
         return open < 0 ? null : new ChainScan(p, open);
-    }
-
-    private static boolean hasFacing(List<JumpConstraint> constraints) {
-        for (JumpConstraint c : constraints) {
-            if (c.mode == JumpConstraint.Mode.F) return true;
-        }
-        return false;
     }
 
     private static Parsed parse(List<JumpConstraint> constraints, JumpLinearModel lin) {
@@ -489,12 +482,12 @@ public final class FacingPrefold {
         return axis == 0 ? mMag[t] * StrictMath.cos(phi) : mMag[t] * StrictMath.sin(phi);
     }
 
-    private static void tighten(double[] lo, double[] hi, int t, JumpConstraint.Cmp cmp, double rhs) {
+    static void tighten(double[] lo, double[] hi, int t, JumpConstraint.Cmp cmp, double rhs) {
         if (cmp != JumpConstraint.Cmp.LE && rhs > lo[t]) lo[t] = rhs;
         if (cmp != JumpConstraint.Cmp.GE && rhs < hi[t]) hi[t] = rhs;
     }
 
-    private static double[] filled(int n, double v) {
+    static double[] filled(int n, double v) {
         double[] a = new double[n];
         Arrays.fill(a, v);
         return a;
