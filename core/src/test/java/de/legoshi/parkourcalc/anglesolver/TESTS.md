@@ -140,6 +140,12 @@ anglesolver/
                            and full turns (four versions, with and without a jump, directions inside
                            the arc, opposite it, near an end and random, scales 1e-6 to 1e6) the
                            support equals, bit for bit, the largest support of the arc's 48-index pieces
+  SineTableSlipTest.java   the cosine slips the support admits (SineTableGeometry.slipExists): millions of
+                           float facings up to 90000 degrees, plus every float next to a quarter turn,
+                           through both radian casts and both tables, never look up a slip the rule
+                           excludes; the support covers every real cell on four versions, and for facings
+                           in [0, 90) and [-180, -90) it exceeds the best real cell nearby by under 2e-6
+                           (4.8e-5 before the rule)
   WitnessOracleTest.java   soundness oracle (SlowSolverTests, one case per solve/ capture): a random yaw path
                            is forwarded byte-exactly from a launch turned by a random quarter turn, and
                            1 to 4 UI constraints of every kind (X, Z, ranges, tick references, dX, dZ,
