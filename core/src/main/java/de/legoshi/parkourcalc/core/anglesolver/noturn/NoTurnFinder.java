@@ -144,7 +144,7 @@ public final class NoTurnFinder {
         for (int i = 0; i < selected.size(); i++) {
             if (cancelled()) return best();
             State s = selected.get(i);
-            double v = screen.runupViolation(s.combos, s.sprint, jaByStructure);
+            double v = screen.runupViolation(s.combos, s.sprint);
             scored.add(new Scored(s, v));
             if ((i & 31) == 0) progress.update("screen run-up " + i + "/" + selected.size(),
                     0.6 + 0.15 * i / Math.max(1, selected.size()));
