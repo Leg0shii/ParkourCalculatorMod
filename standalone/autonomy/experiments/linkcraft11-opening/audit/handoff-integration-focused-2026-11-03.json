@@ -1,0 +1,25 @@
+{
+  "sourceRevision": "984b701bc0d158620b38971afa0fbd1c2f8ee2a6",
+  "handoffRevision": "61355976",
+  "command": [
+    "/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/.venv-guidance/bin/python",
+    "-B",
+    "-m",
+    "unittest",
+    "standalone.autonomy.tests.test_minimum_runs",
+    "standalone.autonomy.tests.test_depth_first",
+    "standalone.autonomy.tests.test_orchestrator_continuation",
+    "standalone.autonomy.tests.test_fixed_clock_goal",
+    "standalone.autonomy.tests.test_terminal_goals",
+    "-v"
+  ],
+  "compiler": "/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/standalone/autonomy/build/compiler.json",
+  "worker": "/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/.venv-guidance/bin/python",
+  "exitCode": 0,
+  "seconds": 17.357451498508453,
+  "log": "standalone/autonomy/experiments/linkcraft11-opening/audit/handoff-integration-focused-2026-11-03.log",
+  "originalLog": "/private/tmp/real11-handoff-checks-e5j4qnup/focused.log",
+  "testCount": 52,
+  "skips": 0,
+  "scope": "Post-handoff integration of five focused modules; compiler/classpath reused read-only; no shared rebuild or Real11 cold retry."
+}

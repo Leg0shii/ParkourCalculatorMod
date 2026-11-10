@@ -85,7 +85,7 @@ class DepthFirstTests(unittest.TestCase):
         self.assertEqual(result['best']['candidate']['objective'],21.)
         for frame in result['searchState']['frames']:
             for record in frame['records']:
-                self.assertEqual(record['objectiveMode'],'optimization' if record['complete'] else 'feasibility')
+                self.assertEqual(record['objectiveMode'],'configured')
         chosen=[t for t in result['searchState']['transitions'] if t['kind']=='choose' and t['depth']==0]
         self.assertEqual([t['arrival'] for t in chosen],[17,21])
         self.assertFalse(result['objectiveOptimalityProven'])

@@ -58,6 +58,11 @@ def prepare(request):
     problem.setdefault('stopOnFeasible', False)
     if not isinstance(problem['stopOnFeasible'], bool):
         raise ValueError('stopOnFeasible must be a boolean')
+    problem.setdefault('objectiveMode', 'configured')
+    if problem['objectiveMode'] not in ('configured','constant_zero'):
+        raise ValueError('Unsupported numerical objective mode')
+    if problem['objectiveMode']=='constant_zero' and not problem['stopOnFeasible']:
+        raise ValueError('Constant-zero objective requires feasible stopping')
     problem.setdefault('maxIterations', 10000)
     integer(problem['maxIterations'], 'maxIterations', 1, 1000000)
     problem.setdefault('contacts', [])
@@ -200,7 +205,7 @@ def prepare(request):
 
 
 def fingerprint(problem):
-    physical = {k: v for k, v in problem.items() if k not in ('seconds', 'yaw', 'fallbackYaw', 'stopOnFeasible', 'source', 'maxIterations')}
+    physical = {k: v for k, v in problem.items() if k not in ('seconds', 'yaw', 'fallbackYaw', 'stopOnFeasible', 'objectiveMode', 'source', 'maxIterations')}
     return hashlib.sha256(json.dumps(physical, sort_keys=True, separators=(',', ':'), allow_nan=False).encode()).hexdigest()
 
 

@@ -133,6 +133,8 @@ def open_stepping_choices(context):
             box = box_for(block, context)
             rise = block['top'] - y0
             for case, jumping in [('normal_step', False), ('slab_boost', True)]:
+                if not jumping and context.get('landingAllowed') is not None and not context['landingAllowed'](block):
+                    continue
                 if not enabled(case) or not 0 < rise <= f32(.6) or jumping and rise <= f32(.42):
                     continue
                 if not interaction_allowed(context, box, 0, jumping=jumping):
@@ -159,6 +161,8 @@ def open_stepping_choices(context):
         for lower in scene['blocks']:
             if context.get('checkBudget'):
                 context['checkBudget']()
+            if context.get('landingAllowed') is not None and not context['landingAllowed'](lower):
+                continue
             landing = first_descent(trace, lower['top'])
             if landing is None:
                 continue
@@ -172,7 +176,8 @@ def open_stepping_choices(context):
                 box = box_for(higher, context)
                 if not interaction_allowed(context, box, landing, jumping=jumping):
                     continue
-                if enabled('blip') and 0 <= higher['top'] - y <= f32(.6):
+                if (enabled('blip') and 0 <= higher['top'] - y <= f32(.6) and
+                        (context.get('landingAllowed') is None or context['landingAllowed'](higher))):
                     options = landing_wall_options(box, landing) if landing else (
                         ([outside_row(box, axis, sign, 0, 'blip:wall_avoid')], [])
                         for axis in ('X', 'Z') for sign in (-1, 1))

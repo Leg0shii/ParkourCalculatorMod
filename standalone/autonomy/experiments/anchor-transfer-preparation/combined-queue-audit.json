@@ -1,0 +1,81 @@
+{
+  "kind": "recorded_queue_audit_not_new_solve",
+  "rootRecords": [
+    {
+      "T": 17,
+      "transfer": {
+        "version": 2,
+        "valid": true,
+        "reason": null,
+        "source": "b1",
+        "target": "b2",
+        "spanStart": 0,
+        "preparationThrough": 8,
+        "preparationJumps": [],
+        "transferJumps": [
+          8
+        ],
+        "arrival": 17
+      }
+    }
+  ],
+  "pending": [
+    {
+      "T": 12,
+      "transfer": {
+        "version": 2,
+        "valid": true,
+        "reason": null,
+        "source": "b1",
+        "target": "b2",
+        "spanStart": 0,
+        "preparationThrough": 12,
+        "preparationJumps": [
+          0
+        ],
+        "transferJumps": [],
+        "arrival": null
+      }
+    },
+    {
+      "T": 20,
+      "transfer": {
+        "version": 2,
+        "valid": true,
+        "reason": null,
+        "source": "b1",
+        "target": "b2",
+        "spanStart": 0,
+        "preparationThrough": 20,
+        "preparationJumps": [
+          8
+        ],
+        "transferJumps": [],
+        "arrival": null
+      }
+    }
+  ],
+  "stack": [
+    {
+      "frame": 0,
+      "span": 0,
+      "phase": "select"
+    },
+    {
+      "frame": 1,
+      "span": 1,
+      "phase": "select"
+    },
+    {
+      "frame": 2,
+      "span": 2,
+      "phase": "select"
+    },
+    {
+      "frame": 3,
+      "span": 3,
+      "phase": "select"
+    }
+  ],
+  "conclusion": "Initial-0 setup remains queued and eligible under policy2; the 300s run did not return to it. This is service-order/budget coverage, not structural pruning."
+}

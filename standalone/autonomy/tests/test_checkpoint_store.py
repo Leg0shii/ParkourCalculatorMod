@@ -90,6 +90,26 @@ class CheckpointStoreTests(StoreCase):
 
 
 class SearchCheckpointTests(StoreCase):
+    def test_nested_internal_node_repair_patches_program_cache_and_calls(self):
+        program=dict(repairState=None)
+        entry=dict(status='suspended',repairState=None)
+        frame=dict(inFlight=None,generation=dict(nodeInFlight=program,nodes={'node':entry}))
+        dfs=dict(stack=[frame],windows=[],cumulativeCalls=0)
+        outer=dict(kind='event_route_search',dfs=dfs,best=None)
+        with CheckpointStore(self.path) as store:
+            writer=SearchCheckpoint(store,{})
+            writer.begin_repair(outer,program,(entry,))
+            for i in range(2):
+                repair=dict(pending=[i],attemptLog=[i])
+                program['repairState']=repair;entry['repairState']=repair
+                dfs['cumulativeCalls']+=1
+                with patch.object(SearchCheckpoint,'__call__',side_effect=AssertionError('full checkpoint')):
+                    writer.repair_progress(outer)
+                self.assertEqual(read_report(self.path)['searchState'],outer)
+            result=dict(searchState=outer,windows=[],best=None)
+            writer.finish(result,[])
+            self.assertEqual(read_report(self.path)['result'],result)
+
     def state(self):
         program = dict(repairState=dict(pending=[1],seen=[],attemptLog=[],contactLog=[]))
         frame = dict(id=3,inFlight=dict(program=program),records=[dict(program=program)])
@@ -189,6 +209,31 @@ class SearchCheckpointTests(StoreCase):
 @unittest.skipUnless(os.environ.get('PKC_RUN_TICKS_COMPILER') and os.environ.get('PKC_IPOPT_PYTHON'),
                      'Set compiler and IPOPT Python for native persistence checks')
 class NativeCheckpointTests(StoreCase):
+    def test_nested_anchor_and_internal_node_repair_publications_match_live_state(self):
+        from standalone.autonomy.compiler import JavaCompiler
+        from standalone.autonomy.cell_routes.checkpoint_search import find_checkpoint_route
+        from standalone.autonomy.cell_routes.support_order import InitialJumpDomain
+        from standalone.autonomy.tests.test_checkpoint_guidance import flat_scene
+        scene=flat_scene();scene['movementSearch'].update(maxInputs=28,maxPrefixes=64)
+        checked=[];owners=[];testcase=self
+        class CheckedWriter(SearchCheckpoint):
+            def begin_repair(self,state,program,extra_targets=()):
+                super().begin_repair(state,program,extra_targets)
+                owners.append(bool(extra_targets))
+            def repair_progress(self,state):
+                super().repair_progress(state)
+                testcase.assertEqual(read_report(testcase.path)['searchState'],json.loads(json.dumps(state)))
+                checked.append(True)
+        with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler, CheckpointStore(self.path) as store:
+            writer=CheckedWriter(store,{})
+            result=find_checkpoint_route(scene,compiler,anchor_search={},seconds=8,score_seconds=2,
+                max_solver_calls=20,program_filter=InitialJumpDomain([0],max_inputs=28),
+                python_executable=os.environ['PKC_IPOPT_PYTHON'],on_progress=writer)
+            writer.finish(result,[])
+            self.assertEqual(read_report(self.path)['result'],json.loads(json.dumps(result)))
+        self.assertTrue(checked)
+        self.assertIn(True,owners,'No internal-node checkpoint was exercised')
+
     def test_every_native_repair_publication_round_trips_before_completion(self):
         from standalone.autonomy.compiler import JavaCompiler
         from standalone.autonomy.cell_routes.checkpoint_search import find_checkpoint_route

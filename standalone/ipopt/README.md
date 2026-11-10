@@ -1,6 +1,6 @@
 # Standalone continuous IPOPT solver
 
-Canonical branch: `feature/ipopt-consolidated`. This package, automatic orchestration and local replay share one branch and movement implementation. See [standalone setup](../README.md) and [consolidation details](../CONSOLIDATION.md).
+Current integrated branch: `research/ipopt-cell-routes`. This package, anchor orchestration and local replay share the integrated implementation. See [current integration](../docs/ANCHOR_SEARCH_INTEGRATION.md); the earlier [consolidation details](../CONSOLIDATION.md) remain historical.
 
 This directory provides a Python API and command-line solver for fixed-input horizontal trajectories. It runs independently of Minecraft. An optional headless Java exporter reads ordinary captured TAS files using the repository's existing physics compiler. The mod's engine, UI and save format are unchanged.
 
@@ -196,4 +196,4 @@ Phase diagnostics include `wallReduction` (original/retained counts and original
 
 ## Pure feasibility (2026-11-04)
 
-`--feasibility-only`, `stop_on_feasible=True`, or request `stopOnFeasible: true` now uses **constant-zero NLP cost** and first independently validated feasible stopping. Previously it stopped early with the configured directional objective still active. Every original constraint/contact is still checked. `candidate.objective` remains the measured objective of the returned path; `objectiveMode: feasibility` marks that it was not optimized. Optimization mode retains its configured cost. An already valid seed can return before worker startup. [Intermediate orchestration, flat-cost incumbent handling, tests and limits](../docs/IPOPT_FEASIBILITY_MODE.md).
+Early stopping and objective choice are independent after the 2026-11-10 integration. `--feasibility-only`, `stop_on_feasible=True` and request `stopOnFeasible: true` retain the configured directional objective by default. Explicit request `objectiveMode: constant_zero` selects pure feasibility and requires feasible stopping. Default `objectiveMode: configured` does not imply optimization continued past the first feasible point. Every original constraint/contact is still checked; `candidate.objective` remains its measured value. An already valid seed can return before worker startup. [Integration and compatibility](../docs/ANCHOR_SEARCH_INTEGRATION.md), [earlier mode benchmarks](../docs/IPOPT_FEASIBILITY_MODE.md).

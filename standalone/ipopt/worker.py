@@ -212,7 +212,7 @@ def fixed_phase(problem, yaw, pattern, seconds, stop, on_candidate, kind, seed_n
     else:
         cost = point[0 if objective['axis'] == 'X' else 1]
     cost *= -1 if objective['sense'] == 'MAX' else 1
-    if stop:
+    if problem.get('objectiveMode') == 'constant_zero':
         cost = ca.SX(0)
     x, g = ca.vertcat(*variables), ca.vertcat(*rows)
     decode = ca.Function('decode', [x], [ca.vertcat(*facings)])
@@ -233,7 +233,8 @@ def fixed_phase(problem, yaw, pattern, seconds, stop, on_candidate, kind, seed_n
           'survivors': int(np.count_nonzero(np.abs(pattern) == 1)), 'kind': kind, 'seed': seed_name,
           'ladderSaturated': sum(b != 0 for row_values in caps for b in row_values), 'capAttempt': attempt,
           'simpleBoundExtraction': True, 'constraintRowsBeforeExtraction': g.numel(),
-          'wallReduction': numerical['audit'], 'objectiveMode': 'feasibility' if stop else 'optimization'})
+          'wallReduction': numerical['audit'], 'objectiveMode': problem.get('objectiveMode','configured'),
+          'stopOnFeasible': stop})
     return monitor.best_yaw if monitor.best_yaw is not None else yaw, stats['return_status'], monitor.best
 
 

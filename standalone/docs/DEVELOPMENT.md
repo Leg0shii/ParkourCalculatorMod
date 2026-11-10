@@ -1,6 +1,6 @@
 # Writing code and fixes
 
-Read [AGENTS](../AGENTS.md), [current state](CURRENT_STATE.md), [architecture](ARCHITECTURE.md) and the affected module in [code map](CODE_MAP.md). The DFS/early-interaction plan is implemented at `498c054c`; use its results and current-state guide as the baseline for further fixes. Continue in the isolated worktree, preserve unrelated edits, commit coherent reviewable boundaries. No agent delegation or external communication is required.
+Read [AGENTS](../AGENTS.md), [current state](CURRENT_STATE.md), [architecture](ARCHITECTURE.md) and the affected module in [code map](CODE_MAP.md). The DFS/early-interaction implementation and later virtual-finish/local-run fixes imported through `61355976` are the baseline for further work. Continue in the isolated worktree and preserve unrelated edits. Only commit after a feature implementation, bundling its related documentation, tests and fixtures; investigation/planning/documentation-only turns do not require a commit. No agent delegation or external communication is required.
 
 ## Where new behavior belongs
 

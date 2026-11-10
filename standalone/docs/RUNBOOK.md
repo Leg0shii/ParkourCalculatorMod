@@ -1,6 +1,6 @@
 # Standalone runbook
 
-Commands below run from the **physical research repository root**, not from `standalone/` or the main checkout. In a symlinked standalone directory, run `pwd -P` then `cd "$(git rev-parse --show-toplevel)"`; verify `git branch --show-current` is `research/ipopt-cell-routes`. Root Gradle builds/tests and Minecraft are unnecessary for normal standalone iteration.
+Commands below run from the **physical research repository root**, not from `standalone/` or the main checkout. In a symlinked standalone directory, run `pwd -P` then `cd "$(git rev-parse --show-toplevel)"`; verify the task’s branch using `git branch --show-current`. The current integrated task uses `research/ipopt-cell-routes` in this checkout; the earlier `research/real11-initial-run-ticks` path is historical. Root Gradle builds/tests and Minecraft are unnecessary for normal standalone iteration.
 
 ## Environment
 
@@ -119,19 +119,37 @@ PYTHONPATH="$PWD" .venv-guidance/bin/python \
 
 The included reports stop with a valid incumbent plus saved unfinished work. To continue them use the fixed-clock CLI, the same archived fixture, `--resume` on the saved resume report and a **new** output path. Ordinary continuation does not intentionally retry completed or unresolved numerical requests; `--retry-unknown` reopens unresolved ones. Report pending root/subtree coverage and any time spent serializing state; the time setting is a search budget, not a hard process-duration guarantee.
 
+## Automatic untimed corridor runs
 
-## Current checkpoint files and JSON export
-
-New `fixed_clock_experiment` output paths hold a small manifest; the data is in the companion `<output-name>.store.sqlite3`. Copy both files together, retaining the companion basename. `--resume` accepts the manifest path or old self-contained JSON reports. Inspect using `standalone.autonomy.checkpoint_store.read_report`; do not feed the manifest directly to a raw JSON audit parser. Export if needed:
+From the physical repository root, with the native worker environment above:
 
 ```sh
-.venv-guidance/bin/python -m standalone.autonomy.checkpoint_store \
-  /tmp/real11-cold-new.json.gz --output /tmp/real11-export.json.gz
+python3 -B -m standalone.autonomy.cell_routes.automatic_experiment \
+  --input standalone/autonomy/experiments/automatic-corridors/fixture.json \
+  --output /tmp/automatic-corridors-new.json.gz \
+  --compiler "$PKC_RUN_TICKS_COMPILER" --python "$PKC_IPOPT_PYTHON"
 ```
 
-[Storage details](CHECKPOINT_STORAGE.md) describe commit ordering, repair-delta assumptions, final compaction, file purposes, measurements and focused resume tests. This changes persistence only; fixture context and DFS schema5 compatibility rules remain.
+Resume with `--resume /tmp/automatic-corridors-new.json.gz` and a NEW output path. The fixture supplies unordered physical geometry, the terminal predicate, independent initial jump inputs and explicit existing budgets. It supplies no points/support list/comparison clocks. CLI progress keeps the latest full in-memory state and writes atomic periodic snapshots (at most one per second between completed writes), plus an unconditional final report. Source hashes distinguish dirty implementation measurements from archived revisions.
 
+`coverage_audit --input <fixture> --witness <archived-report.json.gz> --output <new-audit.json.gz> --compiler "$PKC_RUN_TICKS_COMPILER"` first enumerates without the witness, then independently replays/classifies it. Its SVGs show actual raw/transit/support rectangles, locally cropped only for display. Coverage does not seed a cold numerical search or establish minimum time.
 
-## Pure feasibility versus optimization
+## Automatic event-guided discovery
 
-The fixed-input CLI's `--feasibility-only` / Python `stop_on_feasible=True` now sets the NLP objective to constant zero and stops at an independently validated feasible point. It previously only stopped early while retaining directional optimization. DFS intermediate goals use this mode automatically; final goals optimize. Reported `candidate.objective` is still a trajectory measurement, with `objectiveMode` identifying its meaning. [Details, tests and checkpoint compatibility](IPOPT_FEASIBILITY_MODE.md): pre-policy DFS checkpoints are not exact-compatible with the new policy fingerprint; preserve them and reconstruct explicitly if needed.
+No-points/no-corridor search now uses the shared event backend. [The migrated Real11 fixture](../autonomy/experiments/event-route-discovery/real11-auto.json) preserves the physical task, initial0/8 domain, horizon and numerical budgets; `discoverySettings` version1 provides resumable graph/materialization work quotas. Legacy `spatialSettings` and automatic schema6/cell-walk continuations are rejected explicitly. Supplied corridor controls remain executable.
+
+From the task worktree root with the native environment set (the shared compiler/worker paths in the [resume handoff](CORRIDOR_IMPLEMENTATION_RESUME.md) remain read-only):
+
+```sh
+"$PKC_IPOPT_PYTHON" -B -m standalone.autonomy.cell_routes.automatic_experiment \
+  --input standalone/autonomy/experiments/event-route-discovery/real11-auto.json \
+  --output /tmp/real11-event-cold-new.json.gz \
+  --compiler "$PKC_RUN_TICKS_COMPILER" --python "$PKC_IPOPT_PYTHON"
+
+"$PKC_IPOPT_PYTHON" -B -m standalone.autonomy.cell_routes.automatic_experiment \
+  --input standalone/autonomy/experiments/event-route-discovery/real11-auto.json \
+  --resume /tmp/real11-event-cold-new.json.gz --output /tmp/real11-event-resumed-new.json.gz \
+  --compiler "$PKC_RUN_TICKS_COMPILER" --python "$PKC_IPOPT_PYTHON"
+```
+
+Outer state `event_route_search` schema1 stores one immutable domain/graph and schema7 dynamic DFS. Physical constraint generation uses state2/context7. Materialization guards suspend residual language/work and do not establish all-routes exhaustion. Full scene/task replay remains necessary for an accepted execution; raw cell-walk completion is no longer an automatic acceptance condition.

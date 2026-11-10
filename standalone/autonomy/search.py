@@ -124,7 +124,7 @@ def search_allocations(route, evaluate, *, seconds=60, improve=False, rank_equal
 
 
 def find_route(request, compiler, *, seconds=60, candidate_seconds=2, retries=1, improve=False,
-               rank_equal_cost=False, optimize_goal=False, python_executable=None, cancel_event=None, on_attempt=None, work=None, on_candidate=None):
+               rank_equal_cost=False, optimize_goal=False, stop_on_feasible=None, python_executable=None, cancel_event=None, on_attempt=None, work=None, on_candidate=None):
     started = time.monotonic()
     route = prepare_route(request)
     if number(seconds, 'search seconds') <= 0:
@@ -133,6 +133,8 @@ def find_route(request, compiler, *, seconds=60, candidate_seconds=2, retries=1,
         raise ValueError('Candidate seconds must be positive')
     if type(retries) is not int or not 0 <= retries <= 10:
         raise ValueError('Retry count must be between zero and ten')
+    if stop_on_feasible is not None and type(stop_on_feasible) is not bool:
+        raise ValueError('stop_on_feasible must be boolean or None')
     if hasattr(compiler, 'derive_footprints') and (cancel_event is None or not cancel_event.is_set()):
         footprints = compiler.derive_footprints(route, min(seconds, candidate_seconds))
         if len(footprints) != len(route['blocks']):
@@ -199,6 +201,7 @@ def find_route(request, compiler, *, seconds=60, candidate_seconds=2, retries=1,
                 waypoints.extend(ladder_waypoints(problem, selections))
                 problem['yaw'] = waypoint_seed(problem, waypoints)
             polish = optimize_goal and stage == 'jump' and len(allocation) == len(route['airtimes'])
+            early_stop = not polish if stop_on_feasible is None else stop_on_feasible
             fallback = objective_seed(problem) if polish else initial_guess(route, plan)
             if route['ladderEvents']:
                 fallback = initial_guess(route, plan)
@@ -262,13 +265,15 @@ def find_route(request, compiler, *, seconds=60, candidate_seconds=2, retries=1,
                     problem['yaw'] = fallback
                 if work is not None:
                     work.before_solve(problem)
-                result = solve(problem, seconds=budget, stop_on_feasible=not polish,
+                result = solve(problem, seconds=budget, stop_on_feasible=early_stop,
                                python_executable=python_executable, cancel_event=cancel_event, on_incumbent=publish)
                 diagnostics.append({'status': result['status'], 'termination': result.get('termination'),
                                     'elapsedSeconds': result.get('elapsedSeconds'), 'error': result.get('error'),
                                     'problemHash': fingerprint(problem), 'request': copy.deepcopy(problem),
-                                    'callOptions': dict(seconds=budget,stopOnFeasible=not polish),
-                                    'objectiveMode': 'optimization' if polish else 'feasibility'})
+                                    'callOptions': dict(seconds=budget,stopOnFeasible=early_stop),
+                                    'objectiveMode': 'configured',
+                                    'workerLaunched': result.get('workerLaunched'),
+                                    'workerStatus': result.get('workerStatus')})
                 if result['status'] == 'cancelled':
                     return {'status': 'cancelled', 'diagnostics': diagnostics}
                 if result['feasible']:

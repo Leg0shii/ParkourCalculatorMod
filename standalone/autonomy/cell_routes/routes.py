@@ -2,7 +2,7 @@ import heapq
 import itertools
 import math
 import time
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, fields
 
 from .geometry import contains, intersection, merge_boxes, segment_intervals
 from ..obstacle_geometry import expanded_box
@@ -111,9 +111,19 @@ class Corridor:
     variants: int = 1
     source: str = 'automatic'
     stage_paths: list = field(default_factory=list)
+    schema: int = 1
+    graph_context: str = ''
+    semantic_key: tuple = ()
+    stages: list = field(default_factory=list)
+    route_variants: list = field(default_factory=list)
+    region_graph: dict = field(default_factory=dict)
 
-    def to_dict(self):
-        return asdict(self)
+    def to_dict(self, *, include_graph=True):
+        if include_graph:
+            return asdict(self)
+        import copy
+        result={f.name:copy.deepcopy(getattr(self,f.name)) for f in fields(self) if f.name!='region_graph'}
+        return dict(result,region_graph={})
 
 
 def corridor_for_points(decomposition, points, gates, *, route_id=0, source='prescribed'):
@@ -148,7 +158,13 @@ def corridor_for_points(decomposition, points, gates, *, route_id=0, source='pre
 
 
 def enumerate_routes(scene, decomposition, *, max_routes=50, max_expansions=5000, max_steps=64,
-                     max_visits=2, deadline=None, cancel_event=None):
+                     max_visits=2, deadline=None, cancel_event=None, route_graph=None, continuation=None):
+    if route_graph is not None:
+        return enumerate_semantic_routes(scene, decomposition, route_graph, max_routes=max_routes,
+            max_expansions=max_expansions, max_steps=max_steps, max_visits=max_visits,
+            deadline=deadline, cancel_event=cancel_event, continuation=continuation)
+    if continuation is not None:
+        raise ValueError('Horizontal signature enumeration has no exact continuation; use a region graph')
     for key, value in dict(max_routes=max_routes, max_expansions=max_expansions, max_steps=max_steps, max_visits=max_visits).items():
         if type(value) is not int or value < 1:
             raise ValueError(key + ' must be a positive integer')
@@ -219,6 +235,210 @@ def enumerate_routes(scene, decomposition, *, max_routes=50, max_expansions=5000
         dominanceDrops=dominated, visitDrops=visit_drops, depthDrops=depth_drops, groupedDuplicates=duplicates,
         routes=len(grouped), maxRoutes=max_routes, maxExpansions=max_expansions, maxSteps=max_steps,
         maxVisits=max_visits, coverageProven=False, missingStart=not starts, missingGoal=not goals)
+
+
+def conditioned_anchor(cover, before, after):
+    """Project a local reference into a finite opening; never create a waypoint row."""
+    reference = tuple((a+b)/2 for a, b in zip(before, after))
+    points = [tuple(min(max(reference[a], b[a]), b[a+3]) for a in range(3)) for b in cover]
+    return min(points, key=lambda p: (math.dist(before, p)+math.dist(p, after), p))
+
+
+def semantic_events(graph, region_path, transition_path):
+    """Conservative ordered itinerary, compressing only unambiguous air chains.
+
+    Keep uncertain passage equivalence separate. In particular no X/Z side
+    signatures, unordered region unions, or visited-support sets define identity.
+    """
+    regions = {r.key: r for r in graph.regions}
+    transitions = {t.key: t for t in graph.transitions}
+    initial=regions[region_path[0]]
+    events = [('start', initial.transit_key or initial.key)]
+    for key in transition_path:
+        t = transitions[key]
+        if t.kind == 'support_arrival':
+            events.append(('support', t.target))
+        elif t.kind == 'support_departure':
+            events.append(('departure',t.source,regions[t.target].transit_key or t.target))
+        elif t.kind == 'finish':
+            events.append(('finish', t.target))
+        elif t.kind == 'open_portal':
+            before = regions[t.source].transit_key or t.source
+            after = regions[t.target].transit_key or t.target
+            if before == after:
+                continue
+            events.append(('passage', before, after))
+    return tuple(events)
+
+
+def corridor_from_walk(scene, decomposition, graph, region_path, transition_path, *, route_id=0):
+    regions = {r.key: r for r in graph.regions}
+    transitions = {t.key: t for t in graph.transitions}
+    start = tuple(scene['initial']['position'])
+    destination = regions[region_path[-1]]
+    endpoint = conditioned_anchor(destination.cover, start, start) if destination.cover else start
+    if destination.kind == 'terminal_predicate':
+        endpoint = list(start)
+        endpoint[1] = destination.predicate['height']
+        for row in destination.predicate['rows']:
+            axis = 0 if row['mode'] == 'X' else 2
+            endpoint[axis] = (min if row['cmp'] == 'LE' else max)(endpoint[axis], row['rhs'])
+        endpoint = tuple(endpoint)
+    # Guide references use the neighboring selected support boundaries. Distant
+    # query-envelope corners and whole-air midpoints have no role in this guide.
+    references = {0: start, len(transition_path): endpoint}
+    for i, key in enumerate(transition_path):
+        t = transitions[key]
+        if t.kind == 'support_arrival':
+            references[i+1] = conditioned_anchor(t.cover, start, endpoint)
+    points = [start]
+    stages = []
+    for i, key in enumerate(transition_path):
+        t = transitions[key]
+        before = references[max(k for k in references if k <= i)]
+        after = references[min(k for k in references if k >= i+1)]
+        if t.cover:
+            points.append(conditioned_anchor(t.cover, before, after))
+        if t.kind != 'support_departure':
+            stages.append(dict(occurrence=len(stages), kind=t.kind, source=t.source, target=t.target,
+                transition=t.key, cover=t.cover, cells=regions[t.source].cells,
+                portals=t.portals, predicate=regions[t.target].predicate,guide_point=points[-1]))
+    if points[-1] != endpoint:
+        points.append(endpoint)
+    cells = sorted({c for key in region_path for c in regions[key].cells if regions[key].kind == 'air_volume'})
+    portals = [p for key in transition_path for p in transitions[key].portals]
+    variant = dict(regions=list(region_path), transitions=list(transition_path))
+    return Corridor(route_id, cells, portals, [list(p) for p in points], (),
+        projected_boxes(decomposition, cells), sum(math.dist(a,b) for a,b in zip(points, points[1:])),
+        source='automatic', stage_paths=[], schema=2, graph_context=graph.context,
+        semantic_key=semantic_events(graph, region_path, transition_path), stages=stages,
+        route_variants=[variant], region_graph=graph.to_dict())
+
+
+def enumerate_semantic_routes(scene, decomposition, graph, *, max_routes=50, max_expansions=5000,
+                              max_steps=64, max_visits=2, deadline=None, cancel_event=None, continuation=None):
+    import copy
+    from .regions import geometry_key
+    for key, value in dict(max_routes=max_routes, max_expansions=max_expansions,
+                           max_steps=max_steps, max_visits=max_visits).items():
+        if type(value) is not int or value < 1:
+            raise ValueError(key + ' must be a positive integer')
+    context = geometry_key((graph.context, max_steps, max_visits, scene['initial']))
+    if continuation is not None and (continuation.get('schema') != 1 or continuation.get('context') != context):
+        raise ValueError('Incompatible spatial continuation; graph or route domain changed')
+    state = copy.deepcopy(continuation) if continuation is not None else dict(schema=1, context=context,
+        frontier=[dict(regions=[s], transitions=[]) for s in graph.starts], emitted=[], expanded=0,
+        duplicates=0, depthDrops=0, visitDrops=0)
+    regions = {r.key: r for r in graph.regions}
+    adjacent = graph.neighbors()
+    targets = [b for key in graph.goals for b in regions[key].cover]
+    start = tuple(scene['initial']['position'])
+
+    def priority(walk):
+        cover = regions[walk['regions'][-1]].cover
+        # Minimum region distance is an ordering hint, not a transit-time bound.
+        distance = min((distance_to_box(conditioned_anchor(cover, start, start), b)
+                        for b in targets), default=0.) if cover else 0.
+        supports=[key for key in walk['regions'] if regions[key].kind=='support_surface']
+        unknown=sum(geometry_key((a,b)) not in graph.transfers for a,b in zip(supports,supports[1:])) if graph.transfers else 0
+        last=None;episode_unknown=False
+        for key in walk['regions']:
+            region=regions[key]
+            if region.kind=='support_surface':
+                last=key;episode_unknown=False
+            elif last in graph.flight_proposals:
+                proposal=graph.flight_proposals[last]
+                if region.kind=='air_volume' and not episode_unknown and all(b[1]>proposal['maxY']+1e-7 for b in region.cover):
+                    unknown+=1;episode_unknown=True
+                if region.kind=='terminal_predicate' and not proposal['normalFinish']:
+                    unknown+=1
+        if len(walk['regions'])>1 and regions[walk['regions'][0]].kind=='support_surface':
+            first=regions[walk['regions'][1]]
+            unknown+=int(not any(contains(b,start) for b in first.cover))
+        return (unknown,len(walk['transitions']), distance, tuple(walk['transitions']))
+
+    # Give newly discovered contact itineraries service before spending the
+    # entire route budget on raw passage encodings of one support sequence.
+    state.setdefault('served',{})
+    frontier = {}
+    serial = itertools.count()
+    def enqueue(walk):
+        family = next((key for key in reversed(walk['regions']) if regions[key].kind=='support_surface'),walk['regions'][0])
+        if walk['regions'][-1] in graph.goals:
+            family=(family,'terminal',walk['regions'][-2] if len(walk['regions'])>1 else walk['regions'][-1])
+        else:
+            family=(family,walk['regions'][-1])
+        if len(walk['regions'])>1:
+            family=geometry_key((walk['regions'][1],family))
+        else:
+            family=geometry_key(family)
+        heapq.heappush(frontier.setdefault(family,[]),(priority(walk),next(serial),walk))
+    for walk in state['frontier']:
+        enqueue(walk)
+    graph_data=graph.to_dict()
+    grouped = {geometry_key(c['semantic_key']): Corridor(**dict(c,region_graph=graph_data)) for c in state['emitted']}
+    expanded = 0
+    termination = 'exhausted'
+    while frontier:
+        if cancel_event is not None and cancel_event.is_set():
+            termination = 'cancelled'
+            break
+        if deadline is not None and time.monotonic() >= deadline:
+            termination = 'deadline'
+            break
+        if len(grouped) >= max_routes:
+            termination = 'route_limit'
+            break
+        if expanded >= max_expansions:
+            termination = 'expansion_limit'
+            break
+        family = min(frontier,key=lambda k:(frontier[k][0][0][0],state['served'].get(k,0),frontier[k][0][0][1:],k))
+        _, _, walk = heapq.heappop(frontier[family])
+        if not frontier[family]:
+            del frontier[family]
+        state['served'][family] = state['served'].get(family,0)+1
+        path, edges = walk['regions'], walk['transitions']
+        current = path[-1]
+        expanded += 1
+        if current in graph.goals:
+            corridor = corridor_from_walk(scene, decomposition, graph, path, edges, route_id=len(grouped))
+            corridor.region_graph=graph_data
+            key = geometry_key(corridor.semantic_key)
+            if key in grouped:
+                existing = grouped[key]
+                if corridor.route_variants[0] not in existing.route_variants:
+                    existing.route_variants.extend(corridor.route_variants)
+                    existing.variants = len(existing.route_variants)
+                state['duplicates'] += 1
+            else:
+                grouped[key] = corridor
+            continue
+        if len(path) >= max_steps:
+            state['depthDrops'] += 1
+            continue
+        for t in adjacent[current]:
+            if t.capability == 'ruled_out':
+                continue
+            if len(path) > 1 and t.target == path[-2] and t.kind != 'support_departure':
+                # Immediate face touch-and-return and same-neighborhood setup
+                # self-hops are local alternatives. Wider returns remain walks.
+                continue
+            last_contact = max((i for i,key in enumerate(path) if regions[key].kind=='support_surface'),default=0)
+            visits = path if regions[t.target].kind=='support_surface' else path[last_contact:]
+            if visits.count(t.target) >= max_visits:
+                state['visitDrops'] += 1
+                continue
+            next_walk = dict(regions=path+[t.target], transitions=edges+[t.key])
+            enqueue(next_walk)
+    state['expanded'] += expanded
+    state['frontier'] = [w for _, _, w in sorted(item for queue in frontier.values() for item in queue)]
+    state['emitted'] = [c.to_dict(include_graph=False) for c in grouped.values()]
+    return list(grouped.values()), dict(termination=termination, expanded=state['expanded'],
+        sessionExpanded=expanded, remaining=len(state['frontier']), routes=len(grouped),
+        rawWalks=state['expanded'], groupedDuplicates=state['duplicates'], depthDrops=state['depthDrops'],
+        visitDrops=state['visitDrops'], maxRoutes=max_routes, maxExpansions=max_expansions,
+        maxSteps=max_steps, maxVisits=max_visits, coverageProven=False, movementFeasibility='unresolved',
+        missingStart=not graph.starts, missingGoal=not graph.goals, continuation=state)
 
 
 def horizontal_trace(candidate):

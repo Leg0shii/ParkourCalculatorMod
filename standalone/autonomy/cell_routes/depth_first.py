@@ -12,6 +12,7 @@ from .checkpoints import Checkpoint, retain_prefix
 from .comparison_goals import goal_spec, goal_key, region_arrival, _landing_prefixes
 from standalone.autonomy.terminal_goals import KIND, bind_goal, satisfied
 from .minimum_runs import POLICY_VERSION, latest_jump, remember, exclusion
+from .anchor_policy import semantic_settings
 
 
 def candidate_key(program):
@@ -59,19 +60,24 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
                  accepted_program, program_filter, roots, resume_state, retry_unknown, deadline, started,
                  candidate_seconds, score_seconds, score_calls, final_calls, batch_size, python_executable,
                  cancel_event, on_progress, on_window, time_margin, progress_margin, route_report,
-                 window_plan, comparison_policy, minimum_run_pruning):
+                 window_plan, comparison_policy, minimum_run_pruning, _owned_state=False):
     from .checkpoint_search import evaluate_program
     from .checkpoint_experiment import replay_witness
 
-    goal_list = [goal_spec(scene, g) for g in goals] if goals else ([] if terminal_plan is not None else [default_goal])
+    anchor_route = hasattr(adapter, 'anchor_policy')
+    event_route = getattr(adapter, 'search_contract', None) == 'event_goals_v1'
+    typed_route = event_route or hasattr(adapter,'for_goal')
+    goal_list = [] if event_route else [goal_spec(scene,g) for g in adapter.goals()] if typed_route else (
+        [goal_spec(scene, g) for g in goals] if goals else ([] if terminal_plan is not None else [default_goal]))
     # Repeated clock observations of the same goal are not separate decisions.
-    goal_list = [g for i, g in enumerate(goal_list) if i == 0 or g != goal_list[i-1]]
+    if not typed_route:
+        goal_list = [g for i, g in enumerate(goal_list) if i == 0 or g != goal_list[i-1]]
     seed = empty_program(scene['initial'], threshold=0.)
     seed['terminalSupport'] = scene['startBlock']
-    if not goals and terminal_plan is not None and hasattr(program_filter,'remaining'):
+    if not typed_route and not goals and terminal_plan is not None and hasattr(program_filter,'remaining'):
         goal_list = [goal_spec(scene,dict(kind='landing',block=b)) for b in program_filter.remaining(seed)]
     final_goal = dict(kind='landing',block=scene['goalBlock'])
-    if terminal_plan is None and (not goal_list or goal_list[-1] != final_goal and goal_list[-1]['kind']!=KIND):
+    if not typed_route and terminal_plan is None and (not goal_list or goal_list[-1] != final_goal and goal_list[-1]['kind']!=KIND):
         goal_list.append(final_goal)
     roots = copy.deepcopy(roots if roots is not None else
         resume_state.get('initialRoots', [seed]) if resume_state else [seed])
@@ -79,25 +85,41 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
         raise ValueError('DFS roots must preserve original state and zero inertia thresholds')
     if any(not accepted_program(p) for p in roots):
         raise ValueError('DFS roots violate the decision domain')
-    context = digest(dict(version=5, kind='ordered_goal_dfs', scene={k:v for k,v in scene.items() if k!='movementSearch'},
+    schema = 8 if anchor_route else 7 if event_route else 6 if typed_route else 5
+    context = digest(dict(version=schema, kind='ordered_goal_dfs', movementGenerationPolicy=3,constraintGenerationPolicy=7,
+        scene={k:v for k,v in scene.items() if k!='movementSearch'},
         domain={k:v for k,v in cfg.items() if k not in ('maxPrefixes','maxQueuedPrefixes','maxChoicesPerType','expansionsPerProposal')},
         roots=[program_search_key(p) for p in roots], goals=goal_list,
         terminal=terminal_plan.to_dict() if terminal_plan else None, corridor=adapter.corridor.to_dict(),
         windows=window_plan, filter=getattr(program_filter, 'checkpoint_identity', None),
         margins=[time_margin,progress_margin], physics=motion,
-        intermediateObjective='constant_zero_feasibility_v1',
-        minimumRunPolicy=POLICY_VERSION if minimum_run_pruning else None))
-    if resume_state is not None and (resume_state.get('version') != 5 or
+        **({'eventStagePolicy':4 if anchor_route else 3} if event_route else {}),
+        **({'anchorPolicy':semantic_settings(adapter.anchor_policy),'guidePlan':adapter.guide_plan['id']} if anchor_route else {}),
+        minimumRunPolicy=POLICY_VERSION if minimum_run_pruning else None,
+        **({'routeStagePolicy':2,'routeCommitPolicy':1,'routeProposalPolicy':1} if typed_route else {})))
+    if resume_state is not None and (resume_state.get('version') != schema or
             resume_state.get('kind') != 'ordered_goal_dfs' or resume_state.get('context') != context):
         raise ValueError('Incompatible DFS continuation; old checkpoint queues require explicit reconstruction')
-    state = copy.deepcopy(resume_state) if resume_state is not None else dict(version=5, kind='ordered_goal_dfs',
+    state = (resume_state if _owned_state else copy.deepcopy(resume_state)) if resume_state is not None else dict(version=schema, kind='ordered_goal_dfs',
         context=context, initialRoots=roots, stack=[], suspended=[], refinements=[], frames=[], transitions=[],
         windows=[], finalAttempts=[], best=None, cumulativeCalls=0, session=0, expanded=0, nextFrame=0)
+    if event_route:
+        state.setdefault('goalQueue', [])
+        state.setdefault('goalOwners', {})
+        state.setdefault('discovery', {})
+    if anchor_route:
+        state.setdefault('hardLatches', {})
+        state.setdefault('latchRevision', 0)
+        state.setdefault('nodeResults', {})
+        state.setdefault('observations', dict(enabled=adapter.anchor_policy['observability'], decisions={}))
+        state['observations']['enabled']=adapter.anchor_policy['observability']
     state['session'] += 1
     prior_calls, initial_expanded = state['cumulativeCalls'], state['expanded']
-    if resume_state and state['best'] is not None and not replay_witness(scene,state['best'],compiler)['passed']:
+    if resume_state and not _owned_state and state['best'] is not None and not replay_witness(scene,state['best'],compiler)['passed']:
         raise ValueError('Saved DFS incumbent no longer passes independent replay')
     gate = InteractionGate(scene, compiler, seconds=candidate_seconds)
+    if event_route:
+        gate.cache = adapter.interaction_cache
     state.setdefault('timeBoundExclusions',[])
     state.setdefault('minimumRunExclusions',[])
     excluded_runs={(r['frame'],r['candidate']) for r in state['minimumRunExclusions']}
@@ -109,54 +131,189 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
         if on_progress:
             on_progress(state)
 
+    def begin_repair(program,extra_targets=()):
+        state['cumulativeCalls']=prior_calls+work.counts['solverCalls']
+        begin=getattr(on_progress,'begin_repair',None)
+        if begin is not None:begin(state,program,extra_targets)
+        else:publish()
+
+    def repair_progress():
+        state['cumulativeCalls']=prior_calls+work.counts['solverCalls']
+        callback=getattr(on_progress,'repair_progress',None)
+        if callback is not None:callback(state)
+        else:publish()
+
     def transition(kind, frame, **fields):
         state['transitions'].append(dict(kind=kind, frame=frame['id'], depth=frame['index'], session=state['session'], elapsedSeconds=time.monotonic()-started, **fields))
-        publish()
+        # A typed arrival's tried flag and child execution owner are one
+        # checkpoint transaction. The child's open/backtrack publishes both.
+        if not typed_route or kind!='choose':
+            publish()
 
-    def frame(index, parents, parent=None):
-        f = dict(id=state['nextFrame'], index=index, parents=copy.deepcopy(parents), parent=parent,
-            goal=goal_list[index] if index<len(goal_list) else None, phase='generate', generation={},
-            ready=[], records=[], inFlight=None, sourceExhausted=False, batches=0)
-        state['nextFrame'] += 1
+    stage_views = {}
+
+    def frame(index, parents, parent=None, cursor=None):
+        if event_route:
+            cursor = cursor if cursor is not None else adapter.initial_cursor(parents)
+            owner = digest(dict(parents=[candidate_key(p) for p in parents], cursor=cursor,
+                physics=motion, domain=adapter.data['domainId']))
+            if owner in state['goalOwners']:
+                return None
+            discovery = dict(owner=owner,index=index,parents=copy.deepcopy(parents),parent=parent,
+                cursor=cursor,continuation=None,exhausted=False)
+            state['discovery'][owner] = discovery
+            state['goalOwners'][owner] = []
+            if parent is not None:
+                state['pendingGoalOwner'] = owner
+            expand_discovery(discovery)
+            ready = next((f for f in state['goalQueue'] if f['owner']==owner),None)
+            if ready is not None:
+                f = ready
+                state['goalQueue'].remove(f)
+                state['stack'].append(f)
+                if state.get('pendingGoalOwner') == owner:
+                    state.pop('pendingGoalOwner')
+                transition('open',f,goal=f['goal'])
+                return f
+            publish()
+            return None
+        f = make_frame(index,parents,parent,goal_list[index] if index<len(goal_list) else None)
         state['stack'].append(f)
-        transition('open', f, goal=f['goal'])
+        transition('open',f,goal=f['goal'])
         return f
 
-    def configure(ctx):
-        adapter.context(ctx)
+    def make_frame(index, parents, parent, goal, **fields):
+        f = dict(id=state['nextFrame'], index=index, parents=copy.deepcopy(parents), parent=parent,
+            goal=goal, phase='generate', generation={}, ready=[], records=[], inFlight=None,
+            sourceExhausted=False, batches=0, **fields)
+        state['nextFrame'] += 1
+        return f
+
+    def expand_discovery(discovery):
+        settings=getattr(adapter,'discovery_settings',{})
+        used=state.setdefault('discoveryWork',dict(expansions=0,materializations=0))
+        requests, continuation, report=adapter.next_goals(discovery['cursor'],discovery['parents'],
+            discovery['continuation'],budget=dict(check=work.check,
+                expansions=max(0,settings.get('maxGraphExpansions',5000)-used['expansions']),
+                materializations=max(0,settings.get('maxGuideMaterializations',50)-used['materializations'])))
+        used['expansions']+=report['expansions'];used['materializations']+=report['materializations']
+        discovery.update(continuation=continuation,exhausted=continuation['exhausted'])
+        for request in requests:
+            if request.get('localSetupAlias'):
+                # Current-support hops/runs remain in the movement source for
+                # every next goal. They do not need an extra comparison frame.
+                state.setdefault('localSetupAliases',[]).append(dict(owner=discovery['owner'],request=request['id']))
+                continue
+            f=make_frame(discovery['index'],discovery['parents'],discovery['parent'],request['goal'],
+                goalRequest=request,semanticCursor=copy.deepcopy(discovery['cursor']),owner=discovery['owner'])
+            state['goalOwners'][discovery['owner']].append(f['id'])
+            state['goalQueue'].append(f)
+
+    def stage_adapter(f):
+        if not typed_route:
+            return adapter
+        key=f['id'] if event_route else f['index']
+        if key not in stage_views:
+            stage_views[key] = (adapter.for_goal(f['goalRequest'],f['semanticCursor']) if event_route else adapter.for_goal(f['index']))
+            if event_route:
+                f['guide'] = stage_views[key].guide
+                f['scoreContextKey'] = stage_views[key].score_context
+        return stage_views[key]
+
+    def span_info(f):
+        view=stage_adapter(f)
+        return view.cursor['anchorIndex'],view.cursor['spanStart']
+
+    def priority(program,f,identity=''):
+        if not anchor_route:return processing_key(program,identity)
+        from .anchor_policy import priority as span_priority
+        return span_priority(program,span_info(f)[1],program.get('priorityTurnaround',False),identity)
+
+    def record_priority(record,f):
+        return priority(record['program'],f,record['id']) if anchor_route else arrival_key(record)
+
+    def latch_key(f):
+        span,_=span_info(f)
+        names=adapter.guide_plan['anchors']
+        return names[span]+'→'+names[span+1]
+
+    def hard_bound(program,f):
+        if not anchor_route or latch_key(f) not in state['hardLatches']:return None
+        from .anchor_policy import transfer_structure
+        _,start=span_info(f)
+        names=adapter.guide_plan['anchors'];i=span_info(f)[0]
+        completed=program.get('terminalSupport') in f['goal'].get('blocks',[f['goal']['block']])
+        transfer=transfer_structure(scene,program,start,names[i],names[i+1],complete=completed)
+        if not transfer['valid']:
+            return dict(reason='global_single_jump_latch',span=latch_key(f),revision=state['latchRevision'],
+                        transfer=transfer)
+        return None
+
+    def score_key(program,f):
+        return digest([candidate_key(program),stage_adapter(f).score_context]) if event_route else candidate_key(program)
+
+    def configure(ctx, f):
+        stage_adapter(f).context(ctx)
         gate.context(ctx)
 
-    def time_bound(program):
+    def time_bound(program,f=None):
         if terminal_plan is None and state['best'] is not None and program['profile']['airtime']>state['best']['plan']['ticks']:
             return dict(reason='elapsed_inputs_exceed_incumbent_finish',elapsedInputs=program['profile']['airtime'],
                 incumbentTick=state['best']['plan']['ticks'])
+        if anchor_route and f is not None and state['best'] is not None:
+            from .anchor_time_bound import remaining_bound
+            span,_=span_info(f)
+            proof=remaining_bound(adapter.guide_plan,span,program,motion)
+            if program['profile']['airtime']+proof['remainingTicks']>state['best']['plan']['ticks']:
+                return dict(proof,reason='optimistic_remaining_time_exceeds_incumbent',
+                    elapsedInputs=program['profile']['airtime'],incumbentTick=state['best']['plan']['ticks'])
         return None
 
     def run_bound(program, f):
         if not minimum_run_pruning or f is None:return None
+        if anchor_route and (latch_key(f) not in state['hardLatches'] or program.get('priorityTurnaround',False) or
+                (program.get('restoredRun') or {}).get('frame')==f['id']):return None
         proof=exclusion(f.get('minimumRuns',{}),latest_jump(program,scene))
         if proof is not None:
             identity=candidate_key(program);key=(f['id'],identity)
             if key not in excluded_runs:
                 excluded_runs.add(key)
-                saved={k:copy.deepcopy(v) for k,v in program.items() if k!='repairState'}
-                state['minimumRunExclusions'].append(dict(frame=f['id'],candidate=identity,proof=proof,program=saved))
+                saved={k:copy.deepcopy(v) for k,v in program.items() if anchor_route or k!='repairState'}
+                state['minimumRunExclusions'].append(dict(frame=f['id'],candidate=identity,proof=proof,program=saved,
+                    **(dict(span=span_info(f)[0],decision=program.get('decisionNode'),isTurnaround=False,
+                            latchRevision=state['latchRevision']) if anchor_route else {})))
         return proof
 
     def eligible(program, f=None):
-        proof=time_bound(program)
+        proof=time_bound(program,f)
         if proof is not None:
             state['timeBoundExclusions'].append(dict(id=candidate_key(program),proof=proof))
             return False
-        return run_bound(program,f) is None and accepted_program(program)
+        return (not (anchor_route and hard_bound(program,f)) and run_bound(program,f) is None and accepted_program(program) and
+                (not typed_route or stage_adapter(f).program_allowed(program)))
 
     def screen(program, f=None):
-        bound=time_bound(program) or run_bound(program,f)
+        bounded=program
+        if anchor_route and f is not None:
+            arrivals=[p for b in f['goal'].get('blocks',[f['goal']['block']])
+                      for p in _landing_prefixes(scene,program,b)]
+            if arrivals:bounded=min(arrivals,key=lambda p:p['profile']['airtime'])
+        bound=time_bound(bounded,f) or (hard_bound(bounded,f) if anchor_route else None) or run_bound(bounded,f)
         if bound is not None:
             return bound
-        required = program_filter.remaining(program) if hasattr(program_filter,'remaining') else (
-            [] if terminal_plan is not None else [scene['goalBlock']])
-        proof = prefix_viability(scene, program, required_contacts=required,
+        if event_route:
+            g=f['goal']
+            required=[g['block']] if g['kind']=='landing' and bounded['terminalSupport'] not in g.get('blocks',[g['block']]) else []
+        elif typed_route or goal_list and goal_list[-1]['kind']==KIND and not hasattr(program_filter,'remaining'):
+            first = f['index'] if f is not None else 0
+            if first<len(goal_list) and goal_list[first]['kind']=='landing' and program['terminalSupport'] in goal_list[first].get('blocks',[goal_list[first]['block']]):
+                first += 1
+            required = [g['block'] for g in goal_list[first:] if g['kind']=='landing']
+        elif hasattr(program_filter,'remaining'):
+            required = program_filter.remaining(program)
+        else:
+            required = [] if terminal_plan is not None else [scene['goalBlock']]
+        proof = prefix_viability(scene, bounded, required_contacts=required,
             terminal_tick=terminal_plan.tick if terminal_plan else cfg['maxInputs'], enabled_types=cfg['types'])
         viability_counts['checked'] += 1
         if proof['dead']:
@@ -172,10 +329,76 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
             repair.get('constraintGeneration') and not repair['constraintGeneration'].get('exhausted'))
 
     def terminal(f):
-        return f['index'] == len(goal_list)
+        return not event_route and f['index'] == len(goal_list)
 
     def final_frame(f):
-        return terminal(f) or terminal_plan is None and f['index']==len(goal_list)-1
+        return f['goalRequest']['terminal'] if event_route else terminal(f) or terminal_plan is None and f['index']==len(goal_list)-1
+
+    def evaluate_node(program, nodes, unused, f):
+        from .node_feasibility import solve_due
+        from .anchor_guides import classify
+        from .turn_observability import record as observe, replay
+        active=stage_adapter(f)
+        span,start=span_info(f)
+        identity=program['decisionNode']
+        depth=program['decisionDepth']
+        if not solve_due(program,adapter.anchor_policy['solveEveryDecisionLevels']):
+            return dict(status='untested',program=program)
+        saved=nodes.get(identity)
+        if saved and saved['status']=='oracle_rejected':
+            return dict(status='oracle_rejected',program=program)
+        if saved and saved['status']=='feasible':
+            # The saved program carries physical rows and a free-yaw seed.
+            return dict(status='feasible',program=copy.deepcopy(saved['program']))
+        if saved and saved.get('repairState') is not None:
+            program['repairState']=saved['repairState']
+        policy=dict(purpose='node',stopOnFeasible=True,rankEqualCost=False,oracleRejection=True)
+        t=time.monotonic()
+        entry=dict(status='suspended',parent=program.get('decisionParent'),repairState=program.get('repairState'))
+        nodes[identity]=entry
+        begin_repair(program,(entry,))
+        def progress(repair):
+            program['repairState']=repair
+            entry['repairState']=repair
+            repair_progress()
+        result=evaluate_program(scene,program,compiler,active.for_node(),work,motion,
+            seconds=max(.001,min(score_seconds,deadline-time.monotonic())),candidate_seconds=candidate_seconds,
+            solver_calls=score_calls,python_executable=python_executable,cancel_event=cancel_event,
+            partial_corridor=True,guide_objective=active.objective,first_witness=True,
+            solve_policy=policy,on_progress=progress,retry_unresolved=retry_unknown)
+        query=result.get('nodeFeasibility',dict(status='feasible' if result['best'] else 'suspended',model=identity))
+        status=query['status']
+        observe(state['observations'],adapter.guide_plan,program,span=span,start=start,
+                model=query['model'],status=status,elapsed=time.monotonic()-t,metrics=result['work'],
+                service=dict(latchRevision=state['latchRevision'],hardLatched=latch_key(f) in state['hardLatches'],
+                    runDeferralEnabled=minimum_run_pruning and not program.get('priorityTurnaround',False) and latch_key(f) in state['hardLatches']))
+        if result['best'] is not None:
+            # Retain selected physical walls; never endpoint/velocity/yaw equalities.
+            updated=commit_arrival(program,result['best'])
+            for k in ('decisionNode','decisionParent','decisionDepth','priorityTurnaround','restoredRun'):
+                if k in program:updated[k]=program[k]
+            updated['lastSolvedDepth']=depth
+            point=result['best']['candidate']['positions'][-1]
+            updated.update(decisionPoint=point,decisionPointTick=program['profile']['airtime'],
+                decisionPointSource='validated_node',decisionTurnaround=classify(adapter.guide_plan,span,point)['isTurnaround'])
+            ancestor=program.get('decisionParent')
+            while ancestor:
+                event=state['observations']['decisions'].get(ancestor)
+                if event is None:break
+                tick=event['pointTick']
+                replay(state['observations'],adapter.guide_plan,ancestor,event['span'],
+                       result['best']['candidate']['positions'][tick],query['model'])
+                ancestor=event['parent']
+            program=updated
+        elif result.get('repairState') is not None:
+            program['repairState']=result['repairState']
+        nodes[identity]=dict(status=status,parent=program.get('decisionParent'),query=query,
+            depth=depth,lastSolvedDepth=program.get('lastSolvedDepth',0),program=copy.deepcopy(program))
+        state['nodeResults'][identity]=dict(query,parent=program.get('decisionParent'),depth=depth)
+        publish()
+        from .node_feasibility import unresolved_only
+        return dict(status=status,program=program,
+                    deferUnknown=status=='suspended' and unresolved_only(program.get('repairState',{})))
 
     def generate(f):
         if f['goal'] and f['goal']['kind']==KIND and not f.get('directDone'):
@@ -190,7 +413,7 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
                 if remaining>0:
                     ctx=dict(mode='open',scene=scene,program=parent,state=boundary_state(parent),maxInputs=remaining,
                         terminalGoal=f['goal'],threshold=0.,checkBudget=work.check)
-                    configure(ctx)
+                    configure(ctx,f)
                     source=iter(generate_choices('normal',ctx))
                     try:
                         for _ in range(f['directCursor']):next(source)
@@ -200,7 +423,7 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
                                 child=bind_goal(child,f['goal'],scene.get('supportClearance',1e-6))
                                 if child.get('terminalGoal')==f['goal'] and eligible(child,f) and screen(child,f) is None:
                                     identity=candidate_key(child)
-                                    if identity not in {candidate_key(p) for p in f['ready']} | {r['id'] for r in f['records']}:
+                                    if identity not in {candidate_key(p) for p in f['ready']} | {r.get('candidateKey',r['id']) for r in f['records']}:
                                         f['ready'].append(child)
                             f['directCursor']+=1
                     finally:source.close()
@@ -226,7 +449,7 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
                     continue
                 ctx = dict(mode='open',scene=scene,program=p,state=boundary_state(p),maxInputs=remaining,
                     normalGap=True,normalGapInputs=remaining,threshold=0.,checkBudget=work.check)
-                configure(ctx)
+                configure(ctx,f)
                 source = iter(generate_choices('normal',ctx))
                 try:
                     for _ in range(f['directCursor']):
@@ -237,7 +460,7 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
                             child = append_choice(p,choice,max_inputs=cfg['maxInputs'])
                             if child is not None and accepted_program(child) and screen(child,f) is None:
                                 identity = candidate_key(child)
-                                if identity not in {r['id'] for r in f['records']}:
+                                if identity not in {r.get('candidateKey',r['id']) for r in f['records']}:
                                     f['ready'].append(child)
                         f['directCursor'] += 1
                         f.pop('directChoice',None)
@@ -261,13 +484,29 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
                 (),tuple(spec['region']))
         report = f['generation']
         before = report.get('continuation',{}).get('expanded',0)
-        settings = dict(cfg,maxPrefixes=max(1,cfg['maxPrefixes']-(state['expanded']-initial_expanded)))
+        settings = dict(cfg,maxPrefixes=max(0 if typed_route else 1,
+            cfg['maxPrefixes']-(state['expanded']-initial_expanded)))
+        if anchor_route:
+            from .anchor_guides import classify
+            span,_=span_info(f)
+            for root in f['parents']:
+                point=root.get('decisionPoint',scene['initial']['position'][::2])
+                root.setdefault('decisionPoint',point)
+                root.setdefault('decisionPointTick',root['profile']['airtime'])
+                root.setdefault('decisionPointSource','original_initial' if not root['profile']['airtime'] else 'validated_anchor')
+                root['decisionTurnaround']=classify(adapter.guide_plan,span,point)['isTurnaround']
+            node_options=dict(node_evaluator=lambda p,n,x:evaluate_node(p,n,x,f),
+                priority_key=lambda p:priority(p,f,candidate_key(p)),
+                policy_context=dict(anchor=semantic_settings(adapter.anchor_policy),span=span,guide=adapter.guide_plan['id'],score=stage_adapter(f).score_context))
+        else:node_options={}
         source = iter_movement_programs(target_scene,settings=settings,report=report,initial_programs=f['parents'],
+            **node_options,
             continuation=report.get('continuation'), persistent=True, checkpoint_tick=cp.tick if cp else None,
             threshold=0., deadline=deadline,cancel_event=cancel_event,work=work,screen=lambda p:screen(p,f),
-            context_adapter=configure,program_filter=lambda p:eligible(p,f),stop_on_goal=cp is None,
+            context_adapter=lambda ctx:configure(ctx,f),program_filter=lambda p:eligible(p,f),stop_on_goal=cp is None,
+            stop_supports=f['goal'].get('blocks') if f['goal'] and f['goal']['kind']=='landing' else None,
             terminal_goal=f['goal'] if f['goal'] and f['goal']['kind']==KIND else None)
-        seen = {r['id'] for r in f['records']} | {candidate_key(p) for p in f['ready']}
+        seen = {r.get('candidateKey',r['id']) for r in f['records']} | {candidate_key(p) for p in f['ready']}
         try:
             while len(f['ready']) < batch_size:
                 try:
@@ -279,10 +518,14 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
                 if identity not in seen:
                     f['ready'].append(p)
                     seen.add(identity)
+                    if typed_route:
+                        # Score the iterator's first ready arrival immediately.
+                        # Remaining proposals stay owned by its saved cursor.
+                        break
         finally:
             source.close()
             state['expanded'] += report.get('continuation',{}).get('expanded',0)-before
-        f['ready'].sort(key=lambda p:processing_key(p,digest(program_physics_key(p))))
+        f['ready'].sort(key=lambda p:priority(p,f,digest(program_physics_key(p))))
         f['batches'] += 1
         if not f['ready'] and not f['sourceExhausted']:
             raise TimeoutError(report.get('termination','generation_suspended'))
@@ -292,7 +535,7 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
 
     def score(f, program, old=None):
         source_program = program
-        identity = old['id'] if old else f['inFlight']['id'] if f['inFlight'] is not None else candidate_key(program)
+        identity = old['id'] if old else f['inFlight']['id'] if f['inFlight'] is not None else score_key(program,f)
         work.counts['terminalEvaluations' if final_frame(f) else 'spatialGoalEvaluations'] += 1
         f['inFlight'] = dict(id=identity,program=program)
         transition('dispatch',f,candidate=identity,goal=f['goal'],inputs=program['profile']['airtime'])
@@ -300,7 +543,7 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
         cp = terminal_plan if terminal(f) else None
         landing = None
         if f['goal'] and f['goal']['kind']=='landing':
-            landing = f['goal']['block']
+            landing = program['terminalSupport'] if program['terminalSupport'] in f['goal'].get('blocks',[]) else f['goal']['block']
             target_scene['goalBlock'] = landing
         elif f['goal'] and f['goal']['kind']=='region':
             spec = f['goal']
@@ -308,31 +551,57 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
                 tuple(scene['initial']['position']),(),tuple(spec['region']))
         def progress(repair):
             f['inFlight']['program']['repairState'] = repair
-            state['cumulativeCalls'] = prior_calls+work.counts['solverCalls']
-            repair_progress = getattr(on_progress,'repair_progress',None)
-            if repair_progress is not None:
-                repair_progress(state)
-            else:
-                publish()
-        result = evaluate_program(target_scene,program,compiler,adapter,work,motion,checkpoint=cp,
+            repair_progress()
+        active_adapter = stage_adapter(f)
+        guidance=active_adapter.objective if event_route and not final_frame(f) else adapter.outgoing_objective(f['index']) if typed_route and not final_frame(f) else None
+        begin_repair(f['inFlight']['program'])
+        result = evaluate_program(target_scene,program,compiler,active_adapter,work,motion,checkpoint=cp,
             seconds=max(.001,min(score_seconds,deadline-time.monotonic())),candidate_seconds=candidate_seconds,
             solver_calls=final_calls if final_frame(f) else score_calls,python_executable=python_executable,
             cancel_event=cancel_event,partial_corridor=not terminal(f),required_landing=landing,
-            on_progress=progress,retry_unresolved=retry_unknown,first_witness=not final_frame(f))
+            on_progress=progress,retry_unresolved=retry_unknown,first_witness=not final_frame(f),guide_objective=guidance,
+            **(dict(solve_policy=dict(purpose='terminal' if final_frame(f) else 'anchor',
+                stopOnFeasible=not final_frame(f),rankEqualCost=final_frame(f),oracleRejection=True)) if anchor_route else {}))
+        if anchor_route:
+            from .turn_observability import record as observe, replay
+            span,start=span_info(f)
+            observe(state['observations'],adapter.guide_plan,program,span=span,start=start,
+                model=result.get('solveIdentity',identity),status=result.get('nodeFeasibility',{}).get('status',result['status']),kind='anchor',
+                metrics=result['work'],elapsed=sum(result.get('timings',{}).values()),
+                service=dict(latchRevision=state['latchRevision'],hardLatched=latch_key(f) in state['hardLatches'],
+                    runDeferralEnabled=minimum_run_pruning and not program.get('priorityTurnaround',False) and latch_key(f) in state['hardLatches']))
+            if result['best'] is not None:
+                ancestor=program.get('decisionParent')
+                while ancestor:
+                    event=state['observations']['decisions'].get(ancestor)
+                    if event is None:break
+                    replay(state['observations'],adapter.guide_plan,ancestor,event['span'],
+                        result['best']['candidate']['positions'][event['pointTick']],result.get('solveIdentity',identity))
+                    ancestor=event['parent']
+            node_id=program.get('decisionNode') or identity
+            state['nodeResults'][node_id]=dict(result.get('nodeFeasibility',{}),
+                parent=program.get('decisionParent'),depth=program.get('decisionDepth',0),kind='terminal' if final_frame(f) else 'anchor')
         p = copy.deepcopy(program)
         if result.get('repairState') is not None:
             p['repairState'] = result['repairState']
         record = dict(id=identity,program=p,status=result['status'],termination=result['termination'],
-            objectiveMode='optimization' if final_frame(f) else 'feasibility',
+            nodeFeasibility=result.get('nodeFeasibility'),objectiveMode='configured',
             arrival=program['profile']['airtime'] if result['best'] is not None else None,
             value=result['best']['candidate']['objective'] if result['best'] else None,
-            family=decision_family(program,f['parents']),work=result['work'],goal=f['goal'],goalKey=goal_key(scene,f['goal'],adapter.corridor) if f['goal'] else None,
+            family=decision_family(program,f['parents']),work=result['work'],goal=f['goal'],goalKey=goal_key(scene,f['goal'],active_adapter.corridor) if f['goal'] else None,
             evaluations=(old.get('evaluations',[]) if old else [])+[dict(session=state['session'],work=result['work'])],
             tried=old.get('tried',False) if old else False,solveScope=result.get('solveScope'),solveIdentity=result.get('solveIdentity'),
             numericalAttempts=result.get('repairState',{}).get('attemptLog',result.get('attempts',[])),
             contactAttempts=result.get('repairState',{}).get('contactLog',result.get('contactAttempts',[])))
+        record['candidateKey'] = candidate_key(program)
+        if (anchor_route and (program.get('restoredRun') or {}).get('frame')==f['id'] and
+                (record.get('nodeFeasibility') or {}).get('status')=='oracle_rejected'):
+            f['recoveryFailure']=dict(reason='restored_preparation_oracle_rejected',candidate=identity)
+        if event_route:
+            record['scoreContextKey'] = active_adapter.score_context
+            record['guideId'] = active_adapter.guide['id']
         record['ticks'] = program['profile']['airtime']
-        record['complete'] = terminal(f) or terminal_plan is None and f['index']==len(goal_list)-1
+        record['complete'] = final_frame(f)
         if window_plan is not None:
             from .decision_windows import DecisionPolicy
             record['decisionAudit'] = DecisionPolicy(window_plan,scene).audit(program)
@@ -350,6 +619,12 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
                 record['witness'] = best
                 record['child'] = commit_arrival(program,best,source_program=source_program)
                 record['child']['searchParent'] = identity
+                if anchor_route:
+                    for k in ('decisionNode','decisionParent','decisionDepth','restoredRun'):
+                        if k in program:record['child'][k]=program[k]
+                    record['child'].update(decisionPoint=best['candidate']['positions'][-1],
+                        decisionPointTick=program['profile']['airtime'],decisionPointSource='validated_anchor',
+                        lastSolvedDepth=program.get('decisionDepth',0))
                 record['child'].pop('solveScope',None)
         elif old and old.get('witness'):
             for key in ('witness','child','arrival','value'):
@@ -373,6 +648,9 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
                 continue
             variant_program = truncate_program(source_program,at) if at<source_program['profile']['airtime'] else source_program
             child = commit_arrival(variant_program,best,source_program=source_program)
+            if anchor_route:
+                child.update(decisionPoint=best['candidate']['positions'][at],decisionPointTick=at,
+                    decisionPointSource='validated_anchor',lastSolvedDepth=source_program.get('decisionDepth',0))
             key = candidate_key(child)
             if key in known_children:
                 continue
@@ -386,9 +664,22 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
             record['guidanceWitness'] = record.pop('witness')
             record.pop('child',None)
             record.update(status='unknown',termination='preliminary_scope_not_a_terminal_witness')
+        if anchor_route and record.get('witness') and final_validated:
+            from .anchor_policy import transfer_structure
+            span,start=span_info(f);names=adapter.guide_plan['anchors']
+            transfer=transfer_structure(scene,program,start,names[span],names[span+1],complete=True)
+            record['transferStructure']=transfer
+            if transfer['valid']:
+                key=latch_key(f)
+                if key not in state['hardLatches']:
+                    state['latchRevision']+=1
+                    state['hardLatches'][key]=dict(version=transfer['version'],revision=state['latchRevision'],candidate=identity,
+                        frame=f['id'],model=result.get('solveIdentity'),inputs=program['profile']['airtime'],
+                        transferStructure=transfer)
+                    transition('hard_jump_latched',f,span=key,revision=state['latchRevision'])
         if minimum_run_pruning and record.get('witness') and final_validated:
             remember(f.setdefault('minimumRuns',{}),latest_jump(program,scene),identity,record['arrival'])
-        if record.get('witness') and final_validated and (terminal(f) or terminal_plan is None and f['index']==len(goal_list)-1):
+        if record.get('witness') and final_validated and final_frame(f):
             from standalone.autonomy.ranking import candidate_rank
             candidate = copy.deepcopy(record['witness'])
             candidate.update(movementProgram=record['child'],blockIds=[scene['startBlock'],scene['goalBlock']])
@@ -414,20 +705,50 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
         if old is not None:
             state['frames'].remove(old)
         state['frames'].append(f)
-        if not deferred and any(numerical_pending(r) or r.get('program',{}).get('repairState',{}).get('unresolved') for r in f['records']):
+        if anchor_route and not f.get('validatedFinish') and not deferred:
+            rejected=any((r.get('nodeFeasibility') or {}).get('status')=='oracle_rejected' for r in f['records'])
+            if rejected or f.get('recoveryFailure'):
+                parent=next((v for v in state['stack'] if f['parent'] and v['id']==f['parent']['frame']),None)
+                if parent is not None:
+                    parent['recoveryFailure']=dict(reason='required_descendant_oracle_rejected',frame=f['id'])
+        if not deferred and (any(numerical_pending(r) or r.get('program',{}).get('repairState',{}).get('unresolved') for r in f['records']) or
+                             f['generation'].get('continuation',{}).get('deferredNodes')):
             state['suspended'].append(f)
         transition('backtrack',f,parent=f['parent'])
 
-    if not state['stack'] and state['nextFrame']==0:
+    def support_episodes_for_child(record, frame):
+        from .event_routes import observed_route
+        return observed_route(adapter.data,record['child']['profile'],record['witness'],
+                              after=stage_adapter(frame).request['afterTick'])
+
+    def retry_deferred_nodes(f):
+        from .node_feasibility import restore_unknown_nodes
+        source=f['generation'].get('continuation',{})
+        if restore_unknown_nodes(source,retry_unknown):
+            f['sourceExhausted']=False
+
+    if event_route:
+        state['discoveryWork'] = dict(expansions=0,materializations=0)
+    if not state['stack'] and state['nextFrame']==0 and not state.get('goalOwners'):
         index = 0
-        while index<len(goal_list) and goal_list[index]['kind']=='landing' and all(
+        while not typed_route and index<len(goal_list) and goal_list[index]['kind']=='landing' and all(
                 list(_landing_prefixes(scene,p,goal_list[index]['block'])) for p in roots):
             index += 1
         frame(index,roots)
+    if event_route:
+        for discovery in state['discovery'].values():
+            if not discovery['exhausted']:
+                expand_discovery(discovery)
+        ready = next((f for f in state['goalQueue'] if f['owner']==state.get('pendingGoalOwner')),None)
+        if ready is not None:
+            state['goalQueue'].remove(ready)
+            state['stack'].append(ready)
+            state.pop('pendingGoalOwner')
     resumable = next((f for f in reversed(state['suspended']) if retry_unknown or any(numerical_pending(r) for r in f['records'])),None)
     if not state['stack'] and resumable is not None:
         f = resumable
         state['suspended'].remove(f)
+        retry_deferred_nodes(f)
         f['retrySession'] = state['session']
         for r in f['records']:
             if retry_unknown and not r.get('witness'):
@@ -436,9 +757,12 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
         state['stack'].append(f)
     resumable_ids = {f['id'] for f in state['suspended'] if retry_unknown or any(numerical_pending(r) for r in f['records'])}
     try:
-        while state['stack'] or state['refinements'] or resumable_ids:
+        while state['stack'] or state['refinements'] or resumable_ids or event_route and state['goalQueue']:
             work.check()
             if not state['stack']:
+                if event_route and state['goalQueue']:
+                    state['stack'].append(state['goalQueue'].pop(0))
+                    continue
                 if state['refinements']:
                     f = state['refinements'].pop(0)
                 else:
@@ -450,6 +774,7 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
                         for r in f['records']:
                             if not r.get('witness') and r['id'] not in known:
                                 f['ready'].append(r['program'])
+                retry_deferred_nodes(f)
                 f['phase'] = 'score' if f['ready'] else 'generate' if not f['sourceExhausted'] else 'select'
                 state['stack'].append(f)
             if cancel_event is not None and cancel_event.is_set():
@@ -459,8 +784,11 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
                 generate(f)
             if f['phase']=='score':
                 while f['ready'] or f['inFlight'] is not None:
-                    work.check()
+                    if not typed_route:
+                        work.check()
                     if f['inFlight'] is not None:
+                        if typed_route:
+                            work.check()
                         item = f['inFlight']
                         program = item['program']
                         previous = next((r for r in f['records'] if r['id']==item['id']),None)
@@ -474,22 +802,30 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
                         observed = {next((t for t,j in enumerate(r['program']['profile']['jump'])
                             if j and r['program']['profile']['grounded'][t]),None) for r in measured}
                         compared_roots = initial_domain is None or set(initial_domain)<=observed
-                        if measured and compared_roots and processing_key(program)[:3] > arrival_key(min(measured,key=arrival_key))[:3]:
+                        if measured and compared_roots and priority(program,f)[:3] > record_priority(min(measured,key=lambda r:record_priority(r,f)),f)[:3]:
                             break
+                        if typed_route:
+                            work.check()
                         f['ready'].remove(program)
-                        previous = next((r for r in f['records'] if r['id']==candidate_key(program)),None)
+                        previous = next((r for r in f['records'] if r.get('candidateKey',r['id'])==candidate_key(program)),None)
                     if not eligible(program,f):
                         f['inFlight']=None
                         transition('candidate_exclusion',f,candidate=candidate_key(program))
                         continue
                     score(f,program,previous)
                 f['phase'] = 'select'
-            options = [r for r in f['records'] if r.get('witness') and not r['tried'] and run_bound(r['program'],f) is None]
+            options = [r for r in f['records'] if r.get('witness') and not r['tried'] and time_bound(r['child'],f) is None and run_bound(r['program'],f) is None and (not anchor_route or hard_bound(r['program'],f) is None)]
             if options:
-                chosen = min(options,key=arrival_key)
+                chosen = min(options,key=lambda r:record_priority(r,f))
                 chosen['tried'] = True
-                transition('choose',f,candidate=chosen['id'],arrival=chosen['arrival'],key=list(arrival_key(chosen)))
-                if terminal(f) or terminal_plan is None and f['index']==len(goal_list)-1:
+                if anchor_route:
+                    event=state['observations']['decisions'].get(chosen['program'].get('decisionNode'))
+                    if event is not None:event['selected']=event.get('selected',0)+1
+                transition('choose',f,candidate=chosen['id'],arrival=chosen['arrival'],key=list(record_priority(chosen,f)))
+                if final_frame(f):
+                    if anchor_route:
+                        for ancestor in state['stack']:
+                            ancestor['validatedFinish']=True
                     candidate = copy.deepcopy(chosen['witness'])
                     candidate.update(movementProgram=chosen['child'],blockIds=[scene['startBlock'],scene['goalBlock']])
                     from standalone.autonomy.ranking import candidate_rank
@@ -510,14 +846,21 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
                     scored=len(options),unknown=sum(not r.get('witness') for r in f['records']),heuristicDrops=0,
                     generation=copy.deepcopy(f['generation']),retention=dict(policy='saved_dfs_siblings_no_cap_eviction'))
                 state['windows'].append(window)
+                if event_route:
+                    observed=support_episodes_for_child(chosen,f)
+                    cursor=adapter.advance(f['semanticCursor'],chosen['child'],observed,f['goalRequest'])
+                    frame(f['index']+1,[chosen['child']],parent=dict(frame=f['id'],candidate=chosen['id']),cursor=cursor)
+                elif typed_route:
+                    frame(f['index']+1,[chosen['child']],parent=dict(frame=f['id'],candidate=chosen['id']))
                 if on_window:
                     on_window(window)
-                frame(f['index']+1,[chosen['child']],parent=dict(frame=f['id'],candidate=chosen['id']))
+                if not typed_route:
+                    frame(f['index']+1,[chosen['child']],parent=dict(frame=f['id'],candidate=chosen['id']))
                 continue
             if f['ready']:
                 f['phase'] = 'score'
                 continue
-            pending = next((r for r in f['records'] if run_bound(r['program'],f) is None and numerical_pending(r) and
+            pending = next((r for r in f['records'] if time_bound(r['program'],f) is None and run_bound(r['program'],f) is None and numerical_pending(r) and
                 r.get('refinementSession')!=state['session']),None)
             if pending is not None:
                 pending['refinementSession'] = state['session']
@@ -526,13 +869,34 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
             if not f['sourceExhausted']:
                 f['phase'] = 'generate'
                 continue
+            if anchor_route and f.get('recoveryFailure') and not f.get('validatedFinish'):
+                recovery=f.pop('recoveryFailure')
+                deferred=[r for r in state['minimumRunExclusions'] if r['frame']==f['id'] and not r.get('restored')]
+                for saved in deferred[:1]:
+                    saved['restored']=True
+                    p=copy.deepcopy(saved['program']);p['restoredRun']=dict(frame=f['id'],candidate=saved['candidate'])
+                    if hard_bound(p,f) is not None:continue
+                    if p['terminalSupport'] in f['goal'].get('blocks',[f['goal']['block']]):
+                        f['ready'].append(p)
+                    else:
+                        continuation=f['generation'].get('continuation')
+                        if continuation is not None:
+                            continuation['pending'].append(p);continuation['exhausted']=False
+                            f['sourceExhausted']=False
+                    saved['recovery']=recovery
+                    transition('restore_run',f,candidate=saved['candidate'],recovery=recovery)
+                if f['ready'] or not f['sourceExhausted']:
+                    f['phase']='score' if f['ready'] else 'generate'
+                    continue
             close_frame(f)
         if not state['stack'] and state['suspended']:
             termination = 'numerical_unknown'
     except TimeoutError as error:
         termination = work.termination or str(error)
     publish()
-    generations = [f['generation'] for f in state['frames']+state['stack']]
+    if event_route and any(not d['exhausted'] for d in state['discovery'].values()) and termination=='exhausted':
+        termination='discovery_work_limit'
+    generations = [f['generation'] for f in state['frames']+state['stack']+state.get('goalQueue',[])]
     return dict(status='feasible' if state['best'] else 'cancelled' if termination=='cancelled' else
         'error' if termination=='error' else 'unknown',termination=termination,best=state['best'],
         windows=state['windows'],finalAttempts=state['finalAttempts'],corridor=adapter.corridor.to_dict(),
@@ -547,4 +911,4 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
         minimumRunPruning=dict(enabled=minimum_run_pruning,version=POLICY_VERSION,excluded=len(state['minimumRunExclusions']),
             scope='ordinary_ground_hold_before_latest_jump',certifiedDominance=False),
         terminalCheckpoint=terminal_plan.to_dict() if terminal_plan else None,
-        goalType='fixed_absolute_tick_objective' if terminal_plan else 'earliest_virtual_landing_height' if goal_list[-1]['kind']==KIND else 'landing_time')
+        goalType='fixed_absolute_tick_objective' if terminal_plan else 'earliest_virtual_landing_height' if (adapter.data['task'] if event_route else goal_list[-1])['kind']==KIND else 'landing_time')

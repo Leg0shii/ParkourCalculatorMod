@@ -1,0 +1,277 @@
+{
+  "sourceRevision": "0d340c0309946a04f6e53fd86bd3a1aaa408c1cb",
+  "sourceHashes": {
+    "standalone/autonomy/cell_routes/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "standalone/autonomy/cell_routes/anchor_adapter.py": "4380a36f5e7a49a18da14d4d285a82bcfb0ba6fc2249f3fd1192097204080218",
+    "standalone/autonomy/cell_routes/anchor_guides.py": "09a340668c7dfd695d2a66a2205c8270b584cbb85d64d21efce3f3966aa13a51",
+    "standalone/autonomy/cell_routes/anchor_policy.py": "6da5612395f58940aaf9fbfd977768f2b28cb2cddbd4425378017bbdf07be271",
+    "standalone/autonomy/cell_routes/automatic_experiment.py": "58e0c73c1daffbd6949ad7c6e9502532a7b67f7bd5b3bf283c8a394763e799f1",
+    "standalone/autonomy/cell_routes/checkpoint_experiment.py": "2dee0d907220701e7ef2d8e70e727400fea3c73df5b67c0d7fa5eeb106fbe76c",
+    "standalone/autonomy/cell_routes/checkpoint_search.py": "d0a55fcfa43cf30e15c8f667839c8dc4b824094253daae0545495241332548ca",
+    "standalone/autonomy/cell_routes/checkpoints.py": "09dbb20802f35a70fda012bfcc600dbb643db7ed6c77d544f40fe982f5603179",
+    "standalone/autonomy/cell_routes/comparison_audit.py": "5d0a13c87a22e0224b6dd3d59a3ee940581cf573f177ea0b6742fb2a6053fc4e",
+    "standalone/autonomy/cell_routes/comparison_goals.py": "0f1cf809bbea51978fc7ecb6295595675b5671bb79f4e8665824cd968c22d6e8",
+    "standalone/autonomy/cell_routes/corridor_guards.py": "051cd8d75b457cc5407013d56f01345fec33eaebd5ec20156bced3068b1db479",
+    "standalone/autonomy/cell_routes/coverage_audit.py": "ab4f796a6d5aa9153bb142df431fe76bf368a9599c6afd7cee93c6efcfbc2f51",
+    "standalone/autonomy/cell_routes/decision_windows.py": "a48b15a241cc25b94abffed80dd1adea5c13ba68305c0c22a9ba3ecfbd65ee5b",
+    "standalone/autonomy/cell_routes/depth_first.py": "fc455e08bccfec117566641ecb705b2547bc5c42cbf60974e098ca25bc835412",
+    "standalone/autonomy/cell_routes/event_adapter.py": "109216f898264e270e8b26dfbbab7fe332f1c26068ab9a36c4b593dc072e6d55",
+    "standalone/autonomy/cell_routes/event_coverage_audit.py": "aefe8f47dc3d472748bfcaa8a5458b5e675aae6098b426fe52adc94270235ab5",
+    "standalone/autonomy/cell_routes/event_routes.py": "d950981606fe78b41649607912b6c7cbc5a334cf4ca6d41d5ccb77b2bf54009a",
+    "standalone/autonomy/cell_routes/event_search.py": "287f696eaea230c351197b7f73407c2fd1bf46a3ff76a20af59e0f291659aea9",
+    "standalone/autonomy/cell_routes/experiment.py": "77ea642f386fd13da3e512d57754d9add567c96d19895e47fbdcfacc08fc44f1",
+    "standalone/autonomy/cell_routes/failure_diagnostic.py": "86a6af5527361650e9f228e096807bdd9d90e3afab74b8708ab1f4119e95a13e",
+    "standalone/autonomy/cell_routes/fix_validation.py": "27fd57a8cb24e117a1287561c8b6a52157e394c23f1381935bd0f617a1200fc8",
+    "standalone/autonomy/cell_routes/fixed_clock_experiment.py": "d8986372617642d839414b6afb50745a6ec65a8707867db8125206a2c3df58ba",
+    "standalone/autonomy/cell_routes/generation_diagnostic.py": "f3374b3d9bb1871ecf89e0a0bdc5ef0d0c87ef7aae4f5b1752e2cd4f821d6e54",
+    "standalone/autonomy/cell_routes/geometry.py": "b9a9f9f6e16c426f8bb1d6f0140a25192d4d5cd880e01c4746fa8b3eb3a3ff4d",
+    "standalone/autonomy/cell_routes/guides.py": "4fdc899cbeb163f1f85e9780c5c5eb53b6bfa64508d28a550b907692f7bebb8d",
+    "standalone/autonomy/cell_routes/local.py": "9e5cc2fa6b797562c0760758a5be69fc2aaa7cba871295e7d2ee8c822bf95938",
+    "standalone/autonomy/cell_routes/minimum_runs.py": "ab8568cd33c7aabd8830740be46443b3eadab3e00b0f9c1942c0b5b00624c77d",
+    "standalone/autonomy/cell_routes/node_feasibility.py": "6f915db7332c58ee126e513dc3bf9c2f782c7c4015917f48e1c8ff461bfcbf82",
+    "standalone/autonomy/cell_routes/regions.py": "5d5f564ffd9180be67c7e58c6b669239dbbb091e5c8a0ab5064505a7c0c57069",
+    "standalone/autonomy/cell_routes/repair_diagnostic.py": "58b803c3b3d8c11ce98f354194abe8de41aa4f862edff25f2fb29f4f1810e8ae",
+    "standalone/autonomy/cell_routes/repair_resume_experiment.py": "0132d046f37a06fa46aee93fe1d8f36fe21c5a2776299e4ba3edea95202e25b1",
+    "standalone/autonomy/cell_routes/route_guards.py": "546a5ebdf27044ecb430f846adec35e96f60a3c7cda49555ddf8aad2d0b2ee4c",
+    "standalone/autonomy/cell_routes/route_progress.py": "d6e1edc8998a546d39cd97398048370ee70b85c294cb2f92766ee3bc84275dc1",
+    "standalone/autonomy/cell_routes/route_queue.py": "4e9aaa7839aa5883d076a7c349f0f9509d60834774fcb85c315315ce288fe34d",
+    "standalone/autonomy/cell_routes/routes.py": "8324e4581a1388a4bce28f6f096c6a3c71fcd80985df4fb6c4a6b4b393bbe3b4",
+    "standalone/autonomy/cell_routes/scalar_seed_diagnostic.py": "37c6385cc56ed7cfc26aea44865284fafa41fe5bcde8abf001aa433f827bc8ba",
+    "standalone/autonomy/cell_routes/semantic_adapter.py": "9e061910a306dcc215ad1bf088ee94a9b087c80753549602c2664e30b30a42e4",
+    "standalone/autonomy/cell_routes/support_order.py": "a675caf679dc3f7578f18abe6cd80d15935a6f8c1bba342f8884a3281de57dad",
+    "standalone/autonomy/cell_routes/time_progress.py": "f905c8b3e2e5195b8fc59a44284327b62e2f44b4c783001a3320af16099dc305",
+    "standalone/autonomy/cell_routes/turn_observability.py": "403e46b6210afe73f3a2e910b9e0c9c44081370b190927350d388513aaf13736",
+    "standalone/autonomy/cell_routes/two_goal_experiment.py": "b550b1dc37ad04fd5bc4551eeb28cc2852d42a0acaf7b7c03c57526561778a1c",
+    "standalone/autonomy/cell_routes/window_diagnostic.py": "8ed7bc87477ab8b9b20009c4b0d35f1abbac13a297cac4caf47f0c3454325f6c",
+    "standalone/autonomy/cell_routes/window_experiment.py": "6bdc9d4d4c9725d967514f2bfdab23f707778ee90fd05014d2a69ebde655acff",
+    "standalone/autonomy/__init__.py": "9675a573a5d2e0617653bc4de99f58c1c7cd72de101cbffd7c3f82ebc7086e37",
+    "standalone/autonomy/block_contacts.py": "028979008f8dcd3fc57053635d0f6e1f6890d9282f4e22198d0ccf5c484d5424",
+    "standalone/autonomy/block_profiles.py": "6de885b41a2e6d55e0878540f148724aa5fbfc92e18f9f60c1c4b597c9e2f559",
+    "standalone/autonomy/block_search.py": "1b57fdaa023f3c0057ae8d4e4c65692160c569f2976a82e57557bf4a9d76fecf",
+    "standalone/autonomy/blockages.py": "19b40ff11f0a7555543e09fba2f13161b7924ef2e898bd497636d3a6cc386c04",
+    "standalone/autonomy/case_profiles.py": "d024822d2f6aef2439acb9bccfa540d82c979773209d5b51c8f0d808c267c0ac",
+    "standalone/autonomy/ceiling_contacts.py": "754b887c88ac423a8f4bbd486f2246acd7820c4ebe9b9ba1778eb0ac6d557040",
+    "standalone/autonomy/ceiling_generation.py": "7004d648f412c4b643165568738094c9db3e97e082ce10c1b398ab759f8d568b",
+    "standalone/autonomy/ceiling_primitives.py": "15d43e1f0e6564880c8d73e1b16c0013fbb75b0068d99d1beb3c579a3b3a0f6c",
+    "standalone/autonomy/climbable_search.py": "bfc21052a0aa02d2ef3484f090377ba1885700e8f631c11e30442b864db48cc3",
+    "standalone/autonomy/compiler.py": "7fa0601a0ee04cad907eb4a961fb18fd98b7c00771b2159a0e5db3065d80350b",
+    "standalone/autonomy/constraint_variants.py": "280b743e65125f384492bd4cd4dc63c8a54875b85a0853f19a3ab10312992fa0",
+    "standalone/autonomy/contact_combinations.py": "7e000c25f11559357dee586bc210400b3acd3bc48e9a3f4cd452c34b56ce3e8c",
+    "standalone/autonomy/contact_profiles.py": "32f3de58736d02770ef34374d8eb9c8a577dc1c3cf0384bd77072cb574b9717b",
+    "standalone/autonomy/hit_events.py": "24caae4625b7a023ad9cd3b147081eba6111a1a3cc90f6826c4c53f61ba7c6f9",
+    "standalone/autonomy/interactions.py": "af1dbe761867b017fc6e6e82ee1fe450b9c46d0eb73daeef8911970a574bce04",
+    "standalone/autonomy/ladder_ceiling.py": "e80ec9eb9f9f72006c4b490a62a2c15ddd79a58ec839f44490c6315360090cbd",
+    "standalone/autonomy/ladder_episodes.py": "3c462d4c4e3eb1f856fffa0a95bb9d88917a593a76e8187692851baf26c75fec",
+    "standalone/autonomy/ladder_events.py": "4fd5c476aa623e9debdcdd485a39f0c2df7e79ca1efc27c89dd2bed7e9f17d5a",
+    "standalone/autonomy/ladder_geometry.py": "5295e1823b39d6f6db5fc4511ca7c69fcda5931ed6a01ddec89ea14578c936e0",
+    "standalone/autonomy/ladder_ranking.py": "790bfe1c60c31d4a95809693b0a9a265be7ed465f867816ec3a4f396a6d0fdc1",
+    "standalone/autonomy/ladder_schedules.py": "7a7c16c05784e8e39415088581612cab04f259b692c6ff3b7aa451a647f51232",
+    "standalone/autonomy/ladder_transfers.py": "c68285f9c3b4605af44112bb6cae41e382ca53f1a7e7d97cc737f909f20a7cf4",
+    "standalone/autonomy/linear_reachability.py": "42ed9786ba3883a8a69369c26a9cc393ad7b68801e0251007b823eb693befa55",
+    "standalone/autonomy/linkcraft.py": "12d90184af1c46ea5f4f7feccae9b298df06a7d480a76205563cd4a359c554a3",
+    "standalone/autonomy/mixed_ladder.py": "aac1b04e7793689b3a89e1ccd74ebcb4d3125c415f64a241b30d7bf048d82efa",
+    "standalone/autonomy/movement_composition.py": "e655a5521abd16294e4a6dec9f13e83699a610a23bd3cdb40ee5367435478493",
+    "standalone/autonomy/movement_contacts.py": "603921982b55b14de23404dc405fe8cf0b94b7bc33a1cc8eb33834246ef4ef5a",
+    "standalone/autonomy/movement_entry.py": "3d138978c86629171ce4b96a32f66693c7bca48c34473d7020708d5940aa25f1",
+    "standalone/autonomy/movement_frontier.py": "a1f281e02c067e8f44e43211dc2240d484d73a34a6e05e1bc1b5ecaa8772f432",
+    "standalone/autonomy/movement_generation.py": "6c76b36d2f6d84882f1aa5e4da76c58430b21d55611bfc8a784642ae08203497",
+    "standalone/autonomy/movement_problem.py": "907e615dc719a00463c9e586561f83fb59542f41dde7191a60b4ba6923aec40d",
+    "standalone/autonomy/movement_search.py": "bdcdb4f2fd8c8e30c3e3a9d69d0841e2965a1cd7ad1c1980edd2131b89259e24",
+    "standalone/autonomy/movement_units.py": "1d84e257b7ed2f9e6fc5f5201754376757c9b0770bd19764a348611717303a90",
+    "standalone/autonomy/obstacle_geometry.py": "9c665a862063693a00155f0a0754c2c57b10a344e144e7b55ed5297e16b69581",
+    "standalone/autonomy/open_ladder.py": "f8fa3a482baea420dafac9a9f8ae1ad59ac70dff19df0c6335e4cb1a3a0e7210",
+    "standalone/autonomy/open_movement.py": "99d81802c21d1e12f7d6b6cbfa16508475c7092379992c01930f2f6d973cc31b",
+    "standalone/autonomy/prefix_viability.py": "11b3db80154bdbdb0332a288fef7bf91fa217cf4b146e87481b628a783f7843c",
+    "standalone/autonomy/ranking.py": "116cb2c23a61fdc2d52b551555f931bd9e369425a302127f50f379965b359ab9",
+    "standalone/autonomy/reachability.py": "f5597b2406664fd3ee6ee5850f1a9cd3c47f50ec7fd6e9e0a9b09a3036d08259",
+    "standalone/autonomy/repair_state.py": "30fcd4bc32753219b4f9b8b6737f3ce058332993e1e32c52a9b21487f7302165",
+    "standalone/autonomy/route.py": "a6cd41c11a3daa2cc5c0112e06f243d708e0d19993e05676d0cec77608318ef0",
+    "standalone/autonomy/screen.py": "bd4edc177e8ed590a61d1757fe5066eb590fd7e55ca5268de400c93892897f6a",
+    "standalone/autonomy/search.py": "ed6a3e0d6debf6d5b7fd8d221d916e8b9564267313719b309f37221ca244ece3",
+    "standalone/autonomy/solve.py": "674e2653aedf730164b6210721d088ca33a7fc1370f83a519206bd217b66b37a",
+    "standalone/autonomy/solve_blocks.py": "faf9cbaf5fdd8432e98aa580e5ea1dff9b5a0e3f63f860898460227a87aa531c",
+    "standalone/autonomy/solve_spec.py": "e0170fb0b48dc517d23bedbb6d3cc3914a25735ae3253ad32d0ea6bad12c6495",
+    "standalone/autonomy/stepping_generation.py": "53704fbf48b328699bac321c38296e134c2c460b48975471081038177f4cf956",
+    "standalone/autonomy/terminal_goals.py": "afadafef3a464a22aa150826c2bb77828dd0417e4bdac330d5438d55537c5264",
+    "standalone/autonomy/vertical_profiles.py": "de20bf3a0314ea39e8dd38d649ac84b05e23a6857c0a7267eb745f3bb12cc167",
+    "standalone/ipopt/__init__.py": "01cd6ea7f4981e14d15dc3887b63827d2f70ca394c028d877e71da68fca2f8b1",
+    "standalone/ipopt/capture.py": "b3af9eae22e282cef8a9c1a045ca88c5a5c392b6eabc2e50919a0133514e75e6",
+    "standalone/ipopt/continuation.py": "a740bb6fd9cbf1ef3de8bedd7208a709dca931d050010c512a1fc2002b4f548a",
+    "standalone/ipopt/ladder.py": "72f46adf6a4f81a2cc123362daf9f4a847c2326fbd6a14b101124a695a80b3b8",
+    "standalone/ipopt/model.py": "e53842f37bca3a15455bf9ab72cdec9825a4c55f64b7e744dae40e99a9f42f23",
+    "standalone/ipopt/solve.py": "2c7ff0c666c91d73dcf1b96e1db9566ac492d9d44a6caac101d49c37636e4528",
+    "standalone/ipopt/solver.py": "9800eb1bc0d87d98ba3b3e3feb5aa47e889d5426abced49ea4dce62854c058b6",
+    "standalone/ipopt/worker.py": "1f5f6ca2359201d6685e27847ee4172a0fa3def502704b27dd5d8cb38ab10538"
+  },
+  "runs": [
+    {
+      "arm": "initial0",
+      "initialJumpInputs": [
+        0
+      ],
+      "declaredSeconds": 90.0,
+      "ticks": 64,
+      "objective": -1093.4443574708994,
+      "Y": 7,
+      "onGround": true,
+      "counts": {
+        "T": 64,
+        "J": 6,
+        "R": 0,
+        "A": 58,
+        "start": 0
+      },
+      "firstFullSolutionSeconds": 8.385531459003687,
+      "searchSeconds": 93.79625308141112,
+      "totalSeconds": 94.45582691952586,
+      "work": {
+        "solverCalls": 42,
+        "workerLaunches": 32,
+        "feasibleSeedReturns": 8,
+        "maxSolverCalls": 1024
+      },
+      "expandedPrefixes": 218,
+      "validatedWitnesses": 25,
+      "allReplaysPassed": true,
+      "rootRecords": [
+        {
+          "T": 21,
+          "status": "feasible",
+          "transfer": {
+            "version": 2,
+            "valid": true,
+            "reason": null,
+            "source": "b1",
+            "target": "b2",
+            "spanStart": 0,
+            "preparationThrough": 12,
+            "preparationJumps": [
+              0
+            ],
+            "transferJumps": [
+              12
+            ],
+            "arrival": 21
+          }
+        }
+      ],
+      "latches": {
+        "b1\u2192b2": {
+          "version": 2,
+          "revision": 1,
+          "candidate": "1d256f777169f8fd4ac4a124e24b4f27645e7a34b63027f9b6afd6b6dfbc78a9",
+          "frame": 0,
+          "model": "ad15549b690e977708320e20a02501d2a6c245b984cefe32d439d83c9ab249dc",
+          "inputs": 21,
+          "transferStructure": {
+            "version": 2,
+            "valid": true,
+            "reason": null,
+            "source": "b1",
+            "target": "b2",
+            "spanStart": 0,
+            "preparationThrough": 12,
+            "preparationJumps": [
+              0
+            ],
+            "transferJumps": [
+              12
+            ],
+            "arrival": 21
+          }
+        },
+        "b2\u2192b3": {
+          "version": 2,
+          "revision": 2,
+          "candidate": "8638cace88d4e7301583baf4c48f9572af553288eeea80280cb71aa68ca9889e",
+          "frame": 1,
+          "model": "9fbbe22dbb46f8e840559fa7df77399e2dd12b4a6f06d2b4978b559e34718618",
+          "inputs": 30,
+          "transferStructure": {
+            "version": 2,
+            "valid": true,
+            "reason": null,
+            "source": "b2",
+            "target": "b3",
+            "spanStart": 21,
+            "preparationThrough": 21,
+            "preparationJumps": [],
+            "transferJumps": [
+              21
+            ],
+            "arrival": 30
+          }
+        },
+        "b3\u2192b4": {
+          "version": 2,
+          "revision": 3,
+          "candidate": "1a7ff7c453048cadbbf4116b6c545c85de86289d7869fe974b6196c6c4138bc7",
+          "frame": 2,
+          "model": "d1748e65fac73e1621c9cd52de2e9cd5f41c283b267c45c5c0f8b9f2ae106a9c",
+          "inputs": 40,
+          "transferStructure": {
+            "version": 2,
+            "valid": true,
+            "reason": null,
+            "source": "b3",
+            "target": "b4",
+            "spanStart": 30,
+            "preparationThrough": 30,
+            "preparationJumps": [],
+            "transferJumps": [
+              30
+            ],
+            "arrival": 40
+          }
+        },
+        "b4\u2192b5": {
+          "version": 2,
+          "revision": 4,
+          "candidate": "00c590d0016425d5642a399563ffc6c21ddf2c7bc743c557e44814ce4a2c9582",
+          "frame": 3,
+          "model": "3c98d65123d6b02e0c7954a3bd49f408bb3906accb6f21f88fed595287d3027b",
+          "inputs": 55,
+          "transferStructure": {
+            "version": 2,
+            "valid": true,
+            "reason": null,
+            "source": "b4",
+            "target": "b5",
+            "spanStart": 40,
+            "preparationThrough": 40,
+            "preparationJumps": [],
+            "transferJumps": [
+              40
+            ],
+            "arrival": 55
+          }
+        },
+        "b5\u2192b7": {
+          "version": 2,
+          "revision": 5,
+          "candidate": "cdb4a9411af6b32ecfd761aef4a6f292dbb4910693af56bf3ecce30a2cd82968",
+          "frame": 4,
+          "model": "c8209b44ae984a703c855bdd76212cfba3a02a46fa54e73d0f9199ada412938a",
+          "inputs": 64,
+          "transferStructure": {
+            "version": 2,
+            "valid": true,
+            "reason": null,
+            "source": "b5",
+            "target": "b7",
+            "spanStart": 55,
+            "preparationThrough": 55,
+            "preparationJumps": [],
+            "transferJumps": [
+              55
+            ],
+            "arrival": 64
+          }
+        }
+      },
+      "sourceUnchanged": true,
+      "termination": "deadline"
+    }
+  ],
+  "validationScope": "Cold discovery and full supplied-scene replay; no archived seeds or global optimality proof"
+}

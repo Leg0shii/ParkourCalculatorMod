@@ -1,0 +1,221 @@
+--- a/standalone/autonomy/cell_routes/depth_first.py
++++ b/standalone/autonomy/cell_routes/depth_first.py
+@@ -89,7 +89,8 @@
+         terminal=terminal_plan.to_dict() if terminal_plan else None, corridor=adapter.corridor.to_dict(),
+         windows=window_plan, filter=getattr(program_filter, 'checkpoint_identity', None),
+         margins=[time_margin,progress_margin], physics=motion,
+-        minimumRunPolicy=POLICY_VERSION if minimum_run_pruning else None))
++        minimumRunPolicy=POLICY_VERSION if minimum_run_pruning else None,
++        **({'routeStagePolicy':2,'routeCommitPolicy':1,'routeProposalPolicy':1} if typed_route else {})))
+     if resume_state is not None and (resume_state.get('version') != schema or
+             resume_state.get('kind') != 'ordered_goal_dfs' or resume_state.get('context') != context):
+         raise ValueError('Incompatible DFS continuation; old checkpoint queues require explicit reconstruction')
+@@ -114,7 +115,10 @@
+
+     def transition(kind, frame, **fields):
+         state['transitions'].append(dict(kind=kind, frame=frame['id'], depth=frame['index'], session=state['session'], elapsedSeconds=time.monotonic()-started, **fields))
+-        publish()
++        # A typed arrival's tried flag and child execution owner are one
++        # checkpoint transaction. The child's open/backtrack publishes both.
++        if not typed_route or kind!='choose':
++            publish()
+
+     def frame(index, parents, parent=None):
+         f = dict(id=state['nextFrame'], index=index, parents=copy.deepcopy(parents), parent=parent,
+@@ -300,6 +304,10 @@
+                 if identity not in seen:
+                     f['ready'].append(p)
+                     seen.add(identity)
++                    if typed_route:
++                        # Score the iterator's first ready arrival immediately.
++                        # Remaining proposals stay owned by its saved cursor.
++                        break
+         finally:
+             source.close()
+             state['expanded'] += report.get('continuation',{}).get('expanded',0)-before
+@@ -476,8 +484,11 @@
+                 generate(f)
+             if f['phase']=='score':
+                 while f['ready'] or f['inFlight'] is not None:
+-                    work.check()
++                    if not typed_route:
++                        work.check()
+                     if f['inFlight'] is not None:
++                        if typed_route:
++                            work.check()
+                         item = f['inFlight']
+                         program = item['program']
+                         previous = next((r for r in f['records'] if r['id']==item['id']),None)
+@@ -493,6 +504,8 @@
+                         compared_roots = initial_domain is None or set(initial_domain)<=observed
+                         if measured and compared_roots and processing_key(program)[:3] > arrival_key(min(measured,key=arrival_key))[:3]:
+                             break
++                        if typed_route:
++                            work.check()
+                         f['ready'].remove(program)
+                         previous = next((r for r in f['records'] if r['id']==candidate_key(program)),None)
+                     if not eligible(program,f):
+@@ -527,9 +540,12 @@
+                     scored=len(options),unknown=sum(not r.get('witness') for r in f['records']),heuristicDrops=0,
+                     generation=copy.deepcopy(f['generation']),retention=dict(policy='saved_dfs_siblings_no_cap_eviction'))
+                 state['windows'].append(window)
++                if typed_route:
++                    frame(f['index']+1,[chosen['child']],parent=dict(frame=f['id'],candidate=chosen['id']))
+                 if on_window:
+                     on_window(window)
+-                frame(f['index']+1,[chosen['child']],parent=dict(frame=f['id'],candidate=chosen['id']))
++                if not typed_route:
++                    frame(f['index']+1,[chosen['child']],parent=dict(frame=f['id'],candidate=chosen['id']))
+                 continue
+             if f['ready']:
+                 f['phase'] = 'score'
+--- a/standalone/autonomy/cell_routes/route_guards.py
++++ b/standalone/autonomy/cell_routes/route_guards.py
+@@ -34,15 +34,16 @@
+
+
+ class RouteGuards:
+-    def __init__(self, scene, corridor, profile, through, *, complete=False, envelopes=None, deadline=None):
++    def __init__(self, scene, corridor, profile, through, *, complete=False, envelopes=None, deadline=None, phase_count=None):
+         self.route, self.profile, self.through = corridor, profile, through
+         self.regions = {r['key']:r for r in corridor.region_graph['regions']}
+         self.edges = {t['key']:t for t in corridor.region_graph['transitions']}
+         self.contacts = physical_events(scene, profile)
+         self.complete = complete
++        self.phase_count=3*through if phase_count is None else phase_count
+         self.envelopes, self.deadline = envelopes, deadline
+         self.uncertain = {3*e['input']+a for e in profile.get('caseEvents', []) for a in range(3)}
+-        self.context = geometry_key((corridor.to_dict(), profile, through, complete))
++        self.context = geometry_key((corridor.to_dict(), profile, through, complete,self.phase_count))
+         self.cache = {}
+
+     def rows(self, box, phase, *, endpoint=None):
+@@ -170,11 +171,11 @@
+             if self.deadline is not None and time.monotonic() >= self.deadline:
+                 raise TimeoutError('route_guard_generation_deadline')
+             node = cursor['pending'][-1]
+-            if node['phase'] == 3*self.through:
++            if node['phase'] == self.phase_count:
+                 cursor['pending'].pop()
+                 variant = self.route.route_variants[node['variant']]
+                 index = node['occurrence']
+-                final = index == len(variant['regions'])-1
++                final = index >= variant.get('required',len(variant['regions'])-1)
+                 if not final and index < len(variant['transitions']):
+                     final = self.edges[variant['transitions'][index]]['kind']=='finish'
+                 if self.complete and not final:
+--- a/standalone/autonomy/cell_routes/route_progress.py
++++ b/standalone/autonomy/cell_routes/route_progress.py
+@@ -151,7 +151,7 @@
+     complete = []
+     for p in possible:
+         variant = route.route_variants[p['variant']]
+-        complete.append(p['confirmed'] == len(variant['regions'])-1)
++        complete.append(p['confirmed'] >= variant.get('required',len(variant['regions'])-1))
+     require_complete = bool(scope and scope.get('complete'))
+     status = 'unknown' if unknown else 'compatible'
+     if require_complete and not any(complete):
+--- a/standalone/autonomy/cell_routes/route_queue.py
++++ b/standalone/autonomy/cell_routes/route_queue.py
+@@ -59,7 +59,8 @@
+     saved=options.pop('resume_state',None)
+     if saved is not None and options.get('initial_programs') is None:
+         options['initial_programs']=saved.get('initialRoots')
+-    context=digest(dict(version=1,graph=graph.context,task=task_goal,spatial=spatial,
++    context=digest(dict(version=1,allocationPolicy=2,routeStagePolicy=2,routeCommitPolicy=1,routeProposalPolicy=1,
++        graph=graph.context,task=task_goal,spatial=spatial,
+         scene={k:v for k,v in scene.items() if k!='movementSearch'},
+         domain={k:v for k,v in cfg.items() if k not in ('maxPrefixes','maxQueuedPrefixes','maxChoicesPerType','expansionsPerProposal')},
+         roots=options.get('initial_programs'),filter=getattr(policy,'checkpoint_identity',None),
+@@ -121,6 +122,7 @@
+         index=state['queue'].pop(0)
+         state['active']=index
+         child=state['children'].get(str(index))
++        before_depth=max((f.get('index',0) for f in child.get('stack',[])),default=0) if child else 0
+         prior_calls=child.get('cumulativeCalls',0) if child else 0
+         prior_expanded=child.get('expanded',0) if child else 0
+         def progress(value):
+@@ -154,7 +156,11 @@
+             state['best']['spatialRoute']=index
+         state['active']=None
+         if result['searchState']['stack'] or result['searchState']['refinements']:
+-            state['queue'].append(index)
++            after_depth=max((f.get('index',0) for f in result['searchState']['stack']),default=0)
++            advanced=after_depth>before_depth
++            state['queue'].insert(0,index) if advanced else state['queue'].append(index)
++            state.setdefault('allocations',[]).append(dict(route=index,beforeDepth=before_depth,afterDepth=after_depth,
++                continuation='committed_child' if advanced else 'yield_to_other_routes'))
+         elif result['searchState']['suspended']:
+             state.setdefault('unknownRoutes',[])
+             if index not in state['unknownRoutes']:
+--- a/standalone/autonomy/cell_routes/semantic_adapter.py
++++ b/standalone/autonomy/cell_routes/semantic_adapter.py
+@@ -16,6 +16,7 @@
+         self.full_corridor = corridor
+         self.program = None
+         self.goal_index = None
++        self.contact_phase_only = False
+
+     def goals(self):
+         regions = {r['key']:r for r in self.full_corridor.region_graph['regions']}
+@@ -39,16 +40,26 @@
+         for variant in self.full_corridor.route_variants:
+             seen = -1
+             stop = len(variant['transitions'])
++            required = len(variant['regions'])-1
+             for i, key in enumerate(variant['transitions']):
+                 if edges[key]['kind'] in ('support_arrival','finish'):
+                     seen += 1
+                     if seen == index:
+-                        stop=i+1
++                        required=i+1
++                    elif seen == index+1:
++                        # The current landing can run off in its remaining X/Z
++                        # phases. Permit the selected outgoing air itinerary,
++                        # without requiring its next contact/finish yet.
++                        stop=i
+                         break
+-            variants.append(dict(regions=variant['regions'][:stop+1],transitions=variant['transitions'][:stop]))
++            variants.append(dict(regions=variant['regions'][:stop+1],transitions=variant['transitions'][:stop],required=required))
+         result.corridor.route_variants = variants
+         result.corridor.graph_context = geometry_key((self.full_corridor.graph_context,index,variants))
+         result.goal_index = index
++        final=variants[0]
++        regions={r['key']:r for r in self.full_corridor.region_graph['regions']}
++        result.contact_phase_only=(final['required']==len(final['regions'])-1 and
++            regions[final['regions'][final['required']]]['kind']=='support_surface')
+         result.program = None
+         result.progress_cache = {}
+         return result
+@@ -136,7 +147,9 @@
+         if self._omitted():
+             return None
+         return RouteGuards(self.scene,self.corridor,profile,scope['through'],complete=True,
+-                           envelopes=envelopes,deadline=deadline)
++                           envelopes=envelopes,deadline=deadline,
++                           phase_count=3*scope['through']-2 if self.contact_phase_only and
++                           scope['through']==profile['airtime'] and profile.get('landingPhase')=='pre' else None)
+
+     def candidate(self, plan, candidate, vertical, *, partial=False):
+         self.counts['corridorAudits'] += 1
+@@ -146,6 +159,8 @@
+             raise ValueError('Semantic route validation needs the selected physical program')
+         phases = phase_trace(dict(candidate,y=vertical['y']))
+         profile = self.program['profile']
++        if self.contact_phase_only and profile.get('landingPhase')=='pre':
++            phases=phases[:-2]
+         uncertain = {e['input'] for e in profile.get('caseEvents',[])}
+         for phase in phases:
+             if phase['input'] in uncertain:
+@@ -162,7 +177,10 @@
+         self.counts['corridorRejections'] += int(not accepted)
+         self.counts['routeUnknowns'] += int(checked['status']=='unknown')
+         return dict(accepted=accepted, reason=None if accepted else 'semantic_route_'+checked['status'],
+-                    routeCertified=accepted, routeProgress=checked, alternatives=[], repairComplete=False)
++                    routeCertified=accepted, routeProgress=checked, alternatives=[], repairComplete=False,
++                    routeHorizonPhase=phases[-1]['phase'] if phases else None,
++                    routeRequirement='physical_contact_phase' if self.contact_phase_only else 'selected_goal_with_outgoing_regions',
++                    requiredOccurrences=[v.get('required',len(v['regions'])-1) for v in self.corridor.route_variants])
+
+     def summary(self):
+         return dict(self.counts,schema=2,graphContext=self.full_corridor.graph_context,

@@ -34,23 +34,23 @@ class FeasibilityModeTests(unittest.TestCase):
                     python_executable=os.environ['PKC_IPOPT_PYTHON'],first_witness=first)
             first = evaluate(program,True)
             self.assertEqual(first['status'],'feasible',first['termination'])
-            self.assertEqual(first['objectiveMode'],'feasibility')
+            self.assertEqual(first['objectiveMode'],'configured')
             self.assertTrue(replay_witness(scene,first['best'],compiler)['passed'])
             calls = [d for a in first['attempts'] for d in a.get('diagnostics',[])]
             self.assertTrue(calls)
-            self.assertTrue(all(d['callOptions']['stopOnFeasible'] and d['objectiveMode']=='feasibility' for d in calls))
+            self.assertTrue(all(d['callOptions']['stopOnFeasible'] and d['objectiveMode']=='configured' for d in calls))
             # The same hard model can later be optimized, but its exhausted
             # feasibility cursor must not suppress the optimization request.
             resumed = dict(copy.deepcopy(program),repairState=first['repairState'])
             second = evaluate(resumed,False)
             self.assertEqual(second['status'],'feasible',second['termination'])
-            self.assertEqual(second['objectiveMode'],'optimization')
+            self.assertEqual(second['objectiveMode'],'configured')
             self.assertFalse(second['repairResume']['compatible'])
             self.assertTrue(replay_witness(scene,second['best'],compiler)['passed'])
             self.assertGreaterEqual(second['best']['candidate']['objective'],first['best']['candidate']['objective']-1e-7)
             calls = [d for a in second['attempts'] for d in a.get('diagnostics',[])]
             self.assertTrue(calls)
-            self.assertTrue(all(not d['callOptions']['stopOnFeasible'] and d['objectiveMode']=='optimization' for d in calls))
+            self.assertTrue(all(not d['callOptions']['stopOnFeasible'] and d['objectiveMode']=='configured' for d in calls))
         self.assertEqual(program,original)
 
 

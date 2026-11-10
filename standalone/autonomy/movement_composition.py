@@ -197,8 +197,10 @@ def append_choice(program, choice, *, max_inputs=200):
                   interactions=program['interactions'] + int(choice.get('interaction', False)), trace=trace)
     for key in ('threshold', 'guideSeedYaw', 'repairState', 'solveScope', 'committedThrough'):
         if key in program:
-            if key == 'repairState' and (program[key].get('context', {}).get('scope') or {}).get('solveIdentity'):
-                continue
+            if key == 'repairState':
+                scope=program[key].get('context', {}).get('scope') or {}
+                if scope.get('solveIdentity') or (scope.get('scope') or {}).get('solveIdentity'):
+                    continue
             result[key] = copy.deepcopy(program[key])
     return result
 

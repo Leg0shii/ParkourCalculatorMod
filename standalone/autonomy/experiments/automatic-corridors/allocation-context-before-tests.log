@@ -1,0 +1,19 @@
+test_choice_and_queue_sizes_do_not_erase_a_late_candidate_after_reload (standalone.autonomy.tests.test_orchestrator_continuation.PersistentGenerationTests.test_choice_and_queue_sizes_do_not_erase_a_late_candidate_after_reload) ... ERROR
+
+======================================================================
+ERROR: test_choice_and_queue_sizes_do_not_erase_a_late_candidate_after_reload (standalone.autonomy.tests.test_orchestrator_continuation.PersistentGenerationTests.test_choice_and_queue_sizes_do_not_erase_a_late_candidate_after_reload)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/parkour-real11-initial-run-ticks/standalone/autonomy/tests/test_orchestrator_continuation.py", line 153, in test_choice_and_queue_sizes_do_not_erase_a_late_candidate_after_reload
+    rest=list(iter_movement_programs(scene,settings=cfg,checkpoint_tick=1,threshold=0.,persistent=True,
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/parkour-real11-initial-run-ticks/standalone/autonomy/movement_search.py", line 37, in iter_movement_programs
+    yield from persistent_programs(scene, settings=cfg, report=report if report is not None else {},
+  File "/private/tmp/parkour-real11-initial-run-ticks/standalone/autonomy/movement_frontier.py", line 26, in persistent_programs
+    raise ValueError('Incompatible movement generation checkpoint')
+ValueError: Incompatible movement generation checkpoint
+
+----------------------------------------------------------------------
+Ran 1 test in 0.005s
+
+FAILED (errors=1)

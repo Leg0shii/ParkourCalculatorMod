@@ -1,5 +1,21 @@
 # Tests and fixtures
 
+Current integration acceptance (2026-11-10): [571 native-enabled selected tests](../autonomy/experiments/anchor-runtime-profile/integrated-2026-11-10/native-final/report.json)
+pass with zero failures/errors/skips and105 runtime hashes matching the cold
+profile. Five additional profiler tests pass. The selected non-ladder autonomy
+scope and full IPOPT module list are explicit in the report; this is not an
+all-mod/game test claim. [Integration contract](ANCHOR_SEARCH_INTEGRATION.md)
+and [cold results](../autonomy/experiments/anchor-runtime-profile/README.md)
+record nested persistence, unknown retention, recovery and time-bound checks.
+
+## Anchor DFS and finite terminal task
+
+Hard-transfer policy2 adds source-hop chains after learning/backtracking/resume, noninitial source boundaries, owner aliases, same-input source/target contact, explicit caps and the actual Real11 initial0 prefix. [Corrected-source evidence](../autonomy/experiments/anchor-transfer-preparation/README.md) records535 native passes and source-stable cold controls. Setup impulses remain in J, while only the transfer is restricted to one jump. The normal0/8 cold run's remaining branch-service limit is recorded separately from eligibility.
+
+`test_anchor_policy`, `test_anchor_search` and `test_anchor_dfs` cover backward finite guides, axis/diagonal binary boundaries, local requested-impulse counts, explicit caps, exact-node versus ancestor outcomes, physical repair exhaustion, current-owner hops, departure exclusions, selected-descent feasibility, source-owned suspension/resume, global hard latches across incoming histories, run restoration, logging parity and native cold physical landing. Updated event/semantic integration assertions use physical-task schema8. The finite landing clock is bound before an unused suffix; owned future rows are removed through the existing truncation path.
+
+Run the [new native driver and matched finite-task measurement](../autonomy/experiments/anchor-feasibility/README.md) to a fresh directory. Their source-specific manifests and replay scope supersede older virtual-task timing as evidence for this feature.
+
 [Runbook](RUNBOOK.md) supplies commands/environment. [File index](FILE_INDEX.md) lists every tracked test and fixture; [function index](FUNCTION_INDEX.md) indexes production definitions. Tests use `unittest`; many require explicit compiler/worker environment variables. Always report skips. No new test runner or formatting tool is required.
 
 ## Choose tests by contract
@@ -66,17 +82,18 @@ Current DFS acceptance: [results and logs](../autonomy/experiments/dfs-interacti
 
 `test_minimum_runs` combines generic dispatch/resume/unknown controls with archived Real11 programs. It checks local preparation counts and preserves different prior interactions, hard obstacle-side rows and free/physical terminal contacts. Full counterfactual controls can set `minimum_run_pruning=False` in fresh fixture settings; policy changes intentionally invalidate exact resume. Saved `minimumRunExclusions` include each discrete program and the representative causing exclusion. Continuation-time pruning remains deferred and is not required for this policy.
 
+## Semantic corridor refactor
 
-## Shared checkpoint persistence
+Add `test_route_regions`, `test_semantic_routes`, `test_route_progress`, `test_route_guards` and `test_semantic_search` to the cell/DFS gate. They cover exact exposed unions and equivalent encodings, checked convex cover, landing versus overflight, 3D layer/passage order, meaningful revisits, no variant splicing, several portals per input, unknown named probes, fixed sweep alternatives, independent initial domains, immutable stage views and continuation. Native tests include inferred intermediate goals/outgoing objectives, exact one-prefix-per-session suspension/resume, finite and airborne virtual finishes, independent replay and archived Real11 witness coverage without seeding discovery.
 
-`test_checkpoint_store` covers exact JSON round trips, repeated-content storage, mutation isolation, failed publication preserving the previous root, legacy files/companion identity, patch compaction, saved pending repairs, completed-request dedup, and DFS interruption/sibling continuation. Its native regression checks each repair publication against the entire live state and independently replays the final witness. Run it with the existing minimum-run/DFS/continuation/terminal gates; the current combined set passes74 tests with compiler/IPOPT enabled and no skips. See [storage](CHECKPOINT_STORAGE.md) and the [saved-data benchmark](../autonomy/experiments/last-jump-runs/row-benchmark/checkpoint_probe.py); no full Real11 search is needed for these checks.
+The semantic schema6 prefix quota can reach zero while already generated ready programs are drained; it cannot silently add an expansion for every new child frame. `test_inferred_intermediate_support_uses_outgoing_guide_objective` checks that boundary as well as actual native guidance wiring. Legacy controls remain under their existing schema5 behavior.
 
+Final spatial-refactor gate: [420 selected native tests](../autonomy/experiments/automatic-corridors/allocation-context-final-native-2026-11-03.json), zero failures/errors/skips,234.1s and sourceUnchanged=true. Its47-module list is explicit; dedicated ladder/climbable/vine/movement-entry modules are excluded, while generic mixed ladder controls execute. [Matched Real11 evidence](../autonomy/experiments/automatic-corridors/matched-allocation-context-2026-11-03/summary.json) preserves the automatic no-finish deadline and supplied T67 result separately from representation coverage.
 
-## Numerical constraints and extraction
+## Generic event discovery
 
-`ipopt/tests/test_constraints.py` covers exact reduction/source ownership mapping, strongest simple bounds, contradictions, angular/relative restrictions, precision and translated feasible controls. `test_worker_bounds.py` launches the configured `PKC_IPOPT_PYTHON` to check recomputed g(x), final-point recovery and early stopping with extraction. Full IPOPT discovery now passes63 tests with native workers; the affected109-test autonomy set also passes without skips. [Commands/contracts/results](IPOPT_CONSTRAINT_REDUCTION.md).
+The new focused suites are `test_event_domain`, `test_event_routes`, `test_interaction_normalization`, `test_guide_progress`, and `test_event_search`. They cover raw incidence/contact provenance, immutable content-checked snapshots, airborne attachment, conservative role/window proofs, interrupted preparation/closure/witness work, cyclic revisits and latent branches, finite local anchors and checked shortcuts, dynamic next goals, atomic pending-child ownership, explicit schema/settings rejection, and absence of inherited raw-cell filters. Pair them with `test_depth_first`, `test_orchestrator_continuation`, `test_repair_resume` and `test_semantic_search`; supplied schema1/2 and archived cell-walk controls remain regression evidence.
 
+[Event implementation evidence](../autonomy/experiments/event-route-discovery/README.md) records the source-specific new native gate. `native_gate.py` uses the exact earlier47-module scope plus the five new suites, recording test/source hashes and exclusions. Run it only to a new report location when preserving an earlier result. Coverage has three fields: raw geometry admits the realized trace, semantic projection is represented, and useful compatible guides were materialized unseeded. None substitutes for cold discovery or native replay.
 
-## Intermediate feasibility mode
-
-`test_worker_bounds` now verifies a constant symbolic objective in feasibility mode, preservation of a later accepted point when flat costs tie, and unchanged nonconstant final objectives. `autonomy/tests/test_feasibility_mode.py` independently replays intermediate feasibility and later optimization of the same hard model, checking that the feasibility cursor cannot suppress optimization. DFS tests assert intermediate/final routing and record labels. The affected complete set passes64 IPOPT and162 autonomy tests with native dependencies/no skips; [details and saved-request comparison](IPOPT_FEASIBILITY_MODE.md).
+Final event-discovery source `08b00185`: [447 selected native tests](../autonomy/experiments/event-route-discovery/native-forward-service-2026-11-03.json), zero failures/errors/skips,239.7s and sourceUnchanged=true. Final-source generic/control replays7/7; stored-Real11 automatic24/24 and supplied95/95 independent replays pass. [Manifest](../autonomy/experiments/event-route-discovery/acceptance-manifest-2026-11-03.json) verifies matching runtime hashes and unchanged historical evidence. This does not include dedicated ladder modules or establish executable-angle/actual-world acceptance.

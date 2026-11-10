@@ -29,29 +29,39 @@ class SearchCheckpoint:
         self.paths = []
 
     def state(self, state):
-        if len(state['windows']) < len(self.windows):
+        dfs=state.get('dfs') if state.get('kind')=='event_route_search' else state
+        if dfs is None:return dict(state)
+        if len(dfs['windows']) < len(self.windows):
             raise ValueError('Checkpoint audit windows cannot shrink')
-        for window in state['windows'][len(self.windows):]:
+        for window in dfs['windows'][len(self.windows):]:
             reference, _ = self.store.archive(window)
             self.windows.append(reference)
-        return dict(state, windows=self.windows)
+        return dict(state,dfs=dict(dfs,windows=self.windows)) if dfs is not state else dict(state,windows=self.windows)
 
-    def __call__(self, state):
+    def __call__(self, state, program=None, extra_targets=()):
         saved = dict(self.metadata, windows=self.windows, searchState=self.state(state))
         self.base, _ = self.store.archive(saved)
         self.store.publish(self.base)
-        active = state['stack'][-1].get('inFlight') if state['stack'] else None
-        self.program = active['program'] if active else None
+        dfs=state.get('dfs') if state.get('kind')=='event_route_search' else state
+        self.dfs_path=['searchState','dfs'] if dfs is not state else ['searchState']
+        active = dfs['stack'][-1].get('inFlight') if dfs and dfs['stack'] else None
+        self.program = program if program is not None else active['program'] if active else None
         self.paths = identity_paths(saved,self.program) if self.program is not None else []
+        self.extra_targets=[(identity_paths(saved,target),target) for target in extra_targets]
+
+    def begin_repair(self,state,program,extra_targets=()):
+        self(state,program,extra_targets)
 
     def repair_progress(self, state):
-        active = state['stack'][-1]['inFlight']
-        if self.base is None or active['program'] is not self.program:
+        dfs=state.get('dfs') if state.get('kind')=='event_route_search' else state
+        active = dfs['stack'][-1].get('inFlight') if dfs and dfs['stack'] else None
+        if self.base is None or self.program is None or active and active['program'] is not self.program:
             # Defensive fallback; normal DFS publishes dispatch before repair.
             self(state)
             return
         changes = [(list(path)+['repairState'],self.program['repairState']) for path in self.paths]
-        changes.append((['searchState','cumulativeCalls'],state['cumulativeCalls']))
+        changes += [(list(path),target) for paths,target in self.extra_targets for path in paths]
+        changes.append((self.dfs_path+['cumulativeCalls'],dfs['cumulativeCalls']))
         self.store.patch(self.base,changes)
 
     def finish(self, result, validation):

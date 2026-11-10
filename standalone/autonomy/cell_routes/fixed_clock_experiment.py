@@ -27,20 +27,8 @@ def run(fixture,compiler,*,on_window=None,python_executable=None,initial_program
     if virtual is not None:
         from .comparison_goals import goal_spec
         virtual=goal_spec(prepare_scene(request),virtual)
-        # A finite collision-query envelope contains every center reachable in
-        # the declared horizon. It is not an upper/lower bound on the goal.
-        sample=compiler.compile(dict(prepare_scene(request),sharedMovement=True),
-            dict(grounded=[True,True,False],jump=[False,True,False]),3)
-        speed=math.hypot(*request['initial']['velocity'][::2]);radius=0.
-        for _ in range(request['movementSearch']['maxInputs']):
-            movement=speed+max(sample['magnitude'])
-            radius+=movement
-            speed=movement*max(sample['friction'])
-        bounds=request['geometryBounds'][:]
-        for axis in (0,2):
-            bounds[axis]=min(bounds[axis],request['initial']['position'][axis]-radius-1.)
-            bounds[axis+3]=max(bounds[axis+3],request['initial']['position'][axis]+radius+1.)
-        request['geometryBounds']=bounds
+        from .route_queue import collision_request
+        request=collision_request(request,compiler,3)
     scene=prepare_scene(request)
     d,gates=decompose(scene),landmarks(scene)
     corridor=corridor_for_points(d,fixture['spatialPoints'],gates)

@@ -1,0 +1,1620 @@
+diff --git a/standalone/autonomy/DFS_INTERACTION_IMPLEMENTATION_PLAN.md b/standalone/autonomy/DFS_INTERACTION_IMPLEMENTATION_PLAN.md
+index 3fbfb85f..0af7615d 100644
+--- a/standalone/autonomy/DFS_INTERACTION_IMPLEMENTATION_PLAN.md
++++ b/standalone/autonomy/DFS_INTERACTION_IMPLEMENTATION_PLAN.md
+@@ -1,7 +1,23 @@
+ # Consolidated plan: depth-first decisions and shared interaction eligibility
+ 
++> **Current extension (2026-11-04):** [anchor plan](ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md) M1–M5 is implemented in the isolated worktree; [new evidence](experiments/anchor-feasibility/README.md) records validation. Physical tasks default to required-anchor/open-span DFS with schema8; virtual/supplied source controls remain separate. Binary turnaround/observability, exact-node solves, global hard latches, run recovery and same-block setup are active. Inter-block revisits remain [deferred](REVISIT_DISCOVERY_DEFERRED_PLAN.md). [Resume](../docs/ANCHOR_IMPLEMENTATION_RESUME.md).
++
+ > Current automatic implementation: [GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md](GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md) controls the implemented event-language/stage-provider refactor at `08b00185`. Its dynamic `GoalRequest` stages use the existing DFS with schema7, event-stage policy3, separate score contexts, pending-child owners and retained siblings/unknowns. Constraint generation is state2/policy7 and repair assembly8.447 selected native checks pass with stable source hashes; automatic stored-Real11 cold search finds T67 at16.09s and all24 independent post-run replays pass. See [current evidence](experiments/event-route-discovery/README.md) for the matched-control status. The remainder records the source-specific `a28e5b71` baseline and its original design history.
+ 
++## Anchor DFS extension obligations (implemented; acceptance below)
++
++The [new file map](ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md#12-file-by-file-implementation-map) extends this engine:
++
++- Coupled required-anchor frames, local requested J/R/A, original-state prior physical history with earlier facings free.
++- Normal exact-node feasibility at selected decision cadence; only a query through that node and no later choices can mark it infeasible. Failed descendants never invalidate unqueried ancestors. No separate ancestor-testing pass.
++- Recommended interval1 per completed jump/contact decision, not per input/raw one-input hold; anchor/final solves mandatory, later2/4 diagnostics. Persist actual query depth/outcome and avoid duplicate exact queries.
++- Backward/onward POSITION/early-stop intermediate work, finite extended physical B7/final MAXZ, no slack/new constant objective.
++- Global monotone hard-jump latch and preliminary110° approach-edge classifier: current decision point vs one edge+margin gives one boolean and selects the whole ordinary/momentum key. Diagonal uses an imaginary diagonal edge. Record geometry/distances/label/key/pruning/replayed flips and two-label diagrams; no blended score or uncertain mode.
++- Active departed-owner filter excludes A→C→A but permits A→A→A→B and optional acyclic supports. Preserve all local jump inputs/physical cases. Deferred [revisit design](REVISIT_DISCOVERY_DEFERRED_PLAN.md) is not an active milestone.
++- Actual one-edge earlier preparation/run recovery with scoped bypass, hard-latch restriction and atomic source/child publication.
++
++The implemented sections below describe the accepted baseline, not these planned changes.
++
+ ## Implemented automatic integration contract
+ 
+ - Use semantic event/goal cursors and immutable stage views; a frame's index is decision depth rather than a lookup into a fixed future support list.
+diff --git a/standalone/autonomy/GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md b/standalone/autonomy/GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md
+index 0d195b57..e341f79c 100644
+--- a/standalone/autonomy/GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md
++++ b/standalone/autonomy/GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md
+@@ -1,8 +1,10 @@
+ # Implementation plan: potential routes, relevant interactions, and shared progress guides
+ 
++> **Next-change authority (2026-11-04, implementation authorized):** resume from [the current anchor handoff](../docs/ANCHOR_IMPLEMENTATION_RESUME.md) and implement [the controlling plan](ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md). The user explicitly authorized implementation before compaction. The current anchor extension is implemented; see its new evidence for source-specific acceptance. Binary per-decision turnaround/observability, exact-node DFS and same-block setup are settled; inter-block revisits remain [deferred](REVISIT_DISCOVERY_DEFERRED_PLAN.md). Preserve historical evidence and other-agent isolation.
++
+ 2026-11-03. Concrete follow-up to [the cited research](GENERIC_ROUTE_DISCOVERY_RESEARCH.md). Baseline: `a28e5b71`, isolated checkout `/private/tmp/parkour-real11-initial-run-ticks`, branch `research/real11-initial-run-ticks`. Implementation authorized after compaction. The event-domain, lazy physical preparation and shared dynamic DFS architecture is implemented; the planned release acceptance gates have passed, as recorded in the implementation ledger. New APIs and schemas below remain proposed unless recorded in the status ledger; links to existing functions describe the verified baseline. The existing uncommitted research, navigation updates and routing-review figures must be preserved.
+ 
+-This is the controlling plan for the **next** route-discovery implementation. It supersedes the earlier spatial plan where that plan makes an ordered transit-box walk the route identity or requires every input to follow that walk. The implemented [spatial baseline](SPATIAL_CORRIDOR_REFACTOR_PLAN.md) and [DFS contract](DFS_INTERACTION_IMPLEMENTATION_PLAN.md) remain the source of existing behavior and protections to preserve.
++This records the controlling plan for the **completed** event route-discovery implementation. It supersedes the earlier spatial plan where that plan makes an ordered transit-box walk the route identity or requires every input to follow that walk. The implemented [spatial baseline](SPATIAL_CORRIDOR_REFACTOR_PLAN.md) and [DFS contract](DFS_INTERACTION_IMPLEMENTATION_PLAN.md) remain the source of existing behavior and protections to preserve.
+ 
+ ## 1. Result we are implementing
+ 
+diff --git a/standalone/autonomy/SPATIAL_CORRIDOR_REFACTOR_PLAN.md b/standalone/autonomy/SPATIAL_CORRIDOR_REFACTOR_PLAN.md
+index 29570d73..f8d3f98f 100644
+--- a/standalone/autonomy/SPATIAL_CORRIDOR_REFACTOR_PLAN.md
++++ b/standalone/autonomy/SPATIAL_CORRIDOR_REFACTOR_PLAN.md
+@@ -1,5 +1,7 @@
+ # Spatial corridor refactor: preserve support visits and 3D passage choices
+ 
++> **Next-change authority (2026-11-04, implementation authorized):** resume from [the current anchor handoff](../docs/ANCHOR_IMPLEMENTATION_RESUME.md) and implement [the controlling plan](ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md). The user explicitly authorized implementation before compaction. The current anchor extension is implemented; see its new evidence for source-specific acceptance. Binary per-decision turnaround/observability, exact-node DFS and same-block setup are settled; inter-block revisits remain [deferred](REVISIT_DISCOVERY_DEFERRED_PLAN.md). Preserve historical evidence and other-agent isolation.
++
+ > Current automatic implementation: [GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md](GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md) controls the implemented replacement of automatic air-box walk identity with a lazy contact/interaction language. Runtime source `08b00185` passes447 selected native tests; cold stored-Real11 search reaches T67 at16.09s with24 post-run replays passing. See [current evidence](experiments/event-route-discovery/README.md) for the final matched-control status. It specifies records/APIs, raw backing geometry, scoped approach normalization, physical-constraint handoff, DFS ownership, migration and acceptance. [The cited research](GENERIC_ROUTE_DISCOVERY_RESEARCH.md) supplies the rationale. The implementation and original contract below describe the `a28e5b71` baseline; they are superseded where the next plan explicitly changes automatic route identity or per-input cell containment.
+ 
+ ## Current automatic scope
+diff --git a/standalone/autonomy/block_contacts.py b/standalone/autonomy/block_contacts.py
+index a191e747..b99a6002 100644
+--- a/standalone/autonomy/block_contacts.py
++++ b/standalone/autonomy/block_contacts.py
+@@ -123,7 +123,8 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
+                            max_blockages=3, max_horizontal=2, max_vertical=2,
+                            max_passage_candidates=128, solid_blocks=None, max_wall_hits=0,
+                            max_wall_candidates=24, candidate_filter=None, work=None, resume_state=None, repair_scope=None,
+-                           on_progress=None, validation_scope=None, initial_variants=None, retry_unresolved=True):
++                           on_progress=None, validation_scope=None, initial_variants=None, retry_unresolved=True,
++                           stop_on_feasible=None, oracle_rejection=False):
+     route = copy.deepcopy(route)
+     if solid_blocks is not None:
+         for passage in route.get('passages', []):
+@@ -134,7 +135,9 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
+     source_exhausted = variant_source is None or getattr(variant_source, 'state', {}).get('exhausted', False)
+     choices = {}
+     choice_alternatives = {}
+-    current_context = repair_context(route, profiles, geometry, repair_scope)
++    policy = dict(stopOnFeasible=stop_on_feasible, optimizeGoal=optimize_goal,
++                  rankEqualCost=rank_equal_cost, oracleRejection=oracle_rejection)
++    current_context = repair_context(route, profiles, geometry, dict(scope=repair_scope, solvePolicy=policy))
+     resuming = (isinstance(resume_state, dict) and resume_state.get('version') in (1, 2)
+                 and compatible(resume_state.get('context'), current_context))
+     exact_resume = resuming and resume_state['context'] == current_context
+@@ -368,7 +371,7 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
+ 
+         result = find_route(branch, compiler, seconds=remaining, candidate_seconds=candidate_seconds,
+                             retries=retries, improve=improve, rank_equal_cost=rank_equal_cost,
+-                            optimize_goal=optimize_goal, python_executable=python_executable,
++                            optimize_goal=optimize_goal, stop_on_feasible=stop_on_feasible, python_executable=python_executable,
+                             cancel_event=cancel_event, work=work, on_candidate=retain)
+         inner_attempts.extend(result['attempts'])
+         completion = dict(branch=branch_key(rows, passages, hits), status=result['status'],
+@@ -409,7 +412,14 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
+             result.update(attempts=inner_attempts, contactAttempts=attempts)
+             return finish(result)
+         if result['best'] is None:
+-            if result['status'] == 'unknown':
++            diagnostics = [d for a in result.get('attempts', []) for d in a.get('diagnostics', [])]
++            oracle_completed = oracle_rejection and diagnostics and all(
++                d.get('status') == 'unknown' and d.get('termination') == 'worker_finished' and
++                d.get('workerStatus') in ('Infeasible_Problem_Detected','Search_Direction_Becomes_Too_Small',
++                                         'Restoration_Failed','Solve_Succeeded','Solved_To_Acceptable_Level')
++                for d in diagnostics)
++            completion['oracleRejected'] = bool(oracle_completed)
++            if result['status'] == 'unknown' and not oracle_completed:
+                 unresolved.append(save_branch(score, rows, passages, hits, proposal_yaw))
+             continue
+         if not conflicts:
+diff --git a/standalone/autonomy/cell_routes/automatic_experiment.py b/standalone/autonomy/cell_routes/automatic_experiment.py
+index 4401ec35..01357855 100644
+--- a/standalone/autonomy/cell_routes/automatic_experiment.py
++++ b/standalone/autonomy/cell_routes/automatic_experiment.py
+@@ -23,6 +23,7 @@ def source_hashes():
+     root=Path(__file__).resolve().parents[3]
+     sources=sorted((root/'standalone/autonomy/cell_routes').glob('*.py'))
+     sources += sorted((root/'standalone/autonomy').glob('*.py'))
++    sources += sorted((root/'standalone/ipopt').glob('*.py'))
+     return {str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for p in sources}
+ 
+ 
+@@ -34,6 +35,7 @@ def run(fixture,compiler,*,python_executable=None,resume_state=None,on_progress=
+     cfg=movement_settings(prepare_scene(request))
+     policy=InitialJumpDomain(fixture.get('initialJumpInputs'),max_inputs=cfg['maxInputs'])
+     result=find_checkpoint_route(request,compiler,task_goal=fixture.get('terminalGoal'),
++        anchor_search=fixture.get('anchorSearch'),
+         discovery_settings=fixture.get('discoverySettings'),program_filter=policy,
+         resume_state=resume_state,on_progress=on_progress,cancel_event=cancel_event,
+         python_executable=python_executable,**fixture.get('settings',{}))
+diff --git a/standalone/autonomy/cell_routes/checkpoint_search.py b/standalone/autonomy/cell_routes/checkpoint_search.py
+index 32b62581..6a182ef6 100644
+--- a/standalone/autonomy/cell_routes/checkpoint_search.py
++++ b/standalone/autonomy/cell_routes/checkpoint_search.py
+@@ -61,13 +61,15 @@ def _motion_bound(scene, compiler, seconds):
+ def evaluate_program(scene, program, compiler, adapter, work, motion_bound, *, checkpoint=None,
+                      seconds=3, candidate_seconds=1, solver_calls=8, python_executable=None, cancel_event=None,
+                      partial_corridor=False, required_landing=None, scope=None, on_progress=None, retry_unresolved=True, first_witness=False,
+-                     guide_objective=None):
++                     guide_objective=None, solve_policy=None):
+     timings={}
+     marked=time.monotonic()
+     def mark(name):
+         nonlocal marked
+         now=time.monotonic();timings[name]=now-marked;marked=now
+-    complete = checkpoint is None
++    complete = checkpoint is None and not getattr(adapter,'node_query',False)
++    from .node_feasibility import policy_spec, outcome
++    policy = policy_spec(solve_policy, first_witness=first_witness)
+     virtual=program.get('terminalGoal')
+     if virtual is not None:
+         from standalone.autonomy.terminal_goals import prepare_goal, height_clock
+@@ -141,8 +143,9 @@ def evaluate_program(scene, program, compiler, adapter, work, motion_bound, *, c
+               if c['block']['solidIndex'] in active and c['offset'] < scope['through']]
+     signature = checkpoint.required_signature if checkpoint is not None else (
+         scoped_adapter.corridor.signature if hasattr(scoped_adapter, 'corridor') and not partial_corridor else ())
++    adapter_identity=getattr(scoped_adapter,'corridor',None).to_dict() if hasattr(scoped_adapter,'corridor') else None
+     identity = solve_identity(scene, program, route.get('guideObjective', route['objective']), scope,
+-        getattr(scoped_adapter, 'corridor', None).to_dict() if hasattr(scoped_adapter, 'corridor') else None, coefficients)
++        dict(adapter=adapter_identity,policy=policy,nodeQuery=getattr(scoped_adapter,'node_query',False)), coefficients)
+     variants = ConstraintVariants(route, profiles[0], plan, scene['collisionScene'], envelopes, scope,
+         checks=checks, gates=scoped_adapter.gates, signature=signature,
+         state=program.get('repairState', {}).get('constraintGeneration'), deadline=scoped.deadline, reference=reference,
+@@ -153,15 +156,23 @@ def evaluate_program(scene, program, compiler, adapter, work, motion_bound, *, c
+     mark('eligibilityAndVariantConstruction')
+     result = solve_contact_branches(route, profiles, checks,
+         compiler, seconds=seconds, candidate_seconds=candidate_seconds, retries=0,
+-        max_branches=scene['maxContactBranches'], improve=True, rank_equal_cost=not first_witness, optimize_goal=True,
++        max_branches=scene['maxContactBranches'], improve=True, rank_equal_cost=policy['rankEqualCost'], optimize_goal=True,
++        stop_on_feasible=policy['stopOnFeasible'], oracle_rejection=policy['oracleRejection'],
+         python_executable=python_executable, cancel_event=cancel_event, geometry=scene['collisionScene'],
+         motion_bound=motion_bound, max_blockages=scene['maxBlockagesPerObstacle'],
+         max_horizontal=scene['maxHorizontalBlockagesPerObstacle'], max_vertical=scene['maxVerticalBlockagesPerObstacle'],
+         max_passage_candidates=scene['maxPassageCandidates'], solid_blocks=owners, max_wall_hits=0,
+         candidate_filter=candidate_filter, work=scoped, resume_state=program.get('repairState'),
+-        repair_scope=dict(solveIdentity=identity, scope=scope, assemblyVersion=8),
++        repair_scope=dict(solveIdentity=identity, scope=scope, solvePolicy=policy, assemblyVersion=9),
+         validation_scope=scope, initial_variants=variants, on_progress=on_progress, retry_unresolved=retry_unresolved)
+     mark('physicalSearchAndValidation')
++    diagnostics=[d for a in result.get('attempts',[]) for d in a.get('diagnostics',[])]
++    parent_work=work
++    while not hasattr(parent_work,'counts'):
++        parent_work=parent_work.parent
++    for counter in (parent_work.counts,scoped.local.counts):
++        counter['workerLaunches']+=sum(d.get('workerLaunched') is True for d in diagnostics)
++        counter['feasibleSeedReturns']+=sum(d.get('workerLaunched') is False and d.get('status')=='feasible' for d in diagnostics)
+     result['timings']=dict(timings,**variants.state['timings'])
+     if result['best'] is not None:
+         if checkpoint is not None and scope['purpose'] == 'complete':
+@@ -175,6 +186,7 @@ def evaluate_program(scene, program, compiler, adapter, work, motion_bound, *, c
+             work.accepted(result['best'])
+     result['work'] = scoped.local.summary()
+     result.update(solveScope=scope, solveIdentity=identity,
++                  solvePolicy=policy, nodeFeasibility=outcome(result, identity, policy),
+                   fullSceneValidated=result['best'] is not None and scope['purpose'] == 'complete',
+                   reachability=dict(excludedSolids=variants.exclusions, interactionGroups=len(variants.items)))
+     if result['best'] is not None:
+@@ -196,7 +208,7 @@ def find_checkpoint_route(request, compiler, *, checkpoints=None, corridor=None,
+                           time_margin=1, progress_margin=None, rescue_passes=1, terminal_checkpoint=None, program_filter=None,
+                           on_window=None, spatial_goals=None, program_priority=None, resume_state=None, on_progress=None,
+                           retry_unknown=False, minimum_run_pruning=True, task_goal=None, spatial_settings=None,
+-                          discovery_settings=None):
++                          discovery_settings=None, anchor_search=None):
+     entry_options = locals().copy()
+     if type(minimum_run_pruning) is not bool:raise ValueError('minimum_run_pruning must be boolean')
+     integer(rescue_passes,'rescue passes',0,100)
+@@ -259,7 +271,7 @@ def find_checkpoint_route(request, compiler, *, checkpoints=None, corridor=None,
+             return search_event_routes(request,compiler,task_goal=task_goal,discovery=discovery_settings,**entry_options)
+         except TimeoutError as error:
+             return unfinished(str(error))
+-    if task_goal is not None or spatial_settings is not None or discovery_settings is not None:
++    if task_goal is not None or spatial_settings is not None or discovery_settings is not None or anchor_search is not None:
+         raise ValueError('task_goal/discovery_settings apply to automatic discovery; a supplied typed corridor embeds its task')
+     try:
+         d, gates = decompose(scene, deadline=deadline), landmarks(scene)
+diff --git a/standalone/autonomy/cell_routes/depth_first.py b/standalone/autonomy/cell_routes/depth_first.py
+index 031145a1..5c32c64f 100644
+--- a/standalone/autonomy/cell_routes/depth_first.py
++++ b/standalone/autonomy/cell_routes/depth_first.py
+@@ -12,6 +12,7 @@ from .checkpoints import Checkpoint, retain_prefix
+ from .comparison_goals import goal_spec, goal_key, region_arrival, _landing_prefixes
+ from standalone.autonomy.terminal_goals import KIND, bind_goal, satisfied
+ from .minimum_runs import POLICY_VERSION, latest_jump, remember, exclusion
++from .anchor_policy import semantic_settings
+ 
+ 
+ def candidate_key(program):
+@@ -63,6 +64,7 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
+     from .checkpoint_search import evaluate_program
+     from .checkpoint_experiment import replay_witness
+ 
++    anchor_route = hasattr(adapter, 'anchor_policy')
+     event_route = getattr(adapter, 'search_contract', None) == 'event_goals_v1'
+     typed_route = event_route or hasattr(adapter,'for_goal')
+     goal_list = [] if event_route else [goal_spec(scene,g) for g in adapter.goals()] if typed_route else (
+@@ -83,7 +85,7 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
+         raise ValueError('DFS roots must preserve original state and zero inertia thresholds')
+     if any(not accepted_program(p) for p in roots):
+         raise ValueError('DFS roots violate the decision domain')
+-    schema = 7 if event_route else 6 if typed_route else 5
++    schema = 8 if anchor_route else 7 if event_route else 6 if typed_route else 5
+     context = digest(dict(version=schema, kind='ordered_goal_dfs', movementGenerationPolicy=3,constraintGenerationPolicy=7,
+         scene={k:v for k,v in scene.items() if k!='movementSearch'},
+         domain={k:v for k,v in cfg.items() if k not in ('maxPrefixes','maxQueuedPrefixes','maxChoicesPerType','expansionsPerProposal')},
+@@ -91,7 +93,8 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
+         terminal=terminal_plan.to_dict() if terminal_plan else None, corridor=adapter.corridor.to_dict(),
+         windows=window_plan, filter=getattr(program_filter, 'checkpoint_identity', None),
+         margins=[time_margin,progress_margin], physics=motion,
+-        **({'eventStagePolicy':3} if event_route else {}),
++        **({'eventStagePolicy':4 if anchor_route else 3} if event_route else {}),
++        **({'anchorPolicy':semantic_settings(adapter.anchor_policy),'guidePlan':adapter.guide_plan['id']} if anchor_route else {}),
+         minimumRunPolicy=POLICY_VERSION if minimum_run_pruning else None,
+         **({'routeStagePolicy':2,'routeCommitPolicy':1,'routeProposalPolicy':1} if typed_route else {})))
+     if resume_state is not None and (resume_state.get('version') != schema or
+@@ -104,6 +107,12 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
+         state.setdefault('goalQueue', [])
+         state.setdefault('goalOwners', {})
+         state.setdefault('discovery', {})
++    if anchor_route:
++        state.setdefault('hardLatches', {})
++        state.setdefault('latchRevision', 0)
++        state.setdefault('nodeResults', {})
++        state.setdefault('observations', dict(enabled=adapter.anchor_policy['observability'], decisions={}))
++        state['observations']['enabled']=adapter.anchor_policy['observability']
+     state['session'] += 1
+     prior_calls, initial_expanded = state['cumulativeCalls'], state['expanded']
+     if resume_state and state['best'] is not None and not replay_witness(scene,state['best'],compiler)['passed']:
+@@ -199,6 +208,33 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
+                 f['scoreContextKey'] = stage_views[key].score_context
+         return stage_views[key]
+ 
++    def span_info(f):
++        view=stage_adapter(f)
++        return view.cursor['anchorIndex'],view.cursor['spanStart']
++
++    def priority(program,f,identity=''):
++        if not anchor_route:return processing_key(program,identity)
++        from .anchor_policy import priority as span_priority
++        return span_priority(program,span_info(f)[1],program.get('priorityTurnaround',False),identity)
++
++    def record_priority(record,f):
++        return priority(record['program'],f,record['id']) if anchor_route else arrival_key(record)
++
++    def latch_key(f):
++        span,_=span_info(f)
++        names=adapter.guide_plan['anchors']
++        return names[span]+'→'+names[span+1]
++
++    def hard_bound(program,f):
++        if not anchor_route or latch_key(f) not in state['hardLatches']:return None
++        from .anchor_policy import single_jump_structure
++        _,start=span_info(f)
++        names=adapter.guide_plan['anchors'];i=span_info(f)[0]
++        completed=program.get('terminalSupport') in f['goal'].get('blocks',[f['goal']['block']])
++        if not single_jump_structure(scene,program,start,names[i],names[i+1],complete=completed):
++            return dict(reason='global_single_jump_latch',span=latch_key(f),revision=state['latchRevision'])
++        return None
++
+     def score_key(program,f):
+         return digest([candidate_key(program),stage_adapter(f).score_context]) if event_route else candidate_key(program)
+ 
+@@ -214,13 +250,17 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
+ 
+     def run_bound(program, f):
+         if not minimum_run_pruning or f is None:return None
++        if anchor_route and (latch_key(f) not in state['hardLatches'] or program.get('priorityTurnaround',False) or
++                (program.get('restoredRun') or {}).get('frame')==f['id']):return None
+         proof=exclusion(f.get('minimumRuns',{}),latest_jump(program,scene))
+         if proof is not None:
+             identity=candidate_key(program);key=(f['id'],identity)
+             if key not in excluded_runs:
+                 excluded_runs.add(key)
+-                saved={k:copy.deepcopy(v) for k,v in program.items() if k!='repairState'}
+-                state['minimumRunExclusions'].append(dict(frame=f['id'],candidate=identity,proof=proof,program=saved))
++                saved={k:copy.deepcopy(v) for k,v in program.items() if anchor_route or k!='repairState'}
++                state['minimumRunExclusions'].append(dict(frame=f['id'],candidate=identity,proof=proof,program=saved,
++                    **(dict(span=span_info(f)[0],decision=program.get('decisionNode'),isTurnaround=False,
++                            latchRevision=state['latchRevision']) if anchor_route else {})))
+         return proof
+ 
+     def eligible(program, f=None):
+@@ -228,16 +268,21 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
+         if proof is not None:
+             state['timeBoundExclusions'].append(dict(id=candidate_key(program),proof=proof))
+             return False
+-        return (run_bound(program,f) is None and accepted_program(program) and
++        return (not (anchor_route and hard_bound(program,f)) and run_bound(program,f) is None and accepted_program(program) and
+                 (not typed_route or stage_adapter(f).program_allowed(program)))
+ 
+     def screen(program, f=None):
+-        bound=time_bound(program) or run_bound(program,f)
++        bounded=program
++        if anchor_route and f is not None:
++            arrivals=[p for b in f['goal'].get('blocks',[f['goal']['block']])
++                      for p in _landing_prefixes(scene,program,b)]
++            if arrivals:bounded=min(arrivals,key=lambda p:p['profile']['airtime'])
++        bound=time_bound(bounded) or (hard_bound(bounded,f) if anchor_route else None) or run_bound(bounded,f)
+         if bound is not None:
+             return bound
+         if event_route:
+             g=f['goal']
+-            required=[g['block']] if g['kind']=='landing' and program['terminalSupport'] not in g.get('blocks',[g['block']]) else []
++            required=[g['block']] if g['kind']=='landing' and bounded['terminalSupport'] not in g.get('blocks',[g['block']]) else []
+         elif typed_route or goal_list and goal_list[-1]['kind']==KIND and not hasattr(program_filter,'remaining'):
+             first = f['index'] if f is not None else 0
+             if first<len(goal_list) and goal_list[first]['kind']=='landing' and program['terminalSupport'] in goal_list[first].get('blocks',[goal_list[first]['block']]):
+@@ -247,7 +292,7 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
+             required = program_filter.remaining(program)
+         else:
+             required = [] if terminal_plan is not None else [scene['goalBlock']]
+-        proof = prefix_viability(scene, program, required_contacts=required,
++        proof = prefix_viability(scene, bounded, required_contacts=required,
+             terminal_tick=terminal_plan.tick if terminal_plan else cfg['maxInputs'], enabled_types=cfg['types'])
+         viability_counts['checked'] += 1
+         if proof['dead']:
+@@ -268,6 +313,67 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
+     def final_frame(f):
+         return f['goalRequest']['terminal'] if event_route else terminal(f) or terminal_plan is None and f['index']==len(goal_list)-1
+ 
++    def evaluate_node(program, nodes, unused, f):
++        from .node_feasibility import solve_due
++        from .anchor_guides import classify
++        from .turn_observability import record as observe, replay
++        active=stage_adapter(f)
++        span,start=span_info(f)
++        identity=program['decisionNode']
++        depth=program['decisionDepth']
++        if not solve_due(program,adapter.anchor_policy['solveEveryDecisionLevels']):
++            return dict(status='untested',program=program)
++        saved=nodes.get(identity)
++        if saved and saved['status']=='oracle_rejected':
++            return dict(status='oracle_rejected',program=program)
++        if saved and saved['status']=='feasible':
++            # The saved program carries physical rows and a free-yaw seed.
++            return dict(status='feasible',program=copy.deepcopy(saved['program']))
++        if saved and saved.get('repairState') is not None:
++            program['repairState']=saved['repairState']
++        policy=dict(purpose='node',stopOnFeasible=True,rankEqualCost=False,oracleRejection=True)
++        t=time.monotonic()
++        def progress(repair):
++            program['repairState']=repair
++            nodes[identity]=dict(status='suspended',parent=program.get('decisionParent'),repairState=repair)
++            publish()
++        result=evaluate_program(scene,program,compiler,active.for_node(),work,motion,
++            seconds=max(.001,min(score_seconds,deadline-time.monotonic())),candidate_seconds=candidate_seconds,
++            solver_calls=score_calls,python_executable=python_executable,cancel_event=cancel_event,
++            partial_corridor=True,guide_objective=active.objective,first_witness=True,
++            solve_policy=policy,on_progress=progress,retry_unresolved=False)
++        query=result.get('nodeFeasibility',dict(status='feasible' if result['best'] else 'suspended',model=identity))
++        status=query['status']
++        observe(state['observations'],adapter.guide_plan,program,span=span,start=start,
++                model=query['model'],status=status,elapsed=time.monotonic()-t,metrics=result['work'],
++                service=dict(latchRevision=state['latchRevision'],hardLatched=latch_key(f) in state['hardLatches'],
++                    runDeferralEnabled=minimum_run_pruning and not program.get('priorityTurnaround',False) and latch_key(f) in state['hardLatches']))
++        if result['best'] is not None:
++            # Retain selected physical walls; never endpoint/velocity/yaw equalities.
++            updated=commit_arrival(program,result['best'])
++            for k in ('decisionNode','decisionParent','decisionDepth','priorityTurnaround','restoredRun'):
++                if k in program:updated[k]=program[k]
++            updated['lastSolvedDepth']=depth
++            point=result['best']['candidate']['positions'][-1]
++            updated.update(decisionPoint=point,decisionPointTick=program['profile']['airtime'],
++                decisionPointSource='validated_node',decisionTurnaround=classify(adapter.guide_plan,span,point)['isTurnaround'])
++            ancestor=program.get('decisionParent')
++            while ancestor:
++                event=state['observations']['decisions'].get(ancestor)
++                if event is None:break
++                tick=event['pointTick']
++                replay(state['observations'],adapter.guide_plan,ancestor,event['span'],
++                       result['best']['candidate']['positions'][tick],query['model'])
++                ancestor=event['parent']
++            program=updated
++        elif result.get('repairState') is not None:
++            program['repairState']=result['repairState']
++        nodes[identity]=dict(status=status,parent=program.get('decisionParent'),query=query,
++            depth=depth,lastSolvedDepth=program.get('lastSolvedDepth',0),program=copy.deepcopy(program))
++        state['nodeResults'][identity]=dict(query,parent=program.get('decisionParent'),depth=depth)
++        publish()
++        return dict(status=status,program=program)
++
+     def generate(f):
+         if f['goal'] and f['goal']['kind']==KIND and not f.get('directDone'):
+             f.setdefault('directRoot',0)
+@@ -354,7 +460,21 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
+         before = report.get('continuation',{}).get('expanded',0)
+         settings = dict(cfg,maxPrefixes=max(0 if typed_route else 1,
+             cfg['maxPrefixes']-(state['expanded']-initial_expanded)))
++        if anchor_route:
++            from .anchor_guides import classify
++            span,_=span_info(f)
++            for root in f['parents']:
++                point=root.get('decisionPoint',scene['initial']['position'][::2])
++                root.setdefault('decisionPoint',point)
++                root.setdefault('decisionPointTick',root['profile']['airtime'])
++                root.setdefault('decisionPointSource','original_initial' if not root['profile']['airtime'] else 'validated_anchor')
++                root['decisionTurnaround']=classify(adapter.guide_plan,span,point)['isTurnaround']
++            node_options=dict(node_evaluator=lambda p,n,x:evaluate_node(p,n,x,f),
++                priority_key=lambda p:priority(p,f,candidate_key(p)),
++                policy_context=dict(anchor=semantic_settings(adapter.anchor_policy),span=span,guide=adapter.guide_plan['id'],score=stage_adapter(f).score_context))
++        else:node_options={}
+         source = iter_movement_programs(target_scene,settings=settings,report=report,initial_programs=f['parents'],
++            **node_options,
+             continuation=report.get('continuation'), persistent=True, checkpoint_tick=cp.tick if cp else None,
+             threshold=0., deadline=deadline,cancel_event=cancel_event,work=work,screen=lambda p:screen(p,f),
+             context_adapter=lambda ctx:configure(ctx,f),program_filter=lambda p:eligible(p,f),stop_on_goal=cp is None,
+@@ -379,7 +499,7 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
+         finally:
+             source.close()
+             state['expanded'] += report.get('continuation',{}).get('expanded',0)-before
+-        f['ready'].sort(key=lambda p:processing_key(p,digest(program_physics_key(p))))
++        f['ready'].sort(key=lambda p:priority(p,f,digest(program_physics_key(p))))
+         f['batches'] += 1
+         if not f['ready'] and not f['sourceExhausted']:
+             raise TimeoutError(report.get('termination','generation_suspended'))
+@@ -412,7 +532,28 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
+             seconds=max(.001,min(score_seconds,deadline-time.monotonic())),candidate_seconds=candidate_seconds,
+             solver_calls=final_calls if final_frame(f) else score_calls,python_executable=python_executable,
+             cancel_event=cancel_event,partial_corridor=not terminal(f),required_landing=landing,
+-            on_progress=progress,retry_unresolved=retry_unknown,first_witness=not final_frame(f),guide_objective=guidance)
++            on_progress=progress,retry_unresolved=retry_unknown,first_witness=not final_frame(f),guide_objective=guidance,
++            **(dict(solve_policy=dict(purpose='terminal' if final_frame(f) else 'anchor',
++                stopOnFeasible=not final_frame(f),rankEqualCost=final_frame(f),oracleRejection=True)) if anchor_route else {}))
++        if anchor_route:
++            from .turn_observability import record as observe, replay
++            span,start=span_info(f)
++            observe(state['observations'],adapter.guide_plan,program,span=span,start=start,
++                model=result.get('solveIdentity',identity),status=result.get('nodeFeasibility',{}).get('status',result['status']),kind='anchor',
++                metrics=result['work'],elapsed=sum(result.get('timings',{}).values()),
++                service=dict(latchRevision=state['latchRevision'],hardLatched=latch_key(f) in state['hardLatches'],
++                    runDeferralEnabled=minimum_run_pruning and not program.get('priorityTurnaround',False) and latch_key(f) in state['hardLatches']))
++            if result['best'] is not None:
++                ancestor=program.get('decisionParent')
++                while ancestor:
++                    event=state['observations']['decisions'].get(ancestor)
++                    if event is None:break
++                    replay(state['observations'],adapter.guide_plan,ancestor,event['span'],
++                        result['best']['candidate']['positions'][event['pointTick']],result.get('solveIdentity',identity))
++                    ancestor=event['parent']
++            node_id=program.get('decisionNode') or identity
++            state['nodeResults'][node_id]=dict(result.get('nodeFeasibility',{}),
++                parent=program.get('decisionParent'),depth=program.get('decisionDepth',0),kind='terminal' if final_frame(f) else 'anchor')
+         p = copy.deepcopy(program)
+         if result.get('repairState') is not None:
+             p['repairState'] = result['repairState']
+@@ -447,6 +588,12 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
+                 record['witness'] = best
+                 record['child'] = commit_arrival(program,best,source_program=source_program)
+                 record['child']['searchParent'] = identity
++                if anchor_route:
++                    for k in ('decisionNode','decisionParent','decisionDepth','restoredRun'):
++                        if k in program:record['child'][k]=program[k]
++                    record['child'].update(decisionPoint=best['candidate']['positions'][-1],
++                        decisionPointTick=program['profile']['airtime'],decisionPointSource='validated_anchor',
++                        lastSolvedDepth=program.get('decisionDepth',0))
+                 record['child'].pop('solveScope',None)
+         elif old and old.get('witness'):
+             for key in ('witness','child','arrival','value'):
+@@ -470,6 +617,9 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
+                 continue
+             variant_program = truncate_program(source_program,at) if at<source_program['profile']['airtime'] else source_program
+             child = commit_arrival(variant_program,best,source_program=source_program)
++            if anchor_route:
++                child.update(decisionPoint=best['candidate']['positions'][at],decisionPointTick=at,
++                    decisionPointSource='validated_anchor',lastSolvedDepth=source_program.get('decisionDepth',0))
+             key = candidate_key(child)
+             if key in known_children:
+                 continue
+@@ -483,6 +633,16 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
+             record['guidanceWitness'] = record.pop('witness')
+             record.pop('child',None)
+             record.update(status='unknown',termination='preliminary_scope_not_a_terminal_witness')
++        if anchor_route and record.get('witness') and final_validated:
++            from .anchor_policy import single_jump_structure
++            span,start=span_info(f);names=adapter.guide_plan['anchors']
++            if single_jump_structure(scene,program,start,names[span],names[span+1],complete=True):
++                key=latch_key(f)
++                if key not in state['hardLatches']:
++                    state['latchRevision']+=1
++                    state['hardLatches'][key]=dict(version=1,revision=state['latchRevision'],candidate=identity,
++                        frame=f['id'],model=result.get('solveIdentity'),inputs=program['profile']['airtime'])
++                    transition('hard_jump_latched',f,span=key,revision=state['latchRevision'])
+         if minimum_run_pruning and record.get('witness') and final_validated:
+             remember(f.setdefault('minimumRuns',{}),latest_jump(program,scene),identity,record['arrival'])
+         if record.get('witness') and final_validated and final_frame(f):
+@@ -593,7 +753,7 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
+                         observed = {next((t for t,j in enumerate(r['program']['profile']['jump'])
+                             if j and r['program']['profile']['grounded'][t]),None) for r in measured}
+                         compared_roots = initial_domain is None or set(initial_domain)<=observed
+-                        if measured and compared_roots and processing_key(program)[:3] > arrival_key(min(measured,key=arrival_key))[:3]:
++                        if measured and compared_roots and priority(program,f)[:3] > record_priority(min(measured,key=lambda r:record_priority(r,f)),f)[:3]:
+                             break
+                         if typed_route:
+                             work.check()
+@@ -605,11 +765,14 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
+                         continue
+                     score(f,program,previous)
+                 f['phase'] = 'select'
+-            options = [r for r in f['records'] if r.get('witness') and not r['tried'] and run_bound(r['program'],f) is None]
++            options = [r for r in f['records'] if r.get('witness') and not r['tried'] and run_bound(r['program'],f) is None and (not anchor_route or hard_bound(r['program'],f) is None)]
+             if options:
+-                chosen = min(options,key=arrival_key)
++                chosen = min(options,key=lambda r:record_priority(r,f))
+                 chosen['tried'] = True
+-                transition('choose',f,candidate=chosen['id'],arrival=chosen['arrival'],key=list(arrival_key(chosen)))
++                if anchor_route:
++                    event=state['observations']['decisions'].get(chosen['program'].get('decisionNode'))
++                    if event is not None:event['selected']=event.get('selected',0)+1
++                transition('choose',f,candidate=chosen['id'],arrival=chosen['arrival'],key=list(record_priority(chosen,f)))
+                 if final_frame(f):
+                     candidate = copy.deepcopy(chosen['witness'])
+                     candidate.update(movementProgram=chosen['child'],blockIds=[scene['startBlock'],scene['goalBlock']])
+@@ -654,6 +817,23 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
+             if not f['sourceExhausted']:
+                 f['phase'] = 'generate'
+                 continue
++            if anchor_route:
++                deferred=[r for r in state['minimumRunExclusions'] if r['frame']==f['id'] and not r.get('restored')]
++                for saved in deferred:
++                    saved['restored']=True
++                    p=copy.deepcopy(saved['program']);p['restoredRun']=dict(frame=f['id'],candidate=saved['candidate'])
++                    if hard_bound(p,f) is not None:continue
++                    if p['terminalSupport'] in f['goal'].get('blocks',[f['goal']['block']]):
++                        f['ready'].append(p)
++                    else:
++                        continuation=f['generation'].get('continuation')
++                        if continuation is not None:
++                            continuation['pending'].append(p);continuation['exhausted']=False
++                            f['sourceExhausted']=False
++                    transition('restore_run',f,candidate=saved['candidate'])
++                if f['ready'] or not f['sourceExhausted']:
++                    f['phase']='score' if f['ready'] else 'generate'
++                    continue
+             close_frame(f)
+         if not state['stack'] and state['suspended']:
+             termination = 'numerical_unknown'
+diff --git a/standalone/autonomy/cell_routes/event_search.py b/standalone/autonomy/cell_routes/event_search.py
+index 52de2bfb..31324d63 100644
+--- a/standalone/autonomy/cell_routes/event_search.py
++++ b/standalone/autonomy/cell_routes/event_search.py
+@@ -26,7 +26,7 @@ def discovery_settings(settings=None):
+     return defaults
+ 
+ 
+-def search_event_routes(request, compiler, *, task_goal=None, discovery=None, **options):
++def search_event_routes(request, compiler, *, task_goal=None, discovery=None, anchor_search=None, **options):
+     from .checkpoint_search import _motion_bound
+     from .depth_first import search_goals
+     started=time.monotonic(); deadline=started+options['seconds']
+@@ -35,6 +35,12 @@ def search_event_routes(request, compiler, *, task_goal=None, discovery=None, **
+         raise ValueError('Automatic event discovery derives its own contact/finish goals')
+     scene=prepare_scene(request)
+     task=goal_spec(scene,task_goal if task_goal is not None else options.get('spatial_goal'))
++    anchor_policy=None
++    if task['kind']=='landing' or anchor_search is not None:
++        from .anchor_policy import settings, semantic_settings
++        anchor_policy=settings(anchor_search or {},scene)
++        if task['kind']!='landing':
++            raise ValueError('Anchor search requires a finite physical landing task')
+     saved=options.get('resume_state')
+     policy=options.get('program_filter')
+     roots=options.get('initial_programs')
+@@ -43,12 +49,15 @@ def search_event_routes(request, compiler, *, task_goal=None, discovery=None, **
+     cfg=movement_settings(scene)
+     cfg['types']=[t for t in cfg['types'] if t in ('normal','ceiling','stepping')]
+     scene['movementSearch']=cfg
+-    context=digest(dict(policy=3,constraintPolicy=7,scene={k:v for k,v in scene.items() if k!='movementSearch'},
++    context=digest(dict(policy=4 if anchor_policy else 3,
++        **(dict(anchorPolicy=semantic_settings(anchor_policy)) if anchor_policy else {}),
++        constraintPolicy=7,scene={k:v for k,v in scene.items() if k!='movementSearch'},
+         task=task,roots=roots,filter=getattr(policy,'checkpoint_identity',None),
+         minimumRuns=options['minimum_run_pruning'],
+         domain={k:v for k,v in cfg.items() if k not in
+             ('maxPrefixes','maxQueuedPrefixes','maxChoicesPerType','expansionsPerProposal')}))
+-    if saved is not None and (saved.get('schema')!=1 or saved.get('kind')!='event_route_search' or saved.get('context')!=context):
++    schema=2 if anchor_policy else 1
++    if saved is not None and (saved.get('schema')!=schema or saved.get('kind')!='event_route_search' or saved.get('context')!=context):
+         raise ValueError('Incompatible automatic event continuation; cell-walk/schema6 states require their source-era runner')
+     counted=CountingCompiler(compiler)
+     if saved is not None:
+@@ -63,7 +72,7 @@ def search_event_routes(request, compiler, *, task_goal=None, discovery=None, **
+             scene['movementSearch']=cfg
+         domain=build_route_domain(scene,task,deadline=deadline)
+         data=domain.to_dict()
+-        state=dict(schema=1,kind='event_route_search',context=context,domain=data,graph=build_event_graph(data),
++        state=dict(schema=schema,kind='event_route_search',context=context,domain=data,graph=build_event_graph(data),
+             dfs=None,initialRoots=copy.deepcopy(roots),effectiveRequest=request,best=None,sessions=0,allocations=[])
+     state['sessions']+=1
+     motion=state.get('motion')
+@@ -72,12 +81,21 @@ def search_event_routes(request, compiler, *, task_goal=None, discovery=None, **
+         state['motion']=motion
+     adapter=EventGuideAdapter(state['domain'],state['graph'],motion=motion,compiler=counted,
+                               candidate_seconds=options['candidate_seconds'])
+-    calls=0; expanded=0; allocations=[]
++    if anchor_policy is not None:
++        from .anchor_adapter import AnchorAdapter
++        adapter=AnchorAdapter(state['domain'],state['graph'],anchor_policy,motion=motion,compiler=counted,
++                              candidate_seconds=options['candidate_seconds'])
++        state['anchorPolicy']=anchor_policy
++        state['guidePlan']=adapter.guide_plan
++    calls=0; expanded=0; allocations=[]; worker_calls=0; seed_returns=0
+     used=dict(expansions=0,materializations=0)
+     termination='exhausted'
+     last=None
+     def accepted_program(program):
+         from ..solve_spec import motion_record
++        if anchor_policy is not None:
++            from .anchor_policy import within_caps
++            if not within_caps(request,program):return False
+         movement=motion_record(program)
+         if movement is not None and any(name in request and movement[field]>request[name]
+                 for name,field in (('maxTotalRunTicks','runs'),('maxJumps','jumps'))):
+@@ -113,12 +131,13 @@ def search_event_routes(request, compiler, *, task_goal=None, discovery=None, **
+         dfs=state['dfs']
+         for k in used:used[k]+=dfs['discoveryWork'][k]
+         calls+=last['work'].get('solverCalls',0);expanded+=last['expandedPrefixes']
++        worker_calls+=last['work'].get('workerLaunches',0);seed_returns+=last['work'].get('feasibleSeedReturns',0)
+         after_depth=max((f['index'] for f in dfs['stack']),default=-1)
+         advanced=after_depth>before_depth
+         allocation=dict(calls=last['work'].get('solverCalls',0),expanded=last['expandedPrefixes'],
+             termination=last['termination'],beforeDepth=before_depth,afterDepth=after_depth,advanced=advanced)
+         allocations.append(allocation);state['allocations'].append(allocation)
+-        if not advanced and dfs['stack'] and dfs['goalQueue']:
++        if anchor_policy is None and not advanced and dfs['stack'] and dfs['goalQueue']:
+             # Each frame contains its actual parent/program/cursor. Parking a
+             # stack changes service order only, never adopts a sibling child.
+             dfs['goalQueue'].extend(reversed(dfs['stack']))
+@@ -140,12 +159,22 @@ def search_event_routes(request, compiler, *, task_goal=None, discovery=None, **
+     report=dict(last or {})
+     report.update(status='feasible' if state['best'] else 'cancelled' if termination=='cancelled' else 'unknown',
+         termination=termination,best=state['best'],searchState=state,effectiveRequest=request,taskGoal=task,
+-        work=dict(solverCalls=calls,maxSolverCalls=options['max_solver_calls']),expandedPrefixes=expanded,
++        work=dict(solverCalls=calls,workerLaunches=worker_calls,feasibleSeedReturns=seed_returns,
++                  maxSolverCalls=options['max_solver_calls']),expandedPrefixes=expanded,
+         elapsedSeconds=time.monotonic()-started,compiler=counted.summary(),backend='event_goals_v1',
+         routeGeneration=dict(backend='event_goals_v1',events=len(state['graph']['events']),**used,
+             coverage=state['domain']['coverage'],completeEnumeration=False),routeAttempts=allocations,
+         routeWorkUnits=sum(len(v) for v in state['dfs']['goalOwners'].values()) if state['dfs'] else 0,
+         coverageProven=False,objectiveOptimalityProven=False,minimumTicksProven=False,
+         resume=dict(exact=saved is not None,session=state['sessions']))
++    if anchor_policy is not None and state['dfs']:
++        from .turn_observability import summary
++        report['anchorSearch']=dict(policy=anchor_policy,guidePlan=adapter.guide_plan,
++            hardLatches=state['dfs']['hardLatches'],latchRevision=state['dfs']['latchRevision'],
++            nodes=state['dfs']['nodeResults'],observations=summary(state['dfs']['observations']),
++            runDeferrals=len(state['dfs']['minimumRunExclusions']),
++            runRestorations=sum(r.get('restored',False) for r in state['dfs']['minimumRunExclusions']))
++        report['backend']='anchor_goals_v1'
++        report['routeGeneration']['backend']='anchor_goals_v1'
+     if options.get('on_progress'):options['on_progress'](state)
+     return report
+diff --git a/standalone/autonomy/movement_composition.py b/standalone/autonomy/movement_composition.py
+index 1e7263d5..432f657f 100644
+--- a/standalone/autonomy/movement_composition.py
++++ b/standalone/autonomy/movement_composition.py
+@@ -197,8 +197,10 @@ def append_choice(program, choice, *, max_inputs=200):
+                   interactions=program['interactions'] + int(choice.get('interaction', False)), trace=trace)
+     for key in ('threshold', 'guideSeedYaw', 'repairState', 'solveScope', 'committedThrough'):
+         if key in program:
+-            if key == 'repairState' and (program[key].get('context', {}).get('scope') or {}).get('solveIdentity'):
+-                continue
++            if key == 'repairState':
++                scope=program[key].get('context', {}).get('scope') or {}
++                if scope.get('solveIdentity') or (scope.get('scope') or {}).get('solveIdentity'):
++                    continue
+             result[key] = copy.deepcopy(program[key])
+     return result
+ 
+diff --git a/standalone/autonomy/movement_frontier.py b/standalone/autonomy/movement_frontier.py
+index 03041997..ae5b592b 100644
+--- a/standalone/autonomy/movement_frontier.py
++++ b/standalone/autonomy/movement_frontier.py
+@@ -9,7 +9,8 @@ from .solve_spec import digest, processing_key
+ 
+ def persistent_programs(scene, *, settings, report, continuation=None, deadline=None, cancel_event=None, work=None,
+                         initial_programs=None, checkpoint_tick=None, threshold=.005, screen=None,
+-                        context_adapter=None, program_filter=None, stop_on_goal=True, terminal_goal=None, stop_supports=None, **kwargs):
++                        context_adapter=None, program_filter=None, stop_on_goal=True, terminal_goal=None, stop_supports=None,
++                        node_evaluator=None, priority_key=None, policy_context=None, **kwargs):
+     initial = empty_program(scene['initial'], threshold=threshold)
+     initial['terminalSupport'] = scene['startBlock']
+     seeds = [initial] if initial_programs is None else initial_programs
+@@ -23,13 +24,17 @@ def persistent_programs(scene, *, settings, report, continuation=None, deadline=
+         context_value['terminalGoal']=terminal_goal
+     if stop_supports is not None:
+         context_value['stopSupports']=stop_supports
++    if policy_context is not None:
++        context_value.update(version=4,decisionPolicy=policy_context)
+     context=digest(context_value)
+     if continuation is not None and continuation.get('context') != context:
+         raise ValueError('Incompatible movement generation checkpoint')
+-    state = copy.deepcopy(continuation) if continuation is not None else dict(version=3, context=context,
++    state = copy.deepcopy(continuation) if continuation is not None else dict(version=4 if policy_context is not None else 3, context=context,
+         pending=copy.deepcopy(seeds), ready=[], expansion=None, seen=[], generated=0, expanded=0, emitted=0,
+         screened=0, policyRejections=0, exhausted=False)
+     state.setdefault('exclusions', [])
++    if node_evaluator is not None:
++        state.setdefault('nodes', {})
+     seen = set(state['seen'])
+     expanded = 0
+     iterator, iterator_key = None, None
+@@ -51,7 +56,7 @@ def persistent_programs(scene, *, settings, report, continuation=None, deadline=
+             and p['profile']['airtime'] > 0)
+ 
+     def key(p):
+-        return processing_key(p, digest(program_physics_key(p)))
++        return priority_key(p) if priority_key else processing_key(p, digest(program_physics_key(p)))
+ 
+     def take(items):
+         p = min(items, key=key)
+@@ -61,14 +66,14 @@ def persistent_programs(scene, *, settings, report, continuation=None, deadline=
+     def update(reason='running'):
+         report.update(termination=reason, expandedPrefixes=expanded, totalExpandedPrefixes=state['expanded'],
+             generated=state['generated'], emittedPrograms=state['emitted'], screenedPrefixes=state['screened'],
+-            remainingPrefixes=len(state['pending'])+len(state['ready'])+int(state['expansion'] is not None),
++            remainingPrefixes=len(state['pending'])+len(state['ready'])+int(state['expansion'] is not None)+int(state.get('nodeInFlight') is not None),
+             queuedCompletePrograms=len(state['ready']), queueDrops=0, partialQueueDrops=0, completeQueueDrops=0,
+             policyRejections=state['policyRejections'], queuePolicy='persistent', types=settings['types'],
+             explicitProgramPriority=False, deferredPrefixes=max(0, len(state['pending'])-settings['maxQueuedPrefixes']),
+             continuation=state, minimumTicksProven=False)
+ 
+     try:
+-        while state['pending'] or state['ready'] or state['expansion'] is not None:
++        while state['pending'] or state['ready'] or state['expansion'] is not None or state.get('nodeInFlight') is not None:
+             budget()
+             e = state['expansion']
+             if state['ready'] and (e is None or e.get('cursor', 0) % settings['maxChoicesPerType'] == 0):
+@@ -85,15 +90,32 @@ def persistent_programs(scene, *, settings, report, continuation=None, deadline=
+                 if expanded >= settings['maxPrefixes']:
+                     update('prefix_limit')
+                     return
+-                program = take(state['pending'])
++                program = state.get('nodeInFlight') or take(state['pending'])
+                 if program_filter is not None and not program_filter(program):
+                     state['policyRejections'] += 1
++                    state.pop('nodeInFlight',None)
+                     continue
+                 if complete(program):
+                     state['ready'].append(program)
+                     continue
+                 if program['profile']['airtime'] >= settings['maxInputs'] or program['interactions'] >= settings['maxInteractions']:
++                    state.pop('nodeInFlight',None)
+                     continue
++                if node_evaluator is not None and program.get('needsNodeSolve'):
++                    # Query a decision when it is selected for descent. Merely
++                    # constructing an unselected sibling must not spend NLPs.
++                    state['nodeInFlight']=program
++                    update()
++                    result=node_evaluator(program,state['nodes'],False)
++                    state['nodeInFlight']=program=result['program']
++                    if result['status'] in ('suspended','error'):
++                        update(result['status'])
++                        return
++                    state.pop('nodeInFlight',None)
++                    if result['status'] in ('oracle_rejected','exhausted'):
++                        update()
++                        continue
++                    program.pop('needsNodeSolve',None)
+                 e = dict(program=program, kind=0, cursor=0)
+                 state['expansion'] = e
+                 expanded += 1
+@@ -135,7 +157,12 @@ def persistent_programs(scene, *, settings, report, continuation=None, deadline=
+                 e['choice'] = copy.deepcopy(choice)
+                 e['cursor'] += 1
+                 state['generated'] += 1
+-            child = append_choice(e['program'], e['choice'], max_inputs=settings['maxInputs'])
++            child = copy.deepcopy(e['child']) if 'child' in e else append_choice(e['program'], e['choice'], max_inputs=settings['maxInputs'])
++            if child is not None and node_evaluator is not None:
++                parent=e['program']
++                for field in ('decisionPoint','decisionPointSource','decisionPointTick','decisionTurnaround','restoredRun'):
++                    if field in parent:child.setdefault(field,copy.deepcopy(parent[field]))
++                child.setdefault('priorityTurnaround',parent.get('decisionTurnaround',False))
+             if child is not None and terminal_goal is not None:
+                 from .terminal_goals import bind_goal
+                 child=bind_goal(child,terminal_goal,scene.get('supportClearance',1e-6))
+@@ -150,6 +177,12 @@ def persistent_programs(scene, *, settings, report, continuation=None, deadline=
+                     continue
+             if child is not None and checkpoint_tick is not None and child['profile']['airtime'] > checkpoint_tick:
+                 child = truncate_program(child, checkpoint_tick)
++            if child is not None and node_evaluator is not None and stop_on_goal:
++                from .cell_routes.comparison_goals import _landing_prefixes
++                arrivals=[p for block in (stop_supports or [scene['goalBlock']])
++                          for p in _landing_prefixes(scene,child,block)]
++                if arrivals:
++                    child=min(arrivals,key=lambda p:(p['profile']['airtime'],p['terminalSupport']))
+             accepted = child is not None and entry_possible(child['profile'], initial_bounds)
+             if accepted and program_filter is not None and not program_filter(child):
+                 state['policyRejections'] += 1
+@@ -166,10 +199,24 @@ def persistent_programs(scene, *, settings, report, continuation=None, deadline=
+                     state['exclusions'].append(dict(id=digest(identity), ticks=child['profile']['airtime'], proof=proof))
+                     accepted = False
+             if accepted:
++                if node_evaluator is not None:
++                    from .cell_routes.node_feasibility import meaningful_choice, node_identity
++                    parent=e['program']; meaningful=meaningful_choice(e['choice'])
++                    child.setdefault('decisionDepth',parent.get('decisionDepth',0)+int(meaningful))
++                    child.setdefault('lastSolvedDepth',parent.get('lastSolvedDepth',0))
++                    child.setdefault('decisionParent',parent.get('decisionNode') if meaningful else parent.get('decisionParent'))
++                    child.setdefault('decisionNode',node_identity(child,policy_context) if meaningful else parent.get('decisionNode'))
++                    for field in ('decisionPoint','decisionPointSource','decisionPointTick','decisionTurnaround','restoredRun'):
++                        if field in parent:child.setdefault(field,copy.deepcopy(parent[field]))
++                    child.setdefault('priorityTurnaround',parent.get('decisionTurnaround',False))
++                    if meaningful and not complete(child):
++                        child['needsNodeSolve']=True
++                identity = program_search_key(child)
+                 seen.add(identity)
+                 state['seen'].append(identity)
+                 (state['ready'] if complete(child) else state['pending']).append(child)
+             e.pop('choice', None)
++            e.pop('child', None)
+             update()
+         state['exhausted'] = True
+         update('exhausted')
+diff --git a/standalone/autonomy/movement_search.py b/standalone/autonomy/movement_search.py
+index fbe43967..df3c9dfd 100644
+--- a/standalone/autonomy/movement_search.py
++++ b/standalone/autonomy/movement_search.py
+@@ -30,7 +30,8 @@ def movement_settings(scene):
+ def iter_movement_programs(scene, *, settings=None, deadline=None, cancel_event=None, report=None, screen=None,
+                            context_adapter=None, work=None, checkpoint_tick=None, initial_programs=None, threshold=.005,
+                            program_filter=None, queue_policy='balanced', stop_on_goal=True, program_priority=None,
+-                           persistent=False, continuation=None, terminal_goal=None, stop_supports=None):
++                           persistent=False, continuation=None, terminal_goal=None, stop_supports=None,
++                           node_evaluator=None, priority_key=None, policy_context=None):
+     cfg = movement_settings(scene) if settings is None else settings
+     if persistent:
+         from .movement_frontier import persistent_programs
+@@ -38,7 +39,7 @@ def iter_movement_programs(scene, *, settings=None, deadline=None, cancel_event=
+             continuation=continuation, deadline=deadline, cancel_event=cancel_event, work=work,
+             initial_programs=initial_programs, checkpoint_tick=checkpoint_tick, threshold=threshold, screen=screen,
+             context_adapter=context_adapter, program_filter=program_filter, stop_on_goal=stop_on_goal, terminal_goal=terminal_goal,
+-            stop_supports=stop_supports)
++            stop_supports=stop_supports,node_evaluator=node_evaluator,priority_key=priority_key,policy_context=policy_context)
+         return
+     if terminal_goal is not None:
+         raise ValueError('Virtual terminal discovery requires the persistent movement source')
+diff --git a/standalone/autonomy/search.py b/standalone/autonomy/search.py
+index 9738fff5..25686beb 100644
+--- a/standalone/autonomy/search.py
++++ b/standalone/autonomy/search.py
+@@ -124,7 +124,7 @@ def search_allocations(route, evaluate, *, seconds=60, improve=False, rank_equal
+ 
+ 
+ def find_route(request, compiler, *, seconds=60, candidate_seconds=2, retries=1, improve=False,
+-               rank_equal_cost=False, optimize_goal=False, python_executable=None, cancel_event=None, on_attempt=None, work=None, on_candidate=None):
++               rank_equal_cost=False, optimize_goal=False, stop_on_feasible=None, python_executable=None, cancel_event=None, on_attempt=None, work=None, on_candidate=None):
+     started = time.monotonic()
+     route = prepare_route(request)
+     if number(seconds, 'search seconds') <= 0:
+@@ -133,6 +133,8 @@ def find_route(request, compiler, *, seconds=60, candidate_seconds=2, retries=1,
+         raise ValueError('Candidate seconds must be positive')
+     if type(retries) is not int or not 0 <= retries <= 10:
+         raise ValueError('Retry count must be between zero and ten')
++    if stop_on_feasible is not None and type(stop_on_feasible) is not bool:
++        raise ValueError('stop_on_feasible must be boolean or None')
+     if hasattr(compiler, 'derive_footprints') and (cancel_event is None or not cancel_event.is_set()):
+         footprints = compiler.derive_footprints(route, min(seconds, candidate_seconds))
+         if len(footprints) != len(route['blocks']):
+@@ -199,6 +201,7 @@ def find_route(request, compiler, *, seconds=60, candidate_seconds=2, retries=1,
+                 waypoints.extend(ladder_waypoints(problem, selections))
+                 problem['yaw'] = waypoint_seed(problem, waypoints)
+             polish = optimize_goal and stage == 'jump' and len(allocation) == len(route['airtimes'])
++            early_stop = not polish if stop_on_feasible is None else stop_on_feasible
+             fallback = objective_seed(problem) if polish else initial_guess(route, plan)
+             if route['ladderEvents']:
+                 fallback = initial_guess(route, plan)
+@@ -262,12 +265,14 @@ def find_route(request, compiler, *, seconds=60, candidate_seconds=2, retries=1,
+                     problem['yaw'] = fallback
+                 if work is not None:
+                     work.before_solve(problem)
+-                result = solve(problem, seconds=budget, stop_on_feasible=not polish,
++                result = solve(problem, seconds=budget, stop_on_feasible=early_stop,
+                                python_executable=python_executable, cancel_event=cancel_event, on_incumbent=publish)
+                 diagnostics.append({'status': result['status'], 'termination': result.get('termination'),
+                                     'elapsedSeconds': result.get('elapsedSeconds'), 'error': result.get('error'),
+                                     'problemHash': fingerprint(problem), 'request': copy.deepcopy(problem),
+-                                    'callOptions': dict(seconds=budget,stopOnFeasible=not polish)})
++                                    'callOptions': dict(seconds=budget,stopOnFeasible=early_stop),
++                                    'workerLaunched': result.get('workerLaunched'),
++                                    'workerStatus': result.get('workerStatus')})
+                 if result['status'] == 'cancelled':
+                     return {'status': 'cancelled', 'diagnostics': diagnostics}
+                 if result['feasible']:
+diff --git a/standalone/autonomy/stepping_generation.py b/standalone/autonomy/stepping_generation.py
+index 46f72a74..ceb513af 100644
+--- a/standalone/autonomy/stepping_generation.py
++++ b/standalone/autonomy/stepping_generation.py
+@@ -133,6 +133,8 @@ def open_stepping_choices(context):
+             box = box_for(block, context)
+             rise = block['top'] - y0
+             for case, jumping in [('normal_step', False), ('slab_boost', True)]:
++                if not jumping and context.get('landingAllowed') is not None and not context['landingAllowed'](block):
++                    continue
+                 if not enabled(case) or not 0 < rise <= f32(.6) or jumping and rise <= f32(.42):
+                     continue
+                 if not interaction_allowed(context, box, 0, jumping=jumping):
+@@ -159,6 +161,8 @@ def open_stepping_choices(context):
+         for lower in scene['blocks']:
+             if context.get('checkBudget'):
+                 context['checkBudget']()
++            if context.get('landingAllowed') is not None and not context['landingAllowed'](lower):
++                continue
+             landing = first_descent(trace, lower['top'])
+             if landing is None:
+                 continue
+@@ -172,7 +176,8 @@ def open_stepping_choices(context):
+                 box = box_for(higher, context)
+                 if not interaction_allowed(context, box, landing, jumping=jumping):
+                     continue
+-                if enabled('blip') and 0 <= higher['top'] - y <= f32(.6):
++                if (enabled('blip') and 0 <= higher['top'] - y <= f32(.6) and
++                        (context.get('landingAllowed') is None or context['landingAllowed'](higher))):
+                     options = landing_wall_options(box, landing) if landing else (
+                         ([outside_row(box, axis, sign, 0, 'blip:wall_avoid')], [])
+                         for axis in ('X', 'Z') for sign in (-1, 1))
+diff --git a/standalone/autonomy/tests/test_event_search.py b/standalone/autonomy/tests/test_event_search.py
+index ae19d632..08229cb7 100644
+--- a/standalone/autonomy/tests/test_event_search.py
++++ b/standalone/autonomy/tests/test_event_search.py
+@@ -81,7 +81,7 @@ class EventSearchTests(unittest.TestCase):
+         self.assertEqual(set(ctx),{'program','supportAllowed'})
+         self.assertNotIn('geometry',view.corridor.to_dict())
+ 
+-    def test_default_dynamic_goals_share_prefix_and_publish_actual_child_atomically(self):
++    def test_declared_anchor_goals_share_prefix_and_publish_actual_child_atomically(self):
+         scene=prepare_scene(dict(version=1,sceneModel='collision_boxes',maxWallHits=0,
+             initial=dict(position=[.5,1,.5],velocity=[0,-.0784000015258789,0],yaw=0),
+             startBlock='start',goalBlock='goal',geometryBounds=[-5,-5,-5,10,10,5],blocks=[
+@@ -112,12 +112,12 @@ class EventSearchTests(unittest.TestCase):
+         with patch('standalone.autonomy.cell_routes.checkpoint_search._motion_bound',return_value=dict(movementAfterSupportCheck=.5)), \
+              patch('standalone.autonomy.cell_routes.depth_first.iter_movement_programs',side_effect=generate), \
+              patch('standalone.autonomy.cell_routes.checkpoint_search.evaluate_program',side_effect=evaluate):
+-            result=find_checkpoint_route(scene,object(),seconds=2,score_seconds=1,max_solver_calls=1,
++            result=find_checkpoint_route(scene,object(),anchor_search=dict(anchors=['mid']),seconds=2,score_seconds=1,max_solver_calls=1,
+                                          score_call_limit=1,on_progress=progress)
+         self.assertEqual(dispatched,[('mid',10)])
+         self.assertTrue(published)
+         dfs=result['searchState']['dfs']
+-        self.assertEqual(dfs['version'],7)
++        self.assertEqual(dfs['version'],8)
+         child_owner=dfs['discovery'][dfs['pendingGoalOwner']]
+         self.assertEqual(child_owner['index'],1)
+         self.assertEqual(child_owner['parents'][0]['profile']['airtime'],10)
+diff --git a/standalone/autonomy/tests/test_semantic_search.py b/standalone/autonomy/tests/test_semantic_search.py
+index fda61100..251cbfc3 100644
+--- a/standalone/autonomy/tests/test_semantic_search.py
++++ b/standalone/autonomy/tests/test_semantic_search.py
+@@ -220,7 +220,7 @@ class SemanticNumericalTests(unittest.TestCase):
+             self.assertEqual(result['status'],'feasible',result['termination'])
+             self.assertTrue(replay_witness(scene,result['best'],compiler)['passed'])
+             self.assertEqual(result['searchState']['kind'],'event_route_search')
+-            self.assertEqual(result['searchState']['dfs']['version'],7)
++            self.assertEqual(result['searchState']['dfs']['version'],8)
+             self.assertLessEqual(result['work']['solverCalls'],3)
+             self.assertLessEqual(result['expandedPrefixes'],scene['movementSearch']['maxPrefixes'])
+             saved=json.loads(json.dumps(result['searchState'],allow_nan=False))
+diff --git a/standalone/docs/ARCHITECTURE.md b/standalone/docs/ARCHITECTURE.md
+index dbd266f9..ec189bb2 100644
+--- a/standalone/docs/ARCHITECTURE.md
++++ b/standalone/docs/ARCHITECTURE.md
+@@ -2,15 +2,23 @@
+ 
+ Read [current state](CURRENT_STATE.md) before assuming a planned component already exists. [Code map](CODE_MAP.md) identifies modules; [function index](FUNCTION_INDEX.md) points to definitions. Python packages are imported from the physical repository root.
+ 
+-The current automatic backend uses the [generic event-discovery plan](../autonomy/GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md). Geometry supplies a cyclic language of possible contacts/passages; soft witnesses guide progress, and the existing movement DFS/numerical machinery decides feasibility. Explicit supplied corridors retain their older typed/raw-walk semantics as controls.
++The current physical automatic backend uses [anchor DFS](../autonomy/ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md): caller-declared required anchors, or one open span when absent. Geometry retains physical contact/passage alternatives; backward soft guide objectives and the existing movement/constraint/native pipeline decide feasibility. Inter-block returns are excluded while repeated current-owner jumps remain generated. Virtual tasks and explicit supplied corridors retain their source-specific event/typed/raw-walk semantics as controls.
+ 
+ ## The three layers
+ 
+-1. **Geometry/spatial route:** `block_search.prepare_scene` normalizes supplied physical AABBs and the original state. `cell_routes.geometry.decompose` builds free player-configuration cells, portals and contact patches. `event_routes.build_route_domain` and `build_event_graph` retain raw incidence and support provenance. Lazy next-goal queries and `guides.guide_for` supply soft witnesses. Explicit supplied controls use `corridor_for_points` or typed corridors. A cell is a spatial region, not a tick; a guide point is not a solver wall. The graph alone does not determine dynamics, contact schedule or travel time.
++1. **Geometry/spatial route:** `block_search.prepare_scene` normalizes supplied physical AABBs and the original state. `cell_routes.geometry.decompose` builds free player-configuration cells, portals and contact patches. `event_routes.build_route_domain` and `build_event_graph` retain raw incidence and support provenance. `AnchorAdapter` chooses required milestones; `anchor_guides` builds backward finite guides and binary approach-edge labels. Virtual-task controls use lazy next-goal queries and `guides.guide_for`. Explicit supplied controls use `corridor_for_points` or typed corridors. A cell is a spatial region, not a tick; a guide point is not a solver wall. The graph alone does not determine dynamics, contact schedule or travel time.
+ 2. **Discrete program:** `movement_generation.generate_choices`, `open_movement`, stepping and ceiling generators compose grounded/air/jump/contact choices. `movement_composition.append_choice` appends choices to an original-state program and traces scalar vertical history. `compile_program` converts it to the existing route/profile/schedule interface. `SupportOrder` is an explicit experimental route restriction, not a universal automatic block order.
+ 3. **Continuous solve and validation:** `compiler.JavaCompiler` obtains movement coefficients using shared Java code. The orchestrator chooses actual rows/contact alternatives and calls `ipopt.solver.solve`. A child worker optimizes continuous facings; parent scalar validation independently checks each witness. Scene, vertical, corridor and eventual executable-angle checks add distinct acceptance layers.
+ 
+-`cell_routes.depth_first` owns comparison frames, goal-based arrival ordering, immediate descent, backtracking and versioned persistence (automatic7, supplied typed6, supplied legacy5). `interactions.InteractionGate` adds compiled approach/required-contact queries before builders. Earlier disk/SOCP guide experiments under `route_guidance` are separate. No disk control replaces the current fixed-magnitude facing model in the selected DFS work.
++`cell_routes.depth_first` owns comparison frames, goal-based arrival ordering, immediate descent, backtracking and versioned persistence (physical automatic8, virtual automatic7, supplied typed6, supplied legacy5). `interactions.InteractionGate` adds compiled approach/required-contact queries before builders. Earlier disk/SOCP guide experiments under `route_guidance` are separate. No disk control replaces the current fixed-magnitude facing model in the selected DFS work.
++
++## Anchor decisions and solves
++
++The outer automatic state is schema2 for physical tasks. Each frame owns one required-anchor/final goal; optional contacts are internal movement choices. Movement context4 keeps node/parent IDs, completed/last-solved decision depth, queued programs and an exact selected `nodeInFlight`. Constructing a sibling does not dispatch a query. Selected meaningful nodes use guided early-stop feasibility; raw run-holds prepare the next completed decision. Anchor/final queries are mandatory. An internal node omits the pending anchor's acceptance/region predicates while retaining its actual physical history and prior anchors.
++
++`node_feasibility` distinguishes exact oracle rejection, repair exhaustion, suspension/error and feasible evidence. A failed child never assigns a status to an unqueried ancestor. Every descendant starts at the original state with all earlier facings free. Feasible rows/selected contacts and yaw seeds survive; endpoint/velocity/facing equalities are not introduced. Objective/stop/rank/oracle intent and exact validation scope are repair compatibility data (assembly9).
++
++Global hard-jump latches live outside frames and survive backtracking. Extra matching ordinary run alternatives keep their actual programs/ownership and are restored at the original frame with a scoped bypass. The binary turn label selects local-span T/−J/R or T/−J/A consistently. `turn_observability` stores compact referenced geometry/decision/query/replay records, independently of solver allocation. A later moved witness can log a label flip without changing queued keys or adding a pose constraint.
+ 
+ ## Main functions and their contracts
+ 
+diff --git a/standalone/docs/CODE_MAP.md b/standalone/docs/CODE_MAP.md
+index cf09a361..4b3166c2 100644
+--- a/standalone/docs/CODE_MAP.md
++++ b/standalone/docs/CODE_MAP.md
+@@ -169,6 +169,11 @@ Maintain this map when public modules change. Index generation uses Python AST a
+ | --- | --- |
+ | [event_routes.py](../autonomy/cell_routes/event_routes.py) | Immutable domain and physical feature/surface provenance; cyclic connector language; residual next-goal cursors; untimed semantic prefixes and observed physical passage evidence. |
+ | [guides.py](../autonomy/cell_routes/guides.py) | Local finite witness anchors, resumable shortest witness, checked shortcuts and outgoing objectives. |
++| [anchor_policy.py](../autonomy/cell_routes/anchor_policy.py) | Ordered anchor audit, physical-owner visit scope, local J/R/A keys, explicit caps and single-jump structure. |
++| [anchor_guides.py](../autonomy/cell_routes/anchor_guides.py) | Backward finite projections, onward objectives, physical approach-edge turns and binary decision labels. |
++| [anchor_adapter.py](../autonomy/cell_routes/anchor_adapter.py) | Required-anchor/open-span stages on the existing event DFS; internal nodes omit pending anchor predicates. |
++| [node_feasibility.py](../autonomy/cell_routes/node_feasibility.py) | Explicit solver intent, stable exact-node identity, outcomes and completed-decision cadence. |
++| [turn_observability.py](../autonomy/cell_routes/turn_observability.py) | Resume-safe decision/query/replay observations, aggregate metrics and boundary/decision diagram export. |
+ | [event_adapter.py](../autonomy/cell_routes/event_adapter.py) | Explicit dynamic stage provider and required physical contact-region predicates, with no inherited raw-cell filtering. |
+ | [event_search.py](../autonomy/cell_routes/event_search.py) | Automatic configuration/state cutover, one shared domain/DFS and bounded fair owner allocation. |
+ | [event_coverage_audit.py](../autonomy/cell_routes/event_coverage_audit.py) | Unseeded graph/guide discovery, then separate raw/semantic/materialized coverage and archived replay. |
+diff --git a/standalone/docs/CORRIDOR_IMPLEMENTATION_RESUME.md b/standalone/docs/CORRIDOR_IMPLEMENTATION_RESUME.md
+index c7ee7082..20a98e3e 100644
+--- a/standalone/docs/CORRIDOR_IMPLEMENTATION_RESUME.md
++++ b/standalone/docs/CORRIDOR_IMPLEMENTATION_RESUME.md
+@@ -1,6 +1,12 @@
+-# Resume generic event route discovery
++# Resume authorized anchor implementation and completed event baseline
+ 
+-The user authorized implementation after compaction. Work is in `/private/tmp/parkour-real11-initial-run-ticks`, branch `research/real11-initial-run-ticks`. Start with the [controlling plan](../autonomy/GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md) and its implementation ledger. Do not return to the old complete-air-walk design. The old source-specific baseline is preserved below.
++**Current implementation:** [ANCHOR_IMPLEMENTATION_RESUME.md](ANCHOR_IMPLEMENTATION_RESUME.md) and [new evidence](../autonomy/experiments/anchor-feasibility/README.md) supersede the historical checkpoint below. Physical tasks now use schema2/DFS8 anchor/open-span policy.
++
++## Latest request and next plan (2026-11-04)
++
++**Implementation is explicitly authorized.** The user said "go ahead and implement", then requested compaction preparation before resuming. Start with [ANCHOR_IMPLEMENTATION_RESUME.md](ANCHOR_IMPLEMENTATION_RESUME.md), the self-contained current handoff with settled contract, exact checkout/status, first M1 actions, dependencies/commands and evidence checks. Do not request permission again or reopen mixed/uncertain heuristic proposals.
++
++Work remains `/private/tmp/parkour-real11-initial-run-ticks`, branch `research/real11-initial-run-ticks`, baseline `4cf39caa`/algorithm `08b00185`. No runtime tools or source edits began in the interrupted implementation turn; only documentation changes exist and no task processes are running. Preserve uncommitted plans/navigation/deferred design and old evidence. The [controlling plan](../autonomy/ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md), [decision doc](../autonomy/ANCHOR_POLICY_DECISIONS.md) and [deferred revisit plan](../autonomy/REVISIT_DISCOVERY_DEFERRED_PLAN.md) are saved. Begin M1 after compaction, then continue the authorized implementation. The completed/historical baseline sections below are context only.
+ 
+ ## Current implementation
+ 
+@@ -15,11 +21,11 @@ Feature commits: `24b787e8` (M1 immutable raw geometry/domain), `5c4e2e36` (M2 s
+ 
+ ## Validation and next action
+ 
+-Final runtime source is `08b00185`. Its final native gate passes447 tests with zero failures/errors/skips and sourceUnchanged=true; the earlier62-test focused gate remains source-specific intermediate evidence. The generic flat gap finishes at tick14 and independently replays; finite and free virtual-finish regressions pass. Broad native and stored-Real11 raw/semantic/materialized-guide coverage pass. Matched cold acceptance is being recorded under [event-route-discovery](../autonomy/experiments/event-route-discovery/README.md). Read that evidence directory and the plan ledger for final results; do not reuse the old420-test report as coverage of new runtime.
++Final runtime source is `08b00185`. Its final native gate passes447 tests with zero failures/errors/skips and sourceUnchanged=true; the earlier62-test focused gate remains source-specific intermediate evidence. The generic flat gap finishes at tick14 and independently replays; finite and free virtual-finish regressions pass. Broad native and stored-Real11 raw/semantic/materialized-guide coverage pass. Final matched cold acceptance is recorded under [event-route-discovery](../autonomy/experiments/event-route-discovery/README.md). Read that evidence directory and the plan ledger for final results; do not reuse the old420-test report as coverage of new runtime.
+ 
+ The initial interrupted Real11 diagnostic is **not** acceptance: it had7 calls and accepted B2/B3 stages, exposed loose long-skip scheduling hints, and was stopped deliberately. Ordinary-flight ordering now uses existing per-flight coefficients; it remains only a scheduling hint. The saved-context M0 profile identifies raw-route guard enumeration and copying, not eager constructor cost, as the dominant work in those two contexts.
+ 
+-M6 is complete for this release. Runtime source `08b00185`; the [final evidence](../autonomy/experiments/event-route-discovery/README.md) includes the447-test native gate, source-stable coverage/generic controls, matched runs, full-route diagram and acceptance manifest. Automatic: T67 first at16.09s, Z=−1093.939078845141,28 calls/1635 prefixes,24/24 replays; supplied: T67 first at43.79s, Z=−1093.8231290646224,51 calls/511 prefixes,95/95 replays. Actual total session walls301.90s/305.76s for declared300s guards. All runtime hashes agree and80 historical artifact hashes are unchanged. No active experiments remain; do not poll obsolete session IDs or rerun completed gates without a new change/concern. No runtime implementation is pending. Remaining limitations/deferred work are listed in the controlling plan’s final release outcome. The automatic result satisfies the agreed virtual height7 clock with actual Y≈6.7967/airborne; the supplied control is physically grounded at Y7. No fixed64 requirement or optimality claim. If the cold performance goal is unmet, preserve unknown work and profile rather than widen caps. Keep docs/manifest/report source claims exact.
++M6 is complete for this release. Runtime source `08b00185`; the [final evidence](../autonomy/experiments/event-route-discovery/README.md) includes the447-test native gate, source-stable coverage/generic controls, matched runs, full-route diagram and acceptance manifest. Automatic: T67 first at16.09s, Z=−1093.939078845141,28 calls/1635 prefixes,24/24 replays; supplied: T67 first at43.79s, Z=−1093.8231290646224,51 calls/511 prefixes,95/95 replays. Actual total session walls301.90s/305.76s for declared300s guards. All runtime hashes agree and80 historical artifact hashes are unchanged. No active experiments remain; do not poll obsolete session IDs or rerun completed gates without a new change/concern. No implementation remains for that completed release. The requested next change is planned above and is not implemented. Baseline limitations/deferred work are listed in the generic plan’s final release outcome. The automatic result satisfies the agreed virtual height7 clock with actual Y≈6.7967/airborne; the supplied control is physically grounded at Y7. No fixed64 requirement or optimality claim. If the cold performance goal is unmet, preserve unknown work and profile rather than widen caps. Keep docs/manifest/report source claims exact.
+ 
+ ## Historical a28e5b71 baseline
+ 
+diff --git a/standalone/docs/CURRENT_STATE.md b/standalone/docs/CURRENT_STATE.md
+index 244714c8..c0c3665a 100644
+--- a/standalone/docs/CURRENT_STATE.md
++++ b/standalone/docs/CURRENT_STATE.md
+@@ -1,10 +1,22 @@
+ # Current standalone state
+ 
+-For the completed feature handoff after compaction, start with [CORRIDOR_IMPLEMENTATION_RESUME.md](CORRIDOR_IMPLEMENTATION_RESUME.md). It records the isolated checkout, preserved uncommitted work, current authorization, exact imported baseline, implemented scope and verification commands. The detailed spatial plan's sections10–11 specify interfaces/call sites and the test matrix.
++## Anchor DFS implementation (2026-11-04)
++
++Finite physical automatic tasks now use declared required anchors, or one open span when no anchors are supplied. [Anchor implementation and evidence](../autonomy/experiments/anchor-feasibility/README.md) records the source-specific acceptance status and commands; [resume](ANCHOR_IMPLEMENTATION_RESUME.md) identifies this isolated worktree. Supplied legacy corridors and virtual tasks remain separate controls.
++
++Required-anchor arrivals are the comparison/promotion boundaries. All decisions within a span remain coupled through full original-state continuous re-solves with all earlier facings free. Internal feasibility queries run when a completed meaningful decision is selected for descent, initially every decision; raw run-hold construction does not dispatch a solve. Earlier feasible positions/velocities/yaws never become fixed seams. Only the exact queried model receives an oracle rejection; incomplete/error work suspends, physical repair exhaustion backtracks without inventing numerical infeasibility, and a failed child never labels an ancestor.
++
++Backward nearest-point guides and onward POSITION objectives are implemented with intermediate stop-on-feasible; terminal optimization still minimizes actual achieved T then maximizes the requested objective. New Real11 fixture uses anchors B2/B3/B4/B5 and extended physical B7 `[729,0,-1095,730,7,-1093]`, guide `(729.5,7,-1093)`, with no old virtual/X<729.7 task rows. The original0/8 initial domain remains explicit, not a generic restriction on9/10/11. B6 remains unchanged because replacement bounds are unspecified.
++
++Validated direct jumps latch their ordered anchor transition globally for the remainder of the solve. Extra ordinary matching run preparations are saved and restored on backtracking with a parent-scoped bypass; restoration does not widen declared caps or reopen multijump structure in a latched span. Same-block setup jumps remain generated; departed physical owners cannot be revisited. [Future revisit work](../autonomy/REVISIT_DISCOVERY_DEFERRED_PLAN.md) remains deferred.
++
++The preliminary110° turnaround classifier uses one approach-facing physical edge (imaginary diagonal when needed),0.3-block spatial margin, and one binary label per decision. Its whole key is `(T,−J,R,id)` outside and `(T,−J,A,id)` inside, with J/R/A local to the current anchor span. Guide progress does not rank or prune decisions. Persisted observations include source point, signed distances, immutable label/key, query/selection metrics and later replay flips; diagrams draw physical footprints, covers, guides, edge/margin and the two labels.
++
++Automatic physical state is outer schema2 / DFS8 / movement context4 / repair assembly9. Old exact automatic states are rejected for this policy. [Controlling plan](../autonomy/ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md) and [decisions](../autonomy/ANCHOR_POLICY_DECISIONS.md) retain rationale and deferred scope. Native acceptance and new-task measurements are being completed; old T67 virtual results below do not validate the new task.
+ 
+ ## Generic route-discovery research (2026-11-03)
+ 
+-The latest user clarification asks for generic discovery of potential contact/passage routes, conservative elimination of obviously impossible choices, and early removal of irrelevant approach/avoidance descriptions. A landing-block list alone is insufficient: a nearby target may require a side/corner approach before its top contact. The [cited research report](../autonomy/GENERIC_ROUTE_DISCOVERY_RESEARCH.md) compares decompositions, roadmaps and layered contact/interaction abstractions, defines scoped pruning/merging rules and works through B2→B3. The [concrete next implementation plan](../autonomy/GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md) now specifies the architecture, records/APIs, call-site changes, migration, milestones and acceptance tests. Implementation is authorized and underway in the isolated worktree. M1 now adds the immutable raw geometry/domain and support-episode catalogue;15 domain/region checks pass. The automatic entry now selects the cyclic event backend with dynamic next-contact goals and one shared DFS. Supplied corridors retain their explicit semantics. Shared physical preparation is now resumable (state2/context7), with scoped role/window proofs and early unwanted-interaction omission;The final447-test native gate passes without failures/skips and with stable hashes. All raw/semantic/materialized coverage checks pass. The fresh automatic Real11 cold arm finds T67 at16.09s; all24 independent post-run replays pass. The source-stable matched supplied arm also finds T67 (first43.79s), with95 independent replays passing. Automatic uses28 calls/1635 prefixes, supplied51/511; actual total session walls301.90s/305.76s for declared300s guards. [Final evidence and complete route diagram](../autonomy/experiments/event-route-discovery/README.md) distinguish virtual versus physical finish and first-discovery versus total session time; minimum time remains unproven. See the plan’s implementation ledger; the research itself made no numerical feasibility claims.
++The latest user clarification asks for generic discovery of potential contact/passage routes, conservative elimination of obviously impossible choices, and early removal of irrelevant approach/avoidance descriptions. A landing-block list alone is insufficient: a nearby target may require a side/corner approach before its top contact. The [cited research report](../autonomy/GENERIC_ROUTE_DISCOVERY_RESEARCH.md) compares decompositions, roadmaps and layered contact/interaction abstractions, defines scoped pruning/merging rules and works through B2→B3. The [completed route-discovery plan](../autonomy/GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md) specifies that release’s architecture, records/APIs, call-site changes, migration and acceptance tests. Its implementation and acceptance are complete in the isolated worktree. M1 added the immutable raw geometry/domain and support-episode catalogue;15 domain/region checks pass. The automatic entry now selects the cyclic event backend with dynamic next-contact goals and one shared DFS. Supplied corridors retain their explicit semantics. Shared physical preparation is now resumable (state2/context7), with scoped role/window proofs and early unwanted-interaction omission. The final447-test native gate passes without failures/skips and with stable hashes. All raw/semantic/materialized coverage checks pass. The fresh automatic Real11 cold arm finds T67 at16.09s; all24 independent post-run replays pass. The source-stable matched supplied arm also finds T67 (first43.79s), with95 independent replays passing. Automatic uses28 calls/1635 prefixes, supplied51/511; actual total session walls301.90s/305.76s for declared300s guards. [Final evidence and complete route diagram](../autonomy/experiments/event-route-discovery/README.md) distinguish virtual versus physical finish and first-discovery versus total session time; minimum time remains unproven. See the plan’s implementation ledger; the research itself made no numerical feasibility claims.
+ 
+ ## Previous spatial corridor baseline (2026-11-03)
+ 
+@@ -12,7 +24,7 @@ Support refinement is committed at `f9aa0d96`. The isolated worktree now impleme
+ 
+ The automatic50-route shortlist now admits the archived64-input initial0 virtual-finish witness after independent replay, without seeding discovery. This is spatial coverage, not a new cold result. The final source-stable matched300-second run found no automatic finish in13 worker calls (actual303.3s), with5 unique partial replays passing. Supplied routing found T67, Z≈−1093.82313 in41 calls (actual311.8s), with51 replays passing. See [measured evidence](../autonomy/experiments/automatic-corridors/README.md). The final native gate passes420 selected tests, no failures/errors/skips, with sourceUnchanged=true; dedicated ladder/climbable/vine/movement-entry modules remain outside the scope. Named step/grind stage certification remains unknown when internal probes are absent from shared diagnostics. Exact revised B6 bounds are still missing. See the [implementation status](../autonomy/SPATIAL_CORRIDOR_REFACTOR_PLAN.md#implementation-status) and [resume handoff](CORRIDOR_IMPLEMENTATION_RESUME.md).
+ 
+-## Current requested terminal goal: virtual B7 landing (2026-11-03)
++## Previous terminal goal: virtual B7 landing (2026-11-03)
+ 
+ The user clarified the intended finish after the fixed-clock benchmark. At the B7-height landing event (height7), use the horizontal goal **X < 729.7 and Z >= -1095.3**, with no goal-imposed lower X bound or upper Z bound. The region is a virtual landing target extending indefinitely toward +Z, not B7's original finite support footprint. Its coordinates are player-center bounds; do not expand them by the hitbox again.
+ 
+diff --git a/standalone/docs/DECISIONS_AND_PLANS.md b/standalone/docs/DECISIONS_AND_PLANS.md
+index 5d996e56..daeee703 100644
+--- a/standalone/docs/DECISIONS_AND_PLANS.md
++++ b/standalone/docs/DECISIONS_AND_PLANS.md
+@@ -1,10 +1,22 @@
+ # Decisions and plan authority
+ 
+-2026-11-03. Read [current state](CURRENT_STATE.md) for implemented behavior. This page prevents an agent from treating older experiments as a new implementation request. User instructions override documentation. Within docs, the current consolidated plan and current-state guide supersede historical proposals.
++**Latest authority:** the user said "go ahead and implement" and then requested compaction preparation. Authorization persists. [ANCHOR_IMPLEMENTATION_RESUME.md](ANCHOR_IMPLEMENTATION_RESUME.md) records the settled binary heuristic/observability contract, current implementation status and remaining verification. Earlier planning-only notes describe when those documents were written, not a bar to authorized work after compaction.
+ 
+-## Latest requested implementation plan
++2026-11-04. Read [current state](CURRENT_STATE.md) for implemented behavior. This page prevents an agent from treating older experiments as a new implementation request. User instructions override documentation. Within docs, the current consolidated plan and current-state guide supersede historical proposals.
+ 
+-The user requests a generic representation of all potential route choices, leaving physical feasibility to movement decisions and solves while discarding proved irrelevant/impossible interactions early. Meaningful routes can include approach sides/corners as well as support contacts. A proof that a target's premature side interaction cannot occur must preserve its required landing; an unknown interaction remains available. See [GENERIC_ROUTE_DISCOVERY_RESEARCH.md](../autonomy/GENERIC_ROUTE_DISCOVERY_RESEARCH.md) for the primary-source comparison, formal scope/merge conditions, proposed contact/interaction abstraction and staged validation. [GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md](../autonomy/GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md) is now the concrete controlling plan for the current automatic route refactor, including scoped relevance, lazy event/goal discovery, shared prefix owners and the physical-only solve boundary. Implementation is now authorized and underway: immutable domains, lazy event/guide discovery, resumable physical preparation and schema7 dynamic DFS are implemented. The default automatic entry uses the event backend; its current acceptance evidence is in [event-route-discovery](../autonomy/experiments/event-route-discovery/README.md). The earlier contracts below describe their source-specific baseline.
++## Current anchor DFS policy
++
++The [current decision doc](../autonomy/ANCHOR_POLICY_DECISIONS.md) and [implementation plan](../autonomy/ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md) control the implemented change. Latest clarification: DFS, normal exact-node solves at a cadence, no separate prefix/ancestor-testing subsystem, and no negative inference from a failed child to an untested parent. Under the user's numerical assumption, only the exact queried node/model can receive the infeasible result. Exhausted alternatives are a different search status.
++
++Recommended starting cadence is1 completed meaningful jump/contact decision, not every simulation input/run-hold construction step; required anchors/final always solved. Compare2/4 later from measured wall cost, not solver-call count alone. Use this as the starting default; later batching is a measurement-driven adjustment.
++
++Approach-facing E edge is settled. Physical returns after another support are deferred/not generated; repeated current-block setup jumps and acyclic optional supports remain supported where global hard latches permit. Full future design is in [the deferred revisit plan](../autonomy/REVISIT_DISCOVERY_DEFERRED_PLAN.md), not current milestones.
++
++The prior settled contract remains: global solve-wide single-jump latch, requested impulses, backward/onward guides and early stop,110° spatial turn regions, extended finite B7/minT→MAXZ. Implementation now uses physical-task outer schema2/DFS8/movement context4/repair assembly9; archived old geometry/task/evidence remains unchanged. See [new implementation evidence](../autonomy/experiments/anchor-feasibility/README.md). Turnaround selection is now a preliminary binary decision-point test against one approach edge (imaginary diagonal if needed) plus spatial margin. Select exactly T,−J,A or T,−J,R. Record point/edge/margin/distances/label/key, pruning behavior and later replay label flips; include two-label diagrams/counters. Blended scores and uncertain membership are removed.
++
++## Completed generic event-discovery baseline
++
++The user requests a generic representation of all potential route choices, leaving physical feasibility to movement decisions and solves while discarding proved irrelevant/impossible interactions early. Meaningful routes can include approach sides/corners as well as support contacts. A proof that a target's premature side interaction cannot occur must preserve its required landing; an unknown interaction remains available. See [GENERIC_ROUTE_DISCOVERY_RESEARCH.md](../autonomy/GENERIC_ROUTE_DISCOVERY_RESEARCH.md) for the primary-source comparison, formal scope/merge conditions, proposed contact/interaction abstraction and staged validation. [GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md](../autonomy/GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md) records the completed automatic route refactor, including scoped relevance, lazy event/goal discovery, shared prefix owners and the physical-only solve boundary. Implementation and acceptance are complete: immutable domains, lazy event/guide discovery, resumable physical preparation and schema7 dynamic DFS are implemented. The default automatic entry uses the event backend; its current acceptance evidence is in [event-route-discovery](../autonomy/experiments/event-route-discovery/README.md). The earlier contracts below describe their source-specific baseline.
+ 
+ ## Current implementation authority
+ 
+@@ -20,21 +32,21 @@ The [corridor handoff](CORRIDOR_AGENT_HANDOFF.md) through `61355976` is imported
+ 
+ | Topic | Decision and rationale |
+ | --- | --- |
+-| Layering | Represent potential contacts/passages in a cyclic geometric language and lazily materialize progress guides; optimize discrete interactions in the existing shared DFS. A spatial route does not determine a jump schedule or constant time edge weight. |
+-| Spatial route identity, clarified | Different progression supports and different 3D obstacle passages are different routes. Overflying a block versus landing then running off is explicitly different even with matching X/Z projections. Timing, run duration and facings within the same itinerary remain local. Same-neighborhood setup hops remain local unless they cross another meaningful passage; broad revisits retain their ordered occurrence. |
+-| Real11 task correction | Current handoff contract is the descending height7 clock with player-center X<729.7, Z>=−1095.3; minimize achieved tick then maximize Z at that tick. Free overshoot and actual finite B7 contact are distinct valid models. No fake floor, lower X goal bound or upper Z goal bound. Use the implemented `terminal_goals` adapter; the literal-finite-B7 and fixed64 interpretations are historical. |
+-| Real11 route/support discovery | Automatically discover untimed support/contact and 3D passage itineraries using geometry and existing movement-aware proposals, rather than requiring B2/B3/B4/B5 by fixture. Local search realizes each selected itinerary and must not silently skip its support stages. Reuse existing geometry/movement/goal/direction helpers; the typed spatial representation/integration is now present, with stored-scene coverage and bounded numerical evidence recorded. Preserve meaningful B1 setup self-hops. The user reports B6 extends farther right; the stored one-block-X box is incomplete for that description, and exact revised bounds remain unspecified. Intentional wall hits stay deferred. |
+-| Local guidance | Naive connected route endpoints can supply direction/progress guidance. No new relaxation is required to implement current search. Re-solve all facings from the beginning so later decisions can alter the continuous path. |
+-| Comparing alternatives | A shared spatial goal compares **time**; a shared absolute tick compares **objective/progress**. Generate allowed candidates, then compare; don't manufacture completion-time families as the objective of generation. |
+-| Retention | Implemented DFS retains siblings/unknowns/refinements; its current heuristic exclusion is extra ordinary preparation before the latest jump within a matching interaction pattern. The old global peer-retention pass is inactive. Keep smaller/earlier unknown/equal-run candidates and distinct contacts; audit heuristic exclusions with full continuations. |
+-| State protection | For matching schedule/phase/scope, position within existing margin, greater directional velocity OR greater horizontal speed blocks peer exclusion. Full position and velocity from the same witness; no arbitrary weighted score. |
++| Layering | Preserve physical contacts/passages and movement alternatives in the existing shared DFS. The current engine makes decisions in coupled required-anchor spans, uses backward guide objectives with early stopping, and retains recoverable alternatives. Spatial geometry does not specify jump timing or constant edge weights. |
++| Spatial route identity, clarified | Support occurrences and3D passages remain meaningful. Current generation excludes returning to a departed physical owner after another block; consecutive same-block setup hops remain supported. Revisit design is preserved for later. Required milestones/global hard latches still apply. |
++| Real11 task correction | Latest requested task extends physical B7 one block +Z to `[729,0,-1095,730,7,-1093]`, actual B7 landing, least T then MAXZ, guide +Z physical edge/X midpoint `(729.5,7,-1093)`. No old virtual/X<729.7 extra task rows in the new fixture. New task evidence is separate from the preserved original-box virtual results. |
++| Real11 route/support discovery | The current engine accepts caller-declared ordered required anchors B2/B3/B4/B5, while movement choices and permitted optional supports remain search decisions. The completed baseline discovers dynamic support/contact choices without that mandatory list. Reuse existing geometry/movement/contact helpers; do not make required anchors a fixture-specific generic algorithm rule. Preserve meaningful B1 setup hops. B6’s reported rightward extension still lacks exact replacement bounds. Intentional wall hits stay deferred. |
++| Local guidance | Restore backward nearest-point guide inference and continuous progress objective with stop-on-feasible. Progress is not a discrete key/pruning rule; no slack. Re-solve all earlier facings from original state so later constraints may change the path. |
++| Comparing alternatives | Compare only at required anchors/final task; optional movement inside a span is coupled. Slower intermediate arrivals are recoverably deferred, not global infeasibility proofs. Full terminal incumbents minimize achieved T then real objective at equal T; current elapsed-time bound remains distinct. |
++| Retention | Eligible hard ordinary extra runs remain recoverable deferrals. Direct feasibility anywhere permanently latches that anchor transition to single-jump structure for the solve, even after changed incoming histories; recovery cannot reopen local multijump structure there. Keep actual run/source/repair ownership and earlier admissible preparation. |
++| State protection | Existing position/velocity protection helpers are historical/inactive for a global peer-exclusion pass. The current tick-only policy adds no such dominance claim. Preserve physical schedule/model/scope distinctions; a first feasible pose is not a bound on later re-solves. |
+ | Different schedules | Absolute-tick p/v is not apples-to-apples across different ground/air histories. Preserve fewer-run/more-effective-jump protections and incomparability. Equal counts do not establish equal schedule. |
+-| Ordering, clarified | Fewest **achieved arrival ticks at the same point**, then most effective grounded jumps, then fewest grounded nonjump runs. Follow chosen child to completion before root siblings. Old simulated-prefix rule is wrong. |
+-| Coupling | Close decisions can be grouped. Weak influence of separated decisions is a provisional map-dependent assumption, not a theorem; backtracking and retained siblings are needed if evidence contradicts it. |
+-| Solver boundary | Orchestrator fixes inputs, events and constraints before IPOPT; reuse builders. Continuous success should satisfy its specified model, with separate rounding/exact replay limits. |
++| Ordering, clarified | Absolute T/local requested J/R/A. Ordinary T,−J,R; turnaround T,−J,A within preprocessed spatial region, no progress key.110° accepted; a0.3-block spatial margin. Each decision selects one whole key; no mixed aggregation or uncertainty label. Global hard structure independent of regional priority. |
++| Coupling | All decisions between required anchors remain coupled through original-state re-solves. Feasibility can be scheduled at completed internal movement decisions without fixing their endpoint/velocity or creating extra comparison anchors. Initial recommended cadence1, later measured2/4 options; raw input steps are not decision levels. |
++| Solver boundary | Inputs/events/physical history fixed before each exact-node query, with earlier facings free. Only that queried node/model can receive an infeasible result under the user assumption; child failure never marks untested ancestors infeasible. No separate ancestor-testing pass. Physical alternative/cancellation/error scopes remain distinct. |
+ | Inertia | Disable thresholds only; retain normal momentum. Exact inertia-pattern follow-up is deferred. |
+ | Relevance | One generic block/tick/phase eligibility helper for required and unwanted interactions; no landing/avoid special-case system. Proved impossible means no interaction-derived choices, rows or checks. Unknown retains coverage. |
+-| Corridor | Automatic event guides are soft: no selected raw-walk containment or projection filters. Required physical contacts/passages and full scene/task validation remain hard. Explicit supplied corridors retain their source-specific checks. |
++| Corridor | No automatic raw-walk containment or portal-clock filters. Backward guide points are soft continuous-objective/turn cues. Required physical contacts/passages and full scene/task validation remain hard; explicit supplied controls retain their source-era checks. |
+ | Budget | Minutes or longer are acceptable for accuracy. Explain structural failures before widening caps; preserve unfinished work and reference controls separately from discovery. |
+ | Workflow | Isolated branch/worktree, no other-agent communication, persist decisions and measured facts. Only commit after a feature implementation; bundle related documentation, tests and fixtures. Investigation/planning/documentation-only turns do not require a commit. This is the new path, not a feature-flag rollout exercise. |
+ 
+@@ -61,6 +73,8 @@ When a decision changes, update this page/current state and the active plan. Pre
+ 
+ ## Latest Real11 terminal-goal clarification (2026-11-03)
+ 
++Historical virtual-target contract, superseded by the2026-11-04 extended physical B7 task above. Existing measurements remain tied to their original task/source.
++
+ Supersedes the earlier fixed64 experiment and the literal-finite-B7 interpretation: use the B7-height virtual landing region X<729.7, Z>=-1095.3, extending without an upper Z bound (and without a new lower X bound). Minimize landing time first, then maximize Z at that earliest tick. This is the actual terminal objective, not a common-clock progress proxy. Do not add fictitious approach collisions by extending physical B7 geometry. The existing fixed-clock evidence remains historical; the corrected goal is implemented at `71c9bb7e` and has new [cold evidence](../autonomy/experiments/virtual-finish/README.md). The existing scalar model determines the nominal downward height clock; actual finite-scene Y/ground remains authoritative for physical replay. Rank complete candidates by time, then objective, without fake goal geometry. See CURRENT_STATE.md for the full contract.
+ 
+ ## Minimum-run rule clarified by the user (2026-11-03)
+diff --git a/standalone/docs/DOC_INDEX.md b/standalone/docs/DOC_INDEX.md
+index d0c8ef26..e263fe88 100644
+--- a/standalone/docs/DOC_INDEX.md
++++ b/standalone/docs/DOC_INDEX.md
+@@ -5,8 +5,12 @@ All tracked standalone Markdown plus this consolidation. Read [AGENTS](../AGENTS
+ | Document | Topic | Authority/status |
+ | --- | --- | --- |
+ | [AGENTS.md](../AGENTS.md) | Standalone agent entry point | Current navigation/guidance |
++| [docs/ANCHOR_IMPLEMENTATION_RESUME.md](ANCHOR_IMPLEMENTATION_RESUME.md) | Self-contained authorized implementation resume: exact worktree, settled contract, implementation status, native environment and checks | Start here after compaction; current worktree/status and validation |
+ | [CONSOLIDATION.md](../CONSOLIDATION.md) | Standalone branch consolidation | Historical; contains superseded branch/policy/status |
+ | [README.md](../README.md) | Standalone route search and IPOPT | Current navigation/guidance |
++| [autonomy/ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md](../autonomy/ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md) | Exact-node DFS cadence, global hard latches, regional turns, same-block setup and finite extended B7 | Implemented anchor policy; physical returns deferred; new evidence separate |
++| [autonomy/ANCHOR_POLICY_DECISIONS.md](../autonomy/ANCHOR_POLICY_DECISIONS.md) | Exact-node rejection/cadence, binary edge-plus-margin decision mode, observability and current visit scope | Latest contract: preliminary binary decision mode with required observability; current visit scope |
++| [autonomy/REVISIT_DISCOVERY_DEFERRED_PLAN.md](../autonomy/REVISIT_DISCOVERY_DEFERRED_PLAN.md) | Preserved revisit complexity, lazy repetition design, future module map, tests and resume steps | Explicitly deferred; do not generate inter-block returns now |
+ | [autonomy/BLOCK_ROUTE_SEARCH.md](../autonomy/BLOCK_ROUTE_SEARCH.md) | Block-route selection prototype | Mechanics/research reference; current decisions control scope |
+ | [autonomy/BLOCK_SOLVER_PLAN.md](../autonomy/BLOCK_SOLVER_PLAN.md) | Block solver: continuous-model orchestration | Prior plan/design reference; check decisions index for implemented/superseded scope |
+ | [autonomy/CELL_ROUTE_EXPERIMENT_PLAN.md](../autonomy/CELL_ROUTE_EXPERIMENT_PLAN.md) | Cell-route experiment plan | Prior plan/design reference; check decisions index for implemented/superseded scope |
+@@ -20,8 +24,8 @@ All tracked standalone Markdown plus this consolidation. Read [AGENTS](../AGENTS
+ | [autonomy/DYNAMIC_CONTACT_DECISIONS.md](../autonomy/DYNAMIC_CONTACT_DECISIONS.md) | Ceiling and stepping decisions change the transition law | Mechanics/research reference; current decisions control scope |
+ | [autonomy/GENERATION_PERFORMANCE_PLAN.md](../autonomy/GENERATION_PERFORMANCE_PLAN.md) | Schedule-generation performance follow-ups | Prior plan/design reference; check decisions index for implemented/superseded scope |
+ | [autonomy/GENERATION_RELEVANCE_PLAN.md](../autonomy/GENERATION_RELEVANCE_PLAN.md) | Preliminary plan: generate only relevant, distinct interaction models | Implemented interaction design; consolidated plan/results control status |
+-| [autonomy/GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md](../autonomy/GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md) | Concrete next route-discovery refactor: event language, interaction normalization, DFS owners, migration and gates | Controlling next implementation plan; runtime remains the implemented baseline |
+-| [autonomy/GENERIC_ROUTE_DISCOVERY_RESEARCH.md](../autonomy/GENERIC_ROUTE_DISCOVERY_RESEARCH.md) | Generic potential-route coverage, decomposition/roadmap comparison, contact/approach semantics and early relevance/merge rules | Cited research and proposed architecture; implementation unchanged |
++| [autonomy/GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md](../autonomy/GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md) | Completed event route-discovery refactor: event language, interaction normalization, DFS owners, migration and gates | Implemented/accepted baseline; anchor-feasibility plan controls the current extension |
++| [autonomy/GENERIC_ROUTE_DISCOVERY_RESEARCH.md](../autonomy/GENERIC_ROUTE_DISCOVERY_RESEARCH.md) | Generic potential-route coverage, decomposition/roadmap comparison, contact/approach semantics and early relevance/merge rules | Cited research; event implementation and current next-change plan have separate authority |
+ | [autonomy/GENERIC_COMPOSITION.md](../autonomy/GENERIC_COMPOSITION.md) | Generic movement programs | Existing API/mechanics reference; check current scope |
+ | [autonomy/GENERIC_COMPOSITION_PLAN.md](../autonomy/GENERIC_COMPOSITION_PLAN.md) | Generic movement composition | Prior plan/design reference; check decisions index for implemented/superseded scope |
+ | [autonomy/GEOMETRIC_DECISION_GUIDANCE.md](../autonomy/GEOMETRIC_DECISION_GUIDANCE.md) | Use the existing cell route as the first decision guide | Mechanics/research reference; current decisions control scope |
+@@ -55,7 +59,7 @@ All tracked standalone Markdown plus this consolidation. Read [AGENTS](../AGENTS
+ | [autonomy/RUN_TICKS_PLAN.md](../autonomy/RUN_TICKS_PLAN.md) | Run-ticks prototype: status and remaining work | Prior plan/design reference; check decisions index for implemented/superseded scope |
+ | [autonomy/SEARCH_CONTINUATION_FIX_PLAN.md](../autonomy/SEARCH_CONTINUATION_FIX_PLAN.md) | Resume unfinished solves and reject provably dead prefixes | Prior plan/design reference; check decisions index for implemented/superseded scope |
+ | [autonomy/SEARCH_OBJECTIVE.md](../autonomy/SEARCH_OBJECTIVE.md) | Search order: total ticks, then objective | Mechanics/research reference; current decisions control scope |
+-| [autonomy/SPATIAL_CORRIDOR_REFACTOR_PLAN.md](../autonomy/SPATIAL_CORRIDOR_REFACTOR_PLAN.md) | Typed support/air regions, 3D route identity, discovery, staged constraints and DFS integration | Pending spatial proposal, reconciled with imported DFS/virtual-finish/local-run implementation through `61355976` |
++| [autonomy/SPATIAL_CORRIDOR_REFACTOR_PLAN.md](../autonomy/SPATIAL_CORRIDOR_REFACTOR_PLAN.md) | Typed support/air regions, 3D route identity, discovery, staged constraints and DFS integration | Implemented spatial baseline; later event implementation and anchor-feasibility plan supersede the stated parts |
+ | [autonomy/SPATIAL_ROUTE_RESEARCH.md](../autonomy/SPATIAL_ROUTE_RESEARCH.md) | From collision geometry to spatial route families | Mechanics/research reference; current decisions control scope |
+ | [autonomy/STATE_PROTECTION_IMPLEMENTATION_PLAN.md](../autonomy/STATE_PROTECTION_IMPLEMENTATION_PLAN.md) | Implementation plan: velocity and schedule protection | Prior plan/design reference; check decisions index for implemented/superseded scope |
+ | [autonomy/STEPPING_CASES.md](../autonomy/STEPPING_CASES.md) | Stepping terminology and cases | Mechanics/research reference; current decisions control scope |
+@@ -138,6 +142,12 @@ All tracked standalone Markdown plus this consolidation. Read [AGENTS](../AGENTS
+ | [ipopt/REPLAY.md](../ipopt/REPLAY.md) | Local Minecraft movement replay | Existing API/mechanics reference; check current scope |
+ | [ipopt/RUN_TICKS_PHYSICS_HANDOFF.md](../ipopt/RUN_TICKS_PHYSICS_HANDOFF.md) | Block-sequence and minimum-run-ticks physics handoff | Historical handoff; current AGENTS supersedes task/branch instructions |
+ 
++Current feature evidence: [anchor-feasibility README](../autonomy/experiments/anchor-feasibility/README.md), [new finite Real11 fixture](../autonomy/experiments/anchor-feasibility/real11-anchors.json), and fresh native/matched-run artifacts in that directory.
++
++## Current next-change plan
++
++- [Current decisions/cadence advice](../autonomy/ANCHOR_POLICY_DECISIONS.md), [implementation plan](../autonomy/ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md), [deferred revisit design](../autonomy/REVISIT_DISCOVERY_DEFERRED_PLAN.md). Normal exact-node DFS solves, no ancestor-negative inference, same-block jumps supported; physical returns after another block deferred. The physical-task anchor extension is implemented; see new evidence for acceptance.
++
+ ## Automatic semantic corridor implementation
+ 
+ - [Implementation contract/status](../autonomy/SPATIAL_CORRIDOR_REFACTOR_PLAN.md), [DFS integration](../autonomy/DFS_INTERACTION_IMPLEMENTATION_PLAN.md), [active resume handoff](CORRIDOR_IMPLEMENTATION_RESUME.md).
+diff --git a/standalone/docs/FILE_INDEX.md b/standalone/docs/FILE_INDEX.md
+index 7f17d4e9..04186c57 100644
+--- a/standalone/docs/FILE_INDEX.md
++++ b/standalone/docs/FILE_INDEX.md
+@@ -4,6 +4,23 @@ Every tracked standalone file plus this consolidation is listed by directory. Ge
+ 
+ Evidence filenames identify different runs/contexts; do not treat reports as executable modules or raw request fixtures. Nearest experiment README/manifest plus embedded source/settings determine exact provenance. This is a navigation snapshot, not permission to overwrite artifacts.
+ 
++## Anchor implementation additions (2026-11-04)
++
++| File | Purpose |
++| --- | --- |
++| [anchor_policy.py](../autonomy/cell_routes/anchor_policy.py) | Milestones, owner visits, local counts/caps and hard structure. |
++| [anchor_guides.py](../autonomy/cell_routes/anchor_guides.py) | Finite backward guides and binary approach-edge geometry. |
++| [anchor_adapter.py](../autonomy/cell_routes/anchor_adapter.py) | Physical required-anchor/open-span stage provider. |
++| [node_feasibility.py](../autonomy/cell_routes/node_feasibility.py) | Solve intent, exact model outcomes and cadence. |
++| [turn_observability.py](../autonomy/cell_routes/turn_observability.py) | Observations, replay drift, aggregates and diagrams. |
++| [test_anchor_policy.py](../autonomy/tests/test_anchor_policy.py) | Policy/geometry/count/status/observability regressions. |
++| [test_anchor_search.py](../autonomy/tests/test_anchor_search.py) | Source-owned generator/node/native integration regressions. |
++| [test_anchor_dfs.py](../autonomy/tests/test_anchor_dfs.py) | Latch, restoration, logging parity and resume trees. |
++| [experiment README](../autonomy/experiments/anchor-feasibility/README.md) | New-task commands, validation status and artifacts. |
++| [Real11 fixture](../autonomy/experiments/anchor-feasibility/real11-anchors.json) | Declared anchors and extended physical B7 landing. |
++| [native gate](../autonomy/experiments/anchor-feasibility/native_gate.py) | Source-stable inherited/autonomy/IPOPT acceptance. |
++| [matched measurement](../autonomy/experiments/anchor-feasibility/measure.py) | Fresh cold guided early-stop/polish controls and replay/plots. |
++
+ ## standalone
+ 
+ | File | Purpose |
+@@ -16,6 +33,8 @@ Evidence filenames identify different runs/contexts; do not treat reports as exe
+ 
+ | File | Purpose |
+ | --- | --- |
++| [ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md](../autonomy/ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md) | Exact-node DFS cadence/recovery, finite B7, global hard latch, regional turns and same-block setup; inter-block returns deferred. Planning only. |
++| [ANCHOR_POLICY_DECISIONS.md](../autonomy/ANCHOR_POLICY_DECISIONS.md) | Current exact-node DFS rejection rule, recommended decision-level solve cadence, settled approach edge and deferred-revisit/current-local-hop scope. No runtime change. |
+ | [BLOCK_ROUTE_SEARCH.md](../autonomy/BLOCK_ROUTE_SEARCH.md) | Block-route selection prototype. See documentation index for authority/status. |
+ | [BLOCK_SOLVER_PLAN.md](../autonomy/BLOCK_SOLVER_PLAN.md) | Block solver: continuous-model orchestration. See documentation index for authority/status. |
+ | [CELL_ROUTE_EXPERIMENT_PLAN.md](../autonomy/CELL_ROUTE_EXPERIMENT_PLAN.md) | Cell-route experiment plan. See documentation index for authority/status. |
+@@ -62,6 +81,7 @@ Evidence filenames identify different runs/contexts; do not treat reports as exe
+ | [RUN_TICKS_PLAN.md](../autonomy/RUN_TICKS_PLAN.md) | Run-ticks prototype: status and remaining work. See documentation index for authority/status. |
+ | [SEARCH_CONTINUATION_FIX_PLAN.md](../autonomy/SEARCH_CONTINUATION_FIX_PLAN.md) | Resume unfinished solves and reject provably dead prefixes. See documentation index for authority/status. |
+ | [SEARCH_OBJECTIVE.md](../autonomy/SEARCH_OBJECTIVE.md) | Search order: total ticks, then objective. See documentation index for authority/status. |
++| [REVISIT_DISCOVERY_DEFERRED_PLAN.md](../autonomy/REVISIT_DISCOVERY_DEFERRED_PLAN.md) | Explicitly deferred revisit analysis/lazy repetition design, future module map/tests/resume; current same-block jumps remain in scope. |
+ | [SPATIAL_CORRIDOR_REFACTOR_PLAN.md](../autonomy/SPATIAL_CORRIDOR_REFACTOR_PLAN.md) | Detailed requested refactor of spatial cells/corridors: support visits, 3D passages, discovery, constraints, goals and acceptance milestones. |
+ | [SPATIAL_ROUTE_RESEARCH.md](../autonomy/SPATIAL_ROUTE_RESEARCH.md) | From collision geometry to spatial route families. See documentation index for authority/status. |
+ | [STATE_PROTECTION_IMPLEMENTATION_PLAN.md](../autonomy/STATE_PROTECTION_IMPLEMENTATION_PLAN.md) | Implementation plan: velocity and schedule protection. See documentation index for authority/status. |
+@@ -1014,6 +1034,7 @@ Evidence filenames identify different runs/contexts; do not treat reports as exe
+ 
+ | File | Purpose |
+ | --- | --- |
++| [ANCHOR_IMPLEMENTATION_RESUME.md](ANCHOR_IMPLEMENTATION_RESUME.md) | Current authorized implementation handoff: unchanged worktree, settled binary/DFS contract, first M1 code steps, dependencies/tests and evidence preservation. |
+ | [ARCHITECTURE.md](ARCHITECTURE.md) | Architecture and execution flow. See documentation index for authority/status. |
+ | [CODE_MAP.md](CODE_MAP.md) | Production code map. See documentation index for authority/status. |
+ | [CORRIDOR_AGENT_HANDOFF.md](CORRIDOR_AGENT_HANDOFF.md) | Handoff: changes since the standalone AGENTS consolidation. See documentation index for authority/status. |
+@@ -1102,7 +1123,7 @@ Evidence filenames identify different runs/contexts; do not treat reports as exe
+ 
+ - [GENERIC_ROUTE_DISCOVERY_RESEARCH.md](../autonomy/GENERIC_ROUTE_DISCOVERY_RESEARCH.md): cited primary literature and repository evidence, alternatives matrix, contact/approach route representation, B2→B3 examples, scoped irrelevance and merge rules, integration map and proposed experiments. Research document; no runtime implementation change.
+ 
+-- [GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md](../autonomy/GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md): controlling implementation plan with proposed records/APIs, module/call-site map, coverage and scope contracts, milestones, tests and cold-run acceptance. Implementation authorized; consult its implementation ledger and current evidence.
++- [GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md](../autonomy/GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md): completed event-discovery implementation plan with records/APIs, module/call-site map, coverage and scope contracts, milestones, tests and cold-run acceptance. Consult its implementation ledger and evidence; the anchor-feasibility plan controls the next change.
+ 
+ ## Generic event implementation files
+ 
+diff --git a/standalone/docs/FUNCTION_INDEX.md b/standalone/docs/FUNCTION_INDEX.md
+index d26bae1d..b4cb565f 100644
+--- a/standalone/docs/FUNCTION_INDEX.md
++++ b/standalone/docs/FUNCTION_INDEX.md
+@@ -1,6 +1,103 @@
+ # Function and test definition index
+ 
+-Source snapshot: generic event discovery implementation, including the imported DFS/request audit and current changed modules. Line numbers are navigation hints; use `rg` after edits. This is a locator, not a replacement for [function contracts](ARCHITECTURE.md). Includes every top-level Python function/class and class method, plus test methods. Nested callbacks remain in their enclosing function. Java entry points are in the [code map](CODE_MAP.md).
++Source snapshot: anchor DFS and generic event discovery implementation, including the imported DFS/request audit and current changed modules. Line numbers are navigation hints; use `rg` after edits. This is a locator, not a replacement for [function contracts](ARCHITECTURE.md). Includes every top-level Python function/class and class method, plus test methods. Nested callbacks remain in their enclosing function. Java entry points are in the [code map](CODE_MAP.md).
++
++## [autonomy/cell_routes/anchor_adapter.py](../autonomy/cell_routes/anchor_adapter.py)
++
++- `AnchorAdapter` — class, line 11.
++- `AnchorAdapter.__init__` — method, line 12.
++- `AnchorAdapter.initial_cursor` — method, line 18.
++- `AnchorAdapter.next_goals` — method, line 27.
++- `AnchorAdapter.for_goal` — method, line 51.
++- `AnchorAdapter.for_node` — method, line 65.
++- `AnchorAdapter.advance` — method, line 69.
++- `AnchorAdapter.context` — method, line 75.
++- `AnchorAdapter.program_allowed` — method, line 85.
++- `AnchorAdapter.contact_regions` — method, line 89.
++- `AnchorAdapter.candidate` — method, line 92.
++- `AnchorAdapter.summary` — method, line 102.
++
++## [autonomy/cell_routes/anchor_policy.py](../autonomy/cell_routes/anchor_policy.py)
++
++- `settings` — def, line 8.
++- `semantic_settings` — def, line 40.
++- `owner` — def, line 44.
++- `visits` — def, line 49.
++- `visit_state` — def, line 77.
++- `audit` — def, line 92.
++- `local_counts` — def, line 110.
++- `priority` — def, line 119.
++- `within_caps` — def, line 124.
++- `single_jump_structure` — def, line 138.
++
++## [autonomy/cell_routes/anchor_guides.py](../autonomy/cell_routes/anchor_guides.py)
++
++- `nearest` — def, line 9.
++- `landing_cover` — def, line 16.
++- `terminal_point` — def, line 23.
++- `unit` — def, line 40.
++- `build_guides` — def, line 45.
++- `classify` — def, line 79.
++- `onward_objective` — def, line 91.
++
++## [autonomy/cell_routes/node_feasibility.py](../autonomy/cell_routes/node_feasibility.py)
++
++- `policy_spec` — def, line 9.
++- `node_identity` — def, line 26.
++- `outcome` — def, line 33.
++- `meaningful_choice` — def, line 57.
++- `solve_due` — def, line 64.
++
++## [autonomy/cell_routes/turn_observability.py](../autonomy/cell_routes/turn_observability.py)
++
++- `record` — def, line 10.
++- `replay` — def, line 31.
++- `summary` — def, line 41.
++- `draw` — def, line 62.
++
++## [autonomy/tests/test_anchor_policy.py](../autonomy/tests/test_anchor_policy.py)
++
++- `scene` — def, line 17.
++- `history` — def, line 26.
++- `AnchorPolicyTests` — class, line 38.
++- `AnchorPolicyTests.test_owner_returns_excluded_but_all_same_owner_jumps_preserved` — method, line 39.
++- `AnchorPolicyTests.test_anchor_order_optional_contacts_and_span_counts` — method, line 48.
++- `AnchorPolicyTests.test_unique_anchors_and_explicit_policy_validation` — method, line 63.
++- `AnchorPolicyTests.test_backward_guides_finite_terminal_and_onward_objective` — method, line 69.
++- `AnchorPolicyTests.test_nearest_preserves_disconnected_cover_and_stable_ties` — method, line 82.
++- `AnchorPolicyTests.test_axis_and_diagonal_binary_edge_equality_scope_and_reflection` — method, line 87.
++- `AnchorPolicyTests.test_observability_is_binary_idempotent_and_logs_replay_flip` — method, line 99.
++- `AnchorPolicyTests.test_internal_node_does_not_require_future_landing_or_region` — method, line 116.
++- `AnchorPolicyTests.test_exact_failure_has_no_ancestor_side_effect_or_or_parent_shortcut` — method, line 133.
++- `AnchorPolicyTests.test_dynamic_repair_progress_does_not_change_node_identity_but_scope_does` — method, line 147.
++- `AnchorPolicyTests.test_ceiling_and_corner_cancel_are_impulses_without_invented_support_visits` — method, line 153.
++- `AnchorPolicyTests.test_hard_structure_excludes_setup_hop_runoff_and_zero_jump_finish` — method, line 165.
++- `AnchorPolicyTests.test_declared_caps_are_not_widened_during_recovery` — method, line 174.
++- `AnchorPolicyTests.test_repair_exhaustion_backtracks_without_oracle_or_ancestor_rejection` — method, line 182.
++
++## [autonomy/tests/test_anchor_dfs.py](../autonomy/tests/test_anchor_dfs.py)
++
++- `extend` — def, line 11.
++- `AnchorDFSTests` — class, line 27.
++- `AnchorDFSTests.run_tree` — method, line 28.
++- `AnchorDFSTests.test_global_latch_survives_abandoned_certifier_and_changed_incoming_prefix` — method, line 61.
++- `AnchorDFSTests.test_logging_does_not_change_solver_allocation_and_anchors_force_queries` — method, line 71.
++- `AnchorDFSTests.test_latch_resume_keeps_exact_parent_and_does_not_repeat_scored_nodes` — method, line 82.
++- `AnchorDFSTests.test_completed_decision_cadence_and_forced_anchor_or_terminal` — method, line 89.
++- `AnchorDFSTests.test_failed_finish_restores_deferred_runs_on_actual_parent_without_redeferring` — method, line 99.
++
++## [autonomy/tests/test_anchor_search.py](../autonomy/tests/test_anchor_search.py)
++
++- `AnchorSearchTests` — class, line 20.
++- `AnchorSearchTests.frontier` — method, line 21.
++- `AnchorSearchTests.test_multiple_same_block_jumps_generated_and_no_solve_for_run_hold` — method, line 29.
++- `AnchorSearchTests.test_rejected_child_preserves_parent_and_other_children` — method, line 44.
++- `AnchorSearchTests.test_suspended_exact_child_resumes_same_choice_before_siblings` — method, line 56.
++- `AnchorSearchTests.test_stop_policy_keeps_native_validation_and_cannot_reuse_polished_context` — method, line 74.
++- `AnchorSearchTests.test_completed_oracle_rejects_only_selected_model_and_limits_stay_pending` — method, line 89.
++- `AnchorSearchTests.test_actual_landing_clock_binds_before_unused_suffix_and_drops_owned_future_rows` — method, line 103.
++- `AnchorNativeTests` — class, line 127.
++- `AnchorNativeTests.test_cold_finite_landing_with_observable_internal_queries` — method, line 128.
+ 
+ ## [autonomy/block_contacts.py](../autonomy/block_contacts.py)
+ 
+@@ -75,8 +172,8 @@ Source snapshot: generic event discovery implementation, including the imported
+ ## [autonomy/cell_routes/automatic_experiment.py](../autonomy/cell_routes/automatic_experiment.py)
+ 
+ - `source_hashes` — def, line 22.
+-- `run` — def, line 29.
+-- `main` — def, line 49.
++- `run` — def, line 30.
++- `main` — def, line 51.
+ 
+ ## [autonomy/cell_routes/checkpoint_experiment.py](../autonomy/cell_routes/checkpoint_experiment.py)
+ 
+@@ -88,17 +185,17 @@ Source snapshot: generic event discovery implementation, including the imported
+ ## [autonomy/cell_routes/checkpoint_search.py](../autonomy/cell_routes/checkpoint_search.py)
+ 
+ - `ScopedWork` — class, line 23.
+-- `ScopedWork.__init__` — def, line 24.
+-- `ScopedWork.deadline` — def, line 29.
+-- `ScopedWork.termination` — def, line 33.
+-- `ScopedWork.check` — def, line 36.
+-- `ScopedWork.proposal` — def, line 40.
+-- `ScopedWork.before_solve` — def, line 44.
+-- `ScopedWork.accepted` — def, line 49.
++- `ScopedWork.__init__` — method, line 24.
++- `ScopedWork.deadline` — method, line 29.
++- `ScopedWork.termination` — method, line 33.
++- `ScopedWork.check` — method, line 36.
++- `ScopedWork.proposal` — method, line 40.
++- `ScopedWork.before_solve` — method, line 44.
++- `ScopedWork.accepted` — method, line 49.
+ - `_motion_bound` — def, line 53.
+ - `evaluate_program` — def, line 61.
+-- `_key` — def, line 185.
+-- `find_checkpoint_route` — def, line 189.
++- `_key` — def, line 197.
++- `find_checkpoint_route` — def, line 201.
+ 
+ ## [autonomy/cell_routes/checkpoints.py](../autonomy/cell_routes/checkpoints.py)
+ 
+@@ -151,11 +248,11 @@ Source snapshot: generic event discovery implementation, including the imported
+ 
+ ## [autonomy/cell_routes/depth_first.py](../autonomy/cell_routes/depth_first.py)
+ 
+-- `candidate_key` — def, line 17.
+-- `arrival_key` — def, line 22.
+-- `decision_family` — def, line 27.
+-- `commit_arrival` — def, line 38.
+-- `search_goals` — def, line 58.
++- `candidate_key` — def, line 18.
++- `arrival_key` — def, line 23.
++- `decision_family` — def, line 28.
++- `commit_arrival` — def, line 39.
++- `search_goals` — def, line 59.
+ 
+ ## [autonomy/cell_routes/event_adapter.py](../autonomy/cell_routes/event_adapter.py)
+ 
+@@ -744,10 +841,10 @@ Source snapshot: generic event discovery implementation, including the imported
+ - `_shift_event` — def, line 83.
+ - `_events` — def, line 100.
+ - `append_choice` — def, line 126.
+-- `truncate_program` — def, line 206.
+-- `program_physics_key` — def, line 252.
+-- `program_search_key` — def, line 262.
+-- `compile_program` — def, line 270.
++- `truncate_program` — def, line 208.
++- `program_physics_key` — def, line 254.
++- `program_search_key` — def, line 264.
++- `compile_program` — def, line 272.
+ 
+ ## [autonomy/movement_contacts.py](../autonomy/movement_contacts.py)
+ 
+@@ -797,8 +894,8 @@ Source snapshot: generic event discovery implementation, including the imported
+ 
+ - `movement_settings` — def, line 13.
+ - `iter_movement_programs` — def, line 30.
+-- `find_movement_blocks` — def, line 225.
+-- `screen_program` — def, line 295.
++- `find_movement_blocks` — def, line 226.
++- `screen_program` — def, line 296.
+ 
+ ## [autonomy/movement_units.py](../autonomy/movement_units.py)
+ 
+@@ -970,7 +1067,7 @@ Source snapshot: generic event discovery implementation, including the imported
+ - `box_for` — def, line 9.
+ - `stepping_profiles` — def, line 13.
+ - `SteppingGenerator` — class, line 88.
+-- `SteppingGenerator.generate` — def, line 89.
++- `SteppingGenerator.generate` — method, line 89.
+ - `open_stepping_choices` — def, line 121.
+ 
+ ## [autonomy/terminal_goals.py](../autonomy/terminal_goals.py)
+@@ -1285,12 +1382,12 @@ Source snapshot: generic event discovery implementation, including the imported
+ ## [autonomy/tests/test_event_search.py](../autonomy/tests/test_event_search.py)
+ 
+ - `EventSearchTests` — class, line 17.
+-- `EventSearchTests.test_quick_reverse_landings_do_not_preempt_forward_goal_service` — def, line 18.
+-- `EventSearchTests.test_disconnected_regions_on_one_physical_block_have_contact_phase_guards` — def, line 33.
+-- `EventSearchTests.test_same_support_setup_is_local_without_removing_its_physical_choices` — def, line 58.
+-- `EventSearchTests.test_adapter_has_no_inherited_raw_cell_rejection_paths` — def, line 71.
+-- `EventSearchTests.test_default_dynamic_goals_share_prefix_and_publish_actual_child_atomically` — def, line 84.
+-- `EventSearchTests.test_explicit_old_catalogue_settings_and_states_are_not_reinterpreted` — def, line 129.
++- `EventSearchTests.test_quick_reverse_landings_do_not_preempt_forward_goal_service` — method, line 18.
++- `EventSearchTests.test_disconnected_regions_on_one_physical_block_have_contact_phase_guards` — method, line 33.
++- `EventSearchTests.test_same_support_setup_is_local_without_removing_its_physical_choices` — method, line 58.
++- `EventSearchTests.test_adapter_has_no_inherited_raw_cell_rejection_paths` — method, line 71.
++- `EventSearchTests.test_declared_anchor_goals_share_prefix_and_publish_actual_child_atomically` — method, line 84.
++- `EventSearchTests.test_explicit_old_catalogue_settings_and_states_are_not_reinterpreted` — method, line 129.
+ 
+ ## [autonomy/tests/test_failure_diagnostic.py](../autonomy/tests/test_failure_diagnostic.py)
+ 
+@@ -1822,18 +1919,18 @@ Source snapshot: generic event discovery implementation, including the imported
+ ## [autonomy/tests/test_semantic_search.py](../autonomy/tests/test_semantic_search.py)
+ 
+ - `SemanticStageTests` — class, line 19.
+-- `SemanticStageTests.test_first_ready_proposal_is_scored_before_requesting_more` — def, line 20.
+-- `SemanticStageTests.test_new_child_continues_before_catalogue_drain_but_stall_yields` — def, line 48.
+-- `SemanticStageTests.test_expired_slice_commits_a_scored_arrival_before_suspending` — def, line 65.
+-- `SemanticStageTests.test_spatial_resume_keeps_each_running_variant_language_immutable` — def, line 100.
+-- `SemanticStageTests.test_stage_views_are_immutable_and_support_order_is_discovered` — def, line 124.
+-- `SemanticStageTests.test_initial_domain_is_independent_of_support_order` — def, line 145.
++- `SemanticStageTests.test_first_ready_proposal_is_scored_before_requesting_more` — method, line 20.
++- `SemanticStageTests.test_new_child_continues_before_catalogue_drain_but_stall_yields` — method, line 48.
++- `SemanticStageTests.test_expired_slice_commits_a_scored_arrival_before_suspending` — method, line 65.
++- `SemanticStageTests.test_spatial_resume_keeps_each_running_variant_language_immutable` — method, line 100.
++- `SemanticStageTests.test_stage_views_are_immutable_and_support_order_is_discovered` — method, line 124.
++- `SemanticStageTests.test_initial_domain_is_independent_of_support_order` — method, line 145.
+ - `SemanticNumericalTests` — class, line 161.
+-- `SemanticNumericalTests.compiler` — def, line 162.
+-- `SemanticNumericalTests.test_inferred_intermediate_support_uses_outgoing_guide_objective` — def, line 166.
+-- `SemanticNumericalTests.test_stored_real11_witness_has_an_unseeded_automatic_corridor` — def, line 188.
+-- `SemanticNumericalTests.test_automatic_finite_landing_without_points_support_list_or_clocks` — def, line 212.
+-- `SemanticNumericalTests.test_free_virtual_finish_has_no_outstanding_physical_goal_contact` — def, line 234.
++- `SemanticNumericalTests.compiler` — method, line 162.
++- `SemanticNumericalTests.test_inferred_intermediate_support_uses_outgoing_guide_objective` — method, line 166.
++- `SemanticNumericalTests.test_stored_real11_witness_has_an_unseeded_automatic_corridor` — method, line 188.
++- `SemanticNumericalTests.test_automatic_finite_landing_without_points_support_list_or_clocks` — method, line 212.
++- `SemanticNumericalTests.test_free_virtual_finish_has_no_outstanding_physical_goal_contact` — method, line 234.
+ 
+ ## [autonomy/tests/test_shared_contacts.py](../autonomy/tests/test_shared_contacts.py)
+ 
+@@ -2052,3 +2149,12 @@ Source snapshot: generic event discovery implementation, including the imported
+ - `fixed_phase` — def, line 105.
+ - `phase` — def, line 226.
+ - `main` — def, line 275.
++
++## [autonomy/experiments/anchor-feasibility/native_gate.py](../autonomy/experiments/anchor-feasibility/native_gate.py)
++
++- `main` — def, line 14.
++
++## [autonomy/experiments/anchor-feasibility/measure.py](../autonomy/experiments/anchor-feasibility/measure.py)
++
++- `witnesses` — def, line 23.
++- `main` — def, line 36.
+diff --git a/standalone/docs/REAL11_GUIDE.md b/standalone/docs/REAL11_GUIDE.md
+index cdecd1de..0fdc6c13 100644
+--- a/standalone/docs/REAL11_GUIDE.md
++++ b/standalone/docs/REAL11_GUIDE.md
+@@ -1,10 +1,18 @@
+ # Linkcraft Real11 opening: agent guide
+ 
++## Physical B7 and anchor implementation (2026-11-04)
++
++The [fresh fixture](../autonomy/experiments/anchor-feasibility/real11-anchors.json) extends B7 one block +Z to `[729,0,-1095,730,7,-1093]` and requires actual B7 landing. It minimizes achieved T, then maximizes Z; terminal guide is `(729.5,7,-1093)`. Normal body-overlap support still applies. The old virtual target/extra X<729.7 row is absent from the new fixture.
++
++The new default physical-task engine uses caller-declared anchors B2/B3/B4/B5, backward/onward guides, intermediate early stopping, global hard-jump latches and recoverable ordinary extra runs. Internal queries check selected completed decisions without future anchor rows or fixed intermediate poses. The preliminary binary110° turn heuristic records its edge/margin/distances/keys and replay drift. Multiple jumps on the current block remain available; inter-block returns are [deferred](../autonomy/REVISIT_DISCOVERY_DEFERRED_PLAN.md).
++
++[New-task implementation and evidence](../autonomy/experiments/anchor-feasibility/README.md), [plan](../autonomy/ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md), and [resume](ANCHOR_IMPLEMENTATION_RESUME.md) describe current source/verification. The2026-11-03 results below remain historical controls with original geometry/virtual semantics. B6's reported extension still needs actual bounds.
++
+ ## Automatic corridor implementation (2026-11-03)
+ 
+ The new [automatic fixture and evidence](../autonomy/experiments/automatic-corridors/README.md) discovers contact/passage itineraries without supplied points, support order or clocks. Typed region/corridor/DFS integration and fixed 3D guard selection are implemented in the isolated branch. The default50-route shortlist admits the archived initial0,64-input witness after independent replay, without seeding discovery. This is representation coverage, not a new cold-search result. The final source-stable300-second comparison found no automatic finish in13 calls; supplied routing found replay-validated T67 in41 calls. This remains a cold-search performance limitation, not an infeasibility result. The supplied virtual fixture below stays an unchanged control; exact B6 extension remains unspecified.
+ 
+-## Current requested terminal goal: virtual B7 landing (2026-11-03)
++## Previous terminal goal: virtual B7 landing (2026-11-03)
+ 
+ The user clarified the intended finish after the fixed-clock benchmark. At the B7-height landing event (height7), use the horizontal goal **X < 729.7 and Z >= -1095.3**, with no goal-imposed lower X bound or upper Z bound. The region is a virtual landing target extending indefinitely toward +Z, not B7's original finite support footprint. Its coordinates are player-center bounds; do not expand them by the hitbox again.
+ 
+@@ -16,9 +24,9 @@ The generic `terminal_goals` adapter and the [new fixture](../autonomy/experimen
+ 
+ This guide first describes the archived pre-DFS audit. [Current DFS cold/resume results](../autonomy/experiments/dfs-interactions/README.md) and evidence are a separate, newer corpus. Generic code must not depend on these labels/coordinates/ticks. [Current state](CURRENT_STATE.md) and [current DFS/interaction plan](../autonomy/DFS_INTERACTION_IMPLEMENTATION_PLAN.md) supersede old pilot policies. Read the archived ledgers to answer existing questions before rerunning jobs.
+ 
+-## Current requested task and historical benchmark
++## Implemented virtual baseline and historical benchmark
+ 
+-The current finish is the implemented **virtual height7 crossing described above**, superseding the earlier literal-finite-B7 interpretation in the source-era capability discussion. The [corridor handoff](CORRIDOR_AGENT_HANDOFF.md) through `61355976` is imported at merge `984b701b`; [spatial-plan section0](../autonomy/SPATIAL_CORRIDOR_REFACTOR_PLAN.md#0-imported-baseline-and-integration-requirements) lists compatibility requirements. The automatic spatial path must discover intermediate supports rather than require a supplied B2/B3/B4/B5 list; the canonical virtual fixture still supplies that route as a control. Intentional wall hits remain future work. B6's reported rightward extension lacks exact revised bounds. Historical capability audits describe their inspected `93652150` code, not the new implementation status.
++The accepted baseline finish is the implemented **virtual height7 crossing described above**, superseding the earlier literal-finite-B7 interpretation in the source-era capability discussion. The [corridor handoff](CORRIDOR_AGENT_HANDOFF.md) through `61355976` is imported at merge `984b701b`; [spatial-plan section0](../autonomy/SPATIAL_CORRIDOR_REFACTOR_PLAN.md#0-imported-baseline-and-integration-requirements) lists compatibility requirements. The automatic spatial path must discover intermediate supports rather than require a supplied B2/B3/B4/B5 list; the canonical virtual fixture still supplies that route as a control. Intentional wall hits remain future work. B6's reported rightward extension lacks exact revised bounds. Historical capability audits describe their inspected `93652150` code, not the new implementation status.
+ 
+ Spatial contract clarified subsequently: different supports and 3D passages distinguish routes; overflight and landing/run-off are different even with identical horizontal projections. Support itineraries are discovered automatically by the spatial layer, then realized by local timing/method search. See the [concrete refactor proposal](../autonomy/SPATIAL_CORRIDOR_REFACTOR_PLAN.md). Earlier diagnostic grouping and supplied support lists are historical, not the desired route contract.
+ 
+diff --git a/standalone/docs/TESTING.md b/standalone/docs/TESTING.md
+index 9ccea72d..ca4c127b 100644
+--- a/standalone/docs/TESTING.md
++++ b/standalone/docs/TESTING.md
+@@ -1,5 +1,11 @@
+ # Tests and fixtures
+ 
++## Anchor DFS and finite terminal task
++
++`test_anchor_policy`, `test_anchor_search` and `test_anchor_dfs` cover backward finite guides, axis/diagonal binary boundaries, local requested-impulse counts, explicit caps, exact-node versus ancestor outcomes, physical repair exhaustion, current-owner hops, departure exclusions, selected-descent feasibility, source-owned suspension/resume, global hard latches across incoming histories, run restoration, logging parity and native cold physical landing. Updated event/semantic integration assertions use physical-task schema8. The finite landing clock is bound before an unused suffix; owned future rows are removed through the existing truncation path.
++
++Run the [new native driver and matched finite-task measurement](../autonomy/experiments/anchor-feasibility/README.md) to a fresh directory. Their source-specific manifests and replay scope supersede older virtual-task timing as evidence for this feature.
++
+ [Runbook](RUNBOOK.md) supplies commands/environment. [File index](FILE_INDEX.md) lists every tracked test and fixture; [function index](FUNCTION_INDEX.md) indexes production definitions. Tests use `unittest`; many require explicit compiler/worker environment variables. Always report skips. No new test runner or formatting tool is required.
+ 
+ ## Choose tests by contract
+diff --git a/standalone/ipopt/solver.py b/standalone/ipopt/solver.py
+index d7e30b5c..6d4ae315 100644
+--- a/standalone/ipopt/solver.py
++++ b/standalone/ipopt/solver.py
+@@ -194,7 +194,7 @@ def solve(request, *, seconds=None, stop_on_feasible=None, python_executable=Non
+             'problem': {'ticks': problem['ticks'], 'constraints': len(problem['walls']),
+                         'contacts': len(problem['contacts']), 'threshold': problem['threshold'],
+                         'objective': problem['objective'], 'source': problem.get('source')},
+-            'termination': termination, 'workerStatus': worker_status, 'error': error,
++            'termination': termination, 'workerStatus': worker_status, 'workerLaunched': process is not None, 'error': error,
+             'tolerance': TOLERANCE, 'phases': phases,
+             'diagnostics': {'rejectedCandidates': rejected, 'lastRejection': last_rejection,
+                             'stderr': list(stderr)}}

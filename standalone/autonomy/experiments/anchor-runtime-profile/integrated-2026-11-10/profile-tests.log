@@ -1,0 +1,10 @@
+test_copy_proxy_preserves_aliases_cycles_and_original_library (test_runtime_profile.RuntimeProfileTests.test_copy_proxy_preserves_aliases_cycles_and_original_library) ... ok
+test_generator_measures_only_active_next_and_closes (test_runtime_profile.RuntimeProfileTests.test_generator_measures_only_active_next_and_closes) ... ok
+test_nested_timings_are_exclusive_and_exception_safe (test_runtime_profile.RuntimeProfileTests.test_nested_timings_are_exclusive_and_exception_safe) ... ok
+test_scoped_instrumentation_restores_module_references_on_failure (test_runtime_profile.RuntimeProfileTests.test_scoped_instrumentation_restores_module_references_on_failure) ... ok
+test_session_with_no_numerical_calls_may_omit_count (test_runtime_profile.RuntimeProfileTests.test_session_with_no_numerical_calls_may_omit_count) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.125s
+
+OK

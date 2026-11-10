@@ -189,13 +189,13 @@ def solve(request, *, seconds=None, stop_on_feasible=None, python_executable=Non
         best = None
     status = 'cancelled' if cancelled else 'feasible' if best is not None else 'error' if error else 'unknown'
     return {'version': 1, 'status': status, 'feasible': best is not None, 'candidate': best,
-            'objectiveMode': 'feasibility' if problem['stopOnFeasible'] else 'optimization',
+            'objectiveMode': problem['objectiveMode'],
             'problemHash': fingerprint(problem), 'elapsedSeconds': time.monotonic() - started,
             'firstFeasibleSeconds': first_feasible,
             'problem': {'ticks': problem['ticks'], 'constraints': len(problem['walls']),
                         'contacts': len(problem['contacts']), 'threshold': problem['threshold'],
                         'objective': problem['objective'], 'source': problem.get('source')},
-            'termination': termination, 'workerStatus': worker_status, 'error': error,
+            'termination': termination, 'workerStatus': worker_status, 'workerLaunched': process is not None, 'error': error,
             'tolerance': TOLERANCE, 'phases': phases,
             'diagnostics': {'rejectedCandidates': rejected, 'lastRejection': last_rejection,
                             'stderr': list(stderr)}}

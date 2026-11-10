@@ -1,6 +1,6 @@
 import itertools
 import time
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 
 from ..obstacle_geometry import BODY_HEIGHT, box_bounds, expanded_box
 from ..route import HALF_WIDTH
@@ -112,6 +112,7 @@ class Decomposition:
     contacts: list
     climbable: dict
     statistics: dict
+    parent_cells: dict = field(default_factory=dict)
 
     def locate(self, point, tolerance=0):
         return [c.id for c in self.cells if contains(c.bounds, point, tolerance)]
@@ -128,7 +129,73 @@ class Decomposition:
         return asdict(self)
 
 
-def decompose(scene, *, max_cells=20000, deadline=None):
+def cell_portals(cells, *, deadline=None):
+    portals = []
+    for i, a in enumerate(cells):
+        if deadline is not None and time.monotonic() >= deadline:
+            raise TimeoutError('Cell adjacency deadline')
+        for b in cells[i + 1:]:
+            overlap = intersection(a.bounds, b.bounds)
+            if overlap is not None and dimension(overlap) >= min(a.dimension, b.dimension) - 1:
+                portals.append(Portal(len(portals), (a.id, b.id), overlap, dimension(overlap)))
+    return portals
+
+
+def contact_patches(cells, solids, owners):
+    # Cells are already outside every open expanded solid. Intersecting their
+    # closures with a face therefore exposes only the collision-free face cover.
+    contacts = []
+    for cell in cells:
+        for i, solid in enumerate(solids):
+            for axis, side in itertools.product(range(3), (-1, 1)):
+                face = list(solid)
+                face[axis] = face[axis + 3] = solid[axis if side < 0 else axis + 3]
+                overlap = intersection(cell.bounds, face)
+                if overlap is not None:
+                    kind = 'support' if axis == 1 and side == 1 else 'ceiling' if axis == 1 else 'wall'
+                    contacts.append(ContactPatch(cell.id, i, owners[i], axis, side, kind, overlap))
+    return contacts
+
+
+def refine_support_cells(cells, contacts, *, max_cells, deadline=None):
+    """Split only cells incident above a finite support; keep residual air/strata."""
+    from .regions import canonical_cover
+    by_owner = {}
+    for patch in contacts:
+        if patch.kind == 'support' and cells[patch.cell].bounds[1] == patch.bounds[1]:
+            by_owner.setdefault((patch.cell, patch.owner), set()).add(patch.bounds)
+    by_cell = {}
+    for (cell, _), patches in by_owner.items():
+        by_cell.setdefault(cell, set()).update(canonical_cover(patches))
+    refined = {}
+    for cell in cells:
+        if deadline is not None and time.monotonic() >= deadline:
+            raise TimeoutError('Support refinement deadline')
+        pieces = [cell.bounds]
+        for patch in sorted(by_cell.get(cell.id, ())):
+            # Cutting a single cell at its own support edges never extends a
+            # grid across neighboring empty space. No merge may erase the cuts.
+            for axis in (0, 2):
+                for edge in (patch[axis], patch[axis + 3]):
+                    next_pieces = []
+                    for box in pieces:
+                        if box[axis] < edge < box[axis + 3]:
+                            lo, hi = list(box), list(box)
+                            lo[axis + 3], hi[axis] = edge, edge
+                            next_pieces.extend((tuple(lo), tuple(hi)))
+                        else:
+                            next_pieces.append(box)
+                    pieces = next_pieces
+                    if len(pieces) + len(refined) > max_cells:
+                        raise ValueError('Support refinement exceeded max_cells; geometry was not truncated')
+        for box in pieces:
+            refined.setdefault(box, []).append(cell.id)
+    boxes = sorted(refined)
+    return ([Cell(i, box, dimension(box)) for i, box in enumerate(boxes)],
+            {i: tuple(refined[box]) for i, box in enumerate(boxes)})
+
+
+def decompose(scene, *, max_cells=20000, deadline=None, refine_support=True):
     started = time.monotonic()
     geometry = scene['collisionScene']
     source_bounds = box_bounds(list(geometry['bounds']), 'decomposition bounds')
@@ -137,7 +204,7 @@ def decompose(scene, *, max_cells=20000, deadline=None):
     if any(bounds[a] > bounds[a + 3] for a in range(3)):
         raise ValueError('Scene coverage is smaller than the player body')
     solids = [tuple(expanded_box(b)) for b in geometry['solids']]
-    raw = union_subtract([bounds], solids, max_cells, deadline=deadline)
+    raw = union_subtract([bounds], merge_boxes(solids), max_cells, deadline=deadline)
     volumes = merge_boxes(raw)
     faces = []
     for solid in solids:
@@ -154,28 +221,14 @@ def decompose(scene, *, max_cells=20000, deadline=None):
     if len(boxes) > max_cells:
         raise ValueError('Cell decomposition exceeded max_cells')
     cells = [Cell(i, b, dimension(b)) for i, b in enumerate(boxes)]
-    portals = []
-    for i, a in enumerate(cells):
-        if deadline is not None and time.monotonic() >= deadline:
-            raise TimeoutError('Cell adjacency deadline')
-        for b in cells[i + 1:]:
-            overlap = intersection(a.bounds, b.bounds)
-            if overlap is None:
-                continue
-            d = dimension(overlap)
-            if d >= min(a.dimension, b.dimension) - 1:
-                portals.append(Portal(len(portals), (a.id, b.id), overlap, d))
     owners = {b['solidIndex']: b.get('sourceBlock', b['id']) for b in scene['blocks']}
-    contacts = []
-    for cell in cells:
-        for i, solid in enumerate(solids):
-            for axis, side in itertools.product(range(3), (-1, 1)):
-                face = list(solid)
-                face[axis] = face[axis + 3] = solid[axis if side < 0 else axis + 3]
-                overlap = intersection(cell.bounds, face)
-                if overlap is not None and not all(solid[a] < sum((overlap[a], overlap[a + 3])) / 2 < solid[a + 3] for a in range(3)):
-                    kind = 'support' if axis == 1 and side == 1 else 'ceiling' if axis == 1 else 'wall'
-                    contacts.append(ContactPatch(cell.id, i, owners[i], axis, side, kind, overlap))
+    contacts = contact_patches(cells, solids, owners)
+    base_count = len(cells)
+    parents = {c.id: (c.id,) for c in cells}
+    if refine_support:
+        cells, parents = refine_support_cells(cells, contacts, max_cells=max_cells, deadline=deadline)
+        contacts = contact_patches(cells, solids, owners)
+    portals = cell_portals(cells, deadline=deadline)
     climbable = {}
     for c in cells:
         memberships = []
@@ -186,8 +239,23 @@ def decompose(scene, *, max_cells=20000, deadline=None):
         if memberships:
             climbable[c.id] = memberships
     return Decomposition(bounds, cells, portals, contacts, climbable,
-        dict(rawCells=len(raw), volumeCells=len(volumes), boundaryCells=len(strata), cells=len(cells),
-             portals=len(portals), contactPatches=len(contacts), elapsedSeconds=time.monotonic() - started))
+        dict(rawCells=len(raw), baseCells=base_count, volumeCells=sum(c.dimension == 3 for c in cells),
+             boundaryCells=sum(c.dimension < 3 for c in cells), cells=len(cells), supportRefinement=refine_support,
+             portals=len(portals), contactPatches=len(contacts), elapsedSeconds=time.monotonic() - started), parents)
+
+
+def box_segment_interval(box, start, end, tolerance=1e-9):
+    lo, hi = 0., 1.
+    for axis in range(3):
+        delta = end[axis] - start[axis]
+        if delta == 0:
+            if not box[axis] - tolerance <= start[axis] <= box[axis + 3] + tolerance:
+                return None
+        else:
+            a = (box[axis] - tolerance - start[axis]) / delta
+            b = (box[axis + 3] + tolerance - start[axis]) / delta
+            lo, hi = max(lo, min(a, b)), min(hi, max(a, b))
+    return (max(0., lo), min(1., hi)) if lo <= hi else None
 
 
 def segment_intervals(decomposition, start, end, cell_ids=None, tolerance=1e-9):
@@ -196,19 +264,9 @@ def segment_intervals(decomposition, start, end, cell_ids=None, tolerance=1e-9):
     for cell in decomposition.cells:
         if allowed is not None and cell.id not in allowed:
             continue
-        lo, hi = 0., 1.
-        for axis in range(3):
-            delta = end[axis] - start[axis]
-            if delta == 0:
-                if not cell.bounds[axis] - tolerance <= start[axis] <= cell.bounds[axis + 3] + tolerance:
-                    hi = -1
-                    break
-            else:
-                a = (cell.bounds[axis] - tolerance - start[axis]) / delta
-                b = (cell.bounds[axis + 3] + tolerance - start[axis]) / delta
-                lo, hi = max(lo, min(a, b)), min(hi, max(a, b))
-        if lo <= hi:
-            result.append((max(0., lo), min(1., hi), cell.id))
+        interval = box_segment_interval(cell.bounds, start, end, tolerance)
+        if interval is not None:
+            result.append((*interval, cell.id))
     return sorted(result)
 
 
@@ -226,8 +284,8 @@ def segment_covered(decomposition, start, end, cell_ids=None, tolerance=1e-9):
     return False
 
 
-def diagnostic_svg(decomposition, *, y):
-    b = decomposition.bounds
+def diagnostic_svg(decomposition, *, y, bounds=None):
+    b = bounds or decomposition.bounds
     width, height = b[3] - b[0], b[5] - b[2]
     lines = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{b[0]} {b[2]} {width} {height}">']
     stroke = max(width, height) / 600

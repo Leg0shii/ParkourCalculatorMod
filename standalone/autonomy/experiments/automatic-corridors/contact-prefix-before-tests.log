@@ -1,0 +1,13 @@
+F
+======================================================================
+FAIL: test_stored_real11_witness_has_an_unseeded_automatic_corridor (standalone.autonomy.tests.test_semantic_search.SemanticNumericalTests.test_stored_real11_witness_has_an_unseeded_automatic_corridor)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/parkour-real11-initial-run-ticks/standalone/autonomy/tests/test_semantic_search.py", line 173, in test_stored_real11_witness_has_an_unseeded_automatic_corridor
+    self.assertTrue(verdict['accepted'],verdict)
+AssertionError: False is not true : {'accepted': False, 'reason': 'semantic_route_ruled_out', 'routeCertified': False, 'routeProgress': {'status': 'ruled_out', 'cursor': {'context': 'b41ec15ec1e1a1600082ccc11c128c1d64c8335cd76e05a50a38612fc872cc20', 'possible': [], 'unknown': False}, 'achieved': [{'kind': 'support_arrival', 'phase': 33, 'event': {'phase': 33, 'owner': 'b1'}}, {'kind': 'support_arrival', 'phase': 60, 'event': {'phase': 60, 'owner': 'b2'}}], 'reason': 'route_phase_or_contact', 'phase': 62}, 'alternatives': [], 'repairComplete': False}
+
+----------------------------------------------------------------------
+Ran 1 test in 3.084s
+
+FAILED (failures=1)

@@ -1,6 +1,162 @@
 # Function and test definition index
 
-Source snapshot: current DFS implementation source, including request-audit logging. Line numbers are navigation hints; use `rg` after edits. This is a locator, not a replacement for [function contracts](ARCHITECTURE.md). Includes every top-level Python function/class and class method, plus test methods. Nested callbacks remain in their enclosing function. Java entry points are in the [code map](CODE_MAP.md).
+## Integration navigation update (2026-11-10)
+
+These entries update the source-era index below.
+
+### [autonomy/cell_routes/anchor_time_bound.py](../autonomy/cell_routes/anchor_time_bound.py)
+
+- `cover_distance` — line 9.
+- `remaining_bound` — line 14.
+
+### [autonomy/cell_routes/checkpoint_persistence.py](../autonomy/cell_routes/checkpoint_persistence.py)
+
+- `identity_paths` — line 8.
+- `SearchCheckpoint` — line 24.
+- `SearchCheckpoint.__init__` — line 25.
+- `SearchCheckpoint.state` — line 31.
+- `SearchCheckpoint.__call__` — line 41.
+- `SearchCheckpoint.begin_repair` — line 52.
+- `SearchCheckpoint.repair_progress` — line 55.
+- `SearchCheckpoint.finish` — line 67.
+
+### [autonomy/cell_routes/node_feasibility.py](../autonomy/cell_routes/node_feasibility.py)
+
+- `policy_spec` — line 9.
+- `node_identity` — line 26.
+- `outcome` — line 33.
+- `meaningful_choice` — line 57.
+- `solve_due` — line 64.
+- `unresolved_only` — line 68.
+- `restore_unknown_nodes` — line 74.
+
+### [autonomy/checkpoint_store.py](../autonomy/checkpoint_store.py)
+
+- `StoredValue` — line 21.
+- `StoredValue.__init__` — line 22.
+- `_json` — line 26.
+- `_atomic_json` — line 30.
+- `CheckpointStore` — line 37.
+- `CheckpointStore.__init__` — line 44.
+- `CheckpointStore.__enter__` — line 62.
+- `CheckpointStore.__exit__` — line 65.
+- `CheckpointStore.close` — line 68.
+- `CheckpointStore.save` — line 71.
+- `CheckpointStore.archive` — line 76.
+- `CheckpointStore.publish` — line 138.
+- `CheckpointStore.patch` — line 145.
+- `CheckpointStore.compact` — line 159.
+- `read_report` — line 194.
+- `main` — line 250.
+
+
+Source snapshot: anchor DFS and generic event discovery implementation, including the imported DFS/request audit and current changed modules. Line numbers are navigation hints; use `rg` after edits. This is a locator, not a replacement for [function contracts](ARCHITECTURE.md). Includes every top-level Python function/class and class method, plus test methods. Nested callbacks remain in their enclosing function. Java entry points are in the [code map](CODE_MAP.md).
+
+## [autonomy/cell_routes/anchor_adapter.py](../autonomy/cell_routes/anchor_adapter.py)
+
+- `AnchorAdapter` — class, line 11.
+- `AnchorAdapter.__init__` — method, line 12.
+- `AnchorAdapter.initial_cursor` — method, line 18.
+- `AnchorAdapter.next_goals` — method, line 27.
+- `AnchorAdapter.for_goal` — method, line 51.
+- `AnchorAdapter.for_node` — method, line 65.
+- `AnchorAdapter.advance` — method, line 69.
+- `AnchorAdapter.context` — method, line 75.
+- `AnchorAdapter.program_allowed` — method, line 85.
+- `AnchorAdapter.contact_regions` — method, line 89.
+- `AnchorAdapter.candidate` — method, line 92.
+- `AnchorAdapter.summary` — method, line 102.
+
+## [autonomy/cell_routes/anchor_policy.py](../autonomy/cell_routes/anchor_policy.py)
+
+- `settings` — def, line 11.
+- `semantic_settings` — def, line 43.
+- `owner` — def, line 48.
+- `visits` — def, line 53.
+- `visit_state` — def, line 81.
+- `audit` — def, line 96.
+- `local_counts` — def, line 114.
+- `priority` — def, line 123.
+- `within_caps` — def, line 128.
+- `transfer_structure` — def, line 142.
+- `single_jump_structure` — def, line 174.
+
+## [autonomy/cell_routes/anchor_guides.py](../autonomy/cell_routes/anchor_guides.py)
+
+- `nearest` — def, line 9.
+- `landing_cover` — def, line 16.
+- `terminal_point` — def, line 23.
+- `unit` — def, line 40.
+- `build_guides` — def, line 45.
+- `classify` — def, line 79.
+- `onward_objective` — def, line 91.
+
+## [autonomy/cell_routes/node_feasibility.py](../autonomy/cell_routes/node_feasibility.py)
+
+- `policy_spec` — def, line 9.
+- `node_identity` — def, line 26.
+- `outcome` — def, line 33.
+- `meaningful_choice` — def, line 57.
+- `solve_due` — def, line 64.
+
+## [autonomy/cell_routes/turn_observability.py](../autonomy/cell_routes/turn_observability.py)
+
+- `record` — def, line 10.
+- `replay` — def, line 31.
+- `summary` — def, line 41.
+- `draw` — def, line 62.
+
+## [autonomy/tests/test_anchor_policy.py](../autonomy/tests/test_anchor_policy.py)
+
+- `scene` — def, line 17.
+- `history` — def, line 26.
+- `AnchorPolicyTests` — class, line 38.
+- `AnchorPolicyTests.test_owner_returns_excluded_but_all_same_owner_jumps_preserved` — method, line 39.
+- `AnchorPolicyTests.test_anchor_order_optional_contacts_and_span_counts` — method, line 48.
+- `AnchorPolicyTests.test_unique_anchors_and_explicit_policy_validation` — method, line 63.
+- `AnchorPolicyTests.test_backward_guides_finite_terminal_and_onward_objective` — method, line 69.
+- `AnchorPolicyTests.test_nearest_preserves_disconnected_cover_and_stable_ties` — method, line 82.
+- `AnchorPolicyTests.test_axis_and_diagonal_binary_edge_equality_scope_and_reflection` — method, line 87.
+- `AnchorPolicyTests.test_observability_is_binary_idempotent_and_logs_replay_flip` — method, line 99.
+- `AnchorPolicyTests.test_internal_node_does_not_require_future_landing_or_region` — method, line 116.
+- `AnchorPolicyTests.test_exact_failure_has_no_ancestor_side_effect_or_or_parent_shortcut` — method, line 133.
+- `AnchorPolicyTests.test_dynamic_repair_progress_does_not_change_node_identity_but_scope_does` — method, line 147.
+- `AnchorPolicyTests.test_ceiling_and_corner_cancel_are_impulses_without_invented_support_visits` — method, line 153.
+- `AnchorPolicyTests.test_hard_structure_excludes_setup_hop_runoff_and_zero_jump_finish` — method, line 165.
+- `AnchorPolicyTests.test_hard_transfer_keeps_arbitrary_source_setup_jumps_and_counts_them` — method, line 174.
+- `AnchorPolicyTests.test_setup_does_not_admit_an_intermediate_block_or_two_transfer_impulses` — method, line 186.
+- `AnchorPolicyTests.test_transfer_uses_current_anchor_boundary_and_physical_owner_aliases` — method, line 197.
+- `AnchorPolicyTests.test_source_contact_at_target_arrival_is_part_of_the_same_transfer` — method, line 206.
+- `AnchorPolicyTests.test_real11_initial0_setup_and_transfer_are_distinct` — method, line 216.
+- `AnchorPolicyTests.test_declared_caps_are_not_widened_during_recovery` — method, line 234.
+- `AnchorPolicyTests.test_repair_exhaustion_backtracks_without_oracle_or_ancestor_rejection` — method, line 242.
+
+## [autonomy/tests/test_anchor_dfs.py](../autonomy/tests/test_anchor_dfs.py)
+
+- `extend` — def, line 11.
+- `AnchorDFSTests` — class, line 27.
+- `AnchorDFSTests.run_tree` — method, line 28.
+- `AnchorDFSTests.test_global_latch_survives_abandoned_certifier_and_changed_incoming_prefix` — method, line 68.
+- `AnchorDFSTests.test_logging_does_not_change_solver_allocation_and_anchors_force_queries` — method, line 78.
+- `AnchorDFSTests.test_latch_resume_keeps_exact_parent_and_does_not_repeat_scored_nodes` — method, line 89.
+- `AnchorDFSTests.test_global_latch_accepts_setup_after_certifier_and_backtracking` — method, line 96.
+- `AnchorDFSTests.test_incompatible_old_latch_policy_is_rejected_on_resume` — method, line 106.
+- `AnchorDFSTests.test_completed_decision_cadence_and_forced_anchor_or_terminal` — method, line 112.
+- `AnchorDFSTests.test_failed_finish_restores_deferred_runs_on_actual_parent_without_redeferring` — method, line 122.
+
+## [autonomy/tests/test_anchor_search.py](../autonomy/tests/test_anchor_search.py)
+
+- `AnchorSearchTests` — class, line 20.
+- `AnchorSearchTests.frontier` — method, line 21.
+- `AnchorSearchTests.test_multiple_same_block_jumps_generated_and_no_solve_for_run_hold` — method, line 30.
+- `AnchorSearchTests.test_rejected_child_preserves_parent_and_other_children` — method, line 45.
+- `AnchorSearchTests.test_learned_latch_and_resume_keep_source_setup_hops_in_the_actual_source` — method, line 57.
+- `AnchorSearchTests.test_suspended_exact_child_resumes_same_choice_before_siblings` — method, line 73.
+- `AnchorSearchTests.test_stop_policy_keeps_native_validation_and_cannot_reuse_polished_context` — method, line 91.
+- `AnchorSearchTests.test_completed_oracle_rejects_only_selected_model_and_limits_stay_pending` — method, line 106.
+- `AnchorSearchTests.test_actual_landing_clock_binds_before_unused_suffix_and_drops_owned_future_rows` — method, line 120.
+- `AnchorNativeTests` — class, line 144.
+- `AnchorNativeTests.test_cold_finite_landing_with_observable_internal_queries` — method, line 145.
 
 ## [autonomy/block_contacts.py](../autonomy/block_contacts.py)
 
@@ -72,6 +228,12 @@ Source snapshot: current DFS implementation source, including request-audit logg
 - `ceiling_sequence` — def, line 23.
 - `ceiling_profile` — def, line 47.
 
+## [autonomy/cell_routes/automatic_experiment.py](../autonomy/cell_routes/automatic_experiment.py)
+
+- `source_hashes` — def, line 22.
+- `run` — def, line 30.
+- `main` — def, line 51.
+
 ## [autonomy/cell_routes/checkpoint_experiment.py](../autonomy/cell_routes/checkpoint_experiment.py)
 
 - `replay_witness` — def, line 20.
@@ -82,17 +244,17 @@ Source snapshot: current DFS implementation source, including request-audit logg
 ## [autonomy/cell_routes/checkpoint_search.py](../autonomy/cell_routes/checkpoint_search.py)
 
 - `ScopedWork` — class, line 23.
-- `ScopedWork.__init__` — def, line 24.
-- `ScopedWork.deadline` — def, line 29.
-- `ScopedWork.termination` — def, line 33.
-- `ScopedWork.check` — def, line 36.
-- `ScopedWork.proposal` — def, line 40.
-- `ScopedWork.before_solve` — def, line 44.
-- `ScopedWork.accepted` — def, line 49.
+- `ScopedWork.__init__` — method, line 24.
+- `ScopedWork.deadline` — method, line 29.
+- `ScopedWork.termination` — method, line 33.
+- `ScopedWork.check` — method, line 36.
+- `ScopedWork.proposal` — method, line 40.
+- `ScopedWork.before_solve` — method, line 44.
+- `ScopedWork.accepted` — method, line 49.
 - `_motion_bound` — def, line 53.
 - `evaluate_program` — def, line 61.
-- `_key` — def, line 163.
-- `find_checkpoint_route` — def, line 167.
+- `_key` — def, line 197.
+- `find_checkpoint_route` — def, line 201.
 
 ## [autonomy/cell_routes/checkpoints.py](../autonomy/cell_routes/checkpoints.py)
 
@@ -116,15 +278,20 @@ Source snapshot: current DFS implementation source, including request-audit logg
 ## [autonomy/cell_routes/comparison_goals.py](../autonomy/cell_routes/comparison_goals.py)
 
 - `goal_spec` — def, line 14.
-- `goal_key` — def, line 41.
-- `region_arrival` — def, line 47.
-- `landing_satisfied` — def, line 61.
-- `_landing_prefixes` — def, line 66.
-- `probe_spatial` — def, line 82.
+- `goal_key` — def, line 44.
+- `region_arrival` — def, line 50.
+- `landing_satisfied` — def, line 64.
+- `_landing_prefixes` — def, line 69.
+- `probe_spatial` — def, line 85.
 
 ## [autonomy/cell_routes/corridor_guards.py](../autonomy/cell_routes/corridor_guards.py)
 
-- `movement_regions` — def, line 4.
+- `movement_regions` — def, line 6.
+
+## [autonomy/cell_routes/coverage_audit.py](../autonomy/cell_routes/coverage_audit.py)
+
+- `audit` — def, line 21.
+- `main` — def, line 45.
 
 ## [autonomy/cell_routes/decision_windows.py](../autonomy/cell_routes/decision_windows.py)
 
@@ -140,11 +307,58 @@ Source snapshot: current DFS implementation source, including request-audit logg
 
 ## [autonomy/cell_routes/depth_first.py](../autonomy/cell_routes/depth_first.py)
 
-- `candidate_key` — def, line 17.
-- `arrival_key` — def, line 22.
-- `decision_family` — def, line 27.
-- `commit_arrival` — def, line 38.
-- `search_goals` — def, line 58.
+- `candidate_key` — def, line 18.
+- `arrival_key` — def, line 23.
+- `decision_family` — def, line 28.
+- `commit_arrival` — def, line 39.
+- `search_goals` — def, line 59.
+
+## [autonomy/cell_routes/event_adapter.py](../autonomy/cell_routes/event_adapter.py)
+
+- `EventReference` — class, line 16.
+- `EventReference.to_dict` — def, line 21.
+- `EventGuideAdapter` — class, line 25.
+- `EventGuideAdapter.__init__` — def, line 28.
+- `EventGuideAdapter.initial_cursor` — def, line 41.
+- `EventGuideAdapter.next_goals` — def, line 44.
+- `EventGuideAdapter.for_goal` — def, line 104.
+- `EventGuideAdapter.advance` — def, line 122.
+- `EventGuideAdapter.context` — def, line 125.
+- `EventGuideAdapter.program_allowed` — def, line 132.
+- `EventGuideAdapter.scoped` — def, line 135.
+- `EventGuideAdapter.bind_program` — def, line 139.
+- `EventGuideAdapter.eligible` — def, line 143.
+- `EventGuideAdapter.contact_regions` — def, line 146.
+- `EventGuideAdapter.candidate` — def, line 168.
+- `EventGuideAdapter.summary` — def, line 200.
+
+## [autonomy/cell_routes/event_coverage_audit.py](../autonomy/cell_routes/event_coverage_audit.py)
+
+- `discover` — def, line 14.
+- `audit` — def, line 50.
+
+## [autonomy/cell_routes/event_routes.py](../autonomy/cell_routes/event_routes.py)
+
+- `_json` — def, line 22.
+- `SurfaceGroup` — class, line 27.
+- `surface_groups` — def, line 36.
+- `RouteDomain` — class, line 76.
+- `RouteDomain.id` — def, line 85.
+- `RouteDomain.to_dict` — def, line 88.
+- `RouteDomain.from_dict` — def, line 92.
+- `build_route_domain` — def, line 102.
+- `support_episodes` — def, line 135.
+- `build_event_graph` — def, line 172.
+- `initial_cursor` — def, line 201.
+- `next_goals` — def, line 218.
+- `semantic_prefix` — def, line 282.
+- `advance_cursor` — def, line 295.
+- `observed_route` — def, line 307.
+
+## [autonomy/cell_routes/event_search.py](../autonomy/cell_routes/event_search.py)
+
+- `discovery_settings` — def, line 16.
+- `search_event_routes` — def, line 29.
 
 ## [autonomy/cell_routes/experiment.py](../autonomy/cell_routes/experiment.py)
 
@@ -176,7 +390,7 @@ Source snapshot: current DFS implementation source, including request-audit logg
 ## [autonomy/cell_routes/fixed_clock_experiment.py](../autonomy/cell_routes/fixed_clock_experiment.py)
 
 - `run` — def, line 23.
-- `main` — def, line 93.
+- `main` — def, line 81.
 
 ## [autonomy/cell_routes/generation_diagnostic.py](../autonomy/cell_routes/generation_diagnostic.py)
 
@@ -208,13 +422,24 @@ Source snapshot: current DFS implementation source, including request-audit logg
 - `Portal` — class, line 89.
 - `ContactPatch` — class, line 97.
 - `Decomposition` — class, line 108.
-- `Decomposition.locate` — def, line 116.
-- `Decomposition.neighbors` — def, line 119.
-- `Decomposition.to_dict` — def, line 127.
-- `decompose` — def, line 131.
-- `segment_intervals` — def, line 193.
-- `segment_covered` — def, line 215.
-- `diagnostic_svg` — def, line 229.
+- `Decomposition.locate` — def, line 117.
+- `Decomposition.neighbors` — def, line 120.
+- `Decomposition.to_dict` — def, line 128.
+- `cell_portals` — def, line 132.
+- `contact_patches` — def, line 144.
+- `refine_support_cells` — def, line 160.
+- `decompose` — def, line 198.
+- `box_segment_interval` — def, line 247.
+- `segment_intervals` — def, line 261.
+- `segment_covered` — def, line 273.
+- `diagnostic_svg` — def, line 287.
+
+## [autonomy/cell_routes/guides.py](../autonomy/cell_routes/guides.py)
+
+- `task_reference` — def, line 12.
+- `segment_in_cover` — def, line 25.
+- `guide_for` — def, line 35.
+- `outgoing_objective` — def, line 109.
 
 ## [autonomy/cell_routes/local.py](../autonomy/cell_routes/local.py)
 
@@ -250,6 +475,24 @@ Source snapshot: current DFS implementation source, including request-audit logg
 - `remember` — def, line 73.
 - `exclusion` — def, line 80.
 
+## [autonomy/cell_routes/regions.py](../autonomy/cell_routes/regions.py)
+
+- `geometry_key` — def, line 18.
+- `canonical_cover` — def, line 24.
+- `SupportComponent` — class, line 89.
+- `support_components` — def, line 99.
+- `RouteRegion` — class, line 128.
+- `RouteTransition` — class, line 140.
+- `RouteGraph` — class, line 154.
+- `RouteGraph.to_dict` — def, line 165.
+- `RouteGraph.neighbors` — def, line 168.
+- `free_transit_cover` — def, line 175.
+- `build_route_graph` — def, line 230.
+- `build_geometry_graph` — def, line 240.
+- `_incidence_graph` — def, line 252.
+- `annotate_normal_proposals` — def, line 344.
+- `diagnostic_svg` — def, line 421.
+
 ## [autonomy/cell_routes/repair_diagnostic.py](../autonomy/cell_routes/repair_diagnostic.py)
 
 - `main` — def, line 21.
@@ -257,6 +500,29 @@ Source snapshot: current DFS implementation source, including request-audit logg
 ## [autonomy/cell_routes/repair_resume_experiment.py](../autonomy/cell_routes/repair_resume_experiment.py)
 
 - `main` — def, line 20.
+
+## [autonomy/cell_routes/route_guards.py](../autonomy/cell_routes/route_guards.py)
+
+- `physical_events` — def, line 15.
+- `canonical_rows` — def, line 26.
+- `RouteGuards` — class, line 36.
+- `RouteGuards.__init__` — def, line 37.
+- `RouteGuards.rows` — def, line 49.
+- `RouteGuards.phase_options` — def, line 66.
+- `RouteGuards.option` — def, line 165.
+
+## [autonomy/cell_routes/route_progress.py](../autonomy/cell_routes/route_progress.py)
+
+- `initial_cursor` — def, line 10.
+- `phase_trace` — def, line 19.
+- `_phase` — def, line 26.
+- `_contact` — def, line 87.
+- `advance` — def, line 115.
+
+## [autonomy/cell_routes/route_queue.py](../autonomy/cell_routes/route_queue.py)
+
+- `collision_request` — def, line 18.
+- `search_routes` — def, line 39.
 
 ## [autonomy/cell_routes/routes.py](../autonomy/cell_routes/routes.py)
 
@@ -272,26 +538,51 @@ Source snapshot: current DFS implementation source, including request-audit logg
 - `walk_projection` — def, line 86.
 - `prescribed_projection` — def, line 98.
 - `Corridor` — class, line 103.
-- `Corridor.to_dict` — def, line 115.
-- `corridor_for_points` — def, line 119.
-- `enumerate_routes` — def, line 150.
-- `horizontal_trace` — def, line 224.
-- `projected_segment_covered` — def, line 240.
-- `audit_candidate` — def, line 265.
+- `Corridor.to_dict` — def, line 121.
+- `corridor_for_points` — def, line 129.
+- `enumerate_routes` — def, line 160.
+- `conditioned_anchor` — def, line 240.
+- `semantic_events` — def, line 247.
+- `corridor_from_walk` — def, line 274.
+- `enumerate_semantic_routes` — def, line 318.
+- `horizontal_trace` — def, line 444.
+- `projected_segment_covered` — def, line 460.
+- `audit_candidate` — def, line 485.
 
 ## [autonomy/cell_routes/scalar_seed_diagnostic.py](../autonomy/cell_routes/scalar_seed_diagnostic.py)
 
 - `synthetic` — def, line 14.
 - `main` — def, line 27.
 
+## [autonomy/cell_routes/semantic_adapter.py](../autonomy/cell_routes/semantic_adapter.py)
+
+- `SemanticCorridorAdapter` — class, line 11.
+- `SemanticCorridorAdapter.__init__` — def, line 12.
+- `SemanticCorridorAdapter.goals` — def, line 21.
+- `SemanticCorridorAdapter.for_goal` — def, line 35.
+- `SemanticCorridorAdapter.outgoing_objective` — def, line 67.
+- `SemanticCorridorAdapter.bind_program` — def, line 79.
+- `SemanticCorridorAdapter.context` — def, line 84.
+- `SemanticCorridorAdapter.program_states` — def, line 100.
+- `SemanticCorridorAdapter.program_allowed` — def, line 128.
+- `SemanticCorridorAdapter.scoped` — def, line 132.
+- `SemanticCorridorAdapter.eligible` — def, line 137.
+- `SemanticCorridorAdapter._omitted` — def, line 141.
+- `SemanticCorridorAdapter.constraint_guards` — def, line 146.
+- `SemanticCorridorAdapter.candidate` — def, line 154.
+- `SemanticCorridorAdapter.summary` — def, line 185.
+
 ## [autonomy/cell_routes/support_order.py](../autonomy/cell_routes/support_order.py)
 
-- `SupportOrder` — class, line 1.
-- `SupportOrder.__init__` — def, line 2.
-- `SupportOrder.audit` — def, line 20.
-- `SupportOrder.__call__` — def, line 50.
-- `SupportOrder.remaining` — def, line 52.
-- `SupportOrder.priority` — def, line 55.
+- `InitialJumpDomain` — class, line 1.
+- `InitialJumpDomain.__init__` — def, line 3.
+- `InitialJumpDomain.__call__` — def, line 10.
+- `SupportOrder` — class, line 18.
+- `SupportOrder.__init__` — def, line 19.
+- `SupportOrder.audit` — def, line 37.
+- `SupportOrder.__call__` — def, line 67.
+- `SupportOrder.remaining` — def, line 69.
+- `SupportOrder.priority` — def, line 72.
 
 ## [autonomy/cell_routes/time_progress.py](../autonomy/cell_routes/time_progress.py)
 
@@ -319,7 +610,7 @@ Source snapshot: current DFS implementation source, including request-audit logg
 
 - `run_fixture` — def, line 16.
 - `save` — def, line 23.
-- `main` — def, line 31.
+- `main` — def, line 32.
 
 ## [autonomy/climbable_search.py](../autonomy/climbable_search.py)
 
@@ -351,17 +642,20 @@ Source snapshot: current DFS implementation source, including request-audit logg
 
 ## [autonomy/constraint_variants.py](../autonomy/constraint_variants.py)
 
-- `ConstraintVariants` — class, line 13.
-- `ConstraintVariants.__init__` — def, line 14.
-- `ConstraintVariants.excluded` — def, line 148.
-- `ConstraintVariants.face_row` — def, line 151.
-- `ConstraintVariants.check` — def, line 156.
-- `ConstraintVariants.effective_key` — def, line 160.
-- `ConstraintVariants.segment_rows` — def, line 172.
-- `ConstraintVariants.option` — def, line 177.
-- `ConstraintVariants.__iter__` — def, line 257.
-- `ConstraintVariants.entailed` — def, line 260.
-- `ConstraintVariants.__next__` — def, line 274.
+- `ConstraintVariants` — class, line 12.
+- `ConstraintVariants.__init__` — def, line 13.
+- `ConstraintVariants.prepare_item` — def, line 55.
+- `ConstraintVariants._prepare_item` — def, line 62.
+- `ConstraintVariants.excluded` — def, line 204.
+- `ConstraintVariants.face_row` — def, line 207.
+- `ConstraintVariants.check` — def, line 212.
+- `ConstraintVariants.effective_key` — def, line 216.
+- `ConstraintVariants.segment_rows` — def, line 228.
+- `ConstraintVariants.option` — def, line 233.
+- `ConstraintVariants.__iter__` — def, line 316.
+- `ConstraintVariants.entailed` — def, line 319.
+- `ConstraintVariants.__next__` — def, line 333.
+- `ConstraintVariants._next_variant` — def, line 340.
 
 ## [autonomy/contact_combinations.py](../autonomy/contact_combinations.py)
 
@@ -376,6 +670,14 @@ Source snapshot: current DFS implementation source, including request-audit logg
 - `contact_opportunities` — def, line 51.
 - `generate_contact_profiles` — def, line 69.
 
+## [autonomy/experiments/automatic-corridors/compare.py](../autonomy/experiments/automatic-corridors/compare.py)
+
+- `verify_automatic` — def, line 21.
+- `main` — def, line 42.
+
+## [autonomy/experiments/automatic-corridors/compare_generic.py](../autonomy/experiments/automatic-corridors/compare_generic.py)
+
+- `main` — def, line 18.
 ## [autonomy/experiments/cell-routes/run_benchmarks.py](../autonomy/experiments/cell-routes/run_benchmarks.py)
 
 - `main` — def, line 24.
@@ -401,29 +703,6 @@ Source snapshot: current DFS implementation source, including request-audit logg
 - `first_full_calls` — def, line 40.
 - `run_summary` — def, line 56.
 - `main` — def, line 89.
-
-## [autonomy/experiments/last-jump-runs/row-benchmark/benchmark.py](../autonomy/experiments/last-jump-runs/row-benchmark/benchmark.py)
-
-- `canonical` — def, line 20.
-- `variants` — def, line 24.
-- `find_request` — def, line 35.
-- `one_solve` — def, line 47.
-- `time_operation` — def, line 75.
-- `main` — def, line 81.
-
-## [autonomy/experiments/last-jump-runs/row-benchmark/callback_probe.py](../autonomy/experiments/last-jump-runs/row-benchmark/callback_probe.py)
-
-- `main` — def, line 14.
-
-## [autonomy/experiments/last-jump-runs/row-benchmark/extraction_probe.py](../autonomy/experiments/last-jump-runs/row-benchmark/extraction_probe.py)
-
-- `main` — def, line 13.
-
-## [autonomy/experiments/last-jump-runs/summarize_retry.py](../autonomy/experiments/last-jump-runs/summarize_retry.py)
-
-- `summarize` — def, line 13.
-- `render` — def, line 48.
-- `main` — def, line 60.
 
 ## [autonomy/experiments/linkcraft11-opening/audit_trace.py](../autonomy/experiments/linkcraft11-opening/audit_trace.py)
 
@@ -523,15 +802,18 @@ Source snapshot: current DFS implementation source, including request-audit logg
 
 ## [autonomy/interactions.py](../autonomy/interactions.py)
 
-- `block_interaction` — def, line 5.
-- `interaction_allowed` — def, line 10.
-- `InteractionGate` — class, line 15.
-- `InteractionGate.__init__` — def, line 16.
-- `InteractionGate.envelopes` — def, line 22.
-- `InteractionGate.query` — def, line 45.
-- `InteractionGate.required` — def, line 72.
-- `InteractionGate.context` — def, line 86.
-- `InteractionGate.summary` — def, line 89.
+- `interaction_context_key` — def, line 8.
+- `query_interaction` — def, line 23.
+- `normalize_alternatives` — def, line 65.
+- `block_interaction` — def, line 82.
+- `interaction_allowed` — def, line 87.
+- `InteractionGate` — class, line 92.
+- `InteractionGate.__init__` — def, line 93.
+- `InteractionGate.envelopes` — def, line 99.
+- `InteractionGate.query` — def, line 122.
+- `InteractionGate.required` — def, line 149.
+- `InteractionGate.context` — def, line 167.
+- `InteractionGate.summary` — def, line 170.
 
 ## [autonomy/ladder_ceiling.py](../autonomy/ladder_ceiling.py)
 
@@ -618,10 +900,10 @@ Source snapshot: current DFS implementation source, including request-audit logg
 - `_shift_event` — def, line 83.
 - `_events` — def, line 100.
 - `append_choice` — def, line 126.
-- `truncate_program` — def, line 206.
-- `program_physics_key` — def, line 252.
-- `program_search_key` — def, line 262.
-- `compile_program` — def, line 270.
+- `truncate_program` — def, line 208.
+- `program_physics_key` — def, line 254.
+- `program_search_key` — def, line 264.
+- `compile_program` — def, line 272.
 
 ## [autonomy/movement_contacts.py](../autonomy/movement_contacts.py)
 
@@ -671,8 +953,8 @@ Source snapshot: current DFS implementation source, including request-audit logg
 
 - `movement_settings` — def, line 13.
 - `iter_movement_programs` — def, line 30.
-- `find_movement_blocks` — def, line 224.
-- `screen_program` — def, line 294.
+- `find_movement_blocks` — def, line 226.
+- `screen_program` — def, line 296.
 
 ## [autonomy/movement_units.py](../autonomy/movement_units.py)
 
@@ -844,7 +1126,7 @@ Source snapshot: current DFS implementation source, including request-audit logg
 - `box_for` — def, line 9.
 - `stepping_profiles` — def, line 13.
 - `SteppingGenerator` — class, line 88.
-- `SteppingGenerator.generate` — def, line 89.
+- `SteppingGenerator.generate` — method, line 89.
 - `open_stepping_choices` — def, line 121.
 
 ## [autonomy/terminal_goals.py](../autonomy/terminal_goals.py)
@@ -1135,6 +1417,37 @@ Source snapshot: current DFS implementation source, including request-audit logg
 - `HistoricalInteractionTests` — class, line 260.
 - `HistoricalInteractionTests.test_real11_b4_blip_is_excluded_before_its_wall_options_are_built` — def, line 261.
 
+## [autonomy/tests/test_event_domain.py](../autonomy/tests/test_event_domain.py)
+
+- `EventDomainTests` — class, line 12.
+- `EventDomainTests.test_rim_only_overlap_is_not_a_certified_surface_connection` — def, line 13.
+- `EventDomainTests.test_raw_graph_keeps_every_cell_portal_and_physical_component` — def, line 18.
+- `EventDomainTests.test_portable_immutable_domain_and_content_validation` — def, line 28.
+- `EventDomainTests.test_airborne_start_cannot_acquire_support_permission` — def, line 43.
+- `EventDomainTests.test_coplanar_group_preserves_hole_provenance_and_owner_task` — def, line 51.
+- `EventDomainTests.test_equivalent_encoding_preserves_semantic_surface_geometry` — def, line 62.
+- `EventDomainTests.test_running_rows_are_silent_but_landings_revisits_and_named_cases_survive` — def, line 68.
+
+## [autonomy/tests/test_event_routes.py](../autonomy/tests/test_event_routes.py)
+
+- `EventRouteTests` — class, line 8.
+- `EventRouteTests.domain` — def, line 9.
+- `EventRouteTests.test_both_contacts_and_overflight_finish_remain_in_one_language` — def, line 14.
+- `EventRouteTests.test_work_limits_and_reload_preserve_all_next_goals` — def, line 30.
+- `EventRouteTests.test_revisits_are_occurrences_without_a_global_visit_cap` — def, line 43.
+- `EventRouteTests.test_unknown_boundary_cannot_certify_disconnection` — def, line 52.
+- `EventRouteTests.test_route_semantics_exclude_absolute_timing_but_keep_physical_feature_order` — def, line 59.
+
+## [autonomy/tests/test_event_search.py](../autonomy/tests/test_event_search.py)
+
+- `EventSearchTests` — class, line 17.
+- `EventSearchTests.test_quick_reverse_landings_do_not_preempt_forward_goal_service` — method, line 18.
+- `EventSearchTests.test_disconnected_regions_on_one_physical_block_have_contact_phase_guards` — method, line 33.
+- `EventSearchTests.test_same_support_setup_is_local_without_removing_its_physical_choices` — method, line 58.
+- `EventSearchTests.test_adapter_has_no_inherited_raw_cell_rejection_paths` — method, line 71.
+- `EventSearchTests.test_declared_anchor_goals_share_prefix_and_publish_actual_child_atomically` — method, line 84.
+- `EventSearchTests.test_explicit_old_catalogue_settings_and_states_are_not_reinterpreted` — method, line 129.
+
 ## [autonomy/tests/test_failure_diagnostic.py](../autonomy/tests/test_failure_diagnostic.py)
 
 - `FailureDiagnosticTests` — class, line 10.
@@ -1186,6 +1499,14 @@ Source snapshot: current DFS implementation source, including request-audit logg
 - `GenericNumericalTests.test_two_airborne_ladders_continue_into_blip_without_a_support_reset` — def, line 256.
 - `GenericNumericalTests.test_five_airborne_ladders_share_the_same_generic_route_compilation` — def, line 278.
 
+## [autonomy/tests/test_guide_progress.py](../autonomy/tests/test_guide_progress.py)
+
+- `GuideTests` — class, line 8.
+- `GuideTests.guide` — def, line 9.
+- `GuideTests.test_witness_points_use_local_interfaces_and_are_covered` — def, line 18.
+- `GuideTests.test_interruption_resumes_witness_and_never_calls_direct_hint_a_witness` — def, line 29.
+- `GuideTests.test_segment_shortcut_cannot_fill_a_hole` — def, line 40.
+
 ## [autonomy/tests/test_hanging_vines.py](../autonomy/tests/test_hanging_vines.py)
 
 - `falling_context` — def, line 22.
@@ -1233,6 +1554,18 @@ Source snapshot: current DFS implementation source, including request-audit logg
 - `IntegrationTests.test_java_reuses_the_mod_footprint_deriver` — def, line 340.
 - `IntegrationTests.test_known_routes_zero_one_and_backtracking` — def, line 354.
 - `IntegrationTests.test_linkcraft_section_keeps_runoff_and_finds_without_recorded_facings` — def, line 375.
+
+## [autonomy/tests/test_interaction_normalization.py](../autonomy/tests/test_interaction_normalization.py)
+
+- `context` — def, line 11.
+- `source` — def, line 16.
+- `InteractionNormalizationTests` — class, line 23.
+- `InteractionNormalizationTests.test_far_avoid_is_omitted_but_absent_required_contact_rejects_owner` — def, line 24.
+- `InteractionNormalizationTests.test_top_contact_boundary_does_not_share_interior_absence_proof` — def, line 40.
+- `InteractionNormalizationTests.test_context_and_probe_uncertainty_invalidate_proofs` — def, line 46.
+- `InteractionNormalizationTests.test_interrupted_phase_mask_and_table_preparation_resumes_exactly` — def, line 55.
+- `InteractionNormalizationTests.test_old_or_changed_constraint_state_is_explicitly_rejected` — def, line 79.
+- `InteractionNormalizationTests.test_absent_prerequisite_rejects_the_whole_owned_alternative` — def, line 85.
 
 ## [autonomy/tests/test_ladder_bridge.py](../autonomy/tests/test_ladder_bridge.py)
 
@@ -1490,18 +1823,18 @@ Source snapshot: current DFS implementation source, including request-audit logg
 - `PersistentGenerationTests` — class, line 113.
 - `PersistentGenerationTests.test_route_side_still_allows_clearing_an_obstacle_vertically` — def, line 114.
 - `PersistentGenerationTests.test_choice_and_queue_sizes_do_not_erase_a_late_candidate_after_reload` — def, line 133.
-- `PersistentGenerationTests.test_interrupted_screen_keeps_the_unprocessed_choice` — def, line 155.
-- `PersistentGenerationTests.test_constraint_generation_cursor_survives_a_new_facing_guess` — def, line 166.
-- `StateProtectionTests` — class, line 184.
-- `StateProtectionTests.check_protected` — def, line 185.
-- `StateProtectionTests.test_forward_velocity_and_speed_are_independent_guards` — def, line 191.
-- `StateProtectionTests.test_different_schedules_are_not_clock_compared_even_with_equal_counts` — def, line 195.
-- `StateProtectionTests.test_missing_velocity_keeps_candidate_unknown_rather_than_inferior` — def, line 201.
-- `StateProtectionTests.test_queue_key_counts_effective_grounded_inputs` — def, line 206.
-- `OuterResumeTests` — class, line 211.
-- `OuterResumeTests.test_split_search_does_not_dispatch_the_completed_terminal_again` — def, line 212.
-- `ScopedNumericalTests` — class, line 250.
-- `ScopedNumericalTests.test_omitted_future_obstacle_does_not_reject_preliminary_guidance` — def, line 251.
+- `PersistentGenerationTests.test_interrupted_screen_keeps_the_unprocessed_choice` — def, line 164.
+- `PersistentGenerationTests.test_constraint_generation_cursor_survives_a_new_facing_guess` — def, line 175.
+- `StateProtectionTests` — class, line 194.
+- `StateProtectionTests.check_protected` — def, line 195.
+- `StateProtectionTests.test_forward_velocity_and_speed_are_independent_guards` — def, line 201.
+- `StateProtectionTests.test_different_schedules_are_not_clock_compared_even_with_equal_counts` — def, line 205.
+- `StateProtectionTests.test_missing_velocity_keeps_candidate_unknown_rather_than_inferior` — def, line 211.
+- `StateProtectionTests.test_queue_key_counts_effective_grounded_inputs` — def, line 216.
+- `OuterResumeTests` — class, line 221.
+- `OuterResumeTests.test_split_search_does_not_dispatch_the_completed_terminal_again` — def, line 222.
+- `ScopedNumericalTests` — class, line 260.
+- `ScopedNumericalTests.test_omitted_future_obstacle_does_not_reject_preliminary_guidance` — def, line 261.
 
 ## [autonomy/tests/test_repair_resume.py](../autonomy/tests/test_repair_resume.py)
 
@@ -1521,6 +1854,14 @@ Source snapshot: current DFS implementation source, including request-audit logg
 - `RepairResumeTests.test_changed_constraints_cannot_reuse_prior_acceptance` — def, line 154.
 - `RepairResumeTests.test_cancellation_keeps_queue_serializable_for_resume` — def, line 161.
 - `RepairResumeTests.test_compatible_extension_preserves_symbolic_state_and_has_distinct_search_identity` — def, line 169.
+
+## [autonomy/tests/test_route_guards.py](../autonomy/tests/test_route_guards.py)
+
+- `RouteGuardTests` — class, line 10.
+- `RouteGuardTests.test_three_dimensional_sweeps_join_adjacent_cells_without_filling_gap` — def, line 11.
+- `RouteGuardTests.test_fixed_guards_can_cross_several_portals_in_one_input` — def, line 19.
+- `RouteGuardTests.test_wrong_layer_cannot_produce_a_fixed_guard_model` — def, line 40.
+- `RouteGuardTests.test_unknown_named_probe_does_not_become_endpoint_height_exclusion` — def, line 46.
 
 ## [autonomy/tests/test_route_guidance.py](../autonomy/tests/test_route_guidance.py)
 
@@ -1545,6 +1886,35 @@ Source snapshot: current DFS implementation source, including request-audit logg
 - `GuidancePhysicalTests.test_edge_coefficients_match_complete_authoritative_schedules` — def, line 189.
 - `GuidancePhysicalTests.test_guidance_produces_independently_checked_whole_initial_state_path` — def, line 203.
 - `GuidancePhysicalTests.test_retaining_two_timings_recovers_the_narrow_support_ranking_counterexample` — def, line 220.
+
+## [autonomy/tests/test_route_progress.py](../autonomy/tests/test_route_progress.py)
+
+- `line_route` — def, line 10.
+- `segment` — def, line 28.
+- `RouteProgressTests` — class, line 32.
+- `RouteProgressTests.test_multiple_portals_one_input_then_actual_landing` — def, line 33.
+- `RouteProgressTests.test_many_inputs_in_same_cell_and_touch_return_are_not_extra_progress` — def, line 43.
+- `RouteProgressTests.test_touch_of_final_portal_does_not_certify_crossing` — def, line 56.
+- `RouteProgressTests.test_unexpected_support_cannot_be_ignored_on_overflight_route` — def, line 64.
+- `RouteProgressTests.test_same_horizontal_trace_wrong_vertical_layer_rejected` — def, line 70.
+- `RouteProgressTests.test_unknown_named_probes_do_not_falsely_exclude_or_certify` — def, line 77.
+- `RouteProgressTests.test_alternative_paths_cannot_be_spliced_at_shared_region` — def, line 84.
+- `RouteProgressTests.test_progress_rejects_changed_context` — def, line 98.
+- `RouteProgressTests.test_meaningful_return_uses_a_new_occurrence_of_the_same_region` — def, line 105.
+
+## [autonomy/tests/test_route_regions.py](../autonomy/tests/test_route_regions.py)
+
+- `task_scene` — def, line 11.
+- `RouteRegionTests` — class, line 22.
+- `RouteRegionTests.test_overlapping_transit_cover_preserves_space_without_subtraction_walls` — def, line 23.
+- `RouteRegionTests.test_canonical_union_discards_encoding_seams_but_keeps_hole_and_concavity` — def, line 37.
+- `RouteRegionTests.test_boundary_lines_points_and_exact_doubles_are_retained` — def, line 49.
+- `RouteRegionTests.test_local_refinement_preserves_free_volume_boundaries_and_residual_air` — def, line 59.
+- `RouteRegionTests.test_exposed_component_keys_survive_same_owner_box_split` — def, line 85.
+- `RouteRegionTests.test_covered_top_not_support_and_disconnected_same_owner_stays_separate` — def, line 92.
+- `RouteRegionTests.test_graph_represents_overflight_separately_from_physical_contact` — def, line 101.
+- `RouteRegionTests.test_exact_height_ceiling_keeps_surface_boundary_region` — def, line 120.
+- `RouteRegionTests.test_virtual_goal_keeps_one_sided_predicate_without_finite_floor` — def, line 128.
 
 ## [autonomy/tests/test_runoff.py](../autonomy/tests/test_runoff.py)
 
@@ -1594,6 +1964,32 @@ Source snapshot: current DFS implementation source, including request-audit logg
 - `SearchFixTests.exercise_incumbent` — def, line 48.
 - `SearchFixTests.test_only_complete_plans_publish_outer_incumbents` — def, line 76.
 - `SearchFixTests.test_custom_projection_controls_fallback_direction` — def, line 96.
+
+## [autonomy/tests/test_semantic_routes.py](../autonomy/tests/test_semantic_routes.py)
+
+- `support_scene` — def, line 11.
+- `SemanticRouteTests` — class, line 18.
+- `SemanticRouteTests.test_support_visit_and_overflight_have_distinct_keys_and_paths` — def, line 19.
+- `SemanticRouteTests.test_spatial_interruption_resume_preserves_order_and_untried_families` — def, line 39.
+- `SemanticRouteTests.test_equivalent_box_split_preserves_cells_and_support_route_keys` — def, line 56.
+- `SemanticRouteTests.test_local_anchor_is_not_moved_by_distant_coverage` — def, line 68.
+- `SemanticRouteTests.test_variant_keeps_region_order_and_does_not_union_opposite_paths` — def, line 75.
+
+## [autonomy/tests/test_semantic_search.py](../autonomy/tests/test_semantic_search.py)
+
+- `SemanticStageTests` — class, line 19.
+- `SemanticStageTests.test_first_ready_proposal_is_scored_before_requesting_more` — method, line 20.
+- `SemanticStageTests.test_new_child_continues_before_catalogue_drain_but_stall_yields` — method, line 48.
+- `SemanticStageTests.test_expired_slice_commits_a_scored_arrival_before_suspending` — method, line 65.
+- `SemanticStageTests.test_spatial_resume_keeps_each_running_variant_language_immutable` — method, line 100.
+- `SemanticStageTests.test_stage_views_are_immutable_and_support_order_is_discovered` — method, line 124.
+- `SemanticStageTests.test_initial_domain_is_independent_of_support_order` — method, line 145.
+- `SemanticNumericalTests` — class, line 161.
+- `SemanticNumericalTests.compiler` — method, line 162.
+- `SemanticNumericalTests.test_inferred_intermediate_support_uses_outgoing_guide_objective` — method, line 166.
+- `SemanticNumericalTests.test_stored_real11_witness_has_an_unseeded_automatic_corridor` — method, line 188.
+- `SemanticNumericalTests.test_automatic_finite_landing_without_points_support_list_or_clocks` — method, line 212.
+- `SemanticNumericalTests.test_free_virtual_finish_has_no_outstanding_physical_goal_contact` — method, line 234.
 
 ## [autonomy/tests/test_shared_contacts.py](../autonomy/tests/test_shared_contacts.py)
 
@@ -1813,120 +2209,38 @@ Source snapshot: current DFS implementation source, including request-audit logg
 - `phase` — def, line 226.
 - `main` — def, line 275.
 
+## [autonomy/experiments/anchor-feasibility/native_gate.py](../autonomy/experiments/anchor-feasibility/native_gate.py)
 
-# Shared checkpoint definitions (2026-11-03)
+- `main` — def, line 14.
 
-See [storage contracts](CHECKPOINT_STORAGE.md) before changing repair persistence.
+## [autonomy/experiments/anchor-feasibility/measure.py](../autonomy/experiments/anchor-feasibility/measure.py)
 
-## [autonomy/checkpoint_store.py](../autonomy/checkpoint_store.py)
+- `witnesses` — def, line 23.
+- `main` — def, line 36.
 
-- `StoredValue` — class, line 21.
-- `StoredValue.__init__` — method, line 22.
-- `_json` — def, line 26.
-- `_atomic_json` — def, line 30.
-- `CheckpointStore` — class, line 37.
-- `CheckpointStore.__init__` — method, line 44.
-- `CheckpointStore.__enter__` — method, line 62.
-- `CheckpointStore.__exit__` — method, line 65.
-- `CheckpointStore.close` — method, line 68.
-- `CheckpointStore.save` — method, line 71.
-- `CheckpointStore.archive` — method, line 76.
-- `CheckpointStore.publish` — method, line 138.
-- `CheckpointStore.patch` — method, line 145.
-- `CheckpointStore.compact` — method, line 159.
-- `read_report` — def, line 194.
-- `main` — def, line 250.
+## [autonomy/experiments/anchor-feasibility/acceptance_manifest.py](../autonomy/experiments/anchor-feasibility/acceptance_manifest.py)
 
-## [autonomy/cell_routes/checkpoint_persistence.py](../autonomy/cell_routes/checkpoint_persistence.py)
+- `main` — def, line 12.
 
-- `identity_paths` — def, line 8.
-- `SearchCheckpoint` — class, line 24.
-- `SearchCheckpoint.__init__` — method, line 25.
-- `SearchCheckpoint.state` — method, line 31.
-- `SearchCheckpoint.__call__` — method, line 39.
-- `SearchCheckpoint.repair_progress` — method, line 47.
-- `SearchCheckpoint.finish` — method, line 57.
+## [autonomy/experiments/anchor-feasibility/generic_controls.py](../autonomy/experiments/anchor-feasibility/generic_controls.py)
 
-## [autonomy/tests/test_checkpoint_store.py](../autonomy/tests/test_checkpoint_store.py)
+- `fixtures` — def, line 16.
+- `main` — def, line 40.
 
-- `StoreCase` — class, line 16.
-- `StoreCase.setUp` — method, line 17.
-- `CheckpointStoreTests` — class, line 23.
-- `CheckpointStoreTests.test_lossless_sharing_without_mutable_aliases` — method, line 24.
-- `CheckpointStoreTests.test_changes_are_detected_across_saves_and_reopening` — method, line 40.
-- `CheckpointStoreTests.test_failed_manifest_publication_preserves_previous_committed_root` — method, line 50.
-- `CheckpointStoreTests.test_legacy_and_companion_errors` — method, line 60.
-- `CheckpointStoreTests.test_patch_and_compaction_keep_needed_roots` — method, line 78.
-- `SearchCheckpointTests` — class, line 92.
-- `SearchCheckpointTests.state` — method, line 93.
-- `SearchCheckpointTests.test_repair_patch_is_full_state_equivalent_including_aliases` — method, line 100.
-- `SearchCheckpointTests.test_completed_repair_is_not_resolved_after_persistent_resume` — method, line 120.
-- `SearchCheckpointTests.test_dfs_continues_siblings_without_repeating_completed_calls` — method, line 136.
-- `SearchCheckpointTests.test_dfs_mid_solve_publication_restores_the_active_candidate` — method, line 151.
-- `SearchCheckpointTests.test_interrupted_repair_keeps_pending_branch_and_audit` — method, line 168.
-- `NativeCheckpointTests` — class, line 191.
-- `NativeCheckpointTests.test_every_native_repair_publication_round_trips_before_completion` — method, line 192.
+## [autonomy/experiments/anchor-feasibility/render_full_scene.py](../autonomy/experiments/anchor-feasibility/render_full_scene.py)
 
-## [autonomy/experiments/last-jump-runs/row-benchmark/checkpoint_probe.py](../autonomy/experiments/last-jump-runs/row-benchmark/checkpoint_probe.py)
+- `main` — def, line 13.
 
-- `main` — def, line 21.
+## [autonomy/experiments/anchor-transfer-preparation/cold.py](../autonomy/experiments/anchor-transfer-preparation/cold.py)
 
+- `witnesses` — def, line 20.
+- `main` — def, line 32.
 
-# IPOPT constraint cleanup definitions (2026-11-03)
+## [autonomy/experiments/anchor-transfer-preparation/verify.py](../autonomy/experiments/anchor-transfer-preparation/verify.py)
 
-See [constraint contracts](IPOPT_CONSTRAINT_REDUCTION.md) for extraction/monitor and source mapping semantics.
+- `main` — def, line 11.
 
-## [ipopt/constraints.py](../ipopt/constraints.py)
+## [autonomy/experiments/anchor-initial0-audit-2026-11-04/check.py](../autonomy/experiments/anchor-initial0-audit-2026-11-04/check.py)
 
-- `reduce_walls` — def, line 4.
-
-## [ipopt/tests/test_constraints.py](../ipopt/tests/test_constraints.py)
-
-- `NumericalConstraintTests` — class, line 11.
-- `NumericalConstraintTests.test_strongest_bounds_preserve_all_source_indices_without_mutation` — method, line 12.
-- `NumericalConstraintTests.test_only_exact_facing_relative_and_cross_axis_duplicates_merge` — method, line 22.
-- `NumericalConstraintTests.test_contradictions_equalities_distinct_ticks_and_axes_survive` — method, line 31.
-- `NumericalConstraintTests.test_operator_defaults_and_float_precision` — method, line 36.
-- `NumericalConstraintTests.test_reduction_preserves_acceptance_on_translated_random_trajectories` — method, line 41.
-
-## [ipopt/tests/test_worker_bounds.py](../ipopt/tests/test_worker_bounds.py)
-
-- `WorkerBoundTests` — class, line 11.
-- `WorkerBoundTests.native` — method, line 12.
-- `WorkerBoundTests.test_monitor_checks_expressions_instead_of_supplied_constraint_vector` — method, line 16.
-- `WorkerBoundTests.fixed_phase` — method, line 31.
-- `WorkerBoundTests.test_extraction_with_mixed_rows_and_original_request_validation` — method, line 72.
-- `WorkerBoundTests.test_extracted_final_point_is_preserved_without_iteration_candidates` — method, line 75.
-- `WorkerBoundTests.test_feasibility_early_stop_preserves_validated_incumbent` — method, line 78.
-
-## [autonomy/experiments/last-jump-runs/row-benchmark/production_bounds_probe.py](../autonomy/experiments/last-jump-runs/row-benchmark/production_bounds_probe.py)
-
-- `main` — def, line 16.
-
-
-# Feasibility-mode additions (2026-11-04)
-
-[Contracts and score semantics](IPOPT_FEASIBILITY_MODE.md). `WorkerBoundTests.test_constant_objective_tie_keeps_the_accepted_point` adds flat-cost incumbent coverage in the existing worker-bound suite.
-
-## [autonomy/tests/test_feasibility_mode.py](../autonomy/tests/test_feasibility_mode.py)
-
-- `FeasibilityModeTests` — class, line 20.
-- `FeasibilityModeTests.test_feasible_intermediate_and_optimized_comparison_use_distinct_repair_work` — method, line 21.
-
-## [autonomy/experiments/last-jump-runs/row-benchmark/feasibility_probe.py](../autonomy/experiments/last-jump-runs/row-benchmark/feasibility_probe.py)
-
-- `main` — def, line 21.
-
-
-# Repeated Real11 intermediate benchmark (2026-11-04)
-
-## [autonomy/experiments/last-jump-runs/row-benchmark/real11_intermediate_benchmark.py](../autonomy/experiments/last-jump-runs/row-benchmark/real11_intermediate_benchmark.py)
-
-- `directional_phase` — def, line 15.
-- `worker_main` — def, line 28.
-- `cases_from_report` — def, line 35.
-- `fresh_run` — def, line 64.
-- `warm_run` — def, line 85.
-- `summarize` — def, line 108.
-- `markdown` — def, line 127.
-- `main` — def, line 159.
+- `jumps` — def, line 27.
+- `main` — def, line 31.

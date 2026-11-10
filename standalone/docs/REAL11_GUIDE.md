@@ -1,6 +1,20 @@
 # Linkcraft Real11 opening: agent guide
 
-## Current requested terminal goal: virtual B7 landing (2026-11-03)
+**Current hard-jump correction:** source-local setup hops remain legal even after a global one-transfer latch. Initial-0 jump0→B1@12 then jump12→B2@21 is one setup plus one hard transfer. The old implementation incorrectly excluded it. [Corrected policy/validation](../autonomy/experiments/anchor-transfer-preparation/README.md).
+
+## Physical B7 and anchor implementation (2026-11-04)
+
+The [fresh fixture](../autonomy/experiments/anchor-feasibility/real11-anchors.json) extends B7 one block +Z to `[729,0,-1095,730,7,-1093]` and requires actual B7 landing. It minimizes achieved T, then maximizes Z; terminal guide is `(729.5,7,-1093)`. Normal body-overlap support still applies. The old virtual target/extra X<729.7 row is absent from the new fixture.
+
+The new default physical-task engine uses caller-declared anchors B2/B3/B4/B5, backward/onward guides, intermediate early stopping, global hard-jump latches and recoverable ordinary extra runs. Internal queries check selected completed decisions without future anchor rows or fixed intermediate poses. The preliminary binary110° turn heuristic records its edge/margin/distances/keys and replay drift. Multiple jumps on the current block remain available; inter-block returns are [deferred](../autonomy/REVISIT_DISCOVERY_DEFERRED_PLAN.md).
+
+[New-task implementation and evidence](../autonomy/experiments/anchor-feasibility/README.md), [plan](../autonomy/ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md), and [resume](ANCHOR_IMPLEMENTATION_RESUME.md) describe current source/verification. The2026-11-03 results below remain historical controls with original geometry/virtual semantics. B6's reported extension still needs actual bounds.
+
+## Automatic corridor implementation (2026-11-03)
+
+The new [automatic fixture and evidence](../autonomy/experiments/automatic-corridors/README.md) discovers contact/passage itineraries without supplied points, support order or clocks. Typed region/corridor/DFS integration and fixed 3D guard selection are implemented in the isolated branch. The default50-route shortlist admits the archived initial0,64-input witness after independent replay, without seeding discovery. This is representation coverage, not a new cold-search result. The final source-stable300-second comparison found no automatic finish in13 calls; supplied routing found replay-validated T67 in41 calls. This remains a cold-search performance limitation, not an infeasibility result. The supplied virtual fixture below stays an unchanged control; exact B6 extension remains unspecified.
+
+## Previous terminal goal: virtual B7 landing (2026-11-03)
 
 The user clarified the intended finish after the fixed-clock benchmark. At the B7-height landing event (height7), use the horizontal goal **X < 729.7 and Z >= -1095.3**, with no goal-imposed lower X bound or upper Z bound. The region is a virtual landing target extending indefinitely toward +Z, not B7's original finite support footprint. Its coordinates are player-center bounds; do not expand them by the hitbox again.
 
@@ -12,9 +26,13 @@ The generic `terminal_goals` adapter and the [new fixture](../autonomy/experimen
 
 This guide first describes the archived pre-DFS audit. [Current DFS cold/resume results](../autonomy/experiments/dfs-interactions/README.md) and evidence are a separate, newer corpus. Generic code must not depend on these labels/coordinates/ticks. [Current state](CURRENT_STATE.md) and [current DFS/interaction plan](../autonomy/DFS_INTERACTION_IMPLEMENTATION_PLAN.md) supersede old pilot policies. Read the archived ledgers to answer existing questions before rerunning jobs.
 
-## What exactly is the task?
+## Implemented virtual baseline and historical benchmark
 
-[Current cold fixture](../autonomy/experiments/linkcraft11-opening/fixtures/clock64-orchestrator.json): original start `(746.5,5,-1104.5)`, stored velocity `(0,-0.0784000015258789,0)`. Only the seven confirmed physical boxes are present inside declared geometry coverage. No external world context is inferred. Required support order B2→B3→B4→B5 is a supplied route restriction; B7 landing is optional. **Maximize Z at absolute state64**, even if airborne or beyond B7. Normal momentum is retained with zero inertia thresholds. Initial jump domain `[0,8]` is explicitly selected, not proof that eight is the minimum useful delay. Later run bounds in this fixture are broader than the user's original simple no-run/B6-only intent.
+The accepted baseline finish is the implemented **virtual height7 crossing described above**, superseding the earlier literal-finite-B7 interpretation in the source-era capability discussion. The [corridor handoff](CORRIDOR_AGENT_HANDOFF.md) through `61355976` is imported at merge `984b701b`; [spatial-plan section0](../autonomy/SPATIAL_CORRIDOR_REFACTOR_PLAN.md#0-imported-baseline-and-integration-requirements) lists compatibility requirements. The automatic spatial path must discover intermediate supports rather than require a supplied B2/B3/B4/B5 list; the canonical virtual fixture still supplies that route as a control. Intentional wall hits remain future work. B6's reported rightward extension lacks exact revised bounds. Historical capability audits describe their inspected `93652150` code, not the new implementation status.
+
+Spatial contract clarified subsequently: different supports and 3D passages distinguish routes; overflight and landing/run-off are different even with identical horizontal projections. Support itineraries are discovered automatically by the spatial layer, then realized by local timing/method search. See the [concrete refactor proposal](../autonomy/SPATIAL_CORRIDOR_REFACTOR_PLAN.md). Earlier diagnostic grouping and supplied support lists are historical, not the desired route contract.
+
+The [recorded cold fixture](../autonomy/experiments/linkcraft11-opening/fixtures/clock64-orchestrator.json) still defines the **older benchmark**: original start `(746.5,5,-1104.5)`, stored velocity `(0,-0.0784000015258789,0)`, seven stored boxes inside declared geometry coverage, prescribed support order B2→B3→B4→B5, and **maximize Z at absolute state64 with B7 landing optional**. No external world context is inferred. Normal momentum is retained with zero inertia thresholds. Initial jump domain `[0,8]` is explicitly selected, not proof that eight is the minimum useful delay. Later run bounds in this fixture are broader than the user's original simple no-run/B6-only intent. Preserve its source-era results; they do not answer the corrected landing-time objective.
 
 | Block | Physical AABB `[minX,minY,minZ,maxX,maxY,maxZ]` |
 | --- | --- |
@@ -38,6 +56,11 @@ This guide first describes the archived pre-DFS audit. [Current DFS cold/resume 
 | Exact seven programs, 227 handled fixed branches, probes, pending frontier, exclusions | [CANDIDATE_AUDIT.md](../autonomy/experiments/orchestrator-fixes/audit/CANDIDATE_AUDIT.md) |
 | Every numerical request/result, including probe logging gaps | [WORKER_CALLS.md](../autonomy/experiments/orchestrator-fixes/audit/WORKER_CALLS.md), [CSV](../autonomy/experiments/orchestrator-fixes/audit/worker-calls.csv) |
 | P01/P02 ancestry/order, P06/P07 introduction, jump16/17 versus run counts | [CANDIDATE_QUESTIONS.md](../autonomy/experiments/orchestrator-fixes/audit/CANDIDATE_QUESTIONS.md) |
+| Why initial runs0/8 only; older successful9; coverage needed for10/11 | [Initial-delay follow-up](../autonomy/experiments/orchestrator-fixes/audit/CANDIDATE_QUESTIONS.md#7-why-only-initial-runs08-rather-than91011) |
+| Why state10; supplied timings/routes/settings versus generated choices | [Experiment configuration audit](../autonomy/experiments/orchestrator-fixes/audit/CANDIDATE_QUESTIONS.md#8-why-compare-first-at-state10-and-what-was-supplied-rather-than-discovered) |
+| Existing automatic components, remaining integration and corrected landing objective | [Capability follow-up](../autonomy/experiments/orchestrator-fixes/audit/CANDIDATE_QUESTIONS.md#9-which-requested-automatic-behaviors-already-exist) |
+| Automatic versus supplied corridor, reference coverage and helper integration plan | [Corridor comparison](../autonomy/experiments/orchestrator-fixes/audit/CANDIDATE_QUESTIONS.md#10-how-does-the-automatic-corridor-compare-with-the-supplied-one), [support/goal/direction plan](../autonomy/DFS_INTERACTION_IMPLEMENTATION_PLAN.md#21-integration-plan-infer-support-order-from-generated-decisions) |
+| How cells are built, support-top patches, portal midpoint bias and local refinement | [Decomposition investigation](../autonomy/experiments/orchestrator-fixes/audit/CANDIDATE_QUESTIONS.md#11-are-large-air-cells-and-negative-z-block-cells-built-into-decomposition), [improvement proposal](../autonomy/DFS_INTERACTION_IMPLEMENTATION_PLAN.md#25-cell-decomposition-and-anchor-investigation-focused-improvement-proposal) |
 | Duplicate descriptions, what can actually be pruned, P04/P05 provenance | [PRUNING_FOLLOWUP.md](../autonomy/experiments/orchestrator-fixes/audit/PRUNING_FOLLOWUP.md), [generation detail](../autonomy/experiments/orchestrator-fixes/audit/generation-detail.json) |
 | Machine-readable exact plans/coefficients/call data | [candidate-ledger.json.gz](../autonomy/experiments/orchestrator-fixes/audit/candidate-ledger.json.gz), [counts](../autonomy/experiments/orchestrator-fixes/audit/counts.json), [manifest](../autonomy/experiments/orchestrator-fixes/audit/manifest.json) |
 | Current runtime fix scope and checks already run | [Orchestrator results](../autonomy/experiments/orchestrator-fixes/README.md) |

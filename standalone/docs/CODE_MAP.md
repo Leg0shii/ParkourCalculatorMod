@@ -76,11 +76,18 @@ Snapshot at the current DFS implementation source, including request-audit loggi
 | [fixed_clock_experiment.py](../autonomy/cell_routes/fixed_clock_experiment.py) | Current fixed-terminal-clock fixture runner with support-order policy, atomic progress and resume CLI. |
 | [generation_diagnostic.py](../autonomy/cell_routes/generation_diagnostic.py) | Physical/execution keys, generator/queue instrumentation and report saving. |
 | [geometry.py](../autonomy/cell_routes/geometry.py) | AABB subtraction/merging, cells/portals/contact patches, free-space decomposition and segment coverage/SVG. |
+| [regions.py](../autonomy/cell_routes/regions.py) | Exact support unions; checked overlapping free convex cover, typed graph and ordinary movement proposal context. |
 | [local.py](../autonomy/cell_routes/local.py) | Search work budgets/counters, counting compiler and scoped corridor/scene acceptance adapter. |
 | [minimum_runs.py](../autonomy/cell_routes/minimum_runs.py) | Latest-jump ordinary ground-hold pattern normalization, validated feasible representatives and heuristic extra-run exclusions. |
 | [repair_diagnostic.py](../autonomy/cell_routes/repair_diagnostic.py) | Diagnostic of repair queue allocation and failures. |
 | [repair_resume_experiment.py](../autonomy/cell_routes/repair_resume_experiment.py) | Experiment preserving and resuming inner repair work. |
 | [routes.py](../autonomy/cell_routes/routes.py) | Route enumeration, landmarks/signatures, guide polyline/corridor projection and horizontal traces. |
+| [coverage_audit.py](../autonomy/cell_routes/coverage_audit.py) | Unseeded spatial witness-coverage audit with independent replay and actual rectangle SVGs. |
+| [automatic_experiment.py](../autonomy/cell_routes/automatic_experiment.py) | Cold/resume CLI for unordered geometry/task fixtures, runtime hashes and atomic evidence. |
+| [route_queue.py](../autonomy/cell_routes/route_queue.py) | Automatic task entry, global work guards, bounded route allocations and exact per-route DFS continuation. |
+| [semantic_adapter.py](../autonomy/cell_routes/semantic_adapter.py) | Immutable stage views, inferred support goals, early ordinary support conditioning and outgoing guide objectives. |
+| [route_guards.py](../autonomy/cell_routes/route_guards.py) | Fixed connected axis-sweep/contact/portal alternatives selected through ConstraintVariants before numerical dispatch. |
+| [route_progress.py](../autonomy/cell_routes/route_progress.py) | Ordered 3D phase/contact progress with occurrence and complete-variant cursors; unknown named probes. |
 | [scalar_seed_diagnostic.py](../autonomy/cell_routes/scalar_seed_diagnostic.py) | Synthetic and fixture tests of scalar seed/fallback validity. |
 | [support_order.py](../autonomy/cell_routes/support_order.py) | Fixture policy enforcing a supplied required support order on generated programs. |
 | [time_progress.py](../autonomy/cell_routes/time_progress.py) | Time/progress comparison, same-witness state protections and retained/deferred frontier. |
@@ -123,6 +130,8 @@ These reuse current mod sources. Scripts are evidence tools, not alternative pro
 | File | Purpose |
 | --- | --- |
 | [autonomy/compiler.gradle](../autonomy/compiler.gradle) | Gradle init tasks for shared standalone coefficient/scene Java compiler and local classpath descriptor. |
+| [autonomy/experiments/automatic-corridors/compare.py](../autonomy/experiments/automatic-corridors/compare.py) | Matched automatic/supplied Real11 controls with identical snapshot cadence, exact work reports and independent replays. |
+| [autonomy/experiments/automatic-corridors/compare_generic.py](../autonomy/experiments/automatic-corridors/compare_generic.py) | Small generic matched automatic versus authored-goal controls with complete reports. |
 | [autonomy/experiments/blockage-order/BlockageOrderProbe.java](../autonomy/experiments/blockage-order/BlockageOrderProbe.java) | Probe shared legacy collision-order constraints for signed blockage cases. |
 | [autonomy/experiments/cell-routes/run_benchmarks.py](../autonomy/experiments/cell-routes/run_benchmarks.py) | Run initial generic non-ladder spatial-route benchmark families. |
 | [autonomy/experiments/checkpoint-guidance/plot_diagnostic.py](../autonomy/experiments/checkpoint-guidance/plot_diagnostic.py) | Render checkpoint-guidance diagnostic reports. |
@@ -154,3 +163,29 @@ These reuse current mod sources. Scripts are evidence tools, not alternative pro
 | [ipopt/java/ReplayStandaloneIpopt.java](../ipopt/java/ReplayStandaloneIpopt.java) | Replay/repair solved facings as executable local TAS inputs and export only validated results. |
 
 Maintain this map when public modules change. Index generation uses Python AST and `git ls-files --cached --others --exclude-standard standalone`; ignore build output, virtualenvs and caches. Purposes are editorial, not inferred dependency contracts.
+
+## Generic event discovery
+
+| Module | Responsibility |
+| --- | --- |
+| [event_routes.py](../autonomy/cell_routes/event_routes.py) | Immutable domain and physical feature/surface provenance; cyclic connector language; residual next-goal cursors; untimed semantic prefixes and observed physical passage evidence. |
+| [guides.py](../autonomy/cell_routes/guides.py) | Local finite witness anchors, resumable shortest witness, checked shortcuts and outgoing objectives. |
+| [anchor_policy.py](../autonomy/cell_routes/anchor_policy.py) | Ordered anchor audit, physical-owner visits, local J/R/A keys/caps, and policy2 source-preparation versus one-transfer structure. |
+| [anchor_guides.py](../autonomy/cell_routes/anchor_guides.py) | Backward finite projections, onward objectives, physical approach-edge turns and binary decision labels. |
+| [anchor_adapter.py](../autonomy/cell_routes/anchor_adapter.py) | Required-anchor/open-span stages on the existing event DFS; internal nodes omit pending anchor predicates. |
+| [node_feasibility.py](../autonomy/cell_routes/node_feasibility.py) | Explicit solver intent, stable exact-node identity, outcomes and completed-decision cadence. |
+| [turn_observability.py](../autonomy/cell_routes/turn_observability.py) | Resume-safe decision/query/replay observations, aggregate metrics and boundary/decision diagram export. |
+| [event_adapter.py](../autonomy/cell_routes/event_adapter.py) | Explicit dynamic stage provider and required physical contact-region predicates, with no inherited raw-cell filtering. |
+| [event_search.py](../autonomy/cell_routes/event_search.py) | Automatic configuration/state cutover, one shared domain/DFS and bounded fair owner allocation. |
+| [event_coverage_audit.py](../autonomy/cell_routes/event_coverage_audit.py) | Unseeded graph/guide discovery, then separate raw/semantic/materialized coverage and archived replay. |
+
+Current automatic CLI: [automatic_experiment.py](../autonomy/cell_routes/automatic_experiment.py). New profiling, native, generic and matched controls: [event-route-discovery](../autonomy/experiments/event-route-discovery/README.md). Legacy automatic catalogue scripts retain source-specific meaning; old fixtures are not silently migrated.
+
+## Coordinated solver and anchor changes (2026-11-10)
+
+| Source | Purpose |
+| --- | --- |
+| [anchor_time_bound.py](../autonomy/cell_routes/anchor_time_bound.py) | Optimistic remaining travel across required landing regions; guide distance stays an estimate. |
+| [checkpoint_persistence.py](../autonomy/cell_routes/checkpoint_persistence.py) | Nested event/DFS checkpoints and explicit node repair ownership. |
+| [anchor-runtime-profile](../autonomy/experiments/anchor-runtime-profile/README.md) | Scoped profiling, persistent source provenance and cold-run evidence. |
+| [integration contract](ANCHOR_SEARCH_INTEGRATION.md) | Selected solver policies, recovery/time bounds and live-state ownership. |

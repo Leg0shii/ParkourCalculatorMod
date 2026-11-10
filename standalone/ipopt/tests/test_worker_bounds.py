@@ -40,7 +40,7 @@ class WorkerBoundTests(unittest.TestCase):
             assert monitor.best_yaw==[.8]
         ''')
 
-    def fixed_phase(self, *, stop=False, final_only=False):
+    def fixed_phase(self, *, stop=False, final_only=False, pure=False):
         self.native('''
             import copy
             from unittest.mock import patch
@@ -56,6 +56,8 @@ class WorkerBoundTests(unittest.TestCase):
             request['walls'] += [dict(mode='Z',t1=2,t2=0,op='MINUS',cmp='GE',rhs=-.3)]
             request['walls'] += [dict(mode='DXZ',t1=2,t2=0,cmp='GE',rhs=-.1)]*2
             request = prepare(request)
+            request['stopOnFeasible']=STOP
+            request['objectiveMode']='constant_zero' if PURE else 'configured'
             original = copy.deepcopy(request)
             assert not validate(request,request['yaw'])['feasible']
             candidates,phases = [],[]
@@ -66,7 +68,7 @@ class WorkerBoundTests(unittest.TestCase):
             options = dict(stop=STOP,final_only=FINAL_ONLY)
             factory = worker.ca.nlpsol
             def inspect(name,plugin,nlp,settings):
-                if options['stop']:
+                if PURE:
                     assert nlp['f'].is_constant() and float(nlp['f'])==0.
                 else:
                     assert not nlp['f'].is_constant()
@@ -84,11 +86,11 @@ class WorkerBoundTests(unittest.TestCase):
             if options['stop']:assert status=='User_Requested_Stop',status
             else:assert abs(validate(request,yaw)['objective']-.18)<1e-6,(yaw,status,cost)
             assert phases[0]['simpleBoundExtraction']
-            assert phases[0]['objectiveMode']==('feasibility' if options['stop'] else 'optimization')
+            assert phases[0]['objectiveMode']==request['objectiveMode']
             assert phases[0]['wallReduction']==reduce_walls(request['walls'])['audit']
             assert phases[0]['wallReduction']['retained']<len(request['walls'])
             assert request==original
-        '''.replace('STOP',repr(stop)).replace('FINAL_ONLY',repr(final_only)))
+        '''.replace('STOP',repr(stop)).replace('FINAL_ONLY',repr(final_only)).replace('PURE',repr(pure)))
 
     def test_extraction_with_mixed_rows_and_original_request_validation(self):
         self.fixed_phase()
@@ -98,6 +100,9 @@ class WorkerBoundTests(unittest.TestCase):
 
     def test_feasibility_early_stop_preserves_validated_incumbent(self):
         self.fixed_phase(stop=True)
+
+    def test_explicit_pure_feasibility_is_independent_of_early_stopping(self):
+        self.fixed_phase(stop=True,pure=True)
 
 
 if __name__ == '__main__':

@@ -132,6 +132,7 @@ class PersistentGenerationTests(unittest.TestCase):
 
     def test_choice_and_queue_sizes_do_not_erase_a_late_candidate_after_reload(self):
         scene=flat_scene();cfg=dict(movement_settings(scene),maxInputs=1,maxPrefixes=1,maxQueuedPrefixes=2,maxChoicesPerType=2,types=['normal'])
+        scene=dict(scene,movementSearch=cfg.copy())
         root=empty_program(scene['initial'],threshold=0.)
         def child(program, choice, **kwargs):
             p=copy.deepcopy(root);q=p['profile'];q.update(airtime=1,position=[1.,1.],velocity=[0.,0.],grounded=[True,True],
@@ -144,6 +145,10 @@ class PersistentGenerationTests(unittest.TestCase):
             report={}
             gen=iter_movement_programs(scene,settings=cfg,checkpoint_tick=1,threshold=0.,persistent=True,report=report)
             first=next(gen);saved=json.loads(json.dumps(report['continuation']));gen.close()
+            # The automatic route queue shrinks a route's final allocation.
+            # Allocation fields can appear in both settings and the scene.
+            cfg=dict(cfg,maxPrefixes=2,maxQueuedPrefixes=1,maxChoicesPerType=3)
+            scene=dict(scene,movementSearch=cfg.copy())
             resumed={}
             rest=list(iter_movement_programs(scene,settings=cfg,checkpoint_tick=1,threshold=0.,persistent=True,
                 report=resumed,continuation=saved))
@@ -151,6 +156,10 @@ class PersistentGenerationTests(unittest.TestCase):
         self.assertEqual(len(rest),29)
         self.assertEqual(resumed['queueDrops'],0)
         self.assertTrue(resumed['continuation']['exhausted'])
+        changed=dict(scene,movementSearch=dict(cfg,maxInputs=2))
+        with self.assertRaisesRegex(ValueError,'Incompatible movement generation'):
+            list(iter_movement_programs(changed,settings=movement_settings(changed),checkpoint_tick=1,
+                threshold=0.,persistent=True,report={},continuation=saved))
 
     def test_interrupted_screen_keeps_the_unprocessed_choice(self):
         scene=flat_scene();cfg=dict(movement_settings(scene),maxPrefixes=1,types=['normal'])
@@ -178,7 +187,8 @@ class PersistentGenerationTests(unittest.TestCase):
         actual=list(itertools.islice(restored,6))
         self.assertEqual(actual,expected)
         self.assertTrue(actual)
-        self.assertNotEqual(first['rows'],actual[0]['rows'])
+        self.assertNotEqual((first['rows'], first['selectedPassages']),
+                            (actual[0]['rows'], actual[0]['selectedPassages']))
 
 
 class StateProtectionTests(unittest.TestCase):

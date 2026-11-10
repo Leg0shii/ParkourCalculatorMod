@@ -1,0 +1,3302 @@
+{
+  "input": "/private/tmp/parkour-real11-initial-run-ticks/standalone/autonomy/experiments/automatic-corridors/matched-allocation-context-2026-11-03/automatic.json.gz",
+  "inputHash": "01d3507aa66836a5ed4703dd73f8473f930a4628493d3e4aba48a8cbe27fb535",
+  "routes": [
+    {
+      "id": 0,
+      "occurrences": [
+        {
+          "occurrence": 0,
+          "label": "B1",
+          "region": {
+            "key": "support:8cd19d078a488045a786f85e59303cb1e10147e28b2d6dcef48bc51fbddaa423",
+            "kind": "support_surface",
+            "cover": [
+              [
+                741.6999999880791,
+                5,
+                -1105.300000011921,
+                742.3000000119209,
+                5,
+                -1104.300000011921
+              ],
+              [
+                741.6999999880791,
+                5,
+                -1102.699999988079,
+                742.3000000119209,
+                5,
+                -1102.699999988079
+              ],
+              [
+                742.3000000119209,
+                5,
+                -1105.300000011921,
+                747.3000000119209,
+                5,
+                -1102.699999988079
+              ]
+            ],
+            "cells": [
+              33,
+              34,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46
+            ],
+            "owners": [
+              "b1"
+            ],
+            "solids": [
+              0
+            ],
+            "predicate": null,
+            "transit_key": ""
+          },
+          "incoming": null,
+          "outgoing": {
+            "key": "transition:2b2e8c6e1585c44fa473fb5bf5030675f22bba3084694a0a631e21b7584badde",
+            "source": "support:8cd19d078a488045a786f85e59303cb1e10147e28b2d6dcef48bc51fbddaa423",
+            "target": "air:b27d2fcb74e1b40d96fe15b60ec28967f7c79b51c980f9d9f1189b242ae01e02",
+            "kind": "support_departure",
+            "cover": [
+              [
+                741.6999999880791,
+                5,
+                -1105.300000011921,
+                747.3000000119209,
+                5,
+                -1104.300000011921
+              ]
+            ],
+            "portals": [],
+            "patches": [
+              273,
+              289
+            ],
+            "movement_families": [
+              "normal",
+              "stepping",
+              "ceiling"
+            ],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          }
+        },
+        {
+          "occurrence": 1,
+          "label": "A1",
+          "region": {
+            "key": "air:b27d2fcb74e1b40d96fe15b60ec28967f7c79b51c980f9d9f1189b242ae01e02",
+            "kind": "air_volume",
+            "cover": [
+              [
+                55.02626376856324,
+                5,
+                -1795.9737362314368,
+                1437.9737362314368,
+                22.200000047683716,
+                -1104.300000011921
+              ]
+            ],
+            "cells": [
+              0,
+              2,
+              4,
+              7,
+              10,
+              13,
+              17,
+              19,
+              21,
+              24,
+              26,
+              28,
+              31,
+              33,
+              35,
+              36,
+              38,
+              40,
+              41,
+              43,
+              44,
+              46
+            ],
+            "owners": [],
+            "solids": [],
+            "predicate": null,
+            "transit_key": "transit:b27d2fcb74e1b40d96fe15b60ec28967f7c79b51c980f9d9f1189b242ae01e02"
+          },
+          "incoming": {
+            "key": "transition:2b2e8c6e1585c44fa473fb5bf5030675f22bba3084694a0a631e21b7584badde",
+            "source": "support:8cd19d078a488045a786f85e59303cb1e10147e28b2d6dcef48bc51fbddaa423",
+            "target": "air:b27d2fcb74e1b40d96fe15b60ec28967f7c79b51c980f9d9f1189b242ae01e02",
+            "kind": "support_departure",
+            "cover": [
+              [
+                741.6999999880791,
+                5,
+                -1105.300000011921,
+                747.3000000119209,
+                5,
+                -1104.300000011921
+              ]
+            ],
+            "portals": [],
+            "patches": [
+              273,
+              289
+            ],
+            "movement_families": [
+              "normal",
+              "stepping",
+              "ceiling"
+            ],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          },
+          "outgoing": {
+            "key": "transition:360a707c4564350023155349b262e23e19317174b6128d6639d25c12e732f97b",
+            "source": "air:b27d2fcb74e1b40d96fe15b60ec28967f7c79b51c980f9d9f1189b242ae01e02",
+            "target": "air:ed844002354adb10e7d8c84c0bb44b7aa739f86d45522b232bccb610aea2a148",
+            "kind": "open_portal",
+            "cover": [
+              [
+                55.02626376856324,
+                6,
+                -1795.9737362314368,
+                1437.9737362314368,
+                22.200000047683716,
+                -1104.300000011921
+              ]
+            ],
+            "portals": [
+              1,
+              3,
+              13,
+              14,
+              16,
+              24,
+              26,
+              34,
+              35,
+              45,
+              46,
+              52,
+              59,
+              61,
+              67,
+              68,
+              72,
+              77,
+              79,
+              85,
+              86,
+              90,
+              95,
+              97,
+              98,
+              106,
+              108,
+              109,
+              114,
+              115,
+              116,
+              117,
+              118,
+              120,
+              129,
+              130,
+              131,
+              134,
+              135,
+              137
+            ],
+            "patches": [],
+            "movement_families": [],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          }
+        },
+        {
+          "occurrence": 2,
+          "label": "A2",
+          "region": {
+            "key": "air:ed844002354adb10e7d8c84c0bb44b7aa739f86d45522b232bccb610aea2a148",
+            "kind": "air_volume",
+            "cover": [
+              [
+                55.02626376856324,
+                6,
+                -1795.9737362314368,
+                1437.9737362314368,
+                22.200000047683716,
+                -1101.300000011921
+              ]
+            ],
+            "cells": [
+              0,
+              2,
+              4,
+              7,
+              10,
+              13,
+              17,
+              19,
+              21,
+              24,
+              26,
+              28,
+              29,
+              31,
+              33,
+              34,
+              35,
+              36,
+              37,
+              40,
+              41,
+              43,
+              44,
+              45,
+              46
+            ],
+            "owners": [],
+            "solids": [],
+            "predicate": null,
+            "transit_key": "transit:ed844002354adb10e7d8c84c0bb44b7aa739f86d45522b232bccb610aea2a148"
+          },
+          "incoming": {
+            "key": "transition:360a707c4564350023155349b262e23e19317174b6128d6639d25c12e732f97b",
+            "source": "air:b27d2fcb74e1b40d96fe15b60ec28967f7c79b51c980f9d9f1189b242ae01e02",
+            "target": "air:ed844002354adb10e7d8c84c0bb44b7aa739f86d45522b232bccb610aea2a148",
+            "kind": "open_portal",
+            "cover": [
+              [
+                55.02626376856324,
+                6,
+                -1795.9737362314368,
+                1437.9737362314368,
+                22.200000047683716,
+                -1104.300000011921
+              ]
+            ],
+            "portals": [
+              1,
+              3,
+              13,
+              14,
+              16,
+              24,
+              26,
+              34,
+              35,
+              45,
+              46,
+              52,
+              59,
+              61,
+              67,
+              68,
+              72,
+              77,
+              79,
+              85,
+              86,
+              90,
+              95,
+              97,
+              98,
+              106,
+              108,
+              109,
+              114,
+              115,
+              116,
+              117,
+              118,
+              120,
+              129,
+              130,
+              131,
+              134,
+              135,
+              137
+            ],
+            "patches": [],
+            "movement_families": [],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          },
+          "outgoing": {
+            "key": "transition:3351a51532713649c79414cbcba8d322fc936dbc849cd9c2fdcf56984d1b09e2",
+            "source": "air:ed844002354adb10e7d8c84c0bb44b7aa739f86d45522b232bccb610aea2a148",
+            "target": "support:ad6e37621cf682e0abbfb77d3cf4c0f648d8de4ea80f22d731ab100b6fe0171b",
+            "kind": "support_arrival",
+            "cover": [
+              [
+                740.6999999880791,
+                6,
+                -1104.300000011921,
+                742.3000000119209,
+                6,
+                -1102.699999988079
+              ]
+            ],
+            "portals": [],
+            "patches": [
+              249
+            ],
+            "movement_families": [
+              "normal",
+              "stepping",
+              "ceiling"
+            ],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          }
+        },
+        {
+          "occurrence": 3,
+          "label": "B2",
+          "region": {
+            "key": "support:ad6e37621cf682e0abbfb77d3cf4c0f648d8de4ea80f22d731ab100b6fe0171b",
+            "kind": "support_surface",
+            "cover": [
+              [
+                740.6999999880791,
+                6,
+                -1104.300000011921,
+                742.3000000119209,
+                6,
+                -1102.699999988079
+              ]
+            ],
+            "cells": [
+              31,
+              33,
+              34,
+              35,
+              36,
+              37,
+              41,
+              44,
+              45
+            ],
+            "owners": [
+              "b2"
+            ],
+            "solids": [
+              1
+            ],
+            "predicate": null,
+            "transit_key": ""
+          },
+          "incoming": {
+            "key": "transition:3351a51532713649c79414cbcba8d322fc936dbc849cd9c2fdcf56984d1b09e2",
+            "source": "air:ed844002354adb10e7d8c84c0bb44b7aa739f86d45522b232bccb610aea2a148",
+            "target": "support:ad6e37621cf682e0abbfb77d3cf4c0f648d8de4ea80f22d731ab100b6fe0171b",
+            "kind": "support_arrival",
+            "cover": [
+              [
+                740.6999999880791,
+                6,
+                -1104.300000011921,
+                742.3000000119209,
+                6,
+                -1102.699999988079
+              ]
+            ],
+            "portals": [],
+            "patches": [
+              249
+            ],
+            "movement_families": [
+              "normal",
+              "stepping",
+              "ceiling"
+            ],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          },
+          "outgoing": {
+            "key": "transition:71e34649cd4d0091ce1f86ffa7d74f3f76b7ef7b6415e55452f1c09f2be65b57",
+            "source": "support:ad6e37621cf682e0abbfb77d3cf4c0f648d8de4ea80f22d731ab100b6fe0171b",
+            "target": "air:ed844002354adb10e7d8c84c0bb44b7aa739f86d45522b232bccb610aea2a148",
+            "kind": "support_departure",
+            "cover": [
+              [
+                740.6999999880791,
+                6,
+                -1104.300000011921,
+                742.3000000119209,
+                6,
+                -1102.699999988079
+              ]
+            ],
+            "portals": [],
+            "patches": [
+              249
+            ],
+            "movement_families": [
+              "normal",
+              "stepping",
+              "ceiling"
+            ],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          }
+        },
+        {
+          "occurrence": 4,
+          "label": "A2",
+          "region": {
+            "key": "air:ed844002354adb10e7d8c84c0bb44b7aa739f86d45522b232bccb610aea2a148",
+            "kind": "air_volume",
+            "cover": [
+              [
+                55.02626376856324,
+                6,
+                -1795.9737362314368,
+                1437.9737362314368,
+                22.200000047683716,
+                -1101.300000011921
+              ]
+            ],
+            "cells": [
+              0,
+              2,
+              4,
+              7,
+              10,
+              13,
+              17,
+              19,
+              21,
+              24,
+              26,
+              28,
+              29,
+              31,
+              33,
+              34,
+              35,
+              36,
+              37,
+              40,
+              41,
+              43,
+              44,
+              45,
+              46
+            ],
+            "owners": [],
+            "solids": [],
+            "predicate": null,
+            "transit_key": "transit:ed844002354adb10e7d8c84c0bb44b7aa739f86d45522b232bccb610aea2a148"
+          },
+          "incoming": {
+            "key": "transition:71e34649cd4d0091ce1f86ffa7d74f3f76b7ef7b6415e55452f1c09f2be65b57",
+            "source": "support:ad6e37621cf682e0abbfb77d3cf4c0f648d8de4ea80f22d731ab100b6fe0171b",
+            "target": "air:ed844002354adb10e7d8c84c0bb44b7aa739f86d45522b232bccb610aea2a148",
+            "kind": "support_departure",
+            "cover": [
+              [
+                740.6999999880791,
+                6,
+                -1104.300000011921,
+                742.3000000119209,
+                6,
+                -1102.699999988079
+              ]
+            ],
+            "portals": [],
+            "patches": [
+              249
+            ],
+            "movement_families": [
+              "normal",
+              "stepping",
+              "ceiling"
+            ],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          },
+          "outgoing": {
+            "key": "transition:643cf61192ba4fb94c04dbd99dfd332e2e513dfb32140e5da03bdf95ff446ae7",
+            "source": "air:ed844002354adb10e7d8c84c0bb44b7aa739f86d45522b232bccb610aea2a148",
+            "target": "air:f369db5edb99fdf31e6f555674b1e976300cdde678542f1df5699aba58939082",
+            "kind": "open_portal",
+            "cover": [
+              [
+                55.02626376856324,
+                7,
+                -1795.9737362314368,
+                1437.9737362314368,
+                22.200000047683716,
+                -1101.300000011921
+              ]
+            ],
+            "portals": [
+              1,
+              3,
+              13,
+              16,
+              24,
+              26,
+              45,
+              46,
+              52,
+              59,
+              61,
+              67,
+              68,
+              72,
+              77,
+              79,
+              80,
+              85,
+              86,
+              89,
+              90,
+              92,
+              97,
+              98,
+              99,
+              114,
+              117,
+              118,
+              119,
+              120,
+              121,
+              134,
+              135,
+              136,
+              137,
+              138
+            ],
+            "patches": [],
+            "movement_families": [],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          }
+        },
+        {
+          "occurrence": 5,
+          "label": "A3",
+          "region": {
+            "key": "air:f369db5edb99fdf31e6f555674b1e976300cdde678542f1df5699aba58939082",
+            "kind": "air_volume",
+            "cover": [
+              [
+                55.02626376856324,
+                7,
+                -1795.9737362314368,
+                1437.9737362314368,
+                22.200000047683716,
+                -1100.300000011921
+              ]
+            ],
+            "cells": [
+              0,
+              2,
+              4,
+              10,
+              13,
+              17,
+              19,
+              21,
+              22,
+              24,
+              26,
+              28,
+              29,
+              31,
+              35,
+              36,
+              37,
+              43,
+              44,
+              45,
+              46
+            ],
+            "owners": [],
+            "solids": [],
+            "predicate": null,
+            "transit_key": "transit:f369db5edb99fdf31e6f555674b1e976300cdde678542f1df5699aba58939082"
+          },
+          "incoming": {
+            "key": "transition:643cf61192ba4fb94c04dbd99dfd332e2e513dfb32140e5da03bdf95ff446ae7",
+            "source": "air:ed844002354adb10e7d8c84c0bb44b7aa739f86d45522b232bccb610aea2a148",
+            "target": "air:f369db5edb99fdf31e6f555674b1e976300cdde678542f1df5699aba58939082",
+            "kind": "open_portal",
+            "cover": [
+              [
+                55.02626376856324,
+                7,
+                -1795.9737362314368,
+                1437.9737362314368,
+                22.200000047683716,
+                -1101.300000011921
+              ]
+            ],
+            "portals": [
+              1,
+              3,
+              13,
+              16,
+              24,
+              26,
+              45,
+              46,
+              52,
+              59,
+              61,
+              67,
+              68,
+              72,
+              77,
+              79,
+              80,
+              85,
+              86,
+              89,
+              90,
+              92,
+              97,
+              98,
+              99,
+              114,
+              117,
+              118,
+              119,
+              120,
+              121,
+              134,
+              135,
+              136,
+              137,
+              138
+            ],
+            "patches": [],
+            "movement_families": [],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          },
+          "outgoing": {
+            "key": "transition:0e5f06b9930aed259e003d79243241b1b96108d45de15082ab418b088aad7674",
+            "source": "air:f369db5edb99fdf31e6f555674b1e976300cdde678542f1df5699aba58939082",
+            "target": "support:ec347572a973b91b35a690fc9aec4f7371a8ac22850a6094d49bcc760fa058f8",
+            "kind": "support_arrival",
+            "cover": [
+              [
+                737.6999999880791,
+                7,
+                -1101.300000011921,
+                739.3000000119209,
+                7,
+                -1100.300000011921
+              ]
+            ],
+            "portals": [],
+            "patches": [
+              199
+            ],
+            "movement_families": [
+              "normal",
+              "stepping",
+              "ceiling"
+            ],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          }
+        },
+        {
+          "occurrence": 6,
+          "label": "B3",
+          "region": {
+            "key": "support:ec347572a973b91b35a690fc9aec4f7371a8ac22850a6094d49bcc760fa058f8",
+            "kind": "support_surface",
+            "cover": [
+              [
+                737.6999999880791,
+                7,
+                -1101.300000011921,
+                739.3000000119209,
+                7,
+                -1099.699999988079
+              ]
+            ],
+            "cells": [
+              24,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31
+            ],
+            "owners": [
+              "b3"
+            ],
+            "solids": [
+              2
+            ],
+            "predicate": null,
+            "transit_key": ""
+          },
+          "incoming": {
+            "key": "transition:0e5f06b9930aed259e003d79243241b1b96108d45de15082ab418b088aad7674",
+            "source": "air:f369db5edb99fdf31e6f555674b1e976300cdde678542f1df5699aba58939082",
+            "target": "support:ec347572a973b91b35a690fc9aec4f7371a8ac22850a6094d49bcc760fa058f8",
+            "kind": "support_arrival",
+            "cover": [
+              [
+                737.6999999880791,
+                7,
+                -1101.300000011921,
+                739.3000000119209,
+                7,
+                -1100.300000011921
+              ]
+            ],
+            "portals": [],
+            "patches": [
+              199
+            ],
+            "movement_families": [
+              "normal",
+              "stepping",
+              "ceiling"
+            ],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          },
+          "outgoing": {
+            "key": "transition:941cf1c93b63dcb3edb574284ef099e331012b23e8ad42d10a259143d9a669d1",
+            "source": "support:ec347572a973b91b35a690fc9aec4f7371a8ac22850a6094d49bcc760fa058f8",
+            "target": "air:f79feda4ee2cc42bb8c2f0291eadb807d724ae11134cf91b64bcffbedaeab413",
+            "kind": "support_departure",
+            "cover": [
+              [
+                737.6999999880791,
+                7,
+                -1101.300000011921,
+                739.3000000119209,
+                7,
+                -1099.699999988079
+              ]
+            ],
+            "portals": [],
+            "patches": [
+              199
+            ],
+            "movement_families": [
+              "normal",
+              "stepping",
+              "ceiling"
+            ],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          }
+        },
+        {
+          "occurrence": 7,
+          "label": "A4",
+          "region": {
+            "key": "air:f79feda4ee2cc42bb8c2f0291eadb807d724ae11134cf91b64bcffbedaeab413",
+            "kind": "air_volume",
+            "cover": [
+              [
+                735.3000000119209,
+                7,
+                -1795.9737362314368,
+                1437.9737362314368,
+                22.200000047683716,
+                -413.02626376856324
+              ]
+            ],
+            "cells": [
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              35,
+              36,
+              37,
+              43,
+              44,
+              45,
+              46
+            ],
+            "owners": [],
+            "solids": [],
+            "predicate": null,
+            "transit_key": "transit:f79feda4ee2cc42bb8c2f0291eadb807d724ae11134cf91b64bcffbedaeab413"
+          },
+          "incoming": {
+            "key": "transition:941cf1c93b63dcb3edb574284ef099e331012b23e8ad42d10a259143d9a669d1",
+            "source": "support:ec347572a973b91b35a690fc9aec4f7371a8ac22850a6094d49bcc760fa058f8",
+            "target": "air:f79feda4ee2cc42bb8c2f0291eadb807d724ae11134cf91b64bcffbedaeab413",
+            "kind": "support_departure",
+            "cover": [
+              [
+                737.6999999880791,
+                7,
+                -1101.300000011921,
+                739.3000000119209,
+                7,
+                -1099.699999988079
+              ]
+            ],
+            "portals": [],
+            "patches": [
+              199
+            ],
+            "movement_families": [
+              "normal",
+              "stepping",
+              "ceiling"
+            ],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          },
+          "outgoing": {
+            "key": "transition:238b68f63d4f15417a8ed19ff240dea03ff42f940f8160b8f633902b1aa271d0",
+            "source": "air:f79feda4ee2cc42bb8c2f0291eadb807d724ae11134cf91b64bcffbedaeab413",
+            "target": "air:4790974757efd99f6aadb9f55c9247bf00c166f1b9419432a4dee61d940133c1",
+            "kind": "open_portal",
+            "cover": [
+              [
+                735.3000000119209,
+                7.5,
+                -1795.9737362314368,
+                1437.9737362314368,
+                22.200000047683716,
+                -413.02626376856324
+              ]
+            ],
+            "portals": [
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              79,
+              80,
+              81,
+              89,
+              90,
+              91,
+              92,
+              93,
+              97,
+              98,
+              99,
+              114,
+              117,
+              118,
+              119,
+              120,
+              121,
+              134,
+              135,
+              136,
+              137,
+              138
+            ],
+            "patches": [],
+            "movement_families": [],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          }
+        },
+        {
+          "occurrence": 8,
+          "label": "A5",
+          "region": {
+            "key": "air:4790974757efd99f6aadb9f55c9247bf00c166f1b9419432a4dee61d940133c1",
+            "kind": "air_volume",
+            "cover": [
+              [
+                731.3000000119209,
+                7.5,
+                -1795.9737362314368,
+                1437.9737362314368,
+                22.200000047683716,
+                -413.02626376856324
+              ]
+            ],
+            "cells": [
+              9,
+              10,
+              11,
+              13,
+              14,
+              15,
+              16,
+              17,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              28,
+              29,
+              30,
+              31,
+              35,
+              36,
+              37,
+              43,
+              44,
+              45,
+              46
+            ],
+            "owners": [],
+            "solids": [],
+            "predicate": null,
+            "transit_key": "transit:4790974757efd99f6aadb9f55c9247bf00c166f1b9419432a4dee61d940133c1"
+          },
+          "incoming": {
+            "key": "transition:238b68f63d4f15417a8ed19ff240dea03ff42f940f8160b8f633902b1aa271d0",
+            "source": "air:f79feda4ee2cc42bb8c2f0291eadb807d724ae11134cf91b64bcffbedaeab413",
+            "target": "air:4790974757efd99f6aadb9f55c9247bf00c166f1b9419432a4dee61d940133c1",
+            "kind": "open_portal",
+            "cover": [
+              [
+                735.3000000119209,
+                7.5,
+                -1795.9737362314368,
+                1437.9737362314368,
+                22.200000047683716,
+                -413.02626376856324
+              ]
+            ],
+            "portals": [
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              79,
+              80,
+              81,
+              89,
+              90,
+              91,
+              92,
+              93,
+              97,
+              98,
+              99,
+              114,
+              117,
+              118,
+              119,
+              120,
+              121,
+              134,
+              135,
+              136,
+              137,
+              138
+            ],
+            "patches": [],
+            "movement_families": [],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          },
+          "outgoing": {
+            "key": "transition:a723bbc36f1dd6b3a4834f9e825613423274e4b4efd9653525128e88e470487c",
+            "source": "air:4790974757efd99f6aadb9f55c9247bf00c166f1b9419432a4dee61d940133c1",
+            "target": "support:3cfeae2be363663d26c842a051d0c838ddb6bf0371cb146e7437d1056d667448",
+            "kind": "support_arrival",
+            "cover": [
+              [
+                733.6999999880791,
+                7.5,
+                -1100.300000011921,
+                735.3000000119209,
+                7.5,
+                -1098.699999988079
+              ]
+            ],
+            "portals": [],
+            "patches": [
+              161
+            ],
+            "movement_families": [
+              "normal",
+              "stepping",
+              "ceiling"
+            ],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          }
+        },
+        {
+          "occurrence": 9,
+          "label": "B4",
+          "region": {
+            "key": "support:3cfeae2be363663d26c842a051d0c838ddb6bf0371cb146e7437d1056d667448",
+            "kind": "support_surface",
+            "cover": [
+              [
+                733.6999999880791,
+                7.5,
+                -1100.300000011921,
+                735.3000000119209,
+                7.5,
+                -1098.699999988079
+              ]
+            ],
+            "cells": [
+              17,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24
+            ],
+            "owners": [
+              "b4"
+            ],
+            "solids": [
+              3
+            ],
+            "predicate": null,
+            "transit_key": ""
+          },
+          "incoming": {
+            "key": "transition:a723bbc36f1dd6b3a4834f9e825613423274e4b4efd9653525128e88e470487c",
+            "source": "air:4790974757efd99f6aadb9f55c9247bf00c166f1b9419432a4dee61d940133c1",
+            "target": "support:3cfeae2be363663d26c842a051d0c838ddb6bf0371cb146e7437d1056d667448",
+            "kind": "support_arrival",
+            "cover": [
+              [
+                733.6999999880791,
+                7.5,
+                -1100.300000011921,
+                735.3000000119209,
+                7.5,
+                -1098.699999988079
+              ]
+            ],
+            "portals": [],
+            "patches": [
+              161
+            ],
+            "movement_families": [
+              "normal",
+              "stepping",
+              "ceiling"
+            ],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          },
+          "outgoing": {
+            "key": "transition:6b6771334e71bf5734d75dc2f02f5536a86249ca1f9c990ec2404dfcacaea3fb",
+            "source": "support:3cfeae2be363663d26c842a051d0c838ddb6bf0371cb146e7437d1056d667448",
+            "target": "air:1c9e06e502b571e36625149b57b11968eb718ccb95c7e829cc36d3fac68029dd",
+            "kind": "support_departure",
+            "cover": [
+              [
+                733.6999999880791,
+                7.5,
+                -1100.300000011921,
+                735.3000000119209,
+                7.5,
+                -1098.699999988079
+              ]
+            ],
+            "portals": [],
+            "patches": [
+              161
+            ],
+            "movement_families": [
+              "normal",
+              "stepping",
+              "ceiling"
+            ],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          }
+        },
+        {
+          "occurrence": 10,
+          "label": "A6",
+          "region": {
+            "key": "air:1c9e06e502b571e36625149b57b11968eb718ccb95c7e829cc36d3fac68029dd",
+            "kind": "air_volume",
+            "cover": [
+              [
+                55.02626376856324,
+                7.5,
+                -1795.9737362314368,
+                1437.9737362314368,
+                22.200000047683716,
+                -1095.300000011921
+              ]
+            ],
+            "cells": [
+              0,
+              4,
+              5,
+              8,
+              10,
+              11,
+              13,
+              14,
+              17,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              28,
+              29,
+              30,
+              31,
+              35,
+              36,
+              37,
+              43,
+              44,
+              45,
+              46
+            ],
+            "owners": [],
+            "solids": [],
+            "predicate": null,
+            "transit_key": "transit:1c9e06e502b571e36625149b57b11968eb718ccb95c7e829cc36d3fac68029dd"
+          },
+          "incoming": {
+            "key": "transition:6b6771334e71bf5734d75dc2f02f5536a86249ca1f9c990ec2404dfcacaea3fb",
+            "source": "support:3cfeae2be363663d26c842a051d0c838ddb6bf0371cb146e7437d1056d667448",
+            "target": "air:1c9e06e502b571e36625149b57b11968eb718ccb95c7e829cc36d3fac68029dd",
+            "kind": "support_departure",
+            "cover": [
+              [
+                733.6999999880791,
+                7.5,
+                -1100.300000011921,
+                735.3000000119209,
+                7.5,
+                -1098.699999988079
+              ]
+            ],
+            "portals": [],
+            "patches": [
+              161
+            ],
+            "movement_families": [
+              "normal",
+              "stepping",
+              "ceiling"
+            ],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          },
+          "outgoing": {
+            "key": "transition:aea438642d2642324e0b182a3987abcf0ca18befdad4b023776848b7858e2ae8",
+            "source": "air:1c9e06e502b571e36625149b57b11968eb718ccb95c7e829cc36d3fac68029dd",
+            "target": "air:f7ebe6b50c1aae861781506676e4e66d3efc360b6cae70a44d0e1c08c84dc879",
+            "kind": "open_portal",
+            "cover": [
+              [
+                55.02626376856324,
+                7.5,
+                -1795.9737362314368,
+                729.6999999880791,
+                22.200000047683716,
+                -1095.300000011921
+              ]
+            ],
+            "portals": [
+              3,
+              4,
+              22,
+              23,
+              24,
+              25,
+              26,
+              28,
+              30,
+              36,
+              37,
+              38,
+              44,
+              45,
+              47,
+              51
+            ],
+            "patches": [],
+            "movement_families": [],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          }
+        },
+        {
+          "occurrence": 11,
+          "label": "A7",
+          "region": {
+            "key": "air:f7ebe6b50c1aae861781506676e4e66d3efc360b6cae70a44d0e1c08c84dc879",
+            "kind": "air_volume",
+            "cover": [
+              [
+                55.02626376856324,
+                7,
+                -1795.9737362314368,
+                729.6999999880791,
+                22.200000047683716,
+                -413.02626376856324
+              ]
+            ],
+            "cells": [
+              0,
+              2,
+              3,
+              4,
+              5,
+              6,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "owners": [],
+            "solids": [],
+            "predicate": null,
+            "transit_key": "transit:f7ebe6b50c1aae861781506676e4e66d3efc360b6cae70a44d0e1c08c84dc879"
+          },
+          "incoming": {
+            "key": "transition:aea438642d2642324e0b182a3987abcf0ca18befdad4b023776848b7858e2ae8",
+            "source": "air:1c9e06e502b571e36625149b57b11968eb718ccb95c7e829cc36d3fac68029dd",
+            "target": "air:f7ebe6b50c1aae861781506676e4e66d3efc360b6cae70a44d0e1c08c84dc879",
+            "kind": "open_portal",
+            "cover": [
+              [
+                55.02626376856324,
+                7.5,
+                -1795.9737362314368,
+                729.6999999880791,
+                22.200000047683716,
+                -1095.300000011921
+              ]
+            ],
+            "portals": [
+              3,
+              4,
+              22,
+              23,
+              24,
+              25,
+              26,
+              28,
+              30,
+              36,
+              37,
+              38,
+              44,
+              45,
+              47,
+              51
+            ],
+            "patches": [],
+            "movement_families": [],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          },
+          "outgoing": {
+            "key": "transition:93557b901d9089cd3ae57bb123a476722977607de1783289c2282588c68e9dbf",
+            "source": "air:f7ebe6b50c1aae861781506676e4e66d3efc360b6cae70a44d0e1c08c84dc879",
+            "target": "support:125a129c1d4dc56b878907fb79b5220c7d30c87cdbdc80c63c8d0e498a3df4d7",
+            "kind": "support_arrival",
+            "cover": [
+              [
+                728.6999999880791,
+                7,
+                -1095.300000011921,
+                729.6999999880791,
+                7,
+                -1093.699999988079
+              ]
+            ],
+            "portals": [],
+            "patches": [
+              50
+            ],
+            "movement_families": [
+              "normal",
+              "stepping",
+              "ceiling"
+            ],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          }
+        },
+        {
+          "occurrence": 12,
+          "label": "B7",
+          "region": {
+            "key": "support:125a129c1d4dc56b878907fb79b5220c7d30c87cdbdc80c63c8d0e498a3df4d7",
+            "kind": "support_surface",
+            "cover": [
+              [
+                728.6999999880791,
+                7,
+                -1095.300000011921,
+                729.6999999880791,
+                7,
+                -1093.699999988079
+              ],
+              [
+                729.6999999880791,
+                7,
+                -1095.300000011921,
+                730.3000000119209,
+                7,
+                -1095.300000011921
+              ],
+              [
+                729.6999999880791,
+                7,
+                -1093.699999988079,
+                730.3000000119209,
+                7,
+                -1093.699999988079
+              ]
+            ],
+            "cells": [
+              0,
+              2,
+              3,
+              4,
+              5,
+              6,
+              8,
+              9,
+              11,
+              12,
+              16
+            ],
+            "owners": [
+              "b7"
+            ],
+            "solids": [
+              6
+            ],
+            "predicate": null,
+            "transit_key": ""
+          },
+          "incoming": {
+            "key": "transition:93557b901d9089cd3ae57bb123a476722977607de1783289c2282588c68e9dbf",
+            "source": "air:f7ebe6b50c1aae861781506676e4e66d3efc360b6cae70a44d0e1c08c84dc879",
+            "target": "support:125a129c1d4dc56b878907fb79b5220c7d30c87cdbdc80c63c8d0e498a3df4d7",
+            "kind": "support_arrival",
+            "cover": [
+              [
+                728.6999999880791,
+                7,
+                -1095.300000011921,
+                729.6999999880791,
+                7,
+                -1093.699999988079
+              ]
+            ],
+            "portals": [],
+            "patches": [
+              50
+            ],
+            "movement_families": [
+              "normal",
+              "stepping",
+              "ceiling"
+            ],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          },
+          "outgoing": {
+            "key": "transition:a7eec1b6093a0526e7075298afe09fa96fbf57ebc65325bd574acb0e28291500",
+            "source": "support:125a129c1d4dc56b878907fb79b5220c7d30c87cdbdc80c63c8d0e498a3df4d7",
+            "target": "terminal:7bace983516273be4a74b4e988420e8a1e36d662d24b04df304e0063e660a31f",
+            "kind": "finish",
+            "cover": [],
+            "portals": [],
+            "patches": [],
+            "movement_families": [
+              "normal",
+              "stepping",
+              "ceiling"
+            ],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          }
+        },
+        {
+          "occurrence": 13,
+          "label": "FINISH",
+          "region": {
+            "key": "terminal:7bace983516273be4a74b4e988420e8a1e36d662d24b04df304e0063e660a31f",
+            "kind": "terminal_predicate",
+            "cover": [],
+            "cells": [],
+            "owners": [],
+            "solids": [],
+            "predicate": {
+              "kind": "landing_height_region",
+              "height": 7,
+              "rows": [
+                {
+                  "mode": "X",
+                  "cmp": "LE",
+                  "rhs": 729.7,
+                  "strict": true
+                },
+                {
+                  "mode": "Z",
+                  "cmp": "GE",
+                  "rhs": -1095.3
+                }
+              ]
+            },
+            "transit_key": ""
+          },
+          "incoming": {
+            "key": "transition:a7eec1b6093a0526e7075298afe09fa96fbf57ebc65325bd574acb0e28291500",
+            "source": "support:125a129c1d4dc56b878907fb79b5220c7d30c87cdbdc80c63c8d0e498a3df4d7",
+            "target": "terminal:7bace983516273be4a74b4e988420e8a1e36d662d24b04df304e0063e660a31f",
+            "kind": "finish",
+            "cover": [],
+            "portals": [],
+            "patches": [],
+            "movement_families": [
+              "normal",
+              "stepping",
+              "ceiling"
+            ],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          },
+          "outgoing": null
+        }
+      ]
+    },
+    {
+      "id": 26,
+      "occurrences": [
+        {
+          "occurrence": 0,
+          "label": "B1",
+          "region": {
+            "key": "support:8cd19d078a488045a786f85e59303cb1e10147e28b2d6dcef48bc51fbddaa423",
+            "kind": "support_surface",
+            "cover": [
+              [
+                741.6999999880791,
+                5,
+                -1105.300000011921,
+                742.3000000119209,
+                5,
+                -1104.300000011921
+              ],
+              [
+                741.6999999880791,
+                5,
+                -1102.699999988079,
+                742.3000000119209,
+                5,
+                -1102.699999988079
+              ],
+              [
+                742.3000000119209,
+                5,
+                -1105.300000011921,
+                747.3000000119209,
+                5,
+                -1102.699999988079
+              ]
+            ],
+            "cells": [
+              33,
+              34,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46
+            ],
+            "owners": [
+              "b1"
+            ],
+            "solids": [
+              0
+            ],
+            "predicate": null,
+            "transit_key": ""
+          },
+          "incoming": null,
+          "outgoing": {
+            "key": "transition:54d10c3e173eccaac5dbd107ddee70b4cc6f090fa3635f75e653002c517c3088",
+            "source": "support:8cd19d078a488045a786f85e59303cb1e10147e28b2d6dcef48bc51fbddaa423",
+            "target": "air:6637f27f97755d1dab015cedd14c1763db9ca8edc6e97bd0169d13acfcc3e71c",
+            "kind": "support_departure",
+            "cover": [
+              [
+                742.3000000119209,
+                5,
+                -1105.300000011921,
+                747.3000000119209,
+                5,
+                -1102.699999988079
+              ]
+            ],
+            "portals": [],
+            "patches": [
+              273,
+              289
+            ],
+            "movement_families": [
+              "normal",
+              "stepping",
+              "ceiling"
+            ],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          }
+        },
+        {
+          "occurrence": 1,
+          "label": "A1",
+          "region": {
+            "key": "air:6637f27f97755d1dab015cedd14c1763db9ca8edc6e97bd0169d13acfcc3e71c",
+            "kind": "air_volume",
+            "cover": [
+              [
+                742.3000000119209,
+                5,
+                -1795.9737362314368,
+                1437.9737362314368,
+                22.200000047683716,
+                -413.02626376856324
+              ]
+            ],
+            "cells": [
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46
+            ],
+            "owners": [],
+            "solids": [],
+            "predicate": null,
+            "transit_key": "transit:6637f27f97755d1dab015cedd14c1763db9ca8edc6e97bd0169d13acfcc3e71c"
+          },
+          "incoming": {
+            "key": "transition:54d10c3e173eccaac5dbd107ddee70b4cc6f090fa3635f75e653002c517c3088",
+            "source": "support:8cd19d078a488045a786f85e59303cb1e10147e28b2d6dcef48bc51fbddaa423",
+            "target": "air:6637f27f97755d1dab015cedd14c1763db9ca8edc6e97bd0169d13acfcc3e71c",
+            "kind": "support_departure",
+            "cover": [
+              [
+                742.3000000119209,
+                5,
+                -1105.300000011921,
+                747.3000000119209,
+                5,
+                -1102.699999988079
+              ]
+            ],
+            "portals": [],
+            "patches": [
+              273,
+              289
+            ],
+            "movement_families": [
+              "normal",
+              "stepping",
+              "ceiling"
+            ],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          },
+          "outgoing": {
+            "key": "transition:1bb352a11e4ab574e2453ceffd205388410a308181f6da3b7fcee8db7a0683b8",
+            "source": "air:6637f27f97755d1dab015cedd14c1763db9ca8edc6e97bd0169d13acfcc3e71c",
+            "target": "air:a1abb8336002db56f36051865159d884774b7168b0c12e185bda1108a9324984",
+            "kind": "open_portal",
+            "cover": [
+              [
+                742.3000000119209,
+                6,
+                -1795.9737362314368,
+                1437.9737362314368,
+                22.200000047683716,
+                -413.02626376856324
+              ]
+            ],
+            "portals": [
+              110,
+              113,
+              114,
+              115,
+              116,
+              117,
+              118,
+              119,
+              120,
+              121,
+              129,
+              130,
+              131,
+              134,
+              135,
+              136,
+              137,
+              138
+            ],
+            "patches": [],
+            "movement_families": [],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          }
+        },
+        {
+          "occurrence": 2,
+          "label": "A2",
+          "region": {
+            "key": "air:a1abb8336002db56f36051865159d884774b7168b0c12e185bda1108a9324984",
+            "kind": "air_volume",
+            "cover": [
+              [
+                739.3000000119209,
+                6,
+                -1795.9737362314368,
+                1437.9737362314368,
+                22.200000047683716,
+                -413.02626376856324
+              ]
+            ],
+            "cells": [
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              33,
+              34,
+              35,
+              36,
+              37,
+              40,
+              41,
+              43,
+              44,
+              45,
+              46
+            ],
+            "owners": [],
+            "solids": [],
+            "predicate": null,
+            "transit_key": "transit:a1abb8336002db56f36051865159d884774b7168b0c12e185bda1108a9324984"
+          },
+          "incoming": {
+            "key": "transition:1bb352a11e4ab574e2453ceffd205388410a308181f6da3b7fcee8db7a0683b8",
+            "source": "air:6637f27f97755d1dab015cedd14c1763db9ca8edc6e97bd0169d13acfcc3e71c",
+            "target": "air:a1abb8336002db56f36051865159d884774b7168b0c12e185bda1108a9324984",
+            "kind": "open_portal",
+            "cover": [
+              [
+                742.3000000119209,
+                6,
+                -1795.9737362314368,
+                1437.9737362314368,
+                22.200000047683716,
+                -413.02626376856324
+              ]
+            ],
+            "portals": [
+              110,
+              113,
+              114,
+              115,
+              116,
+              117,
+              118,
+              119,
+              120,
+              121,
+              129,
+              130,
+              131,
+              134,
+              135,
+              136,
+              137,
+              138
+            ],
+            "patches": [],
+            "movement_families": [],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          },
+          "outgoing": {
+            "key": "transition:22a4e6692e6afebc718df2acac349c25e33e3bb2171265086b8a0a7b188424a9",
+            "source": "air:a1abb8336002db56f36051865159d884774b7168b0c12e185bda1108a9324984",
+            "target": "support:ad6e37621cf682e0abbfb77d3cf4c0f648d8de4ea80f22d731ab100b6fe0171b",
+            "kind": "support_arrival",
+            "cover": [
+              [
+                740.6999999880791,
+                6,
+                -1104.300000011921,
+                742.3000000119209,
+                6,
+                -1102.699999988079
+              ]
+            ],
+            "portals": [],
+            "patches": [
+              249
+            ],
+            "movement_families": [
+              "normal",
+              "stepping",
+              "ceiling"
+            ],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          }
+        },
+        {
+          "occurrence": 3,
+          "label": "B2",
+          "region": {
+            "key": "support:ad6e37621cf682e0abbfb77d3cf4c0f648d8de4ea80f22d731ab100b6fe0171b",
+            "kind": "support_surface",
+            "cover": [
+              [
+                740.6999999880791,
+                6,
+                -1104.300000011921,
+                742.3000000119209,
+                6,
+                -1102.699999988079
+              ]
+            ],
+            "cells": [
+              31,
+              33,
+              34,
+              35,
+              36,
+              37,
+              41,
+              44,
+              45
+            ],
+            "owners": [
+              "b2"
+            ],
+            "solids": [
+              1
+            ],
+            "predicate": null,
+            "transit_key": ""
+          },
+          "incoming": {
+            "key": "transition:22a4e6692e6afebc718df2acac349c25e33e3bb2171265086b8a0a7b188424a9",
+            "source": "air:a1abb8336002db56f36051865159d884774b7168b0c12e185bda1108a9324984",
+            "target": "support:ad6e37621cf682e0abbfb77d3cf4c0f648d8de4ea80f22d731ab100b6fe0171b",
+            "kind": "support_arrival",
+            "cover": [
+              [
+                740.6999999880791,
+                6,
+                -1104.300000011921,
+                742.3000000119209,
+                6,
+                -1102.699999988079
+              ]
+            ],
+            "portals": [],
+            "patches": [
+              249
+            ],
+            "movement_families": [
+              "normal",
+              "stepping",
+              "ceiling"
+            ],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          },
+          "outgoing": {
+            "key": "transition:71e34649cd4d0091ce1f86ffa7d74f3f76b7ef7b6415e55452f1c09f2be65b57",
+            "source": "support:ad6e37621cf682e0abbfb77d3cf4c0f648d8de4ea80f22d731ab100b6fe0171b",
+            "target": "air:ed844002354adb10e7d8c84c0bb44b7aa739f86d45522b232bccb610aea2a148",
+            "kind": "support_departure",
+            "cover": [
+              [
+                740.6999999880791,
+                6,
+                -1104.300000011921,
+                742.3000000119209,
+                6,
+                -1102.699999988079
+              ]
+            ],
+            "portals": [],
+            "patches": [
+              249
+            ],
+            "movement_families": [
+              "normal",
+              "stepping",
+              "ceiling"
+            ],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          }
+        },
+        {
+          "occurrence": 4,
+          "label": "A3",
+          "region": {
+            "key": "air:ed844002354adb10e7d8c84c0bb44b7aa739f86d45522b232bccb610aea2a148",
+            "kind": "air_volume",
+            "cover": [
+              [
+                55.02626376856324,
+                6,
+                -1795.9737362314368,
+                1437.9737362314368,
+                22.200000047683716,
+                -1101.300000011921
+              ]
+            ],
+            "cells": [
+              0,
+              2,
+              4,
+              7,
+              10,
+              13,
+              17,
+              19,
+              21,
+              24,
+              26,
+              28,
+              29,
+              31,
+              33,
+              34,
+              35,
+              36,
+              37,
+              40,
+              41,
+              43,
+              44,
+              45,
+              46
+            ],
+            "owners": [],
+            "solids": [],
+            "predicate": null,
+            "transit_key": "transit:ed844002354adb10e7d8c84c0bb44b7aa739f86d45522b232bccb610aea2a148"
+          },
+          "incoming": {
+            "key": "transition:71e34649cd4d0091ce1f86ffa7d74f3f76b7ef7b6415e55452f1c09f2be65b57",
+            "source": "support:ad6e37621cf682e0abbfb77d3cf4c0f648d8de4ea80f22d731ab100b6fe0171b",
+            "target": "air:ed844002354adb10e7d8c84c0bb44b7aa739f86d45522b232bccb610aea2a148",
+            "kind": "support_departure",
+            "cover": [
+              [
+                740.6999999880791,
+                6,
+                -1104.300000011921,
+                742.3000000119209,
+                6,
+                -1102.699999988079
+              ]
+            ],
+            "portals": [],
+            "patches": [
+              249
+            ],
+            "movement_families": [
+              "normal",
+              "stepping",
+              "ceiling"
+            ],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          },
+          "outgoing": {
+            "key": "transition:643cf61192ba4fb94c04dbd99dfd332e2e513dfb32140e5da03bdf95ff446ae7",
+            "source": "air:ed844002354adb10e7d8c84c0bb44b7aa739f86d45522b232bccb610aea2a148",
+            "target": "air:f369db5edb99fdf31e6f555674b1e976300cdde678542f1df5699aba58939082",
+            "kind": "open_portal",
+            "cover": [
+              [
+                55.02626376856324,
+                7,
+                -1795.9737362314368,
+                1437.9737362314368,
+                22.200000047683716,
+                -1101.300000011921
+              ]
+            ],
+            "portals": [
+              1,
+              3,
+              13,
+              16,
+              24,
+              26,
+              45,
+              46,
+              52,
+              59,
+              61,
+              67,
+              68,
+              72,
+              77,
+              79,
+              80,
+              85,
+              86,
+              89,
+              90,
+              92,
+              97,
+              98,
+              99,
+              114,
+              117,
+              118,
+              119,
+              120,
+              121,
+              134,
+              135,
+              136,
+              137,
+              138
+            ],
+            "patches": [],
+            "movement_families": [],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          }
+        },
+        {
+          "occurrence": 5,
+          "label": "A4",
+          "region": {
+            "key": "air:f369db5edb99fdf31e6f555674b1e976300cdde678542f1df5699aba58939082",
+            "kind": "air_volume",
+            "cover": [
+              [
+                55.02626376856324,
+                7,
+                -1795.9737362314368,
+                1437.9737362314368,
+                22.200000047683716,
+                -1100.300000011921
+              ]
+            ],
+            "cells": [
+              0,
+              2,
+              4,
+              10,
+              13,
+              17,
+              19,
+              21,
+              22,
+              24,
+              26,
+              28,
+              29,
+              31,
+              35,
+              36,
+              37,
+              43,
+              44,
+              45,
+              46
+            ],
+            "owners": [],
+            "solids": [],
+            "predicate": null,
+            "transit_key": "transit:f369db5edb99fdf31e6f555674b1e976300cdde678542f1df5699aba58939082"
+          },
+          "incoming": {
+            "key": "transition:643cf61192ba4fb94c04dbd99dfd332e2e513dfb32140e5da03bdf95ff446ae7",
+            "source": "air:ed844002354adb10e7d8c84c0bb44b7aa739f86d45522b232bccb610aea2a148",
+            "target": "air:f369db5edb99fdf31e6f555674b1e976300cdde678542f1df5699aba58939082",
+            "kind": "open_portal",
+            "cover": [
+              [
+                55.02626376856324,
+                7,
+                -1795.9737362314368,
+                1437.9737362314368,
+                22.200000047683716,
+                -1101.300000011921
+              ]
+            ],
+            "portals": [
+              1,
+              3,
+              13,
+              16,
+              24,
+              26,
+              45,
+              46,
+              52,
+              59,
+              61,
+              67,
+              68,
+              72,
+              77,
+              79,
+              80,
+              85,
+              86,
+              89,
+              90,
+              92,
+              97,
+              98,
+              99,
+              114,
+              117,
+              118,
+              119,
+              120,
+              121,
+              134,
+              135,
+              136,
+              137,
+              138
+            ],
+            "patches": [],
+            "movement_families": [],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          },
+          "outgoing": {
+            "key": "transition:0e5f06b9930aed259e003d79243241b1b96108d45de15082ab418b088aad7674",
+            "source": "air:f369db5edb99fdf31e6f555674b1e976300cdde678542f1df5699aba58939082",
+            "target": "support:ec347572a973b91b35a690fc9aec4f7371a8ac22850a6094d49bcc760fa058f8",
+            "kind": "support_arrival",
+            "cover": [
+              [
+                737.6999999880791,
+                7,
+                -1101.300000011921,
+                739.3000000119209,
+                7,
+                -1100.300000011921
+              ]
+            ],
+            "portals": [],
+            "patches": [
+              199
+            ],
+            "movement_families": [
+              "normal",
+              "stepping",
+              "ceiling"
+            ],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          }
+        },
+        {
+          "occurrence": 6,
+          "label": "B3",
+          "region": {
+            "key": "support:ec347572a973b91b35a690fc9aec4f7371a8ac22850a6094d49bcc760fa058f8",
+            "kind": "support_surface",
+            "cover": [
+              [
+                737.6999999880791,
+                7,
+                -1101.300000011921,
+                739.3000000119209,
+                7,
+                -1099.699999988079
+              ]
+            ],
+            "cells": [
+              24,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31
+            ],
+            "owners": [
+              "b3"
+            ],
+            "solids": [
+              2
+            ],
+            "predicate": null,
+            "transit_key": ""
+          },
+          "incoming": {
+            "key": "transition:0e5f06b9930aed259e003d79243241b1b96108d45de15082ab418b088aad7674",
+            "source": "air:f369db5edb99fdf31e6f555674b1e976300cdde678542f1df5699aba58939082",
+            "target": "support:ec347572a973b91b35a690fc9aec4f7371a8ac22850a6094d49bcc760fa058f8",
+            "kind": "support_arrival",
+            "cover": [
+              [
+                737.6999999880791,
+                7,
+                -1101.300000011921,
+                739.3000000119209,
+                7,
+                -1100.300000011921
+              ]
+            ],
+            "portals": [],
+            "patches": [
+              199
+            ],
+            "movement_families": [
+              "normal",
+              "stepping",
+              "ceiling"
+            ],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          },
+          "outgoing": {
+            "key": "transition:941cf1c93b63dcb3edb574284ef099e331012b23e8ad42d10a259143d9a669d1",
+            "source": "support:ec347572a973b91b35a690fc9aec4f7371a8ac22850a6094d49bcc760fa058f8",
+            "target": "air:f79feda4ee2cc42bb8c2f0291eadb807d724ae11134cf91b64bcffbedaeab413",
+            "kind": "support_departure",
+            "cover": [
+              [
+                737.6999999880791,
+                7,
+                -1101.300000011921,
+                739.3000000119209,
+                7,
+                -1099.699999988079
+              ]
+            ],
+            "portals": [],
+            "patches": [
+              199
+            ],
+            "movement_families": [
+              "normal",
+              "stepping",
+              "ceiling"
+            ],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          }
+        },
+        {
+          "occurrence": 7,
+          "label": "A5",
+          "region": {
+            "key": "air:f79feda4ee2cc42bb8c2f0291eadb807d724ae11134cf91b64bcffbedaeab413",
+            "kind": "air_volume",
+            "cover": [
+              [
+                735.3000000119209,
+                7,
+                -1795.9737362314368,
+                1437.9737362314368,
+                22.200000047683716,
+                -413.02626376856324
+              ]
+            ],
+            "cells": [
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              35,
+              36,
+              37,
+              43,
+              44,
+              45,
+              46
+            ],
+            "owners": [],
+            "solids": [],
+            "predicate": null,
+            "transit_key": "transit:f79feda4ee2cc42bb8c2f0291eadb807d724ae11134cf91b64bcffbedaeab413"
+          },
+          "incoming": {
+            "key": "transition:941cf1c93b63dcb3edb574284ef099e331012b23e8ad42d10a259143d9a669d1",
+            "source": "support:ec347572a973b91b35a690fc9aec4f7371a8ac22850a6094d49bcc760fa058f8",
+            "target": "air:f79feda4ee2cc42bb8c2f0291eadb807d724ae11134cf91b64bcffbedaeab413",
+            "kind": "support_departure",
+            "cover": [
+              [
+                737.6999999880791,
+                7,
+                -1101.300000011921,
+                739.3000000119209,
+                7,
+                -1099.699999988079
+              ]
+            ],
+            "portals": [],
+            "patches": [
+              199
+            ],
+            "movement_families": [
+              "normal",
+              "stepping",
+              "ceiling"
+            ],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          },
+          "outgoing": {
+            "key": "transition:238b68f63d4f15417a8ed19ff240dea03ff42f940f8160b8f633902b1aa271d0",
+            "source": "air:f79feda4ee2cc42bb8c2f0291eadb807d724ae11134cf91b64bcffbedaeab413",
+            "target": "air:4790974757efd99f6aadb9f55c9247bf00c166f1b9419432a4dee61d940133c1",
+            "kind": "open_portal",
+            "cover": [
+              [
+                735.3000000119209,
+                7.5,
+                -1795.9737362314368,
+                1437.9737362314368,
+                22.200000047683716,
+                -413.02626376856324
+              ]
+            ],
+            "portals": [
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              79,
+              80,
+              81,
+              89,
+              90,
+              91,
+              92,
+              93,
+              97,
+              98,
+              99,
+              114,
+              117,
+              118,
+              119,
+              120,
+              121,
+              134,
+              135,
+              136,
+              137,
+              138
+            ],
+            "patches": [],
+            "movement_families": [],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          }
+        },
+        {
+          "occurrence": 8,
+          "label": "A6",
+          "region": {
+            "key": "air:4790974757efd99f6aadb9f55c9247bf00c166f1b9419432a4dee61d940133c1",
+            "kind": "air_volume",
+            "cover": [
+              [
+                731.3000000119209,
+                7.5,
+                -1795.9737362314368,
+                1437.9737362314368,
+                22.200000047683716,
+                -413.02626376856324
+              ]
+            ],
+            "cells": [
+              9,
+              10,
+              11,
+              13,
+              14,
+              15,
+              16,
+              17,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              28,
+              29,
+              30,
+              31,
+              35,
+              36,
+              37,
+              43,
+              44,
+              45,
+              46
+            ],
+            "owners": [],
+            "solids": [],
+            "predicate": null,
+            "transit_key": "transit:4790974757efd99f6aadb9f55c9247bf00c166f1b9419432a4dee61d940133c1"
+          },
+          "incoming": {
+            "key": "transition:238b68f63d4f15417a8ed19ff240dea03ff42f940f8160b8f633902b1aa271d0",
+            "source": "air:f79feda4ee2cc42bb8c2f0291eadb807d724ae11134cf91b64bcffbedaeab413",
+            "target": "air:4790974757efd99f6aadb9f55c9247bf00c166f1b9419432a4dee61d940133c1",
+            "kind": "open_portal",
+            "cover": [
+              [
+                735.3000000119209,
+                7.5,
+                -1795.9737362314368,
+                1437.9737362314368,
+                22.200000047683716,
+                -413.02626376856324
+              ]
+            ],
+            "portals": [
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              79,
+              80,
+              81,
+              89,
+              90,
+              91,
+              92,
+              93,
+              97,
+              98,
+              99,
+              114,
+              117,
+              118,
+              119,
+              120,
+              121,
+              134,
+              135,
+              136,
+              137,
+              138
+            ],
+            "patches": [],
+            "movement_families": [],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          },
+          "outgoing": {
+            "key": "transition:a723bbc36f1dd6b3a4834f9e825613423274e4b4efd9653525128e88e470487c",
+            "source": "air:4790974757efd99f6aadb9f55c9247bf00c166f1b9419432a4dee61d940133c1",
+            "target": "support:3cfeae2be363663d26c842a051d0c838ddb6bf0371cb146e7437d1056d667448",
+            "kind": "support_arrival",
+            "cover": [
+              [
+                733.6999999880791,
+                7.5,
+                -1100.300000011921,
+                735.3000000119209,
+                7.5,
+                -1098.699999988079
+              ]
+            ],
+            "portals": [],
+            "patches": [
+              161
+            ],
+            "movement_families": [
+              "normal",
+              "stepping",
+              "ceiling"
+            ],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          }
+        },
+        {
+          "occurrence": 9,
+          "label": "B4",
+          "region": {
+            "key": "support:3cfeae2be363663d26c842a051d0c838ddb6bf0371cb146e7437d1056d667448",
+            "kind": "support_surface",
+            "cover": [
+              [
+                733.6999999880791,
+                7.5,
+                -1100.300000011921,
+                735.3000000119209,
+                7.5,
+                -1098.699999988079
+              ]
+            ],
+            "cells": [
+              17,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24
+            ],
+            "owners": [
+              "b4"
+            ],
+            "solids": [
+              3
+            ],
+            "predicate": null,
+            "transit_key": ""
+          },
+          "incoming": {
+            "key": "transition:a723bbc36f1dd6b3a4834f9e825613423274e4b4efd9653525128e88e470487c",
+            "source": "air:4790974757efd99f6aadb9f55c9247bf00c166f1b9419432a4dee61d940133c1",
+            "target": "support:3cfeae2be363663d26c842a051d0c838ddb6bf0371cb146e7437d1056d667448",
+            "kind": "support_arrival",
+            "cover": [
+              [
+                733.6999999880791,
+                7.5,
+                -1100.300000011921,
+                735.3000000119209,
+                7.5,
+                -1098.699999988079
+              ]
+            ],
+            "portals": [],
+            "patches": [
+              161
+            ],
+            "movement_families": [
+              "normal",
+              "stepping",
+              "ceiling"
+            ],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          },
+          "outgoing": {
+            "key": "transition:083745d2f016ed64ce07d12abd4ca6a5cd41ad4068bfd8b176d0df64ba3e97a3",
+            "source": "support:3cfeae2be363663d26c842a051d0c838ddb6bf0371cb146e7437d1056d667448",
+            "target": "air:4790974757efd99f6aadb9f55c9247bf00c166f1b9419432a4dee61d940133c1",
+            "kind": "support_departure",
+            "cover": [
+              [
+                733.6999999880791,
+                7.5,
+                -1100.300000011921,
+                735.3000000119209,
+                7.5,
+                -1098.699999988079
+              ]
+            ],
+            "portals": [],
+            "patches": [
+              161
+            ],
+            "movement_families": [
+              "normal",
+              "stepping",
+              "ceiling"
+            ],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          }
+        },
+        {
+          "occurrence": 10,
+          "label": "A6",
+          "region": {
+            "key": "air:4790974757efd99f6aadb9f55c9247bf00c166f1b9419432a4dee61d940133c1",
+            "kind": "air_volume",
+            "cover": [
+              [
+                731.3000000119209,
+                7.5,
+                -1795.9737362314368,
+                1437.9737362314368,
+                22.200000047683716,
+                -413.02626376856324
+              ]
+            ],
+            "cells": [
+              9,
+              10,
+              11,
+              13,
+              14,
+              15,
+              16,
+              17,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              28,
+              29,
+              30,
+              31,
+              35,
+              36,
+              37,
+              43,
+              44,
+              45,
+              46
+            ],
+            "owners": [],
+            "solids": [],
+            "predicate": null,
+            "transit_key": "transit:4790974757efd99f6aadb9f55c9247bf00c166f1b9419432a4dee61d940133c1"
+          },
+          "incoming": {
+            "key": "transition:083745d2f016ed64ce07d12abd4ca6a5cd41ad4068bfd8b176d0df64ba3e97a3",
+            "source": "support:3cfeae2be363663d26c842a051d0c838ddb6bf0371cb146e7437d1056d667448",
+            "target": "air:4790974757efd99f6aadb9f55c9247bf00c166f1b9419432a4dee61d940133c1",
+            "kind": "support_departure",
+            "cover": [
+              [
+                733.6999999880791,
+                7.5,
+                -1100.300000011921,
+                735.3000000119209,
+                7.5,
+                -1098.699999988079
+              ]
+            ],
+            "portals": [],
+            "patches": [
+              161
+            ],
+            "movement_families": [
+              "normal",
+              "stepping",
+              "ceiling"
+            ],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          },
+          "outgoing": {
+            "key": "transition:ae3dcd3cd026cd3145e03e347c3f167471b3b709ea4001fe8df5991d8bf7d616",
+            "source": "air:4790974757efd99f6aadb9f55c9247bf00c166f1b9419432a4dee61d940133c1",
+            "target": "air:c83f0d67e1668b04e477a997ef59f6505682dca571422ff498f56d645587726f",
+            "kind": "open_portal",
+            "cover": [
+              [
+                731.3000000119209,
+                7.5,
+                -1795.9737362314368,
+                733.6999999880791,
+                22.200000047683716,
+                -1095.300000011921
+              ]
+            ],
+            "portals": [
+              44,
+              45,
+              46,
+              47,
+              48,
+              51,
+              52,
+              54,
+              59,
+              60,
+              61,
+              62,
+              63,
+              67,
+              69,
+              71,
+              73
+            ],
+            "patches": [],
+            "movement_families": [],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          }
+        },
+        {
+          "occurrence": 11,
+          "label": "A7",
+          "region": {
+            "key": "air:c83f0d67e1668b04e477a997ef59f6505682dca571422ff498f56d645587726f",
+            "kind": "air_volume",
+            "cover": [
+              [
+                55.02626376856324,
+                6,
+                -1795.9737362314368,
+                733.6999999880791,
+                22.200000047683716,
+                -1095.300000011921
+              ]
+            ],
+            "cells": [
+              0,
+              2,
+              4,
+              5,
+              7,
+              8,
+              10,
+              11,
+              13,
+              14,
+              17,
+              19,
+              20,
+              21,
+              22,
+              23
+            ],
+            "owners": [],
+            "solids": [],
+            "predicate": null,
+            "transit_key": "transit:c83f0d67e1668b04e477a997ef59f6505682dca571422ff498f56d645587726f"
+          },
+          "incoming": {
+            "key": "transition:ae3dcd3cd026cd3145e03e347c3f167471b3b709ea4001fe8df5991d8bf7d616",
+            "source": "air:4790974757efd99f6aadb9f55c9247bf00c166f1b9419432a4dee61d940133c1",
+            "target": "air:c83f0d67e1668b04e477a997ef59f6505682dca571422ff498f56d645587726f",
+            "kind": "open_portal",
+            "cover": [
+              [
+                731.3000000119209,
+                7.5,
+                -1795.9737362314368,
+                733.6999999880791,
+                22.200000047683716,
+                -1095.300000011921
+              ]
+            ],
+            "portals": [
+              44,
+              45,
+              46,
+              47,
+              48,
+              51,
+              52,
+              54,
+              59,
+              60,
+              61,
+              62,
+              63,
+              67,
+              69,
+              71,
+              73
+            ],
+            "patches": [],
+            "movement_families": [],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          },
+          "outgoing": {
+            "key": "transition:55a370539803e65da4b49ed6987239454f238af941ade8d4f6fbdc25ac140d1f",
+            "source": "air:c83f0d67e1668b04e477a997ef59f6505682dca571422ff498f56d645587726f",
+            "target": "support:a44299aba84eba81e82b49de987a887d4ad208592c4cec94dd89c2d682aa83d8",
+            "kind": "support_arrival",
+            "cover": [
+              [
+                729.6999999880791,
+                6,
+                -1096.300000011921,
+                731.3000000119209,
+                6,
+                -1095.300000011921
+              ]
+            ],
+            "portals": [],
+            "patches": [
+              89
+            ],
+            "movement_families": [
+              "normal",
+              "stepping",
+              "ceiling"
+            ],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          }
+        },
+        {
+          "occurrence": 12,
+          "label": "B5",
+          "region": {
+            "key": "support:a44299aba84eba81e82b49de987a887d4ad208592c4cec94dd89c2d682aa83d8",
+            "kind": "support_surface",
+            "cover": [
+              [
+                729.6999999880791,
+                6,
+                -1096.300000011921,
+                731.3000000119209,
+                6,
+                -1095.300000011921
+              ],
+              [
+                731.3000000119209,
+                6,
+                -1095.300000011921,
+                731.3000000119209,
+                6,
+                -1094.699999988079
+              ]
+            ],
+            "cells": [
+              2,
+              7,
+              8,
+              10,
+              11,
+              17
+            ],
+            "owners": [
+              "b5"
+            ],
+            "solids": [
+              4
+            ],
+            "predicate": null,
+            "transit_key": ""
+          },
+          "incoming": {
+            "key": "transition:55a370539803e65da4b49ed6987239454f238af941ade8d4f6fbdc25ac140d1f",
+            "source": "air:c83f0d67e1668b04e477a997ef59f6505682dca571422ff498f56d645587726f",
+            "target": "support:a44299aba84eba81e82b49de987a887d4ad208592c4cec94dd89c2d682aa83d8",
+            "kind": "support_arrival",
+            "cover": [
+              [
+                729.6999999880791,
+                6,
+                -1096.300000011921,
+                731.3000000119209,
+                6,
+                -1095.300000011921
+              ]
+            ],
+            "portals": [],
+            "patches": [
+              89
+            ],
+            "movement_families": [
+              "normal",
+              "stepping",
+              "ceiling"
+            ],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          },
+          "outgoing": {
+            "key": "transition:3fff2b88c541f063bd8ed3d2d049b859f21d052f637603e9a3d482e21c3730ff",
+            "source": "support:a44299aba84eba81e82b49de987a887d4ad208592c4cec94dd89c2d682aa83d8",
+            "target": "air:c83f0d67e1668b04e477a997ef59f6505682dca571422ff498f56d645587726f",
+            "kind": "support_departure",
+            "cover": [
+              [
+                729.6999999880791,
+                6,
+                -1096.300000011921,
+                731.3000000119209,
+                6,
+                -1095.300000011921
+              ]
+            ],
+            "portals": [],
+            "patches": [
+              89
+            ],
+            "movement_families": [
+              "normal",
+              "stepping",
+              "ceiling"
+            ],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          }
+        },
+        {
+          "occurrence": 13,
+          "label": "A7",
+          "region": {
+            "key": "air:c83f0d67e1668b04e477a997ef59f6505682dca571422ff498f56d645587726f",
+            "kind": "air_volume",
+            "cover": [
+              [
+                55.02626376856324,
+                6,
+                -1795.9737362314368,
+                733.6999999880791,
+                22.200000047683716,
+                -1095.300000011921
+              ]
+            ],
+            "cells": [
+              0,
+              2,
+              4,
+              5,
+              7,
+              8,
+              10,
+              11,
+              13,
+              14,
+              17,
+              19,
+              20,
+              21,
+              22,
+              23
+            ],
+            "owners": [],
+            "solids": [],
+            "predicate": null,
+            "transit_key": "transit:c83f0d67e1668b04e477a997ef59f6505682dca571422ff498f56d645587726f"
+          },
+          "incoming": {
+            "key": "transition:3fff2b88c541f063bd8ed3d2d049b859f21d052f637603e9a3d482e21c3730ff",
+            "source": "support:a44299aba84eba81e82b49de987a887d4ad208592c4cec94dd89c2d682aa83d8",
+            "target": "air:c83f0d67e1668b04e477a997ef59f6505682dca571422ff498f56d645587726f",
+            "kind": "support_departure",
+            "cover": [
+              [
+                729.6999999880791,
+                6,
+                -1096.300000011921,
+                731.3000000119209,
+                6,
+                -1095.300000011921
+              ]
+            ],
+            "portals": [],
+            "patches": [
+              89
+            ],
+            "movement_families": [
+              "normal",
+              "stepping",
+              "ceiling"
+            ],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          },
+          "outgoing": {
+            "key": "transition:1ee0d785ec8d011e3ec36eafcd112796c122ba1099d68f1875774ac546b8c61d",
+            "source": "air:c83f0d67e1668b04e477a997ef59f6505682dca571422ff498f56d645587726f",
+            "target": "air:f7ebe6b50c1aae861781506676e4e66d3efc360b6cae70a44d0e1c08c84dc879",
+            "kind": "open_portal",
+            "cover": [
+              [
+                55.02626376856324,
+                7,
+                -1795.9737362314368,
+                729.6999999880791,
+                22.200000047683716,
+                -1095.300000011921
+              ]
+            ],
+            "portals": [
+              1,
+              3,
+              4,
+              13,
+              15,
+              16,
+              17,
+              22,
+              23,
+              24,
+              25,
+              26,
+              28,
+              30,
+              36,
+              37,
+              38,
+              44,
+              45,
+              47,
+              51
+            ],
+            "patches": [],
+            "movement_families": [],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          }
+        },
+        {
+          "occurrence": 14,
+          "label": "A8",
+          "region": {
+            "key": "air:f7ebe6b50c1aae861781506676e4e66d3efc360b6cae70a44d0e1c08c84dc879",
+            "kind": "air_volume",
+            "cover": [
+              [
+                55.02626376856324,
+                7,
+                -1795.9737362314368,
+                729.6999999880791,
+                22.200000047683716,
+                -413.02626376856324
+              ]
+            ],
+            "cells": [
+              0,
+              2,
+              3,
+              4,
+              5,
+              6,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "owners": [],
+            "solids": [],
+            "predicate": null,
+            "transit_key": "transit:f7ebe6b50c1aae861781506676e4e66d3efc360b6cae70a44d0e1c08c84dc879"
+          },
+          "incoming": {
+            "key": "transition:1ee0d785ec8d011e3ec36eafcd112796c122ba1099d68f1875774ac546b8c61d",
+            "source": "air:c83f0d67e1668b04e477a997ef59f6505682dca571422ff498f56d645587726f",
+            "target": "air:f7ebe6b50c1aae861781506676e4e66d3efc360b6cae70a44d0e1c08c84dc879",
+            "kind": "open_portal",
+            "cover": [
+              [
+                55.02626376856324,
+                7,
+                -1795.9737362314368,
+                729.6999999880791,
+                22.200000047683716,
+                -1095.300000011921
+              ]
+            ],
+            "portals": [
+              1,
+              3,
+              4,
+              13,
+              15,
+              16,
+              17,
+              22,
+              23,
+              24,
+              25,
+              26,
+              28,
+              30,
+              36,
+              37,
+              38,
+              44,
+              45,
+              47,
+              51
+            ],
+            "patches": [],
+            "movement_families": [],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          },
+          "outgoing": {
+            "key": "transition:25af8d4179f2a4971d584d7663d3208419e8d394c1bf73a2ce51412bb6856689",
+            "source": "air:f7ebe6b50c1aae861781506676e4e66d3efc360b6cae70a44d0e1c08c84dc879",
+            "target": "air:5c66375770c8593eee0d7490eb43b71f8eb6964ecbcfd6c89bdeadb9b65f6d4a",
+            "kind": "open_portal",
+            "cover": [
+              [
+                55.02626376856324,
+                7,
+                -1093.699999988079,
+                729.6999999880791,
+                22.200000047683716,
+                -413.02626376856324
+              ]
+            ],
+            "portals": [
+              2,
+              4,
+              5,
+              18,
+              19,
+              20,
+              27,
+              29,
+              30,
+              31,
+              32,
+              33,
+              39,
+              40,
+              41,
+              49,
+              53
+            ],
+            "patches": [],
+            "movement_families": [],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          }
+        },
+        {
+          "occurrence": 15,
+          "label": "A9",
+          "region": {
+            "key": "air:5c66375770c8593eee0d7490eb43b71f8eb6964ecbcfd6c89bdeadb9b65f6d4a",
+            "kind": "air_volume",
+            "cover": [
+              [
+                55.02626376856324,
+                -200,
+                -1093.699999988079,
+                1437.9737362314368,
+                22.200000047683716,
+                -413.02626376856324
+              ]
+            ],
+            "cells": [
+              0,
+              1,
+              3,
+              5,
+              6,
+              9,
+              12,
+              14,
+              15,
+              16,
+              17,
+              18,
+              20,
+              23,
+              24,
+              25,
+              27,
+              30,
+              31,
+              32,
+              34,
+              37,
+              42,
+              45,
+              46
+            ],
+            "owners": [],
+            "solids": [],
+            "predicate": null,
+            "transit_key": "transit:5c66375770c8593eee0d7490eb43b71f8eb6964ecbcfd6c89bdeadb9b65f6d4a"
+          },
+          "incoming": {
+            "key": "transition:25af8d4179f2a4971d584d7663d3208419e8d394c1bf73a2ce51412bb6856689",
+            "source": "air:f7ebe6b50c1aae861781506676e4e66d3efc360b6cae70a44d0e1c08c84dc879",
+            "target": "air:5c66375770c8593eee0d7490eb43b71f8eb6964ecbcfd6c89bdeadb9b65f6d4a",
+            "kind": "open_portal",
+            "cover": [
+              [
+                55.02626376856324,
+                7,
+                -1093.699999988079,
+                729.6999999880791,
+                22.200000047683716,
+                -413.02626376856324
+              ]
+            ],
+            "portals": [
+              2,
+              4,
+              5,
+              18,
+              19,
+              20,
+              27,
+              29,
+              30,
+              31,
+              32,
+              33,
+              39,
+              40,
+              41,
+              49,
+              53
+            ],
+            "patches": [],
+            "movement_families": [],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          },
+          "outgoing": {
+            "key": "transition:bfe43ee847f81ed0058595d951e650c807f026bfa664903526ebbf4a9f04e7a1",
+            "source": "air:5c66375770c8593eee0d7490eb43b71f8eb6964ecbcfd6c89bdeadb9b65f6d4a",
+            "target": "terminal:7bace983516273be4a74b4e988420e8a1e36d662d24b04df304e0063e660a31f",
+            "kind": "finish",
+            "cover": [],
+            "portals": [],
+            "patches": [],
+            "movement_families": [
+              "normal",
+              "stepping",
+              "ceiling"
+            ],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          }
+        },
+        {
+          "occurrence": 16,
+          "label": "FINISH",
+          "region": {
+            "key": "terminal:7bace983516273be4a74b4e988420e8a1e36d662d24b04df304e0063e660a31f",
+            "kind": "terminal_predicate",
+            "cover": [],
+            "cells": [],
+            "owners": [],
+            "solids": [],
+            "predicate": {
+              "kind": "landing_height_region",
+              "height": 7,
+              "rows": [
+                {
+                  "mode": "X",
+                  "cmp": "LE",
+                  "rhs": 729.7,
+                  "strict": true
+                },
+                {
+                  "mode": "Z",
+                  "cmp": "GE",
+                  "rhs": -1095.3
+                }
+              ]
+            },
+            "transit_key": ""
+          },
+          "incoming": {
+            "key": "transition:bfe43ee847f81ed0058595d951e650c807f026bfa664903526ebbf4a9f04e7a1",
+            "source": "air:5c66375770c8593eee0d7490eb43b71f8eb6964ecbcfd6c89bdeadb9b65f6d4a",
+            "target": "terminal:7bace983516273be4a74b4e988420e8a1e36d662d24b04df304e0063e660a31f",
+            "kind": "finish",
+            "cover": [],
+            "portals": [],
+            "patches": [],
+            "movement_families": [
+              "normal",
+              "stepping",
+              "ceiling"
+            ],
+            "capability": "not_ruled_out",
+            "evidence": "geometry_only"
+          },
+          "outgoing": null
+        }
+      ]
+    }
+  ]
+}

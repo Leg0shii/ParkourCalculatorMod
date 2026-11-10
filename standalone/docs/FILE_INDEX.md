@@ -1,8 +1,32 @@
 # Complete standalone file inventory
 
+2026-11-10 additions: [integration contract](ANCHOR_SEARCH_INTEGRATION.md),
+[integration review](SOLVER_BRANCH_INTEGRATION_REVIEW.md),
+[remaining-time bound](../autonomy/cell_routes/anchor_time_bound.py),
+[bound tests](../autonomy/tests/test_anchor_time_bound.py), and the
+[profiling harness/evidence](../autonomy/experiments/anchor-runtime-profile/README.md)
+(`profile_run.py`, `runtime_profile.py`, `test_runtime_profile.py`).
+
 Every tracked standalone file plus this consolidation is listed by directory. Generated build output, caches and virtualenvs are intentionally excluded. Every production module has an editorial purpose in [code map](CODE_MAP.md); detailed test definitions are in [function index](FUNCTION_INDEX.md), fixtures/testing conventions in [testing](TESTING.md), and documentation status in [document index](DOC_INDEX.md).
 
 Evidence filenames identify different runs/contexts; do not treat reports as executable modules or raw request fixtures. Nearest experiment README/manifest plus embedded source/settings determine exact provenance. This is a navigation snapshot, not permission to overwrite artifacts.
+
+## Anchor implementation additions (2026-11-04)
+
+| File | Purpose |
+| --- | --- |
+| [anchor_policy.py](../autonomy/cell_routes/anchor_policy.py) | Milestones, owner visits, local counts/caps and hard structure. |
+| [anchor_guides.py](../autonomy/cell_routes/anchor_guides.py) | Finite backward guides and binary approach-edge geometry. |
+| [anchor_adapter.py](../autonomy/cell_routes/anchor_adapter.py) | Physical required-anchor/open-span stage provider. |
+| [node_feasibility.py](../autonomy/cell_routes/node_feasibility.py) | Solve intent, exact model outcomes and cadence. |
+| [turn_observability.py](../autonomy/cell_routes/turn_observability.py) | Observations, replay drift, aggregates and diagrams. |
+| [test_anchor_policy.py](../autonomy/tests/test_anchor_policy.py) | Policy/geometry/count/status/observability regressions. |
+| [test_anchor_search.py](../autonomy/tests/test_anchor_search.py) | Source-owned generator/node/native integration regressions. |
+| [test_anchor_dfs.py](../autonomy/tests/test_anchor_dfs.py) | Latch, restoration, logging parity and resume trees. |
+| [experiment README](../autonomy/experiments/anchor-feasibility/README.md) | New-task commands, validation status and artifacts. |
+| [Real11 fixture](../autonomy/experiments/anchor-feasibility/real11-anchors.json) | Declared anchors and extended physical B7 landing. |
+| [native gate](../autonomy/experiments/anchor-feasibility/native_gate.py) | Source-stable inherited/autonomy/IPOPT acceptance. |
+| [matched measurement](../autonomy/experiments/anchor-feasibility/measure.py) | Fresh cold guided early-stop/polish controls and replay/plots. |
 
 ## standalone
 
@@ -16,6 +40,8 @@ Evidence filenames identify different runs/contexts; do not treat reports as exe
 
 | File | Purpose |
 | --- | --- |
+| [ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md](../autonomy/ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md) | Exact-node DFS cadence/recovery, finite B7, global hard latch, regional turns and same-block setup; inter-block returns deferred. Planning only. |
+| [ANCHOR_POLICY_DECISIONS.md](../autonomy/ANCHOR_POLICY_DECISIONS.md) | Current exact-node DFS rejection rule, recommended decision-level solve cadence, settled approach edge and deferred-revisit/current-local-hop scope. No runtime change. |
 | [BLOCK_ROUTE_SEARCH.md](../autonomy/BLOCK_ROUTE_SEARCH.md) | Block-route selection prototype. See documentation index for authority/status. |
 | [BLOCK_SOLVER_PLAN.md](../autonomy/BLOCK_SOLVER_PLAN.md) | Block solver: continuous-model orchestration. See documentation index for authority/status. |
 | [CELL_ROUTE_EXPERIMENT_PLAN.md](../autonomy/CELL_ROUTE_EXPERIMENT_PLAN.md) | Cell-route experiment plan. See documentation index for authority/status. |
@@ -62,6 +88,8 @@ Evidence filenames identify different runs/contexts; do not treat reports as exe
 | [RUN_TICKS_PLAN.md](../autonomy/RUN_TICKS_PLAN.md) | Run-ticks prototype: status and remaining work. See documentation index for authority/status. |
 | [SEARCH_CONTINUATION_FIX_PLAN.md](../autonomy/SEARCH_CONTINUATION_FIX_PLAN.md) | Resume unfinished solves and reject provably dead prefixes. See documentation index for authority/status. |
 | [SEARCH_OBJECTIVE.md](../autonomy/SEARCH_OBJECTIVE.md) | Search order: total ticks, then objective. See documentation index for authority/status. |
+| [REVISIT_DISCOVERY_DEFERRED_PLAN.md](../autonomy/REVISIT_DISCOVERY_DEFERRED_PLAN.md) | Explicitly deferred revisit analysis/lazy repetition design, future module map/tests/resume; current same-block jumps remain in scope. |
+| [SPATIAL_CORRIDOR_REFACTOR_PLAN.md](../autonomy/SPATIAL_CORRIDOR_REFACTOR_PLAN.md) | Detailed requested refactor of spatial cells/corridors: support visits, 3D passages, discovery, constraints, goals and acceptance milestones. |
 | [SPATIAL_ROUTE_RESEARCH.md](../autonomy/SPATIAL_ROUTE_RESEARCH.md) | From collision geometry to spatial route families. See documentation index for authority/status. |
 | [STATE_PROTECTION_IMPLEMENTATION_PLAN.md](../autonomy/STATE_PROTECTION_IMPLEMENTATION_PLAN.md) | Implementation plan: velocity and schedule protection. See documentation index for authority/status. |
 | [STEPPING_CASES.md](../autonomy/STEPPING_CASES.md) | Stepping terminology and cases. See documentation index for authority/status. |
@@ -143,11 +171,18 @@ Evidence filenames identify different runs/contexts; do not treat reports as exe
 | [fixed_clock_experiment.py](../autonomy/cell_routes/fixed_clock_experiment.py) | Current fixed-terminal-clock fixture runner with support-order policy, atomic progress and resume CLI. |
 | [generation_diagnostic.py](../autonomy/cell_routes/generation_diagnostic.py) | Physical/execution keys, generator/queue instrumentation and report saving. |
 | [geometry.py](../autonomy/cell_routes/geometry.py) | AABB subtraction/merging, cells/portals/contact patches, free-space decomposition and segment coverage/SVG. |
+| [regions.py](../autonomy/cell_routes/regions.py) | Exact support unions; checked overlapping free convex cover, typed graph and ordinary movement proposal context. |
 | [local.py](../autonomy/cell_routes/local.py) | Search work budgets/counters, counting compiler and scoped corridor/scene acceptance adapter. |
 | [minimum_runs.py](../autonomy/cell_routes/minimum_runs.py) | Latest-jump ordinary ground-hold pattern normalization, validated feasible representatives and heuristic extra-run exclusions. |
 | [repair_diagnostic.py](../autonomy/cell_routes/repair_diagnostic.py) | Diagnostic of repair queue allocation and failures. |
 | [repair_resume_experiment.py](../autonomy/cell_routes/repair_resume_experiment.py) | Experiment preserving and resuming inner repair work. |
 | [routes.py](../autonomy/cell_routes/routes.py) | Route enumeration, landmarks/signatures, guide polyline/corridor projection and horizontal traces. |
+| [coverage_audit.py](../autonomy/cell_routes/coverage_audit.py) | Unseeded spatial witness-coverage audit with independent replay and actual rectangle SVGs. |
+| [automatic_experiment.py](../autonomy/cell_routes/automatic_experiment.py) | Cold/resume CLI for unordered geometry/task fixtures, runtime hashes and atomic evidence. |
+| [route_queue.py](../autonomy/cell_routes/route_queue.py) | Automatic task entry, global work guards, bounded route allocations and exact per-route DFS continuation. |
+| [semantic_adapter.py](../autonomy/cell_routes/semantic_adapter.py) | Immutable stage views, inferred support goals, early ordinary support conditioning and outgoing guide objectives. |
+| [route_guards.py](../autonomy/cell_routes/route_guards.py) | Fixed connected axis-sweep/contact/portal alternatives selected through ConstraintVariants before numerical dispatch. |
+| [route_progress.py](../autonomy/cell_routes/route_progress.py) | Ordered 3D phase/contact progress with occurrence and complete-variant cursors; unknown named probes. |
 | [scalar_seed_diagnostic.py](../autonomy/cell_routes/scalar_seed_diagnostic.py) | Synthetic and fixture tests of scalar seed/fallback validity. |
 | [support_order.py](../autonomy/cell_routes/support_order.py) | Fixture policy enforcing a supplied required support order on generated programs. |
 | [time_progress.py](../autonomy/cell_routes/time_progress.py) | Time/progress comparison, same-witness state protections and retained/deferred frontier. |
@@ -489,11 +524,7 @@ Evidence filenames identify different runs/contexts; do not treat reports as exe
 
 | File | Purpose |
 | --- | --- |
-| [HARD_ROWS_AUDIT.md](../autonomy/experiments/last-jump-runs/HARD_ROWS_AUDIT.md) | Why the request has278 rows. See documentation index for authority/status. |
 | [README.md](../autonomy/experiments/last-jump-runs/README.md) | Minimum runs before the latest jump. See documentation index for authority/status. |
-| [REAL11_RETRY.md](../autonomy/experiments/last-jump-runs/REAL11_RETRY.md) | Real11 retry after the handoff push. See documentation index for authority/status. |
-| [REAL11_RETRY_CALLS.md](../autonomy/experiments/last-jump-runs/REAL11_RETRY_CALLS.md) | Fresh Real11 retry: numerical requests. See documentation index for authority/status. |
-| [summarize_retry.py](../autonomy/experiments/last-jump-runs/summarize_retry.py) | Fixture-specific diagnostic script: summarize retry. Inspect its main/CLI before running; outputs may mutate evidence. |
 
 ## autonomy/experiments/last-jump-runs/evidence
 
@@ -503,26 +534,6 @@ Evidence filenames identify different runs/contexts; do not treat reports as exe
 | [focused-tests.log](../autonomy/experiments/last-jump-runs/evidence/focused-tests.log) | Captured commands/test/runtime output or investigation notes; source-era evidence. |
 | [generic-focused-summary.json](../autonomy/experiments/last-jump-runs/evidence/generic-focused-summary.json) | Structured experiment data/settings/provenance: generic focused summary. |
 | [generic-focused-tests.log](../autonomy/experiments/last-jump-runs/evidence/generic-focused-tests.log) | Captured commands/test/runtime output or investigation notes; source-era evidence. |
-| [hard-row-breakdown.json](../autonomy/experiments/last-jump-runs/evidence/hard-row-breakdown.json) | Structured experiment data/settings/provenance: hard row breakdown. |
-| [real11-retry-after-handoff.json.gz](../autonomy/experiments/last-jump-runs/evidence/real11-retry-after-handoff.json.gz) | Compressed exact result/request/continuation evidence; inspect owning experiment and source fields before reuse. |
-| [real11-retry-after-handoff.log](../autonomy/experiments/last-jump-runs/evidence/real11-retry-after-handoff.log) | Captured commands/test/runtime output or investigation notes; source-era evidence. |
-| [real11-retry-manifest.json](../autonomy/experiments/last-jump-runs/evidence/real11-retry-manifest.json) | Structured experiment data/settings/provenance: real11 retry manifest. |
-| [real11-retry-summary.json](../autonomy/experiments/last-jump-runs/evidence/real11-retry-summary.json) | Structured experiment data/settings/provenance: real11 retry summary. |
-
-## autonomy/experiments/last-jump-runs/row-benchmark
-
-| File | Purpose |
-| --- | --- |
-| [README.md](../autonomy/experiments/last-jump-runs/row-benchmark/README.md) | Do duplicate rows cost time?. See documentation index for authority/status. |
-| [benchmark.py](../autonomy/experiments/last-jump-runs/row-benchmark/benchmark.py) | Fixture-specific diagnostic script: benchmark. Inspect its main/CLI before running; outputs may mutate evidence. |
-| [callback-results.json](../autonomy/experiments/last-jump-runs/row-benchmark/callback-results.json) | Structured experiment data/settings/provenance: callback results. |
-| [callback.log](../autonomy/experiments/last-jump-runs/row-benchmark/callback.log) | Captured commands/test/runtime output or investigation notes; source-era evidence. |
-| [callback_probe.py](../autonomy/experiments/last-jump-runs/row-benchmark/callback_probe.py) | Fixture-specific diagnostic script: callback probe. Inspect its main/CLI before running; outputs may mutate evidence. |
-| [extraction-probe.json](../autonomy/experiments/last-jump-runs/row-benchmark/extraction-probe.json) | Fixed-request extraction/monitor compatibility probe results; production unchanged. |
-| [extraction_probe.py](../autonomy/experiments/last-jump-runs/row-benchmark/extraction_probe.py) | Reproduce extraction off/on and original-constraint monitoring on a stored request; no route discovery. |
-| [results.json](../autonomy/experiments/last-jump-runs/row-benchmark/results.json) | Structured experiment data/settings/provenance: results. |
-| [run.log](../autonomy/experiments/last-jump-runs/row-benchmark/run.log) | Captured commands/test/runtime output or investigation notes; source-era evidence. |
-| [snapshot-breakdown.json](../autonomy/experiments/last-jump-runs/row-benchmark/snapshot-breakdown.json) | Offline checkpoint byte accounting and live-state versus historical-data trace; production unchanged. |
 
 ## autonomy/experiments/linkcraft11-j0-j16
 
@@ -1030,9 +1041,11 @@ Evidence filenames identify different runs/contexts; do not treat reports as exe
 
 | File | Purpose |
 | --- | --- |
+| [ANCHOR_IMPLEMENTATION_RESUME.md](ANCHOR_IMPLEMENTATION_RESUME.md) | Current authorized implementation handoff: unchanged worktree, settled binary/DFS contract, first M1 code steps, dependencies/tests and evidence preservation. |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Architecture and execution flow. See documentation index for authority/status. |
 | [CODE_MAP.md](CODE_MAP.md) | Production code map. See documentation index for authority/status. |
 | [CORRIDOR_AGENT_HANDOFF.md](CORRIDOR_AGENT_HANDOFF.md) | Handoff: changes since the standalone AGENTS consolidation. See documentation index for authority/status. |
+| [CORRIDOR_IMPLEMENTATION_RESUME.md](CORRIDOR_IMPLEMENTATION_RESUME.md) | Resume corridor implementation after compaction: isolated checkout and uncommitted state, settled requirements, implementation sequence and verification environment. |
 | [CURRENT_STATE.md](CURRENT_STATE.md) | Current standalone state. See documentation index for authority/status. |
 | [DECISIONS_AND_PLANS.md](DECISIONS_AND_PLANS.md) | Decisions and plan authority. See documentation index for authority/status. |
 | [DEVELOPMENT.md](DEVELOPMENT.md) | Writing code and fixes. See documentation index for authority/status. |
@@ -1100,46 +1113,99 @@ Evidence filenames identify different runs/contexts; do not treat reports as exe
 | [test_movement.py](../ipopt/tests/test_movement.py) | Tests: boundary touch cannot claim the compiled wall hit; ground changes cannot silently keep old acceleration; collision assumptions must match declared schedule (additional cases in file). |
 | [test_solver.py](../ipopt/tests/test_solver.py) | Tests: timeout stops worker that never reads large request; active cancellation discards candidate; timeout retains validated incumbent (additional cases in file). |
 
+## Semantic corridor acceptance additions
 
-## Shared checkpoint additions (2026-11-03)
+- [test_route_regions.py](../autonomy/tests/test_route_regions.py): generic geometry, language, guard or native stage/continuation acceptance.
+- [test_semantic_routes.py](../autonomy/tests/test_semantic_routes.py): generic geometry, language, guard or native stage/continuation acceptance.
+- [test_route_progress.py](../autonomy/tests/test_route_progress.py): generic geometry, language, guard or native stage/continuation acceptance.
+- [test_route_guards.py](../autonomy/tests/test_route_guards.py): generic geometry, language, guard or native stage/continuation acceptance.
+- [test_semantic_search.py](../autonomy/tests/test_semantic_search.py): generic geometry, language, guard or native stage/continuation acceptance.
+- [Automatic fixture](../autonomy/experiments/automatic-corridors/fixture.json), [bounded smoke](../autonomy/experiments/automatic-corridors/smoke-fixture.json) and [evidence guide](../autonomy/experiments/automatic-corridors/README.md).
 
-| File | Purpose |
-| --- | --- |
-| [checkpoint_store.py](../autonomy/checkpoint_store.py) | Lossless shared object store, atomic manifests, repair patch roots, compaction, legacy reader and ordinary JSON export. |
-| [checkpoint_persistence.py](../autonomy/cell_routes/checkpoint_persistence.py) | DFS persistence adapter; one-copy historical windows and durable repair-only updates with alias handling. |
-| [test_checkpoint_store.py](../autonomy/tests/test_checkpoint_store.py) | Storage/atomicity/equality, interruption, completed-call dedup, DFS and native callback/replay regressions. |
-| [CHECKPOINT_STORAGE.md](CHECKPOINT_STORAGE.md) | Storage format/runbook, callback assumptions, file map, measurements and limits. |
-| [checkpoint_probe.py](../autonomy/experiments/last-jump-runs/row-benchmark/checkpoint_probe.py) | Saved-state and fixed-NLP storage benchmark; no route discovery. |
-| [checkpoint-results.json](../autonomy/experiments/last-jump-runs/row-benchmark/checkpoint-results.json) | Source hashes, sizes, timings, exact equality and fixed-request results. |
+- [Generic matched controls](../autonomy/experiments/automatic-corridors/generic-fixtures.json), [driver](../autonomy/experiments/automatic-corridors/compare_generic.py), [Real11 comparison driver](../autonomy/experiments/automatic-corridors/compare.py) and [final native gate](../autonomy/experiments/automatic-corridors/allocation-context-final-native-2026-11-03.json).
 
+- [Final acceptance manifest](../autonomy/experiments/automatic-corridors/acceptance-manifest-2026-11-03.json), [final coverage rectangles](../autonomy/experiments/automatic-corridors/coverage-allocation-context-final-2026-11-03.json.regions.svg), and [final matched Real11 report](../autonomy/experiments/automatic-corridors/matched-allocation-context-2026-11-03/summary.json).
 
-## IPOPT constraint cleanup additions (2026-11-03)
+## Generic route-discovery research
 
-| File | Purpose |
-| --- | --- |
-| [constraints.py](../ipopt/constraints.py) | Equivalent numerical row selection with original-source indices; no request mutation. |
-| [test_constraints.py](../ipopt/tests/test_constraints.py) | Reduction/provenance/precision and angular/relative/translated feasible-control checks. |
-| [test_worker_bounds.py](../ipopt/tests/test_worker_bounds.py) | Native extraction, expression monitor, final-point recovery and early-stop regressions. |
-| [IPOPT_CONSTRAINT_REDUCTION.md](IPOPT_CONSTRAINT_REDUCTION.md) | Runtime contract, diagnostic meanings, tests, saved-request results and limits. |
-| [production_bounds_probe.py](../autonomy/experiments/last-jump-runs/row-benchmark/production_bounds_probe.py) | Controlled reduction/extraction A/B on the same archived fixed NLP. |
-| [production-bounds-results.json](../autonomy/experiments/last-jump-runs/row-benchmark/production-bounds-results.json) | Source hashes, all23 fixed solves, row mapping, timings and validation. |
+- [GENERIC_ROUTE_DISCOVERY_RESEARCH.md](../autonomy/GENERIC_ROUTE_DISCOVERY_RESEARCH.md): cited primary literature and repository evidence, alternatives matrix, contact/approach route representation, B2→B3 examples, scoped irrelevance and merge rules, integration map and proposed experiments. Research document; no runtime implementation change.
 
+- [GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md](../autonomy/GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md): completed event-discovery implementation plan with records/APIs, module/call-site map, coverage and scope contracts, milestones, tests and cold-run acceptance. Consult its implementation ledger and evidence; the anchor-feasibility plan controls the next change.
 
-## Pure feasibility additions (2026-11-04)
+## Generic event implementation files
 
-| File | Purpose |
-| --- | --- |
-| [IPOPT_FEASIBILITY_MODE.md](IPOPT_FEASIBILITY_MODE.md) | Objective-free intermediate solves, solver/acceptance contracts, persistence changes and evidence. |
-| [test_feasibility_mode.py](../autonomy/tests/test_feasibility_mode.py) | Native intermediate-feasibility/optimization routing, cursor reset and independent replay checks. |
-| [feasibility_probe.py](../autonomy/experiments/last-jump-runs/row-benchmark/feasibility_probe.py) | Fixed-request comparison of directional early stop, constant feasibility and optimization. |
-| [feasibility-results.json](../autonomy/experiments/last-jump-runs/row-benchmark/feasibility-results.json) | Source hashes,36 first-phase runs and eight fresh-worker outcomes, including unknowns. |
+- Runtime: [event_routes.py](../autonomy/cell_routes/event_routes.py), [guides.py](../autonomy/cell_routes/guides.py), [event_adapter.py](../autonomy/cell_routes/event_adapter.py), [event_search.py](../autonomy/cell_routes/event_search.py), [event_coverage_audit.py](../autonomy/cell_routes/event_coverage_audit.py).
+- Tests: [test_event_domain.py](../autonomy/tests/test_event_domain.py), [test_event_routes.py](../autonomy/tests/test_event_routes.py), [test_interaction_normalization.py](../autonomy/tests/test_interaction_normalization.py), [test_guide_progress.py](../autonomy/tests/test_guide_progress.py), [test_event_search.py](../autonomy/tests/test_event_search.py).
+- Fixtures/evidence: [Real11 automatic input](../autonomy/experiments/event-route-discovery/real11-auto.json), [preparation profiler](../autonomy/experiments/event-route-discovery/profile_saved_contexts.py), [native gate](../autonomy/experiments/event-route-discovery/native_gate.py), [coverage driver](../autonomy/experiments/event-route-discovery/coverage.py), [generic matrix](../autonomy/experiments/event-route-discovery/generic_matrix.py), [matched driver](../autonomy/experiments/event-route-discovery/compare.py), [evidence guide](../autonomy/experiments/event-route-discovery/README.md).
 
+- Final event feature acceptance: [447-test native report](../autonomy/experiments/event-route-discovery/native-forward-service-2026-11-03.json), [coverage](../autonomy/experiments/event-route-discovery/coverage-forward-service-2026-11-03.json.gz), [matched cold summary](../autonomy/experiments/event-route-discovery/matched-forward-service-2026-11-03/summary.json), [complete cold route](../autonomy/experiments/event-route-discovery/cold-full-route.pdf), [manifest](../autonomy/experiments/event-route-discovery/acceptance-manifest-2026-11-03.json).
 
-## Repeated intermediate benchmark additions (2026-11-04)
+## Anchor feature evidence inventory
 
 | File | Purpose |
 | --- | --- |
-| [real11_intermediate_benchmark.py](../autonomy/experiments/last-jump-runs/row-benchmark/real11_intermediate_benchmark.py) | Extract all nonterminal requests once; repeated fresh/warm three-mode comparison, original-row validation and table generation. |
-| [real11-intermediate-results.json.gz](../autonomy/experiments/last-jump-runs/row-benchmark/real11-intermediate-results.json.gz) | Nine exact requests, input/script provenance,135 fresh runs with accepted facings/exit states,81 warm probes and summaries. |
-| [real11-intermediate-results.md](../autonomy/experiments/last-jump-runs/row-benchmark/real11-intermediate-results.md) | Generated nine-case timing/outcome table. |
-| [REAL11_INTERMEDIATE_BENCHMARK.md](../autonomy/experiments/last-jump-runs/row-benchmark/REAL11_INTERMEDIATE_BENCHMARK.md) | Methodology, results, seed bypass, objective-quality tradeoff, limits and reproduction. |
+| [.gitattributes](../autonomy/experiments/anchor-feasibility/.gitattributes) | Feature metadata, fixture, manifest or evidence navigation. |
+| [.gitignore](../autonomy/experiments/anchor-feasibility/.gitignore) | Feature metadata, fixture, manifest or evidence navigation. |
+| [README.md](../autonomy/experiments/anchor-feasibility/README.md) | Feature metadata, fixture, manifest or evidence navigation. |
+| [acceptance-manifest.json](../autonomy/experiments/anchor-feasibility/acceptance-manifest.json) | Feature metadata, fixture, manifest or evidence navigation. |
+| [acceptance_manifest.py](../autonomy/experiments/anchor-feasibility/acceptance_manifest.py) | Reproducible evidence/diagram driver. |
+| [generic-2026-11-04/same-block-chain.json.gz](../autonomy/experiments/anchor-feasibility/generic-2026-11-04/same-block-chain.json.gz) | Complete source/settings/continuation/replay report. |
+| [generic-2026-11-04/summary.json](../autonomy/experiments/anchor-feasibility/generic-2026-11-04/summary.json) | Feature metadata, fixture, manifest or evidence navigation. |
+| [generic-2026-11-04/turn-negative-x-full-scene.pdf](../autonomy/experiments/anchor-feasibility/generic-2026-11-04/turn-negative-x-full-scene.pdf) | Recorded source-specific guide/decision/trajectory visualization. |
+| [generic-2026-11-04/turn-negative-x-full-scene.svg](../autonomy/experiments/anchor-feasibility/generic-2026-11-04/turn-negative-x-full-scene.svg) | Recorded source-specific guide/decision/trajectory visualization. |
+| [generic-2026-11-04/turn-negative-x.json.gz](../autonomy/experiments/anchor-feasibility/generic-2026-11-04/turn-negative-x.json.gz) | Complete source/settings/continuation/replay report. |
+| [generic-2026-11-04/turn-positive-x-full-scene.pdf](../autonomy/experiments/anchor-feasibility/generic-2026-11-04/turn-positive-x-full-scene.pdf) | Recorded source-specific guide/decision/trajectory visualization. |
+| [generic-2026-11-04/turn-positive-x-full-scene.png](../autonomy/experiments/anchor-feasibility/generic-2026-11-04/turn-positive-x-full-scene.png) | Recorded source-specific guide/decision/trajectory visualization. |
+| [generic-2026-11-04/turn-positive-x-full-scene.svg](../autonomy/experiments/anchor-feasibility/generic-2026-11-04/turn-positive-x-full-scene.svg) | Recorded source-specific guide/decision/trajectory visualization. |
+| [generic-2026-11-04/turn-positive-x.json.gz](../autonomy/experiments/anchor-feasibility/generic-2026-11-04/turn-positive-x.json.gz) | Complete source/settings/continuation/replay report. |
+| [generic_controls.py](../autonomy/experiments/anchor-feasibility/generic_controls.py) | Reproducible evidence/diagram driver. |
+| [matched-2026-11-04/guided_early_stop-full-scene.pdf](../autonomy/experiments/anchor-feasibility/matched-2026-11-04/guided_early_stop-full-scene.pdf) | Recorded source-specific guide/decision/trajectory visualization. |
+| [matched-2026-11-04/guided_early_stop-full-scene.png](../autonomy/experiments/anchor-feasibility/matched-2026-11-04/guided_early_stop-full-scene.png) | Recorded source-specific guide/decision/trajectory visualization. |
+| [matched-2026-11-04/guided_early_stop-full-scene.svg](../autonomy/experiments/anchor-feasibility/matched-2026-11-04/guided_early_stop-full-scene.svg) | Recorded source-specific guide/decision/trajectory visualization. |
+| [matched-2026-11-04/guided_early_stop.json.gz](../autonomy/experiments/anchor-feasibility/matched-2026-11-04/guided_early_stop.json.gz) | Complete source/settings/continuation/replay report. |
+| [matched-2026-11-04/guided_early_stop.pdf](../autonomy/experiments/anchor-feasibility/matched-2026-11-04/guided_early_stop.pdf) | Recorded source-specific guide/decision/trajectory visualization. |
+| [matched-2026-11-04/guided_early_stop.svg](../autonomy/experiments/anchor-feasibility/matched-2026-11-04/guided_early_stop.svg) | Recorded source-specific guide/decision/trajectory visualization. |
+| [matched-2026-11-04/guided_polish_control-full-scene.pdf](../autonomy/experiments/anchor-feasibility/matched-2026-11-04/guided_polish_control-full-scene.pdf) | Recorded source-specific guide/decision/trajectory visualization. |
+| [matched-2026-11-04/guided_polish_control-full-scene.svg](../autonomy/experiments/anchor-feasibility/matched-2026-11-04/guided_polish_control-full-scene.svg) | Recorded source-specific guide/decision/trajectory visualization. |
+| [matched-2026-11-04/guided_polish_control.json.gz](../autonomy/experiments/anchor-feasibility/matched-2026-11-04/guided_polish_control.json.gz) | Complete source/settings/continuation/replay report. |
+| [matched-2026-11-04/guided_polish_control.pdf](../autonomy/experiments/anchor-feasibility/matched-2026-11-04/guided_polish_control.pdf) | Recorded source-specific guide/decision/trajectory visualization. |
+| [matched-2026-11-04/guided_polish_control.svg](../autonomy/experiments/anchor-feasibility/matched-2026-11-04/guided_polish_control.svg) | Recorded source-specific guide/decision/trajectory visualization. |
+| [matched-2026-11-04/source.patch](../autonomy/experiments/anchor-feasibility/matched-2026-11-04/source.patch) | Literal dirty tracked source/documentation patch at measurement start. |
+| [matched-2026-11-04/summary.json](../autonomy/experiments/anchor-feasibility/matched-2026-11-04/summary.json) | Feature metadata, fixture, manifest or evidence navigation. |
+| [measure.py](../autonomy/experiments/anchor-feasibility/measure.py) | Reproducible evidence/diagram driver. |
+| [native-2026-11-04/status.json](../autonomy/experiments/anchor-feasibility/native-2026-11-04/status.json) | Feature metadata, fixture, manifest or evidence navigation. |
+| [native-2026-11-04/tests.log](../autonomy/experiments/anchor-feasibility/native-2026-11-04/tests.log) | Native test log; nearest report defines acceptance status. |
+| [native-acceptance-2026-11-04/report.json](../autonomy/experiments/anchor-feasibility/native-acceptance-2026-11-04/report.json) | Feature metadata, fixture, manifest or evidence navigation. |
+| [native-acceptance-2026-11-04/tests.log](../autonomy/experiments/anchor-feasibility/native-acceptance-2026-11-04/tests.log) | Native test log; nearest report defines acceptance status. |
+| [native-final-2026-11-04/report.json](../autonomy/experiments/anchor-feasibility/native-final-2026-11-04/report.json) | Feature metadata, fixture, manifest or evidence navigation. |
+| [native-final-2026-11-04/tests.log](../autonomy/experiments/anchor-feasibility/native-final-2026-11-04/tests.log) | Native test log; nearest report defines acceptance status. |
+| [native_gate.py](../autonomy/experiments/anchor-feasibility/native_gate.py) | Reproducible evidence/diagram driver. |
+| [real11-anchors.json](../autonomy/experiments/anchor-feasibility/real11-anchors.json) | Feature metadata, fixture, manifest or evidence navigation. |
+| [render_full_scene.py](../autonomy/experiments/anchor-feasibility/render_full_scene.py) | Reproducible evidence/diagram driver. |
+| [storage.json](../autonomy/experiments/anchor-feasibility/storage.json) | Feature metadata, fixture, manifest or evidence navigation. |
+
+## Hard-transfer preparation correction and prior diagnosis
+
+| File | Purpose |
+| --- | --- |
+| [anchor-transfer-preparation/.gitattributes](../autonomy/experiments/anchor-transfer-preparation/.gitattributes) | Correction/diagnostic evidence; nearest README distinguishes cold versus archived-yaw control and remaining service limits. |
+| [anchor-transfer-preparation/.gitignore](../autonomy/experiments/anchor-transfer-preparation/.gitignore) | Correction/diagnostic evidence; nearest README distinguishes cold versus archived-yaw control and remaining service limits. |
+| [anchor-transfer-preparation/README.md](../autonomy/experiments/anchor-transfer-preparation/README.md) | Correction/diagnostic evidence; nearest README distinguishes cold versus archived-yaw control and remaining service limits. |
+| [anchor-transfer-preparation/cold.py](../autonomy/experiments/anchor-transfer-preparation/cold.py) | Correction/diagnostic evidence; nearest README distinguishes cold versus archived-yaw control and remaining service limits. |
+| [anchor-transfer-preparation/combined-300s-2026-11-04/combined.json.gz](../autonomy/experiments/anchor-transfer-preparation/combined-300s-2026-11-04/combined.json.gz) | Correction/diagnostic evidence; nearest README distinguishes cold versus archived-yaw control and remaining service limits. |
+| [anchor-transfer-preparation/combined-300s-2026-11-04/source.patch](../autonomy/experiments/anchor-transfer-preparation/combined-300s-2026-11-04/source.patch) | Correction/diagnostic evidence; nearest README distinguishes cold versus archived-yaw control and remaining service limits. |
+| [anchor-transfer-preparation/combined-300s-2026-11-04/summary.json](../autonomy/experiments/anchor-transfer-preparation/combined-300s-2026-11-04/summary.json) | Correction/diagnostic evidence; nearest README distinguishes cold versus archived-yaw control and remaining service limits. |
+| [anchor-transfer-preparation/combined-queue-audit.json](../autonomy/experiments/anchor-transfer-preparation/combined-queue-audit.json) | Correction/diagnostic evidence; nearest README distinguishes cold versus archived-yaw control and remaining service limits. |
+| [anchor-transfer-preparation/initial0-90s-2026-11-04/initial0.json.gz](../autonomy/experiments/anchor-transfer-preparation/initial0-90s-2026-11-04/initial0.json.gz) | Correction/diagnostic evidence; nearest README distinguishes cold versus archived-yaw control and remaining service limits. |
+| [anchor-transfer-preparation/initial0-90s-2026-11-04/route.pdf](../autonomy/experiments/anchor-transfer-preparation/initial0-90s-2026-11-04/route.pdf) | Correction/diagnostic evidence; nearest README distinguishes cold versus archived-yaw control and remaining service limits. |
+| [anchor-transfer-preparation/initial0-90s-2026-11-04/route.png](../autonomy/experiments/anchor-transfer-preparation/initial0-90s-2026-11-04/route.png) | Correction/diagnostic evidence; nearest README distinguishes cold versus archived-yaw control and remaining service limits. |
+| [anchor-transfer-preparation/initial0-90s-2026-11-04/source.patch](../autonomy/experiments/anchor-transfer-preparation/initial0-90s-2026-11-04/source.patch) | Correction/diagnostic evidence; nearest README distinguishes cold versus archived-yaw control and remaining service limits. |
+| [anchor-transfer-preparation/initial0-90s-2026-11-04/summary.json](../autonomy/experiments/anchor-transfer-preparation/initial0-90s-2026-11-04/summary.json) | Correction/diagnostic evidence; nearest README distinguishes cold versus archived-yaw control and remaining service limits. |
+| [anchor-transfer-preparation/native-2026-11-04/report.json](../autonomy/experiments/anchor-transfer-preparation/native-2026-11-04/report.json) | Correction/diagnostic evidence; nearest README distinguishes cold versus archived-yaw control and remaining service limits. |
+| [anchor-transfer-preparation/native-2026-11-04/tests.log](../autonomy/experiments/anchor-transfer-preparation/native-2026-11-04/tests.log) | Correction/diagnostic evidence; nearest README distinguishes cold versus archived-yaw control and remaining service limits. |
+| [anchor-transfer-preparation/storage.json](../autonomy/experiments/anchor-transfer-preparation/storage.json) | Correction/diagnostic evidence; nearest README distinguishes cold versus archived-yaw control and remaining service limits. |
+| [anchor-transfer-preparation/verify.py](../autonomy/experiments/anchor-transfer-preparation/verify.py) | Correction/diagnostic evidence; nearest README distinguishes cold versus archived-yaw control and remaining service limits. |
+| [anchor-initial0-audit-2026-11-04/README.md](../autonomy/experiments/anchor-initial0-audit-2026-11-04/README.md) | Correction/diagnostic evidence; nearest README distinguishes cold versus archived-yaw control and remaining service limits. |
+| [anchor-initial0-audit-2026-11-04/check.py](../autonomy/experiments/anchor-initial0-audit-2026-11-04/check.py) | Correction/diagnostic evidence; nearest README distinguishes cold versus archived-yaw control and remaining service limits. |
+| [anchor-initial0-audit-2026-11-04/result.json](../autonomy/experiments/anchor-initial0-audit-2026-11-04/result.json) | Correction/diagnostic evidence; nearest README distinguishes cold versus archived-yaw control and remaining service limits. |
+| [policy2 manifest](../autonomy/experiments/anchor-transfer-preparation/manifest.json) | Runtime/test/artifact hashes, cold outcomes and preserved historical evidence. |

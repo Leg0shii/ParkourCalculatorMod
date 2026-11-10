@@ -1,5 +1,9 @@
 # Documentation index
 
+Current integration: [anchor search and solver integration](ANCHOR_SEARCH_INTEGRATION.md),
+[selective review](SOLVER_BRANCH_INTEGRATION_REVIEW.md), and
+[profiling evidence](../autonomy/experiments/anchor-runtime-profile/README.md).
+
 All tracked standalone Markdown plus this consolidation. Read [AGENTS](../AGENTS.md) and [current state](CURRENT_STATE.md) first. Historical documents are preserved to explain decisions and measurements, not all made current by this index. A status label is not an assertion that every source-era sentence has been rewritten.
 
 | Document | Topic | Authority/status |
@@ -10,8 +14,12 @@ All tracked standalone Markdown plus this consolidation. Read [AGENTS](../AGENTS
 | [autonomy/experiments/last-jump-runs/row-benchmark/REAL11_INTERMEDIATE_BENCHMARK.md](../autonomy/experiments/last-jump-runs/row-benchmark/REAL11_INTERMEDIATE_BENCHMARK.md) | Repeated all-nine-request intermediate feasibility comparison, witness quality and limits | Current measured evidence |
 | [autonomy/experiments/last-jump-runs/row-benchmark/real11-intermediate-results.md](../autonomy/experiments/last-jump-runs/row-benchmark/real11-intermediate-results.md) | Generated timing table for all nine intermediate numerical requests | Current measured evidence |
 | [AGENTS.md](../AGENTS.md) | Standalone agent entry point | Current navigation/guidance |
+| [docs/ANCHOR_IMPLEMENTATION_RESUME.md](ANCHOR_IMPLEMENTATION_RESUME.md) | Self-contained authorized implementation resume: exact worktree, settled contract, implementation status, native environment and checks | Start here after compaction; current worktree/status and validation |
 | [CONSOLIDATION.md](../CONSOLIDATION.md) | Standalone branch consolidation | Historical; contains superseded branch/policy/status |
 | [README.md](../README.md) | Standalone route search and IPOPT | Current navigation/guidance |
+| [autonomy/ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md](../autonomy/ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md) | Exact-node DFS cadence, global hard latches, regional turns, same-block setup and finite extended B7 | Implemented anchor policy; physical returns deferred; new evidence separate |
+| [autonomy/ANCHOR_POLICY_DECISIONS.md](../autonomy/ANCHOR_POLICY_DECISIONS.md) | Exact-node rejection/cadence, binary edge-plus-margin decision mode, observability and current visit scope | Latest contract: preliminary binary decision mode with required observability; current visit scope |
+| [autonomy/REVISIT_DISCOVERY_DEFERRED_PLAN.md](../autonomy/REVISIT_DISCOVERY_DEFERRED_PLAN.md) | Preserved revisit complexity, lazy repetition design, future module map, tests and resume steps | Explicitly deferred; do not generate inter-block returns now |
 | [autonomy/BLOCK_ROUTE_SEARCH.md](../autonomy/BLOCK_ROUTE_SEARCH.md) | Block-route selection prototype | Mechanics/research reference; current decisions control scope |
 | [autonomy/BLOCK_SOLVER_PLAN.md](../autonomy/BLOCK_SOLVER_PLAN.md) | Block solver: continuous-model orchestration | Prior plan/design reference; check decisions index for implemented/superseded scope |
 | [autonomy/CELL_ROUTE_EXPERIMENT_PLAN.md](../autonomy/CELL_ROUTE_EXPERIMENT_PLAN.md) | Cell-route experiment plan | Prior plan/design reference; check decisions index for implemented/superseded scope |
@@ -25,6 +33,8 @@ All tracked standalone Markdown plus this consolidation. Read [AGENTS](../AGENTS
 | [autonomy/DYNAMIC_CONTACT_DECISIONS.md](../autonomy/DYNAMIC_CONTACT_DECISIONS.md) | Ceiling and stepping decisions change the transition law | Mechanics/research reference; current decisions control scope |
 | [autonomy/GENERATION_PERFORMANCE_PLAN.md](../autonomy/GENERATION_PERFORMANCE_PLAN.md) | Schedule-generation performance follow-ups | Prior plan/design reference; check decisions index for implemented/superseded scope |
 | [autonomy/GENERATION_RELEVANCE_PLAN.md](../autonomy/GENERATION_RELEVANCE_PLAN.md) | Preliminary plan: generate only relevant, distinct interaction models | Implemented interaction design; consolidated plan/results control status |
+| [autonomy/GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md](../autonomy/GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md) | Completed event route-discovery refactor: event language, interaction normalization, DFS owners, migration and gates | Implemented/accepted baseline; anchor-feasibility plan controls the current extension |
+| [autonomy/GENERIC_ROUTE_DISCOVERY_RESEARCH.md](../autonomy/GENERIC_ROUTE_DISCOVERY_RESEARCH.md) | Generic potential-route coverage, decomposition/roadmap comparison, contact/approach semantics and early relevance/merge rules | Cited research; event implementation and current next-change plan have separate authority |
 | [autonomy/GENERIC_COMPOSITION.md](../autonomy/GENERIC_COMPOSITION.md) | Generic movement programs | Existing API/mechanics reference; check current scope |
 | [autonomy/GENERIC_COMPOSITION_PLAN.md](../autonomy/GENERIC_COMPOSITION_PLAN.md) | Generic movement composition | Prior plan/design reference; check decisions index for implemented/superseded scope |
 | [autonomy/GEOMETRIC_DECISION_GUIDANCE.md](../autonomy/GEOMETRIC_DECISION_GUIDANCE.md) | Use the existing cell route as the first decision guide | Mechanics/research reference; current decisions control scope |
@@ -58,6 +68,7 @@ All tracked standalone Markdown plus this consolidation. Read [AGENTS](../AGENTS
 | [autonomy/RUN_TICKS_PLAN.md](../autonomy/RUN_TICKS_PLAN.md) | Run-ticks prototype: status and remaining work | Prior plan/design reference; check decisions index for implemented/superseded scope |
 | [autonomy/SEARCH_CONTINUATION_FIX_PLAN.md](../autonomy/SEARCH_CONTINUATION_FIX_PLAN.md) | Resume unfinished solves and reject provably dead prefixes | Prior plan/design reference; check decisions index for implemented/superseded scope |
 | [autonomy/SEARCH_OBJECTIVE.md](../autonomy/SEARCH_OBJECTIVE.md) | Search order: total ticks, then objective | Mechanics/research reference; current decisions control scope |
+| [autonomy/SPATIAL_CORRIDOR_REFACTOR_PLAN.md](../autonomy/SPATIAL_CORRIDOR_REFACTOR_PLAN.md) | Typed support/air regions, 3D route identity, discovery, staged constraints and DFS integration | Implemented spatial baseline; later event implementation and anchor-feasibility plan supersede the stated parts |
 | [autonomy/SPATIAL_ROUTE_RESEARCH.md](../autonomy/SPATIAL_ROUTE_RESEARCH.md) | From collision geometry to spatial route families | Mechanics/research reference; current decisions control scope |
 | [autonomy/STATE_PROTECTION_IMPLEMENTATION_PLAN.md](../autonomy/STATE_PROTECTION_IMPLEMENTATION_PLAN.md) | Implementation plan: velocity and schedule protection | Prior plan/design reference; check decisions index for implemented/superseded scope |
 | [autonomy/STEPPING_CASES.md](../autonomy/STEPPING_CASES.md) | Stepping terminology and cases | Mechanics/research reference; current decisions control scope |
@@ -122,6 +133,7 @@ All tracked standalone Markdown plus this consolidation. Read [AGENTS](../AGENTS
 | [docs/ARCHITECTURE.md](ARCHITECTURE.md) | Architecture and execution flow | Current navigation/guidance |
 | [docs/CODE_MAP.md](CODE_MAP.md) | Production code map | Current navigation/guidance |
 | [docs/CORRIDOR_AGENT_HANDOFF.md](CORRIDOR_AGENT_HANDOFF.md) | Handoff: changes since the standalone AGENTS consolidation | Current navigation/guidance |
+| [docs/CORRIDOR_IMPLEMENTATION_RESUME.md](CORRIDOR_IMPLEMENTATION_RESUME.md) | Exact checkout/state, implementation authorization, next action and test commands after compaction | Current corridor implementation resume entry point |
 | [docs/CURRENT_STATE.md](CURRENT_STATE.md) | Current standalone state | Current navigation/guidance |
 | [docs/DECISIONS_AND_PLANS.md](DECISIONS_AND_PLANS.md) | Decisions and plan authority | Current navigation/guidance |
 | [docs/DEVELOPMENT.md](DEVELOPMENT.md) | Writing code and fixes | Current navigation/guidance |
@@ -142,3 +154,18 @@ All tracked standalone Markdown plus this consolidation. Read [AGENTS](../AGENTS
 | [ipopt/RECENT_REPLAY_HANDOFF.md](../ipopt/RECENT_REPLAY_HANDOFF.md) | Replay and movement handoff, updated 2026-10-28 | Historical handoff; current AGENTS supersedes task/branch instructions |
 | [ipopt/REPLAY.md](../ipopt/REPLAY.md) | Local Minecraft movement replay | Existing API/mechanics reference; check current scope |
 | [ipopt/RUN_TICKS_PHYSICS_HANDOFF.md](../ipopt/RUN_TICKS_PHYSICS_HANDOFF.md) | Block-sequence and minimum-run-ticks physics handoff | Historical handoff; current AGENTS supersedes task/branch instructions |
+
+Current feature evidence: [anchor-feasibility README](../autonomy/experiments/anchor-feasibility/README.md), [new finite Real11 fixture](../autonomy/experiments/anchor-feasibility/real11-anchors.json), and fresh native/matched-run artifacts in that directory.
+
+Latest correction: [hard-transfer preparation evidence](../autonomy/experiments/anchor-transfer-preparation/README.md). Policy2 preserves source-local setup after latching;535 native checks pass. Initial0-only cold finds64; the combined arm remains limited by root service order. [Earlier seeded diagnosis](../autonomy/experiments/anchor-initial0-audit-2026-11-04/README.md) is distinct from these cold results.
+
+## Current next-change plan
+
+- [Current decisions/cadence advice](../autonomy/ANCHOR_POLICY_DECISIONS.md), [implementation plan](../autonomy/ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md), [deferred revisit design](../autonomy/REVISIT_DISCOVERY_DEFERRED_PLAN.md). Normal exact-node DFS solves, no ancestor-negative inference, same-block jumps supported; physical returns after another block deferred. The physical-task anchor extension is implemented; see new evidence for acceptance.
+
+## Automatic semantic corridor implementation
+
+- [Implementation contract/status](../autonomy/SPATIAL_CORRIDOR_REFACTOR_PLAN.md), [DFS integration](../autonomy/DFS_INTERACTION_IMPLEMENTATION_PLAN.md), [active resume handoff](CORRIDOR_IMPLEMENTATION_RESUME.md).
+- [Automatic fixture, commands, coverage and numerical evidence](../autonomy/experiments/automatic-corridors/README.md). Source-era failed audits remain alongside final acceptance reports.
+
+- [Event-discovery implementation evidence](../autonomy/experiments/event-route-discovery/README.md):447-test final native gate, seven generic/control replays, three-tier coverage, matched automatic/supplied cold results, complete new trajectory diagram and source/evidence manifest.

@@ -1,5 +1,17 @@
 # Pure feasibility for intermediate solves
 
+**Current policy (2026-11-10):** the integrated anchor solver uses the configured
+directional objective with `stopOnFeasible=True`. Early stopping no longer
+implicitly selects constant zero. To request the retained pure-feasibility mode
+explicitly, pass `objectiveMode: constant_zero` and `stopOnFeasible: true` in the
+numerical request. `objectiveMode: configured` is the default. Final optimization
+retains the configured objective and does not stop at the first feasible point.
+See [integration and checkpoint compatibility](ANCHOR_SEARCH_INTEGRATION.md).
+
+The following text and measurements document the earlier solver-branch default
+and the retained explicit constant-zero mode; its old API/default and schema5
+instructions are historical. The benchmark evidence itself remains unchanged.
+
 Implemented 2026-11-04 at the user's request. Intermediate spatial-goal solves now ask for any feasible trajectory, while the final solve retains the configured objective. For a fixed set of discrete decisions, the numerical problem is:
 
 \[

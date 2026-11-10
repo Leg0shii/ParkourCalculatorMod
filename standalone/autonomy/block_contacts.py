@@ -123,7 +123,8 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
                            max_blockages=3, max_horizontal=2, max_vertical=2,
                            max_passage_candidates=128, solid_blocks=None, max_wall_hits=0,
                            max_wall_candidates=24, candidate_filter=None, work=None, resume_state=None, repair_scope=None,
-                           on_progress=None, validation_scope=None, initial_variants=None, retry_unresolved=True):
+                           on_progress=None, validation_scope=None, initial_variants=None, retry_unresolved=True,
+                           stop_on_feasible=None, oracle_rejection=False):
     route = copy.deepcopy(route)
     if solid_blocks is not None:
         for passage in route.get('passages', []):
@@ -133,7 +134,10 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
     variant_source = iter(initial_variants) if initial_variants is not None else None
     source_exhausted = variant_source is None or getattr(variant_source, 'state', {}).get('exhausted', False)
     choices = {}
-    current_context = repair_context(route, profiles, geometry, repair_scope)
+    choice_alternatives = {}
+    policy = dict(stopOnFeasible=stop_on_feasible, optimizeGoal=optimize_goal,
+                  rankEqualCost=rank_equal_cost, oracleRejection=oracle_rejection)
+    current_context = repair_context(route, profiles, geometry, dict(scope=repair_scope, solvePolicy=policy))
     resuming = (isinstance(resume_state, dict) and resume_state.get('version') in (1, 2)
                 and compatible(resume_state.get('context'), current_context))
     exact_resume = resuming and resume_state['context'] == current_context
@@ -147,17 +151,21 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
     def offer(score, rows, passages, hits, warm_yaw=None, selected=None):
         nonlocal serial
         key = branch_key(rows, passages, hits)
+        if selected is not None:
+            choices.setdefault(key, copy.deepcopy(selected))
+            alternatives = choice_alternatives.setdefault(key, [])
+            if selected not in alternatives:
+                alternatives.append(copy.deepcopy(selected))
         if key in seen:
             return
         seen.add(key)
-        if selected is not None:
-            choices[key] = copy.deepcopy(selected)
         serial += 1
         heapq.heappush(queue, (score, serial, copy.deepcopy(rows), copy.deepcopy(passages), copy.deepcopy(hits),
                               copy.deepcopy(warm_yaw)))
 
     if resuming:
         choices.update(copy.deepcopy(resume_state.get('interactionChoices', {})))
+        choice_alternatives.update(copy.deepcopy(resume_state.get('interactionAlternatives', {})))
         pending = (([resume_state['incumbent']] if resume_state.get('incumbent') is not None else [])
                    if resume_state.get('version') == 1 else [])+resume_state.get('pending', [])
         deferred = (resume_state.get('unresolved', []) if retry_unresolved else [])+([resume_state['inFlight']] if resume_state.get('inFlight') else [])
@@ -191,6 +199,7 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
             acceptedVariants=copy.deepcopy(accepted_variants),
             acceptedResult=saved_best, inFlight=copy.deepcopy(in_flight), completed=copy.deepcopy(completed),
             referenceWarmYaw=copy.deepcopy(reference_yaw), interactionChoices=copy.deepcopy(choices),
+            interactionAlternatives=copy.deepcopy(choice_alternatives),
             constraintGeneration=copy.deepcopy(getattr(variant_source, 'state', None)),
             attemptLog=copy.deepcopy((resume_state.get('attemptLog', []) if exact_resume else [])+inner_attempts),
             contactLog=copy.deepcopy((resume_state.get('contactLog', []) if exact_resume else [])+attempts))
@@ -330,6 +339,8 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
                 blockageUsage=[{'blockId': value if kind == 'block' else 'solid:' + str(value), **counts}
                     for (kind, value), counts in blockage_usage(passages).items()], vertical=checked['vertical']['vertical'])
             best['selectedInteractions'] = copy.deepcopy(choices.get(branch_key(rows, passages, hits), passages))
+            best['selectedInteractionAlternatives'] = copy.deepcopy(choice_alternatives.get(
+                branch_key(rows, passages, hits), [best['selectedInteractions']]))
             best['candidate'].update({key: checked['vertical'][key] for key in ('y', 'vy', 'onGround')})
             if candidate_filter is not None:
                 best['corridorCheck'] = checked['verdict']
@@ -360,7 +371,7 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
 
         result = find_route(branch, compiler, seconds=remaining, candidate_seconds=candidate_seconds,
                             retries=retries, improve=improve, rank_equal_cost=rank_equal_cost,
-                            optimize_goal=optimize_goal, python_executable=python_executable,
+                            optimize_goal=optimize_goal, stop_on_feasible=stop_on_feasible, python_executable=python_executable,
                             cancel_event=cancel_event, work=work, on_candidate=retain)
         inner_attempts.extend(result['attempts'])
         completion = dict(branch=branch_key(rows, passages, hits), status=result['status'],
@@ -401,7 +412,14 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
             result.update(attempts=inner_attempts, contactAttempts=attempts)
             return finish(result)
         if result['best'] is None:
-            if result['status'] == 'unknown':
+            diagnostics = [d for a in result.get('attempts', []) for d in a.get('diagnostics', [])]
+            oracle_completed = oracle_rejection and diagnostics and all(
+                d.get('status') == 'unknown' and d.get('termination') == 'worker_finished' and
+                d.get('workerStatus') in ('Infeasible_Problem_Detected','Search_Direction_Becomes_Too_Small',
+                                         'Restoration_Failed','Solve_Succeeded','Solved_To_Acceptable_Level')
+                for d in diagnostics)
+            completion['oracleRejected'] = bool(oracle_completed)
+            if result['status'] == 'unknown' and not oracle_completed:
                 unresolved.append(save_branch(score, rows, passages, hits, proposal_yaw))
             continue
         if not conflicts:
