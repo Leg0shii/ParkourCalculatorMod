@@ -48,14 +48,14 @@ public final class TurnProfileController {
         public final int[][] effects;
         public final int[] leadKeys;
         public final TurnReference.Landing landing;
-        public final TurnProfile profile;
+        public final Boolean modelLands;
         public final AttemptSampler.Stats attempts;
         public final double pixelDeg;
         final AngleSolverEngine.PathSnapshot snapshot;
 
         Current(int startTick, int tasFirstTick, double[] facing, int[] keys, boolean[] checkKeys, int[] optionalKeys,
                 boolean[] checkYaw, boolean[] still, boolean[] jumpTicks, int[][] effects,
-                int[] leadKeys, TurnReference.Landing landing, TurnProfile profile, AttemptSampler.Stats attempts,
+                int[] leadKeys, TurnReference.Landing landing, Boolean modelLands, AttemptSampler.Stats attempts,
                 double pixelDeg, AngleSolverEngine.PathSnapshot snapshot) {
             this.startTick = startTick;
             this.tasFirstTick = tasFirstTick;
@@ -70,7 +70,7 @@ public final class TurnProfileController {
             this.effects = effects;
             this.leadKeys = leadKeys;
             this.landing = landing;
-            this.profile = profile;
+            this.modelLands = modelLands;
             this.attempts = attempts;
             this.pixelDeg = pixelDeg;
             this.snapshot = snapshot;
@@ -78,15 +78,15 @@ public final class TurnProfileController {
 
         Current withAttempts(AttemptSampler.Stats stats, double pixelDeg) {
             return new Current(startTick, tasFirstTick, facing, keys, checkKeys, optionalKeys, checkYaw, still,
-                    jumpTicks, effects, leadKeys, landing, profile, stats, pixelDeg, snapshot);
+                    jumpTicks, effects, leadKeys, landing, modelLands, stats, pixelDeg, snapshot);
         }
 
         public boolean canRate() {
-            return snapshot != null && profile != null && profile.lands;
+            return snapshot != null && modelLands != null && modelLands;
         }
 
         public boolean pathLands() {
-            return profile == null || profile.lands;
+            return modelLands == null || modelLands;
         }
 
         public int lastTick() {
@@ -406,10 +406,10 @@ public final class TurnProfileController {
         String violated = built && landingTick >= 0 ? simulationViolation(first, landingTick) : "no path";
         items.add(new SetupCheck.Item("The simulation meets every constraint", violated == null,
                 violated == null ? "every constraint from tick " + (first + 2) + " to tick " + (landingTick + 1) : violated));
-        boolean modelLands = built && cur.profile != null && cur.profile.lands;
+        boolean modelLands = built && cur.modelLands != null && cur.modelLands;
         items.add(new SetupCheck.Item("The solver lands the TAS too", modelLands,
                 modelLands ? "the solver replays the rows with its own physics and meets the landing constraint"
-                        : !built || cur.profile == null ? "the solver could not replay the rows"
+                        : !built || cur.modelLands == null ? "the solver could not replay the rows"
                         : "the solver replays the rows with its own physics and misses the landing constraint, check the path and solve again"));
         String disagree = built && cur.snapshot != null ? modelDisagreement(cur) : "the solver could not replay the rows";
         items.add(new SetupCheck.Item("The solver's replay matches the simulation", disagree == null,
@@ -583,13 +583,9 @@ public final class TurnProfileController {
             jumps[k] = (keys[k] & TurnReference.KEY_JUMP) != 0 && (sc == null || !Double.isNaN(sc.slipAt(k)));
             effects[k] = built.ref.row(k).getEffectLevels();
         }
-        TurnProfile profile = null;
-        if (snap != null) {
-            ForwardModel model = engine.forwardModel();
-            profile = TurnProfile.compute(model, snap.spec, facing, null, false);
-        }
+        Boolean modelLands = snap == null ? null : TurnProfile.lands(engine.forwardModel(), snap.spec, facing);
         current.set(new Current(0, ref.tasFirstTick(), facing, keys, checkKeys, optional, checkYaw, still, jumps,
-                effects, leadKeys(ref.tasFirstTick()), ref.landing(), profile, null,
+                effects, leadKeys(ref.tasFirstTick()), ref.landing(), modelLands, null,
                 TurnProfile.pixelDeg(sensitivity.get()), snap));
     }
 
