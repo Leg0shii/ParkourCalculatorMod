@@ -12,6 +12,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpLinearModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
+import de.legoshi.parkourcalc.core.anglesolver.solver.Objective;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SlpSolve;
 import de.legoshi.parkourcalc.core.save.SaveFile;
 import de.legoshi.parkourcalc.core.save.SaveIO;
@@ -48,7 +49,11 @@ public class CrossAxisSignTest {
     }
 
     private static Loaded load() {
-        SaveFile file = SaveIO.parseSafe(Fixtures.rawPool(CAPTURE));
+        return load(CAPTURE);
+    }
+
+    private static Loaded load(String capture) {
+        SaveFile file = SaveIO.parseSafe(Fixtures.rawPool(capture));
         assertNotNull(file);
         ExactJumpModel model = ExactJumpModel.forMcVersion(file.mcVersion);
         InputData inputs = new InputData();
@@ -168,5 +173,25 @@ public class CrossAxisSignTest {
             double[] gf = sc.toGameFacings(yaws);
             assertTrue(JumpConstraintCompiler.compile(pinned).maxViolation(gf, l.model.forward(sc, gf)) <= 0.0);
         }
+    }
+
+    @Test
+    public void dualBoundCoversBothDominantSigns() {
+        Loaded l = load("gh398-optimize-2jump");
+        JumpPhysicsInputs sc = l.spec.asScenario();
+        List<JumpConstraint> crossOnly = new ArrayList<>();
+        for (JumpConstraint c : l.spec.constraints) if (JumpLinearModel.isCrossAxis(c)) crossOnly.add(c);
+        assertEquals(1, crossOnly.size());
+        Objective objective = new Objective(JumpPhysicsInputs.Axis.Z, Objective.Sense.MIN, l.spec.objective.tick);
+        JumpSpec withCross = new JumpSpec(sc, crossOnly, objective);
+        double[] free = ClosedFormSolve.optimize(l.model, new JumpSpec(sc, new ArrayList<JumpConstraint>(), objective),
+                0.0, new AtomicBoolean(false));
+        assertNotNull(free);
+        double[] gf = sc.toGameFacings(free);
+        ForwardPath path = l.model.forward(sc, gf);
+        assertTrue(JumpConstraintCompiler.compile(withCross).maxViolation(gf, path) <= 0.0);
+        double bound = ClosedFormSolve.dualBound(withCross);
+        assertTrue("a feasible path at " + objective.evaluate(path) + " lies beyond the bound " + bound,
+                Double.isNaN(bound) || objective.evaluate(path) >= bound - 1.0e-4);
     }
 }

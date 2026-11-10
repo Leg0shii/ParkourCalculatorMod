@@ -651,27 +651,40 @@ public final class ClosedFormSolve {
         double[] cz = new double[lin.n];
         lin.objectiveVectors(spec.objective, cx, cz);
         boolean[] trivialInfeasible = {false};
-        List<JumpLinearModel.Wall> walls = lin.compileAxisWalls(spec.constraints, 0.0, trivialInfeasible);
+        List<JumpLinearModel.Wall> axisWalls = lin.compileAxisWalls(spec.constraints, 0.0, trivialInfeasible);
         if (trivialInfeasible[0]) return Double.NaN;
-        double value;
-        if (pre != null && !pre.isIdentity()) {
-            FacingPrefold.Reduced red = pre.reduce(cx, cz, lin.mMagAll(), walls);
-            double pinnedTerm = pre.pinnedObjectiveTerm(cx, cz);
-            if (red.n == 0) {
-                value = pinnedTerm;
-            } else {
-                CostateDualSolver.Result r = new CostateDualSolver(red.n, red.cx, red.cz, red.mMag, red.walls).solve(0.0, null);
-                if (r == null) return Double.NaN;
-                value = r.value + pinnedTerm;
-            }
-        } else {
-            CostateDualSolver.Result r = new CostateDualSolver(lin.n, cx, cz, lin.mMagAll(), walls).solve(0.0, null);
-            if (r == null) return Double.NaN;
-            value = r.value;
-        }
+        double value = crossUnionBoundValue(lin, pre, cx, cz, spec.constraints);
+        if (Double.isNaN(value)) value = boundValue(lin, pre, cx, cz, axisWalls);
+        if (Double.isNaN(value)) return Double.NaN;
         // r.value bounds max c·u with c MAX-normalized; fold the constant part back in (MIN is negated).
         double constPos = lin.objectiveConst(spec.objective);
         return spec.objective.sense == Objective.Sense.MAX ? constPos + value : constPos - value;
+    }
+
+    private static double crossUnionBoundValue(JumpLinearModel lin, FacingPrefold pre, double[] cx, double[] cz,
+                                               List<JumpConstraint> constraints) {
+        int k = JumpLinearModel.crossAxisCount(constraints);
+        if (k == 0 || k > CROSS_SIGN_CAP) return Double.NaN;
+        double union = Double.NEGATIVE_INFINITY;
+        for (int[] signs : crossSignCombos(constraints)) {
+            double v = boundValue(lin, pre, cx, cz, lin.compileWalls(constraints, 0.0, new boolean[1], signs));
+            if (Double.isNaN(v)) return Double.NaN;
+            union = Math.max(union, v);
+        }
+        return union;
+    }
+
+    private static double boundValue(JumpLinearModel lin, FacingPrefold pre, double[] cx, double[] cz,
+                                     List<JumpLinearModel.Wall> walls) {
+        if (pre != null && !pre.isIdentity()) {
+            FacingPrefold.Reduced red = pre.reduce(cx, cz, lin.mMagAll(), walls);
+            double pinnedTerm = pre.pinnedObjectiveTerm(cx, cz);
+            if (red.n == 0) return pinnedTerm;
+            CostateDualSolver.Result r = new CostateDualSolver(red.n, red.cx, red.cz, red.mMag, red.walls).solve(0.0, null);
+            return r == null ? Double.NaN : r.value + pinnedTerm;
+        }
+        CostateDualSolver.Result r = new CostateDualSolver(lin.n, cx, cz, lin.mMagAll(), walls).solve(0.0, null);
+        return r == null ? Double.NaN : r.value;
     }
 
     public static double dualBoundIgnoringFacing(JumpSpec spec) {
