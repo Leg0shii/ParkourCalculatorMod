@@ -24,7 +24,7 @@ public final class StructurePoolDriver {
         }
     }
 
-    public static final class Config {
+    public static final class Config implements Cloneable {
         public int maxEdges = 3;
         public int minDwell = 3;
         public int[] alphabet = {NoTurnKeys.NONE, NoTurnKeys.W, NoTurnKeys.WA, NoTurnKeys.WD,
@@ -62,6 +62,14 @@ public final class StructurePoolDriver {
         public int minLevel = 0;
         public boolean playable = false;
         public int threads = 0;
+
+        Config copy() {
+            try {
+                return (Config) super.clone();
+            } catch (CloneNotSupportedException e) {
+                throw new AssertionError(e);
+            }
+        }
     }
 
     public static final class Candidate {
@@ -1783,7 +1791,7 @@ public final class StructurePoolDriver {
         int per = Math.max(1, threads / structures.length);
         List<StructurePoolDriver> drivers = new ArrayList<>();
         for (int si = 0; si < structures.length; si++) {
-            Config cfg2 = copyConfig(cfg);
+            Config cfg2 = cfg.copy();
             cfg2.threads = per;
             cfg2.allowJa = false;
             cfg2.jaAllPass = false;
@@ -1831,47 +1839,6 @@ public final class StructurePoolDriver {
         }
     }
 
-
-    private static Config copyConfig(Config c) {
-        Config o = new Config();
-        o.maxEdges = c.maxEdges;
-        o.minDwell = c.minDwell;
-        o.alphabet = c.alphabet;
-        o.takeoffCombos = c.takeoffCombos;
-        o.tapsStage = c.tapsStage;
-        o.repairStage = c.repairStage;
-        o.repairAfterLevel = c.repairAfterLevel;
-        o.repairWidth = c.repairWidth;
-        o.repairPairs = c.repairPairs;
-        o.repairRounds = c.repairRounds;
-        o.repairBudgetNanos = c.repairBudgetNanos;
-        o.repairPoolCap = c.repairPoolCap;
-        o.repairFlashNanos = c.repairFlashNanos;
-        o.diskGrid = c.diskGrid;
-        o.diskCoarseStride = c.diskCoarseStride;
-        o.diskMidStride = c.diskMidStride;
-        o.diskEarlyOutViol = c.diskEarlyOutViol;
-        o.diskKeep = c.diskKeep;
-        o.slackScale = c.slackScale;
-        o.byteExact = c.byteExact;
-        o.byteFeasible = c.byteFeasible;
-        o.poolCap = c.poolCap;
-        o.perEdgeCertify = c.perEdgeCertify;
-        o.maxCertify = c.maxCertify;
-        o.extraCertify = c.extraCertify;
-        o.extraCertifyNanos = c.extraCertifyNanos;
-        o.certifyBudgetNanos = c.certifyBudgetNanos;
-        o.searchBudgetNanos = c.searchBudgetNanos;
-        o.nearSearchBudgetNanos = c.nearSearchBudgetNanos;
-        o.totalBudgetNanos = c.totalBudgetNanos;
-        o.turnCombo = c.turnCombo;
-        o.allowJa = c.allowJa;
-        o.jaAllPass = c.jaAllPass;
-        o.minLevel = c.minLevel;
-        o.playable = c.playable;
-        o.threads = c.threads;
-        return o;
-    }
 
     private static LevelResult awaitLevel(java.util.concurrent.Future<LevelResult> f) {
         try {
