@@ -77,6 +77,7 @@ public final class Expect {
     public Double minGain;
     public Boolean turns;
     public Double roundsGain;
+    public Boolean fullSearch;
     public Boolean seedMayMiss;
     public Double cap;
 
