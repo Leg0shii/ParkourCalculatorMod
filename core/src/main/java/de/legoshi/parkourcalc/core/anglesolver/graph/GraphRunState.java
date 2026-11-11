@@ -16,6 +16,7 @@ public final class GraphRunState {
         public long[] workUnits;
         public double objective = Double.NaN;
         public double violation = Double.NaN;
+        public double dualGap = Double.NaN;
         public boolean feasible;
 
         Step(String nodeId, String label) {
@@ -30,6 +31,7 @@ public final class GraphRunState {
             s.workUnits = workUnits;
             s.objective = objective;
             s.violation = violation;
+            s.dualGap = dualGap;
             s.feasible = feasible;
             return s;
         }
@@ -81,6 +83,7 @@ public final class GraphRunState {
         if (cand != null && cand.yaws != null) {
             last.objective = cand.objective;
             last.violation = cand.violation;
+            last.dualGap = cand.dualGap;
             last.feasible = cand.feasible;
         }
     }

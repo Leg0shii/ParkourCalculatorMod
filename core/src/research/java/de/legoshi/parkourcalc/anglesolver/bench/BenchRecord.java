@@ -58,6 +58,7 @@ public final class BenchRecord {
         public String taken;
         public double workMs;
         public Double objective;
+        public Double gap;
         public boolean feasible;
     }
 

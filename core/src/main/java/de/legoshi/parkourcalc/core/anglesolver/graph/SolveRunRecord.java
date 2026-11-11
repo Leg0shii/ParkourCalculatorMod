@@ -99,6 +99,7 @@ public final class SolveRunRecord {
         public long[] workUnits;
         public Double objective;
         public Double violation;
+        public Double dualGap;
         public boolean feasible;
     }
 
@@ -222,6 +223,7 @@ public final class SolveRunRecord {
             r.workUnits = s.workUnits;
             r.objective = Double.isNaN(s.objective) ? null : s.objective;
             r.violation = Double.isNaN(s.violation) ? null : s.violation;
+            r.dualGap = Double.isNaN(s.dualGap) ? null : s.dualGap;
             r.feasible = s.feasible;
             out.add(r);
         }

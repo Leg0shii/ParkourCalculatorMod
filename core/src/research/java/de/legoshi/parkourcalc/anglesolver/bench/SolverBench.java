@@ -326,6 +326,7 @@ public class SolverBench {
                 step.taken = s.taken;
                 step.workMs = s.workNanos < 0 ? -1.0 : s.workNanos / 1e6;
                 step.objective = s.objective;
+                step.gap = s.dualGap;
                 step.feasible = s.feasible;
                 rec.steps.add(step);
                 if (s.workUnits != null) lastUnits = s.workUnits;
