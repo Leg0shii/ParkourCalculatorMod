@@ -244,6 +244,7 @@ public final class SaveIO {
         state.setEffort(effort);
         state.setStopOnFeasible(a.stopOnFeasible != null && a.stopOnFeasible);
         state.setLegalMode(a.legalMode != null && a.legalMode);
+        state.setFullTurnStart(a.fullTurnStart != null && a.fullTurnStart);
         if (a.budgetMs != null) state.setBudgetMs(a.budgetMs);
         else if (a.optimizeSeconds != null && effort != AngleSolverState.Effort.FAST) state.setOptimizeSeconds(a.optimizeSeconds);
         state.setSmoothGiveBack(a.smoothGiveBack != null ? a.smoothGiveBack : 1.0);
@@ -666,6 +667,7 @@ public final class SaveIO {
         a.effort = s.getEffort().name();
         a.stopOnFeasible = s.isStopOnFeasible();
         a.legalMode = s.isLegalMode();
+        a.fullTurnStart = s.isFullTurnStart() ? Boolean.TRUE : null;
         a.optimizeSeconds = s.getOptimizeSeconds();
         a.budgetMs = s.getBudgetMs();
         a.smoothGiveBack = s.getSmoothGiveBack() < 1.0 ? s.getSmoothGiveBack() : null;

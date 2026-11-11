@@ -1326,7 +1326,7 @@ public final class CertifiedBnb {
                     double cand = base + sgn * k * (double) Math.ulp(target);
                     float ent;
                     if (locked) {
-                        ent = (float) cand;
+                        ent = s.sc.lockedFacing(t, cand);
                     } else {
                         double delta = Angles.wrapDelta(cand - prevAbs);
                         ent = entity + (float) delta;
