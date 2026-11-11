@@ -158,7 +158,7 @@ public final class SmoothPortfolio {
         return deadlineNanos != 0L && System.nanoTime() >= deadlineNanos;
     }
 
-    private static JumpSpec guard(JumpPhysicsInputs sc, JumpSpec spec, double reference, double giveBack) {
+    static JumpSpec guard(JumpPhysicsInputs sc, JumpSpec spec, double reference, double giveBack) {
         if (spec.objective.isCustomAngle() || Double.isInfinite(giveBack)) {
             return spec;
         }

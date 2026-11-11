@@ -4,6 +4,7 @@ public final class TickInputs {
 
     public static final float SCALE = 0.98F;
     private static final float TOL = 1.0e-6F;
+    private static final float UNIT_DIAGONAL = 0.70710677F;
 
     public static final TickInputs NONE = new TickInputs(false, false, false, false, false);
 
@@ -35,8 +36,8 @@ public final class TickInputs {
 
     private static int sign(float v) {
         if (Math.abs(v) <= TOL) return 0;
-        if (Math.abs(v - SCALE) <= TOL) return 1;
-        if (Math.abs(v + SCALE) <= TOL) return -1;
+        if (Math.abs(v - SCALE) <= TOL || Math.abs(v - UNIT_DIAGONAL) <= TOL) return 1;
+        if (Math.abs(v + SCALE) <= TOL || Math.abs(v + UNIT_DIAGONAL) <= TOL) return -1;
         return 2;
     }
 

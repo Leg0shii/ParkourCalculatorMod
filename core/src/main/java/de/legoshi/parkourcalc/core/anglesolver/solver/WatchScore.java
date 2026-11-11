@@ -15,9 +15,9 @@ public final class WatchScore {
     public static final double W_REVERSAL = 4.0;
     public static final double W_WOBBLE = 1.0;
     public static final double W_MICRO = 1.0;
+    public static final double W_TURN = 0.25;
     public static final double EXCESS_PER_POINT_DEG = 90.0;
     public static final double OFF_HEADING_PER_POINT_DEG = 45.0;
-    public static final double JERK_PER_POINT_DEG = 180.0;
 
     private static final double TOL = 1.0e-9;
 
@@ -52,9 +52,8 @@ public final class WatchScore {
         this.headingTravelDeg = headingTravelDeg;
         this.excessDeg = excessDeg;
         this.offHeadingDeg = offHeadingDeg;
-        this.cost = W_REVERSAL * reversalCost + W_WOBBLE * wobbles + W_MICRO * microTurns
-                + excessDeg / EXCESS_PER_POINT_DEG + offHeadingDeg / OFF_HEADING_PER_POINT_DEG
-                + jerkDeg / JERK_PER_POINT_DEG;
+        this.cost = W_REVERSAL * reversalCost + W_WOBBLE * wobbles + W_MICRO * microTurns + W_TURN * turns
+                + excessDeg / EXCESS_PER_POINT_DEG + offHeadingDeg / OFF_HEADING_PER_POINT_DEG;
     }
 
     public static WatchScore of(double anchorYaw, double[] absWrapped, ForwardPath path) {
@@ -204,7 +203,7 @@ public final class WatchScore {
     @Override
     public String toString() {
         return String.format(Locale.ROOT,
-                "cost=%.2f reversals=%d shakes=%d wobbles=%d micro=%d travel=%.0f excess=%.0f off=%.0f max=%.0f jerk=%.0f",
-                cost, reversals, shakes, wobbles, microTurns, travelDeg, excessDeg, offHeadingDeg, maxTurnDeg, jerkDeg);
+                "cost=%.2f turns=%d reversals=%d shakes=%d wobbles=%d micro=%d travel=%.0f excess=%.0f off=%.0f max=%.0f jerk=%.0f",
+                cost, turns, reversals, shakes, wobbles, microTurns, travelDeg, excessDeg, offHeadingDeg, maxTurnDeg, jerkDeg);
     }
 }

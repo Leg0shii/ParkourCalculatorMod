@@ -45,6 +45,10 @@ public final class ShapeSmooth {
     private static final double REPAIR_MIN_SCALE = 1.0 / 16.0;
     private static final int REPAIR_ROUNDS = 6;
     private static final double REPAIR_SHRINK = 0.5;
+    private static final int RESTORE_ROUNDS = 60;
+    private static final double RESTORE_SHRINK = 0.9;
+    private static final double RIGID_OWN_WEIGHT = 0.05;
+    private static final double RIGID_MAX_STEP_DEG = 8.0;
     private static final int STEP_TRIES = 5;
     private static final int LINE_STEPS = 5;
     private static final double LINE_SHRINK = 0.4;
@@ -204,6 +208,23 @@ public final class ShapeSmooth {
         return Angles.wrapAll(u.clone());
     }
 
+    public double[] restore(double[] seedAbsWrapped, Weights w) {
+        double[] seed = Angles.wrapAll(seedAbsWrapped.clone());
+        if (seed.length != n) {
+            return null;
+        }
+        double[] u = unwrap(seed);
+        if (free.length == 0) {
+            return violation(u, null) <= 0.0 ? seed : null;
+        }
+        HeadingBand band = w.heading > 0.0 ? HeadingBand.of(path(u), u) : null;
+        double[][] h = new double[free.length][BandQp.BAND + 1];
+        double[] g = new double[free.length];
+        assemble(u, w, band, h, g);
+        double[] out = repair(u, BandQp.factor(h, REPAIR_DAMPING), RESTORE_ROUNDS, RESTORE_SHRINK);
+        return out == null ? null : Angles.wrapAll(out);
+    }
+
     private static boolean stopped(long deadlineNanos, AtomicBoolean cancel) {
         if (cancel != null && cancel.get()) {
             return true;
@@ -220,12 +241,92 @@ public final class ShapeSmooth {
         return compiled.maxViolation(gf, p);
     }
 
+    public double[] restoreRigid(double[] seedAbsWrapped, int[] group, int groups) {
+        double[] seed = Angles.wrapAll(seedAbsWrapped.clone());
+        if (seed.length != n || group.length != n) {
+            return null;
+        }
+        double[] cand = unwrap(seed);
+        ForwardPath[] holder = new ForwardPath[1];
+        double viol = violation(cand, holder);
+        if (viol <= 0.0) {
+            return seed;
+        }
+        if (groups == 0) {
+            return null;
+        }
+        double[][] h = new double[groups][BandQp.BAND + 1];
+        for (int g = 0; g < groups; g++) {
+            h[g][0] = (g + 1 < groups ? 2.0 : 1.0) + RIGID_OWN_WEIGHT;
+            if (g >= 1) {
+                h[g][1] = -1.0;
+            }
+        }
+        BandQp.Factor factor = BandQp.factor(h, 0.0);
+        double[] zero = new double[groups];
+        for (int round = 0; round < RESTORE_ROUNDS && viol > 0.0; round++) {
+            double[] r = residuals(holder[0]);
+            double[][] jac = jacobian(cand);
+            List<double[]> a = new ArrayList<>();
+            List<Double> b = new ArrayList<>();
+            wallRows(jac, r, a, b, true);
+            List<double[]> reduced = new ArrayList<>();
+            List<Double> bounds = new ArrayList<>();
+            for (int i = 0; i < a.size(); i++) {
+                double[] row = new double[groups];
+                boolean any = false;
+                for (int k = 0; k < free.length; k++) {
+                    int g = group[free[k]];
+                    if (g >= 0 && a.get(i)[k] != 0.0) {
+                        row[g] += a.get(i)[k];
+                        any = true;
+                    }
+                }
+                if (any) {
+                    reduced.add(row);
+                    bounds.add(b.get(i));
+                }
+            }
+            double[] step = BandQp.solve(factor, zero, reduced, bounds, MULTIPLIER_CAP);
+            double longest = 0.0;
+            for (double v : step) {
+                longest = Math.max(longest, Math.abs(v));
+            }
+            double trust = longest > RIGID_MAX_STEP_DEG ? RIGID_MAX_STEP_DEG / longest : 1.0;
+            boolean stepped = false;
+            for (double scale = trust; scale >= trust * REPAIR_MIN_SCALE; scale *= 0.5) {
+                double[] next = cand.clone();
+                for (int t = 0; t < n; t++) {
+                    if (group[t] >= 0 && slot[t] >= 0) {
+                        next[t] += scale * step[group[t]];
+                    }
+                }
+                double nv = violation(next, holder);
+                if (nv <= 0.0 || nv < RESTORE_SHRINK * viol) {
+                    cand = next;
+                    viol = nv;
+                    stepped = true;
+                    break;
+                }
+            }
+            if (!stepped) {
+                violation(cand, holder);
+                break;
+            }
+        }
+        return viol <= 0.0 ? Angles.wrapAll(cand) : null;
+    }
+
     private double[] repair(double[] candidate, BandQp.Factor factor) {
+        return repair(candidate, factor, REPAIR_ROUNDS, REPAIR_SHRINK);
+    }
+
+    private double[] repair(double[] candidate, BandQp.Factor factor, int rounds, double shrink) {
         double[] cand = candidate;
         ForwardPath[] holder = new ForwardPath[1];
         double viol = violation(cand, holder);
         double[] zero = new double[free.length];
-        for (int round = 0; round < REPAIR_ROUNDS && viol > 0.0; round++) {
+        for (int round = 0; round < rounds && viol > 0.0; round++) {
             double[] r = residuals(holder[0]);
             double[][] jac = jacobian(cand);
             List<double[]> a = new ArrayList<>();
@@ -239,7 +340,7 @@ public final class ShapeSmooth {
                     next[free[i]] += scale * step[i];
                 }
                 double nv = violation(next, holder);
-                if (nv <= 0.0 || nv < REPAIR_SHRINK * viol) {
+                if (nv <= 0.0 || nv < shrink * viol) {
                     cand = next;
                     viol = nv;
                     stepped = true;

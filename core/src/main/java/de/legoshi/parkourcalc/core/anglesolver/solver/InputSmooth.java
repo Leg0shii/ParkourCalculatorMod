@@ -8,6 +8,7 @@ public final class InputSmooth {
 
     public static final double PLAIN_SHARE = 1.0 / 3.0;
     public static final double POLISH_SHARE = 0.15;
+    public static final double PLAN_SHARE = 0.5;
     public static final long MIN_SLICE_NANOS = 150_000_000L;
     public static final long MAX_SLICE_NANOS = 1_000_000_000L;
     public static final int SLICES_PER_SCREEN = 16;
@@ -34,9 +35,11 @@ public final class InputSmooth {
         public final TrendFilterSmooth.Stop stop;
         public final long nanos;
         public final double[] plainYaws;
+        public final double watchCost;
+        public final double plainWatchCost;
 
         Report(double[] yaws, JumpPhysicsInputs scenario, TickInputs[] inputs, int changed, int tried,
-               TrendFilterSmooth.Stop stop, long nanos, double[] plainYaws) {
+               TrendFilterSmooth.Stop stop, long nanos, double[] plainYaws, double watchCost, double plainWatchCost) {
             this.yaws = yaws;
             this.scenario = scenario;
             this.inputs = inputs;
@@ -45,6 +48,8 @@ public final class InputSmooth {
             this.stop = stop;
             this.nanos = nanos;
             this.plainYaws = plainYaws;
+            this.watchCost = watchCost;
+            this.plainWatchCost = plainWatchCost;
         }
     }
 
@@ -52,15 +57,28 @@ public final class InputSmooth {
         final JumpPhysicsInputs scenario;
         final double[] yaws;
         final TurnShape shape;
+        final WatchScore watch;
         final TickInputs[] inputs;
         final double objective;
 
-        State(JumpPhysicsInputs scenario, double[] yaws, TurnShape shape, TickInputs[] inputs, double objective) {
+        State(JumpPhysicsInputs scenario, double[] yaws, TurnShape shape, WatchScore watch, TickInputs[] inputs,
+              double objective) {
             this.scenario = scenario;
             this.yaws = yaws;
             this.shape = shape;
+            this.watch = watch;
             this.inputs = inputs;
             this.objective = objective;
+        }
+
+        boolean betterThan(State other) {
+            if (watch.betterThan(other.watch)) {
+                return true;
+            }
+            if (other.watch.betterThan(watch)) {
+                return false;
+            }
+            return shape.edges < other.shape.edges;
         }
 
         int changed() {
@@ -101,25 +119,36 @@ public final class InputSmooth {
         ForwardPath seedPath = exact.forward(base, seedGf);
         if (seedAbsWrapped.length != n || comp.maxViolation(seedGf, seedPath) > FEAS_TOL) {
             return new Report(seedAbsWrapped, base, new TickInputs[n], 0, 0, TrendFilterSmooth.Stop.CONVERGED,
-                    System.nanoTime() - t0, seedAbsWrapped);
+                    System.nanoTime() - t0, seedAbsWrapped, Double.NaN, Double.NaN);
         }
         double reference = spec.objective.evaluate(seedPath);
 
         long plainDeadline = t0 + (long) (total * PLAIN_SHARE);
-        TrendFilterSmooth.Report plain = TrendFilterSmooth.smoothReport(exact, spec, seed, giveBack, plainDeadline, cancel);
+        TrendFilterSmooth.Report plain = SmoothPortfolio.smoothReport(exact, spec, seed, giveBack, plainDeadline, cancel);
         double[] plainYaws = plain.yaws;
         JumpPhysicsInputs editable = TickInputs.editable(base);
-        TurnShape plainShape = TurnShape.of(anchor, plainYaws).withEdges(edges(editable));
-        State inc = new State(editable, plainYaws, plainShape, new TickInputs[n],
-                objectiveOf(exact, editable, spec, plainYaws));
+        State plainState = state(exact, spec, editable, plainYaws, new TickInputs[n], anchor);
+        State inc = plainState;
+        if (!opt.keepSprint) {
+            long planDeadline = System.nanoTime() + (long) (Math.max(0L, deadlineNanos - System.nanoTime()) * PLAN_SHARE);
+            State planned = planned(exact, spec, comp, seed, max, reference, giveBack, anchor, opt, planDeadline, cancel);
+            if (planned != null && planned.betterThan(inc)) {
+                if (SolverTrace.on()) {
+                    SolverTrace.log("ENGINE", "input smooth release plan: %s -> %s (%d ticks)", inc.watch, planned.watch,
+                            planned.changed());
+                }
+                inc = planned;
+            }
+        }
         TickInputs[] original = new TickInputs[n];
         for (int t = 0; t < n; t++) original[t] = TickInputs.of(editable, t);
 
         long screenDeadline = deadlineNanos - (long) (total * POLISH_SHARE);
         int tried = 0;
         TrendFilterSmooth.Stop stop = TrendFilterSmooth.Stop.CONVERGED;
+        boolean planWon = inc != plainState;
         outer:
-        while (true) {
+        while (!planWon) {
             if (cancel != null && cancel.get()) {
                 stop = TrendFilterSmooth.Stop.CANCELLED;
                 break;
@@ -143,7 +172,7 @@ public final class InputSmooth {
                 long slice = Math.max(MIN_SLICE_NANOS, Math.min(MAX_SLICE_NANOS, (screenDeadline - now) / SLICES_PER_SCREEN));
                 tried++;
                 State cand = evaluate(exact, spec, comp, inc, m, max, reference, giveBack, anchor, slice, opt, cancel);
-                if (cand != null && cand.shape.betterThan(inc.shape)) {
+                if (cand != null && cand.betterThan(inc)) {
                     if (SolverTrace.on()) {
                         SolverTrace.log("ENGINE", "input smooth T%d %s -> %s: %s -> %s", m.tick + 1,
                                 String.valueOf(inputsAt(inc, m.tick)), m.inputs.label(), inc.shape, cand.shape);
@@ -158,27 +187,28 @@ public final class InputSmooth {
 
         int changed = inc.changed();
         if (changed == 0) {
-            return new Report(plainYaws, base, new TickInputs[n], 0, tried, plain.stop, System.nanoTime() - t0, plainYaws);
+            return new Report(plainYaws, base, new TickInputs[n], 0, tried, plain.stop, System.nanoTime() - t0, plainYaws,
+                    plainState.watch.cost, plainState.watch.cost);
         }
         JumpSpec finalSpec = new JumpSpec(inc.scenario, new ArrayList<>(spec.constraints), spec.objective);
-        double[] best = inc.yaws;
-        TurnShape bestShape = inc.shape;
+        State best = inc;
         if (!(cancel != null && cancel.get()) && System.nanoTime() < deadlineNanos) {
             double remaining = remainingGiveBack(max, reference, inc.objective, giveBack);
-            TrendFilterSmooth.Report polish = TrendFilterSmooth.smoothReport(exact, finalSpec, inc.yaws, remaining,
+            TrendFilterSmooth.Report polish = SmoothPortfolio.smoothReport(exact, finalSpec, inc.yaws, remaining,
                     deadlineNanos, cancel);
             if (polish.yaws != null && accepts(exact, finalSpec, comp, polish.yaws, max, reference, giveBack)) {
-                TurnShape shape = TurnShape.of(anchor, polish.yaws).withEdges(edges(inc.scenario));
-                if (shape.betterThan(bestShape)) {
-                    best = polish.yaws;
-                    bestShape = shape;
+                State polished = state(exact, spec, inc.scenario, polish.yaws, inc.inputs, anchor);
+                if (polished.betterThan(best)) {
+                    best = polished;
                 }
             }
         }
-        if (!bestShape.betterThan(plainShape)) {
-            return new Report(plainYaws, base, new TickInputs[n], 0, tried, plain.stop, System.nanoTime() - t0, plainYaws);
+        if (!best.betterThan(plainState)) {
+            return new Report(plainYaws, base, new TickInputs[n], 0, tried, plain.stop, System.nanoTime() - t0, plainYaws,
+                    plainState.watch.cost, plainState.watch.cost);
         }
-        return new Report(best, inc.scenario, inc.inputs, changed, tried, stop, System.nanoTime() - t0, plainYaws);
+        return new Report(best.yaws, best.scenario, best.inputs, changed, tried, stop, System.nanoTime() - t0, plainYaws,
+                best.watch.cost, plainState.watch.cost);
     }
 
     private static TickInputs inputsAt(State s, int t) {
@@ -293,8 +323,41 @@ public final class InputSmooth {
                 ? r.yaws : yaws;
         TickInputs[] inputs = inc.inputs.clone();
         inputs[m.tick] = m.inputs.equals(m.original) ? null : m.inputs;
-        return new State(sc, smoothed, TurnShape.of(anchor, smoothed).withEdges(edges(sc)), inputs,
-                objectiveOf(exact, sc, spec, smoothed));
+        return state(exact, spec, sc, smoothed, inputs, anchor);
+    }
+
+    private static State state(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc, double[] yaws,
+                               TickInputs[] inputs, double anchor) {
+        ForwardPath path = exact.forward(sc, sc.toGameFacings(yaws));
+        return new State(sc, yaws, TurnShape.of(anchor, yaws).withEdges(edges(sc)), WatchScore.of(anchor, yaws, path),
+                inputs, spec.objective.evaluate(path));
+    }
+
+    private static State planned(ExactJumpModel exact, JumpSpec spec, JumpConstraintCompiler.Compiled comp, double[] seed,
+                                 boolean max, double reference, double giveBack, double anchor, Options opt,
+                                 long deadlineNanos, AtomicBoolean cancel) {
+        long t0 = System.nanoTime();
+        ReleasePlan.Result plan = ReleasePlan.plan(exact, spec, seed, giveBack, opt.allowA, opt.allowD, opt.resolver,
+                deadlineNanos, cancel);
+        SmoothProfile.add("inputs.plan", t0);
+        if (plan == null) {
+            return null;
+        }
+        JumpSpec plannedSpec = new JumpSpec(plan.scenario, new ArrayList<>(spec.constraints), spec.objective);
+        if (!accepts(exact, plannedSpec, comp, plan.yaws, max, reference, giveBack)) {
+            return null;
+        }
+        State raw = state(exact, spec, plan.scenario, plan.yaws, plan.inputs, anchor);
+        double remaining = remainingGiveBack(max, reference, raw.objective, giveBack);
+        long t1 = System.nanoTime();
+        TrendFilterSmooth.Report polish = SmoothPortfolio.smoothReport(exact, plannedSpec, plan.yaws, remaining,
+                deadlineNanos, cancel);
+        SmoothProfile.add("inputs.planSmooth", t1);
+        if (polish.yaws == null || !accepts(exact, plannedSpec, comp, polish.yaws, max, reference, giveBack)) {
+            return raw;
+        }
+        State polished = state(exact, spec, plan.scenario, polish.yaws, plan.inputs, anchor);
+        return polished.betterThan(raw) ? polished : raw;
     }
 
     public static int edges(JumpPhysicsInputs sc) {

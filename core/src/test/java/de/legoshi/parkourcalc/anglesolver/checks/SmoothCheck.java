@@ -158,10 +158,17 @@ final class SmoothCheck implements ProblemCheck {
         TurnShape shape = TurnShape.of(anchor, Paths.resultYaws(smoothed));
         System.out.printf("SMOOTHINPUTS %-22s plain %s inputs %s changed=%s%n", pf.name, plainShape, shape,
                 Paths.detail(smoothed, "Inputs changed"));
-        assertTrue(name + ": more reversals than Turn only: " + shape + " vs " + plainShape,
-                shape.reversals <= plainShape.reversals);
-        assertTrue(name + ": more acceleration flips than Turn only: " + shape + " vs " + plainShape,
-                shape.reversals < plainShape.reversals || shape.accelFlips <= plainShape.accelFlips);
+        String scores = Paths.detail(smoothed, AngleSolverEngine.WATCH_SCORE_DETAIL);
+        if (smoothed.getInputChanges() != null) {
+            assertNotNull(name + ": the details carry the watch score of both modes", scores);
+            double inputsCost = Double.parseDouble(scores.substring(0, scores.indexOf(' ')));
+            double plainCost = Double.parseDouble(scores.substring(scores.lastIndexOf(' ') + 1, scores.length() - 1));
+            assertTrue(name + ": less pleasant to watch than Turn only: " + scores, inputsCost <= plainCost);
+            if (pf.expect.maxWatchShare != null) {
+                assertTrue(name + ": watch score above " + pf.expect.maxWatchShare + " of Turn only: " + scores,
+                        inputsCost <= pf.expect.maxWatchShare * plainCost);
+            }
+        }
 
         TickInputs[] changes = smoothed.getInputChanges();
         int minChanged = pf.expect.or(pf.expect.minChanged, 1);
