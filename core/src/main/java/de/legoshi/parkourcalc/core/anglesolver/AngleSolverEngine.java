@@ -594,9 +594,9 @@ public final class AngleSolverEngine {
         if (base.strafeSigns != null) sc.strafeSignPerTick = base.strafeSigns.clone();
         double[] incumbent = base.strafeSigns != null ? base.yaws.clone() : base.solverYaws.clone();
         Vec3dCore incumbentStart = base.start;
-        if (!verifiesOnScenario(job, sc, incumbent)) {
+        if (!verifiesOnScenario(job, sc, incumbent, base.start)) {
             double[] current = currentRowYaws(job.startTick, job.numTicks);
-            if (current == null || !verifiesOnScenario(job, sc, current)) {
+            if (current == null || !verifiesOnScenario(job, sc, current, null)) {
                 SolveResult stale = new SolveResult(false, 0, job.uiConstraints.size(), job.startTick + 1, job.landingTick + 1);
                 stale.setNoticeLabel(STALE_SMOOTH_LABEL);
                 stale.setNotice("The last solve no longer lands on the TAS as it is now. Solve again, then smooth.");
@@ -613,9 +613,17 @@ public final class AngleSolverEngine {
 
     public static final String STALE_SMOOTH_LABEL = "Nothing to smooth";
 
-    private boolean verifiesOnScenario(Job job, JumpPhysicsInputs sc, double[] yaws) {
+    private boolean verifiesOnScenario(Job job, JumpPhysicsInputs sc, double[] yaws, Vec3dCore solvedStart) {
         if (yaws == null || yaws.length != sc.numTicks) return false;
-        return !Double.isNaN(Scoring.verifiedObjectiveAt(model, sc, job.spec, yaws, sc.startPos.x, sc.startPos.z, FEAS_TOL));
+        double px = sc.startPos.x;
+        double pz = sc.startPos.z;
+        StartBox box = sc.startBox != null && sc.startBox.startFree() ? sc.startBox : null;
+        if (box != null && solvedStart != null && solvedStart.x >= box.pxLo && solvedStart.x <= box.pxHi
+                && solvedStart.z >= box.pzLo && solvedStart.z <= box.pzHi) {
+            px = solvedStart.x;
+            pz = solvedStart.z;
+        }
+        return !Double.isNaN(Scoring.verifiedObjectiveAt(model, sc, job.spec, yaws, px, pz, FEAS_TOL));
     }
 
     private static boolean isSmoothJob(Job job) {

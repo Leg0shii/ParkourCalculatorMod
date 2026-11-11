@@ -13,6 +13,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Objective;
 import de.legoshi.parkourcalc.core.anglesolver.solver.TickInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.TurnShape;
+import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 
 import java.util.List;
@@ -40,11 +41,15 @@ final class SmoothCheck implements ProblemCheck {
         assertNotNull(name + ": no result within " + timeout + " ms", solved);
         assertTrue(name + ": fast did not land: " + solved.getSolver(), solved.isSuccess());
         assertTrue(name + ": a landed solve of the range can be smoothed", rig.engine.canSmooth());
+        Vec3dCore solvedStart = rig.engine.lastSpecDebug().asScenario().startPos;
 
         rig.engine.smooth();
         assertFalse(name + ": not while it runs", rig.engine.canSmooth());
         SolveResult smoothed = awaitSmooth(name, rig, timeout);
         assertTrue(name + ": smoothing lost the landing: " + smoothed.getSolver(), smoothed.isSuccess());
+        Vec3dCore smoothedStart = rig.engine.lastSpecDebug().asScenario().startPos;
+        assertEquals(name + ": smoothing starts where the solve started (X)", solvedStart.x, smoothedStart.x, 0.0);
+        assertEquals(name + ": smoothing starts where the solve started (Z)", solvedStart.z, smoothedStart.z, 0.0);
         assertTrue(name + ": the smoothed chain starts from the incumbent: " + smoothed.getSolver(),
                 smoothed.getSolver() != null && smoothed.getSolver().startsWith("incumbent"));
         SolveRunRecord rec = rig.engine.lastRunRecord();
