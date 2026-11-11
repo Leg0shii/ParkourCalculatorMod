@@ -93,6 +93,7 @@ public final class CertifiedBnbNode implements NodeRuntime {
         cfg.nodeCap = cap;
         cfg.polishCap = optimize ? 12 : 2;
         cfg.incumbentPolishCap = optimize ? 12 : 0;
+        cfg.resolveProbes = optimize;
         if (dive) {
             cfg.diveEvery = DIVE_EVERY;
             cfg.diveLength = DIVE_LENGTH;
@@ -120,6 +121,9 @@ public final class CertifiedBnbNode implements NodeRuntime {
         }
         if (res.declined) return NodeOutcome.of(miss, in);
         if (optimize && res.feasible && res.certified) ctx.certifyOptimum();
+        if (optimize && res.feasible && CertifiedBnb.relaxationCoversScenario(dspec.asScenario())) {
+            ctx.offerProvenBound(res.boundObjective);
+        }
         if (!res.feasible) {
             if (res.bestInfeasYaws != null) ctx.closestMiss().offer(res.bestInfeasYaws, res.bestInfeasViol);
             if (res.certifiedInfeasible) ctx.certifyInfeasible(proofOf(dspec, res, solveNanos));

@@ -219,6 +219,10 @@ anglesolver/
                            engine and a fresh engine on one thread end on the same facings, objective,
                            stages and work time bit for bit, a seed repeats too, and without the
                            option a solve carries no work time
+  ProvenBoundGapTest.java  (slow) the result's "Dual bound gap" on a repeatable Optimize of 2 s: it is
+                           measured against the tightest bound of the certified passes (nix-t25 under
+                           0.1 where the closed form gap is 0.25, j021 under 0.01), a jump with a
+                           carried facing row shows a gap (gh553-j345), a damage tick shows none
   graph/LeafSnapNodeTest.java  the leaf snap node's repeat param: on j017 (certified landing after 60 nodes)
                            one snap improves the landing, a repeat without a time budget is that one
                            call, the repeated snap ends more than 1e-4 further, byte-exact with no
