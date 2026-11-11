@@ -92,6 +92,7 @@ public final class StructurePoolDriver {
         public final double byteViol;
         boolean flash;
         int familyCost;
+        boolean family;
 
         Candidate(int[] combos, boolean[] sprint, int engage, int edges, int presses, double diskTheta,
                   double byteTheta, double byteViol) {
@@ -553,6 +554,7 @@ public final class StructurePoolDriver {
         byteScreened++;
         Candidate out = new Candidate(c.combos, c.sprint, c.engage, c.edges, c.presses, c.diskTheta, bs[1], bs[0]);
         out.familyCost = c.familyCost;
+        out.family = c.family;
         return out;
     }
 
@@ -1226,6 +1228,7 @@ public final class StructurePoolDriver {
         Candidate c = new Candidate(combos.clone(), sprint.clone(), NoTurnKeys.firstSprint(sprint), countEdges(combos),
                 countPresses(combos), diskTheta, diskTheta, Math.max(0.0, fa.dual) * FREE_AIR_VIOL_SCALE);
         c.familyCost = familyCost;
+        c.family = true;
         pool.add(c);
         if (certifyTier(cfg, c) < SCREEN_MISS_TIER) goodInPool++;
         if (pool.size() > cfg.poolCap * 4) trimPool();
@@ -1334,6 +1337,7 @@ public final class StructurePoolDriver {
                 if (a.backward != b.backward) return Integer.compare(a.backward, b.backward);
                 return Double.compare(a.byteViol, b.byteViol);
             }
+            if (a.family != b.family) return a.family ? 1 : -1;
             int byViol = Double.compare(a.byteViol, b.byteViol);
             if (byViol != 0) return byViol;
             if (a.presses != b.presses) return Integer.compare(a.presses, b.presses);
@@ -2055,14 +2059,11 @@ public final class StructurePoolDriver {
             if (cancelled() || certifier.variationsOver()) break;
             if (ended.get() == laneCount && finished.isEmpty()) break;
             if (certifier.certifyNext(false, true) || certifier.certifyNext(false, false)) continue;
-            certifier.resetCertifyCount();
-            if (!certifier.certifyNext(false, true)) {
-                try {
-                    Thread.sleep(2L);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    break;
-                }
+            try {
+                Thread.sleep(2L);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
             }
         }
         stopEnum.set(true);
