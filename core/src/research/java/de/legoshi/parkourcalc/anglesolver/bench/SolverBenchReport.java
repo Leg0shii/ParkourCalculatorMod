@@ -28,13 +28,24 @@ public class SolverBenchReport {
     public void report() throws Exception {
         String mode = System.getProperty("pkc.bench.report");
         Assume.assumeTrue("set -Dpkc.bench.report=<mode> and -Dpkc.bench.in=<files> to run", mode != null);
-        run(mode, System.out);
+        runTo(mode);
+    }
+
+    private static void runTo(String mode) throws Exception {
+        String path = System.getProperty("pkc.bench.reportOut");
+        if (path == null) {
+            run(mode, System.out);
+            return;
+        }
+        try (PrintStream out = new PrintStream(new File(path), "UTF-8")) {
+            run(mode, out);
+        }
     }
 
     public static void main(String[] args) throws Exception {
         String mode = System.getProperty("pkc.bench.report");
         if (mode == null) throw new IllegalArgumentException("set -Dpkc.bench.report=sheet|seeds|stages|compare|scaling|portfolio|reference|identity");
-        run(mode, System.out);
+        runTo(mode);
         System.exit(0);
     }
 

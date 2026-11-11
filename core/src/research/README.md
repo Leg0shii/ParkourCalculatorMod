@@ -156,7 +156,8 @@ anglesolver/
                            stage chain), wall and work time with the work counters, one entry per stage
                            visit (work time and landing after it), the facings and start (for a turn
                            profile), the yaw smoothness numbers, and empty stratfinder fields
-  bench/SolverBenchReport.java  the benchmark's tables, Markdown on stdout: -Dpkc.bench.in=<files, a
+  bench/SolverBenchReport.java  the benchmark's tables, Markdown on stdout or into the file
+                           -Dpkc.bench.reportOut: -Dpkc.bench.in=<files, a
                            name may hold one *> and -Dpkc.bench.report=sheet (offset per jump, category
                            and strength, Fast times; -Dpkc.bench.variant, -Dpkc.bench.mode), seeds
                            (best, median, worst over the seeds of config -Dpkc.bench.a), stages (work
