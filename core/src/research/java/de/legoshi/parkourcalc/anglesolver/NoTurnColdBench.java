@@ -299,6 +299,7 @@ public class NoTurnColdBench {
                 int without = Integer.getInteger("pkc.bench.familyWithout", -1);
                 if (without >= 0) cfg.families = de.legoshi.parkourcalc.core.anglesolver.noturn.StratFamilies.shippedWithout(without);
                 cfg.changeLevels = !Boolean.getBoolean("pkc.bench.familyOnly");
+                cfg.familyDelayNanos = Long.getLong("pkc.bench.familyDelayMs", cfg.familyDelayNanos / 1_000_000L) * 1_000_000L;
                 line("families: on without=" + without + " changeLevels=" + cfg.changeLevels);
             }
             if (Integer.getInteger("pkc.bench.repairWidth", -1) >= 0) cfg.repairWidth = Integer.getInteger("pkc.bench.repairWidth");

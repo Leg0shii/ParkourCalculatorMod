@@ -107,7 +107,8 @@ anglesolver/
                            allowJa,playable,threads,searchSec,nearSearchMs,certifySec,totalSec,maxCertify,
                            extraCertify,extraSec,dumpPool,out}; families=true turns the family stage on,
                            familyWithout=<jump number> leaves that jump's rows out of the library,
-                           familyOnly=true turns the change levels off; keys/engage/repeat/cascade for
+                           familyOnly=true turns the change levels off,
+                           familyDelayMs=<ms> sets how long the change levels keep every thread; keys/engage/repeat/cascade for
                            driver=keys, dfMarks to add dF=0 marks, contCap/contLead/contSec/parCont/
                            deepPairRepair for driver=benders; pair with -Dpkc.graphTrace=true (per-node
                            ms plus one [pool]/[whd]/[bm] line per certify), -Dpkc.solver.trace=<tag>,

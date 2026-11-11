@@ -66,6 +66,8 @@ public final class StructurePoolDriver {
         public int familyBandCost = 4;
         public double familyKeep = 0.01;
         public double familyReach = 0.06;
+        public int familyAfterLevel = 1;
+        public long familyDelayNanos = 5_000_000_000L;
         public boolean playable = false;
         public int threads = 0;
 
@@ -1833,7 +1835,10 @@ public final class StructurePoolDriver {
                 List<List<Integer>> lanes = new ArrayList<>();
                 lanes.add(familyStages);
                 if (cfg.changeLevels) lanes.add(stages);
-                runLanes(problem, certifier, pipeExec, lanes, enumThreads, stopEnum);
+                int heldUntilStages = stages.indexOf(Integer.valueOf(cfg.familyAfterLevel)) + 1;
+                boolean hold = cfg.changeLevels && cfg.familyDelayNanos > 0L && heldUntilStages > 0;
+                runLanes(problem, certifier, pipeExec, lanes, hold ? 0 : -1, heldUntilStages,
+                        start + cfg.familyDelayNanos, enumThreads, stopEnum);
                 stages = new ArrayList<>();
             }
             LevelResult current = stages.isEmpty() ? null : enumerateLevel(problem, enumThreads, stages.get(0), stopEnum);
@@ -1984,50 +1989,90 @@ public final class StructurePoolDriver {
 
     private StratFamilies.Segment[] runFamilySegments;
 
-    private void runLanes(final NoTurnProblem problem, PoolCertifier certifier, ExecutorService exec,
-                          List<List<Integer>> lanes, final int enumThreads, final AtomicBoolean stopEnum) {
-        int laneCount = lanes.size();
-        int[] at = new int[laneCount];
-        List<java.util.concurrent.Future<LevelResult>> pending = new ArrayList<>();
-        final int shared = Math.max(1, enumThreads / laneCount);
-        for (int lane = 0; lane < laneCount; lane++) {
-            final int first = lanes.get(lane).get(0);
-            pending.add(exec.submit(() -> enumerateLevel(problem, shared, first, stopEnum)));
+    private static final class StageResult {
+        final int stage;
+        final LevelResult result;
+
+        StageResult(int stage, LevelResult result) {
+            this.stage = stage;
+            this.result = result;
         }
-        int open = laneCount;
-        while (open > 0) {
-            int done = -1;
-            for (int lane = 0; lane < laneCount && done < 0; lane++) {
-                if (pending.get(lane) != null && pending.get(lane).isDone()) done = lane;
-            }
-            if (done < 0) {
-                if (cancelled() || certifier.variationsOver()) break;
-                if (!certifier.certifyNext(false, true) && !certifier.certifyNext(false, false)) {
-                    try {
-                        Thread.sleep(2L);
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        break;
+    }
+
+    private final Object beamLock = new Object();
+
+    private void runLanes(final NoTurnProblem problem, PoolCertifier certifier, ExecutorService exec,
+                          final List<List<Integer>> lanes, final int heldLane, final int heldUntilStages,
+                          final long heldUntilNanos, final int enumThreads, final AtomicBoolean stopEnum) {
+        final int laneCount = lanes.size();
+        final java.util.concurrent.ConcurrentLinkedQueue<StageResult> finished =
+                new java.util.concurrent.ConcurrentLinkedQueue<>();
+        final java.util.concurrent.atomic.AtomicInteger active = new java.util.concurrent.atomic.AtomicInteger();
+        final java.util.concurrent.atomic.AtomicInteger ended = new java.util.concurrent.atomic.AtomicInteger();
+        final java.util.concurrent.atomic.AtomicInteger freeStages = new java.util.concurrent.atomic.AtomicInteger();
+        final boolean hold = heldLane >= 0 && laneCount > 1;
+        List<java.util.concurrent.Future<?>> futures = new ArrayList<>();
+        for (int index = 0; index < laneCount; index++) {
+            final int lane = index;
+            final boolean held = hold && lane == heldLane;
+            if (!held) active.incrementAndGet();
+            futures.add(exec.submit(() -> {
+                try {
+                    if (held) {
+                        while (!stopEnum.get() && System.nanoTime() < heldUntilNanos
+                                && freeStages.get() < heldUntilStages && ended.get() == 0) {
+                            try {
+                                Thread.sleep(5L);
+                            } catch (InterruptedException e) {
+                                Thread.currentThread().interrupt();
+                                return;
+                            }
+                        }
+                        active.incrementAndGet();
                     }
+                    for (int stage : lanes.get(lane)) {
+                        if (stopEnum.get()) break;
+                        int threads = Math.max(1, enumThreads / Math.max(1, active.get()));
+                        LevelResult result = enumerateLevel(problem, threads, stage, stopEnum);
+                        if (stopEnum.get()) break;
+                        if (result.beam != null) {
+                            synchronized (beamLock) {
+                                beam = mergeBeam(beam, result.beam, cfg.repairWidth);
+                            }
+                        }
+                        finished.add(new StageResult(stage, result));
+                        if (!held) freeStages.incrementAndGet();
+                    }
+                } finally {
+                    active.decrementAndGet();
+                    ended.incrementAndGet();
                 }
-                continue;
+            }));
+        }
+        while (true) {
+            StageResult next;
+            while ((next = finished.poll()) != null) offerStage(certifier, next.result, next.stage);
+            if (cancelled() || certifier.variationsOver()) break;
+            if (ended.get() == laneCount && finished.isEmpty()) break;
+            if (certifier.certifyNext(false, true) || certifier.certifyNext(false, false)) continue;
+            certifier.resetCertifyCount();
+            if (!certifier.certifyNext(false, true)) {
+                try {
+                    Thread.sleep(2L);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
             }
-            LevelResult current = awaitLevel(pending.get(done));
-            int stage = lanes.get(done).get(at[done]);
-            if (current.beam != null) beam = mergeBeam(beam, current.beam, cfg.repairWidth);
-            at[done]++;
-            if (at[done] < lanes.get(done).size() && !cancelled() && !certifier.variationsOver()) {
-                final int nextStage = lanes.get(done).get(at[done]);
-                final int threads = open == 1 ? enumThreads : shared;
-                pending.set(done, exec.submit(() -> enumerateLevel(problem, threads, nextStage, stopEnum)));
-            } else {
-                pending.set(done, null);
-                open--;
-            }
-            offerStage(certifier, current, stage);
         }
         stopEnum.set(true);
-        for (java.util.concurrent.Future<LevelResult> f : pending) if (f != null) awaitLevel(f);
+        for (java.util.concurrent.Future<?> f : futures) {
+            try {
+                f.get();
+            } catch (InterruptedException | java.util.concurrent.ExecutionException e) {
+                throw new IllegalStateException(e);
+            }
+        }
         stopEnum.set(false);
     }
 
