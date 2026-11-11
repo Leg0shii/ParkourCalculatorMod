@@ -2193,8 +2193,8 @@ public final class StructurePoolDriver {
             while ((next = finished.poll()) != null) offerStage(certifier, next.result, next.stage, next.early);
             if (cancelled() || certifier.variationsOver()) break;
             if (ended.get() == laneCount && finished.isEmpty()) break;
-            boolean certified = certifier.certifyNext(false, true) || certifier.certifyNext(false, false);
-            if (certifier.certifyFamilyByValue() || certified) continue;
+            if (certifier.certifyTurn()) continue;
+            if (certifier.certifyNext(false, true) || certifier.certifyNext(false, false)) continue;
             try {
                 Thread.sleep(2L);
             } catch (InterruptedException e) {
@@ -2231,6 +2231,7 @@ public final class StructurePoolDriver {
         if (ranked.size() > cap) ranked.subList(cap, ranked.size()).clear();
         certifier.offer(ranked);
         certifier.resetCertifyCount();
+        if (!isFamilyStage(stage)) certifier.openChangeTurns();
         if (stage == REPAIR_STAGE) certifier.liftCertifyCap();
         progress.update("certify " + stageLabel(stage) + " (" + ranked.size() + " kept, " + scored + " scored)", 0.4);
     }
