@@ -91,6 +91,7 @@ public final class SaveFile {
         public String effort;                            // absent in old files -> FAST
         public Boolean stopOnFeasible;                   // absent in old files -> false
         public Boolean legalMode;                        // absent in old files -> false
+        public Boolean fullTurnStart;
         public Integer optimizeSeconds;                  // absent in old files -> default
         public Integer budgetMs;                         // absent in old files -> from optimizeSeconds
         public Double smoothGiveBack;
@@ -98,6 +99,8 @@ public final class SaveFile {
         public String graphPreset;
         public String defaultInputs;
         public String strafeSide;
+        public String smoothMode;
+        public Boolean smoothKeepSprint;
         public String defaultSprint;                     // absent in old files -> ALWAYS
         public String defaultSlipperiness;
         public List<Tick> ticks = new ArrayList<Tick>();

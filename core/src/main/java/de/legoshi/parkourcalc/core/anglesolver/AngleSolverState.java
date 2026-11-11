@@ -62,6 +62,17 @@ public final class AngleSolverState {
         }
     }
 
+    public enum SmoothMode {
+        TURN("Turn only"),
+        INPUTS("Turn and inputs");
+
+        public final String label;
+
+        SmoothMode(String label) {
+            this.label = label;
+        }
+    }
+
     /** Solve effort. FAST returns the first byte-exact feasible solution (lowest latency). THOROUGH
      *  ("Optimize" in the UI; the constant keeps its name so old saves load) spends a time budget on the
      *  best objective it can find. CUSTOM exposes every knob. */
@@ -154,6 +165,7 @@ public final class AngleSolverState {
     private Effort effort = Effort.FAST;
     private boolean stopOnFeasible = true;
     private boolean legalMode;
+    private boolean fullTurnStart;
     private int budgetMs = DEFAULT_BUDGET_MS;
     private double smoothLambda;
     private double smoothGiveBack = 1.0;
@@ -164,6 +176,8 @@ public final class AngleSolverState {
 
     private InputMode defaultInputs = InputMode.FORCE_45;
     private StrafeSide strafeSide = StrafeSide.A;
+    private SmoothMode smoothMode = SmoothMode.TURN;
+    private boolean smoothKeepSprint;
     private SprintMode defaultSprint = SprintMode.ALWAYS;
     private Slipperiness defaultSlipperiness = Slipperiness.AIR;
 
@@ -327,6 +341,14 @@ public final class AngleSolverState {
         this.legalMode = legalMode;
     }
 
+    public boolean isFullTurnStart() {
+        return fullTurnStart;
+    }
+
+    public void setFullTurnStart(boolean fullTurnStart) {
+        this.fullTurnStart = fullTurnStart;
+    }
+
     public int getOptimizeSeconds() {
         return budgetMs / 1000;
     }
@@ -407,6 +429,22 @@ public final class AngleSolverState {
 
     public void setStrafeSide(StrafeSide side) {
         this.strafeSide = side;
+    }
+
+    public SmoothMode getSmoothMode() {
+        return smoothMode;
+    }
+
+    public void setSmoothMode(SmoothMode mode) {
+        this.smoothMode = mode == null ? SmoothMode.TURN : mode;
+    }
+
+    public boolean isSmoothKeepSprint() {
+        return smoothKeepSprint;
+    }
+
+    public void setSmoothKeepSprint(boolean keep) {
+        this.smoothKeepSprint = keep;
     }
 
     public void setDefaultInputs(InputMode mode) {
@@ -780,6 +818,7 @@ public final class AngleSolverState {
         effort = Effort.FAST;
         stopOnFeasible = true;
         legalMode = false;
+        fullTurnStart = false;
         budgetMs = DEFAULT_BUDGET_MS;
         solveBudget.resetToDefaults();
         graphPresetName = null;

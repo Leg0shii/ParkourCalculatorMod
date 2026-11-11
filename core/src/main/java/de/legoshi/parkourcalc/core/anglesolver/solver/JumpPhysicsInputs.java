@@ -65,10 +65,16 @@ public final class JumpPhysicsInputs {
     /** Per-tick yaw lock state (unlocked = float delta the game accumulates; locked = absolute facing). */
     public boolean[] yawLockedPerTick = null;
 
+    public boolean freeStartYaw = false;
+
+    public boolean startTurnFree = false;
+
     /** Per-tick sprint state, derived from the rows by the engine's reduced client sprint machine
      *  (gh-120). Gates the ground 1.3x attribute, the air-accel constant, and the 0.2 jump boost.
      *  null = the legacy assumption: sprinting on every tick. */
     public boolean[] sprintPerTick = null;
+
+    public boolean[] sprintKeyPerTick = null;
 
     /** Sprint state in force on the tick before this window's first tick. MC snapshots the movement
      *  factor (landMovementFactor / jumpMovementFactor) after the move, so the factor lags isSprinting()
@@ -76,6 +82,10 @@ public final class JumpPhysicsInputs {
      *  This seeds that lag for tick 0. null = no seed: tick 0 falls back to its own sprint, preserving the
      *  single-tick model callers' behavior. */
     public Boolean incomingSprint = null;
+
+    public int incomingSprintTap = -1;
+
+    public Boolean incomingForward = null;
 
     public boolean liveMovementFactor = false;
 
@@ -132,8 +142,13 @@ public final class JumpPhysicsInputs {
         c.dolphinsGracePerTick = dolphinsGracePerTick;
         c.weavingPerTick = weavingPerTick;
         c.yawLockedPerTick = yawLockedPerTick;
+        c.freeStartYaw = freeStartYaw;
+        c.startTurnFree = startTurnFree;
         c.sprintPerTick = sprintPerTick;
+        c.sprintKeyPerTick = sprintKeyPerTick;
         c.incomingSprint = incomingSprint;
+        c.incomingSprintTap = incomingSprintTap;
+        c.incomingForward = incomingForward;
         c.liveMovementFactor = liveMovementFactor;
         c.variant = variant;
         c.incomingAmp = incomingAmp;
@@ -159,6 +174,8 @@ public final class JumpPhysicsInputs {
         c.liveMovementFactor = liveMovementFactor;
         c.variant = variant;
         c.incomingSprint = from == 0 ? incomingSprint : Boolean.valueOf(sprintAt(from - 1));
+        c.incomingSprintTap = from == 0 ? incomingSprintTap : -1;
+        c.incomingForward = from == 0 ? incomingForward : null;
         c.incomingAmp = from == 0 ? incomingAmp : Integer.valueOf(speedAmplifierAt(from - 1));
         c.incomingSlowness = from == 0 ? incomingSlowness : Integer.valueOf(slownessAmplifierAt(from - 1));
         c.incomingServerVelocity = from == 0 ? incomingServerVelocity : null;
@@ -177,6 +194,7 @@ public final class JumpPhysicsInputs {
         boolean[] weaving = new boolean[m];
         boolean[] locked = new boolean[m];
         boolean[] sprint = new boolean[m];
+        boolean[] sprintKey = new boolean[m];
         float[] fwd = new float[m];
         float[] str = new float[m];
         boolean[] damage = damagePerTick == null ? null : new boolean[m];
@@ -199,6 +217,7 @@ public final class JumpPhysicsInputs {
             weaving[k] = weavingAt(i);
             locked[k] = yawLockedPerTick != null && i < yawLockedPerTick.length && yawLockedPerTick[i];
             sprint[k] = sprintAt(i);
+            sprintKey[k] = sprintKeyAt(i);
             fwd[k] = forwardAt(i);
             str[k] = strafeInputAt(i);
             if (damage != null) damage[k] = damageAt(i);
@@ -220,13 +239,23 @@ public final class JumpPhysicsInputs {
         c.dolphinsGracePerTick = dolphin;
         c.weavingPerTick = weaving;
         c.yawLockedPerTick = locked;
+        c.freeStartYaw = from == 0 && freeStartYaw;
         c.sprintPerTick = sprint;
+        c.sprintKeyPerTick = sprintKey;
         c.forwardInputPerTick = fwd;
         c.strafeInputPerTick = str;
         c.damagePerTick = damage;
         c.serverJumpPerTick = serverJump;
         c.packetYPerTick = packetY;
         return c;
+    }
+
+    public float lockedFacing(int tick, double abs) {
+        return tick == 0 && freeStartYaw ? (float) (abs + Angles.wholeTurns(startYaw)) : (float) abs;
+    }
+
+    public float startYawAtTurns(double turnsDeg) {
+        return startYaw + (float) (turnsDeg - Angles.wholeTurns(startYaw));
     }
 
     public JumpPhysicsInputs pinnedAt(double x, double z) {
@@ -329,6 +358,11 @@ public final class JumpPhysicsInputs {
         return tick >= 0 && tick < sprintPerTick.length && sprintPerTick[tick];
     }
 
+    public boolean sprintKeyAt(int tick) {
+        if (sprintKeyPerTick == null) return true;
+        return tick >= 0 && tick < sprintKeyPerTick.length && sprintKeyPerTick[tick];
+    }
+
     /** Sprint state that drives this tick's ground/air movement factor. MC recomputes the factor after
      *  the move, so it lags isSprinting() by one tick: tick t uses tick t-1's sprint. {@link #incomingSprint}
      *  seeds the pre-window tick; a null seed falls back to this tick's own sprint (single-tick callers). */
@@ -413,7 +447,7 @@ public final class JumpPhysicsInputs {
             double abs = absWrapped[k];
             boolean locked = yawLockedPerTick != null && k < yawLockedPerTick.length && yawLockedPerTick[k];
             if (locked) {
-                entity = (float) abs;
+                entity = lockedFacing(k, abs);
             } else {
                 double delta = abs - prevAbs;
                 delta = Angles.wrapDelta(delta);

@@ -10,6 +10,7 @@ public final class BuiltinGraphs {
     public static final String MULTI_START_PRESET = "Fast (multi-start)";
     public static final String OPTIMIZE_PRESET = "Optimize";
     public static final String SMOOTH_PRESET = "Smooth";
+    public static final String SMOOTH_INPUTS_PRESET = "Smooth (inputs)";
 
     public static final double WRAP_RESERVE_FRACTION = 0.25;
     public static final int WRAP_RESERVE_CAP_SEC = 3;
@@ -19,6 +20,14 @@ public final class BuiltinGraphs {
     public static final int SWEEP_SEEDS = 64;
     public static final int MULTI_START_SWEEP_SEC = 20;
     public static final int MIN_SWEEP_SEC = 3;
+
+    public static final int POLISH_FACINGS = 64;
+    public static final int POLISH_SEARCHES = 21;
+    public static final int POLISH_TABLE = 30000;
+    public static final int POLISH_WINDOW = 64;
+    public static final int POLISH_WORK = 4000;
+    public static final double POLISH_RESERVE_FRACTION = 0.05;
+    public static final int POLISH_RESERVE_CAP_SEC = 2;
 
     private BuiltinGraphs() {
     }
@@ -32,6 +41,26 @@ public final class BuiltinGraphs {
         g.add("entry", "entry");
         g.add("smooth", "smooth")
                 .set("smooth", "giveBack", giveBack)
+                .set("smooth", GraphRunner.RESERVE_FRACTION_PARAM, 1.0)
+                .set("smooth", GraphRunner.RESERVE_CAP_PARAM, 0);
+        g.add("emit", "emit");
+        chain(g, "entry", "smooth");
+        chain(g, "smooth", "emit");
+        return g.build();
+    }
+
+    public static boolean isSmoothPreset(String name) {
+        return SMOOTH_PRESET.equals(name) || SMOOTH_INPUTS_PRESET.equals(name);
+    }
+
+    public static SolverGraph smoothInputs(double giveBack, boolean allowA, boolean allowD, boolean keepSprint) {
+        GraphBuilder g = new GraphBuilder(SMOOTH_INPUTS_PRESET, true);
+        g.add("entry", "entry");
+        g.add("smooth", "inputSmooth")
+                .set("smooth", "giveBack", giveBack)
+                .set("smooth", "allowA", allowA)
+                .set("smooth", "allowD", allowD)
+                .set("smooth", "keepSprint", keepSprint)
                 .set("smooth", GraphRunner.RESERVE_FRACTION_PARAM, 1.0)
                 .set("smooth", GraphRunner.RESERVE_CAP_PARAM, 0);
         g.add("emit", "emit");
@@ -141,6 +170,14 @@ public final class BuiltinGraphs {
         g.add("cap2", "capCertify")
                 .set("cap2", "computeDualGap", false)
                 .set("cap2", "skipIfSettled", true);
+        if (!fastTier) {
+            g.add("polish", "latticePolish")
+                    .set("polish", "facings", POLISH_FACINGS)
+                    .set("polish", "searches", POLISH_SEARCHES)
+                    .set("polish", "tableSize", POLISH_TABLE)
+                    .set("polish", "window", POLISH_WINDOW)
+                    .set("polish", "work", POLISH_WORK);
+        }
         g.add("wrap", "wrapIls")
                 .set("wrap", "budgetSec", fastTier ? 0 : tp)
                 .set("wrap", "minRemainingSec", 1);
@@ -190,7 +227,12 @@ public final class BuiltinGraphs {
         chain(g, "cert", "bnb");
         chain(g, "bnb", "ils");
         chain(g, "ils", "cap2");
-        chain(g, "cap2", "wrap");
+        if (fastTier) {
+            chain(g, "cap2", "wrap");
+        } else {
+            chain(g, "cap2", "polish");
+            chain(g, "polish", "wrap");
+        }
         chain(g, "wrap", "translate");
         if (leafSnap) {
             chain(g, "translate", "snap");

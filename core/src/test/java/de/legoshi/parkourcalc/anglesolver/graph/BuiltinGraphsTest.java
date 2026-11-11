@@ -23,18 +23,18 @@ public class BuiltinGraphsTest {
 
     private static final List<String> FAST_NODES = Arrays.asList(
             "entry", "horizon", "wrap0", "seed", "cap1", "freeRescue", "peel", "freeImprove",
-            "sweep", "ils2", "translate2", "fold", "ladder", "cert", "bnb", "ils", "cap2", "wrap",
-            "translate", "certify", "emit");
+            "sweep", "ils2", "translate2", "fold", "ladder", "cert", "bnb", "ils", "cap2",
+            "wrap", "translate", "certify", "emit");
 
     private static final List<String> OPTIMIZE_NODES = Arrays.asList(
             "entry", "seeds", "horizon", "wrap0", "seed", "cap1", "freeRescue", "peel", "freeImprove",
-            "sweep", "ils2", "translate2", "fold", "ladder", "cert", "bnb", "ils", "cap2", "wrap",
-            "translate", "snap", "certify", "emit");
+            "sweep", "ils2", "translate2", "fold", "ladder", "cert", "bnb", "ils", "cap2", "polish",
+            "wrap", "translate", "snap", "certify", "emit");
 
     private static final List<String> MULTI_START_NODES = Arrays.asList(
             "entry", "seeds", "horizon", "wrap0", "seed", "cap1", "freeRescue", "peel", "freeImprove",
-            "sweep", "ils2", "translate2", "fold", "ladder", "cert", "bnb", "ils", "cap2", "wrap",
-            "translate", "certify", "emit");
+            "sweep", "ils2", "translate2", "fold", "ladder", "cert", "bnb", "ils", "cap2",
+            "wrap", "translate", "certify", "emit");
 
     private static final String[][] FAST_PAIRS = {
             {"entry", "seed"}, {"seed", "horizon"}, {"horizon", "wrap0"}, {"wrap0", "cap1"},
@@ -52,7 +52,7 @@ public class BuiltinGraphsTest {
             {"entry", "seeds"}, {"seeds", "horizon"}, {"horizon", "wrap0"}, {"wrap0", "seed"}, {"seed", "cap1"},
             {"cap1", "freeRescue"}, {"freeRescue", "peel"}, {"peel", "freeImprove"}, {"freeImprove", "sweep"},
             {"ils2", "translate2"}, {"fold", "ladder"}, {"ladder", "cert"}, {"cert", "bnb"}, {"bnb", "ils"},
-            {"ils", "cap2"}, {"cap2", "wrap"}, {"wrap", "translate"}, {"translate", "snap"}, {"snap", "certify"}, {"certify", "emit"}};
+            {"ils", "cap2"}, {"cap2", "polish"}, {"polish", "wrap"}, {"wrap", "translate"}, {"translate", "snap"}, {"snap", "certify"}, {"certify", "emit"}};
 
     private static List<String> nodeIds(SolverGraph g) {
         List<String> ids = new ArrayList<String>();
@@ -169,6 +169,24 @@ public class BuiltinGraphsTest {
         assertEquals(30_000_000_000L, GraphRunner.reserveNanos(g.node("smooth"), 30_000_000_000L));
         assertFalse("the smooth graph is not a selectable preset", BuiltinGraphs.isBuiltinPreset(BuiltinGraphs.SMOOTH_PRESET));
         assertNull("builtin tiers do not smooth on their own", BuiltinGraphs.optimize(45).node("smooth"));
+    }
+
+    @Test
+    public void smoothInputsIsTheInputsStageAloneWithTheWholeBudget() {
+        SolverGraph g = BuiltinGraphs.smoothInputs(0.4, true, false, false);
+        assertFalse(GraphValidator.hasErrors(GraphValidator.validate(g)));
+        assertEquals(Arrays.asList("entry", "smooth", "emit"), nodeIds(g));
+        assertEquals("inputSmooth", g.node("smooth").type.id);
+        assertLinear(g, new String[][] {{"entry", "smooth"}, {"smooth", "emit"}});
+        assertEquals(0.4, g.node("smooth").params.getDouble("giveBack"), 0.0);
+        assertTrue(g.node("smooth").params.getBool("allowA"));
+        assertFalse(g.node("smooth").params.getBool("allowD"));
+        assertEquals(1.0, g.node("smooth").params.getDouble(GraphRunner.RESERVE_FRACTION_PARAM), 0.0);
+        assertTrue(BuiltinGraphs.isSmoothPreset(BuiltinGraphs.SMOOTH_INPUTS_PRESET));
+        assertTrue(BuiltinGraphs.isSmoothPreset(BuiltinGraphs.SMOOTH_PRESET));
+        assertFalse(BuiltinGraphs.isSmoothPreset(BuiltinGraphs.FAST_PRESET));
+        assertFalse("the inputs smooth graph is not a selectable preset",
+                BuiltinGraphs.isBuiltinPreset(BuiltinGraphs.SMOOTH_INPUTS_PRESET));
     }
 
     @Test

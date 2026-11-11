@@ -75,10 +75,18 @@ public final class Expect {
     public String axis;
     public String goal;
     public Double minGain;
+    public Boolean turns;
+    public Double roundsGain;
+    public Boolean fullSearch;
     public Boolean seedMayMiss;
     public Double cap;
 
+    public String unsupported;
+
     public Boolean resmooth;
+    public Boolean smoothInputs;
+    public Integer minChanged;
+    public Double maxWatchShare;
     public String strafeSide;
 
     private static final Gson GSON = new Gson();
