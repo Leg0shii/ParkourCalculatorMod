@@ -254,6 +254,8 @@ public final class SaveIO {
         state.setGraphPresetName(a.graphPreset);
         state.setDefaultInputs(parseEnum(AngleSolverState.InputMode.class, a.defaultInputs, AngleSolverState.InputMode.FORCE_45));
         state.setStrafeSide(parseEnum(AngleSolverState.StrafeSide.class, a.strafeSide, AngleSolverState.StrafeSide.A));
+        state.setSmoothMode(parseEnum(AngleSolverState.SmoothMode.class, a.smoothMode, AngleSolverState.SmoothMode.TURN));
+        state.setSmoothKeepSprint(a.smoothKeepSprint != null && a.smoothKeepSprint);
         state.setDefaultSprint(parseEnum(AngleSolverState.SprintMode.class, a.defaultSprint, AngleSolverState.SprintMode.ALWAYS));
         state.setDefaultSlipperiness(parseEnum(Slipperiness.class, a.defaultSlipperiness, Slipperiness.AIR));
 
@@ -679,6 +681,8 @@ public final class SaveIO {
         a.graphPreset = s.getGraphPresetName();
         a.defaultInputs = s.getDefaultInputs().name();
         a.strafeSide = s.getStrafeSide() != AngleSolverState.StrafeSide.A ? s.getStrafeSide().name() : null;
+        a.smoothMode = s.getSmoothMode() != AngleSolverState.SmoothMode.TURN ? s.getSmoothMode().name() : null;
+        a.smoothKeepSprint = s.isSmoothKeepSprint() ? Boolean.TRUE : null;
         a.defaultSprint = s.getDefaultSprint().name();
         a.defaultSlipperiness = s.getDefaultSlipperiness().name();
         for (Integer tick : s.populatedTicks()) {

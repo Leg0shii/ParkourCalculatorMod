@@ -143,6 +143,12 @@ anglesolver/
                            -Dpkc.polish.ms=<n> gives every spec that many milliseconds
                            (docs/research/lattice-polish-2026-11-10.md)
   SmoothFileScreen.java    smoothing pass on a saved solve; PKC_SOLVE_FILE=<save.json>
+  SmoothWatchBench.java    current smoother (TrendFilterSmooth) against the watch-score portfolio
+                           (SmoothPortfolio) on Fast solves; -Dpkc.smoothbench=<capture or save path,...>
+                           to run, -Dpkc.smoothbench.{budgetMs,solveMs,runs,tag} tune it; one row per
+                           path with the WatchScore parts at build/reports/smoothbench-<tag>.tsv and
+                           the turn profiles and paths at smoothbench-<tag>.jsonl (the input of the
+                           turn viewer page); run via direct java -cp, wall-clock budgets need a quiet machine
   render/GizmoDragConstraintBench.java  gizmo drag constraint timing; PKC_BENCH=1
   render/PathRebuildBenchmark.java      path rebuild timing; PKC_BENCH=1
 ```
