@@ -13,6 +13,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Objective;
+import de.legoshi.parkourcalc.core.anglesolver.solver.SmoothPortfolio;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolverTrace;
 import de.legoshi.parkourcalc.core.anglesolver.solver.TrendFilterSmooth;
 
@@ -43,7 +44,7 @@ public final class SmoothNode implements NodeRuntime {
         if (SolverTrace.on()) SolverTrace.log("ENGINE", "smooth start giveBack=%.6f blocks", giveBack);
         TrendFilterSmooth.Report report;
         try {
-            report = TrendFilterSmooth.smoothReport(ctx.exactModel, ctx.spec, in.yaws, giveBack, deadline, nodeToken);
+            report = SmoothPortfolio.smoothReport(ctx.exactModel, ctx.spec, in.yaws, giveBack, deadline, nodeToken);
         } catch (RuntimeException e) {
             if (SolverTrace.on()) SolverTrace.log("ENGINE", "final facing smoothing failed: %s", String.valueOf(e));
             return NodeOutcome.of(Guarantee.UNCHANGED, in);
