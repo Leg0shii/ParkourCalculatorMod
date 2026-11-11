@@ -80,6 +80,7 @@ public final class GraphRunner {
             } finally {
                 ctx.endNode(cur, taken);
             }
+            noteResult(ctx, cur, cand);
             if (TRACE) traceNode(ctx, cur, taken, cand);
             reportIncumbent(ctx, cand);
             if (ctx.infeasibilityProof() != null) return cand;
@@ -88,6 +89,11 @@ public final class GraphRunner {
     }
 
     public static final boolean TRACE = Boolean.getBoolean("pkc.graphTrace");
+
+    private static void noteResult(GraphContext ctx, GraphNode node, Candidate cand) {
+        SolveClock clock = SolveClock.current();
+        ctx.runState.noteResult(node.id, clock == null ? -1L : clock.elapsedNanos(), clock == null ? null : clock.unitsSnapshot(), cand);
+    }
 
     private static void traceNode(GraphContext ctx, GraphNode node, Guarantee taken, Candidate cand) {
         NodeStatus st = ctx.runState.status(node.id);

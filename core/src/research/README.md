@@ -130,6 +130,43 @@ anglesolver/
                            -Dpkc.fc.impl=de.legoshi.parkourcalc.core.anglesolver.noturn.OptimizeGraphCheck
   RunUpSweepProbe.java     free-start run-up sweep on one save; PKC_SOLVE_FILE=<save.json> plus
                            PKC_GRAPH_FILE=<graph.json> (docs/research/freestart-runup-sweep-2026-09-05.md)
+  bench/SolverBench.java   THE SOLVER BENCHMARK (run): solves a jump set with the solver option
+                           Repeatable solve on, so a result is the same on every machine and under any
+                           load and several JVMs may run side by side. -Dpkc.bench.out=<file.jsonl> to
+                           run (one JSON line per solve, appended; a run that is started again skips
+                           what the file already holds). -Dpkc.bench.sets=hpk (captures/hpk and
+                           captures/hpk_human, the release set), hpkstart (the /hpk_human corpus) or
+                           dev:<problem folder> (for example dev:solve), comma list;
+                           -Dpkc.bench.categories=human,theoretical (human: the jump as recorded;
+                           theoretical: Force 45 on every tick, F and dF constraints dropped; dev sets
+                           run as saved, category asis); -Dpkc.bench.modes=start,lastjump (lastjump
+                           starts at the last grounded jump tick from the recorded state);
+                           -Dpkc.bench.strengths=fast,1s,10s,30s (Fast, or an Optimize budget);
+                           -Dpkc.bench.seeds=0,1,2 (the solver option Seed); -Dpkc.bench.variant=<label>
+                           with -Dpkc.bench.graph="drop:ils;set:polish.reserveFraction=0.1" to ablate a
+                           stage or change a node param of the builtin graph (drop:<node>@<branch> when
+                           a node has several successors); -Dpkc.bench.filter=<regex on the jump key>,
+                           -Dpkc.bench.shard=<i>/<n>, -Dpkc.bench.build=<label written into every
+                           record>, -Dpkc.bench.verify=<n> solves every n-th task twice and fails the
+                           run when facings, objective or work counters differ,
+                           -Dpkc.bench.sequential=true, -Dpkc.bench.wall=true (option off, wall clock
+                           budgets, not repeatable). A record holds the jump (id, warp, name,
+                           difficulty), category, mode, strength, seed, variant and graph hash, the
+                           problem, the result (lands, verdict, objective, offset past the goal wall,
+                           stage chain), wall and work time with the work counters, one entry per stage
+                           visit (work time and landing after it), the facings and start (for a turn
+                           profile), the yaw smoothness numbers, and empty stratfinder fields
+  bench/SolverBenchReport.java  the benchmark's tables, Markdown on stdout: -Dpkc.bench.in=<files, a
+                           name may hold one *> and -Dpkc.bench.report=sheet (offset per jump, category
+                           and strength, Fast times; -Dpkc.bench.variant, -Dpkc.bench.mode), seeds
+                           (best, median, worst over the seeds of config -Dpkc.bench.a), stages (work
+                           share and gain per stage of config a), compare (config b against config a
+                           by the win/loss rule printed with it), scaling (distance to the best known
+                           landing per budget, needs -Dpkc.bench.reference), portfolio (best of K seeds
+                           at a budget against one run at K times the budget, -Dpkc.bench.variant),
+                           reference (raise the best known landings in the file -Dpkc.bench.reference
+                           from the inputs), identity (the same runs in -Dpkc.bench.other must be
+                           identical). A config is <variant>|<fast or seconds>, for example "base|10s"
   HpkStartBenchmark.java   cold-solve benchmark over the hpk_human corpus against reference
                            objectives; -Dpkc.bench.{only,skip,graph,effort,optsec,timeoutms,out},
                            -Dpkc.bench.gate fails the run when a jump misses its reference by more

@@ -92,6 +92,16 @@ public final class SolveRunRecord {
         public long evals;
     }
 
+    public static final class StepRun {
+        public String id;
+        public String taken;
+        public long workNanos;
+        public long[] workUnits;
+        public Double objective;
+        public Double violation;
+        public boolean feasible;
+    }
+
     public static final class Race {
         public boolean spawned;
         public long spawnElapsedNanos;
@@ -110,6 +120,7 @@ public final class SolveRunRecord {
     public Outcome outcome;
     public List<Sample> trajectory = new ArrayList<Sample>();
     public List<NodeRun> nodes = new ArrayList<NodeRun>();
+    public List<StepRun> steps = new ArrayList<StepRun>();
     public Race race;
     public Counters counters;
     public String modVersion;
@@ -196,6 +207,22 @@ public final class SolveRunRecord {
             r.elapsedNanos = s.elapsedNanos;
             r.taken = s.taken != null ? s.taken.name() : null;
             r.evals = s.evals;
+            out.add(r);
+        }
+        return out;
+    }
+
+    public static List<StepRun> stepRunsOf(List<GraphRunState.Step> steps) {
+        List<StepRun> out = new ArrayList<StepRun>(steps.size());
+        for (GraphRunState.Step s : steps) {
+            StepRun r = new StepRun();
+            r.id = s.nodeId;
+            r.taken = s.taken != null ? s.taken.name() : null;
+            r.workNanos = s.workNanos;
+            r.workUnits = s.workUnits;
+            r.objective = Double.isNaN(s.objective) ? null : s.objective;
+            r.violation = Double.isNaN(s.violation) ? null : s.violation;
+            r.feasible = s.feasible;
             out.add(r);
         }
         return out;
