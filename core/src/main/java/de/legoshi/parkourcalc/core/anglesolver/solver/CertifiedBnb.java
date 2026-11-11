@@ -346,8 +346,6 @@ public final class CertifiedBnb {
         byte[] effZ;
         boolean[] freeX;
         boolean[] freeZ;
-        double[] injX;
-        double[] injZ;
         double[] slackDx;
         double[] slackDz;
         boolean anyFree;
@@ -360,8 +358,6 @@ public final class CertifiedBnb {
         iv.effZ = new byte[n];
         iv.freeX = new boolean[n];
         iv.freeZ = new boolean[n];
-        iv.injX = new double[n];
-        iv.injZ = new double[n];
         iv.slackDx = new double[n + 1];
         iv.slackDz = new double[n + 1];
         double vxLo = s.sc.initialVelocity.x;
@@ -395,16 +391,12 @@ public final class CertifiedBnb {
                 if (gxState == FREE) {
                     iv.freeX[t] = true;
                     iv.anyFree = true;
-                    iv.injX[t] = s.thr + dx;
-                    dx = iv.injX[t];
                 } else if (gxState == ZERO) {
                     dx = 0.0;
                 }
                 if (gzState == FREE) {
                     iv.freeZ[t] = true;
                     iv.anyFree = true;
-                    iv.injZ[t] = s.thr + dz;
-                    dz = iv.injZ[t];
                 } else if (gzState == ZERO) {
                     dz = 0.0;
                 }
@@ -430,10 +422,6 @@ public final class CertifiedBnb {
                     iv.freeX[t] = true;
                     iv.freeZ[t] = true;
                     iv.anyFree = true;
-                    iv.injX[t] = s.thr + dx;
-                    iv.injZ[t] = s.thr + dz;
-                    dx = iv.injX[t];
-                    dz = iv.injZ[t];
                 } else if (st != OPEN_ANY) {
                     double sectorBound = s.thr / StrictMath.sqrt(2.0);
                     if (st == SECTOR_XP) vxLo = Math.max(vxLo, sectorBound);
@@ -544,35 +532,33 @@ public final class CertifiedBnb {
             s.trivialInfeasible = true;
             return null;
         }
-        List<JumpLinearModel.Wall> rows = new ArrayList<JumpLinearModel.Wall>();
-        for (JumpLinearModel.Wall w : specWalls) {
-            double slack = rowSlack(s, iv, w);
-            if (w.eq && slack > 0.0) {
-                double[] neg = new double[s.n];
-                for (int t = 0; t < s.n; t++) neg[t] = -w.coef[t];
-                rows.add(new JumpLinearModel.Wall(w.axis, w.coef, w.bPrime + slack, false, w.name + "&hi", w.p0coef));
-                rows.add(new JumpLinearModel.Wall(w.axis, neg, -w.bPrime + slack, false, w.name + "&lo", -w.p0coef));
-            } else if (slack > 0.0) {
-                rows.add(new JumpLinearModel.Wall(w.axis, w.coef, w.bPrime + slack, w.eq, w.name, w.p0coef));
-            } else {
-                rows.add(w);
-            }
-        }
+        List<JumpLinearModel.Wall> rows = new ArrayList<JumpLinearModel.Wall>(specWalls);
         addGateRows(s, nd, iv, lin, rows);
         int boxStart = rows.size();
+        List<JumpLinearModel.Wall> kernelRows = new ArrayList<JumpLinearModel.Wall>(rows);
         List<DiskSocpKernel.ChordRow> chords = new ArrayList<DiskSocpKernel.ChordRow>();
+        List<DiskSocpKernel.ChordRow> kernelChords = new ArrayList<DiskSocpKernel.ChordRow>();
         for (int t = 0; t < s.n; t++) {
             if (nd.iLo[t] == FULL) continue;
             SineTableGeometry.RangeInfo r = ri[t];
             double rad = s.geom.radiusUpper(t);
-            if (r.uxHi < rad) rows.add(boxRow(s.n, 0, t, 1.0, r.uxHi, "bxh@" + t));
-            if (r.uxLo > -rad) rows.add(boxRow(s.n, 0, t, -1.0, -r.uxLo, "bxl@" + t));
-            if (r.uzHi < rad) rows.add(boxRow(s.n, 1, t, 1.0, r.uzHi, "bzh@" + t));
-            if (r.uzLo > -rad) rows.add(boxRow(s.n, 1, t, -1.0, -r.uzLo, "bzl@" + t));
-            if (r.hasChord) chords.add(new DiskSocpKernel.ChordRow(t, r.chordAx, r.chordAz, r.chordRhs, "arc@" + t));
+            double reachX = impulseReach(s, iv, t, 1.0, 0.0);
+            double reachZ = impulseReach(s, iv, t, 0.0, 1.0);
+            if (r.uxHi < rad) addBoxRow(rows, kernelRows, s.n, 0, t, 1.0, r.uxHi, reachX, "bxh@" + t);
+            if (r.uxLo > -rad) addBoxRow(rows, kernelRows, s.n, 0, t, -1.0, -r.uxLo, reachX, "bxl@" + t);
+            if (r.uzHi < rad) addBoxRow(rows, kernelRows, s.n, 1, t, 1.0, r.uzHi, reachZ, "bzh@" + t);
+            if (r.uzLo > -rad) addBoxRow(rows, kernelRows, s.n, 1, t, -1.0, -r.uzLo, reachZ, "bzl@" + t);
+            if (r.hasChord) {
+                DiskSocpKernel.ChordRow chord = new DiskSocpKernel.ChordRow(t, r.chordAx, r.chordAz, r.chordRhs,
+                        "arc@" + t);
+                double reach = impulseReach(s, iv, t, r.chordAx, r.chordAz);
+                chords.add(chord);
+                kernelChords.add(reach > 0.0 ? new DiskSocpKernel.ChordRow(t, r.chordAx, r.chordAz,
+                        r.chordRhs - reach, "arc@" + t) : chord);
+            }
         }
         double[] mMagB = new double[s.n];
-        for (int t = 0; t < s.n; t++) mMagB[t] = s.geom.radiusUpper(t);
+        for (int t = 0; t < s.n; t++) mMagB[t] = s.geom.radiusUpper(t) + impulseRadius(s, iv, t);
 
         long k0 = System.nanoTime();
         double cp = lin.objectiveConst(s.spec.objective);
@@ -580,13 +566,10 @@ public final class CertifiedBnb {
         double cutoff = floor - FLOOR_CUTOFF_REL * (1.0 + Math.abs(floor));
         if (s.incYaws != null) {
             double target = s.incScore + CERT_EPS - (s.max ? cp : -cp);
-            for (int t = 0; t < s.n; t++) {
-                if (iv.freeX[t]) target -= iv.injX[t] * Math.abs(cx[t]);
-                if (iv.freeZ[t]) target -= iv.injZ[t] * Math.abs(cz[t]);
-            }
             cutoff = Math.max(cutoff, target - CUTOFF_MARGIN * (1.0 + Math.abs(target)));
         }
-        DiskSocpKernel.Outcome oc = DiskSocpKernel.solveChords(s.n, cx, cz, mMagB, rows, s.freeP0, chords, cutoff);
+        DiskSocpKernel.Outcome oc = DiskSocpKernel.solveChords(s.n, cx, cz, mMagB, kernelRows, s.freeP0,
+                kernelChords, cutoff);
         s.kernelSolves++;
         s.kernelNanos += System.nanoTime() - k0;
         double[] gxv;
@@ -603,7 +586,8 @@ public final class CertifiedBnb {
             ux = oc.result.ux;
             uz = oc.result.uz;
         } else {
-            CostateDualSolver.Result dr = new CostateDualSolver(s.n, cx, cz, mMagB, rows, s.freeP0).solve(0.0, null);
+            CostateDualSolver.Result dr = new CostateDualSolver(s.n, cx, cz, mMagB, kernelRows, s.freeP0)
+                    .solve(0.0, null);
             if (dr == null) {
                 dropUnresolved(s, nd);
                 return null;
@@ -647,11 +631,12 @@ public final class CertifiedBnb {
             val += startX + startZ;
             magnitude += Math.abs(startX) + Math.abs(startZ);
         }
-        boolean empty = val < floor - (CERT_EPS * (1.0 + Math.abs(floor)) + EMPTY_ROUNDING_REL * magnitude);
-        for (int t = 0; t < s.n; t++) {
-            if (iv.freeX[t]) val += iv.injX[t] * Math.abs(cx[t]);
-            if (iv.freeZ[t]) val += iv.injZ[t] * Math.abs(cz[t]);
+        if (iv.anyFree) {
+            double allowance = impulseAllowance(s, iv, cx, cz, rows, boxStart, lambda);
+            val += allowance;
+            magnitude += allowance;
         }
+        boolean empty = val < floor - (CERT_EPS * (1.0 + Math.abs(floor)) + EMPTY_ROUNDING_REL * magnitude);
         double score = val + (s.max ? cp : -cp);
         if (score > nd.score) score = nd.score;
         nd.score = score;
@@ -660,6 +645,10 @@ public final class CertifiedBnb {
                     score, s.incScore, open.size());
         }
         if (score <= s.incScore + CERT_EPS) return null;
+        if ((empty || unbounded) && s.incYaws == null && s.bestInfeasYaws == null) {
+            double[] attempt = decode(s, nd, lin, gxv, gzv);
+            if (attempt != null) replayCandidate(s, attempt, s.refPx, s.refPz, true);
+        }
         if (empty) return null;
         if (unbounded) {
             dropUnresolved(s, nd);
@@ -750,14 +739,37 @@ public final class CertifiedBnb {
         return new JumpLinearModel.Wall(axis, coef, bound, false, name, 0.0);
     }
 
-    private static double rowSlack(Search s, Intervals iv, JumpLinearModel.Wall w) {
-        double slack = 0.0;
-        for (int t = 0; t < s.n; t++) {
-            if (w.coef[t] == 0.0) continue;
-            if (w.axis == 0 && iv.freeX[t]) slack += iv.injX[t] * Math.abs(w.coef[t]);
-            if (w.axis == 1 && iv.freeZ[t]) slack += iv.injZ[t] * Math.abs(w.coef[t]);
+    private static void addBoxRow(List<JumpLinearModel.Wall> rows, List<JumpLinearModel.Wall> kernelRows, int n,
+                                  int axis, int t, double sign, double bound, double reach, String name) {
+        JumpLinearModel.Wall row = boxRow(n, axis, t, sign, bound, name);
+        rows.add(row);
+        kernelRows.add(reach > 0.0 ? boxRow(n, axis, t, sign, bound + reach, name) : row);
+    }
+
+    private static double impulseReach(Search s, Intervals iv, int t, double ax, double az) {
+        if (!s.perAxis) return iv.freeX[t] ? s.thr * StrictMath.hypot(ax, az) : 0.0;
+        return (iv.freeX[t] ? s.thr * Math.abs(ax) : 0.0) + (iv.freeZ[t] ? s.thr * Math.abs(az) : 0.0);
+    }
+
+    private static double impulseRadius(Search s, Intervals iv, int t) {
+        if (s.perAxis && iv.freeX[t] && iv.freeZ[t]) return s.thr * StrictMath.sqrt(2.0);
+        return iv.freeX[t] || iv.freeZ[t] ? s.thr : 0.0;
+    }
+
+    private static double impulseAllowance(Search s, Intervals iv, double[] cx, double[] cz,
+                                           List<JumpLinearModel.Wall> rows, int trajectoryRows, double[] lambda) {
+        double[] tx = cx.clone();
+        double[] tz = cz.clone();
+        for (int j = 0; j < trajectoryRows && j < lambda.length; j++) {
+            JumpLinearModel.Wall w = rows.get(j);
+            double lj = w.eq ? lambda[j] : Math.max(lambda[j], 0.0);
+            if (lj == 0.0) continue;
+            if (w.coefX != null) for (int t = 0; t < w.coefX.length && t < s.n; t++) tx[t] -= lj * w.coefX[t];
+            if (w.coefZ != null) for (int t = 0; t < w.coefZ.length && t < s.n; t++) tz[t] -= lj * w.coefZ[t];
         }
-        return slack;
+        double allowance = 0.0;
+        for (int t = 0; t < s.n; t++) allowance += impulseReach(s, iv, t, tx[t], tz[t]);
+        return allowance;
     }
 
     private static void addGateRows(Search s, Node nd, Intervals iv, JumpLinearModel lin,
@@ -1251,7 +1263,7 @@ public final class CertifiedBnb {
         for (int t = 1; t < s.n; t++) {
             if (s.perAxis) {
                 if (iv.freeX[t]) {
-                    double imp = gateImpactOf(s, iv.injX[t], lin, t, 0, decPath);
+                    double imp = gateImpactOf(s, s.thr, lin, t, 0, decPath);
                     if (imp > gateImpact) {
                         gateImpact = imp;
                         gateAxis = 0;
@@ -1259,7 +1271,7 @@ public final class CertifiedBnb {
                     }
                 }
                 if (iv.freeZ[t]) {
-                    double imp = gateImpactOf(s, iv.injZ[t], lin, t, 1, decPath);
+                    double imp = gateImpactOf(s, s.thr, lin, t, 1, decPath);
                     if (imp > gateImpact) {
                         gateImpact = imp;
                         gateAxis = 1;
@@ -1267,7 +1279,7 @@ public final class CertifiedBnb {
                     }
                 }
             } else if (iv.effX[t] == FREE) {
-                double imp = gateImpactOf(s, iv.injX[t] + iv.injZ[t], lin, t, 0, decPath);
+                double imp = gateImpactOf(s, 2.0 * s.thr, lin, t, 0, decPath);
                 if (imp > gateImpact) {
                     gateImpact = imp;
                     gateAxis = 0;
