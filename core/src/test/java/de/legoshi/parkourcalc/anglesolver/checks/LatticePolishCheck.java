@@ -40,6 +40,7 @@ final class LatticePolishCheck implements ProblemCheck {
 
     private static final String ENGINE_MODE = "engine";
     private static final String STAGE_TYPE = "latticePolish";
+    private static final long WORK_UNITS_PER_MILLION = 1_000_000L;
     private static final String STAGE_NODE = "polish";
     private static final String STAGE_AFTER = "cap2";
     private static final String STAGE_BEFORE = "wrap";
@@ -147,6 +148,19 @@ final class LatticePolishCheck implements ProblemCheck {
                 System.out.printf("POLISH %-28s one round=%.9f repeated gain=%.3e%n", name, base, over);
                 assertTrue(name + ": the repeated grid search gains " + over + " over one round, under " + e.roundsGain,
                         over >= e.roundsGain);
+            }
+            if (Boolean.TRUE.equals(e.fullSearch)) {
+                LatticePolish.Config full = new LatticePolish.Config();
+                full.heavyCombos = BuiltinGraphs.POLISH_FACINGS;
+                full.closures = BuiltinGraphs.POLISH_SEARCHES;
+                full.halfCap = BuiltinGraphs.POLISH_TABLE;
+                full.window = BuiltinGraphs.POLISH_WINDOW;
+                full.workUnits = BuiltinGraphs.POLISH_WORK * WORK_UNITS_PER_MILLION;
+                LatticePolish.Result wide = LatticePolish.polish(model, spec, yaws, startX, startZ, full, 0L, null);
+                assertNotNull(name + ": the Optimize parameters return no result", wide);
+                System.out.printf("POLISH %-28s Optimize parameters=%.9f%n", name, wide.objective);
+                assertTrue(name + ": the Optimize parameters return " + wide.objective + ", short of " + value,
+                        max ? wide.objective >= value : wide.objective <= value);
             }
         }
 

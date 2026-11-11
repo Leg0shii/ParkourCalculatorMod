@@ -76,7 +76,10 @@ Largest gains, the same in both settings: `mcc11-cross-axis-sign` 1.26e-4, `hpk/
 The sweep prints four digits of the gain; compared at full precision 32 specs are better in both settings. With 8
 rounds instead of 16 the total gain is 6.0e-4 for about 13 percent less time (measured with the option on).
 
-### Twelve human jumps, Fast engine, solve, Apply, solve again
+### Twelve human jumps, a Fast landing plus the stage, solve, Apply, solve again
+
+Measured while the Fast graph still carried the stage (default parameters). Since the second ruling of 2026-11-11
+a Fast solve does not run the stage; the numbers of a 10 s Optimize are under "In Optimize" below.
 
 Option off (default):
 
@@ -94,10 +97,10 @@ Option off (default):
 | j925 | 2809.336732908 | 2809.336749669 | 1.68e-5 |
 | j154 (minimum) | -1599.700114039 | -1599.700114039 | 0 |
 
-j335 does not land in Fast in either build. The second and third solve after Apply return the same objective,
+j335 does not land in a Fast solve in either build. The second and third solve after Apply return the same objective,
 with one exception per build: before this change j718 came back with -1902.861583318 on the second solve (now the
 same value three times), and with this change j345 comes back with -660.197872806, the value of the build before,
-1.2e-6 under its first solve. A Fast solve after Apply starts from the applied start position, lands somewhere
+1.2e-6 under its first solve. A Fast landing after Apply starts from the applied start position, lands somewhere
 else and the grid search is local to that landing.
 
 Option on:
@@ -117,6 +120,87 @@ Option on:
 | j154 (minimum) | -1599.700117640 | -1599.700117640 | 0 |
 
 Every jump returns the same objective on the second and third solve after Apply.
+
+## In Optimize
+
+Since the second ruling of 2026-11-11 the stage runs in the Optimize and Custom graphs only
+(`lattice-polish-2026-11-10.md`, "Where the stage runs"). The Optimize graph gives it wider parameters than the
+defaults (`facings` 64, `searches` 21, `tableSize` 30000, `window` 64, `BuiltinGraphs.POLISH_*`) and a time share
+of 5 percent of the budget, at most 2 s: 150 ms of a 3 s Optimize, 500 ms of 10 s, 2 s from 40 s on.
+`LatticePolishSweep` measures that case with `-Dpkc.polish.optimize=true`, `-Dpkc.polish.ms=<n>` and
+`-Dpkc.polish.rounds=<n>`. All numbers below: 67 seeded specs, closed form seed, single run each; a run under a
+deadline depends on the machine.
+
+### One round against 16 with the Optimize parameters
+
+| time per jump | better with 16 rounds | worse | total gain |
+| --- | --- | --- | --- |
+| 150 ms | 11 | 0 | 9.2e-5 |
+| 500 ms | 14 | 0 | 1.68e-4 |
+| 2 s | 17 | 0 | 3.66e-4 |
+| no deadline | 18 | 0 | 4.05e-4 |
+
+Without a deadline the stage takes 17.9 s over the 67 specs with one round and 65.1 s with 16 (`taser-80t` 9.4 s,
+`j020-panewallsingleblockbf` 7.1 s, the human `j925` 7.0 s). Inside Optimize the deadline cuts that off: the
+rounds use the time the stage has and no more.
+
+### The wide parameters under the deadline: a quick search first
+
+One grid search with the wide parameters can take the whole time share and end without a grid point. The wide
+stage under its deadline against the default parameters without one:
+
+| time per jump | wide is worse on | of those without any gain |
+| --- | --- | --- |
+| 150 ms | 10 | `j005` (default 6.8e-3), `hpk/d9/j121` (6.4e-3), `hpk/d10/j148` (4.2e-3) |
+| 500 ms | 6 | `hpk/d10/j148` (4.2e-3) |
+| 2 s | 3 | none, each loses under 2e-5 |
+
+The default parameters find those gains in 20 to 63 ms. In the engine the human j345 showed it: a 10 s Optimize
+came back with -660.206476562, the stage spent its 500 ms on one search and found no grid point. The same landing
+with the default parameters gives -660.197872806, which is 8.6e-3 further.
+
+`LatticePolish.polish` therefore runs the search with the default parameters first whenever its own parameters
+are wider (`Config.quick`; with the option `Full turn start facing` on it covers every start turn), and then the
+wide search from that result with the time that is left. Option off:
+
+| time per jump | against the wide search alone | against the default parameters without a deadline |
+| --- | --- | --- |
+| 150 ms | 12 better, 4 worse, total +1.86e-3 | 18 better, none worse |
+| 500 ms | 8 better, 1 worse, total +4.32e-3 | 23 better, none worse |
+| 2 s | 4 better, 1 worse, total +2.75e-5 | 25 better, none worse |
+
+The worse ones lose 1e-7 to 2e-7, because the wide search starts from another point. The exception is `taser-80t`
+(80 ticks) at 150 ms: the wide search alone finishes its first search right at that deadline (about 100 ms
+without one), and with the quick search before it (9 ms, no result on that jump) the run found nothing and lost
+1.57e-2. At 500 ms it is back.
+
+With the option on, the quick search has tried every turn before the wide search starts. The start facing is one
+turn away on 39 of the 67 jumps at each of the three deadlines, against 16, 20 and 30 with the wide search alone
+(40 without a deadline).
+
+### Twelve human jumps, Optimize 10 s
+
+One run each, with the quick search first. The stages before the polish are cut at 7.0 s, the polish runs until
+7.5 s at the latest and the solve ends at about 7.6 s.
+
+| jump | option off | option on | start facing turn |
+| --- | --- | --- | --- |
+| j140 | -826.231873309 | -826.231845885 | +360 |
+| j345 | -660.197872806 | -660.197752012 | +360 |
+| j1099 | -2501.298703062 | -2501.298678096 | +360 |
+| j1149 (minimum) | 4950.794602257 | 4950.794602257 | -360, same value |
+| j1150 | -2805.297958184 | -2805.297949439 | +360 |
+| j155 | 4984.763186192 | 4984.763186192 | |
+| j716 (minimum) | -699.950269473 | -699.950269454 | |
+| j718 | -1902.861547729 | -1902.861532334 | +360 |
+| j828 | 4978.013118202 | 4978.013118202 | |
+| j925 | 2809.336761230 | 2809.336769916 | -360 |
+| j154 (minimum) | -1599.700114069 | -1599.700117640 | -360 |
+
+j335 does not land in 10 s. With the wide search alone and the option on, two of the eleven jumps came back a turn
+away (j1150, j154), and j345 and j1099 came back without a gain from the stage. j716 differs by 1.9e-8 between
+the two columns because its stage runs into the deadline in both. j828 stays 4.7e-6 under its smooth optimum,
+which is the tied facing limit named in `lattice-polish-facing-rows-2026-11-11.md`.
 
 ## A stall the cross check found on the way
 
