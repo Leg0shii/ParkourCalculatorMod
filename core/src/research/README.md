@@ -139,7 +139,8 @@ anglesolver/
                            core/src/test/resources), -Dpkc.polish.only=<name part>,
                            -Dpkc.polish.turns=true switches the Full turn start facing option on,
                            -Dpkc.polish.optimize=true runs the stage with the Optimize graph's
-                           parameters, -Dpkc.polish.ms=<n> gives every spec that many milliseconds
+                           parameters, -Dpkc.polish.rounds=<n> sets the grid search rounds,
+                           -Dpkc.polish.ms=<n> gives every spec that many milliseconds
                            (docs/research/lattice-polish-2026-11-10.md)
   SmoothFileScreen.java    smoothing pass on a saved solve; PKC_SOLVE_FILE=<save.json>
   render/GizmoDragConstraintBench.java  gizmo drag constraint timing; PKC_BENCH=1

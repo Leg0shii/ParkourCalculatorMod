@@ -136,6 +136,7 @@ public class LatticePolishSweep {
             cfg.window = BuiltinGraphs.POLISH_WINDOW;
             cfg.workUnits = BuiltinGraphs.POLISH_WORK * 1_000_000L;
         }
+        cfg.rounds = Integer.getInteger("pkc.polish.rounds", cfg.rounds);
         return cfg;
     }
 

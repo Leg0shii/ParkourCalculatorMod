@@ -270,6 +270,9 @@ public final class NodeHelp {
                 + " list. More reaches a finer result and takes longer.");
         param("latticePolish", "window", "How many fitting partner combinations it collects for each listed"
                 + " combination, closest first.");
+        param("latticePolish", "rounds", "How often the grid search may run again from its own result, each"
+                + " time moving another group of ticks together. It stops early once a pass over every group"
+                + " finds nothing better. 1 runs the search once.");
         param("latticePolish", "work", "How much work the smooth solves may spend before the stage gives up,"
                 + " counted in steps so the same jump always gets the same result. A long jump with many"
                 + " free ticks needs more.");

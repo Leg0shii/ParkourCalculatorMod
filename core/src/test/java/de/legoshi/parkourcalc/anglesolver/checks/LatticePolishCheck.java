@@ -139,6 +139,16 @@ final class LatticePolishCheck implements ProblemCheck {
                 assertTrue(name + ": the same turn reaches the result as well",
                         kept == null || (max ? kept.objective < value : kept.objective > value));
             }
+            if (e.roundsGain != null) {
+                LatticePolish.Config once = new LatticePolish.Config();
+                once.rounds = 1;
+                LatticePolish.Result single = LatticePolish.polish(model, spec, yaws, startX, startZ, once, 0L, null);
+                double base = single == null ? incumbent : single.objective;
+                double over = max ? value - base : base - value;
+                System.out.printf("POLISH %-28s one round=%.9f repeated gain=%.3e%n", name, base, over);
+                assertTrue(name + ": the repeated grid search gains " + over + " over one round, under " + e.roundsGain,
+                        over >= e.roundsGain);
+            }
             if (Boolean.TRUE.equals(e.fullSearch)) {
                 LatticePolish.Config full = new LatticePolish.Config();
                 full.heavyCombos = BuiltinGraphs.POLISH_FACINGS;

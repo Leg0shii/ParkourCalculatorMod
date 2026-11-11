@@ -25,6 +25,7 @@ public final class LatticePolish {
         public int verify = 12;
         public long workUnits = 100_000_000L;
         public boolean turns = true;
+        public int rounds = 16;
 
         Config quick() {
             Config base = new Config();
@@ -38,6 +39,7 @@ public final class LatticePolish {
             q.verify = verify;
             q.workUnits = Math.min(workUnits, base.workUnits);
             q.turns = turns;
+            q.rounds = rounds;
             return q;
         }
 
@@ -215,6 +217,7 @@ public final class LatticePolish {
         closure.halfCap = cfg.halfCap;
         closure.window = cfg.window;
         closure.verify = cfg.verify;
+        closure.rounds = cfg.rounds;
         LatticeClosure.Result best = null;
         int ran = 0;
         for (Sub sub : subs) {
@@ -227,6 +230,7 @@ public final class LatticePolish {
                 Sub eased = backedOff(sub, BACK_OFF[rung], work);
                 if (eased == null) break;
                 r = LatticeClosure.run(eased.model, eased.z, eased.mu, eased.yaws, closure, deadlineNanos);
+                if (r != null) r = LatticeClosure.refine(sub.model, sub.z, sub.mu, r, closure, deadlineNanos);
                 if (SolverTrace.on()) {
                     SolverTrace.log("POLISH", "search %d backed off %.1e smooth=%.9f exact=%s", ran + 1, BACK_OFF[rung],
                             sign * eased.value, r == null ? "none" : String.format(java.util.Locale.ROOT, "%.9f", r.objective));
