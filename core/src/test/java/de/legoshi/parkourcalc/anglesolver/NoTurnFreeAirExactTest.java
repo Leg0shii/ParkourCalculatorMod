@@ -54,6 +54,37 @@ public class NoTurnFreeAirExactTest {
     }
 
     @Test
+    public void theTableScreenScoresLikeTheModelBuiltPerSchedule() throws Exception {
+        StructurePoolDriver.Config cfg = new StructurePoolDriver.Config();
+        String[] captures = {"hpk/d11/j716-1bm_Cobblewall_to_Cobblewall_Winged_Neo", "hpk/d12/j154_1bm_Head_Butterfly_Neo",
+                "hpk/d10/j424_1.4375bm_Double_Winged_Neo__0.25", "hpk/d11/j1099-1.1875bm_Head_Butterfly_Neo_fail"};
+        java.util.Random random = new java.util.Random(671L);
+        for (String capture : captures) {
+            NoTurnProblem p = NoTurnCapture.problem(capture);
+            FreeAirExact.Tables tables = FreeAirExact.Tables.of(p, cfg.turnCombo, cfg.allowJa);
+            assertTrue(capture + " has no tables", tables != null);
+            for (int trial = 0; trial < 60; trial++) {
+                int[] combos = new int[p.n];
+                boolean[] sprint = new boolean[p.n];
+                int t = 0;
+                while (t < p.n) {
+                    int combo = random.nextInt(NoTurnKeys.COUNT);
+                    boolean run = random.nextBoolean();
+                    int end = Math.min(p.n, t + 1 + random.nextInt(12));
+                    for (; t < end; t++) {
+                        combos[t] = combo;
+                        sprint[t] = run && random.nextInt(8) != 0;
+                    }
+                }
+                double perSchedule = FreeAirExact.solve(p.buildSpec(combos, sprint, cfg.turnCombo, cfg.allowJa)).dual;
+                double fromTables = new FreeAirExact.Screen(tables).solve(combos, sprint, Double.POSITIVE_INFINITY).dual;
+                assertEquals(capture + " " + NoTurnKeys.describe(combos), Double.doubleToLongBits(perSchedule),
+                        Double.doubleToLongBits(fromTables));
+            }
+        }
+    }
+
+    @Test
     public void theScoreIsTheSameOnEveryCall() throws Exception {
         StructurePoolDriver.Config cfg = new StructurePoolDriver.Config();
         NoTurnProblem p = NoTurnCapture.problem("hpk/d11/j716-1bm_Cobblewall_to_Cobblewall_Winged_Neo");

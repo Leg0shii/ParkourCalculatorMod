@@ -17,6 +17,118 @@ public final class FreeAirExact {
     private static final double GAP_TOL = 1.0e-9;
     private static final int MAX_OUTER = 400;
     private static final int MAX_NEWTON = 60;
+    private static final int WARM_SLOTS = 4;
+
+    public static final class Warm {
+        private final double[][] slots = new double[WARM_SLOTS][];
+        private int next;
+
+        void remember(double[] lambda) {
+            double[] slot = slots[next];
+            if (slot == null || slot.length != lambda.length) {
+                slot = new double[lambda.length];
+                slots[next] = slot;
+            }
+            System.arraycopy(lambda, 0, slot, 0, lambda.length);
+            next = (next + 1) % WARM_SLOTS;
+        }
+    }
+
+    public static final class Tables {
+        private final FreeAirExact shape;
+        private final double[][][] termX;
+        private final double[][][] termY;
+        private final double[][] fixedX;
+        private final int[][] rowsAt;
+
+        private Tables(FreeAirExact shape) {
+            this.shape = shape;
+            this.termX = new double[shape.n][NoTurnKeys.COUNT << 2][];
+            this.termY = new double[shape.n][NoTurnKeys.COUNT << 2][];
+            this.fixedX = new double[shape.rows][shape.units];
+            this.rowsAt = new int[shape.n][];
+            for (int j = 0; j < shape.rows; j++) {
+                if (shape.boxUnitX >= 0) fixedX[j][shape.boxUnitX] = shape.ax[j][shape.boxUnitX];
+                if (shape.boxUnitZ >= 0) fixedX[j][shape.boxUnitZ] = shape.ax[j][shape.boxUnitZ];
+            }
+            int[] buf = new int[shape.rows];
+            for (int t = 0; t < shape.n; t++) {
+                int count = 0;
+                for (int j = 0; j < shape.rows; j++) if (shape.rowCoef[j][t] != 0.0) buf[count++] = j;
+                rowsAt[t] = java.util.Arrays.copyOf(buf, count);
+            }
+        }
+
+        public static Tables of(NoTurnProblem problem, int turnCombo, boolean jaFree) {
+            int n = problem.n;
+            int[] combos = new int[n];
+            boolean[] sprint = new boolean[n];
+            Tables out = null;
+            for (int combo = 0; combo < NoTurnKeys.COUNT; combo++) {
+                java.util.Arrays.fill(combos, combo);
+                for (int pattern = 0; pattern < 4; pattern++) {
+                    for (int t = 0; t < n; t++) {
+                        sprint[t] = pattern == 0 || (pattern == 2 && t % 2 == 0) || (pattern == 3 && t % 2 == 1);
+                    }
+                    JumpSpec spec = problem.buildSpec(combos, sprint, turnCombo, jaFree);
+                    JumpPhysicsInputs sc = spec.asScenario();
+                    for (int d = 0; d <= sc.lastDamageTick(); d++) if (sc.damageAt(d)) return null;
+                    FreeAirExact probe = new FreeAirExact(spec, null, null);
+                    if (probe.rows == 0) return null;
+                    if (out == null) out = new Tables(probe);
+                    if (!out.add(probe, combo, sprint)) return null;
+                }
+            }
+            return out;
+        }
+
+        private boolean add(FreeAirExact probe, int combo, boolean[] sprint) {
+            if (probe.rows != shape.rows || probe.units != shape.units || probe.n != shape.n) return false;
+            for (int j = 0; j < shape.rows; j++) {
+                if (probe.rowAxis[j] != shape.rowAxis[j] || !same(probe.rowStart[j], shape.rowStart[j])
+                        || !same(probe.rowShift[j], shape.rowShift[j])) return false;
+                for (int t = 0; t < shape.n; t++) if (!same(probe.rowCoef[j][t], shape.rowCoef[j][t])) return false;
+            }
+            for (int t = 0; t < shape.n; t++) {
+                int key = key(combo, sprint[t], t == 0 ? sprint[0] : sprint[t - 1]);
+                double[] x = new double[shape.rows];
+                double[] y = new double[shape.rows];
+                for (int j = 0; j < shape.rows; j++) {
+                    double k = shape.rowCoef[j][t];
+                    if (k == 0.0) continue;
+                    x[j] = k * (shape.rowAxis[j] == 0 ? probe.in0x[t] : probe.in0z[t]);
+                    y[j] = k * (shape.rowAxis[j] == 0 ? probe.in9x[t] : probe.in9z[t]);
+                }
+                termX[t][key] = x;
+                termY[t][key] = y;
+            }
+            return true;
+        }
+
+        private static boolean same(double a, double b) {
+            return Double.doubleToLongBits(a) == Double.doubleToLongBits(b);
+        }
+
+        private static int key(int combo, boolean sprint, boolean sprintBefore) {
+            return (combo << 2) | (sprint ? 2 : 0) | (sprintBefore ? 1 : 0);
+        }
+    }
+
+    public static final class Screen {
+        private final Tables tables;
+        private final FreeAirExact solver;
+        private final Warm warm = new Warm();
+
+        public Screen(Tables tables) {
+            this.tables = tables;
+            this.solver = new FreeAirExact(tables.shape);
+        }
+
+        public Result solve(int[] combos, boolean[] sprint, double rejectAbove) {
+            solver.load(tables, combos, sprint);
+            return solver.screen(rejectAbove, warm, null);
+        }
+    }
 
     public static final class Result {
         public final double dual;
@@ -27,6 +139,7 @@ public final class FreeAirExact {
         public final int iterations;
         public final int active;
         public final int interior;
+        double[] lambda;
 
         Result(double dual, double primal, double[] yaws, double startX, double startZ, int iterations, int active,
                int interior) {
@@ -68,6 +181,17 @@ public final class FreeAirExact {
     private final double[] uy;
     private final double[] rowValue;
     private final boolean[] inSet;
+    private final int[] nonZero;
+    private double[][] rowCoef;
+    private int[] rowAxis;
+    private double[] rowStart;
+    private double[] rowShift;
+    private double[] in0x;
+    private double[] in0z;
+    private double[] in9x;
+    private double[] in9z;
+    private double[] trialBuf;
+    private int[] idxBuf;
     private int iterations;
     private double rejectAbove = Double.POSITIVE_INFINITY;
     private double[] gradBuf;
@@ -140,11 +264,23 @@ public final class FreeAirExact {
         this.ax = new double[rows][units];
         this.ay = new double[rows][units];
         this.b = new double[rows];
+        this.rowCoef = new double[rows][n];
+        this.rowAxis = new int[rows];
+        this.rowStart = new double[rows];
+        this.rowShift = new double[rows];
+        this.in0x = u0x;
+        this.in0z = u0z;
+        this.in9x = u9x;
+        this.in9z = u9z;
         for (int j = 0; j < rows; j++) {
             JumpLinearModel.Wall w = all.get(j);
             double s = sign.get(j);
             double rhs = s * w.bPrime;
             double p0 = s * (w.axis == 0 ? w.p0coefX : w.p0coefZ);
+            rowAxis[j] = w.axis;
+            rowStart[j] = rhs;
+            rowShift[j] = p0 * (w.axis == 0 ? midX : midZ);
+            for (int t = 0; t < n; t++) rowCoef[j][t] = s * w.coef[t];
             for (int t = 0; t < n; t++) {
                 double k = s * w.coef[t];
                 if (k == 0.0) continue;
@@ -175,6 +311,63 @@ public final class FreeAirExact {
         this.uy = new double[units];
         this.rowValue = new double[rows];
         this.inSet = new boolean[rows];
+        this.nonZero = new int[rows];
+    }
+
+    private FreeAirExact(FreeAirExact shape) {
+        this.rows = shape.rows;
+        this.units = shape.units;
+        this.n = shape.n;
+        this.ties = shape.ties;
+        this.unitOfTick = shape.unitOfTick;
+        this.offsetOfTick = shape.offsetOfTick;
+        this.pinOfTick = shape.pinOfTick;
+        this.boxUnitX = shape.boxUnitX;
+        this.boxUnitZ = shape.boxUnitZ;
+        this.refX = shape.refX;
+        this.refZ = shape.refZ;
+        this.midX = shape.midX;
+        this.midZ = shape.midZ;
+        this.halfX = shape.halfX;
+        this.halfZ = shape.halfZ;
+        this.rowStart = shape.rowStart;
+        this.rowShift = shape.rowShift;
+        this.ax = new double[rows][units];
+        this.ay = new double[rows][units];
+        this.b = new double[rows];
+        this.lambda = new double[rows];
+        this.gx = new double[units];
+        this.gy = new double[units];
+        this.norm = new double[units];
+        this.ux = new double[units];
+        this.uy = new double[units];
+        this.rowValue = new double[rows];
+        this.inSet = new boolean[rows];
+        this.nonZero = new int[rows];
+    }
+
+    private void load(Tables tables, int[] combos, boolean[] sprint) {
+        for (int j = 0; j < rows; j++) {
+            System.arraycopy(tables.fixedX[j], 0, ax[j], 0, units);
+            java.util.Arrays.fill(ay[j], 0.0);
+            b[j] = rowStart[j];
+        }
+        for (int t = 0; t < n; t++) {
+            int key = Tables.key(combos[t], sprint[t], t == 0 ? sprint[0] : sprint[t - 1]);
+            double[] x = tables.termX[t][key];
+            double[] y = tables.termY[t][key];
+            int v = unitOfTick[t];
+            if (v < 0) {
+                for (int j : tables.rowsAt[t]) b[j] -= x[j];
+            } else {
+                for (int j : tables.rowsAt[t]) {
+                    ax[j][v] += x[j];
+                    ay[j][v] += y[j];
+                }
+            }
+        }
+        for (int j = 0; j < rows; j++) b[j] += rowShift[j];
+        iterations = 0;
     }
 
     public static Result solve(JumpSpec spec) {
@@ -187,8 +380,36 @@ public final class FreeAirExact {
 
     public static Result solveWithInertia(JumpSpec spec, double threshold, boolean perAxis, double rejectAbove,
                                           double inertiaReach, int passes) {
-        Result best = solve(spec, rejectAbove + inertiaReach, null, null);
+        return solveWithInertia(spec, threshold, perAxis, rejectAbove, inertiaReach, passes, null);
+    }
+
+    public static Result solveWithInertia(JumpSpec spec, double threshold, boolean perAxis, double rejectAbove,
+                                          double inertiaReach, int passes, Warm warm) {
+        Result best = solve(spec, rejectAbove + inertiaReach, null, null, warm, null);
         if (best.dual <= rejectAbove || best.yaws == null) return best;
+        return inertiaPasses(spec, best, threshold, perAxis, rejectAbove, passes, warm != null);
+    }
+
+    public static Result solve(JumpSpec spec, double rejectAbove, Warm warm) {
+        return solve(spec, rejectAbove, null, null, warm, null);
+    }
+
+    public static Result inertiaRescue(JumpSpec spec, double threshold, boolean perAxis, double rejectAbove,
+                                       double inertiaReach, int passes, Warm warm) {
+        Result plain = solve(spec, rejectAbove + inertiaReach, null, null, warm, null);
+        if (plain.dual <= rejectAbove || plain.yaws == null) return null;
+        return rescue(spec, plain, threshold, perAxis, rejectAbove, passes);
+    }
+
+    public static Result rescue(JumpSpec spec, Result plain, double threshold, boolean perAxis, double rejectAbove,
+                                int passes) {
+        Result best = inertiaPasses(spec, plain, threshold, perAxis, rejectAbove, passes, true);
+        return best.dual <= rejectAbove ? best : null;
+    }
+
+    private static Result inertiaPasses(JumpSpec spec, Result best, double threshold, boolean perAxis,
+                                        double rejectAbove, int passes, boolean warmStart) {
+        double[] start = warmStart ? best.lambda : null;
         JumpPhysicsInputs sc = NoTurnProblem.pinnedAtRef(spec).asScenario();
         int n = sc.numTicks;
         boolean[] zx = null;
@@ -205,7 +426,7 @@ public final class FreeAirExact {
             if (!any || same) break;
             zx = nzx;
             zz = nzz;
-            cur = solve(spec, Double.POSITIVE_INFINITY, zx, zz);
+            cur = solve(spec, Double.POSITIVE_INFINITY, zx, zz, null, start);
             if (cur.yaws == null) break;
             if (cur.dual < best.dual) best = cur;
             if (best.dual <= rejectAbove) break;
@@ -248,30 +469,61 @@ public final class FreeAirExact {
     }
 
     public static Result solve(JumpSpec spec, double rejectAbove, boolean[] zeroX, boolean[] zeroZ) {
+        return solve(spec, rejectAbove, zeroX, zeroZ, null, null);
+    }
+
+    private static Result solve(JumpSpec spec, double rejectAbove, boolean[] zeroX, boolean[] zeroZ, Warm warm,
+                                double[] start) {
         FreeAirExact s = new FreeAirExact(spec, zeroX, zeroZ);
         if (s.rows == 0) return new Result(Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, null, s.refX, s.refZ, 0, 0, 0);
-        s.rejectAbove = rejectAbove;
-        return s.run();
+        return s.screen(rejectAbove, warm, start);
+    }
+
+    private Result screen(double rejectAbove, Warm warm, double[] start) {
+        this.rejectAbove = rejectAbove;
+        double[] from = start != null && start.length == rows ? start : null;
+        if (warm != null) {
+            double top = Double.NEGATIVE_INFINITY;
+            for (double[] slot : warm.slots) {
+                if (slot == null || slot.length != rows) continue;
+                double value = -evaluate(slot);
+                if (value > top) {
+                    top = value;
+                    from = slot;
+                }
+            }
+            if (top > rejectAbove) return new Result(top, Double.POSITIVE_INFINITY, null, refX, refZ, 0, 0, 0);
+        }
+        Result r = run(from);
+        r.lambda = lambda;
+        if (warm != null) warm.remember(lambda);
+        return r;
     }
 
     private double evaluate(double[] lam) {
+        int m = 0;
+        for (int j = 0; j < rows; j++) if (lam[j] != 0.0) nonZero[m++] = j;
+        java.util.Arrays.fill(gx, 0.0);
+        java.util.Arrays.fill(gy, 0.0);
+        for (int a = 0; a < m; a++) {
+            int j = nonZero[a];
+            double l = lam[j];
+            double[] rx = ax[j];
+            double[] ry = ay[j];
+            for (int k = 0; k < units; k++) {
+                gx[k] += l * rx[k];
+                gy[k] += l * ry[k];
+            }
+        }
         double f = 0.0;
         for (int k = 0; k < units; k++) {
-            double x = 0.0;
-            double y = 0.0;
-            for (int j = 0; j < rows; j++) {
-                double l = lam[j];
-                if (l == 0.0) continue;
-                x += l * ax[j][k];
-                y += l * ay[j][k];
-            }
-            gx[k] = x;
-            gy[k] = y;
+            double x = gx[k];
+            double y = gy[k];
             double nk = StrictMath.sqrt(x * x + y * y + EPS2);
             norm[k] = nk;
             f += nk;
         }
-        for (int j = 0; j < rows; j++) f += lam[j] * b[j];
+        for (int a = 0; a < m; a++) f += lam[nonZero[a]] * b[nonZero[a]];
         return f;
     }
 
@@ -287,23 +539,33 @@ public final class FreeAirExact {
         }
     }
 
-    private Result run() {
-        double[] trial = new double[rows];
-        for (int j = 0; j < rows; j++) lambda[j] = 1.0 / rows;
-        evaluate(lambda);
-        recover();
-        int worst = 0;
-        for (int j = 1; j < rows; j++) if (rowValue[j] > rowValue[worst]) worst = j;
-        java.util.Arrays.fill(lambda, 0.0);
-        lambda[worst] = 1.0;
-        inSet[worst] = true;
+    private Result run(double[] from) {
+        if (trialBuf == null) {
+            trialBuf = new double[rows];
+            idxBuf = new int[rows];
+        }
+        double[] trial = trialBuf;
+        if (from != null) {
+            System.arraycopy(from, 0, lambda, 0, rows);
+            for (int j = 0; j < rows; j++) inSet[j] = lambda[j] > 0.0;
+        } else {
+            java.util.Arrays.fill(inSet, false);
+            for (int j = 0; j < rows; j++) lambda[j] = 1.0 / rows;
+            evaluate(lambda);
+            recover();
+            int worst = 0;
+            for (int j = 1; j < rows; j++) if (rowValue[j] > rowValue[worst]) worst = j;
+            java.util.Arrays.fill(lambda, 0.0);
+            lambda[worst] = 1.0;
+            inSet[worst] = true;
+        }
         double f = evaluate(lambda);
         double bestDual = -f;
         if (bestDual > rejectAbove) {
             return new Result(bestDual, Double.POSITIVE_INFINITY, null, refX, refZ, iterations, 0, 0);
         }
         double primal = Double.POSITIVE_INFINITY;
-        int[] idx = new int[rows];
+        int[] idx = idxBuf;
         for (int outer = 0; outer < MAX_OUTER; outer++) {
             iterations++;
             f = newtonOnSet(f, idx, trial);

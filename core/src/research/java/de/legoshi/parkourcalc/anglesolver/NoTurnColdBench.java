@@ -300,6 +300,8 @@ public class NoTurnColdBench {
                 if (without >= 0) cfg.families = de.legoshi.parkourcalc.core.anglesolver.noturn.StratFamilies.shippedWithout(without);
                 cfg.changeLevels = !Boolean.getBoolean("pkc.bench.familyOnly");
                 cfg.familyDelayNanos = Long.getLong("pkc.bench.familyDelayMs", cfg.familyDelayNanos / 1_000_000L) * 1_000_000L;
+                cfg.familyInertiaShare = Double.parseDouble(System.getProperty("pkc.bench.familyInertiaShare", String.valueOf(cfg.familyInertiaShare)));
+                cfg.familyReach = Double.parseDouble(System.getProperty("pkc.bench.familyReach", String.valueOf(cfg.familyReach)));
                 line("families: on without=" + without + " changeLevels=" + cfg.changeLevels);
             }
             if (Integer.getInteger("pkc.bench.repairWidth", -1) >= 0) cfg.repairWidth = Integer.getInteger("pkc.bench.repairWidth");
