@@ -11,11 +11,15 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.Scoring;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.FreeStartSolve;
+import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.RecoveryLadder;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolverTrace;
 import de.legoshi.parkourcalc.core.anglesolver.solver.StartBox;
+import de.legoshi.parkourcalc.core.anglesolver.solver.YawOrder;
+import de.legoshi.parkourcalc.core.anglesolver.solver.YawTies;
+import java.util.List;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -68,7 +72,7 @@ public final class FreeStartImproveNode implements NodeRuntime {
         double centerZ = 0.5 * (ctx.freeBox.pzLo + ctx.freeBox.pzHi);
         boolean centerFirst = de.legoshi.parkourcalc.core.anglesolver.solver.CertifiedBnb.carriesOrder(ctx.spec);
         if (centerFirst) {
-            adoptYaws = centerChain(ctx, sc, centerX, centerZ, cancel);
+            adoptYaws = centerChain(ctx, sc, centerX, centerZ, centerFirst, cancel);
             if (adoptYaws != null) {
                 adoptX = centerX;
                 adoptZ = centerZ;
@@ -84,7 +88,7 @@ public final class FreeStartImproveNode implements NodeRuntime {
             }
         }
         if (adoptYaws == null && !centerFirst && (cancel == null || !cancel.get())) {
-            adoptYaws = centerChain(ctx, sc, centerX, centerZ, cancel);
+            adoptYaws = centerChain(ctx, sc, centerX, centerZ, centerFirst, cancel);
             if (adoptYaws != null) {
                 adoptX = centerX;
                 adoptZ = centerZ;
@@ -102,18 +106,30 @@ public final class FreeStartImproveNode implements NodeRuntime {
     }
 
     private static double[] centerChain(GraphContext ctx, JumpPhysicsInputs sc, double centerX, double centerZ,
-                                        AtomicBoolean cancel) {
+                                        boolean ordered, AtomicBoolean cancel) {
         JumpPhysicsInputs pinned = sc.pinnedAt(centerX, centerZ);
-        JumpSpec pinnedSpec = new JumpSpec(pinned, ctx.spec.constraints, ctx.spec.objective);
         String[] via = new String[1];
-        double[] chainYaws = RecoveryLadder.solve(
-                ctx.exactModel, pinnedSpec, pinned, cancel, via);
-        if (chainYaws == null
-                || FreeStartSolve.violationAt(ctx.exactModel, ctx.spec, chainYaws, centerX, centerZ) > ctx.feasTol) {
-            return null;
+        double[] chainYaws = chainAt(ctx, pinned, ctx.spec.constraints, centerX, centerZ, cancel, via);
+        if (chainYaws == null && ordered && (cancel == null || !cancel.get())) {
+            YawOrder order = YawOrder.carry(ctx.spec.constraints, YawTies.of(ctx.spec.constraints, sc.numTicks),
+                    sc.numTicks);
+            chainYaws = chainAt(ctx, pinned, order.stripped(ctx.spec.constraints), centerX, centerZ, cancel, via);
+            if (chainYaws != null) via[0] = via[0] + ", facing order held unasked";
         }
+        if (chainYaws == null) return null;
         if (SolverTrace.on()) SolverTrace.log("ENGINE", "free rescue center chain via=%s", via[0]);
         return chainYaws;
+    }
+
+    private static double[] chainAt(GraphContext ctx, JumpPhysicsInputs pinned, List<JumpConstraint> constraints,
+                                    double centerX, double centerZ, AtomicBoolean cancel, String[] via) {
+        double[] yaws = RecoveryLadder.solve(ctx.exactModel, new JumpSpec(pinned, constraints, ctx.spec.objective),
+                pinned, cancel, via);
+        if (yaws == null
+                || FreeStartSolve.violationAt(ctx.exactModel, ctx.spec, yaws, centerX, centerZ) > ctx.feasTol) {
+            return null;
+        }
+        return yaws;
     }
 
     private double[] improve(GraphContext ctx, double[] seedYaws, AtomicBoolean cancel) {
