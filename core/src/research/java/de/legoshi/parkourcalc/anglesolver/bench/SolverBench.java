@@ -10,11 +10,13 @@ import de.legoshi.parkourcalc.core.anglesolver.TickConstraints;
 import de.legoshi.parkourcalc.core.anglesolver.graph.BuiltinGraphs;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolveRunRecord;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
+import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolveClock;
+import de.legoshi.parkourcalc.core.anglesolver.solver.WatchScore;
 import de.legoshi.parkourcalc.core.save.SaveFile;
 import de.legoshi.parkourcalc.core.save.SaveIO;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
@@ -372,6 +374,14 @@ public class SolverBench {
             Vec3dCore start = engine.lastPlanStart();
             if (start != null) rec.turn.start = new double[] {start.x, start.y, start.z};
             rec.turn.startYaw = engine.lastPlanStartYaw();
+            double anchor = rec.turn.startYaw != null ? rec.turn.startYaw : yaws[0];
+            WatchScore watch = WatchScore.of(anchor, Angles.wrapAll(yaws), null);
+            if (rec.smoothness == null) rec.smoothness = new BenchRecord.Smoothness();
+            rec.smoothness.watchCost = watch.cost;
+            rec.smoothness.watchTurns = watch.turns;
+            rec.smoothness.watchWobbles = watch.wobbles;
+            rec.smoothness.watchMicroTurns = watch.microTurns;
+            rec.smoothness.watchReversalCost = watch.reversalCost;
         }
     }
 

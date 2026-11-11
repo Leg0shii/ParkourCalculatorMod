@@ -73,6 +73,11 @@ public final class BenchRecord {
         public Integer reversals;
         public Double maxStepDeg;
         public Double jerkDeg;
+        public Double watchCost;
+        public Integer watchTurns;
+        public Integer watchWobbles;
+        public Integer watchMicroTurns;
+        public Double watchReversalCost;
     }
 
     public static final class Stratfinder {
