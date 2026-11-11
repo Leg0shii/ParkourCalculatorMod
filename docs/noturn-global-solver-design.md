@@ -562,14 +562,41 @@ The change levels explode after 3 to 4 paid changes: on j716 level 1 has 7.1 mil
 
 What carries is the observation that a human Strat is a product of a few reusable pieces. Cut a schedule at its jump ticks: the run-up before the first jump, one middle segment per jump, the final segment after the last jump. A **segment family** is the list of key changes in a segment with their tick offsets, counted from the segment start when the change sits in the first half of the segment and from the next jump when it sits in the second half (run-up changes count back from the first jump, final segment changes from the last jump), so one family fits segments of different length. A family and its mirror are one family. `StratFamilies` builds the families from the library `strats/schedules.txt` (`docs/research/strat-families/README.md`), places the fitting ones on the segments of a problem and gives each a cost of -log2 of its share of the weight, in half bits. A schedule is one family per segment, its cost the sum.
 
-`StructurePoolDriver` with `Config.familyStage` walks those products in cost bands of `Config.familyBandCost` half bits (`enumFamily`): segment by segment in cost order, cut when the cheapest completion leaves the band above or the dearest one stays below it, with the pad-wall prefix pruning of the change levels at every segment start. The bands are a second lane beside the change levels (`runLanes`): each lane chains its stages in its own thread and hands every finished stage to the one certify queue, so a band of a few hundred schedules never waits for the certifying thread to come back from a certify call. The change levels keep every enumeration thread until level `Config.familyAfterLevel` (1) is done or `Config.familyDelayNanos` (5 s) have passed, because most jumps are found by the first levels within seconds and the first measurement with an even split from the start made exactly those finds slower (j1150 on the development PC: 7 s to 13 s). From then on the lanes share the threads and a finished lane leaves them to the other. While both lanes are still enumerating and the certifier has reached its per stage cap, the cap count is reset so the best waiting candidates are certified instead of the certifier idling.
+`StructurePoolDriver` with `Config.familyStage` walks those products in cost bands of `Config.familyBandCost` half bits (`enumFamily`): segment by segment in cost order, cut when the cheapest completion leaves the band above or the dearest one stays below it, with the pad-wall prefix pruning of the change levels at every segment start. The bands are a second lane beside the change levels (`runLanes`): each lane chains its stages in its own thread and hands every finished stage to the one certify queue, so a band of a few hundred schedules never waits for the certifying thread to come back from a certify call. The change levels keep every enumeration thread until level `Config.familyAfterLevel` (1) is done or `Config.familyDelayNanos` (5 s) have passed, because most jumps are found by the first levels within seconds and the first measurement with an even split from the start made exactly those finds slower (j1150 on the development PC: 7 s to 13 s). From then on the lanes share the threads and a finished lane leaves them to the other. The certifier keeps its per stage cap while a band enumerates: a reset of the cap count while it idled was tried and made j298 scatter between 100 and 165 s instead of a steady 100 s, because the certifier was then inside a batch of lower ranked candidates when the next band arrived.
 
 Two companions made it land:
 
 - **The screen.** The byte screen (one facing per unit) misrates human Strats by up to 0.38 b; with it the human Strat of j716 was reached after 16 s and never certified, at rank 306 of the pool. A family leaf is screened by `FreeAirExact` instead: the exact minimum over the facings of the worst wall violation of this one schedule in the linear model, a free facing per untied tick, the start box as a variable, plus passes that zero the velocity components the inertia threshold would zero. It is a dual method on the active rows, so its value is a lower bound even when it stops early. 56 of the 59 recorded human Strats score under 0.002 b (the exact tier), 58 under the keep threshold of 0.01 b; j127 scores 0.136 b and is left to the change levels. Cost about 0.45 ms per schedule on one thread.
-- **The certify order.** Inside the exact tier the pool is ordered by family cost before presses, so the most common families are certified first.
+- **The certify order.** Inside the exact tier the pool is ordered by family cost before presses, so the most common families are certified first. Outside the exact tier a family candidate ranks behind every byte screened candidate (`Candidate.family`): its rank value is the `FreeAirExact` lower bound, which reads smaller than a byte screen deficit, and without the rule 53 to 55 near tier family candidates were certified before the level 1 Strat of j1150 (17.6 s against 11.0 s on dev).
 
-The table below is a weak machine comparison: CPU path, 4 cloud cores, 120 s, the single pool driver. It says nothing about the development PC, where the GPU screen, the in-game driver and 240 s already find 55 of the 59 recordings (repair stage section above), j424, j718, j1150 and j155 among them and j716 in 3 of 4 standalone runs. The comparison on that setup is open.
+**Measured on the development PC (2026-11-11).** GPU screen, in-game driver, inputs wiped, 6 threads, 240 s, one JVM at a time, one run per jump and arm, all 59 recordings, the jump's own rows left out of the library. Arms: dev 3ba2df4, the first commit 6bfe914 (even thread split from the start), 012935a (the head start for the change levels). **The family lane finds no recording that dev misses**: every arm finds the same 56 of 59 and misses j1099, j154 and j347. What changes is the time to the first Strat: over the 56 found the sum is 841 s on dev, 425 s on 6bfe914 and 491 s on 012935a (median 2.5, 2.1, 2.7 s).
+
+| jump | dev | 6bfe914 | 012935a |
+| --- | --- | --- | --- |
+| j716 | 120.1 | 26.8 | 26.4 |
+| j424 | 148.7 | 26.7 | 29.2 |
+| j298 | 186.7 | 98.4 | 164.9 |
+| j152 | 65.1 | 2.3 | 4.8 |
+| j132 | 21.1 | 1.1 | 2.8 |
+| j146 | 21.1 | 1.1 | 2.8 |
+| j1149 | 20.4 | 7.4 | 7.4 |
+| j119 | 17.7 | 1.0 | 2.8 |
+| j1150 | 6.9 | 13.3 | 7.6 |
+| j122 | 0.8 | 8.1 | 0.9 |
+| j342 | 2.6 | 5.0 | 2.7 |
+| j816 | 0.6 | 2.1 | 0.7 |
+| j828 | 1.0 | 2.1 | 1.0 |
+| j148 | 2.7 | 0.5 | 2.8 |
+| j127 | 4.8 | 0.9 | 4.8 |
+| j128 | 2.4 | 0.8 | 2.8 |
+
+The other jumps differ by less than about 1 s between the arms. The even split of 6bfe914 was more than 1 s slower than dev on 9 jumps (the first level finds, j122 and j1150 above all); the head start removes that and costs about 2 s on the jumps the family lane finds at once, because the certifying thread first finishes a batch of level 0 and 1 candidates. Without any head start (`-Dpkc.bench.familyDelayMs=0`) the losses come back (j122 8.1 s, j1150 61.5 s); 1 s and 12 s were tried too and 5 s kept. j298 repeated: 94 to 98 s on 6bfe914, 100 to 165 s on 012935a, a steady 99 to 101 s after the certify count reset was removed (5cc07cf).
+
+Later runs of that day had a game open on the same PC, which slows the GPU part about 1.7 times; they are only used as comparisons inside one phase. Under that load level 1 of j1150 takes about 11 s, longer than the head start, and the branch then needs 16.5 s against 11.0 s on dev because 44 exact tier family candidates are certified before the level 1 Strat. 5cc07cf itself has no clean table of its own.
+
+The family lane alone on 30 threads with 900 s does not find j154 or j1099: it screens 26 and 45 million schedules, a band takes 3 to 4 times as long as the one before, and the recorded Strats sit about 3.8e7 and 1e8 deep in the family order. `FreeAirExact` on the CPU does 3e4 to 5e4 schedules per second there; a GPU version of the family leaf screen is the open lever for these two.
+
+An earlier cloud comparison follows as a development record only: CPU path, 4 cloud cores, 120 s, the single pool driver. Its "not found" rows for the levels do not hold on the PC.
 
 Measured on 4 cloud cores, CPU path, cold (inputs wiped, the jump's own rows left out of the library), one run each, 120 s budget, seconds until the certified Strat. The bench's extra certify and polish put a floor of about 15 s under every find. "Levels" is dev before this stage, "families alone" the research build with the family lane only, "both lanes" this stage as it ships (`-Dpkc.bench.families=true -Dpkc.bench.familyWithout=<jump>`):
 
@@ -605,4 +632,4 @@ On this setup the levels find 18 of the 25 within 120 s, both lanes 20 (j716, j4
 
 The test `NoTurnFamilyStageTest` runs the family lane alone without the extra certify and the polish: j132, whose recorded Strat has three paid changes, lands in 4 s (12 thousand schedules scored), j346 in under 1 s.
 
-Open: j154 and j1099 need about 10 million screened schedules, which is minutes on the 32 thread development PC and not measured yet; j347 has two middle segments no family covers and j155 a run-up no family covers; the translator reads two thirds of the worded Strats.
+Open: j154 and j1099 (see above, the GPU family screen); j347 has two middle segments no family covers and j155 a run-up no family covers; the translator reads two thirds of the worded Strats.
