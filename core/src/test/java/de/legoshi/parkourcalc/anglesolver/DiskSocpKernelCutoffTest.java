@@ -26,12 +26,12 @@ public class DiskSocpKernelCutoffTest {
     }
 
     private static DiskSocpKernel.Outcome solve(double cutoff) {
-        return DiskSocpKernel.solveChords(N, CX, CZ, M_MAG, walls(), null, null, null, cutoff);
+        return DiskSocpKernel.solveChords(N, CX, CZ, M_MAG, walls(), null, null, cutoff);
     }
 
     @Test
     public void aCutoffBelowTheOptimumChangesNothing() {
-        DiskSocpKernel.Outcome plain = DiskSocpKernel.solveChords(N, CX, CZ, M_MAG, walls(), null, null, null);
+        DiskSocpKernel.Outcome plain = DiskSocpKernel.solveChords(N, CX, CZ, M_MAG, walls(), null, null);
         assertNotNull(plain.result);
         assertTrue(plain.result.converged);
         DiskSocpKernel.Outcome low = solve(plain.result.value - 1.0e-3);

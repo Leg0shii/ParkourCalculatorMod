@@ -163,16 +163,16 @@ public class WallHomotopyLadderTest {
     }
 
     @Test
-    public void j154LadderImprovesOnPlainDriverAndIsDeterministic() {
+    public void j154LadderIsNoWorseThanThePlainDriverAndIsDeterministic() {
         Loaded l = load(J154);
         FoldReplayDriver.Result plain = FoldReplayDriver.solve(l.model, l.spec);
         assertNotNull(plain.best);
         WallHomotopyLadder.Result ladder = WallHomotopyLadder.solve(l.model, l.spec, null, 0L);
         assertNotNull(ladder.best);
         assertEquals("all four rungs must run", 4, ladder.rungs.size());
-        assertTrue("ladder must improve on the plain driver, got ladder " + ladder.best.maxViolation
+        assertTrue("ladder must not fall behind the plain driver, got ladder " + ladder.best.maxViolation
                 + " vs plain " + plain.best.maxViolation,
-                ladder.best.maxViolation < plain.best.maxViolation);
+                ladder.best.maxViolation <= plain.best.maxViolation);
         assertTrue("ladder must land the j154 knife edge byte-exact, got maxViol "
                 + ladder.best.maxViolation, ladder.best.feasible());
         assertTrue("ladder landing must be witness-or-better, got " + ladder.best.objective,

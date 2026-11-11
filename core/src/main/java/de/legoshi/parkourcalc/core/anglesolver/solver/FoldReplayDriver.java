@@ -601,20 +601,6 @@ public final class FoldReplayDriver {
         return oc.result != null && oc.result.value < INFEAS_VALUE;
     }
 
-    private static Map<String, Double> lambdaMap(List<JumpLinearModel.Wall> walls,
-                                                 List<DiskSocpKernel.ChordRow> chordRows,
-                                                 DiskSocpKernel.Result r) {
-        Map<String, Double> map = new HashMap<>();
-        int mw = walls.size();
-        for (int j = 0; j < mw && j < r.lambda.length; j++) map.put(walls.get(j).name, r.lambda[j]);
-        if (chordRows != null) {
-            for (int q = 0; q < chordRows.size() && mw + q < r.lambda.length; q++) {
-                map.put(chordRows.get(q).name, r.lambda[mw + q]);
-            }
-        }
-        return map;
-    }
-
     private static List<DiskSocpKernel.ChordRow> chordRows(java.util.TreeMap<Integer, double[]> chords,
                                                            double[] mMag) {
         List<DiskSocpKernel.ChordRow> rows = new ArrayList<>(chords.size());
@@ -633,7 +619,7 @@ public final class FoldReplayDriver {
                                                   CostateDualSolver.FreeP0 freeP0, boolean dualFallback,
                                                   JumpLinearModel lin, AtomicBoolean cancel,
                                                   long deadlineNanos, KernelStats stats) {
-        DiskSocpKernel.Outcome base = DiskSocpKernel.solveChords(n, cx, cz, mMag, walls, freeP0, null, null);
+        DiskSocpKernel.Outcome base = DiskSocpKernel.solveChords(n, cx, cz, mMag, walls, freeP0, null);
         if (stats != null) stats.solves++;
         if (!usable(base)) {
             if (infeasibleSignal(base)) {
@@ -662,8 +648,6 @@ public final class FoldReplayDriver {
 
         DiskSocpKernel.Result sol = base.result;
         java.util.TreeMap<Integer, double[]> chords = new java.util.TreeMap<>();
-        Map<String, Double> warm = lambdaMap(walls, null, sol);
-        List<DiskSocpKernel.ChordRow> curRows = null;
         for (int it = 0; it < NARROW_MAX_ITER; it++) {
             if (cancel != null && cancel.get()) break;
             if (deadlineNanos != 0L && System.nanoTime() >= deadlineNanos) break;
@@ -697,7 +681,7 @@ public final class FoldReplayDriver {
                 }
             }
             List<DiskSocpKernel.ChordRow> rows = chordRows(next, mMag);
-            DiskSocpKernel.Outcome cand = DiskSocpKernel.solveChords(n, cx, cz, mMag, walls, freeP0, rows, warm);
+            DiskSocpKernel.Outcome cand = DiskSocpKernel.solveChords(n, cx, cz, mMag, walls, freeP0, rows);
             if (stats != null) stats.solves++;
             if (DEBUG) {
                 System.out.printf("      narrow[%d] worst=%d slack=%.3e chords=%d usable=%b gap=%s%n",
@@ -711,7 +695,7 @@ public final class FoldReplayDriver {
                             Math.min(e.getValue()[1] / NARROW_SHRINK, NARROW_DELTA0)});
                 }
                 rows = chordRows(loose, mMag);
-                cand = DiskSocpKernel.solveChords(n, cx, cz, mMag, walls, freeP0, rows, warm);
+                cand = DiskSocpKernel.solveChords(n, cx, cz, mMag, walls, freeP0, rows);
                 if (stats != null) stats.solves++;
                 if (DEBUG) {
                     System.out.printf("      narrow[%d] loosened usable=%b%n", it, usable(cand));
@@ -720,9 +704,7 @@ public final class FoldReplayDriver {
                 next = loose;
             }
             chords = next;
-            curRows = rows;
             sol = cand.result;
-            warm = lambdaMap(walls, curRows, sol);
         }
         if (DEBUG && !chords.isEmpty()) {
             System.out.printf("    NARROW ticks=%d solves=%d%n", chords.size(), stats == null ? -1 : stats.solves);
