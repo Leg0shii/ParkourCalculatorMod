@@ -154,6 +154,7 @@ public final class AngleSolverState {
     private Effort effort = Effort.FAST;
     private boolean stopOnFeasible = true;
     private boolean legalMode;
+    private boolean fullTurnStart;
     private int budgetMs = DEFAULT_BUDGET_MS;
     private double smoothLambda;
     private double smoothGiveBack = 1.0;
@@ -327,6 +328,14 @@ public final class AngleSolverState {
 
     public void setLegalMode(boolean legalMode) {
         this.legalMode = legalMode;
+    }
+
+    public boolean isFullTurnStart() {
+        return fullTurnStart;
+    }
+
+    public void setFullTurnStart(boolean fullTurnStart) {
+        this.fullTurnStart = fullTurnStart;
     }
 
     public int getOptimizeSeconds() {
@@ -798,6 +807,7 @@ public final class AngleSolverState {
         effort = Effort.FAST;
         stopOnFeasible = true;
         legalMode = false;
+        fullTurnStart = false;
         budgetMs = DEFAULT_BUDGET_MS;
         solveBudget.resetToDefaults();
         graphPresetName = null;

@@ -146,6 +146,7 @@ public final class SeedSweepNode implements NodeRuntime {
         JumpPhysicsInputs sc = ctx.scenario.copy();
         sc.startPos = new Vec3dCore(ref[0], sc.startPos.y, ref[1]);
         sc.startBox = StartBox.pinned(ref[0], ref[1], sc.initialVelocity.x, sc.initialVelocity.z);
+        sc.startTurnFree = false;
         JumpSpec spec = new JumpSpec(sc, new ArrayList<>(ctx.spec.constraints), ctx.spec.objective);
         AtomicBoolean cancel = nodeToken != null ? nodeToken : new AtomicBoolean(false);
         GraphContext sub = new GraphContext(spec, ctx.model, ctx.freeBox, ctx.legalGoal, ctx.feasTol, cancel,

@@ -69,6 +69,15 @@ public class SaveFieldRoundTripTest {
     }
 
     @Test
+    public void fullTurnStartIsOffUnlessSaved() throws Exception {
+        AngleSolverState in = new AngleSolverState();
+        assertFalse(in.isFullTurnStart());
+        assertFalse(saveAndReload(in).isFullTurnStart());
+        in.setFullTurnStart(true);
+        assertTrue(saveAndReload(in).isFullTurnStart());
+    }
+
+    @Test
     public void noticeSurvivesSaveRoundTrip() throws Exception {
         AngleSolverState in = new AngleSolverState();
         SolveResult r = new SolveResult(true, 3, 3, 1, 10);
