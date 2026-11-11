@@ -3,6 +3,7 @@ package de.legoshi.parkourcalc.anglesolver.checks;
 import de.legoshi.parkourcalc.anglesolver.harness.Expect;
 import de.legoshi.parkourcalc.anglesolver.harness.ProblemFixture;
 import de.legoshi.parkourcalc.core.anglesolver.SolveResult;
+import de.legoshi.parkourcalc.core.anglesolver.graph.BuiltinGraphs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ClosedFormSolve;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
@@ -27,6 +28,7 @@ import static org.junit.Assert.assertTrue;
 final class LatticePolishCheck implements ProblemCheck {
 
     private static final String ENGINE_MODE = "engine";
+    private static final long WORK_UNITS_PER_MILLION = 1_000_000L;
 
     @Override
     public void run(ProblemFixture pf) {
@@ -91,6 +93,19 @@ final class LatticePolishCheck implements ProblemCheck {
             assertArrayEquals(name + ": the second run found other facings", out.yaws, again.yaws, 0.0);
             assertEquals(name + ": the second run found another start X", out.startX, again.startX, 0.0);
             assertEquals(name + ": the second run found another start Z", out.startZ, again.startZ, 0.0);
+            if (Boolean.TRUE.equals(e.fullSearch)) {
+                LatticePolish.Config full = new LatticePolish.Config();
+                full.heavyCombos = BuiltinGraphs.POLISH_FACINGS;
+                full.closures = BuiltinGraphs.POLISH_SEARCHES;
+                full.halfCap = BuiltinGraphs.POLISH_TABLE;
+                full.window = BuiltinGraphs.POLISH_WINDOW;
+                full.workUnits = BuiltinGraphs.POLISH_WORK * WORK_UNITS_PER_MILLION;
+                LatticePolish.Result wide = LatticePolish.polish(model, spec, yaws, startX, startZ, full, 0L, null);
+                assertNotNull(name + ": the Optimize parameters return no result", wide);
+                System.out.printf("POLISH %-28s Optimize parameters=%.9f%n", name, wide.objective);
+                assertTrue(name + ": the Optimize parameters return " + wide.objective + ", short of " + value,
+                        max ? wide.objective >= value : wide.objective <= value);
+            }
         }
 
         double[] junk = new double[sc.numTicks];

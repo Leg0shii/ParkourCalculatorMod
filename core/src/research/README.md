@@ -136,7 +136,9 @@ anglesolver/
                            than -Dpkc.bench.tol (default 1e-5); not env-gated, it runs whenever selected
   LatticePolishSweep.java  lattice polish from the closed form seed on every capture under a folder,
                            each result replayed byte-exact; -Dpkc.polish.sweep=<folder> (for example
-                           core/src/test/resources), -Dpkc.polish.only=<name part>
+                           core/src/test/resources), -Dpkc.polish.only=<name part>,
+                           -Dpkc.polish.optimize=true runs the stage with the Optimize graph's
+                           parameters, -Dpkc.polish.ms=<n> gives every spec that many milliseconds
                            (docs/research/lattice-polish-2026-11-10.md)
   SmoothFileScreen.java    smoothing pass on a saved solve; PKC_SOLVE_FILE=<save.json>
   render/GizmoDragConstraintBench.java  gizmo drag constraint timing; PKC_BENCH=1

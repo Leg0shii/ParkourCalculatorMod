@@ -22,6 +22,24 @@ public final class LatticePolish {
         public int window = 24;
         public int verify = 12;
         public long workUnits = 100_000_000L;
+
+        Config quick() {
+            Config base = new Config();
+            Config q = new Config();
+            q.maxVars = maxVars;
+            q.heavyCombos = Math.min(heavyCombos, base.heavyCombos);
+            q.closures = Math.min(closures, base.closures);
+            q.maxAdjusters = maxAdjusters;
+            q.halfCap = Math.min(halfCap, base.halfCap);
+            q.window = Math.min(window, base.window);
+            q.verify = verify;
+            q.workUnits = Math.min(workUnits, base.workUnits);
+            return q;
+        }
+
+        boolean widerThan(Config q) {
+            return heavyCombos > q.heavyCombos || closures > q.closures || halfCap > q.halfCap || window > q.window;
+        }
     }
 
     public static final class Result {
@@ -68,6 +86,21 @@ public final class LatticePolish {
     public static Result polish(ExactJumpModel exact, JumpSpec spec, double[] yawsIn, double startX, double startZ,
                                 Config cfg, long deadlineNanos, AtomicBoolean cancel) {
         if (TrigRowModel.unsupported(spec) != null) return null;
+        Config quick = cfg.quick();
+        if (!cfg.widerThan(quick)) return polishAt(exact, spec, yawsIn, startX, startZ, cfg, deadlineNanos, cancel);
+        Result first = polishAt(exact, spec, yawsIn, startX, startZ, quick, deadlineNanos, cancel);
+        if (first == null) return polishAt(exact, spec, yawsIn, startX, startZ, cfg, deadlineNanos, cancel);
+        if (expired(deadlineNanos, cancel)) return first;
+        Result second = polishAt(exact, spec, first.yaws, first.startX, first.startZ, cfg, deadlineNanos, cancel);
+        if (SolverTrace.on()) {
+            SolverTrace.log("POLISH", "quick search %.9f, full search %s", first.objective,
+                    second == null ? "none" : String.format(java.util.Locale.ROOT, "%.9f", second.objective));
+        }
+        return second != null ? second : first;
+    }
+
+    private static Result polishAt(ExactJumpModel exact, JumpSpec spec, double[] yawsIn, double startX, double startZ,
+                                   Config cfg, long deadlineNanos, AtomicBoolean cancel) {
         double[] yaws = Angles.wrapAll(yawsIn.clone());
         TrigRowModel joint = new TrigRowModel(exact, spec);
         if (joint.vars > cfg.maxVars) return null;

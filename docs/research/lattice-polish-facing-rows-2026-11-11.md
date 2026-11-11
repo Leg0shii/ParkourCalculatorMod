@@ -135,6 +135,37 @@ now. Identical to seven digits except four jumps that move by 2e-7 to 7e-6 in th
 -660.1978728, j718 -1902.8616148 to -1902.8616113, j925 2809.3367308 to 2809.3367329, j828 4978.0131219 to
 4978.0131220). j154 stays at -1599.7001140.
 
+## In Optimize: a quick search first
+
+The Optimize graph gives the stage wider parameters than the defaults (`facings` 64, `searches` 21, `tableSize`
+30000, `window` 64, `BuiltinGraphs.POLISH_*`) and a time share of 5 percent of the budget, at most 2 s: 150 ms of a
+3 s Optimize, 500 ms of 10 s, 2 s from 40 s on. Those parameters were set for the grid search before this change.
+The search of this change costs more per combination (a longer reach, and a partner scan that keeps going until
+`window` partners fit), so with a table of 30000 one search can take the whole time share and end without a grid
+point. The human j345 showed it: a 10 s Optimize came back with -660.206476562, search 1 ran 480 ms and found
+nothing. The build before this change gives -660.1978689 there (measured in the thread of that change).
+
+`LatticePolish.polish` therefore runs the search with the default parameters first whenever its own parameters are
+wider (`Config.quick`), and then the wide search from that result with the time that is left. j345 in a 10 s
+Optimize: -660.197814970, the quick search takes 70 ms.
+
+`LatticePolishSweep` with the Optimize parameters (`-Dpkc.polish.optimize=true`) and a deadline per jump
+(`-Dpkc.polish.ms=<n>`), 67 seeded specs, single runs, against the default parameters without a deadline:
+
+| time per jump | better | worse | total |
+| --- | --- | --- | --- |
+| 150 ms | 31 | 0 | +3.7e-4 |
+| 500 ms | 32 | 0 | +1.61e-2 |
+| 2 s | 33 | 0 | +1.61e-2 |
+
+Most of the total at 500 ms and above is `taser-80t` (80 ticks, 1.57e-2), whose wide search needs 100 to 150 ms.
+The sidecar field `fullSearch` pins the same statement without a deadline: the Optimize parameters must not come
+back short of the default parameters. A check under a deadline would depend on the machine, so the time share is
+measured with the sweep and not gated.
+
+Open: the wide parameters themselves. With this search a smaller table or a step between the quick and the wide
+search may use a short time share better; from 500 ms to 2 s the wide search gains almost nothing more.
+
 ## Limits and open work
 
 - **Damage tick, flow push, free start velocity, smoothed objective, position equality** still decline. A position
