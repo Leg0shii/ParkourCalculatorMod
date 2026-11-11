@@ -23,18 +23,18 @@ public class BuiltinGraphsTest {
 
     private static final List<String> FAST_NODES = Arrays.asList(
             "entry", "horizon", "wrap0", "seed", "cap1", "freeRescue", "peel", "freeImprove",
-            "sweep", "ils2", "translate2", "fold", "ladder", "cert", "bnb", "ils", "cap2", "wrap",
-            "translate", "certify", "emit");
+            "sweep", "ils2", "translate2", "fold", "ladder", "cert", "bnb", "ils", "cap2",
+            "wrap", "translate", "certify", "emit");
 
     private static final List<String> OPTIMIZE_NODES = Arrays.asList(
             "entry", "seeds", "horizon", "wrap0", "seed", "cap1", "freeRescue", "peel", "freeImprove",
-            "sweep", "ils2", "translate2", "fold", "ladder", "cert", "bnb", "ils", "cap2", "wrap",
-            "translate", "snap", "dive", "translate3", "snap2", "certify", "emit");
+            "sweep", "ils2", "translate2", "fold", "ladder", "cert", "bnb", "ils", "cap2", "polish",
+            "wrap", "translate", "snap", "dive", "translate3", "snap2", "certify", "emit");
 
     private static final List<String> MULTI_START_NODES = Arrays.asList(
             "entry", "seeds", "horizon", "wrap0", "seed", "cap1", "freeRescue", "peel", "freeImprove",
-            "sweep", "ils2", "translate2", "fold", "ladder", "cert", "bnb", "ils", "cap2", "wrap",
-            "translate", "certify", "emit");
+            "sweep", "ils2", "translate2", "fold", "ladder", "cert", "bnb", "ils", "cap2",
+            "wrap", "translate", "certify", "emit");
 
     private static final String[][] FAST_PAIRS = {
             {"entry", "seed"}, {"seed", "horizon"}, {"horizon", "wrap0"}, {"wrap0", "cap1"},
@@ -52,8 +52,9 @@ public class BuiltinGraphsTest {
             {"entry", "seeds"}, {"seeds", "horizon"}, {"horizon", "wrap0"}, {"wrap0", "seed"}, {"seed", "cap1"},
             {"cap1", "freeRescue"}, {"freeRescue", "peel"}, {"peel", "freeImprove"}, {"freeImprove", "sweep"},
             {"ils2", "translate2"}, {"fold", "ladder"}, {"ladder", "cert"}, {"cert", "bnb"}, {"bnb", "ils"},
-            {"ils", "cap2"}, {"cap2", "wrap"}, {"wrap", "translate"}, {"translate", "snap"}, {"snap", "dive"},
-            {"dive", "translate3"}, {"translate3", "snap2"}, {"snap2", "certify"}, {"certify", "emit"}};
+            {"ils", "cap2"}, {"cap2", "polish"}, {"polish", "wrap"}, {"wrap", "translate"}, {"translate", "snap"},
+            {"snap", "dive"}, {"dive", "translate3"}, {"translate3", "snap2"}, {"snap2", "certify"},
+            {"certify", "emit"}};
 
     private static List<String> nodeIds(SolverGraph g) {
         List<String> ids = new ArrayList<String>();

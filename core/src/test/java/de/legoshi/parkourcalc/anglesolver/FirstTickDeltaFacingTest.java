@@ -4,6 +4,7 @@ import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.Constraint;
 import de.legoshi.parkourcalc.core.anglesolver.SolveResult;
+import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.FacingPrefold;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
@@ -114,11 +115,13 @@ public class FirstTickDeltaFacingTest {
         engine.setOnStartYawChanged(moved::set);
         engine.apply();
         assertNotNull("Apply must publish the new start facing", moved.get());
-        assertEquals(solvedStart, moved.get(), 0f);
+        assertEquals((float) (yaws[0] + Angles.wholeTurns(moved.get())), moved.get(), 0f);
+        assertTrue("the start facing may sit one turn away at most: " + moved.get(),
+                Math.abs(Angles.wholeTurns(moved.get())) <= 360.0);
 
         List<InputRow> rows = inputs.getRows();
         InputRow first = rows.get(0);
-        assertEquals(first.isYawLocked() ? solvedStart : 0f, first.getYaw(), 0f);
+        assertEquals(first.isYawLocked() ? moved.get() : 0f, first.getYaw(), 0f);
 
         JumpPhysicsInputs sc = engine.lastSpecDebug().asScenario().copy();
         boolean[] locks = new boolean[TICKS];

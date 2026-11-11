@@ -31,6 +31,10 @@ public final class Angles {
         return w;
     }
 
+    public static double wholeTurns(double deg) {
+        return 360.0 * StrictMath.rint((deg - wrap(deg)) / 360.0);
+    }
+
     public static double wrapDelta(double delta) {
         while (delta > 180.0) delta -= 360.0;
         while (delta < -180.0) delta += 360.0;
