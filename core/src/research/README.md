@@ -134,6 +134,10 @@ anglesolver/
                            objectives; -Dpkc.bench.{only,skip,graph,effort,optsec,timeoutms,out},
                            -Dpkc.bench.gate fails the run when a jump misses its reference by more
                            than -Dpkc.bench.tol (default 1e-5); not env-gated, it runs whenever selected
+  LatticePolishSweep.java  lattice polish from the closed form seed on every capture under a folder,
+                           each result replayed byte-exact; -Dpkc.polish.sweep=<folder> (for example
+                           core/src/test/resources), -Dpkc.polish.only=<name part>
+                           (docs/research/lattice-polish-2026-11-10.md)
   SmoothFileScreen.java    smoothing pass on a saved solve; PKC_SOLVE_FILE=<save.json>
   render/GizmoDragConstraintBench.java  gizmo drag constraint timing; PKC_BENCH=1
   render/PathRebuildBenchmark.java      path rebuild timing; PKC_BENCH=1

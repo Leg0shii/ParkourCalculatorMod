@@ -78,6 +78,8 @@ public final class Expect {
     public Boolean seedMayMiss;
     public Double cap;
 
+    public String unsupported;
+
     public Boolean resmooth;
     public String strafeSide;
 
