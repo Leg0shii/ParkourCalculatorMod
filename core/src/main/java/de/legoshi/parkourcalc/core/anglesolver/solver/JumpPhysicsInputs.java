@@ -65,6 +65,10 @@ public final class JumpPhysicsInputs {
     /** Per-tick yaw lock state (unlocked = float delta the game accumulates; locked = absolute facing). */
     public boolean[] yawLockedPerTick = null;
 
+    public boolean freeStartYaw = false;
+
+    public boolean startTurnFree = false;
+
     /** Per-tick sprint state, derived from the rows by the engine's reduced client sprint machine
      *  (gh-120). Gates the ground 1.3x attribute, the air-accel constant, and the 0.2 jump boost.
      *  null = the legacy assumption: sprinting on every tick. */
@@ -132,6 +136,8 @@ public final class JumpPhysicsInputs {
         c.dolphinsGracePerTick = dolphinsGracePerTick;
         c.weavingPerTick = weavingPerTick;
         c.yawLockedPerTick = yawLockedPerTick;
+        c.freeStartYaw = freeStartYaw;
+        c.startTurnFree = startTurnFree;
         c.sprintPerTick = sprintPerTick;
         c.incomingSprint = incomingSprint;
         c.liveMovementFactor = liveMovementFactor;
@@ -220,6 +226,7 @@ public final class JumpPhysicsInputs {
         c.dolphinsGracePerTick = dolphin;
         c.weavingPerTick = weaving;
         c.yawLockedPerTick = locked;
+        c.freeStartYaw = from == 0 && freeStartYaw;
         c.sprintPerTick = sprint;
         c.forwardInputPerTick = fwd;
         c.strafeInputPerTick = str;
@@ -227,6 +234,14 @@ public final class JumpPhysicsInputs {
         c.serverJumpPerTick = serverJump;
         c.packetYPerTick = packetY;
         return c;
+    }
+
+    public float lockedFacing(int tick, double abs) {
+        return tick == 0 && freeStartYaw ? (float) (abs + Angles.wholeTurns(startYaw)) : (float) abs;
+    }
+
+    public float startYawAtTurns(double turnsDeg) {
+        return startYaw + (float) (turnsDeg - Angles.wholeTurns(startYaw));
     }
 
     public JumpPhysicsInputs pinnedAt(double x, double z) {
@@ -413,7 +428,7 @@ public final class JumpPhysicsInputs {
             double abs = absWrapped[k];
             boolean locked = yawLockedPerTick != null && k < yawLockedPerTick.length && yawLockedPerTick[k];
             if (locked) {
-                entity = (float) abs;
+                entity = lockedFacing(k, abs);
             } else {
                 double delta = abs - prevAbs;
                 delta = Angles.wrapDelta(delta);

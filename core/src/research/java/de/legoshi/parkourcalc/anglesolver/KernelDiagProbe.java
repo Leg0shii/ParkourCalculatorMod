@@ -72,7 +72,7 @@ public class KernelDiagProbe {
         }
 
         if ("1".equals(System.getenv("PKC_KDIAG_DEBUG"))) DiskSocpKernel.DEBUG = true;
-        DiskSocpKernel.Outcome base = DiskSocpKernel.solveChords(n, cx, cz, lin.mMagAll(), walls, freeP0, null, null);
+        DiskSocpKernel.Outcome base = DiskSocpKernel.solveChords(n, cx, cz, lin.mMagAll(), walls, freeP0, null);
         report("BASE", base, lin, n);
 
         String chordDeg = System.getenv("PKC_KDIAG_CHORD");
@@ -90,7 +90,7 @@ public class KernelDiagProbe {
                         mm * Math.cos(delta), "chord@" + t));
             }
             System.out.printf("KDIAG chords=%d deltaDeg=%s%n", chords.size(), chordDeg);
-            DiskSocpKernel.Outcome ch = DiskSocpKernel.solveChords(n, cx, cz, lin.mMagAll(), walls, freeP0, chords, null);
+            DiskSocpKernel.Outcome ch = DiskSocpKernel.solveChords(n, cx, cz, lin.mMagAll(), walls, freeP0, chords);
             report("CHORD", ch, lin, n);
         }
     }
@@ -119,14 +119,8 @@ public class KernelDiagProbe {
                 if (mm <= 0.0) continue;
                 double uNorm = Math.hypot(r.ux[t], r.uz[t]);
                 double gNorm = Math.hypot(r.gx[t], r.gz[t]);
-                String ref = "-";
-                if (r.uxRef != null) {
-                    ref = String.format("|uRef|=%.4e refDir=%.3f",
-                            Math.hypot(r.uxRef[t], r.uzRef[t]),
-                            Math.toDegrees(Math.atan2(r.uzRef[t], r.uxRef[t])));
-                }
-                System.out.printf("  tick=%d mm=%.4f |u|=%.6e slack=%.3e |g|=%.3e dir=%.3f %s%n",
-                        t, mm, uNorm, mm - uNorm, gNorm, Math.toDegrees(Math.atan2(r.uz[t], r.ux[t])), ref);
+                System.out.printf("  tick=%d mm=%.4f |u|=%.6e slack=%.3e |g|=%.3e dir=%.3f%n",
+                        t, mm, uNorm, mm - uNorm, gNorm, Math.toDegrees(Math.atan2(r.uz[t], r.ux[t])));
             }
         }
     }
