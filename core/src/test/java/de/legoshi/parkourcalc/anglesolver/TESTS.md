@@ -109,6 +109,10 @@ anglesolver/
   DiskSocpKernelCutoffTest.java  the dual cutoff of the certified B&B: a cutoff below the optimum leaves the
                            solve bit-identical, one above it stops early (FAIL_CUTOFF) on a dual
                            feasible point whose value is under the cutoff and still above the optimum
+  DiskSocpKernelWarmStartTest.java  the warm start's jam restart: a child node warm-started from its
+                           parent's multipliers returns the cold solve's bound (the kernel before it
+                           stopped 0.023 above it on a collapsed cone), and that bound sits just above
+                           a known feasible point
   FoldDriverEngineTest.java  #422 M1 engine-level gates through engine.solve() (driver wired as
                            primary recovery): j003 THOROUGH-10s in-deadline, j1150-noturn-inner
                            FAST solves (feasibility only, FAST has no objective bar), j154 FAST

@@ -18,6 +18,8 @@ public final class DiskSocpKernel {
     private static final double ARMIJO = 1.0e-4;
     private static final double REG_FACTOR = 1.0e-4;
     private static final double WARM_MIN = 1.0e-8;
+    private static final int JAM_FIRST_STEP = 15;
+    private static final double JAM_GRADIENT_RATIO = 100.0;
 
     public static final int FAIL_NONE = 0;
     public static final int FAIL_CHOLESKY = 2;
@@ -49,6 +51,8 @@ public final class DiskSocpKernel {
     private final double[] rowMlt;
     private final CostateDualSolver.FreeP0 freeP0;
     private final Map<String, Double> warmLambda;
+    private final List<JumpLinearModel.Wall> walls;
+    private final List<ChordRow> chords;
 
     private int failCode = FAIL_NONE;
     private int failIter;
@@ -69,6 +73,8 @@ public final class DiskSocpKernel {
         this.mMag = mMag;
         this.freeP0 = freeP0;
         this.warmLambda = warmLambda;
+        this.walls = walls;
+        this.chords = chords;
         this.axis = new int[m];
         this.coefX = new double[m][];
         this.coefZ = new double[m][];
@@ -304,6 +310,7 @@ public final class DiskSocpKernel {
         double mu = centeringMu(lambda, tau, gx, gz);
         boolean converged = false;
         boolean aborted = false;
+        boolean jamChecked = warmLambda == null;
         int iters = 0;
         int numericFailOuters = 0;
         outer:
@@ -351,6 +358,11 @@ public final class DiskSocpKernel {
                     aborted = true;
                     break outer;
                 }
+                if (!jamChecked && inner + 1 >= JAM_FIRST_STEP && coneCollapsed(gTau)) {
+                    jamChecked = true;
+                    Result cold = coldRestart(iters);
+                    if (cold != null) return cold;
+                }
             }
             bestLambda = lambda.clone();
             bestTau = tau.clone();
@@ -392,6 +404,28 @@ public final class DiskSocpKernel {
             fail(FAIL_UNBOUNDED, iters, mu);
         }
         return r;
+    }
+
+    private boolean coneCollapsed(double[] gTau) {
+        for (int t = 0; t < n; t++) {
+            if (mMag[t] > 0.0 && Math.abs(gTau[t]) >= JAM_GRADIENT_RATIO * mMag[t]) return true;
+        }
+        return false;
+    }
+
+    private Result coldRestart(int spentIters) {
+        DiskSocpKernel cold = new DiskSocpKernel(n, cx, cz, mMag, walls, freeP0, chords, null);
+        cold.cutoff = cutoff;
+        Result r = cold.run();
+        if (r == null || (cold.failCode != FAIL_NONE && cold.failCode != FAIL_CUTOFF)) return null;
+        failCode = cold.failCode;
+        failIter = cold.failIter;
+        failMu = cold.failMu;
+        Result out = new Result(r.gx, r.gz, r.ux, r.uz, r.lambda, r.value, r.converged, r.iters + spentIters, r.gap,
+                r.dvx, r.dvz);
+        out.uxRef = r.uxRef;
+        out.uzRef = r.uzRef;
+        return out;
     }
 
     private double boundValue(double[] lambda, double[] gx, double[] gz) {
