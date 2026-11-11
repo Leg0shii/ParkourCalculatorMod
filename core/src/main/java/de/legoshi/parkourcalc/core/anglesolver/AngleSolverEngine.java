@@ -481,7 +481,8 @@ public final class AngleSolverEngine {
             }
         }
 
-        ph.inputs.startTurnFree = startTick == 0 && startTurnFree(ph.inputs, freeStartYaw, constraints);
+        ph.inputs.startTurnFree = state.isFullTurnStart() && startTick == 0
+                && startTurnFree(ph.inputs, freeStartYaw, constraints);
         boolean stopOnFeasible = stopOnFeasibleFor(state, effort);
         boolean legalWallHard = legalGoal != null && stopOnFeasible;
         if (legalGoal != null && !legalWallHard) constraints.remove(legalGoal);
