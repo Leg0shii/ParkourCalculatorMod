@@ -34,6 +34,7 @@ public final class BenchRecord {
         public String axis;
         public String sense;
         public boolean freeStart;
+        public Double goalWall;
     }
 
     public static final class Result {

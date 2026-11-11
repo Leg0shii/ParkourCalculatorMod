@@ -12,9 +12,10 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.SolveRunRecord;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
+import de.legoshi.parkourcalc.core.anglesolver.solver.GoalWall;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
-import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
+import de.legoshi.parkourcalc.core.anglesolver.solver.Objective;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolveClock;
 import de.legoshi.parkourcalc.core.anglesolver.solver.WatchScore;
 import de.legoshi.parkourcalc.core.save.SaveFile;
@@ -303,6 +304,7 @@ public class SolverBench {
         rec.problem = new BenchRecord.Problem();
         rec.problem.startTick = state.getStartTick();
         rec.problem.landingTick = state.getLandingTick();
+        rec.problem.goalWall = goalWall(spec);
         if (run != null && run.problem != null) {
             rec.problem.hash = run.problem.hash;
             rec.problem.numTicks = run.problem.numTicks;
@@ -386,19 +388,15 @@ public class SolverBench {
     }
 
     static double offset(JumpSpec spec, double objective) {
-        if (spec == null || Double.isNaN(objective)) return Double.NaN;
-        double margin = Double.NaN;
-        boolean axisX = spec.objective.axis == JumpPhysicsInputs.Axis.X;
-        for (JumpConstraint c : spec.constraints) {
-            if (c.t1 != spec.objective.tick || c.t2 != null) continue;
-            if (c.mode != (axisX ? JumpConstraint.Mode.X : JumpConstraint.Mode.Z)) continue;
-            double m;
-            if (c.cmp == JumpConstraint.Cmp.GE) m = objective - c.rhs;
-            else if (c.cmp == JumpConstraint.Cmp.LE) m = c.rhs - objective;
-            else m = -Math.abs(objective - c.rhs);
-            if (Double.isNaN(margin) || m < margin) margin = m;
-        }
-        return margin;
+        Double wall = goalWall(spec);
+        if (wall == null || Double.isNaN(objective)) return Double.NaN;
+        return spec.objective.sense == Objective.Sense.MAX ? objective - wall : wall - objective;
+    }
+
+    static Double goalWall(JumpSpec spec) {
+        if (spec == null) return null;
+        JumpConstraint wall = GoalWall.tightest(spec.constraints, spec.objective);
+        return wall == null ? null : wall.rhs;
     }
 
     private static String line(BenchRecord r) {

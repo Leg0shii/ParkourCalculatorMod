@@ -152,8 +152,10 @@ anglesolver/
                            -Dpkc.bench.sequential=true, -Dpkc.bench.wall=true (option off, wall clock
                            budgets, not repeatable). A record holds the jump (id, warp, name,
                            difficulty), category, mode, strength, seed, variant and graph hash, the
-                           problem, the result (lands, verdict, objective, offset past the goal wall,
-                           stage chain), wall and work time with the work counters, one entry per stage
+                           problem with its goal wall (the engine's `GoalWall.tightest`: the tightest
+                           row on the objective axis at the objective tick on the side the objective
+                           moves away from), the result (lands, verdict, objective, offset past that
+                           wall, stage chain), wall and work time with the work counters, one entry per stage
                            visit (work time and landing after it), the facings and start (for a turn
                            profile), the yaw smoothness numbers, and empty stratfinder fields
   bench/SolverBenchReport.java  the benchmark's tables, Markdown on stdout or into the file
