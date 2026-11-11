@@ -15,6 +15,7 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.GraphRunState;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphRunner;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Scoring;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolveRunLog;
+import de.legoshi.parkourcalc.core.anglesolver.graph.InputOutcome;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SmoothOutcome;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolveRunRecord;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
@@ -35,7 +36,9 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolveProgress;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolverTrace;
 import de.legoshi.parkourcalc.core.anglesolver.solver.StartBox;
+import de.legoshi.parkourcalc.core.anglesolver.solver.InputSmooth;
 import de.legoshi.parkourcalc.core.anglesolver.solver.StrafeSideRealization;
+import de.legoshi.parkourcalc.core.anglesolver.solver.TickInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SurfaceKind;
 
 import java.util.ArrayList;
@@ -48,6 +51,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
+import java.util.function.IntUnaryOperator;
 
 /** Bridges the Angle Solver UI to the byte-exact jump model and back into the live TAS.
  *
@@ -136,6 +140,12 @@ public final class AngleSolverEngine {
 
     public void setOnStartMoved(Consumer<Vec3dCore> onStartMoved) {
         this.onStartMoved = onStartMoved != null ? onStartMoved : pos -> { };
+    }
+
+    private IntUnaryOperator sprintTapAt = tick -> -1;
+
+    public void setSprintTapLookup(IntUnaryOperator lookup) {
+        this.sprintTapAt = lookup != null ? lookup : tick -> -1;
     }
 
     private Consumer<Float> onStartYawChanged = yaw -> { };
@@ -289,10 +299,12 @@ public final class AngleSolverEngine {
         final boolean freeStartYaw;
         final float startYaw;
         final boolean startTurnFree;
+        final TickInputs[] inputs;
+        final int[] sprintKeyTicks;
 
         Plan(int startTick, double[] yaws, double[] solverYaws, boolean[] strafeMask, boolean[] force45Mask,
              int strafeSign, int[] strafeSigns, ForwardPath path, Vec3dCore start, boolean lockYaws,
-             boolean freeStartYaw, float startYaw, boolean startTurnFree) {
+             boolean freeStartYaw, float startYaw, boolean startTurnFree, TickInputs[] inputs, int[] sprintKeyTicks) {
             this.startTick = startTick;
             this.yaws = yaws;
             this.solverYaws = solverYaws;
@@ -306,6 +318,12 @@ public final class AngleSolverEngine {
             this.freeStartYaw = freeStartYaw;
             this.startYaw = startYaw;
             this.startTurnFree = startTurnFree;
+            this.inputs = inputs;
+            this.sprintKeyTicks = sprintKeyTicks;
+        }
+
+        TickInputs inputsAt(int k) {
+            return inputs == null || k >= inputs.length ? null : inputs[k];
         }
 
         int strafeSignAt(int k) {
@@ -577,30 +595,73 @@ public final class AngleSolverEngine {
         if (!canSmooth()) return;
         Plan base = smoothBase;
         AngleSolverState.Effort effort = state.getEffort();
-        Job job = buildJob(effort, BuiltinGraphs.smooth(state.getSmoothGiveBack()));
+        boolean inputsToo = state.getSmoothMode() == AngleSolverState.SmoothMode.INPUTS;
+        AngleSolverState.StrafeSide side = state.getStrafeSide();
+        SolverGraph graph = inputsToo
+                ? BuiltinGraphs.smoothInputs(state.getSmoothGiveBack(), side != AngleSolverState.StrafeSide.D,
+                        side != AngleSolverState.StrafeSide.A, state.isSmoothKeepSprint())
+                : BuiltinGraphs.smooth(state.getSmoothGiveBack());
+        Job job = buildJob(effort, graph);
         if (job == null) return;
-        if (job.deadlineNanos <= 0) job = job.withDeadline(SMOOTH_BUTTON_BUDGET_NANOS);
-        if (base.strafeSigns != null) {
-            job.spec.asScenario().strafeSignPerTick = base.strafeSigns.clone();
-            job.incumbentYaws = base.yaws.clone();
-        } else {
-            job.incumbentYaws = base.solverYaws.clone();
+        job = job.withDeadline(smoothBudgetNanos());
+        JumpPhysicsInputs sc = job.spec.asScenario();
+        if (base.strafeSigns != null) sc.strafeSignPerTick = base.strafeSigns.clone();
+        double[] incumbent = base.strafeSigns != null ? base.yaws.clone() : base.solverYaws.clone();
+        Vec3dCore incumbentStart = base.start;
+        float tasStartYaw = sc.startYaw;
+        if (sc.startTurnFree) {
+            sc.startYaw = sc.startYawAtTurns(Angles.wholeTurns(base.startYaw));
         }
-        job.incumbentStart = base.start;
-        job.incumbentStartYaw = base.startYaw;
+        if (!verifiesOnScenario(job, sc, incumbent, base.start)) {
+            sc.startYaw = tasStartYaw;
+            if (!sc.startTurnFree) {
+                homeStartFacing(sc);
+            }
+            double[] current = currentRowYaws(job.startTick, job.numTicks);
+            if (current == null || !verifiesOnScenario(job, sc, current, null)) {
+                SolveResult stale = new SolveResult(false, 0, job.uiConstraints.size(), job.startTick + 1, job.landingTick + 1);
+                stale.setNoticeLabel(STALE_SMOOTH_LABEL);
+                stale.setNotice("The last solve no longer lands on the TAS as it is now. Solve again, then smooth.");
+                state.setResult(stale);
+                return;
+            }
+            incumbent = current;
+            incumbentStart = null;
+        }
+        job.incumbentYaws = incumbent;
+        job.incumbentStart = incumbentStart;
+        job.incumbentStartYaw = incumbentStart == null ? tasStartYaw : base.startYaw;
         start(job, effort);
     }
 
+    public static final String STALE_SMOOTH_LABEL = "Nothing to smooth";
+
+    private boolean verifiesOnScenario(Job job, JumpPhysicsInputs sc, double[] yaws, Vec3dCore solvedStart) {
+        if (yaws == null || yaws.length != sc.numTicks) return false;
+        double px = sc.startPos.x;
+        double pz = sc.startPos.z;
+        StartBox box = sc.startBox != null && sc.startBox.startFree() ? sc.startBox : null;
+        if (box != null && solvedStart != null && solvedStart.x >= box.pxLo && solvedStart.x <= box.pxHi
+                && solvedStart.z >= box.pzLo && solvedStart.z <= box.pzHi) {
+            px = solvedStart.x;
+            pz = solvedStart.z;
+        }
+        return !Double.isNaN(Scoring.verifiedObjectiveAt(model, sc, job.spec, yaws, px, pz, FEAS_TOL));
+    }
+
     private static boolean isSmoothJob(Job job) {
-        return job != null && job.graph != null && BuiltinGraphs.SMOOTH_PRESET.equals(job.graph.name);
+        return job != null && job.graph != null && BuiltinGraphs.isSmoothPreset(job.graph.name);
     }
 
     public long smoothBudgetNanos() {
         long budget = deadlineNanosFor(state);
-        return budget > 0 ? budget : SMOOTH_BUTTON_BUDGET_NANOS;
+        long plain = budget > 0 ? budget : SMOOTH_BUTTON_BUDGET_NANOS;
+        return state.getSmoothMode() == AngleSolverState.SmoothMode.INPUTS ? SMOOTH_INPUTS_FACTOR * plain : plain;
     }
 
     private static final long SMOOTH_BUTTON_BUDGET_NANOS = 6_000_000_000L;
+    public static final long SMOOTH_INPUTS_FACTOR = 3L;
+    public static final String WATCH_SCORE_DETAIL = "Watch score";
 
     private void start(Job job, AngleSolverState.Effort effort) {
         long t0 = System.nanoTime();
@@ -735,6 +796,7 @@ public final class AngleSolverEngine {
         float[] forwardIn = new float[numTicks];
         float[] strafeIn = new float[numTicks];
         boolean[] sprintArr = new boolean[numTicks];
+        boolean[] sprintKey = new boolean[numTicks];
         boolean[] damage = new boolean[numTicks];
         boolean[] serverJump = new boolean[numTicks];
         double[] packetY = new double[numTicks];
@@ -795,6 +857,7 @@ public final class AngleSolverEngine {
                 TickState waterSample = boxes.getState(t + 1);
                 sprintArr[k] = waterSample != null && waterSample.hasMovementSample() && waterSample.sprinting;
             }
+            sprintKey[k] = force45Mask[k] || row.isKeyActive(InputRow.Key.SPRINT);
             yawLocked[k] = row.isYawLocked();
             speedAmp[k] = effSpeedLevel(t, rows);
             slowAmp[k] = effSlownessLevel(t, rows);
@@ -825,6 +888,7 @@ public final class AngleSolverEngine {
         phys.forwardInputPerTick = forwardIn;
         phys.strafeInputPerTick = strafeIn;
         phys.sprintPerTick = sprintArr;
+        phys.sprintKeyPerTick = sprintKey;
         phys.damagePerTick = anyDamage ? damage : null;
         phys.incomingServerVelocity = seed.server != null ? seed.server.velocity : null;
         phys.serverJumpPerTick = anyServerJumpFlag ? serverJump : null;
@@ -834,6 +898,8 @@ public final class AngleSolverEngine {
         phys.incomingSprint = effSprint(startTick) == AngleSolverState.SprintMode.DERIVE
                 ? (seed.hasMovementSample() ? seed.sprinting : Boolean.TRUE)
                 : Boolean.TRUE;
+        phys.incomingSprintTap = sprintTapAt.applyAsInt(startTick);
+        phys.incomingForward = seed.hasMovementSample() ? Boolean.valueOf(seed.moveForward > 1.0e-5F) : null;
         phys.incomingAmp = startTick > 0 ? effSpeedLevel(startTick - 1, rows) : effSpeedLevel(startTick, rows);
         phys.incomingSlowness = startTick > 0 ? effSlownessLevel(startTick - 1, rows) : effSlownessLevel(startTick, rows);
         return new Phys(phys, strafeMask, force45Mask, jumpTickRel);
@@ -1217,6 +1283,7 @@ public final class AngleSolverEngine {
         ForwardPath path = realized ? sides.path : solverPath;
         SolveResult result = assembleResult(job, yaws, gameFacings, path, solverName, solveNanos, dualGap);
         addSmoothingDetails(result, job, ctx.smoothOutcome());
+        addInputDetails(result, ctx.inputOutcome(), sc, job.startTick);
         addStrafeSideDetails(result, sides, sc);
         if (job.legalGoal != null) {
             double achieved = spec.objective.evaluate(path);
@@ -1234,7 +1301,7 @@ public final class AngleSolverEngine {
         }
         finishRecord(rec, SolveRunRecord.STATUS_SOLVED, finalObjective, finalViolation,
                 finalViolation <= FEAS_TOL, solverName, yaws);
-        return new Outcome(result, planOf(job, yaws, sides, path, sc, stageLocked));
+        return new Outcome(result, planOf(job, yaws, sides, path, sc, stageLocked, ctx.inputOutcome()));
     }
 
     private StrafeSideRealization realizeStrafeSides(Job job, JumpSpec spec, double[] yaws, double[] gameFacings,
@@ -1287,23 +1354,54 @@ public final class AngleSolverEngine {
                 result.addDetail("Yaw reversals before", Integer.toString(before.yawDirChanges));
             }
         }
-        if (job.graph != null && BuiltinGraphs.SMOOTH_PRESET.equals(job.graph.name)) {
+        if (job.graph != null && BuiltinGraphs.isSmoothPreset(job.graph.name)) {
             result.setSmoothing(stop, smooth.nanos);
+        }
+    }
+
+    private static void addInputDetails(SolveResult result, InputOutcome io, JumpPhysicsInputs sc, int startTick) {
+        if (io == null) return;
+        if (io.changed == 0) {
+            result.addDetail("Inputs changed", "none (" + io.tried + " tried)");
+            return;
+        }
+        result.addDetail("Inputs changed", io.changed + (io.changed == 1 ? " tick" : " ticks") + " (" + io.tried + " tried)");
+        result.addDetail(WATCH_SCORE_DETAIL, String.format(java.util.Locale.ROOT, "%.2f (Turn only %.2f)", io.watchCost,
+                io.plainWatchCost));
+        result.setInputChanges(io.inputs.clone());
+        for (int k = 0; k < io.inputs.length; k++) {
+            TickInputs after = io.inputs[k];
+            if (after == null) continue;
+            TickInputs before = io.before[k];
+            result.addDetail("T" + (startTick + k + 1), after.label() + (before == null ? "" : " (was " + before.label() + ")"));
+        }
+        int[] keyTicks = InputSmooth.sprintKeyTicks(sc);
+        if (keyTicks.length > 0) {
+            StringBuilder sb = new StringBuilder();
+            for (int t : keyTicks) sb.append(sb.length() == 0 ? "T" : ", T").append(startTick + t + 1);
+            result.addDetail("Sprint key pressed", sb.toString());
         }
     }
 
     private static Plan planOf(Job job, double[] yaws, StrafeSideRealization sides, ForwardPath path,
                                JumpPhysicsInputs sc, boolean lockYaws) {
+        return planOf(job, yaws, sides, path, sc, lockYaws, null);
+    }
+
+    private static Plan planOf(Job job, double[] yaws, StrafeSideRealization sides, ForwardPath path,
+                               JumpPhysicsInputs sc, boolean lockYaws, InputOutcome io) {
         boolean realized = sides != null && sides.verified;
         int[] framed = sc.strafeSignPerTick;
+        TickInputs[] inputs = io != null && io.changed > 0 ? io.inputs : null;
+        int[] keyTicks = inputs != null ? InputSmooth.sprintKeyTicks(sc) : null;
         if (!realized && framed != null) {
             return new Plan(job.startTick, yaws, StrafeSideRealization.solverYaws(yaws, framed, sc.strafeSign),
                     job.strafeMask, job.force45Mask, sc.strafeSign, framed, path, sc.startPos, lockYaws,
-                    job.freeStartYaw, sc.startYaw, sc.startTurnFree);
+                    job.freeStartYaw, sc.startYaw, sc.startTurnFree, inputs, keyTicks);
         }
         return new Plan(job.startTick, realized ? sides.yaws : yaws, yaws, job.strafeMask, job.force45Mask,
                 sc.strafeSign, realized ? sides.sides : null, realized ? sides.path : path, sc.startPos, lockYaws,
-                job.freeStartYaw, sc.startYaw, sc.startTurnFree);
+                job.freeStartYaw, sc.startYaw, sc.startTurnFree, inputs, keyTicks);
     }
 
 
@@ -1605,16 +1703,46 @@ public final class AngleSolverEngine {
         }
         writeYaws(rows, p.startTick, p.yaws, p.freeStartYaw,
                 p.startTurnFree || p.freeStartYaw ? p.startYaw : (float) boxes.getYaw(p.startTick));
+        boolean overridesChanged = false;
+        boolean inputsChanged = false;
         for (int k = 0; k < p.yaws.length && p.startTick + k < rows.size(); k++) {
-            if (p.force45Mask[k]) {
+            TickInputs changed = p.inputsAt(k);
+            if (changed != null) {
+                writeInputs(rows.get(p.startTick + k), changed);
+                inputsChanged = true;
+            } else if (p.force45Mask[k]) {
                 // A Force-45 tick realizes its solve assumption in the rows (gh-104): W + sprint held
                 // on every tick, strafe per the mask (the grounded jump tick stays W-only). Keep ticks
                 // are left alone; their keys ARE what the solve ran.
                 rows.get(p.startTick + k).applyForce45(p.strafeMask[k], p.strafeSignAt(k));
             }
         }
+        if (p.sprintKeyTicks != null) {
+            for (int k : p.sprintKeyTicks) {
+                if (p.startTick + k < rows.size()) rows.get(p.startTick + k).setKeyActive(InputRow.Key.SPRINT, true);
+            }
+        }
+        if (inputsChanged) {
+            for (int k = 0; k < p.yaws.length && p.startTick + k < rows.size(); k++) {
+                if (p.force45Mask[k] && p.inputsAt(k) == null) {
+                    rows.get(p.startTick + k).applyForce45(p.strafeMask[k], p.strafeSignAt(k));
+                }
+            }
+            state.setDefaultInputs(AngleSolverState.InputMode.KEEP);
+            state.setDefaultSprint(AngleSolverState.SprintMode.DERIVE);
+            overridesChanged = true;
+        }
+        if (overridesChanged) state.pruneRedundantOverrides();
         onApplied.accept(p.startTick);
         checkApplyDeviation(p);
+    }
+
+    static void writeInputs(InputRow row, TickInputs in) {
+        row.setKeyActive(InputRow.Key.W, in.w);
+        row.setKeyActive(InputRow.Key.A, in.a);
+        row.setKeyActive(InputRow.Key.S, in.s);
+        row.setKeyActive(InputRow.Key.D, in.d);
+        row.setKeyActive(InputRow.Key.SPRINT, in.sprint);
     }
 
     public void writeYaws(List<InputRow> rows, int startTick, double[] yaws, boolean freeStartYaw) {

@@ -132,7 +132,8 @@ public class SimulatorEntity extends Player {
         this.setHealth(this.getMaxHealth());
         this.setPos(startPosition);
         this.setDeltaMovement(Vec3.ZERO);
-        this.setRot(startYaw, 0);
+        this.setYRot(startYaw);
+        this.setXRot(0);
 
         this.input.setData(new InputRow());
         this.sprintTriggerTime = 0;
