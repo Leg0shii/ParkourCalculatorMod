@@ -190,6 +190,10 @@ public final class ExactJumpModel implements ForwardModel {
         return sine262;
     }
 
+    public boolean foldedInputRad() {
+        return modern || foldedInputRad;
+    }
+
     public boolean floatSprintBoost() {
         return floatSprintBoost;
     }
