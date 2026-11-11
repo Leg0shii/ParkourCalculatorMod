@@ -61,6 +61,8 @@ public final class CertifiedBnb {
         public boolean homotopy;
         public boolean probeGates = true;
         public int incumbentPolishCap;
+        public int diveEvery;
+        public int diveLength;
     }
 
     public static final class Result {
@@ -112,6 +114,7 @@ public final class CertifiedBnb {
         final byte[] gz;
         final int depth;
         double score;
+        boolean holdsDecoded;
 
         Node(long id, int[] iLo, int[] iHi, byte[] gx, byte[] gz, int depth, double score) {
             this.id = id;
@@ -288,6 +291,10 @@ public final class CertifiedBnb {
                 0, Double.POSITIVE_INFINITY));
 
         boolean exhausted = false;
+        boolean dives = s.cfg.mode == Mode.OPTIMIZE && s.cfg.diveEvery > 0 && s.cfg.diveLength > 0;
+        Node dive = null;
+        int diveLeft = 0;
+        int sinceDive = 0;
         while (true) {
             if (s.stopped()) break;
             if (s.cfg.mode == Mode.FIRST_FEASIBLE && s.incYaws != null) break;
@@ -311,7 +318,18 @@ public final class CertifiedBnb {
                 break;
             }
             if (s.nodes >= s.cfg.nodeCap) break;
-            open.poll();
+            if (dive != null && dive.score > s.incScore + CERT_EPS) {
+                nd = dive;
+                open.remove(nd);
+            } else {
+                open.poll();
+                diveLeft = 0;
+                if (dives && ++sinceDive >= s.cfg.diveEvery) {
+                    sinceDive = 0;
+                    diveLeft = s.cfg.diveLength;
+                }
+            }
+            dive = null;
             s.nodes++;
             List<Node> children = evaluate(s, nd, open);
             if (s.trivialInfeasible) {
@@ -320,6 +338,11 @@ public final class CertifiedBnb {
             }
             if (children != null) {
                 for (Node c : children) open.add(c);
+                if (diveLeft > 0 && !children.isEmpty()) {
+                    diveLeft--;
+                    dive = children.get(children.size() - 1);
+                    for (Node c : children) if (c.holdsDecoded) dive = c;
+                }
             }
         }
         Node top = open.peek();
@@ -1461,14 +1484,24 @@ public final class CertifiedBnb {
             int a0 = SineTableGeometry.idxOf(theta - 90.0);
             int a1 = SineTableGeometry.idxOf(theta + 90.0);
             int b1 = SineTableGeometry.idxOf(theta + 270.0);
-            out.add(childArc(s, nd, arcTick, a0, a1));
+            Node around = childArc(s, nd, arcTick, a0, a1);
+            around.holdsDecoded = true;
+            out.add(around);
             out.add(childArc(s, nd, arcTick, a1, b1));
         } else {
             int loT = nd.iLo[arcTick];
             int hiT = nd.iHi[arcTick];
             int mid = (loT + hiT) >> 1;
-            out.add(childArc(s, nd, arcTick, loT, mid));
-            out.add(childArc(s, nd, arcTick, mid + 1, hiT));
+            Node low = childArc(s, nd, arcTick, loT, mid);
+            Node high = childArc(s, nd, arcTick, mid + 1, hiT);
+            if (decoded != null) {
+                int c = SineTableGeometry.idxOf(decoded[arcTick]);
+                c += McSineTable.SIZE * (int) Math.round((double) (mid - c) / McSineTable.SIZE);
+                if (c <= mid) low.holdsDecoded = true;
+                else high.holdsDecoded = true;
+            }
+            out.add(low);
+            out.add(high);
         }
         return out;
     }

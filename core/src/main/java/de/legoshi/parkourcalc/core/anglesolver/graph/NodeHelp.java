@@ -189,6 +189,10 @@ public final class NodeHelp {
                 + " while the jump does not land yet, so the search can rule a landing out for certain."
                 + " Does nothing once a landing exists or without a time budget. Meant for a stage at the"
                 + " end of the pipeline, after every other stage has had its turn.");
+        param("certBnb", "dive", "Search again from the landing found so far, visiting the branches in another"
+                + " order: every 20 branches it follows one branch down for up to 40 steps. Which landing a"
+                + " search finds depends on the order, so a second order can find a better one. Does nothing"
+                + " while the jump does not land, or once the landing is proven best.");
 
         node("foldDriver", "Another angle solver that repeatedly replays and adjusts the jump. It can try"
                 + " several different starting guesses and finish with a fine nudge pass.");

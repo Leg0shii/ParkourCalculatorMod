@@ -137,7 +137,10 @@ anglesolver/
                            without the bound falling below a landing either run found;
                            landing polish (SlowSolverTests): on j016 at 300 nodes the search that polishes
                            every new incumbent (Config.incumbentPolishCap 12) lands more than 5e-5 further
-                           than the one that does not, byte-exact, and its bound stays above both landings
+                           than the one that does not, byte-exact, and its bound stays above both landings;
+                           dive order (SlowSolverTests): a second pass on j016 seeded with the first landing
+                           ends where the first did in the same node order and more than 5e-5 further in
+                           the dive order (Config.diveEvery 20, diveLength 40), with a gap under 1e-5
   GateProbeTest.java       the one-row dual probe behind CertifiedBnb.settleGates: for random directions on
                            1.8.9 and 1.21.5 the probe value at any multiplier is at least the objective of
                            every sampled cell path on the row's side, and a side that holds a path is never

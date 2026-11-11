@@ -35,7 +35,8 @@ public class PipelineShapeTest {
 
     private static final List<String> THOROUGH_PIPELINE = Arrays.asList(
             "horizon", "wrap0", "seed", "cap1", "freeRescue", "peel", "freeImprove", "sweep",
-            "fold", "ladder", "cert", "bnb", "ils", "cap2", "wrap", "translate", "snap", "certify");
+            "fold", "ladder", "cert", "bnb", "ils", "cap2", "wrap", "translate", "snap", "dive", "translate3",
+            "snap2", "certify");
 
     private static final long TIMEOUT_MS = 4000;
 

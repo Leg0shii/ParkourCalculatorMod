@@ -29,7 +29,7 @@ public class BuiltinGraphsTest {
     private static final List<String> OPTIMIZE_NODES = Arrays.asList(
             "entry", "seeds", "horizon", "wrap0", "seed", "cap1", "freeRescue", "peel", "freeImprove",
             "sweep", "ils2", "translate2", "fold", "ladder", "cert", "bnb", "ils", "cap2", "wrap",
-            "translate", "snap", "certify", "emit");
+            "translate", "snap", "dive", "translate3", "snap2", "certify", "emit");
 
     private static final List<String> MULTI_START_NODES = Arrays.asList(
             "entry", "seeds", "horizon", "wrap0", "seed", "cap1", "freeRescue", "peel", "freeImprove",
@@ -52,7 +52,8 @@ public class BuiltinGraphsTest {
             {"entry", "seeds"}, {"seeds", "horizon"}, {"horizon", "wrap0"}, {"wrap0", "seed"}, {"seed", "cap1"},
             {"cap1", "freeRescue"}, {"freeRescue", "peel"}, {"peel", "freeImprove"}, {"freeImprove", "sweep"},
             {"ils2", "translate2"}, {"fold", "ladder"}, {"ladder", "cert"}, {"cert", "bnb"}, {"bnb", "ils"},
-            {"ils", "cap2"}, {"cap2", "wrap"}, {"wrap", "translate"}, {"translate", "snap"}, {"snap", "certify"}, {"certify", "emit"}};
+            {"ils", "cap2"}, {"cap2", "wrap"}, {"wrap", "translate"}, {"translate", "snap"}, {"snap", "dive"},
+            {"dive", "translate3"}, {"translate3", "snap2"}, {"snap2", "certify"}, {"certify", "emit"}};
 
     private static List<String> nodeIds(SolverGraph g) {
         List<String> ids = new ArrayList<String>();
@@ -125,6 +126,12 @@ public class BuiltinGraphsTest {
         assertEquals(0, opt.node("seed").params.getInt("budgetMs"));
         assertNull("fast has no leaf snap stage", fast.node("snap"));
         assertEquals(1, opt.node("snap").params.getInt("pairPass"));
+        assertNull("fast has no dive order stage", fast.node("dive"));
+        assertTrue(opt.node("dive").params.getBool("dive"));
+        assertEquals(120, opt.node("dive").params.getInt("budgetSec"));
+        assertNull("fast has no stages behind the dive order stage", fast.node("translate3"));
+        assertNull(fast.node("snap2"));
+        assertEquals(1, opt.node("snap2").params.getInt("pairPass"));
         assertEquals(0, fast.node("sweep").params.getInt("budgetSec"));
         assertTrue(opt.node("sweep").params.getInt("budgetSec") > 0);
         assertEquals(0, fast.node("ils2").params.getInt("budgetSec"));

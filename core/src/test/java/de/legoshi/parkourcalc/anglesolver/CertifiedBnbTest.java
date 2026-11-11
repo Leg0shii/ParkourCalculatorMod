@@ -445,6 +445,51 @@ public class CertifiedBnbTest {
                 + plain.objective, sign * polished.boundObjective >= sign * plain.objective - CertifiedBnb.CERT_EPS);
     }
 
+    private static CertifiedBnb.Result secondPass(ExactJumpModel model, JumpSpec spec, CertifiedBnb.Result first,
+                                                  boolean diveOrder) {
+        CertifiedBnb.Config cfg = new CertifiedBnb.Config();
+        cfg.mode = CertifiedBnb.Mode.OPTIMIZE;
+        cfg.nodeCap = 300;
+        cfg.polishCap = 12;
+        cfg.incumbentPolishCap = 12;
+        cfg.seedYaws = first.yawsDeg;
+        cfg.seedPx = first.px;
+        cfg.seedPz = first.pz;
+        if (diveOrder) {
+            cfg.diveEvery = 20;
+            cfg.diveLength = 40;
+        }
+        cfg.deadlineNanos = System.nanoTime() + 120_000_000_000L;
+        return CertifiedBnb.solve(model, spec, cfg);
+    }
+
+    @Test
+    @Category(SlowSolverTests.class)
+    public void aSecondPassInDiveOrderFindsALandingTheFirstOrderDoesNot() {
+        ProblemFixture pf = ProblemFixture.load("solve", "j016-X2jmmp2p");
+        ProblemFixture.Rig rig = pf.rig();
+        rig.state.setEffort(AngleSolverState.Effort.THOROUGH);
+        JumpSpec spec = rig.spec();
+        double sign = spec.objective.sense == Objective.Sense.MAX ? 1.0 : -1.0;
+        CertifiedBnb.Result first = optimizeWithLandingPolish(pf.model, spec, 12);
+        assertTrue("j016 must land in the first pass", first.feasible);
+        CertifiedBnb.Result same = secondPass(pf.model, spec, first, false);
+        CertifiedBnb.Result dived = secondPass(pf.model, spec, first, true);
+        assertTrue("both second passes must keep a landing", same.feasible && dived.feasible);
+        assertEquals("a second pass in the same order must end where the first did", first.objective,
+                same.objective, 1.0e-12);
+        double verified = Scoring.verifiedObjectiveAt(pf.model, spec.asScenario(), spec,
+                dived.yawsDeg, dived.px, dived.pz, 0.0);
+        assertEquals("the dive order landing must equal its byte-exact re-simulation",
+                dived.objective, verified, 1.0e-9);
+        assertTrue("dive order landing " + dived.objective + " against " + first.objective
+                        + " from the first pass: the second order must gain more than 5e-5 on j016",
+                sign * dived.objective > sign * first.objective + 5.0e-5);
+        assertTrue("bound " + dived.boundObjective + " cuts below the dive order landing " + dived.objective,
+                sign * dived.boundObjective >= sign * dived.objective - CertifiedBnb.CERT_EPS);
+        assertTrue("dive order gap " + dived.gap + " must fall under 1e-5 on j016", dived.gap < 1.0e-5);
+    }
+
     @Test
     public void tinySolveIsDeterministic() {
         ExactJumpModel model = ExactJumpModel.forMcVersion("1.8.9");
