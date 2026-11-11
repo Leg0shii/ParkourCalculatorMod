@@ -7,12 +7,14 @@ public final class SineTableGeometry {
 
     public static final int SLOP_IDX = 3;
     public static final int FULL_WINDOW = 512;
+    private static final int[] WINDOW_LADDER = {32, 64, 128, 256, FULL_WINDOW};
     public static final int SCAN_WIDTH_CAP = 40000;
     public static final double IDX_PER_DEG = Math.PI / 180.0 * 10430.378;
 
     private static final int SIZE = McSineTable.SIZE;
     private static final int MASK = McSineTable.MASK;
     private static final int COS_OFF = 16384;
+    private static final double INDEX_STEP = 2.0 * Math.PI / SIZE;
 
     private final boolean sine262;
     private final float[] table;
@@ -30,8 +32,10 @@ public final class SineTableGeometry {
         final double fd;
         final double rMax;
         final double rMin;
+        final int window;
 
-        TickPart(boolean legacyFloat, float sf, float ff, double sd, double fd, double rMax, double rMin) {
+        TickPart(boolean legacyFloat, float sf, float ff, double sd, double fd, double rMax, double rMin,
+                 int window) {
             this.legacyFloat = legacyFloat;
             this.sf = sf;
             this.ff = ff;
@@ -39,6 +43,7 @@ public final class SineTableGeometry {
             this.fd = fd;
             this.rMax = rMax;
             this.rMin = rMin;
+            this.window = window;
         }
     }
 
@@ -148,26 +153,86 @@ public final class SineTableGeometry {
         if (mm == null) {
             double rMax = 0.0;
             double rMin = Double.POSITIVE_INFINITY;
+            double offNominal = 0.0;
+            double base = StrictMath.atan2(legacyFloat ? (double) ff : fd, legacyFloat ? (double) sf : sd);
+            double[][] radius = new double[3][SIZE];
             double[] u = new double[2];
             for (int i = 0; i < SIZE; i++) {
                 for (int d = -1; d <= 1; d++) {
                     evalRaw(legacyFloat, sf, ff, sd, fd, i, d, u);
                     double r = StrictMath.hypot(u[0], u[1]);
+                    radius[d + 1][i] = r;
                     if (r > rMax) rMax = r;
                     if (r < rMin) rMin = r;
+                    if (r > 0.0) {
+                        double off = StrictMath.atan2(u[1], u[0]) - base - i * INDEX_STEP;
+                        off -= 2.0 * Math.PI * Math.rint(off / (2.0 * Math.PI));
+                        if (Math.abs(off) > offNominal) offNominal = Math.abs(off);
+                    }
                 }
             }
             if (rMax > 0.0) {
-                double near = rMin * StrictMath.cos((SLOP_IDX + 2) * 2.0 * Math.PI / SIZE);
-                double far = rMax * StrictMath.cos((FULL_WINDOW - SLOP_IDX) * 2.0 * Math.PI / SIZE);
+                double near = rMin * StrictMath.cos((SLOP_IDX + 2) * INDEX_STEP);
+                double far = rMax * StrictMath.cos((FULL_WINDOW - SLOP_IDX) * INDEX_STEP);
                 if (near <= far) throw new IllegalStateException("support window domination violated");
             }
-            mm = new double[]{rMax, rMin};
+            mm = new double[]{rMax, rMin, certifiedWindow(radius, rMax, rMin, offNominal)};
             synchronized (NORM_CACHE) {
                 NORM_CACHE.put(key, mm);
             }
         }
-        return new TickPart(legacyFloat, sf, ff, sd, fd, mm[0], mm[1]);
+        return new TickPart(legacyFloat, sf, ff, sd, fd, mm[0], mm[1], (int) mm[2]);
+    }
+
+    private static int certifiedWindow(double[][] radius, double rMax, double rMin, double offNominal) {
+        if (!(rMax > 0.0)) return WINDOW_LADDER[0];
+        if (offNominal > SLOP_IDX * INDEX_STEP) return 0;
+        if (rMax >= rMin * dominationLimit(FULL_WINDOW + 1)) return 0;
+        int window = FULL_WINDOW;
+        for (int j = WINDOW_LADDER.length - 2; j >= 0; j--) {
+            int inner = WINDOW_LADDER[j];
+            if (lagRatio(radius, inner, WINDOW_LADDER[j + 1]) >= dominationLimit(inner + 1)) break;
+            window = inner;
+        }
+        return window;
+    }
+
+    private static double dominationLimit(int lag) {
+        double ahead = StrictMath.cos((SLOP_IDX + 2) * INDEX_STEP)
+                / StrictMath.cos((lag - 1 - SLOP_IDX) * INDEX_STEP);
+        double behind = 1.0 / StrictMath.cos((lag - 2 * SLOP_IDX - 2) * INDEX_STEP);
+        return Math.min(ahead, behind);
+    }
+
+    private static double lagRatio(double[][] radius, int inner, int outer) {
+        double worst = 0.0;
+        for (double[] r : radius) {
+            double[] top = windowMax(r, outer - inner);
+            for (int i = 0; i < SIZE; i++) {
+                double far = Math.max(top[(i + inner + 1) & MASK], top[(i - outer) & MASK]);
+                double ratio = far / r[i];
+                if (Double.isNaN(ratio)) return Double.POSITIVE_INFINITY;
+                if (ratio > worst) worst = ratio;
+            }
+        }
+        return worst;
+    }
+
+    private static double[] windowMax(double[] r, int length) {
+        double[] out = new double[SIZE];
+        int[] queue = new int[SIZE + length];
+        int head = 0;
+        int tail = 0;
+        for (int j = 0; j < SIZE + length - 1; j++) {
+            double v = r[j & MASK];
+            while (tail > head && r[queue[tail - 1] & MASK] <= v) tail--;
+            queue[tail++] = j;
+            int start = j - length + 1;
+            if (start < 0) continue;
+            while (queue[head] < start) head++;
+            out[start] = r[queue[head] & MASK];
+        }
+        return out;
     }
 
     private void evalRaw(boolean legacyFloat, float sf, float ff, double sd, double fd, int i, int d, double[] out) {
@@ -209,28 +274,38 @@ public final class SineTableGeometry {
     }
 
     private double partSupport(TickPart p, double gx, double gz, double loDeg, double hiDeg) {
-        int i0;
-        int i1;
-        if (!Double.isNaN(loDeg)) {
+        boolean full = Double.isNaN(loDeg);
+        int i0 = 0;
+        int i1 = 0;
+        if (!full) {
             i0 = idxOf(loDeg) - SLOP_IDX;
             i1 = idxOf(hiDeg) + SLOP_IDX;
-            if (i1 - i0 >= SIZE || i1 - i0 > SCAN_WIDTH_CAP) {
-                loDeg = Double.NaN;
-            }
+            full = i1 - i0 >= SIZE || i1 - i0 > SCAN_WIDTH_CAP;
         }
-        if (Double.isNaN(loDeg)) {
-            double sD = strafeD(p);
-            double fD = forwardD(p);
-            double a = gx * sD + gz * fD;
-            double b = gz * sD - gx * fD;
-            double theta = StrictMath.atan2(b, a);
-            int center = (int) Math.floor(theta / (2.0 * Math.PI) * SIZE);
-            i0 = center - FULL_WINDOW;
-            i1 = center + FULL_WINDOW;
-        } else {
-            i0 = idxOf(loDeg) - SLOP_IDX;
-            i1 = idxOf(hiDeg) + SLOP_IDX;
+        boolean certified = p.window > 0;
+        int window = certified ? p.window : FULL_WINDOW;
+        if (!full && (!certified || i1 - i0 <= 2 * window)) return scanSupport(p, gx, gz, i0, i1);
+        int center = peakIndex(p, gx, gz);
+        if (full) return scanSupport(p, gx, gz, center - window, center + window);
+        double best = Math.max(scanSupport(p, gx, gz, i0, i0 + window), scanSupport(p, gx, gz, i1 - window, i1));
+        int inside = i0 + Math.floorMod(center - i0, SIZE);
+        if (inside <= i1) {
+            best = Math.max(best, scanSupport(p, gx, gz, Math.max(i0, inside - window),
+                    Math.min(i1, inside + window)));
         }
+        return best;
+    }
+
+    private static int peakIndex(TickPart p, double gx, double gz) {
+        double sD = strafeD(p);
+        double fD = forwardD(p);
+        double a = gx * sD + gz * fD;
+        double b = gz * sD - gx * fD;
+        double theta = StrictMath.atan2(b, a);
+        return (int) Math.floor(theta / (2.0 * Math.PI) * SIZE);
+    }
+
+    private double scanSupport(TickPart p, double gx, double gz, int i0, int i1) {
         double best = Double.NEGATIVE_INFINITY;
         double[] u = new double[2];
         for (int i = i0; i <= i1; i++) {
