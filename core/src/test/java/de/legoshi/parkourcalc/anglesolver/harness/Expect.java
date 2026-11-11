@@ -75,6 +75,7 @@ public final class Expect {
     public String axis;
     public String goal;
     public Double minGain;
+    public Boolean turns;
     public Boolean fullSearch;
     public Boolean seedMayMiss;
     public Double cap;

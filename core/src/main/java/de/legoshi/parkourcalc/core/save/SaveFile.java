@@ -91,6 +91,7 @@ public final class SaveFile {
         public String effort;                            // absent in old files -> FAST
         public Boolean stopOnFeasible;                   // absent in old files -> false
         public Boolean legalMode;                        // absent in old files -> false
+        public Boolean fullTurnStart;
         public Integer optimizeSeconds;                  // absent in old files -> default
         public Integer budgetMs;                         // absent in old files -> from optimizeSeconds
         public Double smoothGiveBack;

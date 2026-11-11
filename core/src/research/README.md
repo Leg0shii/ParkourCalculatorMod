@@ -137,6 +137,7 @@ anglesolver/
   LatticePolishSweep.java  lattice polish from the closed form seed on every capture under a folder,
                            each result replayed byte-exact; -Dpkc.polish.sweep=<folder> (for example
                            core/src/test/resources), -Dpkc.polish.only=<name part>,
+                           -Dpkc.polish.turns=true switches the Full turn start facing option on,
                            -Dpkc.polish.optimize=true runs the stage with the Optimize graph's
                            parameters, -Dpkc.polish.ms=<n> gives every spec that many milliseconds
                            (docs/research/lattice-polish-2026-11-10.md)

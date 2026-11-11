@@ -12,6 +12,8 @@ public final class LatticePolish {
     private static final int MAX_SHELL = 400;
     private static final int PATTERN_BISECTIONS = 12;
     private static final double[] BACK_OFF = {1.0e-6, 4.0e-6, 1.6e-5};
+    private static final double FULL_TURN = 360.0;
+    private static final double MAX_FACING = 720.0;
 
     public static final class Config {
         public int maxVars = 160;
@@ -22,6 +24,7 @@ public final class LatticePolish {
         public int window = 24;
         public int verify = 12;
         public long workUnits = 100_000_000L;
+        public boolean turns = true;
 
         Config quick() {
             Config base = new Config();
@@ -34,6 +37,7 @@ public final class LatticePolish {
             q.window = Math.min(window, base.window);
             q.verify = verify;
             q.workUnits = Math.min(workUnits, base.workUnits);
+            q.turns = turns;
             return q;
         }
 
@@ -49,14 +53,17 @@ public final class LatticePolish {
         public final double objective;
         public final double continuous;
         public final int closures;
+        public final float startYaw;
 
-        Result(double[] yaws, double startX, double startZ, double objective, double continuous, int closures) {
+        Result(double[] yaws, double startX, double startZ, double objective, double continuous, int closures,
+               float startYaw) {
             this.yaws = yaws;
             this.startX = startX;
             this.startZ = startZ;
             this.objective = objective;
             this.continuous = continuous;
             this.closures = closures;
+            this.startYaw = startYaw;
         }
     }
 
@@ -87,11 +94,14 @@ public final class LatticePolish {
                                 Config cfg, long deadlineNanos, AtomicBoolean cancel) {
         if (TrigRowModel.unsupported(spec) != null) return null;
         Config quick = cfg.quick();
-        if (!cfg.widerThan(quick)) return polishAt(exact, spec, yawsIn, startX, startZ, cfg, deadlineNanos, cancel);
-        Result first = polishAt(exact, spec, yawsIn, startX, startZ, quick, deadlineNanos, cancel);
-        if (first == null) return polishAt(exact, spec, yawsIn, startX, startZ, cfg, deadlineNanos, cancel);
+        if (!cfg.widerThan(quick)) return everyTurn(exact, spec, yawsIn, startX, startZ, cfg, deadlineNanos, cancel);
+        Result first = everyTurn(exact, spec, yawsIn, startX, startZ, quick, deadlineNanos, cancel);
+        if (first == null) return everyTurn(exact, spec, yawsIn, startX, startZ, cfg, deadlineNanos, cancel);
         if (expired(deadlineNanos, cancel)) return first;
-        Result second = polishAt(exact, spec, first.yaws, first.startX, first.startZ, cfg, deadlineNanos, cancel);
+        JumpPhysicsInputs from = spec.asScenario().copy();
+        from.startYaw = first.startYaw;
+        Result second = everyTurn(exact, new JumpSpec(from, spec.constraints, spec.objective), first.yaws,
+                first.startX, first.startZ, cfg, deadlineNanos, cancel);
         if (SolverTrace.on()) {
             SolverTrace.log("POLISH", "quick search %.9f, full search %s", first.objective,
                     second == null ? "none" : String.format(java.util.Locale.ROOT, "%.9f", second.objective));
@@ -99,14 +109,58 @@ public final class LatticePolish {
         return second != null ? second : first;
     }
 
+    private static Result everyTurn(ExactJumpModel exact, JumpSpec spec, double[] yawsIn, double startX, double startZ,
+                                    Config cfg, long deadlineNanos, AtomicBoolean cancel) {
+        Result best = polishAt(exact, spec, yawsIn, startX, startZ, Double.NaN, cfg, deadlineNanos, cancel);
+        JumpPhysicsInputs sc = spec.asScenario();
+        if (!cfg.turns || !sc.startTurnFree || sc.numTicks == 0) return best;
+        double[] yaws = best != null ? best.yaws : Angles.wrapAll(yawsIn.clone());
+        double x = best != null ? best.startX : startX;
+        double z = best != null ? best.startZ : startZ;
+        double bar = best != null ? best.objective
+                : verified(exact, spec, new TrigRowModel(exact, spec), yaws, startX, startZ);
+        if (Double.isNaN(bar)) return best;
+        double sign = spec.objective.sense == Objective.Sense.MAX ? -1.0 : 1.0;
+        double here = Angles.wholeTurns(sc.startYaw);
+        double[] others = {0.0, FULL_TURN, -FULL_TURN};
+        for (double turns : others) {
+            if (turns == here || expired(deadlineNanos, cancel)) continue;
+            JumpPhysicsInputs moved = sc.copy();
+            moved.startYaw = sc.startYawAtTurns(turns);
+            JumpSpec there = new JumpSpec(moved, spec.constraints, spec.objective);
+            Result r = polishAt(exact, there, yaws, x, z, bar, cfg, deadlineNanos, cancel);
+            if (SolverTrace.on()) {
+                SolverTrace.log("POLISH", "start facing at %+.0f: %s", turns,
+                        r == null ? "none" : String.format(java.util.Locale.ROOT, "%.9f", r.objective));
+            }
+            if (r == null || !(sign * r.objective < sign * bar)) continue;
+            if (widestFacing(moved, r.yaws) > MAX_FACING) continue;
+            best = r;
+            bar = r.objective;
+            yaws = r.yaws;
+            x = r.startX;
+            z = r.startZ;
+        }
+        return best;
+    }
+
+    private static double widestFacing(JumpPhysicsInputs sc, double[] yaws) {
+        double widest = 0.0;
+        for (double facing : sc.toGameFacings(yaws)) widest = Math.max(widest, Math.abs(facing));
+        return widest;
+    }
+
     private static Result polishAt(ExactJumpModel exact, JumpSpec spec, double[] yawsIn, double startX, double startZ,
-                                   Config cfg, long deadlineNanos, AtomicBoolean cancel) {
+                                   double toBeat, Config cfg, long deadlineNanos, AtomicBoolean cancel) {
         double[] yaws = Angles.wrapAll(yawsIn.clone());
         TrigRowModel joint = new TrigRowModel(exact, spec);
         if (joint.vars > cfg.maxVars) return null;
         double sign = spec.objective.sense == Objective.Sense.MAX ? -1.0 : 1.0;
-        double incumbent = verified(exact, spec, joint, yaws, startX, startZ);
+        double asIs = verified(exact, spec, joint, yaws, startX, startZ);
+        boolean asIsWins = !Double.isNaN(toBeat) && !Double.isNaN(asIs) && sign * asIs < sign * toBeat;
+        double incumbent = Double.isNaN(asIs) || (!Double.isNaN(toBeat) && !asIsWins) ? toBeat : asIs;
         if (Double.isNaN(incumbent)) return null;
+        float startYaw = spec.asScenario().startYaw;
 
         List<Integer> heavy = new ArrayList<>();
         for (int v = 0; v < joint.vars; v++) {
@@ -115,7 +169,9 @@ public final class LatticePolish {
 
         joint.build(yaws, startX, startZ);
         joint.calibrate(yaws, startX, startZ);
-        if (joint.onWrap) return null;
+        if (joint.onWrap) {
+            return asIsWins ? new Result(yaws, startX, startZ, asIs, Double.NaN, 0, startYaw) : null;
+        }
         double[] z = joint.pointOf(joint.effective(yaws, startX, startZ));
         double[] mu = new double[joint.rowCount];
         double[] centreYaws = yaws;
@@ -184,8 +240,10 @@ public final class LatticePolish {
             if (r != null && (best == null || sign * r.objective < sign * best.objective)) best = r;
         }
         if (SolverTrace.on()) SolverTrace.log("POLISH", "tied steps solved=%d of %d searches=%d", subs.size(), combos.size(), ran);
-        if (best == null || !(sign * best.objective < sign * incumbent)) return null;
-        return new Result(best.yaws, best.startX, best.startZ, best.objective, continuous, ran);
+        if (best == null || !(sign * best.objective < sign * incumbent)) {
+            return asIsWins ? new Result(yaws, startX, startZ, asIs, continuous, ran, startYaw) : null;
+        }
+        return new Result(best.yaws, best.startX, best.startZ, best.objective, continuous, ran, startYaw);
     }
 
     private static boolean expired(long deadlineNanos, AtomicBoolean cancel) {
