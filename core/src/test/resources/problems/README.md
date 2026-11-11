@@ -23,7 +23,7 @@ class that names the capture.
 | `translation/`    | scores translation-aware: the zero-width translated score byte-equals the pinned score, and with `cap` the best translation over the [-cap, cap] box matches a brute-force grid |
 | `gapattribution/` | reaches `refObjective` in THOROUGH mode and attributes the gap between the dual bound and the achieved objective |
 | `strafeside/`     | solves FAST with the strafe side pass flipping at least `minFlipped` Force 45 ticks onto the other A/D side (gh-338): less anchored yaw jerk, realized path feasible byte-exact at the shipped objective, Apply writes the key and the shifted yaw per tick; the check sets the strafe side to Both, then solves on A only and on D only and checks no pass ran and Apply writes that key on every strafe tick, and Smooth on Both keeps the A/D keys of the solve |
-| `polish/`         | is improved by the lattice polish from a deterministic incumbent (the closed form seed, or with `mode` `engine` a live FAST solve): the result replays byte-exact feasible with the start inside the box, is strictly better by at least `minGain` (no `minGain`: the stage may keep the incumbent), a second run returns the same facings, an infeasible incumbent comes back without a result, and with `unsupported` the stage declines the spec for that reason |
+| `polish/`         | is improved by the lattice polish from a deterministic incumbent (the closed form seed, with `mode` `engine` a live solve, FAST unless the sidecar sets `effort`; a FAST solve never carries the stage, so it is the kind of landing the stage starts from in Optimize): the result replays byte-exact feasible with the start inside the box, is strictly better by at least `minGain` (no `minGain`: the stage may keep the incumbent), a second run returns the same facings, an infeasible incumbent comes back without a result, with `unsupported` the stage declines the spec for that reason, and with `fullSearch` the stage runs with the Optimize graph's parameters as well and must not come back short of the default parameters' result |
 
 ## Adding a capture
 
@@ -123,9 +123,10 @@ Every fixture JSON is one line, no BOM, no trailing newline.
   "seedMayMiss":     true,      // the closed form may fail to seed this capture; then only the infeasible-seed half runs
 
   // polish/
-  "mode":            "engine",  // take the incumbent from a live FAST solve instead of the closed form seed
+  "mode":            "engine",  // take the incumbent from a live solve instead of the closed form seed (FAST unless "effort" says otherwise; a FAST solve never carries the stage)
   "minGain":         1e-4,      // the stage beats the incumbent by at least this much; absent: it may keep the incumbent
-  "unsupported":     "facing inequality", // the stage declines the spec and its reason contains this text
+  "unsupported":     "damage tick", // the stage declines the spec and its reason contains this text
+  "fullSearch":      true,      // the stage also runs with the Optimize graph's parameters and must not come back short of the run with the default parameters
 
   // translation/
   "cap":             0.05,      // also brute-force the best translation over the [-cap, cap] box and compare

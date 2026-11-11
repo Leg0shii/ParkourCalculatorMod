@@ -3,6 +3,7 @@ package de.legoshi.parkourcalc.anglesolver;
 import de.legoshi.parkourcalc.anglesolver.harness.Fixtures;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
+import de.legoshi.parkourcalc.core.anglesolver.graph.BuiltinGraphs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ClosedFormSolve;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
@@ -90,9 +91,10 @@ public class LatticePolishSweep {
             }
             seeded++;
             double before = spec.objective.evaluate(seedPath);
+            long budgetMs = Long.getLong("pkc.polish.ms", 0L);
             long t0 = System.nanoTime();
             LatticePolish.Result r = LatticePolish.polish(model, spec, seed, sc.startPos.x, sc.startPos.z,
-                    new LatticePolish.Config(), 0L, null);
+                    config(), budgetMs > 0 ? t0 + budgetMs * 1_000_000L : 0L, null);
             double ms = (System.nanoTime() - t0) / 1.0e6;
             if (r == null) {
                 print("%-62s seed=%.9f kept %.1f ms", name, before, ms);
@@ -117,6 +119,18 @@ public class LatticePolishSweep {
         }
         print("specs=%d declined=%d seeded=%d improved=%d bad=%d", specs, declined, seeded, improved, bad);
         assertEquals("results that fail the byte-exact replay", 0, bad);
+    }
+
+    private static LatticePolish.Config config() {
+        LatticePolish.Config cfg = new LatticePolish.Config();
+        if (Boolean.getBoolean("pkc.polish.optimize")) {
+            cfg.heavyCombos = BuiltinGraphs.POLISH_FACINGS;
+            cfg.closures = BuiltinGraphs.POLISH_SEARCHES;
+            cfg.halfCap = BuiltinGraphs.POLISH_TABLE;
+            cfg.window = BuiltinGraphs.POLISH_WINDOW;
+            cfg.workUnits = BuiltinGraphs.POLISH_WORK * 1_000_000L;
+        }
+        return cfg;
     }
 
     private static void print(String format, Object... args) {
