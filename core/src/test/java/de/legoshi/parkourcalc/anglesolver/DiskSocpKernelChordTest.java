@@ -23,7 +23,7 @@ public class DiskSocpKernelChordTest {
         List<DiskSocpKernel.ChordRow> chords = new ArrayList<>();
         chords.add(new DiskSocpKernel.ChordRow(0, 0.0, 1.0, Math.cos(Math.PI / 6.0), "chord@0"));
         DiskSocpKernel.Outcome oc = DiskSocpKernel.solveChords(n, cx, cz, mMag,
-                Collections.<JumpLinearModel.Wall>emptyList(), null, chords, null);
+                Collections.<JumpLinearModel.Wall>emptyList(), null, chords);
         assertNotNull(oc.result);
         assertTrue("chord solve must converge, gap " + oc.result.gap, oc.result.converged);
         assertEquals(0, oc.failCode);
@@ -43,7 +43,7 @@ public class DiskSocpKernelChordTest {
         DiskSocpKernel.Result plain = DiskSocpKernel.solve(n, cx, cz, mMag,
                 Collections.<JumpLinearModel.Wall>emptyList());
         DiskSocpKernel.Outcome oc = DiskSocpKernel.solveChords(n, cx, cz, mMag,
-                Collections.<JumpLinearModel.Wall>emptyList(), null, null, null);
+                Collections.<JumpLinearModel.Wall>emptyList(), null, null);
         assertNotNull(plain);
         assertNotNull(oc.result);
         assertEquals(Double.doubleToRawLongBits(plain.value), Double.doubleToRawLongBits(oc.result.value));

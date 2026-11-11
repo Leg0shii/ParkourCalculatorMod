@@ -23,6 +23,7 @@ class that names the capture.
 | `translation/`    | scores translation-aware: the zero-width translated score byte-equals the pinned score, and with `cap` the best translation over the [-cap, cap] box matches a brute-force grid |
 | `gapattribution/` | reaches `refObjective` in THOROUGH mode and attributes the gap between the dual bound and the achieved objective |
 | `strafeside/`     | solves FAST with the strafe side pass flipping at least `minFlipped` Force 45 ticks onto the other A/D side (gh-338): less anchored yaw jerk, realized path feasible byte-exact at the shipped objective, Apply writes the key and the shifted yaw per tick; the check sets the strafe side to Both, then solves on A only and on D only and checks no pass ran and Apply writes that key on every strafe tick, and Smooth on Both keeps the A/D keys of the solve |
+| `polish/`         | is improved by the lattice polish from a deterministic incumbent (the closed form seed, with `mode` `engine` a live FAST solve, with `mode` `landing` a live FAST solve of the Fast graph without the polish stage, which is the landing the stage starts from in the engine): the result replays byte-exact feasible with the start inside the box, is strictly better by at least `minGain` (no `minGain`: the stage may keep the incumbent), a second run returns the same facings and the same start facing, a spec whose start turn is not free keeps its start facing, an infeasible incumbent comes back without a result, and with `unsupported` the stage declines the spec for that reason; with `roundsGain` the result must beat the stage run with a single grid search round by that much; with `turns` the check switches the solver option `Full turn start facing` on (every other case runs with it off, the default), the result must sit one full turn away from the incumbent and beat the stage run without the turn, and in `engine` mode the solve itself must pick another turn, Apply must publish that start facing, the applied rows must read back to the solved objective bit for bit and a second solve on them must give the same objective and start facing |
 
 ## Adding a capture
 
@@ -120,6 +121,13 @@ Every fixture JSON is one line, no BOM, no trailing newline.
 
   // ils/
   "seedMayMiss":     true,      // the closed form may fail to seed this capture; then only the infeasible-seed half runs
+
+  // polish/
+  "mode":            "engine",  // take the incumbent from a live FAST solve instead of the closed form seed; "landing": from a FAST solve without the polish stage
+  "minGain":         1e-4,      // the stage beats the incumbent by at least this much; absent: it may keep the incumbent
+  "unsupported":     "damage tick", // the stage declines the spec and its reason contains this text
+  "turns":           true,      // switches the Full turn start facing option on; the result must start one full turn away (315 instead of -45); with "mode": "engine" the check also runs Apply and solves again
+  "roundsGain":      5e-5,      // the stage beats its own run with one grid search round ("rounds" 1) by at least this much
 
   // translation/
   "cap":             0.05,      // also brute-force the best translation over the [-cap, cap] box and compare

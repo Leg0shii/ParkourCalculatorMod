@@ -640,6 +640,15 @@ public final class AngleSolverWindow implements RenderInterface {
             + " of the dropped wall the run lands (the legal shortfall). Available only while exactly one"
             + " qualifying goal wall exists.";
 
+    private static final String FULL_TURN_START_TIP =
+            "Lets a solve move the start facing one full turn away, for example 315 instead of -45, when the"
+            + " jump goes further that way. The direction is the same, but the game's angle table has longer"
+            + " steps there for some directions. Apply then sets the start facing to that value, so the"
+            + " player starts the jump turned once around. The gain is small, usually 1e-5 to 5e-5 blocks."
+            + " Only for a solve that starts on the first tick of the TAS without a locked yaw or an"
+            + " absolute F constraint. Turning this off again does not move a start facing that is already"
+            + " a turn away.";
+
     private static final String CUSTOM_BUDGET_TIP =
             "Run a solver graph preset instead of the plain time budget. Pick a preset in the Budget row and"
             + " open it in the editor to change its stages and per-stage budgets.";
@@ -676,6 +685,11 @@ public final class AngleSolverWindow implements RenderInterface {
             }
             TooltipUtil.onHover(LEGAL_MODE_TIP + (legalWall != null ? " Goal wall: " + legalWall + "." : ""));
         }
+
+        if (Controls.checkbox("Full turn start facing", state.isFullTurnStart())) {
+            state.setFullTurnStart(!state.isFullTurnStart());
+        }
+        TooltipUtil.onHover(FULL_TURN_START_TIP);
 
         if (Controls.checkbox("Custom budget", state.isCustomBudget())) {
             state.setCustomBudget(!state.isCustomBudget());

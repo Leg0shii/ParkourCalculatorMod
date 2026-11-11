@@ -206,6 +206,10 @@ public final class AngleSolverEngine {
         return lastPlan == null ? null : lastPlan.start;
     }
 
+    public Float lastPlanStartYaw() {
+        return lastPlan == null ? null : lastPlan.startYaw;
+    }
+
     private static final class RunRecording {
         final SolveRunRecord.Config config;
         final SolveRunRecord.Problem problem;
@@ -286,19 +290,14 @@ public final class AngleSolverEngine {
         final Vec3dCore start;
         final boolean lockYaws;
         final boolean freeStartYaw;
+        final float startYaw;
+        final boolean startTurnFree;
         final TickInputs[] inputs;
         final int[] sprintKeyTicks;
 
         Plan(int startTick, double[] yaws, double[] solverYaws, boolean[] strafeMask, boolean[] force45Mask,
              int strafeSign, int[] strafeSigns, ForwardPath path, Vec3dCore start, boolean lockYaws,
-             boolean freeStartYaw) {
-            this(startTick, yaws, solverYaws, strafeMask, force45Mask, strafeSign, strafeSigns, path, start, lockYaws,
-                    freeStartYaw, null, null);
-        }
-
-        Plan(int startTick, double[] yaws, double[] solverYaws, boolean[] strafeMask, boolean[] force45Mask,
-             int strafeSign, int[] strafeSigns, ForwardPath path, Vec3dCore start, boolean lockYaws,
-             boolean freeStartYaw, TickInputs[] inputs, int[] sprintKeyTicks) {
+             boolean freeStartYaw, float startYaw, boolean startTurnFree, TickInputs[] inputs, int[] sprintKeyTicks) {
             this.startTick = startTick;
             this.yaws = yaws;
             this.solverYaws = solverYaws;
@@ -310,6 +309,8 @@ public final class AngleSolverEngine {
             this.start = start;
             this.lockYaws = lockYaws;
             this.freeStartYaw = freeStartYaw;
+            this.startYaw = startYaw;
+            this.startTurnFree = startTurnFree;
             this.inputs = inputs;
             this.sprintKeyTicks = sprintKeyTicks;
         }
@@ -357,6 +358,7 @@ public final class AngleSolverEngine {
         final boolean bothStrafeSides;
         double[] incumbentYaws;
         Vec3dCore incumbentStart;
+        Float incumbentStartYaw;
         Job legalFallback;
 
         Job withDeadline(long deadlineNanos) {
@@ -456,7 +458,10 @@ public final class AngleSolverEngine {
             if (freeBox != null) ph.inputs.startBox = freeBox;
         }
         boolean freeStartYaw = consumeFirstTickZeroTurn(uiCons, consumed);
-        if (freeStartYaw) ph.inputs.yawLockedPerTick[0] = true;
+        if (freeStartYaw) {
+            ph.inputs.yawLockedPerTick[0] = true;
+            ph.inputs.freeStartYaw = true;
+        }
 
         List<JumpConstraint> constraints = new ArrayList<>();
         int objectiveTick = objectiveSegTick(startTick, numTicks);
@@ -487,6 +492,8 @@ public final class AngleSolverEngine {
             }
         }
 
+        ph.inputs.startTurnFree = state.isFullTurnStart() && startTick == 0
+                && startTurnFree(ph.inputs, freeStartYaw, constraints);
         boolean stopOnFeasible = stopOnFeasibleFor(state, effort);
         boolean legalWallHard = legalGoal != null && stopOnFeasible;
         if (legalGoal != null && !legalWallHard) constraints.remove(legalGoal);
@@ -594,7 +601,11 @@ public final class AngleSolverEngine {
         if (base.strafeSigns != null) sc.strafeSignPerTick = base.strafeSigns.clone();
         double[] incumbent = base.strafeSigns != null ? base.yaws.clone() : base.solverYaws.clone();
         Vec3dCore incumbentStart = base.start;
+        if (sc.startTurnFree) {
+            sc.startYaw = sc.startYawAtTurns(Angles.wholeTurns(base.startYaw));
+        }
         if (!verifiesOnScenario(job, sc, incumbent)) {
+            homeStartFacing(sc);
             double[] current = currentRowYaws(job.startTick, job.numTicks);
             if (current == null || !verifiesOnScenario(job, sc, current)) {
                 SolveResult stale = new SolveResult(false, 0, job.uiConstraints.size(), job.startTick + 1, job.landingTick + 1);
@@ -608,6 +619,7 @@ public final class AngleSolverEngine {
         }
         job.incumbentYaws = incumbent;
         job.incumbentStart = incumbentStart;
+        job.incumbentStartYaw = incumbentStart == null ? null : base.startYaw;
         start(job, effort);
     }
 
@@ -634,6 +646,8 @@ public final class AngleSolverEngine {
 
     private void start(Job job, AngleSolverState.Effort effort) {
         long t0 = System.nanoTime();
+        homeStartFacing(job.spec.asScenario());
+        if (job.legalFallback != null) homeStartFacing(job.legalFallback.spec.asScenario());
         // Show the spinner instead of a stale result.
         state.clearResult();
         lastPlan = null;
@@ -680,6 +694,10 @@ public final class AngleSolverEngine {
         worker.start();
     }
 
+    private static void homeStartFacing(JumpPhysicsInputs sc) {
+        if (sc.startTurnFree || sc.freeStartYaw) sc.startYaw = sc.startYawAtTurns(0.0);
+    }
+
     private void offerIncumbent(Job job, AngleSolverState.Effort effort) {
         if (effort == AngleSolverState.Effort.FAST || BuiltinGraphs.FAST_PRESET.equals(job.graph.name)) return;
         Plan prev = lastPlan;
@@ -688,6 +706,7 @@ public final class AngleSolverEngine {
         if (prev.startTick != job.startTick || prev.yaws.length != job.numTicks) return;
         job.incumbentYaws = prev.solverYaws.clone();
         job.incumbentStart = prev.start;
+        job.incumbentStartYaw = prev.startYaw;
     }
 
     private Candidate adoptIncumbent(Job job, JumpPhysicsInputs sc, JumpSpec spec, StartBox freeBox, GraphContext ctx) {
@@ -700,8 +719,15 @@ public final class AngleSolverEngine {
             px = s.x;
             pz = s.z;
         }
+        float startYaw = sc.startYaw;
+        if (sc.startTurnFree && job.incumbentStartYaw != null) {
+            sc.startYaw = sc.startYawAtTurns(Angles.wholeTurns(job.incumbentStartYaw));
+        }
         double obj = Scoring.verifiedObjectiveAt(model, sc, spec, job.incumbentYaws, px, pz, FEAS_TOL);
-        if (Double.isNaN(obj)) return null;
+        if (Double.isNaN(obj)) {
+            sc.startYaw = startYaw;
+            return null;
+        }
         Scoring.adoptPinnedStart(sc, px, pz);
         ctx.chainAppend("incumbent");
         if (SolverTrace.on()) {
@@ -875,6 +901,18 @@ public final class AngleSolverEngine {
             if (forwardIn[k] < SPRINT_SUSTAIN_F) return;
             sprint[k] = true;
         }
+    }
+
+    private static boolean startTurnFree(JumpPhysicsInputs sc, boolean freeStartYaw, List<JumpConstraint> constraints) {
+        if (sc.yawLockedPerTick != null) {
+            for (int t = freeStartYaw ? 1 : 0; t < sc.yawLockedPerTick.length; t++) {
+                if (sc.yawLockedPerTick[t]) return false;
+            }
+        }
+        for (JumpConstraint c : constraints) {
+            if (c.mode == JumpConstraint.Mode.F && c.t2 == null) return false;
+        }
+        return true;
     }
 
     private static boolean consumeFirstTickZeroTurn(List<ConstraintAt> uiCons, Set<Constraint> consumed) {
@@ -1338,11 +1376,11 @@ public final class AngleSolverEngine {
         if (!realized && framed != null) {
             return new Plan(job.startTick, yaws, StrafeSideRealization.solverYaws(yaws, framed, sc.strafeSign),
                     job.strafeMask, job.force45Mask, sc.strafeSign, framed, path, sc.startPos, lockYaws,
-                    job.freeStartYaw, inputs, keyTicks);
+                    job.freeStartYaw, sc.startYaw, sc.startTurnFree, inputs, keyTicks);
         }
         return new Plan(job.startTick, realized ? sides.yaws : yaws, yaws, job.strafeMask, job.force45Mask,
                 sc.strafeSign, realized ? sides.sides : null, realized ? sides.path : path, sc.startPos, lockYaws,
-                job.freeStartYaw, inputs, keyTicks);
+                job.freeStartYaw, sc.startYaw, sc.startTurnFree, inputs, keyTicks);
     }
 
 
@@ -1486,6 +1524,10 @@ public final class AngleSolverEngine {
             }
         }
         if (locked > 0) result.addDetail("Locked yaws", Integer.toString(locked));
+        double startTurn = sc.startTurnFree ? Angles.wholeTurns(sc.startYaw) : 0.0;
+        if (startTurn != 0.0) {
+            result.addDetail("Start facing turn", String.format(java.util.Locale.ROOT, "%+d deg", Math.round(startTurn)));
+        }
         SolveRunRecord.Outcome smooth = new SolveRunRecord.Outcome();
         SolveRunRecord.smoothnessOf(smooth, yaws);
         if (smooth.yawTravelDeg != null) {
@@ -1638,7 +1680,8 @@ public final class AngleSolverEngine {
                 rows.get(p.startTick + k).setYawLocked(true);
             }
         }
-        writeYaws(rows, p.startTick, p.yaws, p.freeStartYaw);
+        writeYaws(rows, p.startTick, p.yaws, p.freeStartYaw,
+                p.startTurnFree || p.freeStartYaw ? p.startYaw : (float) boxes.getYaw(p.startTick));
         boolean overridesChanged = false;
         boolean inputsChanged = false;
         for (int k = 0; k < p.yaws.length && p.startTick + k < rows.size(); k++) {
@@ -1682,14 +1725,19 @@ public final class AngleSolverEngine {
     }
 
     public void writeYaws(List<InputRow> rows, int startTick, double[] yaws, boolean freeStartYaw) {
+        writeYaws(rows, startTick, yaws, freeStartYaw, (float) boxes.getYaw(startTick));
+    }
+
+    private void writeYaws(List<InputRow> rows, int startTick, double[] yaws, boolean freeStartYaw, float before) {
         if (freeStartYaw && yaws.length > 0) {
-            float startYaw = (float) yaws[0];
+            float startYaw = (float) (yaws[0] + Angles.wholeTurns(before));
             if (startYaw != boxes.getYaw(startTick)) onStartYawChanged.accept(startYaw);
             InputRow first = rows.get(startTick);
             first.setYaw(first.isYawLocked() ? startYaw : 0f);
             writeYawRows(rows, startTick, yaws, 1, yaws[0]);
         } else {
-            writeYawRows(rows, startTick, yaws, (float) boxes.getYaw(startTick));
+            if (before != boxes.getYaw(startTick)) onStartYawChanged.accept(before);
+            writeYawRows(rows, startTick, yaws, before);
         }
     }
 
