@@ -16,13 +16,14 @@ public final class SolveClock {
     public static final int LEAF = 6;
     public static final int LATTICE = 7;
     public static final int VIOL = 8;
-    public static final int KINDS = 9;
+    public static final int POLISH = 9;
+    public static final int KINDS = 10;
 
-    private static final String[] KIND_NAMES = {"poll", "tick", "kernel", "support", "lp", "dual", "leaf", "lattice", "viol"};
+    private static final String[] KIND_NAMES = {"poll", "tick", "kernel", "support", "lp", "dual", "leaf", "lattice", "viol", "polish"};
     private static final long[] PICOS_PER_UNIT = weights();
 
     private static long[] weights() {
-        long[] w = {30000L, 26000L, 290L, 6200L, 910L, 740L, 1700L, 78000L, 5200L};
+        long[] w = {30000L, 26000L, 290L, 6200L, 910L, 740L, 1700L, 78000L, 5200L, 2900L};
         String override = System.getProperty("pkc.clockWeights");
         if (override != null) {
             String[] parts = override.split(",");

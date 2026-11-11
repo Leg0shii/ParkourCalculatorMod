@@ -10,6 +10,7 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.Scoring;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.LatticePolish;
+import de.legoshi.parkourcalc.core.anglesolver.solver.SolveClock;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolverTrace;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -38,7 +39,7 @@ public final class LatticePolishNode implements NodeRuntime {
         if (!ctx.exact() || in == null || in.yaws == null || !in.feasible) {
             return NodeOutcome.of(Guarantee.UNCHANGED, in);
         }
-        long deadline = deadlineNanos > 0 ? deadlineNanos : System.nanoTime() + UNBUDGETED_NANOS;
+        long deadline = deadlineNanos > 0 ? deadlineNanos : SolveClock.nanoTime() + UNBUDGETED_NANOS;
         JumpPhysicsInputs sc = ctx.scenario;
         double startX = sc.startPos.x;
         double startZ = sc.startPos.z;

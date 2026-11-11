@@ -210,6 +210,10 @@ anglesolver/
                            longest task or the shared load over the virtual workers, a fork stops at
                            its own deadline, a cancel fires every token and hurries, the wall limit
                            marks the solve as not repeatable, the seed reaches every fork
+  LatticePolishClockTest.java  the lattice polish on the work clock (j013, Optimize parameters): the
+                           Newton rounds and the grid search charge the clock, a work budget ends the
+                           search early, close to the budget, and at the same point in every run (same
+                           result, same counters)
   RepeatableSolveTest.java  (slow) the Repeatable solve option end to end on j016, free-translate-edge
                            (free start) and gh553-j345 (pattern B&B): a second solve on the same
                            engine and a fresh engine on one thread end on the same facings, objective,
