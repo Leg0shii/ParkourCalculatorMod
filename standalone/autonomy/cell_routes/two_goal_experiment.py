@@ -5,6 +5,8 @@ from pathlib import Path
 import subprocess
 import sys
 
+from standalone.autonomy.candidate_comparison import compare_candidates
+
 from standalone.autonomy.block_search import prepare_scene
 from standalone.autonomy.compiler import JavaCompiler
 from .checkpoint_experiment import brief,replay_witness
@@ -32,7 +34,7 @@ def competitive_followup(run,prior):
         and r['selection'] not in ('retained','final_evaluated')}
     ticks=best['plan']['ticks']
     entries=[e for e in source_entries(run['result']) if e['id'] in unfinished
-        and e['program']['profile']['airtime']<=ticks]
+        and compare_candidates(dict(T=e['program']['profile']['airtime']),incumbent=dict(T=ticks))['action']!='exclude_bound']
     request=copy.deepcopy(run['fixture']['request'])
     request.setdefault('movementSearch',{}).update(maxInputs=ticks,maxPrefixes=4096,
         maxQueuedPrefixes=4096,maxChoicesPerType=200000)

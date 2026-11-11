@@ -4,7 +4,7 @@ import itertools
 
 from .blockages import faces, face_chains, intervals, consecutive, blockage_counts, compile_passages, passage_kind, face_clearance
 from .obstacle_geometry import expanded_box
-from .interactions import query_interaction, interaction_context_key
+from .interactions import query_interaction, interaction_context_key, PROOF_POLICY
 from .reachability import interaction_reachability
 from .solve_spec import digest
 
@@ -104,7 +104,7 @@ class ConstraintVariants:
                 possible = prep['possible']
                 if not possible:
                     self.exclusions.append(dict(solidIndex=item['solidIndex'], reason='all_contact_phases_unreachable',
-                        phaseExclusions=prep['excluded'], role='unwanted_contact', proofPolicy=1))
+                        phaseExclusions=prep['excluded'], role='unwanted_contact', proofPolicy=PROOF_POLICY))
                     item['rows'] = [[]]
                     prep['stage'] = 'done'
                     continue

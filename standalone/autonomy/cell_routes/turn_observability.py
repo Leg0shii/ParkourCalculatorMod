@@ -4,7 +4,7 @@ import copy
 
 from ..solve_spec import digest
 from .anchor_guides import classify
-from .anchor_policy import local_counts, priority
+from ..candidate_comparison import comparison_label, priority_key
 
 
 def record(state, guides, program, *, span, start, model, status, elapsed=0., kind='node', metrics=None, service=None):
@@ -16,12 +16,13 @@ def record(state, guides, program, *, span, start, model, status, elapsed=0., ki
         point=program.get('decisionPoint') or guides['points'][0][::2]
         label=classify(guides,span,point)
         mode=program.get('priorityTurnaround',label['isTurnaround'])
+        counts=comparison_label(program,start=start,mode=mode,identity=ident)
         events[ident]=dict(id=ident,parent=program.get('decisionParent'),
             depth=program.get('decisionDepth',0),lastSolvedDepth=program.get('lastSolvedDepth',0),
             pointTick=program.get('decisionPointTick',0),
             pointSource=program.get('decisionPointSource','original_initial'),
-            **label,counts=local_counts(program,start),mode='turnaround' if mode else 'ordinary',
-            key=list(priority(program,start,mode,ident)),kind=kind,queries=[],replays=[])
+            **label,counts={k:counts[k] for k in ('T','J','R','A','start')},mode='turnaround' if mode else 'ordinary',
+            key=list(priority_key(counts)),kind=kind,queries=[],replays=[])
     event=events[ident]
     query=dict(model=model,status=status,elapsedSeconds=elapsed,metrics=metrics or {},service=service or {})
     if query not in event['queries']:

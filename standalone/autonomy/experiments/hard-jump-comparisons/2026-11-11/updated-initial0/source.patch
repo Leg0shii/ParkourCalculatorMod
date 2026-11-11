@@ -1,0 +1,1717 @@
+diff --git a/standalone/autonomy/block_profiles.py b/standalone/autonomy/block_profiles.py
+index 7367df6f..5adac967 100644
+--- a/standalone/autonomy/block_profiles.py
++++ b/standalone/autonomy/block_profiles.py
+@@ -11,24 +11,26 @@ def normal_jump_height():
+     return max(ordinary_jump_profile(0, 0)['position'])
+ 
+ 
+-def ordinary_jump_profile(source_top, target_top, *, max_inputs=200):
+-    return _flight_profile(source_top, target_top, True, max_inputs)
++def ordinary_jump_profile(source_top, target_top, *, max_inputs=200, threshold=.005):
++    return _flight_profile(source_top, target_top, True, max_inputs, threshold)
+ 
+ 
+-def runoff_profile(source_top, target_top, *, max_inputs=200):
++def runoff_profile(source_top, target_top, *, max_inputs=200, threshold=.005):
+     source_top = number(source_top, 'source top')
+     target_top = number(target_top, 'target top')
+     integer(max_inputs, 'maximum flight inputs', 1, 200)
+     if target_top >= source_top:
+         return None
+-    return _flight_profile(source_top, target_top, False, max_inputs)
++    return _flight_profile(source_top, target_top, False, max_inputs, threshold)
+ 
+ 
+-def _flight_profile(source_top, target_top, jumping, max_inputs):
++def _flight_profile(source_top, target_top, jumping, max_inputs, threshold=.005):
+     source_top = number(source_top, 'source top')
+     target_top = number(target_top, 'target top')
+     integer(max_inputs, 'maximum flight inputs', 2 if jumping else 1, 200)
+-    config = {'threshold': .005, 'jumpVelocity': [f32(.42) if jumping else None] + [None] * (max_inputs - 1),
++    threshold=number(threshold,'physics threshold')
++    if threshold<0:raise ValueError('Physics threshold must be nonnegative')
++    config = {'threshold': threshold, 'jumpVelocity': [f32(.42) if jumping else None] + [None] * (max_inputs - 1),
+               'sneak': [False] * max_inputs, 'contacts': []}
+     y, vy, ground = source_top, REST_CARRY, True
+     positions, velocities, grounded = [y], [vy], [ground]
+diff --git a/standalone/autonomy/cell_routes/anchor_guides.py b/standalone/autonomy/cell_routes/anchor_guides.py
+index ef50ac10..c0328046 100644
+--- a/standalone/autonomy/cell_routes/anchor_guides.py
++++ b/standalone/autonomy/cell_routes/anchor_guides.py
+@@ -51,7 +51,7 @@ def build_guides(data, policy):
+     points[0]=list(scene['initial']['position'])
+     footprints={name:[scene['collisionScene']['solids'][b['solidIndex']] for b in scene['blocks'] if b['id']==name]
+                 for name in names}
+-    result=dict(version=1,anchors=names,points=points,covers=covers,physicalFootprints=footprints,turns=[])
++    result=dict(version=2,anchors=names,points=points,covers=covers,coverPhase='pre_or_post',physicalFootprints=footprints,turns=[])
+     for i in range(1,len(names)-1):
+         s,e,n=points[i-1:i+2]
+         incoming=unit(e[0]-s[0],e[2]-s[2]); away=unit(e[0]-n[0],e[2]-n[2])
+diff --git a/standalone/autonomy/cell_routes/anchor_policy.py b/standalone/autonomy/cell_routes/anchor_policy.py
+index cc99bc44..c7c97f45 100644
+--- a/standalone/autonomy/cell_routes/anchor_policy.py
++++ b/standalone/autonomy/cell_routes/anchor_policy.py
+@@ -3,9 +3,10 @@
+ import copy
+ 
+ from ..solve_spec import digest
++from ..candidate_comparison import comparison_label, priority_key, POLICY_VERSION as COMPARISON_POLICY_VERSION
+ 
+ 
+-HARD_JUMP_POLICY_VERSION = 2
++HARD_JUMP_POLICY_VERSION = 3
+ 
+ 
+ def settings(value, scene):
+@@ -42,7 +43,7 @@ def settings(value, scene):
+ 
+ def semantic_settings(policy):
+     return dict({k:v for k,v in policy.items() if k!='observability'},
+-                hardJumpPolicyVersion=HARD_JUMP_POLICY_VERSION,searchPolicyVersion=4)
++                hardJumpPolicyVersion=HARD_JUMP_POLICY_VERSION,searchPolicyVersion=5,comparisonPolicyVersion=COMPARISON_POLICY_VERSION)
+ 
+ 
+ def owner(scene, block):
+@@ -112,17 +113,12 @@ def audit(scene, program, anchors, *, reached=None):
+ 
+ 
+ def local_counts(program, start=0):
+-    p=program['profile']; n=p['airtime']
+-    if not 0 <= start <= n:
+-        raise ValueError('Anchor span starts outside the program')
+-    jumps=sum(bool(p['grounded'][t] and p['jump'][t]) for t in range(start,n))
+-    runs=sum(bool(p['grounded'][t] and not p['jump'][t]) for t in range(start,n))
+-    return dict(T=n, J=jumps, R=runs, A=n-start-jumps-runs, start=start)
++    c=comparison_label(program,start=start)
++    return {k:c[k] for k in ('T','J','R','A','start')}
+ 
+ 
+ def priority(program, start=0, turnaround=False, identity=''):
+-    c=local_counts(program,start)
+-    return (c['T'], -c['J'], c['A'] if turnaround else c['R'], identity)
++    return priority_key(comparison_label(program,start=start,mode=turnaround,identity=identity))
+ 
+ 
+ def within_caps(request, program):
+@@ -155,6 +151,10 @@ def transfer_structure(scene, program, start, source, target, *, complete=False)
+     boundary=max([start]+[t for t,name in contacts if name==source and (arrival is None or t<arrival)])
+     preparation=[t for t in launches if t<boundary]
+     transfer=[t for t in launches if t>=boundary and (arrival is None or t<arrival)]
++    from ..case_profiles import CASES
++    stepping=[e['input'] for e in p.get('caseEvents', [])
++              if (e.get('type')=='stepping' or e.get('case') in CASES-{'grind'})
++              and boundary<=e['input'] and (arrival is None or e['input']<arrival)]
+     reason=None
+     if any(name not in (source,target) for _,name in contacts):
+         reason='intermediate_support_between_anchors'
+@@ -164,11 +164,14 @@ def transfer_structure(scene, program, start, source, target, *, complete=False)
+         reason='jump_after_target_arrival'
+     elif len(transfer)>1:
+         reason='multiple_transfer_impulses'
++    elif arrival is not None and stepping:
++        reason='stepping_during_hard_transfer'
+     elif complete and (arrival is None or len(transfer)!=1):
+         reason='missing_transfer_jump'
+     return dict(version=HARD_JUMP_POLICY_VERSION,valid=reason is None,reason=reason,
+                 source=source,target=target,spanStart=start,preparationThrough=boundary,
+-                preparationJumps=preparation,transferJumps=transfer,arrival=arrival)
++                preparationJumps=preparation,transferJumps=transfer,arrival=arrival,
++                transferSteppingInputs=stepping,assumption='hard_transfer_without_stepping')
+ 
+ 
+ def single_jump_structure(scene, program, start, source, target, *, complete=False):
+diff --git a/standalone/autonomy/cell_routes/anchor_time_bound.py b/standalone/autonomy/cell_routes/anchor_time_bound.py
+index cb2f2117..385065e8 100644
+--- a/standalone/autonomy/cell_routes/anchor_time_bound.py
++++ b/standalone/autonomy/cell_routes/anchor_time_bound.py
+@@ -11,24 +11,60 @@ def cover_distance(left, right):
+                for b in left for c in right)
+ 
+ 
+-def remaining_bound(guides, span, program, motion):
++def _vertical_remaining(guides, span, program, transfers, hard_latches):
++    from standalone.ipopt.ladder import REST_CARRY
++    names=guides['anchors'];p=program['profile'];n=p['airtime']
++    reached=program.get('terminalSupport')==names[span+1] and p['grounded'][-1]
++    terms=[]
++    for i in range(span+int(reached),len(names)-1):
++        key=names[i]+'→'+names[i+1];r=transfers.get(key,{})
++        if key not in hard_latches or not r.get('ticks'):continue
++        ticks=r['ticks'];reason='future_transfer'
++        if i==span and not reached:
++            positions,velocities=p.get('position',[]),p.get('velocity',[])
++            if not positions or not velocities:continue
++            if p['grounded'][-1] and program.get('terminalSupport')==names[i]:
++                if abs(positions[-1]-r['sourceTop'])>1e-7 or abs(velocities[-1]-REST_CARRY)>1e-7:continue
++                reason='grounded_source'
++            elif not p['grounded'][-1]:
++                source_contacts=[e['offset']+1 for e in p.get('contactEvents',[]) if
++                    e.get('axis')=='Y' and e.get('direction')==-1 and e.get('box')==r.get('sourceBox')]
++                boundary=max(source_contacts,default=0)
++                launches=[t for t in range(boundary,n) if p['grounded'][t] and p['jump'][t]]
++                if len(launches)!=1:continue
++                launch=launches[0]
++                if abs(positions[launch]-r['sourceTop'])>1e-7:continue
++                if any(e['input']>=launch for e in p.get('caseEvents',[])):continue
++                if any(e['offset']>=launch and e.get('axis')=='Y' and e.get('direction')==1
++                       for e in p.get('contactEvents',[])):continue
++                ticks=max(0,ticks-(n-launch));reason='paid_transfer_inputs'
++            else:continue
++        terms.append(dict(source=names[i],target=names[i+1],ticks=ticks,reason=reason,proof=r.get('id')))
++    return sum(t['ticks'] for t in terms),terms
++
++
++def remaining_bound(guides, span, program, motion, *, transfers=None, hard_latches=None):
++    from .transfer_time_bounds import state_covers
+     names=guides['anchors'];p=program['profile']
+     target=span+1
+     reached=program.get('terminalSupport')==names[target] and p['grounded'][-1]
+     first=target if reached else target-1
+-    # Airborne boundaries are not at the last support's guide/region. Omit that
+-    # segment rather than pinning a feasible witness or overestimating travel.
+     if not reached and (not p['grounded'][-1] or program.get('terminalSupport')!=names[first]):
+         first=target
+-    segments=[]
++    segments=[];unknown=False
+     for i in range(first,len(names)-1):
+         a,b=names[i:i+2]
+-        if not guides['covers'].get(a) or not guides['covers'].get(b):
+-            return dict(remainingTicks=0,reason='unknown_landing_cover')
+-        segments.append(dict(source=a,target=b,distance=cover_distance(guides['covers'][a],guides['covers'][b])))
++        left,right=state_covers(guides,a,motion),state_covers(guides,b,motion)
++        if not left or not right:
++            unknown=True;continue
++        segments.append(dict(source=a,target=b,distance=cover_distance(left,right)))
+     gap=sum(s['distance'] for s in segments)
+     speed=motion.get('movementAfterSupportCheck',0.)
+-    ticks=max(0,math.ceil((gap-1e-7)/speed)) if math.isfinite(speed) and speed>0 else 0
+-    return dict(remainingTicks=ticks,distanceLowerBound=gap,movementUpperBound=speed,segments=segments,
++    horizontal=max(0,math.ceil((gap-1e-7)/speed)) if math.isfinite(speed) and speed>0 else 0
++    vertical,terms=_vertical_remaining(guides,span,program,transfers or {},hard_latches or {})
++    return dict(remainingTicks=max(horizontal,vertical),horizontalTicks=horizontal,verticalTicks=vertical,
++                transferTerms=terms,proofIds=[t['proof'] for t in terms if t.get('proof')],
++                reason='partial_unknown_landing_enclosure' if unknown else 'relaxed_remaining_time',
++                distanceLowerBound=gap,movementUpperBound=speed,segments=segments,
+                 guideDistanceEstimate=sum(math.hypot(guides['points'][i+1][0]-guides['points'][i][0],
+                     guides['points'][i+1][2]-guides['points'][i][2]) for i in range(first,len(names)-1)))
+diff --git a/standalone/autonomy/cell_routes/checkpoint_search.py b/standalone/autonomy/cell_routes/checkpoint_search.py
+index eb6c833a..72995e66 100644
+--- a/standalone/autonomy/cell_routes/checkpoint_search.py
++++ b/standalone/autonomy/cell_routes/checkpoint_search.py
+@@ -76,8 +76,13 @@ def evaluate_program(scene, program, compiler, adapter, work, motion_bound, *, c
+         virtual=prepare_goal(virtual)
+         if not height_clock(program,virtual):
+             raise ValueError('Virtual finish program does not reach its height clock')
+-    compiled = compile_program(scene, program, require_complete=complete and virtual is None)
+-    route, profiles = compiled['route'], compiled['profiles']
++    from standalone.autonomy.interactions import InteractionGate
++    service=getattr(adapter,'interaction_service',None) or InteractionGate(scene,compiler,seconds=max(.001,min(seconds,candidate_seconds)))
++    prepared=service.prepare(program,scene=scene,require_complete=complete and virtual is None)
++    if prepared is None:
++        return dict(status='unknown',termination='vertical_schedule',best=None,attempts=[],contactAttempts=[],work=dict(solverCalls=0),fullSceneValidated=False)
++    route,profiles=copy.copy(prepared['route']),prepared['profiles']
++    route['constraints']=list(route.get('constraints',[]))
+     mark('programCompilation')
+     if guide_objective is not None:
+         route['objective']=dict(axis='X',sense='MAX')
+@@ -113,20 +118,19 @@ def evaluate_program(scene, program, compiler, adapter, work, motion_bound, *, c
+     from standalone.autonomy.route import schedule
+     from standalone.autonomy.block_contacts import validate_vertical_schedule
+     plan = schedule(route, [0])
+-    vertical = validate_vertical_schedule(route, profiles, plan)
++    vertical = prepared['vertical']
+     if not vertical['feasible']:
+         return dict(status='unknown', termination='vertical_schedule', best=None, attempts=[], contactAttempts=[],
+                     work=scoped.local.summary(), solveScope=scope, fullSceneValidated=False)
+     plan['vertical'] = dict(vertical['vertical'], referencePosition=vertical['y'], referenceVelocity=vertical['vy'])
+     mark('scopeAndVerticalPreparation')
+-    coefficients = compiler.compile(route, plan, max(.001, min(seconds, candidate_seconds)))
++    analysis=service.analyze_model(route,plan,vertical,scope=scope)
++    coefficients=analysis['coefficient']
+     mark('coefficientCompilation')
+     model = dict(coefficients, version=1, ticks=plan['ticks'], walls=plan['walls'], contacts=plan['contacts'],
+         position=scene['initial']['position'][::2], velocity=scene['initial']['velocity'][::2],
+         threshold=route.get('physicsThreshold', .005), vertical=vertical['vertical'], objective=dict(route.get('guideObjective', route['objective']), tick=plan['ticks']))
+-    envelopes = reachable_envelopes(model, vertical['y'])
+-    from standalone.autonomy.solve_spec import digest
+-    envelopes['modelKey'] = digest(coefficients)
++    envelopes=analysis['envelopes']
+     mark('reachability')
+     if hasattr(scoped_adapter, 'eligible'):
+         scoped_adapter = scoped_adapter.eligible(envelopes, scope['through'])
+diff --git a/standalone/autonomy/cell_routes/comparison_goals.py b/standalone/autonomy/cell_routes/comparison_goals.py
+index 779a6009..05be63f5 100644
+--- a/standalone/autonomy/cell_routes/comparison_goals.py
++++ b/standalone/autonomy/cell_routes/comparison_goals.py
+@@ -66,7 +66,7 @@ def landing_satisfied(scene,block_id,vertical):
+     return bool(vertical['onGround'][-1] and abs(vertical['y'][-1]-block['top'])<=1e-7)
+ 
+ 
+-def _landing_prefixes(scene,program,block_id):
++def _landing_prefixes(scene,program,block_id, *, reuse_full=False):
+     block=next(b for b in scene['blocks'] if b['id']==block_id)
+     box=scene['collisionScene']['solids'][block['solidIndex']]
+     p=program['profile']
+@@ -77,8 +77,13 @@ def _landing_prefixes(scene,program,block_id):
+     for tick in sorted(times):
+         if not 0<tick<=p['airtime'] or not p['grounded'][tick] or abs(p['position'][tick]-block['top'])>1e-7:
+             continue
+-        candidate=truncate_program(program,tick)
++        candidate=program if reuse_full and tick==p['airtime'] and program['terminalSupport']==block_id else truncate_program(program,tick)
+         candidate['terminalSupport']=block_id
++        at=[e for e in events if e.get('box')==box and e.get('offset',e.get('input',-1))==tick-1]
++        if any(e.get('case') in ('normal_step','blip') for e in at):
++            candidate['profile']['landingPhase']='post'
++        elif any(e.get('axis')=='Y' and e.get('direction')==-1 for e in at):
++            candidate['profile']['landingPhase']='pre'
+         yield candidate
+ 
+ 
+diff --git a/standalone/autonomy/cell_routes/depth_first.py b/standalone/autonomy/cell_routes/depth_first.py
+index 1f0409a0..efe5dd2f 100644
+--- a/standalone/autonomy/cell_routes/depth_first.py
++++ b/standalone/autonomy/cell_routes/depth_first.py
+@@ -3,8 +3,8 @@ import math
+ import time
+ 
+ from standalone.autonomy.interactions import InteractionGate
+-from standalone.autonomy.movement_composition import append_choice, boundary_state, empty_program, program_physics_key, program_search_key, truncate_program
+-from standalone.autonomy.movement_generation import generate_choices
++from standalone.autonomy.movement_composition import boundary_state, empty_program, program_physics_key, program_search_key, truncate_program
++from standalone.autonomy.movement_generation import generate_choices, propose_choices
+ from standalone.autonomy.movement_search import iter_movement_programs, screen_program
+ from standalone.autonomy.prefix_viability import prefix_viability
+ from standalone.autonomy.solve_spec import digest, motion_record, processing_key
+@@ -13,6 +13,7 @@ from .comparison_goals import goal_spec, goal_key, region_arrival, _landing_pref
+ from standalone.autonomy.terminal_goals import KIND, bind_goal, satisfied
+ from .minimum_runs import POLICY_VERSION, latest_jump, remember, exclusion
+ from .anchor_policy import semantic_settings
++from ..candidate_comparison import comparison_label, priority_key, compare_candidates, POLICY_VERSION as COMPARISON_POLICY_VERSION
+ 
+ 
+ def candidate_key(program):
+@@ -21,8 +22,7 @@ def candidate_key(program):
+ 
+ 
+ def arrival_key(record):
+-    motion = motion_record(record['program']) or dict(jumps=0, runs=0)
+-    return (record['arrival'], -motion['jumps'], motion['runs'], record['id'])
++    return priority_key(comparison_label(record['program'],through=record['arrival'],identity=record['id']))
+ 
+ 
+ def decision_family(program, parents):
+@@ -95,7 +95,7 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
+         margins=[time_margin,progress_margin], physics=motion,
+         **({'eventStagePolicy':4 if anchor_route else 3} if event_route else {}),
+         **({'anchorPolicy':semantic_settings(adapter.anchor_policy),'guidePlan':adapter.guide_plan['id']} if anchor_route else {}),
+-        minimumRunPolicy=POLICY_VERSION if minimum_run_pruning else None,
++        minimumRunPolicy=POLICY_VERSION if minimum_run_pruning else None,comparisonPolicy=COMPARISON_POLICY_VERSION,
+         **({'routeStagePolicy':2,'routeCommitPolicy':1,'routeProposalPolicy':1} if typed_route else {})))
+     if resume_state is not None and (resume_state.get('version') != schema or
+             resume_state.get('kind') != 'ordered_goal_dfs' or resume_state.get('context') != context):
+@@ -118,8 +118,10 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
+     if resume_state and not _owned_state and state['best'] is not None and not replay_witness(scene,state['best'],compiler)['passed']:
+         raise ValueError('Saved DFS incumbent no longer passes independent replay')
+     gate = InteractionGate(scene, compiler, seconds=candidate_seconds)
++    adapter.interaction_service=gate
+     if event_route:
+         gate.cache = adapter.interaction_cache
++        gate.metrics = adapter.interaction_metrics
+     state.setdefault('timeBoundExclusions',[])
+     state.setdefault('minimumRunExclusions',[])
+     excluded_runs={(r['frame'],r['candidate']) for r in state['minimumRunExclusions']}
+@@ -230,7 +232,7 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
+         return span_priority(program,span_info(f)[1],program.get('priorityTurnaround',False),identity)
+ 
+     def record_priority(record,f):
+-        return priority(record['program'],f,record['id']) if anchor_route else arrival_key(record)
++        return priority(record.get('child',record['program']),f,record['id']) if anchor_route else arrival_key(record)
+ 
+     def latch_key(f):
+         span,_=span_info(f)
+@@ -257,31 +259,71 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
+         gate.context(ctx)
+ 
+     def time_bound(program,f=None):
+-        if terminal_plan is None and state['best'] is not None and program['profile']['airtime']>state['best']['plan']['ticks']:
+-            return dict(reason='elapsed_inputs_exceed_incumbent_finish',elapsedInputs=program['profile']['airtime'],
+-                incumbentTick=state['best']['plan']['ticks'])
+-        if anchor_route and f is not None and state['best'] is not None:
++        if state['best'] is None:return None
++        label=dict(T=program['profile']['airtime'])
++        ctx=dict(fixedTerminal=terminal_plan is not None)
++        decision=compare_candidates(label,context=ctx,incumbent=state['best'])
++        if decision['action']=='exclude_bound':
++            return dict(reason=decision['reason'],elapsedInputs=label['T'],incumbentTick=decision['incumbentT'])
++        if anchor_route and f is not None:
+             from .anchor_time_bound import remaining_bound
+             span,_=span_info(f)
+-            proof=remaining_bound(adapter.guide_plan,span,program,motion)
+-            if program['profile']['airtime']+proof['remainingTicks']>state['best']['plan']['ticks']:
+-                return dict(proof,reason='optimistic_remaining_time_exceeds_incumbent',
+-                    elapsedInputs=program['profile']['airtime'],incumbentTick=state['best']['plan']['ticks'])
++            from .transfer_time_bounds import transfer_bounds
++            records=state.setdefault('transferTimeBounds',{})
++            transfer_bounds(scene,adapter.guide_plan,motion,gate,saved=records,threshold=0.,check=work.check)
++            proof=remaining_bound(adapter.guide_plan,span,program,motion,
++                                  transfers=records,hard_latches=state['hardLatches'])
++            label['remainingFinishBound']=dict(ticks=proof['remainingTicks'],proofIds=proof.get('proofIds',[]))
++            decision=compare_candidates(label,context=ctx,incumbent=state['best'])
++            if decision['action']=='exclude_bound':
++                return dict(proof,reason=decision['reason'],elapsedInputs=label['T'],incumbentTick=decision['incumbentT'])
+         return None
+ 
++    def tick_label(program,f, *, identity=None, validated=False):
++        span,start=span_info(f)
++        if 'comparisonContextId' not in f:
++            f['comparisonContextId']=digest(dict(roots=[candidate_key(p) for p in f['parents']],
++                span=span,start=start,goal=f['goal'],score=stage_adapter(f).score_context))
++        complete=program.get('terminalSupport') in f['goal'].get('blocks',[f['goal']['block']]) and program['profile']['grounded'][-1]
++        return comparison_label(program,start=start,mode=program.get('priorityTurnaround',False),
++            identity=identity or candidate_key(program),context=dict(comparisonContext=f['comparisonContextId'],
++                basis='anchor_arrival' if complete else 'open_prefix',scope=program.get('solveScope'),
++                milestone=f['goal']['block'],landingPhase=program['profile'].get('landingPhase','pre')),
++            evidence=dict(validated=validated))
++
+     def run_bound(program, f):
+         if not minimum_run_pruning or f is None:return None
+-        if anchor_route and (latch_key(f) not in state['hardLatches'] or program.get('priorityTurnaround',False) or
+-                (program.get('restoredRun') or {}).get('frame')==f['id']):return None
+-        proof=exclusion(f.get('minimumRuns',{}),latest_jump(program,scene))
++        proof=None
++        if anchor_route:
++            if (program.get('restoredRun') or {}).get('frame')==f['id']:return None
++            from .preparation_deferrals import assess
++            context=dict(purpose='hard_anchor',backend='automatic_anchor',localDeferralEnabled=True,
++                hardLatched=latch_key(f) in state['hardLatches'],comparisonContextId=f.get('comparisonContextId'))
++            # Incomplete prefixes never inherit an arrival's future counts.
++            if not context['hardLatched'] or program.get('terminalSupport') not in f['goal'].get('blocks',[f['goal']['block']]):return None
++            label=tick_label(program,f)
++            token=[f['id'],f.get('tickPeerRevision',0),state['latchRevision'],label['id'],label['mode']]
++            counters=state.setdefault('comparisonWork',dict(assessments=0,cacheHits=0,peerChecks=0))
++            if program.get('comparisonCacheToken')==token:
++                decision=program['comparisonDecision'];counters['cacheHits']+=1
++            else:
++                decision=assess(label,f.get('tickPeers',{}),context)
++                counters['assessments']+=1;counters['peerChecks']+=decision.get('peerChecks',0)
++                program['comparisonCacheToken']=token
++            program['comparisonDecision']=decision
++            state.setdefault('comparisonDecisions',{})[str(f['id'])+':'+label['id']]=decision
++            if decision['action']=='defer_preparation':
++                proof=dict(reason='higher_ticks_without_structural_advantage',heuristic=True,comparison=decision)
++        else:
++            proof=exclusion(f.get('minimumRuns',{}),latest_jump(program,scene))
+         if proof is not None:
+             identity=candidate_key(program);key=(f['id'],identity)
+             if key not in excluded_runs:
+                 excluded_runs.add(key)
+                 saved={k:copy.deepcopy(v) for k,v in program.items() if anchor_route or k!='repairState'}
+                 state['minimumRunExclusions'].append(dict(frame=f['id'],candidate=identity,proof=proof,program=saved,
+-                    **(dict(span=span_info(f)[0],decision=program.get('decisionNode'),isTurnaround=False,
+-                            latchRevision=state['latchRevision']) if anchor_route else {})))
++                    **(dict(span=span_info(f)[0],decision=program.get('decisionNode'),
++                            isTurnaround=program.get('priorityTurnaround',False),latchRevision=state['latchRevision']) if anchor_route else {})))
+         return proof
+ 
+     def eligible(program, f=None):
+@@ -298,7 +340,7 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
+ 
+     def screen(program, f=None):
+         bounded=program
+-        if anchor_route and f is not None:
++        if anchor_route and f is not None and program.get('ownedEndpoint')!=program['profile']['airtime']:
+             arrivals=[p for b in f['goal'].get('blocks',[f['goal']['block']])
+                       for p in _landing_prefixes(scene,program,b)]
+             if arrivals:bounded=min(arrivals,key=lambda p:p['profile']['airtime'])
+@@ -324,8 +366,8 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
+             viability_counts['excluded'] += 1
+             return proof
+         # Check the full proposal, including events beyond a diagnostic projection.
+-        return gate.required(program) or screen_program(scene, program, compiler,
+-            max(.001,min(candidate_seconds,deadline-time.monotonic())))
++        return screen_program(scene,program,compiler,
++            max(.001,min(candidate_seconds,deadline-time.monotonic())),gate=gate)
+ 
+     def numerical_pending(record):
+         repair = record.get('program', {}).get('repairState', {})
+@@ -375,7 +417,8 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
+         observe(state['observations'],adapter.guide_plan,program,span=span,start=start,
+                 model=query['model'],status=status,elapsed=time.monotonic()-t,metrics=result['work'],
+                 service=dict(latchRevision=state['latchRevision'],hardLatched=latch_key(f) in state['hardLatches'],
+-                    runDeferralEnabled=minimum_run_pruning and not program.get('priorityTurnaround',False) and latch_key(f) in state['hardLatches']))
++                    runDeferralEnabled=minimum_run_pruning and not program.get('priorityTurnaround',False) and latch_key(f) in state['hardLatches'],
++                    tickDeferralEnabled=minimum_run_pruning and latch_key(f) in state['hardLatches'],comparisonPolicy=COMPARISON_POLICY_VERSION))
+         if result['best'] is not None:
+             # Retain selected physical walls; never endpoint/velocity/yaw equalities.
+             updated=commit_arrival(program,result['best'])
+@@ -396,6 +439,8 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
+             program=updated
+         elif result.get('repairState') is not None:
+             program['repairState']=result['repairState']
++        if (program.get('restoredRun') or {}).get('frame')==f['id'] and status in ('oracle_rejected','exhausted'):
++            f['recoveryFailure']=dict(reason='restored_internal_preparation_failed',candidate=identity,model=query.get('model'))
+         nodes[identity]=dict(status=status,parent=program.get('decisionParent'),query=query,
+             depth=depth,lastSolvedDepth=program.get('lastSolvedDepth',0),program=copy.deepcopy(program))
+         state['nodeResults'][identity]=dict(query,parent=program.get('decisionParent'),depth=depth)
+@@ -418,18 +463,20 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
+                     ctx=dict(mode='open',scene=scene,program=parent,state=boundary_state(parent),maxInputs=remaining,
+                         terminalGoal=f['goal'],threshold=0.,checkBudget=work.check)
+                     configure(ctx,f)
+-                    source=iter(generate_choices('normal',ctx))
++                    source=iter(propose_choices('normal',ctx,source=generate_choices('normal',ctx),
++                        start=f['directCursor'],max_inputs=cfg['maxInputs'],
++                        bind=lambda p:bind_goal(p,f['goal'],scene.get('supportClearance',1e-6))))
+                     try:
+-                        for _ in range(f['directCursor']):next(source)
+-                        for choice in source:
+-                            child=append_choice(parent,choice,max_inputs=cfg['maxInputs'])
++                        for proposal in source:
++                            f['directProposal']=proposal
++                            child=proposal['program']
+                             if child is not None:
+-                                child=bind_goal(child,f['goal'],scene.get('supportClearance',1e-6))
+                                 if child.get('terminalGoal')==f['goal'] and eligible(child,f) and screen(child,f) is None:
+                                     identity=candidate_key(child)
+                                     if identity not in {candidate_key(p) for p in f['ready']} | {r.get('candidateKey',r['id']) for r in f['records']}:
+                                         f['ready'].append(child)
+-                            f['directCursor']+=1
++                            f['directCursor']=proposal['ordinal']+1
++                            f.pop('directProposal',None)
+                     finally:source.close()
+                 f['directRoot']+=1
+                 f['directCursor']=0
+@@ -454,20 +501,19 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
+                 ctx = dict(mode='open',scene=scene,program=p,state=boundary_state(p),maxInputs=remaining,
+                     normalGap=True,normalGapInputs=remaining,threshold=0.,checkBudget=work.check)
+                 configure(ctx,f)
+-                source = iter(generate_choices('normal',ctx))
++                source = iter(propose_choices('normal',ctx,source=generate_choices('normal',ctx),
++                    start=f['directCursor'],max_inputs=cfg['maxInputs']))
+                 try:
+-                    for _ in range(f['directCursor']):
+-                        next(source)
+-                    for choice in source:
+-                        f['directChoice'] = choice
+-                        if choice['profile']['airtime']==remaining:
+-                            child = append_choice(p,choice,max_inputs=cfg['maxInputs'])
++                    for proposal in source:
++                        f['directProposal'] = proposal
++                        if proposal['choice']['profile']['airtime']==remaining:
++                            child = proposal['program']
+                             if child is not None and accepted_program(child) and screen(child,f) is None:
+                                 identity = candidate_key(child)
+                                 if identity not in {r.get('candidateKey',r['id']) for r in f['records']}:
+                                     f['ready'].append(child)
+-                        f['directCursor'] += 1
+-                        f.pop('directChoice',None)
++                        f['directCursor'] = proposal['ordinal']+1
++                        f.pop('directProposal',None)
+                 finally:
+                     source.close()
+                 f['directRoot'] += 1
+@@ -573,7 +619,8 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
+                 model=result.get('solveIdentity',identity),status=result.get('nodeFeasibility',{}).get('status',result['status']),kind='anchor',
+                 metrics=result['work'],elapsed=sum(result.get('timings',{}).values()),
+                 service=dict(latchRevision=state['latchRevision'],hardLatched=latch_key(f) in state['hardLatches'],
+-                    runDeferralEnabled=minimum_run_pruning and not program.get('priorityTurnaround',False) and latch_key(f) in state['hardLatches']))
++                    runDeferralEnabled=minimum_run_pruning and not program.get('priorityTurnaround',False) and latch_key(f) in state['hardLatches'],
++                    tickDeferralEnabled=minimum_run_pruning and latch_key(f) in state['hardLatches'],comparisonPolicy=COMPARISON_POLICY_VERSION))
+             if result['best'] is not None:
+                 ancestor=program.get('decisionParent')
+                 while ancestor:
+@@ -682,7 +729,13 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
+                         transferStructure=transfer)
+                     transition('hard_jump_latched',f,span=key,revision=state['latchRevision'])
+         if minimum_run_pruning and record.get('witness') and final_validated:
+-            remember(f.setdefault('minimumRuns',{}),latest_jump(program,scene),identity,record['arrival'])
++            if anchor_route:
++                from .preparation_deferrals import remember_peer
++                if record.get('transferStructure',{}).get('valid') and remember_peer(
++                        f.setdefault('tickPeers',{}),tick_label(record['child'],f,identity=identity,validated=True)):
++                    f['tickPeerRevision']=f.get('tickPeerRevision',0)+1
++            else:
++                remember(f.setdefault('minimumRuns',{}),latest_jump(program,scene),identity,record['arrival'])
+         if record.get('witness') and final_validated and final_frame(f):
+             from standalone.autonomy.ranking import candidate_rank
+             candidate = copy.deepcopy(record['witness'])
+@@ -818,10 +871,16 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
+                         continue
+                     score(f,program,previous)
+                 f['phase'] = 'select'
+-            options = [r for r in f['records'] if r.get('witness') and not r['tried'] and run_bound(r['program'],f) is None and (not anchor_route or hard_bound(r['program'],f) is None)]
++            options = [r for r in f['records'] if r.get('witness') and not r['tried'] and not r.get('preparationDeferral')]
+             if options:
+                 chosen = min(options,key=lambda r:record_priority(r,f))
+                 chosen['tried'] = True
++                preparation=run_bound(chosen['child'],f)
++                structural=hard_bound(chosen['child'],f) if anchor_route else None
++                if preparation or structural:
++                    chosen['preparationDeferral']=preparation or structural
++                    transition('candidate_exclusion',f,candidate=chosen['id'],proof=preparation or structural)
++                    continue
+                 proof=reject_time(chosen['child'],f)
+                 if proof is not None:
+                     chosen['timeBoundExclusion']=proof
+@@ -869,10 +928,14 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
+             if f['ready']:
+                 f['phase'] = 'score'
+                 continue
+-            pending = next((r for r in f['records'] if not r.get('refinementTimeExclusion') and run_bound(r['program'],f) is None and numerical_pending(r) and
++            pending = next((r for r in f['records'] if not r.get('refinementTimeExclusion') and not r.get('preparationDeferral') and numerical_pending(r) and
+                 r.get('refinementSession')!=state['session']),None)
+             if pending is not None:
+                 pending['refinementSession'] = state['session']
++                preparation=run_bound(pending['program'],f)
++                if preparation is not None:
++                    pending['preparationDeferral']=preparation
++                    continue
+                 proof=reject_time(pending['program'],f)
+                 if proof is not None:
+                     pending['refinementTimeExclusion']=proof
+@@ -885,22 +948,33 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
+                 continue
+             if anchor_route and f.get('recoveryFailure') and not f.get('validatedFinish'):
+                 recovery=f.pop('recoveryFailure')
+-                deferred=[r for r in state['minimumRunExclusions'] if r['frame']==f['id'] and not r.get('restored')]
+-                for saved in deferred[:1]:
+-                    saved['restored']=True
++                deferred=[r for r in state['minimumRunExclusions'] if r['frame']==f['id'] and
++                          not r.get('restored') and not r.get('retired')]
++                cached=False
++                for saved in sorted(deferred,key=lambda r:priority(r['program'],f,r['candidate'])):
+                     p=copy.deepcopy(saved['program']);p['restoredRun']=dict(frame=f['id'],candidate=saved['candidate'])
+-                    if hard_bound(p,f) is not None:continue
+-                    if p['terminalSupport'] in f['goal'].get('blocks',[f['goal']['block']]):
++                    excluded=time_bound(p,f) or hard_bound(p,f)
++                    if excluded is not None:
++                        saved.update(retired=True,restorationExclusion=excluded)
++                        continue
++                    saved.update(restored=True,recovery=recovery)
++                    prior=next((r for r in f['records'] if r.get('witness') and
++                        candidate_key(r.get('child',r['program']))==saved['candidate']),None)
++                    if prior is not None:
++                        prior['program']['restoredRun']=p['restoredRun']
++                        prior['child']['restoredRun']=p['restoredRun']
++                        prior.pop('preparationDeferral',None);prior['tried']=False;cached=True
++                    elif p['terminalSupport'] in f['goal'].get('blocks',[f['goal']['block']]):
+                         f['ready'].append(p)
+                     else:
+                         continuation=f['generation'].get('continuation')
+                         if continuation is not None:
+                             continuation['pending'].append(p);continuation['exhausted']=False
+                             f['sourceExhausted']=False
+-                    saved['recovery']=recovery
+-                    transition('restore_run',f,candidate=saved['candidate'],recovery=recovery)
+-                if f['ready'] or not f['sourceExhausted']:
+-                    f['phase']='score' if f['ready'] else 'generate'
++                    transition('restore_run',f,candidate=saved['candidate'],recovery=recovery,cachedWitness=cached)
++                    break
++                if cached or f['ready'] or not f['sourceExhausted']:
++                    f['phase']='select' if cached else 'score' if f['ready'] else 'generate'
+                     continue
+             close_frame(f)
+         if not state['stack'] and state['suspended']:
+@@ -923,6 +997,7 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
+         objectiveOptimalityProven=False,minimumTicksProven=False,searchState=state,
+         resume=dict(exact=state['session']>1,session=state['session']),interactionGate=gate.summary(),viability=viability_counts,
+         minimumRunPruning=dict(enabled=minimum_run_pruning,version=POLICY_VERSION,excluded=len(state['minimumRunExclusions']),
+-            scope='ordinary_ground_hold_before_latest_jump',certifiedDominance=False),
++            scope='protected_hard_anchor_ticks' if anchor_route else 'ordinary_ground_hold_before_latest_jump',
++            comparisonPolicy=COMPARISON_POLICY_VERSION,certifiedDominance=False),
+         terminalCheckpoint=terminal_plan.to_dict() if terminal_plan else None,
+         goalType='fixed_absolute_tick_objective' if terminal_plan else 'earliest_virtual_landing_height' if (adapter.data['task'] if event_route else goal_list[-1])['kind']==KIND else 'landing_time')
+diff --git a/standalone/autonomy/cell_routes/event_adapter.py b/standalone/autonomy/cell_routes/event_adapter.py
+index 7c8c4fce..903503c7 100644
+--- a/standalone/autonomy/cell_routes/event_adapter.py
++++ b/standalone/autonomy/cell_routes/event_adapter.py
+@@ -35,6 +35,7 @@ class EventGuideAdapter:
+         self.program = None
+         self.counts = dict(eventAudits=0, requiredEventRejections=0)
+         self.interaction_cache = {}
++        self.interaction_metrics = {}
+         self.compiler, self.candidate_seconds = compiler, candidate_seconds
+         self.flight_cache = {}
+ 
+diff --git a/standalone/autonomy/cell_routes/event_search.py b/standalone/autonomy/cell_routes/event_search.py
+index c275c6dc..c73fd90c 100644
+--- a/standalone/autonomy/cell_routes/event_search.py
++++ b/standalone/autonomy/cell_routes/event_search.py
+@@ -3,6 +3,8 @@
+ import copy
+ import time
+ 
++from ..candidate_comparison import POLICY_VERSION as COMPARISON_POLICY_VERSION
++
+ from ..block_search import prepare_scene
+ from ..movement_search import movement_settings
+ from ..solve_spec import digest
+@@ -49,7 +51,7 @@ def search_event_routes(request, compiler, *, task_goal=None, discovery=None, an
+     cfg=movement_settings(scene)
+     cfg['types']=[t for t in cfg['types'] if t in ('normal','ceiling','stepping')]
+     scene['movementSearch']=cfg
+-    context=digest(dict(policy=4 if anchor_policy else 3,
++    context=digest(dict(policy=4 if anchor_policy else 3,comparisonPolicy=COMPARISON_POLICY_VERSION,
+         **(dict(anchorPolicy=semantic_settings(anchor_policy)) if anchor_policy else {}),
+         constraintPolicy=7,scene={k:v for k,v in scene.items() if k!='movementSearch'},
+         task=task,roots=roots,filter=getattr(policy,'checkpoint_identity',None),
+@@ -189,6 +191,8 @@ def search_event_routes(request, compiler, *, task_goal=None, discovery=None, an
+         from .turn_observability import summary
+         report['anchorSearch']=dict(policy=anchor_policy,guidePlan=adapter.guide_plan,
+             hardLatches=state['dfs']['hardLatches'],latchRevision=state['dfs']['latchRevision'],
++            transferTimeBounds=state['dfs'].get('transferTimeBounds',{}),
++            comparisonWork=state['dfs'].get('comparisonWork',{}),comparisonPolicy=COMPARISON_POLICY_VERSION,
+             nodes=state['dfs']['nodeResults'],observations=summary(state['dfs']['observations']),
+             runDeferrals=len(state['dfs']['minimumRunExclusions']),
+             runRestorations=sum(r.get('restored',False) for r in state['dfs']['minimumRunExclusions']))
+diff --git a/standalone/autonomy/cell_routes/minimum_runs.py b/standalone/autonomy/cell_routes/minimum_runs.py
+index c8d73673..0735d4a2 100644
+--- a/standalone/autonomy/cell_routes/minimum_runs.py
++++ b/standalone/autonomy/cell_routes/minimum_runs.py
+@@ -3,9 +3,10 @@ import copy
+ 
+ from standalone.autonomy.movement_composition import empty_program, program_physics_key, truncate_program
+ from standalone.autonomy.solve_spec import digest
++from ..candidate_comparison import comparison_label, priority_key, compare_candidates
+ 
+ 
+-POLICY_VERSION = 1
++POLICY_VERSION = 2
+ 
+ 
+ def _shift(event, tick):
+@@ -67,20 +68,25 @@ def latest_jump(program, scene):
+         rows=sorted(rows,key=digest),terminalSupport=program.get('terminalSupport'),
+         terminalGoal=program.get('terminalGoal'),landingPhase=p.get('landingPhase'))
+     return dict(pattern=digest(dict(version=POLICY_VERSION,before=program_physics_key(before),suffix=suffix)),
+-        runTicks=takeoff-ground,groundState=ground,jumpInput=takeoff)
++        runTicks=takeoff-ground,groundState=ground,jumpInput=takeoff,
++        label=comparison_label(program,context=dict(basis='matched_preparation')))
+ 
+ 
+ def remember(representatives, description, candidate, arrival):
+     if description is None:return
+     key=description['pattern'];old=representatives.get(key)
+-    if old is None or description['runTicks']<old['runTicks']:
++    if old is None or priority_key(description['label'])<priority_key(old['label']):
+         representatives[key]=dict(description,candidate=candidate,arrival=arrival)
+ 
+ 
+ def exclusion(representatives, description):
+     if description is None:return None
+     peer=representatives.get(description['pattern'])
+-    if peer is None or description['runTicks']<=peer['runTicks']:return None
++    if peer is None:return None
++    candidate=dict(description['label'],comparisonContext=description['pattern'])
++    other=dict(peer['label'],comparisonContext=description['pattern'],validated=True)
++    decision=compare_candidates(candidate,other,context=dict(purpose='matched_preparation',localDeferralEnabled=True))
++    if decision['action']!='defer_preparation':return None
+     return dict(reason='extra_runs_before_latest_jump',heuristic=True,pattern=description['pattern'],
+         runTicks=description['runTicks'],minimumFeasibleRunTicks=peer['runTicks'],
+         groundState=description['groundState'],jumpInput=description['jumpInput'],representative=peer['candidate'])
+diff --git a/standalone/autonomy/cell_routes/route_queue.py b/standalone/autonomy/cell_routes/route_queue.py
+index 4dd0ab71..aa8f2403 100644
+--- a/standalone/autonomy/cell_routes/route_queue.py
++++ b/standalone/autonomy/cell_routes/route_queue.py
+@@ -3,6 +3,8 @@
+ import copy
+ import time
+ 
++from ..candidate_comparison import POLICY_VERSION as COMPARISON_POLICY_VERSION
++
+ from ..block_search import prepare_scene
+ from ..movement_search import movement_settings
+ from ..ranking import candidate_rank
+@@ -59,7 +61,7 @@ def search_routes(request, compiler, *, task_goal=None, spatial_settings=None, *
+     saved=options.pop('resume_state',None)
+     if saved is not None and options.get('initial_programs') is None:
+         options['initial_programs']=saved.get('initialRoots')
+-    context=digest(dict(version=1,allocationPolicy=2,routeStagePolicy=2,routeCommitPolicy=1,routeProposalPolicy=1,movementGenerationPolicy=3,constraintGenerationPolicy=7,
++    context=digest(dict(version=1,comparisonPolicy=COMPARISON_POLICY_VERSION,allocationPolicy=2,routeStagePolicy=2,routeCommitPolicy=1,routeProposalPolicy=1,movementGenerationPolicy=3,constraintGenerationPolicy=7,
+         graph=graph.context,task=task_goal,spatial=spatial,
+         scene={k:v for k,v in scene.items() if k!='movementSearch'},
+         domain={k:v for k,v in cfg.items() if k not in ('maxPrefixes','maxQueuedPrefixes','maxChoicesPerType','expansionsPerProposal')},
+diff --git a/standalone/autonomy/cell_routes/time_progress.py b/standalone/autonomy/cell_routes/time_progress.py
+index 98669ea3..a0a4374b 100644
+--- a/standalone/autonomy/cell_routes/time_progress.py
++++ b/standalone/autonomy/cell_routes/time_progress.py
+@@ -3,10 +3,9 @@ import math
+ 
+ from standalone.ipopt.model import integer, number
+ from standalone.autonomy.solve_spec import motion_record, processing_key
++from ..candidate_comparison import compare_candidates, measurements as _measurements, TOLERANCE
+ 
+ 
+-TOLERANCE = 1e-7
+-
+ 
+ def generation_exhausted(report):
+     return (report.get('termination')=='exhausted' and not report.get('queueDrops',0)
+@@ -15,57 +14,14 @@ def generation_exhausted(report):
+         and not any(row.get('termination')=='choice_limit' for row in report.get('generation',[])))
+ 
+ 
+-def _measurements(record):
+-    times = {key:value['ticks'] for key,value in record.get('spatial_results',{}).items()
+-             if value.get('status')=='feasible' and value.get('ticks') is not None}
+-    progress = {key:value['objective'] for key,value in record.get('clock_results',{}).items()
+-                if value.get('status')=='feasible' and value.get('objective') is not None}
+-    return times,progress
+-
+-
+ def protections(candidate, peer, progress_margin):
+-    reasons = []
+-    for key in candidate.get('required_clocks', candidate.get('clock_results', {})):
+-        c = candidate.get('clock_results', {}).get(key, {})
+-        b = peer.get('clock_results', {}).get(key, {})
+-        cs, bs = c.get('state'), b.get('state')
+-        if not cs or not bs or not cs.get('motion') or not bs.get('motion') or c.get('objective') is None or b.get('objective') is None:
+-            reasons.append('missing_state_metadata')
+-            continue
+-        if cs['motion']['schedule'] != bs['motion']['schedule']:
+-            reasons.append('incomparable_schedules')
+-            if cs['motion']['runs'] < bs['motion']['runs']:
+-                reasons.append('fewer_run_inputs')
+-            if cs['motion']['jumps'] > bs['motion']['jumps']:
+-                reasons.append('more_effective_jumps')
+-            continue
+-        if cs['motion']['phase'] != bs['motion']['phase'] or cs.get('scope') != bs.get('scope'):
+-            reasons.append('incompatible_phase_or_scope')
+-            continue
+-        if c['objective'] >= b['objective']-progress_margin-TOLERANCE:
+-            reasons.append('position_close_or_ahead')
+-        if cs['forwardVelocity'] > bs['forwardVelocity']+TOLERANCE:
+-            reasons.append('higher_forward_velocity')
+-        if cs['speed'] > bs['speed']+TOLERANCE:
+-            reasons.append('higher_horizontal_speed')
+-    return sorted(set(reasons))
++    return compare_candidates(candidate,peer,context=dict(purpose='common_clock',
++        progressMargin=progress_margin))['protectionReasons']
+ 
+ 
+ def clearly_worse(candidate, peer, *, time_margin, progress_margin):
+-    ct,cp = _measurements(candidate)
+-    pt,pp = _measurements(peer)
+-    if not ct or not cp or not ct.keys() <= pt.keys() or not cp.keys() <= pp.keys():
+-        return False
+-    expected_t = set(candidate.get('required_spatial',ct))
+-    expected_p = set(candidate.get('required_clocks',cp))
+-    if not expected_t <= ct.keys() or not expected_p <= cp.keys():
+-        return False
+-    if protections(candidate, peer, progress_margin):
+-        return False
+-    if any(pt[key]>value for key,value in ct.items()) or any(pp[key]<value-TOLERANCE for key,value in cp.items()):
+-        return False
+-    return any(value-pt[key]>time_margin for key,value in ct.items()) or any(
+-        pp[key]-value>progress_margin+TOLERANCE for key,value in cp.items())
++    return compare_candidates(candidate,peer,context=dict(purpose='common_clock',
++        timeMargin=time_margin,progressMargin=progress_margin))['action']=='defer_preparation'
+ 
+ 
+ def retain_two_goals(candidates, *, cap, unknown_slots=1, time_margin=1, progress_margin=.25, prune=True):
+@@ -78,11 +34,18 @@ def retain_two_goals(candidates, *, cap, unknown_slots=1, time_margin=1, progres
+     if len(ids)!=len(set(ids)):
+         raise ValueError('Candidate identities must be unique')
+     decisions = {}
++    pair_cache = {}
++    def pair(candidate, peer):
++        key=(candidate['id'],peer['id'])
++        if key not in pair_cache:
++            pair_cache[key]=compare_candidates(candidate,peer,context=dict(purpose='common_clock',
++                timeMargin=time_margin,progressMargin=progress_margin))
++        return pair_cache[key]
+     eligible,unknown = [],[]
+     for i,(record,program) in enumerate(candidates):
+         times,progress = _measurements(record)
+-        peer = next((r['id'] for r in records if r['id']!=record['id'] and clearly_worse(
+-            record,r,time_margin=time_margin,progress_margin=progress_margin)),None) if prune else None
++        peer = next((r['id'] for r in records if r['id']!=record['id'] and
++            pair(record,r)['action']=='defer_preparation'),None) if prune else None
+         if peer is not None:
+             decisions[record['id']] = dict(reason='markedly_worse',peer=peer)
+         elif not times and not progress:
+@@ -101,7 +64,7 @@ def retain_two_goals(candidates, *, cap, unknown_slots=1, time_margin=1, progres
+         elif record['id'] not in decisions:
+             decisions[record['id']]=dict(reason='deferred')
+         if decisions[record['id']]['reason'] != 'markedly_worse':
+-            guards = {r['id']: protections(record, r, progress_margin) for r in records if r['id'] != record['id']}
++            guards = {r['id']: pair(record,r)['protectionReasons'] for r in records if r['id'] != record['id']}
+             decisions[record['id']]['protections'] = {k: v for k, v in guards.items() if v}
+     return [candidates[i] for i in selected],dict(policy='two_goal_margin' if prune else 'unpruned_reference',
+         timeMargin=time_margin,progressMargin=progress_margin,hardCap=cap,unknownReserve=unknown_slots,
+diff --git a/standalone/autonomy/cell_routes/turn_observability.py b/standalone/autonomy/cell_routes/turn_observability.py
+index 56f1ec7a..8154ecc5 100644
+--- a/standalone/autonomy/cell_routes/turn_observability.py
++++ b/standalone/autonomy/cell_routes/turn_observability.py
+@@ -4,7 +4,7 @@ import copy
+ 
+ from ..solve_spec import digest
+ from .anchor_guides import classify
+-from .anchor_policy import local_counts, priority
++from ..candidate_comparison import comparison_label, priority_key
+ 
+ 
+ def record(state, guides, program, *, span, start, model, status, elapsed=0., kind='node', metrics=None, service=None):
+@@ -16,12 +16,13 @@ def record(state, guides, program, *, span, start, model, status, elapsed=0., ki
+         point=program.get('decisionPoint') or guides['points'][0][::2]
+         label=classify(guides,span,point)
+         mode=program.get('priorityTurnaround',label['isTurnaround'])
++        counts=comparison_label(program,start=start,mode=mode,identity=ident)
+         events[ident]=dict(id=ident,parent=program.get('decisionParent'),
+             depth=program.get('decisionDepth',0),lastSolvedDepth=program.get('lastSolvedDepth',0),
+             pointTick=program.get('decisionPointTick',0),
+             pointSource=program.get('decisionPointSource','original_initial'),
+-            **label,counts=local_counts(program,start),mode='turnaround' if mode else 'ordinary',
+-            key=list(priority(program,start,mode,ident)),kind=kind,queries=[],replays=[])
++            **label,counts={k:counts[k] for k in ('T','J','R','A','start')},mode='turnaround' if mode else 'ordinary',
++            key=list(priority_key(counts)),kind=kind,queries=[],replays=[])
+     event=events[ident]
+     query=dict(model=model,status=status,elapsedSeconds=elapsed,metrics=metrics or {},service=service or {})
+     if query not in event['queries']:
+diff --git a/standalone/autonomy/cell_routes/two_goal_experiment.py b/standalone/autonomy/cell_routes/two_goal_experiment.py
+index a0b52ced..292cfff5 100644
+--- a/standalone/autonomy/cell_routes/two_goal_experiment.py
++++ b/standalone/autonomy/cell_routes/two_goal_experiment.py
+@@ -5,6 +5,8 @@ from pathlib import Path
+ import subprocess
+ import sys
+ 
++from standalone.autonomy.candidate_comparison import compare_candidates
++
+ from standalone.autonomy.block_search import prepare_scene
+ from standalone.autonomy.compiler import JavaCompiler
+ from .checkpoint_experiment import brief,replay_witness
+@@ -32,7 +34,7 @@ def competitive_followup(run,prior):
+         and r['selection'] not in ('retained','final_evaluated')}
+     ticks=best['plan']['ticks']
+     entries=[e for e in source_entries(run['result']) if e['id'] in unfinished
+-        and e['program']['profile']['airtime']<=ticks]
++        and compare_candidates(dict(T=e['program']['profile']['airtime']),incumbent=dict(T=ticks))['action']!='exclude_bound']
+     request=copy.deepcopy(run['fixture']['request'])
+     request.setdefault('movementSearch',{}).update(maxInputs=ticks,maxPrefixes=4096,
+         maxQueuedPrefixes=4096,maxChoicesPerType=200000)
+diff --git a/standalone/autonomy/compiler.py b/standalone/autonomy/compiler.py
+index bb4941bc..c2745d94 100644
+--- a/standalone/autonomy/compiler.py
++++ b/standalone/autonomy/compiler.py
+@@ -3,6 +3,17 @@ import subprocess
+ import threading
+ 
+ 
++def coefficient_request(route, plan):
++    """Canonical request used both by the bridge and shared analysis cache."""
++    message = {'grounded': plan['grounded'], 'jump': plan['jump'], 'inputs': route['inputs']}
++    if route.get('sharedMovement'):
++        message.update(sharedMovement=True, contacts=plan.get('sceneContacts', []))
++        for key in ('sneak', 'ladderTicks', 'vertical'):
++            if key in plan:
++                message[key] = plan[key]
++    return message
++
++
+ class JavaCompiler:
+     def __init__(self, config):
+         command = config.get('command') if isinstance(config, dict) else None
+@@ -28,13 +39,7 @@ class JavaCompiler:
+             return
+ 
+     def compile(self, route, plan, seconds):
+-        message = {'grounded': plan['grounded'], 'jump': plan['jump'], 'inputs': route['inputs']}
+-        if route.get('sharedMovement'):
+-            message.update(sharedMovement=True, contacts=plan.get('sceneContacts', []))
+-            for key in ('sneak', 'ladderTicks', 'vertical'):
+-                if key in plan:
+-                    message[key] = plan[key]
+-        return self._exchange(message, seconds)
++        return self._exchange(coefficient_request(route, plan), seconds)
+ 
+     def derive_footprints(self, route, seconds):
+         return self._exchange({'action': 'footprints', 'blocks': route['blocks']}, seconds)['footprints']
+diff --git a/standalone/autonomy/constraint_variants.py b/standalone/autonomy/constraint_variants.py
+index 0b4f9022..4c9cb415 100644
+--- a/standalone/autonomy/constraint_variants.py
++++ b/standalone/autonomy/constraint_variants.py
+@@ -4,7 +4,7 @@ import itertools
+ 
+ from .blockages import faces, face_chains, intervals, consecutive, blockage_counts, compile_passages, passage_kind, face_clearance
+ from .obstacle_geometry import expanded_box
+-from .interactions import query_interaction, interaction_context_key
++from .interactions import query_interaction, interaction_context_key, PROOF_POLICY
+ from .reachability import interaction_reachability
+ from .solve_spec import digest
+ 
+@@ -104,7 +104,7 @@ class ConstraintVariants:
+                 possible = prep['possible']
+                 if not possible:
+                     self.exclusions.append(dict(solidIndex=item['solidIndex'], reason='all_contact_phases_unreachable',
+-                        phaseExclusions=prep['excluded'], role='unwanted_contact', proofPolicy=1))
++                        phaseExclusions=prep['excluded'], role='unwanted_contact', proofPolicy=PROOF_POLICY))
+                     item['rows'] = [[]]
+                     prep['stage'] = 'done'
+                     continue
+diff --git a/standalone/autonomy/experiments/anchor-runtime-profile/profile_run.py b/standalone/autonomy/experiments/anchor-runtime-profile/profile_run.py
+index e4404feb..e29d47f3 100644
+--- a/standalone/autonomy/experiments/anchor-runtime-profile/profile_run.py
++++ b/standalone/autonomy/experiments/anchor-runtime-profile/profile_run.py
+@@ -109,6 +109,9 @@ def main():
+             termination=result['termination'],runDeferrals=len(deferrals),
+             runRestorations=sum(bool(v.get('restored')) for v in deferrals),
+             deferredNodes=result.get('anchorSearch',{}).get('deferredNodes',0),
++            comparisonWork=dfs.get('comparisonWork',{}),interactionMetrics=result.get('interactionGate',{}).get('metrics',{}),
++            transferTimeBounds=dfs.get('transferTimeBounds',{}),
++            wrappers=len(profile.requests),workers=sum(bool(r.get('workerLaunched')) for r in profile.requests),
+             validatedWitnesses=len(replays),allReplaysPassed=all(v['passed'] for v in replays),
+             sourceUnchanged=source==source_hashes(),sessions=profile.sessions)
+         save(args.output/'summary.json',summary)
+@@ -127,6 +130,7 @@ def main():
+                         error=None if error is None else dict(type=type(error).__name__,message=str(error)),
+                         gc=gc_times,cancelled=cancelled.is_set())
+         save(args.output/'profile.json',snapshot)
++        save(args.output/'requests.json',profile.requests)
+ 
+ 
+ if __name__ == '__main__':
+diff --git a/standalone/autonomy/experiments/anchor-runtime-profile/runtime_profile.py b/standalone/autonomy/experiments/anchor-runtime-profile/runtime_profile.py
+index 1c5467fc..47a0e442 100644
+--- a/standalone/autonomy/experiments/anchor-runtime-profile/runtime_profile.py
++++ b/standalone/autonomy/experiments/anchor-runtime-profile/runtime_profile.py
+@@ -13,6 +13,7 @@ class RuntimeProfile:
+         self.buckets = {}
+         self.stack = []
+         self.sessions = []
++        self.requests = []
+ 
+     @contextmanager
+     def region(self, name):
+@@ -83,7 +84,9 @@ class CopyProxy:
+ 
+ @contextmanager
+ def instrument(profiler):
+-    from standalone.autonomy import movement_frontier, solve_spec, search
++    from standalone.autonomy import movement_frontier, movement_generation, solve_spec, search, candidate_comparison
++    from standalone.autonomy.interactions import InteractionGate
++    from standalone.autonomy.cell_routes import anchor_time_bound, transfer_time_bounds, preparation_deferrals
+     from standalone.autonomy.cell_routes import checkpoint_experiment, checkpoint_search, depth_first, event_search
+     changes = []
+ 
+@@ -112,7 +115,17 @@ def instrument(profiler):
+                               for k,v in profiler.buckets.items()
+                               if v['calls'] != counters.get(k,{}).get('calls',0)}
+ 
++    def invoke(problem, **kwargs):
++        row=dict(index=len(profiler.requests)+1,fingerprint=search.fingerprint(problem),
++                 ticks=len(problem['magnitude']),stopOnFeasible=kwargs.get('stop_on_feasible',False))
++        profiler.requests.append(row)
++        result=profiler.call('solver.invoke',original_solve,problem,**kwargs)
++        row.update(status=result['status'],workerLaunched=result.get('workerLaunched'),
++                   workerStatus=result.get('workerStatus'))
++        return result
++
+     original_search = depth_first.search_goals
++    original_solve = search.solve
+     try:
+         # Only module globals change; original stdlib deepcopy's recursive
+         # implementation is untouched. Aliasing/memo behavior stays identical.
+@@ -121,7 +134,26 @@ def instrument(profiler):
+                 replace(module, 'copy', CopyProxy(profiler, name, module.copy))
+         replace(depth_first, 'search_goals', session)
+         replace(checkpoint_search, 'evaluate_program', profiler.function('numerical.evaluate', checkpoint_search.evaluate_program))
+-        replace(search, 'solve', profiler.function('solver.invoke', search.solve))
++        replace(search, 'solve', invoke)
++        for name in ('prepare','analyze_model','condition','sequence','check_program','required'):
++            replace(InteractionGate,name,profiler.function('reachability.'+name,getattr(InteractionGate,name)))
++        for module,names,prefix in ((candidate_comparison,('compare_candidates','comparison_label','priority_key'),'comparison.'),
++                (anchor_time_bound,('remaining_bound',),'bound.'),
++                (transfer_time_bounds,('transfer_bound',),'bound.'),
++                (preparation_deferrals,('assess','remember_peer'),'peer.')):
++            for name in names:
++                original=getattr(module,name);wrapped=profiler.function(prefix+name,original)
++                for imported_name,owner in list(sys.modules.items()):
++                    if imported_name.startswith('standalone.autonomy.') and getattr(owner,name,None) is original:
++                        replace(owner,name,wrapped)
++        for module in (movement_generation,):
++            replace(module,'assess_proposal',profiler.function('proposal.assess',module.assess_proposal))
++            # Consumers import aliases; cover each without wrapping twice.
++            for imported_name,owner in list(sys.modules.items()):
++                if imported_name.startswith('standalone.autonomy.') and owner is not module:
++                    current=getattr(owner,'assess_proposal',None)
++                    if current is not None and current is not module.assess_proposal:
++                        replace(owner,'assess_proposal',module.assess_proposal)
+         replace(checkpoint_experiment, 'replay_witness', profiler.function('validation.replay', checkpoint_experiment.replay_witness))
+         replace(depth_first, 'iter_movement_programs', profiler.generator('movement.source', depth_first.iter_movement_programs))
+         replace(movement_frontier, 'generate_choices', profiler.generator('movement.choices', movement_frontier.generate_choices))
+diff --git a/standalone/autonomy/interactions.py b/standalone/autonomy/interactions.py
+index ad169c6a..c6501c97 100644
+--- a/standalone/autonomy/interactions.py
++++ b/standalone/autonomy/interactions.py
+@@ -2,7 +2,7 @@ from .obstacle_geometry import expanded_box
+ from .reachability import interaction_reachability, reachable_envelopes
+ 
+ 
+-PROOF_POLICY = 1
++PROOF_POLICY = 2
+ 
+ 
+ def interaction_context_key(context):
+@@ -90,34 +90,110 @@ def interaction_allowed(context, box, tick, *, jumping=False, phases=('Y', 'X',
+ 
+ 
+ class InteractionGate:
++    """Session-shared preparation, coefficient and exact-model proof cache."""
+     def __init__(self, scene, compiler, *, seconds=1):
+         self.scene, self.compiler, self.seconds = scene, compiler, seconds
+         self.cache = {}
++        self.metrics = {}
+         self.checked = 0
+         self.exclusions = []
+ 
+-    def envelopes(self, program):
++    def _cached(self, key, build, kind):
++        hit = key in self.cache
++        name=kind+('Hits' if hit else 'Misses')
++        self.metrics[name]=self.metrics.get(name,0)+1
++        if hit:
++            value=self.cache.pop(key)
++        else:
++            value=build()  # A timeout never commits a result or advances a cursor.
++        self.cache[key]=value
++        while len(self.cache)>512:
++            self.cache.pop(next(iter(self.cache)))
++        return value
++
++    def prepare(self, program, *, scene=None, require_complete=False):
+         from .movement_composition import compile_program, program_physics_key
+         from .route import prepare_route, schedule
+         from .block_contacts import validate_vertical_schedule
+         from .solve_spec import digest
+-        key = digest(program_physics_key(program))
+-        if key not in self.cache:
+-            compiled = compile_program(self.scene, program, require_complete=False)
+-            route = prepare_route(compiled['route'])
+-            plan = schedule(route, [0])
+-            vertical = validate_vertical_schedule(route, compiled['profiles'], plan)
+-            if not vertical['feasible']:
+-                return None
+-            plan['vertical'] = dict(vertical['vertical'], referencePosition=vertical['y'], referenceVelocity=vertical['vy'])
+-            coefficient = self.compiler.compile(route, plan, self.seconds)
+-            # Artificial terminal support rows do not restrict an open proposal.
+-            rows = [r for r in plan['walls'] if not r.get('name', '').startswith('landing:1:')]
+-            self.cache[key] = reachable_envelopes(dict(coefficient, ticks=plan['ticks'], walls=rows,
+-                position=self.scene['initial']['position'][::2], velocity=self.scene['initial']['velocity'][::2],
+-                threshold=program.get('threshold', .005), contacts=plan['contacts'], vertical=vertical['vertical'],
+-                ladderTicks=plan.get('ladderTicks', [False]*(plan['ticks']+1))), vertical['y'])
+-        return self.cache[key]
++        scene=self.scene if scene is None else scene
++        key=('prepared',digest(dict(scene={k:v for k,v in scene.items() if k!='movementSearch'},
++            program=program_physics_key(program),complete=require_complete)))
++        def build():
++            compiled=compile_program(scene,program,require_complete=require_complete)
++            route=prepare_route(compiled['route']);plan=schedule(route,[0])
++            vertical=validate_vertical_schedule(route,compiled['profiles'],plan)
++            if not vertical['feasible']:return None
++            plan['vertical']=dict(vertical['vertical'],referencePosition=vertical['y'],referenceVelocity=vertical['vy'])
++            return dict(route=route,profiles=compiled['profiles'],plan=plan,vertical=vertical)
++        return self._cached(key,build,'preparation')
++
++    def analyze_model(self, route, plan, vertical, *, open_terminal=False, scope=None, initial_intervals=None):
++        from .compiler import coefficient_request
++        from .solve_spec import digest
++        request=coefficient_request(route,plan)
++        coefficient=self._cached(('coefficients',digest(request)),
++            lambda:self.compiler.compile(route,plan,self.seconds),'coefficient')
++        rows=[r for r in plan['walls'] if not open_terminal or not r.get('name','').startswith('landing:1:')]
++        model=dict(coefficient,ticks=plan['ticks'],walls=rows,contacts=plan['contacts'],
++            position=route['initial']['position'][::2],velocity=route['initial']['velocity'][::2],
++            threshold=route.get('physicsThreshold',.005),vertical=vertical['vertical'],
++            ladderTicks=plan.get('ladderTicks',[False]*(plan['ticks']+1)))
++        if initial_intervals is not None:model['initialIntervals']=initial_intervals
++        key=interaction_context_key(dict(model=model,y=vertical['y'],scope=scope))
++        def build():
++            envelope=reachable_envelopes(model,vertical['y']);envelope['modelKey']=digest(coefficient)
++            return dict(key=key,model=model,envelopes=envelope,coefficient=coefficient,y=vertical['y'])
++        return self._cached(('analysis',key),build,'analysis')
++
++    def analyze(self, program, *, scene=None, require_complete=False, open_terminal=True, scope=None):
++        prepared=self.prepare(program,scene=scene,require_complete=require_complete)
++        if prepared is None:return None
++        return self.analyze_model(prepared['route'],prepared['plan'],prepared['vertical'],
++                                  open_terminal=open_terminal,scope=scope)
++
++    def condition(self, analysis, rows):
++        """Add X/Z prerequisites and repropagate, retaining the compiled physics."""
++        model=dict(analysis['model'],walls=list(analysis['model']['walls'])+list(rows))
++        key=interaction_context_key(dict(model=model,y=analysis['y']))
++        return self._cached(('conditioned',key),lambda:dict(analysis,key=key,model=model,
++            envelopes=reachable_envelopes(model,analysis['y'])),'conditioned')
++
++    def envelopes(self, program):
++        analysis=self.analyze(program)
++        return analysis['envelopes'] if analysis else None
++
++    def sequence(self, context, choice):
++        """Screen a shared named outcome before multiplying its side variants."""
++        from .movement_composition import append_choice
++        if context.get('checkBudget'):context['checkBudget']()
++        program=append_choice(context['program'],choice)
++        self.metrics['sequenceChecks']=self.metrics.get('sequenceChecks',0)+1
++        proof=dict(reason='composition_rejected') if program is None else self.required(program)
++        if proof:
++            self.metrics['sequenceExclusions']=self.metrics.get('sequenceExclusions',0)+1
++            self.exclusions.append(dict(reason='joint_prerequisites_unreachable',proof=proof,
++                input=context['program']['profile']['airtime'],cases=choice['profile'].get('caseEvents',[])))
++        return proof
++
++    def check_program(self, program):
++        # This guard is a distinct physical requirement, not an interval bound.
++        p=program['profile']
++        if p['airtime'] and p['position'][1]<self.scene['initial']['position'][1]-1e-7:
++            from .route import supports
++            if any(abs(b['top']-self.scene['initial']['position'][1])<1e-7 and
++                   supports(b,*self.scene['initial']['position'][::2]) for b in self.scene['blocks']):
++                return dict(reason='unselected_initial_floor')
++        analysis=self.analyze(program)
++        if analysis is None:return dict(reason='vertical_schedule')
++        def build():
++            proof=self.required(program)
++            if proof:return proof
++            if self.scene.get('maxWallHits',0):return None
++            self.metrics['linearChecks']=self.metrics.get('linearChecks',0)+1
++            checked=interaction_reachability(analysis['envelopes'],{},refine=True)
++            return {k:v for k,v in checked.items() if k!='ruledOut'} if checked['ruledOut'] else None
++        return self._cached(('screen',analysis['key']),build,'screen')
+ 
+     def query(self, context, box, tick, *, jumping=False, phases=('Y', 'X', 'Z')):
+         from .movement_composition import append_choice, program_physics_key
+@@ -151,6 +227,9 @@ class InteractionGate:
+         if envelope is None:
+             return dict(reason='vertical_schedule')
+         profile = program['profile']
++        if envelope.get('contradiction'):
++            return dict(reason='required_interaction_unreachable',input=envelope['contradiction'].get('state'),
++                        proof=dict(ruledOut=True,**envelope['contradiction']))
+         context = dict(envelopes=envelope)
+         context_key = interaction_context_key(context)
+         for event in profile.get('contactEvents', [])+profile.get('caseEvents', []):
+@@ -168,4 +247,4 @@ class InteractionGate:
+         context['interactionGate'] = self
+ 
+     def summary(self):
+-        return dict(checked=self.checked, excluded=len(self.exclusions), exclusions=self.exclusions)
++        return dict(checked=self.checked,excluded=len(self.exclusions),exclusions=self.exclusions,metrics=dict(self.metrics))
+diff --git a/standalone/autonomy/movement_frontier.py b/standalone/autonomy/movement_frontier.py
+index e3da8cee..6cf37309 100644
+--- a/standalone/autonomy/movement_frontier.py
++++ b/standalone/autonomy/movement_frontier.py
+@@ -3,8 +3,9 @@ import time
+ 
+ from .case_profiles import entry_possible
+ from .movement_composition import append_choice, boundary_state, empty_program, program_physics_key, program_search_key, truncate_program
+-from .movement_generation import generate_choices
++from .movement_generation import generate_choices, propose_choices, assess_proposal
+ from .solve_spec import digest, processing_key
++from .candidate_comparison import POLICY_VERSION as COMPARISON_POLICY_VERSION
+ 
+ 
+ def persistent_programs(scene, *, settings, report, continuation=None, deadline=None, cancel_event=None, work=None,
+@@ -16,7 +17,7 @@ def persistent_programs(scene, *, settings, report, continuation=None, deadline=
+     seeds = [initial] if initial_programs is None else initial_programs
+     # The scene also carries movementSearch. Hash its physical fields here;
+     # settings below already owns the domain and deliberately excludes slices.
+-    context_value = dict(version=3, scene={k:v for k,v in scene.items() if k!='movementSearch'}, settings={k: v for k, v in settings.items() if k not in
++    context_value = dict(version=3, comparisonPolicy=COMPARISON_POLICY_VERSION, proposalPolicy=1, scene={k:v for k,v in scene.items() if k!='movementSearch'}, settings={k: v for k, v in settings.items() if k not in
+         ('maxPrefixes', 'maxQueuedPrefixes', 'maxChoicesPerType', 'expansionsPerProposal')},
+         roots=[program_search_key(p) for p in seeds], checkpoint=checkpoint_tick, threshold=threshold,
+         stopOnGoal=stop_on_goal)
+@@ -64,6 +65,15 @@ def persistent_programs(scene, *, settings, report, continuation=None, deadline=
+         items.remove(p)
+         return p
+ 
++    def project_owned(program):
++        from .cell_routes.comparison_goals import _landing_prefixes
++        arrivals=[p for block in (stop_supports or [scene['goalBlock']])
++                  for p in _landing_prefixes(scene,program,block,reuse_full=True)]
++        if not arrivals:return program
++        owned=min(arrivals,key=lambda p:(p['profile']['airtime'],p['terminalSupport']))
++        owned['ownedEndpoint']=owned['profile']['airtime']
++        return owned
++
+     def update(reason='running'):
+         report.update(termination=reason, expandedPrefixes=expanded, totalExpandedPrefixes=state['expanded'],
+             generated=state['generated'], emittedPrograms=state['emitted'], screenedPrefixes=state['screened'],
+@@ -146,50 +156,48 @@ def persistent_programs(scene, *, settings, report, continuation=None, deadline=
+                     context_data['normalGapInputs'] = checkpoint_tick-p['profile']['airtime']
+                 if context_adapter is not None:
+                     context_adapter(context_data)
+-                iterator = iter(generate_choices(settings['types'][e['kind']], context_data))
++                bind=None
++                if terminal_goal is not None:
++                    from .terminal_goals import bind_goal
++                    bind=lambda p:bind_goal(p,terminal_goal,scene.get('supportClearance',1e-6))
++                iterator=iter(propose_choices(settings['types'][e['kind']],context_data,
++                    source=generate_choices(settings['types'][e['kind']],context_data),start=e['cursor'],
++                    max_inputs=settings['maxInputs'],inherit_decisions=node_evaluator is not None,
++                    project=project_owned if node_evaluator is not None and stop_on_goal else None,bind=bind))
+                 iterator_key = ident
+-                for _ in range(e['cursor']):
+-                    budget()
+-                    try:
+-                        next(iterator)
+-                    except StopIteration:
+-                        raise ValueError('Movement generator changed across checkpoint restoration')
+             if 'choice' not in e:
+                 try:
+-                    choice = next(iterator)
++                    proposal = next(iterator)
+                 except StopIteration:
+                     e.update(kind=e['kind']+1, cursor=0)
+                     iterator, iterator_key = None, None
+                     continue
+-                e['choice'] = copy.deepcopy(choice)
+-                e['cursor'] += 1
++                e['choice'] = proposal['choice']
++                e['child'] = proposal['program']
++                e['fullProgram'] = proposal['fullProgram']
++                e['projected'] = proposal['projected']
++                e['cursor'] = proposal['ordinal']+1
+                 state['generated'] += 1
+-            child = copy.deepcopy(e['child']) if 'child' in e else append_choice(e['program'], e['choice'], max_inputs=settings['maxInputs'])
+-            if child is not None and node_evaluator is not None:
+-                parent=e['program']
+-                for field in ('decisionPoint','decisionPointSource','decisionPointTick','decisionTurnaround','restoredRun'):
+-                    if field in parent:child.setdefault(field,copy.deepcopy(parent[field]))
+-                child.setdefault('priorityTurnaround',parent.get('decisionTurnaround',False))
+-            if child is not None and terminal_goal is not None:
+-                from .terminal_goals import bind_goal
+-                child=bind_goal(child,terminal_goal,scene.get('supportClearance',1e-6))
+-            if child is not None and screen is not None:
+-                proof = screen(child)
+-                if proof is not None:
++            child=e['child']
++            if child is not None and screen is not None and not e.get('proposalChecked'):
++                # Commit the raw ordinal/owned view before the budgeted query.
++                update()
++                result=assess_proposal(dict(program=child,fullProgram=e['fullProgram'],projected=e['projected']),screen,
++                                       context_data.get('interactionGate'))
++                e['proposalChecked']=True
++                if result['fullProof'] is not None:
++                    state['exclusions'].append(dict(id=digest(program_physics_key(e['fullProgram'])),
++                        ticks=e['fullProgram']['profile']['airtime'],proof=result['fullProof'],scope='unused_extension'))
++                if result['proof'] is not None:
+                     state['screened'] += 1
+                     state['exclusions'].append(dict(id=digest(program_physics_key(child)),
+-                        ticks=child['profile']['airtime'], proof=proof, scope='full_proposal_before_projection'))
+-                    e.pop('choice', None)
++                        ticks=child['profile']['airtime'],proof=result['proof'],scope='owned_proposal'))
++                    for field in ('choice','child','fullProgram','projected','proposalChecked'):e.pop(field,None)
+                     update()
+                     continue
++            before_projection=child
+             if child is not None and checkpoint_tick is not None and child['profile']['airtime'] > checkpoint_tick:
+                 child = truncate_program(child, checkpoint_tick)
+-            if child is not None and node_evaluator is not None and stop_on_goal:
+-                from .cell_routes.comparison_goals import _landing_prefixes
+-                arrivals=[p for block in (stop_supports or [scene['goalBlock']])
+-                          for p in _landing_prefixes(scene,child,block)]
+-                if arrivals:
+-                    child=min(arrivals,key=lambda p:(p['profile']['airtime'],p['terminalSupport']))
+             accepted = child is not None and entry_possible(child['profile'], initial_bounds)
+             if accepted and program_filter is not None and not program_filter(child):
+                 state['policyRejections'] += 1
+@@ -199,7 +207,7 @@ def persistent_programs(scene, *, settings, report, continuation=None, deadline=
+             identity = program_search_key(child) if accepted else None
+             if identity in seen:
+                 accepted = False
+-            if accepted and screen is not None:
++            if accepted and screen is not None and child is not before_projection:
+                 proof = screen(child)
+                 if proof is not None:
+                     state['screened'] += 1
+@@ -213,17 +221,13 @@ def persistent_programs(scene, *, settings, report, continuation=None, deadline=
+                     child.setdefault('lastSolvedDepth',parent.get('lastSolvedDepth',0))
+                     child.setdefault('decisionParent',parent.get('decisionNode') if meaningful else parent.get('decisionParent'))
+                     child.setdefault('decisionNode',node_identity(child,policy_context) if meaningful else parent.get('decisionNode'))
+-                    for field in ('decisionPoint','decisionPointSource','decisionPointTick','decisionTurnaround','restoredRun'):
+-                        if field in parent:child.setdefault(field,copy.deepcopy(parent[field]))
+-                    child.setdefault('priorityTurnaround',parent.get('decisionTurnaround',False))
+                     if meaningful and not complete(child):
+                         child['needsNodeSolve']=True
+                 identity = program_search_key(child)
+                 seen.add(identity)
+                 state['seen'].append(identity)
+                 (state['ready'] if complete(child) else state['pending']).append(child)
+-            e.pop('choice', None)
+-            e.pop('child', None)
++            for field in ('choice','child','fullProgram','projected','proposalChecked'):e.pop(field,None)
+             update()
+         state['exhausted'] = True
+         update('numerical_unknown' if state.get('deferredNodes') else 'exhausted')
+diff --git a/standalone/autonomy/movement_generation.py b/standalone/autonomy/movement_generation.py
+index 84deb4b1..360dd2ba 100644
+--- a/standalone/autonomy/movement_generation.py
++++ b/standalone/autonomy/movement_generation.py
+@@ -28,6 +28,42 @@ def generate_choices(kind, context, **options):
+         yield choice
+ 
+ 
++def propose_choices(kind, context, *, source=None, start=0, max_inputs=200,
++                    inherit_decisions=False, project=None, bind=None):
++    """Compose once at stable raw-choice ordinals, before budgeted assessment.
++
++    Rejected proposals are yielded too: filtering may depend on a new incumbent,
++    but it must not renumber the iterator's resume cursor. Old ordinals are replayed
++    without composing/checking them. Producer prerequisites remain deterministic.
++    """
++    from .movement_composition import append_choice
++    source=generate_choices(kind,context) if source is None else source
++    for ordinal,choice in enumerate(source):
++        if ordinal<start:
++            if context.get('checkBudget'):context['checkBudget']()
++            continue
++        full=append_choice(context['program'],choice,max_inputs=max_inputs)
++        if full is not None and inherit_decisions:
++            parent=context['program']
++            for field in ('decisionPoint','decisionPointSource','decisionPointTick','decisionTurnaround','restoredRun'):
++                if field in parent:full[field]=copy.deepcopy(parent[field])
++            full['priorityTurnaround']=parent.get('decisionTurnaround',False)
++        if full is not None and bind is not None:full=bind(full)
++        owned=project(full) if full is not None and project is not None else full
++        yield dict(ordinal=ordinal,choice=choice,fullProgram=full,program=owned,projected=owned is not full)
++
++
++def assess_proposal(proposal, screen, gate=None):
++    """Check the owned model once; a rejected unused extension is separate."""
++    owned,full=proposal['program'],proposal['fullProgram']
++    if owned is None:return dict(proof=None,fullProof=None)
++    proof=screen(owned) if screen is not None else gate.check_program(owned) if gate is not None else None
++    full_proof=None
++    if proposal.get('projected',owned is not full) and gate is not None and proof is None:
++        full_proof=gate.check_program(full)
++    return dict(proof=proof,fullProof=full_proof)
++
++
+ def _unit(kind, context, start, end, **parameters):
+     unit = movement_unit(kind, start, end, **parameters)
+     if MOVEMENT_TYPES[kind]['ladder']:
+diff --git a/standalone/autonomy/movement_search.py b/standalone/autonomy/movement_search.py
+index df3c9dfd..120cb1c5 100644
+--- a/standalone/autonomy/movement_search.py
++++ b/standalone/autonomy/movement_search.py
+@@ -7,7 +7,8 @@ import time
+ from standalone.ipopt.model import integer, number
+ from .case_profiles import entry_possible
+ from .movement_composition import append_choice, boundary_state, compile_program, empty_program, truncate_program, program_search_key
+-from .movement_generation import GENERATORS, generate_choices
++from .movement_generation import GENERATORS, generate_choices, propose_choices, assess_proposal
++from .candidate_comparison import compare_candidates
+ 
+ 
+ def movement_settings(scene):
+@@ -105,7 +106,7 @@ def iter_movement_programs(scene, *, settings=None, deadline=None, cancel_event=
+                     or ranked(min(ready,key=ranked))[0]<=ranked(min(pending,key=ranked))[0]):
+                 ticks, _, program = take(ready) if program_priority is not None else heapq.heappop(ready)
+                 since_proposal = 0
+-                if ticks > report.get('maxAcceptedTicks', cfg['maxInputs']):
++                if compare_candidates(dict(T=ticks),incumbent=dict(T=report['maxAcceptedTicks']) if 'maxAcceptedTicks' in report else None)['action']=='exclude_bound':
+                     continue
+                 if checkpoint_tick is not None and ticks == checkpoint_tick:
+                     report.update(checkpointTick=checkpoint_tick, checkpointPrefixes=report.get('checkpointPrefixes', 0)+1)
+@@ -129,7 +130,7 @@ def iter_movement_programs(scene, *, settings=None, deadline=None, cancel_event=
+                 ticks, _, program = item
+             else:
+                 ticks, _, program = heapq.heappop(pending)
+-            if ticks > report.get('maxAcceptedTicks', cfg['maxInputs']):
++            if compare_candidates(dict(T=ticks),incumbent=dict(T=report['maxAcceptedTicks']) if 'maxAcceptedTicks' in report else None)['action']=='exclude_bound':
+                 continue
+             expanded += 1
+             since_proposal += 1
+@@ -157,15 +158,16 @@ def iter_movement_programs(scene, *, settings=None, deadline=None, cancel_event=
+                 context_adapter(context)
+             for kind in cfg['types']:
+                 choices = 0
+-                for choice in generate_choices(kind, context):
++                for proposal in propose_choices(kind,context,source=generate_choices(kind,context),max_inputs=cfg['maxInputs']):
+                     budget()
+                     if choices >= cfg['maxChoicesPerType']:
+                         records.append(dict(type=kind, prefixTicks=ticks, termination='choice_limit', emitted=choices))
+                         break
+                     choices += 1
+                     generated += 1
+-                    child = append_choice(program, choice, max_inputs=cfg['maxInputs'])
+-                    if child is not None and screen is not None and screen(child) is not None:
++                    child=proposal['program']
++                    before_projection=child
++                    if child is not None and screen is not None and assess_proposal(proposal,screen)['proof'] is not None:
+                         screened += 1
+                         continue
+                     if child is not None and checkpoint_tick is not None and child['profile']['airtime'] > checkpoint_tick:
+@@ -191,7 +193,7 @@ def iter_movement_programs(scene, *, settings=None, deadline=None, cancel_event=
+                     if key in seen:
+                         continue
+                     seen.add(key)
+-                    if screen is not None and screen(child) is not None:
++                    if screen is not None and child is not before_projection and screen(child) is not None:
+                         screened += 1
+                         continue
+                     serial += 1
+@@ -253,7 +255,7 @@ def find_movement_blocks(request, compiler, *, seconds=60, candidate_seconds=2,
+             context_adapter(context)
+         gate.context(context)
+     def screen(program):
+-        return gate.required(program) or screen_program(scene, program, compiler, max(.001, deadline - time.monotonic()))
++        return screen_program(scene,program,compiler,max(.001,deadline-time.monotonic()),gate=gate)
+     for program in iter_movement_programs(scene, settings=cfg, deadline=deadline, cancel_event=cancel_event,
+                                           report=report, screen=screen, context_adapter=configure, work=work):
+         if time.monotonic() >= deadline:
+@@ -293,27 +295,7 @@ def find_movement_blocks(request, compiler, *, seconds=60, candidate_seconds=2,
+         validationLevel='continuous_movement_program_with_shared_scene_collision_checks')
+ 
+ 
+-def screen_program(scene, program, compiler, seconds):
+-    from .block_contacts import validate_vertical_schedule
+-    from .route import prepare_route, schedule
+-    from .screen import contradiction
+-    profile = program['profile']
+-    if profile['position'][1] < scene['initial']['position'][1]-1e-7:
+-        from .route import supports
+-        if any(abs(b['top']-scene['initial']['position'][1])<1e-7 and supports(
+-                b,scene['initial']['position'][0],scene['initial']['position'][2]) for b in scene['blocks']):
+-            return dict(reason='unselected_initial_floor')
+-    compiled = compile_program(scene, program, require_complete=False)
+-    route = prepare_route(compiled['route'])
+-    plan = schedule(route, [0])
+-    vertical = validate_vertical_schedule(route, compiled['profiles'], plan)
+-    if not vertical['feasible']:
+-        return dict(reason='vertical_schedule')
+-    if scene.get('maxWallHits', 0):
+-        return None
+-    plan['vertical'] = dict(vertical['vertical'], referencePosition=vertical['y'], referenceVelocity=vertical['vy'])
+-    coefficient = compiler.compile(route, plan, seconds)
+-    rows = [row for row in plan['walls'] if not row.get('name', '').startswith('landing:1:')]
+-    return contradiction(dict(coefficient, ticks=plan['ticks'], position=scene['initial']['position'][::2],
+-        velocity=scene['initial']['velocity'][::2], threshold=route.get('physicsThreshold', .005), walls=rows, contacts=plan['contacts'],
+-        ladderTicks=plan.get('ladderTicks', [False] * (plan['ticks'] + 1))))
++def screen_program(scene, program, compiler, seconds, *, gate=None):
++    """Compatibility entry point for the shared exact-proposal analysis."""
++    from .interactions import InteractionGate
++    return (gate or InteractionGate(scene,compiler,seconds=seconds)).check_program(program)
+diff --git a/standalone/autonomy/solve_spec.py b/standalone/autonomy/solve_spec.py
+index 5781a15d..97f2d19d 100644
+--- a/standalone/autonomy/solve_spec.py
++++ b/standalone/autonomy/solve_spec.py
+@@ -3,6 +3,7 @@ import hashlib
+ import json
+ 
+ from .movement_composition import program_physics_key
++from .candidate_comparison import comparison_label, priority_key
+ 
+ 
+ def digest(value):
+@@ -11,21 +12,15 @@ def digest(value):
+ 
+ def motion_record(program):
+     p = program.get('profile', {})
+-    n = p.get('airtime', 0)
+-    grounded, jump = p.get('grounded', []), p.get('jump', [])
+-    if len(grounded) < n or len(jump) < n:
++    c = comparison_label(program)
++    if c['J'] is None:
+         return None
+-    schedule = ['J' if grounded[t] and jump[t] else 'R' if grounded[t] else 'A' for t in range(n)]
+-    phase = {k: p[k] for k in ('position', 'velocity', 'grounded', 'contacts', 'caseEvents') if k in p}
+-    return dict(ticks=n, jumps=schedule.count('J'), runs=schedule.count('R'), schedule=schedule,
+-                phase=digest(phase))
++    phase = {k:p[k] for k in ('position','velocity','grounded','contacts','caseEvents') if k in p}
++    return dict(ticks=c['T'], jumps=c['J'], runs=c['R'], schedule=c['schedule'], phase=digest(phase))
+ 
+ 
+ def processing_key(program, identity=''):
+-    record = motion_record(program)
+-    if record is None:
+-        return (program.get('profile', {}).get('airtime', 0), 0, 0, identity)
+-    return (record['ticks'], -record['jumps'], record['runs'], identity)
++    return priority_key(comparison_label(program, identity=identity))
+ 
+ 
+ def solve_scope(scene, program, supplied=None):
+diff --git a/standalone/autonomy/stepping_generation.py b/standalone/autonomy/stepping_generation.py
+index ceb513af..d4db8069 100644
+--- a/standalone/autonomy/stepping_generation.py
++++ b/standalone/autonomy/stepping_generation.py
+@@ -118,6 +118,17 @@ class SteppingGenerator:
+         stats.update(complete=True, termination='exhausted')
+ 
+ 
++def _sequence_allowed(context, initial, event, jumping, rows, support=None):
++    """Check the common named outcome before creating its side alternatives."""
++    gate=context.get('interactionGate')
++    if gate is None or not hasattr(gate,'sequence'):
++        return True
++    from .open_movement import named_choice
++    common=named_choice(context,'stepping',initial,event,jumping=jumping,
++                        constraints=rows,support=support)
++    return common is not None and gate.sequence(context,common) is None
++
++
+ def open_stepping_choices(context):
+     from .interactions import interaction_allowed
+     from .movement_composition import scalar_initial
+@@ -178,9 +189,15 @@ def open_stepping_choices(context):
+                     continue
+                 if (enabled('blip') and 0 <= higher['top'] - y <= f32(.6) and
+                         (context.get('landingAllowed') is None or context['landingAllowed'](higher))):
+-                    options = landing_wall_options(box, landing) if landing else (
+-                        ([outside_row(box, axis, sign, 0, 'blip:wall_avoid')], [])
+-                        for axis in ('X', 'Z') for sign in (-1, 1))
++                    shared_event=dict(case='blip',input=landing,plane=higher['top'],lowerHeight=lower['top'],
++                        higherHeight=higher['top'],box=box,lowerBox=box_for(lower,context),
++                        anchors={'landing':landing,'hit':landing+1})
++                    options = ()
++                    if _sequence_allowed(context,initial,shared_event,jumping,
++                            lower_rows+region_rows(higher,landing+1),higher['id']):
++                        options = landing_wall_options(box, landing) if landing else (
++                            ([outside_row(box, axis, sign, 0, 'blip:wall_avoid')], [])
++                            for axis in ('X', 'Z') for sign in (-1, 1))
+                     for rows, finite in options:
+                         event = dict(case='blip', input=landing, plane=higher['top'], lowerHeight=lower['top'],
+                             higherHeight=higher['top'], box=box, lowerBox=box_for(lower, context),
+@@ -192,6 +209,11 @@ def open_stepping_choices(context):
+                 for case in ('blip_up', 'corner_blip_up'):
+                     if not enabled(case) or not (y > higher['top'] if case == 'blip_up' else 0 <= higher['top'] - y <= f32(.6)):
+                         continue
++                    shared_event=dict(case=case,input=landing,plane=y,lowerHeight=lower['top'],higherHeight=higher['top'],
++                        box=box,lowerBox=box_for(lower,context),anchors={'landing':landing,'hit':landing+1})
++                    shared_rows=lower_rows+(region_rows(higher,landing+1) if case=='blip_up' else [])
++                    if not _sequence_allowed(context,initial,shared_event,jumping,shared_rows):
++                        continue
+                     rows = ([outside_row(box, axis, sign, landing, 'blip_up:outside')] + region_rows(higher, landing + 1)
+                             for axis in ('X', 'Z') for sign in (-1, 1)) if case == 'blip_up' else (
+                             corner_rows(box, landing, landing + 1, xdir, zdir) for xdir in (-1, 1) for zdir in (-1, 1))
+diff --git a/standalone/autonomy/tests/test_anchor_dfs.py b/standalone/autonomy/tests/test_anchor_dfs.py
+index fb810a23..292d644b 100644
+--- a/standalone/autonomy/tests/test_anchor_dfs.py
++++ b/standalone/autonomy/tests/test_anchor_dfs.py
+@@ -125,7 +125,7 @@ class AnchorDFSTests(unittest.TestCase):
+     def check_lazy_queue_bound(self, *, refinement=False, remaining=15):
+         saved=self.queued_tree(refinement)
+         checked=[];cancel=threading.Event()
+-        def bound(guides,span,program,motion):
++        def bound(guides,span,program,motion,**kwargs):
+             checked.append(program['profile']['airtime'])
+             return dict(remainingTicks=remaining)
+         def progress(state):
+@@ -160,7 +160,9 @@ class AnchorDFSTests(unittest.TestCase):
+         self.assertEqual(len(prepared),1)
+         self.assertEqual(prepared[0]['status'],'feasible')
+         self.assertEqual(prepared[0]['transferStructure']['transferJumps'],[1])
+-        self.assertEqual(result['searchState']['dfs']['hardLatches']['start→mid']['version'],2)
++        from standalone.autonomy.cell_routes.anchor_policy import HARD_JUMP_POLICY_VERSION
++        self.assertEqual(result['searchState']['dfs']['hardLatches']['start→mid']['version'],HARD_JUMP_POLICY_VERSION)
++        self.assertEqual(prepared[0]['transferStructure']['assumption'],'hard_transfer_without_stepping')
+ 
+     def test_incompatible_old_latch_policy_is_rejected_on_resume(self):
+         first,_=self.run_tree(calls=2)
+@@ -178,7 +180,7 @@ class AnchorDFSTests(unittest.TestCase):
+         self.assertTrue(solve_due(dict(decisionDepth=1,lastSolvedDepth=0),4,forced=True))
+         self.assertFalse(solve_due(dict(decisionDepth=1,lastSolvedDepth=1),1))
+ 
+-    def run_recovery_tree(self, reject_first=True, oracle=True):
++    def run_recovery_tree(self, reject_first=True, oracle=True, include_setup=False, finish_tick=30):
+         from standalone.autonomy.block_search import prepare_scene
+         from standalone.autonomy.tests.test_checkpoint_guidance import flat_scene
+         from standalone.autonomy.tests.test_minimum_runs import flight
+@@ -187,6 +189,7 @@ class AnchorDFSTests(unittest.TestCase):
+         raw={k:v for k,v in s.items() if k not in ('collisionScene',)}
+         raw['blocks']=[dict(id=b['id'],boxes=[s['collisionScene']['solids'][b['solidIndex']]]) for b in s['blocks']]
+         raw['blocks'].append(dict(id='finish',boxes=[[8,0,0,9,1,1]]))
++        raw['movementSearch']['maxInputs']=max(raw['movementSearch']['maxInputs'],finish_tick)
+         s=prepare_scene(raw);calls=[]
+         def generate(target_scene,*,report,initial_programs,continuation=None,**kwargs):
+             saved=copy.deepcopy(continuation) if continuation else dict(expanded=1,cursor=0,exhausted=False)
+@@ -194,7 +197,15 @@ class AnchorDFSTests(unittest.TestCase):
+             if target_scene['goalBlock']=='goal':
+                 base=dict(s,goalBlock='goal')
+                 choices=[flight(base,r) for r in (0,1,2)]
+-            else:choices=[extend(s,initial_programs[0],'finish',30)]
++                if include_setup:
++                    from standalone.autonomy.open_movement import normal_choices
++                    from standalone.autonomy.movement_composition import empty_program,append_choice,boundary_state
++                    parent=empty_program(base['initial'],threshold=0.);parent['terminalSupport']='start'
++                    options=normal_choices(dict(scene=base,state=boundary_state(parent),maxInputs=30,threshold=0.))
++                    parent=append_choice(parent,next(c for c in options if c['terminalSupport']=='start' and c['profile']['jump'][0]))
++                    options=normal_choices(dict(scene=base,state=boundary_state(parent),maxInputs=30,threshold=0.))
++                    choices.append(append_choice(parent,next(c for c in options if c['terminalSupport']=='goal' and c['profile']['jump'][0])))
++            else:choices=[extend(s,initial_programs[0],'finish',finish_tick)]
+             while saved['cursor']<len(choices):
+                 p=choices[saved['cursor']];saved['cursor']+=1;yield p
+             saved['exhausted']=True
+@@ -225,6 +236,15 @@ class AnchorDFSTests(unittest.TestCase):
+         self.assertIsNotNone(result['best'])
+         self.assertTrue(all(r['program']['terminalSupport']=='goal' for r in dfs['minimumRunExclusions']))
+ 
++    def test_more_jump_history_remains_first_class_after_an_earlier_finish_succeeds(self):
++        result,calls=self.run_recovery_tree(reject_first=False,include_setup=True,finish_tick=50)
++        self.assertIn(('goal',24),calls)
++        self.assertEqual(calls.count(('finish',50)),2)
++        self.assertNotIn(('goal',13),calls)
++        self.assertEqual(result['anchorSearch']['runRestorations'],0)
++        decisions=result['searchState']['dfs']['comparisonDecisions'].values()
++        self.assertTrue(any(d['action']=='keep_protected' and 'more_jump_inputs' in d['protectionReasons'] for d in decisions))
++
+     def test_successful_finish_never_restores_extra_hard_jump_runs(self):
+         result,calls=self.run_recovery_tree(reject_first=False)
+         self.assertEqual(calls,[('goal',12),('finish',30)])
+diff --git a/standalone/autonomy/tests/test_anchor_policy.py b/standalone/autonomy/tests/test_anchor_policy.py
+index 3a5a3a3f..20c9870d 100644
+--- a/standalone/autonomy/tests/test_anchor_policy.py
++++ b/standalone/autonomy/tests/test_anchor_policy.py
+@@ -36,6 +36,24 @@ def history(s,names):
+ 
+ 
+ class AnchorPolicyTests(unittest.TestCase):
++    def test_hard_transfer_excludes_stepping_but_preserves_closed_and_pending_preparations(self):
++        s=scene()
++        p=history(s,['mid'])
++        p['profile']['caseEvents']=[dict(input=0,type='stepping',case='slab_boost')]
++        self.assertEqual(transfer_structure(s,p,0,'start','mid',complete=True)['reason'],
++                         'stepping_during_hard_transfer')
++        p['profile']['caseEvents'][0].update(type='ceiling',case='grind')
++        self.assertTrue(transfer_structure(s,p,0,'start','mid',complete=True)['valid'])
++        p=history(s,['start','mid'])
++        p['profile']['caseEvents']=[dict(input=0,type='stepping',case='corner_jump_cancel')]
++        self.assertTrue(transfer_structure(s,p,0,'start','mid',complete=True)['valid'])
++        # Until a pending cancelled flight lands, it may still close on S as
++        # preparation. Do not prohibit that setup by guessing its destination.
++        p=history(s,['mid']);p['profile']['contactEvents']=[]
++        p['terminalSupport']=None;p['profile']['grounded'][-1]=False
++        p['profile']['caseEvents']=[dict(input=0,type='stepping',case='corner_jump_cancel')]
++        self.assertTrue(transfer_structure(s,p,0,'start','mid')['valid'])
++
+     def test_owner_returns_excluded_but_all_same_owner_jumps_preserved(self):
+         s=scene()
+         for names in (['start','start','mid'],['start','optional','mid'],['mid','mid','goal']):
+diff --git a/standalone/autonomy/tests/test_orchestrator_continuation.py b/standalone/autonomy/tests/test_orchestrator_continuation.py
+index 1af1e16d..5676fc70 100644
+--- a/standalone/autonomy/tests/test_orchestrator_continuation.py
++++ b/standalone/autonomy/tests/test_orchestrator_continuation.py
+@@ -141,7 +141,7 @@ class PersistentGenerationTests(unittest.TestCase):
+             return p
+         def generated(*args):return iter(range(30))
+         with patch('standalone.autonomy.movement_frontier.generate_choices',side_effect=generated), \
+-             patch('standalone.autonomy.movement_frontier.append_choice',side_effect=child):
++             patch('standalone.autonomy.movement_composition.append_choice',side_effect=child):
+             report={}
+             gen=iter_movement_programs(scene,settings=cfg,checkpoint_tick=1,threshold=0.,persistent=True,report=report)
+             first=next(gen);saved=json.loads(json.dumps(report['continuation']));gen.close()
+diff --git a/standalone/autonomy/tests/test_search_fixes.py b/standalone/autonomy/tests/test_search_fixes.py
+index c9af75e3..15e65036 100644
+--- a/standalone/autonomy/tests/test_search_fixes.py
++++ b/standalone/autonomy/tests/test_search_fixes.py
+@@ -23,7 +23,7 @@ class SearchFixTests(unittest.TestCase):
+         choices = [(1, False), (2, False), (11, True), (12, True), (3, False)]
+         report = {}
+         with patch('standalone.autonomy.movement_search.generate_choices', return_value=iter(choices)), \
+-             patch('standalone.autonomy.movement_search.append_choice', side_effect=child), \
++             patch('standalone.autonomy.movement_composition.append_choice', side_effect=child), \
+              patch('standalone.autonomy.movement_search.entry_possible', return_value=True):
+             programs = list(iter_movement_programs(scene, settings=cfg, threshold=0, report=report))
+         self.assertEqual([p['marker'] for p in programs], [(11, True)])

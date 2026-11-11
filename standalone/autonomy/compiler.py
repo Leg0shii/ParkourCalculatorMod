@@ -3,6 +3,17 @@ import subprocess
 import threading
 
 
+def coefficient_request(route, plan):
+    """Canonical request used both by the bridge and shared analysis cache."""
+    message = {'grounded': plan['grounded'], 'jump': plan['jump'], 'inputs': route['inputs']}
+    if route.get('sharedMovement'):
+        message.update(sharedMovement=True, contacts=plan.get('sceneContacts', []))
+        for key in ('sneak', 'ladderTicks', 'vertical'):
+            if key in plan:
+                message[key] = plan[key]
+    return message
+
+
 class JavaCompiler:
     def __init__(self, config):
         command = config.get('command') if isinstance(config, dict) else None
@@ -28,13 +39,7 @@ class JavaCompiler:
             return
 
     def compile(self, route, plan, seconds):
-        message = {'grounded': plan['grounded'], 'jump': plan['jump'], 'inputs': route['inputs']}
-        if route.get('sharedMovement'):
-            message.update(sharedMovement=True, contacts=plan.get('sceneContacts', []))
-            for key in ('sneak', 'ladderTicks', 'vertical'):
-                if key in plan:
-                    message[key] = plan[key]
-        return self._exchange(message, seconds)
+        return self._exchange(coefficient_request(route, plan), seconds)
 
     def derive_footprints(self, route, seconds):
         return self._exchange({'action': 'footprints', 'blocks': route['blocks']}, seconds)['footprints']

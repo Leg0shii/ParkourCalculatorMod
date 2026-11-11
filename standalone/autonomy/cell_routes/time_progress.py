@@ -3,9 +3,8 @@ import math
 
 from standalone.ipopt.model import integer, number
 from standalone.autonomy.solve_spec import motion_record, processing_key
+from ..candidate_comparison import compare_candidates, measurements as _measurements, TOLERANCE
 
-
-TOLERANCE = 1e-7
 
 
 def generation_exhausted(report):
@@ -15,57 +14,14 @@ def generation_exhausted(report):
         and not any(row.get('termination')=='choice_limit' for row in report.get('generation',[])))
 
 
-def _measurements(record):
-    times = {key:value['ticks'] for key,value in record.get('spatial_results',{}).items()
-             if value.get('status')=='feasible' and value.get('ticks') is not None}
-    progress = {key:value['objective'] for key,value in record.get('clock_results',{}).items()
-                if value.get('status')=='feasible' and value.get('objective') is not None}
-    return times,progress
-
-
 def protections(candidate, peer, progress_margin):
-    reasons = []
-    for key in candidate.get('required_clocks', candidate.get('clock_results', {})):
-        c = candidate.get('clock_results', {}).get(key, {})
-        b = peer.get('clock_results', {}).get(key, {})
-        cs, bs = c.get('state'), b.get('state')
-        if not cs or not bs or not cs.get('motion') or not bs.get('motion') or c.get('objective') is None or b.get('objective') is None:
-            reasons.append('missing_state_metadata')
-            continue
-        if cs['motion']['schedule'] != bs['motion']['schedule']:
-            reasons.append('incomparable_schedules')
-            if cs['motion']['runs'] < bs['motion']['runs']:
-                reasons.append('fewer_run_inputs')
-            if cs['motion']['jumps'] > bs['motion']['jumps']:
-                reasons.append('more_effective_jumps')
-            continue
-        if cs['motion']['phase'] != bs['motion']['phase'] or cs.get('scope') != bs.get('scope'):
-            reasons.append('incompatible_phase_or_scope')
-            continue
-        if c['objective'] >= b['objective']-progress_margin-TOLERANCE:
-            reasons.append('position_close_or_ahead')
-        if cs['forwardVelocity'] > bs['forwardVelocity']+TOLERANCE:
-            reasons.append('higher_forward_velocity')
-        if cs['speed'] > bs['speed']+TOLERANCE:
-            reasons.append('higher_horizontal_speed')
-    return sorted(set(reasons))
+    return compare_candidates(candidate,peer,context=dict(purpose='common_clock',
+        progressMargin=progress_margin))['protectionReasons']
 
 
 def clearly_worse(candidate, peer, *, time_margin, progress_margin):
-    ct,cp = _measurements(candidate)
-    pt,pp = _measurements(peer)
-    if not ct or not cp or not ct.keys() <= pt.keys() or not cp.keys() <= pp.keys():
-        return False
-    expected_t = set(candidate.get('required_spatial',ct))
-    expected_p = set(candidate.get('required_clocks',cp))
-    if not expected_t <= ct.keys() or not expected_p <= cp.keys():
-        return False
-    if protections(candidate, peer, progress_margin):
-        return False
-    if any(pt[key]>value for key,value in ct.items()) or any(pp[key]<value-TOLERANCE for key,value in cp.items()):
-        return False
-    return any(value-pt[key]>time_margin for key,value in ct.items()) or any(
-        pp[key]-value>progress_margin+TOLERANCE for key,value in cp.items())
+    return compare_candidates(candidate,peer,context=dict(purpose='common_clock',
+        timeMargin=time_margin,progressMargin=progress_margin))['action']=='defer_preparation'
 
 
 def retain_two_goals(candidates, *, cap, unknown_slots=1, time_margin=1, progress_margin=.25, prune=True):
@@ -78,11 +34,18 @@ def retain_two_goals(candidates, *, cap, unknown_slots=1, time_margin=1, progres
     if len(ids)!=len(set(ids)):
         raise ValueError('Candidate identities must be unique')
     decisions = {}
+    pair_cache = {}
+    def pair(candidate, peer):
+        key=(candidate['id'],peer['id'])
+        if key not in pair_cache:
+            pair_cache[key]=compare_candidates(candidate,peer,context=dict(purpose='common_clock',
+                timeMargin=time_margin,progressMargin=progress_margin))
+        return pair_cache[key]
     eligible,unknown = [],[]
     for i,(record,program) in enumerate(candidates):
         times,progress = _measurements(record)
-        peer = next((r['id'] for r in records if r['id']!=record['id'] and clearly_worse(
-            record,r,time_margin=time_margin,progress_margin=progress_margin)),None) if prune else None
+        peer = next((r['id'] for r in records if r['id']!=record['id'] and
+            pair(record,r)['action']=='defer_preparation'),None) if prune else None
         if peer is not None:
             decisions[record['id']] = dict(reason='markedly_worse',peer=peer)
         elif not times and not progress:
@@ -101,7 +64,7 @@ def retain_two_goals(candidates, *, cap, unknown_slots=1, time_margin=1, progres
         elif record['id'] not in decisions:
             decisions[record['id']]=dict(reason='deferred')
         if decisions[record['id']]['reason'] != 'markedly_worse':
-            guards = {r['id']: protections(record, r, progress_margin) for r in records if r['id'] != record['id']}
+            guards = {r['id']: pair(record,r)['protectionReasons'] for r in records if r['id'] != record['id']}
             decisions[record['id']]['protections'] = {k: v for k, v in guards.items() if v}
     return [candidates[i] for i in selected],dict(policy='two_goal_margin' if prune else 'unpruned_reference',
         timeMargin=time_margin,progressMargin=progress_margin,hardCap=cap,unknownReserve=unknown_slots,

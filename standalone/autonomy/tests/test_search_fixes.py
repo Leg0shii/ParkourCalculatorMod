@@ -23,7 +23,7 @@ class SearchFixTests(unittest.TestCase):
         choices = [(1, False), (2, False), (11, True), (12, True), (3, False)]
         report = {}
         with patch('standalone.autonomy.movement_search.generate_choices', return_value=iter(choices)), \
-             patch('standalone.autonomy.movement_search.append_choice', side_effect=child), \
+             patch('standalone.autonomy.movement_composition.append_choice', side_effect=child), \
              patch('standalone.autonomy.movement_search.entry_possible', return_value=True):
             programs = list(iter_movement_programs(scene, settings=cfg, threshold=0, report=report))
         self.assertEqual([p['marker'] for p in programs], [(11, True)])

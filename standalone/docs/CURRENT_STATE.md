@@ -1,5 +1,22 @@
 # Current standalone state
 
+2026-11-11: the [hard-jump comparison/reachability implementation](HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md)
+is implemented. One shared helper owns intermediate ordering, independent more-J
+OR fewer-R/fewer-A protections, recoverable slower-peer deferral and strict
+full-finish comparisons. No incumbent update scans queued bounds. Shared proposal
+analysis rejects joint stepping prerequisites before side fan-out, preserves an
+owned anchor arrival independently of an impossible unused tail, and reuses exact
+coefficient/envelope contexts. Hard policy3 explicitly assumes **no stepping in
+the actual between-anchor transfer**; source-local setup hops remain legal.
+Only shortening ceilings can disable its scalar flight minima. Unknowns contribute
+zero, H/V combine using max, and already-paid ordinary flight ticks are subtracted.
+The native gate passes600 tests with no skips and unchanged runtime hashes;
+all131 archived T67/T64 witness prefixes pass the bound control. Matched cold
+measurements are recorded in the [feature evidence](../autonomy/experiments/hard-jump-comparisons/README.md).
+Combined300s improves T67→T64, workers159→55 and expansions1,114→35;
+initial0-only90s retains T64 with workers56→22 and expansions427→7. All80
+post-change retained-witness replays pass. Runtime hashes stayed unchanged. Earlier paragraphs retain source-era measurements.
+
 2026-11-10 follow-up: time bounds are checked lazily for the selected arrival or
 refinement against the current best finish, rather than evaluated across queued
 records. Equality remains eligible. [Implementation and51 focused checks](ANCHOR_SEARCH_INTEGRATION.md)

@@ -76,8 +76,13 @@ def evaluate_program(scene, program, compiler, adapter, work, motion_bound, *, c
         virtual=prepare_goal(virtual)
         if not height_clock(program,virtual):
             raise ValueError('Virtual finish program does not reach its height clock')
-    compiled = compile_program(scene, program, require_complete=complete and virtual is None)
-    route, profiles = compiled['route'], compiled['profiles']
+    from standalone.autonomy.interactions import InteractionGate
+    service=getattr(adapter,'interaction_service',None) or InteractionGate(scene,compiler,seconds=max(.001,min(seconds,candidate_seconds)))
+    prepared=service.prepare(program,scene=scene,require_complete=complete and virtual is None)
+    if prepared is None:
+        return dict(status='unknown',termination='vertical_schedule',best=None,attempts=[],contactAttempts=[],work=dict(solverCalls=0),fullSceneValidated=False)
+    route,profiles=copy.copy(prepared['route']),prepared['profiles']
+    route['constraints']=list(route.get('constraints',[]))
     mark('programCompilation')
     if guide_objective is not None:
         route['objective']=dict(axis='X',sense='MAX')
@@ -113,20 +118,19 @@ def evaluate_program(scene, program, compiler, adapter, work, motion_bound, *, c
     from standalone.autonomy.route import schedule
     from standalone.autonomy.block_contacts import validate_vertical_schedule
     plan = schedule(route, [0])
-    vertical = validate_vertical_schedule(route, profiles, plan)
+    vertical = prepared['vertical']
     if not vertical['feasible']:
         return dict(status='unknown', termination='vertical_schedule', best=None, attempts=[], contactAttempts=[],
                     work=scoped.local.summary(), solveScope=scope, fullSceneValidated=False)
     plan['vertical'] = dict(vertical['vertical'], referencePosition=vertical['y'], referenceVelocity=vertical['vy'])
     mark('scopeAndVerticalPreparation')
-    coefficients = compiler.compile(route, plan, max(.001, min(seconds, candidate_seconds)))
+    analysis=service.analyze_model(route,plan,vertical,scope=scope)
+    coefficients=analysis['coefficient']
     mark('coefficientCompilation')
     model = dict(coefficients, version=1, ticks=plan['ticks'], walls=plan['walls'], contacts=plan['contacts'],
         position=scene['initial']['position'][::2], velocity=scene['initial']['velocity'][::2],
         threshold=route.get('physicsThreshold', .005), vertical=vertical['vertical'], objective=dict(route.get('guideObjective', route['objective']), tick=plan['ticks']))
-    envelopes = reachable_envelopes(model, vertical['y'])
-    from standalone.autonomy.solve_spec import digest
-    envelopes['modelKey'] = digest(coefficients)
+    envelopes=analysis['envelopes']
     mark('reachability')
     if hasattr(scoped_adapter, 'eligible'):
         scoped_adapter = scoped_adapter.eligible(envelopes, scope['through'])

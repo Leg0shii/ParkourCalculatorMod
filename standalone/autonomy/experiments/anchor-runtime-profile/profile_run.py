@@ -109,6 +109,9 @@ def main():
             termination=result['termination'],runDeferrals=len(deferrals),
             runRestorations=sum(bool(v.get('restored')) for v in deferrals),
             deferredNodes=result.get('anchorSearch',{}).get('deferredNodes',0),
+            comparisonWork=dfs.get('comparisonWork',{}),interactionMetrics=result.get('interactionGate',{}).get('metrics',{}),
+            transferTimeBounds=dfs.get('transferTimeBounds',{}),
+            wrappers=len(profile.requests),workers=sum(bool(r.get('workerLaunched')) for r in profile.requests),
             validatedWitnesses=len(replays),allReplaysPassed=all(v['passed'] for v in replays),
             sourceUnchanged=source==source_hashes(),sessions=profile.sessions)
         save(args.output/'summary.json',summary)
@@ -127,6 +130,7 @@ def main():
                         error=None if error is None else dict(type=type(error).__name__,message=str(error)),
                         gc=gc_times,cancelled=cancelled.is_set())
         save(args.output/'profile.json',snapshot)
+        save(args.output/'requests.json',profile.requests)
 
 
 if __name__ == '__main__':

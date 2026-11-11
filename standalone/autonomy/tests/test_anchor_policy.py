@@ -36,6 +36,24 @@ def history(s,names):
 
 
 class AnchorPolicyTests(unittest.TestCase):
+    def test_hard_transfer_excludes_stepping_but_preserves_closed_and_pending_preparations(self):
+        s=scene()
+        p=history(s,['mid'])
+        p['profile']['caseEvents']=[dict(input=0,type='stepping',case='slab_boost')]
+        self.assertEqual(transfer_structure(s,p,0,'start','mid',complete=True)['reason'],
+                         'stepping_during_hard_transfer')
+        p['profile']['caseEvents'][0].update(type='ceiling',case='grind')
+        self.assertTrue(transfer_structure(s,p,0,'start','mid',complete=True)['valid'])
+        p=history(s,['start','mid'])
+        p['profile']['caseEvents']=[dict(input=0,type='stepping',case='corner_jump_cancel')]
+        self.assertTrue(transfer_structure(s,p,0,'start','mid',complete=True)['valid'])
+        # Until a pending cancelled flight lands, it may still close on S as
+        # preparation. Do not prohibit that setup by guessing its destination.
+        p=history(s,['mid']);p['profile']['contactEvents']=[]
+        p['terminalSupport']=None;p['profile']['grounded'][-1]=False
+        p['profile']['caseEvents']=[dict(input=0,type='stepping',case='corner_jump_cancel')]
+        self.assertTrue(transfer_structure(s,p,0,'start','mid')['valid'])
+
     def test_owner_returns_excluded_but_all_same_owner_jumps_preserved(self):
         s=scene()
         for names in (['start','start','mid'],['start','optional','mid'],['mid','mid','goal']):

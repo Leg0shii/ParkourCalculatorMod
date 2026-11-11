@@ -3,8 +3,9 @@ import time
 
 from .case_profiles import entry_possible
 from .movement_composition import append_choice, boundary_state, empty_program, program_physics_key, program_search_key, truncate_program
-from .movement_generation import generate_choices
+from .movement_generation import generate_choices, propose_choices, assess_proposal
 from .solve_spec import digest, processing_key
+from .candidate_comparison import POLICY_VERSION as COMPARISON_POLICY_VERSION
 
 
 def persistent_programs(scene, *, settings, report, continuation=None, deadline=None, cancel_event=None, work=None,
@@ -16,7 +17,7 @@ def persistent_programs(scene, *, settings, report, continuation=None, deadline=
     seeds = [initial] if initial_programs is None else initial_programs
     # The scene also carries movementSearch. Hash its physical fields here;
     # settings below already owns the domain and deliberately excludes slices.
-    context_value = dict(version=3, scene={k:v for k,v in scene.items() if k!='movementSearch'}, settings={k: v for k, v in settings.items() if k not in
+    context_value = dict(version=3, comparisonPolicy=COMPARISON_POLICY_VERSION, proposalPolicy=1, scene={k:v for k,v in scene.items() if k!='movementSearch'}, settings={k: v for k, v in settings.items() if k not in
         ('maxPrefixes', 'maxQueuedPrefixes', 'maxChoicesPerType', 'expansionsPerProposal')},
         roots=[program_search_key(p) for p in seeds], checkpoint=checkpoint_tick, threshold=threshold,
         stopOnGoal=stop_on_goal)
@@ -63,6 +64,15 @@ def persistent_programs(scene, *, settings, report, continuation=None, deadline=
         p = min(items, key=key)
         items.remove(p)
         return p
+
+    def project_owned(program):
+        from .cell_routes.comparison_goals import _landing_prefixes
+        arrivals=[p for block in (stop_supports or [scene['goalBlock']])
+                  for p in _landing_prefixes(scene,program,block,reuse_full=True)]
+        if not arrivals:return program
+        owned=min(arrivals,key=lambda p:(p['profile']['airtime'],p['terminalSupport']))
+        owned['ownedEndpoint']=owned['profile']['airtime']
+        return owned
 
     def update(reason='running'):
         report.update(termination=reason, expandedPrefixes=expanded, totalExpandedPrefixes=state['expanded'],
@@ -146,50 +156,48 @@ def persistent_programs(scene, *, settings, report, continuation=None, deadline=
                     context_data['normalGapInputs'] = checkpoint_tick-p['profile']['airtime']
                 if context_adapter is not None:
                     context_adapter(context_data)
-                iterator = iter(generate_choices(settings['types'][e['kind']], context_data))
+                bind=None
+                if terminal_goal is not None:
+                    from .terminal_goals import bind_goal
+                    bind=lambda p:bind_goal(p,terminal_goal,scene.get('supportClearance',1e-6))
+                iterator=iter(propose_choices(settings['types'][e['kind']],context_data,
+                    source=generate_choices(settings['types'][e['kind']],context_data),start=e['cursor'],
+                    max_inputs=settings['maxInputs'],inherit_decisions=node_evaluator is not None,
+                    project=project_owned if node_evaluator is not None and stop_on_goal else None,bind=bind))
                 iterator_key = ident
-                for _ in range(e['cursor']):
-                    budget()
-                    try:
-                        next(iterator)
-                    except StopIteration:
-                        raise ValueError('Movement generator changed across checkpoint restoration')
             if 'choice' not in e:
                 try:
-                    choice = next(iterator)
+                    proposal = next(iterator)
                 except StopIteration:
                     e.update(kind=e['kind']+1, cursor=0)
                     iterator, iterator_key = None, None
                     continue
-                e['choice'] = copy.deepcopy(choice)
-                e['cursor'] += 1
+                e['choice'] = proposal['choice']
+                e['child'] = proposal['program']
+                e['fullProgram'] = proposal['fullProgram']
+                e['projected'] = proposal['projected']
+                e['cursor'] = proposal['ordinal']+1
                 state['generated'] += 1
-            child = copy.deepcopy(e['child']) if 'child' in e else append_choice(e['program'], e['choice'], max_inputs=settings['maxInputs'])
-            if child is not None and node_evaluator is not None:
-                parent=e['program']
-                for field in ('decisionPoint','decisionPointSource','decisionPointTick','decisionTurnaround','restoredRun'):
-                    if field in parent:child.setdefault(field,copy.deepcopy(parent[field]))
-                child.setdefault('priorityTurnaround',parent.get('decisionTurnaround',False))
-            if child is not None and terminal_goal is not None:
-                from .terminal_goals import bind_goal
-                child=bind_goal(child,terminal_goal,scene.get('supportClearance',1e-6))
-            if child is not None and screen is not None:
-                proof = screen(child)
-                if proof is not None:
+            child=e['child']
+            if child is not None and screen is not None and not e.get('proposalChecked'):
+                # Commit the raw ordinal/owned view before the budgeted query.
+                update()
+                result=assess_proposal(dict(program=child,fullProgram=e['fullProgram'],projected=e['projected']),screen,
+                                       context_data.get('interactionGate'))
+                e['proposalChecked']=True
+                if result['fullProof'] is not None:
+                    state['exclusions'].append(dict(id=digest(program_physics_key(e['fullProgram'])),
+                        ticks=e['fullProgram']['profile']['airtime'],proof=result['fullProof'],scope='unused_extension'))
+                if result['proof'] is not None:
                     state['screened'] += 1
                     state['exclusions'].append(dict(id=digest(program_physics_key(child)),
-                        ticks=child['profile']['airtime'], proof=proof, scope='full_proposal_before_projection'))
-                    e.pop('choice', None)
+                        ticks=child['profile']['airtime'],proof=result['proof'],scope='owned_proposal'))
+                    for field in ('choice','child','fullProgram','projected','proposalChecked'):e.pop(field,None)
                     update()
                     continue
+            before_projection=child
             if child is not None and checkpoint_tick is not None and child['profile']['airtime'] > checkpoint_tick:
                 child = truncate_program(child, checkpoint_tick)
-            if child is not None and node_evaluator is not None and stop_on_goal:
-                from .cell_routes.comparison_goals import _landing_prefixes
-                arrivals=[p for block in (stop_supports or [scene['goalBlock']])
-                          for p in _landing_prefixes(scene,child,block)]
-                if arrivals:
-                    child=min(arrivals,key=lambda p:(p['profile']['airtime'],p['terminalSupport']))
             accepted = child is not None and entry_possible(child['profile'], initial_bounds)
             if accepted and program_filter is not None and not program_filter(child):
                 state['policyRejections'] += 1
@@ -199,7 +207,7 @@ def persistent_programs(scene, *, settings, report, continuation=None, deadline=
             identity = program_search_key(child) if accepted else None
             if identity in seen:
                 accepted = False
-            if accepted and screen is not None:
+            if accepted and screen is not None and child is not before_projection:
                 proof = screen(child)
                 if proof is not None:
                     state['screened'] += 1
@@ -213,17 +221,13 @@ def persistent_programs(scene, *, settings, report, continuation=None, deadline=
                     child.setdefault('lastSolvedDepth',parent.get('lastSolvedDepth',0))
                     child.setdefault('decisionParent',parent.get('decisionNode') if meaningful else parent.get('decisionParent'))
                     child.setdefault('decisionNode',node_identity(child,policy_context) if meaningful else parent.get('decisionNode'))
-                    for field in ('decisionPoint','decisionPointSource','decisionPointTick','decisionTurnaround','restoredRun'):
-                        if field in parent:child.setdefault(field,copy.deepcopy(parent[field]))
-                    child.setdefault('priorityTurnaround',parent.get('decisionTurnaround',False))
                     if meaningful and not complete(child):
                         child['needsNodeSolve']=True
                 identity = program_search_key(child)
                 seen.add(identity)
                 state['seen'].append(identity)
                 (state['ready'] if complete(child) else state['pending']).append(child)
-            e.pop('choice', None)
-            e.pop('child', None)
+            for field in ('choice','child','fullProgram','projected','proposalChecked'):e.pop(field,None)
             update()
         state['exhausted'] = True
         update('numerical_unknown' if state.get('deferredNodes') else 'exhausted')

@@ -11,24 +11,26 @@ def normal_jump_height():
     return max(ordinary_jump_profile(0, 0)['position'])
 
 
-def ordinary_jump_profile(source_top, target_top, *, max_inputs=200):
-    return _flight_profile(source_top, target_top, True, max_inputs)
+def ordinary_jump_profile(source_top, target_top, *, max_inputs=200, threshold=.005):
+    return _flight_profile(source_top, target_top, True, max_inputs, threshold)
 
 
-def runoff_profile(source_top, target_top, *, max_inputs=200):
+def runoff_profile(source_top, target_top, *, max_inputs=200, threshold=.005):
     source_top = number(source_top, 'source top')
     target_top = number(target_top, 'target top')
     integer(max_inputs, 'maximum flight inputs', 1, 200)
     if target_top >= source_top:
         return None
-    return _flight_profile(source_top, target_top, False, max_inputs)
+    return _flight_profile(source_top, target_top, False, max_inputs, threshold)
 
 
-def _flight_profile(source_top, target_top, jumping, max_inputs):
+def _flight_profile(source_top, target_top, jumping, max_inputs, threshold=.005):
     source_top = number(source_top, 'source top')
     target_top = number(target_top, 'target top')
     integer(max_inputs, 'maximum flight inputs', 2 if jumping else 1, 200)
-    config = {'threshold': .005, 'jumpVelocity': [f32(.42) if jumping else None] + [None] * (max_inputs - 1),
+    threshold=number(threshold,'physics threshold')
+    if threshold<0:raise ValueError('Physics threshold must be nonnegative')
+    config = {'threshold': threshold, 'jumpVelocity': [f32(.42) if jumping else None] + [None] * (max_inputs - 1),
               'sneak': [False] * max_inputs, 'contacts': []}
     y, vy, ground = source_top, REST_CARRY, True
     positions, velocities, grounded = [y], [vy], [ground]

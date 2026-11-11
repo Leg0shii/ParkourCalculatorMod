@@ -7,7 +7,8 @@ import time
 from standalone.ipopt.model import integer, number
 from .case_profiles import entry_possible
 from .movement_composition import append_choice, boundary_state, compile_program, empty_program, truncate_program, program_search_key
-from .movement_generation import GENERATORS, generate_choices
+from .movement_generation import GENERATORS, generate_choices, propose_choices, assess_proposal
+from .candidate_comparison import compare_candidates
 
 
 def movement_settings(scene):
@@ -105,7 +106,7 @@ def iter_movement_programs(scene, *, settings=None, deadline=None, cancel_event=
                     or ranked(min(ready,key=ranked))[0]<=ranked(min(pending,key=ranked))[0]):
                 ticks, _, program = take(ready) if program_priority is not None else heapq.heappop(ready)
                 since_proposal = 0
-                if ticks > report.get('maxAcceptedTicks', cfg['maxInputs']):
+                if compare_candidates(dict(T=ticks),incumbent=dict(T=report['maxAcceptedTicks']) if 'maxAcceptedTicks' in report else None)['action']=='exclude_bound':
                     continue
                 if checkpoint_tick is not None and ticks == checkpoint_tick:
                     report.update(checkpointTick=checkpoint_tick, checkpointPrefixes=report.get('checkpointPrefixes', 0)+1)
@@ -129,7 +130,7 @@ def iter_movement_programs(scene, *, settings=None, deadline=None, cancel_event=
                 ticks, _, program = item
             else:
                 ticks, _, program = heapq.heappop(pending)
-            if ticks > report.get('maxAcceptedTicks', cfg['maxInputs']):
+            if compare_candidates(dict(T=ticks),incumbent=dict(T=report['maxAcceptedTicks']) if 'maxAcceptedTicks' in report else None)['action']=='exclude_bound':
                 continue
             expanded += 1
             since_proposal += 1
@@ -157,15 +158,16 @@ def iter_movement_programs(scene, *, settings=None, deadline=None, cancel_event=
                 context_adapter(context)
             for kind in cfg['types']:
                 choices = 0
-                for choice in generate_choices(kind, context):
+                for proposal in propose_choices(kind,context,source=generate_choices(kind,context),max_inputs=cfg['maxInputs']):
                     budget()
                     if choices >= cfg['maxChoicesPerType']:
                         records.append(dict(type=kind, prefixTicks=ticks, termination='choice_limit', emitted=choices))
                         break
                     choices += 1
                     generated += 1
-                    child = append_choice(program, choice, max_inputs=cfg['maxInputs'])
-                    if child is not None and screen is not None and screen(child) is not None:
+                    child=proposal['program']
+                    before_projection=child
+                    if child is not None and screen is not None and assess_proposal(proposal,screen)['proof'] is not None:
                         screened += 1
                         continue
                     if child is not None and checkpoint_tick is not None and child['profile']['airtime'] > checkpoint_tick:
@@ -191,7 +193,7 @@ def iter_movement_programs(scene, *, settings=None, deadline=None, cancel_event=
                     if key in seen:
                         continue
                     seen.add(key)
-                    if screen is not None and screen(child) is not None:
+                    if screen is not None and child is not before_projection and screen(child) is not None:
                         screened += 1
                         continue
                     serial += 1
@@ -253,7 +255,7 @@ def find_movement_blocks(request, compiler, *, seconds=60, candidate_seconds=2, 
             context_adapter(context)
         gate.context(context)
     def screen(program):
-        return gate.required(program) or screen_program(scene, program, compiler, max(.001, deadline - time.monotonic()))
+        return screen_program(scene,program,compiler,max(.001,deadline-time.monotonic()),gate=gate)
     for program in iter_movement_programs(scene, settings=cfg, deadline=deadline, cancel_event=cancel_event,
                                           report=report, screen=screen, context_adapter=configure, work=work):
         if time.monotonic() >= deadline:
@@ -293,27 +295,7 @@ def find_movement_blocks(request, compiler, *, seconds=60, candidate_seconds=2, 
         validationLevel='continuous_movement_program_with_shared_scene_collision_checks')
 
 
-def screen_program(scene, program, compiler, seconds):
-    from .block_contacts import validate_vertical_schedule
-    from .route import prepare_route, schedule
-    from .screen import contradiction
-    profile = program['profile']
-    if profile['position'][1] < scene['initial']['position'][1]-1e-7:
-        from .route import supports
-        if any(abs(b['top']-scene['initial']['position'][1])<1e-7 and supports(
-                b,scene['initial']['position'][0],scene['initial']['position'][2]) for b in scene['blocks']):
-            return dict(reason='unselected_initial_floor')
-    compiled = compile_program(scene, program, require_complete=False)
-    route = prepare_route(compiled['route'])
-    plan = schedule(route, [0])
-    vertical = validate_vertical_schedule(route, compiled['profiles'], plan)
-    if not vertical['feasible']:
-        return dict(reason='vertical_schedule')
-    if scene.get('maxWallHits', 0):
-        return None
-    plan['vertical'] = dict(vertical['vertical'], referencePosition=vertical['y'], referenceVelocity=vertical['vy'])
-    coefficient = compiler.compile(route, plan, seconds)
-    rows = [row for row in plan['walls'] if not row.get('name', '').startswith('landing:1:')]
-    return contradiction(dict(coefficient, ticks=plan['ticks'], position=scene['initial']['position'][::2],
-        velocity=scene['initial']['velocity'][::2], threshold=route.get('physicsThreshold', .005), walls=rows, contacts=plan['contacts'],
-        ladderTicks=plan.get('ladderTicks', [False] * (plan['ticks'] + 1))))
+def screen_program(scene, program, compiler, seconds, *, gate=None):
+    """Compatibility entry point for the shared exact-proposal analysis."""
+    from .interactions import InteractionGate
+    return (gate or InteractionGate(scene,compiler,seconds=seconds)).check_program(program)

@@ -3,9 +3,10 @@ import copy
 
 from standalone.autonomy.movement_composition import empty_program, program_physics_key, truncate_program
 from standalone.autonomy.solve_spec import digest
+from ..candidate_comparison import comparison_label, priority_key, compare_candidates
 
 
-POLICY_VERSION = 1
+POLICY_VERSION = 2
 
 
 def _shift(event, tick):
@@ -67,20 +68,25 @@ def latest_jump(program, scene):
         rows=sorted(rows,key=digest),terminalSupport=program.get('terminalSupport'),
         terminalGoal=program.get('terminalGoal'),landingPhase=p.get('landingPhase'))
     return dict(pattern=digest(dict(version=POLICY_VERSION,before=program_physics_key(before),suffix=suffix)),
-        runTicks=takeoff-ground,groundState=ground,jumpInput=takeoff)
+        runTicks=takeoff-ground,groundState=ground,jumpInput=takeoff,
+        label=comparison_label(program,context=dict(basis='matched_preparation')))
 
 
 def remember(representatives, description, candidate, arrival):
     if description is None:return
     key=description['pattern'];old=representatives.get(key)
-    if old is None or description['runTicks']<old['runTicks']:
+    if old is None or priority_key(description['label'])<priority_key(old['label']):
         representatives[key]=dict(description,candidate=candidate,arrival=arrival)
 
 
 def exclusion(representatives, description):
     if description is None:return None
     peer=representatives.get(description['pattern'])
-    if peer is None or description['runTicks']<=peer['runTicks']:return None
+    if peer is None:return None
+    candidate=dict(description['label'],comparisonContext=description['pattern'])
+    other=dict(peer['label'],comparisonContext=description['pattern'],validated=True)
+    decision=compare_candidates(candidate,other,context=dict(purpose='matched_preparation',localDeferralEnabled=True))
+    if decision['action']!='defer_preparation':return None
     return dict(reason='extra_runs_before_latest_jump',heuristic=True,pattern=description['pattern'],
         runTicks=description['runTicks'],minimumFeasibleRunTicks=peer['runTicks'],
         groundState=description['groundState'],jumpInput=description['jumpInput'],representative=peer['candidate'])

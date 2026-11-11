@@ -3,9 +3,10 @@
 import copy
 
 from ..solve_spec import digest
+from ..candidate_comparison import comparison_label, priority_key, POLICY_VERSION as COMPARISON_POLICY_VERSION
 
 
-HARD_JUMP_POLICY_VERSION = 2
+HARD_JUMP_POLICY_VERSION = 3
 
 
 def settings(value, scene):
@@ -42,7 +43,7 @@ def settings(value, scene):
 
 def semantic_settings(policy):
     return dict({k:v for k,v in policy.items() if k!='observability'},
-                hardJumpPolicyVersion=HARD_JUMP_POLICY_VERSION,searchPolicyVersion=4)
+                hardJumpPolicyVersion=HARD_JUMP_POLICY_VERSION,searchPolicyVersion=5,comparisonPolicyVersion=COMPARISON_POLICY_VERSION)
 
 
 def owner(scene, block):
@@ -112,17 +113,12 @@ def audit(scene, program, anchors, *, reached=None):
 
 
 def local_counts(program, start=0):
-    p=program['profile']; n=p['airtime']
-    if not 0 <= start <= n:
-        raise ValueError('Anchor span starts outside the program')
-    jumps=sum(bool(p['grounded'][t] and p['jump'][t]) for t in range(start,n))
-    runs=sum(bool(p['grounded'][t] and not p['jump'][t]) for t in range(start,n))
-    return dict(T=n, J=jumps, R=runs, A=n-start-jumps-runs, start=start)
+    c=comparison_label(program,start=start)
+    return {k:c[k] for k in ('T','J','R','A','start')}
 
 
 def priority(program, start=0, turnaround=False, identity=''):
-    c=local_counts(program,start)
-    return (c['T'], -c['J'], c['A'] if turnaround else c['R'], identity)
+    return priority_key(comparison_label(program,start=start,mode=turnaround,identity=identity))
 
 
 def within_caps(request, program):
@@ -155,6 +151,10 @@ def transfer_structure(scene, program, start, source, target, *, complete=False)
     boundary=max([start]+[t for t,name in contacts if name==source and (arrival is None or t<arrival)])
     preparation=[t for t in launches if t<boundary]
     transfer=[t for t in launches if t>=boundary and (arrival is None or t<arrival)]
+    from ..case_profiles import CASES
+    stepping=[e['input'] for e in p.get('caseEvents', [])
+              if (e.get('type')=='stepping' or e.get('case') in CASES-{'grind'})
+              and boundary<=e['input'] and (arrival is None or e['input']<arrival)]
     reason=None
     if any(name not in (source,target) for _,name in contacts):
         reason='intermediate_support_between_anchors'
@@ -164,11 +164,14 @@ def transfer_structure(scene, program, start, source, target, *, complete=False)
         reason='jump_after_target_arrival'
     elif len(transfer)>1:
         reason='multiple_transfer_impulses'
+    elif arrival is not None and stepping:
+        reason='stepping_during_hard_transfer'
     elif complete and (arrival is None or len(transfer)!=1):
         reason='missing_transfer_jump'
     return dict(version=HARD_JUMP_POLICY_VERSION,valid=reason is None,reason=reason,
                 source=source,target=target,spanStart=start,preparationThrough=boundary,
-                preparationJumps=preparation,transferJumps=transfer,arrival=arrival)
+                preparationJumps=preparation,transferJumps=transfer,arrival=arrival,
+                transferSteppingInputs=stepping,assumption='hard_transfer_without_stepping')
 
 
 def single_jump_structure(scene, program, start, source, target, *, complete=False):

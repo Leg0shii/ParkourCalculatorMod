@@ -13,6 +13,7 @@ class RuntimeProfile:
         self.buckets = {}
         self.stack = []
         self.sessions = []
+        self.requests = []
 
     @contextmanager
     def region(self, name):
@@ -83,7 +84,9 @@ class CopyProxy:
 
 @contextmanager
 def instrument(profiler):
-    from standalone.autonomy import movement_frontier, solve_spec, search
+    from standalone.autonomy import movement_frontier, movement_generation, solve_spec, search, candidate_comparison
+    from standalone.autonomy.interactions import InteractionGate
+    from standalone.autonomy.cell_routes import anchor_time_bound, transfer_time_bounds, preparation_deferrals
     from standalone.autonomy.cell_routes import checkpoint_experiment, checkpoint_search, depth_first, event_search
     changes = []
 
@@ -112,7 +115,17 @@ def instrument(profiler):
                               for k,v in profiler.buckets.items()
                               if v['calls'] != counters.get(k,{}).get('calls',0)}
 
+    def invoke(problem, **kwargs):
+        row=dict(index=len(profiler.requests)+1,fingerprint=search.fingerprint(problem),
+                 ticks=len(problem['magnitude']),stopOnFeasible=kwargs.get('stop_on_feasible',False))
+        profiler.requests.append(row)
+        result=profiler.call('solver.invoke',original_solve,problem,**kwargs)
+        row.update(status=result['status'],workerLaunched=result.get('workerLaunched'),
+                   workerStatus=result.get('workerStatus'))
+        return result
+
     original_search = depth_first.search_goals
+    original_solve = search.solve
     try:
         # Only module globals change; original stdlib deepcopy's recursive
         # implementation is untouched. Aliasing/memo behavior stays identical.
@@ -121,7 +134,26 @@ def instrument(profiler):
                 replace(module, 'copy', CopyProxy(profiler, name, module.copy))
         replace(depth_first, 'search_goals', session)
         replace(checkpoint_search, 'evaluate_program', profiler.function('numerical.evaluate', checkpoint_search.evaluate_program))
-        replace(search, 'solve', profiler.function('solver.invoke', search.solve))
+        replace(search, 'solve', invoke)
+        for name in ('prepare','analyze_model','condition','sequence','check_program','required'):
+            replace(InteractionGate,name,profiler.function('reachability.'+name,getattr(InteractionGate,name)))
+        for module,names,prefix in ((candidate_comparison,('compare_candidates','comparison_label','priority_key'),'comparison.'),
+                (anchor_time_bound,('remaining_bound',),'bound.'),
+                (transfer_time_bounds,('transfer_bound',),'bound.'),
+                (preparation_deferrals,('assess','remember_peer'),'peer.')):
+            for name in names:
+                original=getattr(module,name);wrapped=profiler.function(prefix+name,original)
+                for imported_name,owner in list(sys.modules.items()):
+                    if imported_name.startswith('standalone.autonomy.') and getattr(owner,name,None) is original:
+                        replace(owner,name,wrapped)
+        for module in (movement_generation,):
+            replace(module,'assess_proposal',profiler.function('proposal.assess',module.assess_proposal))
+            # Consumers import aliases; cover each without wrapping twice.
+            for imported_name,owner in list(sys.modules.items()):
+                if imported_name.startswith('standalone.autonomy.') and owner is not module:
+                    current=getattr(owner,'assess_proposal',None)
+                    if current is not None and current is not module.assess_proposal:
+                        replace(owner,'assess_proposal',module.assess_proposal)
         replace(checkpoint_experiment, 'replay_witness', profiler.function('validation.replay', checkpoint_experiment.replay_witness))
         replace(depth_first, 'iter_movement_programs', profiler.generator('movement.source', depth_first.iter_movement_programs))
         replace(movement_frontier, 'generate_choices', profiler.generator('movement.choices', movement_frontier.generate_choices))

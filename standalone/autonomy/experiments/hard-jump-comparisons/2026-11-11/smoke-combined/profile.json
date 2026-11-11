@@ -1,0 +1,1950 @@
+{
+  "version": 1,
+  "buckets": {
+    "copy:standalone.autonomy.block_search:prepare_scene:16": {
+      "calls": 4,
+      "inclusiveSeconds": 0.0001577436923980713,
+      "selfSeconds": 0.0001577436923980713,
+      "maxSeconds": 4.5496970415115356e-05
+    },
+    "copy:standalone.autonomy.obstacle_geometry:normalize_geometry:60": {
+      "calls": 28,
+      "inclusiveSeconds": 5.208328366279602e-05,
+      "selfSeconds": 5.208328366279602e-05,
+      "maxSeconds": 2.9169023036956787e-06
+    },
+    "copy:standalone.autonomy.route:prepare_route:13": {
+      "calls": 289,
+      "inclusiveSeconds": 0.11139670014381409,
+      "selfSeconds": 0.11139670014381409,
+      "maxSeconds": 0.02540253847837448
+    },
+    "copy:standalone.autonomy.movement_units:movement_unit:15": {
+      "calls": 332,
+      "inclusiveSeconds": 0.0004594363272190094,
+      "selfSeconds": 0.0004594363272190094,
+      "maxSeconds": 5.299970507621765e-05
+    },
+    "copy:standalone.autonomy.cell_routes.comparison_goals:goal_spec:15": {
+      "calls": 2,
+      "inclusiveSeconds": 3.7923455238342285e-06,
+      "selfSeconds": 3.7923455238342285e-06,
+      "maxSeconds": 1.955777406692505e-06
+    },
+    "copy:standalone.autonomy.cell_routes.anchor_policy:settings:17": {
+      "calls": 1,
+      "inclusiveSeconds": 5.04031777381897e-06,
+      "selfSeconds": 5.04031777381897e-06,
+      "maxSeconds": 5.04031777381897e-06
+    },
+    "identity.digest": {
+      "calls": 1950880,
+      "inclusiveSeconds": 4.3060622327029705,
+      "selfSeconds": 4.3060622327029705,
+      "maxSeconds": 0.00266304612159729
+    },
+    "copy:standalone.autonomy.cell_routes.event_search:search_event_routes:78": {
+      "calls": 1,
+      "inclusiveSeconds": 2.123415470123291e-06,
+      "selfSeconds": 2.123415470123291e-06,
+      "maxSeconds": 2.123415470123291e-06
+    },
+    "copy:standalone.autonomy.cell_routes.depth_first:search_goals:82": {
+      "calls": 3,
+      "inclusiveSeconds": 5.6333839893341064e-05,
+      "selfSeconds": 5.6333839893341064e-05,
+      "maxSeconds": 1.982972025871277e-05
+    },
+    "comparison.comparison_label": {
+      "calls": 282,
+      "inclusiveSeconds": 0.0010235942900180817,
+      "selfSeconds": 0.0010235942900180817,
+      "maxSeconds": 1.5165656805038452e-05
+    },
+    "copy:standalone.autonomy.cell_routes.depth_first:frame:164": {
+      "calls": 6,
+      "inclusiveSeconds": 0.00268670916557312,
+      "selfSeconds": 0.00268670916557312,
+      "maxSeconds": 0.0006925389170646667
+    },
+    "copy:standalone.autonomy.cell_routes.depth_first:expand_discovery:210": {
+      "calls": 6,
+      "inclusiveSeconds": 0.00015886500477790833,
+      "selfSeconds": 0.00015886500477790833,
+      "maxSeconds": 4.466623067855835e-05
+    },
+    "copy:standalone.autonomy.cell_routes.depth_first:make_frame:188": {
+      "calls": 6,
+      "inclusiveSeconds": 0.0027128010988235474,
+      "selfSeconds": 0.0027128010988235474,
+      "maxSeconds": 0.0007052123546600342
+    },
+    "callback.profile_write": {
+      "calls": 2,
+      "inclusiveSeconds": 0.0016488321125507355,
+      "selfSeconds": 0.0016488321125507355,
+      "maxSeconds": 0.0012794174253940582
+    },
+    "callback.progress": {
+      "calls": 125,
+      "inclusiveSeconds": 0.0020215660333633423,
+      "selfSeconds": 0.0003727339208126068,
+      "maxSeconds": 0.0014416277408599854
+    },
+    "movement.source.create": {
+      "calls": 8,
+      "inclusiveSeconds": 3.003329038619995e-05,
+      "selfSeconds": 3.003329038619995e-05,
+      "maxSeconds": 4.537403583526611e-06
+    },
+    "copy:standalone.autonomy.movement_frontier:persistent_programs:34": {
+      "calls": 6,
+      "inclusiveSeconds": 0.002639327198266983,
+      "selfSeconds": 0.002639327198266983,
+      "maxSeconds": 0.0006913319230079651
+    },
+    "comparison.priority_key": {
+      "calls": 132,
+      "inclusiveSeconds": 9.148567914962769e-05,
+      "selfSeconds": 9.148567914962769e-05,
+      "maxSeconds": 5.163252353668213e-06
+    },
+    "movement.choices.create": {
+      "calls": 36,
+      "inclusiveSeconds": 1.4334917068481445e-05,
+      "selfSeconds": 1.4334917068481445e-05,
+      "maxSeconds": 5.848705768585205e-07
+    },
+    "copy:standalone.autonomy.vertical_profiles:trace_ladder_schedule:45": {
+      "calls": 418,
+      "inclusiveSeconds": 0.0033698156476020813,
+      "selfSeconds": 0.0033698156476020813,
+      "maxSeconds": 3.1791627407073975e-05
+    },
+    "copy:standalone.autonomy.movement_composition:profile_from_trace:52": {
+      "calls": 692,
+      "inclusiveSeconds": 0.007832128554582596,
+      "selfSeconds": 0.007832128554582596,
+      "maxSeconds": 9.299814701080322e-05
+    },
+    "copy:standalone.autonomy.movement_composition:profile_from_trace:53": {
+      "calls": 346,
+      "inclusiveSeconds": 0.027034711092710495,
+      "selfSeconds": 0.027034711092710495,
+      "maxSeconds": 0.00037154555320739746
+    },
+    "copy:standalone.autonomy.movement_composition:movement_choice:74": {
+      "calls": 173,
+      "inclusiveSeconds": 0.00016460195183753967,
+      "selfSeconds": 0.00016460195183753967,
+      "maxSeconds": 2.041459083557129e-06
+    },
+    "copy:standalone.autonomy.movement_composition:append_choice:154": {
+      "calls": 173,
+      "inclusiveSeconds": 0.00018596649169921875,
+      "selfSeconds": 0.00018596649169921875,
+      "maxSeconds": 3.5427510738372803e-06
+    },
+    "copy:standalone.autonomy.movement_composition:append_choice:161": {
+      "calls": 173,
+      "inclusiveSeconds": 0.006339617073535919,
+      "selfSeconds": 0.006339617073535919,
+      "maxSeconds": 7.500126957893372e-05
+    },
+    "copy:standalone.autonomy.movement_units:shifted_unit:133": {
+      "calls": 2069,
+      "inclusiveSeconds": 0.008404094725847244,
+      "selfSeconds": 0.008404094725847244,
+      "maxSeconds": 0.00031233206391334534
+    },
+    "copy:standalone.autonomy.movement_composition:_events:102": {
+      "calls": 173,
+      "inclusiveSeconds": 0.00015748664736747742,
+      "selfSeconds": 0.00015748664736747742,
+      "maxSeconds": 1.12876296043396e-06
+    },
+    "copy:standalone.autonomy.movement_composition:profile_from_trace:55": {
+      "calls": 173,
+      "inclusiveSeconds": 0.006458789110183716,
+      "selfSeconds": 0.006458789110183716,
+      "maxSeconds": 6.600096821784973e-05
+    },
+    "copy:standalone.autonomy.movement_composition:append_choice:195": {
+      "calls": 173,
+      "inclusiveSeconds": 0.00041021034121513367,
+      "selfSeconds": 0.00041021034121513367,
+      "maxSeconds": 4.708766937255859e-06
+    },
+    "copy:standalone.autonomy.movement_composition:append_choice:204": {
+      "calls": 276,
+      "inclusiveSeconds": 0.0007250532507896423,
+      "selfSeconds": 0.0007250532507896423,
+      "maxSeconds": 1.0792165994644165e-05
+    },
+    "copy:standalone.autonomy.block_search:compile_block_path:309": {
+      "calls": 262,
+      "inclusiveSeconds": 0.0010436810553073883,
+      "selfSeconds": 0.0010436810553073883,
+      "maxSeconds": 1.1622905731201172e-05
+    },
+    "copy:standalone.autonomy.block_search:compile_block_path:320": {
+      "calls": 131,
+      "inclusiveSeconds": 0.04061606153845787,
+      "selfSeconds": 0.04061606153845787,
+      "maxSeconds": 0.0006752908229827881
+    },
+    "reachability.prepare": {
+      "calls": 230,
+      "inclusiveSeconds": 0.3353005200624466,
+      "selfSeconds": 0.15664387866854668,
+      "maxSeconds": 0.027586083859205246
+    },
+    "reachability.analyze_model": {
+      "calls": 230,
+      "inclusiveSeconds": 0.4757557138800621,
+      "selfSeconds": 0.4058845564723015,
+      "maxSeconds": 0.0072064995765686035
+    },
+    "copy:standalone.autonomy.contact_combinations:merge_contacts:25": {
+      "calls": 12841,
+      "inclusiveSeconds": 0.03914656862616539,
+      "selfSeconds": 0.03914656862616539,
+      "maxSeconds": 0.00021783262491226196
+    },
+    "movement.choices.next": {
+      "calls": 88,
+      "inclusiveSeconds": 0.6442884430289268,
+      "selfSeconds": 0.12325392663478851,
+      "maxSeconds": 0.05057508498430252
+    },
+    "copy:standalone.autonomy.movement_generation:propose_choices:49": {
+      "calls": 208,
+      "inclusiveSeconds": 0.000131167471408844,
+      "selfSeconds": 0.000131167471408844,
+      "maxSeconds": 1.7546117305755615e-06
+    },
+    "reachability.required": {
+      "calls": 54,
+      "inclusiveSeconds": 0.14018824324011803,
+      "selfSeconds": 0.0411226823925972,
+      "maxSeconds": 0.007911086082458496
+    },
+    "reachability.check_program": {
+      "calls": 50,
+      "inclusiveSeconds": 0.9175767786800861,
+      "selfSeconds": 0.5381849408149719,
+      "maxSeconds": 0.26381979137659073
+    },
+    "proposal.assess": {
+      "calls": 52,
+      "inclusiveSeconds": 0.9204900860786438,
+      "selfSeconds": 0.0026605241000652313,
+      "maxSeconds": 0.263843834400177
+    },
+    "movement.choices.close": {
+      "calls": 36,
+      "inclusiveSeconds": 1.3247132301330566e-05,
+      "selfSeconds": 1.3247132301330566e-05,
+      "maxSeconds": 5.029141902923584e-07
+    },
+    "movement.source.next": {
+      "calls": 8,
+      "inclusiveSeconds": 1.7323456704616547,
+      "selfSeconds": 0.12190821394324303,
+      "maxSeconds": 0.5703573748469353
+    },
+    "movement.source.close": {
+      "calls": 8,
+      "inclusiveSeconds": 0.00013286620378494263,
+      "selfSeconds": 0.00013286620378494263,
+      "maxSeconds": 2.3461878299713135e-05
+    },
+    "copy:standalone.autonomy.cell_routes.checkpoint_search:evaluate_program:89": {
+      "calls": 7,
+      "inclusiveSeconds": 2.095848321914673e-05,
+      "selfSeconds": 2.095848321914673e-05,
+      "maxSeconds": 3.5837292671203613e-06
+    },
+    "copy:standalone.autonomy.solve_spec:solve_scope:27": {
+      "calls": 9,
+      "inclusiveSeconds": 1.0747462511062622e-05,
+      "selfSeconds": 1.0747462511062622e-05,
+      "maxSeconds": 2.000480890274048e-06
+    },
+    "copy:standalone.autonomy.constraint_variants:__init__:45": {
+      "calls": 8,
+      "inclusiveSeconds": 0.0003000907599925995,
+      "selfSeconds": 0.0003000907599925995,
+      "maxSeconds": 5.7213008403778076e-05
+    },
+    "copy:standalone.autonomy.block_contacts:solve_contact_branches:128": {
+      "calls": 9,
+      "inclusiveSeconds": 0.004511289298534393,
+      "selfSeconds": 0.004511289298534393,
+      "maxSeconds": 0.0006454139947891235
+    },
+    "copy:standalone.autonomy.block_contacts:snapshot:198": {
+      "calls": 158,
+      "inclusiveSeconds": 0.0022548846900463104,
+      "selfSeconds": 0.0022548846900463104,
+      "maxSeconds": 0.00030687451362609863
+    },
+    "copy:standalone.autonomy.block_contacts:snapshot:199": {
+      "calls": 79,
+      "inclusiveSeconds": 0.19573865085840225,
+      "selfSeconds": 0.19573865085840225,
+      "maxSeconds": 0.04218224808573723
+    },
+    "copy:standalone.autonomy.block_contacts:snapshot:200": {
+      "calls": 158,
+      "inclusiveSeconds": 0.0009241439402103424,
+      "selfSeconds": 0.0009241439402103424,
+      "maxSeconds": 5.887448787689209e-05
+    },
+    "copy:standalone.autonomy.block_contacts:snapshot:201": {
+      "calls": 158,
+      "inclusiveSeconds": 0.0017375126481056213,
+      "selfSeconds": 0.0017375126481056213,
+      "maxSeconds": 3.8042664527893066e-05
+    },
+    "copy:standalone.autonomy.block_contacts:snapshot:202": {
+      "calls": 79,
+      "inclusiveSeconds": 0.0038928985595703125,
+      "selfSeconds": 0.0038928985595703125,
+      "maxSeconds": 0.00021583214402198792
+    },
+    "copy:standalone.autonomy.block_contacts:snapshot:203": {
+      "calls": 79,
+      "inclusiveSeconds": 1.3940213546156883,
+      "selfSeconds": 1.3940213546156883,
+      "maxSeconds": 0.07794320955872536
+    },
+    "copy:standalone.autonomy.block_contacts:snapshot:204": {
+      "calls": 79,
+      "inclusiveSeconds": 0.10071616247296333,
+      "selfSeconds": 0.10071616247296333,
+      "maxSeconds": 0.04067474976181984
+    },
+    "copy:standalone.autonomy.block_contacts:snapshot:205": {
+      "calls": 79,
+      "inclusiveSeconds": 0.0022438280284404755,
+      "selfSeconds": 0.0022438280284404755,
+      "maxSeconds": 8.454546332359314e-05
+    },
+    "copy:standalone.autonomy.block_contacts:offer:155": {
+      "calls": 37,
+      "inclusiveSeconds": 0.0006621293723583221,
+      "selfSeconds": 0.0006621293723583221,
+      "maxSeconds": 2.5544315576553345e-05
+    },
+    "copy:standalone.autonomy.block_contacts:offer:158": {
+      "calls": 37,
+      "inclusiveSeconds": 0.0004871375858783722,
+      "selfSeconds": 0.0004871375858783722,
+      "maxSeconds": 1.9416213035583496e-05
+    },
+    "copy:standalone.autonomy.block_contacts:offer:163": {
+      "calls": 33,
+      "inclusiveSeconds": 0.00019521638751029968,
+      "selfSeconds": 0.00019521638751029968,
+      "maxSeconds": 3.100186586380005e-05
+    },
+    "copy:standalone.autonomy.block_contacts:offer:164": {
+      "calls": 11,
+      "inclusiveSeconds": 8.653849363327026e-05,
+      "selfSeconds": 8.653849363327026e-05,
+      "maxSeconds": 1.1544674634933472e-05
+    },
+    "copy:standalone.autonomy.block_contacts:save_branch:190": {
+      "calls": 29,
+      "inclusiveSeconds": 0.0008042827248573303,
+      "selfSeconds": 0.0008042827248573303,
+      "maxSeconds": 4.791095852851868e-05
+    },
+    "copy:standalone.autonomy.block_contacts:solve_contact_branches:285": {
+      "calls": 11,
+      "inclusiveSeconds": 0.006618615239858627,
+      "selfSeconds": 0.006618615239858627,
+      "maxSeconds": 0.0012175440788269043
+    },
+    "copy:standalone.autonomy.search:publish:253": {
+      "calls": 24,
+      "inclusiveSeconds": 0.016410142183303833,
+      "selfSeconds": 0.016410142183303833,
+      "maxSeconds": 0.0010142065584659576
+    },
+    "copy:standalone.autonomy.block_contacts:enrich:335": {
+      "calls": 18,
+      "inclusiveSeconds": 0.02678583189845085,
+      "selfSeconds": 0.02678583189845085,
+      "maxSeconds": 0.00195983424782753
+    },
+    "copy:standalone.autonomy.block_contacts:enrich:341": {
+      "calls": 18,
+      "inclusiveSeconds": 0.0002265051007270813,
+      "selfSeconds": 0.0002265051007270813,
+      "maxSeconds": 2.921372652053833e-05
+    },
+    "copy:standalone.autonomy.block_contacts:enrich:342": {
+      "calls": 18,
+      "inclusiveSeconds": 0.00019866600632667542,
+      "selfSeconds": 0.00019866600632667542,
+      "maxSeconds": 2.1416693925857544e-05
+    },
+    "copy:standalone.autonomy.block_contacts:snapshot:193": {
+      "calls": 508,
+      "inclusiveSeconds": 0.11652473360300064,
+      "selfSeconds": 0.11652473360300064,
+      "maxSeconds": 0.0033088326454162598
+    },
+    "solver.invoke": {
+      "calls": 11,
+      "inclusiveSeconds": 1.5370159223675728,
+      "selfSeconds": 1.343083381652832,
+      "maxSeconds": 0.24665645509958267
+    },
+    "copy:standalone.autonomy.search:evaluate:272": {
+      "calls": 11,
+      "inclusiveSeconds": 0.006815832108259201,
+      "selfSeconds": 0.006815832108259201,
+      "maxSeconds": 0.0008372887969017029
+    },
+    "copy:standalone.autonomy.search:probe:39": {
+      "calls": 11,
+      "inclusiveSeconds": 0.015791043639183044,
+      "selfSeconds": 0.015791043639183044,
+      "maxSeconds": 0.0019190460443496704
+    },
+    "copy:standalone.autonomy.search:probe:40": {
+      "calls": 33,
+      "inclusiveSeconds": 0.00677088275551796,
+      "selfSeconds": 0.00677088275551796,
+      "maxSeconds": 0.0007787533104419708
+    },
+    "copy:standalone.autonomy.search:search_allocations:119": {
+      "calls": 11,
+      "inclusiveSeconds": 5.669891834259033e-06,
+      "selfSeconds": 5.669891834259033e-06,
+      "maxSeconds": 5.848705768585205e-07
+    },
+    "copy:standalone.autonomy.search:find_route:302": {
+      "calls": 9,
+      "inclusiveSeconds": 0.005053412169218063,
+      "selfSeconds": 0.005053412169218063,
+      "maxSeconds": 0.0007360018789768219
+    },
+    "copy:standalone.autonomy.block_contacts:solve_contact_branches:472": {
+      "calls": 9,
+      "inclusiveSeconds": 0.018241751939058304,
+      "selfSeconds": 0.018241751939058304,
+      "maxSeconds": 0.0026181675493717194
+    },
+    "numerical.evaluate": {
+      "calls": 9,
+      "inclusiveSeconds": 17.383039254695177,
+      "selfSeconds": 9.873158197849989,
+      "maxSeconds": 7.988909628242254
+    },
+    "copy:standalone.autonomy.cell_routes.depth_first:score:635": {
+      "calls": 9,
+      "inclusiveSeconds": 0.1808934509754181,
+      "selfSeconds": 0.1808934509754181,
+      "maxSeconds": 0.03698321059346199
+    },
+    "copy:standalone.autonomy.cell_routes.depth_first:commit_arrival:40": {
+      "calls": 17,
+      "inclusiveSeconds": 0.03320791572332382,
+      "selfSeconds": 0.03320791572332382,
+      "maxSeconds": 0.002616874873638153
+    },
+    "copy:standalone.autonomy.cell_routes.checkpoints:retain_prefix:92": {
+      "calls": 17,
+      "inclusiveSeconds": 0.4301198273897171,
+      "selfSeconds": 0.4301198273897171,
+      "maxSeconds": 0.08609917014837265
+    },
+    "copy:standalone.autonomy.cell_routes.depth_first:score:692": {
+      "calls": 10,
+      "inclusiveSeconds": 0.019951578229665756,
+      "selfSeconds": 0.019951578229665756,
+      "maxSeconds": 0.002545289695262909
+    },
+    "peer.remember_peer": {
+      "calls": 7,
+      "inclusiveSeconds": 7.164105772972107e-05,
+      "selfSeconds": 7.018446922302246e-05,
+      "maxSeconds": 1.9419938325881958e-05
+    },
+    "comparison.compare_candidates": {
+      "calls": 45,
+      "inclusiveSeconds": 0.00030788034200668335,
+      "selfSeconds": 0.0002847351133823395,
+      "maxSeconds": 1.5497207641601562e-05
+    },
+    "peer.assess": {
+      "calls": 11,
+      "inclusiveSeconds": 0.0002686344087123871,
+      "selfSeconds": 8.671358227729797e-05,
+      "maxSeconds": 3.229454159736633e-05
+    },
+    "copy:standalone.autonomy.cell_routes.depth_first:search_goals:912": {
+      "calls": 6,
+      "inclusiveSeconds": 0.2448372170329094,
+      "selfSeconds": 0.2448372170329094,
+      "maxSeconds": 0.08640404045581818
+    },
+    "copy:standalone.autonomy.cell_routes.depth_first:search_goals:915": {
+      "calls": 6,
+      "inclusiveSeconds": 0.01653025671839714,
+      "selfSeconds": 0.01653025671839714,
+      "maxSeconds": 0.003904670476913452
+    },
+    "copy:standalone.autonomy.movement_frontier:persistent_programs:33": {
+      "calls": 2,
+      "inclusiveSeconds": 0.004584621638059616,
+      "selfSeconds": 0.004584621638059616,
+      "maxSeconds": 0.003126084804534912
+    },
+    "copy:standalone.autonomy.open_movement:named_choice:46": {
+      "calls": 4,
+      "inclusiveSeconds": 4.116073250770569e-05,
+      "selfSeconds": 4.116073250770569e-05,
+      "maxSeconds": 1.212581992149353e-05
+    },
+    "copy:standalone.autonomy.movement_composition:append_choice:156": {
+      "calls": 4,
+      "inclusiveSeconds": 2.9962509870529175e-05,
+      "selfSeconds": 2.9962509870529175e-05,
+      "maxSeconds": 8.046627044677734e-06
+    },
+    "reachability.sequence": {
+      "calls": 4,
+      "inclusiveSeconds": 0.02868083119392395,
+      "selfSeconds": 0.0015789195895195007,
+      "maxSeconds": 0.008399870246648788
+    },
+    "dfs.session": {
+      "calls": 3,
+      "inclusiveSeconds": 20.149460453540087,
+      "selfSeconds": 0.08237899094820023,
+      "maxSeconds": 8.289899207651615
+    },
+    "copy:standalone.autonomy.cell_routes.depth_first:score:709": {
+      "calls": 3,
+      "inclusiveSeconds": 0.002268124371767044,
+      "selfSeconds": 0.002268124371767044,
+      "maxSeconds": 0.0007804147899150848
+    },
+    "copy:standalone.autonomy.cell_routes.depth_first:score:741": {
+      "calls": 2,
+      "inclusiveSeconds": 0.0050943754613399506,
+      "selfSeconds": 0.0050943754613399506,
+      "maxSeconds": 0.0026134997606277466
+    },
+    "bound.transfer_bound": {
+      "calls": 5,
+      "inclusiveSeconds": 0.00010018050670623779,
+      "selfSeconds": 0.00010018050670623779,
+      "maxSeconds": 3.967061638832092e-05
+    },
+    "bound.remaining_bound": {
+      "calls": 11,
+      "inclusiveSeconds": 0.00016907602548599243,
+      "selfSeconds": 0.00016907602548599243,
+      "maxSeconds": 2.5499612092971802e-05
+    },
+    "copy:standalone.autonomy.cell_routes.depth_first:search_goals:897": {
+      "calls": 2,
+      "inclusiveSeconds": 0.005094245076179504,
+      "selfSeconds": 0.005094245076179504,
+      "maxSeconds": 0.002619165927171707
+    },
+    "copy:standalone.autonomy.constraint_variants:__init__:42": {
+      "calls": 1,
+      "inclusiveSeconds": 0.013523206114768982,
+      "selfSeconds": 0.013523206114768982,
+      "maxSeconds": 0.013523206114768982
+    },
+    "copy:standalone.autonomy.block_contacts:solve_contact_branches:147": {
+      "calls": 1,
+      "inclusiveSeconds": 1.1622905731201172e-05,
+      "selfSeconds": 1.1622905731201172e-05,
+      "maxSeconds": 1.1622905731201172e-05
+    },
+    "copy:standalone.autonomy.block_contacts:solve_contact_branches:167": {
+      "calls": 1,
+      "inclusiveSeconds": 8.627772331237793e-06,
+      "selfSeconds": 8.627772331237793e-06,
+      "maxSeconds": 8.627772331237793e-06
+    },
+    "copy:standalone.autonomy.block_contacts:solve_contact_branches:168": {
+      "calls": 1,
+      "inclusiveSeconds": 8.162111043930054e-06,
+      "selfSeconds": 8.162111043930054e-06,
+      "maxSeconds": 8.162111043930054e-06
+    },
+    "copy:standalone.autonomy.block_contacts:solve_contact_branches:173": {
+      "calls": 1,
+      "inclusiveSeconds": 9.164214134216309e-07,
+      "selfSeconds": 9.164214134216309e-07,
+      "maxSeconds": 9.164214134216309e-07
+    },
+    "copy:standalone.autonomy.block_contacts:solve_contact_branches:220": {
+      "calls": 1,
+      "inclusiveSeconds": 0.002253543585538864,
+      "selfSeconds": 0.002253543585538864,
+      "maxSeconds": 0.002253543585538864
+    },
+    "copy:standalone.autonomy.block_contacts:solve_contact_branches:221": {
+      "calls": 1,
+      "inclusiveSeconds": 2.9828399419784546e-05,
+      "selfSeconds": 2.9828399419784546e-05,
+      "maxSeconds": 2.9828399419784546e-05
+    },
+    "copy:standalone.autonomy.block_contacts:solve_contact_branches:222": {
+      "calls": 1,
+      "inclusiveSeconds": 3.5390257835388184e-06,
+      "selfSeconds": 3.5390257835388184e-06,
+      "maxSeconds": 3.5390257835388184e-06
+    },
+    "copy:standalone.autonomy.block_contacts:solve_contact_branches:223": {
+      "calls": 1,
+      "inclusiveSeconds": 0.0021454617381095886,
+      "selfSeconds": 0.0021454617381095886,
+      "maxSeconds": 0.0021454617381095886
+    },
+    "run.search_and_final_replay": {
+      "calls": 1,
+      "inclusiveSeconds": 20.306050460785627,
+      "selfSeconds": 0.1550525315105915,
+      "maxSeconds": 20.306050460785627
+    },
+    "postrun.accepted_replays": {
+      "calls": 1,
+      "inclusiveSeconds": 0.04326687380671501,
+      "selfSeconds": 0.04326687380671501,
+      "maxSeconds": 0.04326687380671501
+    },
+    "postrun.shared_report_write": {
+      "calls": 1,
+      "inclusiveSeconds": 1.2586109563708305,
+      "selfSeconds": 1.2586109563708305,
+      "maxSeconds": 1.2586109563708305
+    },
+    "postrun.shared_report_compact": {
+      "calls": 1,
+      "inclusiveSeconds": 0.10934175178408623,
+      "selfSeconds": 0.10934175178408623,
+      "maxSeconds": 0.10934175178408623
+    }
+  },
+  "sessions": [
+    {
+      "index": 1,
+      "calls": 6,
+      "expanded": 19,
+      "budgetRemainingSeconds": 7.999986708164215,
+      "frames": 0,
+      "windows": 0,
+      "termination": "numerical_call_limit",
+      "wallSeconds": 5.714706879109144,
+      "buckets": {
+        "copy:standalone.autonomy.route:prepare_route:13": {
+          "calls": 250,
+          "inclusiveSeconds": 0.09515195712447166,
+          "selfSeconds": 0.09515195712447166
+        },
+        "copy:standalone.autonomy.movement_units:movement_unit:15": {
+          "calls": 284,
+          "inclusiveSeconds": 0.00040193647146224976,
+          "selfSeconds": 0.00040193647146224976
+        },
+        "identity.digest": {
+          "calls": 372500,
+          "inclusiveSeconds": 0.89170828089118,
+          "selfSeconds": 0.89170828089118
+        },
+        "copy:standalone.autonomy.cell_routes.depth_first:search_goals:82": {
+          "calls": 1,
+          "inclusiveSeconds": 1.982972025871277e-05,
+          "selfSeconds": 1.982972025871277e-05
+        },
+        "comparison.comparison_label": {
+          "calls": 225,
+          "inclusiveSeconds": 0.0007877945899963379,
+          "selfSeconds": 0.0007877945899963379
+        },
+        "copy:standalone.autonomy.cell_routes.depth_first:frame:164": {
+          "calls": 5,
+          "inclusiveSeconds": 0.0019941702485084534,
+          "selfSeconds": 0.0019941702485084534
+        },
+        "copy:standalone.autonomy.cell_routes.depth_first:expand_discovery:210": {
+          "calls": 4,
+          "inclusiveSeconds": 6.957724690437317e-05,
+          "selfSeconds": 6.957724690437317e-05
+        },
+        "copy:standalone.autonomy.cell_routes.depth_first:make_frame:188": {
+          "calls": 4,
+          "inclusiveSeconds": 0.0013197548687458038,
+          "selfSeconds": 0.0013197548687458038
+        },
+        "callback.profile_write": {
+          "calls": 1,
+          "inclusiveSeconds": 0.00036941468715667725,
+          "selfSeconds": 0.00036941468715667725
+        },
+        "callback.progress": {
+          "calls": 64,
+          "inclusiveSeconds": 0.0004988498985767365,
+          "selfSeconds": 0.0001294352114200592
+        },
+        "movement.source.create": {
+          "calls": 6,
+          "inclusiveSeconds": 2.2780150175094604e-05,
+          "selfSeconds": 2.2780150175094604e-05
+        },
+        "copy:standalone.autonomy.movement_frontier:persistent_programs:34": {
+          "calls": 4,
+          "inclusiveSeconds": 0.0012880750000476837,
+          "selfSeconds": 0.0012880750000476837
+        },
+        "comparison.priority_key": {
+          "calls": 73,
+          "inclusiveSeconds": 5.1427632570266724e-05,
+          "selfSeconds": 5.1427632570266724e-05
+        },
+        "movement.choices.create": {
+          "calls": 34,
+          "inclusiveSeconds": 1.3377517461776733e-05,
+          "selfSeconds": 1.3377517461776733e-05
+        },
+        "copy:standalone.autonomy.vertical_profiles:trace_ladder_schedule:45": {
+          "calls": 390,
+          "inclusiveSeconds": 0.0029840171337127686,
+          "selfSeconds": 0.0029840171337127686
+        },
+        "copy:standalone.autonomy.movement_composition:profile_from_trace:52": {
+          "calls": 644,
+          "inclusiveSeconds": 0.00688258558511734,
+          "selfSeconds": 0.00688258558511734
+        },
+        "copy:standalone.autonomy.movement_composition:profile_from_trace:53": {
+          "calls": 322,
+          "inclusiveSeconds": 0.022969353944063187,
+          "selfSeconds": 0.022969353944063187
+        },
+        "copy:standalone.autonomy.movement_composition:movement_choice:74": {
+          "calls": 161,
+          "inclusiveSeconds": 0.00015364959836006165,
+          "selfSeconds": 0.00015364959836006165
+        },
+        "copy:standalone.autonomy.movement_composition:append_choice:154": {
+          "calls": 161,
+          "inclusiveSeconds": 0.0001728162169456482,
+          "selfSeconds": 0.0001728162169456482
+        },
+        "copy:standalone.autonomy.movement_composition:append_choice:161": {
+          "calls": 161,
+          "inclusiveSeconds": 0.005549035966396332,
+          "selfSeconds": 0.005549035966396332
+        },
+        "copy:standalone.autonomy.movement_units:shifted_unit:133": {
+          "calls": 1639,
+          "inclusiveSeconds": 0.006808847188949585,
+          "selfSeconds": 0.006808847188949585
+        },
+        "copy:standalone.autonomy.movement_composition:_events:102": {
+          "calls": 161,
+          "inclusiveSeconds": 0.00014690682291984558,
+          "selfSeconds": 0.00014690682291984558
+        },
+        "copy:standalone.autonomy.movement_composition:profile_from_trace:55": {
+          "calls": 161,
+          "inclusiveSeconds": 0.0056803785264492035,
+          "selfSeconds": 0.0056803785264492035
+        },
+        "copy:standalone.autonomy.movement_composition:append_choice:195": {
+          "calls": 161,
+          "inclusiveSeconds": 0.00038200244307518005,
+          "selfSeconds": 0.00038200244307518005
+        },
+        "copy:standalone.autonomy.movement_composition:append_choice:204": {
+          "calls": 252,
+          "inclusiveSeconds": 0.0006056800484657288,
+          "selfSeconds": 0.0006056800484657288
+        },
+        "copy:standalone.autonomy.block_search:compile_block_path:309": {
+          "calls": 238,
+          "inclusiveSeconds": 0.000941205769777298,
+          "selfSeconds": 0.000941205769777298
+        },
+        "copy:standalone.autonomy.block_search:compile_block_path:320": {
+          "calls": 119,
+          "inclusiveSeconds": 0.033544525504112244,
+          "selfSeconds": 0.033544525504112244
+        },
+        "reachability.prepare": {
+          "calls": 213,
+          "inclusiveSeconds": 0.2906460389494896,
+          "selfSeconds": 0.1330283060669899
+        },
+        "reachability.analyze_model": {
+          "calls": 213,
+          "inclusiveSeconds": 0.4225883409380913,
+          "selfSeconds": 0.3626199960708618
+        },
+        "copy:standalone.autonomy.contact_combinations:merge_contacts:25": {
+          "calls": 10326,
+          "inclusiveSeconds": 0.03136049211025238,
+          "selfSeconds": 0.03136049211025238
+        },
+        "movement.choices.next": {
+          "calls": 80,
+          "inclusiveSeconds": 0.5857281610369682,
+          "selfSeconds": 0.11445312201976776
+        },
+        "copy:standalone.autonomy.movement_generation:propose_choices:49": {
+          "calls": 184,
+          "inclusiveSeconds": 0.00011646002531051636,
+          "selfSeconds": 0.00011646002531051636
+        },
+        "reachability.required": {
+          "calls": 50,
+          "inclusiveSeconds": 0.12398036941885948,
+          "selfSeconds": 0.036457523703575134
+        },
+        "reachability.check_program": {
+          "calls": 46,
+          "inclusiveSeconds": 0.8229543603956699,
+          "selfSeconds": 0.4914577677845955
+        },
+        "proposal.assess": {
+          "calls": 46,
+          "inclusiveSeconds": 0.8240443766117096,
+          "selfSeconds": 0.0010900162160396576
+        },
+        "movement.choices.close": {
+          "calls": 34,
+          "inclusiveSeconds": 1.2625008821487427e-05,
+          "selfSeconds": 1.2625008821487427e-05
+        },
+        "movement.source.next": {
+          "calls": 6,
+          "inclusiveSeconds": 1.543514210730791,
+          "selfSeconds": 0.09718232601881027
+        },
+        "movement.source.close": {
+          "calls": 6,
+          "inclusiveSeconds": 9.527802467346191e-05,
+          "selfSeconds": 9.527802467346191e-05
+        },
+        "copy:standalone.autonomy.cell_routes.checkpoint_search:evaluate_program:89": {
+          "calls": 6,
+          "inclusiveSeconds": 1.7873942852020264e-05,
+          "selfSeconds": 1.7873942852020264e-05
+        },
+        "copy:standalone.autonomy.solve_spec:solve_scope:27": {
+          "calls": 6,
+          "inclusiveSeconds": 5.956739187240601e-06,
+          "selfSeconds": 5.956739187240601e-06
+        },
+        "copy:standalone.autonomy.constraint_variants:__init__:45": {
+          "calls": 6,
+          "inclusiveSeconds": 0.00019925832748413086,
+          "selfSeconds": 0.00019925832748413086
+        },
+        "copy:standalone.autonomy.block_contacts:solve_contact_branches:128": {
+          "calls": 6,
+          "inclusiveSeconds": 0.002577543258666992,
+          "selfSeconds": 0.002577543258666992
+        },
+        "copy:standalone.autonomy.block_contacts:snapshot:198": {
+          "calls": 74,
+          "inclusiveSeconds": 0.0002915188670158386,
+          "selfSeconds": 0.0002915188670158386
+        },
+        "copy:standalone.autonomy.block_contacts:snapshot:199": {
+          "calls": 37,
+          "inclusiveSeconds": 0.012447446584701538,
+          "selfSeconds": 0.012447446584701538
+        },
+        "copy:standalone.autonomy.block_contacts:snapshot:200": {
+          "calls": 74,
+          "inclusiveSeconds": 0.00025476887822151184,
+          "selfSeconds": 0.00025476887822151184
+        },
+        "copy:standalone.autonomy.block_contacts:snapshot:201": {
+          "calls": 74,
+          "inclusiveSeconds": 0.00024208426475524902,
+          "selfSeconds": 0.00024208426475524902
+        },
+        "copy:standalone.autonomy.block_contacts:snapshot:202": {
+          "calls": 37,
+          "inclusiveSeconds": 0.0005441121757030487,
+          "selfSeconds": 0.0005441121757030487
+        },
+        "copy:standalone.autonomy.block_contacts:snapshot:203": {
+          "calls": 37,
+          "inclusiveSeconds": 0.3455420322716236,
+          "selfSeconds": 0.3455420322716236
+        },
+        "copy:standalone.autonomy.block_contacts:snapshot:204": {
+          "calls": 37,
+          "inclusiveSeconds": 0.012501653283834457,
+          "selfSeconds": 0.012501653283834457
+        },
+        "copy:standalone.autonomy.block_contacts:snapshot:205": {
+          "calls": 37,
+          "inclusiveSeconds": 0.0002907067537307739,
+          "selfSeconds": 0.0002907067537307739
+        },
+        "copy:standalone.autonomy.block_contacts:offer:155": {
+          "calls": 13,
+          "inclusiveSeconds": 0.0001345425844192505,
+          "selfSeconds": 0.0001345425844192505
+        },
+        "copy:standalone.autonomy.block_contacts:offer:158": {
+          "calls": 13,
+          "inclusiveSeconds": 8.687004446983337e-05,
+          "selfSeconds": 8.687004446983337e-05
+        },
+        "copy:standalone.autonomy.block_contacts:offer:163": {
+          "calls": 18,
+          "inclusiveSeconds": 4.671141505241394e-05,
+          "selfSeconds": 4.671141505241394e-05
+        },
+        "copy:standalone.autonomy.block_contacts:offer:164": {
+          "calls": 6,
+          "inclusiveSeconds": 3.1791627407073975e-05,
+          "selfSeconds": 3.1791627407073975e-05
+        },
+        "copy:standalone.autonomy.block_contacts:save_branch:190": {
+          "calls": 14,
+          "inclusiveSeconds": 0.000186871737241745,
+          "selfSeconds": 0.000186871737241745
+        },
+        "copy:standalone.autonomy.block_contacts:solve_contact_branches:285": {
+          "calls": 6,
+          "inclusiveSeconds": 0.0027597472071647644,
+          "selfSeconds": 0.0027597472071647644
+        },
+        "copy:standalone.autonomy.search:publish:253": {
+          "calls": 8,
+          "inclusiveSeconds": 0.004456877708435059,
+          "selfSeconds": 0.004456877708435059
+        },
+        "copy:standalone.autonomy.block_contacts:enrich:335": {
+          "calls": 8,
+          "inclusiveSeconds": 0.008896198123693466,
+          "selfSeconds": 0.008896198123693466
+        },
+        "copy:standalone.autonomy.block_contacts:enrich:341": {
+          "calls": 8,
+          "inclusiveSeconds": 2.8539448976516724e-05,
+          "selfSeconds": 2.8539448976516724e-05
+        },
+        "copy:standalone.autonomy.block_contacts:enrich:342": {
+          "calls": 8,
+          "inclusiveSeconds": 2.787262201309204e-05,
+          "selfSeconds": 2.787262201309204e-05
+        },
+        "copy:standalone.autonomy.block_contacts:snapshot:193": {
+          "calls": 48,
+          "inclusiveSeconds": 0.01865066960453987,
+          "selfSeconds": 0.01865066960453987
+        },
+        "solver.invoke": {
+          "calls": 6,
+          "inclusiveSeconds": 0.7887754179537296,
+          "selfSeconds": 0.7404072545468807
+        },
+        "copy:standalone.autonomy.search:evaluate:272": {
+          "calls": 6,
+          "inclusiveSeconds": 0.002986174076795578,
+          "selfSeconds": 0.002986174076795578
+        },
+        "copy:standalone.autonomy.search:probe:39": {
+          "calls": 6,
+          "inclusiveSeconds": 0.006724830716848373,
+          "selfSeconds": 0.006724830716848373
+        },
+        "copy:standalone.autonomy.search:probe:40": {
+          "calls": 18,
+          "inclusiveSeconds": 0.0029874593019485474,
+          "selfSeconds": 0.0029874593019485474
+        },
+        "copy:standalone.autonomy.search:search_allocations:119": {
+          "calls": 6,
+          "inclusiveSeconds": 3.21120023727417e-06,
+          "selfSeconds": 3.21120023727417e-06
+        },
+        "copy:standalone.autonomy.search:find_route:302": {
+          "calls": 4,
+          "inclusiveSeconds": 0.0016624517738819122,
+          "selfSeconds": 0.0016624517738819122
+        },
+        "copy:standalone.autonomy.block_contacts:solve_contact_branches:472": {
+          "calls": 4,
+          "inclusiveSeconds": 0.0058736652135849,
+          "selfSeconds": 0.0058736652135849
+        },
+        "numerical.evaluate": {
+          "calls": 6,
+          "inclusiveSeconds": 3.805831663310528,
+          "selfSeconds": 1.8317757360637188
+        },
+        "copy:standalone.autonomy.cell_routes.depth_first:score:635": {
+          "calls": 6,
+          "inclusiveSeconds": 0.08537136763334274,
+          "selfSeconds": 0.08537136763334274
+        },
+        "copy:standalone.autonomy.cell_routes.depth_first:commit_arrival:40": {
+          "calls": 8,
+          "inclusiveSeconds": 0.011625498533248901,
+          "selfSeconds": 0.011625498533248901
+        },
+        "copy:standalone.autonomy.cell_routes.checkpoints:retain_prefix:92": {
+          "calls": 8,
+          "inclusiveSeconds": 0.09526032954454422,
+          "selfSeconds": 0.09526032954454422
+        },
+        "copy:standalone.autonomy.cell_routes.depth_first:score:692": {
+          "calls": 4,
+          "inclusiveSeconds": 0.005692668259143829,
+          "selfSeconds": 0.005692668259143829
+        },
+        "peer.remember_peer": {
+          "calls": 4,
+          "inclusiveSeconds": 3.0506402254104614e-05,
+          "selfSeconds": 3.0506402254104614e-05
+        },
+        "comparison.compare_candidates": {
+          "calls": 8,
+          "inclusiveSeconds": 7.837638258934021e-05,
+          "selfSeconds": 7.487833499908447e-05
+        },
+        "peer.assess": {
+          "calls": 4,
+          "inclusiveSeconds": 0.00011333450675010681,
+          "selfSeconds": 3.49581241607666e-05
+        },
+        "copy:standalone.autonomy.cell_routes.depth_first:search_goals:912": {
+          "calls": 4,
+          "inclusiveSeconds": 0.11436980217695236,
+          "selfSeconds": 0.11436980217695236
+        },
+        "copy:standalone.autonomy.cell_routes.depth_first:search_goals:915": {
+          "calls": 4,
+          "inclusiveSeconds": 0.008975669741630554,
+          "selfSeconds": 0.008975669741630554
+        },
+        "copy:standalone.autonomy.movement_frontier:persistent_programs:33": {
+          "calls": 2,
+          "inclusiveSeconds": 0.004584621638059616,
+          "selfSeconds": 0.004584621638059616
+        },
+        "copy:standalone.autonomy.open_movement:named_choice:46": {
+          "calls": 4,
+          "inclusiveSeconds": 4.116073250770569e-05,
+          "selfSeconds": 4.116073250770569e-05
+        },
+        "copy:standalone.autonomy.movement_composition:append_choice:156": {
+          "calls": 4,
+          "inclusiveSeconds": 2.9962509870529175e-05,
+          "selfSeconds": 2.9962509870529175e-05
+        },
+        "reachability.sequence": {
+          "calls": 4,
+          "inclusiveSeconds": 0.02868083119392395,
+          "selfSeconds": 0.0015789195895195007
+        },
+        "dfs.session": {
+          "calls": 1,
+          "inclusiveSeconds": 5.714693538844585,
+          "selfSeconds": 0.03635803610086441
+        }
+      }
+    },
+    {
+      "index": 2,
+      "calls": 2,
+      "expanded": 1,
+      "budgetRemainingSeconds": 7.999982122331858,
+      "frames": 0,
+      "windows": 4,
+      "termination": "deadline",
+      "wallSeconds": 8.289941668510437,
+      "buckets": {
+        "copy:standalone.autonomy.route:prepare_route:13": {
+          "calls": 18,
+          "inclusiveSeconds": 0.007752306759357452,
+          "selfSeconds": 0.007752306759357452
+        },
+        "copy:standalone.autonomy.movement_units:movement_unit:15": {
+          "calls": 13,
+          "inclusiveSeconds": 2.0701438188552856e-05,
+          "selfSeconds": 2.0701438188552856e-05
+        },
+        "identity.digest": {
+          "calls": 976205,
+          "inclusiveSeconds": 2.1077339686453342,
+          "selfSeconds": 2.1077339686453342
+        },
+        "copy:standalone.autonomy.cell_routes.depth_first:search_goals:82": {
+          "calls": 1,
+          "inclusiveSeconds": 1.6920268535614014e-05,
+          "selfSeconds": 1.6920268535614014e-05
+        },
+        "comparison.comparison_label": {
+          "calls": 22,
+          "inclusiveSeconds": 0.0001009814441204071,
+          "selfSeconds": 0.0001009814441204071
+        },
+        "copy:standalone.autonomy.cell_routes.depth_first:expand_discovery:210": {
+          "calls": 1,
+          "inclusiveSeconds": 4.466623067855835e-05,
+          "selfSeconds": 4.466623067855835e-05
+        },
+        "copy:standalone.autonomy.cell_routes.depth_first:make_frame:188": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0007052123546600342,
+          "selfSeconds": 0.0007052123546600342
+        },
+        "callback.profile_write": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0012794174253940582,
+          "selfSeconds": 0.0012794174253940582
+        },
+        "callback.progress": {
+          "calls": 24,
+          "inclusiveSeconds": 0.0014768317341804504,
+          "selfSeconds": 0.0001974143087863922
+        },
+        "movement.source.create": {
+          "calls": 1,
+          "inclusiveSeconds": 3.416091203689575e-06,
+          "selfSeconds": 3.416091203689575e-06
+        },
+        "copy:standalone.autonomy.movement_frontier:persistent_programs:34": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0006913319230079651,
+          "selfSeconds": 0.0006913319230079651
+        },
+        "comparison.priority_key": {
+          "calls": 9,
+          "inclusiveSeconds": 6.452202796936035e-06,
+          "selfSeconds": 6.452202796936035e-06
+        },
+        "movement.choices.create": {
+          "calls": 1,
+          "inclusiveSeconds": 4.5821070671081543e-07,
+          "selfSeconds": 4.5821070671081543e-07
+        },
+        "copy:standalone.autonomy.vertical_profiles:trace_ladder_schedule:45": {
+          "calls": 14,
+          "inclusiveSeconds": 0.0001978762447834015,
+          "selfSeconds": 0.0001978762447834015
+        },
+        "copy:standalone.autonomy.movement_composition:profile_from_trace:52": {
+          "calls": 24,
+          "inclusiveSeconds": 0.00047409161925315857,
+          "selfSeconds": 0.00047409161925315857
+        },
+        "copy:standalone.autonomy.movement_composition:profile_from_trace:53": {
+          "calls": 12,
+          "inclusiveSeconds": 0.0019868165254592896,
+          "selfSeconds": 0.0019868165254592896
+        },
+        "copy:standalone.autonomy.movement_composition:movement_choice:74": {
+          "calls": 6,
+          "inclusiveSeconds": 5.539506673812866e-06,
+          "selfSeconds": 5.539506673812866e-06
+        },
+        "copy:standalone.autonomy.movement_composition:append_choice:154": {
+          "calls": 6,
+          "inclusiveSeconds": 6.496906280517578e-06,
+          "selfSeconds": 6.496906280517578e-06
+        },
+        "copy:standalone.autonomy.movement_composition:append_choice:161": {
+          "calls": 6,
+          "inclusiveSeconds": 0.00040194764733314514,
+          "selfSeconds": 0.00040194764733314514
+        },
+        "copy:standalone.autonomy.movement_units:shifted_unit:133": {
+          "calls": 206,
+          "inclusiveSeconds": 0.000748857855796814,
+          "selfSeconds": 0.000748857855796814
+        },
+        "copy:standalone.autonomy.movement_composition:_events:102": {
+          "calls": 6,
+          "inclusiveSeconds": 5.245208740234375e-06,
+          "selfSeconds": 5.245208740234375e-06
+        },
+        "copy:standalone.autonomy.movement_composition:profile_from_trace:55": {
+          "calls": 6,
+          "inclusiveSeconds": 0.00038562342524528503,
+          "selfSeconds": 0.00038562342524528503
+        },
+        "copy:standalone.autonomy.movement_composition:append_choice:195": {
+          "calls": 6,
+          "inclusiveSeconds": 1.3627111911773682e-05,
+          "selfSeconds": 1.3627111911773682e-05
+        },
+        "copy:standalone.autonomy.movement_composition:append_choice:204": {
+          "calls": 12,
+          "inclusiveSeconds": 5.8628618717193604e-05,
+          "selfSeconds": 5.8628618717193604e-05
+        },
+        "copy:standalone.autonomy.block_search:compile_block_path:309": {
+          "calls": 14,
+          "inclusiveSeconds": 5.7052820920944214e-05,
+          "selfSeconds": 5.7052820920944214e-05
+        },
+        "copy:standalone.autonomy.block_search:compile_block_path:320": {
+          "calls": 7,
+          "inclusiveSeconds": 0.004058580845594406,
+          "selfSeconds": 0.004058580845594406
+        },
+        "reachability.prepare": {
+          "calls": 10,
+          "inclusiveSeconds": 0.025954030454158783,
+          "selfSeconds": 0.013906218111515045
+        },
+        "reachability.analyze_model": {
+          "calls": 10,
+          "inclusiveSeconds": 0.03581012412905693,
+          "selfSeconds": 0.030008643865585327
+        },
+        "copy:standalone.autonomy.contact_combinations:merge_contacts:25": {
+          "calls": 1202,
+          "inclusiveSeconds": 0.003621269017457962,
+          "selfSeconds": 0.003621269017457962
+        },
+        "movement.choices.next": {
+          "calls": 4,
+          "inclusiveSeconds": 0.03184882923960686,
+          "selfSeconds": 0.004385650157928467
+        },
+        "copy:standalone.autonomy.movement_generation:propose_choices:49": {
+          "calls": 12,
+          "inclusiveSeconds": 6.8284571170806885e-06,
+          "selfSeconds": 6.8284571170806885e-06
+        },
+        "reachability.required": {
+          "calls": 3,
+          "inclusiveSeconds": 0.012187499552965164,
+          "selfSeconds": 0.0034934505820274353
+        },
+        "reachability.check_program": {
+          "calls": 3,
+          "inclusiveSeconds": 0.07239866629242897,
+          "selfSeconds": 0.035026419907808304
+        },
+        "proposal.assess": {
+          "calls": 3,
+          "inclusiveSeconds": 0.07246395945549011,
+          "selfSeconds": 6.529316306114197e-05
+        },
+        "movement.choices.close": {
+          "calls": 1,
+          "inclusiveSeconds": 2.905726432800293e-07,
+          "selfSeconds": 2.905726432800293e-07
+        },
+        "movement.source.next": {
+          "calls": 1,
+          "inclusiveSeconds": 0.1216009184718132,
+          "selfSeconds": 0.012717202305793762
+        },
+        "movement.source.close": {
+          "calls": 1,
+          "inclusiveSeconds": 1.4126300811767578e-05,
+          "selfSeconds": 1.4126300811767578e-05
+        },
+        "copy:standalone.autonomy.solve_spec:solve_scope:27": {
+          "calls": 1,
+          "inclusiveSeconds": 2.000480890274048e-06,
+          "selfSeconds": 2.000480890274048e-06
+        },
+        "copy:standalone.autonomy.constraint_variants:__init__:45": {
+          "calls": 1,
+          "inclusiveSeconds": 5.2206218242645264e-05,
+          "selfSeconds": 5.2206218242645264e-05
+        },
+        "copy:standalone.autonomy.block_contacts:solve_contact_branches:128": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0006454139947891235,
+          "selfSeconds": 0.0006454139947891235
+        },
+        "copy:standalone.autonomy.block_contacts:snapshot:198": {
+          "calls": 36,
+          "inclusiveSeconds": 0.0010002143681049347,
+          "selfSeconds": 0.0010002143681049347
+        },
+        "copy:standalone.autonomy.block_contacts:snapshot:199": {
+          "calls": 18,
+          "inclusiveSeconds": 0.10289179906249046,
+          "selfSeconds": 0.10289179906249046
+        },
+        "copy:standalone.autonomy.block_contacts:snapshot:200": {
+          "calls": 36,
+          "inclusiveSeconds": 0.00027697905898094177,
+          "selfSeconds": 0.00027697905898094177
+        },
+        "copy:standalone.autonomy.block_contacts:snapshot:201": {
+          "calls": 36,
+          "inclusiveSeconds": 0.0006729774177074432,
+          "selfSeconds": 0.0006729774177074432
+        },
+        "copy:standalone.autonomy.block_contacts:snapshot:202": {
+          "calls": 18,
+          "inclusiveSeconds": 0.001583494246006012,
+          "selfSeconds": 0.001583494246006012
+        },
+        "copy:standalone.autonomy.block_contacts:snapshot:203": {
+          "calls": 18,
+          "inclusiveSeconds": 0.445920217782259,
+          "selfSeconds": 0.445920217782259
+        },
+        "copy:standalone.autonomy.block_contacts:snapshot:204": {
+          "calls": 18,
+          "inclusiveSeconds": 0.06098809838294983,
+          "selfSeconds": 0.06098809838294983
+        },
+        "copy:standalone.autonomy.block_contacts:snapshot:205": {
+          "calls": 18,
+          "inclusiveSeconds": 0.0008912459015846252,
+          "selfSeconds": 0.0008912459015846252
+        },
+        "copy:standalone.autonomy.block_contacts:offer:155": {
+          "calls": 11,
+          "inclusiveSeconds": 0.0002535320818424225,
+          "selfSeconds": 0.0002535320818424225
+        },
+        "copy:standalone.autonomy.block_contacts:offer:158": {
+          "calls": 11,
+          "inclusiveSeconds": 0.00019233673810958862,
+          "selfSeconds": 0.00019233673810958862
+        },
+        "copy:standalone.autonomy.block_contacts:offer:163": {
+          "calls": 6,
+          "inclusiveSeconds": 6.50063157081604e-05,
+          "selfSeconds": 6.50063157081604e-05
+        },
+        "copy:standalone.autonomy.block_contacts:offer:164": {
+          "calls": 2,
+          "inclusiveSeconds": 2.1412968635559082e-05,
+          "selfSeconds": 2.1412968635559082e-05
+        },
+        "copy:standalone.autonomy.block_contacts:save_branch:190": {
+          "calls": 6,
+          "inclusiveSeconds": 0.000263117253780365,
+          "selfSeconds": 0.000263117253780365
+        },
+        "copy:standalone.autonomy.block_contacts:solve_contact_branches:285": {
+          "calls": 2,
+          "inclusiveSeconds": 0.0014005787670612335,
+          "selfSeconds": 0.0014005787670612335
+        },
+        "copy:standalone.autonomy.search:publish:253": {
+          "calls": 6,
+          "inclusiveSeconds": 0.004715252667665482,
+          "selfSeconds": 0.004715252667665482
+        },
+        "copy:standalone.autonomy.block_contacts:enrich:335": {
+          "calls": 4,
+          "inclusiveSeconds": 0.007392626255750656,
+          "selfSeconds": 0.007392626255750656
+        },
+        "copy:standalone.autonomy.block_contacts:enrich:341": {
+          "calls": 4,
+          "inclusiveSeconds": 8.424744009971619e-05,
+          "selfSeconds": 8.424744009971619e-05
+        },
+        "copy:standalone.autonomy.block_contacts:enrich:342": {
+          "calls": 4,
+          "inclusiveSeconds": 7.488206028938293e-05,
+          "selfSeconds": 7.488206028938293e-05
+        },
+        "copy:standalone.autonomy.block_contacts:snapshot:193": {
+          "calls": 218,
+          "inclusiveSeconds": 0.04209555685520172,
+          "selfSeconds": 0.04209555685520172
+        },
+        "solver.invoke": {
+          "calls": 2,
+          "inclusiveSeconds": 0.352718498557806,
+          "selfSeconds": 0.29151154309511185
+        },
+        "copy:standalone.autonomy.search:evaluate:272": {
+          "calls": 2,
+          "inclusiveSeconds": 0.0015791654586791992,
+          "selfSeconds": 0.0015791654586791992
+        },
+        "copy:standalone.autonomy.search:probe:39": {
+          "calls": 2,
+          "inclusiveSeconds": 0.00373004749417305,
+          "selfSeconds": 0.00373004749417305
+        },
+        "copy:standalone.autonomy.search:probe:40": {
+          "calls": 6,
+          "inclusiveSeconds": 0.001552589237689972,
+          "selfSeconds": 0.001552589237689972
+        },
+        "copy:standalone.autonomy.search:search_allocations:119": {
+          "calls": 2,
+          "inclusiveSeconds": 1.0021030902862549e-06,
+          "selfSeconds": 1.0021030902862549e-06
+        },
+        "copy:standalone.autonomy.search:find_route:302": {
+          "calls": 2,
+          "inclusiveSeconds": 0.0014186277985572815,
+          "selfSeconds": 0.0014186277985572815
+        },
+        "copy:standalone.autonomy.block_contacts:solve_contact_branches:472": {
+          "calls": 2,
+          "inclusiveSeconds": 0.005172707140445709,
+          "selfSeconds": 0.005172707140445709
+        },
+        "numerical.evaluate": {
+          "calls": 1,
+          "inclusiveSeconds": 7.988909628242254,
+          "selfSeconds": 4.905669804662466
+        },
+        "copy:standalone.autonomy.cell_routes.depth_first:score:635": {
+          "calls": 1,
+          "inclusiveSeconds": 0.03698321059346199,
+          "selfSeconds": 0.03698321059346199
+        },
+        "copy:standalone.autonomy.cell_routes.depth_first:commit_arrival:40": {
+          "calls": 3,
+          "inclusiveSeconds": 0.007531706243753433,
+          "selfSeconds": 0.007531706243753433
+        },
+        "copy:standalone.autonomy.cell_routes.checkpoints:retain_prefix:92": {
+          "calls": 3,
+          "inclusiveSeconds": 0.11005812510848045,
+          "selfSeconds": 0.11005812510848045
+        },
+        "copy:standalone.autonomy.cell_routes.depth_first:score:692": {
+          "calls": 2,
+          "inclusiveSeconds": 0.0049839988350868225,
+          "selfSeconds": 0.0049839988350868225
+        },
+        "peer.remember_peer": {
+          "calls": 1,
+          "inclusiveSeconds": 1.0669231414794922e-05,
+          "selfSeconds": 1.0669231414794922e-05
+        },
+        "comparison.compare_candidates": {
+          "calls": 3,
+          "inclusiveSeconds": 2.574920654296875e-05,
+          "selfSeconds": 2.442300319671631e-05
+        },
+        "peer.assess": {
+          "calls": 1,
+          "inclusiveSeconds": 2.946332097053528e-05,
+          "selfSeconds": 9.216368198394775e-06
+        },
+        "dfs.session": {
+          "calls": 1,
+          "inclusiveSeconds": 8.289899207651615,
+          "selfSeconds": 0.014738775789737701
+        },
+        "copy:standalone.autonomy.cell_routes.depth_first:score:709": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0007604993879795074,
+          "selfSeconds": 0.0007604993879795074
+        },
+        "copy:standalone.autonomy.cell_routes.depth_first:score:741": {
+          "calls": 1,
+          "inclusiveSeconds": 0.002480875700712204,
+          "selfSeconds": 0.002480875700712204
+        }
+      }
+    },
+    {
+      "index": 3,
+      "calls": 3,
+      "expanded": 1,
+      "budgetRemainingSeconds": 5.854713294655085,
+      "frames": 0,
+      "windows": 4,
+      "termination": "deadline",
+      "wallSeconds": 6.144898500293493,
+      "buckets": {
+        "copy:standalone.autonomy.route:prepare_route:13": {
+          "calls": 16,
+          "inclusiveSeconds": 0.007661987096071243,
+          "selfSeconds": 0.007661987096071243
+        },
+        "copy:standalone.autonomy.movement_units:movement_unit:15": {
+          "calls": 11,
+          "inclusiveSeconds": 1.2714415788650513e-05,
+          "selfSeconds": 1.2714415788650513e-05
+        },
+        "identity.digest": {
+          "calls": 602173,
+          "inclusiveSeconds": 1.3064982742071152,
+          "selfSeconds": 1.3064982742071152
+        },
+        "copy:standalone.autonomy.cell_routes.depth_first:search_goals:82": {
+          "calls": 1,
+          "inclusiveSeconds": 1.9583851099014282e-05,
+          "selfSeconds": 1.9583851099014282e-05
+        },
+        "comparison.comparison_label": {
+          "calls": 35,
+          "inclusiveSeconds": 0.00013481825590133667,
+          "selfSeconds": 0.00013481825590133667
+        },
+        "copy:standalone.autonomy.cell_routes.depth_first:frame:164": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0006925389170646667,
+          "selfSeconds": 0.0006925389170646667
+        },
+        "copy:standalone.autonomy.cell_routes.depth_first:expand_discovery:210": {
+          "calls": 1,
+          "inclusiveSeconds": 4.462152719497681e-05,
+          "selfSeconds": 4.462152719497681e-05
+        },
+        "copy:standalone.autonomy.cell_routes.depth_first:make_frame:188": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0006878338754177094,
+          "selfSeconds": 0.0006878338754177094
+        },
+        "callback.progress": {
+          "calls": 33,
+          "inclusiveSeconds": 4.2844563722610474e-05,
+          "selfSeconds": 4.2844563722610474e-05
+        },
+        "movement.source.create": {
+          "calls": 1,
+          "inclusiveSeconds": 3.8370490074157715e-06,
+          "selfSeconds": 3.8370490074157715e-06
+        },
+        "copy:standalone.autonomy.movement_frontier:persistent_programs:34": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0006599202752113342,
+          "selfSeconds": 0.0006599202752113342
+        },
+        "comparison.priority_key": {
+          "calls": 50,
+          "inclusiveSeconds": 3.360584378242493e-05,
+          "selfSeconds": 3.360584378242493e-05
+        },
+        "movement.choices.create": {
+          "calls": 1,
+          "inclusiveSeconds": 4.991888999938965e-07,
+          "selfSeconds": 4.991888999938965e-07
+        },
+        "copy:standalone.autonomy.vertical_profiles:trace_ladder_schedule:45": {
+          "calls": 14,
+          "inclusiveSeconds": 0.00018792226910591125,
+          "selfSeconds": 0.00018792226910591125
+        },
+        "copy:standalone.autonomy.movement_composition:profile_from_trace:52": {
+          "calls": 24,
+          "inclusiveSeconds": 0.00047545135021209717,
+          "selfSeconds": 0.00047545135021209717
+        },
+        "copy:standalone.autonomy.movement_composition:profile_from_trace:53": {
+          "calls": 12,
+          "inclusiveSeconds": 0.002078540623188019,
+          "selfSeconds": 0.002078540623188019
+        },
+        "copy:standalone.autonomy.movement_composition:movement_choice:74": {
+          "calls": 6,
+          "inclusiveSeconds": 5.412846803665161e-06,
+          "selfSeconds": 5.412846803665161e-06
+        },
+        "copy:standalone.autonomy.movement_composition:append_choice:154": {
+          "calls": 6,
+          "inclusiveSeconds": 6.6533684730529785e-06,
+          "selfSeconds": 6.6533684730529785e-06
+        },
+        "copy:standalone.autonomy.movement_composition:append_choice:161": {
+          "calls": 6,
+          "inclusiveSeconds": 0.00038863345980644226,
+          "selfSeconds": 0.00038863345980644226
+        },
+        "copy:standalone.autonomy.movement_units:shifted_unit:133": {
+          "calls": 204,
+          "inclusiveSeconds": 0.0007767379283905029,
+          "selfSeconds": 0.0007767379283905029
+        },
+        "copy:standalone.autonomy.movement_composition:_events:102": {
+          "calls": 6,
+          "inclusiveSeconds": 5.334615707397461e-06,
+          "selfSeconds": 5.334615707397461e-06
+        },
+        "copy:standalone.autonomy.movement_composition:profile_from_trace:55": {
+          "calls": 6,
+          "inclusiveSeconds": 0.0003927871584892273,
+          "selfSeconds": 0.0003927871584892273
+        },
+        "copy:standalone.autonomy.movement_composition:append_choice:195": {
+          "calls": 6,
+          "inclusiveSeconds": 1.4580786228179932e-05,
+          "selfSeconds": 1.4580786228179932e-05
+        },
+        "copy:standalone.autonomy.movement_composition:append_choice:204": {
+          "calls": 12,
+          "inclusiveSeconds": 6.074458360671997e-05,
+          "selfSeconds": 6.074458360671997e-05
+        },
+        "copy:standalone.autonomy.block_search:compile_block_path:309": {
+          "calls": 10,
+          "inclusiveSeconds": 4.542246460914612e-05,
+          "selfSeconds": 4.542246460914612e-05
+        },
+        "copy:standalone.autonomy.block_search:compile_block_path:320": {
+          "calls": 5,
+          "inclusiveSeconds": 0.0030129551887512207,
+          "selfSeconds": 0.0030129551887512207
+        },
+        "reachability.prepare": {
+          "calls": 7,
+          "inclusiveSeconds": 0.018700450658798218,
+          "selfSeconds": 0.009709354490041733
+        },
+        "reachability.analyze_model": {
+          "calls": 7,
+          "inclusiveSeconds": 0.017357248812913895,
+          "selfSeconds": 0.01325591653585434
+        },
+        "copy:standalone.autonomy.contact_combinations:merge_contacts:25": {
+          "calls": 1233,
+          "inclusiveSeconds": 0.003897048532962799,
+          "selfSeconds": 0.003897048532962799
+        },
+        "movement.choices.next": {
+          "calls": 4,
+          "inclusiveSeconds": 0.02671145275235176,
+          "selfSeconds": 0.004415154457092285
+        },
+        "copy:standalone.autonomy.movement_generation:propose_choices:49": {
+          "calls": 12,
+          "inclusiveSeconds": 7.878988981246948e-06,
+          "selfSeconds": 7.878988981246948e-06
+        },
+        "reachability.required": {
+          "calls": 1,
+          "inclusiveSeconds": 0.004020374268293381,
+          "selfSeconds": 0.001171708106994629
+        },
+        "reachability.check_program": {
+          "calls": 1,
+          "inclusiveSeconds": 0.02222375199198723,
+          "selfSeconds": 0.01170075312256813
+        },
+        "proposal.assess": {
+          "calls": 3,
+          "inclusiveSeconds": 0.023981750011444092,
+          "selfSeconds": 0.0015052147209644318
+        },
+        "movement.choices.close": {
+          "calls": 1,
+          "inclusiveSeconds": 3.3155083656311035e-07,
+          "selfSeconds": 3.3155083656311035e-07
+        },
+        "movement.source.next": {
+          "calls": 1,
+          "inclusiveSeconds": 0.06723054125905037,
+          "selfSeconds": 0.012008685618638992
+        },
+        "movement.source.close": {
+          "calls": 1,
+          "inclusiveSeconds": 2.3461878299713135e-05,
+          "selfSeconds": 2.3461878299713135e-05
+        },
+        "copy:standalone.autonomy.cell_routes.checkpoint_search:evaluate_program:89": {
+          "calls": 1,
+          "inclusiveSeconds": 3.084540367126465e-06,
+          "selfSeconds": 3.084540367126465e-06
+        },
+        "copy:standalone.autonomy.solve_spec:solve_scope:27": {
+          "calls": 2,
+          "inclusiveSeconds": 2.7902424335479736e-06,
+          "selfSeconds": 2.7902424335479736e-06
+        },
+        "copy:standalone.autonomy.constraint_variants:__init__:45": {
+          "calls": 1,
+          "inclusiveSeconds": 4.8626214265823364e-05,
+          "selfSeconds": 4.8626214265823364e-05
+        },
+        "copy:standalone.autonomy.block_contacts:solve_contact_branches:128": {
+          "calls": 2,
+          "inclusiveSeconds": 0.0012883320450782776,
+          "selfSeconds": 0.0012883320450782776
+        },
+        "copy:standalone.autonomy.block_contacts:snapshot:198": {
+          "calls": 48,
+          "inclusiveSeconds": 0.0009631514549255371,
+          "selfSeconds": 0.0009631514549255371
+        },
+        "copy:standalone.autonomy.block_contacts:snapshot:199": {
+          "calls": 24,
+          "inclusiveSeconds": 0.08039940521121025,
+          "selfSeconds": 0.08039940521121025
+        },
+        "copy:standalone.autonomy.block_contacts:snapshot:200": {
+          "calls": 48,
+          "inclusiveSeconds": 0.0003923960030078888,
+          "selfSeconds": 0.0003923960030078888
+        },
+        "copy:standalone.autonomy.block_contacts:snapshot:201": {
+          "calls": 48,
+          "inclusiveSeconds": 0.0008224509656429291,
+          "selfSeconds": 0.0008224509656429291
+        },
+        "copy:standalone.autonomy.block_contacts:snapshot:202": {
+          "calls": 24,
+          "inclusiveSeconds": 0.0017652921378612518,
+          "selfSeconds": 0.0017652921378612518
+        },
+        "copy:standalone.autonomy.block_contacts:snapshot:203": {
+          "calls": 24,
+          "inclusiveSeconds": 0.6025591045618057,
+          "selfSeconds": 0.6025591045618057
+        },
+        "copy:standalone.autonomy.block_contacts:snapshot:204": {
+          "calls": 24,
+          "inclusiveSeconds": 0.027226410806179047,
+          "selfSeconds": 0.027226410806179047
+        },
+        "copy:standalone.autonomy.block_contacts:snapshot:205": {
+          "calls": 24,
+          "inclusiveSeconds": 0.0010618753731250763,
+          "selfSeconds": 0.0010618753731250763
+        },
+        "copy:standalone.autonomy.block_contacts:offer:155": {
+          "calls": 13,
+          "inclusiveSeconds": 0.00027405470609664917,
+          "selfSeconds": 0.00027405470609664917
+        },
+        "copy:standalone.autonomy.block_contacts:offer:158": {
+          "calls": 13,
+          "inclusiveSeconds": 0.0002079308032989502,
+          "selfSeconds": 0.0002079308032989502
+        },
+        "copy:standalone.autonomy.block_contacts:offer:163": {
+          "calls": 9,
+          "inclusiveSeconds": 8.349865674972534e-05,
+          "selfSeconds": 8.349865674972534e-05
+        },
+        "copy:standalone.autonomy.block_contacts:offer:164": {
+          "calls": 3,
+          "inclusiveSeconds": 3.333389759063721e-05,
+          "selfSeconds": 3.333389759063721e-05
+        },
+        "copy:standalone.autonomy.block_contacts:save_branch:190": {
+          "calls": 9,
+          "inclusiveSeconds": 0.00035429373383522034,
+          "selfSeconds": 0.00035429373383522034
+        },
+        "copy:standalone.autonomy.block_contacts:solve_contact_branches:285": {
+          "calls": 3,
+          "inclusiveSeconds": 0.0024582892656326294,
+          "selfSeconds": 0.0024582892656326294
+        },
+        "copy:standalone.autonomy.search:publish:253": {
+          "calls": 10,
+          "inclusiveSeconds": 0.007238011807203293,
+          "selfSeconds": 0.007238011807203293
+        },
+        "copy:standalone.autonomy.block_contacts:enrich:335": {
+          "calls": 6,
+          "inclusiveSeconds": 0.010497007519006729,
+          "selfSeconds": 0.010497007519006729
+        },
+        "copy:standalone.autonomy.block_contacts:enrich:341": {
+          "calls": 6,
+          "inclusiveSeconds": 0.00011371821165084839,
+          "selfSeconds": 0.00011371821165084839
+        },
+        "copy:standalone.autonomy.block_contacts:enrich:342": {
+          "calls": 6,
+          "inclusiveSeconds": 9.591132402420044e-05,
+          "selfSeconds": 9.591132402420044e-05
+        },
+        "copy:standalone.autonomy.block_contacts:snapshot:193": {
+          "calls": 242,
+          "inclusiveSeconds": 0.05577850714325905,
+          "selfSeconds": 0.05577850714325905
+        },
+        "solver.invoke": {
+          "calls": 3,
+          "inclusiveSeconds": 0.39552200585603714,
+          "selfSeconds": 0.31116458401083946
+        },
+        "copy:standalone.autonomy.search:evaluate:272": {
+          "calls": 3,
+          "inclusiveSeconds": 0.002250492572784424,
+          "selfSeconds": 0.002250492572784424
+        },
+        "copy:standalone.autonomy.search:probe:39": {
+          "calls": 3,
+          "inclusiveSeconds": 0.005336165428161621,
+          "selfSeconds": 0.005336165428161621
+        },
+        "copy:standalone.autonomy.search:probe:40": {
+          "calls": 9,
+          "inclusiveSeconds": 0.0022308342158794403,
+          "selfSeconds": 0.0022308342158794403
+        },
+        "copy:standalone.autonomy.search:search_allocations:119": {
+          "calls": 3,
+          "inclusiveSeconds": 1.4565885066986084e-06,
+          "selfSeconds": 1.4565885066986084e-06
+        },
+        "copy:standalone.autonomy.search:find_route:302": {
+          "calls": 3,
+          "inclusiveSeconds": 0.0019723325967788696,
+          "selfSeconds": 0.0019723325967788696
+        },
+        "copy:standalone.autonomy.block_contacts:solve_contact_branches:472": {
+          "calls": 3,
+          "inclusiveSeconds": 0.007195379585027695,
+          "selfSeconds": 0.007195379585027695
+        },
+        "numerical.evaluate": {
+          "calls": 2,
+          "inclusiveSeconds": 5.588297963142395,
+          "selfSeconds": 3.135712657123804
+        },
+        "copy:standalone.autonomy.cell_routes.depth_first:score:635": {
+          "calls": 2,
+          "inclusiveSeconds": 0.05853887274861336,
+          "selfSeconds": 0.05853887274861336
+        },
+        "copy:standalone.autonomy.cell_routes.depth_first:commit_arrival:40": {
+          "calls": 6,
+          "inclusiveSeconds": 0.014050710946321487,
+          "selfSeconds": 0.014050710946321487
+        },
+        "copy:standalone.autonomy.cell_routes.checkpoints:retain_prefix:92": {
+          "calls": 6,
+          "inclusiveSeconds": 0.22480137273669243,
+          "selfSeconds": 0.22480137273669243
+        },
+        "copy:standalone.autonomy.cell_routes.depth_first:score:692": {
+          "calls": 4,
+          "inclusiveSeconds": 0.009274911135435104,
+          "selfSeconds": 0.009274911135435104
+        },
+        "peer.remember_peer": {
+          "calls": 2,
+          "inclusiveSeconds": 3.0465424060821533e-05,
+          "selfSeconds": 2.9008835554122925e-05
+        },
+        "comparison.compare_candidates": {
+          "calls": 34,
+          "inclusiveSeconds": 0.0002037547528743744,
+          "selfSeconds": 0.0001854337751865387
+        },
+        "peer.assess": {
+          "calls": 6,
+          "inclusiveSeconds": 0.000125836580991745,
+          "selfSeconds": 4.25390899181366e-05
+        },
+        "copy:standalone.autonomy.cell_routes.depth_first:search_goals:912": {
+          "calls": 2,
+          "inclusiveSeconds": 0.13046741485595703,
+          "selfSeconds": 0.13046741485595703
+        },
+        "copy:standalone.autonomy.cell_routes.depth_first:search_goals:915": {
+          "calls": 2,
+          "inclusiveSeconds": 0.007554586976766586,
+          "selfSeconds": 0.007554586976766586
+        },
+        "dfs.session": {
+          "calls": 1,
+          "inclusiveSeconds": 6.144867707043886,
+          "selfSeconds": 0.031282179057598114
+        },
+        "copy:standalone.autonomy.cell_routes.depth_first:score:709": {
+          "calls": 2,
+          "inclusiveSeconds": 0.0015076249837875366,
+          "selfSeconds": 0.0015076249837875366
+        },
+        "copy:standalone.autonomy.cell_routes.depth_first:score:741": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0026134997606277466,
+          "selfSeconds": 0.0026134997606277466
+        },
+        "bound.transfer_bound": {
+          "calls": 5,
+          "inclusiveSeconds": 0.00010018050670623779,
+          "selfSeconds": 0.00010018050670623779
+        },
+        "bound.remaining_bound": {
+          "calls": 11,
+          "inclusiveSeconds": 0.00016907602548599243,
+          "selfSeconds": 0.00016907602548599243
+        },
+        "copy:standalone.autonomy.cell_routes.depth_first:search_goals:897": {
+          "calls": 2,
+          "inclusiveSeconds": 0.005094245076179504,
+          "selfSeconds": 0.005094245076179504
+        },
+        "copy:standalone.autonomy.constraint_variants:__init__:42": {
+          "calls": 1,
+          "inclusiveSeconds": 0.013523206114768982,
+          "selfSeconds": 0.013523206114768982
+        },
+        "copy:standalone.autonomy.block_contacts:solve_contact_branches:147": {
+          "calls": 1,
+          "inclusiveSeconds": 1.1622905731201172e-05,
+          "selfSeconds": 1.1622905731201172e-05
+        },
+        "copy:standalone.autonomy.block_contacts:solve_contact_branches:167": {
+          "calls": 1,
+          "inclusiveSeconds": 8.627772331237793e-06,
+          "selfSeconds": 8.627772331237793e-06
+        },
+        "copy:standalone.autonomy.block_contacts:solve_contact_branches:168": {
+          "calls": 1,
+          "inclusiveSeconds": 8.162111043930054e-06,
+          "selfSeconds": 8.162111043930054e-06
+        },
+        "copy:standalone.autonomy.block_contacts:solve_contact_branches:173": {
+          "calls": 1,
+          "inclusiveSeconds": 9.164214134216309e-07,
+          "selfSeconds": 9.164214134216309e-07
+        },
+        "copy:standalone.autonomy.block_contacts:solve_contact_branches:220": {
+          "calls": 1,
+          "inclusiveSeconds": 0.002253543585538864,
+          "selfSeconds": 0.002253543585538864
+        },
+        "copy:standalone.autonomy.block_contacts:solve_contact_branches:221": {
+          "calls": 1,
+          "inclusiveSeconds": 2.9828399419784546e-05,
+          "selfSeconds": 2.9828399419784546e-05
+        },
+        "copy:standalone.autonomy.block_contacts:solve_contact_branches:222": {
+          "calls": 1,
+          "inclusiveSeconds": 3.5390257835388184e-06,
+          "selfSeconds": 3.5390257835388184e-06
+        },
+        "copy:standalone.autonomy.block_contacts:solve_contact_branches:223": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0021454617381095886,
+          "selfSeconds": 0.0021454617381095886
+        }
+      }
+    }
+  ],
+  "active": [],
+  "accounting": "Inclusive buckets overlap; selfSeconds exclude instrumented children. Unwrapped work stays in its parent.",
+  "wallSeconds": 22.252392541617155,
+  "cpuSeconds": 20.146084000000002,
+  "maxRssBytes": 229736448,
+  "error": null,
+  "gc": {
+    "calls": 2365,
+    "seconds": 0.6718890778720379
+  },
+  "cancelled": false
+}

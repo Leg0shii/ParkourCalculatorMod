@@ -141,7 +141,7 @@ class PersistentGenerationTests(unittest.TestCase):
             return p
         def generated(*args):return iter(range(30))
         with patch('standalone.autonomy.movement_frontier.generate_choices',side_effect=generated), \
-             patch('standalone.autonomy.movement_frontier.append_choice',side_effect=child):
+             patch('standalone.autonomy.movement_composition.append_choice',side_effect=child):
             report={}
             gen=iter_movement_programs(scene,settings=cfg,checkpoint_tick=1,threshold=0.,persistent=True,report=report)
             first=next(gen);saved=json.loads(json.dumps(report['continuation']));gen.close()

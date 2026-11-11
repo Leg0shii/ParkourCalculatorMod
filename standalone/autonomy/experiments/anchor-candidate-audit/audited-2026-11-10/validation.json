@@ -1,0 +1,14 @@
+{
+  "scope": "Read-only audit; no new IPOPT or cold route solve.",
+  "integratedRevision": "91381e5a",
+  "matchedRuntimeFiles": 105,
+  "admittedPrograms": 1158,
+  "rawChoices": 10568,
+  "workers": 149,
+  "internalSetupHopWorkers": 114,
+  "assertions": "CSV counts, query sums, movement reconciliation, probe cases/clocks, script syntax and integrated source hashes passed.",
+  "scripts": {
+    "audit.py": "cf5aef56e8789b67f1ac088503258392cd44582cd00c364e577057b0c53e375b",
+    "probe.py": "ce4a566d5aa27d28cc1554e4d25ce8ce53c448322c333853fd9ac2dc13692ad5"
+  }
+}

@@ -1,5 +1,79 @@
 # Function and test definition index
 
+## Hard-jump implementation navigation (2026-11-11)
+
+These entries supersede the corresponding source-era line references below.
+
+### [autonomy/candidate_comparison.py](../autonomy/candidate_comparison.py)
+
+- `comparison_label` — line 11.
+- `priority_key` — line 38.
+- `_count_protections` — line 44.
+- `measurements` — line 53.
+- `_clock_protections` — line 61.
+- `_clock_decision` — line 90.
+- `compare_candidates` — line 107.
+
+### [autonomy/cell_routes/preparation_deferrals.py](../autonomy/cell_routes/preparation_deferrals.py)
+
+- `remember_peer` — line 7.
+- `assess` — line 16.
+
+### [autonomy/cell_routes/transfer_time_bounds.py](../autonomy/cell_routes/transfer_time_bounds.py)
+
+- `state_covers` — line 21.
+- `transfer_bound` — line 32.
+- `transfer_bounds` — line 87.
+
+### [autonomy/interactions.py](../autonomy/interactions.py)
+
+- `interaction_context_key` — line 8.
+- `query_interaction` — line 23.
+- `normalize_alternatives` — line 65.
+- `block_interaction` — line 82.
+- `interaction_allowed` — line 87.
+- `InteractionGate` — line 92.
+- `InteractionGate.__init__` — line 94.
+- `InteractionGate._cached` — line 101.
+- `InteractionGate.prepare` — line 114.
+- `InteractionGate.analyze_model` — line 131.
+- `InteractionGate.analyze` — line 149.
+- `InteractionGate.condition` — line 155.
+- `InteractionGate.envelopes` — line 162.
+- `InteractionGate.sequence` — line 166.
+- `InteractionGate.check_program` — line 179.
+- `InteractionGate.query` — line 198.
+- `InteractionGate.required` — line 225.
+- `InteractionGate.context` — line 246.
+- `InteractionGate.summary` — line 249.
+
+### [autonomy/movement_generation.py](../autonomy/movement_generation.py)
+
+- `register_movement_type` — line 10.
+- `generate_choices` — line 17.
+- `propose_choices` — line 31.
+- `assess_proposal` — line 56.
+- `_unit` — line 67.
+- `NormalGenerator` — line 75.
+- `NormalGenerator.sneak_inputs` — line 76.
+- `NormalGenerator.generate` — line 79.
+- `LadderFallGenerator` — line 103.
+- `LadderFallGenerator.sneak_inputs` — line 104.
+- `LadderFallGenerator.generate` — line 107.
+- `LadderClimbGenerator` — line 121.
+- `LadderClimbGenerator.sneak_inputs` — line 122.
+- `LadderClimbGenerator._choice` — line 125.
+- `LadderClimbGenerator.generate` — line 147.
+- `generate_unit_programs` — line 177.
+- `materialize_generated_units` — line 202.
+- `sneak_domain` — line 214.
+
+### [autonomy/cell_routes/anchor_time_bound.py](../autonomy/cell_routes/anchor_time_bound.py)
+
+- `cover_distance` — line 9.
+- `_vertical_remaining` — line 14.
+- `remaining_bound` — line 46.
+
 ## Integration navigation update (2026-11-10)
 
 These entries update the source-era index below.

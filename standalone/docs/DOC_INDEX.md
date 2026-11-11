@@ -1,5 +1,12 @@
 # Documentation index
 
+Current hard-jump implementation: [shared comparison/reachability plan](HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md)
+and [candidate audit](../autonomy/experiments/anchor-candidate-audit/README.md).
+The plan is implemented with one shared comparison helper, shared proposal
+reachability and conditional no-stepping hard-flight bounds. [Acceptance evidence](../autonomy/experiments/hard-jump-comparisons/README.md)
+records native tests, matched cold runs and known-witness bound controls. The
+earlier candidate audit remains saved-run investigation evidence.
+
 Current integration: [anchor search and solver integration](ANCHOR_SEARCH_INTEGRATION.md),
 [selective review](SOLVER_BRANCH_INTEGRATION_REVIEW.md), and
 [profiling evidence](../autonomy/experiments/anchor-runtime-profile/README.md).

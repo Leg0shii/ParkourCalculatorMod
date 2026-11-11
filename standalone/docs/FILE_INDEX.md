@@ -1,5 +1,27 @@
 # Complete standalone file inventory
 
+2026-11-11 implementation additions:
+
+| File | Purpose |
+| --- | --- |
+| [candidate_comparison.py](../autonomy/candidate_comparison.py) | Sole intermediate count, priority, protection and incumbent predicate owner, including legacy compatibility adapters. |
+| [preparation_deferrals.py](../autonomy/cell_routes/preparation_deferrals.py) | Frame-local validated peer storage and common-verdict orchestration; recoverable records stay in the existing DFS table. |
+| [transfer_time_bounds.py](../autonomy/cell_routes/transfer_time_bounds.py) | Phase-correct landing enclosures and ceiling-aware conditional hard-flight minima under the declared no-stepping assumption. |
+| [comparison tests](../autonomy/tests/test_candidate_comparison.py) | Ordinary/turnaround protections, equality, incumbent bounds, missing data and legacy compatibility. |
+| [proposal tests](../autonomy/tests/test_proposal_analysis.py) | Analysis reuse/isolation, native joint stepping rejection, owned tails and stable resume behavior. |
+| [flight-bound tests](../autonomy/tests/test_transfer_time_bounds.py) | Derived Real11 clocks, ceiling controls, phase offsets, latch activation and paid airborne time. |
+| [feature evidence](../autonomy/experiments/hard-jump-comparisons/README.md) | Matched pre/post cold runs, native gate, provenance, request fingerprints and replay scope. |
+
+2026-11-11 investigation additions:
+
+| File | Purpose |
+| --- | --- |
+| [hard-jump follow-up plan](HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md) | Controlling implementation/acceptance ledger for shared tick comparison, protected deferral, early reachability and transfer-time bounds. |
+| [candidate audit README](../autonomy/experiments/anchor-candidate-audit/README.md) | Saved-run candidate inventory, findings, scope and reproduction commands. |
+| [audit.py](../autonomy/experiments/anchor-candidate-audit/audit.py) | Reconstruct all admitted physical programs and numerical-query metrics from a saved checkpoint. |
+| [probe.py](../autonomy/experiments/anchor-candidate-audit/probe.py) | Enumerate/screen representative saved prefixes without IPOPT. |
+| [plan_probe.py](../autonomy/experiments/anchor-candidate-audit/plan_probe.py) | Read-only Real11 geometry/clock checks; generic stepped/cancelled transfers now explicitly fall outside the hard domain. |
+
 2026-11-10 additions: [integration contract](ANCHOR_SEARCH_INTEGRATION.md),
 [integration review](SOLVER_BRANCH_INTEGRATION_REVIEW.md),
 [remaining-time bound](../autonomy/cell_routes/anchor_time_bound.py),

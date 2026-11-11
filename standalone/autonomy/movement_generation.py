@@ -28,6 +28,42 @@ def generate_choices(kind, context, **options):
         yield choice
 
 
+def propose_choices(kind, context, *, source=None, start=0, max_inputs=200,
+                    inherit_decisions=False, project=None, bind=None):
+    """Compose once at stable raw-choice ordinals, before budgeted assessment.
+
+    Rejected proposals are yielded too: filtering may depend on a new incumbent,
+    but it must not renumber the iterator's resume cursor. Old ordinals are replayed
+    without composing/checking them. Producer prerequisites remain deterministic.
+    """
+    from .movement_composition import append_choice
+    source=generate_choices(kind,context) if source is None else source
+    for ordinal,choice in enumerate(source):
+        if ordinal<start:
+            if context.get('checkBudget'):context['checkBudget']()
+            continue
+        full=append_choice(context['program'],choice,max_inputs=max_inputs)
+        if full is not None and inherit_decisions:
+            parent=context['program']
+            for field in ('decisionPoint','decisionPointSource','decisionPointTick','decisionTurnaround','restoredRun'):
+                if field in parent:full[field]=copy.deepcopy(parent[field])
+            full['priorityTurnaround']=parent.get('decisionTurnaround',False)
+        if full is not None and bind is not None:full=bind(full)
+        owned=project(full) if full is not None and project is not None else full
+        yield dict(ordinal=ordinal,choice=choice,fullProgram=full,program=owned,projected=owned is not full)
+
+
+def assess_proposal(proposal, screen, gate=None):
+    """Check the owned model once; a rejected unused extension is separate."""
+    owned,full=proposal['program'],proposal['fullProgram']
+    if owned is None:return dict(proof=None,fullProof=None)
+    proof=screen(owned) if screen is not None else gate.check_program(owned) if gate is not None else None
+    full_proof=None
+    if proposal.get('projected',owned is not full) and gate is not None and proof is None:
+        full_proof=gate.check_program(full)
+    return dict(proof=proof,fullProof=full_proof)
+
+
 def _unit(kind, context, start, end, **parameters):
     unit = movement_unit(kind, start, end, **parameters)
     if MOVEMENT_TYPES[kind]['ladder']:

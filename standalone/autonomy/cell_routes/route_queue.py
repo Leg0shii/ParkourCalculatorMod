@@ -3,6 +3,8 @@
 import copy
 import time
 
+from ..candidate_comparison import POLICY_VERSION as COMPARISON_POLICY_VERSION
+
 from ..block_search import prepare_scene
 from ..movement_search import movement_settings
 from ..ranking import candidate_rank
@@ -59,7 +61,7 @@ def search_routes(request, compiler, *, task_goal=None, spatial_settings=None, *
     saved=options.pop('resume_state',None)
     if saved is not None and options.get('initial_programs') is None:
         options['initial_programs']=saved.get('initialRoots')
-    context=digest(dict(version=1,allocationPolicy=2,routeStagePolicy=2,routeCommitPolicy=1,routeProposalPolicy=1,movementGenerationPolicy=3,constraintGenerationPolicy=7,
+    context=digest(dict(version=1,comparisonPolicy=COMPARISON_POLICY_VERSION,allocationPolicy=2,routeStagePolicy=2,routeCommitPolicy=1,routeProposalPolicy=1,movementGenerationPolicy=3,constraintGenerationPolicy=7,
         graph=graph.context,task=task_goal,spatial=spatial,
         scene={k:v for k,v in scene.items() if k!='movementSearch'},
         domain={k:v for k,v in cfg.items() if k not in ('maxPrefixes','maxQueuedPrefixes','maxChoicesPerType','expansionsPerProposal')},

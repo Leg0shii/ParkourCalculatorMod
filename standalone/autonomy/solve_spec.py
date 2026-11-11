@@ -3,6 +3,7 @@ import hashlib
 import json
 
 from .movement_composition import program_physics_key
+from .candidate_comparison import comparison_label, priority_key
 
 
 def digest(value):
@@ -11,21 +12,15 @@ def digest(value):
 
 def motion_record(program):
     p = program.get('profile', {})
-    n = p.get('airtime', 0)
-    grounded, jump = p.get('grounded', []), p.get('jump', [])
-    if len(grounded) < n or len(jump) < n:
+    c = comparison_label(program)
+    if c['J'] is None:
         return None
-    schedule = ['J' if grounded[t] and jump[t] else 'R' if grounded[t] else 'A' for t in range(n)]
-    phase = {k: p[k] for k in ('position', 'velocity', 'grounded', 'contacts', 'caseEvents') if k in p}
-    return dict(ticks=n, jumps=schedule.count('J'), runs=schedule.count('R'), schedule=schedule,
-                phase=digest(phase))
+    phase = {k:p[k] for k in ('position','velocity','grounded','contacts','caseEvents') if k in p}
+    return dict(ticks=c['T'], jumps=c['J'], runs=c['R'], schedule=c['schedule'], phase=digest(phase))
 
 
 def processing_key(program, identity=''):
-    record = motion_record(program)
-    if record is None:
-        return (program.get('profile', {}).get('airtime', 0), 0, 0, identity)
-    return (record['ticks'], -record['jumps'], record['runs'], identity)
+    return priority_key(comparison_label(program, identity=identity))
 
 
 def solve_scope(scene, program, supplied=None):

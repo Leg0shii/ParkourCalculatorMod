@@ -118,6 +118,17 @@ class SteppingGenerator:
         stats.update(complete=True, termination='exhausted')
 
 
+def _sequence_allowed(context, initial, event, jumping, rows, support=None):
+    """Check the common named outcome before creating its side alternatives."""
+    gate=context.get('interactionGate')
+    if gate is None or not hasattr(gate,'sequence'):
+        return True
+    from .open_movement import named_choice
+    common=named_choice(context,'stepping',initial,event,jumping=jumping,
+                        constraints=rows,support=support)
+    return common is not None and gate.sequence(context,common) is None
+
+
 def open_stepping_choices(context):
     from .interactions import interaction_allowed
     from .movement_composition import scalar_initial
@@ -178,9 +189,15 @@ def open_stepping_choices(context):
                     continue
                 if (enabled('blip') and 0 <= higher['top'] - y <= f32(.6) and
                         (context.get('landingAllowed') is None or context['landingAllowed'](higher))):
-                    options = landing_wall_options(box, landing) if landing else (
-                        ([outside_row(box, axis, sign, 0, 'blip:wall_avoid')], [])
-                        for axis in ('X', 'Z') for sign in (-1, 1))
+                    shared_event=dict(case='blip',input=landing,plane=higher['top'],lowerHeight=lower['top'],
+                        higherHeight=higher['top'],box=box,lowerBox=box_for(lower,context),
+                        anchors={'landing':landing,'hit':landing+1})
+                    options = ()
+                    if _sequence_allowed(context,initial,shared_event,jumping,
+                            lower_rows+region_rows(higher,landing+1),higher['id']):
+                        options = landing_wall_options(box, landing) if landing else (
+                            ([outside_row(box, axis, sign, 0, 'blip:wall_avoid')], [])
+                            for axis in ('X', 'Z') for sign in (-1, 1))
                     for rows, finite in options:
                         event = dict(case='blip', input=landing, plane=higher['top'], lowerHeight=lower['top'],
                             higherHeight=higher['top'], box=box, lowerBox=box_for(lower, context),
@@ -191,6 +208,11 @@ def open_stepping_choices(context):
                             yield choice
                 for case in ('blip_up', 'corner_blip_up'):
                     if not enabled(case) or not (y > higher['top'] if case == 'blip_up' else 0 <= higher['top'] - y <= f32(.6)):
+                        continue
+                    shared_event=dict(case=case,input=landing,plane=y,lowerHeight=lower['top'],higherHeight=higher['top'],
+                        box=box,lowerBox=box_for(lower,context),anchors={'landing':landing,'hit':landing+1})
+                    shared_rows=lower_rows+(region_rows(higher,landing+1) if case=='blip_up' else [])
+                    if not _sequence_allowed(context,initial,shared_event,jumping,shared_rows):
                         continue
                     rows = ([outside_row(box, axis, sign, landing, 'blip_up:outside')] + region_rows(higher, landing + 1)
                             for axis in ('X', 'Z') for sign in (-1, 1)) if case == 'blip_up' else (

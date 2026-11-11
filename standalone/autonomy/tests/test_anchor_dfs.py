@@ -125,7 +125,7 @@ class AnchorDFSTests(unittest.TestCase):
     def check_lazy_queue_bound(self, *, refinement=False, remaining=15):
         saved=self.queued_tree(refinement)
         checked=[];cancel=threading.Event()
-        def bound(guides,span,program,motion):
+        def bound(guides,span,program,motion,**kwargs):
             checked.append(program['profile']['airtime'])
             return dict(remainingTicks=remaining)
         def progress(state):
@@ -160,7 +160,9 @@ class AnchorDFSTests(unittest.TestCase):
         self.assertEqual(len(prepared),1)
         self.assertEqual(prepared[0]['status'],'feasible')
         self.assertEqual(prepared[0]['transferStructure']['transferJumps'],[1])
-        self.assertEqual(result['searchState']['dfs']['hardLatches']['start→mid']['version'],2)
+        from standalone.autonomy.cell_routes.anchor_policy import HARD_JUMP_POLICY_VERSION
+        self.assertEqual(result['searchState']['dfs']['hardLatches']['start→mid']['version'],HARD_JUMP_POLICY_VERSION)
+        self.assertEqual(prepared[0]['transferStructure']['assumption'],'hard_transfer_without_stepping')
 
     def test_incompatible_old_latch_policy_is_rejected_on_resume(self):
         first,_=self.run_tree(calls=2)
@@ -178,7 +180,7 @@ class AnchorDFSTests(unittest.TestCase):
         self.assertTrue(solve_due(dict(decisionDepth=1,lastSolvedDepth=0),4,forced=True))
         self.assertFalse(solve_due(dict(decisionDepth=1,lastSolvedDepth=1),1))
 
-    def run_recovery_tree(self, reject_first=True, oracle=True):
+    def run_recovery_tree(self, reject_first=True, oracle=True, include_setup=False, finish_tick=30):
         from standalone.autonomy.block_search import prepare_scene
         from standalone.autonomy.tests.test_checkpoint_guidance import flat_scene
         from standalone.autonomy.tests.test_minimum_runs import flight
@@ -187,6 +189,7 @@ class AnchorDFSTests(unittest.TestCase):
         raw={k:v for k,v in s.items() if k not in ('collisionScene',)}
         raw['blocks']=[dict(id=b['id'],boxes=[s['collisionScene']['solids'][b['solidIndex']]]) for b in s['blocks']]
         raw['blocks'].append(dict(id='finish',boxes=[[8,0,0,9,1,1]]))
+        raw['movementSearch']['maxInputs']=max(raw['movementSearch']['maxInputs'],finish_tick)
         s=prepare_scene(raw);calls=[]
         def generate(target_scene,*,report,initial_programs,continuation=None,**kwargs):
             saved=copy.deepcopy(continuation) if continuation else dict(expanded=1,cursor=0,exhausted=False)
@@ -194,7 +197,15 @@ class AnchorDFSTests(unittest.TestCase):
             if target_scene['goalBlock']=='goal':
                 base=dict(s,goalBlock='goal')
                 choices=[flight(base,r) for r in (0,1,2)]
-            else:choices=[extend(s,initial_programs[0],'finish',30)]
+                if include_setup:
+                    from standalone.autonomy.open_movement import normal_choices
+                    from standalone.autonomy.movement_composition import empty_program,append_choice,boundary_state
+                    parent=empty_program(base['initial'],threshold=0.);parent['terminalSupport']='start'
+                    options=normal_choices(dict(scene=base,state=boundary_state(parent),maxInputs=30,threshold=0.))
+                    parent=append_choice(parent,next(c for c in options if c['terminalSupport']=='start' and c['profile']['jump'][0]))
+                    options=normal_choices(dict(scene=base,state=boundary_state(parent),maxInputs=30,threshold=0.))
+                    choices.append(append_choice(parent,next(c for c in options if c['terminalSupport']=='goal' and c['profile']['jump'][0])))
+            else:choices=[extend(s,initial_programs[0],'finish',finish_tick)]
             while saved['cursor']<len(choices):
                 p=choices[saved['cursor']];saved['cursor']+=1;yield p
             saved['exhausted']=True
@@ -224,6 +235,15 @@ class AnchorDFSTests(unittest.TestCase):
         self.assertEqual(calls.count(('goal',14)),0)
         self.assertIsNotNone(result['best'])
         self.assertTrue(all(r['program']['terminalSupport']=='goal' for r in dfs['minimumRunExclusions']))
+
+    def test_more_jump_history_remains_first_class_after_an_earlier_finish_succeeds(self):
+        result,calls=self.run_recovery_tree(reject_first=False,include_setup=True,finish_tick=50)
+        self.assertIn(('goal',24),calls)
+        self.assertEqual(calls.count(('finish',50)),2)
+        self.assertNotIn(('goal',13),calls)
+        self.assertEqual(result['anchorSearch']['runRestorations'],0)
+        decisions=result['searchState']['dfs']['comparisonDecisions'].values()
+        self.assertTrue(any(d['action']=='keep_protected' and 'more_jump_inputs' in d['protectionReasons'] for d in decisions))
 
     def test_successful_finish_never_restores_extra_hard_jump_runs(self):
         result,calls=self.run_recovery_tree(reject_first=False)

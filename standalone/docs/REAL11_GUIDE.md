@@ -1,12 +1,29 @@
 # Linkcraft Real11 opening: agent guide
 
+2026-11-11: [implemented shared comparisons/reachability](HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md)
+protect more J OR fewer R ordinarily / fewer A in turnaround, defer slower
+unprotected hard arrivals for explicit recovery, and prune against a strict
+optimistic finish bound without queue scans. Hard transfers assume no stepping;
+source setup hops remain allowed. Ceiling-aware scalar minima derive9/9/10/15/9
+for B1→B2→B3→B4→B5→B7. Early joint stepping checks avoid the former12-variant
+B3@28 fan-out; owned-arrival counting excludes unused tails. The600-test native
+gate and131-prefix known-witness bound controls pass. New combined cold search
+reaches T64; [evidence](../autonomy/experiments/hard-jump-comparisons/README.md)
+records final counts/settings/replays and source-specific limitations.
+
+2026-11-10: [candidate inventory and generation audit](../autonomy/experiments/anchor-candidate-audit/README.md)
+reconstructs all 1,158 admitted programs from the last integrated 300s run. It
+identifies B3→B4 as the main generator/solver hotspot, with late rejection of
+jointly impossible stepping cases and extensive source-hop preparation work.
+This is source-era investigation evidence motivating the implemented follow-up above.
+
 **Current hard-jump correction:** source-local setup hops remain legal even after a global one-transfer latch. Initial-0 jump0→B1@12 then jump12→B2@21 is one setup plus one hard transfer. The old implementation incorrectly excluded it. [Corrected policy/validation](../autonomy/experiments/anchor-transfer-preparation/README.md).
 
 ## Physical B7 and anchor implementation (2026-11-04)
 
 The [fresh fixture](../autonomy/experiments/anchor-feasibility/real11-anchors.json) extends B7 one block +Z to `[729,0,-1095,730,7,-1093]` and requires actual B7 landing. It minimizes achieved T, then maximizes Z; terminal guide is `(729.5,7,-1093)`. Normal body-overlap support still applies. The old virtual target/extra X<729.7 row is absent from the new fixture.
 
-The new default physical-task engine uses caller-declared anchors B2/B3/B4/B5, backward/onward guides, intermediate early stopping, global hard-jump latches and recoverable ordinary extra runs. Internal queries check selected completed decisions without future anchor rows or fixed intermediate poses. The preliminary binary110° turn heuristic records its edge/margin/distances/keys and replay drift. Multiple jumps on the current block remain available; inter-block returns are [deferred](../autonomy/REVISIT_DISCOVERY_DEFERRED_PLAN.md).
+The new default physical-task engine uses caller-declared anchors B2/B3/B4/B5, backward/onward guides, intermediate early stopping, global hard-jump latches and protected/recoverable hard-span tick alternatives. Internal queries check selected completed decisions without future anchor rows or fixed intermediate poses. The preliminary binary110° turn heuristic records its edge/margin/distances/keys and replay drift. Multiple jumps on the current block remain available; inter-block returns are [deferred](../autonomy/REVISIT_DISCOVERY_DEFERRED_PLAN.md).
 
 [New-task implementation and evidence](../autonomy/experiments/anchor-feasibility/README.md), [plan](../autonomy/ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md), and [resume](ANCHOR_IMPLEMENTATION_RESUME.md) describe current source/verification. The2026-11-03 results below remain historical controls with original geometry/virtual semantics. B6's reported extension still needs actual bounds.
 

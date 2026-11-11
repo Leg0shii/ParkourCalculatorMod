@@ -51,7 +51,7 @@ def build_guides(data, policy):
     points[0]=list(scene['initial']['position'])
     footprints={name:[scene['collisionScene']['solids'][b['solidIndex']] for b in scene['blocks'] if b['id']==name]
                 for name in names}
-    result=dict(version=1,anchors=names,points=points,covers=covers,physicalFootprints=footprints,turns=[])
+    result=dict(version=2,anchors=names,points=points,covers=covers,coverPhase='pre_or_post',physicalFootprints=footprints,turns=[])
     for i in range(1,len(names)-1):
         s,e,n=points[i-1:i+2]
         incoming=unit(e[0]-s[0],e[2]-s[2]); away=unit(e[0]-n[0],e[2]-n[2])

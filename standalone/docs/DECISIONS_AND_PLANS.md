@@ -1,5 +1,21 @@
 # Decisions and plan authority
 
+2026-11-11 controlling implementation: the [hard-jump comparison/reachability plan](HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md)
+is implemented; its ledger and [feature evidence](../autonomy/experiments/hard-jump-comparisons/README.md)
+record acceptance. The user confirmed more J OR fewer R normally / fewer A in a
+turnaround. Raw additional A/R is no protection. Slower unprotected hard arrivals
+are recoverably deferred against compatible validated peers; equal time stays
+live. A strict optimistic full-finish bound overrides local protection.
+
+**Declared assumption:** hard jumps between anchors never involve stepping.
+Completed stepped transfers cannot learn or satisfy a hard latch. Closed or
+pending source-local setup remains allowed. Flight minima therefore consider
+ceilings only; unknown shortening ceilings yield zero. This assumption is part
+of hard policy3 and exact continuation identity, not a proved fact about all maps.
+The old generic stepped/cancelled fixtures retain their validity outside this hard
+domain. Guides still optimize continuous solves; they do not prune/count-rank.
+All original-state facings remain free. Inter-block revisits stay deferred.
+
 **Latest authority:** the user said "go ahead and implement" and then requested compaction preparation. Authorization persists. [ANCHOR_IMPLEMENTATION_RESUME.md](ANCHOR_IMPLEMENTATION_RESUME.md) records the settled binary heuristic/observability contract, current implementation status and remaining verification. Earlier planning-only notes describe when those documents were written, not a bar to authorized work after compaction.
 
 2026-11-04. Read [current state](CURRENT_STATE.md) for implemented behavior. This page prevents an agent from treating older experiments as a new implementation request. User instructions override documentation. Within docs, the current consolidated plan and current-state guide supersede historical proposals.

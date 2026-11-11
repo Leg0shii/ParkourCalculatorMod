@@ -66,7 +66,7 @@ def landing_satisfied(scene,block_id,vertical):
     return bool(vertical['onGround'][-1] and abs(vertical['y'][-1]-block['top'])<=1e-7)
 
 
-def _landing_prefixes(scene,program,block_id):
+def _landing_prefixes(scene,program,block_id, *, reuse_full=False):
     block=next(b for b in scene['blocks'] if b['id']==block_id)
     box=scene['collisionScene']['solids'][block['solidIndex']]
     p=program['profile']
@@ -77,8 +77,13 @@ def _landing_prefixes(scene,program,block_id):
     for tick in sorted(times):
         if not 0<tick<=p['airtime'] or not p['grounded'][tick] or abs(p['position'][tick]-block['top'])>1e-7:
             continue
-        candidate=truncate_program(program,tick)
+        candidate=program if reuse_full and tick==p['airtime'] and program['terminalSupport']==block_id else truncate_program(program,tick)
         candidate['terminalSupport']=block_id
+        at=[e for e in events if e.get('box')==box and e.get('offset',e.get('input',-1))==tick-1]
+        if any(e.get('case') in ('normal_step','blip') for e in at):
+            candidate['profile']['landingPhase']='post'
+        elif any(e.get('axis')=='Y' and e.get('direction')==-1 for e in at):
+            candidate['profile']['landingPhase']='pre'
         yield candidate
 
 

@@ -2,7 +2,7 @@ from .obstacle_geometry import expanded_box
 from .reachability import interaction_reachability, reachable_envelopes
 
 
-PROOF_POLICY = 1
+PROOF_POLICY = 2
 
 
 def interaction_context_key(context):
@@ -90,34 +90,110 @@ def interaction_allowed(context, box, tick, *, jumping=False, phases=('Y', 'X', 
 
 
 class InteractionGate:
+    """Session-shared preparation, coefficient and exact-model proof cache."""
     def __init__(self, scene, compiler, *, seconds=1):
         self.scene, self.compiler, self.seconds = scene, compiler, seconds
         self.cache = {}
+        self.metrics = {}
         self.checked = 0
         self.exclusions = []
 
-    def envelopes(self, program):
+    def _cached(self, key, build, kind):
+        hit = key in self.cache
+        name=kind+('Hits' if hit else 'Misses')
+        self.metrics[name]=self.metrics.get(name,0)+1
+        if hit:
+            value=self.cache.pop(key)
+        else:
+            value=build()  # A timeout never commits a result or advances a cursor.
+        self.cache[key]=value
+        while len(self.cache)>512:
+            self.cache.pop(next(iter(self.cache)))
+        return value
+
+    def prepare(self, program, *, scene=None, require_complete=False):
         from .movement_composition import compile_program, program_physics_key
         from .route import prepare_route, schedule
         from .block_contacts import validate_vertical_schedule
         from .solve_spec import digest
-        key = digest(program_physics_key(program))
-        if key not in self.cache:
-            compiled = compile_program(self.scene, program, require_complete=False)
-            route = prepare_route(compiled['route'])
-            plan = schedule(route, [0])
-            vertical = validate_vertical_schedule(route, compiled['profiles'], plan)
-            if not vertical['feasible']:
-                return None
-            plan['vertical'] = dict(vertical['vertical'], referencePosition=vertical['y'], referenceVelocity=vertical['vy'])
-            coefficient = self.compiler.compile(route, plan, self.seconds)
-            # Artificial terminal support rows do not restrict an open proposal.
-            rows = [r for r in plan['walls'] if not r.get('name', '').startswith('landing:1:')]
-            self.cache[key] = reachable_envelopes(dict(coefficient, ticks=plan['ticks'], walls=rows,
-                position=self.scene['initial']['position'][::2], velocity=self.scene['initial']['velocity'][::2],
-                threshold=program.get('threshold', .005), contacts=plan['contacts'], vertical=vertical['vertical'],
-                ladderTicks=plan.get('ladderTicks', [False]*(plan['ticks']+1))), vertical['y'])
-        return self.cache[key]
+        scene=self.scene if scene is None else scene
+        key=('prepared',digest(dict(scene={k:v for k,v in scene.items() if k!='movementSearch'},
+            program=program_physics_key(program),complete=require_complete)))
+        def build():
+            compiled=compile_program(scene,program,require_complete=require_complete)
+            route=prepare_route(compiled['route']);plan=schedule(route,[0])
+            vertical=validate_vertical_schedule(route,compiled['profiles'],plan)
+            if not vertical['feasible']:return None
+            plan['vertical']=dict(vertical['vertical'],referencePosition=vertical['y'],referenceVelocity=vertical['vy'])
+            return dict(route=route,profiles=compiled['profiles'],plan=plan,vertical=vertical)
+        return self._cached(key,build,'preparation')
+
+    def analyze_model(self, route, plan, vertical, *, open_terminal=False, scope=None, initial_intervals=None):
+        from .compiler import coefficient_request
+        from .solve_spec import digest
+        request=coefficient_request(route,plan)
+        coefficient=self._cached(('coefficients',digest(request)),
+            lambda:self.compiler.compile(route,plan,self.seconds),'coefficient')
+        rows=[r for r in plan['walls'] if not open_terminal or not r.get('name','').startswith('landing:1:')]
+        model=dict(coefficient,ticks=plan['ticks'],walls=rows,contacts=plan['contacts'],
+            position=route['initial']['position'][::2],velocity=route['initial']['velocity'][::2],
+            threshold=route.get('physicsThreshold',.005),vertical=vertical['vertical'],
+            ladderTicks=plan.get('ladderTicks',[False]*(plan['ticks']+1)))
+        if initial_intervals is not None:model['initialIntervals']=initial_intervals
+        key=interaction_context_key(dict(model=model,y=vertical['y'],scope=scope))
+        def build():
+            envelope=reachable_envelopes(model,vertical['y']);envelope['modelKey']=digest(coefficient)
+            return dict(key=key,model=model,envelopes=envelope,coefficient=coefficient,y=vertical['y'])
+        return self._cached(('analysis',key),build,'analysis')
+
+    def analyze(self, program, *, scene=None, require_complete=False, open_terminal=True, scope=None):
+        prepared=self.prepare(program,scene=scene,require_complete=require_complete)
+        if prepared is None:return None
+        return self.analyze_model(prepared['route'],prepared['plan'],prepared['vertical'],
+                                  open_terminal=open_terminal,scope=scope)
+
+    def condition(self, analysis, rows):
+        """Add X/Z prerequisites and repropagate, retaining the compiled physics."""
+        model=dict(analysis['model'],walls=list(analysis['model']['walls'])+list(rows))
+        key=interaction_context_key(dict(model=model,y=analysis['y']))
+        return self._cached(('conditioned',key),lambda:dict(analysis,key=key,model=model,
+            envelopes=reachable_envelopes(model,analysis['y'])),'conditioned')
+
+    def envelopes(self, program):
+        analysis=self.analyze(program)
+        return analysis['envelopes'] if analysis else None
+
+    def sequence(self, context, choice):
+        """Screen a shared named outcome before multiplying its side variants."""
+        from .movement_composition import append_choice
+        if context.get('checkBudget'):context['checkBudget']()
+        program=append_choice(context['program'],choice)
+        self.metrics['sequenceChecks']=self.metrics.get('sequenceChecks',0)+1
+        proof=dict(reason='composition_rejected') if program is None else self.required(program)
+        if proof:
+            self.metrics['sequenceExclusions']=self.metrics.get('sequenceExclusions',0)+1
+            self.exclusions.append(dict(reason='joint_prerequisites_unreachable',proof=proof,
+                input=context['program']['profile']['airtime'],cases=choice['profile'].get('caseEvents',[])))
+        return proof
+
+    def check_program(self, program):
+        # This guard is a distinct physical requirement, not an interval bound.
+        p=program['profile']
+        if p['airtime'] and p['position'][1]<self.scene['initial']['position'][1]-1e-7:
+            from .route import supports
+            if any(abs(b['top']-self.scene['initial']['position'][1])<1e-7 and
+                   supports(b,*self.scene['initial']['position'][::2]) for b in self.scene['blocks']):
+                return dict(reason='unselected_initial_floor')
+        analysis=self.analyze(program)
+        if analysis is None:return dict(reason='vertical_schedule')
+        def build():
+            proof=self.required(program)
+            if proof:return proof
+            if self.scene.get('maxWallHits',0):return None
+            self.metrics['linearChecks']=self.metrics.get('linearChecks',0)+1
+            checked=interaction_reachability(analysis['envelopes'],{},refine=True)
+            return {k:v for k,v in checked.items() if k!='ruledOut'} if checked['ruledOut'] else None
+        return self._cached(('screen',analysis['key']),build,'screen')
 
     def query(self, context, box, tick, *, jumping=False, phases=('Y', 'X', 'Z')):
         from .movement_composition import append_choice, program_physics_key
@@ -151,6 +227,9 @@ class InteractionGate:
         if envelope is None:
             return dict(reason='vertical_schedule')
         profile = program['profile']
+        if envelope.get('contradiction'):
+            return dict(reason='required_interaction_unreachable',input=envelope['contradiction'].get('state'),
+                        proof=dict(ruledOut=True,**envelope['contradiction']))
         context = dict(envelopes=envelope)
         context_key = interaction_context_key(context)
         for event in profile.get('contactEvents', [])+profile.get('caseEvents', []):
@@ -168,4 +247,4 @@ class InteractionGate:
         context['interactionGate'] = self
 
     def summary(self):
-        return dict(checked=self.checked, excluded=len(self.exclusions), exclusions=self.exclusions)
+        return dict(checked=self.checked,excluded=len(self.exclusions),exclusions=self.exclusions,metrics=dict(self.metrics))

@@ -3,6 +3,8 @@
 import copy
 import time
 
+from ..candidate_comparison import POLICY_VERSION as COMPARISON_POLICY_VERSION
+
 from ..block_search import prepare_scene
 from ..movement_search import movement_settings
 from ..solve_spec import digest
@@ -49,7 +51,7 @@ def search_event_routes(request, compiler, *, task_goal=None, discovery=None, an
     cfg=movement_settings(scene)
     cfg['types']=[t for t in cfg['types'] if t in ('normal','ceiling','stepping')]
     scene['movementSearch']=cfg
-    context=digest(dict(policy=4 if anchor_policy else 3,
+    context=digest(dict(policy=4 if anchor_policy else 3,comparisonPolicy=COMPARISON_POLICY_VERSION,
         **(dict(anchorPolicy=semantic_settings(anchor_policy)) if anchor_policy else {}),
         constraintPolicy=7,scene={k:v for k,v in scene.items() if k!='movementSearch'},
         task=task,roots=roots,filter=getattr(policy,'checkpoint_identity',None),
@@ -189,6 +191,8 @@ def search_event_routes(request, compiler, *, task_goal=None, discovery=None, an
         from .turn_observability import summary
         report['anchorSearch']=dict(policy=anchor_policy,guidePlan=adapter.guide_plan,
             hardLatches=state['dfs']['hardLatches'],latchRevision=state['dfs']['latchRevision'],
+            transferTimeBounds=state['dfs'].get('transferTimeBounds',{}),
+            comparisonWork=state['dfs'].get('comparisonWork',{}),comparisonPolicy=COMPARISON_POLICY_VERSION,
             nodes=state['dfs']['nodeResults'],observations=summary(state['dfs']['observations']),
             runDeferrals=len(state['dfs']['minimumRunExclusions']),
             runRestorations=sum(r.get('restored',False) for r in state['dfs']['minimumRunExclusions']))
