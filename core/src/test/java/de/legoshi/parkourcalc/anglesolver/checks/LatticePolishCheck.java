@@ -2,12 +2,7 @@ package de.legoshi.parkourcalc.anglesolver.checks;
 
 import de.legoshi.parkourcalc.anglesolver.harness.Expect;
 import de.legoshi.parkourcalc.anglesolver.harness.ProblemFixture;
-import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.SolveResult;
-import de.legoshi.parkourcalc.core.anglesolver.graph.BuiltinGraphs;
-import de.legoshi.parkourcalc.core.anglesolver.graph.GraphEdge;
-import de.legoshi.parkourcalc.core.anglesolver.graph.GraphNode;
-import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ClosedFormSolve;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
@@ -20,9 +15,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.Objective;
 import de.legoshi.parkourcalc.core.anglesolver.solver.StartBox;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -34,8 +27,6 @@ import static org.junit.Assert.assertTrue;
 final class LatticePolishCheck implements ProblemCheck {
 
     private static final String ENGINE_MODE = "engine";
-    private static final String LANDING_MODE = "landing";
-    private static final String POLISH_TYPE = "latticePolish";
 
     @Override
     public void run(ProblemFixture pf) {
@@ -59,11 +50,8 @@ final class LatticePolishCheck implements ProblemCheck {
         double[] yaws;
         double startX = sc.startPos.x;
         double startZ = sc.startPos.z;
-        if (ENGINE_MODE.equals(e.mode) || LANDING_MODE.equals(e.mode)) {
-            ProblemFixture.Run run = LANDING_MODE.equals(e.mode)
-                    ? rig.solve(AngleSolverState.Effort.FAST, withoutPolish(BuiltinGraphs.fast()), e.timeoutMs(60_000L))
-                    : rig.solve(e.timeoutMs(60_000L));
-            SolveResult r = run.result;
+        if (ENGINE_MODE.equals(e.mode)) {
+            SolveResult r = rig.solve(e.timeoutMs(60_000L)).result;
             assertNotNull(name + ": engine returned no result", r);
             assertTrue(name + ": the engine must solve: " + r.getSolver(), r.isSuccess());
             yaws = new double[sc.numTicks];
@@ -110,27 +98,6 @@ final class LatticePolishCheck implements ProblemCheck {
         double[] facings = at.toGameFacings(junk);
         if (JumpConstraintCompiler.compile(spec).maxViolation(facings, model.forward(at, facings)) <= 0.0) return;
         assertNull(name + ": an infeasible incumbent must come back without a result", polish(model, spec, junk, startX, startZ));
-    }
-
-    private static SolverGraph withoutPolish(SolverGraph graph) {
-        List<GraphNode> nodes = new ArrayList<>();
-        String polish = null;
-        for (GraphNode node : graph.nodes) {
-            if (POLISH_TYPE.equals(node.type.id)) polish = node.id;
-            else nodes.add(node);
-        }
-        assertNotNull("the Fast graph has no lattice polish stage", polish);
-        String next = null;
-        for (GraphEdge edge : graph.edges) {
-            if (edge.fromNode.equals(polish)) next = edge.toNode;
-        }
-        assertNotNull("the lattice polish stage leads nowhere", next);
-        List<GraphEdge> edges = new ArrayList<>();
-        for (GraphEdge edge : graph.edges) {
-            if (edge.fromNode.equals(polish)) continue;
-            edges.add(edge.toNode.equals(polish) ? new GraphEdge(edge.fromNode, edge.branch, next) : edge);
-        }
-        return new SolverGraph(graph.name, false, nodes, edges);
     }
 
     private static LatticePolish.Result polish(ExactJumpModel model, JumpSpec spec, double[] yaws, double x, double z) {
