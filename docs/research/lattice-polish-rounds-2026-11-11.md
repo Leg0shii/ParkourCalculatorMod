@@ -146,8 +146,11 @@ rounds use the time the stage has and no more.
 
 ### The wide parameters under the deadline: a quick search first
 
-One grid search with the wide parameters can take the whole time share and end without a grid point. The wide
-stage under its deadline against the default parameters without one:
+One grid search with the wide parameters can take the whole time share and end without a grid point. That came
+in with the grid search of the facing rows change, which costs more per combination than the one the wide
+parameters were set for; the fix (a quick search first) is part of that change and described in
+`lattice-polish-facing-rows-2026-11-11.md`, "In Optimize". The numbers here are measured on top of the stack, with
+the repeated grid search. The wide stage under its deadline against the default parameters without one:
 
 | time per jump | wide is worse on | of those without any gain |
 | --- | --- | --- |

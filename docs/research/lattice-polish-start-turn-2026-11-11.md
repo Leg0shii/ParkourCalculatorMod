@@ -147,11 +147,14 @@ a free start turn, which is the added time.
 
 ## Limits and open work
 
-- **Under an Optimize budget** the stage has a deadline (5 percent of the budget, at most 2 s). It searches the
-  turn the jump is in first and gives the other turns the time that is left. `LatticePolishSweep` with the
-  Optimize graph's parameters and the repeated grid search of the change stacked on this one: the turn is used on
-  16 of 67 jumps at 150 ms, 20 at 500 ms and 30 at 2 s, against 40 without a deadline. That change runs a quick
-  search over every turn first, which brings it to 39 at each of the three.
+- **Under an Optimize budget** the stage has a deadline (5 percent of the budget, at most 2 s). The quick search
+  of the facing rows change (`Config.quick`, the default parameters before the wide ones) covers every start turn,
+  so the turn is tried early. `LatticePolishSweep` with the Optimize graph's parameters, measured on top of the
+  stack with the repeated grid search: the turn is used on 39 of 67 jumps at 150 ms, at 500 ms and at 2 s, against
+  40 without a deadline. With the wide search alone, which searches the turn the jump is in first and gives the
+  other turns the time that is left, it was 16, 20 and 30. An even split of the time over the three turns was
+  tried and dropped: the turn the jump is in then starves on long jumps (`taser-80t` loses 1.4e-2 at 150 ms,
+  `hpk/d9/j121` 6.3e-3 at 500 ms).
 - **A jump inside the TAS** keeps its turn. Its start yaw is the facing the ticks before it produced, so moving it
   one turn means a row that turns 360 degrees. That needs a ruling first; it is not built.
 - **One turn per jump.** Single ticks cannot leave the turn of their neighbours, for the same reason.
