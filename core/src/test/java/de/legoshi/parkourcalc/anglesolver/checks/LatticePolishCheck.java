@@ -6,9 +6,12 @@ import de.legoshi.parkourcalc.anglesolver.harness.ProblemFixture;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.SolveResult;
+import de.legoshi.parkourcalc.core.anglesolver.graph.Branch;
 import de.legoshi.parkourcalc.core.anglesolver.graph.BuiltinGraphs;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphEdge;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphNode;
+import de.legoshi.parkourcalc.core.anglesolver.graph.NodeCatalog;
+import de.legoshi.parkourcalc.core.anglesolver.graph.NodeType;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ClosedFormSolve;
@@ -36,8 +39,10 @@ import static org.junit.Assert.assertTrue;
 final class LatticePolishCheck implements ProblemCheck {
 
     private static final String ENGINE_MODE = "engine";
-    private static final String LANDING_MODE = "landing";
-    private static final String POLISH_TYPE = "latticePolish";
+    private static final String STAGE_TYPE = "latticePolish";
+    private static final String STAGE_NODE = "polish";
+    private static final String STAGE_AFTER = "cap2";
+    private static final String STAGE_BEFORE = "wrap";
 
     @Override
     public void run(ProblemFixture pf) {
@@ -65,11 +70,10 @@ final class LatticePolishCheck implements ProblemCheck {
         double startZ = sc.startPos.z;
         float startYaw = sc.startYaw;
         SolveResult solved = null;
-        if (ENGINE_MODE.equals(e.mode) || LANDING_MODE.equals(e.mode)) {
-            ProblemFixture.Run run = LANDING_MODE.equals(e.mode)
-                    ? rig.solve(AngleSolverState.Effort.FAST, withoutPolish(BuiltinGraphs.fast()), e.timeoutMs(60_000L))
-                    : rig.solve(e.timeoutMs(60_000L));
-            SolveResult r = run.result;
+        if (ENGINE_MODE.equals(e.mode)) {
+            SolveResult r = (turns
+                    ? rig.solve(AngleSolverState.Effort.FAST, fastWithStage(), e.timeoutMs(60_000L))
+                    : rig.solve(e.timeoutMs(60_000L))).result;
             assertNotNull(name + ": engine returned no result", r);
             assertTrue(name + ": the engine must solve: " + r.getSolver(), r.isSuccess());
             yaws = new double[sc.numTicks];
@@ -143,25 +147,21 @@ final class LatticePolishCheck implements ProblemCheck {
         assertNull(name + ": an infeasible incumbent must come back without a result", polish(model, spec, junk, startX, startZ));
     }
 
-    private static SolverGraph withoutPolish(SolverGraph graph) {
-        List<GraphNode> nodes = new ArrayList<>();
-        String polish = null;
-        for (GraphNode node : graph.nodes) {
-            if (POLISH_TYPE.equals(node.type.id)) polish = node.id;
-            else nodes.add(node);
-        }
-        assertNotNull("the Fast graph has no lattice polish stage", polish);
-        String next = null;
-        for (GraphEdge edge : graph.edges) {
-            if (edge.fromNode.equals(polish)) next = edge.toNode;
-        }
-        assertNotNull("the lattice polish stage leads nowhere", next);
+    private static SolverGraph fastWithStage() {
+        SolverGraph fast = BuiltinGraphs.fast();
+        NodeType stage = NodeCatalog.byId(STAGE_TYPE);
+        List<GraphNode> nodes = new ArrayList<>(fast.nodes);
+        nodes.add(new GraphNode(STAGE_NODE, stage, stage.defaultParams()));
         List<GraphEdge> edges = new ArrayList<>();
-        for (GraphEdge edge : graph.edges) {
-            if (edge.fromNode.equals(polish)) continue;
-            edges.add(edge.toNode.equals(polish) ? new GraphEdge(edge.fromNode, edge.branch, next) : edge);
+        boolean rerouted = false;
+        for (GraphEdge edge : fast.edges) {
+            boolean intoNext = edge.fromNode.equals(STAGE_AFTER) && edge.toNode.equals(STAGE_BEFORE);
+            rerouted |= intoNext;
+            edges.add(intoNext ? new GraphEdge(edge.fromNode, edge.branch, STAGE_NODE) : edge);
         }
-        return new SolverGraph(graph.name, false, nodes, edges);
+        assertTrue("the Fast graph has no edge from " + STAGE_AFTER + " to " + STAGE_BEFORE, rerouted);
+        for (Branch branch : stage.branches) edges.add(new GraphEdge(STAGE_NODE, branch.label, STAGE_BEFORE));
+        return new SolverGraph(fast.name, false, nodes, edges);
     }
 
     private static JumpSpec facing(JumpSpec spec, float startYaw) {
@@ -191,7 +191,7 @@ final class LatticePolishCheck implements ProblemCheck {
         assertEquals(name + ": the applied path gives another objective than the solve",
                 solved.getObjectiveValue(), current.getObjectiveValue(), 0.0);
         rig.state.clearResult();
-        applied.solve();
+        applied.solve(AngleSolverState.Effort.FAST, fastWithStage());
         long deadline = System.currentTimeMillis() + pf.expect.timeoutMs(60_000L);
         while (applied.isSolving() && System.currentTimeMillis() < deadline) {
             applied.poll();

@@ -619,8 +619,9 @@ public final class AngleSolverWindow implements RenderInterface {
             + " qualifying goal wall exists.";
 
     private static final String FULL_TURN_START_TIP =
-            "Lets a solve move the start facing one full turn away, for example 315 instead of -45, when the"
-            + " jump goes further that way. The direction is the same, but the game's angle table has longer"
+            "Lets an Optimize solve move the start facing one full turn away, for example 315 instead of -45,"
+            + " when the jump goes further that way. A Fast solve never does, it does not run the stage that"
+            + " moves it. The direction is the same, but the game's angle table has longer"
             + " steps there for some directions. Apply then sets the start facing to that value, so the"
             + " player starts the jump turned once around. The gain is small, usually 1e-5 to 5e-5 blocks."
             + " Only for a solve that starts on the first tick of the TAS without a locked yaw or an"

@@ -89,9 +89,11 @@ complete, which is what the pairing needs.
 Cloud container, 4 cores, JDK 21, single run each. Objective values as the engine reports them; a gain is counted in
 the direction of the capture's objective.
 
-### The five declined #553 captures, Fast
+### The five declined #553 captures, a Fast landing plus the stage
 
-Landing: the Fast graph without the stage. Result: the Fast graph with it.
+Landing: a Fast solve. Result: that landing plus the stage. Since the ruling of 2026-11-11 the Fast graphs do not
+carry the stage (`lattice-polish-2026-11-10.md`, "Where the stage runs"), so in the engine these gains show in
+Optimize and in a Custom graph, not in Fast.
 
 | capture | landing | with the stage | gain |
 | --- | --- | --- | --- |
@@ -101,7 +103,7 @@ Landing: the Fast graph without the stage. Result: the Fast graph with it.
 | `gh553-j345-dfneo` | -660.194916871 | -660.193016532 | 1.90e-3 |
 | `gh553-j925-dfle` | -1003.297971806 | -1003.297891060 | 8.08e-5 |
 
-Each is a `problems/polish/` case in `landing` mode with a `minGain` below the measured gain.
+Each is a `problems/polish/` case in `engine` mode (a Fast landing, which never carries the stage) with a `minGain` below the measured gain.
 
 ### The two cross-axis captures
 
@@ -126,9 +128,10 @@ Of the 65 specs both builds seed, 24 are better, 41 the same and none worse. The
 old search found nothing because of the two problems above: `hpk/d9/j127` 0 to 1.71e-2, `hpk/d11/j1149` 0 to 1.35e-2,
 `hpk/d9/j121` 0 to 6.43e-3, `j005` 2.8e-4 to 6.80e-3, `j017` 0 to 1.63e-3.
 
-### Twelve human jumps, Fast engine
+### Twelve human jumps, a Fast landing plus the stage
 
-Identical to seven digits except four jumps that move by 2e-7 to 7e-6 in the good direction (j345 -660.1978799 to
+Measured while the Fast graph still carried the stage; a Fast solve itself returns the numbers from before PR 657
+now. Identical to seven digits except four jumps that move by 2e-7 to 7e-6 in the good direction (j345 -660.1978799 to
 -660.1978728, j718 -1902.8616148 to -1902.8616113, j925 2809.3367308 to 2809.3367329, j828 4978.0131219 to
 4978.0131220). j154 stays at -1599.7001140.
 
