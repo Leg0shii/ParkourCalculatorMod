@@ -135,6 +135,12 @@ anglesolver/
                            -Dpkc.bench.gate fails the run when a jump misses its reference by more
                            than -Dpkc.bench.tol (default 1e-5); not env-gated, it runs whenever selected
   SmoothFileScreen.java    smoothing pass on a saved solve; PKC_SOLVE_FILE=<save.json>
+  SmoothWatchBench.java    current smoother (TrendFilterSmooth) against the watch-score portfolio
+                           (SmoothPortfolio) on Fast solves; -Dpkc.smoothbench=<capture or save path,...>
+                           to run, -Dpkc.smoothbench.{budgetMs,solveMs,runs,tag} tune it; one row per
+                           path with the WatchScore parts at build/reports/smoothbench-<tag>.tsv and
+                           the turn profiles and paths at smoothbench-<tag>.jsonl (the input of the
+                           turn viewer page); run via direct java -cp, wall-clock budgets need a quiet machine
   render/GizmoDragConstraintBench.java  gizmo drag constraint timing; PKC_BENCH=1
   render/PathRebuildBenchmark.java      path rebuild timing; PKC_BENCH=1
 ```
