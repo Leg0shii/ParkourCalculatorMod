@@ -271,6 +271,10 @@ public final class Application {
         AngleSolverEngine angleSolverEngine = new AngleSolverEngine(angleSolverState, boxController, inputData, this::onUserChange, forwardModel);
         angleSolverEngine.setOnStartMoved(runner::setStartPosition);
         angleSolverEngine.setOnStartYawChanged(runner::setStartYaw);
+        angleSolverEngine.setSprintTapLookup(tick -> {
+            StartResumeState resume = runner.describeResumeAt(tick);
+            return resume == null ? -1 : resume.sprintWindow;
+        });
         angleSolverEngine.setUltrawarm(mc::isUltrawarm);
         this.solverEngine = angleSolverEngine;
         if (saveStore != null) {

@@ -49,6 +49,7 @@ public final class GraphContext {
     private double headroomBound = Double.NaN;
     private volatile long overallDeadlineNanos;
     private volatile SmoothOutcome smoothOutcome;
+    private volatile InputOutcome inputOutcome;
     private volatile String infeasibilityProof;
 
     public GraphContext(JumpSpec spec, ForwardModel model, StartBox freeBox, JumpConstraint legalGoal,
@@ -140,6 +141,14 @@ public final class GraphContext {
 
     public void setSmoothOutcome(SmoothOutcome outcome) {
         this.smoothOutcome = outcome;
+    }
+
+    public InputOutcome inputOutcome() {
+        return inputOutcome;
+    }
+
+    public void setInputOutcome(InputOutcome outcome) {
+        this.inputOutcome = outcome;
     }
 
     public boolean stageLocked() {
