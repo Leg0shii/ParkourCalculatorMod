@@ -1,6 +1,7 @@
 package de.legoshi.parkourcalc.anglesolver.checks;
 
 import de.legoshi.parkourcalc.anglesolver.harness.ProblemFixture;
+import de.legoshi.parkourcalc.anglesolver.harness.SprintReplay;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.SolveResult;
@@ -9,6 +10,7 @@ import de.legoshi.parkourcalc.core.anglesolver.TickConstraints;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolveRunRecord;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
+import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Objective;
 import de.legoshi.parkourcalc.core.anglesolver.solver.TickInputs;
@@ -208,6 +210,17 @@ final class SmoothCheck implements ProblemCheck {
             assertFalse(at + "no per-tick pin, the defaults switched instead", ov != null && (ov.overridesInputs() || ov.overridesSprint()));
             assertEquals(name + ": Apply switches the solver to Keep", AngleSolverState.InputMode.KEEP, rig.state.getDefaultInputs());
             assertEquals(name + ": Apply switches the solver to Derive", AngleSolverState.SprintMode.DERIVE, rig.state.getDefaultSprint());
+        }
+        JumpPhysicsInputs planned = spec.asScenario();
+        boolean[] replay = SprintReplay.run(rows, startTick, planned, pf.model.airTapSprint());
+        boolean keysMoved = false;
+        for (int k = 0; k < changes.length; k++) {
+            keysMoved |= changes[k] != null;
+            InputRow row = rows.get(startTick + k);
+            if (!keysMoved || !row.isKeyActive(InputRow.Key.W) || row.isKeyActive(InputRow.Key.S)) continue;
+            boolean sprint = changes[k] != null ? changes[k].sprint : planned.sprintAt(k);
+            assertEquals(name + ": T" + (startTick + k + 1) + " sprints in the game the way the plan assumed",
+                    sprint, replay[k]);
         }
         double[] yaws = Paths.resultYaws(smoothed);
         boolean freeStart = rig.engine.debugFreeStartYaw();

@@ -51,6 +51,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
+import java.util.function.IntUnaryOperator;
 
 /** Bridges the Angle Solver UI to the byte-exact jump model and back into the live TAS.
  *
@@ -139,6 +140,12 @@ public final class AngleSolverEngine {
 
     public void setOnStartMoved(Consumer<Vec3dCore> onStartMoved) {
         this.onStartMoved = onStartMoved != null ? onStartMoved : pos -> { };
+    }
+
+    private IntUnaryOperator sprintTapAt = tick -> -1;
+
+    public void setSprintTapLookup(IntUnaryOperator lookup) {
+        this.sprintTapAt = lookup != null ? lookup : tick -> -1;
     }
 
     private Consumer<Float> onStartYawChanged = yaw -> { };
@@ -891,6 +898,8 @@ public final class AngleSolverEngine {
         phys.incomingSprint = effSprint(startTick) == AngleSolverState.SprintMode.DERIVE
                 ? (seed.hasMovementSample() ? seed.sprinting : Boolean.TRUE)
                 : Boolean.TRUE;
+        phys.incomingSprintTap = sprintTapAt.applyAsInt(startTick);
+        phys.incomingForward = seed.hasMovementSample() ? Boolean.valueOf(seed.moveForward > 1.0e-5F) : null;
         phys.incomingAmp = startTick > 0 ? effSpeedLevel(startTick - 1, rows) : effSpeedLevel(startTick, rows);
         phys.incomingSlowness = startTick > 0 ? effSlownessLevel(startTick - 1, rows) : effSlownessLevel(startTick, rows);
         return new Phys(phys, strafeMask, force45Mask, jumpTickRel);

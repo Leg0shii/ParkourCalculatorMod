@@ -119,6 +119,9 @@ public final class ReleasePlan {
     private final double[] planArg;
     private final double[][] comboArg;
     private final boolean[] allowed;
+    private final boolean airTap;
+    private final boolean[] sprintJump;
+    private int blockedPress = -1;
 
     private final boolean[] decided;
     private final boolean[] walking;
@@ -139,6 +142,8 @@ public final class ReleasePlan {
         this.base = spec.asScenario();
         this.editable = TickInputs.editable(base);
         this.n = base.numTicks;
+        this.airTap = exact.airTapSprint();
+        this.sprintJump = new boolean[n];
         this.guarded = SmoothPortfolio.guard(base, spec, spec.objective.evaluate(seedPath), giveBack).constraints;
         this.held = DeWiggle.heldByFacing(n, spec);
         this.eligible = new boolean[n];
@@ -274,23 +279,57 @@ public final class ReleasePlan {
         if (current.violation > PLAN_TOLERANCE) {
             return null;
         }
+        Snapshot fresh = new Snapshot(this);
+        ThrustPlan.Result relaxed = current;
+        for (int round = 0; round <= n; round++) {
+            int stuck = dive(deadlineNanos, cancel);
+            if (stuck < 0) {
+                return realise(resolver, deadlineNanos, cancel);
+            }
+            int jump = stuck == n ? -1 : walkJumpBehind(blockedPress);
+            if (SolverTrace.on()) {
+                SolverTrace.log("ENGINE", "release plan dive stuck at tick %d, walk jump in the way %d", stuck, jump);
+            }
+            if (jump < 0) {
+                return null;
+            }
+            sprintJump[jump] = true;
+            fresh.restore(this);
+            current = relaxed;
+            debt = new double[walls.size()];
+            loose = 0;
+            blockedPress = -1;
+        }
+        return null;
+    }
+
+    private int dive(long deadlineNanos, AtomicBoolean cancel) {
         for (int pass = 0; pass < 2; pass++) {
             for (int t = 0; t < n; t++) {
                 if (decided[t] || held[t] || contact[t] != (pass == 0)) {
                     continue;
                 }
                 if (stopped(deadlineNanos, cancel)) {
-                    return null;
+                    return n;
                 }
                 if (!decide(t, deadlineNanos)) {
-                    if (SolverTrace.on()) {
-                        SolverTrace.log("ENGINE", "release plan dive stuck at tick %d", t);
-                    }
-                    return null;
+                    return t;
                 }
             }
         }
-        return realise(resolver, deadlineNanos, cancel);
+        return -1;
+    }
+
+    private int walkJumpBehind(int press) {
+        if (press < 0) {
+            return -1;
+        }
+        int jump = press + 1 < n && contact[press + 1] ? press + 1 : press;
+        while (jump >= 0 && !contact[jump]) {
+            jump--;
+        }
+        boolean walks = jump >= 0 && keys[jump] != null && keys[jump].forward() && !keys[jump].sprint;
+        return walks && !sprintJump[jump] ? jump : -1;
     }
 
     private ThrustPlan.Result relax(double softness, double[] warm, int maxIterations, long deadlineNanos) {
@@ -352,7 +391,7 @@ public final class ReleasePlan {
     }
 
     private boolean canWalk(int t) {
-        return t >= 2 && eligible[t - 1] && eligible[t - 2] && !contact[t - 1] && !contact[t - 2]
+        return t >= 2 && !sprintJump[t] && eligible[t - 1] && eligible[t - 2] && !contact[t - 1] && !contact[t - 2]
                 && !decided[t - 1] && !decided[t - 2];
     }
 
@@ -450,6 +489,7 @@ public final class ReleasePlan {
             return true;
         }
         Snapshot before = new Snapshot(this);
+        choices = untapped(t, choices, before);
         ThrustPlan.Result from = current;
         ThrustPlan.Result best = null;
         Snapshot bestState = null;
@@ -489,6 +529,37 @@ public final class ReleasePlan {
             }
         }
         return true;
+    }
+
+    private List<Choice> untapped(int t, List<Choice> choices, Snapshot before) {
+        if (!airTap) {
+            return choices;
+        }
+        boolean[] was = SprintTap.conflicts(scenario(false));
+        List<Choice> out = new ArrayList<>();
+        for (Choice choice : choices) {
+            fix(t, choice);
+            int press = SprintTap.added(was, SprintTap.conflicts(scenario(false)));
+            before.restore(this);
+            if (press < 0) {
+                out.add(choice);
+            } else {
+                blockedPress = press;
+            }
+        }
+        return out.isEmpty() ? choices : out;
+    }
+
+    private JumpPhysicsInputs scenario(boolean settled) {
+        JumpPhysicsInputs sc = TickInputs.cloneInputs(editable);
+        for (int t = 0; t < n; t++) {
+            if (keys[t] != null) {
+                keys[t].applyTo(sc, t);
+            } else if (!settled && eligible[t] && !decided[t]) {
+                TickInputs.NONE.applyTo(sc, t);
+            }
+        }
+        return sc;
     }
 
     private void fix(int t, Choice choice) {
@@ -773,17 +844,19 @@ public final class ReleasePlan {
 
     private JumpPhysicsInputs settle() {
         for (int round = 0; round <= n; round++) {
-            JumpPhysicsInputs sc = TickInputs.cloneInputs(editable);
-            for (int t = 0; t < n; t++) {
-                if (keys[t] != null) {
-                    keys[t].applyTo(sc, t);
-                }
-            }
+            JumpPhysicsInputs sc = scenario(true);
             int bad = -1;
             for (int t = 0; t < n && bad < 0; t++) {
                 if (keys[t] != null && !InputSmooth.realizable(sc, t, keys[t])) {
                     bad = t;
                 }
+            }
+            int tapped = airTap ? SprintTap.firstNew(editable, sc) : -1;
+            if (tapped >= 0 && (bad < 0 || tapped < bad)) {
+                if (!untap(sc, tapped)) {
+                    return null;
+                }
+                continue;
             }
             if (bad < 0) {
                 return sc;
@@ -798,6 +871,21 @@ public final class ReleasePlan {
             }
         }
         return null;
+    }
+
+    private boolean untap(JumpPhysicsInputs sc, int tapped) {
+        int armer = SprintTap.armer(sc, tapped);
+        boolean lone = armer >= 0 && keys[armer] != null && keys[armer] != TickInputs.NONE && !contact[armer]
+                && !SprintTap.forward(sc, armer + 1);
+        if (lone) {
+            release(armer);
+            return true;
+        }
+        if (eligible[tapped] && keys[tapped] != TickInputs.NONE) {
+            release(tapped);
+            return true;
+        }
+        return false;
     }
 
     private void release(int t) {

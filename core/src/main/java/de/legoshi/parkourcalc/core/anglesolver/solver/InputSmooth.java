@@ -157,7 +157,7 @@ public final class InputSmooth {
                 stop = TrendFilterSmooth.Stop.BUDGET;
                 break;
             }
-            List<Move> moves = moves(inc, original, anchor, opt);
+            List<Move> moves = moves(inc, original, anchor, opt, exact.airTapSprint() ? editable : null);
             boolean improved = false;
             for (Move m : moves) {
                 if (cancel != null && cancel.get()) {
@@ -203,7 +203,8 @@ public final class InputSmooth {
                 }
             }
         }
-        if (!best.betterThan(plainState)) {
+        boolean tapped = exact.airTapSprint() && SprintTap.firstNew(editable, best.scenario) >= 0;
+        if (tapped || !best.betterThan(plainState)) {
             return new Report(plainYaws, base, new TickInputs[n], 0, tried, plain.stop, System.nanoTime() - t0, plainYaws,
                     plainState.watch.cost, plainState.watch.cost);
         }
@@ -215,7 +216,7 @@ public final class InputSmooth {
         return TickInputs.of(s.scenario, t);
     }
 
-    static List<Move> moves(State inc, TickInputs[] original, double anchor, Options opt) {
+    static List<Move> moves(State inc, TickInputs[] original, double anchor, Options opt, JumpPhysicsInputs tapBase) {
         JumpPhysicsInputs sc = inc.scenario;
         int n = sc.numTicks;
         double[] d = TurnShape.deltas(anchor, inc.yaws);
@@ -237,6 +238,9 @@ public final class InputSmooth {
             for (TickInputs c : alphabet(opt)) {
                 if (c.equals(cur)) continue;
                 if (!realizable(sc, t, c)) continue;
+                if (tapBase != null && tapsIntoSprint(tapBase, sc, t, c)) {
+                    continue;
+                }
                 out.add(new Move(t, c, original[t], seedFor(inc.yaws, cur, c, t)));
             }
         }
@@ -281,6 +285,12 @@ public final class InputSmooth {
             if (nextForward && !sc.sprintAt(t + 1)) return false;
         }
         return true;
+    }
+
+    private static boolean tapsIntoSprint(JumpPhysicsInputs base, JumpPhysicsInputs current, int t, TickInputs c) {
+        JumpPhysicsInputs moved = TickInputs.cloneInputs(current);
+        c.applyTo(moved, t);
+        return SprintTap.firstNew(base, moved) >= 0;
     }
 
     private static double[] seedFor(double[] yaws, TickInputs cur, TickInputs next, int t) {

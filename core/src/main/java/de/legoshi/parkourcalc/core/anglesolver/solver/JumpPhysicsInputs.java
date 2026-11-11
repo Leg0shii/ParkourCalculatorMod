@@ -83,6 +83,10 @@ public final class JumpPhysicsInputs {
      *  single-tick model callers' behavior. */
     public Boolean incomingSprint = null;
 
+    public int incomingSprintTap = -1;
+
+    public Boolean incomingForward = null;
+
     public boolean liveMovementFactor = false;
 
     public PhysicsVariant variant = PhysicsVariant.VANILLA;
@@ -143,6 +147,8 @@ public final class JumpPhysicsInputs {
         c.sprintPerTick = sprintPerTick;
         c.sprintKeyPerTick = sprintKeyPerTick;
         c.incomingSprint = incomingSprint;
+        c.incomingSprintTap = incomingSprintTap;
+        c.incomingForward = incomingForward;
         c.liveMovementFactor = liveMovementFactor;
         c.variant = variant;
         c.incomingAmp = incomingAmp;
@@ -168,6 +174,8 @@ public final class JumpPhysicsInputs {
         c.liveMovementFactor = liveMovementFactor;
         c.variant = variant;
         c.incomingSprint = from == 0 ? incomingSprint : Boolean.valueOf(sprintAt(from - 1));
+        c.incomingSprintTap = from == 0 ? incomingSprintTap : -1;
+        c.incomingForward = from == 0 ? incomingForward : null;
         c.incomingAmp = from == 0 ? incomingAmp : Integer.valueOf(speedAmplifierAt(from - 1));
         c.incomingSlowness = from == 0 ? incomingSlowness : Integer.valueOf(slownessAmplifierAt(from - 1));
         c.incomingServerVelocity = from == 0 ? incomingServerVelocity : null;

@@ -135,7 +135,7 @@ Every fixture JSON is one line, no BOM, no trailing newline.
 
   // smooth/
   "resmooth":        true,      // also smooth at 50 % twice and then at 0 % on a fresh solve: each press starts from the unsmoothed solve
-  "smoothInputs":    true,      // also smooth in the Turn and inputs mode (gh-606): the keys of at least minChanged ticks change
+  "smoothInputs":    true,      // also smooth in the Turn and inputs mode (gh-606): the keys of at least minChanged ticks change, and the applied rows, replayed through the game's sprint rules, sprint exactly where the plan assumed
   "minChanged":      1,         // smoothInputs: the least number of ticks whose keys must change (default 1)
   "maxWatchShare":   0.5,       // smoothInputs: the watch score of the result is at most this share of the Turn only score
   "strafeSide":      "BOTH"     // any check: the Force 45 strafe side the rig solves with (A, D or BOTH; the save's own when absent)
