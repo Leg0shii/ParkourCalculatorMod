@@ -278,6 +278,7 @@ public final class NodeCatalog {
                 .branch(Branch.feasible(Guarantee.ADOPTED))
                 .branch(Branch.preserves(Guarantee.REJECTED))
                 .param(ParamSpec.integer("pairPass", "Pair pass", 0, 1, 0))
+                .param(ParamSpec.bool("repeat", "Repeat until nothing improves", false))
                 .fallback(Guarantee.REJECTED)
                 .factory(LeafSnapNode::new)
                 .build());

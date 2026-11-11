@@ -160,7 +160,8 @@ public final class BuiltinGraphs {
             g.add("translate3", "translatedStart");
             if (leafSnap) {
                 g.add("snap2", "leafSnap")
-                        .set("snap2", "pairPass", 1);
+                        .set("snap2", "pairPass", 1)
+                        .set("snap2", "repeat", true);
             }
         }
         g.add("certify", "certBnb")
