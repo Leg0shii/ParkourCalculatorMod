@@ -17,6 +17,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -65,6 +66,15 @@ public class SaveFieldRoundTripTest {
     public void editedVelocityIsPreserved() {
         Vec3dCore v = new Vec3dCore(0.1, -0.2, 0.3);
         assertEquals(v, SaveIO.velOf(start(new double[]{0.1, -0.2, 0.3})));
+    }
+
+    @Test
+    public void fullTurnStartIsOffUnlessSaved() throws Exception {
+        AngleSolverState in = new AngleSolverState();
+        assertFalse(in.isFullTurnStart());
+        assertFalse(saveAndReload(in).isFullTurnStart());
+        in.setFullTurnStart(true);
+        assertTrue(saveAndReload(in).isFullTurnStart());
     }
 
     @Test

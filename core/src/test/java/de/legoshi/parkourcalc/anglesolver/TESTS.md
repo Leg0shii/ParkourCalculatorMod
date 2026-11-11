@@ -55,6 +55,15 @@ anglesolver/
                            eval cap; wrap-class results survive locked-rows JSON round trip
                            byte-exact; PKC_WRAPILS_FULL=1 + PKC_WRAPILS_TAG runs the env-gated full
                            replication with kicks (1.5e-5 bar on rung)
+  StartTurnTest.java       the start facing turn of the lattice polish: Angles.wholeTurns, when the engine
+                           marks a jump's start turn as free (first tick of the TAS, with or without a
+                           free start facing; not inside the run, with a locked row, an absolute F
+                           constraint or a one-way turn on tick 1), a copy carries the flag and a slice
+                           drops it, a start yaw one turn away carries every game facing there and comes
+                           back bit for bit, the locked first tick of a free start facing takes the turn
+                           of the start yaw, and rows written from another turn replay the same facings.
+                           Without the Full turn start facing option (off by default) no jump has a free
+                           turn. The gains and the Apply round trip are problems/polish/ sidecars with `turns`
   LegalModeTest.java       legal/record goal-wall selection on synthetic constraint lists: velocity, EQ, cap,
                            off-tick and off-axis walls are never selected, the tightest reach wall wins, ties and
                            an empty set refuse (the capture-backed legal gates are problems/legal/ and the
@@ -255,6 +264,7 @@ resources/
 | `translation/`    | translation-aware free-start scoring: the zero-width translated score byte-equals the pinned score, and with `cap` the closed-form best translation matches a brute-force grid |
 | `gapattribution/` | a cold Optimize's reported dual-bound gap is honest: credited yaws re-simulate to the reported objective, the gap never prints negative and is never tighter than the true shortfall to a byte-exact-attainable `refObjective` (the hpk_human j1150 and j155 strats) |
 | `strafeside/`     | a Force 45 flick capture solves FAST, the strafe side pass puts at least `minFlipped` ticks on the other A/D side with less anchored yaw jerk than the solved facings, the realized path is feasible byte-exact with the shipped objective, and Apply writes the chosen key and the shifted yaw per tick (gh-338) |
+| `polish/`         | the lattice polish strictly improves a deterministic incumbent (closed form seed, or a live Fast solve with `mode` `engine`) by `minGain`, its result replays byte-exact feasible with the start inside the box, a second run returns the same facings, an infeasible incumbent and an unsupported spec (`unsupported`) come back without a result; `turns` switches the Full turn start facing option on and pins a start facing one full turn away, in `engine` mode through Apply and a second solve; `roundsGain` pins what the repeated grid search gains over a single round, `fullSearch` that the Optimize graph's parameters do not come back short of the default parameters |
 
 ## Notes on individual solve/ cases
 
@@ -264,6 +274,7 @@ resources/
 - solve/gh553-j345-dfneo: gh-553; hpk j345 3jmm neo with dF <= 0 on T39..T43 and T46, X MAX against a knife-edge X wall on T41 (the human path clears it by 9e-6). The certified B&B exhausts its FAST budget without an incumbent; the pattern B&B lands it in ms on the zx1@6 pattern, so this pins that the pattern B&B accepts an order spec and that its per-pattern closed form runs the ordered tie cascade
 - solve/gh553-j925-dfle: gh-553; the gh283-j925-farseed free-start capture with dF <= 0 on T15..T17, which its own cold solve already satisfied; the free-start joint solve declined every order spec, now it runs the tie cascade around the unordered joint solve, 0.3 s
 - solve/gh553-j335-dfle: gh-553; the gh386-j335-lowx free-start run with dF <= 0 on T5, T11 and T13 from its own solve. The unordered joint solve flips tick 4 by 180 deg, so the cascade must tie a link that sits on the wrap, and the landing comes from the free rescue's centre chain through the relaxation recovery, which declined every F row before; 5 s
+- freestart/gh553-j335-lowx-dfge: gh-553; the gh386-j335-lowx free-start run with dF >= 0 on T1, T19 and T20, which its own solve satisfies by 2 to 5 deg. Every pair of the three rows lands, all three made the centre chain's relaxation recovery miss at every margin and the solve ran 39 s without a landing; the free rescue now repeats the centre chain without the one-way rows and keeps the result when the byte-exact check of the full list passes; 4 s
 - solve/gh553-j022-minturn: gh-553; j022-1bmhbfly with a minimum turn 0.01 deg under the solved turn on T34 (the seam), T36 and T37 against its knife-edge X@44 wall. The SLP stalls at 1e-8 on a sine-table bucket there, so the closed form's seed must land through the relaxation recovery; pins that stage carrying the order, 70 ms
 - solve/nix-full-t1: long multi-jump free start; accepted as not solving after the CMA-ES removal (issue 374) until the multi-jump seam work lands
 - solve/gh283-j925-farseed: gh-283; hpk j925 momentum+neo with the start dragged ~2 blocks outside its tick-0 footprint box, cold rows; pins the seed-position-independent free-start solve, FAST 20 s: bestTranslate's conflict fallback must place conflicted candidates at the min-violation translation, never at the seed
