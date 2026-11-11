@@ -79,6 +79,8 @@ public final class Expect {
     public Double cap;
 
     public Boolean resmooth;
+    public Boolean smoothInputs;
+    public Integer minChanged;
     public String strafeSide;
 
     private static final Gson GSON = new Gson();
