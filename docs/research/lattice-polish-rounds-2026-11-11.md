@@ -49,30 +49,58 @@ still only improve a result.
 
 ## Results
 
-Cloud container, 4 cores, JDK 21.
+Cloud container, 4 cores, JDK 21. The option `Full turn start facing` is off by default since the ruling of
+2026-11-11 (`lattice-polish-start-turn-2026-11-11.md`), so the numbers are given for both settings. The repeated
+grid search gains about the same either way.
 
 ### Capture sweep
 
-`LatticePolishSweep` over all 154 specs, standalone stage from the stored seed, against the start turn change:
+`LatticePolishSweep` over all 155 specs, standalone stage from the stored seed, against the start turn change:
 
-| | start turn change | this change |
+| | option off (default) | option on |
 | --- | --- | --- |
 | seeded | 67 | 67 |
-| better than before | | 28 |
-| worse | | 0 |
-| total gain | | 6.76e-4 |
+| better than before | 29 | 28 |
+| worse | 0 | 0 |
+| total gain | 6.63e-4 | 6.76e-4 |
 | violations | 0 | 0 |
-| stage time over all seeded specs | 1538 ms | 3292 ms |
+| stage time over all seeded specs | 722 ms to 1537 ms | 1323 ms to 3089 ms |
+| median gap to the smooth optimum | 1.30e-5 to 4.59e-6 | 4.65e-6 to 1.80e-6 |
+| mean gap to the smooth optimum | 3.15e-5 to 2.08e-5 | 2.79e-5 to 1.70e-5 |
 
-Largest gains: `mcc11-cross-axis-sign` 1.25e-4, `hpk/d9/j111` 8.6e-5, `j013-cw2cwwinged` 7.3e-5,
-`hpk/d11/j1149` 7.0e-5, `j018-tds2tdsbf` 6.6e-5, `j019-3jmmtruenix` 4.9e-5, `j004` 3.9e-5, `hpk/d10/j343` 2.8e-5,
-`hpk/d9/j315` 2.4e-5. The slowest jumps take about 240 ms (`hpk/d10/j148`, `hpk/d9/j108`).
+Largest gains, the same in both settings: `mcc11-cross-axis-sign` 1.26e-4, `hpk/d9/j111` 8.6e-5,
+`j013-cw2cwwinged` 7.3e-5, `hpk/d11/j1149` 7.1e-5, `j018-tds2tdsbf` 6.6e-5, `j019-3jmmtruenix` 4.9e-5, `j004`
+3.9e-5. The slowest jumps take about 120 ms with the option off (`hpk/d9/j108`) and up to 290 ms with it on
+(`hpk/d11/j1149`), where the stage runs once per turn.
 
-The sweep prints four digits of the gain; compared at full precision 32 specs are better. Gap between the grid
-result and the smooth optimum over the 67 seeded specs: median 4.65e-6 before, 1.80e-6 now; mean 2.79e-5 before,
-1.70e-5 now. With 8 rounds instead of 16 the total gain is 6.0e-4 for about 13 percent less time.
+The sweep prints four digits of the gain; compared at full precision 32 specs are better in both settings. With 8
+rounds instead of 16 the total gain is 6.0e-4 for about 13 percent less time (measured with the option on).
 
 ### Twelve human jumps, Fast engine, solve, Apply, solve again
+
+Option off (default):
+
+| jump | start turn change | this change | gain |
+| --- | --- | --- | --- |
+| j140 | -826.231873309 | -826.231873309 | 0 |
+| j345 | -660.197872806 | -660.197871611 | 1.2e-6 |
+| j1099 | -2501.298719493 | -2501.298719493 | 0 |
+| j1149 (minimum) | 4950.794602430 | 4950.794602340 | 9.0e-8 |
+| j1150 | -2805.297967220 | -2805.297966942 | 2.8e-7 |
+| j155 | 4984.763186192 | 4984.763186192 | 0 |
+| j716 (minimum) | -699.950269410 | -699.950269446 | 3.6e-8 |
+| j718 | -1902.861611313 | -1902.861571206 | 4.01e-5 |
+| j828 | 4978.013121953 | 4978.013121953 | 0 |
+| j925 | 2809.336732908 | 2809.336749669 | 1.68e-5 |
+| j154 (minimum) | -1599.700114039 | -1599.700114039 | 0 |
+
+j335 does not land in Fast in either build. The second and third solve after Apply return the same objective,
+with one exception per build: before this change j718 came back with -1902.861583318 on the second solve (now the
+same value three times), and with this change j345 comes back with -660.197872806, the value of the build before,
+1.2e-6 under its first solve. A Fast solve after Apply starts from the applied start position, lands somewhere
+else and the grid search is local to that landing.
+
+Option on:
 
 | jump | start turn change | this change | gain |
 | --- | --- | --- | --- |
@@ -88,8 +116,7 @@ result and the smooth optimum over the 67 seeded specs: median 4.65e-6 before, 1
 | j925 | 2809.336757148 | 2809.336769916 | 1.28e-5 |
 | j154 (minimum) | -1599.700117640 | -1599.700117640 | 0 |
 
-j335 does not land in Fast in either build. Every jump returns the same objective on the second and third solve
-after Apply.
+Every jump returns the same objective on the second and third solve after Apply.
 
 ## A stall the cross check found on the way
 
