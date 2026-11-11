@@ -195,6 +195,17 @@ anglesolver/
                            scenario: NaN on the two damage captures (j344-fall-damage, synth-damage-reset)
                            and on a jump with a water flow push at tick start or tick end, a number on
                            a plain jump (j016)
+  SolveClockTest.java      the work clock behind the Repeatable solve option: without a clock the time is
+                           the wall clock, with one it moves only with charged work and the same work
+                           gives the same time, an armed token fires at its deadline, a join takes the
+                           longest task or the shared load over the virtual workers, a fork stops at
+                           its own deadline, a cancel fires every token and hurries, the wall limit
+                           marks the solve as not repeatable, the seed reaches every fork
+  RepeatableSolveTest.java  (slow) the Repeatable solve option end to end on j016, free-translate-edge
+                           (free start) and gh553-j345 (pattern B&B): a second solve on the same
+                           engine and a fresh engine on one thread end on the same facings, objective,
+                           stages and work time bit for bit, a seed repeats too, and without the
+                           option a solve carries no work time
   graph/LeafSnapNodeTest.java  the leaf snap node's repeat param: on j017 (certified landing after 60 nodes)
                            one snap improves the landing, a repeat without a time budget is that one
                            call, the repeated snap ends more than 1e-4 further, byte-exact with no

@@ -141,6 +141,6 @@ final class WindowReshape {
 
     private static boolean expired(AtomicBoolean cancel, long deadlineNanos) {
         if (cancel != null && cancel.get()) return true;
-        return deadlineNanos != 0L && System.nanoTime() >= deadlineNanos;
+        return deadlineNanos != 0L && SolveClock.nanoTime() >= deadlineNanos;
     }
 }

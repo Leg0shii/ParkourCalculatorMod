@@ -36,8 +36,9 @@ public final class IlsPolish {
         Objective obj = spec.objective;
         double sign = obj.sense == Objective.Sense.MAX ? -1.0 : 1.0;
         int n = sc.numTicks;
-        int batch = Math.max(1, Runtime.getRuntime().availableProcessors());
-        Random rng = new Random(0x5DEECE66DL ^ n);
+        SolveClock clock = SolveClock.current();
+        int batch = clock != null ? SolveClock.WORKERS : Math.max(1, Runtime.getRuntime().availableProcessors());
+        Random rng = new Random(0x5DEECE66DL ^ n ^ SolveClock.seedMix());
 
         double[] best = Angles.wrapAll(feasibleSeedAbsWrapped.clone());
         double bestScore = score(model, sc, c, obj, sign, best);
@@ -46,7 +47,7 @@ public final class IlsPolish {
         try {
             for (int round = 0; round < roundCap; round++) {
                 if (cancel != null && cancel.get()) return best;
-                if (deadlineNanos > 0 && System.nanoTime() >= deadlineNanos) break;
+                if (deadlineNanos > 0 && SolveClock.nanoTime() >= deadlineNanos) break;
 
                 double[] base = best;
                 List<double[]> kicks = new ArrayList<>(batch);
@@ -54,10 +55,15 @@ public final class IlsPolish {
                     kicks.add(kickCandidate(base, rng, n, cfg));
                 }
 
-                java.util.stream.Stream<double[]> stream = sequential ? kicks.stream() : kicks.parallelStream();
-                List<double[]> climbed = stream
-                        .map(k -> climb(model, spec, sc, c, obj, sign, k, cancel, cfg))
-                        .collect(Collectors.toList());
+                List<double[]> climbed;
+                if (clock != null) {
+                    climbed = climbForked(clock, kicks, deadlineNanos, sequential, model, spec, sc, c, obj, sign, cfg);
+                } else {
+                    java.util.stream.Stream<double[]> stream = sequential ? kicks.stream() : kicks.parallelStream();
+                    climbed = stream
+                            .map(k -> climb(model, spec, sc, c, obj, sign, k, cancel, cfg))
+                            .collect(Collectors.toList());
+                }
 
                 boolean improved = false;
                 for (double[] y : climbed) {
@@ -85,6 +91,41 @@ public final class IlsPolish {
             return best;
         }
         return best;
+    }
+
+    private static List<double[]> climbForked(SolveClock clock, List<double[]> kicks, long deadlineNanos,
+                                              boolean sequential, ForwardModel model, JumpSpec spec,
+                                              JumpPhysicsInputs sc, JumpConstraintCompiler.Compiled c, Objective obj,
+                                              double sign, Config cfg) {
+        int count = kicks.size();
+        SolveClock[] forks = new SolveClock[count];
+        AtomicBoolean[] tokens = new AtomicBoolean[count];
+        for (int i = 0; i < count; i++) {
+            tokens[i] = new AtomicBoolean(false);
+            forks[i] = clock.fork(tokens[i], deadlineNanos);
+        }
+        java.util.stream.IntStream indices = java.util.stream.IntStream.range(0, count);
+        if (!sequential) indices = indices.parallel();
+        boolean[] cancelled = new boolean[count];
+        List<double[]> climbed = indices.mapToObj(i -> {
+            SolveClock previous = forks[i].enter();
+            try {
+                return climb(model, spec, sc, c, obj, sign, kicks.get(i), tokens[i], cfg);
+            } catch (SolveCancelledException e) {
+                cancelled[i] = true;
+                return null;
+            } finally {
+                SolveClock.restore(previous);
+            }
+        }).collect(Collectors.toList());
+        for (boolean hit : cancelled) {
+            if (!hit) continue;
+            clock.advanceTo(deadlineNanos);
+            clock.addUnits(forks);
+            throw new SolveCancelledException();
+        }
+        clock.join(forks);
+        return climbed;
     }
 
     public static double[] kickCandidate(double[] base, Random rng, int n, Config cfg) {

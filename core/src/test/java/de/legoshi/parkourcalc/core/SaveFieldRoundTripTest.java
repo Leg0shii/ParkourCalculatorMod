@@ -17,6 +17,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -226,5 +227,23 @@ public class SaveFieldRoundTripTest {
         SaveIO.applyAngleSolverTo(f, state);
 
         assertNotNull(state.tickConstraintsOrNull(84));
+    }
+
+    @Test
+    public void repeatableSolveAndItsSeedSurviveSaveRoundTrip() throws Exception {
+        AngleSolverState in = new AngleSolverState();
+        assertFalse(saveAndReload(in).isRepeatable());
+        in.setRepeatable(true);
+        in.setSeed(41L);
+        AngleSolverState out = saveAndReload(in);
+        assertTrue(out.isRepeatable());
+        assertEquals(41L, out.getSeed());
+    }
+
+    @Test
+    public void aSaveWithoutTheRepeatableOptionLoadsWithItOff() {
+        AngleSolverState state = load("{\"version\":1,\"angleSolver\":{}}");
+        assertFalse(state.isRepeatable());
+        assertEquals(0L, state.getSeed());
     }
 }

@@ -139,7 +139,7 @@ public final class ClosedFormSolve {
     private static Result solveOrdered(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc, double feasTol,
                                        AtomicBoolean cancel, double[] margins, boolean ascending, Config cfg,
                                        YawOrder order, boolean[] zeroX, boolean[] zeroZ) {
-        long t0 = System.nanoTime();
+        long t0 = SolveClock.nanoTime();
         JumpConstraintCompiler.Compiled full = JumpConstraintCompiler.compile(spec);
         List<JumpConstraint> base = order.stripped(spec.constraints);
         int n = sc.numTicks;
@@ -212,7 +212,7 @@ public final class ClosedFormSolve {
         if (SolverTrace.on()) {
             SolverTrace.log("CF", "ordered %s rounds=%d viol=%s us=%.1f",
                     best != null ? "solved" : "miss", rounds,
-                    least == null ? "none" : SolverTrace.fmt("%.3e", least.violation), (System.nanoTime() - t0) / 1e3);
+                    least == null ? "none" : SolverTrace.fmt("%.3e", least.violation), (SolveClock.nanoTime() - t0) / 1e3);
         }
         return best != null ? best : least;
     }
@@ -278,7 +278,7 @@ public final class ClosedFormSolve {
     private static Result scanChain(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc, double feasTol,
                                     AtomicBoolean cancel, double[] margins, boolean ascending, Config cfg,
                                     FacingPrefold.ChainScan scan) {
-        long t0 = System.nanoTime();
+        long t0 = SolveClock.nanoTime();
         double[] thetas = candidateThetas(spec, new JumpLinearModel(sc), scan, null);
         if (thetas == null) {
             if (SolverTrace.on()) SolverTrace.log("CF", "chain scan trivially infeasible");
@@ -325,7 +325,7 @@ public final class ClosedFormSolve {
             SolverTrace.log("CF", "chain scan %s theta=%s cands=%d ms=%.1f",
                     bestFeas != null ? "solved" : "miss",
                     bestFeas != null ? SolverTrace.fmt("%.4f", bestTheta) : "-",
-                    thetas.length, (System.nanoTime() - t0) / 1e6);
+                    thetas.length, (SolveClock.nanoTime() - t0) / 1e6);
         }
         return bestFeas != null ? bestFeas : bestInfeas;
     }
@@ -345,6 +345,7 @@ public final class ClosedFormSolve {
         boolean[] trivialInfeasible = {false};
         List<JumpLinearModel.Wall> walls = lin.compileAxisWalls(spec.constraints, 0.0, trivialInfeasible);
         if (trivialInfeasible[0]) return null;
+        SolveClock.charge(SolveClock.SUPPORT, (long) walls.size() * lin.n);
         double halfX = translationBox == null ? 0.0 : 0.5 * (translationBox.pxHi - translationBox.pxLo);
         double halfZ = translationBox == null ? 0.0 : 0.5 * (translationBox.pzHi - translationBox.pzLo);
 
@@ -447,7 +448,7 @@ public final class ClosedFormSolve {
     private static Result solveWithPrefold(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc, double feasTol,
                                            AtomicBoolean cancel, double[] margins, boolean ascending, Config cfg,
                                            FacingPrefold pre) {
-        long t0 = System.nanoTime();
+        long t0 = SolveClock.nanoTime();
         JumpConstraintCompiler.Compiled compiled = JumpConstraintCompiler.compile(spec);
 
         int n = sc.numTicks;
@@ -494,7 +495,7 @@ public final class ClosedFormSolve {
         }
         if (SolverTrace.on()) {
             SolverTrace.log("CF", "fallback bestViol=%s us=%.1f",
-                    best == null ? "none" : SolverTrace.fmt("%.3e", best.violation), (System.nanoTime() - t0) / 1e3);
+                    best == null ? "none" : SolverTrace.fmt("%.3e", best.violation), (SolveClock.nanoTime() - t0) / 1e3);
         }
         return best;
     }

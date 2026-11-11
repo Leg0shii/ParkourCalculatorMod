@@ -12,6 +12,7 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.Scoring;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
+import de.legoshi.parkourcalc.core.anglesolver.solver.SolveClock;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolverTrace;
 import de.legoshi.parkourcalc.core.anglesolver.solver.StartBox;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
@@ -57,15 +58,23 @@ public final class SeedSweepNode implements NodeRuntime {
         SeedResult[] out = new SeedResult[refs.size()];
         int nThreads = threadCount(ctx, refs.size());
         SolverGraph fast = BuiltinGraphs.fast();
-        long t0 = System.nanoTime();
+        long t0 = SolveClock.nanoTime();
+        SolveClock clock = SolveClock.current();
+        SolveClock[] forks = clock == null ? null : new SolveClock[refs.size()];
+        AtomicBoolean[] tokens = new AtomicBoolean[refs.size()];
+        for (int i = 0; i < refs.size(); i++) {
+            tokens[i] = clock == null ? nodeToken : new AtomicBoolean(false);
+            if (clock != null) forks[i] = clock.fork(tokens[i], deadlineNanos);
+        }
         if (nThreads <= 1) {
             for (int i = 0; i < refs.size(); i++) {
                 if (nodeToken != null && nodeToken.get()) break;
-                out[i] = runSeed(ctx, fast, refs.get(i), nodeToken);
+                out[i] = runSeedOn(forks == null ? null : forks[i], ctx, fast, refs.get(i), tokens[i]);
             }
         } else {
-            runParallel(ctx, fast, refs, out, nThreads, nodeToken);
+            runParallel(ctx, fast, refs, out, nThreads, nodeToken, forks, tokens);
         }
+        if (clock != null) clock.join(forks);
         SeedResult best = null;
         int feasibleCount = 0;
         boolean max = ctx.maximize();
@@ -76,7 +85,7 @@ public final class SeedSweepNode implements NodeRuntime {
         }
         if (SolverTrace.on()) {
             SolverTrace.log("SWEEP", "seeds=%d feasible=%d threads=%d ms=%d best=%s", refs.size(), feasibleCount,
-                    nThreads, (System.nanoTime() - t0) / 1_000_000L,
+                    nThreads, (SolveClock.nanoTime() - t0) / 1_000_000L,
                     best == null ? "none" : String.format(java.util.Locale.ROOT, "%.9f@(%.5f,%.5f)",
                             best.objective, best.px, best.pz));
         }
@@ -96,8 +105,19 @@ public final class SeedSweepNode implements NodeRuntime {
         return Math.max(1, Math.min(n, work));
     }
 
+    private static SeedResult runSeedOn(SolveClock fork, GraphContext ctx, SolverGraph fast, double[] ref,
+                                        AtomicBoolean token) {
+        if (fork == null) return runSeed(ctx, fast, ref, token);
+        SolveClock previous = fork.enter();
+        try {
+            return runSeed(ctx, fast, ref, token);
+        } finally {
+            SolveClock.restore(previous);
+        }
+    }
+
     private void runParallel(GraphContext ctx, SolverGraph fast, List<double[]> refs, SeedResult[] out,
-                             int nThreads, AtomicBoolean nodeToken) {
+                             int nThreads, AtomicBoolean nodeToken, SolveClock[] forks, AtomicBoolean[] tokens) {
         AtomicInteger seq = new AtomicInteger();
         ExecutorService pool = Executors.newFixedThreadPool(nThreads, r -> {
             Thread t = new Thread(r, "seed-sweep-" + seq.incrementAndGet());
@@ -110,7 +130,7 @@ public final class SeedSweepNode implements NodeRuntime {
             final int idx = i;
             futures.add(pool.submit(() -> {
                 if (nodeToken != null && nodeToken.get()) return;
-                out[idx] = runSeed(ctx, fast, refs.get(idx), nodeToken);
+                out[idx] = runSeedOn(forks == null ? null : forks[idx], ctx, fast, refs.get(idx), tokens[idx]);
             }));
         }
         pool.shutdown();

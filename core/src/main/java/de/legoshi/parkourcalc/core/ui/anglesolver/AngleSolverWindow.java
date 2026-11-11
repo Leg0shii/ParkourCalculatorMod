@@ -131,6 +131,7 @@ public final class AngleSolverWindow implements RenderInterface {
     private final ImFloat runTicksSafetyMultBuf = new ImFloat();
     private final ImInt runTicksSafetyMarginBuf = new ImInt();
     private final ImInt smoothGiveBackBuf = new ImInt();
+    private final ImInt seedBuf = new ImInt();
     private final float[] budgetSliderBuf = new float[1];
     private final ImString budgetInput = new ImString(16);
     private int lastSyncedBudgetMs = -1;
@@ -622,6 +623,17 @@ public final class AngleSolverWindow implements RenderInterface {
             "Run a solver graph preset instead of the plain time budget. Pick a preset in the Budget row and"
             + " open it in the editor to change its stages and per-stage budgets.";
 
+    private static final String REPEATABLE_TIP =
+            "Makes a solve give the same result every time, on any PC: the stages stop after a fixed amount"
+            + " of counted work instead of after a time on the clock. For comparing solver versions and"
+            + " settings. The budget is then an amount of work, so the real time differs from it: shorter"
+            + " on a fast PC, longer on a slow one or with few cores. Such a solve also starts fresh, it"
+            + " does not build on the previous result. Smooth is not covered.";
+
+    private static final String SEED_TIP =
+            "Changes the random draws of the search stages. The same seed gives the same result, another"
+            + " seed gives another run of the same solver. 0 is the default draw.";
+
     private static final String RUN_TICKS_TIP =
             "Before solving, try adding up to N extra running ticks in front of each jump and keep the"
             + " combination with the best objective. Every combination is solved as a quick pass. The search"
@@ -660,6 +672,20 @@ public final class AngleSolverWindow implements RenderInterface {
             if (state.isCustomBudget()) refreshPresets();
         }
         TooltipUtil.onHover(CUSTOM_BUDGET_TIP);
+
+        if (Controls.checkbox("Repeatable solve", state.isRepeatable())) state.setRepeatable(!state.isRepeatable());
+        TooltipUtil.onHover(REPEATABLE_TIP);
+        if (state.isRepeatable()) {
+            ImGui.indent(OPTION_INDENT * scale);
+            Controls.pushInputFrameHeight();
+            SolverWidgets.rowLabel("Seed", runTicksLabelWidth(scale));
+            seedBuf.set((int) state.getSeed());
+            ImGui.setNextItemWidth(Math.max(40f * scale, ImGui.getContentRegionAvail().x));
+            if (ImGui.inputInt("##solveSeed", seedBuf, 1, 10)) state.setSeed(seedBuf.get());
+            Controls.popInputFrameHeight();
+            TooltipUtil.onHover(SEED_TIP);
+            ImGui.unindent(OPTION_INDENT * scale);
+        }
 
         RunTicksSettings cfg = state.getRunTicks();
         if (Controls.checkbox("Run ticks", cfg.isEnabled())) cfg.setEnabled(!cfg.isEnabled());

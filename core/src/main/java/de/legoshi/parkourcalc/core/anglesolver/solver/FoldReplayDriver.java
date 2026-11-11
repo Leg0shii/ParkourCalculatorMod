@@ -169,7 +169,7 @@ public final class FoldReplayDriver {
 
         for (int round = 0; round < MAX_ROUNDS; round++) {
             if (cancel != null && cancel.get()) break;
-            if (deadlineNanos != 0L && System.nanoTime() >= deadlineNanos) break;
+            if (deadlineNanos != 0L && SolveClock.nanoTime() >= deadlineNanos) break;
             RoundStart start = new RoundStart(curZeroX, curZeroZ, pins.size(), keepAliveRetries, margins, prevYaws);
             if (repeats(roundStarts, start)) break;
             roundStarts.add(start);
@@ -349,7 +349,7 @@ public final class FoldReplayDriver {
                     || (best.feasible() && params.objectiveRounds > 0));
         if (wantEndPolish
                 && (cancel == null || !cancel.get())
-                && (deadlineNanos == 0L || System.nanoTime() < deadlineNanos)) {
+                && (deadlineNanos == 0L || SolveClock.nanoTime() < deadlineNanos)) {
             Result pol = polishFromAnchor(exact, spec, best.yawsDeg, best.px, best.pz, params);
             rounds.addAll(pol.rounds);
             best = pickBetter(best, pol.best, max);
@@ -367,7 +367,7 @@ public final class FoldReplayDriver {
         boolean improved = fb.maxViolation < first.rounds.get(0).maxViolation;
         if (!improved) return first;
         if (params.cancel != null && params.cancel.get()) return first;
-        if (params.deadlineNanos != 0L && System.nanoTime() >= params.deadlineNanos) return first;
+        if (params.deadlineNanos != 0L && SolveClock.nanoTime() >= params.deadlineNanos) return first;
         Result second = polishPass(exact, spec, fb.yawsDeg, fb.px, fb.pz, params);
         if (second.best == null) return first;
         List<Round> merged = new ArrayList<>(first.rounds);
@@ -520,7 +520,7 @@ public final class FoldReplayDriver {
         int k = flips.size();
         for (int combo = 0; combo < (1 << k); combo++) {
             if (cancel != null && cancel.get()) return;
-            if (deadlineNanos != 0L && System.nanoTime() >= deadlineNanos) return;
+            if (deadlineNanos != 0L && SolveClock.nanoTime() >= deadlineNanos) return;
             boolean[] zx = baseZeroX.clone();
             boolean[] zz = baseZeroZ.clone();
             for (int i = 0; i < k; i++) {
@@ -650,7 +650,7 @@ public final class FoldReplayDriver {
         java.util.TreeMap<Integer, double[]> chords = new java.util.TreeMap<>();
         for (int it = 0; it < NARROW_MAX_ITER; it++) {
             if (cancel != null && cancel.get()) break;
-            if (deadlineNanos != 0L && System.nanoTime() >= deadlineNanos) break;
+            if (deadlineNanos != 0L && SolveClock.nanoTime() >= deadlineNanos) break;
             int worst = -1;
             double worstSlack = 0.0;
             for (int t = 0; t < n; t++) {

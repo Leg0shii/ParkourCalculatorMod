@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.core.anglesolver.graph;
 
+import de.legoshi.parkourcalc.core.anglesolver.solver.SolveClock;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -32,7 +33,7 @@ public final class GraphRunner {
         GraphNode cur = graph.entry;
         Candidate cand = initial;
         long overallAtStart = ctx.overallDeadline();
-        long totalNanos = overallAtStart > 0 ? overallAtStart - System.nanoTime() : 0L;
+        long totalNanos = overallAtStart > 0 ? overallAtStart - SolveClock.nanoTime() : 0L;
         Map<String, Long> reserves = new HashMap<>();
         for (GraphNode n : graph.nodes) {
             long r = reserveNanos(n, totalNanos);
@@ -56,7 +57,7 @@ public final class GraphRunner {
                 runtimes.put(cur.id, rt);
             }
             long budgetNanos = budgetNanos(cur, totalNanos);
-            long now = System.nanoTime();
+            long now = SolveClock.nanoTime();
             long deadline = budgetNanos > 0 ? now + budgetNanos : 0L;
             if (overall > 0 && (deadline == 0L || overall < deadline)) deadline = overall;
             if (overall > 0 && now >= overall) deadline = now;
@@ -92,7 +93,11 @@ public final class GraphRunner {
         NodeStatus st = ctx.runState.status(node.id);
         double ms = st == null ? -1.0 : st.elapsedNanos / 1e6;
         String v = cand == null || cand.yaws == null ? "-" : String.format(java.util.Locale.ROOT, "%.3g", ctx.violationOf(cand.yaws));
-        System.out.println(String.format(java.util.Locale.ROOT, "[graph] %-12s %-9s %8.1f ms viol=%s", node.id, taken, ms, v));
+        SolveClock clock = SolveClock.current();
+        String work = clock == null ? "" : String.format(java.util.Locale.ROOT, " obj=%s workMs=%.1f %s",
+                cand == null || cand.yaws == null ? "-" : Double.toString(cand.objective),
+                clock.elapsedNanos() / 1e6, clock.describe());
+        System.out.println(String.format(java.util.Locale.ROOT, "[graph] %-12s %-9s %8.1f ms viol=%s%s", node.id, taken, ms, v, work));
     }
 
     public static boolean reserving(NodeType type) {

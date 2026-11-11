@@ -146,6 +146,7 @@ public final class CertifiedBnb {
         final double[] f4;
         final YawTies ties;
         final YawOrder order;
+        final long seedMix = SolveClock.seedMix();
         long nextId = 1L;
         int nodes;
         int kernelSolves;
@@ -191,7 +192,7 @@ public final class CertifiedBnb {
 
         boolean stopped() {
             if (cfg.cancel != null && cfg.cancel.get()) return true;
-            return cfg.deadlineNanos != 0L && System.nanoTime() >= cfg.deadlineNanos;
+            return cfg.deadlineNanos != 0L && SolveClock.nanoTime() >= cfg.deadlineNanos;
         }
     }
 
@@ -593,7 +594,7 @@ public final class CertifiedBnb {
         double[] mMagB = new double[s.n];
         for (int t = 0; t < s.n; t++) mMagB[t] = s.geom.radiusUpper(t) + impulseRadius(s, iv, t);
 
-        long k0 = System.nanoTime();
+        long k0 = SolveClock.nanoTime();
         double cp = lin.objectiveConst(s.spec.objective);
         double floor = relaxationFloor(s, cx, cz, mMagB);
         double cutoff = floor - FLOOR_CUTOFF_REL * (1.0 + Math.abs(floor));
@@ -604,7 +605,7 @@ public final class CertifiedBnb {
         DiskSocpKernel.Outcome oc = DiskSocpKernel.solveChords(s.n, cx, cz, mMagB, kernelRows, s.freeP0,
                 kernelChords, cutoff);
         s.kernelSolves++;
-        s.kernelNanos += System.nanoTime() - k0;
+        s.kernelNanos += SolveClock.nanoTime() - k0;
         double[] gxv;
         double[] gzv;
         double[] lambda;
@@ -960,7 +961,7 @@ public final class CertifiedBnb {
             double fill = Math.min(1.0, StrictMath.hypot(ux[t], uz[t]) / radius);
             double chance = 0.5 * (1.0 - fill);
             if (chance < ROUNDING_MIN_CHANCE) continue;
-            if (unitDraw(nodeId, t) < chance) {
+            if (unitDraw(nodeId ^ s.seedMix, t) < chance) {
                 ux[t] = -ux[t];
                 uz[t] = -uz[t];
                 any = true;
@@ -1349,9 +1350,12 @@ public final class CertifiedBnb {
 
     private static void leafDfs(Search s, LeafState st, int t, double prefix, double[][] wallPref) {
         if (st.steps >= LEAF_DFS_CAP) return;
-        if ((st.steps & 4095L) == 0L && s.stopped()) {
-            st.steps = LEAF_DFS_CAP;
-            return;
+        if ((st.steps & 4095L) == 0L) {
+            SolveClock.charge(SolveClock.LEAF, 4096L * (st.walls.length + 2));
+            if (s.stopped()) {
+                st.steps = LEAF_DFS_CAP;
+                return;
+            }
         }
         st.steps++;
         int n = st.scores.length;

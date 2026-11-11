@@ -32,6 +32,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Objective;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardPath;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
+import de.legoshi.parkourcalc.core.anglesolver.solver.SolveClock;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolveProgress;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolverTrace;
 import de.legoshi.parkourcalc.core.anglesolver.solver.StartBox;
@@ -174,6 +175,21 @@ public final class AngleSolverEngine {
     }
 
     private volatile boolean sequentialSolve;
+    private volatile boolean lastSolveOverran;
+    private volatile String lastSolveWork;
+    private volatile long lastSolveWorkNanos;
+
+    public String lastSolveWork() {
+        return lastSolveWork;
+    }
+
+    public long lastSolveWorkNanos() {
+        return lastSolveWorkNanos;
+    }
+
+    public boolean lastSolveOverran() {
+        return lastSolveOverran;
+    }
 
     public void setSequentialSolve(boolean sequential) {
         this.sequentialSolve = sequential;
@@ -586,6 +602,8 @@ public final class AngleSolverEngine {
     }
 
     private static final long SMOOTH_BUTTON_BUDGET_NANOS = 6_000_000_000L;
+    private static final long REPEATABLE_WALL_FACTOR = 6L;
+    private static final long REPEATABLE_WALL_FLOOR_NANOS = 30_000_000_000L;
 
     private void start(Job job, AngleSolverState.Effort effort) {
         long t0 = System.nanoTime();
@@ -610,14 +628,30 @@ public final class AngleSolverEngine {
                 progress, t0);
         recording = rec;
         solving = true;
+        boolean repeatable = state.isRepeatable() && !isSmoothJob(job);
+        long seed = state.getSeed();
         Thread worker = new Thread(() -> {
+            SolveClock clock = repeatable
+                    ? SolveClock.install(token,
+                            REPEATABLE_WALL_FACTOR * Math.max(job.deadlineNanos, REPEATABLE_WALL_FLOOR_NANOS), seed)
+                    : null;
             try {
-                long firstStart = System.nanoTime();
-                Outcome o = runJob(job, token, progress, rec);
-                if (o != null && !token.get() && job.legalFallback != null && !o.result.isSuccess()) {
-                    long remaining = job.deadlineNanos > 0 ? job.deadlineNanos - (System.nanoTime() - firstStart) : 0L;
-                    if (job.deadlineNanos <= 0 || remaining > 0) {
-                        o = runLegalFallback(job.legalFallback.withDeadline(remaining), token, progress, rec);
+                Outcome o;
+                try {
+                    long firstStart = SolveClock.nanoTime();
+                    o = runJob(job, token, progress, rec);
+                    if (o != null && !token.get() && job.legalFallback != null && !o.result.isSuccess()) {
+                        long remaining = job.deadlineNanos > 0 ? job.deadlineNanos - (SolveClock.nanoTime() - firstStart) : 0L;
+                        if (job.deadlineNanos <= 0 || remaining > 0) {
+                            o = runLegalFallback(job.legalFallback.withDeadline(remaining), token, progress, rec);
+                        }
+                    }
+                } finally {
+                    if (clock != null) {
+                        lastSolveOverran = clock.overran();
+                        lastSolveWork = clock.describe();
+                        lastSolveWorkNanos = clock.elapsedNanos();
+                        clock.uninstall();
                     }
                 }
                 if (o != null && !token.get()) pending = o;
@@ -637,6 +671,7 @@ public final class AngleSolverEngine {
 
     private void offerIncumbent(Job job, AngleSolverState.Effort effort) {
         if (effort == AngleSolverState.Effort.FAST || BuiltinGraphs.FAST_PRESET.equals(job.graph.name)) return;
+        if (state.isRepeatable()) return;
         Plan prev = lastPlan;
         SolveResult prevResult = state.getResult();
         if (prev == null || prevResult == null || !prevResult.isSuccess() || prev.lockYaws) return;
@@ -1099,7 +1134,7 @@ public final class AngleSolverEngine {
         }
         GraphContext ctx = new GraphContext(spec, model, freeBox, job.legalFallback != null ? null : job.legalGoal,
                 FEAS_TOL, cancel, progress, sequentialSolve, job.longRun);
-        if (job.deadlineNanos > 0) ctx.setOverallDeadline(System.nanoTime() + job.deadlineNanos);
+        if (job.deadlineNanos > 0) ctx.setOverallDeadline(SolveClock.nanoTime() + job.deadlineNanos);
         if (rec != null) rec.ctx = ctx;
         lastRunState = ctx.runState;
         currentGraphContext = ctx;
@@ -1535,6 +1570,11 @@ public final class AngleSolverEngine {
     // The solver chain is not a detail row: the UI lists it in its own numbered section from getSolver().
     private void addBaseDetails(SolveResult r, long solveNanos) {
         r.addDetail("Runtime", ConstraintText.duration(solveNanos));
+        SolveClock clock = SolveClock.current();
+        if (clock != null) {
+            r.addDetail("Work time", ConstraintText.duration(clock.elapsedNanos())
+                    + (clock.overran() ? " (safety stop, not repeatable)" : ""));
+        }
         r.addDetail("Finished", r.getFinishedAt());
         r.addDetail("Model", model.getClass().getSimpleName());
     }
