@@ -177,6 +177,9 @@ final class SmoothCheck implements ProblemCheck {
 
         TickInputs[] changes = smoothed.getInputChanges();
         int minChanged = pf.expect.or(pf.expect.minChanged, 1);
+        if (changes == null && minChanged == 0) {
+            changes = new TickInputs[0];
+        }
         assertNotNull(name + ": no key changed, expected at least " + minChanged, changes);
         int changed = 0;
         for (TickInputs c : changes) if (c != null) changed++;
