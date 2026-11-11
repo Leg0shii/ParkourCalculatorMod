@@ -662,6 +662,7 @@ public final class AngleSolverEngine {
     private static final long SMOOTH_BUTTON_BUDGET_NANOS = 6_000_000_000L;
     public static final long SMOOTH_INPUTS_FACTOR = 3L;
     public static final String WATCH_SCORE_DETAIL = "Watch score";
+    public static final String DRIVE_CHANGES_DETAIL = "Forward key changes";
 
     private void start(Job job, AngleSolverState.Effort effort) {
         long t0 = System.nanoTime();
@@ -1368,6 +1369,7 @@ public final class AngleSolverEngine {
         result.addDetail("Inputs changed", io.changed + (io.changed == 1 ? " tick" : " ticks") + " (" + io.tried + " tried)");
         result.addDetail(WATCH_SCORE_DETAIL, String.format(java.util.Locale.ROOT, "%.2f (Turn only %.2f)", io.watchCost,
                 io.plainWatchCost));
+        result.addDetail(DRIVE_CHANGES_DETAIL, io.driveChanges + " (was " + io.plainDriveChanges + ")");
         result.setInputChanges(io.inputs.clone());
         for (int k = 0; k < io.inputs.length; k++) {
             TickInputs after = io.inputs[k];

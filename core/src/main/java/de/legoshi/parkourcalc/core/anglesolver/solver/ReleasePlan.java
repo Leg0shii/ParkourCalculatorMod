@@ -3,7 +3,9 @@ package de.legoshi.parkourcalc.core.anglesolver.solver;
 import de.legoshi.parkourcalc.core.anglesolver.FlowVector;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class ReleasePlan {
@@ -51,6 +53,8 @@ public final class ReleasePlan {
     private static final double TURN_BASE = 0.25;
     private static final double TURN_SLOPE = 0.35;
     private static final int MAX_CHOICES = 8;
+    private static final double TIDY_SHARE = 0.5;
+    private static final int TIDY_REACH = 24;
 
     public static final class Result {
         public final JumpPhysicsInputs scenario;
@@ -284,7 +288,8 @@ public final class ReleasePlan {
         for (int round = 0; round <= n; round++) {
             int stuck = dive(deadlineNanos, cancel);
             if (stuck < 0) {
-                return realise(resolver, deadlineNanos, cancel);
+                Result planned = realise(resolver, deadlineNanos, cancel);
+                return planned == null ? null : tidyKeys(planned, deadlineNanos, cancel);
             }
             int jump = stuck == n ? -1 : walkJumpBehind(blockedPress);
             if (SolverTrace.on()) {
@@ -650,6 +655,97 @@ public final class ReleasePlan {
                     yaws == null ? "not repaired" : resolved ? "re-solved" : rigid ? "turned as groups" : "repaired");
         }
         return yaws == null ? null : new Result(scenario, yaws, inputs, changed, resolved);
+    }
+
+    private double cost(Result r) {
+        return score(r.scenario, r.yaws).cost + InputSmooth.DRIVE_CHANGE_COST * InputSmooth.driveChanges(r.scenario);
+    }
+
+    private Result tidyKeys(Result planned, long deadlineNanos, AtomicBoolean cancel) {
+        long now = System.nanoTime();
+        long stop = deadlineNanos == 0L ? 0L : now + (long) (TIDY_SHARE * Math.max(0L, deadlineNanos - now));
+        Result best = planned;
+        double bestCost = cost(best);
+        boolean improved = true;
+        Set<Long> failed = new HashSet<>();
+        while (improved && !stopped(stop, cancel)) {
+            improved = false;
+            for (int[] move : absorptions(best.scenario)) {
+                if (stopped(stop, cancel)) {
+                    break;
+                }
+                long id = ((long) move[0] * n + move[1] - 1) * n + move[2];
+                if (!failed.add(id)) {
+                    continue;
+                }
+                Snapshot before = new Snapshot(this);
+                if (!absorb(best.scenario, move[0], move[1], move[2])) {
+                    before.restore(this);
+                    continue;
+                }
+                Result r = realise(null, stop, cancel);
+                double c = r == null ? Double.POSITIVE_INFINITY : cost(r);
+                if (c < bestCost - PLACE_TIE) {
+                    if (SolverTrace.on()) {
+                        SolverTrace.log("ENGINE", "release plan tidy ticks %d..%d from tick %d: %.2f -> %.2f", move[0],
+                                move[1] - 1, move[2], bestCost, c);
+                    }
+                    best = r;
+                    bestCost = c;
+                    improved = true;
+                    int lo = move[0] - TIDY_REACH;
+                    int hi = move[1] + TIDY_REACH;
+                    failed.removeIf(f -> f / n / n <= hi && f / n % n >= lo);
+                    break;
+                }
+                before.restore(this);
+            }
+        }
+        return best;
+    }
+
+    private List<int[]> absorptions(JumpPhysicsInputs scenario) {
+        List<int[]> runs = new ArrayList<>();
+        int a = 0;
+        for (int t = 1; t <= n; t++) {
+            if (t < n && InputSmooth.drive(scenario, t) == InputSmooth.drive(scenario, a)) {
+                continue;
+            }
+            runs.add(new int[]{a, t});
+            a = t;
+        }
+        runs.sort((x, y) -> Integer.compare(x[1] - x[0], y[1] - y[0]));
+        List<int[]> out = new ArrayList<>();
+        for (int[] run : runs) {
+            if (run[0] > 0) {
+                out.add(new int[]{run[0], run[1], run[0] - 1});
+            }
+            if (run[1] < n) {
+                out.add(new int[]{run[0], run[1], run[1]});
+            }
+        }
+        return out;
+    }
+
+    private boolean absorb(JumpPhysicsInputs scenario, int from, int to, int source) {
+        TickInputs like = TickInputs.of(scenario, source);
+        if (like == null) {
+            return false;
+        }
+        boolean thrust = like.w || like.a || like.s || like.d;
+        int anchor = faced[source] ? source : anchor(source);
+        double facing = anchor < 0 ? base.startYaw : face[anchor];
+        for (int t = from; t < to; t++) {
+            if (!eligible[t]) {
+                return false;
+            }
+            keys[t] = thrust ? like : TickInputs.NONE;
+            faced[t] = thrust;
+            if (thrust) {
+                face[t] = facing;
+            }
+        }
+        return true;
     }
 
     private double[] rigid(ShapeSmooth shape, JumpPhysicsInputs scenario, JumpSpec planned, double[] start, int level) {

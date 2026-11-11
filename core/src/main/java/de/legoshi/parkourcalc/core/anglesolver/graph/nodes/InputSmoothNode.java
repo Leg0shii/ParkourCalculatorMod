@@ -70,7 +70,7 @@ public final class InputSmoothNode implements NodeRuntime {
         if (report.changed > 0) adopt(sc, report.scenario);
         ctx.setSmoothOutcome(new SmoothOutcome(in.yaws, report.yaws, report.stop, report.nanos));
         ctx.setInputOutcome(new InputOutcome(report.inputs, before, report.changed, report.tried, report.watchCost,
-                report.plainWatchCost));
+                report.plainWatchCost, report.driveChanges, report.plainDriveChanges));
         if (SolverTrace.on()) {
             SolverTrace.log("ENGINE", "input smooth stop=%s changed=%d tried=%d ms=%d", report.stop.label,
                     report.changed, report.tried, report.nanos / 1_000_000L);

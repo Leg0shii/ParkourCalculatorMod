@@ -12,8 +12,10 @@ public final class InputSmooth {
     public static final long MIN_SLICE_NANOS = 150_000_000L;
     public static final long MAX_SLICE_NANOS = 1_000_000_000L;
     public static final int SLICES_PER_SCREEN = 16;
+    public static final double DRIVE_CHANGE_COST = 0.5;
 
     private static final double FEAS_TOL = 0.0;
+    private static final double COST_TIE = 1.0e-9;
 
     public interface Resolver {
         double[] resolve(JumpSpec guardedSpec, double[] seed, long deadlineNanos, AtomicBoolean cancel);
@@ -37,9 +39,12 @@ public final class InputSmooth {
         public final double[] plainYaws;
         public final double watchCost;
         public final double plainWatchCost;
+        public final int driveChanges;
+        public final int plainDriveChanges;
 
         Report(double[] yaws, JumpPhysicsInputs scenario, TickInputs[] inputs, int changed, int tried,
-               TrendFilterSmooth.Stop stop, long nanos, double[] plainYaws, double watchCost, double plainWatchCost) {
+               TrendFilterSmooth.Stop stop, long nanos, double[] plainYaws, double watchCost, double plainWatchCost,
+               int driveChanges, int plainDriveChanges) {
             this.yaws = yaws;
             this.scenario = scenario;
             this.inputs = inputs;
@@ -50,6 +55,8 @@ public final class InputSmooth {
             this.plainYaws = plainYaws;
             this.watchCost = watchCost;
             this.plainWatchCost = plainWatchCost;
+            this.driveChanges = driveChanges;
+            this.plainDriveChanges = plainDriveChanges;
         }
     }
 
@@ -60,9 +67,13 @@ public final class InputSmooth {
         final WatchScore watch;
         final TickInputs[] inputs;
         final double objective;
+        final int driveChanges;
+        final double cost;
 
         State(JumpPhysicsInputs scenario, double[] yaws, TurnShape shape, WatchScore watch, TickInputs[] inputs,
               double objective) {
+            this.driveChanges = driveChanges(scenario);
+            this.cost = watch.cost + DRIVE_CHANGE_COST * driveChanges;
             this.scenario = scenario;
             this.yaws = yaws;
             this.shape = shape;
@@ -72,6 +83,12 @@ public final class InputSmooth {
         }
 
         boolean betterThan(State other) {
+            if (cost < other.cost - COST_TIE) {
+                return true;
+            }
+            if (cost > other.cost + COST_TIE) {
+                return false;
+            }
             if (watch.betterThan(other.watch)) {
                 return true;
             }
@@ -119,7 +136,7 @@ public final class InputSmooth {
         ForwardPath seedPath = exact.forward(base, seedGf);
         if (seedAbsWrapped.length != n || comp.maxViolation(seedGf, seedPath) > FEAS_TOL) {
             return new Report(seedAbsWrapped, base, new TickInputs[n], 0, 0, TrendFilterSmooth.Stop.CONVERGED,
-                    System.nanoTime() - t0, seedAbsWrapped, Double.NaN, Double.NaN);
+                    System.nanoTime() - t0, seedAbsWrapped, Double.NaN, Double.NaN, 0, 0);
         }
         double reference = spec.objective.evaluate(seedPath);
 
@@ -134,8 +151,8 @@ public final class InputSmooth {
             State planned = planned(exact, spec, comp, seed, max, reference, giveBack, anchor, opt, planDeadline, cancel);
             if (planned != null && planned.betterThan(inc)) {
                 if (SolverTrace.on()) {
-                    SolverTrace.log("ENGINE", "input smooth release plan: %s -> %s (%d ticks)", inc.watch, planned.watch,
-                            planned.changed());
+                    SolverTrace.log("ENGINE", "input smooth release plan: %s -> %s (%d ticks, %d forward key changes)", inc.watch,
+                            planned.watch, planned.changed(), planned.driveChanges);
                 }
                 inc = planned;
             }
@@ -188,7 +205,7 @@ public final class InputSmooth {
         int changed = inc.changed();
         if (changed == 0) {
             return new Report(plainYaws, base, new TickInputs[n], 0, tried, plain.stop, System.nanoTime() - t0, plainYaws,
-                    plainState.watch.cost, plainState.watch.cost);
+                    plainState.watch.cost, plainState.watch.cost, plainState.driveChanges, plainState.driveChanges);
         }
         JumpSpec finalSpec = new JumpSpec(inc.scenario, new ArrayList<>(spec.constraints), spec.objective);
         State best = inc;
@@ -206,10 +223,10 @@ public final class InputSmooth {
         boolean tapped = exact.airTapSprint() && SprintTap.firstNew(editable, best.scenario) >= 0;
         if (tapped || !best.betterThan(plainState)) {
             return new Report(plainYaws, base, new TickInputs[n], 0, tried, plain.stop, System.nanoTime() - t0, plainYaws,
-                    plainState.watch.cost, plainState.watch.cost);
+                    plainState.watch.cost, plainState.watch.cost, plainState.driveChanges, plainState.driveChanges);
         }
         return new Report(best.yaws, best.scenario, best.inputs, changed, tried, stop, System.nanoTime() - t0, plainYaws,
-                best.watch.cost, plainState.watch.cost);
+                best.watch.cost, plainState.watch.cost, best.driveChanges, plainState.driveChanges);
     }
 
     private static TickInputs inputsAt(State s, int t) {
@@ -368,6 +385,22 @@ public final class InputSmooth {
         }
         State polished = state(exact, spec, plan.scenario, polish.yaws, plan.inputs, anchor);
         return polished.betterThan(raw) ? polished : raw;
+    }
+
+    public static int driveChanges(JumpPhysicsInputs sc) {
+        int changes = 0;
+        int prev = drive(sc, 0);
+        for (int t = 1; t < sc.numTicks; t++) {
+            int cur = drive(sc, t);
+            if (cur != prev) changes++;
+            prev = cur;
+        }
+        return changes;
+    }
+
+    static int drive(JumpPhysicsInputs sc, int t) {
+        if (SprintTap.forward(sc, t)) return sc.sprintAt(t) ? 2 : 1;
+        return SprintTap.backward(sc, t) ? -1 : 0;
     }
 
     public static int edges(JumpPhysicsInputs sc) {

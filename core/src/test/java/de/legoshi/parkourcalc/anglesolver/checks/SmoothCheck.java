@@ -177,6 +177,19 @@ final class SmoothCheck implements ProblemCheck {
             }
         }
 
+        if (pf.expect.maxForwardKeyChanges != null) {
+            String drive = Paths.detail(smoothed, AngleSolverEngine.DRIVE_CHANGES_DETAIL);
+            int added = 0;
+            if (smoothed.getInputChanges() != null) {
+                assertNotNull(name + ": the details count the forward key changes", drive);
+                int after = Integer.parseInt(drive.substring(0, drive.indexOf(' ')));
+                int before = Integer.parseInt(drive.substring(drive.lastIndexOf(' ') + 1, drive.length() - 1));
+                added = after - before;
+            }
+            assertTrue(name + ": " + added + " forward key changes added, at most " + pf.expect.maxForwardKeyChanges
+                    + " expected: " + drive, added <= pf.expect.maxForwardKeyChanges);
+        }
+
         TickInputs[] changes = smoothed.getInputChanges();
         int minChanged = pf.expect.or(pf.expect.minChanged, 1);
         if (changes == null && minChanged == 0) {
