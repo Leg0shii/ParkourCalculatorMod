@@ -20,11 +20,6 @@ public final class BuiltinGraphs {
     public static final int MULTI_START_SWEEP_SEC = 20;
     public static final int MIN_SWEEP_SEC = 3;
 
-    public static final int FAST_POLISH_FACINGS = 5;
-    public static final int FAST_POLISH_SEARCHES = 3;
-    public static final int FAST_POLISH_TABLE = 2200;
-    public static final int FAST_POLISH_WINDOW = 24;
-    public static final int FAST_POLISH_WORK = 100;
     public static final int POLISH_FACINGS = 64;
     public static final int POLISH_SEARCHES = 21;
     public static final int POLISH_TABLE = 30000;
@@ -154,12 +149,14 @@ public final class BuiltinGraphs {
         g.add("cap2", "capCertify")
                 .set("cap2", "computeDualGap", false)
                 .set("cap2", "skipIfSettled", true);
-        g.add("polish", "latticePolish")
-                .set("polish", "facings", fastTier ? FAST_POLISH_FACINGS : POLISH_FACINGS)
-                .set("polish", "searches", fastTier ? FAST_POLISH_SEARCHES : POLISH_SEARCHES)
-                .set("polish", "tableSize", fastTier ? FAST_POLISH_TABLE : POLISH_TABLE)
-                .set("polish", "window", fastTier ? FAST_POLISH_WINDOW : POLISH_WINDOW)
-                .set("polish", "work", fastTier ? FAST_POLISH_WORK : POLISH_WORK);
+        if (!fastTier) {
+            g.add("polish", "latticePolish")
+                    .set("polish", "facings", POLISH_FACINGS)
+                    .set("polish", "searches", POLISH_SEARCHES)
+                    .set("polish", "tableSize", POLISH_TABLE)
+                    .set("polish", "window", POLISH_WINDOW)
+                    .set("polish", "work", POLISH_WORK);
+        }
         g.add("wrap", "wrapIls")
                 .set("wrap", "budgetSec", fastTier ? 0 : tp)
                 .set("wrap", "minRemainingSec", 1);
@@ -209,8 +206,12 @@ public final class BuiltinGraphs {
         chain(g, "cert", "bnb");
         chain(g, "bnb", "ils");
         chain(g, "ils", "cap2");
-        chain(g, "cap2", "polish");
-        chain(g, "polish", "wrap");
+        if (fastTier) {
+            chain(g, "cap2", "wrap");
+        } else {
+            chain(g, "cap2", "polish");
+            chain(g, "polish", "wrap");
+        }
         chain(g, "wrap", "translate");
         if (leafSnap) {
             chain(g, "translate", "snap");

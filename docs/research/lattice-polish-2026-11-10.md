@@ -5,6 +5,17 @@ least explored part of the solver. Repeated Fast solves of `hpk_human/d12/j154_1
 each Apply moves the start by about 1e-5 and the next solve lands between -1599.700034 and -1599.700092 in 2 to
 350 ms.
 
+## Where the stage runs
+
+Maintainer ruling, 2026-11-11: Optimize only. Fast only has to find a solution, so the Fast graphs (`Fast`,
+`Fast (multi-start)`, the run ticks graph and the per-seed Fast runs inside the seed sweep) do not carry the stage.
+The Optimize and Custom graphs run it once, between `cap2` and `wrap`.
+
+The measurements below were taken on 2026-11-10 with the stage in the Fast graph as well. Every "Fast landing plus
+the stage" value is therefore what the stage makes of a Fast landing, not what the Fast preset returns: the Fast
+preset returns the "before" value. The Optimize column was measured again on 2026-11-11 with the stage in Optimize
+only.
+
 ## Diagnosis
 
 Before this change no stage searched the start position and the facings together. A solve found a landing for the
@@ -75,9 +86,9 @@ velocity, a smoothed objective.
 
 Engine runs through `HpkStartBenchmark` (research source set), 1.8.9 captures, every constraint met.
 
-Objective before and after, both tiers. The gain is the Fast gain in the objective's own direction.
+Objective before and after. The gain is what the stage adds to the Fast landing, in the objective's own direction.
 
-| jump | goal | Fast before | Fast with the stage | Fast gain | Optimize 10 s before | Optimize 10 s with the stage |
+| jump | goal | Fast | Fast landing plus the stage | gain | Optimize 10 s before | Optimize 10 s with the stage |
 | --- | --- | --- | --- | --- | --- | --- |
 | j140 | MAX | -826.2338869 | -826.2318733 | 2.0e-3 | -826.2319303 | -826.2318733 |
 | j345 | MAX | -660.2078867 | -660.1978799 | 1.0e-2 | -660.2064766 | -660.1978689 |
@@ -87,12 +98,18 @@ Objective before and after, both tiers. The gain is the Fast gain in the objecti
 | j155 | MAX | 4984.7631860 | 4984.7631862 | 2e-7 | 4984.7631862 | 4984.7631862 |
 | j716 | MIN | -699.9502144 | -699.9502694 | 5.5e-5 | -699.9502616 | -699.9502695 |
 | j718 | MAX | -1902.8624458 | -1902.8616148 | 8.3e-4 | -1902.8616929 | -1902.8615488 |
-| j828 | MAX | 4978.0130819 | 4978.0131219 | 4.0e-5 | 4978.0131181 | 4978.0131182 |
+| j828 | MAX | 4978.0130819 | 4978.0131219 | 4.0e-5 | 4978.0131181 | 4978.0131181 |
 | j925 | MAX | 2809.3363553 | 2809.3367308 | 3.8e-4 | 2809.3362871 | 2809.3367511 |
 | j154 | MIN | -1599.7000639 | -1599.7001140 | 5.0e-5 | -1599.7001109 | -1599.7001141 |
 
-Fast with the stage is at or past the old Optimize result on every jump except j1099 (1.6e-5 short). The stage
-itself takes 1 to 30 ms in Fast.
+A Fast landing plus the stage is at or past the old Optimize result on every jump except j1099 (1.6e-5 short). The
+stage itself takes 1 to 30 ms on a Fast landing at the small search size (5 tied facing steps, 3 searches, tables
+of 2200).
+
+Optimize 10 s gives the same values whether the per-seed Fast runs of the seed sweep carry the stage (2026-11-10)
+or not (2026-11-11, the shipped placement), to every printed digit except j828 (4978.0131182 against
+4978.0131181). Against Optimize without the stage that is a gain of 3.2e-6 (j154) to 8.6e-3 (j345) on eight jumps
+and no change on j1099, j155 and j828.
 
 j335 stays unsolved in both tiers with and without the stage: the stage needs a landing to start from.
 
@@ -105,10 +122,11 @@ Repeated Fast solves of j154 with Apply moving the start between solves (`Repeat
 | | objective range | time per solve after the first |
 | --- | --- | --- |
 | before | -1599.700034 to -1599.700092 | 1 to 341 ms |
-| with the stage | -1599.700114039 every time | 9 to 26 ms |
+| with the stage in the Fast graph | -1599.700114039 every time | 9 to 26 ms |
 
 The scatter came from the start drifting with every Apply; once the stage puts the start at its joint optimum the
-start no longer moves, so the closed form lands on the first try each time.
+start no longer moves, so the closed form lands on the first try each time. With the stage in Optimize only the
+Fast preset keeps the scatter of the first row; Optimize 10 s gives -1599.7001141 on this jump.
 
 Sweep over every capture in the test resources from the closed form seed (deterministic, no engine): 154 specs, 9
 declined, 65 with a feasible seed, 56 improved, 9 kept, none returned that failed the byte-exact check. Typical
@@ -120,8 +138,8 @@ changed nothing.
 
 ## How much the start point still matters
 
-Fast from nine start points on a 3 x 3 grid across the start box (10 %, 50 %, 90 % per axis), spread = best minus
-worst objective over the points that land:
+Fast from nine start points on a 3 x 3 grid across the start box (10 %, 50 %, 90 % per axis), with the stage in
+the Fast graph for the right column, spread = best minus worst objective over the points that land:
 
 | jump | landed | spread before | spread with the stage |
 | --- | --- | --- | --- |
@@ -142,10 +160,11 @@ nine gave -826.2356294, with the stage all nine give -826.2318733. Three reading
 
 - On 9 of 11 jumps every start point that lands now ends in the same result, so inside one landing basin the start
   search is closed by the joint solve.
-- j155 and j828 have several basins (four distinct values each). That is the multi-start problem, and the existing
-  seed sweep already runs the whole Fast graph per seed, so with the stage it ranks polished results. The
-  `Fast (multi-start)` preset reaches the best of the nine points on j155, j828 and j718 (j718 gains 5.9e-6 over the
-  capture's own start).
+- j155 and j828 have several basins (four distinct values each). That is the multi-start problem. The seed sweep
+  runs the whole Fast graph per seed; with the stage in that graph it ranked polished results, and the
+  `Fast (multi-start)` preset then reached the best of the nine points on j155, j828 and j718 (j718 gains 5.9e-6
+  over the capture's own start). With the stage in Optimize only the sweep ranks plain Fast landings and the stage
+  polishes the winner; on these eleven jumps Optimize 10 s ends at the same values either way.
 - j1099, j716 and j154 do not land from every start point, with or without the stage. That is a first landing
   problem, not a polish problem.
 
@@ -157,12 +176,12 @@ nine gave -826.2356294, with the stage all nine give -826.2318733. Three reading
 - The stage stays inside the base wrap window. The cosine index of 1.8.9 can slip against the sine index at
   facings 360 degrees apart, which is worth another 1e-5 to 7e-5 on diagonal jumps; that needs locked absolute
   facings per tick in the closure tables.
-- Tied facings on j828. Fast lands at 4978.0131219, a cold Optimize at 4978.0131182, the smooth optimum is
-  4978.0131230. The jump has three tied facings: one is stiff (its grid step decides the loss, and most of its
-  neighbouring steps leave no feasible re-solve), two barely matter. Tried and dropped: ranking the tied steps by a
-  closest vector search in the metric of the reduced augmented Lagrangian Hessian instead of by distance. The penalty
-  curvature overstates the loss of the stiff facing by two orders of magnitude, the ranking then spends the whole
-  budget on the two facings that do not matter, and the result was equal or worse than distance shells (Fast
-  4978.0131216 at the default size). A ranking by measured per-facing loss profiles is the next candidate.
+- Tied facings on j828. A Fast landing plus the stage gives 4978.0131219, a cold Optimize 4978.0131181, the smooth
+  optimum is 4978.0131230. The jump has three tied facings: one is stiff (its grid step decides the loss, and most
+  of its neighbouring steps leave no feasible re-solve), two barely matter. Tried and dropped: ranking the tied
+  steps by a closest vector search in the metric of the reduced augmented Lagrangian Hessian instead of by distance.
+  The penalty curvature overstates the loss of the stiff facing by two orders of magnitude, the ranking then spends
+  the whole budget on the two facings that do not matter, and the result was equal or worse than distance shells
+  (Fast 4978.0131216 at the default size). A ranking by measured per-facing loss profiles is the next candidate.
 - A cold search for other landing basins (j335) is a different problem: this stage polishes a basin, it does not
   find one.
