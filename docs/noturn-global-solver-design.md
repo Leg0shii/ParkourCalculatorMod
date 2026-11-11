@@ -569,7 +569,9 @@ Two companions made it land:
 - **The screen.** The byte screen (one facing per unit) misrates human Strats by up to 0.38 b; with it the human Strat of j716 was reached after 16 s and never certified, at rank 306 of the pool. A family leaf is screened by `FreeAirExact` instead: the exact minimum over the facings of the worst wall violation of this one schedule in the linear model, a free facing per untied tick, the start box as a variable, plus passes that zero the velocity components the inertia threshold would zero. It is a dual method on the active rows, so its value is a lower bound even when it stops early. 56 of the 59 recorded human Strats score under 0.002 b (the exact tier), 58 under the keep threshold of 0.01 b; j127 scores 0.136 b and is left to the change levels. Cost about 0.45 ms per schedule on one thread.
 - **The certify order.** Inside the exact tier the pool is ordered by family cost before presses, so the most common families are certified first.
 
-Measured on 4 cloud cores, cold (inputs wiped, the jump's own rows left out of the library), one run each, 120 s budget, seconds until the certified Strat. The bench's extra certify and polish put a floor of about 15 s under every find. "Levels" is dev before this stage, "families alone" the research build with the family lane only, "both lanes" this stage as it ships (`-Dpkc.bench.families=true -Dpkc.bench.familyWithout=<jump>`):
+The table below is a weak machine comparison: CPU path, 4 cloud cores, 120 s, the single pool driver. It says nothing about the development PC, where the GPU screen, the in-game driver and 240 s already find 55 of the 59 recordings (repair stage section above), j424, j718, j1150 and j155 among them and j716 in 3 of 4 standalone runs. The comparison on that setup is open.
+
+Measured on 4 cloud cores, CPU path, cold (inputs wiped, the jump's own rows left out of the library), one run each, 120 s budget, seconds until the certified Strat. The bench's extra certify and polish put a floor of about 15 s under every find. "Levels" is dev before this stage, "families alone" the research build with the family lane only, "both lanes" this stage as it ships (`-Dpkc.bench.families=true -Dpkc.bench.familyWithout=<jump>`):
 
 | jump | levels | families alone | both lanes |
 | --- | --- | --- | --- |
@@ -599,7 +601,7 @@ Measured on 4 cloud cores, cold (inputs wiped, the jump's own rows left out of t
 | j129 | 16 | 37 | 19 |
 | j816 | 16 | 22 | 16 |
 
-The levels find 18 of the 25 within 120 s, both lanes 20: j716, j424 and j718 are new, nothing is lost. Of the 17 jumps both find, the lanes are more than 3 s faster on 10, within 3 s on 5 and slower on j328 (6 s) and j129 (3 s). With half the enumeration threads the family lane reaches j716 and j424 later than alone, and j1150 (185 s alone) falls outside the budget.
+On this setup the levels find 18 of the 25 within 120 s, both lanes 20 (j716, j424 and j718 in addition), nothing is lost. Of the 17 jumps both find, the lanes are more than 3 s faster on 10, within 3 s on 5 and slower on j328 (6 s) and j129 (3 s). With half the enumeration threads the family lane reaches j716 and j424 later than alone, and j1150 (185 s alone) falls outside the budget.
 
 The test `NoTurnFamilyStageTest` runs the family lane alone without the extra certify and the polish: j132, whose recorded Strat has three paid changes, lands in 4 s (12 thousand schedules scored), j346 in under 1 s.
 
