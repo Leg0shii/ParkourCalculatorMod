@@ -139,6 +139,16 @@ anglesolver/
                            instance's certified optimum is certified infeasible (exhausted tree, no
                            unresolved drop), a feasible instance never carries one, an expired
                            deadline or a zero node cap leaves infeasibility uncertified
+  InertiaImpulseModelTest.java  the premise of the certified bound's inertia allowance and of the leaf's
+                           exact inputs: on every solve capture without damage or flow, for random yaw
+                           paths (constant, drifting, random, reversing), the byte-exact position at
+                           every tick equals the linear model without zero flags driven by
+                           SineTableGeometry.exactU plus one impulse of minus the carried velocity on
+                           each tick the clamp fires (at most the threshold), to 1e-7
+  SineTableGeometrySupportTest.java  the certified scan window of SineTableGeometry.support: on wide arcs
+                           and full turns (four versions, with and without a jump, directions inside
+                           the arc, opposite it, near an end and random, scales 1e-6 to 1e6) the
+                           support equals, bit for bit, the largest support of the arc's 48-index pieces
   WitnessOracleTest.java   soundness oracle (SlowSolverTests, one case per solve/ capture): a random yaw path
                            is forwarded byte-exactly from a launch turned by a random quarter turn, and
                            1 to 4 UI constraints of every kind (X, Z, ranges, tick references, dX, dZ,

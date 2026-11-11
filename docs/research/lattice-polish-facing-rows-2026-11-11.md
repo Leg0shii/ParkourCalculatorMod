@@ -103,7 +103,7 @@ Optimize and in a Custom graph, not in Fast.
 | `gh553-j345-dfneo` | -660.194916871 | -660.193016532 | 1.90e-3 |
 | `gh553-j925-dfle` | -1003.297971806 | -1003.297891060 | 8.08e-5 |
 
-Each is a `problems/polish/` case in `engine` mode (a Fast landing, which never carries the stage) with a `minGain` below the measured gain.
+Each is a `problems/polish/` case in `engine` mode (a Fast landing, which never carries the stage) with a `minGain` below the measured gain. The exception since the tighter certified bound of #655 is in `dev`: a Fast solve of `gh553-j345-dfneo` now lands at -660.192949915, further than the polished landing of the table, the stage keeps that incumbent, and the case carries no `minGain` anymore.
 
 ### The two cross-axis captures
 
