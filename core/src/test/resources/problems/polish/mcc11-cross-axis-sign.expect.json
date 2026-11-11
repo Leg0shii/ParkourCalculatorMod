@@ -1,1 +1,1 @@
-{"minGain": 0.001}
+{"minGain": 0.001, "roundsGain": 1e-4}

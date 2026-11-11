@@ -76,6 +76,7 @@ public final class Expect {
     public String goal;
     public Double minGain;
     public Boolean turns;
+    public Double roundsGain;
     public Boolean seedMayMiss;
     public Double cap;
 

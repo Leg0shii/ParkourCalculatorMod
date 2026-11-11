@@ -290,6 +290,7 @@ public final class NodeCatalog {
                 .param(ParamSpec.integer("adjusters", "Ticks adjusted together", 2, 12, 8))
                 .param(ParamSpec.integer("tableSize", "Combinations per half", 9, 200000, 2200))
                 .param(ParamSpec.integer("window", "Neighbours scanned", 1, 4096, 24))
+                .param(ParamSpec.integer("rounds", "Grid search rounds", 1, 256, 16))
                 .param(ParamSpec.integer("work", "Smooth solve work limit (millions)", 1, 1000000, 100))
                 .param(ParamSpec.bool("turns", "Try the start facing one turn away", true))
                 .param(ParamSpec.decimal(GraphRunner.RESERVE_FRACTION_PARAM, "Reserved share of the solve time", 0.0, 1.0,

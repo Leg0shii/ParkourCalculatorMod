@@ -17,8 +17,10 @@ final class LatticeClosure {
     private static final int GATE_REACH = 3;
     private static final int LEVEL_SLACK = 8;
     private static final int SCAN_DEPTH = 32;
+    private static final double ROUND_FLOOR = 2.0e-7;
 
     static final class Config {
+        int rounds = 16;
         int maxAdjusters = 8;
         int halfCap = 2200;
         int maxOffset = 13;
@@ -95,10 +97,15 @@ final class LatticeClosure {
     }
 
     static Result run(TrigRowModel m, double[] z, double[] mu, double[] yaws, Config cfg, long deadline) {
-        return new LatticeClosure(m, z, cfg, deadline).search(z, mu, yaws);
+        return new LatticeClosure(m, z, cfg, deadline).search(z, mu, yaws, null);
     }
 
-    private Result search(double[] z, double[] mu, double[] yaws) {
+    static Result refine(TrigRowModel m, double[] z, double[] mu, Result from, Config cfg, long deadline) {
+        Result r = new LatticeClosure(m, z, cfg, deadline).search(z, mu, from.yaws, from);
+        return r == null ? from : r;
+    }
+
+    private Result search(double[] z, double[] mu, double[] yaws, Result from) {
         double[] base = yaws.clone();
         List<Integer> lights = new ArrayList<>();
         for (int t = 0; t < n; t++) {
@@ -106,9 +113,9 @@ final class LatticeClosure {
             if (v < 0 || m.fixed[v]) continue;
             if (m.ticksInVar[v] != 1) return null;
             lights.add(t);
-            base[t] = Angles.wrap(TrigRowModel.centre(base[t]));
+            if (from == null) base[t] = Angles.wrap(TrigRowModel.centre(base[t]));
         }
-        if (!settleFacingRows(base, lights)) return null;
+        if (from == null && !settleFacingRows(base, lights)) return null;
         int rows = m.rows.length;
         double[] g = m.rowValues(z);
         boolean[] tight = new boolean[m.rowCount];
@@ -134,18 +141,55 @@ final class LatticeClosure {
                 return Double.compare(lever[w], lever[u]);
             }
         });
+        if (from != null) return again(from, z, mu, g, tight, coupled, loose);
+        if (!settleGates(base, lights, mu)) return null;
+        Result first = round(base, z, mu, g, tight, coupled, loose, 0);
+        return first == null ? null : again(first, z, mu, g, tight, coupled, loose);
+    }
+
+    private Result again(Result from, double[] z, double[] mu, double[] g, boolean[] tight, List<Integer> coupled,
+                         List<Integer> loose) {
+        int subsets = coupled.size() <= cfg.maxAdjusters ? 1
+                : (coupled.size() + cfg.maxAdjusters / 2 - 1) / (cfg.maxAdjusters / 2);
+        Result best = from;
+        double reach = m.objectiveAt(z) + ROUND_FLOOR;
+        int idle = 0;
+        for (int round = 1; round < cfg.rounds && idle < subsets; round++) {
+            if (sign * best.objective <= reach) break;
+            if (deadline > 0 && System.nanoTime() > deadline) break;
+            Result next = round(best.yaws.clone(), z, mu, g, tight, coupled, loose, round);
+            if (next != null && sign * next.objective < sign * best.objective) {
+                best = next;
+                idle = 0;
+            } else {
+                idle++;
+            }
+        }
+        return best;
+    }
+
+    private Result round(double[] base, double[] z, double[] mu, double[] g, boolean[] tight, List<Integer> coupled,
+                         List<Integer> free, int round) {
+        int rows = m.rows.length;
+        List<Integer> loose = new ArrayList<>(free);
         List<Integer> adjusters = new ArrayList<>();
         if (coupled.size() <= cfg.maxAdjusters) {
             adjusters.addAll(coupled);
         } else {
             int high = cfg.maxAdjusters / 2;
             int low = cfg.maxAdjusters - high;
-            for (int i = 0; i < high; i++) adjusters.add(coupled.get(i));
-            for (int i = coupled.size() - low; i < coupled.size(); i++) adjusters.add(coupled.get(i));
-            loose.addAll(coupled.subList(high, coupled.size() - low));
+            int size = coupled.size();
+            int shift = (round * high) % size;
+            boolean[] picked = new boolean[size];
+            for (int i = 0; i < high; i++) picked[(shift + i) % size] = true;
+            for (int i = size - low; i < size; i++) picked[(shift + i) % size] = true;
+            for (int i = 0; i < size; i++) {
+                if (picked[i]) adjusters.add(coupled.get(i));
+                else loose.add(coupled.get(i));
+            }
         }
+        if (round > 0) loose.clear();
 
-        if (!settleGates(base, lights, mu)) return null;
         ForwardPath p0 = m.exact.forward(at, at.toGameFacings(base));
         double[] e0 = new double[rows];
         for (int r = 0; r < rows; r++) e0[r] = m.rows[r].excess(p0, base);

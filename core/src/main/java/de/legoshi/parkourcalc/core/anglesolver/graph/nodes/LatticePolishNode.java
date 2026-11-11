@@ -28,6 +28,7 @@ public final class LatticePolishNode implements NodeRuntime {
         cfg.maxAdjusters = params.getInt("adjusters");
         cfg.halfCap = params.getInt("tableSize");
         cfg.window = params.getInt("window");
+        cfg.rounds = params.getInt("rounds");
         cfg.workUnits = params.getInt("work") * WORK_UNITS_PER_MILLION;
         cfg.turns = params.getBool("turns");
     }
