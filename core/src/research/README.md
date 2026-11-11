@@ -165,8 +165,12 @@ anglesolver/
                            landing per budget, needs -Dpkc.bench.reference), portfolio (best of K seeds
                            at a budget against one run at K times the budget, -Dpkc.bench.variant),
                            reference (raise the best known landings in the file -Dpkc.bench.reference
-                           from the inputs), identity (the same runs in -Dpkc.bench.other must be
-                           identical). A config is <variant>|<fast or seconds>, for example "base|10s"
+                           from the inputs), ladder (every strength of -Dpkc.bench.variant against the
+                           next lower one by the same rule), distance (per jump the distance of config
+                           a to the best known landing and a summary per category, needs
+                           -Dpkc.bench.reference), identity (the same runs in -Dpkc.bench.other must
+                           be identical). A config is <variant>|<fast or seconds>, for example
+                           "base|10s"
   HpkStartBenchmark.java   cold-solve benchmark over the hpk_human corpus against reference
                            objectives; -Dpkc.bench.{only,skip,graph,effort,optsec,timeoutms,out},
                            -Dpkc.bench.gate fails the run when a jump misses its reference by more

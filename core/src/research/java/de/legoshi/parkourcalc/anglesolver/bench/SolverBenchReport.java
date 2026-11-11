@@ -47,6 +47,8 @@ public class SolverBenchReport {
         else if ("stages".equals(mode)) stages(data, BenchData.config(required("pkc.bench.a")), out);
         else if ("compare".equals(mode)) compare(data, BenchData.config(required("pkc.bench.a")), BenchData.config(required("pkc.bench.b")), out);
         else if ("scaling".equals(mode)) scaling(data, ref, out);
+        else if ("ladder".equals(mode)) ladder(data, out);
+        else if ("distance".equals(mode)) distance(data, ref, BenchData.config(required("pkc.bench.a")), out);
         else if ("portfolio".equals(mode)) portfolio(data, required("pkc.bench.variant"), out);
         else if ("reference".equals(mode)) reference(data, ref, new File(required("pkc.bench.reference")), out);
         else if ("identity".equals(mode)) identity(data, BenchData.load(required("pkc.bench.other")), out);
@@ -113,8 +115,8 @@ public class SolverBenchReport {
             out.println(row);
         }
         out.println();
-        out.println("| Category | Strength | Jumps | Land | Median offset | Sum of offsets |");
-        out.println("| --- | --- | ---: | ---: | ---: | ---: |");
+        out.println("| Category | Strength | Jumps | Land | With an offset | Median offset | Sum of offsets |");
+        out.println("| --- | --- | ---: | ---: | ---: | ---: | ---: |");
         for (String c : categories) {
             for (int b : budgets) {
                 int n = 0;
@@ -125,14 +127,16 @@ public class SolverBenchReport {
                     List<BenchRecord> list = cells.get(j.key + "|" + c + "|" + b);
                     if (list == null) continue;
                     n++;
+                    boolean all = true;
+                    for (BenchRecord r : list) all &= BenchData.lands(r);
+                    if (all) land++;
                     double o = medianOffset(list);
                     if (Double.isNaN(o)) continue;
-                    land++;
                     sum += o;
                     offs.add(o);
                 }
-                out.println(String.format(Locale.ROOT, "| %s | %s | %d | %d | %.6f | %.6f |", c, b == 0 ? "Fast" : b / 1000 + " s", n, land,
-                        BenchData.median(offs), sum));
+                out.println(String.format(Locale.ROOT, "| %s | %s | %d | %d | %d | %.6f | %.6f |", c, b == 0 ? "Fast" : b / 1000 + " s", n, land,
+                        offs.size(), BenchData.median(offs), sum));
             }
         }
     }
@@ -436,6 +440,95 @@ public class SolverBenchReport {
         }
         out.println();
         out.println(common.size() + " problems land at every budget and enter the distance columns.");
+    }
+
+    static void distance(BenchData data, BenchReference ref, String config, PrintStream out) {
+        out.println("Distance to the best known landing, config `" + config + "` (median over its seeds).");
+        out.println();
+        out.println("| Problem | Ticks | Landing | Best known | Distance | Source of the best known |");
+        out.println("| --- | ---: | ---: | ---: | ---: | --- |");
+        List<String> rows = new ArrayList<String>();
+        Map<String, List<Double>> byCategory = new TreeMap<String, List<Double>>();
+        for (Map.Entry<String, Map<Long, BenchRecord>> e : data.byProblem(config).entrySet()) {
+            double best = ref.value(e.getKey());
+            if (Double.isNaN(best)) continue;
+            List<Double> vals = new ArrayList<Double>();
+            BenchRecord any = null;
+            for (BenchRecord r : e.getValue().values()) {
+                any = r;
+                if (BenchData.lands(r)) vals.add(BenchData.value(r));
+            }
+            if (any == null) continue;
+            BenchReference.Entry entry = ref.entries.get(e.getKey());
+            double d = vals.size() < e.getValue().size() ? Double.POSITIVE_INFINITY : Math.max(0.0, best - BenchData.median(vals));
+            List<Double> list = byCategory.get(any.category);
+            if (list == null) {
+                list = new ArrayList<Double>();
+                byCategory.put(any.category, list);
+            }
+            list.add(d);
+            if (d <= BenchData.EPS) continue;
+            rows.add(String.format(Locale.ROOT, "%020.12f| %s | %d | %s | %.9f | %s | %s |", Double.isInfinite(d) ? 0.0 : 1.0e6 - d, e.getKey(),
+                    any.problem == null ? 0 : any.problem.numTicks,
+                    vals.isEmpty() ? "-" : String.format(Locale.ROOT, "%.9f", BenchData.median(vals)), best,
+                    Double.isInfinite(d) ? "no landing" : String.format(Locale.ROOT, "%.3e", d), entry.source));
+        }
+        Collections.sort(rows);
+        for (String r : rows) out.println(r.substring(r.indexOf('|')));
+        out.println();
+        out.println("| Category | Problems | At best known | Within 1e-6 | Within 1e-4 | Within 1e-3 | No landing | Sum of distance | Median distance |");
+        out.println("| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |");
+        for (Map.Entry<String, List<Double>> e : byCategory.entrySet()) {
+            int at = 0;
+            int in6 = 0;
+            int in4 = 0;
+            int in3 = 0;
+            int none = 0;
+            double sum = 0.0;
+            List<Double> finite = new ArrayList<Double>();
+            for (double d : e.getValue()) {
+                if (Double.isInfinite(d)) {
+                    none++;
+                    continue;
+                }
+                finite.add(d);
+                sum += d;
+                if (d <= BenchData.EPS) at++;
+                if (d <= 1e-6) in6++;
+                if (d <= 1e-4) in4++;
+                if (d <= 1e-3) in3++;
+            }
+            out.println(String.format(Locale.ROOT, "| %s | %d | %d | %d | %d | %d | %d | %.6f | %.3e |", e.getKey(), e.getValue().size(), at, in6, in4, in3,
+                    none, sum, BenchData.median(finite)));
+        }
+    }
+
+    static void ladder(BenchData data, PrintStream out) {
+        String variant = System.getProperty("pkc.bench.variant", "base");
+        TreeMap<Integer, String> configs = new TreeMap<Integer, String>();
+        for (BenchRecord r : data.solves) {
+            if (variant.equals(r.variant)) configs.put(r.strength.budgetMs, r.configKey());
+        }
+        out.println("Strength ladder, variant `" + variant + "`: each strength against the next lower one, on the seeds both ran. A loss is a problem that ends shorter with more time.");
+        out.println();
+        out.println("| From | To | Wins | Lean wins | Equal | Lean losses | Losses | Mixed | Landings gained | Landings lost | Sum of mean differences | Largest loss |");
+        out.println("| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |");
+        Map.Entry<Integer, String> prev = null;
+        for (Map.Entry<Integer, String> c : configs.entrySet()) {
+            if (prev != null) {
+                Verdicts v = verdicts(data, prev.getValue(), c.getValue());
+                double worst = 0.0;
+                for (double m : v.moved) worst = Math.min(worst, m);
+                out.println(String.format(Locale.ROOT, "| %s | %s | %d | %d | %d | %d | %d | %d | %d | %d | %+.3e | %.2e |", strengthName(prev.getKey()),
+                        strengthName(c.getKey()), v.wins, v.leanWins, v.equal, v.leanLosses, v.losses, v.mixed, v.gainedLandings, v.lostLandings,
+                        v.sumGain, worst));
+            }
+            prev = c;
+        }
+    }
+
+    private static String strengthName(int budgetMs) {
+        return budgetMs == 0 ? "Fast" : budgetMs % 1000 == 0 ? budgetMs / 1000 + " s" : budgetMs + " ms";
     }
 
     static void portfolio(BenchData data, String variant, PrintStream out) {
