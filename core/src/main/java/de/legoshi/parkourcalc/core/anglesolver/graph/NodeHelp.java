@@ -261,7 +261,7 @@ public final class NodeHelp {
                 + " pairs. 0 off, 1 on. Slower but can land a cleaner result.");
         param("leafSnap", "repeat", "Snap again from the snapped result until a snap finds nothing better or"
                 + " the time is up. Each snap only looks at exact values close to the angles it starts from,"
-                + " so a repeat can reach further. Needs a time budget.");
+                + " so a repeat can reach further. A snap also only looks at the last 12 turning ticks of the jump; the repeat then goes through the earlier ones, 12 at a time. Needs a time budget.");
 
         node("translatedStart", "Only with a free start block: slides the whole solution's start spot to the"
                 + " best position that still lands the jump.");

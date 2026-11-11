@@ -195,6 +195,9 @@ anglesolver/
                            one snap improves the landing, a repeat without a time budget is that one
                            call, the repeated snap ends more than 1e-4 further, byte-exact with no
                            violation, and at a point where one more snap finds nothing better
+                           on j024 (25 snap ticks, one call only looks at the last 12) the repeat also
+                           goes through the earlier ticks and ends more than 5e-5 further than the
+                           last twelve alone, at a point no window improves
   NoTurnDriversTest.java   #424 the no-turn drivers on the two hpk_precise structures (slow):
                            the certifier drives the inner engine as the byte-exact oracle on j1150
                            with a dF=0 chain and lands a clean no-turn (viol 0, obj near the

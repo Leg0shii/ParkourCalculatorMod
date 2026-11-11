@@ -8,7 +8,7 @@ public final class LeafSnap {
     private static final int BUCKET_RADIUS = 6;
     private static final int BUCKET_RADIUS_DEEP = 8;
     private static final double TURN_DEG = 1.0;
-    private static final int MAX_ENUM = 12;
+    public static final int MAX_ENUM = 12;
     private static final int SINGLE_ROUNDS = 4;
     private static final int DEEP_ROUNDS = 16;
     private static final double NORM_TOL = 1.0e-6;
@@ -18,6 +18,17 @@ public final class LeafSnap {
 
     public static double[] snap(ExactJumpModel exact, JumpSpec spec, double[] seedAbsWrapped, double feasTol,
                                 AtomicBoolean cancel, long deadlineNanos, boolean pairPass) {
+        return snap(exact, spec, seedAbsWrapped, feasTol, cancel, deadlineNanos, pairPass, 0);
+    }
+
+    public static int snapTickCount(JumpSpec spec, double[] seedAbsWrapped) {
+        JumpPhysicsInputs sc = spec.asScenario();
+        if (seedAbsWrapped == null || seedAbsWrapped.length != sc.numTicks) return 0;
+        return snapTicks(spec, sc, sc.toGameFacings(Angles.wrapAll(seedAbsWrapped))).length;
+    }
+
+    public static double[] snap(ExactJumpModel exact, JumpSpec spec, double[] seedAbsWrapped, double feasTol,
+                                AtomicBoolean cancel, long deadlineNanos, boolean pairPass, int windowShift) {
         if (seedAbsWrapped == null) return null;
         JumpPhysicsInputs sc = spec.asScenario();
         int n = sc.numTicks;
@@ -31,7 +42,7 @@ public final class LeafSnap {
         if (baseViol > feasTol) return null;
         double baseObj = spec.objective.evaluate(path);
 
-        int[] enumTicks = enumerationTicks(spec, sc, gf);
+        int[] enumTicks = window(snapTicks(spec, sc, gf), windowShift);
         if (enumTicks.length == 0) return null;
 
         int radius = pairPass ? BUCKET_RADIUS_DEEP : BUCKET_RADIUS;
@@ -106,7 +117,17 @@ public final class LeafSnap {
         return out;
     }
 
-    private static int[] enumerationTicks(JumpSpec spec, JumpPhysicsInputs sc, double[] gf) {
+    private static int[] window(int[] all, int windowShift) {
+        if (all.length <= MAX_ENUM) return windowShift == 0 ? all : new int[0];
+        int end = all.length - windowShift;
+        if (end <= 0) return new int[0];
+        int start = Math.max(0, end - MAX_ENUM);
+        int[] out = new int[end - start];
+        System.arraycopy(all, start, out, 0, out.length);
+        return out;
+    }
+
+    private static int[] snapTicks(JumpSpec spec, JumpPhysicsInputs sc, double[] gf) {
         int n = gf.length;
         LinkedHashSet<Integer> set = new LinkedHashSet<>();
         int[] degen = JumpLinearModel.hasFacingWall(spec.constraints)
@@ -122,10 +143,7 @@ public final class LeafSnap {
         int i = 0;
         for (int t : set) all[i++] = t;
         java.util.Arrays.sort(all);
-        if (all.length <= MAX_ENUM) return all;
-        int[] out = new int[MAX_ENUM];
-        System.arraycopy(all, all.length - MAX_ENUM, out, 0, MAX_ENUM);
-        return out;
+        return all;
     }
 
     private static boolean better(double a, double b, boolean max) {

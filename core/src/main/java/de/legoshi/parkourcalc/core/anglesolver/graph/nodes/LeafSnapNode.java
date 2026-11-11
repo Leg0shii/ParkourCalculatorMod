@@ -17,6 +17,7 @@ public final class LeafSnapNode implements NodeRuntime {
 
     private static final long FAST_BUDGET_NANOS = 2_000_000_000L;
     private static final int MAX_CALLS = 64;
+    private static final int WINDOW_STEP = 6;
 
     private final boolean pairPass;
     private final boolean repeat;
@@ -55,6 +56,25 @@ public final class LeafSnapNode implements NodeRuntime {
             snapGf = next;
             heldObj = nextObj;
             calls++;
+        }
+        if (repeat && deadlineNanos > 0) {
+            int ticks = LeafSnap.snapTickCount(ctx.spec, snapGf);
+            boolean moved = ticks > LeafSnap.MAX_ENUM;
+            int firstShift = WINDOW_STEP;
+            while (moved && System.nanoTime() < snapDeadline) {
+                moved = false;
+                for (int shift = firstShift; shift < ticks && System.nanoTime() < snapDeadline; shift += WINDOW_STEP) {
+                    double[] next = LeafSnap.snap(ctx.exactModel, ctx.spec, snapGf, ctx.feasTol, nodeToken,
+                            snapDeadline, pairPass, shift);
+                    if (next == null || ctx.scoredViol(next) > ctx.feasTol) continue;
+                    double nextObj = ctx.scoredObjective(next);
+                    if (!(ctx.maximize() ? nextObj > heldObj : nextObj < heldObj)) continue;
+                    snapGf = next;
+                    heldObj = nextObj;
+                    moved = true;
+                }
+                firstShift = 0;
+            }
         }
         if (!Scoring.adoptStageResult(ctx.model, sc, ctx.spec, ctx.freeBox,
                 sc.toGameFacings(Angles.wrapAll(snapGf)), ctx.feasTol)) {
