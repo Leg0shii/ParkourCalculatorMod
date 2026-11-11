@@ -294,6 +294,13 @@ public class NoTurnColdBench {
             cfg.playable = Boolean.getBoolean("pkc.bench.playable");
             if (System.getProperty("pkc.bench.taps") != null) cfg.tapsStage = Boolean.parseBoolean(System.getProperty("pkc.bench.taps"));
             if (System.getProperty("pkc.bench.repair") != null) cfg.repairStage = Boolean.parseBoolean(System.getProperty("pkc.bench.repair"));
+            if (Boolean.getBoolean("pkc.bench.families")) {
+                cfg.familyStage = true;
+                int without = Integer.getInteger("pkc.bench.familyWithout", -1);
+                if (without >= 0) cfg.families = de.legoshi.parkourcalc.core.anglesolver.noturn.StratFamilies.shippedWithout(without);
+                cfg.changeLevels = !Boolean.getBoolean("pkc.bench.familyOnly");
+                line("families: on without=" + without + " changeLevels=" + cfg.changeLevels);
+            }
             if (Integer.getInteger("pkc.bench.repairWidth", -1) >= 0) cfg.repairWidth = Integer.getInteger("pkc.bench.repairWidth");
             if (Integer.getInteger("pkc.bench.repairPairs", -1) >= 0) cfg.repairPairs = Integer.getInteger("pkc.bench.repairPairs");
             if (Integer.getInteger("pkc.bench.repairRounds", -1) >= 0) cfg.repairRounds = Integer.getInteger("pkc.bench.repairRounds");

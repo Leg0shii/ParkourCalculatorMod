@@ -555,3 +555,52 @@ The Stratfinder's ordinary search is the pool driver and the beam finder inside 
 The master is sequential by default (`Config.parallelContinuations` false) because the parallel continuation batch was never measured against it; the test's cold crack of j154 took about 55 minutes on the development box, which is why the default budget is an hour. Measured on the 4-core cloud box with the test's own configuration and its 4500 s deadline (2026-10-25, `NoTurnBendersTest.j154ColdCracksThroughMaster` with `-Dpkc.j154ColdCrack=true`): no incumbent in 75 minutes, 194 master iterations, 2548 certifies, 25 fat-feasible families, 8 continuations, the V6 ancestor proposed, certified fat and continued at continuation index 2 but never closed. So on a small box the deep search does not reach j154 inside an hour; the 55 minute crack is a figure from the many-core development box and has to be re-measured there before the default budget means anything, and the parallel continuation batch (`Config.parallelContinuations`) is the lever to measure next, since 8 sequential continuations of 600 s each is where the 75 minutes went.
 
 **Measured on the development PC and fixed (2026-10-25, 32 threads, nothing else on the box).** The same test on 30 enumeration threads: no incumbent in 84 minutes either, 194 iterations, 5918 certifies, 25 fat-feasible families, 10 continuations, the V6 ancestor proposed at iteration 99, fat-feasible, continued second, not closed. Cores were never the reason: since #558 tied tick 0 (see "Retired j154 V6 gates" above) V6 is infeasible and the feasible j154 family opens with a one-tick A tap from the ancestor `A SDx5 Sx9 WAx13 W`, which the master could not propose, because `StructurePoolDriver.enumerateRaw` applies the 6-tick minimum hold to the first segment too (and the tapped ancestor has 4 key changes against the master's cap of 3; 122872 structures at 4 changes with the hold kept, 742267 with a free first tick, against 38837). The continuation itself still works: `WallHomotopyDriver.runFromSeeds` with `buildContinuationConfig`, seeded by hand with that ancestor, closes `A SDx5 Sx8 SD WA A WAx11 W` in 160 s and 103 certifies (7 edges, ja, violation 0.0, start interior). The fix is on the proposal side and deliberately small (`Config.openingTaps`, on in `deepConfig` and in the test): when a proposed family certifies fat-feasible, the master fat-certifies its seven tick-0 tap variants (the alphabet minus the family's own opening) and keeps the feasible ones on the family, sorted by fat objective; they count neither toward the continuation lead nor the continuation cap, so the proposal order is exactly the plain master's; when the family's own continuation does not close, its taps are continued at once, all in parallel with the cores split between them (`runContinuationBatch`, 5 threads each on this box). A first version that queued the taps like families was measured and dropped: 23 of 35 taps were fat-feasible, the lead of 25 filled after 76 proposals, and nine dead 600 s continuations spent the budget before the ancestor was ever proposed. With the taps on the side: j154 cracks cold in 31 minutes (1873 s wall, 194 iterations, 4741 certifies, 25 fat-feasible families, 16 continuations): the V6 ancestor is proposed at iteration 99 and continued ninth, its own continuation fails, and of its seven taps, continued in parallel, the A-tap closes `A SDx5 Sx8 SD WA A WAx11 W` at 7 edges, objective -1599.7000741, violation 0.0, ja, start interior (-1599.7287, 4931.0602). The test's edge bound is 7 now (the tap counts as a key change under the tie). The default deep-search budget of 60 minutes therefore holds on a 32-thread box; a small box has not been re-measured since the fix.
+
+### The family stage: products of segment families (2026-11-11, gh-671)
+
+The change levels explode after 3 to 4 paid changes: on j716 level 1 has 7.1 million schedules, level 2 0.9 billion, level 3 67 billion and level 4 3,100 billion (hold rule, before pruning), and the recorded human Strats of j716, j424, j154 and j347 sit at level 4, j1099 at level 5. Three attempts to tame the tree did not carry: a sound completion bound over the DFS (20 to 30 times fewer leaves, the same wall time), a rhythm rule with separate budgets for changes on and off the jump ticks (still 23 billion schedules on j716), and a per tick probability model as the search order (45 of 59 human Strats inside the first million schedules instead of 25, but the hard jumps stay at 1e8 to 1e11).
+
+What carries is the observation that a human Strat is a product of a few reusable pieces. Cut a schedule at its jump ticks: the run-up before the first jump, one middle segment per jump, the final segment after the last jump. A **segment family** is the list of key changes in a segment with their tick offsets, counted from the segment start when the change sits in the first half of the segment and from the next jump when it sits in the second half (run-up changes count back from the first jump, final segment changes from the last jump), so one family fits segments of different length. A family and its mirror are one family. `StratFamilies` builds the families from the library `strats/schedules.txt` (`docs/research/strat-families/README.md`), places the fitting ones on the segments of a problem and gives each a cost of -log2 of its share of the weight, in half bits. A schedule is one family per segment, its cost the sum.
+
+`StructurePoolDriver` with `Config.familyStage` walks those products in cost bands of `Config.familyBandCost` half bits (`enumFamily`): segment by segment in cost order, cut when the cheapest completion leaves the band above or the dearest one stays below it, with the pad-wall prefix pruning of the change levels at every segment start. The bands are a second lane beside the change levels (`runLanes`): each lane enumerates on half of the threads, a finished lane hands its threads to the other, and both feed the one certify queue, so a jump that only one of the two reaches waits at most twice as long as it would alone.
+
+Two companions made it land:
+
+- **The screen.** The byte screen (one facing per unit) misrates human Strats by up to 0.38 b; with it the human Strat of j716 was reached after 16 s and never certified, at rank 306 of the pool. A family leaf is screened by `FreeAirExact` instead: the exact minimum over the facings of the worst wall violation of this one schedule in the linear model, a free facing per untied tick, the start box as a variable, plus passes that zero the velocity components the inertia threshold would zero. It is a dual method on the active rows, so its value is a lower bound even when it stops early. 56 of the 59 recorded human Strats score under 0.002 b (the exact tier), 58 under the keep threshold of 0.01 b; j127 scores 0.136 b and is left to the change levels. Cost about 0.45 ms per schedule on one thread.
+- **The certify order.** Inside the exact tier the pool is ordered by family cost before presses, so the most common families are certified first.
+
+Measured on 4 cloud cores, cold (inputs wiped, the jump's own rows left out of the library), one run each, 120 s budget, seconds until the certified Strat. The bench's extra certify and polish put a floor of about 15 s under every find. "Levels" is dev before this stage, "families alone" the research build with the family lane only, "both lanes" this stage as it ships (`-Dpkc.bench.families=true -Dpkc.bench.familyWithout=<jump>`):
+
+| jump | levels | families alone | both lanes |
+| --- | --- | --- | --- |
+| j716 | not found | 75 | 100 |
+| j424 | not found | 94 | 117 |
+| j718 | not found | 59 | 54 |
+| j1150 | not found | 185 (300 s budget) | not found |
+| j154 | not found | not found in 300 s | not found |
+| j1099 | not found | not found in 300 s | not found |
+| j347 | not found | not found | not found |
+| j155 | not found | not found | not found |
+| j120 | 107 | 20 | 22 |
+| j315 | 84 | 27 | 40 |
+| J143 | 79 | 19 | 31 |
+| j717 | 65 | 19 | 50 |
+| j328 | 55 | 30 | 61 |
+| j140 | 53 | 19 | 20 |
+| j146 | 42 | 17 | 18 |
+| j1149 | 41 | 35 | 38 |
+| j128 | 36 | 15 | 16 |
+| j132 | 31 | 17 | 17 |
+| j147 | 29 | 22 | 28 |
+| j119 | 28 | 17 | 17 |
+| j144 | 27 | 17 | 19 |
+| j925 | 27 | 22 | 26 |
+| j346 | 17 | 16 | 17 |
+| j129 | 16 | 37 | 19 |
+| j816 | 16 | 22 | 16 |
+
+The levels find 18 of the 25 within 120 s, both lanes 20: j716, j424 and j718 are new, nothing is lost. Of the 17 jumps both find, the lanes are more than 3 s faster on 10, within 3 s on 5 and slower on j328 (6 s) and j129 (3 s). With half the enumeration threads the family lane reaches j716 and j424 later than alone, and j1150 (185 s alone) falls outside the budget.
+
+The test `NoTurnFamilyStageTest` runs the family lane alone without the extra certify and the polish: j132, whose recorded Strat has three paid changes, lands in 4 s (12 thousand schedules scored), j346 in under 1 s.
+
+Open: j154 and j1099 need about 10 million screened schedules, which is minutes on the 32 thread development PC and not measured yet; j347 has two middle segments no family covers and j155 a run-up no family covers; the translator reads two thirds of the worded Strats.
