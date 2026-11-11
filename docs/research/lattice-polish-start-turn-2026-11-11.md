@@ -21,6 +21,9 @@ so whoever wants it switches it on.
   without the option.
 - The numbers under "Results" are all measured with the option on. With it off the stage gives the results of the
   facing rows change.
+- The stage runs in the Optimize and Custom graphs only (second ruling of 2026-11-11,
+  `lattice-polish-2026-11-10.md`, "Where the stage runs"). A Fast solve does not carry it, so the option does
+  nothing there.
 
 ## Why a full turn changes the jump
 
@@ -103,7 +106,11 @@ All captures under `captures/` that the stage accepts and the closed form seeds 
 Total gain 2.49e-3. Typical 1e-5 to 5e-5; `hpk/d10/j148` 2.63e-4, `hpk/d10/j149` 2.29e-4, `taser-80t` 1.26e-3
 (79 ticks, stored start yaw 208 degrees, the base turn is the better one there). Every result replays byte-exact.
 
-### Twelve human jumps, Fast engine, solve, Apply, solve again
+### Twelve human jumps, a Fast landing plus the stage, solve, Apply, solve again
+
+Measured while the Fast graph still carried the stage. In the engine these results now come from Optimize or from
+a Custom graph; the `problems/polish/` cases with `turns` in `engine` mode run this path with a Fast graph that
+has the stage added.
 
 | jump | before | with the turn | gain |
 | --- | --- | --- | --- |
@@ -119,7 +126,7 @@ Total gain 2.49e-3. Typical 1e-5 to 5e-5; `hpk/d10/j148` 2.63e-4, `hpk/d10/j149`
 | j925 | 2809.336732908 | 2809.336757148 | 2.42e-5 |
 | j154 (minimum) | -1599.700114039 | -1599.700117640 | 3.60e-6 |
 
-j335 does not land in Fast in either build. With the turn every jump returns the same objective on the second and
+j335 does not land in a Fast solve in either build. With the turn every jump returns the same objective on the second and
 third solve after Apply. Before, j718 came back with -1902.861583318 on the second solve.
 
 ### Capture sweep
@@ -140,6 +147,11 @@ a free start turn, which is the added time.
 
 ## Limits and open work
 
+- **Under an Optimize budget** the stage has a deadline (5 percent of the budget, at most 2 s). It searches the
+  turn the jump is in first and gives the other turns the time that is left. `LatticePolishSweep` with the
+  Optimize graph's parameters and the repeated grid search of the change stacked on this one: the turn is used on
+  16 of 67 jumps at 150 ms, 20 at 500 ms and 30 at 2 s, against 40 without a deadline. That change runs a quick
+  search over every turn first, which brings it to 39 at each of the three.
 - **A jump inside the TAS** keeps its turn. Its start yaw is the facing the ticks before it produced, so moving it
   one turn means a row that turns 360 degrees. That needs a ruling first; it is not built.
 - **One turn per jump.** Single ticks cannot leave the turn of their neighbours, for the same reason.
