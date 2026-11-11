@@ -45,6 +45,8 @@ final class LatticePolishCheck implements ProblemCheck {
         String name = pf.name;
         ExactJumpModel model = pf.model;
         ProblemFixture.Rig rig = pf.rig();
+        boolean turns = Boolean.TRUE.equals(e.turns);
+        rig.state.setFullTurnStart(turns);
         JumpSpec spec = rig.spec();
         JumpPhysicsInputs sc = spec.asScenario();
 
@@ -93,7 +95,6 @@ final class LatticePolishCheck implements ProblemCheck {
         spec = facing(spec, startYaw);
         sc = spec.asScenario();
         double incumbent = replay(name + " incumbent", model, spec, yaws, startX, startZ);
-        boolean turns = Boolean.TRUE.equals(e.turns);
         if (turns && ENGINE_MODE.equals(e.mode)) {
             assertTrue(name + ": the solve kept the start facing in the base turn: " + startYaw,
                     Angles.wholeTurns(startYaw) != 0.0);

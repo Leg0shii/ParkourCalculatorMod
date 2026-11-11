@@ -65,6 +65,7 @@ public class LatticePolishSweep {
             AngleSolverState state = new AngleSolverState();
             SaveIO.applyAngleSolverTo(file, state);
             state.clearResult();
+            state.setFullTurnStart(Boolean.getBoolean("pkc.polish.turns"));
             ExactJumpModel model = ExactJumpModel.forMcVersion(file.mcVersion);
             AngleSolverEngine engine = new AngleSolverEngine(state, Fixtures.buildBoxes(file), inputs, t -> { }, model);
             JumpSpec spec = engine.debugBuildSpec();

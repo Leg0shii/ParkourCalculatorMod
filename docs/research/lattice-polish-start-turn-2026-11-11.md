@@ -4,6 +4,24 @@ Follow-up to `lattice-polish-facing-rows-2026-11-11.md`. That record left a grid
 jumps and named the lever: the same direction one full turn away uses other cells of the game's sine table. This
 change lets the stage move the whole jump one turn, and carries the turn through the engine, the plan and Apply.
 
+## Ruling: its own option, off by default
+
+User ruling, 2026-11-11: a TAS may use facings one full turn away, but only as its own setting, and that setting is
+off by default in every tier, Optimize included. A start facing a turn away is ugly to watch and the gain is small,
+so whoever wants it switches it on.
+
+- `AngleSolverState.fullTurnStart`, the `Full turn start facing` checkbox under More options of the Angle Solver
+  window, saved per TAS as `fullTurnStart` (absent means off).
+- `AngleSolverEngine.buildJob` sets `JumpPhysicsInputs.startTurnFree` only with the option on. Everything below
+  ("Where the turn lives", "Method", the engine part) describes a solve with the option on.
+- With the option off the solver never moves a turn. A pinned start keeps the stored start yaw whatever turn it is
+  in, so a TAS that was applied a turn away stays there until the start facing is edited. A free start facing is
+  written into the base turn, as before this change.
+- The node parameter `turns` stays (on by default). It switches the search inside the stage and does nothing
+  without the option.
+- The numbers under "Results" are all measured with the option on. With it off the stage gives the results of the
+  facing rows change.
+
 ## Why a full turn changes the jump
 
 The game reads `sin` at table index `(int) (f * 10430.378F) & 65535` and `cos` at
@@ -45,7 +63,7 @@ lifted first facing could not travel in the yaw list anyway. The turn is the sce
 ## Method
 
 `LatticePolish.polish` runs the stage as before in the turn the scenario is in. With `turns` (on by default) and a
-free start turn it then repeats the stage with the start yaw at 0, +360 and -360, each time from the best point so
+free start turn (the option above) it then repeats the stage with the start yaw at 0, +360 and -360, each time from the best point so
 far, and takes a result that is strictly better and keeps every game facing within 720 degrees
 (`MAX_FACING`, the standing envelope for wraps). In a new turn the incumbent's own facings are judged first: when
 they are feasible there and already better, they count as a result even when the grid search around them finds
@@ -126,8 +144,7 @@ a free start turn, which is the added time.
   one turn means a row that turns 360 degrees. That needs a ruling first; it is not built.
 - **One turn per jump.** Single ticks cannot leave the turn of their neighbours, for the same reason.
 - **Playing the jump by hand.** After a reset the player's yaw is in the base turn. A human reaches the start
-  facing of such a result only by turning once around before the jump. The `turns` parameter of the stage switches
-  the search off.
+  facing of such a result only by turning once around before the jump. This is why the option is off by default.
 - **`FacingStepNode`** still sorts the first facing of a free start into the base turn's cells when it lists its
   candidates. It only costs that stage some candidates when an incumbent sits in another turn.
 - **Tied facings** as in the record before: ranking the grid steps of a tied facing by measured loss is open.

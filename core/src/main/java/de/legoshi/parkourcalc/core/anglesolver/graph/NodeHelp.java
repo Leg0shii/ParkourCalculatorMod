@@ -280,7 +280,8 @@ public final class NodeHelp {
                 + " example 315 instead of -45, and Apply then sets the start facing there. The game's angle table"
                 + " has longer steps there for some directions, so the jump can reach further. Only when the solve"
                 + " starts on the first tick of the TAS and no row has a locked yaw or an absolute F constraint."
-                + " The start facing never sits more than one turn away.");
+                + " The start facing never sits more than one turn away. Needs the solver option Full turn start"
+                + " facing under More options, which is off by default; without it this switch does nothing.");
         param("latticePolish", "reserveFraction", "The share of the whole solve time held back for this stage, so"
                 + " the stages before it cannot use up the budget. Only matters when the solve has a time budget.");
         param("latticePolish", "reserveCapSec", "The most seconds the reserve may hold back. 0 means no cap.");

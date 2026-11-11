@@ -43,6 +43,7 @@ public class StartTurnTest {
         for (int t = 0; t <= TICKS; t++) boxes.add(placeholder());
         state.setStartTick(0);
         state.setLandingTick(TICKS);
+        state.setFullTurnStart(true);
         engine = new AngleSolverEngine(state, boxes, inputs, t -> { }, ExactJumpModel.forMcVersion("1.8.9"));
     }
 
@@ -64,6 +65,21 @@ public class StartTurnTest {
         JumpPhysicsInputs sc = scenario();
         assertTrue(sc.startTurnFree);
         assertFalse(sc.freeStartYaw);
+    }
+
+    @Test
+    public void withoutTheSettingEveryJumpKeepsItsTurn() {
+        state.setFullTurnStart(false);
+        assertFalse(scenario().startTurnFree);
+        addFacing(0, Constraint.Field.DF, Constraint.Op.EQ, 0.0);
+        JumpPhysicsInputs sc = scenario();
+        assertFalse(sc.startTurnFree);
+        assertTrue(sc.freeStartYaw);
+    }
+
+    @Test
+    public void aNewStateHasTheSettingOff() {
+        assertFalse(new AngleSolverState().isFullTurnStart());
     }
 
     @Test
