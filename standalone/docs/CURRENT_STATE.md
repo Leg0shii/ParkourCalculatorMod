@@ -1,143 +1,97 @@
 # Current standalone state
 
-2026-11-11: the [hard-jump comparison/reachability implementation](HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md)
-is implemented. One shared helper owns intermediate ordering, independent more-J
-OR fewer-R/fewer-A protections, recoverable slower-peer deferral and strict
-full-finish comparisons. No incumbent update scans queued bounds. Shared proposal
-analysis rejects joint stepping prerequisites before side fan-out, preserves an
-owned anchor arrival independently of an impossible unused tail, and reuses exact
-coefficient/envelope contexts. Hard policy3 explicitly assumes **no stepping in
-the actual between-anchor transfer**; source-local setup hops remain legal.
-Only shortening ceilings can disable its scalar flight minima. Unknowns contribute
-zero, H/V combine using max, and already-paid ordinary flight ticks are subtracted.
-The native gate passes600 tests with no skips and unchanged runtime hashes;
-all131 archived T67/T64 witness prefixes pass the bound control. Matched cold
-measurements are recorded in the [feature evidence](../autonomy/experiments/hard-jump-comparisons/README.md).
-Combined300s improves T67→T64, workers159→55 and expansions1,114→35;
-initial0-only90s retains T64 with workers56→22 and expansions427→7. All80
-post-change retained-witness replays pass. Runtime hashes stayed unchanged. Earlier paragraphs retain source-era measurements.
+2026-11-11, runtime `dd738c98`. Start with the [execution reference](ANCHOR_SEARCH_EXECUTION_REFERENCE.md)
+for the combination catalogue, pruning/deferral table, IPOPT dispatch boundaries,
+settled decisions/rationale and module ownership. The [decisions index](DECISIONS_AND_PLANS.md)
+records authority; the [implementation record](HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md)
+and [evidence](../autonomy/experiments/hard-jump-comparisons/README.md) record how
+this version was implemented and validated. This feature is complete.
 
-2026-11-10 follow-up: time bounds are checked lazily for the selected arrival or
-refinement against the current best finish, rather than evaluated across queued
-records. Equality remains eligible. [Implementation and51 focused checks](ANCHOR_SEARCH_INTEGRATION.md)
-record this update; the full integration/cold measurements below describe the
-preceding `91381e5a` revision, not a new performance measurement.
-
-## Coordinated solver/anchor integration (2026-11-10)
-
-The [integration contract](ANCHOR_SEARCH_INTEGRATION.md) supersedes the older
-checkout and automatic-restoration guidance below. Development histories are
-joined in this checkout. Numerical row reduction/bound extraction are retained;
-anchor/node calls retain their configured guide objective while stopping on
-feasibility. Shared checkpoints now cover nested event state and internal nodes.
-Extra runs require an explicit failed-descendant recovery reason and are restored
-one at a time; successful branches do not restore them during ordinary improvement.
-Equal-time candidates remain eligible. A relaxed landing-region travel bound
-adds optimistic remaining time. Internal slices reuse one owned DFS state;
-external resume retains isolation and independent replay. Fresh acceptance is
-recorded in the [profiling experiment](../autonomy/experiments/anchor-runtime-profile/README.md).
-Unresolved-only internal nodes are parked with their exact repair state for
-explicit retry; they neither block ordinary siblings nor become infeasibility
-proofs. Runnable interrupted queries still resume at the same node.
-
-## Anchor DFS implementation (2026-11-04)
-
-**Hard-jump correction:** [transfer/preparation policy2](../autonomy/experiments/anchor-transfer-preparation/README.md) enforces one jump from S to E while preserving any allowed setup hops returning to S, before or after the global latch. All setup impulses remain in local J and all caps remain active. The previous implementation wrongly rejected the initial-0 B1 setup; the [historical audit](../autonomy/experiments/anchor-initial0-audit-2026-11-04/README.md) established a physically valid T64 control. No initial-span exemption is used. Corrected-source gate:535 native tests pass with no failures/errors/skips and101 runtime hashes stable. Initial0-only cold discovery reaches physical T64 in8.3855s with25/25 independent accepted-witness replays. The combined0/8 run still reaches67 within300s because initial0 remains queued, now eligible; traversal service order remains a separate limitation.
-
-Finite physical automatic tasks now use declared required anchors, or one open span when no anchors are supplied. [Anchor implementation and evidence](../autonomy/experiments/anchor-feasibility/README.md) records the source-specific acceptance status and commands; [resume](ANCHOR_IMPLEMENTATION_RESUME.md) identifies this isolated worktree. Supplied legacy corridors and virtual tasks remain separate controls.
-
-Required-anchor arrivals are the comparison/promotion boundaries. All decisions within a span remain coupled through full original-state continuous re-solves with all earlier facings free. Internal feasibility queries run when a completed meaningful decision is selected for descent, initially every decision; raw run-hold construction does not dispatch a solve. Earlier feasible positions/velocities/yaws never become fixed seams. Only the exact queried model receives an oracle rejection; incomplete/error work suspends, physical repair exhaustion backtracks without inventing numerical infeasibility, and a failed child never labels an ancestor.
-
-Backward nearest-point guides and onward POSITION objectives are implemented with intermediate stop-on-feasible; terminal optimization still minimizes actual achieved T then maximizes the requested objective. New Real11 fixture uses anchors B2/B3/B4/B5 and extended physical B7 `[729,0,-1095,730,7,-1093]`, guide `(729.5,7,-1093)`, with no old virtual/X<729.7 task rows. The original0/8 initial domain remains explicit, not a generic restriction on9/10/11. B6 remains unchanged because replacement bounds are unspecified.
-
-Validated direct jumps latch their ordered anchor transition globally for the remainder of the solve. Extra ordinary matching run preparations are saved and restored on backtracking with a parent-scoped bypass; restoration does not widen declared caps or introduce intermediate supports in a latched transfer. Same-block setup jumps remain generated even after a hard-transfer latch; departed physical owners cannot be revisited. [Future revisit work](../autonomy/REVISIT_DISCOVERY_DEFERRED_PLAN.md) remains deferred.
-
-The preliminary110° turnaround classifier uses one approach-facing physical edge (imaginary diagonal when needed),0.3-block spatial margin, and one binary label per decision. Its whole key is `(T,−J,R,id)` outside and `(T,−J,A,id)` inside, with J/R/A local to the current anchor span. Guide progress does not rank or prune decisions. Persisted observations include source point, signed distances, immutable label/key, query/selection metrics and later replay flips; diagrams draw physical footprints, covers, guides, edge/margin and the two labels.
-
-Automatic physical state is outer schema2 / DFS8 / movement context4 / repair assembly9. Old exact automatic states are rejected for this policy. [Controlling plan](../autonomy/ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md) and [decisions](../autonomy/ANCHOR_POLICY_DECISIONS.md) retain rationale and deferred scope. Final native acceptance:527 tests, zero failures/errors/skips,101 runtime source hashes stable and all54 historical evidence artifacts unchanged. New finite-task cold arms both find T67/Y7/grounded and Z≈−1093.823129: first14.02s early-stop versus13.56s polish,43/43 accepted-witness replays, source stable. Similar timing is observed; no speedup or global optimality claim. Old virtual results below remain separate historical evidence.
-
-## Generic route-discovery research (2026-11-03)
-
-The latest user clarification asks for generic discovery of potential contact/passage routes, conservative elimination of obviously impossible choices, and early removal of irrelevant approach/avoidance descriptions. A landing-block list alone is insufficient: a nearby target may require a side/corner approach before its top contact. The [cited research report](../autonomy/GENERIC_ROUTE_DISCOVERY_RESEARCH.md) compares decompositions, roadmaps and layered contact/interaction abstractions, defines scoped pruning/merging rules and works through B2→B3. The [completed route-discovery plan](../autonomy/GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md) specifies that release’s architecture, records/APIs, call-site changes, migration and acceptance tests. Its implementation and acceptance are complete in the isolated worktree. M1 added the immutable raw geometry/domain and support-episode catalogue;15 domain/region checks pass. That source-era automatic entry selected the cyclic event backend with dynamic next-contact goals and one shared DFS; the current physical-task extension is described above. Supplied corridors retain their explicit semantics. Shared physical preparation is now resumable (state2/context7), with scoped role/window proofs and early unwanted-interaction omission. The final447-test native gate passes without failures/skips and with stable hashes. All raw/semantic/materialized coverage checks pass. The fresh automatic Real11 cold arm finds T67 at16.09s; all24 independent post-run replays pass. The source-stable matched supplied arm also finds T67 (first43.79s), with95 independent replays passing. Automatic uses28 calls/1635 prefixes, supplied51/511; actual total session walls301.90s/305.76s for declared300s guards. [Final evidence and complete route diagram](../autonomy/experiments/event-route-discovery/README.md) distinguish virtual versus physical finish and first-discovery versus total session time; minimum time remains unproven. See the plan’s implementation ledger; the research itself made no numerical feasibility claims.
-
-## Previous spatial corridor baseline (2026-11-03)
-
-Support refinement is committed at `f9aa0d96`. The isolated worktree now implements typed support/air/terminal graphs, overlapping checked free convex transit regions, untimed route enumeration/resume, 3D progress, fixed axis-sweep guard alternatives, stage-derived goals/directions and a route queue over the existing DFS. Typed inner states use schema6; supplied controls retain schema5. The automatic path accepts unordered geometry and a task predicate, with an independent initial jump domain.
-
-The automatic50-route shortlist now admits the archived64-input initial0 virtual-finish witness after independent replay, without seeding discovery. This is spatial coverage, not a new cold result. The final source-stable matched300-second run found no automatic finish in13 worker calls (actual303.3s), with5 unique partial replays passing. Supplied routing found T67, Z≈−1093.82313 in41 calls (actual311.8s), with51 replays passing. See [measured evidence](../autonomy/experiments/automatic-corridors/README.md). The final native gate passes420 selected tests, no failures/errors/skips, with sourceUnchanged=true; dedicated ladder/climbable/vine/movement-entry modules remain outside the scope. Named step/grind stage certification remains unknown when internal probes are absent from shared diagnostics. Exact revised B6 bounds are still missing. See the [implementation status](../autonomy/SPATIAL_CORRIDOR_REFACTOR_PLAN.md#implementation-status) and [resume handoff](CORRIDOR_IMPLEMENTATION_RESUME.md).
-
-## Previous terminal goal: virtual B7 landing (2026-11-03)
-
-The user clarified the intended finish after the fixed-clock benchmark. At the B7-height landing event (height7), use the horizontal goal **X < 729.7 and Z >= -1095.3**, with no goal-imposed lower X bound or upper Z bound. The region is a virtual landing target extending indefinitely toward +Z, not B7's original finite support footprint. Its coordinates are player-center bounds; do not expand them by the hitbox again.
-
-The task objective is lexicographic: **minimize the achieved landing tick T, then maximize Z[T] among candidates at that earliest tick**. T is discovered, not fixed to64. Preserve normal momentum, zero inertia thresholds and original-state continuous re-solves. Use existing numerical clearances for strict inequalities.
-
-This goal does not authorize adding artificial side walls or treating an enlarged goal footprint as new collision terrain during the approach. Supplied physical obstacles and the virtual terminal condition remain distinct. Finite implementation envelopes must come from reach/horizon bounds, not arbitrary goal-coordinate caps.
-
-The generic `terminal_goals` adapter and the [new fixture](../autonomy/experiments/virtual-finish/fixture.json) now implement this objective. It discovers the downward height-crossing tick from the existing scalar movement model, adds only endpoint horizontal rows and preserves actual collisions with the supplied scene. An overshooting trajectory can end below height7 and airborne: this is a nominal landing-height clock, not an artificial collision floor. Actual Y and ground state are reported separately. Ordinary finite-support landing choices remain available. The 200-input horizon is a search guard, not a fixed finish. [New cold evidence](../autonomy/experiments/virtual-finish/README.md): combined0/8 DFS finds67 (Z≈−1093.82313); a separate initial0-only cold diagnostic finds64 (Z≈−1093.26755), with no reference seeds. All34 replay checks pass. The combined run still spends its budget in the initial8 subtree, so do not present the diagnostic as default traversal success. Neither run proves the earliest possible tick. All372 selected regression tests pass. The archived91.22s MAXZ-at64 result remains historical.
-
-2026-11-03. Integration baseline: [handoff](CORRIDOR_AGENT_HANDOFF.md) through `61355976`, merged as `984b701b` into `research/real11-initial-run-ticks`. This includes DFS/interaction fixes through `498c054c`, exact request logging, virtual finish and local-run pruning through `c1e71cb3`. Fresh post-merge focused acceptance:52 native tests passed, no skips, approximately17s; [log](../autonomy/experiments/linkcraft11-opening/audit/handoff-integration-focused-2026-11-03.log), [settings/summary](../autonomy/experiments/linkcraft11-opening/audit/handoff-integration-focused-2026-11-03.json). Earlier experiment reports describe their own revisions. The new automatic/supplied measurements are linked above; no shared helper rebuild was performed.
-
-The earlier corridor investigation's literal-finite-B7 interpretation is superseded by the virtual finish above. Its fixed64 geometry/corridor measurements remain source-specific at `93652150`. The new automatic spatial path discovers support/passage itineraries; current supplied-route fixtures remain controls. B6's reported rightward extension is absent from the stored box and exact revised bounds remain unknown. See [Real11 task/status](REAL11_GUIDE.md) and the [spatial plan's imported baseline](../autonomy/SPATIAL_CORRIDOR_REFACTOR_PLAN.md#0-imported-baseline-and-integration-requirements).
-
-The historical pre-refactor investigation's [corridor comparison](../autonomy/experiments/orchestrator-fixes/audit/CANDIDATE_QUESTIONS.md#10-how-does-the-automatic-corridor-compare-with-the-supplied-one) finds that the first automatic route and the existing default50-route shortlist all reject the saved historical reference by crossing signature, while the supplied corridor accepts it. This is geometric coverage evidence on the stored boxes, not50 validated movement routes. The requested support/goal/direction integration is detailed in [plan sections2.1–2.4](../autonomy/DFS_INTERACTION_IMPLEMENTATION_PLAN.md#21-integration-plan-infer-support-order-from-generated-decisions), reusing current helpers. Investigation/planning records are bundled with the first implemented spatial feature under the AGENTS commit practice.
-
-The [decomposition follow-up](../autonomy/experiments/orchestrator-fixes/audit/CANDIDATE_QUESTIONS.md#11-are-large-air-cells-and-negative-z-block-cells-built-into-decomposition) confirms that finite exposed support-top patches already exist; geometric routing ignores their movement meaning and uses scene-wide portal midpoints. Z reflection reverses the observed side choice, so negative Z is not fixed. A geometric local-refinement diagnostic preserves free volume while splitting33 cells into47 support-aligned/air regions; a conditioned B2→B3 anchor fits the existing cells without that split. These were investigation results; the implemented raw refinement and typed routing supersede that old behavior. [Plan section2.5](../autonomy/DFS_INTERACTION_IMPLEMENTATION_PLAN.md#25-cell-decomposition-and-anchor-investigation-focused-improvement-proposal) separates support-region refinement, anchor placement and movement-aware route proposals.
-
-Latest spatial clarification: **overflight and landing/run-off are different routes even with the same horizontal projection**. Distinct support progression and 3D passages must survive routing; local DFS optimizes timing/methods within the selected itinerary. The requested [spatial corridor refactor plan](../autonomy/SPATIAL_CORRIDOR_REFACTOR_PLAN.md) supersedes the earlier routing drafts and specifies typed surface/volume regions, route stages, enumeration, constraint/audit integration and acceptance milestones. Milestone1 is implemented: support-aligned cell refinement and a typed support/air graph in `regions.py`. The legacy supplied controls remain available; the new automatic path uses typed routes and schema6 DFS.29 focused geometry/region/route/local checks and52 native regression checks pass, no skips; the [rectangle diagnostic and graph dump](../autonomy/experiments/linkcraft11-opening/audit/semantic-regions-2026-11-03.json) records33→47 cells and7 exposed support components. The remaining typed route/progress/guard/DFS milestones are now implemented as described above; the milestone1 report remains its original geometry evidence.
-
-## What exists
-
-`ipopt` solves fixed-input continuous horizontal trajectories, with independent scalar validation, subprocess isolation, incumbent retention and prescribed contact/vertical/ladder support. `autonomy` builds discrete movement/input/contact programs with existing Java physics and constraint helpers. `cell_routes` decomposes player configuration space and guides a selected spatial corridor. Earlier disk/SOCP/mixed-input experiments remain in `route_guidance`; they are not the selected search implementation.
-
-The seven earlier workstreams remain: explicit solve scope/identity, scoped corridor projection, shared reachability, fixed constraints before numerical solves, state/schedule retention helpers, generator/terminal repair persistence and conservative dead-fall exclusion. The current change fixes their incomplete early wiring and replaces outer traversal.
-
-## Implemented DFS and early interaction changes
+## Implemented search
 
 | Area | Current behavior |
 | --- | --- |
-| Traversal | `find_checkpoint_route` delegates to `depth_first.search_goals`. Compare arrivals at a common spatial goal, then follow the chosen child deeply. No global checkpoint-window drain barrier. |
-| Goal ordering | `(validated absolute arrival, -effective grounded jumps, grounded nonjump runs, stable identity)`. Shorter simulated prefixes organize local generation only. Explicit initial-jump families are compared before selection. |
-| Scoring | Fixed goal-contact programs have known schedule durations. Evaluate necessary earlier alternatives; save later arrivals and optional refinements rather than waiting for all numerical work. First feasibility still requires scene/vertical/corridor acceptance. |
-| Candidate promotion | Continue the actual validated arrival program plus selected hard constraints. Earlier facings and the original horizontal state remain free/fixed respectively; no optimized endpoint is frozen. |
-| Terminal work | Test existing normal jump/run-off air continuations first, then retain generic symbolic terminal generation and refinements. A direct continuation has the same full constraints/checks as other candidates. |
-| Early interaction gate | `interactions.InteractionGate` uses compiled original-state prefix/approach envelopes before open normal/stepping/ceiling builders expand block rows. Required full-proposal checks, avoidance phases, floor checks and derived corridor gates use the shared query. Unknown keeps coverage. |
-| Generation | Per-obstacle partial nodes/options and cross-obstacle partial effective models dedup before expensive leaf refinement; resource distinctions remain where relevant. Complete keys are checked before LP refinement. |
-| Ownership | Generated row bundles carry owner completion states. Full proposals are screened before truncation; uncommitted removed events lose their approach rows. Promotion cannot copy those orphan rows back from a longer witness. |
-| Retention | DFS preserves scored siblings, unscored proposals, unknowns, inner search and accepted constraint variants. It now excludes extra ordinary ground runs before the latest jump within an otherwise matching interaction pattern. Other peer exclusions remain inactive. Existing position/velocity/schedule helpers remain available. |
-| Persistence | Version5 `ordered_goal_dfs` state stores frames, active/in-flight work, generators, siblings, refinements, suspended work and incumbent. Numerical progress does not change candidate identity. Each unfinished frame has one execution owner. |
+| Physical automatic routing | Ordered caller anchors; no anchors means one coupled start→finish span. Optional contacts remain movement choices. Geometry provides exposed supports/contact incidence; no authored raw-cell walk or guide containment filter is imposed. |
+| Hard transfer | Validated one-transfer jump latches its ordered span globally, including across backtracking/changed incoming histories. Source-local setup hops remain legal. **Declared assumption:** no stepping in the actual hard transfer; only ceilings can shorten its ordinary flight bound. |
+| Discrete ordering | Absolute T; requested grounded J/grounded nonjump R/air A local to span. Ordinary `(T,-J,R,id)`, turnaround `(T,-J,A,id)`. More J OR fewer R/A protects a slower compatible hard arrival. Raw extra A/R alone does not. |
+| Recoverable alternatives | Slower unprotected hard arrivals are saved, not labelled physically infeasible. Explicit required-continuation failure can restore one saved alternative with scoped bypass after runnable first-class work drains. A successful finish alone does not reopen them. |
+| Finish bound | One best validated full finish. Check only new/selected work; exclude `T+max(H,V)>bestT`, preserve equality. H uses phase-correct full covers; V uses applicable latched ceiling-aware flight minima and paid flight age. No incumbent-triggered queue scan. |
+| Shared preparation | `InteractionGate` caches exact program preparation, canonical Java coefficient payloads and model envelopes/screens. Joint stepping prerequisites precede side/corner fan-out. Unknown probe bounds retain coverage. |
+| Owned proposals / persistence | Common composition uses stable consumed raw ordinals. Actual anchor prefix owns its counts/rows independently of an unused tail; persisted projection flag survives JSON alias loss. Complete programs/repair/cursors/unknown work remain saved. |
+| Numerical queries | Selected meaningful completed decisions at cadence1; anchors/final mandatory. No raw-hold NLP or separate ancestor-probe pass. Every query re-solves from original state with earlier facings free. |
+| Solve intent / outcome | Intermediate configured onward objective plus early feasible stop; final configured optimization. A feasible seed can avoid an intermediate worker. Exact operational oracle rejection, repair exhaustion and suspended/error are distinct; child failure never labels an unqueried ancestor. |
+| Guide / turnaround | Backward nearest-point landing-cover guides, onward E→N objective, no discrete progress/slack score. >110° guide cue; one approach-facing physical/imaginary diagonal edge+0.3-block margin gives one frozen binary mode, with distances and replay flips logged. |
+| Visits / movement scope | Multiple current-owner hops supported; departed-owner returns and repeated mandatory anchors deferred. Intentional wall-hit generation deferred; required named-case contacts remain. Supplied corridors/virtual tasks keep separate compatibility paths. |
 
-The [approved plan](../autonomy/DFS_INTERACTION_IMPLEMENTATION_PLAN.md) remains the design record. [Architecture](ARCHITECTURE.md), [code map](CODE_MAP.md), [runbook](RUNBOOK.md) and [testing](TESTING.md) describe interfaces and validation. Spatial goals no longer require corresponding absolute-clock windows; supplied clocks remain diagnostics. A fixed-clock task does not imply a final landing.
+All intermediate comparison predicates live in `candidate_comparison`; callers
+normalize evidence and execute its verdict. Legacy `minimum_runs` family extraction
+and `time_progress` record APIs delegate rather than owning a second policy.
+Terminal actualT/objective ranking stays separate. Cells, portals and soft guide
+points are not discrete input clocks or fixed dynamic seams.
 
-## Latest pruning audit (2026-11-03)
+Physical automatic continuation is outer schema2 / DFS8 / movement context4 /
+repair assembly9. Hard3/search5/comparison1/guide2/proposal1 semantic identities
+also matter; schema equality does not make old policy checkpoints compatible.
+Storage remains manifest/SQLite version1. Internal slices reuse owned live state;
+external resume decodes isolated mutable values and checks the saved incumbent.
 
-The [virtual-finish pruning audit](../autonomy/experiments/virtual-finish/PRUNING_AUDIT.md) traces every questioned call. The selected fix is now implemented at `db211b2b`: within the same prior decisions and latest-jump interaction pattern, use the least-run validated feasible representative to skip extra-run copies. Counts are local to that jump (B4@40→jump43 means3), not cumulative15. Representatives/excluded programs persist and unknowns/equal-run alternatives remain eligible. [Implementation and validation](../autonomy/experiments/last-jump-runs/README.md): all52 focused native regressions pass, no skips. The user has reauthorized a fresh Real11 retry after pushing the [other-agent handoff](CORRIDOR_AGENT_HANDOFF.md); corridor/cell work remains with that agent. Additional continuation-time reasoning remains explicitly **deferred**; the existing elapsed-input cutoff is unchanged. Equal-time free/physical B7 contact alternatives remain distinct; initial0 calls5–8 are two such models, each with one corridor repair. The audit now explains B3's X=738.5 reference plane in ordinary coordinates.
+## Current Real11 task and evidence
 
-## Durable requirements
+The [fixture](../autonomy/experiments/anchor-feasibility/real11-anchors.json) supplies
+B2/B3/B4/B5 anchors, normal+stepping, first jumps0/8, horizon200 and declared caps.
+These are configuration, not proof that first jumps9/10/11 are useless. B7 is the
+physical extended box `[729,0,-1095,730,7,-1093]`; actual landing minimizes T then
+maximizes Z. Guide `(729.5,7,-1093)` is not a center-coordinate cap. The old
+virtual goal, extra X<729.7 row and fixed64 task are absent.
 
-- All inputs, events and hard constraints are fixed before IPOPT. Reuse builders; no new fractional decisions or continuous equations.
-- Re-solve from the original position/stored velocity with all previous facings variable. Carry ordinary momentum with zero inertia thresholds.
-- Compare time at the same spatial goal and objective at a compatible common clock. Keep current 0.25-block/1-tick margins; don't invent a weighted score. Preserving all DFS siblings also preserves agreed state/schedule protections.
-- Proved impossible required interaction rejects its proposal; proved absent contact contributes no prevention choice or interaction-derived check. Unknown is not feasible, infeasible or dominated. Swept Y→X→Z phases matter.
-- Full terminal acceptance requires the declared scene/horizon/objective. A preliminary witness cannot become a final incumbent. Keep physical and corridor acceptance distinct, with diagnostics.
-- Generic algorithms, no Real11 IDs/ticks/coordinates in production rules, no reference seeds in cold discovery, no silent domain/cap increases.
+| Matched arm | Best T | Workers | Expanded prefixes | Independent retained-witness replays |
+| --- | ---: | ---: | ---: | ---: |
+| Baseline combined300s |67 |159 |1,114 |75/75 |
+| Current combined300s |64 |55 |35 |57/57 |
+| Baseline initial0-only90s |64 |56 |427 |34/34 |
+| Current initial0-only90s |64 |22 |7 |23/23 |
 
-## Evidence and remaining limits
+Both current arms reach Z=−1093.2381026602416. The combined arm has61 distinct
+invocation fingerprints,22 saved finish-bound exclusions,8 recoverable deferrals,
+0 restorations and18 early common-sequence exclusions. Comparison/bound checks
+cost milliseconds; remaining measured cost is largely numerical preparation,
+digesting and retained-state copies. The [evidence README](../autonomy/experiments/hard-jump-comparisons/README.md)
+qualifies timing overlap/instrumentation and gives exact budgets/provenance.
 
-The archived pre-DFS corpus stalled at state28 after208 worker calls over~910s; all172 main numerical calls were feasible. A first DFS diagnostic reached a full state64 solution through the delayed setup in eight calls, independently replayed. Current source-matched cold/resume measurements live in the [results](../autonomy/experiments/dfs-interactions/README.md); distinguish them from that earlier diagnostic and seeded reference controls.
+600 native-enabled tests pass without failures/errors/skips;131 archived T67/T64
+prefix-bound controls and80 current retained-witness replays pass. Runtime hashes
+stay unchanged;54 historical event artifacts remain unchanged. The native module
+scope includes generic mixed-ladder controls/all IPOPT tests, but excludes dedicated
+autonomy ladder/climbable/vine/movement-entry modules. No mod build/game run or
+new native-helper rebuild was needed. See [testing](TESTING.md).
 
-DFS chooses the most promising **evaluated** candidate, not a proven globally earliest unseen arrival. Local generation and catalogue caps can suspend work; numerical unknowns remain unknown. There is no new admissible global objective bound. A completed incumbent does not prove slower local arrivals lose the final objective. Search inside one branch can still be large, and a root fallback can remain pending while closer siblings are explored. State/report size grows with retained evidence.
+The wall guards ended both runs; global minimum T/Z and actual-world executable
+replay are not established. B6 remains the stored box because replacement bounds
+for its reported rightward extension have not been supplied. Current controls do
+not cover unknown world geometry.
 
-The gate is available whenever a compiled movement context exists; contexts without it retain unknown choices. The approach gate leaves post-contact Y unconstrained before a stepping/ceiling outcome is chosen, then checks the full proposed model. Existing interval/LP screens are conservative/numerical respectively, not rational certificates. Complete acceptance and original-state replay remain essential.
+## Deferred work
 
-An explicit supplied corridor uses one DFS; the automatic path allocates bounded work across a persistent route queue. No claim of all-map, all-catalogue or global continuous optimality follows. Exact executable float-angle replay/export and actual-world validation remain separate from standalone continuous/scene acceptance.
+Inter-block revisits/repeated anchors have a [preserved future plan](../autonomy/REVISIT_DISCOVERY_DEFERRED_PLAN.md).
+Intentional wall hits, cadence2/4 comparison, turnaround-margin tuning, root-service
+fairness changes, remaining bookkeeping optimization and actual-world/export
+acceptance are separate work. Hard-latch/count policy intentionally narrows or
+orders a bounded search; it is not a global completeness/optimality theorem.
 
-## Deferred
+## Source-era history
 
-Discrete decision transfer between completed/sibling solves; new global objective bounding; new mixed-integer/SOCP decision search; water; ladder/intentional wall-hit expansion; additional continuation-time pruning. The spatial refactor is implemented to the current scope above, extending the imported DFS. Automatic Real11 cold completion remains unresolved at the measured budget. Existing ladder/replay code stays implemented. Weak coupling between separated decisions is provisional; use retained alternatives and evidence when a map contradicts it.
+These records explain earlier implementations/results; their old checkout paths,
+status paragraphs and policies do not direct current work.
 
+| Stage | Evidence / design record |
+| --- | --- |
+| Selective numerical solver integration, nested persistence, explicit recovery and lazy selected-only bounds | [Integration contract](ANCHOR_SEARCH_INTEGRATION.md), [review](SOLVER_BRANCH_INTEGRATION_REVIEW.md), [profiling](../autonomy/experiments/anchor-runtime-profile/README.md) |
+| Anchor feasibility / finite B7, then correction preserving source hops | [Initial anchor implementation](../autonomy/experiments/anchor-feasibility/README.md), [transfer/preparation correction](../autonomy/experiments/anchor-transfer-preparation/README.md) |
+| Generic potential route/contact discovery and event backend | [Cited research](../autonomy/GENERIC_ROUTE_DISCOVERY_RESEARCH.md), [implemented plan](../autonomy/GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md), [cold evidence](../autonomy/experiments/event-route-discovery/README.md) |
+| Typed cells/portals/corridors, guide geometry and old automatic-versus-supplied shortlists | [Spatial plan](../autonomy/SPATIAL_CORRIDOR_REFACTOR_PLAN.md), [automatic corridor evidence](../autonomy/experiments/automatic-corridors/README.md), [handoff](CORRIDOR_AGENT_HANDOFF.md) |
+| Virtual B7 height crossing and latest-jump run-family comparisons | [Virtual-finish evidence](../autonomy/experiments/virtual-finish/README.md), [local-run evidence](../autonomy/experiments/last-jump-runs/README.md) |
+| Imported goal-aware DFS/early interactions and original fixed64 pilot | [DFS evidence](../autonomy/experiments/dfs-interactions/README.md), [Real11 source-era ledgers](REAL11_GUIDE.md) |
 
-Named step/grind events need special care in **the shared envelope**, not separate relevance rules. Realized Y endpoints omit the movement probes that trigger those cases. Such phases keep Y unknown and include intended, unclipped X/Z movement in their outer bounds. The existing case builders and full scene checks decide validity. This restored the generic five-input grind→air→blip regression, which an overly tight realized-Y query had incorrectly removed. Precise probe-height envelopes are a possible later performance refinement; never infer vertical noninteraction for these phases from realized feet height alone.
-
-
-Historical pre-virtual-goal acceptance:368 non-ladder autonomy tests and54 IPOPT tests passed;25 post-logging repair/terminal tests passed. That source-era cold Real11 run reached a first fixed64 route in91.22s/eight calls; two150s sessions made14 calls with zero repeated completed requests and all10/18 witness replays passing. Best Z64 was−1094.5755032869683. The zero-run root alternative remained pending and the seeded reference was about1.308 blocks farther. These measurements do not replace the current virtual-goal/local-run evidence or imply a fully green ladder-inclusive suite.
+Use [architecture](ARCHITECTURE.md), [runbook](RUNBOOK.md), [debugging](RESULTS_AND_DEBUGGING.md)
+and [resume](ANCHOR_IMPLEMENTATION_RESUME.md) for current work. No implementation
+or numerical run from the completed feature remains pending after compaction.

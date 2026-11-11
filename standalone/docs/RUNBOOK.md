@@ -2,6 +2,28 @@
 
 Commands below run from the **physical research repository root**, not from `standalone/` or the main checkout. In a symlinked standalone directory, run `pwd -P` then `cd "$(git rev-parse --show-toplevel)"`; verify the task’s branch using `git branch --show-current`. The current integrated task uses `research/ipopt-cell-routes` in this checkout; the earlier `research/real11-initial-run-ticks` path is historical. Root Gradle builds/tests and Minecraft are unnecessary for normal standalone iteration.
 
+## Current physical-anchor entry and evidence
+
+Read the [execution reference](ANCHOR_SEARCH_EXECUTION_REFERENCE.md) for the actual
+combination/pruning/IPOPT boundaries and decisions. The completed runtime is
+`dd738c98`; do not resume an older policy merely because its integer schema matches.
+Use the environment below, then these commands from the physical repository root:
+
+```sh
+"$PKC_IPOPT_PYTHON" -B standalone/autonomy/experiments/hard-jump-comparisons/native_gate.py --output /tmp/anchor-current-native-new
+"$PKC_IPOPT_PYTHON" -B standalone/autonomy/experiments/anchor-runtime-profile/profile_run.py --input standalone/autonomy/experiments/anchor-feasibility/real11-anchors.json --output /tmp/real11-current-combined-new --seconds 300
+"$PKC_IPOPT_PYTHON" -B standalone/autonomy/experiments/anchor-runtime-profile/profile_run.py --input standalone/autonomy/experiments/hard-jump-comparisons/2026-11-11/initial0.json --output /tmp/real11-current-initial0-new --seconds 90
+```
+
+Outputs must be new. Profiled arms retain invocation fingerprints, wrapper/worker
+status, source/configuration hashes, instrumentation snapshots, counters and
+independent retained-witness replay. `report.json.gz` is a manifest with a paired
+`.store.sqlite3`; decode with `standalone.autonomy.checkpoint_store.read_report`.
+Never overwrite dated evidence or separate manifest/database companions. Read
+[measured results](../autonomy/experiments/hard-jump-comparisons/README.md) before
+starting another long run. Older commands later in this runbook remain supplied,
+virtual, native-helper or replay controls with their own task semantics.
+
 ## Environment
 
 The existing ignored `.venv-guidance` is the current numerical environment on this machine. If creating a fresh environment, use Python 3.12 and pinned dependencies:

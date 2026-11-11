@@ -1,5 +1,7 @@
 # Documentation index
 
+Current execution tables, decisions/rationale and module ownership: [anchor execution reference](ANCHOR_SEARCH_EXECUTION_REFERENCE.md).
+
 Current hard-jump implementation: [shared comparison/reachability plan](HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md)
 and [candidate audit](../autonomy/experiments/anchor-candidate-audit/README.md).
 The plan is implemented with one shared comparison helper, shared proposal
@@ -15,13 +17,14 @@ All tracked standalone Markdown plus this consolidation. Read [AGENTS](../AGENTS
 
 | Document | Topic | Authority/status |
 | --- | --- | --- |
+| [docs/ANCHOR_SEARCH_EXECUTION_REFERENCE.md](ANCHOR_SEARCH_EXECUTION_REFERENCE.md) | Combination catalogue, pruning/deferral/solver tables, decisions/rationale, owners, configuration and measured work | Current physical-anchor execution reference at `dd738c98` |
 | [docs/CHECKPOINT_STORAGE.md](CHECKPOINT_STORAGE.md) | Shared checkpoint format, resume/export, callback contract and measured cleanup | Current implementation/runbook |
 | [docs/IPOPT_CONSTRAINT_REDUCTION.md](IPOPT_CONSTRAINT_REDUCTION.md) | Numerical row reduction, extraction/monitor contract, provenance and validation | Current implementation/reference |
 | [docs/IPOPT_FEASIBILITY_MODE.md](IPOPT_FEASIBILITY_MODE.md) | Constant-objective intermediate solves, final optimization, score semantics and persistence compatibility | Current implementation/reference |
 | [autonomy/experiments/last-jump-runs/row-benchmark/REAL11_INTERMEDIATE_BENCHMARK.md](../autonomy/experiments/last-jump-runs/row-benchmark/REAL11_INTERMEDIATE_BENCHMARK.md) | Repeated all-nine-request intermediate feasibility comparison, witness quality and limits | Current measured evidence |
 | [autonomy/experiments/last-jump-runs/row-benchmark/real11-intermediate-results.md](../autonomy/experiments/last-jump-runs/row-benchmark/real11-intermediate-results.md) | Generated timing table for all nine intermediate numerical requests | Current measured evidence |
 | [AGENTS.md](../AGENTS.md) | Standalone agent entry point | Current navigation/guidance |
-| [docs/ANCHOR_IMPLEMENTATION_RESUME.md](ANCHOR_IMPLEMENTATION_RESUME.md) | Self-contained authorized implementation resume: exact worktree, settled contract, implementation status, native environment and checks | Start here after compaction; current worktree/status and validation |
+| [docs/ANCHOR_IMPLEMENTATION_RESUME.md](ANCHOR_IMPLEMENTATION_RESUME.md) | Self-contained authorized implementation resume: exact worktree, settled contract, implementation status, native environment and checks | Current completed-feature resume; no pending M1 or numerical process |
 | [CONSOLIDATION.md](../CONSOLIDATION.md) | Standalone branch consolidation | Historical; contains superseded branch/policy/status |
 | [README.md](../README.md) | Standalone route search and IPOPT | Current navigation/guidance |
 | [autonomy/ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md](../autonomy/ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md) | Exact-node DFS cadence, global hard latches, regional turns, same-block setup and finite extended B7 | Implemented anchor policy; physical returns deferred; new evidence separate |

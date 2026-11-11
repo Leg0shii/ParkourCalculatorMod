@@ -1,5 +1,7 @@
 # Linkcraft Real11 opening: agent guide
 
+Current combination/pruning/IPOPT tables and decisions: [execution reference](ANCHOR_SEARCH_EXECUTION_REFERENCE.md). Source-era sections below preserve their own task/policy/results.
+
 2026-11-11: [implemented shared comparisons/reachability](HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md)
 protect more J OR fewer R ordinarily / fewer A in turnaround, defer slower
 unprotected hard arrivals for explicit recovery, and prune against a strict
@@ -43,9 +45,9 @@ The generic `terminal_goals` adapter and the [new fixture](../autonomy/experimen
 
 This guide first describes the archived pre-DFS audit. [Current DFS cold/resume results](../autonomy/experiments/dfs-interactions/README.md) and evidence are a separate, newer corpus. Generic code must not depend on these labels/coordinates/ticks. [Current state](CURRENT_STATE.md) and [current DFS/interaction plan](../autonomy/DFS_INTERACTION_IMPLEMENTATION_PLAN.md) supersede old pilot policies. Read the archived ledgers to answer existing questions before rerunning jobs.
 
-## Implemented virtual baseline and historical benchmark
+## Historical virtual baseline and fixed-clock benchmark
 
-The accepted baseline finish is the implemented **virtual height7 crossing described above**, superseding the earlier literal-finite-B7 interpretation in the source-era capability discussion. The [corridor handoff](CORRIDOR_AGENT_HANDOFF.md) through `61355976` is imported at merge `984b701b`; [spatial-plan section0](../autonomy/SPATIAL_CORRIDOR_REFACTOR_PLAN.md#0-imported-baseline-and-integration-requirements) lists compatibility requirements. The automatic spatial path must discover intermediate supports rather than require a supplied B2/B3/B4/B5 list; the canonical virtual fixture still supplies that route as a control. Intentional wall hits remain future work. B6's reported rightward extension lacks exact revised bounds. Historical capability audits describe their inspected `93652150` code, not the new implementation status.
+For this historical corpus, the accepted finish was the **virtual height7 crossing described above**. Current physical B7/minT→MAXZ semantics are specified at the top of this guide. The [corridor handoff](CORRIDOR_AGENT_HANDOFF.md) through `61355976` is imported at merge `984b701b`; [spatial-plan section0](../autonomy/SPATIAL_CORRIDOR_REFACTOR_PLAN.md#0-imported-baseline-and-integration-requirements) lists compatibility requirements. The automatic spatial path must discover intermediate supports rather than require a supplied B2/B3/B4/B5 list; the canonical virtual fixture still supplies that route as a control. Intentional wall hits remain future work. B6's reported rightward extension lacks exact revised bounds. Historical capability audits describe their inspected `93652150` code, not the new implementation status.
 
 Spatial contract clarified subsequently: different supports and 3D passages distinguish routes; overflight and landing/run-off are different even with identical horizontal projections. Support itineraries are discovered automatically by the spatial layer, then realized by local timing/method search. See the [concrete refactor proposal](../autonomy/SPATIAL_CORRIDOR_REFACTOR_PLAN.md). Earlier diagnostic grouping and supplied support lists are historical, not the desired route contract.
 
@@ -138,7 +140,7 @@ At state10 delayed8 wins position and forward velocity, yet immediate0's advanta
 The saved complete reference uses jumps `[0,12,21,30,40,55]`, achieves Z64 approximately−1093.2675533415547, airborne, with no required B7 landing. It is a validated best-found control, **not a global optimality certificate or cold-discovery result**. Run commands are in [runbook](RUNBOOK.md).
 
 
-## Current implementation evidence
+## Historical imported DFS implementation evidence
 
 [DFS results](../autonomy/experiments/dfs-interactions/README.md) supersede the pre-DFS stall as current discovery status. The cold run reaches a complete standalone route after91.22s/eight calls; total cold/resume dispatches are10+4=14, with no repeated completed requests and all10/18 independent witness replays passing. [Summary](../autonomy/experiments/dfs-interactions/evidence/summary.json), [current call table](../autonomy/experiments/dfs-interactions/CALLS.md). Both root arrivals17/21 were measured and retained; only17 has been fully descended so far. Best Z64−1094.5755032869683 remains about1.308 blocks behind the separately seeded reference. Distinguish valid cold discovery from proof of optimality or exhaustive root coverage.
 

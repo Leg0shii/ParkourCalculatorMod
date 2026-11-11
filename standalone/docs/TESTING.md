@@ -1,5 +1,9 @@
 # Tests and fixtures
 
+Current `dd738c98` acceptance: [600 native-enabled tests](../autonomy/experiments/hard-jump-comparisons/2026-11-11/native-gate/report.json), no failures/errors/skips and unchanged runtime hashes. [Evidence](../autonomy/experiments/hard-jump-comparisons/README.md) also records131 archived-witness prefix-bound checks and80 updated retained-witness scene replays. The [execution reference](ANCHOR_SEARCH_EXECUTION_REFERENCE.md) maps each combination/pruning/query policy to its current module. Use the feature's `hard-jump-comparisons/native_gate.py` for this complete recorded scope; the older gates below validate their own source-era scopes.
+
+Focused additions are `test_candidate_comparison`, `test_proposal_analysis` and `test_transfer_time_bounds`, plus updated anchor DFS/policy and continuation tests. Coverage includes independent count protections, equality/strict bounds, explicit recovery, source hops, ceilings/unknowns, owned-tail isolation, JSON projection flags and resumed raw ordinals. Dedicated autonomy ladder/climbable/vine/movement-entry modules remain outside the selected scope; generic mixed-ladder controls and all IPOPT modules are included. Documentation-only follow-ups need link/status/source-consistency checks, not repeated cold numerical runs.
+
 Lazy queue time-bound follow-up: [51 focused checks](../autonomy/experiments/anchor-runtime-profile/lazy-bounds-2026-11-10/report.json)
 pass with native dependencies/no skips. They cover selected-only arrival and
 refinement checks, equality, original-state DFS, external resume and persistence.

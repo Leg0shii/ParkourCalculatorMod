@@ -1,5 +1,7 @@
 # Hard-jump comparisons, proposal reachability and transfer-time bounds
 
+Current user-facing combination/pruning/IPOPT tables, decisions/rationale and module ownership are consolidated in the [execution reference](ANCHOR_SEARCH_EXECUTION_REFERENCE.md). This document remains the detailed implementation/caller-migration and acceptance record for `dd738c98`.
+
 2026-11-11. **Implemented; final measured acceptance below.** Pre-edit runtime:
 `5d54f02b`. Work in the session's physical checkout and preserve unrelated edits
 to AGENTS.md and CODE_MAP.md. This is the single controlling follow-up plan for
@@ -800,7 +802,7 @@ or global optimality claim is made. The first 20-second integration smoke found 
 with9/9 independent accepted-witness replays and unchanged runtime hashes; it
 ran alongside the test suite and is not a performance comparison.
 
-Implementation, tests, fixtures and evidence are ready for the feature commit.
+Implementation, tests, fixtures and evidence were committed together as `dd738c98`.
 All pre-edit baseline artifacts and unrelated AGENTS/CODE_MAP edits are preserved.
 The experiment README records final acceptance, source hashes, profiling costs
 and both matched arms.

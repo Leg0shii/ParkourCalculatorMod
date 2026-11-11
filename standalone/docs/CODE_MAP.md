@@ -1,6 +1,6 @@
 # Production code map
 
-Snapshot at the current DFS implementation source, including request-audit logging. Every production Python module is listed below, along with Java/build adapters and experiment scripts. Tests/data/docs have an exhaustive [file index](FILE_INDEX.md). [Architecture](ARCHITECTURE.md) explains interactions and important function contracts; [function index](FUNCTION_INDEX.md) supplies definitions and source lines.
+Current runtime through `dd738c98`. [Execution reference](ANCHOR_SEARCH_EXECUTION_REFERENCE.md) maps combinations, pruning/dispatch boundaries and the reasons for the current policies. Every production Python module is listed below, along with Java/build adapters and experiment scripts. Tests/data/docs have an exhaustive [file index](FILE_INDEX.md). [Architecture](ARCHITECTURE.md) explains interactions and important function contracts; [function index](FUNCTION_INDEX.md) supplies definitions and source lines.
 
 ## autonomy
 
@@ -11,6 +11,7 @@ Snapshot at the current DFS implementation source, including request-audit loggi
 | [block_profiles.py](../autonomy/block_profiles.py) | Ordinary flight, run-off and stair/jump scalar profiles; compile prescribed open-air support routes. |
 | [block_search.py](../autonomy/block_search.py) | Normalize supplied block scenes, build transition graph and discover/compile block paths; dispatch movement families. |
 | [blockages.py](../autonomy/blockages.py) | Signed face chains, gate timelines, caps, ordering and hard passage constraints in legacy collision order. |
+| [candidate_comparison.py](../autonomy/candidate_comparison.py) | Sole intermediate J/R/A counts, T/key, independent OR protections, legacy common-clock guards and strict-incumbent predicates. |
 | [case_profiles.py](../autonomy/case_profiles.py) | Geometry and scalar-profile constraints for named stepping/corner cases and landing alternatives. |
 | [ceiling_contacts.py](../autonomy/ceiling_contacts.py) | Compatibility import surface for ceiling contact primitives. |
 | [ceiling_generation.py](../autonomy/ceiling_generation.py) | Open ceiling choices and generator registered with generic movement discovery. |
@@ -21,7 +22,7 @@ Snapshot at the current DFS implementation source, including request-audit loggi
 | [contact_combinations.py](../autonomy/contact_combinations.py) | Merge, validate and compile heterogeneous contact events; enumerate combinations. |
 | [contact_profiles.py](../autonomy/contact_profiles.py) | Contact-derived scalar profiles and opportunity generation. |
 | [hit_events.py](../autonomy/hit_events.py) | Compile/validate horizontal hit events, options and initial guesses. |
-| [interactions.py](../autonomy/interactions.py) | Shared block/tick/phase eligibility and compiled prefix/approach gate before open builders; uncertain named probes preserve coverage. |
+| [interactions.py](../autonomy/interactions.py) | Shared cached exact program preparation, canonical coefficient payloads, envelopes/screens and joint prerequisite checks before side fan-out; uncertain named probes preserve coverage. |
 | [ladder_ceiling.py](../autonomy/ladder_ceiling.py) | Assign ceiling contacts to ladder units and predict revised ceiling sequences. |
 | [ladder_episodes.py](../autonomy/ladder_episodes.py) | Compose multiple ladder episodes with original-state continuity. |
 | [ladder_events.py](../autonomy/ladder_events.py) | Validate and compile prescribed ladder event fields. |
@@ -78,7 +79,9 @@ Snapshot at the current DFS implementation source, including request-audit loggi
 | [geometry.py](../autonomy/cell_routes/geometry.py) | AABB subtraction/merging, cells/portals/contact patches, free-space decomposition and segment coverage/SVG. |
 | [regions.py](../autonomy/cell_routes/regions.py) | Exact support unions; checked overlapping free convex cover, typed graph and ordinary movement proposal context. |
 | [local.py](../autonomy/cell_routes/local.py) | Search work budgets/counters, counting compiler and scoped corridor/scene acceptance adapter. |
-| [minimum_runs.py](../autonomy/cell_routes/minimum_runs.py) | Latest-jump ordinary ground-hold pattern normalization, validated feasible representatives and heuristic extra-run exclusions. |
+| [preparation_deferrals.py](../autonomy/cell_routes/preparation_deferrals.py) | Frame-local validated peer storage and common-verdict orchestration; actual deferred programs stay in the DFS compatibility table. |
+| [transfer_time_bounds.py](../autonomy/cell_routes/transfer_time_bounds.py) | Phase-correct landing-state enclosures and conditional ordinary flight minima under no-stepping hard transfers, with ceiling uncertainty fallback. |
+| [minimum_runs.py](../autonomy/cell_routes/minimum_runs.py) | Legacy latest-jump family normalization/representatives; exclusion delegates to the shared comparator. Active anchor peer policy lives in DFS/preparation_deferrals. |
 | [repair_diagnostic.py](../autonomy/cell_routes/repair_diagnostic.py) | Diagnostic of repair queue allocation and failures. |
 | [repair_resume_experiment.py](../autonomy/cell_routes/repair_resume_experiment.py) | Experiment preserving and resuming inner repair work. |
 | [routes.py](../autonomy/cell_routes/routes.py) | Route enumeration, landmarks/signatures, guide polyline/corridor projection and horizontal traces. |
@@ -170,7 +173,7 @@ Maintain this map when public modules change. Index generation uses Python AST a
 | --- | --- |
 | [event_routes.py](../autonomy/cell_routes/event_routes.py) | Immutable domain and physical feature/surface provenance; cyclic connector language; residual next-goal cursors; untimed semantic prefixes and observed physical passage evidence. |
 | [guides.py](../autonomy/cell_routes/guides.py) | Local finite witness anchors, resumable shortest witness, checked shortcuts and outgoing objectives. |
-| [anchor_policy.py](../autonomy/cell_routes/anchor_policy.py) | Ordered anchor audit, physical-owner visits, local J/R/A keys/caps, and policy2 source-preparation versus one-transfer structure. |
+| [anchor_policy.py](../autonomy/cell_routes/anchor_policy.py) | Ordered anchor audit, physical-owner visits, local J/R/A keys/caps, and policy3 source-preparation versus one-transfer structure; completed hard transfers exclude stepping. |
 | [anchor_guides.py](../autonomy/cell_routes/anchor_guides.py) | Backward finite projections, onward objectives, physical approach-edge turns and binary decision labels. |
 | [anchor_adapter.py](../autonomy/cell_routes/anchor_adapter.py) | Required-anchor/open-span stages on the existing event DFS; internal nodes omit pending anchor predicates. |
 | [node_feasibility.py](../autonomy/cell_routes/node_feasibility.py) | Explicit solver intent, stable exact-node identity, outcomes and completed-decision cadence. |
@@ -185,7 +188,7 @@ Current automatic CLI: [automatic_experiment.py](../autonomy/cell_routes/automat
 
 | Source | Purpose |
 | --- | --- |
-| [anchor_time_bound.py](../autonomy/cell_routes/anchor_time_bound.py) | Optimistic remaining travel across required landing regions; guide distance stays an estimate. |
+| [anchor_time_bound.py](../autonomy/cell_routes/anchor_time_bound.py) | Selected-candidate optimistic remaining time max(H,V), phase-correct landing covers, latched flight clocks and paid-input residuals; guide distance stays an estimate. |
 | [checkpoint_persistence.py](../autonomy/cell_routes/checkpoint_persistence.py) | Nested event/DFS checkpoints and explicit node repair ownership. |
 | [anchor-runtime-profile](../autonomy/experiments/anchor-runtime-profile/README.md) | Scoped profiling, persistent source provenance and cold-run evidence. |
 | [integration contract](ANCHOR_SEARCH_INTEGRATION.md) | Selected solver policies, recovery/time bounds and live-state ownership. |

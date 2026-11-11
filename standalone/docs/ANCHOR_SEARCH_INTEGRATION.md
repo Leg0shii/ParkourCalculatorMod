@@ -1,9 +1,11 @@
 # Anchor search and solver integration
 
+Current execution tables and policy/rationale: [execution reference](ANCHOR_SEARCH_EXECUTION_REFERENCE.md). The later `dd738c98` feature generalizes ordinary run-family deferral to protected hard-anchor tick comparisons, shares proposal preparation and adds ceiling-aware flight minima under the declared no-stepping transfer assumption. [Current evidence](../autonomy/experiments/hard-jump-comparisons/README.md) supersedes this integration baseline's counts. Integration is complete; the measurements below retain their source-era scope.
+
 2026-11-10. This implements the user's authorization following the
 [nine-commit review](SOLVER_BRANCH_INTEGRATION_REVIEW.md). The working checkout
 is `/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes`, branch
-`research/ipopt-cell-routes`. Both development histories are being joined here;
+`research/ipopt-cell-routes`. Both development histories were joined here;
 the old isolated anchor worktree is historical, not the current work location.
 The implementation and acceptance checks are complete. The feature commit
 bundles both development histories, implementation, tests, documentation and

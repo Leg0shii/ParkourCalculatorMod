@@ -1,5 +1,7 @@
 # Shared hard-jump comparisons and proposal reachability
 
+For the complete current combination catalogue, pruning/deferral/IPOPT dispatch tables and decision rationale, read the [execution reference](../../../docs/ANCHOR_SEARCH_EXECUTION_REFERENCE.md). Runtime feature commit: `dd738c98`. This README records the measured implementation acceptance; its dated source/provenance artifacts are unchanged by documentation updates.
+
 2026-11-11. Implements the [single controlling plan](../../../docs/HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md)
 on baseline `5d54f02b` in the session checkout. **Declared assumption:** a hard
 transfer between anchors never uses stepping. Source-local setup hops remain

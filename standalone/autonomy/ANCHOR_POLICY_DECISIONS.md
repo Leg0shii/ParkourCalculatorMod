@@ -1,8 +1,12 @@
 # Anchor search decisions: DFS, binary turns and observability
 
-**Implementation authorized:** the user approved starting implementation, then requested compaction preparation. [Current resume handoff](../docs/ANCHOR_IMPLEMENTATION_RESUME.md) records the completed implementation, settled decisions and source-stable validation. This document remains the design/decision record; there is no new permission question.
-
-2026-11-04, revised after binary-decision turnaround and observability clarification. Originally written during planning; the feature is now implemented and validated in [new evidence](experiments/anchor-feasibility/README.md). Worktree `/private/tmp/parkour-real11-initial-run-ticks`, branch `research/real11-initial-run-ticks`, baseline `4cf39caa` (algorithm `08b00185`). Current scope defers inter-block revisit generation, preserves same-block setup jumps, uses a preliminary binary edge-and-margin label per decision with required observability, and replaces the separate prefix-testing proposal with normal exact-node feasibility and an explicit solve cadence. The [implementation plan](ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md) is updated to match.
+Current decisions through runtime `dd738c98` (2026-11-11). The
+[execution reference](../docs/ANCHOR_SEARCH_EXECUTION_REFERENCE.md) is the current
+combination/pruning/IPOPT and implementation-owner table. This O1–O7 record
+explains the choices; [current acceptance](experiments/hard-jump-comparisons/README.md)
+records600 native tests,131 known-witness prefix checks and80 retained-witness
+replays. The feature is complete in the session checkout; old private-worktree
+paths and planning-only authorization notes have been removed from this entry.
 
 Feasibility scheduling advice is in [O4: exact DFS node feasibility and cadence](#o4--exact-dfs-node-feasibility-and-solve-cadence). Current visit scope is in [O6](#o6--revisit-generation-deferred-same-block-jumps-required); the full future revisit design is preserved separately. Other sections record the newly settled decisions and their implementation implications. Suggested implementation details are labelled recommendations; the user's explicit policies are adopted as policies rather than presented as mathematical completeness claims.
 
@@ -25,9 +29,19 @@ S → S → E        excluded if the final transfer is only a run-off, without a
 
 Initial-0 Real11 jumps at0 back onto B1@12 and at12 to B2@21. The first is preparation; the second is the hard transfer. A latch learned from jump8→B2@17 must preserve that initial-0 program. Preparatory hops on later anchors receive exactly the same treatment.
 
-Global latches still survive certifier abandonment. Run-family normalization keeps the complete earlier preparation history, so an extra-run representative from one setup history cannot suppress another. Deferred ordinary runs are restored with their actual parent/rows and scoped bypass. Optional inter-block revisits remain deferred; same-source setup does not consume the required-anchor cursor.
+Global latches survive certifier abandonment. Current hard-arrival comparison is
+frame-local and broader than the older matching latest-jump run family. A slower
+compatible arrival stays first-class if it has **more J OR fewer R ordinarily /
+fewer A in turnaround**. Otherwise it can be recoverably deferred against one
+validated earlier peer. Earlier preparation histories/actual programs are not
+merged. Recovery preserves parent/rows and uses a scoped bypass. Optional inter-block revisits remain deferred; same-source setup does not consume the required-anchor cursor.
 
-Hard-jump policy version2 is part of the outer/DFS/stage/movement semantic context. Old exact checkpoints are rejected because the wrong policy may already have discarded setup choices. Latch/arrival records expose preparation impulses, transfer impulses and the source-contact boundary. No movement physics or continuous objective equation changes.
+**Declared assumption (2026-11-11):** hard transfers between anchors never involve
+stepping; only ceilings can shorten the ordinary-flight bound. Completed stepped
+transfers cannot learn/satisfy a latch. Closed or pending source-local preparation
+is not blanket-rejected. Unknown shortening ceilings contribute zero to the bound.
+
+Hard-jump policy version3 and shared comparison policy1 are part of the outer/DFS/stage/movement semantic context. Old exact checkpoints are rejected because the wrong policy may already have discarded setup choices. Latch/arrival records expose preparation impulses, transfer impulses and the source-contact boundary. No movement physics or continuous objective equation changes.
 
 ## O2 — Requested grounded impulses are the jump count
 
@@ -68,7 +82,7 @@ X midpoint is a neutral guide choice because the objective has no X preference. 
 
 Existing support semantics allow player-body overlap rather than requiring the center strictly inside the solid. Consequently the physical guide edge Z=−1093 is not necessarily the maximum legal player-center Z: the ordinary center bound extends by the player half-width, approximately 0.3, subject to clearance/exposed-region checks. Reuse [`route.center_bounds`](route.py) and existing finite contact regions. Do not add a new center cap at the guide point or remove normal overhang support merely to make the picture and optimum coincide.
 
-This changes collision geometry and terminal validation: B7 is now a real extended solid with real contact. Use a fresh fixture/report path under the next experiment directory. Do not edit archived old fixtures/evidence or present their virtual T67 results as validation of the new finite task. Runtime and stored archived box remain unchanged in this planning turn.
+This changes collision geometry and terminal validation: B7 is now a real extended solid with real contact. Use a fresh fixture/report path under the next experiment directory. Do not edit archived old fixtures/evidence or present their virtual T67 results as validation of the new finite task. The new physical fixture is implemented; archived original-box reports remain unchanged.
 
 ### Guide recursion and objective
 
@@ -83,7 +97,7 @@ objective_E = maximize(d.x * X[T_E] + d.z * Z[T_E])
 
 Reuse [`Checkpoint.objective`](cell_routes/checkpoints.py) and existing POSITION/customYaw. Physical landing constraints remain independent. No waypoint equality, progress-based pruning, slack work or constant FEASIBILITY objective is introduced.
 
-**Settled design evidence:** the user reports another agent measured approximately equal speed for this objective with early stop. Adopt that as the design input; this session did not reproduce or inspect the other agent's measurement. No further approval or constant-objective comparison is required to proceed with this direction. The implementation still needs ordinary regression/performance checks for its changed task and search policies.
+**Settled design evidence:** the user reports another agent measured approximately equal speed for this objective with early stop. Adopt that as the design input; this session did not reproduce or inspect the other agent's measurement. No further approval or constant-objective comparison is required to proceed with this direction. Implementation/regression/cold acceptance is recorded in the current evidence linked above.
 
 Use stop-on-feasible and no intermediate polishing/equal-cost variant drain. Keep native scene/anchor acceptance, repair, feasible-yaw seeds and original-state re-solves. A warm seed may already be feasible and return without improvement; it remains a valid early-stop result. Final actual landing uses real MAXZ optimization.
 
@@ -103,9 +117,9 @@ Example: P has children P+A and P+B. Solving P+A and finding it infeasible rejec
 
 A completed designated no-solution attempt is an operational rejection under the user's solver-accuracy assumption. Record the actual status/allocation. Cancellation, unstarted work, errors and incomplete model construction do not pretend to be a completed node solve. Cache results by exact node/model/scope so a checked node is not redundantly solved after resume. Do not put changing repair progress into its semantic physical identity.
 
-### Recommendation: solve each completed movement decision first
+### Implemented default: solve each completed movement decision
 
-Start with a feasibility solve after every **completed meaningful movement decision**, always at required anchors and the finish. This is a clear initial baseline: an impossible selected jump/contact is rejected before extending it, and rejection has an unambiguous exact-node owner. It also fits the existing stop-on-feasible/feasible-yaw warm-start machinery.
+The default performs a guided feasibility solve after every **completed meaningful movement decision**, always at required anchors and the finish. This is a clear initial baseline: an impossible selected jump/contact is rejected before extending it, and rejection has an unambiguous exact-node owner. It also fits the existing stop-on-feasible/feasible-yaw warm-start machinery.
 
 A decision level here means a completed jump/landing or selected physical contact/case choice. It does **not** mean a simulation input or a raw one-input run-hold construction node. Consecutive ordinary ground-run inputs are preparation of a run-length choice and are included in the next completed movement decision's model. Do not add an IPOPT call merely because the generator extended an ordinary run from R2 to R3. If a whole run-duration action is exposed as a meaningful decision in a different generator, count that action once, not once per input.
 
@@ -115,7 +129,7 @@ Each feasible node contributes a yaw seed only; no fixed X/Z/velocity seam is cr
 
 ### Alternative: every 2 or 4 decision levels
 
-Make cadence a small deterministic interval, measured in those completed decision levels since the last actual solve. Proposed starting interval is1. An interval 2 or4 can reduce NLP launches when most choices are feasible and solving dominates runtime. Its cost is exploring more discrete work below an impossible, still-untested ancestor before reaching the next scheduled solve.
+Make cadence a small deterministic interval, measured in those completed decision levels since the last actual solve. Implemented default interval is1;2/4 are configurable, unselected alternatives for future matched cadence measurements. An interval 2 or4 can reduce NLP launches when most choices are feasible and solving dominates runtime. Its cost is exploring more discrete work below an impossible, still-untested ancestor before reaching the next scheduled solve.
 
 When a scheduled deeper node fails, reject only that solved node. Do not walk upward running extra ancestor tests or label its unsolved parent infeasible. Resume ordinary DFS alternatives there. Changing cadence changes when we spend solver work, not what a child rejection logically establishes.
 
@@ -125,11 +139,18 @@ Always force the normal solve at required anchors/final task regardless of caden
 
 Compare intervals 1,2,4 and anchor-only as matched diagnostics using the same new finite task/domain/budget. Measure total wall time, solver calls/worker launches, time spent constructing subsequently rejected descendants, first full finish and final T/Z. Do not choose from number of solves alone. If interval 1 has cheap warm-start returns and prevents expensive dead work, keep it; if calls dominate and nearly all nodes are feasible, increase the interval. No adaptive controller or separate probing mechanism is needed initially.
 
-This recommendation is unmeasured for the new implementation; the user asked for advice, not a claim that interval 1 is fastest. Cadence remains the engineering choice to settle before implementation. My recommendation is **interval 1 at completed movement decisions first**, then choose2/4 only from measured cost.
+Cadence1 is implemented and covered by current tests/cold runs. A matched cadence1/2/4 study has not selected a replacement; no claim that1 is fastest follows. There is no unconfirmed cadence question blocking implementation.
 
-### Existing elapsed-time pruning remains
+### Implemented full-finish pruning and lazy checks
 
-An unchanged unfinished node with elapsed T>T_best validated full finish cannot improve and can be pruned immediately without a new solver call. At equality, bind any already-achieved same-input finish for MAXZ; if another positive-duration action is truly necessary, it cannot tie. Changing earlier decisions creates a different node. This bound is independent of the node's feasibility status. [`depth_first.time_bound`](cell_routes/depth_first.py).
+One validated full incumbent bounds new/selected candidates. Compute optimistic
+finish `T+max(H,V)` from phase-correct landing-state covers and applicable latched
+ceiling-aware flight minima, subtracting already-paid ordinary flight inputs.
+Exclude only if strictly later than the incumbent. Equality remains eligible,
+including unfinished work; a separately justified positive remaining bound can
+then exclude it. Guide distances are estimates, not these pruning enclosures.
+This bound overrides local count protection. Incumbent updates do not rescan
+queued bounds. A different earlier history is a different candidate.
 
 ## O5 — Preliminary binary turnaround heuristic and observability
 
@@ -171,7 +192,7 @@ All J/R/A counts remain local to the current required-anchor span. There is no R
 
 The default solve cadence 1 supplies a validated node point before its next movement decision. If later benchmarking a larger cadence, explicitly define/log the deterministic seed/reference position used at an unsolved node; the classifier still accepts a point and returns one boolean. Do not substitute reachability-envelope membership or branch the heuristic into several possibilities.
 
-In turnaround mode, use the momentum rule and preserve ordinary run alternatives. Outside, use normal time/hard behavior; matching hard-run deferral is eligible only for that ordinary decision. Global hard topology stays single-jump wherever already latched. Do not split one run hold into differently ranked pieces.
+In turnaround mode, use T/−J/A and protect more J OR fewer A. Outside, use T/−J/R and protect more J OR fewer R. Local hard-arrival deferral applies in either mode only without the corresponding independent protections; raw extra R/A alone is not protection. Global hard topology stays single-jump wherever already latched. Do not split one run hold into differently ranked pieces.
 
 The initial margin is approximately0.3 blocks. The previously suggested1-input margin is an optional later tuning representation, not an automatic temporal dilation or an extra membership state in this initial edge-distance classifier. Any later change must remain a documented binary rule.
 
@@ -223,16 +244,21 @@ Current tests must assert both sides: several legal same-block jumps are generat
 
 ## O7 — Turnaround heuristic means momentum ordering
 
-**Settled:** interpretation1. In the preprocessed turnaround region use the momentum count preference, allowing/favoring runs relative to air at equal T/J. Do not reinterpret this as suppressing greater run counts around a reversal.
+**Settled:** one turnaround decision uses `(T,-J,A,id)`. At equal T/J, fewer A
+favors R. For a *slower* candidate the confirmed protection is **more J OR fewer A**,
+not raw more R. Extra run time with unchanged J/A can therefore defer against an
+earlier compatible hard peer. Ordinary mode analogously protects more J OR fewer R.
+Equal T remains live. This replaces the earlier ordinary-only run-deferral exemption.
 
-Outside that region, normal time/hard behavior remains. Hard-run deferral stays recoverable, and a restored alternative gets its scoped bypass. For a decision labelled turnaround by the edge-plus-margin rule, do not suppress the extra run preparation that the turn heuristic is intended to preserve.
-
-No O7 follow-up remains. Global hard topology and regional momentum ordering are independent: a latched span still has one jump, while each decision selects exactly one of the ordinary/turn heuristics.
+Global hard topology and regional mode are independent: a latched span still has
+one actual transfer after allowed source setup hops. Restore an unprotected slower
+candidate only on explicit failed-continuation recovery, with scoped bypass and
+all bounds/domain limits still enforced. No O7 design question remains.
 
 ## Settled versus remaining implementation choices
 
 Settled: DFS; solve-wide single-jump hard latch; requested grounded impulses; extended finite B7/onward guides/early stop;110° turn with approach-facing boundary and regional margin; no separate ancestor-testing subsystem; a failed descendant cannot invalidate an untested ancestor; inter-block revisit generation deferred; multiple setup jumps on the current block preserved even after a hard-transfer latch.
 
-Starting implementation default: normal feasibility after each completed movement decision, with anchors/final mandatory; benchmark 2/4 later if solving dominates. Turn mode is a preliminary binary edge-plus-margin decision using its current point, with compact diagnostics, plots and outcome counters. The blended regional-score and uncertain-membership proposals are removed; no new turn-policy question needs reopening.
+Implemented default: normal feasibility after each completed movement decision, with anchors/final mandatory; benchmark 2/4 later if solving dominates. Turn mode is a preliminary binary edge-plus-margin decision using its current point, with compact diagnostics, plots and outcome counters. The blended regional-score and uncertain-membership proposals are removed; no new turn-policy question needs reopening.
 
-The [deferred revisit plan](REVISIT_DISCOVERY_DEFERRED_PLAN.md) preserves future cyclic-route work in full. Current runtime/fixtures remain unchanged; no numerical cadence measurement or planning-only commit was made.
+The [deferred revisit plan](REVISIT_DISCOVERY_DEFERRED_PLAN.md) preserves future cyclic-route work in full. The current feature is implemented/validated; cadence comparison, revisit generation and turn tuning are future work, not pending steps from this plan.

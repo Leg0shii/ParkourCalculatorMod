@@ -1,5 +1,9 @@
 # Results, terminology and debugging
 
+For current physical-anchor search use the [execution reference](ANCHOR_SEARCH_EXECUTION_REFERENCE.md). It separates a consumed proposal, admitted program, constraint variant, evaluation, solver wrapper and worker launch; these counters must not be interchanged. A strict finish-bound exclusion is different from a recoverable peer deferral, a resource cap, an analytical absence proof, exact operational oracle rejection or suspended work.
+
+Current saved evidence: `DFS.transferTimeBounds`, `timeBoundExclusions`, `comparisonWork`, `comparisonDecisions` and the single `minimumRunExclusions` compatibility table; frame-local `tickPeers`; `interactionGate.metrics`; and the profiled arms' `requests.json` invocation fingerprints/stop/worker status. Use [matched results](../autonomy/experiments/hard-jump-comparisons/README.md) for source provenance. A common-case rejection before side fan-out creates no side programs/workers. A rejected unused tail cannot label its valid owned anchor prefix infeasible.
+
 Start with [architecture](ARCHITECTURE.md) for call flow, [runbook](RUNBOOK.md) for execution, and [Real11 guide](REAL11_GUIDE.md) for the existing corpus. Do not launch a new long solve just to answer a question already logged.
 
 ## Vocabulary and units of work
@@ -12,7 +16,7 @@ Start with [architecture](ARCHITECTURE.md) for call flow, [runbook](RUNBOOK.md) 
 | Passage description | Signed face chain and switch/gate ticks used to build obstacle clearance rows. Many descriptions can yield one effective row set. |
 | Constraint variant | One concrete hard row/contact alternative for a fixed program. A schedule can require many such trials. |
 | Branch | One handled constraint alternative. It may be screened or stopped before worker dispatch. |
-| Worker call | A subprocess numerical solve; main calls and spatial-comparison probe calls are counted separately. One call can have multiple internal phases/iterations/callbacks. |
+| Solver wrapper / worker launch | The Python solve API may return a validated feasible seed without IPOPT in early-stop mode. A worker launch starts a subprocess numerical solve. One worker can have multiple internal phases/iterations/callbacks. |
 | Repair search/state | Inner fixed-program enumeration/refinement and its resumable queues/logs. It is not an IPOPT mixed-integer mechanism. |
 | Spatial probe | Auxiliary arrival solve used to compare alternatives at a common spatial goal; does not by itself establish a complete route. |
 | Accepted prefix | Numerically and physically accepted for its recorded scope/horizon. Not a complete terminal incumbent. |
@@ -36,11 +40,10 @@ Read large files selectively:
 
 ```sh
 python3 - <<'PY'
-import gzip, json
 from pathlib import Path
+from standalone.autonomy.checkpoint_store import read_report
 p = Path('/tmp/real11-cold-new.json.gz')
-with (gzip.open(p, 'rt') if p.suffix == '.gz' else p.open()) as f:
-    report = json.load(f)
+report = read_report(p)  # Shared manifest/SQLite or legacy plain/gzipped JSON.
 r = report.get('result', report)
 print('keys:', sorted(r))
 print('status:', r.get('status'), 'termination:', r.get('termination'))
@@ -61,7 +64,7 @@ Do not dump complete multi-MB reports to the conversation. Use tables/counters a
 5. For a suspicious block/tick, ask the **shared interaction query** with the actual compiled context. Inspect swept Y extent, X/Z envelopes and selected contacts. Endpoint height or a soft guide is not a reachability proof. Impossible required contact rejects the proposal; impossible unwanted contact creates no avoidance.
 6. For orphan constraints, retain the full proposal and owner event before projection. Compare untruncated and truncated checks. A discarded future event must not leave accidental hard approach rows.
 7. For repeated work, compare physical/context keys and exact effective rows; distinguish raw descriptions, unique models, dispatched calls and worker callbacks. Never infer that many duplicate descriptions mean every numerical call was duplicated.
-8. For pruning/ordering, compare the same goal, absolute tick, phase/schedule and witness provenance. Directional position, forward velocity and speed must come from the **same** accepted witness. Retention caps must not erase protected saved work.
+8. For active anchor pruning, inspect the shared verdict: same frame/incoming context, mode, milestone/phase/scope, local J/R/A and validated peer; then distinguish recoverable deferral from strict optimistic-finish exclusion. Different schedules are not automatically incomparable at an anchor. Legacy common-clock state guards still require their original schedule/phase and same-witness position/velocity alignment. Retention caps must not erase saved protected/deferred work.
 9. Add a minimal generic regression and a fixture-specific one. Then run only the checks needed to validate the hypothesis, before broadening.
 
 ## Profiling and evidence

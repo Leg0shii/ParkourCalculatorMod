@@ -1,5 +1,7 @@
 # Complete standalone file inventory
 
+Current [execution reference](ANCHOR_SEARCH_EXECUTION_REFERENCE.md): combination/pruning/IPOPT tables, rationale, implementation owners, configuration and evidence.
+
 2026-11-11 implementation additions:
 
 | File | Purpose |
@@ -62,8 +64,8 @@ Evidence filenames identify different runs/contexts; do not treat reports as exe
 
 | File | Purpose |
 | --- | --- |
-| [ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md](../autonomy/ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md) | Exact-node DFS cadence/recovery, finite B7, global hard latch, regional turns and same-block setup; inter-block returns deferred. Planning only. |
-| [ANCHOR_POLICY_DECISIONS.md](../autonomy/ANCHOR_POLICY_DECISIONS.md) | Current exact-node DFS rejection rule, recommended decision-level solve cadence, settled approach edge and deferred-revisit/current-local-hop scope. No runtime change. |
+| [ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md](../autonomy/ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md) | Implemented anchor design baseline; current execution reference and later hard-jump record control shared comparisons/ceilings-only flight bounds. Inter-block returns remain deferred. |
+| [ANCHOR_POLICY_DECISIONS.md](../autonomy/ANCHOR_POLICY_DECISIONS.md) | Updated O1–O7 decisions/rationale, implemented cadence1, hard policy3/count protections and deferred-revisit/current-local-hop scope. |
 | [BLOCK_ROUTE_SEARCH.md](../autonomy/BLOCK_ROUTE_SEARCH.md) | Block-route selection prototype. See documentation index for authority/status. |
 | [BLOCK_SOLVER_PLAN.md](../autonomy/BLOCK_SOLVER_PLAN.md) | Block solver: continuous-model orchestration. See documentation index for authority/status. |
 | [CELL_ROUTE_EXPERIMENT_PLAN.md](../autonomy/CELL_ROUTE_EXPERIMENT_PLAN.md) | Cell-route experiment plan. See documentation index for authority/status. |

@@ -1,12 +1,14 @@
 # Consolidated plan: depth-first decisions and shared interaction eligibility
 
-> **Hard-jump correction:** a latch constrains the S→E transfer to one jump. It must preserve multiple S→S setup hops before the transfer, including after learning/resuming/backtracking. Do not impose a total span-J=1 cap or exempt only the opening. All setup impulses remain in the ordinary/turnaround heuristic. See [policy2](experiments/anchor-transfer-preparation/README.md).
+Current runtime through `dd738c98`: [combination/pruning/IPOPT execution reference](../docs/ANCHOR_SEARCH_EXECUTION_REFERENCE.md), [hard-jump implementation record](../docs/HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md) and [measured evidence](experiments/hard-jump-comparisons/README.md). These supersede the source-era run-only deferral/no-remaining-bound/default-policy statements below. Current hard policy3 excludes stepping only in the actual hard transfer, preserves source hops, protects more J OR fewer R/A and uses selected-only max(H,V) finish bounds. There is no unimplemented anchor extension to start from this document.
+
+> **Hard-jump correction:** a latch constrains the S→E transfer to one jump. It must preserve multiple S→S setup hops before the transfer, including after learning/resuming/backtracking. Do not impose a total span-J=1 cap or exempt only the opening. All setup impulses remain in the ordinary/turnaround heuristic. The [policy2 correction evidence](experiments/anchor-transfer-preparation/README.md) is historical; current hard policy3 additionally excludes stepping in the actual transfer and uses the shared protected tick policy.
 
 > **Current extension (2026-11-04):** [anchor plan](ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md) M1–M5 is implemented in the isolated worktree; [new evidence](experiments/anchor-feasibility/README.md) records validation. Physical tasks default to required-anchor/open-span DFS with schema8; virtual/supplied source controls remain separate. Binary turnaround/observability, exact-node solves, global hard latches, run recovery and same-block setup are active. Inter-block revisits remain [deferred](REVISIT_DISCOVERY_DEFERRED_PLAN.md). [Resume](../docs/ANCHOR_IMPLEMENTATION_RESUME.md).
 
 > Current automatic implementation: [GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md](GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md) controls the implemented event-language/stage-provider refactor at `08b00185`. Its dynamic `GoalRequest` stages use the existing DFS with schema7, event-stage policy3, separate score contexts, pending-child owners and retained siblings/unknowns. Constraint generation is state2/policy7 and repair assembly8.447 selected native checks pass with stable source hashes; automatic stored-Real11 cold search finds T67 at16.09s and all24 independent post-run replays pass. See [current evidence](experiments/event-route-discovery/README.md) for the matched-control status. The remainder records the source-specific `a28e5b71` baseline and its original design history.
 
-## Anchor DFS extension obligations (implemented; acceptance below)
+## Anchor DFS extension obligations (implemented; source-era acceptance below)
 
 The [new file map](ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md#12-file-by-file-implementation-map) extends this engine:
 
@@ -18,7 +20,7 @@ The [new file map](ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md#12-file-by-file-imp
 - Active departed-owner filter excludes A→C→A but permits A→A→A→B and optional acyclic supports. Preserve all local jump inputs/physical cases. Deferred [revisit design](REVISIT_DISCOVERY_DEFERRED_PLAN.md) is not an active milestone.
 - Actual one-edge earlier preparation/run recovery with scoped bypass, hard-latch restriction and atomic source/child publication.
 
-The implemented sections below describe the accepted baseline, not these planned changes.
+The sections below describe their accepted source-era baselines. The anchor obligations above are implemented; do not restart them as planned work.
 
 ## Implemented automatic integration contract
 

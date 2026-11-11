@@ -1,12 +1,19 @@
 # Plan: anchor DFS, global hard latches and observable binary turn heuristics
 
-**Hard-jump correction (2026-11-04):** “single jump” means a single S→E transfer; S→S momentum/setup hops remain eligible before that transfer, even after a global latch. This applies to every anchor span and the opening. The initial implementation/document wording that forbade local setup after a latch was wrong. The [corrected decisions](ANCHOR_POLICY_DECISIONS.md#o1--hard-jump-status-is-a-solve-wide-latch) and [transfer-preparation implementation](experiments/anchor-transfer-preparation/README.md) supersede that wording. Policy2 is fingerprinted for exact continuation.
+**Implemented anchor baseline, with current follow-ups through `dd738c98`.**
+The [execution reference](../docs/ANCHOR_SEARCH_EXECUTION_REFERENCE.md) contains
+current combination/pruning/IPOPT tables, rationale and owners. The later
+[hard-jump implementation record](../docs/HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md)
+controls shared comparisons, early proposal reachability and flight bounds.
+[Current evidence](experiments/hard-jump-comparisons/README.md) records600 native
+passes and cold physical T64. There is no M1 implementation to resume and no
+checkout switch authorized by the original planning worktree below.
 
-**Implementation status (2026-11-04):** M1–M6 is implemented;527 final-source native tests pass without failures/errors/skips, with101 runtime hashes stable. M7 matched finite-task cold arms both find T67/Y7/grounded, with43/43 independent accepted-witness replays and stable source. First14.02s early stop versus13.56s polish shows similar timing; no global optimality claim. See [implementation evidence](experiments/anchor-feasibility/README.md). The following authorization history is preserved. **Implementation authorization / compaction checkpoint:** the user explicitly said "go ahead and implement", then requested a handoff before compaction. Resume from [ANCHOR_IMPLEMENTATION_RESUME.md](../docs/ANCHOR_IMPLEMENTATION_RESUME.md) and start M1. No runtime tool call/source change occurred before interruption; implementation is authorized and still to do. Older planning-only wording below records document history, not revoked authorization.
-
-2026-11-04, revised after the binary-decision turnaround/observability clarification. **Planning only; runtime/fixtures unchanged.** Worktree `/private/tmp/parkour-real11-initial-run-ticks`, branch `research/real11-initial-run-ticks`, baseline `4cf39caa`, measured algorithm `08b00185`. Preserve the other checkout/shared native dependencies. Commit only implemented features with their related docs/tests/fixtures, not this planning-only turn.
-
-Read [ANCHOR_POLICY_DECISIONS.md](ANCHOR_POLICY_DECISIONS.md) for the current exact-node rejection rule and recommended solve cadence. There is no separate ancestor-testing/probing subsystem. Inter-block revisit generation is deferred, with its full future plan in [REVISIT_DISCOVERY_DEFERRED_PLAN.md](REVISIT_DISCOVERY_DEFERRED_PLAN.md); multiple jumps on the current block remain in scope. Approach-facing turn edge and one binary mode per decision are settled; this preliminary rule requires observability. Keep solve-wide hard latches, finite physical B7, regional turn handling and no slack/new constant objective. The [completed event implementation](GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md) and [accepted evidence](experiments/event-route-discovery/README.md) remain the unchanged baseline. [Resume handoff](../docs/CORRIDOR_IMPLEMENTATION_RESUME.md).
+This document preserves the anchor architecture/milestones originally implemented
+at `0d340c03`, then source-hop correction `769cdbe3` and solver integration
+`91381e5a`. Original milestone results below belong to those revisions. Current
+hard policy3 means one S→E transfer **without stepping**, preserving source-local
+setup hops; protected hard-arrival deferral now applies in both binary modes.
 
 ## 1. What the user has agreed to
 
@@ -15,7 +22,7 @@ Read [ANCHOR_POLICY_DECISIONS.md](ANCHOR_POLICY_DECISIONS.md) for the current ex
 | Anchors/coupling | Ordered required anchors; Real11 B2/B3/B4/B5. All movement choices between anchors are coupled. Comparisons/promotions only at required anchors/final task. |
 | Counts | Absolute T; requested grounded J and grounded nonjump R/air A local to the current anchor span. Named jump cancels still have their horizontal impulse and count J. |
 | Default/turn preference | At each decision choose ordinary T,−J,R or turnaround T,−J,A from current point versus edge+margin. One boolean, no blended counts or uncertain label; progress never ranks decisions. |
-| Hard jump | A fully validated direct jump anywhere latches that anchor transition to single-transfer structure for the rest of the solve, preserving starting-anchor setup hops, across backtracking/changed incoming histories. This is intentional domain restriction. |
+| Hard jump | A fully validated direct jump anywhere latches that anchor transition to single-transfer structure for the rest of the solve, preserving starting-anchor setup hops, across backtracking/changed incoming histories. This is intentional domain restriction. The actual hard transfer excludes stepping by user assumption; only ceilings affect its flight minimum. |
 | Recovery | Restore/reconstruct deferred run alternatives and earlier preparation, walking actual tree edges. Additional same-block setup jumps remain allowed even with a global hard-transfer latch; inter-block returns are deferred. |
 | Guides/solver | Backward guide inference; optimize onward toward the next point with existing POSITION objective and stop-on-feasible. User reports another agent measured similar speed. No slack/new constant objective. |
 | Finish | Extend physical B7 one block in +Z and require actual B7 landing. Minimize achieved landing T then maximize Z. Terminal guide is +Z physical edge, X midpoint. |
@@ -158,7 +165,7 @@ Use the actual current decision point: original X/Z at root, otherwise validated
 
 Do not classify envelopes, infer uncertain membership, add mixed-region costs or temporal label dilation. The first implementation uses the explicit spatial margin. A1-input margin remains a possible later tuning representation only, with an explicit binary rule. Other physical reachability/probe uncertainty remains in physical validation and is not a third heuristic class.
 
-The rule is preliminary: log position/edge/margin/distances, label, selected key and pruning behavior; draw axis/diagonal boundaries and two-label points. Later re-solve label flips are diagnostics. Global hard latch stays structural; binary turnaround disables ordinary run suppression for that decision. No hard waypoint/edge containment constraint is introduced.
+The rule is preliminary: log position/edge/margin/distances, label, selected key and pruning behavior; draw axis/diagonal boundaries and two-label points. Later re-solve label flips are diagnostics. Global hard latch stays structural; binary turnaround selects A instead of R as tick cost; more J OR fewer A protects a slower hard arrival, replacing the original ordinary-only deferral exemption. No hard waypoint/edge containment constraint is introduced.
 
 ## 9. Bounds, rejection and recovery
 
@@ -166,9 +173,9 @@ The rule is preliminary: log position/edge/margin/distances, label, selected key
 | --- | --- |
 | Global latched structure / explicit domain/cap violation | Reject as selected policy domain; recovery cannot bypass a latch. |
 | Physical contradiction or adopted completed oracle no-solution | Reject exact prefix/model descendants; preserve unresolved parent alternatives. |
-| Fixed prefix already T>T_best validated full finish | Prune descendants and backtrack. Equality competes on MAXZ only if actual finish already achieved; unfinished positive-duration completion also cannot tie. |
+| Fixed prefix already T>T_best validated full finish | Prune descendants and backtrack. Apply the shared strict optimistic-finish bound; equality stays live unless a justified remaining-time bound makes it strictly later. |
 | Slower intermediate anchor arrival | Primary deferral/restoration as requested, not the full-finish bound. |
-| Eligible hard ordinary extra-run family | Recoverable deferral with program/recipe/residual cursors and restored-work bypass. |
+| Slower compatible hard arrival without more J OR fewer R/A | Recoverable deferral with exact program/ownership, validated peer proof and restored-work bypass. Applies in ordinary and turnaround modes. |
 | Work slice/cancellation/error before oracle completion | Persist/suspend/error; no fabricated oracle rejection. |
 
 Bind actual achieved event before comparing unused proposal suffix length. Changing an earlier decision creates another prefix and is not excluded by its old child's time/oracle rejection.
@@ -219,7 +226,7 @@ Keep physical/call/time/input/method limits; discovery/refinement allocations re
 | [`event_adapter.py`](cell_routes/event_adapter.py), [`event_routes.py`](cell_routes/event_routes.py), [`event_search.py`](cell_routes/event_search.py) | Required-anchor stage views/open acyclic and same-block support choices, shared physical/guide references; retain finite region ORs/provenance. |
 | [`depth_first.py`](cell_routes/depth_first.py) | Global monotone latch table/eligibility revision, anchor frames, full-finish backtrack, prefix statuses, targeted run recovery. |
 | [`movement_frontier.py`](movement_frontier.py), [`movement_search.py`](movement_search.py), [`movement_generation.py`](movement_generation.py) | Normal node IDs/parent/outcome and completed-decision solve interval; regional key hooks/departed-owner eligibility, no revisit-family cursors. |
-| [`minimum_runs.py`](cell_routes/minimum_runs.py) | Matching normalization reused; regional ordinary-only deferral and explicit restored-run bypass. |
+| [`candidate_comparison.py`](candidate_comparison.py), [`preparation_deferrals.py`](cell_routes/preparation_deferrals.py), [`minimum_runs.py`](cell_routes/minimum_runs.py) | One shared count/key/guard/bound predicate owner; frame-local peer storage; minimum_runs retains legacy matched-family normalization only. DFS owns scoped recovery bypass. |
 | [`checkpoint_search.py`](cell_routes/checkpoint_search.py), [`search.py`](search.py), [`block_contacts.py`](block_contacts.py) | Explicit objective/stop/polish, exact-node endpoint assembly, cadence and rejection-scope handling, physical alternatives/native audit and repair. |
 | [`interactions.py`](interactions.py), [`reachability.py`](reachability.py), [`prefix_viability.py`](prefix_viability.py) | Reuse cheap screens/envelopes and phase sweeps, no new physical equations. |
 | [`repair_state.py`](repair_state.py), [`support_order.py`](cell_routes/support_order.py), [`comparison_goals.py`](cell_routes/comparison_goals.py) | Correct scope/policy compatibility and contact helpers; strict old filters must not ban same-block setup or acyclic optional supports; apply explicit departed-owner eligibility. |
@@ -325,7 +332,7 @@ Record stable decision/node/parent ID, required-anchor span/cursor, completed de
 | Geometry references | Applicable/matched turn anchor IDs, S/E/N guide IDs, physical footprint reference, edge normal/offset c and margin m with units. Geometry stored once; event references its ID. |
 | Boundary measurements | Signed raw edge distance n·p−c and signed offset-boundary distance n·p−(c−m); equality-inside convention. No applicable boundary means ordinary with an explicit reason, not an uncertain class. |
 | Mode and key | isTurnaround boolean, ordinary/momentum name, absolute T/local J/R/A counts and exact priority tuple actually used. |
-| Pruning/service | Hard-latch eligibility, ordinary run-deferral enabled/disabled, actual deferred/restored alternatives/reasons, selected decision/owner. |
+| Pruning/service | Hard-latch eligibility, shared tick-deferral enabled/disabled, actual independent count protections and deferred/restored alternatives/reasons, selected decision/owner. |
 | Result references | Exact-node feasibility/selection outcome, solver wrapper/worker/timing IDs, accepted continuation/final incumbent references. |
 
 Later full-history continuous re-solves can move earlier decision positions. Log replayed X/Z and signed distance and whether the **same** edge rule would flip its old binary label. The assigned label/key remains stable for its existing work; any intentional reclassification gets a new explicit service event/reason. Diagnostic drift never becomes a hard position seam or an automatically inferred infeasibility.
@@ -340,7 +347,7 @@ Fresh diagrams show finite extended B7, actual physical contact geometry, backwa
 
 Store geometry/guide tables once and emit compact referenced events when label/key/service/result is chosen; avoid per-input full trajectory/request duplication. Persist an event cursor across resume so events are not emitted twice. Logging/plot collection must leave mode, keys, selected hard constraints and solver-call allocations unchanged.
 
-Test exact boundary, either side, axis/diagonal/reflection/translation, no registered turn, scoped old boundary, no third classifier result, whole crossing decision retaining its selected mode, and replayed location change causing a logged flip without changing physical rows. Test event/log replay after interruption and logging on/off parity. Assert no ordinary run suppression is recorded for a turnaround decision.
+Test exact boundary, either side, axis/diagonal/reflection/translation, no registered turn, scoped old boundary, no third classifier result, whole crossing decision retaining its selected mode, and replayed location change causing a logged flip without changing physical rows. Test event/log replay after interruption and logging on/off parity. Assert turnaround peer deferral uses the shared more-J OR fewer-A protections; do not reinstate an ordinary-only exemption or raw-more-R protection.
 
 ### Source/validation evidence
 
@@ -357,9 +364,18 @@ export PKC_IPOPT_PYTHON=/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-ro
 export PKC_RUN_TICKS_COMPILER=/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/standalone/autonomy/build/compiler.json
 ```
 
-Extend existing test_minimum_runs/test_depth_first/test_orchestrator_continuation/test_repair_resume/generator tests; add proposed test_anchor_policy/test_anchor_guides/test_turn_regions/test_turn_observability/test_node_feasibility/test_solve_cadence/test_same_block_setup/test_anchor_recovery suites. Run after they exist. Reuse accepted native module list with fresh output paths, never execute dated writers over committed evidence. No mod/Java/game rebuild is needed unless actual mod/API changes become necessary.
+The proposed suites were implemented primarily in `test_anchor_policy`,
+`test_anchor_search`, `test_anchor_dfs`, `test_anchor_time_bound` and the existing
+DFS/continuation/repair suites. Later shared-helper/proposal/flight tests and the
+current600-test native gate are mapped in [testing](../docs/TESTING.md). Use its
+current driver and fresh output paths; do not execute dated writers over evidence.
+No mod/Java/game rebuild is needed for documentation or standalone Python changes.
 
-First implementation session: read decision doc/cadence recommendation and this plan, confirm worktree/status/latest user answers, use settled binary classifier and starting every-decision cadence, then M1–M5 in one coherent existing engine. Do not revive prefix-scoped hard restriction, whole-span turn modes, inter-block revisit generation, virtual/unbounded B7 finish, constant FEASIBILITY/slack or separate ancestor-testing mechanism. Validate M6–M7 before claiming new task success.
+There is no first implementation session remaining. Resume from the [current
+handoff](../docs/ANCHOR_IMPLEMENTATION_RESUME.md); consult this original milestone
+plan for rationale, and the execution reference for the actual current code paths.
+Do not restart M1–M7, switch to the old private worktree, freeze numerical seams,
+or revive separate ancestor probes/whole-span turn modes/virtual B7 semantics.
 
 ## Implementation ledger
 
