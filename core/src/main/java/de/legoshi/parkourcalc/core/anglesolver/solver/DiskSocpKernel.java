@@ -1,25 +1,26 @@
 package de.legoshi.parkourcalc.core.anglesolver.solver;
 
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 public final class DiskSocpKernel {
 
     public static boolean DEBUG = false;
 
-    private static final double MU0 = 1.0;
-    private static final double MU_REDUCE = 0.2;
-    private static final int MAX_OUTER = 80;
-    private static final int MAX_INNER = 50;
-    private static final double INNER_TOL = 1.0e-10;
-    private static final double FRAC = 0.99;
+    private static final int MAX_ITERS = 80;
+    private static final double GAP_TOL = 1.0e-10;
+    private static final double RESIDUAL_TOL = 1.0e-9;
+    private static final double STALL_TOL = 1.0e-8;
+    private static final int STALL_ITERS = 3;
+    private static final double STEP_FRACTION = 0.99;
+    private static final double MIN_STEP = 1.0e-12;
+    private static final double UNBOUNDED_MARGIN = 1.0e-6;
     private static final double INF = 1.0e18;
     private static final double LAMBDA_CAP = 1.0e12;
-    private static final double ARMIJO = 1.0e-4;
-    private static final double REG_FACTOR = 1.0e-4;
-    private static final double WARM_MIN = 1.0e-8;
-    private static final int JAM_FIRST_STEP = 15;
-    private static final double JAM_GRADIENT_RATIO = 100.0;
+
+    private static final int JOINT = 0;
+    private static final int PRIMAL = 1;
+    private static final int DUAL = 2;
 
     public static final int FAIL_NONE = 0;
     public static final int FAIL_CHOLESKY = 2;
@@ -27,10 +28,10 @@ public final class DiskSocpKernel {
     public static final int FAIL_UNBOUNDED = 4;
     public static final int FAIL_DET = 5;
     public static final int FAIL_CUTOFF = 6;
+    public static final int FAIL_STALLED = 7;
 
     private final int n;
     private final int m;
-    private final int p;
     private final double[] cx;
     private final double[] cz;
     private final double[] mMag;
@@ -40,30 +41,68 @@ public final class DiskSocpKernel {
     private final int[] lastCoupled;
     private final double[] bPrime;
     private final boolean[] eq;
-    private final int[] orthOf;
     private final double[] scale;
     private final double[] p0coef;
-    private final String[] rowName;
     private final int[][] rowsAt;
     private final double[][] coefXAt;
     private final double[][] coefZAt;
-    private final double[] rowDotG;
-    private final double[] rowMlt;
     private final CostateDualSolver.FreeP0 freeP0;
-    private final Map<String, Double> warmLambda;
-    private final List<JumpLinearModel.Wall> walls;
-    private final List<ChordRow> chords;
+    private final boolean[] cone;
+    private final boolean[] boxOn = new boolean[2];
+    private final double[] boxLo = new double[2];
+    private final double[] boxHi = new double[2];
+    private final double complementarityCount;
 
     private int failCode = FAIL_NONE;
     private int failIter;
     private double failMu = Double.NaN;
-    private double[] uRefX;
-    private double[] uRefZ;
     private double cutoff = Double.NEGATIVE_INFINITY;
 
+    private double[] lambda;
+    private double[] slack;
+    private double[] tau;
+    private double[] gx;
+    private double[] gz;
+    private double[] x1;
+    private double[] x2;
+    private final double[] boxV = new double[2];
+    private final double[] boxOmega = new double[2];
+
+    private double[] residual;
+    private double residualMax;
+    private double multiplierResidual;
+    private double gap;
+
+    private double[] h00;
+    private double[] ratio1;
+    private double[] ratio2;
+    private double[] k11;
+    private double[] k12;
+    private double[] k22;
+    private double[] beta;
+    private double[] vb0;
+    private double[] vb1;
+    private double[] vb2;
+    private double[] nu0;
+    private double[] nu1;
+    private double[] nu2;
+    private final double[] wPlus = new double[2];
+    private final double[] wMinus = new double[2];
+    private final double[] piPlus = new double[2];
+    private final double[] piMinus = new double[2];
+    private final double[] kappa = new double[2];
+    private double[][] schur;
+    private double[][] chol;
+
+    private double[] q0;
+    private double[] q1;
+    private double[] q2;
+    private double[] rowTarget;
+    private final double[] targetPlus = new double[2];
+    private final double[] targetMinus = new double[2];
+
     private DiskSocpKernel(int n, double[] cx, double[] cz, double[] mMag, List<JumpLinearModel.Wall> walls,
-                           CostateDualSolver.FreeP0 freeP0, List<ChordRow> chords,
-                           Map<String, Double> warmLambda) {
+                           CostateDualSolver.FreeP0 freeP0, List<ChordRow> chords) {
         this.n = n;
         int mw = walls.size();
         int mc = chords == null ? 0 : chords.size();
@@ -72,26 +111,20 @@ public final class DiskSocpKernel {
         this.cz = cz;
         this.mMag = mMag;
         this.freeP0 = freeP0;
-        this.warmLambda = warmLambda;
-        this.walls = walls;
-        this.chords = chords;
         this.axis = new int[m];
         this.coefX = new double[m][];
         this.coefZ = new double[m][];
         this.lastCoupled = new int[m];
         this.bPrime = new double[m];
         this.eq = new boolean[m];
-        this.orthOf = new int[m];
         this.scale = new double[m];
         this.p0coef = new double[m];
-        this.rowName = new String[m];
-        int po = 0;
+        int inequalities = 0;
         for (int j = 0; j < mw; j++) {
             JumpLinearModel.Wall w = walls.get(j);
             axis[j] = w.axis;
             eq[j] = w.eq;
-            orthOf[j] = w.eq ? -1 : po++;
-            rowName[j] = w.name;
+            if (!w.eq) inequalities++;
             double[] wx = w.axis == 2 ? w.coefX : (w.axis == 0 ? w.coef : null);
             double[] wz = w.axis == 2 ? w.coefZ : (w.axis == 0 ? null : w.coef);
             double s = Math.abs(w.bPrime);
@@ -123,8 +156,7 @@ public final class DiskSocpKernel {
             ChordRow ch = chords.get(q);
             axis[j] = -1;
             eq[j] = false;
-            orthOf[j] = po++;
-            rowName[j] = ch.name;
+            inequalities++;
             double s = Math.max(Math.abs(ch.rhs), Math.max(Math.abs(ch.ax), Math.abs(ch.az)));
             if (s <= 0.0) s = 1.0;
             scale[j] = s;
@@ -138,7 +170,6 @@ public final class DiskSocpKernel {
             lastCoupled[j] = ch.tick;
             p0coef[j] = 0.0;
         }
-        this.p = po;
         this.rowsAt = rowsPerTick();
         this.coefXAt = new double[n][];
         this.coefZAt = new double[n][];
@@ -152,8 +183,24 @@ public final class DiskSocpKernel {
                 coefZAt[t][a] = coefZ[j] != null ? coefZ[j][t] : 0.0;
             }
         }
-        this.rowDotG = new double[m];
-        this.rowMlt = new double[m];
+        this.cone = new boolean[n];
+        int cones = 0;
+        for (int t = 0; t < n; t++) {
+            cone[t] = mMag[t] > 0.0;
+            if (cone[t]) cones++;
+        }
+        int boxPairs = 0;
+        if (freeP0 != null) {
+            boxLo[0] = freeP0.dvLoX;
+            boxHi[0] = freeP0.dvHiX;
+            boxLo[1] = freeP0.dvLoZ;
+            boxHi[1] = freeP0.dvHiZ;
+            for (int a = 0; a < 2; a++) {
+                boxOn[a] = boxHi[a] > boxLo[a];
+                if (boxOn[a]) boxPairs += 2;
+            }
+        }
+        this.complementarityCount = cones + inequalities + boxPairs;
     }
 
     private int[][] rowsPerTick() {
@@ -208,8 +255,6 @@ public final class DiskSocpKernel {
         public final double gap;
         public final double dvx;
         public final double dvz;
-        public double[] uxRef;
-        public double[] uzRef;
 
         Result(double[] gx, double[] gz, double[] ux, double[] uz, double[] lambda, double value,
                boolean converged, int iters, double gap, double dvx, double dvz) {
@@ -248,184 +293,512 @@ public final class DiskSocpKernel {
 
     public static Result solve(int n, double[] cx, double[] cz, double[] mMag,
                                List<JumpLinearModel.Wall> walls, CostateDualSolver.FreeP0 freeP0) {
-        DiskSocpKernel k = new DiskSocpKernel(n, cx, cz, mMag, walls, freeP0, null, null);
+        DiskSocpKernel k = new DiskSocpKernel(n, cx, cz, mMag, walls, freeP0, null);
         Result r = k.run();
         return k.failCode != FAIL_NONE ? null : r;
     }
 
     public static Outcome solveChords(int n, double[] cx, double[] cz, double[] mMag,
                                       List<JumpLinearModel.Wall> walls, CostateDualSolver.FreeP0 freeP0,
-                                      List<ChordRow> chords, Map<String, Double> warmLambda) {
-        return solveChords(n, cx, cz, mMag, walls, freeP0, chords, warmLambda, Double.NEGATIVE_INFINITY);
+                                      List<ChordRow> chords) {
+        return solveChords(n, cx, cz, mMag, walls, freeP0, chords, Double.NEGATIVE_INFINITY);
     }
 
     public static Outcome solveChords(int n, double[] cx, double[] cz, double[] mMag,
                                       List<JumpLinearModel.Wall> walls, CostateDualSolver.FreeP0 freeP0,
-                                      List<ChordRow> chords, Map<String, Double> warmLambda, double cutoff) {
-        DiskSocpKernel k = new DiskSocpKernel(n, cx, cz, mMag, walls, freeP0, chords, warmLambda);
+                                      List<ChordRow> chords, double cutoff) {
+        DiskSocpKernel k = new DiskSocpKernel(n, cx, cz, mMag, walls, freeP0, chords);
         k.cutoff = cutoff;
         Result r = k.run();
         return new Outcome(r, k.failCode, k.failIter, k.failMu);
     }
 
+    private static final class Step {
+        final double[] lambda;
+        final double[] slack;
+        final double[] tau;
+        final double[] gx;
+        final double[] gz;
+        final double[] x1;
+        final double[] x2;
+        final double[] omega = new double[2];
+        final double[] v = new double[2];
+        final double[] h = new double[2];
+
+        Step(int n, int m) {
+            lambda = new double[m];
+            slack = new double[m];
+            tau = new double[n];
+            gx = new double[n];
+            gz = new double[n];
+            x1 = new double[n];
+            x2 = new double[n];
+        }
+    }
+
     private Result run() {
         if (m == 0) return trivial();
+        start();
+        Step affine = new Step(n, m);
+        Step step = new Step(n, m);
+        double[] rhs = new double[m];
+        double[] bestLambda = null;
+        double[] bestX1 = null;
+        double[] bestX2 = null;
+        double[] bestV = null;
+        double bestValue = Double.POSITIVE_INFINITY;
+        double lowBound = primalLowBound();
+        int nearOptimumCount = 0;
+        int iters = 0;
+        for (int it = 0; it < MAX_ITERS; it++) {
+            measure();
+            double mu = gap / complementarityCount;
+            double value = boundValue(lambda, gx, gz);
+            if (value < bestValue) {
+                bestValue = value;
+                bestLambda = lambda.clone();
+                bestX1 = x1.clone();
+                bestX2 = x2.clone();
+                bestV = boxV.clone();
+            }
+            if (cutoff > Double.NEGATIVE_INFINITY && value <= cutoff) {
+                fail(FAIL_CUTOFF, iters, mu);
+                return emit(lambda, gx, gz, x1, x2, boxV, false, iters);
+            }
+            if (value < lowBound - UNBOUNDED_MARGIN * (1.0 + Math.abs(lowBound))) {
+                fail(FAIL_UNBOUNDED, iters, mu);
+                return emit(lambda, gx, gz, x1, x2, boxV, false, iters);
+            }
+            double valueScale = 1.0 + Math.abs(value);
+            if (gap <= GAP_TOL * valueScale && residualMax <= RESIDUAL_TOL
+                    && Math.abs(multiplierResidual) <= GAP_TOL * valueScale) {
+                return emit(lambda, gx, gz, x1, x2, boxV, true, iters);
+            }
+            boolean nearOptimum = gap <= STALL_TOL * valueScale && residualMax <= STALL_TOL
+                    && Math.abs(multiplierResidual) <= STALL_TOL * valueScale;
+            if (nearOptimum && ++nearOptimumCount >= STALL_ITERS) {
+                return emit(lambda, gx, gz, x1, x2, boxV, true, iters);
+            }
+            iters++;
+            int broken = FAIL_NONE;
+            if (!scaleCones()) {
+                broken = FAIL_DET;
+            } else {
+                assembleSchur();
+                if (!factor(schur, chol)) broken = FAIL_CHOLESKY;
+            }
+            double alphaPrimal = 0.0;
+            double alphaDual = 0.0;
+            if (broken == FAIL_NONE) {
+                affineTargets();
+                direction(affine, rhs);
+                double alphaAffine = Math.min(1.0, maxStep(JOINT, affine));
+                double ratio = Math.max(0.0, gapAfter(alphaAffine, affine)) / gap;
+                double sigma = Math.min(1.0, ratio * ratio * ratio);
+                centredTargets(sigma * mu, affine);
+                direction(step, rhs);
+                alphaPrimal = Math.min(1.0, STEP_FRACTION * maxStep(PRIMAL, step));
+                alphaDual = Math.min(1.0, STEP_FRACTION * maxStep(DUAL, step));
+                if (!(Math.max(alphaPrimal, alphaDual) > MIN_STEP)) broken = FAIL_STALLED;
+            }
+            if (broken != FAIL_NONE) {
+                if (nearOptimum) return emit(lambda, gx, gz, x1, x2, boxV, true, iters);
+                fail(broken, iters, mu);
+                return emitBest(bestLambda, bestX1, bestX2, bestV, iters);
+            }
+            int moved = advance(alphaPrimal, alphaDual, step);
+            if (moved == FAIL_NAN) {
+                fail(FAIL_NAN, iters, mu);
+                return emitBest(bestLambda, bestX1, bestX2, bestV, iters);
+            }
+            if (moved == FAIL_UNBOUNDED) {
+                fail(FAIL_UNBOUNDED, iters, mu);
+                return emit(lambda, gx, gz, x1, x2, boxV, false, iters);
+            }
+        }
+        fail(FAIL_STALLED, iters, Double.NaN);
+        return emitBest(bestLambda, bestX1, bestX2, bestV, iters);
+    }
 
-        double[] lambda = new double[m];
-        double[] tau = new double[n];
-        double[] gx = new double[n];
-        double[] gz = new double[n];
+    private void start() {
+        lambda = new double[m];
+        slack = new double[m];
+        tau = new double[n];
+        gx = new double[n];
+        gz = new double[n];
+        x1 = new double[n];
+        x2 = new double[n];
+        for (int j = 0; j < m; j++) lambda[j] = eq[j] ? 0.0 : 1.0;
+        costates(lambda, gx, gz);
+        for (int t = 0; t < n; t++) {
+            double norm = StrictMath.hypot(gx[t], gz[t]);
+            tau[t] = cone[t] ? norm + 1.0 : norm;
+        }
+        if (freeP0 != null) {
+            for (int a = 0; a < 2; a++) {
+                boxV[a] = boxOn[a] ? 0.5 * (boxLo[a] + boxHi[a]) : boxLo[a];
+                if (boxOn[a]) boxOmega[a] = Math.abs(hAxis(lambda, a)) + 1.0;
+            }
+        }
         for (int j = 0; j < m; j++) {
-            double init = eq[j] ? 0.0 : 1.0;
-            if (warmLambda != null) {
-                Double w = warmLambda.get(rowName[j]);
-                if (w != null) {
-                    double ws = w * scale[j];
-                    init = eq[j] ? ws : Math.max(ws, WARM_MIN);
+            if (eq[j]) continue;
+            double s0 = bPrime[j];
+            if (touchesBox(j)) s0 += p0coef[j] * boxV[axis[j]];
+            slack[j] = Math.max(s0, 0.5);
+        }
+        residual = new double[m];
+        h00 = new double[n];
+        ratio1 = new double[n];
+        ratio2 = new double[n];
+        k11 = new double[n];
+        k12 = new double[n];
+        k22 = new double[n];
+        beta = new double[n];
+        vb0 = new double[n];
+        vb1 = new double[n];
+        vb2 = new double[n];
+        nu0 = new double[n];
+        nu1 = new double[n];
+        nu2 = new double[n];
+        schur = new double[m][m];
+        chol = new double[m][m];
+        q0 = new double[n];
+        q1 = new double[n];
+        q2 = new double[n];
+        rowTarget = new double[m];
+    }
+
+    private boolean touchesBox(int j) {
+        return freeP0 != null && (axis[j] == 0 || axis[j] == 1);
+    }
+
+    private void measure() {
+        Arrays.fill(residual, 0.0);
+        for (int t = 0; t < n; t++) {
+            if (!cone[t]) continue;
+            int[] rows = rowsAt[t];
+            double[] rx = coefXAt[t];
+            double[] rz = coefZAt[t];
+            for (int a = 0; a < rows.length; a++) residual[rows[a]] += rx[a] * x1[t] + rz[a] * x2[t];
+        }
+        residualMax = 0.0;
+        multiplierResidual = 0.0;
+        for (int j = 0; j < m; j++) {
+            double r = bPrime[j] + residual[j];
+            if (touchesBox(j)) r += p0coef[j] * boxV[axis[j]];
+            if (!eq[j]) r -= slack[j];
+            residual[j] = r;
+            residualMax = Math.max(residualMax, Math.abs(r));
+            multiplierResidual += lambda[j] * r;
+        }
+        gap = 0.0;
+        for (int t = 0; t < n; t++) if (cone[t]) gap += mMag[t] * tau[t] + x1[t] * gx[t] + x2[t] * gz[t];
+        for (int j = 0; j < m; j++) if (!eq[j]) gap += slack[j] * lambda[j];
+        for (int a = 0; a < 2; a++) {
+            if (!boxOn[a]) continue;
+            double h = hAxis(lambda, a);
+            wPlus[a] = 0.5 * (boxOmega[a] + h);
+            wMinus[a] = 0.5 * (boxOmega[a] - h);
+            piPlus[a] = boxHi[a] - boxV[a];
+            piMinus[a] = boxV[a] - boxLo[a];
+            gap += piPlus[a] * wPlus[a] + piMinus[a] * wMinus[a];
+        }
+    }
+
+    private boolean scaleCones() {
+        for (int t = 0; t < n; t++) {
+            if (!cone[t]) continue;
+            double dx = coneDet(mMag[t], x1[t], x2[t]);
+            double dz = coneDet(tau[t], gx[t], gz[t]);
+            if (!(dx > 0.0) || !(dz > 0.0)) return false;
+            double sx = StrictMath.sqrt(dx);
+            double sz = StrictMath.sqrt(dz);
+            double xh0 = mMag[t] / sx;
+            double xh1 = x1[t] / sx;
+            double xh2 = x2[t] / sx;
+            double zh0 = tau[t] / sz;
+            double zh1 = gx[t] / sz;
+            double zh2 = gz[t] / sz;
+            double gamma = StrictMath.sqrt(0.5 * (1.0 + xh0 * zh0 + xh1 * zh1 + xh2 * zh2));
+            double w0 = (xh0 + zh0) / (2.0 * gamma);
+            double w1 = (xh1 - zh1) / (2.0 * gamma);
+            double w2 = (xh2 - zh2) / (2.0 * gamma);
+            double b2 = sx / sz;
+            double dd = 1.0 + 2.0 * (w1 * w1 + w2 * w2);
+            h00[t] = b2 * dd;
+            ratio1[t] = 2.0 * w0 * w1 / dd;
+            ratio2[t] = 2.0 * w0 * w2 / dd;
+            k11[t] = b2 * (1.0 + 2.0 * w2 * w2) / dd;
+            k12[t] = -b2 * 2.0 * w1 * w2 / dd;
+            k22[t] = b2 * (1.0 + 2.0 * w1 * w1) / dd;
+            double den = StrictMath.sqrt(2.0 * (w0 + 1.0));
+            beta[t] = StrictMath.sqrt(b2);
+            vb0[t] = (w0 + 1.0) / den;
+            vb1[t] = w1 / den;
+            vb2[t] = w2 / den;
+            double dot = vb0[t] * tau[t] + vb1[t] * gx[t] + vb2[t] * gz[t];
+            nu0[t] = beta[t] * (2.0 * vb0[t] * dot - tau[t]);
+            nu1[t] = beta[t] * (2.0 * vb1[t] * dot + gx[t]);
+            nu2[t] = beta[t] * (2.0 * vb2[t] * dot + gz[t]);
+        }
+        return true;
+    }
+
+    private static double coneDet(double a0, double a1, double a2) {
+        double norm = StrictMath.hypot(a1, a2);
+        return (a0 - norm) * (a0 + norm);
+    }
+
+    private void assembleSchur() {
+        for (int j = 0; j < m; j++) Arrays.fill(schur[j], 0.0);
+        for (int t = 0; t < n; t++) {
+            if (!cone[t]) continue;
+            int[] rows = rowsAt[t];
+            double[] rx = coefXAt[t];
+            double[] rz = coefZAt[t];
+            for (int a = 0; a < rows.length; a++) {
+                double ka = k11[t] * rx[a] + k12[t] * rz[a];
+                double kb = k12[t] * rx[a] + k22[t] * rz[a];
+                double[] sj = schur[rows[a]];
+                for (int b = 0; b <= a; b++) sj[rows[b]] += ka * rx[b] + kb * rz[b];
+            }
+        }
+        for (int j = 0; j < m; j++) if (!eq[j]) schur[j][j] += slack[j] / lambda[j];
+        for (int a = 0; a < 2; a++) {
+            if (!boxOn[a]) continue;
+            double d = wMinus[a] * piPlus[a] + wPlus[a] * piMinus[a];
+            kappa[a] = piPlus[a] * piMinus[a] / d;
+            for (int j = 0; j < m; j++) {
+                if (axis[j] != a || p0coef[j] == 0.0) continue;
+                for (int k = 0; k <= j; k++) {
+                    if (axis[k] != a || p0coef[k] == 0.0) continue;
+                    schur[j][k] += kappa[a] * p0coef[j] * p0coef[k];
                 }
             }
-            lambda[j] = init;
+        }
+    }
+
+    private void affineTargets() {
+        for (int t = 0; t < n; t++) {
+            if (!cone[t]) continue;
+            q0[t] = -mMag[t];
+            q1[t] = -x1[t];
+            q2[t] = -x2[t];
+        }
+        for (int j = 0; j < m; j++) rowTarget[j] = eq[j] ? 0.0 : -slack[j];
+        for (int a = 0; a < 2; a++) {
+            if (!boxOn[a]) continue;
+            targetPlus[a] = -piPlus[a] * wPlus[a];
+            targetMinus[a] = -piMinus[a] * wMinus[a];
+        }
+    }
+
+    private void centredTargets(double sigmaMu, Step affine) {
+        for (int t = 0; t < n; t++) {
+            if (!cone[t]) continue;
+            double b = beta[t];
+            double dotX = -vb1[t] * affine.x1[t] - vb2[t] * affine.x2[t];
+            double a0 = (2.0 * vb0[t] * dotX) / b;
+            double a1 = (2.0 * -vb1[t] * dotX + affine.x1[t]) / b;
+            double a2 = (2.0 * -vb2[t] * dotX + affine.x2[t]) / b;
+            double dotZ = vb0[t] * affine.tau[t] + vb1[t] * affine.gx[t] + vb2[t] * affine.gz[t];
+            double c0 = b * (2.0 * vb0[t] * dotZ - affine.tau[t]);
+            double c1 = b * (2.0 * vb1[t] * dotZ + affine.gx[t]);
+            double c2 = b * (2.0 * vb2[t] * dotZ + affine.gz[t]);
+            double r0 = sigmaMu - (nu0[t] * nu0[t] + nu1[t] * nu1[t] + nu2[t] * nu2[t]);
+            double r1 = -2.0 * nu0[t] * nu1[t];
+            double r2 = -2.0 * nu0[t] * nu2[t];
+            r0 -= a0 * c0 + a1 * c1 + a2 * c2;
+            r1 -= a0 * c1 + c0 * a1;
+            r2 -= a0 * c2 + c0 * a2;
+            double dn = coneDet(nu0[t], nu1[t], nu2[t]);
+            double d0 = (nu0[t] * r0 - nu1[t] * r1 - nu2[t] * r2) / dn;
+            double d1 = (r1 - d0 * nu1[t]) / nu0[t];
+            double d2 = (r2 - d0 * nu2[t]) / nu0[t];
+            double dot = vb0[t] * d0 + vb1[t] * d1 + vb2[t] * d2;
+            q0[t] = b * (2.0 * vb0[t] * dot - d0);
+            q1[t] = b * (2.0 * vb1[t] * dot + d1);
+            q2[t] = b * (2.0 * vb2[t] * dot + d2);
+        }
+        for (int j = 0; j < m; j++) {
+            if (eq[j]) {
+                rowTarget[j] = 0.0;
+                continue;
+            }
+            double corrector = affine.slack[j] * affine.lambda[j];
+            rowTarget[j] = (sigmaMu - slack[j] * lambda[j] - corrector) / lambda[j];
+        }
+        for (int a = 0; a < 2; a++) {
+            if (!boxOn[a]) continue;
+            double correctorPlus = (-affine.v[a]) * 0.5 * (affine.omega[a] + affine.h[a]);
+            double correctorMinus = (affine.v[a]) * 0.5 * (affine.omega[a] - affine.h[a]);
+            targetPlus[a] = sigmaMu - piPlus[a] * wPlus[a] - correctorPlus;
+            targetMinus[a] = sigmaMu - piMinus[a] * wMinus[a] - correctorMinus;
+        }
+    }
+
+    private void direction(Step d, double[] rhs) {
+        double vHatX = 0.0;
+        double vHatZ = 0.0;
+        for (int j = 0; j < m; j++) rhs[j] = -residual[j] + rowTarget[j];
+        for (int t = 0; t < n; t++) {
+            if (!cone[t]) continue;
+            double qh1 = q1[t] - ratio1[t] * q0[t];
+            double qh2 = q2[t] - ratio2[t] * q0[t];
+            int[] rows = rowsAt[t];
+            double[] rx = coefXAt[t];
+            double[] rz = coefZAt[t];
+            for (int a = 0; a < rows.length; a++) rhs[rows[a]] -= rx[a] * qh1 + rz[a] * qh2;
+        }
+        for (int a = 0; a < 2; a++) {
+            if (!boxOn[a]) continue;
+            double den = wMinus[a] * piPlus[a] + wPlus[a] * piMinus[a];
+            double vHat = (piPlus[a] * targetMinus[a] - piMinus[a] * targetPlus[a]) / den;
+            if (a == 0) vHatX = vHat;
+            else vHatZ = vHat;
+            for (int j = 0; j < m; j++) if (axis[j] == a) rhs[j] -= p0coef[j] * vHat;
+        }
+        System.arraycopy(rhs, 0, d.lambda, 0, m);
+        solveFactored(chol, d.lambda);
+        for (int j = 0; j < m; j++) {
+            d.slack[j] = eq[j] ? 0.0 : rowTarget[j] - slack[j] / lambda[j] * d.lambda[j];
+        }
+        for (int t = 0; t < n; t++) {
+            int[] rows = rowsAt[t];
+            double[] rx = coefXAt[t];
+            double[] rz = coefZAt[t];
+            double g0 = 0.0;
+            double g1 = 0.0;
+            for (int a = 0; a < rows.length; a++) {
+                g0 -= rx[a] * d.lambda[rows[a]];
+                g1 -= rz[a] * d.lambda[rows[a]];
+            }
+            d.gx[t] = g0;
+            d.gz[t] = g1;
+            if (!cone[t]) {
+                d.tau[t] = 0.0;
+                d.x1[t] = 0.0;
+                d.x2[t] = 0.0;
+                continue;
+            }
+            d.tau[t] = q0[t] / h00[t] - ratio1[t] * g0 - ratio2[t] * g1;
+            d.x1[t] = q1[t] - ratio1[t] * q0[t] - k11[t] * g0 - k12[t] * g1;
+            d.x2[t] = q2[t] - ratio2[t] * q0[t] - k12[t] * g0 - k22[t] * g1;
+        }
+        for (int a = 0; a < 2; a++) {
+            if (!boxOn[a]) {
+                d.omega[a] = 0.0;
+                d.v[a] = 0.0;
+                d.h[a] = 0.0;
+                continue;
+            }
+            double h = 0.0;
+            for (int j = 0; j < m; j++) if (axis[j] == a) h += p0coef[j] * d.lambda[j];
+            d.h[a] = h;
+            double den = wMinus[a] * piPlus[a] + wPlus[a] * piMinus[a];
+            d.v[a] = (a == 0 ? vHatX : vHatZ) + kappa[a] * h;
+            d.omega[a] = (2.0 * (wMinus[a] * targetPlus[a] + wPlus[a] * targetMinus[a])
+                    - (wMinus[a] * piPlus[a] - wPlus[a] * piMinus[a]) * h) / den;
+        }
+    }
+
+    private double maxStep(int side, Step d) {
+        double amax = INF;
+        for (int j = 0; j < m; j++) {
+            if (eq[j]) continue;
+            if (side != PRIMAL && d.lambda[j] < 0.0) amax = Math.min(amax, -lambda[j] / d.lambda[j]);
+            if (side != DUAL && d.slack[j] < 0.0) amax = Math.min(amax, -slack[j] / d.slack[j]);
+        }
+        for (int t = 0; t < n; t++) {
+            if (!cone[t]) continue;
+            if (side != PRIMAL) {
+                amax = Math.min(amax, maxStepSoc(tau[t], gx[t], gz[t], d.tau[t], d.gx[t], d.gz[t]));
+            }
+            if (side != DUAL) {
+                amax = Math.min(amax, maxStepSoc(mMag[t], x1[t], x2[t], 0.0, d.x1[t], d.x2[t]));
+            }
+        }
+        for (int a = 0; a < 2; a++) {
+            if (!boxOn[a]) continue;
+            double dwp = 0.5 * (d.omega[a] + d.h[a]);
+            double dwm = 0.5 * (d.omega[a] - d.h[a]);
+            if (side != PRIMAL && dwp < 0.0) amax = Math.min(amax, -wPlus[a] / dwp);
+            if (side != PRIMAL && dwm < 0.0) amax = Math.min(amax, -wMinus[a] / dwm);
+            if (side != DUAL && d.v[a] > 0.0) amax = Math.min(amax, piPlus[a] / d.v[a]);
+            if (side != DUAL && d.v[a] < 0.0) amax = Math.min(amax, -piMinus[a] / d.v[a]);
+        }
+        return amax;
+    }
+
+    private double gapAfter(double alpha, Step d) {
+        double after = 0.0;
+        for (int t = 0; t < n; t++) {
+            if (!cone[t]) continue;
+            after += mMag[t] * (tau[t] + alpha * d.tau[t])
+                    + (x1[t] + alpha * d.x1[t]) * (gx[t] + alpha * d.gx[t])
+                    + (x2[t] + alpha * d.x2[t]) * (gz[t] + alpha * d.gz[t]);
+        }
+        for (int j = 0; j < m; j++) {
+            if (!eq[j]) after += (slack[j] + alpha * d.slack[j]) * (lambda[j] + alpha * d.lambda[j]);
+        }
+        for (int a = 0; a < 2; a++) {
+            if (!boxOn[a]) continue;
+            after += (piPlus[a] - alpha * d.v[a]) * (wPlus[a] + alpha * 0.5 * (d.omega[a] + d.h[a]))
+                    + (piMinus[a] + alpha * d.v[a]) * (wMinus[a] + alpha * 0.5 * (d.omega[a] - d.h[a]));
+        }
+        return after;
+    }
+
+    private int advance(double alphaPrimal, double alphaDual, Step d) {
+        boolean capped = false;
+        for (int j = 0; j < m; j++) {
+            lambda[j] += alphaDual * d.lambda[j];
+            if (!eq[j]) slack[j] += alphaPrimal * d.slack[j];
+            if (Double.isNaN(lambda[j])) return FAIL_NAN;
+            if (Math.abs(lambda[j]) > LAMBDA_CAP) capped = true;
         }
         costates(lambda, gx, gz);
-        for (int t = 0; t < n; t++) tau[t] = StrictMath.hypot(gx[t], gz[t]) + 1.0;
-
-        double[] gLam = new double[m];
-        double[] gTau = new double[n];
-        double[][] S = new double[m][m];
-        double[][] L = new double[m][m];
-        double[] Mlt = new double[m * n];
-        double[] Dtt = new double[n];
-        double[] dLam = new double[m];
-        double[] dTau = new double[n];
-        double[] rhsLam = new double[m];
-        double[] candLam = new double[m];
-        double[] candTau = new double[n];
-        double[] candGx = new double[n];
-        double[] candGz = new double[n];
-        double[] bestLambda = null;
-        double[] bestTau = null;
-        double bestMu = Double.NaN;
-
-        double nu = 2.0 * n + p;
-        double mu = centeringMu(lambda, tau, gx, gz);
-        boolean converged = false;
-        boolean aborted = false;
-        boolean jamChecked = warmLambda == null;
-        int iters = 0;
-        int numericFailOuters = 0;
-        outer:
-        for (int outer = 0; outer < MAX_OUTER && !converged; outer++) {
-            boolean numericFail = false;
-            for (int inner = 0; inner < MAX_INNER; inner++) {
-                iters++;
-                gradient(lambda, tau, gx, gz, mu, gLam, gTau);
-                if (!assembleHessian(lambda, tau, gx, gz, mu, S, Mlt, Dtt)) {
-                    fail(FAIL_DET, iters, mu);
-                    numericFail = true;
-                    break;
-                }
-                if (!factor(S, L)) {
-                    fail(FAIL_CHOLESKY, iters, mu);
-                    numericFail = true;
-                    break;
-                }
-                newtonDir(gLam, gTau, Mlt, Dtt, L, rhsLam, dLam, dTau);
-                double dec = 0.0;
-                for (int j = 0; j < m; j++) dec -= gLam[j] * dLam[j];
-                for (int t = 0; t < n; t++) dec -= gTau[t] * dTau[t];
-                if (dec <= INNER_TOL) break;
-                double step = lineSearch(lambda, tau, gx, gz, mu, dLam, dTau, dec, candLam, candTau, candGx, candGz);
-                if (DEBUG) System.out.printf("  outer=%d inner=%d mu=%.3e dec=%.3e step=%.3e%n", outer, inner, mu, dec, step);
-                if (step <= 0.0) break;
-                System.arraycopy(candLam, 0, lambda, 0, m);
-                System.arraycopy(candTau, 0, tau, 0, n);
-                System.arraycopy(candGx, 0, gx, 0, n);
-                System.arraycopy(candGz, 0, gz, 0, n);
-                for (int j = 0; j < m; j++) {
-                    if (Double.isNaN(lambda[j])) {
-                        fail(FAIL_NAN, iters, mu);
-                        aborted = true;
-                        break outer;
-                    }
-                    if (Math.abs(lambda[j]) > LAMBDA_CAP) {
-                        fail(FAIL_UNBOUNDED, iters, mu);
-                        aborted = true;
-                        break outer;
-                    }
-                }
-                if (cutoff > Double.NEGATIVE_INFINITY && boundValue(lambda, gx, gz) <= cutoff) {
-                    fail(FAIL_CUTOFF, iters, mu);
-                    aborted = true;
-                    break outer;
-                }
-                if (!jamChecked && inner + 1 >= JAM_FIRST_STEP && coneCollapsed(gTau)) {
-                    jamChecked = true;
-                    Result cold = coldRestart(iters);
-                    if (cold != null) return cold;
-                }
-            }
-            bestLambda = lambda.clone();
-            bestTau = tau.clone();
-            bestMu = mu;
-            if (uRefX == null && mu * nu <= 1.0e-4) {
-                uRefX = new double[n];
-                uRefZ = new double[n];
-                for (int t = 0; t < n; t++) {
-                    double w = tau[t] > 0.0 ? mMag[t] / tau[t] : 0.0;
-                    uRefX[t] = w * gx[t];
-                    uRefZ[t] = w * gz[t];
-                }
-            }
-            if (numericFail) {
-                numericFailOuters++;
-                if (numericFailOuters >= 3) break;
-            } else {
-                numericFailOuters = 0;
-                if (mu * nu <= 1.0e-11) { converged = true; break; }
-            }
-            mu *= MU_REDUCE;
-        }
-        if (converged) {
-            failCode = FAIL_NONE;
-            failIter = 0;
-            failMu = Double.NaN;
-        }
-        if (aborted) {
-            if (failCode == FAIL_UNBOUNDED || failCode == FAIL_CUTOFF) return emit(lambda, tau, gx, gz, false, iters, mu * nu);
-            if (bestLambda == null) return null;
-            lambda = bestLambda;
-            tau = bestTau;
-            mu = bestMu;
-            costates(lambda, gx, gz);
-        }
-        Result r = emit(lambda, tau, gx, gz, converged, iters, mu * nu);
-        double lb = primalLowBound();
-        if (r.value < lb - 1.0e-6 * (1.0 + Math.abs(lb))) {
-            fail(FAIL_UNBOUNDED, iters, mu);
-        }
-        return r;
-    }
-
-    private boolean coneCollapsed(double[] gTau) {
         for (int t = 0; t < n; t++) {
-            if (mMag[t] > 0.0 && Math.abs(gTau[t]) >= JAM_GRADIENT_RATIO * mMag[t]) return true;
+            double norm = StrictMath.hypot(gx[t], gz[t]);
+            if (!cone[t]) {
+                tau[t] = norm;
+                continue;
+            }
+            tau[t] += alphaDual * d.tau[t];
+            x1[t] += alphaPrimal * d.x1[t];
+            x2[t] += alphaPrimal * d.x2[t];
+            if (!(tau[t] > norm)) tau[t] = norm * (1.0 + 1.0e-12) + 1.0e-300;
         }
-        return false;
+        for (int a = 0; a < 2; a++) {
+            if (!boxOn[a]) continue;
+            boxV[a] += alphaPrimal * d.v[a];
+            boxOmega[a] += alphaDual * d.omega[a];
+            double h = Math.abs(hAxis(lambda, a));
+            if (!(boxOmega[a] > h)) boxOmega[a] = h * (1.0 + 1.0e-12) + 1.0e-300;
+        }
+        return capped ? FAIL_UNBOUNDED : FAIL_NONE;
     }
 
-    private Result coldRestart(int spentIters) {
-        DiskSocpKernel cold = new DiskSocpKernel(n, cx, cz, mMag, walls, freeP0, chords, null);
-        cold.cutoff = cutoff;
-        Result r = cold.run();
-        if (r == null || (cold.failCode != FAIL_NONE && cold.failCode != FAIL_CUTOFF)) return null;
-        failCode = cold.failCode;
-        failIter = cold.failIter;
-        failMu = cold.failMu;
-        Result out = new Result(r.gx, r.gz, r.ux, r.uz, r.lambda, r.value, r.converged, r.iters + spentIters, r.gap,
-                r.dvx, r.dvz);
-        out.uxRef = r.uxRef;
-        out.uzRef = r.uzRef;
-        return out;
+    private Result emitBest(double[] bestLambda, double[] bestX1, double[] bestX2, double[] bestV, int iters) {
+        if (bestLambda == null) return null;
+        double[] bestGx = new double[n];
+        double[] bestGz = new double[n];
+        costates(bestLambda, bestGx, bestGz);
+        return emit(bestLambda, bestGx, bestGz, bestX1, bestX2, bestV, false, iters);
+    }
+
+    private Result emit(double[] lambda, double[] gx, double[] gz, double[] x1, double[] x2, double[] v,
+                        boolean converged, int iters) {
+        double[] ux = new double[n];
+        double[] uz = new double[n];
+        for (int t = 0; t < n; t++) {
+            ux[t] = -x1[t];
+            uz[t] = -x2[t];
+        }
+        double[] lambdaOut = new double[m];
+        for (int j = 0; j < m; j++) lambdaOut[j] = lambda[j] / scale[j];
+        return new Result(gx.clone(), gz.clone(), ux, uz, lambdaOut, boundValue(lambda, gx, gz), converged, iters,
+                gap, freeP0 != null ? v[0] : 0.0, freeP0 != null ? v[1] : 0.0);
     }
 
     private double boundValue(double[] lambda, double[] gx, double[] gz) {
@@ -455,35 +828,6 @@ public final class DiskSocpKernel {
         this.failCode = code;
         this.failIter = iter;
         this.failMu = mu;
-    }
-
-    private Result emit(double[] lambda, double[] tau, double[] gx, double[] gz, boolean converged,
-                        int iters, double gap) {
-        double[] ux = new double[n];
-        double[] uz = new double[n];
-        double value = 0.0;
-        for (int t = 0; t < n; t++) {
-            double w = tau[t] > 0.0 ? mMag[t] / tau[t] : 0.0;
-            ux[t] = w * gx[t];
-            uz[t] = w * gz[t];
-            value += mMag[t] * StrictMath.hypot(gx[t], gz[t]);
-        }
-        for (int j = 0; j < m; j++) value += lambda[j] * bPrime[j];
-        double dvx = 0.0;
-        double dvz = 0.0;
-        if (freeP0 != null) {
-            double hx = hAxis(lambda, 0);
-            double hz = hAxis(lambda, 1);
-            value += freeP0.support(hx, 0) + freeP0.support(hz, 1);
-            dvx = freeP0.delta(hx, 0);
-            dvz = freeP0.delta(hz, 1);
-        }
-        double[] lambdaOut = new double[m];
-        for (int j = 0; j < m; j++) lambdaOut[j] = lambda[j] / scale[j];
-        Result r = new Result(gx, gz, ux, uz, lambdaOut, value, converged, iters, gap, dvx, dvz);
-        r.uxRef = uRefX;
-        r.uzRef = uRefZ;
-        return r;
     }
 
     private Result trivial() {
@@ -522,42 +866,6 @@ public final class DiskSocpKernel {
         return h;
     }
 
-    private double centeringMu(double[] lambda, double[] tau, double[] gx, double[] gz) {
-        double num = 0.0;
-        double den = 0.0;
-        for (int t = 0; t < n; t++) {
-            double det = tau[t] * tau[t] - gx[t] * gx[t] - gz[t] * gz[t];
-            double h = 2.0 * tau[t] / det;
-            num += mMag[t] * h;
-            den += h * h;
-        }
-        for (int j = 0; j < m; j++) {
-            double[] cxj = coefX[j];
-            double[] czj = coefZ[j];
-            int last = lastCoupled[j];
-            double h = 0.0;
-            for (int t = 0; t <= last; t++) {
-                double det = 0.0;
-                boolean have = false;
-                if (cxj != null && cxj[t] != 0.0) {
-                    det = tau[t] * tau[t] - gx[t] * gx[t] - gz[t] * gz[t];
-                    have = true;
-                    h += 2.0 * cxj[t] * gx[t] / det;
-                }
-                if (czj != null && czj[t] != 0.0) {
-                    if (!have) det = tau[t] * tau[t] - gx[t] * gx[t] - gz[t] * gz[t];
-                    h += 2.0 * czj[t] * gz[t] / det;
-                }
-            }
-            if (orthOf[j] >= 0) h += 1.0 / lambda[j];
-            num += bPrime[j] * h;
-            den += h * h;
-        }
-        double mu = den > 0.0 ? num / den : MU0;
-        if (!(mu > 0.0) || Double.isNaN(mu)) mu = MU0;
-        return Math.max(mu, 1.0e-8);
-    }
-
     private void costates(double[] lambda, double[] gx, double[] gz) {
         for (int t = 0; t < n; t++) { gx[t] = cx[t]; gz[t] = cz[t]; }
         for (int j = 0; j < m; j++) {
@@ -569,202 +877,6 @@ public final class DiskSocpKernel {
             if (cxj != null) for (int t = 0; t <= last; t++) gx[t] -= lj * cxj[t];
             if (czj != null) for (int t = 0; t <= last; t++) gz[t] -= lj * czj[t];
         }
-    }
-
-    private void gradient(double[] lambda, double[] tau, double[] gx, double[] gz, double mu,
-                          double[] gLam, double[] gTau) {
-        for (int t = 0; t < n; t++) {
-            double det = tau[t] * tau[t] - gx[t] * gx[t] - gz[t] * gz[t];
-            gTau[t] = mMag[t] - mu * 2.0 * tau[t] / det;
-        }
-        for (int j = 0; j < m; j++) {
-            double[] cxj = coefX[j];
-            double[] czj = coefZ[j];
-            int last = lastCoupled[j];
-            double acc = bPrime[j];
-            for (int t = 0; t <= last; t++) {
-                double det = 0.0;
-                boolean have = false;
-                if (cxj != null && cxj[t] != 0.0) {
-                    det = tau[t] * tau[t] - gx[t] * gx[t] - gz[t] * gz[t];
-                    have = true;
-                    acc -= mu * 2.0 * cxj[t] * gx[t] / det;
-                }
-                if (czj != null && czj[t] != 0.0) {
-                    if (!have) det = tau[t] * tau[t] - gx[t] * gx[t] - gz[t] * gz[t];
-                    acc -= mu * 2.0 * czj[t] * gz[t] / det;
-                }
-            }
-            if (orthOf[j] >= 0) acc -= mu / lambda[j];
-            gLam[j] = acc + REG_FACTOR * mu * lambda[j];
-        }
-        if (freeP0 != null) {
-            double dsx = freeP0.delta(hAxis(lambda, 0), 0);
-            double dsz = freeP0.delta(hAxis(lambda, 1), 1);
-            for (int j = 0; j < m; j++) gLam[j] += p0coef[j] * (axis[j] == 0 ? dsx : (axis[j] == 1 ? dsz : 0.0));
-        }
-    }
-
-    private boolean assembleHessian(double[] lambda, double[] tau, double[] gx, double[] gz, double mu,
-                                    double[][] S, double[] Mlt, double[] Dtt) {
-        for (int j = 0; j < m; j++) java.util.Arrays.fill(S[j], 0.0);
-        java.util.Arrays.fill(Mlt, 0.0);
-        for (int t = 0; t < n; t++) {
-            double det = tau[t] * tau[t] - gx[t] * gx[t] - gz[t] * gz[t];
-            if (det <= 0.0) return false;
-            Dtt[t] = 2.0 * mu * (tau[t] * tau[t] + gx[t] * gx[t] + gz[t] * gz[t]) / (det * det);
-        }
-        for (int j = 0; j < m; j++) {
-            S[j][j] += REG_FACTOR * mu;
-            if (orthOf[j] >= 0) S[j][j] += mu / (lambda[j] * lambda[j]);
-        }
-        if (freeP0 != null) {
-            double curvX = freeP0.curvature(hAxis(lambda, 0), 0);
-            double curvZ = freeP0.curvature(hAxis(lambda, 1), 1);
-            for (int j = 0; j < m; j++) {
-                if (axis[j] < 0 || p0coef[j] == 0.0) continue;
-                double cv = axis[j] == 0 ? curvX : curvZ;
-                if (cv == 0.0) continue;
-                for (int k = 0; k <= j; k++) {
-                    if (axis[k] != axis[j] || p0coef[k] == 0.0) continue;
-                    S[j][k] += p0coef[j] * p0coef[k] * cv;
-                }
-            }
-        }
-        double twoMu = 2.0 * mu;
-        for (int t = 0; t < n; t++) {
-            double det = tau[t] * tau[t] - gx[t] * gx[t] - gz[t] * gz[t];
-            double invd = 1.0 / det;
-            double invd2 = invd * invd;
-            double gxt = gx[t];
-            double gzt = gz[t];
-            double mltScale = 4.0 * mu * tau[t];
-            int[] rows = rowsAt[t];
-            double[] rowX = coefXAt[t];
-            double[] rowZ = coefZAt[t];
-            for (int a = 0; a < rows.length; a++) {
-                int j = rows[a];
-                double ajx = rowX[a];
-                double ajz = rowZ[a];
-                double ajg = 0.0;
-                if (ajx != 0.0) ajg += ajx * gxt;
-                if (ajz != 0.0) ajg += ajz * gzt;
-                rowDotG[a] = ajg;
-                Mlt[j * n + t] = mltScale * ajg * invd2;
-                double twoAjg = 2.0 * ajg;
-                double[] sj = S[j];
-                for (int b = 0; b <= a; b++) {
-                    double akx = rowX[b];
-                    double akz = rowZ[b];
-                    double dotA = 0.0;
-                    if (ajx != 0.0 && akx != 0.0) dotA += ajx * akx;
-                    if (ajz != 0.0 && akz != 0.0) dotA += ajz * akz;
-                    sj[rows[b]] += twoMu * (dotA * invd + twoAjg * rowDotG[b] * invd2);
-                }
-            }
-        }
-        for (int t = 0; t < n; t++) {
-            int[] rows = rowsAt[t];
-            double dtt = Dtt[t];
-            for (int a = 0; a < rows.length; a++) rowMlt[a] = Mlt[rows[a] * n + t];
-            for (int a = 0; a < rows.length; a++) {
-                double mlt = rowMlt[a];
-                if (mlt == 0.0) continue;
-                double f = mlt / dtt;
-                double[] sj = S[rows[a]];
-                for (int b = 0; b <= a; b++) {
-                    double mlk = rowMlt[b];
-                    if (mlk != 0.0) sj[rows[b]] -= f * mlk;
-                }
-            }
-        }
-        return true;
-    }
-
-    private void newtonDir(double[] gLam, double[] gTau, double[] Mlt, double[] Dtt, double[][] L,
-                           double[] rhsLam, double[] dLam, double[] dTau) {
-        for (int j = 0; j < m; j++) {
-            double acc = -gLam[j];
-            for (int t = 0; t < n; t++) {
-                double mlt = Mlt[j * n + t];
-                if (mlt != 0.0) acc -= mlt * (-gTau[t] / Dtt[t]);
-            }
-            rhsLam[j] = acc;
-            dLam[j] = acc;
-        }
-        solveFactored(L, dLam);
-        for (int t = 0; t < n; t++) {
-            double acc = -gTau[t];
-            for (int j = 0; j < m; j++) {
-                double mlt = Mlt[j * n + t];
-                if (mlt != 0.0) acc -= mlt * dLam[j];
-            }
-            dTau[t] = acc / Dtt[t];
-        }
-    }
-
-    private double lineSearch(double[] lambda, double[] tau, double[] gx, double[] gz, double mu,
-                              double[] dLam, double[] dTau, double dec,
-                              double[] candLam, double[] candTau, double[] candGx, double[] candGz) {
-        double amax = INF;
-        for (int j = 0; j < m; j++) {
-            if (orthOf[j] >= 0 && dLam[j] < 0.0) amax = Math.min(amax, -lambda[j] / dLam[j]);
-        }
-        double[] dg = new double[2];
-        for (int t = 0; t < n; t++) {
-            dgAt(t, dLam, dg);
-            amax = Math.min(amax, maxStepSoc(tau[t], gx[t], gz[t], dTau[t], dg[0], dg[1]));
-        }
-        double a = Math.min(1.0, FRAC * amax);
-        double phi0 = barrier(lambda, tau, gx, gz, mu);
-        for (int ls = 0; ls < 40; ls++) {
-            boolean ok = true;
-            for (int j = 0; j < m; j++) {
-                candLam[j] = lambda[j] + a * dLam[j];
-                if (orthOf[j] >= 0 && candLam[j] <= 0.0) ok = false;
-            }
-            if (ok) {
-                costates(candLam, candGx, candGz);
-                boolean feas = true;
-                for (int t = 0; t < n; t++) {
-                    candTau[t] = tau[t] + a * dTau[t];
-                    if (candTau[t] * candTau[t] - candGx[t] * candGx[t] - candGz[t] * candGz[t] <= 0.0) feas = false;
-                }
-                if (feas) {
-                    double phi = barrier(candLam, candTau, candGx, candGz, mu);
-                    if (phi <= phi0 - ARMIJO * a * dec) return a;
-                }
-            }
-            a *= 0.5;
-        }
-        return 0.0;
-    }
-
-    private void dgAt(int t, double[] dLam, double[] dg) {
-        double d0 = 0.0, d1 = 0.0;
-        for (int j = 0; j < m; j++) {
-            if (t > lastCoupled[j]) continue;
-            double[] cxj = coefX[j];
-            double[] czj = coefZ[j];
-            if (cxj != null && cxj[t] != 0.0) d0 -= cxj[t] * dLam[j];
-            if (czj != null && czj[t] != 0.0) d1 -= czj[t] * dLam[j];
-        }
-        dg[0] = d0;
-        dg[1] = d1;
-    }
-
-    private double barrier(double[] lambda, double[] tau, double[] gx, double[] gz, double mu) {
-        double v = 0.0;
-        double reg = REG_FACTOR * mu;
-        for (int j = 0; j < m; j++) v += bPrime[j] * lambda[j] + 0.5 * reg * lambda[j] * lambda[j];
-        for (int t = 0; t < n; t++) {
-            v += mMag[t] * tau[t];
-            double det = tau[t] * tau[t] - gx[t] * gx[t] - gz[t] * gz[t];
-            v -= mu * StrictMath.log(det);
-        }
-        for (int j = 0; j < m; j++) if (orthOf[j] >= 0) v -= mu * StrictMath.log(lambda[j]);
-        if (freeP0 != null) v += freeP0.support(hAxis(lambda, 0), 0) + freeP0.support(hAxis(lambda, 1), 1);
-        return v;
     }
 
     private static double maxStepSoc(double v0, double v1, double v2, double d0, double d1, double d2) {

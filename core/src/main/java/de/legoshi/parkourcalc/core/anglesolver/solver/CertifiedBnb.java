@@ -2,9 +2,7 @@ package de.legoshi.parkourcalc.core.anglesolver.solver;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -15,6 +13,7 @@ public final class CertifiedBnb {
     private static final double INTERVAL_REL = 2.0e-7;
     private static final double INTERVAL_ABS = 1.0e-12;
     private static final double POLISH_VIOL_CAP = 5.0e-2;
+    private static final double ROUNDING_MIN_CHANCE = 1.0e-3;
     private static final double FREE_START_SMOOTH = 5.0e-4;
     private static final double MODERN_THR_SQ = 9.0e-6;
     private static final byte FREE = 0;
@@ -111,10 +110,8 @@ public final class CertifiedBnb {
         final byte[] gz;
         final int depth;
         double score;
-        Map<String, Double> warm;
 
-        Node(long id, int[] iLo, int[] iHi, byte[] gx, byte[] gz, int depth, double score,
-             Map<String, Double> warm) {
+        Node(long id, int[] iLo, int[] iHi, byte[] gx, byte[] gz, int depth, double score) {
             this.id = id;
             this.iLo = iLo;
             this.iHi = iHi;
@@ -122,7 +119,6 @@ public final class CertifiedBnb {
             this.gz = gz;
             this.depth = depth;
             this.score = score;
-            this.warm = warm;
         }
     }
 
@@ -285,7 +281,7 @@ public final class CertifiedBnb {
             }
         }
         open.add(new Node(s.nextId++, lo, hi, new byte[s.n], s.perAxis ? new byte[s.n] : null,
-                0, Double.POSITIVE_INFINITY, null));
+                0, Double.POSITIVE_INFINITY));
 
         boolean exhausted = false;
         while (true) {
@@ -590,7 +586,7 @@ public final class CertifiedBnb {
             }
             cutoff = Math.max(cutoff, target - CUTOFF_MARGIN * (1.0 + Math.abs(target)));
         }
-        DiskSocpKernel.Outcome oc = DiskSocpKernel.solveChords(s.n, cx, cz, mMagB, rows, s.freeP0, chords, nd.warm, cutoff);
+        DiskSocpKernel.Outcome oc = DiskSocpKernel.solveChords(s.n, cx, cz, mMagB, rows, s.freeP0, chords, cutoff);
         s.kernelSolves++;
         s.kernelNanos += System.nanoTime() - k0;
         double[] gxv;
@@ -659,14 +655,6 @@ public final class CertifiedBnb {
         double score = val + (s.max ? cp : -cp);
         if (score > nd.score) score = nd.score;
         nd.score = score;
-        Map<String, Double> wm = new HashMap<String, Double>();
-        for (int j = 0; j < rows.size() && j < lambda.length; j++) {
-            wm.put(rows.get(j).name, lambda[j]);
-        }
-        for (int q = 0; q < chordCount && rows.size() + q < lambda.length; q++) {
-            wm.put(chords.get(q).name, lambda[rows.size() + q]);
-        }
-        nd.warm = wm;
         if (SolverTrace.on()) {
             SolverTrace.log("CERT", "node=%d depth=%d score=%.9f inc=%.9f open=%d", nd.id, nd.depth,
                     score, s.incScore, open.size());
@@ -684,13 +672,28 @@ public final class CertifiedBnb {
             leafPx = s.box.clampX(s.refPx + oc.result.dvx);
             leafPz = s.box.clampZ(s.refPz + oc.result.dvz);
         }
-        double[] decoded = decode(s, nd, lin, ux != null ? ux : gxv, uz != null ? uz : gzv);
+        double[] dirX = gxv;
+        double[] dirZ = gzv;
+        if (ux != null) {
+            dirX = ux.clone();
+            dirZ = uz.clone();
+            alignWithCostate(s.n, gxv, gzv, dirX, dirZ);
+        }
+        double[] decoded = decode(s, nd, lin, dirX, dirZ);
         ForwardPath decPath = null;
         boolean[] decZx = new boolean[s.n];
         boolean[] decZz = new boolean[s.n];
         if (decoded != null) {
             decPath = replayCandidate(s, decoded, leafPx, leafPz, true);
             if (decPath != null) FoldReplayDriver.extractPattern(s.exact, decPath, s.n, decZx, decZz);
+        }
+        if (ux != null && decoded != null && !(s.cfg.mode == Mode.FIRST_FEASIBLE && s.incYaws != null)) {
+            double[] roundX = dirX.clone();
+            double[] roundZ = dirZ.clone();
+            if (flipInteriorTicks(s, nd.id, roundX, roundZ)) {
+                double[] rounded = decode(s, nd, lin, roundX, roundZ);
+                if (!Arrays.equals(rounded, decoded)) replayCandidate(s, rounded, leafPx, leafPz, true);
+            }
         }
         if (s.cfg.mode == Mode.FIRST_FEASIBLE && s.incYaws != null) return null;
 
@@ -808,6 +811,42 @@ public final class CertifiedBnb {
         JumpLinearModel.Wall hiW = lin.keepAliveWall(axis, t, -b, false);
         if (loW != null) rows.add(loW);
         if (hiW != null) rows.add(hiW);
+    }
+
+    private static boolean flipInteriorTicks(Search s, long nodeId, double[] ux, double[] uz) {
+        boolean any = false;
+        for (int t = 0; t < s.n; t++) {
+            if (!s.geom.hasInput(t)) continue;
+            double radius = s.geom.radiusUpper(t);
+            if (radius <= 0.0) continue;
+            double fill = Math.min(1.0, StrictMath.hypot(ux[t], uz[t]) / radius);
+            double chance = 0.5 * (1.0 - fill);
+            if (chance < ROUNDING_MIN_CHANCE) continue;
+            if (unitDraw(nodeId, t) < chance) {
+                ux[t] = -ux[t];
+                uz[t] = -uz[t];
+                any = true;
+            }
+        }
+        return any;
+    }
+
+    private static double unitDraw(long nodeId, int tick) {
+        long h = nodeId * 0x9E3779B97F4A7C15L + (tick + 1) * 0xBF58476D1CE4E5B9L;
+        h = (h ^ (h >>> 30)) * 0xBF58476D1CE4E5B9L;
+        h = (h ^ (h >>> 27)) * 0x94D049BB133111EBL;
+        h ^= h >>> 31;
+        return (h >>> 11) * (1.0 / 9007199254740992.0);
+    }
+
+    private static void alignWithCostate(int n, double[] gx, double[] gz, double[] ux, double[] uz) {
+        for (int t = 0; t < n; t++) {
+            double costate = StrictMath.hypot(gx[t], gz[t]);
+            if (costate <= 0.0) continue;
+            double length = StrictMath.hypot(ux[t], uz[t]);
+            ux[t] = length * gx[t] / costate;
+            uz[t] = length * gz[t] / costate;
+        }
     }
 
     private static double[] decode(Search s, Node nd, JumpLinearModel lin, double[] ux, double[] uz) {
@@ -1262,7 +1301,6 @@ public final class CertifiedBnb {
             }
         }
         List<Node> out = new ArrayList<Node>();
-        Map<String, Double> warm = nd.warm;
         if (gateTick >= 0) {
             if (s.perAxis) {
                 byte preferred = POS;
@@ -1273,9 +1311,9 @@ public final class CertifiedBnb {
                 }
                 for (byte st : new byte[]{ZERO, POS, NEG}) {
                     if (st == preferred) continue;
-                    addGateChild(s, out, nd, gateAxis, gateTick, st, warm);
+                    addGateChild(s, out, nd, gateAxis, gateTick, st);
                 }
-                addGateChild(s, out, nd, gateAxis, gateTick, preferred, warm);
+                addGateChild(s, out, nd, gateAxis, gateTick, preferred);
             } else {
                 byte preferred = SECTOR_XP;
                 if (decPath != null) {
@@ -1287,9 +1325,9 @@ public final class CertifiedBnb {
                 }
                 for (byte st : new byte[]{ZERO, SECTOR_XP, SECTOR_XN, SECTOR_ZP, SECTOR_ZN}) {
                     if (st == preferred) continue;
-                    addGateChild(s, out, nd, 0, gateTick, st, warm);
+                    addGateChild(s, out, nd, 0, gateTick, st);
                 }
-                addGateChild(s, out, nd, 0, gateTick, preferred, warm);
+                addGateChild(s, out, nd, 0, gateTick, preferred);
             }
             return out;
         }
@@ -1312,17 +1350,17 @@ public final class CertifiedBnb {
     }
 
     private static void addGateChild(Search s, List<Node> out, Node nd, int gateAxis, int gateTick,
-                                     byte st, Map<String, Double> warm) {
+                                     byte st) {
         if (s.perAxis) {
             byte[] ngx = nd.gx.clone();
             byte[] ngz = nd.gz.clone();
             if (gateAxis == 0) ngx[gateTick] = st;
             else ngz[gateTick] = st;
-            out.add(new Node(s.nextId++, nd.iLo, nd.iHi, ngx, ngz, nd.depth + 1, nd.score, warm));
+            out.add(new Node(s.nextId++, nd.iLo, nd.iHi, ngx, ngz, nd.depth + 1, nd.score));
         } else {
             byte[] ngx = nd.gx.clone();
             ngx[gateTick] = st;
-            out.add(new Node(s.nextId++, nd.iLo, nd.iHi, ngx, null, nd.depth + 1, nd.score, warm));
+            out.add(new Node(s.nextId++, nd.iLo, nd.iHi, ngx, null, nd.depth + 1, nd.score));
         }
     }
 
@@ -1344,7 +1382,7 @@ public final class CertifiedBnb {
         int[] nlo = nd.iLo.clone();
         int[] nhi = nd.iHi.clone();
         assignArc(s, nlo, nhi, t, iLo, iHi);
-        return new Node(s.nextId++, nlo, nhi, nd.gx, nd.gz, nd.depth + 1, nd.score, nd.warm);
+        return new Node(s.nextId++, nlo, nhi, nd.gx, nd.gz, nd.depth + 1, nd.score);
     }
 
     private static void assignArc(Search s, int[] nlo, int[] nhi, int t, int iLo, int iHi) {
@@ -1490,7 +1528,7 @@ public final class CertifiedBnb {
         int[] nhi = nd.iHi.clone();
         assignArc(s, nlo, nhi, l.loTick, (int) aLo, (int) aHi);
         assignArc(s, nlo, nhi, l.hiTick, (int) (bLo - shift), (int) (bHi - shift));
-        return new Node(s.nextId++, nlo, nhi, nd.gx, nd.gz, nd.depth + 1, nd.score, nd.warm);
+        return new Node(s.nextId++, nlo, nhi, nd.gx, nd.gz, nd.depth + 1, nd.score);
     }
 
     private static boolean leafOrderOk(LeafState st, int t, int i) {

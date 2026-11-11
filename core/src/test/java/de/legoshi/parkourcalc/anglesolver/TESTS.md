@@ -109,15 +109,19 @@ anglesolver/
   DiskSocpKernelCutoffTest.java  the dual cutoff of the certified B&B: a cutoff below the optimum leaves the
                            solve bit-identical, one above it stops early (FAIL_CUTOFF) on a dual
                            feasible point whose value is under the cutoff and still above the optimum
-  DiskSocpKernelWarmStartTest.java  the warm start's jam restart: a child node warm-started from its
-                           parent's multipliers returns the cold solve's bound (the kernel before it
-                           stopped 0.023 above it on a collapsed cone), and that bound sits just above
-                           a known feasible point
+  DiskSocpKernelPrimalDualTest.java  the primal-dual kernel on small problems: the bound sits just above
+                           a known feasible point, the returned primal point is feasible and reaches
+                           the bound, the value is the dual value of the returned multipliers, walls
+                           no point meets are reported unbounded (FAIL_UNBOUNDED), and a free start
+                           box is solved at its corner
   FoldDriverEngineTest.java  #422 M1 engine-level gates through engine.solve() (driver wired as
                            primary recovery): j003 THOROUGH-10s in-deadline, j1150-noturn-inner
                            FAST solves (feasibility only, FAST has no objective bar), j154 FAST
                            re-solve determinism; the j154 FAST and j1150 THOROUGH gates live in
                            problems/solve
+  CertifiedBnbRoundingTest.java  the certified search's second candidate per node: an oracle instance
+                           (j022-1bmhbfly) whose relaxation leaves a tick inside its disk lands
+                           within 40 nodes only when that tick is also rounded to the opposite side
   CertifiedBnbTest.java    #422 M2a certified B&B fast units: SineTableGeometry containment (realized
                            inputs inside boxes/chords/supports across all four eras incl. the legacy
                            jump-tick double cast), a tiny 2-tick instance certifying at the enumerated
