@@ -617,6 +617,11 @@ public final class ClosedFormSolve {
      *  it. Valid even where the dual's recovery degenerates, so it certifies a primally-found solution
      *  without a search. {@code NaN} when no bound applies (facing walls, violated constant, unbounded). */
     public static double dualBound(JumpSpec spec) {
+        if (!CertifiedBnb.relaxationCoversScenario(spec.asScenario())) return Double.NaN;
+        return linearReach(spec);
+    }
+
+    static double linearReach(JumpSpec spec) {
         boolean facing = JumpLinearModel.hasFacingWall(spec.constraints);
         JumpPhysicsInputs sc = spec.asScenario();
         JumpLinearModel lin = new JumpLinearModel(sc);

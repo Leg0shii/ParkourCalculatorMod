@@ -360,7 +360,7 @@ public final class CertifiedBnb {
                 s.kernelNanos, s.bestInfeasYaws, s.bestInfeasViol, certifiedInfeasible, s.unresolved);
     }
 
-    private static boolean relaxationCoversScenario(JumpPhysicsInputs sc) {
+    static boolean relaxationCoversScenario(JumpPhysicsInputs sc) {
         if (sc.lastDamageTick() >= 0) return false;
         for (int t = 0; t < sc.numTicks; t++) {
             if (sc.flowAt(t).pushes() || sc.endFlowAt(t).pushes()) return false;
