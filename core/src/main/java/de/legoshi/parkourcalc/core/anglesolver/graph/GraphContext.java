@@ -47,6 +47,7 @@ public final class GraphContext {
     private int foldableDf = -1;
     private boolean reachBoundSet;
     private double reachBound = Double.NaN;
+    private double provenBound = Double.NaN;
     private boolean headroomBoundSet;
     private double headroomBound = Double.NaN;
     private volatile long overallDeadlineNanos;
@@ -209,6 +210,17 @@ public final class GraphContext {
 
     public void certifyOptimum() {
         optimumCertified = true;
+    }
+
+    public synchronized void offerProvenBound(double bound) {
+        if (Double.isNaN(bound) || Double.isInfinite(bound)) return;
+        if (Double.isNaN(provenBound) || (maximize() ? bound < provenBound : bound > provenBound)) {
+            provenBound = bound;
+        }
+    }
+
+    public synchronized double provenBound() {
+        return provenBound;
     }
 
     public void setSettled(boolean settled) {

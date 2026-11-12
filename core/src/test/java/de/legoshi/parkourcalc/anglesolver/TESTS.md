@@ -226,6 +226,10 @@ anglesolver/
                            engine and a fresh engine on one thread end on the same facings, objective,
                            stages and work time bit for bit, a seed repeats too, and without the
                            option a solve carries no work time
+  ProvenBoundGapTest.java  (slow) the result's "Dual bound gap" on a repeatable Optimize of 2 s: it is
+                           measured against the tightest bound of the certified passes (nix-t25 under
+                           0.1 where the closed form gap is 0.25, j021 under 0.01), a jump with a
+                           carried facing row shows a gap (gh553-j345), a damage tick shows none
   graph/SeedSweepClockTest.java  the seed sweep on the work clock (j016 with a start box of 0.05 around
                            its start, 64 seeds): without a budget every seed runs, a work budget of
                            4 ms ends the sweep within 1 ms of it with some seeds left out, and a
