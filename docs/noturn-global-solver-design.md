@@ -681,6 +681,16 @@ Time to the first Strat in the driver (cloud, 4 threads, CPU, family lane alone,
 | j716 | 37.6 s | 29.3 s |
 | j1150 | 7.9 s | 9.6 s |
 
-These are cloud numbers and a development signal; the development PC has not run the branch yet. The walk now checks about 5 million schedules per second on the four cloud threads while the certifier uses half of them; j1150 waits on certification in both builds (its Strat is offered after 1.3 s and certified after 8 s). The library contains each jump's own rows in these runs, so they say nothing about a jump whose families are missing.
+These are cloud numbers and a development signal. The walk now checks about 5 million schedules per second on the four cloud threads while the certifier uses half of them; j1150 waits on certification in both builds (its Strat is offered after 1.3 s and certified after 8 s). The library contains each jump's own rows in these runs, so they say nothing about a jump whose families are missing.
+
+The development PC, one run each (30 threads, graphics card screen on, both lanes, the full library, no game open, the same jar at ccd4a26 with the stored rejects and the exact tier first on, against both switched off with `-Dpkc.bench.familyCutPool=0 -Dpkc.bench.familyExactFirst=false`):
+
+| jump | switched off | on |
+| --- | --- | --- |
+| j154 | 26.2 s | 13.1 s |
+| j1099 | 23.0 s | 16.7 s |
+| j1150 | not run | 8.1 s |
+
+All five runs found a Strat. j154 scored 211 million schedules in its run with the change and 31 million without.
 
 `NoTurnFreeAirExactTest.storedRejectsOnlyDropSchedulesTheFullSolveDrops` holds the pool to the solve: a rejected schedule's attained violation is never under the bound that rejected it, the stored sums give the same answer as the sum over ticks, and every rejected sprint variant is over the limit in the full solve.
