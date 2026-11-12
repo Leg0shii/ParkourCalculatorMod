@@ -262,7 +262,7 @@ public final class LatticePolish {
 
     private static boolean expired(long deadlineNanos, AtomicBoolean cancel) {
         if (cancel != null && cancel.get()) return true;
-        return deadlineNanos > 0 && System.nanoTime() > deadlineNanos;
+        return deadlineNanos > 0 && SolveClock.nanoTime() > deadlineNanos;
     }
 
     private static double verified(ExactJumpModel exact, JumpSpec spec, TrigRowModel shape,

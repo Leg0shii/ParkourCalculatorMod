@@ -13,6 +13,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.FacingPrefold;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
+import de.legoshi.parkourcalc.core.anglesolver.solver.SolveClock;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolverTrace;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -23,11 +24,15 @@ public final class CertifiedBnbNode implements NodeRuntime {
     private static final int ORDER_FF_NODE_CAP = 2048;
     private static final long FOLD_FF_NANOS = 30_000_000_000L;
     private static final long FOLD_TAIL_NANOS = 1_500_000_000L;
+    private static final int DIVE_EVERY = 20;
+    private static final int DIVE_LENGTH = 40;
+    private static final long DIVE_TAIL_NANOS = 200_000_000L;
 
     private final int ffSec;
     private final int ffNodeCap;
     private final int tickCap;
     private final boolean exhaust;
+    private final boolean dive;
     private final String labelSuffix;
 
     public CertifiedBnbNode(ParamValues params) {
@@ -35,6 +40,7 @@ public final class CertifiedBnbNode implements NodeRuntime {
         this.ffNodeCap = params.getInt("ffNodeCap");
         this.tickCap = params.getInt("tickCap");
         this.exhaust = params.getBool("exhaust");
+        this.dive = params.getBool("dive");
         this.labelSuffix = params.getString("labelSuffix");
     }
 
@@ -42,7 +48,7 @@ public final class CertifiedBnbNode implements NodeRuntime {
     public NodeOutcome execute(GraphContext ctx, Candidate in, AtomicBoolean nodeToken, long deadlineNanos) {
         boolean optimize = in != null && in.yaws != null && in.feasible;
         Guarantee miss = in != null && in.yaws != null ? Guarantee.UNCHANGED : Guarantee.NONE;
-        long now = System.nanoTime();
+        long now = SolveClock.nanoTime();
         int cap;
         long solveDeadline;
         AtomicBoolean cancelToken = nodeToken;
@@ -51,6 +57,12 @@ public final class CertifiedBnbNode implements NodeRuntime {
             if (FacingPrefold.overconstrainedChain(ctx.spec, ctx.scenario)) return NodeOutcome.of(miss, in);
             cap = OPT_SAFETY_NODE_CAP;
             solveDeadline = deadlineNanos;
+        } else if (dive) {
+            if (!optimize || deadlineNanos <= 0 || now >= deadlineNanos) return NodeOutcome.of(miss, in);
+            if (ctx.optimumCertified()) return NodeOutcome.of(miss, in);
+            cap = OPT_SAFETY_NODE_CAP;
+            solveDeadline = deadlineNanos - DIVE_TAIL_NANOS;
+            if (now >= solveDeadline) return NodeOutcome.of(miss, in);
         } else if (optimize) {
             if (deadlineNanos <= 0 || now >= deadlineNanos) return NodeOutcome.of(miss, in);
             cap = OPT_SAFETY_NODE_CAP;
@@ -80,6 +92,11 @@ public final class CertifiedBnbNode implements NodeRuntime {
         cfg.mode = optimize ? CertifiedBnb.Mode.OPTIMIZE : CertifiedBnb.Mode.FIRST_FEASIBLE;
         cfg.nodeCap = cap;
         cfg.polishCap = optimize ? 12 : 2;
+        cfg.incumbentPolishCap = optimize ? 12 : 0;
+        if (dive) {
+            cfg.diveEvery = DIVE_EVERY;
+            cfg.diveLength = DIVE_LENGTH;
+        }
         cfg.cancel = cancelToken;
         cfg.deadlineNanos = solveDeadline;
         cfg.homotopy = ctx.foldableDf() && ctx.overallDeadline() > 0;
@@ -88,9 +105,9 @@ public final class CertifiedBnbNode implements NodeRuntime {
             cfg.seedPx = ctx.scenario.startPos.x;
             cfg.seedPz = ctx.scenario.startPos.z;
         }
-        long solveStart = System.nanoTime();
+        long solveStart = SolveClock.nanoTime();
         CertifiedBnb.Result res = CertifiedBnb.solve(exact, dspec, cfg);
-        long solveNanos = System.nanoTime() - solveStart;
+        long solveNanos = SolveClock.nanoTime() - solveStart;
         if (SolverTrace.on()) {
             SolverTrace.log("CERT", "done declined=%s feasible=%s obj=%s bound=%s gap=%s certified=%s"
                             + " infeasible=%s unresolved=%d nodes=%d kernelMs=%d",
@@ -102,6 +119,7 @@ public final class CertifiedBnbNode implements NodeRuntime {
                     res.certified, res.certifiedInfeasible, res.unresolved, res.nodes, res.kernelNanos / 1_000_000L);
         }
         if (res.declined) return NodeOutcome.of(miss, in);
+        if (optimize && res.feasible && res.certified) ctx.certifyOptimum();
         if (!res.feasible) {
             if (res.bestInfeasYaws != null) ctx.closestMiss().offer(res.bestInfeasYaws, res.bestInfeasViol);
             if (res.certifiedInfeasible) ctx.certifyInfeasible(proofOf(dspec, res, solveNanos));
@@ -114,6 +132,11 @@ public final class CertifiedBnbNode implements NodeRuntime {
         if (in != null && in.yaws != null) {
             double cur = ctx.exactObjective(in.yaws);
             boolean better = max ? obj > cur : obj < cur;
+            if (better && optimize && ctx.freeStart) {
+                double curMoved = objectiveAfterStartMove(ctx, in.yaws, ctx.scenario.startPos.x, ctx.scenario.startPos.z);
+                double objMoved = objectiveAfterStartMove(ctx, res.yawsDeg, res.px, res.pz);
+                better = max ? objMoved > curMoved : objMoved < curMoved;
+            }
             if (!better && (optimize || in.feasible)) return NodeOutcome.of(miss, in);
         }
         Scoring.adoptPinnedStart(ctx.scenario, res.px, res.pz);
@@ -121,6 +144,13 @@ public final class CertifiedBnbNode implements NodeRuntime {
         Candidate out = Candidate.of(ctx, res.yawsDeg);
         if (optimize && !Double.isNaN(res.gap)) out = out.withDualGap(res.gap);
         return NodeOutcome.of(optimize ? Guarantee.IMPROVED : Guarantee.FOUND, out);
+    }
+
+    private static double objectiveAfterStartMove(GraphContext ctx, double[] yaws, double px, double pz) {
+        JumpPhysicsInputs moved = ctx.scenario.copy();
+        Scoring.adoptPinnedStart(moved, px, pz);
+        Scoring.adoptWinningTranslation(ctx.model, moved, ctx.spec, ctx.freeBox, yaws, ctx.feasTol);
+        return Scoring.exactObjective(ctx.model, moved, ctx.spec, yaws);
     }
 
     private static String proofOf(JumpSpec spec, CertifiedBnb.Result res, long solveNanos) {

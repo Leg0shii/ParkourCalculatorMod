@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.PriorityQueue;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 public final class BoundPrunedRecovery {
 
@@ -48,14 +49,21 @@ public final class BoundPrunedRecovery {
                                  ClosestMiss miss, double[] warmIncumbent) {
         if (spec == null) return null;
         if (!accepts(spec)) return null;
-        long start = System.nanoTime();
-        long searchDeadline = start + (long) (budgetNanos * SEARCH_SHARE);
-        long fullDeadline = start + budgetNanos;
+        long start = SolveClock.nanoTime();
         AtomicBoolean outer = cancel != null ? cancel : new AtomicBoolean(false);
         AtomicBoolean searchCancel = new AtomicBoolean(false);
         AtomicBoolean polishCancel = new AtomicBoolean(false);
         AtomicBoolean finished = new AtomicBoolean(false);
-        Thread watchdog = startWatchdog(outer, finished, searchCancel, searchDeadline, polishCancel, fullDeadline);
+        SolveClock clock = SolveClock.current();
+        long outerAt = clock == null ? Long.MAX_VALUE : clock.deadlineOf(outer);
+        long searchDeadline = Math.min(outerAt, start + (long) (budgetNanos * SEARCH_SHARE));
+        long fullDeadline = Math.min(outerAt, start + budgetNanos);
+        Thread watchdog = clock == null
+                ? startWatchdog(outer, finished, searchCancel, searchDeadline, polishCancel, fullDeadline) : null;
+        if (clock != null) {
+            clock.arm(searchCancel, searchDeadline);
+            clock.arm(polishCancel, fullDeadline);
+        }
         try {
             JumpPhysicsInputs sc = spec.asScenario();
             JumpLinearModel free = new JumpLinearModel(sc);
@@ -161,9 +169,11 @@ public final class BoundPrunedRecovery {
                 }
             }
             if (!viable.isEmpty() && !searchCancel.get()) {
-                int threads = Math.min(viable.size(), Math.max(2, Runtime.getRuntime().availableProcessors() - 2));
+                int workers = clock != null ? clock.workers()
+                        : Math.max(2, Runtime.getRuntime().availableProcessors() - 2);
+                int threads = Math.min(viable.size(), workers);
                 final long sliceNanos = viable.size() > threads
-                        ? Math.max(1L, (searchDeadline - System.nanoTime()) * threads / viable.size())
+                        ? Math.max(1L, (searchDeadline - SolveClock.nanoTime()) * threads / viable.size())
                         : 0L;
                 if (SolverTrace.on() && sliceNanos > 0L) {
                     SolverTrace.log("BNB", "slicing %d patterns over %d threads, sliceMs=%d",
@@ -178,25 +188,55 @@ public final class BoundPrunedRecovery {
                     List<java.util.concurrent.Future<Search>> futures = new ArrayList<>();
                     final double searchFloor = floorNorm;
                     final JumpSpec treeSpec = searchSpec;
-                    for (Pattern p : viable) {
+                    final SolveClock[] forks = clock == null ? null : new SolveClock[viable.size()];
+                    final AtomicLong sharedStop = clock == null ? null : new AtomicLong(Long.MAX_VALUE);
+                    final long forkedAt = clock == null ? 0L : SolveClock.nanoTime();
+                    for (int pi = 0; pi < viable.size(); pi++) {
+                        final Pattern p = viable.get(pi);
+                        final AtomicBoolean patternCancel = clock == null ? searchCancel : new AtomicBoolean(false);
+                        final long forkDeadline = sliceNanos > 0L
+                                ? Math.min(searchDeadline, forkedAt + sliceNanos) : searchDeadline;
+                        final SolveClock fork = clock == null ? null : clock.fork(patternCancel, forkDeadline);
+                        if (forks != null) forks[pi] = fork;
                         futures.add(pool.submit(() -> {
-                            if (searchCancel.get()) return null;
-                            long deadline = sliceNanos > 0L
-                                    ? Math.min(searchDeadline, System.nanoTime() + sliceNanos)
-                                    : searchDeadline;
-                            Search search = Search.build(exact, treeSpec, compiled, feasTol, searchCancel, deadline,
-                                    p.lin, p.velWalls, p.patterned, stopNorm, p.label, searchFloor, miss);
-                            if (search == null) return null;
-                            if (seedYaws != null) search.offer(seedYaws);
-                            search.run();
-                            return search;
+                            if (patternCancel.get()) return null;
+                            SolveClock previous = fork == null ? null : fork.enter();
+                            try {
+                                long deadline = fork != null ? forkDeadline : sliceNanos > 0L
+                                        ? Math.min(searchDeadline, SolveClock.nanoTime() + sliceNanos)
+                                        : searchDeadline;
+                                Search search = Search.build(exact, treeSpec, compiled, feasTol, patternCancel, deadline,
+                                        p.lin, p.velWalls, p.patterned, stopNorm, p.label, searchFloor, miss);
+                                if (search == null) return null;
+                                search.sharedStop = sharedStop;
+                                if (seedYaws != null) search.offer(seedYaws);
+                                search.run();
+                                return search;
+                            } finally {
+                                if (fork != null) SolveClock.restore(previous);
+                            }
                         }));
                     }
+                    if (clock != null) {
+                        for (java.util.concurrent.Future<Search> future : futures) {
+                            try {
+                                future.get();
+                            } catch (Exception e) {
+                                if (e instanceof InterruptedException) Thread.currentThread().interrupt();
+                            }
+                        }
+                    }
+                    final long firstHit = sharedStop == null ? Long.MAX_VALUE : sharedStop.get();
+                    int winner = -1;
                     for (int i = 0; i < futures.size(); i++) {
                         Search search;
                         try {
-                            long wait = Math.max(1L, searchDeadline - System.nanoTime() + 2_000_000_000L);
-                            search = futures.get(i).get(wait, java.util.concurrent.TimeUnit.NANOSECONDS);
+                            if (clock != null) {
+                                search = futures.get(i).get();
+                            } else {
+                                long wait = Math.max(1L, searchDeadline - SolveClock.nanoTime() + 2_000_000_000L);
+                                search = futures.get(i).get(wait, java.util.concurrent.TimeUnit.NANOSECONDS);
+                            }
                         } catch (java.util.concurrent.TimeoutException e) {
                             continue;
                         } catch (Exception e) {
@@ -210,10 +250,17 @@ public final class BoundPrunedRecovery {
                                     search.statRestoreHits, search.statSlpCalls, search.statSlpHits,
                                     search.incumbentYaws == null ? "none" : String.valueOf(search.incumbentNorm));
                         }
+                        if (firstHit != Long.MAX_VALUE) {
+                            if (winner >= 0 || search.hitNanos != firstHit) continue;
+                            winner = i;
+                        }
                         if (search.incumbentYaws != null && search.incumbentNorm > incumbentNorm) {
                             incumbentYaws = search.incumbentYaws;
                             incumbentNorm = search.incumbentNorm;
                         }
+                    }
+                    if (clock != null) {
+                        clock.join(forks, firstHit == Long.MAX_VALUE ? Long.MAX_VALUE : firstHit - forkedAt, winner);
                     }
                 } finally {
                     pool.shutdownNow();
@@ -231,12 +278,16 @@ public final class BoundPrunedRecovery {
             if (SolverTrace.on()) {
                 SolverTrace.log("BNB", "end incumbent=%s ms=%d",
                         incumbentYaws == null ? "none" : SolverTrace.fmt("%.9f", incumbentNorm),
-                        (System.nanoTime() - start) / 1_000_000L);
+                        (SolveClock.nanoTime() - start) / 1_000_000L);
             }
             return incumbentYaws;
         } finally {
             finished.set(true);
-            watchdog.interrupt();
+            if (watchdog != null) watchdog.interrupt();
+            if (clock != null) {
+                clock.disarm(searchCancel);
+                clock.disarm(polishCancel);
+            }
         }
     }
 
@@ -446,7 +497,7 @@ public final class BoundPrunedRecovery {
         Thread t = new Thread(() -> {
             while (!finished.get()) {
                 boolean stop = outer.get();
-                long now = System.nanoTime();
+                long now = SolveClock.nanoTime();
                 if (stop || now >= searchDeadline) searchCancel.set(true);
                 if (stop || now >= fullDeadline) polishCancel.set(true);
                 if (polishCancel.get()) return;
@@ -541,6 +592,8 @@ public final class BoundPrunedRecovery {
         final String label;
         final ClosestMiss miss;
         int lastRestoreIters;
+        AtomicLong sharedStop;
+        long hitNanos = Long.MAX_VALUE;
 
         private Search(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel, long deadline,
                        JumpPhysicsInputs sc, JumpLinearModel lin, JumpConstraintCompiler.Compiled compiled,
@@ -843,6 +896,7 @@ public final class BoundPrunedRecovery {
             double[] d = new double[n];
             for (int iter = 0; iter < RESTORE_ITERS; iter++) {
                 if (expired()) break;
+                SolveClock.charge(SolveClock.DUAL, (long) m * n * n / 2L + (long) n * n * n / 3L);
                 lastRestoreIters = iter + 1;
                 lin.inputVectors(theta, ux, uz);
                 for (int p = 0; p < n; p++) {
@@ -1115,7 +1169,14 @@ public final class BoundPrunedRecovery {
             if (normed > incumbentNorm) {
                 incumbentNorm = normed;
                 incumbentYaws = wrapped;
-                if (!Double.isNaN(stopNorm) && normed >= stopNorm) cancel.set(true);
+                if (!Double.isNaN(stopNorm) && normed >= stopNorm) {
+                    if (sharedStop != null && hitNanos == Long.MAX_VALUE) {
+                        hitNanos = SolveClock.nanoTime();
+                        final long at = hitNanos;
+                        sharedStop.accumulateAndGet(at, Math::min);
+                    }
+                    cancel.set(true);
+                }
                 if (SolverTrace.on()) {
                     SolverTrace.log("BNB", "%s incumbent=%.9f nodes=%d%s", label, normed, statNodes,
                             !Double.isNaN(stopNorm) && normed >= stopNorm ? " stopAt reached" : "");
@@ -1134,7 +1195,9 @@ public final class BoundPrunedRecovery {
         }
 
         private boolean expired() {
-            return cancel.get() || System.nanoTime() >= deadline;
+            if (cancel.get()) return true;
+            long now = SolveClock.nanoTime();
+            return now >= deadline || (sharedStop != null && now >= sharedStop.get());
         }
     }
 }

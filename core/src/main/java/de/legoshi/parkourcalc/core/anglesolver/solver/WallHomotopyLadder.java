@@ -45,7 +45,7 @@ public final class WallHomotopyLadder {
         double[] seedYaws = null;
         for (double delta : DELTAS) {
             if (cancel != null && cancel.get()) break;
-            if (deadlineNanos != 0L && System.nanoTime() >= deadlineNanos) break;
+            if (deadlineNanos != 0L && SolveClock.nanoTime() >= deadlineNanos) break;
             FoldReplayDriver.Params p = new FoldReplayDriver.Params();
             p.specWallRelax = delta;
             if (delta == 0.0) {

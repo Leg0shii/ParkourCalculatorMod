@@ -134,7 +134,7 @@ public final class LongRunSolver {
         Map<Integer, Object> retryCache = new HashMap<>();
         for (int commit : cfg.commitLadder) {
             if (cancel != null && cancel.get()) return null;
-            if (deadlineNanos > 0L && System.nanoTime() >= deadlineNanos) return null;
+            if (deadlineNanos > 0L && SolveClock.nanoTime() >= deadlineNanos) return null;
             chosen[0] = Double.NaN;
             chosen[1] = Double.NaN;
             double[] gf = runHorizon(exact, sc, spec, bounds, jumps, commit, cfg.windowLadder, cancel,
@@ -168,7 +168,7 @@ public final class LongRunSolver {
 
         for (int commit : cfg.commitLadder) {
             if (cancel != null && cancel.get()) return null;
-            if (deadlineNanos > 0L && System.nanoTime() >= deadlineNanos) return null;
+            if (deadlineNanos > 0L && SolveClock.nanoTime() >= deadlineNanos) return null;
             double[] gf = runHorizon(exact, sc, spec, bounds, jumps, commit, cfg.windowLadder, cancel, null, null, null,
                     windows, deadlineNanos);
             if (gf == null) continue;
@@ -201,7 +201,7 @@ public final class LongRunSolver {
         int i = 0;
         while (i < jumps) {
             if (cancel != null && cancel.get()) return null;
-            if (deadlineNanos > 0L && System.nanoTime() >= deadlineNanos) return null;
+            if (deadlineNanos > 0L && SolveClock.nanoTime() >= deadlineNanos) return null;
             boolean advanced = false;
             // Try the largest window that solves; shrink on failure for robustness near the run's end / hard spots.
             int prevWe = -1;
@@ -336,7 +336,7 @@ public final class LongRunSolver {
         double bestObj = feasibleObjective(exact, win, compiled, first, primary);
         for (Objective alt : alternates(first, win.numTicks)) {
             if (cancel != null && cancel.get()) break;
-            if (deadlineNanos > 0L && System.nanoTime() >= deadlineNanos) break;
+            if (deadlineNanos > 0L && SolveClock.nanoTime() >= deadlineNanos) break;
             double[] seed = ClosedFormSolve.optimize(exact, new JumpSpec(win, cons, alt), 0.0, cancel);
             if (seed == null) continue;
             double[] hugged = hugObjective(exact, win, cons, first, seed, cancel);

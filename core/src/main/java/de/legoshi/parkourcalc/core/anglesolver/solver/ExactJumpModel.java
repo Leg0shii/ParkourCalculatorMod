@@ -286,6 +286,7 @@ public final class ExactJumpModel implements ForwardModel {
     @Override
     public void stepRange(JumpPhysicsInputs scenario, double[] yawAbsDeg, int from, ForwardPath path) {
         int n = yawAbsDeg.length;
+        SolveClock.charge(SolveClock.TICK, n - from);
         double[] posX = path.posX, posY = path.posY, posZ = path.posZ;
         double[] velX = path.velX, velY = path.velY, velZ = path.velZ;
         double thr = inertiaThreshold;

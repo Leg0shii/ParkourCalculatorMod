@@ -113,7 +113,7 @@ public final class WrapWindowIls {
         sw.curViol = score(model, sc, compiled, gf, transDomain, st, cfg);
         double[] bestGf = gf.clone();
         double bestViol = sw.curViol;
-        Random rng = new Random(cfg.rngSeed);
+        Random rng = new Random(cfg.rngSeed ^ SolveClock.seedMix());
         int rounds = 0;
         int kickCycles = 0;
 
@@ -447,7 +447,7 @@ public final class WrapWindowIls {
     private static boolean stopped(State st, AtomicBoolean cancel) {
         if (st.hitCap) return true;
         if (cancel != null && cancel.get()) return true;
-        if (st.deadline > 0 && System.nanoTime() >= st.deadline) return true;
+        if (st.deadline > 0 && SolveClock.nanoTime() >= st.deadline) return true;
         return false;
     }
 

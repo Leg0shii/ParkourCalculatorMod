@@ -13,6 +13,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.FoldReplayDriver;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpLinearModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
+import de.legoshi.parkourcalc.core.anglesolver.solver.SolveClock;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolverTrace;
 import de.legoshi.parkourcalc.core.anglesolver.solver.StartBox;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
@@ -49,7 +50,7 @@ public final class FoldDriverNode implements NodeRuntime {
         if (JumpLinearModel.hasFacingWall(ctx.spec.constraints)) return NodeOutcome.of(miss, in);
         if (improve && objectiveRounds <= 0) {
             if (ascentMs <= 0) return NodeOutcome.of(miss, in);
-            long ascentDeadline = System.nanoTime() + ascentMs * 1_000_000L;
+            long ascentDeadline = SolveClock.nanoTime() + ascentMs * 1_000_000L;
             if (deadlineNanos > 0) ascentDeadline = Math.min(ascentDeadline, deadlineNanos);
             JumpPhysicsInputs at0 = ctx.scenario.pinnedAt(ctx.scenario.startPos.x,
                     ctx.scenario.startPos.z);
@@ -99,8 +100,8 @@ public final class FoldDriverNode implements NodeRuntime {
         if (Double.isNaN(bestObj)) return NodeOutcome.of(miss, in);
         boolean max = ctx.maximize();
         if ((objectiveRounds > 0 || ascentMs > 0) && (nodeToken == null || !nodeToken.get())
-                && (deadlineNanos == 0L || System.nanoTime() < deadlineNanos)) {
-            long ascDeadline = ascentMs > 0 ? System.nanoTime() + ascentMs * 1_000_000L : deadlineNanos;
+                && (deadlineNanos == 0L || SolveClock.nanoTime() < deadlineNanos)) {
+            long ascDeadline = ascentMs > 0 ? SolveClock.nanoTime() + ascentMs * 1_000_000L : deadlineNanos;
             if (deadlineNanos > 0 && ascDeadline > 0) ascDeadline = Math.min(ascDeadline, deadlineNanos);
             JumpPhysicsInputs at = ctx.scenario.pinnedAt(bestPx, bestPz);
             JumpSpec pspec = new JumpSpec(at, new ArrayList<>(ctx.spec.constraints), ctx.spec.objective);
@@ -142,7 +143,7 @@ public final class FoldDriverNode implements NodeRuntime {
         for (double[] ref : refs) {
             if (done >= multiStart) break;
             if (nodeToken != null && nodeToken.get()) break;
-            if (deadlineNanos > 0 && deadlineNanos - System.nanoTime() < MIN_START_REMAINING_NANOS) break;
+            if (deadlineNanos > 0 && deadlineNanos - SolveClock.nanoTime() < MIN_START_REMAINING_NANOS) break;
             JumpSpec sspec = driverSpec(ctx, new StartBox(ref[0], ref[1],
                     box.vx, box.vz, box.pxLo, box.pxHi, box.pzLo, box.pzHi,
                     box.vx, box.vx, box.vz, box.vz));

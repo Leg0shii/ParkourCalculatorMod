@@ -38,6 +38,7 @@ public final class GraphContext {
     private String chain;
     private volatile boolean stageLocked;
     private volatile boolean settled;
+    private volatile boolean optimumCertified;
     private volatile GraphNode currentNode;
     private volatile AtomicBoolean currentToken;
     private long evalsAtNodeStart;
@@ -171,6 +172,14 @@ public final class GraphContext {
 
     public boolean settled() {
         return settled;
+    }
+
+    public boolean optimumCertified() {
+        return optimumCertified;
+    }
+
+    public void certifyOptimum() {
+        optimumCertified = true;
     }
 
     public void setSettled(boolean settled) {

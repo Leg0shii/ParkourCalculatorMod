@@ -9,6 +9,7 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.ParamValues;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Scoring;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
+import de.legoshi.parkourcalc.core.anglesolver.solver.SolveClock;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolverTrace;
 import de.legoshi.parkourcalc.core.anglesolver.solver.WrapWindowIls;
 
@@ -42,7 +43,7 @@ public final class WrapIlsNode implements NodeRuntime {
     public NodeOutcome execute(GraphContext ctx, Candidate in, AtomicBoolean nodeToken, long deadlineNanos) {
         if (!ctx.exact() || in == null || in.yaws == null) return NodeOutcome.of(Guarantee.REJECTED, in);
         if (ctx.stageLocked()) return NodeOutcome.of(Guarantee.REJECTED, in);
-        long remaining = deadlineNanos > 0 ? deadlineNanos - System.nanoTime() : 0L;
+        long remaining = deadlineNanos > 0 ? deadlineNanos - SolveClock.nanoTime() : 0L;
         if (remaining <= minRemainingSec * 1_000_000_000L) return NodeOutcome.of(Guarantee.REJECTED, in);
         if (in.feasible && ctx.legalGoal == null) return NodeOutcome.of(Guarantee.REJECTED, in);
         JumpPhysicsInputs sc = ctx.scenario;

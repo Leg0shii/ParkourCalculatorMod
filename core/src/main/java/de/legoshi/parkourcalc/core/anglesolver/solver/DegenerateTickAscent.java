@@ -92,7 +92,7 @@ public final class DegenerateTickAscent {
             boolean improved = false;
             for (int i = 0; i < degen.length; i++) {
                 if (cancel != null && cancel.get()) break;
-                if (deadlineNanos != 0L && System.nanoTime() >= deadlineNanos) break;
+                if (deadlineNanos != 0L && SolveClock.nanoTime() >= deadlineNanos) break;
                 Cand best = scanTick(exact, spec, sc, compiled, degen, thetas, i, current, feasTol, cancel,
                         deadlineNanos, max, currentObj);
                 if (best != null && best.feasible && better(best.obj, currentObj, max)) {
@@ -117,7 +117,7 @@ public final class DegenerateTickAscent {
         Cand best = null;
         for (double th = -180.0; th < 180.0; th += COARSE_STEP) {
             if (cancel != null && cancel.get()) break;
-            if (deadlineNanos != 0L && System.nanoTime() >= deadlineNanos) break;
+            if (deadlineNanos != 0L && SolveClock.nanoTime() >= deadlineNanos) break;
             Cand c = complete(exact, spec, sc, compiled, degen, thetas, i, th, seed, feasTol, cancel);
             if (c != null && c.feasible && (best == null || better(c.obj, best.obj, max))) best = c;
         }
@@ -127,7 +127,7 @@ public final class DegenerateTickAscent {
             for (int k = -REFINE_EACH; k <= REFINE_EACH; k++) {
                 if (k == 0) continue;
                 if (cancel != null && cancel.get()) break;
-                if (deadlineNanos != 0L && System.nanoTime() >= deadlineNanos) break;
+                if (deadlineNanos != 0L && SolveClock.nanoTime() >= deadlineNanos) break;
                 Cand c = complete(exact, spec, sc, compiled, degen, thetas, i, center + k * step, seed, feasTol, cancel);
                 if (c != null && c.feasible && better(c.obj, best.obj, max)) best = c;
             }
