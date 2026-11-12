@@ -132,7 +132,11 @@ anglesolver/
                            PKC_GRAPH_FILE=<graph.json> (docs/research/freestart-runup-sweep-2026-09-05.md)
   bench/SolverBench.java   THE SOLVER BENCHMARK (run): solves a jump set with the solver option
                            Repeatable solve on, so a result is the same on every machine and under any
-                           load and several JVMs may run side by side. -Dpkc.bench.out=<file.jsonl> to
+                           load and several JVMs may run side by side, as long as no solve hits the
+                           clock's safety stop (real time over six times the budget, at least 180 s):
+                           such a solve is marked overran, left out of every table and solved again
+                           when the run is started again, so at 30 s run at most two JVMs side by side
+                           on four cores. -Dpkc.bench.out=<file.jsonl> to
                            run (one JSON line per solve, appended; a run that is started again skips
                            what the file already holds). -Dpkc.bench.sets=hpk (captures/hpk and
                            captures/hpk_human, the release set), hpkstart (the /hpk_human corpus) or

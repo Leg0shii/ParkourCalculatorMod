@@ -47,6 +47,10 @@ public final class BenchRecord {
         public Map<String, String> details = new LinkedHashMap<String, String>();
     }
 
+    public boolean overran() {
+        return time != null && time.overran;
+    }
+
     public static final class Time {
         public long wallMs;
         public double workMs;

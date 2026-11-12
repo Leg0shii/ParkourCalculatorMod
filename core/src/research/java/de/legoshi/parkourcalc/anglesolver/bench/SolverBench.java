@@ -97,6 +97,7 @@ public class SolverBench {
         int ran = 0;
         int identical = 0;
         int verified = 0;
+        int overran = 0;
         try (PrintWriter w = new PrintWriter(new OutputStreamWriter(new FileOutputStream(out, true), StandardCharsets.UTF_8), true)) {
             for (int i = 0; i < tasks.size(); i++) {
                 Task t = tasks.get(i);
@@ -104,8 +105,9 @@ public class SolverBench {
                 BenchRecord r = solve(t, variant, edits, build, repeatable, timeoutMs);
                 w.println(GSON.toJson(r));
                 ran++;
+                if (r.overran()) overran++;
                 System.out.println(line(r));
-                if (repeatable && verifyEvery > 0 && i % verifyEvery == 0 && r.error == null) {
+                if (repeatable && verifyEvery > 0 && i % verifyEvery == 0 && r.error == null && !r.overran()) {
                     BenchRecord again = solve(t, variant, edits, build, true, timeoutMs);
                     again.kind = "verify";
                     boolean same = r.identity().equals(again.identity());
@@ -119,6 +121,9 @@ public class SolverBench {
         }
         System.out.println(String.format(Locale.ROOT, "bench done: %d solves written to %s, identity check %d of %d identical",
                 ran, out.getPath(), identical, verified));
+        if (overran > 0) {
+            System.out.println(overran + " solves hit the safety stop of the work clock and are not repeatable; start the run again with fewer JVMs side by side, it solves only those again");
+        }
         if (verified > identical) throw new AssertionError("repeatability broke on " + (verified - identical) + " of " + verified + " checked solves");
     }
 
@@ -185,7 +190,7 @@ public class SolverBench {
             while ((l = r.readLine()) != null) {
                 if (l.trim().isEmpty()) continue;
                 BenchRecord rec = GSON.fromJson(l, BenchRecord.class);
-                if (rec != null && "solve".equals(rec.kind) && rec.jump != null) keys.add(rec.runKey());
+                if (rec != null && "solve".equals(rec.kind) && rec.jump != null && !rec.overran()) keys.add(rec.runKey());
             }
         }
         return keys;

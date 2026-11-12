@@ -51,6 +51,10 @@ public class SolverBenchReport {
 
     static void run(String mode, PrintStream out) throws Exception {
         BenchData data = BenchData.load(required("pkc.bench.in"));
+        if (!data.overran.isEmpty()) {
+            out.println(data.overran.size() + " solves hit the safety stop of the work clock (not repeatable) and are left out of every table.");
+            out.println();
+        }
         String refPath = System.getProperty("pkc.bench.reference");
         BenchReference ref = BenchReference.load(refPath == null ? null : new File(refPath));
         if ("sheet".equals(mode)) sheet(data, out);

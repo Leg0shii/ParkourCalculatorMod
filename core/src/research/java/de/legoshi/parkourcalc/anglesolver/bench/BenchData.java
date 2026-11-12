@@ -23,6 +23,7 @@ public final class BenchData {
 
     public final List<BenchRecord> solves = new ArrayList<BenchRecord>();
     public final List<BenchRecord> verifies = new ArrayList<BenchRecord>();
+    public final List<BenchRecord> overran = new ArrayList<BenchRecord>();
 
     public static BenchData load(String inputs) throws IOException {
         BenchData data = new BenchData();
@@ -57,6 +58,7 @@ public final class BenchData {
                 BenchRecord rec = GSON.fromJson(l, BenchRecord.class);
                 if (rec == null || rec.jump == null || rec.strength == null) continue;
                 if ("verify".equals(rec.kind)) verifies.add(rec);
+                else if (rec.overran()) overran.add(rec);
                 else solves.add(rec);
             }
         }
