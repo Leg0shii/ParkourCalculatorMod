@@ -188,6 +188,16 @@ public final class SolveClock {
         if (deadlineNanos < nextFire) nextFire = deadlineNanos;
     }
 
+    public long deadlineOf(AtomicBoolean token) {
+        if (token == null) return Long.MAX_VALUE;
+        if (token.get()) return nowNanos;
+        long earliest = Long.MAX_VALUE;
+        for (int i = 0; i < armed; i++) {
+            if (tokens[i] == token && deadlines[i] < earliest) earliest = deadlines[i];
+        }
+        return earliest;
+    }
+
     public void disarm(AtomicBoolean token) {
         int kept = 0;
         long next = Long.MAX_VALUE;

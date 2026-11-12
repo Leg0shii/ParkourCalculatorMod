@@ -125,6 +125,27 @@ public class SolveClockTest {
     }
 
     @Test
+    public void anArmedTokenTellsItsDeadline() {
+        SolveClock clock = SolveClock.install(null, 0L, 0L);
+        try {
+            AtomicBoolean armed = new AtomicBoolean(false);
+            AtomicBoolean loose = new AtomicBoolean(false);
+            long deadline = SolveClock.nanoTime() + 1_000_000L;
+            clock.arm(armed, deadline);
+            clock.arm(armed, deadline + 5L);
+            assertEquals("the earliest deadline of the token", deadline, clock.deadlineOf(armed));
+            assertEquals("a token nobody armed has none", Long.MAX_VALUE, clock.deadlineOf(loose));
+            assertEquals(Long.MAX_VALUE, clock.deadlineOf(null));
+            while (!armed.get()) SolveClock.charge(SolveClock.TICK, 1L);
+            assertTrue("a token that fired is due", clock.deadlineOf(armed) <= SolveClock.nanoTime());
+            loose.set(true);
+            assertTrue("a token set from outside is due", clock.deadlineOf(loose) <= SolveClock.nanoTime());
+        } finally {
+            clock.uninstall();
+        }
+    }
+
+    @Test
     public void aSerialForkCountsEveryTaskInside() {
         SolveClock parent = SolveClock.install(null, 0L, 0L);
         try {
