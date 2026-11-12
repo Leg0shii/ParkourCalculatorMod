@@ -125,6 +125,29 @@ public class SolveClockTest {
     }
 
     @Test
+    public void aSerialForkCountsEveryTaskInside() {
+        SolveClock parent = SolveClock.install(null, 0L, 0L);
+        try {
+            SolveClock lane = parent.forkSerial(null, 0L);
+            assertEquals(1, lane.workers());
+            assertEquals(SolveClock.WORKERS, parent.workers());
+            SolveClock first = lane.fork(null, 0L);
+            SolveClock second = lane.fork(null, 0L);
+            assertEquals("a fork of a serial fork is serial", 1, first.workers());
+            work(first, 1000L);
+            work(second, 4000L);
+            lane.join(new SolveClock[]{first, second});
+            assertEquals("one worker runs the tasks one after the other",
+                    first.elapsedNanos() + second.elapsedNanos(), lane.elapsedNanos());
+            parent.join(new SolveClock[]{lane});
+            assertEquals(lane.elapsedNanos(), parent.elapsedNanos());
+            assertEquals(5000L, parent.units(SolveClock.TICK));
+        } finally {
+            parent.uninstall();
+        }
+    }
+
+    @Test
     public void aForkStopsAtItsOwnDeadline() {
         SolveClock parent = SolveClock.install(null, 0L, 0L);
         try {

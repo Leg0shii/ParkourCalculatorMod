@@ -208,8 +208,10 @@ anglesolver/
                            the wall clock, with one it moves only with charged work and the same work
                            gives the same time, an armed token fires at its deadline, a join takes the
                            longest task or the shared load over the virtual workers, a fork stops at
-                           its own deadline, a cancel fires every token and hurries, the wall limit
-                           marks the solve as not repeatable, the seed reaches every fork
+                           its own deadline, a serial fork counts every task inside it (a join there
+                           is the summed work, a fork below it is serial too), a cancel fires every
+                           token and hurries, the wall limit marks the solve as not repeatable, the
+                           seed reaches every fork
   LatticePolishClockTest.java  the lattice polish on the work clock (j013, Optimize parameters): the
                            Newton rounds and the grid search charge the clock, a work budget ends the
                            search early, close to the budget, and at the same point in every run (same
@@ -223,6 +225,11 @@ anglesolver/
                            measured against the tightest bound of the certified passes (nix-t25 under
                            0.1 where the closed form gap is 0.25, j021 under 0.01), a jump with a
                            carried facing row shows a gap (gh553-j345), a damage tick shows none
+  graph/SeedSweepClockTest.java  the seed sweep on the work clock (j016 with a start box of 0.05 around
+                           its start, 64 seeds): without a budget every seed runs, a work budget of
+                           4 ms ends the sweep within 1 ms of it with some seeds left out, and a
+                           budgeted sweep ends on the same facings, counters and work time in a second
+                           run and on one thread
   graph/LeafSnapNodeTest.java  the leaf snap node's repeat param: on j017 (certified landing after 60 nodes)
                            one snap improves the landing, a repeat without a time budget is that one
                            call, the repeated snap ends more than 1e-4 further, byte-exact with no
