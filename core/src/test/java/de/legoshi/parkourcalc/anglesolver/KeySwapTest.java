@@ -2,6 +2,7 @@ package de.legoshi.parkourcalc.anglesolver;
 
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
+import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardPath;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
@@ -131,5 +132,53 @@ public class KeySwapTest {
             }
         }
         assertEquals("the count is the number of ticks whose keys differ", changed, swap.changed);
+    }
+
+    private static JumpPhysicsInputs brakeThenCoast() {
+        JumpPhysicsInputs sc = TickInputs.editable(airScenario());
+        for (int t = 8; t < N; t++) {
+            TickInputs.NONE.applyTo(sc, t);
+        }
+        return sc;
+    }
+
+    @Test
+    public void aSwapThatFallsShortLandsWithThrustOnAReleasedTick() {
+        JumpPhysicsInputs sc = brakeThenCoast();
+        double[] turn = new double[N];
+        turn[6] = 180.0;
+        turn[7] = 180.0;
+        ForwardPath path = MODEL.forward(sc, sc.toGameFacings(turn));
+        List<JumpConstraint> cons = new ArrayList<JumpConstraint>();
+        cons.add(new JumpConstraint(JumpConstraint.Mode.Z, 6, null, JumpConstraint.Op.PLUS, JumpConstraint.Cmp.GE,
+                path.posZ[6] - 2.0e-3, "run"));
+        cons.add(new JumpConstraint(JumpConstraint.Mode.Z, N, null, JumpConstraint.Op.PLUS, JumpConstraint.Cmp.LE,
+                path.posZ[N] + 2.0e-3, "stop"));
+        JumpSpec spec = new JumpSpec(sc, cons, new Objective(JumpPhysicsInputs.Axis.Z, Objective.Sense.MAX, N));
+        KeySwap.Result swap = KeySwap.plan(MODEL, spec, turn, true, true, false);
+        assertNotNull(swap);
+        assertEquals(2, swap.changed);
+        KeySwap.Result stepwise = KeySwap.realise(MODEL, spec, turn, swap, spec.constraints, 0L, new AtomicBoolean(false));
+        assertTrue("S brakes with 77 percent of the push, so the whole swap alone overshoots",
+                stepwise == null || stepwise.changed < swap.changed);
+        KeySwap.Result landed = KeySwap.compensate(MODEL, spec, swap, spec.constraints, 0L, new AtomicBoolean(false));
+        assertNotNull("thrust on a released tick makes up the lost push", landed);
+        int helpers = 0;
+        for (int t = 0; t < N; t++) {
+            TickInputs keys = TickInputs.of(landed.scenario, t);
+            if (t == 6 || t == 7) {
+                assertTrue("tick " + t + " keeps the back key: " + keys.label(), keys.s && !keys.w);
+            } else if (t >= 8 && !TickInputs.NONE.equals(keys)) {
+                assertEquals(SPRINT, keys);
+                helpers++;
+            } else if (t < 6) {
+                assertEquals(SPRINT, keys);
+            }
+        }
+        assertTrue("a released tick got thrust", helpers >= 1);
+        assertEquals(2 + helpers, landed.changed);
+        double[] gf = landed.scenario.toGameFacings(landed.yaws);
+        JumpSpec swapped = new JumpSpec(landed.scenario, spec.constraints, spec.objective);
+        assertEquals(0.0, JumpConstraintCompiler.compile(swapped).maxViolation(gf, MODEL.forward(landed.scenario, gf)), 0.0);
     }
 }

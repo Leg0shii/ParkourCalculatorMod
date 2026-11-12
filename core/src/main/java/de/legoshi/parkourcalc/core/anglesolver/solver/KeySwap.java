@@ -15,6 +15,8 @@ public final class KeySwap {
     public static final double LOOK_MIN_BLOCKS = 0.1;
     public static final double LOOK_DEAD_DEG = 45.0;
     public static final double LOOK_WEIGHT = 0.5;
+    public static final int HELPER_TRIES = 3;
+    public static final int HELPER_PAIR_POOL = 4;
 
     private static final ShapeSmooth.Weights REPAIR_METRIC =
             new ShapeSmooth.Weights(ShapeSmooth.Norm.L2, 1.0, 1.0, 0.0, 0.0);
@@ -297,6 +299,147 @@ public final class KeySwap {
             kept++;
         }
         return kept == 0 ? null : new Result(scenario, yaws, kept);
+    }
+
+    public static Result compensate(ExactJumpModel exact, JumpSpec source, Result swap, List<JumpConstraint> guarded,
+                                    long deadlineNanos, AtomicBoolean cancel) {
+        JumpPhysicsInputs from = TickInputs.editable(source.asScenario());
+        int n = from.numTicks;
+        JumpSpec all = new JumpSpec(swap.scenario, new ArrayList<>(guarded), source.objective);
+        ThrustLanding whole = new ThrustLanding(all, swap.yaws);
+        double short0 = whole.relax(0.0, deadlineNanos).violation;
+        if (short0 <= ThrustLanding.FEASIBLE) {
+            double[] yaws = whole.land(exact, deadlineNanos, cancel);
+            if (yaws != null) {
+                if (SolverTrace.on()) {
+                    SolverTrace.log("ENGINE", "key swap lands whole through the thrust relaxation");
+                }
+                return new Result(swap.scenario, yaws, swap.changed);
+            }
+        }
+        boolean[] held = DeWiggle.heldByFacing(n, all);
+        List<Helper> helpers = new ArrayList<>();
+        for (int t = 0; t < n && !stopped(deadlineNanos, cancel); t++) {
+            TickInputs was = TickInputs.of(swap.scenario, t);
+            if (was == null || thrusts(was) || held[t] || from.sneakAt(t) || from.damageAt(t)
+                    || from.surfaceAt(t) != SurfaceKind.NORMAL || from.flowAt(t) != FlowVector.NONE
+                    || (from.jumpAt(t) && from.contactAt(t))) {
+                continue;
+            }
+            JumpPhysicsInputs next = helped(exact, from, swap.scenario, new int[]{t});
+            if (next == null) {
+                continue;
+            }
+            double violation = new ThrustLanding(new JumpSpec(next, new ArrayList<>(guarded), source.objective), swap.yaws)
+                    .relax(0.0, deadlineNanos).violation;
+            helpers.add(new Helper(new int[]{t}, next, violation, InputSmooth.driveChanges(next)));
+        }
+        helpers.sort(KeySwap::compare);
+        if (SolverTrace.on()) {
+            StringBuilder sb = new StringBuilder();
+            for (Helper h : helpers) {
+                sb.append(h.ticks[0]).append(':').append(String.format(java.util.Locale.ROOT, "%.1e", h.violation)).append(' ');
+            }
+            SolverTrace.log("ENGINE", "key swap short by %.3e in the thrust relaxation, helper ticks: %s", short0, sb);
+        }
+        List<Helper> tries = new ArrayList<>();
+        for (Helper h : helpers) {
+            if (h.violation <= ThrustLanding.FEASIBLE && tries.size() < HELPER_TRIES) {
+                tries.add(h);
+            }
+        }
+        if (tries.isEmpty()) {
+            int top = Math.min(HELPER_PAIR_POOL, helpers.size());
+            List<Helper> pairs = new ArrayList<>();
+            for (int i = 0; i < top && !stopped(deadlineNanos, cancel); i++) {
+                for (int j = i + 1; j < top; j++) {
+                    int[] ticks = {helpers.get(i).ticks[0], helpers.get(j).ticks[0]};
+                    JumpPhysicsInputs next = helped(exact, from, swap.scenario, ticks);
+                    if (next == null) {
+                        continue;
+                    }
+                    double violation = new ThrustLanding(new JumpSpec(next, new ArrayList<>(guarded), source.objective),
+                            swap.yaws).relax(0.0, deadlineNanos).violation;
+                    if (violation <= ThrustLanding.FEASIBLE) {
+                        pairs.add(new Helper(ticks, next, violation, InputSmooth.driveChanges(next)));
+                    }
+                }
+            }
+            pairs.sort(KeySwap::compare);
+            for (Helper h : pairs) {
+                if (tries.size() < HELPER_TRIES) {
+                    tries.add(h);
+                }
+            }
+        }
+        for (Helper h : tries) {
+            if (stopped(deadlineNanos, cancel)) {
+                break;
+            }
+            JumpSpec spec = new JumpSpec(h.scenario, new ArrayList<>(guarded), source.objective);
+            double[] yaws = new ThrustLanding(spec, swap.yaws).land(exact, deadlineNanos, cancel);
+            if (SolverTrace.on()) {
+                SolverTrace.log("ENGINE", "key swap with thrust on tick %s: %s", java.util.Arrays.toString(h.ticks),
+                        yaws == null ? "not landed" : "landed");
+            }
+            if (yaws != null) {
+                return new Result(h.scenario, yaws, swap.changed + h.ticks.length);
+            }
+        }
+        return null;
+    }
+
+    private static final class Helper {
+        final int[] ticks;
+        final JumpPhysicsInputs scenario;
+        final double violation;
+        final int driveChanges;
+
+        Helper(int[] ticks, JumpPhysicsInputs scenario, double violation, int driveChanges) {
+            this.ticks = ticks;
+            this.scenario = scenario;
+            this.violation = violation;
+            this.driveChanges = driveChanges;
+        }
+    }
+
+    private static int compare(Helper a, Helper b) {
+        boolean fa = a.violation <= ThrustLanding.FEASIBLE;
+        boolean fb = b.violation <= ThrustLanding.FEASIBLE;
+        if (fa != fb) {
+            return fa ? -1 : 1;
+        }
+        if (fa && a.driveChanges != b.driveChanges) {
+            return Integer.compare(a.driveChanges, b.driveChanges);
+        }
+        return Double.compare(a.violation, b.violation);
+    }
+
+    private static JumpPhysicsInputs helped(ExactJumpModel exact, JumpPhysicsInputs from, JumpPhysicsInputs swapped,
+                                            int[] ticks) {
+        JumpPhysicsInputs next = TickInputs.cloneInputs(swapped);
+        for (int t : ticks) {
+            COMBOS[0].applyTo(next, t);
+        }
+        for (int t : ticks) {
+            for (int s = Math.max(0, t - 1); s <= Math.min(next.numTicks - 1, t + 1); s++) {
+                TickInputs now = TickInputs.of(next, s);
+                if (now != null && !realizable(next, from, s, now)) {
+                    return null;
+                }
+            }
+        }
+        if (exact.airTapSprint() && SprintTap.firstNew(from, next) >= 0) {
+            return null;
+        }
+        return next;
+    }
+
+    private static boolean stopped(long deadlineNanos, AtomicBoolean cancel) {
+        if (cancel != null && cancel.get()) {
+            return true;
+        }
+        return deadlineNanos != 0L && System.nanoTime() >= deadlineNanos;
     }
 
     private static double[] restored(ExactJumpModel exact, JumpSpec spec, double[] start) {
