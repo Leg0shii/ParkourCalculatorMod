@@ -270,6 +270,7 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
         StructurePoolDriver.Config poolCfg = new StructurePoolDriver.Config();
         poolCfg.allowJa = true;
         poolCfg.jaAllPass = true;
+        poolCfg.familyStage = true;
         poolCfg.certifyBudgetNanos = 0L;
         poolCfg.extraCertify = 1000;
         poolCfg.extraCertifyNanos = 45_000_000_000L;
