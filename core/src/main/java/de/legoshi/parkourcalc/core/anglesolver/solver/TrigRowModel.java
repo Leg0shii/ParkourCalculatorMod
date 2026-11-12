@@ -3,6 +3,7 @@ package de.legoshi.parkourcalc.core.anglesolver.solver;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.BooleanSupplier;
 
 final class TrigRowModel {
 
@@ -535,9 +536,21 @@ final class TrigRowModel {
 
     static final class Work {
         long left;
+        private final BooleanSupplier stop;
 
         Work(long units) {
+            this(units, null);
+        }
+
+        Work(long units, BooleanSupplier stop) {
             this.left = units;
+            this.stop = stop;
+        }
+
+        boolean spend(long units) {
+            left -= units;
+            if (left >= 0 && stop != null && stop.getAsBoolean()) left = -1;
+            return left >= 0;
         }
     }
 
@@ -559,9 +572,8 @@ final class TrigRowModel {
         int stalled = 0;
         for (int outer = 0; outer < maxOuter; outer++) {
             for (int round = 0; round < NEWTON_ROUNDS; round++) {
-                work.left -= roundCost;
-                if (work.left < 0) return false;
                 SolveClock.charge(SolveClock.POLISH, roundCost);
+                if (!work.spend(roundCost)) return false;
                 double merit = merit(z, mu, rho, g, sn, cs);
                 Arrays.fill(grad, 0.0);
                 for (double[] h : hess) Arrays.fill(h, 0.0);

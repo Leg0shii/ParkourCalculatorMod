@@ -30,6 +30,7 @@ public final class CertifiedBnb {
     private static final int ORDER_PASSES = 4;
     private static final double EMPTY_ROUNDING_REL = 1.0e-13;
     private static final double CUTOFF_MARGIN = 1.0e-9;
+    private static final double RESOLVE_SHARE = 0.2;
     private static final double FLOOR_CUTOFF_REL = 1.0e-6;
 
     private CertifiedBnb() {
@@ -60,6 +61,7 @@ public final class CertifiedBnb {
         public Double seedPz;
         public boolean homotopy;
         public boolean probeGates = true;
+        public boolean resolveProbes;
         public int incumbentPolishCap;
         public int diveEvery;
         public int diveLength;
@@ -151,6 +153,8 @@ public final class CertifiedBnb {
         int nodes;
         int kernelSolves;
         long kernelNanos;
+        boolean resolveDeadlineSet;
+        long resolveDeadline;
         int polishCalls;
         double incScore = Double.NEGATIVE_INFINITY;
         double[] incYaws;
@@ -193,6 +197,12 @@ public final class CertifiedBnb {
         boolean stopped() {
             if (cfg.cancel != null && cfg.cancel.get()) return true;
             return cfg.deadlineNanos != 0L && SolveClock.nanoTime() >= cfg.deadlineNanos;
+        }
+
+        boolean resolveStopped() {
+            if (cfg.cancel != null && cfg.cancel.get()) return true;
+            long limit = resolveDeadline != 0L ? resolveDeadline : cfg.deadlineNanos;
+            return limit != 0L && SolveClock.nanoTime() >= limit;
         }
     }
 
@@ -361,7 +371,7 @@ public final class CertifiedBnb {
                 s.kernelNanos, s.bestInfeasYaws, s.bestInfeasViol, certifiedInfeasible, s.unresolved);
     }
 
-    static boolean relaxationCoversScenario(JumpPhysicsInputs sc) {
+    public static boolean relaxationCoversScenario(JumpPhysicsInputs sc) {
         if (sc.lastDamageTick() >= 0) return false;
         for (int t = 0; t < sc.numTicks; t++) {
             if (sc.flowAt(t).pushes() || sc.endFlowAt(t).pushes()) return false;
@@ -566,52 +576,18 @@ public final class CertifiedBnb {
             s.trivialInfeasible = true;
             return null;
         }
-        List<JumpLinearModel.Wall> rows = new ArrayList<JumpLinearModel.Wall>(specWalls);
-        addGateRows(s, nd, iv, lin, rows);
-        int boxStart = rows.size();
-        List<JumpLinearModel.Wall> kernelRows = new ArrayList<JumpLinearModel.Wall>(rows);
-        List<DiskSocpKernel.ChordRow> chords = new ArrayList<DiskSocpKernel.ChordRow>();
-        List<DiskSocpKernel.ChordRow> kernelChords = new ArrayList<DiskSocpKernel.ChordRow>();
-        for (int t = 0; t < s.n; t++) {
-            if (nd.iLo[t] == FULL) continue;
-            SineTableGeometry.RangeInfo r = ri[t];
-            double rad = s.geom.radiusUpper(t);
-            double reachX = impulseReach(s, iv, t, 1.0, 0.0);
-            double reachZ = impulseReach(s, iv, t, 0.0, 1.0);
-            if (r.uxHi < rad) addBoxRow(rows, kernelRows, s.n, 0, t, 1.0, r.uxHi, reachX, "bxh@" + t);
-            if (r.uxLo > -rad) addBoxRow(rows, kernelRows, s.n, 0, t, -1.0, -r.uxLo, reachX, "bxl@" + t);
-            if (r.uzHi < rad) addBoxRow(rows, kernelRows, s.n, 1, t, 1.0, r.uzHi, reachZ, "bzh@" + t);
-            if (r.uzLo > -rad) addBoxRow(rows, kernelRows, s.n, 1, t, -1.0, -r.uzLo, reachZ, "bzl@" + t);
-            if (r.hasChord) {
-                DiskSocpKernel.ChordRow chord = new DiskSocpKernel.ChordRow(t, r.chordAx, r.chordAz, r.chordRhs,
-                        "arc@" + t);
-                double reach = impulseReach(s, iv, t, r.chordAx, r.chordAz);
-                chords.add(chord);
-                kernelChords.add(reach > 0.0 ? new DiskSocpKernel.ChordRow(t, r.chordAx, r.chordAz,
-                        r.chordRhs - reach, "arc@" + t) : chord);
-            }
-        }
-        double[] mMagB = new double[s.n];
-        for (int t = 0; t < s.n; t++) mMagB[t] = s.geom.radiusUpper(t) + impulseRadius(s, iv, t);
-
-        long k0 = SolveClock.nanoTime();
-        double cp = lin.objectiveConst(s.spec.objective);
-        double floor = relaxationFloor(s, cx, cz, mMagB);
-        double cutoff = floor - FLOOR_CUTOFF_REL * (1.0 + Math.abs(floor));
-        if (s.incYaws != null) {
-            double target = s.incScore + CERT_EPS - (s.max ? cp : -cp);
-            cutoff = Math.max(cutoff, target - CUTOFF_MARGIN * (1.0 + Math.abs(target)));
-        }
-        DiskSocpKernel.Outcome oc = DiskSocpKernel.solveChords(s.n, cx, cz, mMagB, kernelRows, s.freeP0,
-                kernelChords, cutoff);
-        s.kernelSolves++;
-        s.kernelNanos += SolveClock.nanoTime() - k0;
+        Relaxation rx = relax(s, nd, iv, lin, ri, cx, cz, specWalls, null);
+        List<JumpLinearModel.Wall> rows = rx.rows;
+        int boxStart = rx.boxStart;
+        double cp = rx.cp;
+        double floor = rx.floor;
+        DiskSocpKernel.Outcome oc = rx.oc;
         double[] gxv;
         double[] gzv;
         double[] lambda;
         double[] ux = null;
         double[] uz = null;
-        int chordCount = chords.size();
+        int chordCount = rx.chords.size();
         boolean unbounded = oc.failCode == DiskSocpKernel.FAIL_UNBOUNDED || oc.failCode == DiskSocpKernel.FAIL_CUTOFF;
         if (oc.result != null) {
             gxv = oc.result.gx;
@@ -620,7 +596,7 @@ public final class CertifiedBnb {
             ux = oc.result.ux;
             uz = oc.result.uz;
         } else {
-            CostateDualSolver.Result dr = new CostateDualSolver(s.n, cx, cz, mMagB, kernelRows, s.freeP0)
+            CostateDualSolver.Result dr = new CostateDualSolver(s.n, cx, cz, rx.mMagB, rx.kernelRows, s.freeP0)
                     .solve(0.0, null);
             if (dr == null) {
                 dropUnresolved(s, nd);
@@ -630,48 +606,12 @@ public final class CertifiedBnb {
             gzv = dr.gz;
             lambda = dr.lambda;
             chordCount = 0;
-            chords = new ArrayList<DiskSocpKernel.ChordRow>();
         }
 
-        double val = 0.0;
-        double magnitude = 0.0;
         double[] supports = new double[s.n];
-        for (int t = 0; t < s.n; t++) {
-            double sup = s.geom.support(t, gxv[t], gzv[t], loDeg(nd, t), hiDeg(nd, t));
-            supports[t] = sup;
-            val += sup;
-            magnitude += Math.abs(sup);
-        }
-        for (int j = 0; j < rows.size() && j < lambda.length; j++) {
-            JumpLinearModel.Wall w = rows.get(j);
-            double lj = w.eq ? lambda[j] : Math.max(lambda[j], 0.0);
-            val += lj * w.bPrime;
-            magnitude += Math.abs(lj * w.bPrime);
-        }
-        for (int q = 0; q < chordCount && rows.size() + q < lambda.length; q++) {
-            double lj = Math.max(lambda[rows.size() + q], 0.0);
-            val += lj * (-chords.get(q).rhs);
-            magnitude += Math.abs(lj * chords.get(q).rhs);
-        }
-        if (s.freeP0 != null) {
-            double hx = s.freeP0.objDevX;
-            double hz = s.freeP0.objDevZ;
-            for (int j = 0; j < rows.size() && j < lambda.length; j++) {
-                JumpLinearModel.Wall w = rows.get(j);
-                double lj = w.eq ? lambda[j] : Math.max(lambda[j], 0.0);
-                if (w.axis == 0) hx += lj * w.p0coef;
-                else hz += lj * w.p0coef;
-            }
-            double startX = hx >= 0.0 ? hx * s.freeP0.dvHiX : hx * s.freeP0.dvLoX;
-            double startZ = hz >= 0.0 ? hz * s.freeP0.dvHiZ : hz * s.freeP0.dvLoZ;
-            val += startX + startZ;
-            magnitude += Math.abs(startX) + Math.abs(startZ);
-        }
-        if (iv.anyFree) {
-            double allowance = impulseAllowance(s, iv, cx, cz, rows, boxStart, lambda);
-            val += allowance;
-            magnitude += allowance;
-        }
+        double[] magnitudeOut = new double[1];
+        double val = relaxedValue(s, nd, iv, cx, cz, rx, gxv, gzv, lambda, chordCount, supports, magnitudeOut);
+        double magnitude = magnitudeOut[0];
         boolean empty = val < floor - (CERT_EPS * (1.0 + Math.abs(floor)) + EMPTY_ROUNDING_REL * magnitude);
         double dualValue = val + (s.max ? cp : -cp);
         double score = dualValue;
@@ -724,8 +664,8 @@ public final class CertifiedBnb {
         if (s.cfg.mode == Mode.FIRST_FEASIBLE && s.incYaws != null) return null;
 
         if (s.cfg.probeGates && iv.anyFree && s.incYaws != null && decPath != null && nd.depth == 0) {
-            Node settled = settleGates(s, nd, iv, lin, cx, cz, rows, boxStart, lambda, gxv, gzv, supports,
-                    dualValue, decPath, decZx, decZz);
+            Node settled = settleGates(s, nd, iv, lin, ri, cx, cz, specWalls, rows, boxStart, lambda, gxv, gzv,
+                    supports, dualValue, decPath, decZx, decZz);
             if (settled != null) {
                 List<Node> requeued = new ArrayList<Node>(1);
                 requeued.add(settled);
@@ -761,6 +701,160 @@ public final class CertifiedBnb {
             return null;
         }
         return children;
+    }
+
+    private static final class Relaxation {
+        List<JumpLinearModel.Wall> rows;
+        List<JumpLinearModel.Wall> kernelRows;
+        List<DiskSocpKernel.ChordRow> chords;
+        int boxStart;
+        double[] mMagB;
+        double cp;
+        double floor;
+        DiskSocpKernel.Outcome oc;
+    }
+
+    private static Relaxation relax(Search s, Node nd, Intervals iv, JumpLinearModel lin,
+                                    SineTableGeometry.RangeInfo[] ri, double[] cx, double[] cz,
+                                    List<JumpLinearModel.Wall> specWalls, JumpLinearModel.Wall extra) {
+        List<JumpLinearModel.Wall> rows = new ArrayList<JumpLinearModel.Wall>(specWalls);
+        addGateRows(s, nd, iv, lin, rows);
+        if (extra != null) rows.add(extra);
+        int boxStart = rows.size();
+        List<JumpLinearModel.Wall> kernelRows = new ArrayList<JumpLinearModel.Wall>(rows);
+        List<DiskSocpKernel.ChordRow> chords = new ArrayList<DiskSocpKernel.ChordRow>();
+        List<DiskSocpKernel.ChordRow> kernelChords = new ArrayList<DiskSocpKernel.ChordRow>();
+        for (int t = 0; t < s.n; t++) {
+            if (nd.iLo[t] == FULL) continue;
+            SineTableGeometry.RangeInfo r = ri[t];
+            double rad = s.geom.radiusUpper(t);
+            double reachX = impulseReach(s, iv, t, 1.0, 0.0);
+            double reachZ = impulseReach(s, iv, t, 0.0, 1.0);
+            if (r.uxHi < rad) addBoxRow(rows, kernelRows, s.n, 0, t, 1.0, r.uxHi, reachX, "bxh@" + t);
+            if (r.uxLo > -rad) addBoxRow(rows, kernelRows, s.n, 0, t, -1.0, -r.uxLo, reachX, "bxl@" + t);
+            if (r.uzHi < rad) addBoxRow(rows, kernelRows, s.n, 1, t, 1.0, r.uzHi, reachZ, "bzh@" + t);
+            if (r.uzLo > -rad) addBoxRow(rows, kernelRows, s.n, 1, t, -1.0, -r.uzLo, reachZ, "bzl@" + t);
+            if (r.hasChord) {
+                DiskSocpKernel.ChordRow chord = new DiskSocpKernel.ChordRow(t, r.chordAx, r.chordAz, r.chordRhs,
+                        "arc@" + t);
+                double reach = impulseReach(s, iv, t, r.chordAx, r.chordAz);
+                chords.add(chord);
+                kernelChords.add(reach > 0.0 ? new DiskSocpKernel.ChordRow(t, r.chordAx, r.chordAz,
+                        r.chordRhs - reach, "arc@" + t) : chord);
+            }
+        }
+        double[] mMagB = new double[s.n];
+        for (int t = 0; t < s.n; t++) mMagB[t] = s.geom.radiusUpper(t) + impulseRadius(s, iv, t);
+
+        long k0 = SolveClock.nanoTime();
+        double cp = lin.objectiveConst(s.spec.objective);
+        double floor = relaxationFloor(s, cx, cz, mMagB);
+        double cutoff = floor - FLOOR_CUTOFF_REL * (1.0 + Math.abs(floor));
+        if (s.incYaws != null) {
+            double target = s.incScore + CERT_EPS - (s.max ? cp : -cp);
+            cutoff = Math.max(cutoff, target - CUTOFF_MARGIN * (1.0 + Math.abs(target)));
+        }
+        DiskSocpKernel.Outcome oc = DiskSocpKernel.solveChords(s.n, cx, cz, mMagB, kernelRows, s.freeP0,
+                kernelChords, cutoff);
+        s.kernelSolves++;
+        s.kernelNanos += SolveClock.nanoTime() - k0;
+        Relaxation rx = new Relaxation();
+        rx.rows = rows;
+        rx.kernelRows = kernelRows;
+        rx.chords = chords;
+        rx.boxStart = boxStart;
+        rx.mMagB = mMagB;
+        rx.cp = cp;
+        rx.floor = floor;
+        rx.oc = oc;
+        return rx;
+    }
+
+    private static double relaxedValue(Search s, Node nd, Intervals iv, double[] cx, double[] cz, Relaxation rx,
+                                       double[] gxv, double[] gzv, double[] lambda, int chordCount,
+                                       double[] supports, double[] magnitudeOut) {
+        List<JumpLinearModel.Wall> rows = rx.rows;
+        double val = 0.0;
+        double magnitude = 0.0;
+        for (int t = 0; t < s.n; t++) {
+            double sup = s.geom.support(t, gxv[t], gzv[t], loDeg(nd, t), hiDeg(nd, t));
+            supports[t] = sup;
+            val += sup;
+            magnitude += Math.abs(sup);
+        }
+        for (int j = 0; j < rows.size() && j < lambda.length; j++) {
+            JumpLinearModel.Wall w = rows.get(j);
+            double lj = w.eq ? lambda[j] : Math.max(lambda[j], 0.0);
+            val += lj * w.bPrime;
+            magnitude += Math.abs(lj * w.bPrime);
+        }
+        for (int q = 0; q < chordCount && rows.size() + q < lambda.length; q++) {
+            double lj = Math.max(lambda[rows.size() + q], 0.0);
+            val += lj * (-rx.chords.get(q).rhs);
+            magnitude += Math.abs(lj * rx.chords.get(q).rhs);
+        }
+        if (s.freeP0 != null) {
+            double hx = s.freeP0.objDevX;
+            double hz = s.freeP0.objDevZ;
+            for (int j = 0; j < rows.size() && j < lambda.length; j++) {
+                JumpLinearModel.Wall w = rows.get(j);
+                double lj = w.eq ? lambda[j] : Math.max(lambda[j], 0.0);
+                if (w.axis == 0) hx += lj * w.p0coef;
+                else hz += lj * w.p0coef;
+            }
+            double startX = hx >= 0.0 ? hx * s.freeP0.dvHiX : hx * s.freeP0.dvLoX;
+            double startZ = hz >= 0.0 ? hz * s.freeP0.dvHiZ : hz * s.freeP0.dvLoZ;
+            val += startX + startZ;
+            magnitude += Math.abs(startX) + Math.abs(startZ);
+        }
+        if (iv.anyFree) {
+            double allowance = impulseAllowance(s, iv, cx, cz, rows, rx.boxStart, lambda);
+            val += allowance;
+            magnitude += allowance;
+        }
+        magnitudeOut[0] = magnitude;
+        return val;
+    }
+
+    private static final class GateCase {
+        final int tick;
+        final int axis;
+        final byte natural;
+        final JumpLinearModel.Wall[] rows;
+        final double share;
+
+        GateCase(int tick, int axis, byte natural, JumpLinearModel.Wall[] rows, double share) {
+            this.tick = tick;
+            this.axis = axis;
+            this.natural = natural;
+            this.rows = rows;
+            this.share = share;
+        }
+    }
+
+    private static boolean probeExcludes(GateProbe probe, JumpLinearModel.Wall[] rows) {
+        if (rows == null) return false;
+        for (JumpLinearModel.Wall row : rows) {
+            if (!probe.excludes(row)) return false;
+        }
+        return true;
+    }
+
+    private static boolean resolveExcludes(Search s, Node nd, Intervals iv, JumpLinearModel lin,
+                                           SineTableGeometry.RangeInfo[] ri, double[] cx, double[] cz,
+                                           List<JumpLinearModel.Wall> specWalls, GateProbe probe,
+                                           JumpLinearModel.Wall[] rows) {
+        if (rows == null) return false;
+        for (JumpLinearModel.Wall row : rows) {
+            if (row == null) return false;
+            if (probe.excludes(row)) continue;
+            Relaxation rx = relax(s, nd, iv, lin, ri, cx, cz, specWalls, row);
+            if (rx.oc.result == null) return false;
+            double val = relaxedValue(s, nd, iv, cx, cz, rx, rx.oc.result.gx, rx.oc.result.gz,
+                    rx.oc.result.lambda, rx.chords.size(), new double[s.n], new double[1]);
+            if (val + (s.max ? rx.cp : -rx.cp) > s.incScore + CERT_EPS) return false;
+        }
+        return true;
     }
 
     private static void dropUnresolved(Search s, Node nd) {
@@ -826,7 +920,9 @@ public final class CertifiedBnb {
         }
     }
 
-    private static Node settleGates(Search s, Node nd, Intervals iv, JumpLinearModel lin, double[] cx, double[] cz,
+    private static Node settleGates(Search s, Node nd, Intervals iv, JumpLinearModel lin,
+                                    SineTableGeometry.RangeInfo[] ri, double[] cx, double[] cz,
+                                    List<JumpLinearModel.Wall> specWalls,
                                     List<JumpLinearModel.Wall> rows, int trajectoryRows, double[] lambda,
                                     double[] gxv, double[] gzv, double[] supports, double dualValue,
                                     ForwardPath decPath, boolean[] decZx, boolean[] decZz) {
@@ -843,9 +939,8 @@ public final class CertifiedBnb {
         }
         GateProbe probe = new GateProbe(s.geom, (t, ax, az) -> impulseReach(s, iv, t, ax, az), lo, hi, gxv, gzv,
                 tx, tz, supports, dualValue, s.incScore + CERT_EPS, firstStep);
-        byte[] ngx = null;
-        byte[] ngz = null;
         double sector = s.thr / StrictMath.sqrt(2.0);
+        List<GateCase> cases = new ArrayList<GateCase>();
         for (int t = 1; t < s.n; t++) {
             if (s.perAxis) {
                 for (int axis = 0; axis < 2; axis++) {
@@ -853,49 +948,72 @@ public final class CertifiedBnb {
                     double d = axis == 0 ? iv.slackDx[t] : iv.slackDz[t];
                     double v = axis == 0 ? decPath.velX[t] : decPath.velZ[t];
                     byte natural = (axis == 0 ? decZx[t] : decZz[t]) ? ZERO : (v >= 0.0 ? POS : NEG);
-                    boolean settled;
+                    JumpLinearModel.Wall[] exclusion = null;
                     if (natural == ZERO) {
                         double b = s.thr - d;
-                        settled = b > 1.0e-12 && probe.excludes(lin.keepAliveWall(axis, t, b, true))
-                                && probe.excludes(lin.keepAliveWall(axis, t, b, false));
+                        if (b > 1.0e-12) {
+                            exclusion = new JumpLinearModel.Wall[]{lin.keepAliveWall(axis, t, b, true),
+                                    lin.keepAliveWall(axis, t, b, false)};
+                        }
                     } else {
-                        settled = probe.excludes(lin.keepAliveWall(axis, t, -(s.thr + d), natural == NEG));
+                        exclusion = new JumpLinearModel.Wall[]{
+                                lin.keepAliveWall(axis, t, -(s.thr + d), natural == NEG)};
                     }
-                    if (!settled) continue;
-                    if (ngx == null) {
-                        ngx = nd.gx.clone();
-                        ngz = nd.gz.clone();
-                    }
-                    if (axis == 0) ngx[t] = natural;
-                    else ngz[t] = natural;
+                    cases.add(new GateCase(t, axis, natural, exclusion, s.thr * Math.abs(axis == 0 ? tx[t] : tz[t])));
                 }
             } else if (iv.effX[t] == FREE) {
                 double vx = decPath.velX[t];
                 double vz = decPath.velZ[t];
                 byte natural;
-                boolean settled;
+                JumpLinearModel.Wall[] exclusion = null;
                 if (decZx[t]) {
                     natural = ZERO;
                     double bx = sector - iv.slackDx[t];
                     double bz = sector - iv.slackDz[t];
-                    settled = bx > 1.0e-12 && bz > 1.0e-12
-                            && probe.excludes(lin.keepAliveWall(0, t, bx, true))
-                            && probe.excludes(lin.keepAliveWall(0, t, bx, false))
-                            && probe.excludes(lin.keepAliveWall(1, t, bz, true))
-                            && probe.excludes(lin.keepAliveWall(1, t, bz, false));
+                    if (bx > 1.0e-12 && bz > 1.0e-12) {
+                        exclusion = new JumpLinearModel.Wall[]{lin.keepAliveWall(0, t, bx, true),
+                                lin.keepAliveWall(0, t, bx, false), lin.keepAliveWall(1, t, bz, true),
+                                lin.keepAliveWall(1, t, bz, false)};
+                    }
                 } else if (Math.abs(vx) >= Math.abs(vz)) {
                     natural = vx >= 0.0 ? SECTOR_XP : SECTOR_XN;
-                    settled = probe.excludes(lin.keepAliveWall(0, t, -(s.thr + iv.slackDx[t]), vx < 0.0));
+                    exclusion = new JumpLinearModel.Wall[]{
+                            lin.keepAliveWall(0, t, -(s.thr + iv.slackDx[t]), vx < 0.0)};
                 } else {
                     natural = vz >= 0.0 ? SECTOR_ZP : SECTOR_ZN;
-                    settled = probe.excludes(lin.keepAliveWall(1, t, -(s.thr + iv.slackDz[t]), vz < 0.0));
+                    exclusion = new JumpLinearModel.Wall[]{
+                            lin.keepAliveWall(1, t, -(s.thr + iv.slackDz[t]), vz < 0.0)};
                 }
-                if (!settled) continue;
-                if (ngx == null) ngx = nd.gx.clone();
-                ngx[t] = natural;
+                cases.add(new GateCase(t, 0, natural, exclusion, s.thr * StrictMath.hypot(tx[t], tz[t])));
             }
         }
-        if (ngx == null) return null;
+        List<GateCase> settled = new ArrayList<GateCase>();
+        List<GateCase> open = new ArrayList<GateCase>();
+        for (GateCase c : cases) {
+            if (probeExcludes(probe, c.rows)) settled.add(c);
+            else open.add(c);
+        }
+        if (s.cfg.resolveProbes && !open.isEmpty()) {
+            if (!s.resolveDeadlineSet) {
+                s.resolveDeadlineSet = true;
+                if (s.cfg.deadlineNanos != 0L) {
+                    long now = SolveClock.nanoTime();
+                    s.resolveDeadline = now + (long) (RESOLVE_SHARE * (s.cfg.deadlineNanos - now));
+                }
+            }
+            open.sort((a, b) -> Double.compare(b.share, a.share));
+            for (GateCase c : open) {
+                if (s.resolveStopped()) break;
+                if (resolveExcludes(s, nd, iv, lin, ri, cx, cz, specWalls, probe, c.rows)) settled.add(c);
+            }
+        }
+        if (settled.isEmpty()) return null;
+        byte[] ngx = nd.gx.clone();
+        byte[] ngz = s.perAxis ? nd.gz.clone() : null;
+        for (GateCase c : settled) {
+            if (c.axis == 0) ngx[c.tick] = c.natural;
+            else ngz[c.tick] = c.natural;
+        }
         return new Node(s.nextId++, nd.iLo, nd.iHi, ngx, ngz, nd.depth, nd.score);
     }
 
