@@ -65,7 +65,7 @@ public final class SeedSweepNode implements NodeRuntime {
         } else if (nThreads <= 1) {
             for (int i = 0; i < refs.size(); i++) {
                 if (nodeToken != null && nodeToken.get()) break;
-                out[i] = runSeed(ctx, fast, refs.get(i), nodeToken, 0L);
+                out[i] = runSeed(ctx, fast, refs.get(i), nodeToken);
             }
         } else {
             runParallel(ctx, fast, refs, out, nThreads, nodeToken);
@@ -115,7 +115,7 @@ public final class SeedSweepNode implements NodeRuntime {
                 try {
                     for (int i = lane; i < refs.size(); i += lanes) {
                         if (tokens[lane].get() || (nodeToken != null && nodeToken.get())) break;
-                        out[i] = runSeed(ctx, fast, refs.get(i), tokens[lane], deadlineNanos);
+                        out[i] = runSeed(ctx, fast, refs.get(i), tokens[lane]);
                     }
                 } finally {
                     SolveClock.restore(previous);
@@ -133,7 +133,7 @@ public final class SeedSweepNode implements NodeRuntime {
             final int idx = i;
             tasks.add(() -> {
                 if (nodeToken != null && nodeToken.get()) return;
-                out[idx] = runSeed(ctx, fast, refs.get(idx), nodeToken, 0L);
+                out[idx] = runSeed(ctx, fast, refs.get(idx), nodeToken);
             });
         }
         runTasks(tasks, nThreads);
@@ -162,8 +162,7 @@ public final class SeedSweepNode implements NodeRuntime {
         }
     }
 
-    private static SeedResult runSeed(GraphContext ctx, SolverGraph fast, double[] ref, AtomicBoolean nodeToken,
-                                      long stopNanos) {
+    private static SeedResult runSeed(GraphContext ctx, SolverGraph fast, double[] ref, AtomicBoolean nodeToken) {
         JumpPhysicsInputs sc = ctx.scenario.copy();
         sc.startPos = new Vec3dCore(ref[0], sc.startPos.y, ref[1]);
         sc.startBox = StartBox.pinned(ref[0], ref[1], sc.initialVelocity.x, sc.initialVelocity.z);
@@ -172,7 +171,6 @@ public final class SeedSweepNode implements NodeRuntime {
         AtomicBoolean cancel = nodeToken != null ? nodeToken : new AtomicBoolean(false);
         GraphContext sub = new GraphContext(spec, ctx.model, ctx.freeBox, ctx.legalGoal, ctx.feasTol, cancel,
                 null, true, ctx.longRun);
-        sub.setStopDeadline(stopNanos);
         Candidate c;
         try {
             c = GraphRunner.run(fast, sub);

@@ -67,9 +67,10 @@ public final class GraphRunner {
                 if (reserved < now) reserved = now;
                 if (deadline == 0L || reserved < deadline) deadline = reserved;
             }
-            long stop = ctx.stopDeadline();
-            if (stop > 0 && deadline > 0 && stop < deadline) deadline = stop;
-            AtomicBoolean token = ctx.beginNode(cur, stop > 0 && deadline == 0L ? stop : deadline, budgetNanos);
+            SolveClock clock = SolveClock.current();
+            long stop = clock == null ? Long.MAX_VALUE : clock.deadlineOf(ctx.cancel);
+            if (deadline > 0 && stop < deadline) deadline = stop;
+            AtomicBoolean token = ctx.beginNode(cur, deadline, budgetNanos);
             Guarantee taken = null;
             try {
                 NodeOutcome outcome = rt.execute(ctx, cand, token, deadline);
