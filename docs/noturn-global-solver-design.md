@@ -721,7 +721,16 @@ Cloud, 4 threads, CPU, family lane alone, the full library with the jump's own r
 | j1150 | 10 | 16.2 s | 14.3 s | 10.1 s | 9.5 s |
 | j424 | 9 | 14.9 s | 14.8 s (not applicable) | 4.2 s | 4.2 s |
 
-All ten runs found a Strat. The enumeration is 1.1 to 2.1 times faster per band, and the time to the first Strat does not follow it: on these four cloud threads the certifier's queue decides it. On j154 the recorded Strat is offered when band 10 ends, about 20 kept candidates rank ahead of it by screen value at that moment (36 once band 11 is in, 55 after band 13), one batch of 20 certifies in about 6 s, and the three queues take turns. Further runs of the same builds gave 42.3 s without the test and 30.8 s, 50.1 s and no Strat in 20 s with it; a faster walk fills the queue sooner with candidates that rank ahead. So this change is worth merging only if the PC run shows a gain there, where the certifier has 30 threads; the next lever for j154 is the order and the cost of the certifier, not the walk.
+All ten runs found a Strat. The enumeration is 1.1 to 2.1 times faster per band, and the time to the first Strat does not follow it: on these four cloud threads the certifier's queue decides it. On j154 the recorded Strat is offered when band 10 ends, about 20 kept candidates rank ahead of it by screen value at that moment (36 once band 11 is in, 55 after band 13), one batch of 20 certifies in about 6 s, and the three queues take turns. Further runs of the same builds gave 42.3 s without the test and 30.8 s, 50.1 s and no Strat in 20 s with it; a faster walk fills the queue sooner with candidates that rank ahead. On the development PC the certifier has 30 threads and the balance is different.
+
+The development PC, one run each (30 threads, graphics card screen on, both lanes, the full library, no game open, the same jar at cc10b43 with `-Dpkc.bench.familySubtreeCuts=0` and `=8`):
+
+| jump | first Strat off | first Strat on | band 10 of the exact tier off | on |
+| --- | --- | --- | --- | --- |
+| j154 | 12.9 s | 7.0 s | 895 ms | 258 ms |
+| j1099 | 16.6 s | 16.8 s | 2921 ms | 2619 ms |
+
+All four runs found a Strat. j154 is found in about half the time, j1099 is unchanged. The run without the test repeats the 13.1 s of the gh-683 run. What is left on j154 after the walk is the certifier: its order and its cost per candidate are the next lever.
 
 `NoTurnFreeAirExactTest.droppedSubtreesHoldNoScheduleTheFullSolveKeeps` builds a walk of 7 choices per segment on j154, j716 and j1099, solves all of its schedules fully and holds both tests to that: the subtree value of every node and vector is never under the best stored value of a schedule below it and within 1e-3 of it, a dropped node holds no schedule the full solve keeps, and the batched test agrees with the per schedule check on every choice. Four of five planted faults fail it (a choice missing from the rest table, a sprint variant without its shift, 16 directions instead of 256, no slack on the directions); a wrong sprint state after a choice does not.
 
