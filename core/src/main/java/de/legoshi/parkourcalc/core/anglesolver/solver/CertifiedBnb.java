@@ -60,6 +60,7 @@ public final class CertifiedBnb {
         public Double seedPz;
         public boolean homotopy;
         public boolean probeGates = true;
+        public int incumbentPolishCap;
     }
 
     public static final class Result {
@@ -159,6 +160,8 @@ public final class CertifiedBnb {
         double stuckScore = Double.NEGATIVE_INFINITY;
         long incVersion;
         long sweptVersion = -1L;
+        long polishedVersion = -1L;
+        int incumbentPolishes;
 
         Search(ExactJumpModel exact, JumpSpec spec, Config cfg, YawTies ties, YawOrder order) {
             this.exact = exact;
@@ -291,6 +294,12 @@ public final class CertifiedBnb {
             while (s.incVersion != s.sweptVersion && !s.stopped()) {
                 s.sweptVersion = s.incVersion;
                 argmaxSweep(s);
+                if (s.incVersion == s.sweptVersion && s.incVersion != s.polishedVersion && s.incYaws != null
+                        && s.incumbentPolishes < s.cfg.incumbentPolishCap && !s.stopped()) {
+                    s.incumbentPolishes++;
+                    s.polishedVersion = s.incVersion;
+                    polishFrom(s, s.incYaws, s.incPx, s.incPz);
+                }
             }
             Node nd = open.peek();
             if (nd == null) {
@@ -1040,8 +1049,11 @@ public final class CertifiedBnb {
         ForwardPath path = s.exact.forward(scRep, gf);
         double viol = s.compiled.maxViolation(gf, path);
         double obj = s.spec.objective.evaluate(path);
+        long acceptedAs = -1L;
         if (viol == 0.0) {
+            long before = s.incVersion;
             acceptIncumbent(s, yaws, px, pz, obj);
+            if (s.incVersion != before) acceptedAs = s.incVersion;
         } else if (viol < s.bestInfeasViol) {
             s.bestInfeasViol = viol;
             s.bestInfeasYaws = yaws.clone();
@@ -1049,22 +1061,28 @@ public final class CertifiedBnb {
         if (allowPolish && s.polishCalls < s.cfg.polishCap
                 && (viol == 0.0 ? s.cfg.mode == Mode.OPTIMIZE : viol < POLISH_VIOL_CAP)) {
             s.polishCalls++;
-            FoldReplayDriver.Params p = new FoldReplayDriver.Params();
-            p.cancel = s.cfg.cancel;
-            p.deadlineNanos = s.cfg.deadlineNanos;
-            p.objectiveRounds = s.cfg.mode == Mode.OPTIMIZE ? 8 : 0;
-            FoldReplayDriver.Result pr = FoldReplayDriver.polishFromAnchor(s.exact, s.spec, yaws, px, pz, p);
-            FoldReplayDriver.Round b = pr.best;
-            if (b != null) {
-                if (b.feasible()) {
-                    acceptIncumbent(s, b.yawsDeg, b.px, b.pz, b.objective);
-                } else if (b.maxViolation < s.bestInfeasViol) {
-                    s.bestInfeasViol = b.maxViolation;
-                    s.bestInfeasYaws = b.yawsDeg.clone();
-                }
-            }
+            polishFrom(s, yaws, px, pz);
+            if (acceptedAs == s.incVersion) s.polishedVersion = acceptedAs;
         }
         return path;
+    }
+
+    private static void polishFrom(Search s, double[] yaws, double px, double pz) {
+        FoldReplayDriver.Params p = new FoldReplayDriver.Params();
+        p.cancel = s.cfg.cancel;
+        p.deadlineNanos = s.cfg.deadlineNanos;
+        p.objectiveRounds = s.cfg.mode == Mode.OPTIMIZE ? 8 : 0;
+        FoldReplayDriver.Result pr = FoldReplayDriver.polishFromAnchor(s.exact, s.spec, yaws, px, pz, p);
+        FoldReplayDriver.Round b = pr.best;
+        if (b == null) return;
+        if (b.feasible()) {
+            long before = s.incVersion;
+            acceptIncumbent(s, b.yawsDeg, b.px, b.pz, b.objective);
+            if (s.incVersion != before) s.polishedVersion = s.incVersion;
+        } else if (b.maxViolation < s.bestInfeasViol) {
+            s.bestInfeasViol = b.maxViolation;
+            s.bestInfeasYaws = b.yawsDeg.clone();
+        }
     }
 
     private static void acceptIncumbent(Search s, double[] yaws, double px, double pz, double obj) {

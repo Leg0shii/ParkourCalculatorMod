@@ -143,7 +143,10 @@ anglesolver/
                            inertia threshold certify the same optimum with and without probing (cases
                            picked so that a wrong probe row, target or sector moves it), and on j021,
                            loopmm-3jump-lands and j002 probing cuts the 150-node gap to under a quarter
-                           without the bound falling below a landing either run found
+                           without the bound falling below a landing either run found;
+                           landing polish (SlowSolverTests): on j016 at 300 nodes the search that polishes
+                           every new incumbent (Config.incumbentPolishCap 12) lands more than 5e-5 further
+                           than the one that does not, byte-exact, and its bound stays above both landings
   GateProbeTest.java       the one-row dual probe behind CertifiedBnb.settleGates: for random directions on
                            1.8.9 and 1.21.5 the probe value at any multiplier is at least the objective of
                            every sampled cell path on the row's side, and a side that holds a path is never

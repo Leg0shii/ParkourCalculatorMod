@@ -80,6 +80,7 @@ public final class CertifiedBnbNode implements NodeRuntime {
         cfg.mode = optimize ? CertifiedBnb.Mode.OPTIMIZE : CertifiedBnb.Mode.FIRST_FEASIBLE;
         cfg.nodeCap = cap;
         cfg.polishCap = optimize ? 12 : 2;
+        cfg.incumbentPolishCap = optimize ? 12 : 0;
         cfg.cancel = cancelToken;
         cfg.deadlineNanos = solveDeadline;
         cfg.homotopy = ctx.foldableDf() && ctx.overallDeadline() > 0;
