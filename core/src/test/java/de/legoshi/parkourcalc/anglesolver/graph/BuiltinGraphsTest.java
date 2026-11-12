@@ -23,7 +23,7 @@ public class BuiltinGraphsTest {
 
     private static final List<String> FAST_NODES = Arrays.asList(
             "entry", "horizon", "wrap0", "seed", "cap1", "freeRescue", "peel", "freeImprove",
-            "sweep", "ils2", "translate2", "fold", "ladder", "cert", "bnb", "ils", "cap2",
+            "sweep", "translate2", "fold", "ladder", "cert", "bnb", "ils", "cap2",
             "wrap", "translate", "certify", "emit");
 
     private static final List<String> OPTIMIZE_NODES = Arrays.asList(
@@ -33,19 +33,19 @@ public class BuiltinGraphsTest {
 
     private static final List<String> MULTI_START_NODES = Arrays.asList(
             "entry", "seeds", "horizon", "wrap0", "seed", "cap1", "freeRescue", "peel", "freeImprove",
-            "sweep", "ils2", "translate2", "fold", "ladder", "cert", "bnb", "ils", "cap2",
+            "sweep", "translate2", "fold", "ladder", "cert", "bnb", "ils", "cap2",
             "wrap", "translate", "certify", "emit");
 
     private static final String[][] FAST_PAIRS = {
             {"entry", "seed"}, {"seed", "horizon"}, {"horizon", "wrap0"}, {"wrap0", "cap1"},
             {"cap1", "freeRescue"}, {"freeRescue", "peel"}, {"peel", "freeImprove"}, {"freeImprove", "sweep"},
-            {"ils2", "translate2"}, {"fold", "ladder"}, {"ladder", "cert"}, {"cert", "bnb"}, {"bnb", "ils"},
+            {"fold", "ladder"}, {"ladder", "cert"}, {"cert", "bnb"}, {"bnb", "ils"},
             {"ils", "cap2"}, {"cap2", "wrap"}, {"wrap", "translate"}, {"translate", "certify"}, {"certify", "emit"}};
 
     private static final String[][] MULTI_START_PAIRS = {
             {"entry", "seeds"}, {"seeds", "seed"}, {"seed", "horizon"}, {"horizon", "wrap0"}, {"wrap0", "cap1"},
             {"cap1", "freeRescue"}, {"freeRescue", "peel"}, {"peel", "freeImprove"}, {"freeImprove", "sweep"},
-            {"ils2", "translate2"}, {"fold", "ladder"}, {"ladder", "cert"}, {"cert", "bnb"}, {"bnb", "ils"},
+            {"fold", "ladder"}, {"ladder", "cert"}, {"cert", "bnb"}, {"bnb", "ils"},
             {"ils", "cap2"}, {"cap2", "wrap"}, {"wrap", "translate"}, {"translate", "certify"}, {"certify", "emit"}};
 
     private static final String[][] OPTIMIZE_PAIRS = {
@@ -77,15 +77,19 @@ public class BuiltinGraphsTest {
         }
     }
 
-    private static void assertLoopEdges(SolverGraph g, boolean looping) {
-        assertNotNull("sweep TRUE must continue into ils2", g.edgeFor("sweep", Guarantee.TRUE));
-        assertEquals("ils2", g.edgeFor("sweep", Guarantee.TRUE).toNode);
+    private static void assertLoopEdges(SolverGraph g, boolean looping, boolean polished) {
+        assertNotNull("sweep TRUE must continue into the loop body", g.edgeFor("sweep", Guarantee.TRUE));
+        assertEquals(polished ? "ils2" : "translate2", g.edgeFor("sweep", Guarantee.TRUE).toNode);
         for (Guarantee br : new Guarantee[]{Guarantee.FOUND, Guarantee.IMPROVED, Guarantee.UNCHANGED, Guarantee.NONE}) {
             assertNotNull("sweep " + br + " must exit to fold", g.edgeFor("sweep", br));
             assertEquals("sweep " + br, "fold", g.edgeFor("sweep", br).toNode);
         }
-        assertEquals("ils2", "translate2", g.edgeFor("ils2", Guarantee.IMPROVED).toNode);
-        assertEquals("ils2", "translate2", g.edgeFor("ils2", Guarantee.UNCHANGED).toNode);
+        if (polished) {
+            assertEquals("ils2", "translate2", g.edgeFor("ils2", Guarantee.IMPROVED).toNode);
+            assertEquals("ils2", "translate2", g.edgeFor("ils2", Guarantee.UNCHANGED).toNode);
+        } else {
+            assertNull("the loop body is the start move alone", g.node("ils2"));
+        }
         assertNotNull(g.edgeFor("translate2", Guarantee.DONE));
         assertEquals("translate2 back edge only when the tier runs the loop",
                 looping ? "sweep" : "fold", g.edgeFor("translate2", Guarantee.DONE).toNode);
@@ -97,7 +101,7 @@ public class BuiltinGraphsTest {
         assertFalse(GraphValidator.hasErrors(GraphValidator.validate(fast)));
         assertEquals(FAST_NODES, nodeIds(fast));
         assertLinear(fast, FAST_PAIRS);
-        assertLoopEdges(fast, false);
+        assertLoopEdges(fast, false, false);
         assertNull("fast has no leaf snap stage", fast.node("snap"));
     }
 
@@ -107,7 +111,43 @@ public class BuiltinGraphsTest {
         assertFalse(GraphValidator.hasErrors(GraphValidator.validate(opt)));
         assertEquals(OPTIMIZE_NODES, nodeIds(opt));
         assertLinear(opt, OPTIMIZE_PAIRS);
-        assertLoopEdges(opt, true);
+        assertLoopEdges(opt, true, true);
+    }
+
+    @Test
+    public void aShortOptimizeOpensWithBothStarts() {
+        for (int sec = 1; sec < BuiltinGraphs.BOTH_STARTS_BELOW_SEC; sec++) {
+            SolverGraph g = BuiltinGraphs.optimize(sec);
+            assertFalse(GraphValidator.hasErrors(GraphValidator.validate(g)));
+            List<String> expected = new ArrayList<String>(OPTIMIZE_NODES);
+            expected.remove("seeds");
+            expected.add(expected.indexOf("horizon"), "cold");
+            expected.add(expected.indexOf("cap1"), "pick");
+            assertEquals(sec + " s", expected, nodeIds(g));
+            assertLinear(g, new String[][]{{"entry", "cold"}, {"cold", "horizon"}, {"horizon", "wrap0"},
+                    {"wrap0", "seed"}, {"seed", "pick"}, {"pick", "cap1"}});
+            assertEquals("dualChain", g.node("cold").type.id);
+            assertEquals(BuiltinGraphs.COLD_START_CAP_MS, g.node("cold").params.getInt("budgetMs"));
+            assertTrue(g.node("cold").params.getBool("keepBetter"));
+            assertTrue(g.node("horizon").params.getBool("keepIncoming"));
+            assertEquals("pickStart", g.node("pick").type.id);
+        }
+    }
+
+    @Test
+    public void fromTheGateOnOptimizeStartsWithTheHorizonAlone() {
+        for (int sec : new int[]{BuiltinGraphs.BOTH_STARTS_BELOW_SEC, 10, 50}) {
+            SolverGraph g = BuiltinGraphs.optimize(sec);
+            assertNull(sec + " s", g.node("cold"));
+            assertNull(sec + " s", g.node("pick"));
+            assertFalse(g.node("horizon").params.getBool("keepIncoming"));
+        }
+        for (SolverGraph g : new SolverGraph[]{BuiltinGraphs.fast(), BuiltinGraphs.fastMultiStart(),
+                BuiltinGraphs.fastRunTicks()}) {
+            assertNull(g.node("cold"));
+            assertNull(g.node("pick"));
+            assertFalse(g.node("horizon").params.getBool("keepIncoming"));
+        }
     }
 
     @Test
@@ -138,8 +178,25 @@ public class BuiltinGraphsTest {
         assertTrue("the last leaf snap repeats until nothing improves", opt.node("snap2").params.getBool("repeat"));
         assertEquals(0, fast.node("sweep").params.getInt("budgetSec"));
         assertTrue(opt.node("sweep").params.getInt("budgetSec") > 0);
-        assertEquals(0, fast.node("ils2").params.getInt("budgetSec"));
+        assertNull("fast never enters the sweep loop and carries no ILS stage for it", fast.node("ils2"));
         assertTrue(opt.node("ils2").params.getInt("budgetSec") > 0);
+    }
+
+    @Test
+    public void theSweepLoopPolishesItsCandidatesOnlyOnALongOptimize() {
+        SolverGraph longRun = BuiltinGraphs.optimize(BuiltinGraphs.SWEEP_ILS_FROM_SEC);
+        assertFalse(GraphValidator.hasErrors(GraphValidator.validate(longRun)));
+        assertLoopEdges(longRun, true, true);
+        assertEquals(3, longRun.node("ils2").params.getInt("budgetSec"));
+        for (int sec : new int[]{1, 2, 10, 15, BuiltinGraphs.SWEEP_ILS_FROM_SEC - 1}) {
+            SolverGraph shortRun = BuiltinGraphs.optimize(sec);
+            assertFalse(sec + " s", GraphValidator.hasErrors(GraphValidator.validate(shortRun)));
+            assertLoopEdges(shortRun, true, false);
+            List<String> expected = new ArrayList<String>(OPTIMIZE_NODES);
+            if (shortRun.node("seeds") == null) expected.remove("seeds");
+            expected.remove("ils2");
+            assertEquals(sec + " s", expected, nodeIds(shortRun));
+        }
     }
 
     @Test
@@ -148,7 +205,7 @@ public class BuiltinGraphsTest {
         assertFalse(GraphValidator.hasErrors(GraphValidator.validate(multi)));
         assertEquals(MULTI_START_NODES, nodeIds(multi));
         assertLinear(multi, MULTI_START_PAIRS);
-        assertLoopEdges(multi, false);
+        assertLoopEdges(multi, false, false);
         assertEquals(BuiltinGraphs.SWEEP_SEEDS, multi.node("seeds").params.getInt("seeds"));
         assertEquals(BuiltinGraphs.MULTI_START_SWEEP_SEC, multi.node("seeds").params.getInt("budgetSec"));
         assertNull("plain fast has no seed sweep", BuiltinGraphs.fast().node("seeds"));
@@ -164,7 +221,7 @@ public class BuiltinGraphsTest {
         assertFalse(GraphValidator.hasErrors(GraphValidator.validate(rt)));
         assertEquals(FAST_NODES, nodeIds(rt));
         assertLinear(rt, FAST_PAIRS);
-        assertLoopEdges(rt, false);
+        assertLoopEdges(rt, false, false);
         assertEquals(0, rt.node("seed").params.getInt("budgetMs"));
     }
 
@@ -214,6 +271,6 @@ public class BuiltinGraphsTest {
         assertFalse(GraphValidator.hasErrors(GraphValidator.validate(g)));
         assertEquals(OPTIMIZE_NODES, nodeIds(g));
         assertLinear(g, OPTIMIZE_PAIRS);
-        assertLoopEdges(g, true);
+        assertLoopEdges(g, true, true);
     }
 }

@@ -12,6 +12,12 @@ public final class GraphRunState {
         public final String nodeId;
         public final String label;
         public Guarantee taken;
+        public long workNanos = -1L;
+        public long[] workUnits;
+        public double objective = Double.NaN;
+        public double violation = Double.NaN;
+        public double dualGap = Double.NaN;
+        public boolean feasible;
 
         Step(String nodeId, String label) {
             this.nodeId = nodeId;
@@ -21,6 +27,12 @@ public final class GraphRunState {
         public Step copy() {
             Step s = new Step(nodeId, label);
             s.taken = taken;
+            s.workNanos = workNanos;
+            s.workUnits = workUnits;
+            s.objective = objective;
+            s.violation = violation;
+            s.dualGap = dualGap;
+            s.feasible = feasible;
             return s;
         }
     }
@@ -60,6 +72,20 @@ public final class GraphRunState {
         }
         if (nodeId.equals(activeNodeId)) activeNodeId = null;
         version++;
+    }
+
+    public synchronized void noteResult(String nodeId, long workNanos, long[] workUnits, Candidate cand) {
+        if (steps.isEmpty()) return;
+        Step last = steps.get(steps.size() - 1);
+        if (!last.nodeId.equals(nodeId)) return;
+        last.workNanos = workNanos;
+        last.workUnits = workUnits;
+        if (cand != null && cand.yaws != null) {
+            last.objective = cand.objective;
+            last.violation = cand.violation;
+            last.dualGap = cand.dualGap;
+            last.feasible = cand.feasible;
+        }
     }
 
     public synchronized int version() {

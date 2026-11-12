@@ -276,6 +276,7 @@ public final class AngleSolverEngine {
         r.race = rec.race;
         if (ctx != null) {
             r.nodes = SolveRunRecord.nodeRunsOf(ctx.runState.statuses());
+            r.steps = SolveRunRecord.stepRunsOf(ctx.runState.steps());
             SolveRunRecord.Counters counters = new SolveRunRecord.Counters();
             counters.smoothingEvals = ctx.smoothingEvals.get();
             r.counters = counters;
@@ -1296,6 +1297,11 @@ public final class AngleSolverEngine {
         if (Double.isNaN(dualGap) && ctx.dualGapRequested() && !Double.isNaN(ctx.reachBound()) && cand.feasible) {
             double bound = ctx.reachBound();
             dualGap = Math.max(0.0, ctx.maximize() ? bound - cand.objective : cand.objective - bound);
+        }
+        double proven = ctx.provenBound();
+        if (!Double.isNaN(proven) && cand.feasible) {
+            double provenGap = Math.max(0.0, ctx.maximize() ? proven - cand.objective : cand.objective - proven);
+            if (Double.isNaN(dualGap) || provenGap < dualGap) dualGap = provenGap;
         }
         long solveNanos = System.nanoTime() - solveStart;
         if (SolverTrace.on()) {

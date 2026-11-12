@@ -409,6 +409,57 @@ public class CertifiedBnbTest {
         }
     }
 
+    private static CertifiedBnb.Result optimizeResolving(ExactJumpModel model, JumpSpec spec, int nodeCap,
+                                                         long seconds) {
+        CertifiedBnb.Config cfg = new CertifiedBnb.Config();
+        cfg.mode = CertifiedBnb.Mode.OPTIMIZE;
+        cfg.nodeCap = nodeCap;
+        cfg.polishCap = 6;
+        cfg.resolveProbes = true;
+        if (seconds > 0) cfg.deadlineNanos = System.nanoTime() + seconds * 1_000_000_000L;
+        return CertifiedBnb.solve(model, spec, cfg);
+    }
+
+    @Test
+    @Category(SlowSolverTests.class)
+    public void resolveProbingKeepsTheCertifiedOptimumOfNearThresholdCarries() {
+        Random rnd = new Random(1L);
+        for (int k = 0; k < GATE_CASES; k++) {
+            JumpSpec spec = nearThresholdCase(rnd);
+            if (Arrays.binarySearch(GATE_CASES_SOLVED, k) < 0) continue;
+            String version = k % 2 == 0 ? "1.8.9" : "1.21.5";
+            ExactJumpModel model = ExactJumpModel.forMcVersion(version);
+            CertifiedBnb.Result plain = optimize(model, spec, false, 200000, 60);
+            CertifiedBnb.Result resolving = optimizeResolving(model, spec, 200000, 60);
+            String label = "case " + k + " on " + version;
+            assertTrue(label + " must certify without probing, gap=" + plain.gap, plain.certified);
+            assertTrue(label + " must certify with resolve probing, gap=" + resolving.gap, resolving.certified);
+            assertEquals(label + " resolve probing moved the certified optimum", plain.objective,
+                    resolving.objective, CertifiedBnb.CERT_EPS);
+        }
+    }
+
+    @Test
+    @Category(SlowSolverTests.class)
+    public void resolveProbingSettlesCasesTheMultiplierProbeLeavesOpen() {
+        for (String name : new String[]{"j021-rinav1-01", "j019-3jmmtruenix"}) {
+            ProblemFixture pf = ProblemFixture.load("solve", name);
+            ProblemFixture.Rig rig = pf.rig();
+            JumpSpec spec = rig.spec();
+            double sign = spec.objective.sense == Objective.Sense.MAX ? 1.0 : -1.0;
+            CertifiedBnb.Result probed = optimize(pf.model, spec, true, 150, 60);
+            CertifiedBnb.Result resolving = optimizeResolving(pf.model, spec, 150, 60);
+            assertTrue(name + " must land with the multiplier probe", probed.feasible);
+            assertTrue(name + " must land with resolve probing", resolving.feasible);
+            double bestLanding = Math.max(sign * probed.objective, sign * resolving.objective);
+            assertTrue(name + " resolved bound " + resolving.boundObjective + " cuts below a landing at "
+                            + sign * bestLanding,
+                    sign * resolving.boundObjective >= bestLanding - CertifiedBnb.CERT_EPS);
+            assertTrue(name + " gap " + resolving.gap + " with resolve probing against " + probed.gap
+                    + " with the multiplier probe", resolving.gap < 0.25 * probed.gap);
+        }
+    }
+
     private static CertifiedBnb.Result optimizeWithLandingPolish(ExactJumpModel model, JumpSpec spec,
                                                                  int incumbentPolishCap) {
         CertifiedBnb.Config cfg = new CertifiedBnb.Config();
