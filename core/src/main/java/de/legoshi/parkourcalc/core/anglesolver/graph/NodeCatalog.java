@@ -194,6 +194,7 @@ public final class NodeCatalog {
                 .param(ParamSpec.integer("ffNodeCap", "First-feasible node cap", 0, 1000000, 32))
                 .param(ParamSpec.integer("tickCap", "Tick cap", 0, 100000, BuiltinGraphs.IMPROVE_TICK_CAP))
                 .param(ParamSpec.bool("exhaust", "Exhaust while nothing lands", false))
+                .param(ParamSpec.bool("dive", "Second pass in dive order", false))
                 .param(ParamSpec.text("labelSuffix", "Chain suffix", ""))
                 .budgetParam("budgetSec")
                 .fallback(Guarantee.UNCHANGED)

@@ -186,6 +186,20 @@ public final class BuiltinGraphs {
             g.add("snap", "leafSnap")
                     .set("snap", "pairPass", fastTier ? 0 : 1);
         }
+        if (!fastTier) {
+            g.add("dive", "certBnb")
+                    .set("dive", "budgetSec", t)
+                    .set("dive", "ffSec", 0)
+                    .set("dive", "ffNodeCap", 0)
+                    .set("dive", "tickCap", IMPROVE_TICK_CAP)
+                    .set("dive", "dive", true)
+                    .set("dive", "labelSuffix", " (dive order)");
+            g.add("translate3", "translatedStart");
+            if (leafSnap) {
+                g.add("snap2", "leafSnap")
+                        .set("snap2", "pairPass", 1);
+            }
+        }
         g.add("certify", "certBnb")
                 .set("certify", "budgetSec", fastTier ? 0 : t)
                 .set("certify", "ffSec", 0)
@@ -234,12 +248,21 @@ public final class BuiltinGraphs {
             chain(g, "polish", "wrap");
         }
         chain(g, "wrap", "translate");
+        String last = "translate";
         if (leafSnap) {
-            chain(g, "translate", "snap");
-            chain(g, "snap", "certify");
-        } else {
-            chain(g, "translate", "certify");
+            chain(g, last, "snap");
+            last = "snap";
         }
+        if (!fastTier) {
+            chain(g, last, "dive");
+            chain(g, "dive", "translate3");
+            last = "translate3";
+            if (leafSnap) {
+                chain(g, last, "snap2");
+                last = "snap2";
+            }
+        }
+        chain(g, last, "certify");
         chain(g, "certify", "emit");
         return g.build();
     }
