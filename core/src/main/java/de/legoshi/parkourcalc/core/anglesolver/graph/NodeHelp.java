@@ -274,6 +274,9 @@ public final class NodeHelp {
                 + " keeping the snap only if the jump still lands.");
         param("leafSnap", "pairPass", "Turn on a second, more thorough snapping pass that adjusts angles in"
                 + " pairs. 0 off, 1 on. Slower but can land a cleaner result.");
+        param("leafSnap", "repeat", "Snap again from the snapped result until a snap finds nothing better or"
+                + " the time is up. Each snap only looks at exact values close to the angles it starts from,"
+                + " so a repeat can reach further. A snap also only looks at the last 12 turning ticks of the jump; the repeat then goes through the earlier ones, 12 at a time. Needs a time budget.");
 
         node("latticePolish", "Takes a jump that already lands to the best nearby solution the game's angle"
                 + " grid allows. It first finds the exact smooth optimum for the start spot and every aim"

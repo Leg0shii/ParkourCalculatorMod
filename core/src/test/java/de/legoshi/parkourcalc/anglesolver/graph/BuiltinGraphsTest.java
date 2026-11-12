@@ -127,12 +127,15 @@ public class BuiltinGraphsTest {
         assertEquals(0, opt.node("seed").params.getInt("budgetMs"));
         assertNull("fast has no leaf snap stage", fast.node("snap"));
         assertEquals(1, opt.node("snap").params.getInt("pairPass"));
+        assertFalse("the first leaf snap is one call, a repeat there takes the second pass's time",
+                opt.node("snap").params.getBool("repeat"));
         assertNull("fast has no dive order stage", fast.node("dive"));
         assertTrue(opt.node("dive").params.getBool("dive"));
         assertEquals(120, opt.node("dive").params.getInt("budgetSec"));
         assertNull("fast has no stages behind the dive order stage", fast.node("translate3"));
         assertNull(fast.node("snap2"));
         assertEquals(1, opt.node("snap2").params.getInt("pairPass"));
+        assertTrue("the last leaf snap repeats until nothing improves", opt.node("snap2").params.getBool("repeat"));
         assertEquals(0, fast.node("sweep").params.getInt("budgetSec"));
         assertTrue(opt.node("sweep").params.getInt("budgetSec") > 0);
         assertEquals(0, fast.node("ils2").params.getInt("budgetSec"));
