@@ -60,21 +60,16 @@ public final class SeedSweepNode implements NodeRuntime {
         SolverGraph fast = BuiltinGraphs.fast();
         long t0 = SolveClock.nanoTime();
         SolveClock clock = SolveClock.current();
-        SolveClock[] forks = clock == null ? null : new SolveClock[refs.size()];
-        AtomicBoolean[] tokens = new AtomicBoolean[refs.size()];
-        for (int i = 0; i < refs.size(); i++) {
-            tokens[i] = clock == null ? nodeToken : new AtomicBoolean(false);
-            if (clock != null) forks[i] = clock.fork(tokens[i], deadlineNanos);
-        }
-        if (nThreads <= 1) {
+        if (clock != null) {
+            runLanes(clock, ctx, fast, refs, out, nodeToken, deadlineNanos);
+        } else if (nThreads <= 1) {
             for (int i = 0; i < refs.size(); i++) {
                 if (nodeToken != null && nodeToken.get()) break;
-                out[i] = runSeedOn(forks == null ? null : forks[i], ctx, fast, refs.get(i), tokens[i]);
+                out[i] = runSeed(ctx, fast, refs.get(i), nodeToken, 0L);
             }
         } else {
-            runParallel(ctx, fast, refs, out, nThreads, nodeToken, forks, tokens);
+            runParallel(ctx, fast, refs, out, nThreads, nodeToken);
         }
-        if (clock != null) clock.join(forks);
         SeedResult best = null;
         int feasibleCount = 0;
         boolean max = ctx.maximize();
@@ -105,19 +100,50 @@ public final class SeedSweepNode implements NodeRuntime {
         return Math.max(1, Math.min(n, work));
     }
 
-    private static SeedResult runSeedOn(SolveClock fork, GraphContext ctx, SolverGraph fast, double[] ref,
-                                        AtomicBoolean token) {
-        if (fork == null) return runSeed(ctx, fast, ref, token);
-        SolveClock previous = fork.enter();
-        try {
-            return runSeed(ctx, fast, ref, token);
-        } finally {
-            SolveClock.restore(previous);
+    private void runLanes(SolveClock clock, GraphContext ctx, SolverGraph fast, List<double[]> refs,
+                          SeedResult[] out, AtomicBoolean nodeToken, long deadlineNanos) {
+        int lanes = Math.min(SolveClock.WORKERS, refs.size());
+        SolveClock[] forks = new SolveClock[lanes];
+        AtomicBoolean[] tokens = new AtomicBoolean[lanes];
+        List<Runnable> tasks = new ArrayList<>(lanes);
+        for (int l = 0; l < lanes; l++) {
+            final int lane = l;
+            tokens[l] = new AtomicBoolean(false);
+            forks[l] = clock.forkSerial(tokens[l], deadlineNanos);
+            tasks.add(() -> {
+                SolveClock previous = forks[lane].enter();
+                try {
+                    for (int i = lane; i < refs.size(); i += lanes) {
+                        if (tokens[lane].get() || (nodeToken != null && nodeToken.get())) break;
+                        out[i] = runSeed(ctx, fast, refs.get(i), tokens[lane], deadlineNanos);
+                    }
+                } finally {
+                    SolveClock.restore(previous);
+                }
+            });
         }
+        runTasks(tasks, threadCount(ctx, lanes));
+        clock.join(forks);
     }
 
     private void runParallel(GraphContext ctx, SolverGraph fast, List<double[]> refs, SeedResult[] out,
-                             int nThreads, AtomicBoolean nodeToken, SolveClock[] forks, AtomicBoolean[] tokens) {
+                             int nThreads, AtomicBoolean nodeToken) {
+        List<Runnable> tasks = new ArrayList<>(refs.size());
+        for (int i = 0; i < refs.size(); i++) {
+            final int idx = i;
+            tasks.add(() -> {
+                if (nodeToken != null && nodeToken.get()) return;
+                out[idx] = runSeed(ctx, fast, refs.get(idx), nodeToken, 0L);
+            });
+        }
+        runTasks(tasks, nThreads);
+    }
+
+    private static void runTasks(List<Runnable> tasks, int nThreads) {
+        if (nThreads <= 1) {
+            for (Runnable task : tasks) task.run();
+            return;
+        }
         AtomicInteger seq = new AtomicInteger();
         ExecutorService pool = Executors.newFixedThreadPool(nThreads, r -> {
             Thread t = new Thread(r, "seed-sweep-" + seq.incrementAndGet());
@@ -126,13 +152,7 @@ public final class SeedSweepNode implements NodeRuntime {
             return t;
         });
         List<Future<?>> futures = new ArrayList<>();
-        for (int i = 0; i < refs.size(); i++) {
-            final int idx = i;
-            futures.add(pool.submit(() -> {
-                if (nodeToken != null && nodeToken.get()) return;
-                out[idx] = runSeedOn(forks == null ? null : forks[idx], ctx, fast, refs.get(idx), tokens[idx]);
-            }));
-        }
+        for (Runnable task : tasks) futures.add(pool.submit(task));
         pool.shutdown();
         try {
             for (Future<?> f : futures) f.get();
@@ -142,7 +162,8 @@ public final class SeedSweepNode implements NodeRuntime {
         }
     }
 
-    private static SeedResult runSeed(GraphContext ctx, SolverGraph fast, double[] ref, AtomicBoolean nodeToken) {
+    private static SeedResult runSeed(GraphContext ctx, SolverGraph fast, double[] ref, AtomicBoolean nodeToken,
+                                      long stopNanos) {
         JumpPhysicsInputs sc = ctx.scenario.copy();
         sc.startPos = new Vec3dCore(ref[0], sc.startPos.y, ref[1]);
         sc.startBox = StartBox.pinned(ref[0], ref[1], sc.initialVelocity.x, sc.initialVelocity.z);
@@ -151,6 +172,7 @@ public final class SeedSweepNode implements NodeRuntime {
         AtomicBoolean cancel = nodeToken != null ? nodeToken : new AtomicBoolean(false);
         GraphContext sub = new GraphContext(spec, ctx.model, ctx.freeBox, ctx.legalGoal, ctx.feasTol, cancel,
                 null, true, ctx.longRun);
+        sub.setStopDeadline(stopNanos);
         Candidate c;
         try {
             c = GraphRunner.run(fast, sub);

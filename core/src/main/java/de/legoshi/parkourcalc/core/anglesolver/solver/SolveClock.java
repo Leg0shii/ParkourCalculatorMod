@@ -51,6 +51,7 @@ public final class SolveClock {
     private int advances;
     private boolean overran;
     private int rateShift;
+    private int workers = WORKERS;
 
     private SolveClock(long startNanos, AtomicBoolean outer, long wallLimitNanos, long seedMix) {
         this.startNanos = startNanos;
@@ -108,8 +109,19 @@ public final class SolveClock {
     public SolveClock fork(AtomicBoolean token, long deadlineNanos) {
         SolveClock child = new SolveClock(nowNanos, outer, wallLimitNanos, seedMix);
         child.rateShift = rateShift;
+        child.workers = workers;
         if (token != null) child.arm(token, deadlineNanos > 0 ? deadlineNanos : Long.MAX_VALUE);
         return child;
+    }
+
+    public SolveClock forkSerial(AtomicBoolean token, long deadlineNanos) {
+        SolveClock child = fork(token, deadlineNanos);
+        child.workers = 1;
+        return child;
+    }
+
+    public int workers() {
+        return workers;
     }
 
     public SolveClock enter() {
@@ -143,7 +155,7 @@ public final class SolveClock {
                 for (int k = 0; k < KINDS; k++) units[k] += child.units[k];
             }
         }
-        advanceTo(nowNanos + Math.max(longest, (sum + WORKERS - 1) / WORKERS));
+        advanceTo(nowNanos + Math.max(longest, (sum + workers - 1) / workers));
     }
 
     public void addUnits(SolveClock[] children) {

@@ -98,6 +98,7 @@ public final class IlsPolish {
                                               JumpPhysicsInputs sc, JumpConstraintCompiler.Compiled c, Objective obj,
                                               double sign, Config cfg) {
         int count = kicks.size();
+        if (clock.workers() == 1) return climbInTurn(clock, kicks, deadlineNanos, model, spec, sc, c, obj, sign, cfg);
         SolveClock[] forks = new SolveClock[count];
         AtomicBoolean[] tokens = new AtomicBoolean[count];
         for (int i = 0; i < count; i++) {
@@ -125,6 +126,29 @@ public final class IlsPolish {
             throw new SolveCancelledException();
         }
         clock.join(forks);
+        return climbed;
+    }
+
+    private static List<double[]> climbInTurn(SolveClock clock, List<double[]> kicks, long deadlineNanos,
+                                              ForwardModel model, JumpSpec spec, JumpPhysicsInputs sc,
+                                              JumpConstraintCompiler.Compiled c, Objective obj, double sign,
+                                              Config cfg) {
+        List<double[]> climbed = new ArrayList<>(kicks.size());
+        for (double[] kick : kicks) {
+            AtomicBoolean token = new AtomicBoolean(false);
+            SolveClock[] fork = {clock.fork(token, deadlineNanos)};
+            SolveClock previous = fork[0].enter();
+            boolean cancelled = false;
+            try {
+                climbed.add(climb(model, spec, sc, c, obj, sign, kick, token, cfg));
+            } catch (SolveCancelledException e) {
+                cancelled = true;
+            } finally {
+                SolveClock.restore(previous);
+            }
+            clock.join(fork);
+            if (cancelled) throw new SolveCancelledException();
+        }
         return climbed;
     }
 
