@@ -111,6 +111,42 @@ public class BuiltinGraphsTest {
     }
 
     @Test
+    public void aShortOptimizeOpensWithBothStarts() {
+        for (int sec = 1; sec < BuiltinGraphs.BOTH_STARTS_BELOW_SEC; sec++) {
+            SolverGraph g = BuiltinGraphs.optimize(sec);
+            assertFalse(GraphValidator.hasErrors(GraphValidator.validate(g)));
+            List<String> expected = new ArrayList<String>(OPTIMIZE_NODES);
+            expected.remove("seeds");
+            expected.add(expected.indexOf("horizon"), "cold");
+            expected.add(expected.indexOf("cap1"), "pick");
+            assertEquals(sec + " s", expected, nodeIds(g));
+            assertLinear(g, new String[][]{{"entry", "cold"}, {"cold", "horizon"}, {"horizon", "wrap0"},
+                    {"wrap0", "seed"}, {"seed", "pick"}, {"pick", "cap1"}});
+            assertEquals("dualChain", g.node("cold").type.id);
+            assertEquals(BuiltinGraphs.COLD_START_CAP_MS, g.node("cold").params.getInt("budgetMs"));
+            assertTrue(g.node("cold").params.getBool("keepBetter"));
+            assertTrue(g.node("horizon").params.getBool("keepIncoming"));
+            assertEquals("pickStart", g.node("pick").type.id);
+        }
+    }
+
+    @Test
+    public void fromTheGateOnOptimizeStartsWithTheHorizonAlone() {
+        for (int sec : new int[]{BuiltinGraphs.BOTH_STARTS_BELOW_SEC, 10, 50}) {
+            SolverGraph g = BuiltinGraphs.optimize(sec);
+            assertNull(sec + " s", g.node("cold"));
+            assertNull(sec + " s", g.node("pick"));
+            assertFalse(g.node("horizon").params.getBool("keepIncoming"));
+        }
+        for (SolverGraph g : new SolverGraph[]{BuiltinGraphs.fast(), BuiltinGraphs.fastMultiStart(),
+                BuiltinGraphs.fastRunTicks()}) {
+            assertNull(g.node("cold"));
+            assertNull(g.node("pick"));
+            assertFalse(g.node("horizon").params.getBool("keepIncoming"));
+        }
+    }
+
+    @Test
     public void tiersDifferOnlyInBudgetsAndCaps() {
         SolverGraph fast = BuiltinGraphs.fast();
         SolverGraph opt = BuiltinGraphs.optimize(120);

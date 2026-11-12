@@ -34,7 +34,7 @@ public class PipelineShapeTest {
             "fold", "ladder", "cert", "bnb", "ils", "cap2", "wrap", "translate", "certify");
 
     private static final List<String> THOROUGH_PIPELINE = Arrays.asList(
-            "horizon", "wrap0", "seed", "cap1", "freeRescue", "peel", "freeImprove", "sweep",
+            "cold", "horizon", "wrap0", "seed", "pick", "cap1", "freeRescue", "peel", "freeImprove", "sweep",
             "fold", "ladder", "cert", "bnb", "ils", "cap2", "polish", "wrap", "translate", "snap", "dive",
             "translate3", "snap2", "certify");
 

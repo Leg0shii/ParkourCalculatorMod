@@ -12,6 +12,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.LongRunSolver;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Objective;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolveProgress;
 import de.legoshi.parkourcalc.core.anglesolver.solver.StartBox;
+import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
@@ -52,6 +53,9 @@ public final class GraphContext {
     private volatile SmoothOutcome smoothOutcome;
     private volatile InputOutcome inputOutcome;
     private volatile String infeasibilityProof;
+    private Candidate heldStart;
+    private Vec3dCore heldStartPos;
+    private StartBox heldStartBox;
 
     public GraphContext(JumpSpec spec, ForwardModel model, StartBox freeBox, JumpConstraint legalGoal,
                         double feasTol, AtomicBoolean cancel, SolveProgress progress, boolean sequential,
@@ -168,6 +172,31 @@ public final class GraphContext {
 
     public void requestDualGap() {
         dualGapRequested = true;
+    }
+
+    public synchronized void holdStart(Candidate candidate) {
+        heldStart = candidate;
+        heldStartPos = scenario.startPos;
+        heldStartBox = scenario.startBox;
+    }
+
+    public synchronized Candidate heldStart() {
+        return heldStart;
+    }
+
+    public synchronized void dropHeldStart() {
+        heldStart = null;
+        heldStartPos = null;
+        heldStartBox = null;
+    }
+
+    public synchronized Candidate restoreHeldStart() {
+        Candidate held = heldStart;
+        if (held == null) return null;
+        scenario.startPos = heldStartPos;
+        scenario.startBox = heldStartBox;
+        dropHeldStart();
+        return held;
     }
 
     public boolean settled() {
