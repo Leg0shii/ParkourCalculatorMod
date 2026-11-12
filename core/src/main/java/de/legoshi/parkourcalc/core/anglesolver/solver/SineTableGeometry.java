@@ -15,6 +15,7 @@ public final class SineTableGeometry {
     private static final int MASK = McSineTable.MASK;
     private static final int COS_OFF = 16384;
     private static final double INDEX_STEP = 2.0 * Math.PI / SIZE;
+    private static final int FIRST_INDEX_WITH_NEGATIVE_SLIP = SIZE - COS_OFF + 1;
 
     private final boolean sine262;
     private final boolean foldedRad;
@@ -158,12 +159,14 @@ public final class SineTableGeometry {
             double offNominal = 0.0;
             double base = StrictMath.atan2(legacyFloat ? (double) ff : fd, legacyFloat ? (double) sf : sd);
             double[][] radius = new double[3][SIZE];
+            double[] strongest = new double[SIZE];
             double[] u = new double[2];
             for (int i = 0; i < SIZE; i++) {
-                for (int d = -1; d <= 1; d++) {
+                for (int d = firstSlip(i); d <= 1; d++) {
                     evalRaw(legacyFloat, sf, ff, sd, fd, i, d, u);
                     double r = StrictMath.hypot(u[0], u[1]);
                     radius[d + 1][i] = r;
+                    if (r > strongest[i]) strongest[i] = r;
                     if (r > rMax) rMax = r;
                     if (r < rMin) rMin = r;
                     if (r > 0.0) {
@@ -178,7 +181,7 @@ public final class SineTableGeometry {
                 double far = rMax * StrictMath.cos((FULL_WINDOW - SLOP_IDX) * INDEX_STEP);
                 if (near <= far) throw new IllegalStateException("support window domination violated");
             }
-            mm = new double[]{rMax, rMin, certifiedWindow(radius, rMax, rMin, offNominal)};
+            mm = new double[]{rMax, rMin, certifiedWindow(radius, strongest, rMax, rMin, offNominal)};
             synchronized (NORM_CACHE) {
                 NORM_CACHE.put(key, mm);
             }
@@ -186,14 +189,26 @@ public final class SineTableGeometry {
         return new TickPart(legacyFloat, sf, ff, sd, fd, mm[0], mm[1], (int) mm[2]);
     }
 
-    private static int certifiedWindow(double[][] radius, double rMax, double rMin, double offNominal) {
+    public static boolean slipExists(int index, int d) {
+        if (d == 0 || d == 1) return true;
+        if (d != -1) return false;
+        int i = index & MASK;
+        return i == 0 || i >= FIRST_INDEX_WITH_NEGATIVE_SLIP;
+    }
+
+    private static int firstSlip(int index) {
+        return slipExists(index, -1) ? -1 : 0;
+    }
+
+    private static int certifiedWindow(double[][] radius, double[] strongest, double rMax, double rMin,
+                                       double offNominal) {
         if (!(rMax > 0.0)) return WINDOW_LADDER[0];
         if (offNominal > SLOP_IDX * INDEX_STEP) return 0;
         if (rMax >= rMin * dominationLimit(FULL_WINDOW + 1)) return 0;
         int window = FULL_WINDOW;
         for (int j = WINDOW_LADDER.length - 2; j >= 0; j--) {
             int inner = WINDOW_LADDER[j];
-            if (lagRatio(radius, inner, WINDOW_LADDER[j + 1]) >= dominationLimit(inner + 1)) break;
+            if (lagRatio(radius, strongest, inner, WINDOW_LADDER[j + 1]) >= dominationLimit(inner + 1)) break;
             window = inner;
         }
         return window;
@@ -206,13 +221,13 @@ public final class SineTableGeometry {
         return Math.min(ahead, behind);
     }
 
-    private static double lagRatio(double[][] radius, int inner, int outer) {
+    private static double lagRatio(double[][] radius, double[] strongest, int inner, int outer) {
         double worst = 0.0;
         for (double[] r : radius) {
             double[] top = windowMax(r, outer - inner);
             for (int i = 0; i < SIZE; i++) {
                 double far = Math.max(top[(i + inner + 1) & MASK], top[(i - outer) & MASK]);
-                double ratio = far / r[i];
+                double ratio = far / strongest[i];
                 if (Double.isNaN(ratio)) return Double.POSITIVE_INFINITY;
                 if (ratio > worst) worst = ratio;
             }
@@ -311,7 +326,7 @@ public final class SineTableGeometry {
         double best = Double.NEGATIVE_INFINITY;
         double[] u = new double[2];
         for (int i = i0; i <= i1; i++) {
-            for (int d = -1; d <= 1; d++) {
+            for (int d = firstSlip(i); d <= 1; d++) {
                 evalRaw(p.legacyFloat, p.sf, p.ff, p.sd, p.fd, i, d, u);
                 double dot = gx * u[0] + gz * u[1];
                 if (dot > best) best = dot;
@@ -395,7 +410,7 @@ public final class SineTableGeometry {
             double pzHi = Double.NEGATIVE_INFINITY;
             double pProj = Double.POSITIVE_INFINITY;
             for (int i = i0; i <= i1; i++) {
-                for (int d = -1; d <= 1; d++) {
+                for (int d = firstSlip(i); d <= 1; d++) {
                     evalRaw(p.legacyFloat, p.sf, p.ff, p.sd, p.fd, i, d, u);
                     if (u[0] < pxLo) pxLo = u[0];
                     if (u[0] > pxHi) pxHi = u[0];
