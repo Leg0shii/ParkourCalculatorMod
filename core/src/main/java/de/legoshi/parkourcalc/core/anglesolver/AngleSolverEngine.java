@@ -276,6 +276,7 @@ public final class AngleSolverEngine {
         r.race = rec.race;
         if (ctx != null) {
             r.nodes = SolveRunRecord.nodeRunsOf(ctx.runState.statuses());
+            r.steps = SolveRunRecord.stepRunsOf(ctx.runState.steps());
             SolveRunRecord.Counters counters = new SolveRunRecord.Counters();
             counters.smoothingEvals = ctx.smoothingEvals.get();
             r.counters = counters;

@@ -225,6 +225,14 @@ public final class SolveClock {
         return units[kind];
     }
 
+    public long[] unitsSnapshot() {
+        return units.clone();
+    }
+
+    public static String kindName(int kind) {
+        return KIND_NAMES[kind];
+    }
+
     public String describe() {
         StringBuilder sb = new StringBuilder();
         for (int k = 0; k < KINDS; k++) {
