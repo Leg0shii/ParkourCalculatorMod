@@ -1298,6 +1298,11 @@ public final class AngleSolverEngine {
             double bound = ctx.reachBound();
             dualGap = Math.max(0.0, ctx.maximize() ? bound - cand.objective : cand.objective - bound);
         }
+        double proven = ctx.provenBound();
+        if (!Double.isNaN(proven) && cand.feasible) {
+            double provenGap = Math.max(0.0, ctx.maximize() ? proven - cand.objective : cand.objective - proven);
+            if (Double.isNaN(dualGap) || provenGap < dualGap) dualGap = provenGap;
+        }
         long solveNanos = System.nanoTime() - solveStart;
         if (SolverTrace.on()) {
             double doneViol = stageLocked
