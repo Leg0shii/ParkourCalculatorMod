@@ -138,6 +138,9 @@ public final class NodeHelp {
 
         node("recedingHorizon", "Builds a multi-jump route from scratch by solving a few ticks at a time and"
                 + " locking in the front of it as it goes. Only runs for routes longer than one jump.");
+        param("recedingHorizon", "keepIncoming", "Normally this stage is skipped when a landing is already"
+                + " there. With this on and a free start block it builds its own route anyway and sets the"
+                + " earlier landing aside; a Pick start stage further down then keeps the better of the two.");
 
         node("setupPeel", "A backup route finder for multi-jumps. It spins the starting aim all the way"
                 + " around and, for each promising start, tries to solve the rest of the route, keeping the"
@@ -307,6 +310,9 @@ public final class NodeHelp {
         param("latticePolish", "reserveFraction", "The share of the whole solve time held back for this stage, so"
                 + " the stages before it cannot use up the budget. Only matters when the solve has a time budget.");
         param("latticePolish", "reserveCapSec", "The most seconds the reserve may hold back. 0 means no cap.");
+
+        node("pickStart", "When a Receding horizon stage has set an earlier landing aside, compares it with"
+                + " the current one and continues with the one that lands further. Does nothing otherwise.");
 
         node("translatedStart", "Only with a free start block: slides the whole solution's start spot to the"
                 + " best position that still lands the jump.");

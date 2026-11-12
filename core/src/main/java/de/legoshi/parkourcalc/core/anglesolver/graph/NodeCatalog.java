@@ -20,6 +20,7 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.RouterNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.SeedSweepNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.SetupPeelNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.SmoothNode;
+import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.StartPickNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.TranslatedStartNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.WrapIlsNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.WrapYawsNode;
@@ -135,6 +136,7 @@ public final class NodeCatalog {
                 .param(ParamSpec.text("windowLadder", "Window ladder (blank = auto)", ""))
                 .param(ParamSpec.text("commitLadder", "Commit ladder (blank = auto)", ""))
                 .param(ParamSpec.integer("budgetSec", "Budget (s)", 0, 600, 0))
+                .param(ParamSpec.bool("keepIncoming", "Run beside a landing that is already there", false))
                 .budgetParam("budgetSec")
                 .fallback(Guarantee.NONE)
                 .factory(RecedingHorizonNode::new)
@@ -329,6 +331,12 @@ public final class NodeCatalog {
                         3 * BuiltinGraphs.SMOOTH_RESERVE_CAP_SEC))
                 .fallback(Guarantee.UNCHANGED)
                 .factory(InputSmoothNode::new)
+                .build());
+        register(NodeType.builder("pickStart", "Pick start", NodeCategory.CONTROL)
+                .requires(InputRequirement.ANY)
+                .branch(Branch.preserves(Guarantee.DONE))
+                .fallback(Guarantee.DONE)
+                .factory(StartPickNode::new)
                 .build());
         register(NodeType.builder("translatedStart", "Translated start", NodeCategory.RECOVERY)
                 .requires(InputRequirement.ANY)

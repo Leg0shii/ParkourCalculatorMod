@@ -22,6 +22,8 @@ public final class BuiltinGraphs {
     public static final int MIN_SWEEP_SEC = 3;
 
     public static final int SWEEP_ILS_FROM_SEC = 20;
+    public static final int BOTH_STARTS_BELOW_SEC = 2;
+    public static final int COLD_START_CAP_MS = 500;
 
     public static final int POLISH_FACINGS = 64;
     public static final int POLISH_SEARCHES = 21;
@@ -117,16 +119,24 @@ public final class BuiltinGraphs {
                     .set("seeds", "seeds", sweepSeeds)
                     .set("seeds", "budgetSec", sweepSec);
         }
+        boolean bothStarts = !fastTier && !seedFirst && t < BOTH_STARTS_BELOW_SEC;
+        if (bothStarts) {
+            g.add("cold", "dualChain")
+                    .set("cold", "keepBetter", true)
+                    .set("cold", "budgetMs", COLD_START_CAP_MS);
+        }
         g.add("horizon", "recedingHorizon")
                 .set("horizon", "window", window)
                 .set("horizon", "commit", commit)
-                .set("horizon", "budgetSec", horizonSec);
+                .set("horizon", "budgetSec", horizonSec)
+                .set("horizon", "keepIncoming", bothStarts);
         g.add("wrap0", "wrapYaws");
         g.add("seed", "dualChain")
                 .set("seed", "keepBetter", true)
                 .set("seed", "budgetSec", fastTier ? 0 : t)
                 .set("seed", "budgetMs", fastTier ? seedCapMs : 0)
                 .set("seed", "warmSec", fastTier ? 0 : 1);
+        if (bothStarts) g.add("pick", "pickStart");
         g.add("cap1", "capCertify")
                 .set("cap1", "computeDualGap", true)
                 .set("cap1", "markSettled", true);
@@ -221,6 +231,13 @@ public final class BuiltinGraphs {
             chain(g, "seed", "horizon");
             chain(g, "horizon", "wrap0");
             chain(g, "wrap0", "cap1");
+        } else if (bothStarts) {
+            chain(g, first, "cold");
+            chain(g, "cold", "horizon");
+            chain(g, "horizon", "wrap0");
+            chain(g, "wrap0", "seed");
+            chain(g, "seed", "pick");
+            chain(g, "pick", "cap1");
         } else {
             chain(g, first, "horizon");
             chain(g, "horizon", "wrap0");
