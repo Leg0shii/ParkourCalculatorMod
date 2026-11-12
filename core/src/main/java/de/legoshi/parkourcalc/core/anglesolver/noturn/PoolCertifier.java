@@ -77,9 +77,14 @@ final class PoolCertifier {
         certs = 0;
     }
 
+    void openChangeTurns() {
+        changeLeft = maxCertify;
+    }
+
     void liftCertifyCap() {
         certs = 0;
         maxCertify = Integer.MAX_VALUE;
+        changeLeft = Integer.MAX_VALUE;
     }
 
     boolean variationsOver() {
@@ -102,25 +107,57 @@ final class PoolCertifier {
     }
 
     void offer(List<Candidate> ranked) {
-        queue.addAll(ranked);
         everything.addAll(ranked);
-        queueDirty = true;
+        for (Candidate c : ranked) {
+            if (!c.family) {
+                queue.add(c);
+                queueDirty = true;
+                turn = CHANGE_TURN;
+                continue;
+            }
+            familyQueue.add(c);
+            familyDirty = true;
+            if (StructurePoolDriver.certifyTier(cfg, c) == StructurePoolDriver.SCREEN_EXACT_TIER) {
+                byValue.add(c);
+                byValueDirty = true;
+            }
+        }
     }
+
+    private static final java.util.Comparator<Candidate> BY_VALUE = (a, b) -> {
+        int byViol = Double.compare(a.byteViol, b.byteViol);
+        if (byViol != 0) return byViol;
+        if (a.familyCost != b.familyCost) return Integer.compare(a.familyCost, b.familyCost);
+        return Integer.compare(a.presses, b.presses);
+    };
+
+    private final List<Candidate> byValue = new ArrayList<>();
+    private boolean byValueDirty;
+    private final List<Candidate> familyQueue = new ArrayList<>();
+    private boolean familyDirty;
+    private boolean familyTurn;
+    private static final int CHANGE_TURN = 0;
+    private static final int FAMILY_COST_TURN = 1;
+    private static final int TURNS = 3;
+    private int turn;
+    private int changeLeft;
+    private final java.util.Set<String> shortTried = new java.util.HashSet<>();
 
     void reofferAll() {
         queue.clear();
-        queue.addAll(everything);
+        familyQueue.clear();
+        for (Candidate c : everything) (c.family ? familyQueue : queue).add(c);
         queueDirty = true;
+        familyDirty = true;
         retryQueue.clear();
     }
 
     boolean certifyNext(boolean ja, boolean goodOnly) {
         if (stopped() || certs >= maxCertify) return false;
-        if (queueDirty) {
-            queue.sort(StructurePoolDriver.rankOrder(cfg));
-            queueDirty = false;
-        }
-        if (takeBatch(queue, ja, goodOnly, false)) return true;
+        sortQueues();
+        familyTurn = !familyTurn;
+        if (takeBatch(familyTurn ? familyQueue : queue, ja, goodOnly, false)) return true;
+        if (takeBatch(familyTurn ? queue : familyQueue, ja, goodOnly, false)) return true;
         if (retryDirty) {
             retryQueue.sort(StructurePoolDriver.rankOrder(cfg));
             retryDirty = false;
@@ -128,8 +165,65 @@ final class PoolCertifier {
         return takeBatch(retryQueue, ja, goodOnly, true);
     }
 
+    boolean certifyTurn() {
+        if (stopped()) return false;
+        sortQueues();
+        for (int k = 0; k < TURNS; k++) {
+            int source = turn;
+            turn = (turn + 1) % TURNS;
+            if (source == CHANGE_TURN) {
+                int before = certs;
+                if (changeLeft > 0 && takeBatch(queue, false, true, false, Math.min(cfg.perEdgeCertify, changeLeft))) {
+                    changeLeft -= certs - before;
+                    return true;
+                }
+            } else if (source == FAMILY_COST_TURN) {
+                if (takeBatch(familyQueue, false, true, false, cfg.perEdgeCertify)) return true;
+            } else if (certifyFamilyByValue()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void sortQueues() {
+        if (queueDirty) {
+            queue.sort(StructurePoolDriver.rankOrder(cfg));
+            queueDirty = false;
+        }
+        if (familyDirty) {
+            familyQueue.sort(StructurePoolDriver.rankOrder(cfg));
+            familyDirty = false;
+        }
+    }
+
+    boolean certifyFamilyByValue() {
+        if (stopped()) return false;
+        if (byValueDirty) {
+            byValue.sort(BY_VALUE);
+            byValueDirty = false;
+        }
+        List<Candidate> batch = new ArrayList<>(cfg.perEdgeCertify);
+        int i = 0;
+        while (i < byValue.size() && batch.size() < cfg.perEdgeCertify) {
+            Candidate c = byValue.get(i++);
+            String key = scheduleKey(c.combos, c.engage, false);
+            if (!found.contains(key) && !tried.contains(key) && !shortTried.contains(key)) batch.add(c);
+        }
+        byValue.subList(0, i).clear();
+        if (batch.isEmpty()) return false;
+        boolean shortPass = SHORT_PASS_NANOS < cfg.searchBudgetNanos;
+        certifyBatch(batch, false, shortPass ? SHORT_PASS_NANOS : cfg.searchBudgetNanos,
+                shortPass ? "screen-exact short by value" : "screen-exact by value", byValue.size() + batch.size(),
+                shortPass);
+        return true;
+    }
+
     private boolean takeBatch(List<Candidate> from, boolean ja, boolean goodOnly, boolean longPass) {
-        int room = Math.min(cfg.perEdgeCertify, maxCertify - certs);
+        return takeBatch(from, ja, goodOnly, longPass, Math.min(cfg.perEdgeCertify, maxCertify - certs));
+    }
+
+    private boolean takeBatch(List<Candidate> from, boolean ja, boolean goodOnly, boolean longPass, int room) {
         List<Candidate> batch = new ArrayList<>(room);
         int tier = -1;
         int i = 0;
@@ -145,7 +239,8 @@ final class PoolCertifier {
             } else if (t != tier || (c.flash && !longPass && cfg.repairFlashNanos > 0) != flash) break;
             if (firstTaken < 0) firstTaken = i;
             String key = scheduleKey(c.combos, c.engage, ja);
-            if (!found.contains(key) && !tried.contains(key)) batch.add(c);
+            boolean shortDone = c.family && !longPass && !ja && shortTried.contains(key);
+            if (!found.contains(key) && !tried.contains(key) && !shortDone) batch.add(c);
             i++;
         }
         if (firstTaken >= 0) from.subList(firstTaken, i).clear();
@@ -179,8 +274,11 @@ final class PoolCertifier {
         for (int bi = 0; bi < batch.size(); bi++) {
             Candidate c = batch.get(bi);
             if (shortPass && res.get(bi) == null) {
-                retryQueue.add(c);
-                retryDirty = true;
+                boolean first = !c.family || shortTried.add(scheduleKey(c.combos, c.engage, ja));
+                if (first) {
+                    retryQueue.add(c);
+                    retryDirty = true;
+                }
             } else {
                 tried.add(scheduleKey(c.combos, c.engage, ja));
             }
