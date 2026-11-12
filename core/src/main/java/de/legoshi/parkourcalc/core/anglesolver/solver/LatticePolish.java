@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BooleanSupplier;
 
 public final class LatticePolish {
 
@@ -98,7 +99,10 @@ public final class LatticePolish {
         Config quick = cfg.quick();
         if (!cfg.widerThan(quick)) return everyTurn(exact, spec, yawsIn, startX, startZ, cfg, deadlineNanos, cancel);
         Result first = everyTurn(exact, spec, yawsIn, startX, startZ, quick, deadlineNanos, cancel);
-        if (first == null) return everyTurn(exact, spec, yawsIn, startX, startZ, cfg, deadlineNanos, cancel);
+        if (first == null) {
+            if (expired(deadlineNanos, cancel)) return null;
+            return everyTurn(exact, spec, yawsIn, startX, startZ, cfg, deadlineNanos, cancel);
+        }
         if (expired(deadlineNanos, cancel)) return first;
         JumpPhysicsInputs from = spec.asScenario().copy();
         from.startYaw = first.startYaw;
@@ -153,7 +157,8 @@ public final class LatticePolish {
     }
 
     private static Result polishAt(ExactJumpModel exact, JumpSpec spec, double[] yawsIn, double startX, double startZ,
-                                   double toBeat, Config cfg, long deadlineNanos, AtomicBoolean cancel) {
+                                   double toBeat, Config cfg, final long deadlineNanos, final AtomicBoolean cancel) {
+        if (expired(deadlineNanos, cancel)) return null;
         double[] yaws = Angles.wrapAll(yawsIn.clone());
         TrigRowModel joint = new TrigRowModel(exact, spec);
         if (joint.vars > cfg.maxVars) return null;
@@ -181,7 +186,12 @@ public final class LatticePolish {
         double centreZ = startZ;
         double continuous = Double.NaN;
         double[] warm = null;
-        TrigRowModel.Work work = new TrigRowModel.Work(cfg.workUnits);
+        TrigRowModel.Work work = new TrigRowModel.Work(cfg.workUnits, new BooleanSupplier() {
+            @Override
+            public boolean getAsBoolean() {
+                return expired(deadlineNanos, cancel);
+            }
+        });
         if (joint.solve(z, mu, OUTER_ROUNDS, false, work)) {
             centreYaws = joint.yawsOf(z);
             centreX = startX + z[joint.vars];
