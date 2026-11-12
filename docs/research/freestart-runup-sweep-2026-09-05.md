@@ -132,3 +132,38 @@ remains expressible in a custom preset.
 Live tracker: a loop candidate was displayed with an impossible objective (j716 -699.950307, 42/44 met) because the
 live result was rebuilt at poll time against whatever start the scenario held by then. `SolveProgress` now snapshots
 the start together with the best candidate and the engine builds the live result at that start.
+
+## The loop body by budget (2026-11-12)
+
+The loop body above was chosen at 60 s. The solver benchmark (HPK set, `Repeatable solve` on, seed 0 unless noted,
+cloud container with 4 cores) measured the Optimize graph with and without `ils2` at the budgets people use. Only
+the human strats reach the loop (52 of 60 at 30 s); on them `ils2` takes 26 to 45 percent of the counted work at
+every budget, because one visit may run 3 s and the loop holds the sweep's whole budget.
+
+Without `ils2` against with it, 60 human strats:
+
+| Budget | Seed | Further | Shorter | Equal | Landings lost | Sign p | Sum | Largest loss | Largest win |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 s | 0 | 7 | 2 | 51 | 0 | 0.18 | +7.06e-04 | 5.4e-06 | 6.9e-04 |
+| 1 s | 1 | 6 | 2 | 52 | 0 | 0.289 | +7.02e-04 | 9.5e-06 | 6.9e-04 |
+| 1 s | 2 | 6 | 4 | 50 | 0 | 0.754 | +6.60e-04 | 2.2e-05 | 6.9e-04 |
+| 2 s | 0 | 8 | 1 | 51 | 0 | 0.0391 | +2.50e-03 | 4.3e-06 | 1.4e-03 |
+| 2 s | 1 | 8 | 2 | 50 | 0 | 0.109 | +2.52e-03 | 3.0e-06 | 1.4e-03 |
+| 2 s | 2 | 9 | 1 | 50 | 0 | 0.0215 | +2.52e-03 | 4.9e-06 | 1.4e-03 |
+| 10 s | 0 | 4 | 2 | 54 | 0 | 0.688 | +4.57e-04 | 3.7e-06 | 4.2e-04 |
+| 10 s | 1 | 5 | 3 | 52 | 0 | 0.727 | +4.59e-04 | 3.0e-06 | 4.2e-04 |
+| 15 s | 0 | 5 | 0 | 55 | 0 | 0.0625 | +2.35e-03 | 0 | 2.3e-03 |
+| 20 s | 0 | 4 | 2 | 54 | 0 | 0.688 | -4.84e-03 | 4.9e-03 | 1.1e-05 |
+| 30 s | 0 | 4 | 3 | 53 | 0 | 1 | -6.86e-03 | 4.9e-03 | 1.1e-05 |
+
+Up to 15 s the solve without the stage is further on more strats than it is shorter, loses at most 2.2e-5 and
+wins up to 2.3e-3; its time goes to the stages behind the loop. At 20 s and 30 s it loses 4.9e-3 on j133 and at
+30 s 2.0e-3 on j424. So the builtin graphs carry `ils2` only from an Optimize budget of 20 s on
+(`BuiltinGraphs.SWEEP_ILS_FROM_SEC`); below that, and in the Fast tiers, which never enter the loop, the sweep's
+TRUE branch goes to `translate2` directly. The loop stays guarded by the sweep's own positive budget.
+
+The losses are not gains of the polish step itself. With and without `ils2` the sweep ends on landings 1e-5 to
+2e-5 apart, and the difference appears in `bnb` behind it: from the polished landing the pattern search improves
+within 1 to 2 s (j133 +2.2e-3 at 20 s and at 30 s, j424 +3.4e-4 at 30 s), from the other one it returns nothing
+better in 5 to 9 s. Whether the cause is the landing the search starts from or the time it is given has not been
+separated; it is kept here as a lead on the pattern search.
