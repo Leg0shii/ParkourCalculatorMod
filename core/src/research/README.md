@@ -105,7 +105,12 @@ anglesolver/
                            given schedule (driver=keys), or runs the pool / in-game / beam / benders
                            drivers with per-certify timings; pkc.bench.{driver,graph,freeBox,startTick,
                            allowJa,playable,threads,searchSec,nearSearchMs,certifySec,totalSec,maxCertify,
-                           extraCertify,extraSec,dumpPool,out}; keys/engage/repeat/cascade for
+                           extraCertify,extraSec,dumpPool,out}; families=true turns the family stage on,
+                           familyWithout=<jump number> leaves that jump's rows out of the library,
+                           familyOnly=true turns the change levels off,
+                           familyDelayMs=<ms> sets how long the change levels keep every thread,
+                           familyReach=<b> and familyInertiaShare=<fraction> set the inertia stages (reach 0 turns them off),
+                           -Dpkc.pool.stageTimes=true prints one STAGE line per finished stage; keys/engage/repeat/cascade for
                            driver=keys, dfMarks to add dF=0 marks, contCap/contLead/contSec/parCont/
                            deepPairRepair for driver=benders; pair with -Dpkc.graphTrace=true (per-node
                            ms plus one [pool]/[whd]/[bm] line per certify), -Dpkc.solver.trace=<tag>,
