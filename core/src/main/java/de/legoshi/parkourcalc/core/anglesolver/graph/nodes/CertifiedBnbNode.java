@@ -58,7 +58,7 @@ public final class CertifiedBnbNode implements NodeRuntime {
             solveDeadline = deadlineNanos;
         } else if (dive) {
             if (!optimize || deadlineNanos <= 0 || now >= deadlineNanos) return NodeOutcome.of(miss, in);
-            if (ctx.optimumCertified() || in.dualGap <= CertifiedBnb.CERT_EPS) return NodeOutcome.of(miss, in);
+            if (ctx.optimumCertified()) return NodeOutcome.of(miss, in);
             cap = OPT_SAFETY_NODE_CAP;
             solveDeadline = deadlineNanos - DIVE_TAIL_NANOS;
             if (now >= solveDeadline) return NodeOutcome.of(miss, in);

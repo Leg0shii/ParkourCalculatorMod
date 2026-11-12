@@ -200,6 +200,10 @@ anglesolver/
                            pipeline stage sequence at BOTH built-in tiers (THOROUGH probed at 1 s);
                            deadline-truncated runs must be a prefix of it, and so must a run the
                            certified B&B ends early with an infeasibility certificate (#462)
+  ClosedFormBoundScopeTest.java  the closed form bound declines where its linear model does not cover the
+                           scenario: NaN on the two damage captures (j344-fall-damage, synth-damage-reset)
+                           and on a jump with a water flow push at tick start or tick end, a number on
+                           a plain jump (j016)
   graph/LeafSnapNodeTest.java  the leaf snap node's repeat param: on j017 (certified landing after 60 nodes)
                            one snap improves the landing, a repeat without a time budget is that one
                            call, the repeated snap ends more than 1e-4 further, byte-exact with no
