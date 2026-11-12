@@ -13,6 +13,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.FacingPrefold;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
+import de.legoshi.parkourcalc.core.anglesolver.solver.SolveClock;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolverTrace;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -47,7 +48,7 @@ public final class CertifiedBnbNode implements NodeRuntime {
     public NodeOutcome execute(GraphContext ctx, Candidate in, AtomicBoolean nodeToken, long deadlineNanos) {
         boolean optimize = in != null && in.yaws != null && in.feasible;
         Guarantee miss = in != null && in.yaws != null ? Guarantee.UNCHANGED : Guarantee.NONE;
-        long now = System.nanoTime();
+        long now = SolveClock.nanoTime();
         int cap;
         long solveDeadline;
         AtomicBoolean cancelToken = nodeToken;
@@ -104,9 +105,9 @@ public final class CertifiedBnbNode implements NodeRuntime {
             cfg.seedPx = ctx.scenario.startPos.x;
             cfg.seedPz = ctx.scenario.startPos.z;
         }
-        long solveStart = System.nanoTime();
+        long solveStart = SolveClock.nanoTime();
         CertifiedBnb.Result res = CertifiedBnb.solve(exact, dspec, cfg);
-        long solveNanos = System.nanoTime() - solveStart;
+        long solveNanos = SolveClock.nanoTime() - solveStart;
         if (SolverTrace.on()) {
             SolverTrace.log("CERT", "done declined=%s feasible=%s obj=%s bound=%s gap=%s certified=%s"
                             + " infeasible=%s unresolved=%d nodes=%d kernelMs=%d",

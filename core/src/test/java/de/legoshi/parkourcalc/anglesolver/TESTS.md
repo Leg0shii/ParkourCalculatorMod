@@ -204,6 +204,33 @@ anglesolver/
                            scenario: NaN on the two damage captures (j344-fall-damage, synth-damage-reset)
                            and on a jump with a water flow push at tick start or tick end, a number on
                            a plain jump (j016)
+  SolveClockTest.java      the work clock behind the Repeatable solve option: without a clock the time is
+                           the wall clock, with one it moves only with charged work and the same work
+                           gives the same time, an armed token fires at its deadline, a join takes the
+                           longest task or the shared load over the virtual workers, a fork stops at
+                           its own deadline, an armed token tells its deadline (a fired one is due
+                           now), a serial fork counts every task inside it (a join there
+                           is the summed work, a fork below it is serial too), a cancel fires every
+                           token and hurries, the wall limit marks the solve as not repeatable, the
+                           seed reaches every fork
+  LatticePolishClockTest.java  the lattice polish on the work clock (j013, Optimize parameters): the
+                           Newton rounds and the grid search charge the clock, a work budget ends the
+                           search early, close to the budget, and at the same point in every run (same
+                           result, same counters)
+  PatternSearchClockTest.java  the pattern B&B on the work clock (j021-rinav1-01, a budget of 400 ms): a
+                           cancel flag armed on the clock at 30 ms ends the search within 20 ms of
+                           that, although its own budget is longer, and a search cut that way counts
+                           the same work in a second run
+  RepeatableSolveTest.java  (slow) the Repeatable solve option end to end on j016, free-translate-edge
+                           (free start) and gh553-j345 (pattern B&B): a second solve on the same
+                           engine and a fresh engine on one thread end on the same facings, objective,
+                           stages and work time bit for bit, a seed repeats too, and without the
+                           option a solve carries no work time
+  graph/SeedSweepClockTest.java  the seed sweep on the work clock (j016 with a start box of 0.05 around
+                           its start, 64 seeds): without a budget every seed runs, a work budget of
+                           4 ms ends the sweep within 1 ms of it with some seeds left out, and a
+                           budgeted sweep ends on the same facings, counters and work time in a second
+                           run and on one thread
   graph/LeafSnapNodeTest.java  the leaf snap node's repeat param: on j017 (certified landing after 60 nodes)
                            one snap improves the landing, a repeat without a time budget is that one
                            call, the repeated snap ends more than 1e-4 further, byte-exact with no

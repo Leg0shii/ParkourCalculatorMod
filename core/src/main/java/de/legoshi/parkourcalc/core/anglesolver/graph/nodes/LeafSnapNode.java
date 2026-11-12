@@ -10,6 +10,7 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.Scoring;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.LeafSnap;
+import de.legoshi.parkourcalc.core.anglesolver.solver.SolveClock;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -32,7 +33,7 @@ public final class LeafSnapNode implements NodeRuntime {
         if (!ctx.exact() || ctx.stageLocked() || in == null || in.yaws == null) {
             return NodeOutcome.of(Guarantee.REJECTED, in);
         }
-        long snapDeadline = deadlineNanos > 0 ? deadlineNanos : System.nanoTime() + FAST_BUDGET_NANOS;
+        long snapDeadline = deadlineNanos > 0 ? deadlineNanos : SolveClock.nanoTime() + FAST_BUDGET_NANOS;
         JumpPhysicsInputs sc = ctx.scenario;
         double[] snapGf = LeafSnap.snap(ctx.exactModel, ctx.spec, in.yaws, ctx.feasTol, nodeToken,
                 snapDeadline, pairPass);
@@ -47,7 +48,7 @@ public final class LeafSnapNode implements NodeRuntime {
         double[] first = snapGf;
         double heldObj = ctx.scoredObjective(snapGf);
         int calls = 1;
-        while (repeat && deadlineNanos > 0 && calls < MAX_CALLS && System.nanoTime() < snapDeadline) {
+        while (repeat && deadlineNanos > 0 && calls < MAX_CALLS && SolveClock.nanoTime() < snapDeadline) {
             double[] next = LeafSnap.snap(ctx.exactModel, ctx.spec, snapGf, ctx.feasTol, nodeToken,
                     snapDeadline, pairPass);
             if (next == null || ctx.scoredViol(next) > ctx.feasTol) break;
@@ -61,9 +62,9 @@ public final class LeafSnapNode implements NodeRuntime {
             int ticks = LeafSnap.snapTickCount(ctx.spec, snapGf);
             boolean moved = ticks > LeafSnap.MAX_ENUM;
             int firstShift = WINDOW_STEP;
-            while (moved && System.nanoTime() < snapDeadline) {
+            while (moved && SolveClock.nanoTime() < snapDeadline) {
                 moved = false;
-                for (int shift = firstShift; shift < ticks && System.nanoTime() < snapDeadline; shift += WINDOW_STEP) {
+                for (int shift = firstShift; shift < ticks && SolveClock.nanoTime() < snapDeadline; shift += WINDOW_STEP) {
                     double[] next = LeafSnap.snap(ctx.exactModel, ctx.spec, snapGf, ctx.feasTol, nodeToken,
                             snapDeadline, pairPass, shift);
                     if (next == null || ctx.scoredViol(next) > ctx.feasTol) continue;

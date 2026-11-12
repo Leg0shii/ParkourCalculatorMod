@@ -323,6 +323,7 @@ public final class SineTableGeometry {
     }
 
     private double scanSupport(TickPart p, double gx, double gz, int i0, int i1) {
+        SolveClock.charge(SolveClock.SUPPORT, i1 - i0 + 1);
         double best = Double.NEGATIVE_INFINITY;
         double[] u = new double[2];
         for (int i = i0; i <= i1; i++) {
@@ -377,6 +378,7 @@ public final class SineTableGeometry {
             double r = radiusUpper(t);
             return new RangeInfo(-r, r, -r, r, 0.0, 0.0, 0.0, false);
         }
+        SolveClock.charge(SolveClock.SUPPORT, i1 - i0 + 2);
         int midIdx = idxOf(0.5 * (loDeg + hiDeg));
         double mux = 0.0;
         double muz = 0.0;

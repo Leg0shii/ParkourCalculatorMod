@@ -9,6 +9,7 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.ParamValues;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Scoring;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.BoundPrunedRecovery;
+import de.legoshi.parkourcalc.core.anglesolver.solver.SolveClock;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolverTrace;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -29,7 +30,7 @@ public final class BnbNode implements NodeRuntime {
     public NodeOutcome execute(GraphContext ctx, Candidate in, AtomicBoolean nodeToken, long deadlineNanos) {
         boolean optimize = in != null && in.yaws != null && in.feasible;
         Guarantee miss = in != null && in.yaws != null ? Guarantee.UNCHANGED : Guarantee.NONE;
-        long now = System.nanoTime();
+        long now = SolveClock.nanoTime();
         long budgetNanos;
         if (optimize) {
             if (deadlineNanos <= 0) return NodeOutcome.of(miss, in);

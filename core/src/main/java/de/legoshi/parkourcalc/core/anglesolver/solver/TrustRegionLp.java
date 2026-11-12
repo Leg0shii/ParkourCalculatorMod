@@ -100,6 +100,7 @@ final class TrustRegionLp {
         int used = 0;
         while (used < maxIter) {
             if (sTarget > Double.NEGATIVE_INFINITY && currentS() <= sTarget) return used;
+            SolveClock.charge(SolveClock.LP, (long) m * (total + 2L * m));
             computeDuals();
             int q = pickEntering();
             if (q < 0) return used;
