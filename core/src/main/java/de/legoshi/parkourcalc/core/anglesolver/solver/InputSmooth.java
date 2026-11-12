@@ -9,6 +9,7 @@ public final class InputSmooth {
     public static final double PLAIN_SHARE = 1.0 / 3.0;
     public static final double POLISH_SHARE = 0.15;
     public static final double PLAN_SHARE = 0.5;
+    public static final double SWAP_SHARE = 0.3;
     public static final long MIN_SLICE_NANOS = 150_000_000L;
     public static final long MAX_SLICE_NANOS = 1_000_000_000L;
     public static final int SLICES_PER_SCREEN = 16;
@@ -146,6 +147,8 @@ public final class InputSmooth {
         JumpPhysicsInputs editable = TickInputs.editable(base);
         State plainState = state(exact, spec, editable, plainYaws, new TickInputs[n], anchor);
         State inc = plainState;
+        TickInputs[] original = new TickInputs[n];
+        for (int t = 0; t < n; t++) original[t] = TickInputs.of(editable, t);
         if (!opt.keepSprint) {
             long planDeadline = System.nanoTime() + (long) (Math.max(0L, deadlineNanos - System.nanoTime()) * PLAN_SHARE);
             State planned = planned(exact, spec, comp, seed, max, reference, giveBack, anchor, opt, planDeadline, cancel);
@@ -157,13 +160,24 @@ public final class InputSmooth {
                 inc = planned;
             }
         }
-        TickInputs[] original = new TickInputs[n];
-        for (int t = 0; t < n; t++) original[t] = TickInputs.of(editable, t);
+        boolean planWon = inc != plainState;
+        State[] sources = planWon ? new State[]{plainState, inc} : new State[]{plainState};
+        for (State source : sources) {
+            long swapDeadline = System.nanoTime() + (long) (Math.max(0L, deadlineNanos - System.nanoTime()) * SWAP_SHARE);
+            State swapped = swapped(exact, spec, comp, source, editable, original, max, reference, giveBack, anchor, opt,
+                    swapDeadline, cancel);
+            if (swapped != null && swapped.betterThan(inc)) {
+                if (SolverTrace.on()) {
+                    SolverTrace.log("ENGINE", "input smooth key swap: %s -> %s (%d ticks, %d forward key changes)", inc.watch,
+                            swapped.watch, swapped.changed(), swapped.driveChanges);
+                }
+                inc = swapped;
+            }
+        }
 
         long screenDeadline = deadlineNanos - (long) (total * POLISH_SHARE);
         int tried = 0;
         TrendFilterSmooth.Stop stop = TrendFilterSmooth.Stop.CONVERGED;
-        boolean planWon = inc != plainState;
         outer:
         while (!planWon) {
             if (cancel != null && cancel.get()) {
@@ -384,6 +398,48 @@ public final class InputSmooth {
             return raw;
         }
         State polished = state(exact, spec, plan.scenario, polish.yaws, plan.inputs, anchor);
+        return polished.betterThan(raw) ? polished : raw;
+    }
+
+    private static State swapped(ExactJumpModel exact, JumpSpec spec, JumpConstraintCompiler.Compiled comp, State source,
+                                 JumpPhysicsInputs editable, TickInputs[] original, boolean max, double reference,
+                                 double giveBack, double anchor, Options opt, long deadlineNanos, AtomicBoolean cancel) {
+        long t0 = System.nanoTime();
+        JumpSpec sourceSpec = new JumpSpec(source.scenario, new ArrayList<>(spec.constraints), spec.objective);
+        KeySwap.Result swap = KeySwap.plan(exact, sourceSpec, source.yaws, opt.allowA, opt.allowD, opt.keepSprint);
+        if (swap == null || (exact.airTapSprint() && SprintTap.firstNew(editable, swap.scenario) >= 0)) {
+            return null;
+        }
+        JumpSpec guarded = TrendFilterSmooth.guard(swap.scenario, sourceSpec, max, reference, giveBack);
+        int picked = swap.changed;
+        swap = KeySwap.realise(exact, sourceSpec, source.yaws, swap, guarded.constraints, deadlineNanos, cancel);
+        SmoothProfile.add("inputs.swap", t0);
+        if (SolverTrace.on()) {
+            SolverTrace.log("ENGINE", "input smooth key swap: %d of %d ticks land", swap == null ? 0 : swap.changed, picked);
+        }
+        if (swap == null || (exact.airTapSprint() && SprintTap.firstNew(editable, swap.scenario) >= 0)) {
+            return null;
+        }
+        JumpSpec swapSpec = new JumpSpec(swap.scenario, new ArrayList<>(spec.constraints), spec.objective);
+        double[] yaws = swap.yaws;
+        if (!accepts(exact, swapSpec, comp, yaws, max, reference, giveBack)) {
+            return null;
+        }
+        int n = swap.scenario.numTicks;
+        TickInputs[] inputs = new TickInputs[n];
+        for (int t = 0; t < n; t++) {
+            TickInputs now = TickInputs.of(swap.scenario, t);
+            inputs[t] = now == null || now.equals(original[t]) ? null : now;
+        }
+        State raw = state(exact, spec, swap.scenario, yaws, inputs, anchor);
+        double remaining = remainingGiveBack(max, reference, raw.objective, giveBack);
+        long t1 = System.nanoTime();
+        TrendFilterSmooth.Report polish = SmoothPortfolio.smoothReport(exact, swapSpec, yaws, remaining, deadlineNanos, cancel);
+        SmoothProfile.add("inputs.swapSmooth", t1);
+        if (polish.yaws == null || !accepts(exact, swapSpec, comp, polish.yaws, max, reference, giveBack)) {
+            return raw;
+        }
+        State polished = state(exact, spec, swap.scenario, polish.yaws, inputs, anchor);
         return polished.betterThan(raw) ? polished : raw;
     }
 
