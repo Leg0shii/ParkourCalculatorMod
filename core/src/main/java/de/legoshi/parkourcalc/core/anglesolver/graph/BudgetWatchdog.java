@@ -28,7 +28,11 @@ public final class BudgetWatchdog implements Runnable {
         AtomicBoolean token = new AtomicBoolean(false);
         SolveClock clock = SolveClock.current();
         deadlineNanos = clock == null ? deadline : 0L;
-        if (clock != null) clock.arm(token, deadline);
+        if (clock != null) {
+            long outerAt = clock.deadlineOf(outer);
+            long at = deadline > 0 ? Math.min(deadline, outerAt) : outerAt;
+            if (at != Long.MAX_VALUE) clock.arm(token, at);
+        }
         current = token;
         return token;
     }

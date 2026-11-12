@@ -50,13 +50,14 @@ public final class BoundPrunedRecovery {
         if (spec == null) return null;
         if (!accepts(spec)) return null;
         long start = SolveClock.nanoTime();
-        long searchDeadline = start + (long) (budgetNanos * SEARCH_SHARE);
-        long fullDeadline = start + budgetNanos;
         AtomicBoolean outer = cancel != null ? cancel : new AtomicBoolean(false);
         AtomicBoolean searchCancel = new AtomicBoolean(false);
         AtomicBoolean polishCancel = new AtomicBoolean(false);
         AtomicBoolean finished = new AtomicBoolean(false);
         SolveClock clock = SolveClock.current();
+        long outerAt = clock == null ? Long.MAX_VALUE : clock.deadlineOf(outer);
+        long searchDeadline = Math.min(outerAt, start + (long) (budgetNanos * SEARCH_SHARE));
+        long fullDeadline = Math.min(outerAt, start + budgetNanos);
         Thread watchdog = clock == null
                 ? startWatchdog(outer, finished, searchCancel, searchDeadline, polishCancel, fullDeadline) : null;
         if (clock != null) {
