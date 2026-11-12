@@ -106,7 +106,7 @@ anglesolver/
                            drivers with per-certify timings; pkc.bench.{driver,graph,freeBox,startTick,
                            allowJa,playable,threads,searchSec,nearSearchMs,certifySec,totalSec,maxCertify,
                            extraCertify,extraSec,dumpPool,out}; families=true turns the family stage on,
-                           familyWithout=<jump number> leaves that jump's rows out of the library,
+                           familyWithout=<jump numbers> leaves those jumps' rows and their copies out of the library,
                            familyOnly=true turns the change levels off,
                            familyDelayMs=<ms> sets how long the change levels keep every thread,
                            familyReach=<b> and familyInertiaShare=<fraction> set the inertia stages (reach 0 turns them off),

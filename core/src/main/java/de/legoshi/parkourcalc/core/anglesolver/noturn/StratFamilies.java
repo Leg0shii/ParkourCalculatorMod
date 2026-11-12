@@ -8,8 +8,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 public final class StratFamilies {
@@ -41,9 +43,13 @@ public final class StratFamilies {
             this.combos = combos;
         }
 
-        boolean from(int origin) {
-            for (int o : origins) if (o == origin) return true;
+        boolean from(int... jumpNumbers) {
+            for (int o : origins) for (int number : jumpNumbers) if (o == number) return true;
             return false;
+        }
+
+        String keyText() {
+            return Arrays.toString(combos);
         }
     }
 
@@ -153,8 +159,8 @@ public final class StratFamilies {
         }
     }
 
-    public static StratFamilies shippedWithout(int origin) {
-        return fromSchedules(shippedSchedules(), origin);
+    public static StratFamilies shippedWithout(int... jumpNumbers) {
+        return fromSchedules(shippedSchedules(), jumpNumbers);
     }
 
     public static List<Schedule> shippedSchedules() {
@@ -209,10 +215,12 @@ public final class StratFamilies {
         return NoTurnKeys.parse(keys, length);
     }
 
-    public static StratFamilies fromSchedules(List<Schedule> rows, int withoutOrigin) {
+    public static StratFamilies fromSchedules(List<Schedule> rows, int... withoutJumps) {
+        Set<String> heldOut = new HashSet<>();
+        for (Schedule row : rows) if (row.from(withoutJumps)) heldOut.add(row.keyText());
         StratFamilies out = new StratFamilies();
         for (Schedule row : rows) {
-            if (withoutOrigin >= 0 && row.from(withoutOrigin)) continue;
+            if (heldOut.contains(row.keyText())) continue;
             for (Family f : familiesOf(row.combos, row.jumpTicks)) out.add(f, row.weight);
         }
         return out;

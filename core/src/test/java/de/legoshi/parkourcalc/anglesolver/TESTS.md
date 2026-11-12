@@ -200,13 +200,14 @@ anglesolver/
   NoTurnStratFamiliesTest.java  the family library behind the stratfinder's family stage (#671,
                            core/.../anglesolver/noturn/StratFamilies): reading the schedule rows, cutting a
                            schedule into run-up, middle and final families, mirror pairs as one family,
-                           placing a family on segments of other lengths, costs in order, and leave one
-                           out over the 59 hpk recordings (at most 4 not a product of known families); fast
+                           placing a family on segments of other lengths, costs in order, the hold out
+                           (a jump's rows and every copy of them), and leave one out over the 59 hpk
+                           recordings (at most 8 not a product of known families); fast
   NoTurnFreeAirExactTest.java  FreeAirExact, the screen of a family leaf: recorded human Strats score in the
                            exact tier, a schedule that stands still does not, same input same value; fast
   NoTurnFamilyStageTest.java  (SlowSolverTests) StructurePoolDriver with the family lane alone, cold, the
-                           jump's own rows left out of the library: j346 and j132 land byte-exact and the
-                           Strat is a product of library families
+                           jump's own rows and their copies left out of the library: j346 and j132 land
+                           byte-exact and the Strat is a product of library families
   SenseFinderTest.java     Sense Finder on hpk_human/d10/j703 built from the plain Angle Solver setup (fast):
                            the turn, the carried jump window, every row over 0 to 200% re-forwards to its
                            offset, the three sort orders, later-tick margins never below the carried edge

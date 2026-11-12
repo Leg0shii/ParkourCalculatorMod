@@ -114,6 +114,15 @@ public class NoTurnStratFamiliesTest {
     }
 
     @Test
+    public void aCopyOfALeftOutRowIsLeftOutToo() throws Exception {
+        List<StratFamilies.Schedule> rows = StratFamilies.readSchedules(new BufferedReader(new StringReader(
+                "1;716;0;Wx11\n4;;0;Wx11\n1;;0;Sx11\n1;119;0;Ax11\n")));
+        assertEquals(3, StratFamilies.fromSchedules(rows).count(StratFamilies.FINAL));
+        assertEquals(2, StratFamilies.fromSchedules(rows, 716).count(StratFamilies.FINAL));
+        assertEquals(1, StratFamilies.fromSchedules(rows, 716, 119).count(StratFamilies.FINAL));
+    }
+
+    @Test
     public void aProblemWithoutJumpsHasNoSegments() throws Exception {
         StratFamilies lib = library("1;;0;Wx11");
         assertNull(lib.segmentsFor(11, new int[0]));
@@ -144,6 +153,6 @@ public class NoTurnStratFamiliesTest {
             }
         }
         assertEquals(59, total);
-        assertTrue("human Strats outside the families: " + missing, missing.size() <= 4);
+        assertTrue("human Strats outside the families: " + missing, missing.size() <= 8);
     }
 }

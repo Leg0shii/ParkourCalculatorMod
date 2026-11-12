@@ -296,8 +296,13 @@ public class NoTurnColdBench {
             if (System.getProperty("pkc.bench.repair") != null) cfg.repairStage = Boolean.parseBoolean(System.getProperty("pkc.bench.repair"));
             if (Boolean.getBoolean("pkc.bench.families")) {
                 cfg.familyStage = true;
-                int without = Integer.getInteger("pkc.bench.familyWithout", -1);
-                if (without >= 0) cfg.families = de.legoshi.parkourcalc.core.anglesolver.noturn.StratFamilies.shippedWithout(without);
+                String without = System.getProperty("pkc.bench.familyWithout", "").trim();
+                if (!without.isEmpty()) {
+                    String[] tok = without.split(",");
+                    int[] jumps = new int[tok.length];
+                    for (int i = 0; i < tok.length; i++) jumps[i] = Integer.parseInt(tok[i].trim());
+                    cfg.families = de.legoshi.parkourcalc.core.anglesolver.noturn.StratFamilies.shippedWithout(jumps);
+                }
                 cfg.changeLevels = !Boolean.getBoolean("pkc.bench.familyOnly");
                 cfg.familyDelayNanos = Long.getLong("pkc.bench.familyDelayMs", cfg.familyDelayNanos / 1_000_000L) * 1_000_000L;
                 cfg.familyInertiaShare = Double.parseDouble(System.getProperty("pkc.bench.familyInertiaShare", String.valueOf(cfg.familyInertiaShare)));
