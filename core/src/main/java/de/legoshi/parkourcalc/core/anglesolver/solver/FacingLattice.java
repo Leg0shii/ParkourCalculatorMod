@@ -128,6 +128,7 @@ public final class FacingLattice {
 
     private static void collectCells(float a, float b, int curSin, int lo, int hi, boolean modern,
                                      boolean jumpBoostTick, LinkedHashMap<Long, Float> cells, int depth) {
+        SolveClock.charge(SolveClock.LATTICE, 1L);
         long idA = jointCellId(a, modern, jumpBoostTick);
         long idB = jointCellId(b, modern, jumpBoostTick);
         record(a, idA, curSin, lo, hi, cells);

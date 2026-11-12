@@ -350,7 +350,9 @@ public final class DiskSocpKernel {
         double lowBound = primalLowBound();
         int nearOptimumCount = 0;
         int iters = 0;
+        final long stepUnits = (long) m * m * (n + m) / 2L + 4L * m * n + 64L;
         for (int it = 0; it < MAX_ITERS; it++) {
+            SolveClock.charge(SolveClock.KERNEL, stepUnits);
             measure();
             double mu = gap / complementarityCount;
             double value = boundValue(lambda, gx, gz);

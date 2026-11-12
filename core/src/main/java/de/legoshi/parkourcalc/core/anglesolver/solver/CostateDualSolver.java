@@ -253,6 +253,7 @@ public final class CostateDualSolver {
         int stall = 0;
         int it = 0;
         for (; it < MAX_ITER; it++) {
+            SolveClock.charge(SolveClock.DUAL, 4L * n * m + 64L);
             double pgres = 0.0;
             for (int j = 0; j < m; j++) {
                 double p = project(lambda[j] - gradient[j], eq[j]) - lambda[j];
@@ -481,6 +482,7 @@ public final class CostateDualSolver {
 
     /** Free-set Hessian H_{ab} = Σ_t (m_t/‖g_t‖)·coef_i·coef_j·([axis equal] − ĝ_i·ĝ_j), i=free[a], j=free[b]. */
     private void buildHessian(int nf) {
+        SolveClock.charge(SolveClock.DUAL, (long) nf * nf * n / 2L + (long) nf * nf * nf / 6L);
         double curvX = 0.0;
         double curvZ = 0.0;
         if (freeP0 != null) {

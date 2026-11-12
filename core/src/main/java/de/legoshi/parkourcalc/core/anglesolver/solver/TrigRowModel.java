@@ -561,6 +561,7 @@ final class TrigRowModel {
             for (int round = 0; round < NEWTON_ROUNDS; round++) {
                 work.left -= roundCost;
                 if (work.left < 0) return false;
+                SolveClock.charge(SolveClock.POLISH, roundCost);
                 double merit = merit(z, mu, rho, g, sn, cs);
                 Arrays.fill(grad, 0.0);
                 for (double[] h : hess) Arrays.fill(h, 0.0);

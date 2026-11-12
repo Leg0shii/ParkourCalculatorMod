@@ -2,6 +2,7 @@ package de.legoshi.parkourcalc.anglesolver;
 
 import de.legoshi.parkourcalc.SlowSolverTests;
 import de.legoshi.parkourcalc.anglesolver.harness.ProblemFixture;
+import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.FlowVector;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Scoring;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
@@ -22,6 +23,7 @@ import org.junit.experimental.categories.Category;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -326,6 +328,166 @@ public class CertifiedBnbTest {
             assertTrue("a certified gap must be non-negative and within CERT_EPS (was " + res.gap + ")",
                     res.gap >= 0.0 && res.gap <= CertifiedBnb.CERT_EPS);
         }
+    }
+
+    private static CertifiedBnb.Result optimize(ExactJumpModel model, JumpSpec spec, boolean probeGates,
+                                                int nodeCap, long seconds) {
+        CertifiedBnb.Config cfg = new CertifiedBnb.Config();
+        cfg.mode = CertifiedBnb.Mode.OPTIMIZE;
+        cfg.nodeCap = nodeCap;
+        cfg.polishCap = 6;
+        cfg.probeGates = probeGates;
+        if (seconds > 0) cfg.deadlineNanos = System.nanoTime() + seconds * 1_000_000_000L;
+        return CertifiedBnb.solve(model, spec, cfg);
+    }
+
+    private static final int GATE_CASES = 54;
+    private static final int[] GATE_CASES_SOLVED = {2, 17, 21, 22, 51, 53};
+
+    private static JumpSpec nearThresholdCase(Random rnd) {
+        double scale = rnd.nextBoolean() ? 0.012 : 0.03;
+        double vx = (rnd.nextDouble() * 2.0 - 1.0) * scale;
+        double vz = (rnd.nextDouble() * 2.0 - 1.0) * scale;
+        boolean ground = rnd.nextInt(3) == 0;
+        int n = 3;
+        JumpPhysicsInputs sc = scenario(n, false, vx, vz);
+        if (ground) {
+            double[] slip = new double[n];
+            Arrays.fill(slip, 0.6);
+            sc.slipPerTick = slip;
+        }
+        double wall = 0.5 + (rnd.nextDouble() * 2.0 - 1.0) * 0.08;
+        int wallTick = 1 + rnd.nextInt(n);
+        JumpConstraint.Mode mode = rnd.nextBoolean() ? JumpConstraint.Mode.Z : JumpConstraint.Mode.X;
+        JumpConstraint.Cmp cmp = rnd.nextBoolean() ? JumpConstraint.Cmp.LE : JumpConstraint.Cmp.GE;
+        List<JumpConstraint> cons = new ArrayList<JumpConstraint>();
+        cons.add(new JumpConstraint(mode, wallTick, null, JumpConstraint.Op.PLUS, cmp, wall, "wall"));
+        JumpPhysicsInputs.Axis axis = rnd.nextBoolean() ? JumpPhysicsInputs.Axis.X : JumpPhysicsInputs.Axis.Z;
+        Objective.Sense sense = rnd.nextBoolean() ? Objective.Sense.MAX : Objective.Sense.MIN;
+        return new JumpSpec(sc, cons, new Objective(axis, sense, n));
+    }
+
+    @Test
+    @Category(SlowSolverTests.class)
+    public void gateProbingKeepsTheCertifiedOptimumOfNearThresholdCarries() {
+        Random rnd = new Random(1L);
+        int probed = 0;
+        for (int k = 0; k < GATE_CASES; k++) {
+            JumpSpec spec = nearThresholdCase(rnd);
+            if (Arrays.binarySearch(GATE_CASES_SOLVED, k) < 0) continue;
+            String version = k % 2 == 0 ? "1.8.9" : "1.21.5";
+            ExactJumpModel model = ExactJumpModel.forMcVersion(version);
+            CertifiedBnb.Result plain = optimize(model, spec, false, 200000, 60);
+            CertifiedBnb.Result withProbe = optimize(model, spec, true, 200000, 60);
+            String label = "case " + k + " on " + version;
+            assertTrue(label + " must certify without probing, gap=" + plain.gap, plain.certified);
+            assertTrue(label + " must certify with probing, gap=" + withProbe.gap, withProbe.certified);
+            assertEquals(label + " probing moved the certified optimum", plain.objective, withProbe.objective,
+                    CertifiedBnb.CERT_EPS);
+            if (withProbe.nodes != plain.nodes) probed++;
+        }
+        assertTrue("probing changed " + probed + " searches, the cases do not exercise it", probed >= 3);
+    }
+
+    @Test
+    @Category(SlowSolverTests.class)
+    public void gateProbingTightensLongJumpsAndNeverCutsBelowAKnownLanding() {
+        for (String name : new String[]{"j021-rinav1-01", "loopmm-3jump-lands", "j002"}) {
+            ProblemFixture pf = ProblemFixture.load("solve", name);
+            ProblemFixture.Rig rig = pf.rig();
+            JumpSpec spec = rig.spec();
+            double sign = spec.objective.sense == Objective.Sense.MAX ? 1.0 : -1.0;
+            CertifiedBnb.Result plain = optimize(pf.model, spec, false, 150, 60);
+            CertifiedBnb.Result withProbe = optimize(pf.model, spec, true, 150, 60);
+            assertTrue(name + " must land without probing", plain.feasible);
+            assertTrue(name + " must land with probing", withProbe.feasible);
+            double bestLanding = Math.max(sign * plain.objective, sign * withProbe.objective);
+            assertTrue(name + " probed bound " + withProbe.boundObjective + " cuts below a landing at "
+                    + sign * bestLanding, sign * withProbe.boundObjective >= bestLanding - CertifiedBnb.CERT_EPS);
+            assertTrue(name + " gap " + withProbe.gap + " with probing against " + plain.gap + " without",
+                    withProbe.gap < 0.25 * plain.gap);
+        }
+    }
+
+    private static CertifiedBnb.Result optimizeWithLandingPolish(ExactJumpModel model, JumpSpec spec,
+                                                                 int incumbentPolishCap) {
+        CertifiedBnb.Config cfg = new CertifiedBnb.Config();
+        cfg.mode = CertifiedBnb.Mode.OPTIMIZE;
+        cfg.nodeCap = 300;
+        cfg.polishCap = 12;
+        cfg.incumbentPolishCap = incumbentPolishCap;
+        cfg.deadlineNanos = System.nanoTime() + 120_000_000_000L;
+        return CertifiedBnb.solve(model, spec, cfg);
+    }
+
+    @Test
+    @Category(SlowSolverTests.class)
+    public void polishingEveryNewLandingReachesFurtherAndStaysUnderTheBound() {
+        ProblemFixture pf = ProblemFixture.load("solve", "j016-X2jmmp2p");
+        ProblemFixture.Rig rig = pf.rig();
+        rig.state.setEffort(AngleSolverState.Effort.THOROUGH);
+        JumpSpec spec = rig.spec();
+        double sign = spec.objective.sense == Objective.Sense.MAX ? 1.0 : -1.0;
+        CertifiedBnb.Result plain = optimizeWithLandingPolish(pf.model, spec, 0);
+        CertifiedBnb.Result polished = optimizeWithLandingPolish(pf.model, spec, 12);
+        assertTrue("j016 must land without the landing polish", plain.feasible);
+        assertTrue("j016 must land with the landing polish", polished.feasible);
+        double verified = Scoring.verifiedObjectiveAt(pf.model, spec.asScenario(), spec,
+                polished.yawsDeg, polished.px, polished.pz, 0.0);
+        assertEquals("the polished landing must equal its byte-exact re-simulation",
+                polished.objective, verified, 1.0e-9);
+        assertTrue("polished landing " + polished.objective + " against " + plain.objective
+                        + " without: the polish must gain more than 5e-5 on j016",
+                sign * polished.objective > sign * plain.objective + 5.0e-5);
+        assertTrue("bound " + polished.boundObjective + " cuts below the polished landing " + polished.objective,
+                sign * polished.boundObjective >= sign * polished.objective - CertifiedBnb.CERT_EPS);
+        assertTrue("bound " + polished.boundObjective + " cuts below the landing found without the polish "
+                + plain.objective, sign * polished.boundObjective >= sign * plain.objective - CertifiedBnb.CERT_EPS);
+    }
+
+    private static CertifiedBnb.Result secondPass(ExactJumpModel model, JumpSpec spec, CertifiedBnb.Result first,
+                                                  boolean diveOrder) {
+        CertifiedBnb.Config cfg = new CertifiedBnb.Config();
+        cfg.mode = CertifiedBnb.Mode.OPTIMIZE;
+        cfg.nodeCap = 300;
+        cfg.polishCap = 12;
+        cfg.incumbentPolishCap = 12;
+        cfg.seedYaws = first.yawsDeg;
+        cfg.seedPx = first.px;
+        cfg.seedPz = first.pz;
+        if (diveOrder) {
+            cfg.diveEvery = 20;
+            cfg.diveLength = 40;
+        }
+        cfg.deadlineNanos = System.nanoTime() + 120_000_000_000L;
+        return CertifiedBnb.solve(model, spec, cfg);
+    }
+
+    @Test
+    @Category(SlowSolverTests.class)
+    public void aSecondPassInDiveOrderFindsALandingTheFirstOrderDoesNot() {
+        ProblemFixture pf = ProblemFixture.load("solve", "j016-X2jmmp2p");
+        ProblemFixture.Rig rig = pf.rig();
+        rig.state.setEffort(AngleSolverState.Effort.THOROUGH);
+        JumpSpec spec = rig.spec();
+        double sign = spec.objective.sense == Objective.Sense.MAX ? 1.0 : -1.0;
+        CertifiedBnb.Result first = optimizeWithLandingPolish(pf.model, spec, 12);
+        assertTrue("j016 must land in the first pass", first.feasible);
+        CertifiedBnb.Result same = secondPass(pf.model, spec, first, false);
+        CertifiedBnb.Result dived = secondPass(pf.model, spec, first, true);
+        assertTrue("both second passes must keep a landing", same.feasible && dived.feasible);
+        assertEquals("a second pass in the same order must end where the first did", first.objective,
+                same.objective, 1.0e-12);
+        double verified = Scoring.verifiedObjectiveAt(pf.model, spec.asScenario(), spec,
+                dived.yawsDeg, dived.px, dived.pz, 0.0);
+        assertEquals("the dive order landing must equal its byte-exact re-simulation",
+                dived.objective, verified, 1.0e-9);
+        assertTrue("dive order landing " + dived.objective + " against " + first.objective
+                        + " from the first pass: the second order must gain more than 5e-5 on j016",
+                sign * dived.objective > sign * first.objective + 5.0e-5);
+        assertTrue("bound " + dived.boundObjective + " cuts below the dive order landing " + dived.objective,
+                sign * dived.boundObjective >= sign * dived.objective - CertifiedBnb.CERT_EPS);
+        assertTrue("dive order gap " + dived.gap + " must fall under 1e-5 on j016", dived.gap < 1.0e-5);
     }
 
     @Test

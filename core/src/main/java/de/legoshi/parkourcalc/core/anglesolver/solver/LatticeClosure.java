@@ -83,6 +83,7 @@ final class LatticeClosure {
     private int[] topA;
     private int[] topB;
     private int topCount;
+    private long scanUnits;
 
     private LatticeClosure(TrigRowModel m, double[] z, Config cfg, long deadline) {
         this.m = m;
@@ -156,7 +157,7 @@ final class LatticeClosure {
         int idle = 0;
         for (int round = 1; round < cfg.rounds && idle < subsets; round++) {
             if (sign * best.objective <= reach) break;
-            if (deadline > 0 && System.nanoTime() > deadline) break;
+            if (deadline > 0 && SolveClock.nanoTime() > deadline) break;
             Result next = round(best.yaws.clone(), z, mu, g, tight, coupled, loose, round);
             if (next != null && sign * next.objective < sign * best.objective) {
                 best = next;
@@ -274,7 +275,9 @@ final class LatticeClosure {
         int countA = halfA.count;
         int countB = halfB.count;
 
+        SolveClock.charge(SolveClock.POLISH, (long) countA * (64 - Long.numberOfLeadingZeros(countA)));
         Key key = chooseKey(mu, tight, sumsA, countA, stride);
+        SolveClock.charge(SolveClock.POLISH, (long) countA * stride);
         final double[] keyA = new double[countA];
         for (int i = 0; i < countA; i++) keyA[i] = keyOf(key, sumsA, i * stride) + key.constant;
         Integer[] order = new Integer[countA];
@@ -295,8 +298,13 @@ final class LatticeClosure {
         double floor = m.objectiveAt(z) - PRUNE_SLOP;
         int scanned = cfg.window * SCAN_DEPTH;
         for (int ib = 0; ib < countB; ib++) {
-            if ((ib & 255) == 0 && deadline > 0 && System.nanoTime() > deadline) break;
+            if ((ib & 255) == 0) {
+                SolveClock.charge(SolveClock.POLISH, scanUnits);
+                scanUnits = 0L;
+                if (deadline > 0 && SolveClock.nanoTime() > deadline) break;
+            }
             int offB = ib * stride;
+            scanUnits += 8;
             if (key.separable) {
                 for (int i = 0, fits = 0; i < countA && i < scanned && fits < cfg.window; i++) {
                     if (consider(sumsA, order[i] * stride, sumsB, offB, order[i], ib, width)) fits++;
@@ -316,6 +324,9 @@ final class LatticeClosure {
                 }
             }
         }
+
+        SolveClock.charge(SolveClock.POLISH, scanUnits);
+        scanUnits = 0L;
 
         JumpConstraintCompiler.Compiled compiled = JumpConstraintCompiler.compile(m.spec);
         Result best = null;
@@ -495,6 +506,7 @@ final class LatticeClosure {
             if ((long) cur.count * span > (long) cfg.halfCap * LEVEL_SLACK) return null;
             Half next = new Half();
             next.reach = used;
+            SolveClock.charge(SolveClock.POLISH, (long) cur.count * span * stride);
             next.sums = new double[cur.count * span * stride];
             next.picks = new int[cur.count * span * (d + 1)];
             for (int i = 0; i < cur.count; i++) {
@@ -566,6 +578,7 @@ final class LatticeClosure {
         }
         Key best = null;
         double bestScore = 0.0;
+        SolveClock.charge(SolveClock.POLISH, (long) keys.size() * countA * stride);
         for (Key k : keys) {
             double lo = Double.POSITIVE_INFINITY;
             double hi = Double.NEGATIVE_INFINITY;
@@ -698,6 +711,7 @@ final class LatticeClosure {
         double hiX = txHi;
         double loZ = tzLo;
         double hiZ = tzHi;
+        scanUnits += width + 1;
         for (int k = 0; k < width; k++) {
             double e = sumsA[offA + k] + sumsB[offB + k];
             if (qx[k] > 0.0) {
