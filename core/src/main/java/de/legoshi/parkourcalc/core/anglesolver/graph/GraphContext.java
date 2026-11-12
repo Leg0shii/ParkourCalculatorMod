@@ -49,6 +49,7 @@ public final class GraphContext {
     private boolean headroomBoundSet;
     private double headroomBound = Double.NaN;
     private volatile long overallDeadlineNanos;
+    private volatile long stopDeadlineNanos;
     private volatile SmoothOutcome smoothOutcome;
     private volatile InputOutcome inputOutcome;
     private volatile String infeasibilityProof;
@@ -86,6 +87,14 @@ public final class GraphContext {
 
     public long overallDeadline() {
         return overallDeadlineNanos;
+    }
+
+    public void setStopDeadline(long absoluteNanos) {
+        this.stopDeadlineNanos = absoluteNanos;
+    }
+
+    public long stopDeadline() {
+        return stopDeadlineNanos;
     }
 
     public boolean maximize() {

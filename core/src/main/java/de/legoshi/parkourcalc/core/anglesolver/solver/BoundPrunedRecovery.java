@@ -168,7 +168,7 @@ public final class BoundPrunedRecovery {
                 }
             }
             if (!viable.isEmpty() && !searchCancel.get()) {
-                int workers = clock != null ? SolveClock.WORKERS
+                int workers = clock != null ? clock.workers()
                         : Math.max(2, Runtime.getRuntime().availableProcessors() - 2);
                 int threads = Math.min(viable.size(), workers);
                 final long sliceNanos = viable.size() > threads
