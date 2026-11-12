@@ -21,6 +21,8 @@ public final class BuiltinGraphs {
     public static final int MULTI_START_SWEEP_SEC = 20;
     public static final int MIN_SWEEP_SEC = 3;
 
+    public static final int SWEEP_ILS_FROM_SEC = 20;
+
     public static final int POLISH_FACINGS = 64;
     public static final int POLISH_SEARCHES = 21;
     public static final int POLISH_TABLE = 30000;
@@ -142,12 +144,15 @@ public final class BuiltinGraphs {
                 .set("freeImprove", "warmSec", fastTier ? 0 : 1);
         g.add("sweep", "facingStep")
                 .set("sweep", "budgetSec", fastTier ? 0 : Math.max(2, Math.min(20, stageSec / 3)));
-        g.add("ils2", "ilsPolish")
-                .set("ils2", "budgetSec", fastTier ? 0 : 3)
-                .set("ils2", "perturbMagMin", 0.0055)
-                .set("ils2", "perturbMagSpan", 10.0)
-                .set("ils2", "perturbTicksMin", 15)
-                .set("ils2", "perturbTicksSpan", 15);
+        boolean sweepIls = !fastTier && t >= SWEEP_ILS_FROM_SEC;
+        if (sweepIls) {
+            g.add("ils2", "ilsPolish")
+                    .set("ils2", "budgetSec", 3)
+                    .set("ils2", "perturbMagMin", 0.0055)
+                    .set("ils2", "perturbMagSpan", 10.0)
+                    .set("ils2", "perturbTicksMin", 15)
+                    .set("ils2", "perturbTicksSpan", 15);
+        }
         g.add("translate2", "translatedStart");
         g.add("fold", "foldDriver")
                 .set("fold", "objectiveRounds", fastTier ? 0 : 16)
@@ -226,12 +231,12 @@ public final class BuiltinGraphs {
         chain(g, "freeRescue", "peel");
         chain(g, "peel", "freeImprove");
         chain(g, "freeImprove", "sweep");
-        g.edge("sweep", Guarantee.TRUE, "ils2");
+        g.edge("sweep", Guarantee.TRUE, sweepIls ? "ils2" : "translate2");
         g.edge("sweep", Guarantee.FOUND, "fold");
         g.edge("sweep", Guarantee.IMPROVED, "fold");
         g.edge("sweep", Guarantee.UNCHANGED, "fold");
         g.edge("sweep", Guarantee.NONE, "fold");
-        chain(g, "ils2", "translate2");
+        if (sweepIls) chain(g, "ils2", "translate2");
         if (fastTier) {
             g.edge("translate2", Guarantee.DONE, "fold");
         } else {
