@@ -121,6 +121,7 @@ public class BuiltinGraphsTest {
             assertFalse(GraphValidator.hasErrors(GraphValidator.validate(g)));
             List<String> expected = new ArrayList<String>(OPTIMIZE_NODES);
             expected.remove("seeds");
+            if (sec < BuiltinGraphs.SWEEP_ILS_FROM_SEC) expected.remove("ils2");
             expected.add(expected.indexOf("horizon"), "cold");
             expected.add(expected.indexOf("cap1"), "pick");
             assertEquals(sec + " s", expected, nodeIds(g));
@@ -195,6 +196,10 @@ public class BuiltinGraphsTest {
             List<String> expected = new ArrayList<String>(OPTIMIZE_NODES);
             if (shortRun.node("seeds") == null) expected.remove("seeds");
             expected.remove("ils2");
+            if (sec < BuiltinGraphs.BOTH_STARTS_BELOW_SEC) {
+                expected.add(expected.indexOf("horizon"), "cold");
+                expected.add(expected.indexOf("cap1"), "pick");
+            }
             assertEquals(sec + " s", expected, nodeIds(shortRun));
         }
     }
