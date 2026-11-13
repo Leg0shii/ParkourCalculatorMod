@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Random;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -25,6 +26,7 @@ public class TrustRegionLpTest {
     private static final int INSTANCES = 300;
     private static final double VALUE_TOL = 2.0e-6;
     private static final double FEAS_TOL = 1.0e-7;
+    private static final long PINNED_STEPS = 7334628220773056215L;
 
     @Test
     public void matchesCommonsMathOnRandomInstances() {
@@ -110,6 +112,50 @@ public class TrustRegionLpTest {
         System.out.printf(Locale.ROOT, "TRLP p1=%d p2=%d infeasibleAgreed=%d skipped=%d%n",
                 checkedP1, checkedP2, infeasibleAgreed, skipped);
         assertTrue("too few instances checked", checkedP1 + checkedP2 >= 200);
+    }
+
+    @Test
+    public void stepsMatchThePinnedHash() {
+        Random rng = new Random(20261112L);
+        long hash = 1469598103934665603L;
+        int solved = 0;
+        for (int i = 0; i < 600; i++) {
+            int n = 1 + rng.nextInt(60);
+            int m = 1 + rng.nextInt(70);
+            double tr = pick(rng, 30.0, 5.0, 0.5);
+            double scale = pick(rng, 1.0, 0.01, 0.2);
+            double[][] a = new double[m][n];
+            double[] viol = new double[m];
+            double maxViol = Double.NEGATIVE_INFINITY;
+            for (int j = 0; j < m; j++) {
+                if (j > 0 && rng.nextInt(10) == 0) {
+                    System.arraycopy(a[j - 1], 0, a[j], 0, n);
+                } else if (rng.nextInt(12) != 0) {
+                    for (int v = 0; v < n; v++) a[j][v] = rng.nextInt(3) == 0 ? 0.0 : rng.nextGaussian() * scale;
+                }
+                viol[j] = rng.nextDouble() * 0.2 - 0.05;
+                maxViol = Math.max(maxViol, viol[j]);
+            }
+            boolean phase1 = rng.nextInt(3) != 0;
+            double sCap = Math.max(-1.0e-6, maxViol - (rng.nextInt(4) == 0 ? 0.3 : 0.0));
+            double[] obj = null;
+            if (!phase1) {
+                obj = new double[n];
+                for (int v = 0; v < n; v++) obj[v] = rng.nextGaussian() * scale;
+            }
+            TrustRegionLp.Result r = TrustRegionLp.solve(a, viol, obj, tr, phase1, sCap, 4000);
+            hash = mix(hash, r == null ? 1L : 2L);
+            if (r == null) continue;
+            solved++;
+            hash = mix(hash, Double.doubleToLongBits(r.s + 0.0));
+            for (double d : r.d) hash = mix(hash, Double.doubleToLongBits(d + 0.0));
+        }
+        assertTrue("too few instances solved: " + solved, solved >= 300);
+        assertEquals("the LP's steps changed, hash " + hash + "L", PINNED_STEPS, hash);
+    }
+
+    private static long mix(long hash, long value) {
+        return (hash ^ value) * 1099511628211L;
     }
 
     @Test
