@@ -51,8 +51,10 @@ public final class SettingsIO {
             }
         }
 
+        migrateHitDistanceGameReach(json, settings);
         clampScaleIndex(settings);
         clampArrowMode(settings);
+        clampHitDistanceReach(settings);
         clampReplayStartDelay(settings);
         normalizeTickInfoStats(settings);
     }
@@ -103,6 +105,28 @@ public final class SettingsIO {
     private static void clampArrowMode(Settings settings) {
         if (settings.arrowMode < Settings.ARROW_MODE_YAW || settings.arrowMode > Settings.ARROW_MODE_COMBINED) {
             settings.arrowMode = Settings.ARROW_MODE_YAW;
+        }
+    }
+
+    private static void migrateHitDistanceGameReach(JsonObject json, Settings settings) {
+        if (json.has("hitDistanceReachMode")) return;
+        JsonElement legacy = json.get("hitDistanceGameReach");
+        if (legacy == null || legacy.isJsonNull()) return;
+        try {
+            if (legacy.getAsBoolean()) settings.hitDistanceReachMode = Settings.HIT_DISTANCE_REACH_GAME_MODE;
+        } catch (Exception ignored) {
+        }
+    }
+
+    private static void clampHitDistanceReach(Settings settings) {
+        if (settings.hitDistanceReachMode < Settings.HIT_DISTANCE_REACH_SURVIVAL
+                || settings.hitDistanceReachMode > Settings.HIT_DISTANCE_REACH_CUSTOM) {
+            settings.hitDistanceReachMode = Settings.HIT_DISTANCE_REACH_SURVIVAL;
+        }
+        if (!(settings.hitDistanceCustomReach >= Settings.MIN_HIT_DISTANCE_CUSTOM_REACH)) {
+            settings.hitDistanceCustomReach = Settings.MIN_HIT_DISTANCE_CUSTOM_REACH;
+        } else if (settings.hitDistanceCustomReach > Settings.MAX_HIT_DISTANCE_CUSTOM_REACH) {
+            settings.hitDistanceCustomReach = Settings.MAX_HIT_DISTANCE_CUSTOM_REACH;
         }
     }
 

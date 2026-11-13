@@ -60,7 +60,16 @@ public final class Settings {
     private static final int DEFAULT_ARROW_MODE = ARROW_MODE_YAW;
     private static final boolean DEFAULT_SHOW_HIT_DISTANCE_LINES = false;
     private static final boolean DEFAULT_HIT_DISTANCE_SELECTED_ONLY = false;
-    private static final boolean DEFAULT_HIT_DISTANCE_GAME_REACH = false;
+    public static final int HIT_DISTANCE_REACH_SURVIVAL = 0;
+    public static final int HIT_DISTANCE_REACH_CREATIVE = 1;
+    public static final int HIT_DISTANCE_REACH_GAME_MODE = 2;
+    public static final int HIT_DISTANCE_REACH_CUSTOM = 3;
+    public static final double SURVIVAL_BLOCK_REACH = 4.5;
+    public static final double CREATIVE_BLOCK_REACH = 5.0;
+    public static final float MIN_HIT_DISTANCE_CUSTOM_REACH = 1.0f;
+    public static final float MAX_HIT_DISTANCE_CUSTOM_REACH = 10.0f;
+    private static final int DEFAULT_HIT_DISTANCE_REACH_MODE = HIT_DISTANCE_REACH_SURVIVAL;
+    private static final float DEFAULT_HIT_DISTANCE_CUSTOM_REACH = 3.0f;
     private static final boolean DEFAULT_SHOW_HITBOX = false;
     private static final boolean DEFAULT_SHOW_FULL_HITBOX = false;
     private static final boolean DEFAULT_SHOW_SUBTICK = false;
@@ -193,7 +202,8 @@ public final class Settings {
     public int arrowMode = DEFAULT_ARROW_MODE;
     public boolean showHitDistanceLines = DEFAULT_SHOW_HIT_DISTANCE_LINES;
     public boolean hitDistanceSelectedOnly = DEFAULT_HIT_DISTANCE_SELECTED_ONLY;
-    public boolean hitDistanceGameReach = DEFAULT_HIT_DISTANCE_GAME_REACH;
+    public int hitDistanceReachMode = DEFAULT_HIT_DISTANCE_REACH_MODE;
+    public float hitDistanceCustomReach = DEFAULT_HIT_DISTANCE_CUSTOM_REACH;
     public boolean showHitbox = DEFAULT_SHOW_HITBOX;
     public boolean showFullHitbox = DEFAULT_SHOW_FULL_HITBOX;
     public boolean showSubtick = DEFAULT_SHOW_SUBTICK;
@@ -340,7 +350,8 @@ public final class Settings {
         arrowMode = DEFAULT_ARROW_MODE;
         showHitDistanceLines = DEFAULT_SHOW_HIT_DISTANCE_LINES;
         hitDistanceSelectedOnly = DEFAULT_HIT_DISTANCE_SELECTED_ONLY;
-        hitDistanceGameReach = DEFAULT_HIT_DISTANCE_GAME_REACH;
+        hitDistanceReachMode = DEFAULT_HIT_DISTANCE_REACH_MODE;
+        hitDistanceCustomReach = DEFAULT_HIT_DISTANCE_CUSTOM_REACH;
         showHitbox = DEFAULT_SHOW_HITBOX;
         showFullHitbox = DEFAULT_SHOW_FULL_HITBOX;
         showSubtick = DEFAULT_SHOW_SUBTICK;

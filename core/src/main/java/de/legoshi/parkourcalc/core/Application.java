@@ -383,7 +383,16 @@ public final class Application {
 
             @Override
             public double blockReach() {
-                return settings.hitDistanceGameReach ? mc.getBlockReach() : 4.5;
+                switch (settings.hitDistanceReachMode) {
+                    case Settings.HIT_DISTANCE_REACH_CREATIVE:
+                        return Settings.CREATIVE_BLOCK_REACH;
+                    case Settings.HIT_DISTANCE_REACH_GAME_MODE:
+                        return mc.getBlockReach();
+                    case Settings.HIT_DISTANCE_REACH_CUSTOM:
+                        return settings.hitDistanceCustomReach;
+                    default:
+                        return Settings.SURVIVAL_BLOCK_REACH;
+                }
             }
 
             @Override
