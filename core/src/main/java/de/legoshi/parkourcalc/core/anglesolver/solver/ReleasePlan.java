@@ -18,10 +18,14 @@ public final class ReleasePlan {
     private static final double[] SOFTNESS = {0.5, 0.25, 0.125, 0.0625, 0.03125, 0.02};
     private static final double FINAL_SOFTNESS = 0.02;
     private static final int DIVE_ITERATIONS = 400;
+    private static final int DIVE_LONG_ITERATIONS = 4000;
     private static final double EMPTY_SHARE = 1.0e-7;
     private static final double EASE_RATIO = 0.5;
     private static final double PLAN_TOLERANCE = 1.0e-6;
     private static final double LOOSE_TOLERANCE = 0.01;
+    private static final double STUCK_TOLERANCE = 0.03;
+    private static final double[] AIM_DEG = {1.0, 2.0, 4.0, 8.0};
+    private static final int AIM_HALVINGS = 4;
     private static final double MULTIPLIER_CAP = 1000.0;
     private static final ShapeSmooth.Weights REPAIR_METRIC =
             new ShapeSmooth.Weights(ShapeSmooth.Norm.L2, 1.0, 1.0, 0.0, 0.0);
@@ -500,14 +504,11 @@ public final class ReleasePlan {
         Snapshot bestState = null;
         boolean bestOver = false;
         double want = share * (walking[t] ? walkRadius[t] : sprintRadius[t]);
+        Choice aimed = null;
+        double aimedViolation = Double.POSITIVE_INFINITY;
         for (Choice choice : choices) {
             fix(t, choice);
-            ThrustPlan.Result r = relax(FINAL_SOFTNESS, from.multipliers, DIVE_ITERATIONS, deadlineNanos);
-            if (SolverTrace.on()) {
-                SolverTrace.log("ENGINE", "release plan tick %d%s share=%.3f keys=%s facing=%.1f violation=%.3e iterations=%d",
-                        t, contact[t] ? " contact" : "", share, keys[t] == null ? "kept" : keys[t].keys(), face[t],
-                        r.violation, r.iterations);
-            }
+            ThrustPlan.Result r = dived(t, share, from.multipliers, deadlineNanos);
             if (r.violation <= PLAN_TOLERANCE) {
                 current = r;
                 return true;
@@ -520,9 +521,32 @@ public final class ReleasePlan {
                 bestState = new Snapshot(this);
                 bestOver = loose && over;
             }
+            boolean drives = choice.keys != null && choice.keys.forward() && choice.keys.sprint;
+            if (drives && r.violation < aimedViolation) {
+                aimed = choice;
+                aimedViolation = r.violation;
+            }
             before.restore(this);
         }
-        if (best == null || best.violation > LOOSE_TOLERANCE) {
+        double tolerance = LOOSE_TOLERANCE;
+        if (best != null && best.violation > LOOSE_TOLERANCE && aimed != null) {
+            tolerance = STUCK_TOLERANCE;
+            Choice turned = aim(t, share, aimed, aimedViolation, from.multipliers, before, deadlineNanos);
+            if (turned != aimed) {
+                fix(t, turned);
+                ThrustPlan.Result r = dived(t, share, from.multipliers, deadlineNanos);
+                if (r.violation <= PLAN_TOLERANCE) {
+                    current = r;
+                    return true;
+                }
+                if (r.violation < best.violation) {
+                    best = r;
+                    bestState = new Snapshot(this);
+                }
+                before.restore(this);
+            }
+        }
+        if (best == null || best.violation > tolerance) {
             return false;
         }
         bestState.restore(this);
@@ -534,6 +558,46 @@ public final class ReleasePlan {
             }
         }
         return true;
+    }
+
+    private Choice aim(int t, double share, Choice from, double violation, double[] warm, Snapshot before,
+                       long deadlineNanos) {
+        Choice best = from;
+        double least = violation;
+        double step = 0.0;
+        for (int round = 0; round < AIM_DEG.length + AIM_HALVINGS && least > PLAN_TOLERANCE; round++) {
+            boolean coarse = round < AIM_DEG.length;
+            Choice centre = coarse ? from : best;
+            step = coarse ? AIM_DEG[round] : step * 0.5;
+            for (int sign = -1; sign <= 1 && !stopped(deadlineNanos, null); sign += 2) {
+                Choice turned = new Choice(centre.keys, centre.heading + Angles.rad(sign * step), centre.radius,
+                        Angles.wrap(centre.facing + sign * step), centre.rank);
+                fix(t, turned);
+                ThrustPlan.Result r = dived(t, share, warm, deadlineNanos);
+                before.restore(this);
+                if (r.violation < least) {
+                    best = turned;
+                    least = r.violation;
+                }
+            }
+            if (round == AIM_DEG.length - 1) {
+                step = StrictMath.max(AIM_DEG[0], StrictMath.abs(Angles.wrapDelta(best.facing - from.facing)));
+            }
+        }
+        return best;
+    }
+
+    private ThrustPlan.Result dived(int t, double share, double[] warm, long deadlineNanos) {
+        ThrustPlan.Result r = relax(FINAL_SOFTNESS, warm, DIVE_ITERATIONS, deadlineNanos);
+        if (!r.converged && r.violation > PLAN_TOLERANCE) {
+            r = relax(FINAL_SOFTNESS, r.multipliers, DIVE_LONG_ITERATIONS, deadlineNanos);
+        }
+        if (SolverTrace.on()) {
+            SolverTrace.log("ENGINE", "release plan tick %d%s share=%.3f keys=%s facing=%.1f violation=%.3e iterations=%d",
+                    t, contact[t] ? " contact" : "", share, keys[t] == null ? "kept" : keys[t].keys(), face[t],
+                    r.violation, r.iterations);
+        }
+        return r;
     }
 
     private List<Choice> untapped(int t, List<Choice> choices, Snapshot before) {
