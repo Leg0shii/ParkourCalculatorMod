@@ -118,15 +118,375 @@ public final class FreeAirExact {
         private final Tables tables;
         private final FreeAirExact solver;
         private final Warm warm = new Warm();
+        private final CutPool pool;
 
         public Screen(Tables tables) {
+            this(tables, 0);
+        }
+
+        public Screen(Tables tables, int poolSize) {
             this.tables = tables;
             this.solver = new FreeAirExact(tables.shape);
+            this.pool = poolSize > 0 ? new CutPool(tables, poolSize) : null;
+        }
+
+        public void layout(int[] starts, int[] options) {
+            if (pool != null) pool.layout(starts, options);
+        }
+
+        public void choose(int segment, int option) {
+            if (pool != null) pool.choose(segment, option);
+        }
+
+        public int survivors(int[] combos, boolean[] sprint, int firstRun, double rejectAbove) {
+            int all = firstRun < 0 ? 1 : firstRun + 2 < tables.shape.n ? 7 : 3;
+            return pool == null ? all : pool.survivors(combos, sprint, firstRun, rejectAbove, all);
         }
 
         public Result solve(int[] combos, boolean[] sprint, double rejectAbove) {
+            if (pool == null) {
+                solver.load(tables, combos, sprint);
+                return solver.screen(rejectAbove, warm, null);
+            }
+            double bound = pool.bound(combos, sprint, rejectAbove);
+            if (bound > rejectAbove) {
+                return new Result(bound, Double.POSITIVE_INFINITY, null, solver.refX, solver.refZ, 0, 0, 0);
+            }
             solver.load(tables, combos, sprint);
-            return solver.screen(rejectAbove, warm, null);
+            Result r = solver.screen(rejectAbove, null, pool.start());
+            if (r.dual > rejectAbove) pool.learn(solver.lambda, combos, sprint, rejectAbove);
+            return r;
+        }
+
+        public long poolRejects() {
+            return pool == null ? 0L : pool.rejects;
+        }
+
+        public long poolSolves() {
+            return pool == null ? 0L : pool.solves;
+        }
+    }
+
+    static final class CutPool {
+        private static final double GUARD = 1.0e-12;
+
+        private static final class Cut {
+            double[] lambda;
+            double[] termX;
+            double[] termY;
+            double base;
+            long hits;
+            double[][] head;
+            long[] stamp;
+            double[] sums;
+            boolean[] summed;
+            double[] shift;
+            long shiftStamp;
+        }
+
+        private final Tables tables;
+        private final FreeAirExact shape;
+        private final int keys;
+        private final Cut[] cuts;
+        private int size;
+        private Cut recent;
+        private final double[] gx;
+        private final double[] gy;
+        private final double[] zeroHead;
+        private final double[] scratch;
+        private int[] starts = new int[0];
+        private int[] slotBase = new int[0];
+        private int[] chosen = new int[0];
+        private long[] epoch = new long[0];
+        private int slots;
+        private long counter;
+        private int top = -1;
+        long rejects;
+        long solves;
+
+        void layout(int[] segmentStarts, int[] options) {
+            boolean same = segmentStarts.length == starts.length;
+            for (int i = 0; same && i < starts.length; i++) {
+                same = segmentStarts[i] == starts[i] && slotBase[i + 1] - slotBase[i] == 2 * options[i];
+            }
+            top = -1;
+            if (same) return;
+            int count = segmentStarts.length;
+            starts = segmentStarts.clone();
+            slotBase = new int[count + 1];
+            for (int i = 0; i < count; i++) slotBase[i + 1] = slotBase[i] + 2 * options[i];
+            slots = slotBase[count];
+            chosen = new int[count];
+            epoch = new long[count];
+            for (int c = 0; c < size; c++) {
+                cuts[c].head = null;
+                cuts[c].sums = null;
+            }
+        }
+
+        void choose(int segment, int option) {
+            chosen[segment] = option;
+            epoch[segment] = ++counter;
+            top = segment;
+        }
+
+        private int from(int segment) {
+            return segment == 0 ? 0 : starts[segment];
+        }
+
+        private int end(int segment) {
+            return segment + 1 < starts.length ? starts[segment + 1] : shape.n;
+        }
+
+        private double[] headOf(Cut cut, int segment, int[] combos, boolean[] sprint) {
+            int width = 2 * shape.units + 1;
+            if (cut.head == null) {
+                cut.head = new double[starts.length][width];
+                cut.stamp = new long[starts.length];
+                cut.sums = new double[slots * width];
+                cut.summed = new boolean[slots];
+                cut.shiftStamp = 0L;
+            }
+            double[] head = cut.head[segment];
+            if (cut.stamp[segment] == epoch[segment]) return head;
+            int first = from(segment);
+            boolean before = first == 0 ? sprint[0] : sprint[first - 1];
+            int slot = slotBase[segment] + 2 * chosen[segment] + (before ? 1 : 0);
+            int at = slot * width;
+            double[] sums = cut.sums;
+            if (!cut.summed[slot]) {
+                accumulate(cut, combos, sprint, first, end(segment), before, sums, at);
+                cut.summed[slot] = true;
+            }
+            if (segment == 0) System.arraycopy(sums, at, head, 0, width);
+            else {
+                double[] below = headOf(cut, segment - 1, combos, sprint);
+                for (int i = 0; i < width; i++) head[i] = below[i] + sums[at + i];
+            }
+            cut.stamp[segment] = epoch[segment];
+            return head;
+        }
+
+        private void accumulate(Cut cut, int[] combos, boolean[] sprint, int from, int end, boolean before,
+                                double[] sum, int at) {
+            double[] tx = cut.termX;
+            double[] ty = cut.termY;
+            int[] unitOfTick = shape.unitOfTick;
+            int units = shape.units;
+            for (int t = from; t < end; t++) {
+                boolean run = sprint[t];
+                int key = t * keys + Tables.key(combos[t], run, before);
+                int v = unitOfTick[t];
+                if (v < 0) sum[at + 2 * units] += tx[key];
+                else {
+                    sum[at + 2 * v] += tx[key];
+                    sum[at + 2 * v + 1] += ty[key];
+                }
+                before = run;
+            }
+        }
+
+        private void variant(Cut cut, int kind, int[] combos, boolean[] sprint, int firstRun, double[] sum, int at) {
+            double[] tx = cut.termX;
+            double[] ty = cut.termY;
+            int[] unitOfTick = shape.unitOfTick;
+            int units = shape.units;
+            int last = Math.min(shape.n - 1, firstRun + kind);
+            for (int t = firstRun; t <= last; t++) {
+                boolean runA = sprint[t];
+                boolean beforeA = t == 0 ? runA : sprint[t - 1];
+                boolean runV = runA && t >= firstRun + kind;
+                boolean beforeV = t == 0 ? runV : sprint[t - 1] && t - 1 >= firstRun + kind;
+                int from = t * keys + Tables.key(combos[t], runA, beforeA);
+                int to = t * keys + Tables.key(combos[t], runV, beforeV);
+                int v = unitOfTick[t];
+                if (v < 0) sum[at + 2 * units] += tx[to] - tx[from];
+                else {
+                    sum[at + 2 * v] += tx[to] - tx[from];
+                    sum[at + 2 * v + 1] += ty[to] - ty[from];
+                }
+            }
+        }
+
+        int survivors(int[] combos, boolean[] sprint, int firstRun, double rejectAbove, int all) {
+            int alive = all;
+            int units = shape.units;
+            int width = 2 * units + 1;
+            double limit = rejectAbove + GUARD;
+            boolean cached = top >= 0 && top == starts.length - 1;
+            int shiftSegment = -1;
+            if (cached && firstRun >= 0) {
+                int reach = Math.min(shape.n - 1, firstRun + 2);
+                shiftSegment = 0;
+                while (end(shiftSegment) <= reach) shiftSegment++;
+            }
+            boolean headVariants = shiftSegment >= 0 && shiftSegment < top;
+            double[] own = scratch;
+            for (int c = 0; c < size && alive != 0; c++) {
+                Cut cut = cuts[c];
+                double[] head;
+                if (cached) head = headOf(cut, top, combos, sprint);
+                else {
+                    head = own;
+                    java.util.Arrays.fill(own, 0, width, 0.0);
+                    accumulate(cut, combos, sprint, 0, shape.n, sprint[0], own, 0);
+                }
+                int was = alive;
+                if ((alive & 1) != 0) {
+                    double f = cut.base - head[2 * units];
+                    for (int k = 0; k < units; k++) {
+                        double x = head[2 * k];
+                        double y = head[2 * k + 1];
+                        f += Math.sqrt(x * x + y * y);
+                    }
+                    if (-f > limit) alive &= ~1;
+                }
+                if ((alive & 6) != 0) {
+                    double[] shift;
+                    if (headVariants) {
+                        shift = cut.shift;
+                        if (shift == null) {
+                            shift = new double[2 * width];
+                            cut.shift = shift;
+                        }
+                        if (cut.shiftStamp != epoch[shiftSegment]) {
+                            java.util.Arrays.fill(shift, 0.0);
+                            variant(cut, 1, combos, sprint, firstRun, shift, 0);
+                            variant(cut, 2, combos, sprint, firstRun, shift, width);
+                            cut.shiftStamp = epoch[shiftSegment];
+                        }
+                    } else {
+                        shift = own;
+                        java.util.Arrays.fill(own, width, 3 * width, 0.0);
+                        variant(cut, 1, combos, sprint, firstRun, own, width);
+                        variant(cut, 2, combos, sprint, firstRun, own, 2 * width);
+                    }
+                    int base = headVariants ? 0 : width;
+                    for (int kind = 1; kind <= 2; kind++) {
+                        if ((alive & (1 << kind)) == 0) continue;
+                        int d = base + (kind - 1) * width;
+                        double f = cut.base - head[2 * units] - shift[d + 2 * units];
+                        for (int k = 0; k < units; k++) {
+                            double x = head[2 * k] + shift[d + 2 * k];
+                            double y = head[2 * k + 1] + shift[d + 2 * k + 1];
+                            f += Math.sqrt(x * x + y * y);
+                        }
+                        if (-f > limit) alive &= ~(1 << kind);
+                    }
+                }
+                if (alive != was) {
+                    cut.hits += Integer.bitCount(was) - Integer.bitCount(alive);
+                    rejects += Integer.bitCount(was) - Integer.bitCount(alive);
+                    if (c > 0 && cuts[c - 1].hits < cut.hits) {
+                        cuts[c] = cuts[c - 1];
+                        cuts[c - 1] = cut;
+                    }
+                }
+            }
+            return alive;
+        }
+
+        CutPool(Tables tables, int capacity) {
+            this.zeroHead = new double[2 * tables.shape.units + 1];
+            this.scratch = new double[3 * (2 * tables.shape.units + 1)];
+            this.tables = tables;
+            this.shape = tables.shape;
+            this.keys = NoTurnKeys.COUNT << 2;
+            this.cuts = new Cut[capacity];
+            this.gx = new double[shape.units];
+            this.gy = new double[shape.units];
+        }
+
+        double[] start() {
+            solves++;
+            return recent == null ? null : recent.lambda;
+        }
+
+        double bound(int[] combos, boolean[] sprint, double rejectAbove) {
+            for (int c = 0; c < size; c++) {
+                Cut cut = cuts[c];
+                double value = value(cut, combos, sprint);
+                if (value > rejectAbove + GUARD) {
+                    cut.hits++;
+                    if (c > 0 && cuts[c - 1].hits < cut.hits) {
+                        cuts[c] = cuts[c - 1];
+                        cuts[c - 1] = cut;
+                    }
+                    rejects++;
+                    return value;
+                }
+            }
+            return Double.NEGATIVE_INFINITY;
+        }
+
+        private double value(Cut cut, int[] combos, boolean[] sprint) {
+            int n = shape.n;
+            int units = shape.units;
+            double[] x = gx;
+            double[] y = gy;
+            for (int k = 0; k < units; k++) {
+                x[k] = 0.0;
+                y[k] = 0.0;
+            }
+            double[] tx = cut.termX;
+            double[] ty = cut.termY;
+            int[] unitOfTick = shape.unitOfTick;
+            double f = cut.base;
+            boolean before = sprint[0];
+            for (int t = 0; t < n; t++) {
+                boolean run = sprint[t];
+                int at = t * keys + Tables.key(combos[t], run, before);
+                int v = unitOfTick[t];
+                if (v < 0) f -= tx[at];
+                else {
+                    x[v] += tx[at];
+                    y[v] += ty[at];
+                }
+                before = run;
+            }
+            for (int k = 0; k < units; k++) f += Math.sqrt(x[k] * x[k] + y[k] * y[k]);
+            return -f;
+        }
+
+        void learn(double[] lambda, int[] combos, boolean[] sprint, double rejectAbove) {
+            Cut cut = new Cut();
+            int rows = shape.rows;
+            int n = shape.n;
+            cut.lambda = lambda.clone();
+            cut.termX = new double[n * keys];
+            cut.termY = new double[n * keys];
+            double base = 0.0;
+            double boxX = 0.0;
+            double boxZ = 0.0;
+            for (int j = 0; j < rows; j++) {
+                double l = lambda[j];
+                if (l == 0.0) continue;
+                base += l * (shape.rowStart[j] + shape.rowShift[j]);
+                if (shape.boxUnitX >= 0) boxX += l * tables.fixedX[j][shape.boxUnitX];
+                if (shape.boxUnitZ >= 0) boxZ += l * tables.fixedX[j][shape.boxUnitZ];
+            }
+            cut.base = base + Math.abs(boxX) + Math.abs(boxZ);
+            for (int t = 0; t < n; t++) {
+                for (int key = 0; key < keys; key++) {
+                    double[] x = tables.termX[t][key];
+                    if (x == null) continue;
+                    double[] y = tables.termY[t][key];
+                    double sx = 0.0;
+                    double sy = 0.0;
+                    for (int j : tables.rowsAt[t]) {
+                        double l = lambda[j];
+                        if (l == 0.0) continue;
+                        sx += l * x[j];
+                        sy += l * y[j];
+                    }
+                    cut.termX[t * keys + key] = sx;
+                    cut.termY[t * keys + key] = sy;
+                }
+            }
+            if (!(value(cut, combos, sprint) > rejectAbove + GUARD)) return;
+            recent = cut;
+            if (size < cuts.length) cuts[size++] = cut;
+            else cuts[size - 1] = cut;
         }
     }
 

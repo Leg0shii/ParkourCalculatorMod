@@ -646,3 +646,51 @@ On this setup the levels find 18 of the 25 within 120 s, both lanes 20 (j716, j4
 The test `NoTurnFamilyStageTest` runs the family lane alone without the extra certify and the polish: j132, whose recorded Strat has three paid changes, lands in 5 s, j346 in under 1 s.
 
 Open: j347 has two middle segments no family covers and j155 a run-up no family covers; the translator reads two thirds of the worded Strats.
+
+### Stored rejects in the family screen (2026-11-12, gh-683)
+
+The family screen solved one small dual problem per schedule. Its value is `-f(lambda)` with `f(lambda) = sum over units |g_k(lambda)| + lambda . b`, and that is a lower bound of the worst wall violation for ANY multiplier vector `lambda >= 0`, not only for the one the solve ends on. So the multipliers of a solve that rejected one schedule can be evaluated on every other schedule, and when the value is above the limit that schedule is rejected without a solve. `g_k` and `lambda . b` are sums over ticks of terms that depend on the tick, its keys and its sprint state only, so a stored vector carries one small table per tick and key state and the bound of a schedule is a sum of table entries plus one square root per facing unit.
+
+`FreeAirExact.CutPool` keeps up to `Config.familyCutPool` (128) such vectors per worker. A vector that rejects moves one place forward, a new vector replaces the last one when the pool is full. The family walk tells the pool its segment layout and each choice (`Screen.layout`, `Screen.choose`); the pool stores each vector's sum per segment choice and per sprint state before the segment, and the sum of the chosen segments per depth, so a leaf costs a few additions per vector tried. The three sprint variants of a schedule differ on at most three ticks after the first run tick and are checked from the same sums (`Screen.survivors`).
+
+What was tried first and dropped: a lookup table keyed by the late rows alone. The late rows of the tied part depend on the head of the schedule through two vectors only (fit error 6e-15 on j154), but the early rows (the edges of the platforms before the last jump) are active in almost every kept schedule, and a table over the three invariants with a Lipschitz margin rejects nothing at an affordable depth. Vectors keyed by a cell of those invariants were also worse than one small global pool (cell 0.02: 73 percent rejected without a solve, cell 0.05: 95 percent, one pool of 64: 99.96 percent).
+
+Two changes around it:
+
+- **Exact tier first.** A schedule within the limit needs the full solve, and near the limit the solve converges slowly (about 37 iterations, 114 microseconds). At the keep limit of 0.01 b j154 keeps 143,557 of 8.7 million schedules of one final segment, at the exact tier limit of 0.002 b 2,930 of 38.5 million. `Config.familyExactFirst` runs every band with the exact limit first (`FAMILY_EXACT_STAGE`), then the bands at the keep limit, then the inertia stages as before. 56 of the 59 recorded Strats score in the exact tier.
+- **Prefix check after the pool.** The pad-wall prefix check of the walk cost more than the pool once the pool was in, so with a pool it runs only for a schedule no vector rejects (`familyPrefixPruned`).
+
+Measured in a probe (cloud, 4 threads, full library, the cost band of the recorded Strat, exact tier limit, first sprint variant only):
+
+| jump | schedules | solve per schedule | pool |
+| --- | --- | --- | --- |
+| j154 | 38,549,014 | 28.1 s | 0.72 s (pool of 64) |
+| j1099 | 78,145,346 | 67 s | 4.0 s (pool of 256), 12 s (64), 107 s (16) |
+| j424 | 7,165,972 | 7.4 s | 4.5 s |
+| j716 | 511,861 | 0.63 s | 0.44 s |
+
+The pool keeps fewer schedules than the solve per schedule (j154: 2,743 against 2,930): the difference are schedules whose solve stalled under the limit although their true value is above it (up to 0.026 b). No schedule with a point at or under the limit was rejected.
+
+Time to the first Strat in the driver (cloud, 4 threads, CPU, family lane alone, the full library with the jump's own rows, one run each, dev d04638b against the branch):
+
+| jump | dev | branch |
+| --- | --- | --- |
+| j154 | 101 s | 28 to 39 s (five runs) |
+| j1099 | not in 45 s | 50 s |
+| j424 | 17.6 s | 4.4 s |
+| j716 | 37.6 s | 29.3 s |
+| j1150 | 7.9 s | 9.6 s |
+
+These are cloud numbers and a development signal. The walk now checks about 5 million schedules per second on the four cloud threads while the certifier uses half of them; j1150 waits on certification in both builds (its Strat is offered after 1.3 s and certified after 8 s). The library contains each jump's own rows in these runs, so they say nothing about a jump whose families are missing.
+
+The development PC, one run each (30 threads, graphics card screen on, both lanes, the full library, no game open, the same jar at ccd4a26 with the stored rejects and the exact tier first on, against both switched off with `-Dpkc.bench.familyCutPool=0 -Dpkc.bench.familyExactFirst=false`):
+
+| jump | switched off | on |
+| --- | --- | --- |
+| j154 | 26.2 s | 13.1 s |
+| j1099 | 23.0 s | 16.7 s |
+| j1150 | not run | 8.1 s |
+
+All five runs found a Strat. j154 scored 211 million schedules in its run with the change and 31 million without.
+
+`NoTurnFreeAirExactTest.storedRejectsOnlyDropSchedulesTheFullSolveDrops` holds the pool to the solve: a rejected schedule's attained violation is never under the bound that rejected it, the stored sums give the same answer as the sum over ticks, and every rejected sprint variant is over the limit in the full solve.
