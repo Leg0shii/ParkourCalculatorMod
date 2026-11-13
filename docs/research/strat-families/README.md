@@ -11,7 +11,7 @@ One key schedule per line:
 ```
 
 - `weight`: how many worded Strats translate into this schedule (mirror pairs counted together), 1 for a recorded human Strat.
-- `jump numbers`: the hpk onejump numbers whose own Strat this row is (matched by checkpoint position, or the recording's own jump). `StratFamilies.shippedWithout(number)` leaves those rows out, which is how a cold test never sees its own jump. Empty for most rows.
+- `jump numbers`: the hpk onejump numbers whose own Strat this row is (matched by checkpoint position, or the recording's own jump). `StratFamilies.shippedWithout(number)` leaves those rows out together with every row that has the same keys (the corpus holds copies of 42 recorded Strats without a jump number), which is how a cold test never sees its own jump. Empty for most rows.
 - `jump ticks`: the ticks of the schedule on which the player jumps.
 - `keys`: the key combination per tick, run-length coded like `NoTurnKeys.describe` (`-x10 Sx3 W WAx12 W WAx10`).
 
@@ -41,9 +41,10 @@ What a text means, as the translator reads it (validated against the recordings:
 
 Segment families (see `docs/noturn-global-solver-design.md`, section "The family stage"): 103 run-up, 498 middle and 55 final families.
 
-Leave one out over the 59 recordings (the jump's own rows removed):
+Leave one out over the 59 recordings. The counts of 2026-11-11 removed only the rows that carry the jump's number; since 2026-11-12 the hold out also removes copies of those rows, and the first line gives both:
 
-- 55 human Strats are a product of known families. Not covered: j347 (two middle segments), j155, j129, j135 (run-ups).
+- 55 human Strats are a product of known families with the rows by number removed, 51 with the copies removed too. Not covered either way: j347 (two middle segments), j155, j129, j135 (run-ups). Not covered without the copies: j144, j925, j138, j146.
+- The table and the counts below are from the hold out by number.
 - Schedules that come before the human Strat in each order, exact counts:
 
 | reach within | change count (the levels) | segment families |

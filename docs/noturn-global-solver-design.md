@@ -609,6 +609,27 @@ Measured on 4 cloud cores, CPU path, cold, the jump's own rows left out, one run
 
 PC check of 897b2b0 (2026-11-11 evening, GPU screen, in-game driver, inputs wiped, 240 s, one run each, no game open, own rows left out): j154 lands after 112.8 s with 6 threads and after 50.8 s with the game's 30 threads, j1099 after 36.7 s with 6 threads; dev and every earlier commit of the branch miss both. j122 0.9 s as on dev. j1150 13.7 s against 6.9 s on dev, which is what the turns above answer. With the turns, on the 4 cloud cores: j716 57 s and j424 24 s with both lanes, j154 163 s and j1099 72 s with the family lane alone; the PC has not measured them.
 
+**How far the family lane generalizes (2026-11-12).** Every "own rows left out" number above was measured with a hold out that dropped only the rows that carry the jump's number. The library also holds rows without a number, and 45 of them are exact copies of numbered rows (42 of the 59 recorded jumps have such a copy; for j1099 the recorded Strat itself stayed in the library). `StratFamilies.shippedWithout` now also drops every row with the same keys as a row of the jump. With that hold out 51 of the 59 recorded Strats are a product of known families (55 with the old one: j144, j925, j138 and j146 join j347, j155, j129 and j135). Measured on 4 cloud cores, CPU path, family lane alone, inputs wiped, one run each, seconds until the first Strat, the old hold out against the new one (120 s budget, 240 s for j154 and j1099, whose new hold out drops the rows of both because the two jumps share their second half):
+
+| jump | rows by number left out | copies left out too |
+| --- | --- | --- |
+| j132 | 1.8 | 1.7 |
+| j346 | 1.1 | 1.2 |
+| j716 | 28.9 | 26.3 |
+| j424 | 18.3 | 16.5 |
+| j152 | 2.2 | 2.1 |
+| j119 | 1.8 | 1.6 |
+| j1149 | 2.4 | 2.4 |
+| j148 | 0.4 | 0.4 |
+| j146 | 2.4 | not found |
+| j127 | not found | not found |
+| j1099 | 72 | 220 (`-x12 SDx8 Sx5 WA A WAx11 W WAx10`) |
+| j154 | 163 | not found |
+
+Of the 11 jumps the lane finds with the old hold out, 9 are still found and 8 of them at the same time. j146 is no product of other jumps' families, and the recorded Strat of j154 rises from 60 to 64 half bits, one band too deep for the budget (with the full library it lands after 101 s). So the lane generalizes where other jumps' families build the Strat cheaply, and j154 lands in game because the library holds its own rows.
+
+A family is also pinned to its alignment: a run-up family counts its first key from the segment start and every later change from the next jump. j154 with one idle tick put in front of the recording (jump ticks 3, 16, 29) has no run-up family "idle, A, SD", the recorded Strat moved by one tick has no family cost in any library variant, and the lane alone finds nothing in 240 s (72 million schedules; the neighbours `A SDx14 ...` and `Ax2 SDx13 ...` are in the family space and do not land). No rule for an idle opening tick is planned: a Strat never opens with a tick that can be removed.
+
 An earlier cloud comparison follows as a development record only: CPU path, 4 cloud cores, 120 s, the single pool driver. Its "not found" rows for the levels do not hold on the PC.
 
 Measured on 4 cloud cores, CPU path, cold (inputs wiped, the jump's own rows left out of the library), one run each, 120 s budget, seconds until the certified Strat. The bench's extra certify and polish put a floor of about 15 s under every find. "Levels" is dev before this stage, "families alone" the research build with the family lane only, "both lanes" this stage as it ships (`-Dpkc.bench.families=true -Dpkc.bench.familyWithout=<jump>`):
