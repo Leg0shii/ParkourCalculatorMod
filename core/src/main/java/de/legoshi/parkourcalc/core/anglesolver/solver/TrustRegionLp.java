@@ -32,6 +32,8 @@ final class TrustRegionLp {
     private final double[] xB;
     private final double[] y;
     private final double[] w;
+    private final double[] aq;
+    private final double[] rcPlus;
     private double sHi = Double.POSITIVE_INFINITY;
     private boolean bland;
     private int stall;
@@ -54,6 +56,8 @@ final class TrustRegionLp {
         this.xB = new double[m];
         this.y = new double[m];
         this.w = new double[m];
+        this.aq = new double[m];
+        this.rcPlus = new double[n];
     }
 
     static Result solve(double[][] a, double[] viol, double[] obj, double tr, boolean phase1, double sCap, int maxIter) {
@@ -71,7 +75,7 @@ final class TrustRegionLp {
             basis[j] = j == jStar ? sVar : 2 * n + 1 + j;
             state[basis[j]] = 2;
         }
-        refactor();
+        startBasis(jStar);
         cost[sVar] = 1.0;
         int iters = iterate(maxIter, phase1 ? Double.NEGATIVE_INFINITY : sCap);
         if (iters < 0) return null;
@@ -119,28 +123,27 @@ final class TrustRegionLp {
     }
 
     private void computeDuals() {
-        for (int k = 0; k < m; k++) {
-            double s = 0.0;
-            for (int r = 0; r < m; r++) {
-                double cb = cost[basis[r]];
-                if (cb != 0.0) s += cb * binv[r][k];
-            }
-            y[k] = s;
+        java.util.Arrays.fill(y, 0.0);
+        for (int r = 0; r < m; r++) {
+            double cb = cost[basis[r]];
+            if (cb == 0.0) continue;
+            double[] row = binv[r];
+            for (int k = 0; k < m; k++) y[k] += cb * row[k];
+        }
+    }
+
+    private void priceStructurals() {
+        System.arraycopy(cost, 0, rcPlus, 0, n);
+        for (int r = 0; r < m; r++) {
+            double yr = y[r];
+            double[] row = a[r];
+            for (int v = 0; v < n; v++) rcPlus[v] -= yr * row[v];
         }
     }
 
     private double reducedCost(int v) {
-        if (v < n) {
-            double s = cost[v];
-            for (int r = 0; r < m; r++) s -= y[r] * a[r][v];
-            return s;
-        }
-        if (v < 2 * n) {
-            double s = cost[v];
-            int u = v - n;
-            for (int r = 0; r < m; r++) s += y[r] * a[r][u];
-            return s;
-        }
+        if (v < n) return rcPlus[v];
+        if (v < 2 * n) return -rcPlus[v - n];
         if (v == sVar) {
             double s = cost[sVar];
             for (int r = 0; r < m; r++) s += y[r];
@@ -150,6 +153,7 @@ final class TrustRegionLp {
     }
 
     private int pickEntering() {
+        priceStructurals();
         int best = -1;
         double bestMag = EPS_RC;
         for (int v = 0; v < total; v++) {
@@ -192,12 +196,17 @@ final class TrustRegionLp {
     }
 
     private boolean pivotOrFlip(int q) {
-        double[] aq = new double[m];
-        column(q, aq);
-        for (int r = 0; r < m; r++) {
-            double s = 0.0;
-            for (int k = 0; k < m; k++) s += binv[r][k] * aq[k];
-            w[r] = s;
+        if (q > sVar) {
+            int unit = q - 2 * n - 1;
+            for (int r = 0; r < m; r++) w[r] = 0.0 + binv[r][unit];
+        } else {
+            column(q, aq);
+            for (int r = 0; r < m; r++) {
+                double[] row = binv[r];
+                double s = 0.0;
+                for (int k = 0; k < m; k++) s += row[k] * aq[k];
+                w[r] = s;
+            }
         }
         double sigma = state[q] == 0 ? 1.0 : -1.0;
         double t = hiOf(q) - loOf(q);
@@ -269,6 +278,21 @@ final class TrustRegionLp {
             stall = 0;
         } else {
             if (++stall >= STALL_LIMIT) bland = true;
+        }
+    }
+
+    private void startBasis(int jStar) {
+        for (int r = 0; r < m; r++) {
+            double[] row = binv[r];
+            java.util.Arrays.fill(row, 0.0);
+            row[r] = 1.0;
+            row[jStar] = -1.0;
+        }
+        for (int r = 0; r < m; r++) {
+            double[] row = binv[r];
+            double s = 0.0;
+            for (int k = 0; k < m; k++) s += row[k] * rhs[k];
+            xB[r] = s;
         }
     }
 

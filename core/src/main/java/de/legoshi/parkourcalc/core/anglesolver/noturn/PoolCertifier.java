@@ -22,7 +22,7 @@ final class PoolCertifier {
     private static final int CERTIFY_THREAD_CAP = 8;
     private static final int GPU_CERTIFY_THREAD_CAP = Integer.getInteger("pkc.pool.gpuCertifyThreads", 16);
     private static final long WARM_BUDGET_NANOS = 300_000_000L;
-    private static final long SHORT_PASS_NANOS = Long.getLong("pkc.pool.shortPassMs", 500L) * 1_000_000L;
+    private static final long SHORT_PASS_NANOS = Long.getLong("pkc.pool.shortPassMs", 100L) * 1_000_000L;
     private static final int MULTI_MAX_CERTIFY = 6000;
     private static final long MULTI_NEAR_SEARCH_NANOS = 300_000_000L;
 
@@ -138,7 +138,10 @@ final class PoolCertifier {
     private boolean familyTurn;
     private static final int CHANGE_TURN = 0;
     private static final int FAMILY_COST_TURN = 1;
-    private static final int TURNS = 3;
+    private static final int RETRY_TURN = 3;
+    private static final int TURNS = 4;
+    private static final int RETRY_BATCH = 4;
+    private static final long RETRY_PASS_NANOS = 500_000_000L;
     private int turn;
     private int changeLeft;
     private final java.util.Set<String> shortTried = new java.util.HashSet<>();
@@ -179,11 +182,32 @@ final class PoolCertifier {
                 }
             } else if (source == FAMILY_COST_TURN) {
                 if (takeBatch(familyQueue, false, true, false, cfg.perEdgeCertify)) return true;
+            } else if (source == RETRY_TURN) {
+                if (retryTurn()) return true;
             } else if (certifyFamilyByValue()) {
                 return true;
             }
         }
         return false;
+    }
+
+    private boolean retryTurn() {
+        if (SHORT_PASS_NANOS >= RETRY_PASS_NANOS || retryQueue.isEmpty()) return false;
+        if (retryDirty) {
+            retryQueue.sort(StructurePoolDriver.rankOrder(cfg));
+            retryDirty = false;
+        }
+        List<Candidate> batch = new ArrayList<>(RETRY_BATCH);
+        int i = 0;
+        while (i < retryQueue.size() && batch.size() < RETRY_BATCH) {
+            Candidate c = retryQueue.get(i++);
+            String key = scheduleKey(c.combos, c.engage, false);
+            if (!found.contains(key) && !tried.contains(key)) batch.add(c);
+        }
+        retryQueue.subList(0, i).clear();
+        if (batch.isEmpty()) return false;
+        certifyBatch(batch, false, RETRY_PASS_NANOS, "retry", retryQueue.size() + batch.size(), false);
+        return true;
     }
 
     private void sortQueues() {
@@ -246,9 +270,9 @@ final class PoolCertifier {
         if (firstTaken >= 0) from.subList(firstTaken, i).clear();
         if (batch.isEmpty()) return i > 0;
         boolean exact = tier == StructurePoolDriver.SCREEN_EXACT_TIER;
-        boolean shortPass = flash || (exact && !longPass && SHORT_PASS_NANOS < cfg.searchBudgetNanos);
+        boolean shortPass = flash || (!longPass && SHORT_PASS_NANOS < (exact ? cfg.searchBudgetNanos : nearBudgetNanos));
         long budget = flash ? cfg.repairFlashNanos
-                : exact ? (shortPass ? SHORT_PASS_NANOS : cfg.searchBudgetNanos) : nearBudgetNanos;
+                : shortPass ? SHORT_PASS_NANOS : exact ? cfg.searchBudgetNanos : nearBudgetNanos;
         String label = (tier >= StructurePoolDriver.SCREEN_MISS_TIER ? "screen-miss"
                 : exact ? (shortPass ? "screen-exact short" : longPass ? "screen-exact retry" : "screen-exact")
                 : "screen-near") + (flash ? " flash" : "") + (ja ? "+ja" : "");
