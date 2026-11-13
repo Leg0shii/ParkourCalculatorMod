@@ -303,6 +303,7 @@ public class NoTurnColdBench {
                 cfg.familyInertiaShare = Double.parseDouble(System.getProperty("pkc.bench.familyInertiaShare", String.valueOf(cfg.familyInertiaShare)));
                 cfg.familyReach = Double.parseDouble(System.getProperty("pkc.bench.familyReach", String.valueOf(cfg.familyReach)));
                 cfg.familyCutPool = Integer.getInteger("pkc.bench.familyCutPool", cfg.familyCutPool);
+                cfg.familySubtreeCuts = Integer.getInteger("pkc.bench.familySubtreeCuts", cfg.familySubtreeCuts);
                 cfg.familyExactFirst = Boolean.parseBoolean(System.getProperty("pkc.bench.familyExactFirst",
                         String.valueOf(cfg.familyExactFirst)));
                 line("families: on without=" + without + " changeLevels=" + cfg.changeLevels);

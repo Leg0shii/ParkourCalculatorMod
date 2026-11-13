@@ -134,6 +134,36 @@ public final class FreeAirExact {
             if (pool != null) pool.layout(starts, options);
         }
 
+        public void layout(int[] starts, int[] options, int[][][] keys) {
+            if (pool != null) pool.layout(starts, options, keys);
+        }
+
+        public boolean subtreeRejected(int index, int[] combos, boolean[] sprint, int firstRun, double rejectAbove,
+                                       int tryCuts) {
+            return pool != null && pool.subtreeRejected(index, combos, sprint, firstRun, rejectAbove, tryCuts);
+        }
+
+        public boolean filterChoices(int index, int lo, int hi, int[] combos, boolean[] sprint, int firstRun,
+                                     double rejectAbove, int tryCuts, byte[] alive) {
+            return pool != null && pool.filterChoices(index, lo, hi, combos, sprint, firstRun, rejectAbove, tryCuts, alive);
+        }
+
+        public double[] subtreeValues(int index, int[] combos, boolean[] sprint, int firstRun) {
+            return pool == null ? null : pool.subtreeValues(index, combos, sprint, firstRun);
+        }
+
+        public double[] storedValues(int[] combos, boolean[] sprint) {
+            return pool == null ? new double[0] : pool.storedValues(combos, sprint);
+        }
+
+        public long subtreeTests() {
+            return pool == null ? 0L : pool.subtreeTests;
+        }
+
+        public long subtreeRejects() {
+            return pool == null ? 0L : pool.subtreeRejects;
+        }
+
         public void choose(int segment, int option) {
             if (pool != null) pool.choose(segment, option);
         }
@@ -182,7 +212,30 @@ public final class FreeAirExact {
             boolean[] summed;
             double[] shift;
             long shiftStamp;
+            double[][] rest;
+            double[][] choiceX;
+            double[][] choiceY;
+            double[][] choiceRest;
         }
+
+        private static final int DIRS = 256;
+        private static final double[] DIR_X = new double[DIRS];
+        private static final double[] DIR_Y = new double[DIRS];
+        private static final double DIR_SLACK = 1.0 / StrictMath.cos(StrictMath.PI / DIRS);
+
+        static {
+            for (int j = 0; j < DIRS; j++) {
+                DIR_X[j] = StrictMath.cos(2.0 * StrictMath.PI * j / DIRS);
+                DIR_Y[j] = StrictMath.sin(2.0 * StrictMath.PI * j / DIRS);
+            }
+        }
+
+        private int[][][] optionKeys;
+        private final int mainUnit;
+        private final int mainLast;
+        private final boolean oneTiedUnit;
+        long subtreeTests;
+        long subtreeRejects;
 
         private final Tables tables;
         private final FreeAirExact shape;
@@ -204,6 +257,11 @@ public final class FreeAirExact {
         long rejects;
         long solves;
 
+        void layout(int[] segmentStarts, int[] options, int[][][] keysOfOption) {
+            optionKeys = keysOfOption;
+            layout(segmentStarts, options);
+        }
+
         void layout(int[] segmentStarts, int[] options) {
             boolean same = segmentStarts.length == starts.length;
             for (int i = 0; same && i < starts.length; i++) {
@@ -221,7 +279,288 @@ public final class FreeAirExact {
             for (int c = 0; c < size; c++) {
                 cuts[c].head = null;
                 cuts[c].sums = null;
+                cuts[c].rest = null;
+                cuts[c].choiceX = null;
             }
+        }
+
+        private void prepare(Cut cut) {
+            if (cut.head != null) return;
+            int width = 2 * shape.units + 1;
+            cut.head = new double[starts.length][width];
+            cut.stamp = new long[starts.length];
+            cut.sums = new double[slots * width];
+            cut.summed = new boolean[slots];
+            cut.shiftStamp = 0L;
+            cut.rest = null;
+            cut.choiceX = null;
+        }
+
+        private int slotOf(Cut cut, int segment, int option, boolean before) {
+            int width = 2 * shape.units + 1;
+            int slot = slotBase[segment] + 2 * option + (before ? 1 : 0);
+            int at = slot * width;
+            if (cut.summed[slot]) return at;
+            int[] picked = optionKeys[segment][option];
+            double[] tx = cut.termX;
+            double[] ty = cut.termY;
+            int units = shape.units;
+            int first = starts[segment];
+            for (int i = 0; i < picked.length; i++) {
+                int t = first + i;
+                boolean run = NoTurnKeys.isRun(picked[i]);
+                int key = t * keys + Tables.key(picked[i], run, t == 0 ? run : before);
+                int v = shape.unitOfTick[t];
+                if (v < 0) cut.sums[at + 2 * units] += tx[key];
+                else {
+                    cut.sums[at + 2 * v] += tx[key];
+                    cut.sums[at + 2 * v + 1] += ty[key];
+                }
+                before = run;
+            }
+            cut.summed[slot] = true;
+            return at;
+        }
+
+        private void rest(Cut cut) {
+            int count = starts.length;
+            int units = shape.units;
+            double[] sums = cut.sums;
+            cut.rest = new double[count + 1][];
+            cut.rest[count] = new double[2];
+            for (int i = count - 1; i >= 1; i--) {
+                int w = starts[i] <= mainLast ? DIRS : 1;
+                int wNext = i + 1 < count && starts[i + 1] <= mainLast ? DIRS : 1;
+                double[] next = cut.rest[i + 1];
+                double[] cur = new double[2 * w];
+                java.util.Arrays.fill(cur, Double.NEGATIVE_INFINITY);
+                int[][] options = optionKeys[i];
+                for (int o = 0; o < options.length; o++) {
+                    int[] k = options[o];
+                    for (int b = 0; b < 2; b++) {
+                        int after = k.length == 0 ? b : NoTurnKeys.isRun(k[k.length - 1]) ? 1 : 0;
+                        int at = slotOf(cut, i, o, b == 1);
+                        double scalar = -sums[at + 2 * units];
+                        for (int u = 0; u < units; u++) {
+                            if (u == mainUnit) continue;
+                            double x = sums[at + 2 * u];
+                            double y = sums[at + 2 * u + 1];
+                            scalar += Math.sqrt(x * x + y * y);
+                        }
+                        if (w == 1) {
+                            double cand = scalar + next[after];
+                            if (cand > cur[b]) cur[b] = cand;
+                            continue;
+                        }
+                        double x = DIR_SLACK * sums[at + 2 * mainUnit];
+                        double y = DIR_SLACK * sums[at + 2 * mainUnit + 1];
+                        int to = b * DIRS;
+                        int from = wNext == 1 ? -1 : after * DIRS;
+                        double tail = wNext == 1 ? next[after] : 0.0;
+                        for (int j = 0; j < DIRS; j++) {
+                            double cand = scalar + DIR_X[j] * x + DIR_Y[j] * y + (from < 0 ? tail : next[from + j]);
+                            if (cand > cur[to + j]) cur[to + j] = cand;
+                        }
+                    }
+                }
+                cut.rest[i] = cur;
+            }
+        }
+
+        private void choices(Cut cut, int segment, int before) {
+            int count = starts.length;
+            if (cut.choiceX == null) {
+                cut.choiceX = new double[2 * count][];
+                cut.choiceY = new double[2 * count][];
+                cut.choiceRest = new double[2 * count][];
+            }
+            int units = shape.units;
+            double[] sums = cut.sums;
+            int[][] options = optionKeys[segment];
+            double[] x = new double[options.length];
+            double[] y = new double[options.length];
+            double[] restOf = new double[options.length];
+            double[] tail = cut.rest[segment + 1];
+            for (int o = 0; o < options.length; o++) {
+                int[] k = options[o];
+                int after = k.length == 0 ? before : NoTurnKeys.isRun(k[k.length - 1]) ? 1 : 0;
+                int at = slotOf(cut, segment, o, before == 1);
+                double scalar = -sums[at + 2 * units];
+                for (int u = 0; u < units; u++) {
+                    if (u == mainUnit) continue;
+                    double ux = sums[at + 2 * u];
+                    double uy = sums[at + 2 * u + 1];
+                    scalar += Math.sqrt(ux * ux + uy * uy);
+                }
+                if (mainUnit >= 0) {
+                    x[o] = sums[at + 2 * mainUnit];
+                    y[o] = sums[at + 2 * mainUnit + 1];
+                }
+                restOf[o] = scalar + tail[after];
+            }
+            cut.choiceX[2 * segment + before] = x;
+            cut.choiceY[2 * segment + before] = y;
+            cut.choiceRest[2 * segment + before] = restOf;
+        }
+
+        boolean filterChoices(int index, int lo, int hi, int[] combos, boolean[] sprint, int firstRun, double rejectAbove,
+                              int tryCuts, byte[] alive) {
+            if (!subtreeReady(index, firstRun)) return false;
+            if (index + 1 < starts.length && starts[index + 1] <= mainLast) return false;
+            int first = starts[index];
+            int units = shape.units;
+            int width = 2 * units + 1;
+            double limit = rejectAbove + GUARD;
+            int before = sprint[first - 1] ? 1 : 0;
+            int shiftSegment = 0;
+            while (end(shiftSegment) <= firstRun + 2) shiftSegment++;
+            for (int o = lo; o < hi; o++) alive[o] = 7;
+            int left = hi - lo;
+            int count = Math.min(size, tryCuts);
+            for (int c = 0; c < count && left > 0; c++) {
+                Cut cut = cuts[c];
+                double[] head = headOf(cut, index - 1, combos, sprint);
+                if (cut.rest == null) rest(cut);
+                if (cut.choiceX == null || cut.choiceX[2 * index + before] == null) choices(cut, index, before);
+                double[] shift = shiftOf(cut, shiftSegment, combos, sprint, firstRun);
+                double[] cx = cut.choiceX[2 * index + before];
+                double[] cy = cut.choiceY[2 * index + before];
+                double[] cr = cut.choiceRest[2 * index + before];
+                long killed = 0L;
+                for (int kind = 0; kind <= 2; kind++) {
+                    int d = (kind - 1) * width;
+                    double fixed = cut.base - head[2 * units] - (kind == 0 ? 0.0 : shift[d + 2 * units]);
+                    double qx = 0.0;
+                    double qy = 0.0;
+                    for (int u = 0; u < units; u++) {
+                        double x = head[2 * u] + (kind == 0 ? 0.0 : shift[d + 2 * u]);
+                        double y = head[2 * u + 1] + (kind == 0 ? 0.0 : shift[d + 2 * u + 1]);
+                        if (u == mainUnit) {
+                            qx = x;
+                            qy = y;
+                        } else fixed += Math.sqrt(x * x + y * y);
+                    }
+                    double need = -limit - fixed;
+                    int bit = 1 << kind;
+                    for (int o = lo; o < hi; o++) {
+                        if ((alive[o] & bit) == 0) continue;
+                        double x = qx + cx[o];
+                        double y = qy + cy[o];
+                        if (cr[o] + Math.sqrt(x * x + y * y) < need) {
+                            alive[o] &= ~bit;
+                            killed++;
+                            if (alive[o] == 0) left--;
+                        }
+                    }
+                }
+                if (killed > 0) {
+                    cut.hits += killed;
+                    if (c > 0 && cuts[c - 1].hits < cut.hits) {
+                        cuts[c] = cuts[c - 1];
+                        cuts[c - 1] = cut;
+                    }
+                }
+            }
+            subtreeTests += hi - lo;
+            subtreeRejects += hi - lo - left;
+            return true;
+        }
+
+        private double[] shiftOf(Cut cut, int shiftSegment, int[] combos, boolean[] sprint, int firstRun) {
+            int width = 2 * shape.units + 1;
+            double[] shift = cut.shift;
+            if (shift == null) {
+                shift = new double[2 * width];
+                cut.shift = shift;
+                cut.shiftStamp = 0L;
+            }
+            if (cut.shiftStamp != epoch[shiftSegment]) {
+                java.util.Arrays.fill(shift, 0.0);
+                variant(cut, 1, combos, sprint, firstRun, shift, 0);
+                variant(cut, 2, combos, sprint, firstRun, shift, width);
+                cut.shiftStamp = epoch[shiftSegment];
+            }
+            return shift;
+        }
+
+        private double subtreeValue(Cut cut, int index, int before, double[] head, double[] shift, int kind) {
+            int units = shape.units;
+            int d = (kind - 1) * (2 * units + 1);
+            boolean scan = starts[index] <= mainLast;
+            double f = cut.base - head[2 * units] - (kind == 0 ? 0.0 : shift[d + 2 * units]);
+            for (int u = 0; u < units; u++) {
+                if (scan && u == mainUnit) continue;
+                double x = head[2 * u] + (kind == 0 ? 0.0 : shift[d + 2 * u]);
+                double y = head[2 * u + 1] + (kind == 0 ? 0.0 : shift[d + 2 * u + 1]);
+                f += Math.sqrt(x * x + y * y);
+            }
+            double[] table = cut.rest[index];
+            if (!scan) return -(f + table[before]);
+            double x = DIR_SLACK * (head[2 * mainUnit] + (kind == 0 ? 0.0 : shift[d + 2 * mainUnit]));
+            double y = DIR_SLACK * (head[2 * mainUnit + 1] + (kind == 0 ? 0.0 : shift[d + 2 * mainUnit + 1]));
+            double best = Double.NEGATIVE_INFINITY;
+            int at = before * DIRS;
+            for (int j = 0; j < DIRS; j++) {
+                double value = DIR_X[j] * x + DIR_Y[j] * y + table[at + j];
+                if (value > best) best = value;
+            }
+            return -(f + best);
+        }
+
+        private boolean subtreeReady(int index, int firstRun) {
+            return oneTiedUnit && optionKeys != null && index >= 1 && index < starts.length && top == index - 1
+                    && firstRun >= 0 && firstRun + 2 < starts[index];
+        }
+
+        boolean subtreeRejected(int index, int[] combos, boolean[] sprint, int firstRun, double rejectAbove, int tryCuts) {
+            if (!subtreeReady(index, firstRun)) return false;
+            double limit = rejectAbove + GUARD;
+            int before = sprint[starts[index] - 1] ? 1 : 0;
+            int shiftSegment = 0;
+            while (end(shiftSegment) <= firstRun + 2) shiftSegment++;
+            int alive = 7;
+            int count = Math.min(size, tryCuts);
+            subtreeTests++;
+            for (int c = 0; c < count && alive != 0; c++) {
+                Cut cut = cuts[c];
+                double[] head = headOf(cut, index - 1, combos, sprint);
+                if (cut.rest == null) rest(cut);
+                double[] shift = shiftOf(cut, shiftSegment, combos, sprint, firstRun);
+                int was = alive;
+                for (int kind = 0; kind <= 2; kind++) {
+                    if ((alive & (1 << kind)) == 0) continue;
+                    if (subtreeValue(cut, index, before, head, shift, kind) > limit) alive &= ~(1 << kind);
+                }
+                if (alive != was && c > 0 && cuts[c - 1].hits < ++cut.hits) {
+                    cuts[c] = cuts[c - 1];
+                    cuts[c - 1] = cut;
+                }
+            }
+            if (alive != 0) return false;
+            subtreeRejects++;
+            return true;
+        }
+
+        double[] subtreeValues(int index, int[] combos, boolean[] sprint, int firstRun) {
+            if (!subtreeReady(index, firstRun)) return null;
+            int before = sprint[starts[index] - 1] ? 1 : 0;
+            int shiftSegment = 0;
+            while (end(shiftSegment) <= firstRun + 2) shiftSegment++;
+            double[] out = new double[3 * size];
+            for (int c = 0; c < size; c++) {
+                Cut cut = cuts[c];
+                double[] head = headOf(cut, index - 1, combos, sprint);
+                if (cut.rest == null) rest(cut);
+                double[] shift = shiftOf(cut, shiftSegment, combos, sprint, firstRun);
+                for (int kind = 0; kind <= 2; kind++) out[3 * c + kind] = subtreeValue(cut, index, before, head, shift, kind);
+            }
+            return out;
+        }
+
+        double[] storedValues(int[] combos, boolean[] sprint) {
+            double[] out = new double[size];
+            for (int c = 0; c < size; c++) out[c] = value(cuts[c], combos, sprint);
+            return out;
         }
 
         void choose(int segment, int option) {
@@ -240,13 +579,7 @@ public final class FreeAirExact {
 
         private double[] headOf(Cut cut, int segment, int[] combos, boolean[] sprint) {
             int width = 2 * shape.units + 1;
-            if (cut.head == null) {
-                cut.head = new double[starts.length][width];
-                cut.stamp = new long[starts.length];
-                cut.sums = new double[slots * width];
-                cut.summed = new boolean[slots];
-                cut.shiftStamp = 0L;
-            }
+            prepare(cut);
             double[] head = cut.head[segment];
             if (cut.stamp[segment] == epoch[segment]) return head;
             int first = from(segment);
@@ -395,6 +728,20 @@ public final class FreeAirExact {
             this.cuts = new Cut[capacity];
             this.gx = new double[shape.units];
             this.gy = new double[shape.units];
+            int[] ticks = new int[shape.units];
+            for (int t = 0; t < shape.n; t++) if (shape.unitOfTick[t] >= 0) ticks[shape.unitOfTick[t]]++;
+            int tied = 0;
+            int main = -1;
+            int last = -1;
+            for (int u = 0; u < shape.units; u++) {
+                if (ticks[u] < 2) continue;
+                tied++;
+                main = u;
+            }
+            for (int t = 0; t < shape.n; t++) if (main >= 0 && shape.unitOfTick[t] == main) last = t;
+            this.oneTiedUnit = tied <= 1;
+            this.mainUnit = tied == 1 ? main : -1;
+            this.mainLast = tied == 1 ? last : -1;
         }
 
         double[] start() {

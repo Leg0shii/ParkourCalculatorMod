@@ -112,6 +112,7 @@ anglesolver/
                            familyReach=<b> and familyInertiaShare=<fraction> set the inertia stages (reach 0 turns them off),
                            familyCutPool=<count> sets the stored reject vectors per worker (0 turns the pool off),
                            familyExactFirst=false runs every band at the keep limit only,
+                           familySubtreeCuts=<count> sets how many stored vectors a subtree test tries (0 turns it off),
                            -Dpkc.pool.stageTimes=true prints one STAGE line per finished stage; keys/engage/repeat/cascade for
                            driver=keys, dfMarks to add dF=0 marks, contCap/contLead/contSec/parCont/
                            deepPairRepair for driver=benders; pair with -Dpkc.graphTrace=true (per-node
