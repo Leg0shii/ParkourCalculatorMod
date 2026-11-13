@@ -87,6 +87,7 @@ public final class Expect {
     public Boolean smoothInputs;
     public Integer minChanged;
     public Double maxWatchShare;
+    public Integer maxForwardKeyChanges;
     public String strafeSide;
 
     private static final Gson GSON = new Gson();
