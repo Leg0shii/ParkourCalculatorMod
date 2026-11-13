@@ -20,6 +20,7 @@ public final class BoundPrunedRecovery {
 
     private static final double SEARCH_SHARE = 0.8;
     private static final double PRUNE_TOL = 1.0e-6;
+    private static final double NODE_RAY_VIOLATION = 1.0e-6;
     private static final double SLP_VIOL_TRIGGER = 0.02;
     private static final double[] SEED_MARGINS = {3.0e-4, 1.2e-3, 5.0e-3, 2.0e-2};
     private static final int MAX_PATTERNS = 64;
@@ -167,6 +168,8 @@ public final class BoundPrunedRecovery {
                         SolverTrace.log("BNB", "rank %s band=%s bound=%.9f", p.label, inBand(p, bandMin, perAxis), p.normBound);
                     }
                 }
+            } else {
+                viable.sort((a, b) -> Double.compare(b.normBound, a.normBound));
             }
             if (!viable.isEmpty() && !searchCancel.get()) {
                 int workers = clock != null ? clock.workers()
@@ -820,8 +823,9 @@ public final class BoundPrunedRecovery {
         private Node makeNode(double[] lo, double[] hi, double[] warm, int depth) {
             statNodes++;
             List<JumpLinearModel.Wall> nodeWalls = nodeWalls(lo, hi);
-            CostateDualSolver dual = new CostateDualSolver(lin.n, cx, cz, mMag, nodeWalls);
-            CostateDualSolver.Result r0 = dual.solve(0.0, warm);
+            CostateDualSolver dual = new CostateDualSolver(lin.n, cx, cz, mMag, nodeWalls)
+                    .stopOnRay(NODE_RAY_VIOLATION);
+            CostateDualSolver.Result r0 = dual.solve(0.0, warm, normConst, incumbentNorm + PRUNE_TOL);
             if (r0 == null) {
                 statPruned++;
                 if (SolverTrace.on()) SolverTrace.log("BNB", "%s node#%d depth=%d dual unbounded, pruned", label, statNodes, depth);
