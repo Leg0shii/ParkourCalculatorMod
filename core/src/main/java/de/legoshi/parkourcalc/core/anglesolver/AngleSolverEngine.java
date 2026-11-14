@@ -975,8 +975,8 @@ public final class AngleSolverEngine {
     private static boolean consumeFirstTickZeroTurn(List<ConstraintAt> uiCons, Set<Constraint> consumed) {
         boolean any = false;
         for (ConstraintAt ca : uiCons) {
-            if (ca.absTick != 0 || ca.c.getField() != Constraint.Field.DF || ca.c.isUnsupportedDf()
-                    || ca.c.getOp() != Constraint.Op.EQ) continue;
+            if (ca.absTick != 0 || ca.c.getField() != Constraint.Field.DF
+                    || ca.c.getOp() != Constraint.Op.EQ || ca.c.getValue() != 0.0) continue;
             consumed.add(ca.c);
             any = true;
         }
@@ -1279,8 +1279,6 @@ public final class AngleSolverEngine {
                 fail.markCertifiedInfeasible();
                 fail.setNoticeLabel(CERTIFIED_INFEASIBLE_LABEL);
                 fail.setNotice(proof);
-            } else if (hasUnsupportedDf(job)) {
-                fail.setNotice(DF_UNSUPPORTED_NOTICE);
             } else if (pinnedYaws != null) {
                 fail.setNoticeLabel(OVERCONSTRAINED_LABEL);
                 fail.setNotice(pinnedChainNotice(sc, ctx.violationOf(pinnedYaws), freeBox != null));
@@ -1458,11 +1456,6 @@ public final class AngleSolverEngine {
         return null;
     }
 
-    private static boolean hasUnsupportedDf(Job job) {
-        for (ConstraintAt ca : job.uiConstraints) if (ca.c.isUnsupportedDf()) return true;
-        return false;
-    }
-
     public static final String OVERCONSTRAINED_LABEL = "Overconstrained";
     public static final String INFEASIBLE_LABEL = "Infeasible constraints";
     public static final String CERTIFIED_INFEASIBLE_LABEL = "Certified infeasible";
@@ -1492,13 +1485,6 @@ public final class AngleSolverEngine {
     public static final String RANGE_MOVED_NOTICE =
             "Rows or the solve range changed while the solve ran, so its result no longer fits the rows."
             + " Solve again.";
-
-    public static final String DF_UNSUPPORTED_NOTICE =
-            "This jump carries a delta-facing (dF) band constraint. dF supports = 0 (hold the facing),"
-            + " >= (turn one way, at least the given degrees per tick) and <= (the other way); a band"
-            + " is not supported, so every solver stage declines the problem before searching and the"
-            + " solve cannot succeed while one is present. Re-select the dF field on that constraint"
-            + " to reset it to dF = 0, or delete the constraint.";
 
     public static final String DF_DIRECTION_LABEL = "Direction unverified";
 
@@ -2053,8 +2039,10 @@ public final class AngleSolverEngine {
      *  fields, see addScalarOrRange), or a single comparison wall. */
     private void addRelative(List<JumpConstraint> out, JumpConstraint.Mode mode, int t1, int t2, Constraint c, String tag) {
         if (c.isRange()) {
-            out.add(new JumpConstraint(mode, t1, t2, JumpConstraint.Op.MINUS, JumpConstraint.Cmp.GE, c.getLo(), tag + "lo"));
-            out.add(new JumpConstraint(mode, t1, t2, JumpConstraint.Op.MINUS, JumpConstraint.Cmp.LE, c.getHi(), tag + "hi"));
+            double lo = mode == JumpConstraint.Mode.F ? turnRangeLo(c) : c.getLo();
+            double hi = mode == JumpConstraint.Mode.F ? turnRangeHi(c) : c.getHi();
+            out.add(new JumpConstraint(mode, t1, t2, JumpConstraint.Op.MINUS, JumpConstraint.Cmp.GE, lo, tag + "lo"));
+            out.add(new JumpConstraint(mode, t1, t2, JumpConstraint.Op.MINUS, JumpConstraint.Cmp.LE, hi, tag + "hi"));
         } else if (c.getOp() == Constraint.Op.EQ) {
             out.add(new JumpConstraint(mode, t1, t2, JumpConstraint.Op.MINUS, JumpConstraint.Cmp.GE, c.getValue() - MET_TOL, tag + "eqLo"));
             out.add(new JumpConstraint(mode, t1, t2, JumpConstraint.Op.MINUS, JumpConstraint.Cmp.LE, c.getValue() + MET_TOL, tag + "eqHi"));
@@ -2078,14 +2066,22 @@ public final class AngleSolverEngine {
     private void addSeamDeltaFacing(List<JumpConstraint> out, Constraint c, String tag, float seedYaw) {
         double base = seedYaw;
         if (c.isRange()) {
-            out.add(new JumpConstraint(JumpConstraint.Mode.F, 0, null, JumpConstraint.Op.PLUS, JumpConstraint.Cmp.GE, base + c.getLo(), tag + "lo"));
-            out.add(new JumpConstraint(JumpConstraint.Mode.F, 0, null, JumpConstraint.Op.PLUS, JumpConstraint.Cmp.LE, base + c.getHi(), tag + "hi"));
+            out.add(new JumpConstraint(JumpConstraint.Mode.F, 0, null, JumpConstraint.Op.PLUS, JumpConstraint.Cmp.GE, base + turnRangeLo(c), tag + "lo"));
+            out.add(new JumpConstraint(JumpConstraint.Mode.F, 0, null, JumpConstraint.Op.PLUS, JumpConstraint.Cmp.LE, base + turnRangeHi(c), tag + "hi"));
         } else if (c.getOp() == Constraint.Op.EQ) {
             out.add(new JumpConstraint(JumpConstraint.Mode.F, 0, null, JumpConstraint.Op.PLUS, JumpConstraint.Cmp.GE, base + c.getValue() - MET_TOL, tag + "eqLo"));
             out.add(new JumpConstraint(JumpConstraint.Mode.F, 0, null, JumpConstraint.Op.PLUS, JumpConstraint.Cmp.LE, base + c.getValue() + MET_TOL, tag + "eqHi"));
         } else {
             out.add(new JumpConstraint(JumpConstraint.Mode.F, 0, null, JumpConstraint.Op.PLUS, cmp(c.getOp()), base + c.getValue(), tag));
         }
+    }
+
+    static double turnRangeLo(Constraint c) {
+        return Math.max(c.getLo(), c.getHi() - 180.0);
+    }
+
+    static double turnRangeHi(Constraint c) {
+        return Math.min(c.getHi(), c.getLo() + 180.0);
     }
 
     private static JumpConstraint.Cmp cmp(Constraint.Op op) {
@@ -2165,14 +2161,15 @@ public final class AngleSolverEngine {
     }
 
     public static boolean satisfied(Constraint c, double found) {
+        boolean angular = c.getField() == Constraint.Field.F || c.getField() == Constraint.Field.DF;
         if (c.isRange()) {
-            boolean lo = c.isLoInclusive() ? found >= c.getLo() - FEAS_TOL : found > c.getLo() - FEAS_TOL;
-            boolean hi = c.isHiInclusive() ? found <= c.getHi() + FEAS_TOL : found < c.getHi() + FEAS_TOL;
+            double at = angular ? aroundRange(c, found) : found;
+            boolean lo = c.isLoInclusive() ? at >= c.getLo() - FEAS_TOL : at > c.getLo() - FEAS_TOL;
+            boolean hi = c.isHiInclusive() ? at <= c.getHi() + FEAS_TOL : at < c.getHi() + FEAS_TOL;
             return lo && hi;
         }
         double v = c.getValue();
         // Facings are angular: compare the wrapped difference so e.g. -179 satisfies a +179 target.
-        boolean angular = c.getField() == Constraint.Field.F || c.getField() == Constraint.Field.DF;
         double f = angular ? v + Angles.wrap(found - v) : found;
         // Walls (the inequalities) are gated strictly at FEAS_TOL, so "Solved" never counts a clip as met;
         // only the exact target (=) keeps MET_TOL, since a single facing/position bucket is never hit to the bit.
@@ -2186,6 +2183,11 @@ public final class AngleSolverEngine {
         }
     }
 
+    private static double aroundRange(Constraint c, double found) {
+        double mid = 0.5 * (c.getLo() + c.getHi());
+        return mid + Angles.wrap(found - mid);
+    }
+
     private static Objective.Sense objectiveSense(Objective o, Constraint c, int segTick) {
         if (o.isCustomAngle() || !c.isRange() || segTick != o.tick) return null;
         JumpPhysicsInputs.Axis axis = c.getField() == Constraint.Field.X ? JumpPhysicsInputs.Axis.X
@@ -2197,10 +2199,12 @@ public final class AngleSolverEngine {
         String field = ConstraintText.fieldLabel(c);
         String tickLabel = "T" + (absTick + 1);
         if (c.isRange()) {
+            boolean angular = c.getField() == Constraint.Field.F || c.getField() == Constraint.Field.DF;
+            double at = angular ? aroundRange(c, found) : found;
             double margin;
             if (sense == Objective.Sense.MAX) margin = found - c.getLo();
             else if (sense == Objective.Sense.MIN) margin = c.getHi() - found;
-            else margin = Math.min(found - c.getLo(), c.getHi() - found);
+            else margin = Math.min(at - c.getLo(), c.getHi() - at);
             String marginStr = (margin >= 0 ? "+" : "") + ConstraintText.fixedStat(margin);
             return new SolveResult.Outcome(field, tickLabel, ConstraintText.chip(c), ConstraintText.fixedStat(found), marginStr, met);
         }

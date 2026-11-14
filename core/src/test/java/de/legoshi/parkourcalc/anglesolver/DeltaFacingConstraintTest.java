@@ -19,7 +19,6 @@ import java.util.function.Consumer;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -194,17 +193,30 @@ public class DeltaFacingConstraintTest {
     }
 
     @Test
-    public void zeroEqualityAndOneWayShapesCountAsSupportedDf() {
-        assertFalse(Constraint.scalar(Constraint.Field.DF, Constraint.Op.EQ, 0.0).isUnsupportedDf());
-        assertFalse(Constraint.scalar(Constraint.Field.DF, Constraint.Op.LE, 0.0).isUnsupportedDf());
-        assertFalse(Constraint.scalar(Constraint.Field.DF, Constraint.Op.GE, 0.5).isUnsupportedDf());
+    public void strictOpsBecomeTheirClosedForms() {
         assertTrue(Constraint.scalar(Constraint.Field.DF, Constraint.Op.GE, 0.5).isDirectionalDf());
+        assertFalse(Constraint.scalar(Constraint.Field.DF, Constraint.Op.EQ, 0.0).isDirectionalDf());
+        assertFalse(Constraint.range(Constraint.Field.DF, -1.0, 1.0, true, true).isDirectionalDf());
         assertEquals(Constraint.Op.GE, Constraint.scalar(Constraint.Field.DF, Constraint.Op.GT, 0.0).getOp());
         assertEquals(Constraint.Op.LE, Constraint.scalar(Constraint.Field.DF, Constraint.Op.LT, 0.0).getOp());
-        assertTrue(Constraint.scalar(Constraint.Field.DF, Constraint.Op.EQ, 1.0).isUnsupportedDf());
-        assertTrue(Constraint.range(Constraint.Field.DF, -1.0, 1.0, true, true).isUnsupportedDf());
-        assertFalse(Constraint.scalar(Constraint.Field.X, Constraint.Op.LE, 3.0).isUnsupportedDf());
-        assertFalse(Constraint.range(Constraint.Field.F, -1.0, 1.0, true, true).isUnsupportedDf());
+    }
+
+    @Test
+    public void switchingBetweenTheShapesKeepsSensibleValues() {
+        Constraint c = Constraint.scalar(Constraint.Field.DF, Constraint.Op.GE, 2.0);
+        c.setOp(Constraint.Op.IN);
+        assertTrue(c.isRange());
+        assertEquals(2.0, c.getLo(), 0.0);
+        assertEquals(2.0, c.getHi(), 0.0);
+        c.setHi(5.0);
+        c.setOp(Constraint.Op.LE);
+        assertEquals(2.0, c.getValue(), 0.0);
+        c.setOp(Constraint.Op.IN);
+        c.setHi(5.0);
+        c.setOp(Constraint.Op.EQ);
+        assertEquals("picking = holds the facing until a turn is typed", 0.0, c.getValue(), 0.0);
+        c.setValue(3.5);
+        assertEquals(3.5, c.getValue(), 0.0);
     }
 
     @Test
@@ -219,8 +231,6 @@ public class DeltaFacingConstraintTest {
         SolveResult r = solve(ctx);
         assertNotNull("engine returned no result", r);
         assertTrue("j004 must solve with the baseline's own turn direction on tick 3", r.isSuccess());
-        assertNotEquals("a one-way dF is supported and must not be reported as unsupported",
-                AngleSolverEngine.DF_UNSUPPORTED_NOTICE, r.getNotice());
         SolveResult.Outcome df = null;
         for (SolveResult.Outcome o : r.getOutcomes()) if ("dF".equals(o.field)) df = o;
         assertNotNull("dF outcome row missing from the result panel", df);
@@ -231,25 +241,105 @@ public class DeltaFacingConstraintTest {
     }
 
     @Test
-    public void unsupportedDfBandFailsWithTheExplanatoryNotice() {
-        Ctx ctx = build(state -> state.tickConstraints(state.getStartTick() + 2).getConstraints()
-                .add(Constraint.range(Constraint.Field.DF, -1.0, 1.0, true, true)));
-        SolveResult r = solve(ctx);
-        assertNotNull("engine returned no result", r);
-        assertFalse("a dF band is retired and must not solve", r.isSuccess());
-        assertEquals("failed solve must name the unsupported dF as the cause",
-                AngleSolverEngine.DF_UNSUPPORTED_NOTICE, r.getNotice());
+    public void overWideRangeIsCutToHalfATurn() {
+        int[] start = new int[1];
+        Ctx ctx = build(state -> {
+            start[0] = state.getStartTick();
+            state.tickConstraints(start[0] + 2).getConstraints()
+                    .add(Constraint.range(Constraint.Field.DF, -100.0, 120.0, true, true));
+            state.tickConstraints(start[0] + 3).getConstraints()
+                    .add(Constraint.range(Constraint.Field.DF, -90.0, 90.0, true, true));
+        });
+        JumpSpec spec = ctx.engine.debugBuildSpec();
+        assertNotNull(spec);
+        for (JumpConstraint w : byPrefix(spec, "dF@" + (start[0] + 2))) {
+            assertEquals(w.cmp == JumpConstraint.Cmp.GE ? -60.0 : 80.0, w.rhs, 0.0);
+        }
+        for (JumpConstraint w : byPrefix(spec, "dF@" + (start[0] + 3))) {
+            assertEquals(w.cmp == JumpConstraint.Cmp.GE ? -90.0 : 90.0, w.rhs, 0.0);
+        }
     }
 
     @Test
-    public void supportedDfSolveCarriesNoUnsupportedNotice() {
-        Ctx ctx = build(state ->
-                addScalar(state, state.getStartTick() + 2, Constraint.Op.EQ, 0.0));
+    public void rangeAcrossTheHalfTurnIsJudgedAroundItsMiddle() {
+        Constraint flip = Constraint.range(Constraint.Field.DF, 170.0, 190.0, true, true);
+        assertTrue(AngleSolverEngine.satisfied(flip, -175.0));
+        assertTrue(AngleSolverEngine.satisfied(flip, 175.0));
+        assertFalse(AngleSolverEngine.satisfied(flip, 160.0));
+        assertFalse(AngleSolverEngine.satisfied(flip, -160.0));
+        Constraint plain = Constraint.range(Constraint.Field.DF, -1.0, 1.0, true, true);
+        assertTrue(AngleSolverEngine.satisfied(plain, 0.5));
+        assertFalse(AngleSolverEngine.satisfied(plain, 1.5));
+    }
+
+    private static double turnAt(SolveResult r, int index) {
+        return Angles.wrap(r.getYaws().get(index).yaw - r.getYaws().get(index - 1).yaw);
+    }
+
+    private static SolveResult.Outcome dfOutcome(SolveResult r) {
+        SolveResult.Outcome df = null;
+        for (SolveResult.Outcome o : r.getOutcomes()) if ("dF".equals(o.field)) df = o;
+        return df;
+    }
+
+    @Test
+    public void dfRangeSolvesInsideTheRange() {
+        SolveResult plain = solve(build(state -> { }));
+        assertNotNull("baseline solve returned no result", plain);
+        assertTrue("baseline j004 must solve", plain.isSuccess());
+        double turn = turnAt(plain, 2);
+        double lo = turn + 0.25;
+        double hi = turn + 1.25;
+
+        Ctx ctx = build(state -> state.tickConstraints(state.getStartTick() + 2).getConstraints()
+                .add(Constraint.range(Constraint.Field.DF, lo, hi, true, true)));
         SolveResult r = solve(ctx);
         assertNotNull("engine returned no result", r);
-        assertTrue("j004 must solve with a zero-turn tick", r.isSuccess());
-        assertNotEquals("a supported dF = 0 must not be reported as unsupported",
-                AngleSolverEngine.DF_UNSUPPORTED_NOTICE, r.getNotice());
+        assertTrue("j004 must solve with the turn on tick 3 held in a range next to the baseline's", r.isSuccess());
+        double solved = turnAt(r, 2);
+        assertTrue("solved turn " + solved + " must lie in [" + lo + ", " + hi + "]",
+                solved >= lo - MET_TOL && solved <= hi + MET_TOL);
+        SolveResult.Outcome df = dfOutcome(r);
+        assertNotNull("dF outcome row missing from the result panel", df);
+        assertTrue("the dF range must report met", df.met);
+    }
+
+    @Test
+    public void twoOneWayRowsOnOneTickSolveAsARange() {
+        SolveResult plain = solve(build(state -> { }));
+        assertNotNull("baseline solve returned no result", plain);
+        assertTrue("baseline j004 must solve", plain.isSuccess());
+        double turn = turnAt(plain, 2);
+        double lo = turn - 1.25;
+        double hi = turn - 0.25;
+
+        Ctx ctx = build(state -> {
+            addScalar(state, state.getStartTick() + 2, Constraint.Op.GE, lo);
+            addScalar(state, state.getStartTick() + 2, Constraint.Op.LE, hi);
+        });
+        SolveResult r = solve(ctx);
+        assertNotNull("engine returned no result", r);
+        assertTrue("a dF >= and a dF <= on the same tick must solve like the range they describe", r.isSuccess());
+        double solved = turnAt(r, 2);
+        assertTrue("solved turn " + solved + " must lie in [" + lo + ", " + hi + "]",
+                solved >= lo - MET_TOL && solved <= hi + MET_TOL);
+    }
+
+    @Test
+    public void exactTurnSolvesAtTheTypedValue() {
+        SolveResult plain = solve(build(state -> { }));
+        assertNotNull("baseline solve returned no result", plain);
+        assertTrue("baseline j004 must solve", plain.isSuccess());
+        double target = turnAt(plain, 2) + 0.5;
+
+        Ctx ctx = build(state -> addScalar(state, state.getStartTick() + 2, Constraint.Op.EQ, target));
+        SolveResult r = solve(ctx);
+        assertNotNull("engine returned no result", r);
+        assertTrue("j004 must solve with an exact turn half a degree off the baseline's on tick 3", r.isSuccess());
+        assertEquals(target, turnAt(r, 2), 2.0 * MET_TOL);
+        SolveResult.Outcome df = dfOutcome(r);
+        assertNotNull("dF outcome row missing from the result panel", df);
+        assertTrue("the exact turn must report met", df.met);
     }
 
     @Test
