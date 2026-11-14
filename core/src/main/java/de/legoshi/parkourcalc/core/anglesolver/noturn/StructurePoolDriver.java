@@ -89,7 +89,7 @@ public final class StructurePoolDriver {
         public boolean playable = false;
         public int threads = 0;
 
-        Config copy() {
+        public Config copy() {
             try {
                 return (Config) super.clone();
             } catch (CloneNotSupportedException e) {

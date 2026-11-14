@@ -82,6 +82,9 @@ public final class StratfinderWindow implements RenderInterface {
 
         void setGpuScreening(boolean value);
 
+        default void windowShown() {
+        }
+
         double offsetOf(NoTurnResult result);
 
         String goalWallLabel();
@@ -174,7 +177,10 @@ public final class StratfinderWindow implements RenderInterface {
         boolean visible = ImGui.begin(WINDOW_ID, flags);
         if (visible) drawTitleBar(scale);
         ThemeManager.popHeaderChrome();
-        if (visible) renderBody();
+        if (visible) {
+            host.windowShown();
+            renderBody();
+        }
         ImGui.end();
     }
 
