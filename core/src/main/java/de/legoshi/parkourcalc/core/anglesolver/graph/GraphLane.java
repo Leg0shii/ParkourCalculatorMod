@@ -2,64 +2,43 @@ package de.legoshi.parkourcalc.core.anglesolver.graph;
 
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolveClock;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
 final class GraphLane {
 
-    final GraphNode node;
+    final GraphNode start;
     final GraphContext ctx;
     final Candidate in;
     final SolveClock clock;
-    final int stepIndex;
-    private final long baseWorkNanos;
+    int stepIndex;
+    final String chainAtStart;
+    private final GraphRunner.Walk walk;
     private Thread thread;
-    private volatile NodeOutcome outcome;
+    private volatile Candidate result;
     private volatile RuntimeException error;
-    private volatile AtomicBoolean token;
     private volatile boolean aborted;
 
-    GraphLane(GraphNode node, GraphContext ctx, Candidate in, SolveClock clock, long baseWorkNanos, int stepIndex) {
-        this.node = node;
+    GraphLane(GraphRunner.Walk walk, GraphNode start, GraphContext ctx, Candidate in, SolveClock clock,
+              int stepIndex) {
+        this.walk = walk;
+        this.start = start;
         this.ctx = ctx;
         this.in = in;
         this.clock = clock;
-        this.baseWorkNanos = baseWorkNanos;
         this.stepIndex = stepIndex;
+        this.chainAtStart = ctx.chain();
     }
 
-    void start(NodeRuntime rt, long deadlineNanos, long budgetNanos) {
-        thread = new Thread(() -> run(rt, deadlineNanos, budgetNanos), "solver-lane-" + node.id);
+    void start() {
+        thread = new Thread(this::run, "solver-lane-" + start.id);
         thread.setDaemon(true);
         thread.start();
     }
 
-    void run(NodeRuntime rt, long deadlineNanos, long budgetNanos) {
+    void run() {
         SolveClock previous = clock == null ? null : clock.enter();
         try {
-            Candidate input = in == null ? null : in.copy();
-            AtomicBoolean t = ctx.beginNode(node, deadlineNanos, budgetNanos);
-            token = t;
-            if (aborted) t.set(true);
-            Guarantee taken = null;
-            Candidate out = input;
-            try {
-                NodeOutcome o = rt.execute(ctx, input, t, deadlineNanos);
-                outcome = o;
-                taken = o.branch;
-                out = o.candidate;
-            } catch (RuntimeException e) {
-                if (aborted) return;
-                if (ctx.cancel.get() || !t.get()) {
-                    error = e;
-                    return;
-                }
-                e.printStackTrace();
-                taken = node.type.fallbackBranch != null ? node.type.fallbackBranch : Guarantee.NONE;
-            } finally {
-                ctx.endNode(node, taken);
-            }
-            ctx.runState.noteResult(node.id, clock == null ? -1L : baseWorkNanos + clock.elapsedNanos(),
-                    clock == null ? null : clock.unitsSnapshot(), out);
+            result = GraphRunner.walkFrom(walk, ctx, start, in == null ? null : in.copy(), true);
+        } catch (RuntimeException e) {
+            if (!aborted) error = e;
         } finally {
             if (clock != null) SolveClock.restore(previous);
             ctx.shutdown();
@@ -82,12 +61,11 @@ final class GraphLane {
 
     void abort() {
         aborted = true;
-        AtomicBoolean t = token;
-        if (t != null) t.set(true);
+        ctx.abortCurrentNode();
     }
 
-    NodeOutcome outcome() {
-        return outcome;
+    Candidate result() {
+        return result;
     }
 
     RuntimeException error() {

@@ -8,6 +8,10 @@ public final class NodeHelp {
     private static final Map<String, String> NODES = new HashMap<>();
     private static final Map<String, String> SHARED_PARAMS = new HashMap<>();
     private static final Map<String, Map<String, String>> NODE_PARAMS = new HashMap<>();
+    private static final String LANE_HELP = "Start this stage and let the next stages run at the same time, each"
+            + " on its own cores. Stages next to each other that both have this on run one after the other in the"
+            + " same lane. The lane works on the landing it was handed; a Join lanes stage further down waits for"
+            + " it and keeps the better of the two landings.";
 
     private NodeHelp() {
     }
@@ -199,9 +203,7 @@ public final class NodeHelp {
         param("certBnb", "batch", "How many branches the search works on at once, each on its own processor"
                 + " core. The search takes its best branches in rounds of this size and merges their results in"
                 + " a fixed order, so the result is the same on every machine; 1 searches one branch at a time.");
-        param("certBnb", GraphRunner.LANE_PARAM, "Start this stage and let the next stages run at the same time,"
-                + " each on its own cores. The stage works on the landing it was handed; a Join lanes stage"
-                + " further down waits for it and keeps the better of the two landings.");
+        param("certBnb", GraphRunner.LANE_PARAM, LANE_HELP);
 
         node("foldDriver", "Another angle solver that repeatedly replays and adjusts the jump. It can try"
                 + " several different starting guesses and finish with a fine nudge pass.");
@@ -221,6 +223,7 @@ public final class NodeHelp {
 
         node("ilsPolish", "Fine-tunes a jump that already lands: it repeatedly shakes up a few angles and"
                 + " keeps the change only if the result is better.");
+        param("ilsPolish", GraphRunner.LANE_PARAM, LANE_HELP);
         param("ilsPolish", "perturbTicksMin", "The fewest ticks a single shake disturbs. Larger makes"
                 + " coarser changes.");
         param("ilsPolish", "perturbTicksSpan", "Extra random ticks a shake may disturb on top of the"
@@ -281,6 +284,7 @@ public final class NodeHelp {
 
         node("leafSnap", "Snaps each aim angle onto the nearest exact value the game can actually use,"
                 + " keeping the snap only if the jump still lands.");
+        param("leafSnap", GraphRunner.LANE_PARAM, LANE_HELP);
         param("leafSnap", "pairPass", "Turn on a second, more thorough snapping pass that adjusts angles in"
                 + " pairs. 0 off, 1 on. Slower but can land a cleaner result.");
         param("leafSnap", "repeat", "Snap again from the snapped result until a snap finds nothing better or"
@@ -307,6 +311,7 @@ public final class NodeHelp {
         param("latticePolish", "work", "How much work the smooth solves may spend before the stage gives up,"
                 + " counted in steps so the same jump always gets the same result. A long jump with many"
                 + " free ticks needs more.");
+        param("latticePolish", GraphRunner.LANE_PARAM, LANE_HELP);
         param("latticePolish", "turns", "Also tries the same jump with the start facing one full turn away, for"
                 + " example 315 instead of -45, and Apply then sets the start facing there. The game's angle table"
                 + " has longer steps there for some directions, so the jump can reach further. Only when the solve"
@@ -319,6 +324,8 @@ public final class NodeHelp {
 
         node("joinLanes", "Waits for every stage that was started to run beside the chain and keeps the"
                 + " better landing of the chain and those stages. Does nothing when no such stage runs.");
+        param("joinLanes", "of", "Wait only for the lane that was started at the stage with this name and"
+                + " leave the others running. Empty waits for all of them.");
 
         node("pickStart", "When a Receding horizon stage has set an earlier landing aside, compares it with"
                 + " the current one and continues with the one that lands further. Does nothing otherwise.");

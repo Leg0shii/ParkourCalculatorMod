@@ -28,8 +28,8 @@ public class BuiltinGraphsTest {
 
     private static final List<String> OPTIMIZE_NODES = Arrays.asList(
             "entry", "seeds", "horizon", "wrap0", "seed", "cap1", "freeRescue", "peel", "freeImprove",
-            "sweep", "ils2", "translate2", "fold", "ladder", "cert", "bnb", "ils", "join", "cap2", "polish",
-            "wrap", "translate", "snap", "dive", "translate3", "snap2", "certify", "emit");
+            "sweep", "ils2", "translate2", "fold", "polish0", "snap0", "ladder", "cert", "bnb", "ils", "join",
+            "cap2", "polish", "wrap", "translate", "snap", "join0", "dive", "translate3", "snap2", "certify", "emit");
 
     private static final List<String> MULTI_START_NODES = Arrays.asList(
             "entry", "seeds", "horizon", "wrap0", "seed", "cap1", "freeRescue", "peel", "freeImprove",
@@ -51,9 +51,10 @@ public class BuiltinGraphsTest {
     private static final String[][] OPTIMIZE_PAIRS = {
             {"entry", "seeds"}, {"seeds", "horizon"}, {"horizon", "wrap0"}, {"wrap0", "seed"}, {"seed", "cap1"},
             {"cap1", "freeRescue"}, {"freeRescue", "peel"}, {"peel", "freeImprove"}, {"freeImprove", "sweep"},
-            {"ils2", "translate2"}, {"fold", "ladder"}, {"ladder", "cert"}, {"cert", "bnb"}, {"bnb", "ils"},
-            {"ils", "join"}, {"join", "cap2"}, {"cap2", "polish"}, {"polish", "wrap"}, {"wrap", "translate"}, {"translate", "snap"},
-            {"snap", "dive"}, {"dive", "translate3"}, {"translate3", "snap2"}, {"snap2", "certify"},
+            {"ils2", "translate2"}, {"fold", "polish0"}, {"polish0", "snap0"}, {"snap0", "ladder"},
+            {"ladder", "cert"}, {"cert", "bnb"}, {"bnb", "ils"}, {"ils", "join"}, {"join", "cap2"},
+            {"cap2", "polish"}, {"polish", "wrap"}, {"wrap", "translate"}, {"translate", "snap"},
+            {"snap", "join0"}, {"join0", "dive"}, {"dive", "translate3"}, {"translate3", "snap2"}, {"snap2", "certify"},
             {"certify", "emit"}};
 
     private static List<String> nodeIds(SolverGraph g) {
@@ -112,6 +113,19 @@ public class BuiltinGraphsTest {
         assertEquals(OPTIMIZE_NODES, nodeIds(opt));
         assertLinear(opt, OPTIMIZE_PAIRS);
         assertLoopEdges(opt, true, true);
+    }
+
+    @Test
+    public void optimizePolishesTheFirstLandingBesideTheChain() {
+        for (int sec : new int[]{1, 10, 50}) {
+            SolverGraph opt = BuiltinGraphs.optimize(sec);
+            assertTrue(sec + " s", GraphRunner.runsAsLane(opt.node("polish0")));
+            assertTrue(sec + " s", GraphRunner.runsAsLane(opt.node("snap0")));
+            assertFalse(sec + " s", GraphRunner.runsAsLane(opt.node("polish")));
+            assertEquals("cert", opt.node("join").params.getString("of"));
+            assertEquals("polish0", opt.node("join0").params.getString("of"));
+        }
+        assertNull(BuiltinGraphs.fast().node("polish0"));
     }
 
     @Test

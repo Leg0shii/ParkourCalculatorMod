@@ -27,32 +27,74 @@ public final class GraphRunner {
         }
     }
 
+    static final class Walk {
+        final SolverGraph graph;
+        final long totalNanos;
+        final Map<String, Long> reserves;
+        final Map<String, Integer> visits;
+        final Map<String, NodeRuntime> runtimes = new HashMap<>();
+
+        Walk(SolverGraph graph, long totalNanos, Map<String, Long> reserves, Map<String, Integer> visits) {
+            this.graph = graph;
+            this.totalNanos = totalNanos;
+            this.reserves = reserves;
+            this.visits = visits;
+        }
+
+        Walk forLane() {
+            return new Walk(graph, totalNanos, reserves, new HashMap<>(visits));
+        }
+    }
+
     private static Candidate walk(SolverGraph graph, GraphContext ctx, Candidate initial) {
         if (graph.entry == null || graph.emit == null) return null;
-        Map<String, NodeRuntime> runtimes = new HashMap<>();
-        Map<String, Integer> visits = new HashMap<>();
-        GraphNode cur = graph.entry;
-        Candidate cand = initial;
         long overallAtStart = ctx.overallDeadline();
         long totalNanos = overallAtStart > 0 ? overallAtStart - SolveClock.nanoTime() : 0L;
         Map<String, Long> reserves = new HashMap<>();
         for (GraphNode n : graph.nodes) {
-            long r = reserveNanos(n, totalNanos);
+            long r = runsAsLane(n) ? 0L : reserveNanos(n, totalNanos);
             if (r > 0) reserves.put(n.id, r);
         }
+        Walk w = new Walk(graph, totalNanos, reserves, new HashMap<>());
+        try {
+            return walkFrom(w, ctx, graph.entry, initial, false);
+        } finally {
+            ctx.closeLanes();
+        }
+    }
+
+    static Candidate walkFrom(Walk w, GraphContext ctx, GraphNode start, Candidate initial, boolean lane) {
+        SolverGraph graph = w.graph;
+        Map<String, NodeRuntime> runtimes = w.runtimes;
+        Map<String, Integer> visits = w.visits;
+        Map<String, Long> reserves = w.reserves;
+        long totalNanos = w.totalNanos;
+        GraphNode cur = start;
+        Candidate cand = initial;
         while (true) {
             if (ctx.cancel.get()) return null;
+            if (lane && ctx.laneAborted) return cand;
             long overall = ctx.overallDeadline();
+            if (lane && (cur == null || cur.type.emitMarker || !runsAsLane(cur))) return cand;
             if (cur == null || cur.type.emitMarker) return ctx.joinLanes(cand);
             if (cur.type.entryMarker) {
                 cur = next(graph, cur, Guarantee.DONE);
                 continue;
             }
+            if (!lane && ctx.hasLane(cur.id)) cand = ctx.joinLanes(cand);
+            if (!lane && runsAsLane(cur)) {
+                ctx.startLane(w.forLane(), cur, cand);
+                if (TRACE) System.out.println(String.format(java.util.Locale.ROOT, "[graph] %-12s lane", cur.id));
+                while (cur != null && !cur.type.emitMarker && runsAsLane(cur)) {
+                    visits.merge(cur.id, 1, Integer::sum);
+                    cur = next(graph, cur, cur.type.fallbackBranch);
+                }
+                continue;
+            }
             Integer seen = visits.get(cur.id);
             int v = seen == null ? 1 : seen + 1;
             visits.put(cur.id, v);
-            if (v > MAX_NODE_VISITS) return ctx.joinLanes(cand);
-            if (ctx.hasLane(cur.id)) cand = ctx.joinLanes(cand);
+            if (v > MAX_NODE_VISITS) return lane ? cand : ctx.joinLanes(cand);
             NodeRuntime rt = runtimes.get(cur.id);
             if (rt == null) {
                 rt = cur.type.factory.create(cur.params);
@@ -72,12 +114,6 @@ public final class GraphRunner {
             SolveClock clock = SolveClock.current();
             long stop = clock == null ? Long.MAX_VALUE : clock.deadlineOf(ctx.cancel);
             if (deadline > 0 && stop < deadline) deadline = stop;
-            if (runsAsLane(cur)) {
-                ctx.startLane(cur, rt, cand, deadline, budgetNanos);
-                if (TRACE) System.out.println(String.format(java.util.Locale.ROOT, "[graph] %-12s lane", cur.id));
-                cur = next(graph, cur, Guarantee.UNCHANGED);
-                continue;
-            }
             AtomicBoolean token = ctx.beginNode(cur, deadline, budgetNanos);
             Guarantee taken = null;
             try {
@@ -93,7 +129,7 @@ public final class GraphRunner {
             }
             noteResult(ctx, cur, cand);
             if (TRACE) traceNode(ctx, cur, taken, cand);
-            reportIncumbent(ctx, cand);
+            reportIncumbent(ctx, cur, cand);
             if (ctx.infeasibilityProof() != null) return cand;
             cur = next(graph, cur, taken);
         }
@@ -143,8 +179,15 @@ public final class GraphRunner {
         return reserve > 0 ? reserve : 0L;
     }
 
-    private static void reportIncumbent(GraphContext ctx, Candidate cand) {
-        if (ctx.progress == null || cand == null || cand.yaws == null) return;
+    private static void reportIncumbent(GraphContext ctx, GraphNode node, Candidate cand) {
+        if (cand == null || cand.yaws == null) return;
+        if (ctx.progress == null && ctx.laneProgress != null) {
+            double violation = ctx.violationOf(cand.yaws);
+            ctx.laneProgress.reportAt(cand.yaws, ctx.exactObjective(cand.yaws), violation, violation <= ctx.feasTol,
+                    ctx.chain(), node.id, ctx.scenario.startPos.x, ctx.scenario.startPos.z);
+            return;
+        }
+        if (ctx.progress == null) return;
         double violation = ctx.violationOf(cand.yaws);
         ctx.progress.setStage(ctx.chain());
         ctx.progress.report(cand.yaws, ctx.exactObjective(cand.yaws), violation, violation <= ctx.feasTol);
