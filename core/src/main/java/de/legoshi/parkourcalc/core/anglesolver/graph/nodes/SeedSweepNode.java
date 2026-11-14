@@ -57,7 +57,7 @@ public final class SeedSweepNode implements NodeRuntime {
         List<double[]> refs = seedPoints(ctx.freeBox, seeds);
         SeedResult[] out = new SeedResult[refs.size()];
         int nThreads = threadCount(ctx, refs.size());
-        SolverGraph fast = BuiltinGraphs.fast();
+        SolverGraph fast = BuiltinGraphs.fastAtStart();
         long t0 = SolveClock.nanoTime();
         SolveClock clock = SolveClock.current();
         if (clock != null) {

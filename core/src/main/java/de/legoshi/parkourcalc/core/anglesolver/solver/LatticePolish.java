@@ -115,6 +115,13 @@ public final class LatticePolish {
         return second != null ? second : first;
     }
 
+    public static Result repair(ExactJumpModel exact, JumpSpec spec, double[] yawsIn, double startX, double startZ,
+                                Config cfg, long deadlineNanos, AtomicBoolean cancel) {
+        if (TrigRowModel.unsupported(spec) != null) return null;
+        double sign = spec.objective.sense == Objective.Sense.MAX ? -1.0 : 1.0;
+        return polishAt(exact, spec, yawsIn, startX, startZ, sign * Double.POSITIVE_INFINITY, cfg, deadlineNanos, cancel);
+    }
+
     private static Result everyTurn(ExactJumpModel exact, JumpSpec spec, double[] yawsIn, double startX, double startZ,
                                     Config cfg, long deadlineNanos, AtomicBoolean cancel) {
         Result best = polishAt(exact, spec, yawsIn, startX, startZ, Double.NaN, cfg, deadlineNanos, cancel);

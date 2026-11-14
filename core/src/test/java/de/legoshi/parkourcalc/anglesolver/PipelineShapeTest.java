@@ -30,7 +30,7 @@ import static org.junit.Assert.fail;
 public class PipelineShapeTest {
 
     private static final List<String> FAST_PIPELINE = Arrays.asList(
-            "seed", "horizon", "wrap0", "cap1", "freeRescue", "peel", "freeImprove", "sweep",
+            "seed", "joint", "horizon", "wrap0", "cap1", "freeRescue", "peel", "freeImprove", "sweep",
             "fold", "ladder", "cert", "bnb", "ils", "cap2", "wrap", "translate", "certify");
 
     private static final List<String> THOROUGH_PIPELINE = Arrays.asList(

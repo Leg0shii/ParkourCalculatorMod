@@ -166,6 +166,9 @@ public final class NodeHelp {
         param("freeStartImprove", "jointOnly", "Only do the rescue pass that moves the start to make the"
                 + " jump land, and skip the extra pass that improves an already-landing jump. Keeps this"
                 + " stage focused on rescue.");
+        param("freeStartImprove", "first", "Run as the first landing stage of a Fast solve: when nothing"
+                + " lands yet, solve the standing spot and the aim angles together, and when that only nearly"
+                + " lands, finish it with the exact model of the lattice polish. Does nothing once the jump lands.");
         param("freeStartImprove", "fsIntervalMargin", "Safety margin used when pinning the free start,"
                 + " 0 to 1. Larger is more cautious about where the start may sit.");
         param("freeStartImprove", "fsInvariantTol", "How much slack to allow in the internal consistency"
