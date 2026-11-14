@@ -89,6 +89,9 @@ final class PoolCertifier {
         }
         this.ladder = new CertifyLadder(cfg, budgets, weights, cfg.streamCertify, queue, familyQueue, byValue,
                 momentumQueue);
+        this.passWall = new long[budgets.length];
+        this.passCpu = new long[budgets.length];
+        this.passLanded = new int[budgets.length];
         this.streamStart = System.nanoTime();
     }
 
@@ -125,6 +128,9 @@ final class PoolCertifier {
         final AtomicBoolean cancel = new AtomicBoolean(false);
         NoTurnResult result;
         boolean failed;
+        double reached = Double.POSITIVE_INFINITY;
+        long wallNanos;
+        long cpuNanos;
 
         Flight(CertifyLadder.Ticket ticket) {
             this.candidate = ticket.candidate;
@@ -142,6 +148,9 @@ final class PoolCertifier {
     private boolean fallbackFamily;
     private long statsAt;
     private int lostFlights;
+    private final long[] passWall;
+    private final long[] passCpu;
+    private final int[] passLanded;
 
     boolean stream() {
         boolean moved = collect(0L);
@@ -186,8 +195,16 @@ final class PoolCertifier {
                 flown.append(pass == 0 ? "" : "/").append(ladder.flown(pass));
                 waiting.append(pass == 0 ? "" : "/").append(ladder.waiting(pass));
             }
+            StringBuilder wall = new StringBuilder();
+            StringBuilder cpu = new StringBuilder();
+            for (int pass = 0; pass < ladder.passCount(); pass++) {
+                int landed = Math.max(1, passLanded[pass]);
+                wall.append(pass == 0 ? "" : "/").append(passWall[pass] / landed / 100_000L / 10.0);
+                cpu.append(pass == 0 ? "" : "/").append(passCpu[pass] / landed / 100_000L / 10.0);
+            }
             System.out.println("CERTIFY flown=" + flown + " waiting=" + waiting + " flying=" + flying.size() + " lost="
-                    + lostFlights + " atMs=" + (System.nanoTime() - streamStart) / 1_000_000L);
+                    + lostFlights + " wallMs=" + wall + " cpuMs=" + cpu + " atMs="
+                    + (System.nanoTime() - streamStart) / 1_000_000L + StructurePoolDriver.runtimeNote());
         }
         while (flying.size() < threads && !stopped()) {
             CertifyLadder.Ticket next = nextTicket();
@@ -198,23 +215,36 @@ final class PoolCertifier {
             certs++;
             if (StructurePoolDriver.watching(f.candidate.combos)) {
                 System.out.println("[watch] certify pass " + next.pass + " starts, budget ms=" + next.budget / 1_000_000L
-                        + " keys=" + NoTurnKeys.describe(f.candidate.combos));
+                        + " flown=" + ladder.flown(next.pass) + " waiting=" + ladder.waiting(next.pass) + " atMs="
+                        + (System.nanoTime() - streamStart) / 1_000_000L + " keys="
+                        + NoTurnKeys.describe(f.candidate.combos));
             }
             flights.submit(() -> {
+                long wall = STREAM_STATS ? System.nanoTime() : 0L;
+                long cpu = STREAM_STATS ? threadCpu() : 0L;
                 try {
                     if (!f.cancel.get() && System.nanoTime() <= deadline) {
-                        f.result = certifyOne(f.candidate, false, f.ticket.budget, f.cancel);
+                        f.result = certifyOne(f.candidate, false, f.ticket.budget, f.cancel, f);
                         if (f.result != null) progress.found(f.result);
                     }
                 } catch (RuntimeException | Error e) {
                     f.result = null;
                     f.failed = true;
                 }
+                if (STREAM_STATS) {
+                    f.wallNanos = System.nanoTime() - wall;
+                    f.cpuNanos = threadCpu() - cpu;
+                }
                 return f;
             });
             launched = true;
         }
         return launched;
+    }
+
+    static long threadCpu() {
+        java.lang.management.ThreadMXBean bean = java.lang.management.ManagementFactory.getThreadMXBean();
+        return bean.isCurrentThreadCpuTimeSupported() ? bean.getCurrentThreadCpuTime() : 0L;
     }
 
     private boolean closed(String key) {
@@ -266,9 +296,16 @@ final class PoolCertifier {
     private void landed(Flight f) {
         Candidate c = f.candidate;
         if (f.failed) lostFlights++;
+        if (STREAM_STATS && !f.cancel.get()) {
+            passWall[f.ticket.pass] += f.wallNanos;
+            passCpu[f.ticket.pass] += f.cpuNanos;
+            passLanded[f.ticket.pass]++;
+        }
         if (StructurePoolDriver.watching(c.combos)) {
             System.out.println("[watch] certify pass " + f.ticket.pass + (f.result != null ? " lands" : f.failed ? " failed"
-                    : f.cancel.get() ? " cancelled" : " misses") + " keys=" + NoTurnKeys.describe(c.combos));
+                    : f.cancel.get() ? " cancelled" : " misses") + " reached=" + f.reached + " wallMs="
+                    + f.wallNanos / 100_000L / 10.0 + " cpuMs=" + f.cpuNanos / 100_000L / 10.0 + " keys="
+                    + NoTurnKeys.describe(c.combos));
         }
         if (f.cancel.get() && f.result == null) return;
         if (f.result == null) {
@@ -459,7 +496,7 @@ final class PoolCertifier {
                 + " (parallel " + threads + ")" + (best != null ? " best=" + best.describe() : ""), fraction());
         List<NoTurnResult> res = NoTurnParallel.collectAll(exec, batch.size(), cancel, (idx, tc) -> {
             if (System.nanoTime() > deadline) return null;
-            NoTurnResult rr = certifyOne(batch.get(idx), ja, budget, tc);
+            NoTurnResult rr = certifyOne(batch.get(idx), ja, budget, tc, null);
             int doneNow = certsBefore + done.incrementAndGet();
             progress.update("certify " + label + " " + doneNow + " certified (parallel " + threads + ")", fraction());
             if (rr != null) progress.found(rr);
@@ -491,7 +528,7 @@ final class PoolCertifier {
         if (!hits.isEmpty()) exploreWarm(hits);
     }
 
-    private NoTurnResult certifyOne(Candidate c, boolean ja, long budget, AtomicBoolean cancelTok) {
+    private NoTurnResult certifyOne(Candidate c, boolean ja, long budget, AtomicBoolean cancelTok, Flight flight) {
         JumpSpec spec = problem.buildSpec(c.combos, c.sprint, cfg.turnCombo, ja);
         long t0 = System.nanoTime();
         NoTurnCertifier.Result cr = cert.certifySearch(spec, budget, cancelTok);
@@ -500,7 +537,10 @@ final class PoolCertifier {
                     (System.nanoTime() - t0) / 1e6, cr != null && cr.feasible, ja, c.engage,
                     NoTurnKeys.describe(c.combos)));
         }
-        if (cr == null || !cr.feasible) return null;
+        if (cr == null || !cr.feasible) {
+            if (flight != null && cr != null) flight.reached = cr.reached;
+            return null;
+        }
         return bind(c.combos, c.sprint, c.engage, ja, cr);
     }
 

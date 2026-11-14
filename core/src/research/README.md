@@ -116,8 +116,16 @@ anglesolver/
                            momentum=true turns the momentum lane on (#696), momentumOnly=true turns the change levels off,
                            momentumMaxLevel, momentumTapLevel, momentumNearLevel, momentumKeep, momentumKeptCap,
                            momentumMemoryShare and momentumThreadShare set its levels, limits, memory and thread share,
-                           -Dpkc.pool.stageTimes=true prints one STAGE line per finished stage and every 2 s one
-                           CERTIFY line of the stream certifier (flights and waiting candidates per pass),
+                           momentumDelayMs=<ms> starts the lane that long after the search,
+                           warmRuns=<count> runs that many searches in the same Java process before the measured
+                           one (one "warm run" line each, then the clock restarts), which shows the share of the
+                           JIT warm-up in a first search,
+                           -Dpkc.pool.stageTimes=true prints one STAGE line per finished stage (a family band with
+                           its heads, the setup time on the lane thread and the summed thread time of its workers,
+                           every stage with the GC and JIT totals and the live thread count) and every 2 s one
+                           CERTIFY line of the stream certifier (flights and waiting candidates per pass, mean wall
+                           and thread time of a flight per pass), -Dpkc.deadline.wallFloor=false switches the
+                           wall floor of the thread time deadlines off for a comparison,
                            -Dpkc.pool.flashPassMs sets its first pass (16, 0 is off), -Dpkc.pool.watch="<keys>;<keys>"
                            follows schedules through the screens and the certify passes; keys/engage/repeat/cascade for
                            driver=keys, dfMarks to add dF=0 marks, contCap/contLead/contSec/parCont/

@@ -288,6 +288,10 @@ anglesolver/
                            most one round of the sources, a better screen value overtakes in the later
                            passes, the passes share the granted time 4 to 2 to 1, a second copy of a
                            schedule does not start again, what is left goes back to the batch queues; fast
+  ../core/anglesolver/solver/WorkDeadlineTest.java  WorkDeadline (in the package of the class): a thread time
+                           budget never ends before the same wall time has passed, a sleeping thread does not
+                           spend it, a capped deadline ends no later than its parent, a cap on no deadline is
+                           a wall deadline; fast
   SenseFinderTest.java     Sense Finder on hpk_human/d10/j703 built from the plain Angle Solver setup (fast):
                            the turn, the carried jump window, every row over 0 to 200% re-forwards to its
                            offset, the three sort orders, later-tick margins never below the carried edge

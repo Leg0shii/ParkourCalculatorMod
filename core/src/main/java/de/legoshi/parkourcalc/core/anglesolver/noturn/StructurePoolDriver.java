@@ -85,6 +85,7 @@ public final class StructurePoolDriver {
         public int momentumChangeCost = 6;
         public double momentumMemoryShare = 1.0 / 6.0;
         public int momentumThreadShare = 4;
+        public long momentumDelayNanos = 0L;
         public boolean playable = false;
         public int threads = 0;
 
@@ -1802,6 +1803,7 @@ public final class StructurePoolDriver {
         final long byteScreened;
         final long pruned;
         final List<Candidate> beam;
+        String note = "";
 
         LevelResult(List<Candidate> pool, long scored, long byteScreened, long pruned, List<Candidate> beam) {
             this.pool = pool;
@@ -2461,6 +2463,17 @@ public final class StructurePoolDriver {
                         }
                         if (!background) active.incrementAndGet();
                     }
+                    if (background) {
+                        while (!stopEnum.get() && !cancelled()
+                                && System.nanoTime() - runStartNanos < cfg.momentumDelayNanos) {
+                            try {
+                                Thread.sleep(5L);
+                            } catch (InterruptedException e) {
+                                Thread.currentThread().interrupt();
+                                return;
+                            }
+                        }
+                    }
                     StagePlan plan = lanes.get(lane);
                     while (true) {
                         if (stopEnum.get() || cancelled()) break;
@@ -2487,7 +2500,8 @@ public final class StructurePoolDriver {
                             System.out.println("STAGE " + stageLabel(stage) + " threads=" + threads + " scored="
                                     + result.scored + " screened=" + result.byteScreened + " kept=" + result.pool.size()
                                     + " ms=" + (System.nanoTime() - stageStart) / 1_000_000L + " atMs="
-                                    + (System.nanoTime() - runStartNanos) / 1_000_000L + (stopEnum.get() ? " cut" : ""));
+                                    + (System.nanoTime() - runStartNanos) / 1_000_000L + result.note + runtimeNote()
+                                    + (stopEnum.get() ? " cut" : ""));
                         }
                         if (stopEnum.get()) break;
                         if (result.beam != null) {
@@ -2559,6 +2573,18 @@ public final class StructurePoolDriver {
     }
 
     private static final boolean STAGE_TIMES = Boolean.getBoolean("pkc.pool.stageTimes");
+
+    static String runtimeNote() {
+        long gc = 0L;
+        for (java.lang.management.GarbageCollectorMXBean bean
+                : java.lang.management.ManagementFactory.getGarbageCollectorMXBeans()) {
+            gc += Math.max(0L, bean.getCollectionTime());
+        }
+        java.lang.management.CompilationMXBean jit = java.lang.management.ManagementFactory.getCompilationMXBean();
+        long compile = jit != null && jit.isCompilationTimeMonitoringSupported() ? jit.getTotalCompilationTime() : -1L;
+        return " gcMs=" + gc + " jitMs=" + compile + " live=" + Thread.activeCount();
+    }
+
     private long runStartNanos;
 
     private String stageLabel(int stage) {
@@ -2579,6 +2605,8 @@ public final class StructurePoolDriver {
     private LevelResult enumerateFamilyBand(NoTurnProblem problem, int threads, int band, boolean inertia,
                                             boolean exact, AtomicBoolean stopFlag) {
         final StratFamilies.Segment[] segments = runFamilySegments;
+        final long setupStart = System.nanoTime();
+        final java.util.concurrent.atomic.AtomicLong workerCpu = new java.util.concurrent.atomic.AtomicLong();
         final List<int[]> heads = familyHeadsInBand(segments, band);
         freeAirTables(problem);
         final java.util.concurrent.atomic.AtomicInteger next = new java.util.concurrent.atomic.AtomicInteger();
@@ -2604,16 +2632,22 @@ public final class StructurePoolDriver {
             w.familyEarlyAt = System.nanoTime() + cfg.familyOfferNanos;
             workers.add(w);
         }
+        final long setupNanos = System.nanoTime() - setupStart;
         ExecutorService exec = Executors.newFixedThreadPool(workerCount);
         List<java.util.concurrent.Future<?>> futures = new ArrayList<>();
         try {
             for (final StructurePoolDriver w : workers) {
                 futures.add(exec.submit(() -> {
-                    int[] combos = new int[n];
-                    int h;
-                    while ((h = next.getAndIncrement()) < heads.size()) {
-                        if (w.cancelled()) return;
-                        w.enumFamilyHead(combos, heads.get(h));
+                    long cpu = STAGE_TIMES ? PoolCertifier.threadCpu() : 0L;
+                    try {
+                        int[] combos = new int[n];
+                        int h;
+                        while ((h = next.getAndIncrement()) < heads.size()) {
+                            if (w.cancelled()) return;
+                            w.enumFamilyHead(combos, heads.get(h));
+                        }
+                    } finally {
+                        if (STAGE_TIMES) workerCpu.addAndGet(PoolCertifier.threadCpu() - cpu);
                     }
                 }));
             }
@@ -2638,7 +2672,12 @@ public final class StructurePoolDriver {
             screenedSum += w.byteScreened;
             prunedSum += w.pruned;
         }
-        return new LevelResult(out, scoredSum, screenedSum, prunedSum, null);
+        LevelResult result = new LevelResult(out, scoredSum, screenedSum, prunedSum, null);
+        if (STAGE_TIMES) {
+            result.note = " heads=" + heads.size() + " setupMs=" + setupNanos / 1_000_000L + " workerCpuMs="
+                    + workerCpu.get() / 1_000_000L;
+        }
+        return result;
     }
 
     private LevelResult enumerateLevel(NoTurnProblem problem, int threads, int level, AtomicBoolean stopFlag) {
