@@ -5,6 +5,7 @@ public final class BuiltinGraphs {
     public static final int IMPROVE_TICK_CAP = 256;
 
     public static final int FAST_SEED_CAP_MS = 500;
+    public static final int JOINT_FIRST_CAP_MS = 1000;
 
     public static final String FAST_PRESET = "Fast";
     public static final String MULTI_START_PRESET = "Fast (multi-start)";
@@ -74,33 +75,38 @@ public final class BuiltinGraphs {
     }
 
     public static SolverGraph fast() {
-        return build(FAST_PRESET, 10, 3, 0, true, false, FAST_SEED_CAP_MS, 0);
+        return build(FAST_PRESET, 10, 3, 0, true, false, FAST_SEED_CAP_MS, 0, true);
     }
 
     public static SolverGraph fast(int budgetMs) {
         int seedCapMs = budgetMs > 0 && budgetMs < 1000 ? budgetMs : FAST_SEED_CAP_MS;
-        return build(FAST_PRESET, 10, 3, 0, true, false, seedCapMs, 0);
+        return build(FAST_PRESET, 10, 3, 0, true, false, seedCapMs, 0, true);
+    }
+
+    public static SolverGraph fastAtStart() {
+        return build(FAST_PRESET, 10, 3, 0, true, false, FAST_SEED_CAP_MS, 0, false);
     }
 
     public static SolverGraph fastMultiStart() {
-        return build(MULTI_START_PRESET, 10, 3, 0, true, false, FAST_SEED_CAP_MS, SWEEP_SEEDS);
+        return build(MULTI_START_PRESET, 10, 3, 0, true, false, FAST_SEED_CAP_MS, SWEEP_SEEDS, true);
     }
 
     public static SolverGraph fastRunTicks() {
-        return build("Fast (run ticks)", 10, 3, 0, true, false, 0, 0);
+        return build("Fast (run ticks)", 10, 3, 0, true, false, 0, 0, true);
     }
 
     public static SolverGraph optimize(int optimizeSeconds) {
-        return build(OPTIMIZE_PRESET, 10, 3, optimizeSeconds > 0 ? optimizeSeconds : 120, false, true, 0, SWEEP_SEEDS);
+        return build(OPTIMIZE_PRESET, 10, 3, optimizeSeconds > 0 ? optimizeSeconds : 120, false, true, 0, SWEEP_SEEDS,
+                false);
     }
 
     public static SolverGraph fromBudget(boolean stopOnFeasible, boolean ilsExhaustive,
                                          boolean useWindowSolver, int window, int commit, int timeBudgetSeconds) {
-        return build("Custom", window, commit, timeBudgetSeconds, false, true, 0, SWEEP_SEEDS);
+        return build("Custom", window, commit, timeBudgetSeconds, false, true, 0, SWEEP_SEEDS, false);
     }
 
     private static SolverGraph build(String name, int window, int commit, int t, boolean seedFirst,
-                                     boolean leafSnap, int seedCapMs, int sweepSeeds) {
+                                     boolean leafSnap, int seedCapMs, int sweepSeeds, boolean jointStart) {
         boolean fastTier = t <= 0;
         int tp = fastTier ? 120 : t;
         long reserveNanos = fastTier ? 0L
@@ -118,6 +124,12 @@ public final class BuiltinGraphs {
             g.add("seeds", "seedSweep")
                     .set("seeds", "seeds", sweepSeeds)
                     .set("seeds", "budgetSec", sweepSec);
+        }
+        boolean jointFirst = jointStart && fastTier && seedFirst;
+        if (jointFirst) {
+            g.add("joint", "freeStartImprove")
+                    .set("joint", "first", true)
+                    .set("joint", "budgetMs", JOINT_FIRST_CAP_MS);
         }
         boolean bothStarts = !fastTier && !seedFirst && t < BOTH_STARTS_BELOW_SEC;
         if (bothStarts) {
@@ -228,7 +240,12 @@ public final class BuiltinGraphs {
         if (sweep) chain(g, "entry", "seeds");
         if (seedFirst) {
             chain(g, first, "seed");
-            chain(g, "seed", "horizon");
+            if (jointFirst) {
+                chain(g, "seed", "joint");
+                chain(g, "joint", "horizon");
+            } else {
+                chain(g, "seed", "horizon");
+            }
             chain(g, "horizon", "wrap0");
             chain(g, "wrap0", "cap1");
         } else if (bothStarts) {

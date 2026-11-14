@@ -37,7 +37,7 @@ public class FreeStartRescueTest {
         assertNotNull("engine returned no result", r);
         assertTrue("free-start dF capture must solve", r.isSuccess());
         assertNotNull("solver label missing", r.getSolver());
-        assertTrue("expected the early joint rescue to produce the candidate, got: " + r.getSolver(),
-                r.getSolver().contains("free start rescue"));
+        assertTrue("expected the joint start stage to produce the candidate, got: " + r.getSolver(),
+                r.getSolver().startsWith("joint start"));
     }
 }
