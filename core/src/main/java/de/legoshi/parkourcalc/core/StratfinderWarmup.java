@@ -23,7 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public final class StratfinderWarmup {
 
     public static final String JUMP_RESOURCE = "/strats/warmup-jump.json";
-    public static final long DEFAULT_NANOS = 8_000_000_000L;
+    public static final long DEFAULT_NANOS = 4_000_000_000L;
 
     private StratfinderWarmup() {
     }
