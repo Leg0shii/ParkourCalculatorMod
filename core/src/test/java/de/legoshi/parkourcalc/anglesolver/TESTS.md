@@ -294,7 +294,9 @@ anglesolver/
   ../core/anglesolver/solver/WorkDeadlineTest.java  WorkDeadline (in the package of the class): a thread time
                            budget never ends before the same wall time has passed, a sleeping thread does not
                            spend it, a capped deadline ends no later than its parent, a cap on no deadline is
-                           a wall deadline; fast
+                           a wall deadline; on a metered thread (SolveClock.meter) a budget waits for its
+                           counted work, ends on time once it has it and ends at its cap without it, and the
+                           meter leaves SolveClock.nanoTime and current alone; fast
   SenseFinderTest.java     Sense Finder on hpk_human/d10/j703 built from the plain Angle Solver setup (fast):
                            the turn, the carried jump window, every row over 0 to 200% re-forwards to its
                            offset, the three sort orders, later-tick margins never below the carried edge
