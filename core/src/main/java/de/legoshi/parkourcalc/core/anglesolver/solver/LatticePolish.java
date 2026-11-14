@@ -2,7 +2,10 @@ package de.legoshi.parkourcalc.core.anglesolver.solver;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.PriorityQueue;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BooleanSupplier;
 
@@ -119,7 +122,133 @@ public final class LatticePolish {
                                 Config cfg, long deadlineNanos, AtomicBoolean cancel) {
         if (TrigRowModel.unsupported(spec) != null) return null;
         double sign = spec.objective.sense == Objective.Sense.MAX ? -1.0 : 1.0;
-        return polishAt(exact, spec, yawsIn, startX, startZ, sign * Double.POSITIVE_INFINITY, cfg, deadlineNanos, cancel);
+        Config first = cfg.quick();
+        first.closures = 1;
+        Result direct = polishAt(exact, spec, yawsIn, startX, startZ, sign * Double.POSITIVE_INFINITY, first,
+                deadlineNanos, cancel);
+        if (direct != null) return direct;
+        return repairAcrossPatterns(exact, spec, yawsIn, startX, startZ, first, deadlineNanos, cancel);
+    }
+
+    private static final int REPAIR_PATTERNS = 16;
+    private static final int REPAIR_FLIPS = 3;
+    private static final double REPAIR_BLAME_SHARE = 1.0e-3;
+
+    private static final class Hop {
+        final boolean[] zeroX;
+        final boolean[] zeroZ;
+        final double blame;
+
+        Hop(boolean[] zeroX, boolean[] zeroZ, double blame) {
+            this.zeroX = zeroX;
+            this.zeroZ = zeroZ;
+            this.blame = blame;
+        }
+
+        String label() {
+            return SolverTrace.patternLabel(zeroX, zeroZ);
+        }
+
+        Hop flipped(TrigRowModel.Row gate, double by) {
+            boolean[] x = zeroX.clone();
+            boolean[] z = zeroZ.clone();
+            flip(x, z, gate);
+            return new Hop(x, z, by);
+        }
+
+        static void flip(boolean[] x, boolean[] z, TrigRowModel.Row gate) {
+            int t = gate.ticks[0];
+            for (int k : gate.kinds) {
+                if (k == TrigRowModel.VEL_X) x[t] = !x[t];
+                if (k == TrigRowModel.VEL_Z) z[t] = !z[t];
+            }
+        }
+    }
+
+    private static Result repairAcrossPatterns(ExactJumpModel exact, JumpSpec spec, double[] yawsIn, double startX,
+                                               double startZ, Config cfg, long deadlineNanos, AtomicBoolean cancel) {
+        double[] yaws = Angles.wrapAll(yawsIn.clone());
+        TrigRowModel model = new TrigRowModel(exact, spec);
+        if (model.vars > cfg.maxVars) return null;
+        double sign = spec.objective.sense == Objective.Sense.MAX ? -1.0 : 1.0;
+        TrigRowModel.Work work = new TrigRowModel.Work(cfg.workUnits, new BooleanSupplier() {
+            @Override
+            public boolean getAsBoolean() {
+                return expired(deadlineNanos, cancel);
+            }
+        });
+        model.build(yaws, startX, startZ);
+        PriorityQueue<Hop> queue = new PriorityQueue<>(new Comparator<Hop>() {
+            @Override
+            public int compare(Hop u, Hop w) {
+                return Double.compare(w.blame, u.blame);
+            }
+        });
+        Set<String> seen = new HashSet<>();
+        Hop observed = new Hop(model.stoppedX.clone(), model.stoppedZ.clone(), Double.POSITIVE_INFINITY);
+        offer(queue, seen, observed);
+        boolean[] aliveX = new boolean[model.n];
+        boolean[] aliveZ = new boolean[model.n];
+        aliveX[0] = observed.zeroX[0];
+        aliveZ[0] = observed.zeroZ[0];
+        offer(queue, seen, new Hop(aliveX, aliveZ, Double.MAX_VALUE));
+        for (int tried = 0; tried < REPAIR_PATTERNS && !queue.isEmpty(); tried++) {
+            if (work.left < 0 || expired(deadlineNanos, cancel)) return null;
+            Hop hop = queue.poll();
+            model.forcedX = hop.zeroX;
+            model.forcedZ = hop.zeroZ;
+            model.build(yaws, startX, startZ);
+            double[] z = model.pointOf(model.effective(yaws, startX, startZ));
+            double[] mu = new double[model.rowCount];
+            boolean solved = model.solve(z, mu, OUTER_ROUNDS, false, work);
+            if (SolverTrace.on()) SolverTrace.log("POLISH", "repair pattern %s %s", hop.label(), solved ? "solved" : "miss");
+            if (solved) {
+                for (int rung = 0; !keepsPattern(model, z, startX, startZ) && rung < BACK_OFF.length; rung++) {
+                    model.backOff(BACK_OFF[rung]);
+                    if (!model.solve(z, mu, OUTER_ROUNDS, true, work)) break;
+                }
+                Result r = polishAt(exact, spec, model.yawsOf(z), startX + z[model.vars], startZ + z[model.vars + 1],
+                        sign * Double.POSITIVE_INFINITY, cfg, deadlineNanos, cancel);
+                if (r != null) return r;
+                continue;
+            }
+            List<Integer> blamed = new ArrayList<>();
+            for (int r = 0; r < model.rows.length; r++) {
+                if (model.rows[r].gate && mu[r] > 0.0) blamed.add(r);
+            }
+            blamed.sort(new Comparator<Integer>() {
+                @Override
+                public int compare(Integer u, Integer w) {
+                    return Double.compare(mu[w], mu[u]);
+                }
+            });
+            if (blamed.size() > 1) {
+                double top = mu[blamed.get(0)];
+                boolean[] x = hop.zeroX.clone();
+                boolean[] zz = hop.zeroZ.clone();
+                for (int r : blamed) {
+                    if (mu[r] < REPAIR_BLAME_SHARE * top) break;
+                    Hop.flip(x, zz, model.rows[r]);
+                }
+                offer(queue, seen, new Hop(x, zz, top));
+            }
+            int flips = 0;
+            for (int i = 0; i < blamed.size() && flips < REPAIR_FLIPS; i++) {
+                int r = blamed.get(i);
+                if (offer(queue, seen, hop.flipped(model.rows[r], mu[r]))) flips++;
+            }
+        }
+        return null;
+    }
+
+    private static boolean offer(PriorityQueue<Hop> queue, Set<String> seen, Hop hop) {
+        if (!seen.add(hop.label())) return false;
+        queue.add(hop);
+        return true;
+    }
+
+    private static boolean keepsPattern(TrigRowModel model, double[] z, double startX, double startZ) {
+        return model.sameStoppedAxes(model.yawsOf(z), startX + z[model.vars], startZ + z[model.vars + 1]);
     }
 
     private static Result everyTurn(ExactJumpModel exact, JumpSpec spec, double[] yawsIn, double startX, double startZ,
