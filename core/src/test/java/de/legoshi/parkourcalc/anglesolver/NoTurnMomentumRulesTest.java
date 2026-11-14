@@ -19,6 +19,8 @@ public class NoTurnMomentumRulesTest {
     private static final String J315 = "hpk/d9/j315_Egg_to_Block_Butterfly_Neo";
     private static final String J154 = "hpk/d12/j154_1bm_Head_Butterfly_Neo";
     private static final String J424 = "hpk/d10/j424_1.4375bm_Double_Winged_Neo__0.25";
+    private static final String J144 = "hpk/d10/j144_1bm_5-1_Triple_Neo";
+    private static final String J155 = "hpk/d11/j155-4jmm_3bcmm_4.9375b";
 
     private static boolean accepts(NoTurnProblem p, String keys, int changes, int dwell) {
         StructurePoolDriver.Config cfg = new StructurePoolDriver.Config();
@@ -60,11 +62,17 @@ public class NoTurnMomentumRulesTest {
     }
 
     @Test
-    public void aRunUpWithTwoFacingPartsIsNotSearched() throws Exception {
+    public void theWalkedTicksEndWhereEveryLaterTickHasItsOwnFacing() throws Exception {
         StructurePoolDriver.Config cfg = new StructurePoolDriver.Config();
         NoTurnProblem one = NoTurnCapture.problem(J154);
         NoTurnProblem two = NoTurnCapture.problem(J424);
-        assertEquals(28, MomentumSearch.tiedTicks(FreeAirExact.Tables.of(one, cfg.turnCombo, cfg.allowJa)));
-        assertEquals(-1, MomentumSearch.tiedTicks(FreeAirExact.Tables.of(two, cfg.turnCombo, cfg.allowJa)));
+        NoTurnProblem tiedToTheEnd = NoTurnCapture.problem(J144);
+        NoTurnProblem turnsOnEveryJump = NoTurnCapture.problem(J155);
+        assertEquals(28, MomentumSearch.walkedTicks(FreeAirExact.Tables.of(one, cfg.turnCombo, cfg.allowJa), one.jumpTicks));
+        assertEquals(39, MomentumSearch.walkedTicks(FreeAirExact.Tables.of(two, cfg.turnCombo, cfg.allowJa), two.jumpTicks));
+        assertEquals(42, MomentumSearch.walkedTicks(FreeAirExact.Tables.of(tiedToTheEnd, cfg.turnCombo, cfg.allowJa),
+                tiedToTheEnd.jumpTicks));
+        assertEquals(55, MomentumSearch.walkedTicks(FreeAirExact.Tables.of(turnsOnEveryJump, cfg.turnCombo, cfg.allowJa),
+                turnsOnEveryJump.jumpTicks));
     }
 }

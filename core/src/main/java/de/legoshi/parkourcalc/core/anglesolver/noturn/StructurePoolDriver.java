@@ -2242,7 +2242,7 @@ public final class StructurePoolDriver {
         momentumSent.clear();
         if (cfg.momentumStage && problem.jumpTicks.length > 0) {
             FreeAirExact.Tables tables = freeAirTables(problem);
-            if (tables != null && MomentumSearch.tiedTicks(tables) > 0) runMomentumSteps = momentumSteps(cfg);
+            if (tables != null && MomentumSearch.walkedTicks(tables, problem.jumpTicks) > 0) runMomentumSteps = momentumSteps(cfg);
         }
         final boolean laned = runFamilySegments != null || runMomentumSteps != null;
         ExecutorService pipeExec = laned ? Executors.newFixedThreadPool(3) : Executors.newSingleThreadExecutor();
