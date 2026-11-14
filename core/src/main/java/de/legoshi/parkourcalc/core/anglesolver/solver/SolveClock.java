@@ -114,6 +114,15 @@ public final class SolveClock {
         return child;
     }
 
+    public SolveClock forkLane() {
+        SolveClock child = new SolveClock(startNanos, outer, wallLimitNanos, seedMix);
+        child.nowNanos = nowNanos;
+        child.workPicos = workPicos;
+        child.rateShift = rateShift;
+        child.workers = workers;
+        return child;
+    }
+
     public SolveClock forkSerial(AtomicBoolean token, long deadlineNanos) {
         SolveClock child = fork(token, deadlineNanos);
         child.workers = 1;

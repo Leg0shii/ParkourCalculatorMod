@@ -74,6 +74,38 @@ public class TreeLaneTest {
                 lane.chain.contains("certified B&B"));
     }
 
+    @Test
+    public void twoLaneStagesInARowRunAsOneLaneAndJoinByName() {
+        Run inline = polishRun(false, false);
+        Run lane = polishRun(true, false);
+        Run oneThread = polishRun(true, true);
+        assertEquals("facings", inline.facings, lane.facings);
+        assertEquals("facings on one thread", lane.facings, oneThread.facings);
+        assertEquals("counted work on one thread", lane.work, oneThread.work);
+        assertEquals("the lane's steps stay where it was started",
+                Arrays.asList("seed", "polishA", "snapA", "joinA", "joinB"), lane.steps);
+    }
+
+    private static Run polishRun(boolean asLane, boolean sequential) {
+        ProblemFixture pf = ProblemFixture.load("solve", CAPTURE);
+        JumpSpec spec = pf.rig().spec();
+        GraphBuilder g = new GraphBuilder("lanes", false);
+        g.add("entry", "entry");
+        g.add("seed", "dualChain");
+        g.add("polishA", "latticePolish").set("polishA", GraphRunner.LANE_PARAM, asLane);
+        g.add("snapA", "leafSnap").set("snapA", GraphRunner.LANE_PARAM, asLane);
+        g.add("joinA", "joinLanes").set("joinA", "of", "elsewhere");
+        g.add("joinB", "joinLanes").set("joinB", "of", "polishA");
+        g.add("emit", "emit");
+        g.chainAll("entry", "seed");
+        g.chainAll("seed", "polishA");
+        g.chainAll("polishA", "snapA");
+        g.chainAll("snapA", "joinA");
+        g.chainAll("joinA", "joinB");
+        g.chainAll("joinB", "emit");
+        return solve(pf, spec, g.build(), sequential);
+    }
+
     private static Run run(boolean asLane, boolean sequential, int batch) {
         ProblemFixture pf = ProblemFixture.load("solve", CAPTURE);
         JumpSpec spec = pf.rig().spec();
@@ -90,7 +122,10 @@ public class TreeLaneTest {
         g.chainAll("seed", "cert");
         g.chainAll("cert", "join");
         g.chainAll("join", "emit");
-        SolverGraph graph = g.build();
+        return solve(pf, spec, g.build(), sequential);
+    }
+
+    private static Run solve(ProblemFixture pf, JumpSpec spec, SolverGraph graph, boolean sequential) {
         AtomicBoolean cancel = new AtomicBoolean(false);
         GraphContext ctx = new GraphContext(spec, pf.model, null, null, 1.0e-9, cancel, null, sequential, null);
         SolveClock clock = SolveClock.install(cancel, 0L, 0L);

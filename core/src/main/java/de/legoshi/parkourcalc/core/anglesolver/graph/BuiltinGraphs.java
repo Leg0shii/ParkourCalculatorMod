@@ -171,6 +171,15 @@ public final class BuiltinGraphs {
                 .set("fold", "budgetSec", fastTier ? 0 : Math.max(2, stageSec / 2))
                 .set("fold", "ascentMs", fastTier ? 0 : 60000)
                 .set("fold", "tickCap", IMPROVE_TICK_CAP);
+        if (!fastTier) {
+            g.add("polish0", "latticePolish")
+                    .set("polish0", GraphRunner.LANE_PARAM, true);
+            if (leafSnap) {
+                g.add("snap0", "leafSnap")
+                        .set("snap0", "pairPass", 1)
+                        .set("snap0", GraphRunner.LANE_PARAM, true);
+            }
+        }
         g.add("ladder", "homotopyLadder");
         g.add("cert", "certBnb")
                 .set("cert", "budgetSec", fastTier ? 0 : tp)
@@ -186,7 +195,7 @@ public final class BuiltinGraphs {
                 .set("bnb", "tickCap", IMPROVE_TICK_CAP);
         g.add("ils", "ilsPolish")
                 .set("ils", "budgetSec", fastTier ? 0 : Math.max(1, stageSec - 4));
-        if (!fastTier) g.add("join", "joinLanes");
+        if (!fastTier) g.add("join", "joinLanes").set("join", "of", "cert");
         g.add("cap2", "capCertify")
                 .set("cap2", "computeDualGap", false)
                 .set("cap2", "skipIfSettled", true);
@@ -207,6 +216,7 @@ public final class BuiltinGraphs {
                     .set("snap", "pairPass", fastTier ? 0 : 1);
         }
         if (!fastTier) {
+            g.add("join0", "joinLanes").set("join0", "of", "polish0");
             g.add("dive", "certBnb")
                     .set("dive", "budgetSec", t)
                     .set("dive", "ffSec", 0)
@@ -266,7 +276,16 @@ public final class BuiltinGraphs {
         } else {
             g.edge("translate2", Guarantee.DONE, "sweep");
         }
-        chain(g, "fold", "ladder");
+        if (fastTier) {
+            chain(g, "fold", "ladder");
+        } else if (leafSnap) {
+            chain(g, "fold", "polish0");
+            chain(g, "polish0", "snap0");
+            chain(g, "snap0", "ladder");
+        } else {
+            chain(g, "fold", "polish0");
+            chain(g, "polish0", "ladder");
+        }
         chain(g, "ladder", "cert");
         chain(g, "cert", "bnb");
         chain(g, "bnb", "ils");
@@ -289,7 +308,8 @@ public final class BuiltinGraphs {
             last = "snap";
         }
         if (!fastTier) {
-            chain(g, last, "dive");
+            chain(g, last, "join0");
+            chain(g, "join0", "dive");
             chain(g, "dive", "translate3");
             last = "translate3";
             if (leafSnap) {
