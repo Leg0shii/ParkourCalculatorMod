@@ -1438,6 +1438,28 @@ public final class StructurePoolDriver {
         familyLo = band == 0 ? Integer.MIN_VALUE : familyHi - cfg.familyBandCost;
     }
 
+    private List<int[]> familyHeadsInBand(StratFamilies.Segment[] segments, int band) {
+        int count = segments.length;
+        int[] minRest = new int[count + 1];
+        int[] maxRest = new int[count + 1];
+        for (int i = count - 1; i >= 0; i--) {
+            minRest[i] = minRest[i + 1] + segments[i].cost[0];
+            maxRest[i] = maxRest[i + 1] + segments[i].cost[segments[i].cost.length - 1];
+        }
+        int hi = minRest[0] + cfg.familyBandCost * band;
+        int lo = band == 0 ? Integer.MIN_VALUE : hi - cfg.familyBandCost;
+        int rest = Math.min(2, count);
+        List<int[]> all = familyHeads(segments);
+        List<int[]> heads = new ArrayList<>();
+        for (int[] head : all) {
+            int cost = segments[0].cost[head[0]] + (count > 1 ? segments[1].cost[head[1]] : 0);
+            if (cost + minRest[rest] > hi || cost + maxRest[rest] <= lo) continue;
+            heads.add(new int[]{head[0], head[1], cost});
+        }
+        heads.sort((x, y) -> Integer.compare(x[2], y[2]));
+        return heads;
+    }
+
     private static List<int[]> familyHeads(StratFamilies.Segment[] segments) {
         List<int[]> heads = new ArrayList<>();
         int second = segments.length > 1 ? segments[1].cost.length : 1;
@@ -2375,7 +2397,7 @@ public final class StructurePoolDriver {
     private LevelResult enumerateFamilyBand(NoTurnProblem problem, int threads, int band, boolean inertia,
                                             boolean exact, AtomicBoolean stopFlag) {
         final StratFamilies.Segment[] segments = runFamilySegments;
-        final List<int[]> heads = familyHeads(segments);
+        final List<int[]> heads = familyHeadsInBand(segments, band);
         if (!familyTablesBuilt) {
             familyTables = FreeAirExact.Tables.of(problem, cfg.turnCombo, cfg.allowJa);
             familyTablesBuilt = true;
