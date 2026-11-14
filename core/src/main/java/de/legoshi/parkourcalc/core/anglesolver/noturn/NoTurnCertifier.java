@@ -20,6 +20,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.LongRunSolver;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Objective;
+import de.legoshi.parkourcalc.core.anglesolver.solver.SolveClock;
 import de.legoshi.parkourcalc.core.anglesolver.solver.StartBox;
 import de.legoshi.parkourcalc.core.anglesolver.solver.TrendFilterSmooth;
 import de.legoshi.parkourcalc.core.anglesolver.solver.WorkDeadline;
@@ -116,7 +117,13 @@ public final class NoTurnCertifier {
         JumpPhysicsInputs scFree = spec.asScenario();
         Vec3dCore ref = NoTurnProblem.refStart(scFree);
         NoTurnProblem problem = NoTurnProblem.ofCandidate(spec, model);
-        FastCheckVerdict v = new CascadeCheck(playable).check(problem, spec, model, budgetNanos, cancel);
+        SolveClock meter = SolveClock.meter();
+        FastCheckVerdict v;
+        try {
+            v = new CascadeCheck(playable).check(problem, spec, model, budgetNanos, cancel);
+        } finally {
+            if (meter != null) meter.uninstall();
+        }
         if (v.kind != FastCheckVerdict.Kind.FEASIBLE || v.yaws == null) return miss(ref, v.reached);
         double px = Double.isNaN(v.px) ? ref.x : v.px;
         double pz = Double.isNaN(v.pz) ? ref.z : v.pz;
