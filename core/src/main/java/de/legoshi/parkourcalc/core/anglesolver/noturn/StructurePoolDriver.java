@@ -75,6 +75,17 @@ public final class StructurePoolDriver {
         public long familyDelayNanos = 0L;
         public long familyOfferNanos = 0L;
         public boolean streamCertify = true;
+        public boolean momentumStage = false;
+        public int momentumMaxLevel = 6;
+        public int momentumTapLevel = 4;
+        public int momentumNearLevel = 1;
+        public double momentumKeep = 0.0005;
+        public double momentumNearKeep = 0.002;
+        public int momentumKeptCap = 5000;
+        public int momentumChangeCost = 6;
+        public double momentumMemoryShare = 1.0 / 6.0;
+        public int momentumThreadShare = 4;
+        public long momentumDelayNanos = 0L;
         public boolean playable = false;
         public int threads = 0;
 
@@ -100,6 +111,7 @@ public final class StructurePoolDriver {
         boolean flash;
         int familyCost;
         boolean family;
+        boolean momentum;
 
         Candidate(int[] combos, boolean[] sprint, int engage, int edges, int presses, double diskTheta,
                   double byteTheta, double byteViol) {
@@ -1319,6 +1331,134 @@ public final class StructurePoolDriver {
     static final int FAMILY_STAGE = -2;
     static final int FAMILY_INERTIA_STAGE = -1_000_000;
     static final int FAMILY_EXACT_STAGE = -2_000_000;
+    static final int MOMENTUM_STAGE = -3_000_000;
+    static final int MOMENTUM_STRICT = 0;
+    static final int MOMENTUM_TAPS = 1;
+    static final int MOMENTUM_NEAR = 2;
+    static final int MOMENTUM_KINDS = 3;
+
+    static final class MomentumStep {
+        final int level;
+        final int kind;
+        final int variant;
+
+        MomentumStep(int level, int kind, int variant) {
+            this.level = level;
+            this.kind = kind;
+            this.variant = variant;
+        }
+    }
+
+    static List<MomentumStep> momentumSteps(Config cfg) {
+        List<MomentumStep> steps = new ArrayList<>();
+        boolean taps = cfg.minDwell > 1;
+        boolean near = cfg.momentumNearKeep > cfg.momentumKeep;
+        for (int level = 0; level <= cfg.momentumMaxLevel; level++) {
+            addMomentumSteps(steps, level, MOMENTUM_STRICT);
+            if (near && level <= cfg.momentumNearLevel) addMomentumSteps(steps, level, MOMENTUM_NEAR);
+            if (taps && level > 0 && level - 1 <= cfg.momentumTapLevel) addMomentumSteps(steps, level - 1, MOMENTUM_TAPS);
+        }
+        if (taps && cfg.momentumMaxLevel <= cfg.momentumTapLevel) {
+            addMomentumSteps(steps, cfg.momentumMaxLevel, MOMENTUM_TAPS);
+        }
+        return steps;
+    }
+
+    private static void addMomentumSteps(List<MomentumStep> steps, int level, int kind) {
+        for (int variant = 0; variant < MomentumRules.SPRINT_VARIANTS; variant++) {
+            steps.add(new MomentumStep(level, kind, variant));
+        }
+    }
+
+    static final class MomentumPlan extends StagePlan {
+        private final List<MomentumStep> steps;
+        private final boolean[] over;
+        private int at;
+
+        MomentumPlan(List<MomentumStep> steps, boolean[] over) {
+            super(new ArrayList<>());
+            this.steps = steps;
+            this.over = over;
+        }
+
+        @Override
+        int next() {
+            while (at < steps.size()) {
+                int index = at++;
+                if (!over[steps.get(index).kind]) return MOMENTUM_STAGE - index;
+            }
+            return NO_STAGE;
+        }
+
+        @Override
+        boolean background() {
+            return true;
+        }
+    }
+
+    private List<MomentumStep> runMomentumSteps;
+    private final boolean[] momentumOver = new boolean[MOMENTUM_KINDS];
+    private List<MomentumSearch.Cut> momentumPool = new ArrayList<>();
+    private final java.util.Set<String> momentumSent = java.util.concurrent.ConcurrentHashMap.newKeySet();
+    private java.util.function.Consumer<List<Candidate>> momentumEarly;
+
+    private synchronized FreeAirExact.Tables freeAirTables(NoTurnProblem problem) {
+        if (!familyTablesBuilt) {
+            familyTables = FreeAirExact.Tables.of(problem, cfg.turnCombo, cfg.allowJa);
+            familyTablesBuilt = true;
+        }
+        return familyTables;
+    }
+
+    private LevelResult enumerateMomentum(final NoTurnProblem problem, int threads, int stage,
+                                          final AtomicBoolean stopFlag) {
+        final MomentumStep step = runMomentumSteps.get(MOMENTUM_STAGE - stage);
+        boolean taps = step.kind == MOMENTUM_TAPS;
+        MomentumRules rules = new MomentumRules(problem, cfg, step.level, taps ? 1 : cfg.minDwell);
+        MomentumRules known = taps ? new MomentumRules(problem, cfg, step.level, cfg.minDwell) : null;
+        MomentumSearch.Settings settings = new MomentumSearch.Settings();
+        settings.threads = threads;
+        settings.keep = step.kind == MOMENTUM_NEAR ? cfg.momentumNearKeep : cfg.momentumKeep;
+        settings.keptCap = cfg.momentumKeptCap;
+        settings.memoryShare = cfg.momentumMemoryShare;
+        final List<Candidate> buffer = new ArrayList<>();
+        final java.util.function.Consumer<List<Candidate>> early = momentumEarly;
+        final long[] offerAt = {0L};
+        MomentumSearch.Sink sink = (combos, variant, value) -> {
+            boolean[] sprint = new boolean[combos.length];
+            MomentumRules.sprintOf(combos, variant, sprint);
+            Candidate c = new Candidate(combos, sprint, NoTurnKeys.firstSprint(sprint), countEdges(cfg, problem, combos),
+                    countPresses(cfg, problem, combos), 0.0, 0.0, Math.max(0.0, value) * FREE_AIR_VIOL_SCALE);
+            c.family = true;
+            c.momentum = true;
+            c.familyCost = cfg.momentumChangeCost * NoTurnKeys.countEdges(combos);
+            List<Candidate> ready = null;
+            synchronized (buffer) {
+                buffer.add(c);
+                long now = System.nanoTime();
+                if (early != null && now >= offerAt[0]) {
+                    ready = new ArrayList<>(buffer);
+                    buffer.clear();
+                    offerAt[0] = now + cfg.familyOfferNanos;
+                }
+            }
+            if (ready != null) early.accept(ready);
+        };
+        MomentumSearch search = new MomentumSearch(freeAirTables(problem), rules, known, problem.jumpTicks, step.variant,
+                settings, momentumPool, momentumSent, () -> stopFlag.get() || cancelled(), sink);
+        MomentumSearch.Outcome outcome = search.run();
+        momentumPool = search.pool();
+        if (outcome != MomentumSearch.Outcome.COMPLETE) {
+            momentumOver[step.kind] = true;
+            if (step.kind == MOMENTUM_STRICT) momentumOver[MOMENTUM_TAPS] = true;
+        }
+        List<Candidate> rest;
+        synchronized (buffer) {
+            rest = new ArrayList<>(buffer);
+            buffer.clear();
+        }
+        return new LevelResult(rest, search.nodes.get(), search.screens.get(), 0, null);
+    }
 
     private boolean familyInertia;
     private boolean familyExact;
@@ -1333,7 +1473,11 @@ public final class StructurePoolDriver {
     private int familyCost;
 
     static boolean isFamilyStage(int stage) {
-        return stage <= FAMILY_STAGE;
+        return stage <= FAMILY_STAGE && stage > MOMENTUM_STAGE;
+    }
+
+    static boolean isMomentumStage(int stage) {
+        return stage <= MOMENTUM_STAGE && stage != NO_STAGE;
     }
 
     static boolean isFamilyInertiaStage(int stage) {
@@ -1341,7 +1485,7 @@ public final class StructurePoolDriver {
     }
 
     static boolean isFamilyExactStage(int stage) {
-        return stage <= FAMILY_EXACT_STAGE;
+        return stage <= FAMILY_EXACT_STAGE && stage > MOMENTUM_STAGE;
     }
 
     static int familyBandOf(int stage) {
@@ -1366,6 +1510,10 @@ public final class StructurePoolDriver {
         }
 
         void finished(int stage, long nanos) {
+        }
+
+        boolean background() {
+            return false;
         }
     }
 
@@ -1655,6 +1803,7 @@ public final class StructurePoolDriver {
         final long byteScreened;
         final long pruned;
         final List<Candidate> beam;
+        String note = "";
 
         LevelResult(List<Candidate> pool, long scored, long byteScreened, long pruned, List<Candidate> beam) {
             this.pool = pool;
@@ -1785,6 +1934,14 @@ public final class StructurePoolDriver {
     static final int REPAIR_STAGE = -1;
 
     private static final String WATCH = System.getProperty("pkc.pool.watch", "");
+    private static final String[] WATCH_PARTS = WATCH.isEmpty() ? new String[0] : WATCH.split(";");
+
+    static boolean watching(int[] combos) {
+        if (WATCH_PARTS.length == 0) return false;
+        String keys = NoTurnKeys.describe(combos);
+        for (String part : WATCH_PARTS) if (part.trim().equals(keys)) return true;
+        return false;
+    }
     private long[] watchHash;
     private String[] watchKeys;
 
@@ -2079,8 +2236,16 @@ public final class StructurePoolDriver {
             StratFamilies library = cfg.families != null ? cfg.families : StratFamilies.shipped();
             runFamilySegments = library.segmentsFor(n, problem.jumpTicks);
         }
-        ExecutorService pipeExec = runFamilySegments != null ? Executors.newFixedThreadPool(2)
-                : Executors.newSingleThreadExecutor();
+        runMomentumSteps = null;
+        java.util.Arrays.fill(momentumOver, false);
+        momentumPool = new ArrayList<>();
+        momentumSent.clear();
+        if (cfg.momentumStage && problem.jumpTicks.length > 0) {
+            FreeAirExact.Tables tables = freeAirTables(problem);
+            if (tables != null && MomentumSearch.tiedTicks(tables) > 0) runMomentumSteps = momentumSteps(cfg);
+        }
+        final boolean laned = runFamilySegments != null || runMomentumSteps != null;
+        ExecutorService pipeExec = laned ? Executors.newFixedThreadPool(3) : Executors.newSingleThreadExecutor();
         try {
             int lastStage = cfg.maxEdges + (cfg.tapsStage && cfg.minDwell > 1 ? 1 : 0);
             int firstLevel = Math.max(0, Math.min(cfg.minLevel, cfg.maxEdges));
@@ -2090,13 +2255,17 @@ public final class StructurePoolDriver {
                 if (cfg.repairStage && cfg.repairWidth > 0 && level == cfg.repairAfterLevel) stages.add(REPAIR_STAGE);
             }
             beam = new ArrayList<>();
-            if (runFamilySegments != null) {
+            if (laned) {
                 List<StagePlan> lanes = new ArrayList<>();
-                lanes.add(new FamilyPlan(familyBands(runFamilySegments, cfg.familyBandCost),
-                        cfg.familyReach > 0.0 ? cfg.familyInertiaShare : 0.0, cfg.familyExactFirst));
+                if (runFamilySegments != null) {
+                    lanes.add(new FamilyPlan(familyBands(runFamilySegments, cfg.familyBandCost),
+                            cfg.familyReach > 0.0 ? cfg.familyInertiaShare : 0.0, cfg.familyExactFirst));
+                }
+                if (runMomentumSteps != null) lanes.add(new MomentumPlan(runMomentumSteps, momentumOver));
                 if (cfg.changeLevels) lanes.add(new StagePlan(stages));
                 int heldUntilStages = stages.indexOf(Integer.valueOf(cfg.familyAfterLevel)) + 1;
-                boolean hold = cfg.changeLevels && cfg.familyDelayNanos > 0L && heldUntilStages > 0;
+                boolean hold = runFamilySegments != null && cfg.changeLevels && cfg.familyDelayNanos > 0L
+                        && heldUntilStages > 0;
                 runLanes(problem, certifier, pipeExec, lanes, hold ? 0 : -1, heldUntilStages,
                         start + cfg.familyDelayNanos, enumThreads, stopEnum);
                 stages = new ArrayList<>();
@@ -2278,7 +2447,8 @@ public final class StructurePoolDriver {
         for (int index = 0; index < laneCount; index++) {
             final int lane = index;
             final boolean held = hold && lane == heldLane;
-            if (!held) active.incrementAndGet();
+            final boolean background = lanes.get(lane).background();
+            if (!held && !background) active.incrementAndGet();
             futures.add(exec.submit(() -> {
                 try {
                     if (held) {
@@ -2291,17 +2461,36 @@ public final class StructurePoolDriver {
                                 return;
                             }
                         }
-                        active.incrementAndGet();
+                        if (!background) active.incrementAndGet();
+                    }
+                    if (background) {
+                        while (!stopEnum.get() && !cancelled()
+                                && System.nanoTime() - runStartNanos < cfg.momentumDelayNanos) {
+                            try {
+                                Thread.sleep(5L);
+                            } catch (InterruptedException e) {
+                                Thread.currentThread().interrupt();
+                                return;
+                            }
+                        }
                     }
                     StagePlan plan = lanes.get(lane);
                     while (true) {
                         if (stopEnum.get() || cancelled()) break;
                         int stage = plan.next();
                         if (stage == NO_STAGE) break;
-                        int threads = Math.max(1, enumThreads / Math.max(1, active.get()));
+                        int busy = active.get();
+                        int threads = background
+                                ? busy > 0 ? Math.max(1, enumThreads / cfg.momentumThreadShare) : enumThreads
+                                : Math.max(1, enumThreads / Math.max(1, busy));
                         if (isFamilyStage(stage)) {
                             final int early = stage;
                             familyEarly = list -> finished.add(
+                                    new StageResult(early, new LevelResult(list, 0, 0, 0, null), true));
+                        }
+                        if (isMomentumStage(stage)) {
+                            final int early = stage;
+                            momentumEarly = list -> finished.add(
                                     new StageResult(early, new LevelResult(list, 0, 0, 0, null), true));
                         }
                         long stageStart = System.nanoTime();
@@ -2311,7 +2500,8 @@ public final class StructurePoolDriver {
                             System.out.println("STAGE " + stageLabel(stage) + " threads=" + threads + " scored="
                                     + result.scored + " screened=" + result.byteScreened + " kept=" + result.pool.size()
                                     + " ms=" + (System.nanoTime() - stageStart) / 1_000_000L + " atMs="
-                                    + (System.nanoTime() - runStartNanos) / 1_000_000L + (stopEnum.get() ? " cut" : ""));
+                                    + (System.nanoTime() - runStartNanos) / 1_000_000L + result.note + runtimeNote()
+                                    + (stopEnum.get() ? " cut" : ""));
                         }
                         if (stopEnum.get()) break;
                         if (result.beam != null) {
@@ -2323,7 +2513,7 @@ public final class StructurePoolDriver {
                         if (!held) freeStages.incrementAndGet();
                     }
                 } finally {
-                    active.decrementAndGet();
+                    if (!background) active.decrementAndGet();
                     ended.incrementAndGet();
                 }
             }));
@@ -2377,19 +2567,37 @@ public final class StructurePoolDriver {
         if (ranked.size() > cap) ranked.subList(cap, ranked.size()).clear();
         certifier.offer(ranked);
         certifier.resetCertifyCount();
-        if (!isFamilyStage(stage)) certifier.openChangeTurns();
+        if (!isFamilyStage(stage) && !isMomentumStage(stage)) certifier.openChangeTurns();
         if (stage == REPAIR_STAGE) certifier.liftCertifyCap();
         progress.update("certify " + stageLabel(stage) + " (" + ranked.size() + " kept, " + scored + " scored)", 0.4);
     }
 
     private static final boolean STAGE_TIMES = Boolean.getBoolean("pkc.pool.stageTimes");
+
+    static String runtimeNote() {
+        long gc = 0L;
+        for (java.lang.management.GarbageCollectorMXBean bean
+                : java.lang.management.ManagementFactory.getGarbageCollectorMXBeans()) {
+            gc += Math.max(0L, bean.getCollectionTime());
+        }
+        java.lang.management.CompilationMXBean jit = java.lang.management.ManagementFactory.getCompilationMXBean();
+        long compile = jit != null && jit.isCompilationTimeMonitoringSupported() ? jit.getTotalCompilationTime() : -1L;
+        return " gcMs=" + gc + " jitMs=" + compile + " live=" + Thread.activeCount();
+    }
+
     private long runStartNanos;
 
     private String stageLabel(int stage) {
         return stage == REPAIR_STAGE ? "repair"
+                : isMomentumStage(stage) ? momentumLabel(runMomentumSteps.get(MOMENTUM_STAGE - stage))
                 : isFamilyStage(stage) ? "families band=" + familyBandOf(stage)
                         + (isFamilyInertiaStage(stage) ? " inertia" : isFamilyExactStage(stage) ? " exact" : "")
                 : "edges=" + Math.min(stage, cfg.maxEdges) + (stage > cfg.maxEdges ? " taps" : "");
+    }
+
+    private static String momentumLabel(MomentumStep step) {
+        return "momentum changes=" + step.level + (step.kind == MOMENTUM_TAPS ? " taps" : step.kind == MOMENTUM_NEAR ? " near" : "")
+                + (step.variant > 0 ? " sprint+" + step.variant : "");
     }
 
     private final List<FreeAirExact.Screen> familyScreens = new ArrayList<>();
@@ -2397,11 +2605,10 @@ public final class StructurePoolDriver {
     private LevelResult enumerateFamilyBand(NoTurnProblem problem, int threads, int band, boolean inertia,
                                             boolean exact, AtomicBoolean stopFlag) {
         final StratFamilies.Segment[] segments = runFamilySegments;
+        final long setupStart = System.nanoTime();
+        final java.util.concurrent.atomic.AtomicLong workerCpu = new java.util.concurrent.atomic.AtomicLong();
         final List<int[]> heads = familyHeadsInBand(segments, band);
-        if (!familyTablesBuilt) {
-            familyTables = FreeAirExact.Tables.of(problem, cfg.turnCombo, cfg.allowJa);
-            familyTablesBuilt = true;
-        }
+        freeAirTables(problem);
         final java.util.concurrent.atomic.AtomicInteger next = new java.util.concurrent.atomic.AtomicInteger();
         List<StructurePoolDriver> workers = new ArrayList<>();
         int workerCount = Math.max(1, Math.min(threads, heads.size()));
@@ -2425,16 +2632,22 @@ public final class StructurePoolDriver {
             w.familyEarlyAt = System.nanoTime() + cfg.familyOfferNanos;
             workers.add(w);
         }
+        final long setupNanos = System.nanoTime() - setupStart;
         ExecutorService exec = Executors.newFixedThreadPool(workerCount);
         List<java.util.concurrent.Future<?>> futures = new ArrayList<>();
         try {
             for (final StructurePoolDriver w : workers) {
                 futures.add(exec.submit(() -> {
-                    int[] combos = new int[n];
-                    int h;
-                    while ((h = next.getAndIncrement()) < heads.size()) {
-                        if (w.cancelled()) return;
-                        w.enumFamilyHead(combos, heads.get(h));
+                    long cpu = STAGE_TIMES ? PoolCertifier.threadCpu() : 0L;
+                    try {
+                        int[] combos = new int[n];
+                        int h;
+                        while ((h = next.getAndIncrement()) < heads.size()) {
+                            if (w.cancelled()) return;
+                            w.enumFamilyHead(combos, heads.get(h));
+                        }
+                    } finally {
+                        if (STAGE_TIMES) workerCpu.addAndGet(PoolCertifier.threadCpu() - cpu);
                     }
                 }));
             }
@@ -2459,7 +2672,12 @@ public final class StructurePoolDriver {
             screenedSum += w.byteScreened;
             prunedSum += w.pruned;
         }
-        return new LevelResult(out, scoredSum, screenedSum, prunedSum, null);
+        LevelResult result = new LevelResult(out, scoredSum, screenedSum, prunedSum, null);
+        if (STAGE_TIMES) {
+            result.note = " heads=" + heads.size() + " setupMs=" + setupNanos / 1_000_000L + " workerCpuMs="
+                    + workerCpu.get() / 1_000_000L;
+        }
+        return result;
     }
 
     private LevelResult enumerateLevel(NoTurnProblem problem, int threads, int level, AtomicBoolean stopFlag) {
@@ -2467,6 +2685,7 @@ public final class StructurePoolDriver {
             stop = stopFlag;
             return repairStage(problem, threads);
         }
+        if (isMomentumStage(level)) return enumerateMomentum(problem, threads, level, stopFlag);
         if (isFamilyStage(level)) {
             return enumerateFamilyBand(problem, threads, familyBandOf(level), isFamilyInertiaStage(level),
                     isFamilyExactStage(level), stopFlag);

@@ -30,7 +30,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class NoTurnColdBench {
 
-    private final long t0 = System.nanoTime();
+    private long t0 = System.nanoTime();
     private final StringBuilder report = new StringBuilder();
     private final List<double[]> certifySpans = new ArrayList<>();
     private long certifyStart = -1L;
@@ -311,6 +311,21 @@ public class NoTurnColdBench {
                         String.valueOf(cfg.familyExactFirst)));
                 line("families: on without=" + without + " changeLevels=" + cfg.changeLevels);
             }
+            if (Boolean.getBoolean("pkc.bench.momentum")) {
+                cfg.momentumStage = true;
+                if (Boolean.getBoolean("pkc.bench.momentumOnly")) cfg.changeLevels = false;
+                cfg.momentumMaxLevel = Integer.getInteger("pkc.bench.momentumMaxLevel", cfg.momentumMaxLevel);
+                cfg.momentumTapLevel = Integer.getInteger("pkc.bench.momentumTapLevel", cfg.momentumTapLevel);
+                cfg.momentumNearLevel = Integer.getInteger("pkc.bench.momentumNearLevel", cfg.momentumNearLevel);
+                cfg.momentumMemoryShare = Double.parseDouble(System.getProperty("pkc.bench.momentumMemoryShare",
+                        String.valueOf(cfg.momentumMemoryShare)));
+                cfg.momentumThreadShare = Integer.getInteger("pkc.bench.momentumThreadShare", cfg.momentumThreadShare);
+                cfg.momentumDelayNanos = Long.getLong("pkc.bench.momentumDelayMs", 0L) * 1_000_000L;
+                cfg.momentumKeptCap = Integer.getInteger("pkc.bench.momentumKeptCap", cfg.momentumKeptCap);
+                cfg.momentumKeep = Double.parseDouble(System.getProperty("pkc.bench.momentumKeep",
+                        String.valueOf(cfg.momentumKeep)));
+                line("momentum: on changeLevels=" + cfg.changeLevels + " families=" + cfg.familyStage);
+            }
             if (Integer.getInteger("pkc.bench.repairWidth", -1) >= 0) cfg.repairWidth = Integer.getInteger("pkc.bench.repairWidth");
             if (Integer.getInteger("pkc.bench.repairPairs", -1) >= 0) cfg.repairPairs = Integer.getInteger("pkc.bench.repairPairs");
             if (Integer.getInteger("pkc.bench.repairRounds", -1) >= 0) cfg.repairRounds = Integer.getInteger("pkc.bench.repairRounds");
@@ -339,6 +354,24 @@ public class NoTurnColdBench {
                     + "s allowJa=" + cfg.allowJa);
             if (Integer.getInteger("pkc.bench.extraCertify", -1) >= 0) cfg.extraCertify = Integer.getInteger("pkc.bench.extraCertify");
             if (Long.getLong("pkc.bench.extraSec", -1L) >= 0) cfg.extraCertifyNanos = Long.getLong("pkc.bench.extraSec") * 1_000_000_000L;
+            int warmRuns = Integer.getInteger("pkc.bench.warmRuns", 0);
+            for (int w = 0; w < warmRuns; w++) {
+                final long warmStart = System.nanoTime();
+                final double[] first = {-1.0};
+                NoTurnResult wr = new StructurePoolDriver(model, cfg, cancel, new StructurePoolDriver.Progress() {
+                    @Override
+                    public void update(String s, double f) {
+                    }
+
+                    @Override
+                    public void found(NoTurnResult r) {
+                        if (first[0] < 0.0) first[0] = (System.nanoTime() - warmStart) / 1e9;
+                    }
+                }).run(p, graph);
+                line(String.format(Locale.ROOT, "warm run %d: first=%.3fs wall=%.1fs found=%s", w + 1, first[0],
+                        (System.nanoTime() - warmStart) / 1e9, wr != null));
+            }
+            if (warmRuns > 0) t0 = System.nanoTime();
             StructurePoolDriver drv = new StructurePoolDriver(model, cfg, cancel, new StructurePoolDriver.Progress() {
                 @Override
                 public void update(String s, double f) {
