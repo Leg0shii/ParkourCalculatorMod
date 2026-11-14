@@ -147,7 +147,7 @@ public final class Constraint {
             loInclusive = true;
             hiInclusive = true;
         } else if (op != Op.IN && this.op == Op.IN) {
-            value = Math.min(lo, hi);
+            value = field == Field.DF && op == Op.EQ ? 0.0 : Math.min(lo, hi);
         }
         this.op = op;
     }
@@ -191,10 +191,6 @@ public final class Constraint {
 
     public boolean isRange() {
         return op == Op.IN;
-    }
-
-    public boolean isUnsupportedDf() {
-        return field == Field.DF && (isRange() || (op == Op.EQ && value != 0.0));
     }
 
     public boolean isDirectionalDf() {

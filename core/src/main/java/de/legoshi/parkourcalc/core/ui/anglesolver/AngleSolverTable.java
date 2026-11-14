@@ -143,19 +143,9 @@ public final class AngleSolverTable {
         return 0;
     }
 
-    private static String dfOpGlyph(Constraint c) {
-        return c.isRange() ? Constraint.Op.IN.glyph : c.getOp().glyph;
-    }
-
-    private static String dfValueLabel(Constraint c) {
-        if (c.isRange()) {
-            return String.format(java.util.Locale.ROOT, "%.4g..%.4g !", c.getLo(), c.getHi());
-        }
-        return String.format(java.util.Locale.ROOT, "%.4g !", c.getValue());
-    }
-
-    private static final String[] DF_OP_ITEMS = {"=", ">=", "<="};
-    private static final Constraint.Op[] DF_OPS = {Constraint.Op.EQ, Constraint.Op.GE, Constraint.Op.LE};
+    private static final String[] DF_OP_ITEMS = {"=", ">=", "<=", "[ ]"};
+    private static final Constraint.Op[] DF_OPS =
+            {Constraint.Op.EQ, Constraint.Op.GE, Constraint.Op.LE, Constraint.Op.IN};
 
     private static int dfOpItemIndex(Constraint c) {
         for (int i = 0; i < DF_OPS.length; i++) if (DF_OPS[i] == c.getOp()) return i;
@@ -163,9 +153,10 @@ public final class AngleSolverTable {
     }
 
     private static String dfTooltip(Constraint c) {
-        if (c.isUnsupportedDf()) {
-            return "Unsupported dF shape from an older save; solves containing it will fail."
-                    + " Re-select the dF field to reset it to dF = 0, or delete it.";
+        if (c.isRange()) {
+            return "dF in [lo, hi]: the turn on this tick stays between lo and hi degrees (positive is the"
+                    + " increasing way, right). A range wider than 180 degrees is cut by the same amount at"
+                    + " both ends until it is 180 wide. On Tick 1 it is measured from the start facing.";
         }
         if (c.isDirectionalDf()) {
             return (c.getOp() == Constraint.Op.GE
@@ -175,8 +166,10 @@ public final class AngleSolverTable {
                     + " section to forbid a turn-out there (the row context menu does that for the selection)."
                     + " On Tick 1 it is measured from the start facing.";
         }
-        return "dF = 0 holds the facing of the previous tick (on Tick 1 the start facing is solved for"
-                + " and Apply moves it). Pick >= or <= to only allow a turn one way.";
+        return "dF = v: the facing turns by exactly v degrees on this tick (positive is the increasing way,"
+                + " right). 0 holds the facing of the previous tick (on Tick 1 the start facing is solved for"
+                + " and Apply moves it). Pick >= or <= to only allow a turn one way, or the range to keep"
+                + " the turn between two values.";
     }
 
     public AngleSolverTable(AngleSolverState state, Settings settings, SelectionManager selection,
@@ -999,10 +992,7 @@ public final class AngleSolverTable {
                     c.setField(Constraint.Field.values()[fieldCombo.get()]);
                 }
                 ImGui.tableNextColumn();
-                if (c.getField() == Constraint.Field.DF && c.isUnsupportedDf()) {
-                    ImGui.textDisabled(dfOpGlyph(c));
-                    TooltipUtil.onHover(dfTooltip(c));
-                } else if (c.getField() == Constraint.Field.DF) {
+                if (c.getField() == Constraint.Field.DF) {
                     opCombo.set(dfOpItemIndex(c));
                     if (Controls.combo("##dfop", opCombo, DF_OP_ITEMS, ImGui.getContentRegionAvail().x)) {
                         c.setOp(DF_OPS[opCombo.get()]);
@@ -1022,12 +1012,8 @@ public final class AngleSolverTable {
                     }
                 }
                 ImGui.tableNextColumn();
-                if (c.getField() == Constraint.Field.DF && !c.isDirectionalDf()) {
-                    ImGui.textDisabled(c.isUnsupportedDf() ? dfValueLabel(c) : "0");
-                    TooltipUtil.onHover(dfTooltip(c));
-                } else {
-                    renderConstraintValues(c);
-                }
+                renderConstraintValues(c);
+                if (c.getField() == Constraint.Field.DF) TooltipUtil.onHover(dfTooltip(c));
                 ImGui.tableNextColumn();
                 if (SolverWidgets.deleteX("del")) delete = i;
                 if (dim) ImGui.popStyleVar();

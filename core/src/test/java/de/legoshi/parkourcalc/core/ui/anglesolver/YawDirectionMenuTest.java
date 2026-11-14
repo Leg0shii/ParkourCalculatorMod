@@ -39,7 +39,6 @@ public class YawDirectionMenuTest {
             assertEquals(Constraint.Field.DF, c.getField());
             assertEquals(Constraint.Op.EQ, c.getOp());
             assertEquals(0.0, c.getValue(), 0.0);
-            assertFalse(c.isUnsupportedDf());
         }
         assertNull(state.tickConstraintsOrNull(1));
         assertTrue(table.anyYawDirection(Arrays.asList(3)));

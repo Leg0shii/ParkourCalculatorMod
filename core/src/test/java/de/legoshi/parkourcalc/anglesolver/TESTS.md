@@ -43,7 +43,10 @@ anglesolver/
                            longest one-way run, the first (seam) and last tick, zero-turn ticks held
                            >= 0 and <= 0, a minimum turn 0.01 and 1e-3 deg under the real one, a
                            dF = 0 next to one-way rows, and the random rows on a 3 s Optimize (up to
-                           60 ticks). Found the free-start gap (df-openchain-free-start, j925, j335)
+                           60 ticks, with a range on one more turning tick). The same with dF ranges
+                           around the solved turns: half a degree either way on the random ticks, a
+                           hundredth, the turn on the range's edge, a degree on every turning tick,
+                           zero-turn ticks, the seam, and the exact turns as dF = v. Found the free-start gap (df-openchain-free-start, j925, j335)
                            and the relaxation-recovery gate (j022 min turn) on 2026-10-18. The
                            Optimize budget is three times the FAST time of the same rows, at least
                            6 s: the dual chain only runs its relaxation recovery with 3 s left
@@ -174,7 +177,7 @@ anglesolver/
   WitnessOracleTest.java   soundness oracle (SlowSolverTests, one case per solve/ capture): a random yaw path
                            is forwarded byte-exactly from a launch turned by a random quarter turn, and
                            1 to 4 UI constraints of every kind (X, Z, ranges, tick references, dX, dZ,
-                           dX vs dZ, F, dF) are derived from it with margins from 0 to 0.05, so a path
+                           dX vs dZ, F, dF, dF ranges) are derived from it with margins from 0 to 0.05, so a path
                            exists by construction; the certified B&B must never certify infeasible, its
                            landing must verify, its bound and a certified optimum must not lie short of
                            the hill-climbed path, the closed form bound neither (pinned starts, 1e-4);
@@ -185,7 +188,7 @@ anglesolver/
                            coupling coefficients and the linear path stays within the sine table
                            residual of the exact path (the prefix sum cancellation the oracle found)
   SolveFailureDiagnosticsTest.java  what a failed j004 solve reports: every constraint and the missed tick, the
-                           closest attempt's values, the dF-band decline, the same-tick conflict; #462
+                           closest attempt's values, a declined dF pair, the same-tick conflict; #462
                            the verdict end to end through the engine: the conflict and a wall half a
                            block past the optimum are INFEASIBLE (the latter certified by the B&B in a
                            handful of nodes), a wall 1e-3 past it is UNDETERMINED with no notice and
