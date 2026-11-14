@@ -271,6 +271,13 @@ public final class SineTableGeometry {
         return r;
     }
 
+    public double radiusLower(int t) {
+        double r = 0.0;
+        if (fly[t] != null) r += fly[t].rMin;
+        if (boost[t] != null) r += boost[t].rMin;
+        return r;
+    }
+
     public boolean hasInput(int t) {
         return fly[t] != null || boost[t] != null;
     }

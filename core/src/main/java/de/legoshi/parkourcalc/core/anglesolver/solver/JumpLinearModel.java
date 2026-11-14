@@ -71,9 +71,11 @@ public final class JumpLinearModel {
         public final double p0coefX;
         public final double p0coefZ;
         public final double p0coef;
+        public final int boxAxis;
 
         public Wall(int axis, double[] coef, double bPrime, boolean eq, String name, double p0coef) {
             this.axis = axis;
+            this.boxAxis = axis;
             this.coefX = (axis == 0) ? coef : null;
             this.coefZ = (axis == 1) ? coef : null;
             this.coef = coef;
@@ -86,7 +88,13 @@ public final class JumpLinearModel {
         }
 
         public Wall(double[] coefX, double[] coefZ, double bPrime, boolean eq, String name, double p0coefX, double p0coefZ) {
+            this(coefX, coefZ, bPrime, eq, name, p0coefX, p0coefZ, 2);
+        }
+
+        public Wall(double[] coefX, double[] coefZ, double bPrime, boolean eq, String name, double p0coefX, double p0coefZ,
+                    int boxAxis) {
             this.axis = 2;
+            this.boxAxis = boxAxis;
             this.coefX = coefX;
             this.coefZ = coefZ;
             this.coef = coefX != null ? coefX : coefZ;
