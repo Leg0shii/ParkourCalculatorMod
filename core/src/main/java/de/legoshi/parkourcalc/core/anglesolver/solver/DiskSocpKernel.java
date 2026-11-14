@@ -122,7 +122,7 @@ public final class DiskSocpKernel {
         int inequalities = 0;
         for (int j = 0; j < mw; j++) {
             JumpLinearModel.Wall w = walls.get(j);
-            axis[j] = w.axis;
+            axis[j] = w.boxAxis;
             eq[j] = w.eq;
             if (!w.eq) inequalities++;
             double[] wx = w.axis == 2 ? w.coefX : (w.axis == 0 ? w.coef : null);

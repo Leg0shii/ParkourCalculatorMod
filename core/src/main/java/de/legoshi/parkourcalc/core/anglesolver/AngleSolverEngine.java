@@ -1275,11 +1275,11 @@ public final class AngleSolverEngine {
                     null, null, null, ctx.chain(), null);
             SolveResult fail = failureResult(job, sc, ctx, System.nanoTime() - solveStart);
             if (ctx.chain() != null) fail.setSolver(ctx.chain());
-            if (proof != null) {
-                fail.markCertifiedInfeasible();
+            if (proof != null) fail.markCertifiedInfeasible();
+            if (proof != null && pinnedYaws == null && !singleHeading) {
                 fail.setNoticeLabel(CERTIFIED_INFEASIBLE_LABEL);
                 fail.setNotice(proof);
-            } else if (hasUnsupportedDf(job)) {
+            } else if (proof == null && hasUnsupportedDf(job)) {
                 fail.setNotice(DF_UNSUPPORTED_NOTICE);
             } else if (pinnedYaws != null) {
                 fail.setNoticeLabel(OVERCONSTRAINED_LABEL);
