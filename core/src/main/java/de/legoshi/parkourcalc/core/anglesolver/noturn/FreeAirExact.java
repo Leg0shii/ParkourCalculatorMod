@@ -125,14 +125,9 @@ public final class FreeAirExact {
         }
 
         public Screen(Tables tables, int poolSize) {
-            this(tables, poolSize, null);
-        }
-
-        public Screen(Tables tables, int poolSize, SharedCuts shared) {
             this.tables = tables;
             this.solver = new FreeAirExact(tables.shape);
             this.pool = poolSize > 0 ? new CutPool(tables, poolSize) : null;
-            if (pool != null) pool.shared = shared;
         }
 
         public void layout(int[] starts, int[] options) {
@@ -184,7 +179,6 @@ public final class FreeAirExact {
                 return solver.screen(rejectAbove, warm, null);
             }
             double bound = pool.bound(combos, sprint, rejectAbove);
-            if (!(bound > rejectAbove)) bound = pool.boundByShared(combos, sprint, rejectAbove);
             if (bound > rejectAbove) {
                 return new Result(bound, Double.POSITIVE_INFINITY, null, solver.refX, solver.refZ, 0, 0, 0);
             }
@@ -203,33 +197,10 @@ public final class FreeAirExact {
         }
     }
 
-    public static final class SharedCuts {
-        private final List<CutPool.Cut> published = new ArrayList<>();
-        private volatile int count;
-
-        synchronized void publish(CutPool.Cut cut) {
-            published.add(cut);
-            count = published.size();
-        }
-
-        int count() {
-            return count;
-        }
-
-        synchronized CutPool.Cut get(int index) {
-            return published.get(index);
-        }
-    }
-
     static final class CutPool {
         private static final double GUARD = 1.0e-12;
-        private static final long REST_AFTER_HITS = Long.getLong("pkc.pool.restAfterHits", 0L);
-        SharedCuts shared;
-        private int imported;
-        long sharedRejects;
 
         private static final class Cut {
-            CutPool owner;
             double[] lambda;
             double[] termX;
             double[] termY;
@@ -448,7 +419,6 @@ public final class FreeAirExact {
             int count = Math.min(size, tryCuts);
             for (int c = 0; c < count && left > 0; c++) {
                 Cut cut = cuts[c];
-                if (cut.rest == null && cut.hits < REST_AFTER_HITS) continue;
                 double[] head = headOf(cut, index - 1, combos, sprint);
                 if (cut.rest == null) rest(cut);
                 if (cut.choiceX == null || cut.choiceX[2 * index + before] == null) choices(cut, index, before);
@@ -553,7 +523,6 @@ public final class FreeAirExact {
             subtreeTests++;
             for (int c = 0; c < count && alive != 0; c++) {
                 Cut cut = cuts[c];
-                if (cut.rest == null && cut.hits < REST_AFTER_HITS) continue;
                 double[] head = headOf(cut, index - 1, combos, sprint);
                 if (cut.rest == null) rest(cut);
                 double[] shift = shiftOf(cut, shiftSegment, combos, sprint, firstRun);
@@ -865,36 +834,6 @@ public final class FreeAirExact {
             recent = cut;
             if (size < cuts.length) cuts[size++] = cut;
             else cuts[size - 1] = cut;
-            if (shared != null) {
-                cut.owner = this;
-                shared.publish(cut);
-            }
-        }
-
-        double boundByShared(int[] combos, boolean[] sprint, double rejectAbove) {
-            if (shared == null) return Double.NEGATIVE_INFINITY;
-            int available = shared.count();
-            while (imported < available) {
-                Cut foreign = shared.get(imported++);
-                if (foreign.owner == this) continue;
-                double value = value(foreign, combos, sprint);
-                boolean hit = value > rejectAbove + GUARD;
-                if (!hit && size >= cuts.length) continue;
-                Cut cut = new Cut();
-                cut.lambda = foreign.lambda;
-                cut.termX = foreign.termX;
-                cut.termY = foreign.termY;
-                cut.base = foreign.base;
-                if (size < cuts.length) cuts[size++] = cut;
-                else cuts[size - 1] = cut;
-                if (hit) {
-                    cut.hits++;
-                    rejects++;
-                    sharedRejects++;
-                    return value;
-                }
-            }
-            return Double.NEGATIVE_INFINITY;
         }
     }
 

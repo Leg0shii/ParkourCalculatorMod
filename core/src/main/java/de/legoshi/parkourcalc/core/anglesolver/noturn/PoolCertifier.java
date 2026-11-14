@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 final class PoolCertifier {
 
-    private static final int CERTIFY_THREAD_CAP = Integer.getInteger("pkc.pool.certifyThreads", 8);
+    private static final int CERTIFY_THREAD_CAP = 8;
     private static final int GPU_CERTIFY_THREAD_CAP = Integer.getInteger("pkc.pool.gpuCertifyThreads", 16);
     private static final long WARM_BUDGET_NANOS = 300_000_000L;
     private static final long SHORT_PASS_NANOS = Long.getLong("pkc.pool.shortPassMs", 100L) * 1_000_000L;
