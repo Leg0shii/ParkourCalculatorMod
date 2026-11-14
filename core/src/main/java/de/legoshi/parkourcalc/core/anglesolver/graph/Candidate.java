@@ -22,6 +22,10 @@ public final class Candidate {
         return new Candidate(yaws, v, o, v <= ctx.feasTol, Double.NaN);
     }
 
+    public Candidate copy() {
+        return new Candidate(yaws == null ? null : yaws.clone(), violation, objective, feasible, dualGap);
+    }
+
     public Candidate withDualGap(double gap) {
         return new Candidate(yaws, violation, objective, feasible, Math.max(0.0, gap));
     }

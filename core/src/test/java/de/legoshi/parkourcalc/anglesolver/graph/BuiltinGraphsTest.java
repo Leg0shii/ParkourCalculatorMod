@@ -28,7 +28,7 @@ public class BuiltinGraphsTest {
 
     private static final List<String> OPTIMIZE_NODES = Arrays.asList(
             "entry", "seeds", "horizon", "wrap0", "seed", "cap1", "freeRescue", "peel", "freeImprove",
-            "sweep", "ils2", "translate2", "fold", "ladder", "cert", "bnb", "ils", "cap2", "polish",
+            "sweep", "ils2", "translate2", "fold", "ladder", "cert", "bnb", "ils", "join", "cap2", "polish",
             "wrap", "translate", "snap", "dive", "translate3", "snap2", "certify", "emit");
 
     private static final List<String> MULTI_START_NODES = Arrays.asList(
@@ -52,7 +52,7 @@ public class BuiltinGraphsTest {
             {"entry", "seeds"}, {"seeds", "horizon"}, {"horizon", "wrap0"}, {"wrap0", "seed"}, {"seed", "cap1"},
             {"cap1", "freeRescue"}, {"freeRescue", "peel"}, {"peel", "freeImprove"}, {"freeImprove", "sweep"},
             {"ils2", "translate2"}, {"fold", "ladder"}, {"ladder", "cert"}, {"cert", "bnb"}, {"bnb", "ils"},
-            {"ils", "cap2"}, {"cap2", "polish"}, {"polish", "wrap"}, {"wrap", "translate"}, {"translate", "snap"},
+            {"ils", "join"}, {"join", "cap2"}, {"cap2", "polish"}, {"polish", "wrap"}, {"wrap", "translate"}, {"translate", "snap"},
             {"snap", "dive"}, {"dive", "translate3"}, {"translate3", "snap2"}, {"snap2", "certify"},
             {"certify", "emit"}};
 
@@ -112,6 +112,23 @@ public class BuiltinGraphsTest {
         assertEquals(OPTIMIZE_NODES, nodeIds(opt));
         assertLinear(opt, OPTIMIZE_PAIRS);
         assertLoopEdges(opt, true, true);
+    }
+
+    @Test
+    public void optimizeRunsTheCertifiedSearchBesideTheChainOnEveryCore() {
+        for (int sec : new int[]{1, 10, 50}) {
+            SolverGraph opt = BuiltinGraphs.optimize(sec);
+            assertTrue(sec + " s", GraphRunner.runsAsLane(opt.node("cert")));
+            assertEquals(BuiltinGraphs.TREE_BATCH, opt.node("cert").params.getInt("batch"));
+            assertEquals(BuiltinGraphs.TREE_BATCH, opt.node("dive").params.getInt("batch"));
+            assertEquals(BuiltinGraphs.TREE_BATCH, opt.node("certify").params.getInt("batch"));
+            assertFalse(GraphRunner.runsAsLane(opt.node("dive")));
+        }
+        SolverGraph fast = BuiltinGraphs.fast();
+        assertFalse(GraphRunner.runsAsLane(fast.node("cert")));
+        assertEquals(1, fast.node("cert").params.getInt("batch"));
+        assertEquals(1, fast.node("certify").params.getInt("batch"));
+        assertNull(fast.node("join"));
     }
 
     @Test

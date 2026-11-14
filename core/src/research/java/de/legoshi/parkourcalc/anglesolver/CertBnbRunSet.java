@@ -136,6 +136,8 @@ public class CertBnbRunSet {
                 cfg.nodeCap = ff ? ffNodes : ("seed".equals(kind) ? 0 : nodes);
                 cfg.polishCap = ff ? 2 : 12;
                 cfg.cancel = cancel;
+                cfg.batch = Integer.parseInt(env("PKC_RUNSET_BATCH", "1"));
+                cfg.sequential = "1".equals(env("PKC_RUNSET_SEQ", "0"));
                 CertifiedBnb.Result r = CertifiedBnb.solve(model, spec, cfg);
                 row.kernelNanos = r.kernelNanos;
                 row.signature = r.declined ? "declined"

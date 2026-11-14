@@ -196,6 +196,12 @@ public final class NodeHelp {
                 + " order: every 20 branches it follows one branch down for up to 40 steps. Which landing a"
                 + " search finds depends on the order, so a second order can find a better one. Does nothing"
                 + " while the jump does not land, or once the landing is proven best.");
+        param("certBnb", "batch", "How many branches the search works on at once, each on its own processor"
+                + " core. The search takes its best branches in rounds of this size and merges their results in"
+                + " a fixed order, so the result is the same on every machine; 1 searches one branch at a time.");
+        param("certBnb", GraphRunner.LANE_PARAM, "Start this stage and let the next stages run at the same time,"
+                + " each on its own cores. The stage works on the landing it was handed; a Join lanes stage"
+                + " further down waits for it and keeps the better of the two landings.");
 
         node("foldDriver", "Another angle solver that repeatedly replays and adjusts the jump. It can try"
                 + " several different starting guesses and finish with a fine nudge pass.");
@@ -310,6 +316,9 @@ public final class NodeHelp {
         param("latticePolish", "reserveFraction", "The share of the whole solve time held back for this stage, so"
                 + " the stages before it cannot use up the budget. Only matters when the solve has a time budget.");
         param("latticePolish", "reserveCapSec", "The most seconds the reserve may hold back. 0 means no cap.");
+
+        node("joinLanes", "Waits for every stage that was started to run beside the chain and keeps the"
+                + " better landing of the chain and those stages. Does nothing when no such stage runs.");
 
         node("pickStart", "When a Receding horizon stage has set an earlier landing aside, compares it with"
                 + " the current one and continues with the one that lands further. Does nothing otherwise.");

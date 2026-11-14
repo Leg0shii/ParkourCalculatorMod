@@ -10,10 +10,13 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.LongRunSolver;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Objective;
+import de.legoshi.parkourcalc.core.anglesolver.solver.SolveClock;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolveProgress;
 import de.legoshi.parkourcalc.core.anglesolver.solver.StartBox;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -54,6 +57,8 @@ public final class GraphContext {
     private volatile SmoothOutcome smoothOutcome;
     private volatile InputOutcome inputOutcome;
     private volatile String infeasibilityProof;
+    private final List<GraphLane> lanes = new ArrayList<>();
+    private String lastChainName;
     private Candidate heldStart;
     private Vec3dCore heldStartPos;
     private StartBox heldStartBox;
@@ -75,6 +80,28 @@ public final class GraphContext {
         this.longRun = longRun;
         this.watchdog = new BudgetWatchdog(cancel);
         if (progress != null) progress.setActiveNodeSource(runState::activeNodeId);
+    }
+
+    private GraphContext(GraphContext parent) {
+        this.spec = parent.spec;
+        this.scenario = parent.scenario.copy();
+        this.model = parent.model;
+        this.exactModel = parent.exactModel;
+        this.freeBox = parent.freeBox;
+        this.freeStart = parent.freeStart;
+        this.legalGoal = parent.legalGoal;
+        this.feasTol = parent.feasTol;
+        this.cancel = parent.cancel;
+        this.progress = null;
+        this.sequential = parent.sequential;
+        this.longRun = parent.longRun;
+        this.watchdog = new BudgetWatchdog(parent.cancel);
+        this.chain = parent.chain();
+        this.stageLocked = parent.stageLocked;
+        this.settled = parent.settled;
+        this.optimumCertified = parent.optimumCertified;
+        this.overallDeadlineNanos = parent.overallDeadlineNanos;
+        this.dualGapRequested = parent.dualGapRequested;
     }
 
     public boolean exact() {
@@ -123,6 +150,7 @@ public final class GraphContext {
 
     public synchronized void chainAppend(String name) {
         chain = Scoring.chain(chain, name);
+        lastChainName = name;
     }
 
     public synchronized void chainSuffix(String suffix) {
@@ -269,7 +297,83 @@ public final class GraphContext {
         runState.end(node.id, taken, smoothingEvals.get() - evalsAtNodeStart);
     }
 
+    void startLane(GraphNode node, NodeRuntime rt, Candidate in, long deadlineNanos, long budgetNanos) {
+        GraphContext laneCtx = new GraphContext(this);
+        SolveClock clock = SolveClock.current();
+        SolveClock fork = clock == null ? null : clock.fork(null, 0L);
+        GraphLane lane = new GraphLane(node, laneCtx, in, fork, clock == null ? 0L : clock.elapsedNanos(),
+                runState.stepCount());
+        lanes.add(lane);
+        if (sequential) lane.run(rt, deadlineNanos, budgetNanos);
+        else lane.start(rt, deadlineNanos, budgetNanos);
+    }
+
+    boolean hasLane(String nodeId) {
+        for (GraphLane lane : lanes) {
+            if (lane.node.id.equals(nodeId)) return true;
+        }
+        return false;
+    }
+
+    public Candidate joinLanes(Candidate current) {
+        Candidate cur = current;
+        int inserted = 0;
+        while (!lanes.isEmpty()) {
+            GraphLane lane = lanes.remove(0);
+            lane.await();
+            SolveClock clock = SolveClock.current();
+            if (clock != null && lane.clock != null) clock.joinLane(lane.clock);
+            GraphContext lc = lane.ctx;
+            inserted += runState.absorb(lc.runState, lane.stepIndex + inserted);
+            if (lane.error() != null) throw lane.error();
+            if (lc.optimumCertified) certifyOptimum();
+            offerProvenBound(lc.provenBound());
+            if (!lc.closestMiss.isEmpty()) closestMiss.offer(lc.closestMiss.yaws(), lc.closestMiss.violation());
+            if (lc.infeasibilityProof != null) certifyInfeasible(lc.infeasibilityProof);
+            cur = mergeLane(cur, lane);
+        }
+        return cur;
+    }
+
+    private Candidate mergeLane(Candidate cur, GraphLane lane) {
+        NodeOutcome o = lane.outcome();
+        if (o == null || (o.branch != Guarantee.FOUND && o.branch != Guarantee.IMPROVED)) return cur;
+        Candidate found = o.candidate;
+        if (found == null || found.yaws == null) return cur;
+        JumpPhysicsInputs laneScenario = lane.ctx.scenario;
+        boolean adopt;
+        if (cur == null || cur.yaws == null) {
+            adopt = true;
+        } else if (!cur.feasible) {
+            adopt = found.feasible || found.violation < cur.violation;
+        } else if (!found.feasible) {
+            adopt = false;
+        } else {
+            double mine = objectiveAfterStartMove(scenario, cur.yaws);
+            double theirs = objectiveAfterStartMove(laneScenario, found.yaws);
+            adopt = maximize() ? theirs > mine : theirs < mine;
+        }
+        if (!adopt) return cur;
+        scenario.startPos = laneScenario.startPos;
+        scenario.startBox = laneScenario.startBox;
+        String name = lane.ctx.lastChainName;
+        if (name != null) chainAppend(name);
+        Candidate out = Candidate.of(this, found.yaws);
+        if (!Double.isNaN(found.dualGap)) out = out.withDualGap(found.dualGap);
+        return out;
+    }
+
+    private double objectiveAfterStartMove(JumpPhysicsInputs at, double[] yaws) {
+        if (!freeStart) return Scoring.exactObjective(model, at, spec, yaws);
+        JumpPhysicsInputs moved = at.copy();
+        Scoring.adoptPinnedStart(moved, moved.startPos.x, moved.startPos.z);
+        Scoring.adoptWinningTranslation(model, moved, spec, freeBox, yaws, feasTol);
+        return Scoring.exactObjective(model, moved, spec, yaws);
+    }
+
     void shutdown() {
+        for (GraphLane lane : lanes) lane.abort();
+        lanes.clear();
         watchdog.shutdown();
     }
 }
