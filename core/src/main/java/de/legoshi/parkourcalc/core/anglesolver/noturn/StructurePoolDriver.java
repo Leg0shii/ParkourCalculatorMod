@@ -75,6 +75,7 @@ public final class StructurePoolDriver {
         public long familyDelayNanos = 0L;
         public long familyOfferNanos = 0L;
         public boolean streamCertify = true;
+        public boolean familyShareCuts = false;
         public boolean playable = false;
         public int threads = 0;
 
@@ -2393,6 +2394,7 @@ public final class StructurePoolDriver {
     }
 
     private final List<FreeAirExact.Screen> familyScreens = new ArrayList<>();
+    private final FreeAirExact.SharedCuts familySharedCuts = new FreeAirExact.SharedCuts();
 
     private LevelResult enumerateFamilyBand(NoTurnProblem problem, int threads, int band, boolean inertia,
                                             boolean exact, AtomicBoolean stopFlag) {
@@ -2416,7 +2418,8 @@ public final class StructurePoolDriver {
             w.familyExact = exact;
             if (familyTables != null) {
                 while (familyScreens.size() <= i) {
-                    familyScreens.add(new FreeAirExact.Screen(familyTables, cfg.familyCutPool));
+                    familyScreens.add(new FreeAirExact.Screen(familyTables, cfg.familyCutPool,
+                            cfg.familyShareCuts ? familySharedCuts : null));
                 }
                 w.familyFast = familyScreens.get(i);
                 w.familyLate = cfg.familyCutPool > 0;

@@ -301,6 +301,8 @@ public class NoTurnColdBench {
                 cfg.changeLevels = !Boolean.getBoolean("pkc.bench.familyOnly");
                 cfg.familyDelayNanos = Long.getLong("pkc.bench.familyDelayMs", cfg.familyDelayNanos / 1_000_000L) * 1_000_000L;
                 cfg.familyOfferNanos = Long.getLong("pkc.bench.familyOfferMs", cfg.familyOfferNanos / 1_000_000L) * 1_000_000L;
+                cfg.familyShareCuts = Boolean.parseBoolean(System.getProperty("pkc.bench.familyShareCuts",
+                        String.valueOf(cfg.familyShareCuts)));
                 cfg.streamCertify = Boolean.parseBoolean(System.getProperty("pkc.bench.streamCertify",
                         String.valueOf(cfg.streamCertify)));
                 cfg.familyInertiaShare = Double.parseDouble(System.getProperty("pkc.bench.familyInertiaShare", String.valueOf(cfg.familyInertiaShare)));
