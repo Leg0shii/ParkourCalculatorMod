@@ -273,15 +273,17 @@ anglesolver/
                            Strat is a product of library families
   NoTurnMomentumRulesTest.java  MomentumRules, the change level rules of the momentum lane (#696) as one state
                            per tick: a change on a jump tick or the tick after it is free, a short hold away
-                           from a jump needs the tap rules, the three sprint variants, and a run-up with two
-                           facing parts is a layout the lane skips; fast
+                           from a jump needs the tap rules, the three sprint variants, and where the walked
+                           ticks end on one tied run-up (j154), two tied parts (j424), tied parts to the
+                           last tick (j144) and a turn on every jump (j155); fast
   NoTurnMomentumSearchTest.java  (SlowSolverTests) MomentumSearch against a full walk of the rules with one
                            FreeAirExact solve per schedule (j135 with and without taps, j344 across a join,
-                           j342 with one change): nothing under the limit is dropped, nothing over it kept;
+                           j342 with one change; several facing parts: j152, j828, j246 and j718; a
+                           turn on every jump: j134): nothing under the limit is dropped, nothing over it kept;
                            on j315 no neighbour of a kept schedule (a change one tick earlier or later, a
                            hold with other keys) is under the limit and missing; StructurePoolDriver with
-                           the momentum lane alone lands j315 cold without the Strat library, j424 (two
-                           facing parts) runs without the lane, and a cancel ends a running lane
+                           the momentum lane alone lands j315 cold without the Strat library and j152 (two
+                           facing parts), and a cancel ends a running lane
   ../core/anglesolver/noturn/NoTurnCertifyLadderTest.java  CertifyLadder, the order of the stream certifier
                            (in the package of the class): a miss climbs the 16, 100 and 500 ms passes and
                            then leaves, a flood of momentum candidates holds a family candidate back by at

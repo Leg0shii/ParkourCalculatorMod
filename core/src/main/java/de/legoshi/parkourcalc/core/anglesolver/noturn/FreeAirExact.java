@@ -15,6 +15,7 @@ public final class FreeAirExact {
 
     private static final double EPS2 = 1.0e-18;
     private static final double GAP_TOL = 1.0e-9;
+    private static final double STALL_GAP = 1.0e-6;
     private static final int MAX_OUTER = 400;
     private static final int MAX_NEWTON = 60;
     private static final int WARM_SLOTS = 4;
@@ -221,7 +222,12 @@ public final class FreeAirExact {
         public Result solve(int[] combos, boolean[] sprint, double rejectAbove) {
             if (pool == null) {
                 solver.load(tables, combos, sprint);
-                return solver.screen(rejectAbove, warm, null);
+                Result r = solver.screen(rejectAbove, warm, null);
+                if (r.dual <= rejectAbove && r.primal > rejectAbove + STALL_GAP) {
+                    Result cold = solver.screen(rejectAbove, null, null);
+                    if (cold.dual > r.dual) r = cold;
+                }
+                return r;
             }
             double bound = pool.bound(combos, sprint, rejectAbove);
             if (bound > rejectAbove) {
