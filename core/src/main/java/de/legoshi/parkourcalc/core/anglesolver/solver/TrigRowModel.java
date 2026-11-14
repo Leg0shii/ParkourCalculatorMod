@@ -121,6 +121,8 @@ final class TrigRowModel {
     double backedOff;
     boolean[] stoppedX;
     boolean[] stoppedZ;
+    boolean[] forcedX;
+    boolean[] forcedZ;
 
     private JumpLinearModel lin;
 
@@ -230,6 +232,10 @@ final class TrigRowModel {
         boolean[] zeroX = new boolean[n];
         boolean[] zeroZ = new boolean[n];
         ForwardPath path = stoppedAxes(yawsWrapped, sx, sz, zeroX, zeroZ);
+        if (forcedX != null) {
+            zeroX = forcedX.clone();
+            zeroZ = forcedZ.clone();
+        }
         stoppedX = zeroX;
         stoppedZ = zeroZ;
         double thr = exact.inertiaThreshold();

@@ -74,7 +74,7 @@ final class LatticePolishCheck implements ProblemCheck {
         if (ENGINE_MODE.equals(e.mode)) {
             SolveResult r = (turns
                     ? rig.solve(AngleSolverState.Effort.FAST, fastWithStage(), e.timeoutMs(60_000L))
-                    : rig.solve(e.timeoutMs(60_000L))).result;
+                    : rig.solve(AngleSolverState.Effort.FAST, BuiltinGraphs.fastAtStart(), e.timeoutMs(60_000L))).result;
             assertNotNull(name + ": engine returned no result", r);
             assertTrue(name + ": the engine must solve: " + r.getSolver(), r.isSuccess());
             yaws = new double[sc.numTicks];
