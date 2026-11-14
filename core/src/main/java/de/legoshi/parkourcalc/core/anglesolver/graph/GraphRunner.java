@@ -10,6 +10,7 @@ public final class GraphRunner {
     public static final int MAX_NODE_VISITS = 1024;
     public static final String RESERVE_FRACTION_PARAM = "reserveFraction";
     public static final String RESERVE_CAP_PARAM = "reserveCapSec";
+    public static final String LANE_PARAM = "lane";
 
     private GraphRunner() {
     }
@@ -42,7 +43,7 @@ public final class GraphRunner {
         while (true) {
             if (ctx.cancel.get()) return null;
             long overall = ctx.overallDeadline();
-            if (cur == null || cur.type.emitMarker) return cand;
+            if (cur == null || cur.type.emitMarker) return ctx.joinLanes(cand);
             if (cur.type.entryMarker) {
                 cur = next(graph, cur, Guarantee.DONE);
                 continue;
@@ -50,7 +51,8 @@ public final class GraphRunner {
             Integer seen = visits.get(cur.id);
             int v = seen == null ? 1 : seen + 1;
             visits.put(cur.id, v);
-            if (v > MAX_NODE_VISITS) return cand;
+            if (v > MAX_NODE_VISITS) return ctx.joinLanes(cand);
+            if (ctx.hasLane(cur.id)) cand = ctx.joinLanes(cand);
             NodeRuntime rt = runtimes.get(cur.id);
             if (rt == null) {
                 rt = cur.type.factory.create(cur.params);
@@ -70,6 +72,12 @@ public final class GraphRunner {
             SolveClock clock = SolveClock.current();
             long stop = clock == null ? Long.MAX_VALUE : clock.deadlineOf(ctx.cancel);
             if (deadline > 0 && stop < deadline) deadline = stop;
+            if (runsAsLane(cur)) {
+                ctx.startLane(cur, rt, cand, deadline, budgetNanos);
+                if (TRACE) System.out.println(String.format(java.util.Locale.ROOT, "[graph] %-12s lane", cur.id));
+                cur = next(graph, cur, Guarantee.UNCHANGED);
+                continue;
+            }
             AtomicBoolean token = ctx.beginNode(cur, deadline, budgetNanos);
             Guarantee taken = null;
             try {
@@ -107,6 +115,13 @@ public final class GraphRunner {
                 cand == null || cand.yaws == null ? "-" : Double.toString(cand.objective),
                 clock.elapsedNanos() / 1e6, clock.describe());
         System.out.println(String.format(java.util.Locale.ROOT, "[graph] %-12s %-9s %8.1f ms viol=%s%s", node.id, taken, ms, v, work));
+    }
+
+    public static boolean runsAsLane(GraphNode n) {
+        for (ParamSpec p : n.type.params) {
+            if (LANE_PARAM.equals(p.key)) return n.params.getBool(LANE_PARAM);
+        }
+        return false;
     }
 
     public static boolean reserving(NodeType type) {

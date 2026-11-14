@@ -9,6 +9,7 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.FreeStartImproveNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.HomotopyLadderNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.IlsPolishNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.InputSmoothNode;
+import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.JoinLanesNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.LabelNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.LatticePolishNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.LeafSnapNode;
@@ -197,6 +198,8 @@ public final class NodeCatalog {
                 .param(ParamSpec.integer("tickCap", "Tick cap", 0, 100000, BuiltinGraphs.IMPROVE_TICK_CAP))
                 .param(ParamSpec.bool("exhaust", "Exhaust while nothing lands", false))
                 .param(ParamSpec.bool("dive", "Second pass in dive order", false))
+                .param(ParamSpec.integer("batch", "Nodes per round", 1, 64, 1))
+                .param(ParamSpec.bool(GraphRunner.LANE_PARAM, "Run beside the chain", false))
                 .param(ParamSpec.text("labelSuffix", "Chain suffix", ""))
                 .budgetParam("budgetSec")
                 .fallback(Guarantee.UNCHANGED)
@@ -331,6 +334,12 @@ public final class NodeCatalog {
                         3 * BuiltinGraphs.SMOOTH_RESERVE_CAP_SEC))
                 .fallback(Guarantee.UNCHANGED)
                 .factory(InputSmoothNode::new)
+                .build());
+        register(NodeType.builder("joinLanes", "Join lanes", NodeCategory.CONTROL)
+                .requires(InputRequirement.ANY)
+                .branch(Branch.preserves(Guarantee.DONE))
+                .fallback(Guarantee.DONE)
+                .factory(JoinLanesNode::new)
                 .build());
         register(NodeType.builder("pickStart", "Pick start", NodeCategory.CONTROL)
                 .requires(InputRequirement.ANY)

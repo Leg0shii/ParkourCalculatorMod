@@ -158,6 +158,13 @@ public final class SolveClock {
         advanceTo(nowNanos + Math.max(longest, (sum + workers - 1) / workers));
     }
 
+    public void joinLane(SolveClock lane) {
+        overran |= lane.overran;
+        rateShift = Math.max(rateShift, lane.rateShift);
+        for (int k = 0; k < KINDS; k++) units[k] += lane.units[k];
+        advanceTo(Math.max(nowNanos, lane.nowNanos));
+    }
+
     public void addUnits(SolveClock[] children) {
         for (SolveClock child : children) {
             if (child == null) continue;

@@ -65,6 +65,29 @@ public final class CertifiedBnb {
         public int incumbentPolishCap;
         public int diveEvery;
         public int diveLength;
+        public int batch = 1;
+        public boolean sequential;
+
+        Config copyWith(AtomicBoolean token) {
+            Config c = new Config();
+            c.mode = mode;
+            c.nodeCap = nodeCap;
+            c.polishCap = polishCap;
+            c.deadlineNanos = deadlineNanos;
+            c.cancel = token;
+            c.seedYaws = seedYaws;
+            c.seedPx = seedPx;
+            c.seedPz = seedPz;
+            c.homotopy = homotopy;
+            c.probeGates = probeGates;
+            c.resolveProbes = resolveProbes;
+            c.incumbentPolishCap = incumbentPolishCap;
+            c.diveEvery = diveEvery;
+            c.diveLength = diveLength;
+            c.batch = batch;
+            c.sequential = sequential;
+            return c;
+        }
     }
 
     public static final class Result {
@@ -109,7 +132,7 @@ public final class CertifiedBnb {
     }
 
     private static final class Node {
-        final long id;
+        long id;
         int[] iLo;
         int[] iHi;
         final byte[] gx;
@@ -148,7 +171,7 @@ public final class CertifiedBnb {
         final double[] f4;
         final YawTies ties;
         final YawOrder order;
-        final long seedMix = SolveClock.seedMix();
+        final long seedMix;
         long nextId = 1L;
         int nodes;
         int kernelSolves;
@@ -176,6 +199,7 @@ public final class CertifiedBnb {
             this.spec = spec;
             this.ties = ties;
             this.order = order;
+            this.seedMix = SolveClock.seedMix();
             this.sc = spec.asScenario();
             this.compiled = JumpConstraintCompiler.compile(spec);
             this.geom = new SineTableGeometry(exact, sc);
@@ -192,6 +216,42 @@ public final class CertifiedBnb {
             JumpLinearModel freeLin = new JumpLinearModel(sc, null, null, true);
             this.f4 = new double[n];
             for (int t = 0; t < n; t++) this.f4[t] = freeLin.friction(t);
+        }
+
+        Search(Search base, Config cfg) {
+            this.exact = base.exact;
+            this.spec = base.spec;
+            this.ties = base.ties;
+            this.order = base.order;
+            this.seedMix = base.seedMix;
+            this.sc = base.sc;
+            this.compiled = base.compiled;
+            this.geom = base.geom;
+            this.cfg = cfg;
+            this.n = base.n;
+            this.max = base.max;
+            this.perAxis = base.perAxis;
+            this.thr = base.thr;
+            this.box = base.box;
+            this.free = base.free;
+            this.refPx = base.refPx;
+            this.refPz = base.refPz;
+            this.freeP0 = base.freeP0;
+            this.f4 = base.f4;
+            this.resolveDeadlineSet = base.resolveDeadlineSet;
+            this.resolveDeadline = base.resolveDeadline;
+            this.polishCalls = base.polishCalls;
+            this.incScore = base.incScore;
+            this.incYaws = base.incYaws;
+            this.incPx = base.incPx;
+            this.incPz = base.incPz;
+            this.incObj = base.incObj;
+            this.bestInfeasYaws = base.bestInfeasYaws;
+            this.bestInfeasViol = base.bestInfeasViol;
+            this.incVersion = base.incVersion;
+            this.sweptVersion = base.sweptVersion;
+            this.polishedVersion = base.polishedVersion;
+            this.incumbentPolishes = base.incumbentPolishes;
         }
 
         boolean stopped() {
@@ -301,6 +361,23 @@ public final class CertifiedBnb {
         open.add(new Node(s.nextId++, lo, hi, new byte[s.n], s.perAxis ? new byte[s.n] : null,
                 0, Double.POSITIVE_INFINITY));
 
+        boolean exhausted = s.cfg.batch > 1 ? searchBatched(s, open) : searchSerial(s, open);
+        Node top = open.peek();
+        double bestOpenScore = exhausted || top == null ? s.incScore : Math.max(top.score, s.incScore);
+        bestOpenScore = Math.max(bestOpenScore, s.stuckScore);
+        double gap = s.incYaws == null ? Double.POSITIVE_INFINITY
+                : Math.max(0.0, bestOpenScore - s.incScore);
+        boolean modelled = relaxationCoversScenario(sc);
+        boolean certified = modelled && s.incYaws != null && gap <= CERT_EPS;
+        if (certified) gap = Math.min(gap, CERT_EPS);
+        double boundObj = s.max ? bestOpenScore : -bestOpenScore;
+        boolean certifiedInfeasible = modelled && exhausted && s.incYaws == null && s.unresolved == 0;
+        return new Result(false, s.incYaws, s.incPx, s.incPz, s.incObj, s.incYaws != null,
+                boundObj, s.incYaws == null ? Double.NaN : gap, certified, s.nodes, s.kernelSolves,
+                s.kernelNanos, s.bestInfeasYaws, s.bestInfeasViol, certifiedInfeasible, s.unresolved);
+    }
+
+    private static boolean searchSerial(Search s, PriorityQueue<Node> open) {
         boolean exhausted = false;
         boolean dives = s.cfg.mode == Mode.OPTIMIZE && s.cfg.diveEvery > 0 && s.cfg.diveLength > 0;
         Node dive = null;
@@ -356,19 +433,120 @@ public final class CertifiedBnb {
                 }
             }
         }
-        Node top = open.peek();
-        double bestOpenScore = exhausted || top == null ? s.incScore : Math.max(top.score, s.incScore);
-        bestOpenScore = Math.max(bestOpenScore, s.stuckScore);
-        double gap = s.incYaws == null ? Double.POSITIVE_INFINITY
-                : Math.max(0.0, bestOpenScore - s.incScore);
-        boolean modelled = relaxationCoversScenario(sc);
-        boolean certified = modelled && s.incYaws != null && gap <= CERT_EPS;
-        if (certified) gap = Math.min(gap, CERT_EPS);
-        double boundObj = s.max ? bestOpenScore : -bestOpenScore;
-        boolean certifiedInfeasible = modelled && exhausted && s.incYaws == null && s.unresolved == 0;
-        return new Result(false, s.incYaws, s.incPx, s.incPz, s.incObj, s.incYaws != null,
-                boundObj, s.incYaws == null ? Double.NaN : gap, certified, s.nodes, s.kernelSolves,
-                s.kernelNanos, s.bestInfeasYaws, s.bestInfeasViol, certifiedInfeasible, s.unresolved);
+        return exhausted;
+    }
+
+    private static boolean searchBatched(Search s, PriorityQueue<Node> open) {
+        boolean exhausted = false;
+        boolean dives = s.cfg.mode == Mode.OPTIMIZE && s.cfg.diveEvery > 0 && s.cfg.diveLength > 0;
+        int width = s.cfg.batch;
+        Node dive = null;
+        int diveLeft = 0;
+        int sinceDive = 0;
+        List<Node> batch = new ArrayList<Node>(width);
+        while (true) {
+            if (s.stopped()) break;
+            if (s.cfg.mode == Mode.FIRST_FEASIBLE && s.incYaws != null) break;
+            settleIncumbent(s);
+            batch.clear();
+            boolean diving = dive != null && dive.score > s.incScore + CERT_EPS && s.nodes < s.cfg.nodeCap;
+            if (diving) {
+                open.remove(dive);
+                batch.add(dive);
+            } else {
+                diveLeft = 0;
+            }
+            dive = null;
+            while (batch.size() < width && s.nodes + batch.size() < s.cfg.nodeCap) {
+                Node nd = open.peek();
+                if (nd == null || nd.score <= s.incScore + CERT_EPS) break;
+                open.poll();
+                batch.add(nd);
+                if (!diving && dives && ++sinceDive >= s.cfg.diveEvery) {
+                    sinceDive = 0;
+                    diveLeft = s.cfg.diveLength;
+                }
+            }
+            if (batch.isEmpty()) {
+                Node top = open.peek();
+                if (top == null || top.score <= s.incScore + CERT_EPS) exhausted = true;
+                break;
+            }
+            s.nodes += batch.size();
+            List<List<Node>> children = evaluateBatch(s, batch, open);
+            for (List<Node> kids : children) {
+                if (kids == null) continue;
+                for (Node c : kids) {
+                    c.id = s.nextId++;
+                    open.add(c);
+                }
+            }
+            if (s.trivialInfeasible) {
+                exhausted = true;
+                break;
+            }
+            List<Node> lead = children.get(0);
+            if (diveLeft > 0 && lead != null && !lead.isEmpty()) {
+                diveLeft--;
+                dive = lead.get(lead.size() - 1);
+                for (Node c : lead) if (c.holdsDecoded) dive = c;
+            }
+        }
+        return exhausted;
+    }
+
+    private static void settleIncumbent(Search s) {
+        while (s.incVersion != s.sweptVersion && !s.stopped()) {
+            s.sweptVersion = s.incVersion;
+            argmaxSweep(s);
+            if (s.incVersion == s.sweptVersion && s.incVersion != s.polishedVersion && s.incYaws != null
+                    && s.incumbentPolishes < s.cfg.incumbentPolishCap && !s.stopped()) {
+                s.incumbentPolishes++;
+                s.polishedVersion = s.incVersion;
+                polishFrom(s, s.incYaws, s.incPx, s.incPz);
+            }
+        }
+    }
+
+    private static List<List<Node>> evaluateBatch(Search s, List<Node> batch, PriorityQueue<Node> open) {
+        int m = batch.size();
+        Search[] workers = new Search[m];
+        int polishBase = s.polishCalls;
+        List<List<Node>> out = ParallelTasks.run(m, s.cfg.cancel, s.cfg.sequential, (i, token) -> {
+            Search w = new Search(s, s.cfg.copyWith(token));
+            workers[i] = w;
+            return evaluate(w, batch.get(i), open);
+        });
+        for (int i = 0; i < m; i++) {
+            if (workers[i] != null) absorb(s, workers[i], polishBase);
+        }
+        return out;
+    }
+
+    private static void absorb(Search s, Search w, int polishBase) {
+        s.kernelSolves += w.kernelSolves;
+        s.kernelNanos += w.kernelNanos;
+        s.unresolved += w.unresolved;
+        s.polishCalls += w.polishCalls - polishBase;
+        if (w.stuckScore > s.stuckScore) s.stuckScore = w.stuckScore;
+        if (w.trivialInfeasible) s.trivialInfeasible = true;
+        if (!s.resolveDeadlineSet && w.resolveDeadlineSet) {
+            s.resolveDeadlineSet = true;
+            s.resolveDeadline = w.resolveDeadline;
+        }
+        if (w.bestInfeasViol < s.bestInfeasViol) {
+            s.bestInfeasViol = w.bestInfeasViol;
+            s.bestInfeasYaws = w.bestInfeasYaws;
+        }
+        if (w.incScore > s.incScore) {
+            s.incScore = w.incScore;
+            s.incYaws = w.incYaws;
+            s.incPx = w.incPx;
+            s.incPz = w.incPz;
+            s.incObj = w.incObj;
+            s.incVersion++;
+            if (w.polishedVersion == w.incVersion) s.polishedVersion = s.incVersion;
+        }
     }
 
     public static boolean relaxationCoversScenario(JumpPhysicsInputs sc) {

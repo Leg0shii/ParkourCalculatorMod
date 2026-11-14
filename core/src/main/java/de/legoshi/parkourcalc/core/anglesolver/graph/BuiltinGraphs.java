@@ -25,6 +25,8 @@ public final class BuiltinGraphs {
     public static final int BOTH_STARTS_BELOW_SEC = 2;
     public static final int COLD_START_CAP_MS = 500;
 
+    public static final int TREE_BATCH = 8;
+
     public static final int POLISH_FACINGS = 64;
     public static final int POLISH_SEARCHES = 21;
     public static final int POLISH_TABLE = 30000;
@@ -106,7 +108,6 @@ public final class BuiltinGraphs {
         long reserveNanos = fastTier ? 0L
                 : GraphRunner.reserveNanos(WRAP_RESERVE_FRACTION, WRAP_RESERVE_CAP_SEC, t * 1_000_000_000L);
         int stageSec = Math.max(1, tp - (int) ((reserveNanos + 999_999_999L) / 1_000_000_000L));
-        int improveSec = Math.max(1, Math.min(60, stageSec / 3));
         int ffSec = fastTier ? 3 : Math.max(1, Math.min(30, stageSec / 2));
         int horizonSec = fastTier ? 0 : Math.max(2, Math.min(12, stageSec / 3));
 
@@ -172,16 +173,20 @@ public final class BuiltinGraphs {
                 .set("fold", "tickCap", IMPROVE_TICK_CAP);
         g.add("ladder", "homotopyLadder");
         g.add("cert", "certBnb")
-                .set("cert", "budgetSec", fastTier ? 0 : Math.max(ffSec, improveSec))
+                .set("cert", "budgetSec", fastTier ? 0 : tp)
                 .set("cert", "ffSec", ffSec)
                 .set("cert", "ffNodeCap", fastTier ? 32 : 256)
                 .set("cert", "tickCap", IMPROVE_TICK_CAP);
+        if (!fastTier) {
+            g.set("cert", "batch", TREE_BATCH).set("cert", GraphRunner.LANE_PARAM, true);
+        }
         g.add("bnb", "bnb")
                 .set("bnb", "budgetSec", fastTier ? 0 : Math.max(3, stageSec / 2))
                 .set("bnb", "ffSec", fastTier ? 40 : Math.max(3, stageSec / 3))
                 .set("bnb", "tickCap", IMPROVE_TICK_CAP);
         g.add("ils", "ilsPolish")
                 .set("ils", "budgetSec", fastTier ? 0 : Math.max(1, stageSec - 4));
+        if (!fastTier) g.add("join", "joinLanes");
         g.add("cap2", "capCertify")
                 .set("cap2", "computeDualGap", false)
                 .set("cap2", "skipIfSettled", true);
@@ -208,6 +213,7 @@ public final class BuiltinGraphs {
                     .set("dive", "ffNodeCap", 0)
                     .set("dive", "tickCap", IMPROVE_TICK_CAP)
                     .set("dive", "dive", true)
+                    .set("dive", "batch", TREE_BATCH)
                     .set("dive", "labelSuffix", " (dive order)");
             g.add("translate3", "translatedStart");
             if (leafSnap) {
@@ -221,7 +227,8 @@ public final class BuiltinGraphs {
                 .set("certify", "ffSec", 0)
                 .set("certify", "ffNodeCap", 0)
                 .set("certify", "tickCap", IMPROVE_TICK_CAP)
-                .set("certify", "exhaust", true);
+                .set("certify", "exhaust", true)
+                .set("certify", "batch", fastTier ? 1 : TREE_BATCH);
         g.add("emit", "emit");
 
         String first = sweep ? "seeds" : "entry";
@@ -263,7 +270,12 @@ public final class BuiltinGraphs {
         chain(g, "ladder", "cert");
         chain(g, "cert", "bnb");
         chain(g, "bnb", "ils");
-        chain(g, "ils", "cap2");
+        if (fastTier) {
+            chain(g, "ils", "cap2");
+        } else {
+            chain(g, "ils", "join");
+            chain(g, "join", "cap2");
+        }
         if (fastTier) {
             chain(g, "cap2", "wrap");
         } else {
