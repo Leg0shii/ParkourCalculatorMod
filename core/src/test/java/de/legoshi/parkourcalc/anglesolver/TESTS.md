@@ -288,6 +288,9 @@ anglesolver/
                            most one round of the sources, a better screen value overtakes in the later
                            passes, the passes share the granted time 4 to 2 to 1, a second copy of a
                            schedule does not start again, what is left goes back to the batch queues; fast
+  ../core/NoTurnWarmupTest.java  StratfinderWarmup (in the package of the class, slow): the bundled jump is a
+                           search problem on every shipped game version, the warm-up search lands Strats with
+                           the 1.8.9 and the 26.3 model, a cancel ends it
   ../core/anglesolver/solver/WorkDeadlineTest.java  WorkDeadline (in the package of the class): a thread time
                            budget never ends before the same wall time has passed, a sleeping thread does not
                            spend it, a capped deadline ends no later than its parent, a cap on no deadline is

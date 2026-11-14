@@ -120,6 +120,9 @@ anglesolver/
                            warmRuns=<count> runs that many searches in the same Java process before the measured
                            one (one "warm run" line each, then the clock restarts), which shows the share of the
                            JIT warm-up in a first search,
+                           warmup=<s> runs the game's warm-up search (StratfinderWarmup, the bundled jump, #699)
+                           that long before the measured search and restarts the clock (one "warm-up" line),
+                           warmupThreads=<count> sets its threads (default: half the processors, as in the game),
                            -Dpkc.pool.stageTimes=true prints one STAGE line per finished stage (a family band with
                            its heads, the setup time on the lane thread and the summed thread time of its workers,
                            every stage with the GC and JIT totals and the live thread count) and every 2 s one

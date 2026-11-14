@@ -58,6 +58,8 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
     private final Runnable saveSettings;
 
     private final AtomicBoolean cancel = new AtomicBoolean(false);
+    private final AtomicBoolean warmupCancel = new AtomicBoolean(false);
+    private boolean warmupStarted;
     private final List<NoTurnResult> results = new ArrayList<>();
 
     private Thread thread;
@@ -265,18 +267,10 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
         goalWall = NoTurnRanking.goalWall(p.baseSpec.constraints, p.objective);
         startTick = state.getStartTick();
         freeStartYaw = engine.debugFreeStartYaw();
+        warmupCancel.set(true);
         beginRun(Phase.SEARCH, "starting");
         SolverGraph graph = BuiltinGraphs.optimize(6);
-        StructurePoolDriver.Config poolCfg = new StructurePoolDriver.Config();
-        poolCfg.allowJa = true;
-        poolCfg.jaAllPass = true;
-        poolCfg.familyStage = true;
-        poolCfg.momentumStage = true;
-        poolCfg.momentumMemoryShare = 1.0 / 24.0;
-        poolCfg.certifyBudgetNanos = 0L;
-        poolCfg.extraCertify = 1000;
-        poolCfg.extraCertifyNanos = 45_000_000_000L;
-        poolCfg.playable = playable;
+        StructurePoolDriver.Config poolCfg = poolConfig(playable);
         StructurePoolDriver driver = new StructurePoolDriver(model, poolCfg, cancel, new StructurePoolDriver.Progress() {
             @Override
             public void update(String s, double f) {
@@ -315,6 +309,38 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
             }
         });
         pushMessage.accept("No-turn search started", HudMessages.COLOR_DEFAULT);
+    }
+
+    static StructurePoolDriver.Config poolConfig(boolean playable) {
+        StructurePoolDriver.Config poolCfg = new StructurePoolDriver.Config();
+        poolCfg.allowJa = true;
+        poolCfg.jaAllPass = true;
+        poolCfg.familyStage = true;
+        poolCfg.momentumStage = true;
+        poolCfg.momentumMemoryShare = 1.0 / 24.0;
+        poolCfg.certifyBudgetNanos = 0L;
+        poolCfg.extraCertify = 1000;
+        poolCfg.extraCertifyNanos = 45_000_000_000L;
+        poolCfg.playable = playable;
+        return poolCfg;
+    }
+
+    @Override
+    public void windowShown() {
+        if (warmupStarted || thread != null || !StratfinderWarmup.enabled()) return;
+        if (!mc.isReady() || engine.isSolving() || otherSolveRunning.getAsBoolean()) return;
+        warmupStarted = true;
+        final StructurePoolDriver.Config cfg = poolConfig(false);
+        Thread warmup = new Thread(() -> {
+            try {
+                StratfinderWarmup.run(model, cfg, StratfinderWarmup.DEFAULT_NANOS, StratfinderWarmup.threads(),
+                        warmupCancel);
+            } catch (Throwable t) {
+                t.printStackTrace();
+            }
+        }, "stratfinder-warmup");
+        warmup.setDaemon(true);
+        warmup.start();
     }
 
     @Override
