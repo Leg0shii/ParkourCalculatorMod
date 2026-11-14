@@ -52,6 +52,7 @@ public final class SolveClock {
     private boolean overran;
     private int rateShift;
     private int workers = WORKERS;
+    private boolean meter;
 
     private SolveClock(long startNanos, AtomicBoolean outer, long wallLimitNanos, long seedMix) {
         this.startNanos = startNanos;
@@ -64,7 +65,7 @@ public final class SolveClock {
     public static long nanoTime() {
         if (LIVE.get() == 0) return System.nanoTime();
         SolveClock c = CURRENT.get();
-        if (c == null) return System.nanoTime();
+        if (c == null || c.meter) return System.nanoTime();
         c.advance(POLL, 1L);
         return c.nowNanos;
     }
@@ -76,7 +77,24 @@ public final class SolveClock {
     }
 
     public static SolveClock current() {
-        return LIVE.get() == 0 ? null : CURRENT.get();
+        if (LIVE.get() == 0) return null;
+        SolveClock c = CURRENT.get();
+        return c == null || c.meter ? null : c;
+    }
+
+    public static SolveClock meter() {
+        if (CURRENT.get() != null) return null;
+        SolveClock c = new SolveClock(0L, null, 0L, 0L);
+        c.meter = true;
+        LIVE.incrementAndGet();
+        CURRENT.set(c);
+        return c;
+    }
+
+    public static long meteredNanos() {
+        if (LIVE.get() == 0) return -1L;
+        SolveClock c = CURRENT.get();
+        return c == null || !c.meter ? -1L : c.nowNanos;
     }
 
     public static long seedMix() {
