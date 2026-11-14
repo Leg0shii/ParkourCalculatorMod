@@ -1,1 +1,1 @@
-{"shouldSolve": false, "effort": "THOROUGH", "maxSolveMs": 20000, "noticeLabel": "Overconstrained", "noticeContains": ["one heading", "misses by"]}
+{"shouldSolve": false, "verdict": "INFEASIBLE", "effort": "THOROUGH", "maxSolveMs": 20000, "noticeLabel": "Overconstrained", "noticeContains": ["one heading", "misses by"]}
