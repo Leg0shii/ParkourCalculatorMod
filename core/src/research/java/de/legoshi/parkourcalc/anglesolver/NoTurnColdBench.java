@@ -311,6 +311,20 @@ public class NoTurnColdBench {
                         String.valueOf(cfg.familyExactFirst)));
                 line("families: on without=" + without + " changeLevels=" + cfg.changeLevels);
             }
+            if (Boolean.getBoolean("pkc.bench.momentum")) {
+                cfg.momentumStage = true;
+                if (Boolean.getBoolean("pkc.bench.momentumOnly")) cfg.changeLevels = false;
+                cfg.momentumMaxLevel = Integer.getInteger("pkc.bench.momentumMaxLevel", cfg.momentumMaxLevel);
+                cfg.momentumTapLevel = Integer.getInteger("pkc.bench.momentumTapLevel", cfg.momentumTapLevel);
+                cfg.momentumNearLevel = Integer.getInteger("pkc.bench.momentumNearLevel", cfg.momentumNearLevel);
+                cfg.momentumMemoryShare = Double.parseDouble(System.getProperty("pkc.bench.momentumMemoryShare",
+                        String.valueOf(cfg.momentumMemoryShare)));
+                cfg.momentumThreadShare = Integer.getInteger("pkc.bench.momentumThreadShare", cfg.momentumThreadShare);
+                cfg.momentumKeptCap = Integer.getInteger("pkc.bench.momentumKeptCap", cfg.momentumKeptCap);
+                cfg.momentumKeep = Double.parseDouble(System.getProperty("pkc.bench.momentumKeep",
+                        String.valueOf(cfg.momentumKeep)));
+                line("momentum: on changeLevels=" + cfg.changeLevels + " families=" + cfg.familyStage);
+            }
             if (Integer.getInteger("pkc.bench.repairWidth", -1) >= 0) cfg.repairWidth = Integer.getInteger("pkc.bench.repairWidth");
             if (Integer.getInteger("pkc.bench.repairPairs", -1) >= 0) cfg.repairPairs = Integer.getInteger("pkc.bench.repairPairs");
             if (Integer.getInteger("pkc.bench.repairRounds", -1) >= 0) cfg.repairRounds = Integer.getInteger("pkc.bench.repairRounds");

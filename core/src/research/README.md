@@ -113,6 +113,9 @@ anglesolver/
                            familyCutPool=<count> sets the stored reject vectors per worker (0 turns the pool off),
                            familyExactFirst=false runs every band at the keep limit only,
                            familySubtreeCuts=<count> sets how many stored vectors a subtree test tries (0 turns it off),
+                           momentum=true turns the momentum lane on (#696), momentumOnly=true turns the change levels off,
+                           momentumMaxLevel, momentumTapLevel, momentumNearLevel, momentumKeep, momentumKeptCap,
+                           momentumMemoryShare and momentumThreadShare set its levels, limits, memory and thread share,
                            -Dpkc.pool.stageTimes=true prints one STAGE line per finished stage; keys/engage/repeat/cascade for
                            driver=keys, dfMarks to add dF=0 marks, contCap/contLead/contSec/parCont/
                            deepPairRepair for driver=benders; pair with -Dpkc.graphTrace=true (per-node

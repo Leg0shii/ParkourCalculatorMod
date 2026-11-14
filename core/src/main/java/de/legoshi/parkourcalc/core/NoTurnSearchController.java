@@ -271,6 +271,8 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
         poolCfg.allowJa = true;
         poolCfg.jaAllPass = true;
         poolCfg.familyStage = true;
+        poolCfg.momentumStage = true;
+        poolCfg.momentumMemoryShare = 1.0 / 24.0;
         poolCfg.certifyBudgetNanos = 0L;
         poolCfg.extraCertify = 1000;
         poolCfg.extraCertifyNanos = 45_000_000_000L;
