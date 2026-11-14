@@ -282,6 +282,12 @@ anglesolver/
                            hold with other keys) is under the limit and missing; StructurePoolDriver with
                            the momentum lane alone lands j315 cold without the Strat library, j424 (two
                            facing parts) runs without the lane, and a cancel ends a running lane
+  ../core/anglesolver/noturn/NoTurnCertifyLadderTest.java  CertifyLadder, the order of the stream certifier
+                           (in the package of the class): a miss climbs the 16, 100 and 500 ms passes and
+                           then leaves, a flood of momentum candidates holds a family candidate back by at
+                           most one round of the sources, a better screen value overtakes in the later
+                           passes, the passes share the granted time 4 to 2 to 1, a second copy of a
+                           schedule does not start again, what is left goes back to the batch queues; fast
   SenseFinderTest.java     Sense Finder on hpk_human/d10/j703 built from the plain Angle Solver setup (fast):
                            the turn, the carried jump window, every row over 0 to 200% re-forwards to its
                            offset, the three sort orders, later-tick margins never below the carried edge

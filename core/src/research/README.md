@@ -116,7 +116,10 @@ anglesolver/
                            momentum=true turns the momentum lane on (#696), momentumOnly=true turns the change levels off,
                            momentumMaxLevel, momentumTapLevel, momentumNearLevel, momentumKeep, momentumKeptCap,
                            momentumMemoryShare and momentumThreadShare set its levels, limits, memory and thread share,
-                           -Dpkc.pool.stageTimes=true prints one STAGE line per finished stage; keys/engage/repeat/cascade for
+                           -Dpkc.pool.stageTimes=true prints one STAGE line per finished stage and every 2 s one
+                           CERTIFY line of the stream certifier (flights and waiting candidates per pass),
+                           -Dpkc.pool.flashPassMs sets its first pass (16, 0 is off), -Dpkc.pool.watch="<keys>;<keys>"
+                           follows schedules through the screens and the certify passes; keys/engage/repeat/cascade for
                            driver=keys, dfMarks to add dF=0 marks, contCap/contLead/contSec/parCont/
                            deepPairRepair for driver=benders; pair with -Dpkc.graphTrace=true (per-node
                            ms plus one [pool]/[whd]/[bm] line per certify), -Dpkc.solver.trace=<tag>,

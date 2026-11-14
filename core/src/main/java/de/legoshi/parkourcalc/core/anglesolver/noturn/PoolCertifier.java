@@ -24,6 +24,9 @@ final class PoolCertifier {
     private static final int GPU_CERTIFY_THREAD_CAP = Integer.getInteger("pkc.pool.gpuCertifyThreads", 16);
     private static final long WARM_BUDGET_NANOS = 300_000_000L;
     private static final long SHORT_PASS_NANOS = Long.getLong("pkc.pool.shortPassMs", 100L) * 1_000_000L;
+    private static final long FLASH_PASS_NANOS = Long.getLong("pkc.pool.flashPassMs", 16L) * 1_000_000L;
+    private static final boolean STREAM_STATS = Boolean.getBoolean("pkc.pool.stageTimes");
+    private static final long STREAM_STATS_NANOS = 2_000_000_000L;
     private static final int MULTI_MAX_CERTIFY = 6000;
     private static final long MULTI_NEAR_SEARCH_NANOS = 300_000_000L;
 
@@ -43,12 +46,11 @@ final class PoolCertifier {
     private final List<Candidate> queue = new ArrayList<>();
     private final List<Candidate> retryQueue = new ArrayList<>();
     private final List<Candidate> everything = new ArrayList<>();
-    private boolean queueDirty;
     private boolean retryDirty;
     private final Set<String> warmTried = new HashSet<>();
     private NoTurnResult best;
     private int certs;
-    private int extraCerts;
+    private double extraCerts;
     private long extraDeadline = Long.MAX_VALUE;
 
     private final Set<String> tried = new HashSet<>();
@@ -69,6 +71,25 @@ final class PoolCertifier {
         this.maxCertify = multi ? Math.max(cfg.maxCertify, MULTI_MAX_CERTIFY) : cfg.maxCertify;
         this.nearBudgetNanos = multi ? Math.min(cfg.nearSearchBudgetNanos, MULTI_NEAR_SEARCH_NANOS)
                 : cfg.nearSearchBudgetNanos;
+        boolean flash = FLASH_PASS_NANOS > 0L && FLASH_PASS_NANOS < SHORT_PASS_NANOS;
+        boolean retry = SHORT_PASS_NANOS < RETRY_PASS_NANOS;
+        int count = 1 + (flash ? 1 : 0) + (retry ? 1 : 0);
+        long[] budgets = new long[count];
+        double[] weights = new double[count];
+        int at = 0;
+        if (flash) {
+            budgets[at] = FLASH_PASS_NANOS;
+            weights[at++] = FLASH_WEIGHT;
+        }
+        budgets[at] = SHORT_PASS_NANOS;
+        weights[at++] = SHORT_WEIGHT;
+        if (retry) {
+            budgets[at] = RETRY_PASS_NANOS;
+            weights[at] = RETRY_WEIGHT;
+        }
+        this.ladder = new CertifyLadder(cfg, budgets, weights, cfg.streamCertify, queue, familyQueue, byValue,
+                momentumQueue);
+        this.streamStart = System.nanoTime();
     }
 
     NoTurnResult best() {
@@ -100,24 +121,27 @@ final class PoolCertifier {
     private static final class Flight {
         final Candidate candidate;
         final String key;
-        final long budget;
-        final boolean shortPass;
+        final CertifyLadder.Ticket ticket;
         final AtomicBoolean cancel = new AtomicBoolean(false);
         NoTurnResult result;
+        boolean failed;
 
-        Flight(Candidate candidate, String key, long budget, boolean shortPass) {
-            this.candidate = candidate;
-            this.key = key;
-            this.budget = budget;
-            this.shortPass = shortPass;
+        Flight(CertifyLadder.Ticket ticket) {
+            this.candidate = ticket.candidate;
+            this.key = ticket.key;
+            this.ticket = ticket;
         }
     }
 
     private final ExecutorCompletionService<Flight> flights;
     private final List<Flight> flying = new ArrayList<>();
     private final Set<String> flyingKeys = new HashSet<>();
-    private int streamSlot;
+    private final List<Candidate> momentumQueue = new ArrayList<>();
+    private final CertifyLadder ladder;
+    private final long streamStart;
     private boolean fallbackFamily;
+    private long statsAt;
+    private int lostFlights;
 
     boolean stream() {
         boolean moved = collect(0L);
@@ -144,34 +168,47 @@ final class PoolCertifier {
             }
             collect(STREAM_WAIT_MS);
         }
+        settle();
+    }
+
+    private void settle() {
+        if (ladder.settle(SHORT_PASS_NANOS, queue, familyQueue, retryQueue)) retryDirty = true;
     }
 
     private boolean launch() {
         boolean launched = false;
-        sortQueues();
-        if (byValueDirty) {
-            byValue.sort(BY_VALUE);
-            byValueDirty = false;
-        }
-        if (retryDirty) {
-            retryQueue.sort(StructurePoolDriver.rankOrder(cfg));
-            retryDirty = false;
+        ladder.sort();
+        if (STREAM_STATS && System.nanoTime() >= statsAt) {
+            statsAt = System.nanoTime() + STREAM_STATS_NANOS;
+            StringBuilder flown = new StringBuilder();
+            StringBuilder waiting = new StringBuilder();
+            for (int pass = 0; pass < ladder.passCount(); pass++) {
+                flown.append(pass == 0 ? "" : "/").append(ladder.flown(pass));
+                waiting.append(pass == 0 ? "" : "/").append(ladder.waiting(pass));
+            }
+            System.out.println("CERTIFY flown=" + flown + " waiting=" + waiting + " flying=" + flying.size() + " lost="
+                    + lostFlights + " atMs=" + (System.nanoTime() - streamStart) / 1_000_000L);
         }
         while (flying.size() < threads && !stopped()) {
-            Flight next = nextFlight();
+            CertifyLadder.Ticket next = nextTicket();
             if (next == null) break;
-            final Flight f = next;
+            final Flight f = new Flight(next);
             flying.add(f);
             flyingKeys.add(f.key);
             certs++;
+            if (StructurePoolDriver.watching(f.candidate.combos)) {
+                System.out.println("[watch] certify pass " + next.pass + " starts, budget ms=" + next.budget / 1_000_000L
+                        + " keys=" + NoTurnKeys.describe(f.candidate.combos));
+            }
             flights.submit(() -> {
                 try {
                     if (!f.cancel.get() && System.nanoTime() <= deadline) {
-                        f.result = certifyOne(f.candidate, false, f.budget, f.cancel);
+                        f.result = certifyOne(f.candidate, false, f.ticket.budget, f.cancel);
                         if (f.result != null) progress.found(f.result);
                     }
-                } catch (RuntimeException e) {
+                } catch (RuntimeException | Error e) {
                     f.result = null;
+                    f.failed = true;
                 }
                 return f;
             });
@@ -180,72 +217,23 @@ final class PoolCertifier {
         return launched;
     }
 
-    private Flight nextFlight() {
-        for (int k = 0; k < STREAM_ORDER.length; k++) {
-            int source = STREAM_ORDER[streamSlot];
-            streamSlot = (streamSlot + 1) % STREAM_ORDER.length;
-            Flight f = flightFrom(source);
-            if (f != null) return f;
+    private boolean closed(String key) {
+        return found.contains(key) || tried.contains(key) || flyingKeys.contains(key);
+    }
+
+    private CertifyLadder.Ticket nextTicket() {
+        CertifyLadder.Ticket t = ladder.next(this::closed, changeLeft > 0);
+        if (t != null) {
+            if (t.pass == 0 && t.source == CertifyLadder.SOURCE_CHANGE) changeLeft--;
+            return t;
         }
         if (certs >= maxCertify) return null;
         for (int k = 0; k < 2; k++) {
             fallbackFamily = !fallbackFamily;
-            Candidate c = poll(fallbackFamily ? familyQueue : queue, false, true);
-            if (c != null) return flightOf(c, false);
-        }
-        if (SHORT_PASS_NANOS >= RETRY_PASS_NANOS) {
-            Candidate c = poll(retryQueue, false, false);
-            if (c != null) return flightOf(c, true);
+            t = ladder.anyOfFirst(this::closed, fallbackFamily);
+            if (t != null) return t;
         }
         return null;
-    }
-
-    private Flight flightFrom(int source) {
-        if (source == CHANGE_TURN) {
-            if (changeLeft <= 0) return null;
-            Candidate c = poll(queue, true, true);
-            if (c == null) return null;
-            changeLeft--;
-            return flightOf(c, false);
-        }
-        if (source == FAMILY_COST_TURN) {
-            Candidate c = poll(familyQueue, true, true);
-            return c == null ? null : flightOf(c, false);
-        }
-        if (source == VALUE_TURN) {
-            Candidate c = poll(byValue, false, true);
-            return c == null ? null : flightOf(c, false);
-        }
-        if (SHORT_PASS_NANOS >= RETRY_PASS_NANOS) return null;
-        Candidate c = poll(retryQueue, false, false);
-        if (c == null) return null;
-        return new Flight(c, scheduleKey(c.combos, c.engage, false), RETRY_PASS_NANOS, false);
-    }
-
-    private Candidate poll(List<Candidate> from, boolean goodOnly, boolean skipShortTried) {
-        int i = 0;
-        Candidate pick = null;
-        while (i < from.size()) {
-            Candidate c = from.get(i);
-            if (goodOnly && StructurePoolDriver.certifyTier(cfg, c) >= StructurePoolDriver.SCREEN_MISS_TIER) break;
-            i++;
-            String key = scheduleKey(c.combos, c.engage, false);
-            if (found.contains(key) || tried.contains(key) || flyingKeys.contains(key)) continue;
-            if (skipShortTried && c.family && shortTried.contains(key)) continue;
-            pick = c;
-            break;
-        }
-        if (i > 0) from.subList(0, i).clear();
-        return pick;
-    }
-
-    private Flight flightOf(Candidate c, boolean longPass) {
-        boolean exact = StructurePoolDriver.certifyTier(cfg, c) == StructurePoolDriver.SCREEN_EXACT_TIER;
-        boolean flash = c.flash && !longPass && cfg.repairFlashNanos > 0;
-        boolean shortPass = flash || (!longPass && SHORT_PASS_NANOS < (exact ? cfg.searchBudgetNanos : nearBudgetNanos));
-        long budget = flash ? cfg.repairFlashNanos
-                : shortPass ? SHORT_PASS_NANOS : exact ? cfg.searchBudgetNanos : nearBudgetNanos;
-        return new Flight(c, scheduleKey(c.combos, c.engage, false), budget, shortPass);
     }
 
     private boolean collect(long waitMs) {
@@ -277,17 +265,19 @@ final class PoolCertifier {
 
     private void landed(Flight f) {
         Candidate c = f.candidate;
+        if (f.failed) lostFlights++;
+        if (StructurePoolDriver.watching(c.combos)) {
+            System.out.println("[watch] certify pass " + f.ticket.pass + (f.result != null ? " lands" : f.failed ? " failed"
+                    : f.cancel.get() ? " cancelled" : " misses") + " keys=" + NoTurnKeys.describe(c.combos));
+        }
         if (f.cancel.get() && f.result == null) return;
-        if (f.shortPass && f.result == null) {
-            boolean first = !c.family || shortTried.add(f.key);
-            if (first) {
-                retryQueue.add(c);
-                retryDirty = true;
-            }
+        if (f.result == null) {
+            if (c.family && f.ticket.budget >= SHORT_PASS_NANOS) shortTried.add(f.key);
+            if (!ladder.missed(f.ticket)) tried.add(f.key);
         } else {
             tried.add(f.key);
         }
-        if (best != null) extraCerts++;
+        if (best != null) extraCerts += Math.min(1.0, (double) f.ticket.budget / SHORT_PASS_NANOS);
         if (f.result == null) return;
         boolean hadBest = best != null;
         found.add(keyOf(f.result));
@@ -314,41 +304,22 @@ final class PoolCertifier {
     void offer(List<Candidate> ranked) {
         everything.addAll(ranked);
         for (Candidate c : ranked) {
-            if (!c.family) {
-                queue.add(c);
-                queueDirty = true;
-                turn = CHANGE_TURN;
-                continue;
-            }
-            familyQueue.add(c);
-            familyDirty = true;
-            if (StructurePoolDriver.certifyTier(cfg, c) == StructurePoolDriver.SCREEN_EXACT_TIER) {
-                byValue.add(c);
-                byValueDirty = true;
-            }
+            ladder.offer(c);
+            if (!c.family) turn = CHANGE_TURN;
         }
     }
 
-    private static final java.util.Comparator<Candidate> BY_VALUE = (a, b) -> {
-        int byViol = Double.compare(a.byteViol, b.byteViol);
-        if (byViol != 0) return byViol;
-        if (a.familyCost != b.familyCost) return Integer.compare(a.familyCost, b.familyCost);
-        return Integer.compare(a.presses, b.presses);
-    };
-
     private final List<Candidate> byValue = new ArrayList<>();
-    private boolean byValueDirty;
     private final List<Candidate> familyQueue = new ArrayList<>();
-    private boolean familyDirty;
     private boolean familyTurn;
     private static final int CHANGE_TURN = 0;
     private static final int FAMILY_COST_TURN = 1;
     private static final int RETRY_TURN = 3;
     private static final int TURNS = 4;
     private static final int VALUE_TURN = 2;
-    private static final int[] STREAM_ORDER = {CHANGE_TURN, FAMILY_COST_TURN, VALUE_TURN, CHANGE_TURN, FAMILY_COST_TURN,
-            VALUE_TURN, CHANGE_TURN, FAMILY_COST_TURN, VALUE_TURN, CHANGE_TURN, FAMILY_COST_TURN, VALUE_TURN, CHANGE_TURN,
-            FAMILY_COST_TURN, VALUE_TURN, RETRY_TURN};
+    private static final double FLASH_WEIGHT = 4.0;
+    private static final double SHORT_WEIGHT = 2.0;
+    private static final double RETRY_WEIGHT = 1.0;
     private static final long STREAM_WAIT_MS = 2L;
 
     private static final int RETRY_BATCH = 4;
@@ -361,8 +332,7 @@ final class PoolCertifier {
         queue.clear();
         familyQueue.clear();
         for (Candidate c : everything) (c.family ? familyQueue : queue).add(c);
-        queueDirty = true;
-        familyDirty = true;
+        ladder.touchFirst();
         retryQueue.clear();
     }
 
@@ -422,22 +392,12 @@ final class PoolCertifier {
     }
 
     private void sortQueues() {
-        if (queueDirty) {
-            queue.sort(StructurePoolDriver.rankOrder(cfg));
-            queueDirty = false;
-        }
-        if (familyDirty) {
-            familyQueue.sort(StructurePoolDriver.rankOrder(cfg));
-            familyDirty = false;
-        }
+        ladder.sortFirst();
     }
 
     boolean certifyFamilyByValue() {
         if (stopped()) return false;
-        if (byValueDirty) {
-            byValue.sort(BY_VALUE);
-            byValueDirty = false;
-        }
+        ladder.sortFirst();
         List<Candidate> batch = new ArrayList<>(cfg.perEdgeCertify);
         int i = 0;
         while (i < byValue.size() && batch.size() < cfg.perEdgeCertify) {
@@ -553,7 +513,7 @@ final class PoolCertifier {
         return out;
     }
 
-    private static String scheduleKey(int[] combos, int engage, boolean ja) {
+    static String scheduleKey(int[] combos, int engage, boolean ja) {
         StringBuilder sb = new StringBuilder(combos.length + 12);
         sb.append(NoTurnKeys.key(combos));
         sb.append('|').append(engage);

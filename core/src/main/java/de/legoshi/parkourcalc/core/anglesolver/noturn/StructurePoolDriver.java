@@ -110,6 +110,7 @@ public final class StructurePoolDriver {
         boolean flash;
         int familyCost;
         boolean family;
+        boolean momentum;
 
         Candidate(int[] combos, boolean[] sprint, int engage, int edges, int presses, double diskTheta,
                   double byteTheta, double byteViol) {
@@ -1428,6 +1429,7 @@ public final class StructurePoolDriver {
             Candidate c = new Candidate(combos, sprint, NoTurnKeys.firstSprint(sprint), countEdges(cfg, problem, combos),
                     countPresses(cfg, problem, combos), 0.0, 0.0, Math.max(0.0, value) * FREE_AIR_VIOL_SCALE);
             c.family = true;
+            c.momentum = true;
             c.familyCost = cfg.momentumChangeCost * NoTurnKeys.countEdges(combos);
             List<Candidate> ready = null;
             synchronized (buffer) {
@@ -1930,6 +1932,14 @@ public final class StructurePoolDriver {
     static final int REPAIR_STAGE = -1;
 
     private static final String WATCH = System.getProperty("pkc.pool.watch", "");
+    private static final String[] WATCH_PARTS = WATCH.isEmpty() ? new String[0] : WATCH.split(";");
+
+    static boolean watching(int[] combos) {
+        if (WATCH_PARTS.length == 0) return false;
+        String keys = NoTurnKeys.describe(combos);
+        for (String part : WATCH_PARTS) if (part.trim().equals(keys)) return true;
+        return false;
+    }
     private long[] watchHash;
     private String[] watchKeys;
 
