@@ -752,7 +752,11 @@ public class FabricParkourCalculator implements ClientModInitializer {
 
         if (open) {
             client.mouseHandler.releaseMouse();
+            KeyMapping.releaseAll();
         } else {
+            //? if >=26.1 {
+            if (client.level != null) KeyMapping.restoreToggleStatesOnScreenClosed();
+            //?}
             client.mouseHandler.grabMouse();
             clearImGuiInputState();
         }
