@@ -95,7 +95,10 @@ public final class YawOrder {
             if (c.op != JumpConstraint.Op.MINUS || c.t2 < 0 || c.t2 >= n || Math.abs(c.t1 - c.t2) != 1) return null;
             Link link = c.cmp == JumpConstraint.Cmp.GE ? new Link(c.t1, c.t2, c.rhs, c) : new Link(c.t2, c.t1, -c.rhs, c);
             for (Link other : links) {
-                if (other.hiTick == link.loTick && other.loTick == link.hiTick) return null;
+                if (other.hiTick == link.loTick && other.loTick == link.hiTick
+                        && link.minTurnDeg + other.minTurnDeg > 0.0) {
+                    return null;
+                }
             }
             links.add(link);
             carried.add(c);
@@ -169,13 +172,31 @@ public final class YawOrder {
             double turn = Angles.wrapDelta(yaws[link.hiTick] - yaws[link.loTick]);
             tie[l] = turn <= link.minTurnDeg + TIE_TOL || turn >= 180.0 - TIE_TOL;
         }
+        for (int l = 0; l < tie.length; l++) {
+            Link link = links.get(l);
+            for (int m = l + 1; m < tie.length && tie[l]; m++) {
+                Link other = links.get(m);
+                if (!tie[m] || other.hiTick != link.loTick || other.loTick != link.hiTick) continue;
+                double turn = Angles.wrapDelta(yaws[link.hiTick] - yaws[link.loTick]);
+                tie[turn - link.minTurnDeg <= -turn - other.minTurnDeg ? m : l] = false;
+            }
+        }
+        double[] rel = new double[pinLo.length];
         for (int b = 0; b < pinLo.length; b++) {
             Bound bd = bounds.get(b);
             if (bd.tick >= yaws.length) continue;
             double mid = 0.5 * (bd.loDeg + bd.hiDeg);
-            double rel = mid + Angles.wrapDelta(yaws[bd.tick] - mid);
-            pinLo[b] = rel <= bd.loDeg + TIE_TOL;
-            pinHi[b] = !pinLo[b] && rel >= bd.hiDeg - TIE_TOL;
+            rel[b] = mid + Angles.wrapDelta(yaws[bd.tick] - mid);
+            pinLo[b] = rel[b] <= bd.loDeg + TIE_TOL;
+            pinHi[b] = !pinLo[b] && rel[b] >= bd.hiDeg - TIE_TOL;
+        }
+        for (int b = 0; b < pinLo.length; b++) {
+            for (int d = 0; d < pinLo.length && pinLo[b]; d++) {
+                if (!pinHi[d] || bounds.get(d).tick != bounds.get(b).tick) continue;
+                boolean nearerLo = rel[b] - bounds.get(b).loDeg <= bounds.get(d).hiDeg - rel[d];
+                if (nearerLo) pinHi[d] = false;
+                else pinLo[b] = false;
+            }
         }
     }
 
