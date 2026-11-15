@@ -378,6 +378,17 @@ public class NoTurnColdBench {
                         (System.nanoTime() - warmStart) / 1e9, wr != null));
             }
             if (warmRuns > 0) t0 = System.nanoTime();
+            long warmupSec = Long.getLong("pkc.bench.warmup", 0L);
+            if (warmupSec > 0L) {
+                long warmStart = System.nanoTime();
+                int warmThreads = Integer.getInteger("pkc.bench.warmupThreads",
+                        de.legoshi.parkourcalc.core.StratfinderWarmup.threads());
+                int warmFound = de.legoshi.parkourcalc.core.StratfinderWarmup.run(model, cfg, warmupSec * 1_000_000_000L,
+                        warmThreads, new AtomicBoolean());
+                line(String.format(Locale.ROOT, "warm-up: wall=%.1fs threads=%d found=%d",
+                        (System.nanoTime() - warmStart) / 1e9, warmThreads, warmFound));
+                t0 = System.nanoTime();
+            }
             StructurePoolDriver drv = new StructurePoolDriver(model, cfg, cancel, new StructurePoolDriver.Progress() {
                 @Override
                 public void update(String s, double f) {

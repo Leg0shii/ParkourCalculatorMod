@@ -303,6 +303,9 @@ anglesolver/
                            a wall deadline; on a metered thread (SolveClock.meter) a budget waits for its
                            counted work, ends on time once it has it and ends at its cap without it, and the
                            meter leaves SolveClock.nanoTime and current alone; fast
+  ../core/NoTurnWarmupTest.java  StratfinderWarmup (in the package of the class, slow): the bundled jump is a
+                           search problem on every shipped game version, the warm-up search lands Strats with
+                           the 1.8.9 and the 26.3 model, a cancel ends it
   SenseFinderTest.java     Sense Finder on hpk_human/d10/j703 built from the plain Angle Solver setup (fast):
                            the turn, the carried jump window, every row over 0 to 200% re-forwards to its
                            offset, the three sort orders, later-tick margins never below the carried edge
