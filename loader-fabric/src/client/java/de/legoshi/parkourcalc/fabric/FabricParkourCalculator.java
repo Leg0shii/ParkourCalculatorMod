@@ -638,62 +638,75 @@ public class FabricParkourCalculator implements ClientModInitializer {
     public static boolean dispatchOverlayHotkey(int key) {
         Minecraft client = Minecraft.getInstance();
         if (client.getWindow() == null) return false;
-        if (FabricInput.isCtrlDown() && key != boundKey(landingConstraintsKeyBinding)) return false;
-        if (key == boundKey(deselectKeyBinding)) {
+        if (FabricInput.isCtrlDown() && !isKeyBound(landingConstraintsKeyBinding, key)) return false;
+        if (isKeyBound(deselectKeyBinding, key)) {
             application.getSelection().clear();
             return true;
         }
-        if (key == boundKey(playbackKeyBinding)) {
+        if (isKeyBound(playbackKeyBinding, key)) {
             togglePlayback();
             return true;
         }
-        if (key == boundKey(landingConstraintsKeyBinding)) {
+        if (isKeyBound(landingConstraintsKeyBinding, key)) {
             boolean enter = FabricInput.isShiftDown();
             boolean remove = FabricInput.isCtrlDown();
             application.onConstraintKey(enter, remove);
             return true;
         }
-        if (key == boundKey(removeConstraintsKeyBinding)) {
+        if (isKeyBound(removeConstraintsKeyBinding, key)) {
             application.removeSelectedConstraints();
             return true;
         }
-        if (key == boundKey(extendPathAndSolveKeyBinding)) {
+        if (isKeyBound(extendPathAndSolveKeyBinding, key)) {
             triggerExtendPathAndSolve(client);
             return true;
         }
-        if (key == boundKey(applySurfaceStateKeyBinding)) {
+        if (isKeyBound(applySurfaceStateKeyBinding, key)) {
             application.applyPathSurfaceState();
             return true;
         }
-        if (key == boundKey(solveKeyBinding)) {
+        if (isKeyBound(solveKeyBinding, key)) {
             application.solveAngleSolver();
             return true;
         }
-        if (key == boundKey(solverStartTickKeyBinding)) {
+        if (isKeyBound(solverStartTickKeyBinding, key)) {
             application.setSolverStartTickFromSelection();
             return true;
         }
-        if (key == boundKey(solverEndTickKeyBinding)) {
+        if (isKeyBound(solverEndTickKeyBinding, key)) {
             application.setSolverLandingTickFromSelection();
             return true;
         }
-        if (key == boundKey(solverGoalFromLookKeyBinding)) {
+        if (isKeyBound(rerunSimulationKeyBinding, key)) {
+            application.runSimulation();
+            return true;
+        }
+        if (isKeyBound(solverGoalFromLookKeyBinding, key)) {
             application.setSolverGoalFromLook(FabricInput.isShiftDown());
             return true;
         }
-        if (key == boundKey(togglePathKeyBinding)) {
+        if (isKeyBound(togglePathKeyBinding, key)) {
             application.toggleShowPath();
             return true;
         }
-        if (key == boundKey(copyTeleportKeyBinding)) {
+        if (isKeyBound(copyTeleportKeyBinding, key)) {
             application.copyTeleportCommand();
             return true;
         }
         return false;
     }
 
-    private static int boundKey(KeyMapping mapping) {
-        return boundKeyOf(mapping).getValue();
+    public static boolean isKeyBound(KeyMapping mapping, int key) {
+        InputConstants.Key bound = boundKeyOf(mapping);
+        return bound.getType() == keyboardType() && bound.getValue() == key;
+    }
+
+    private static InputConstants.Type keyboardType() {
+        //? if >=26.1 {
+        return InputConstants.Type.KEYBOARD;
+        //?} else {
+        /*return InputConstants.Type.KEYSYM;
+        *///?}
     }
 
     private static InputConstants.Key boundKeyOf(KeyMapping mapping) {
@@ -711,13 +724,8 @@ public class FabricParkourCalculator implements ClientModInitializer {
         if (key.getValue() == InputConstants.UNKNOWN.getValue()) {
             key = boundKeyOf(client.options.keyAttack);
         }
-        //? if >=26.1 {
-        InputConstants.Type keyboard = InputConstants.Type.KEYBOARD;
-        //?} else {
-        /*InputConstants.Type keyboard = InputConstants.Type.KEYSYM;
-        *///?}
         if (key.getType() == InputConstants.Type.MOUSE) return FabricInput.isMouseDown(key.getValue());
-        if (key.getType() == keyboard) return FabricInput.isKeyDown(key.getValue());
+        if (key.getType() == keyboardType()) return FabricInput.isKeyDown(key.getValue());
         return false;
     }
 
@@ -855,6 +863,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
 
     public static boolean isControlPanelOpen() {
         return application.isControlPanelOpen();
+    }
+
+    public static boolean isGameScreenOpen() {
+        return currentScreen(Minecraft.getInstance()) != null;
     }
 
     public static boolean shouldSuppressLeftClick() {

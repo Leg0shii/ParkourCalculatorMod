@@ -129,8 +129,8 @@ public final class ImGuiImpl {
         ImGui.destroyContext();
     }
 
-    public static void keyCallback(int scancode, int action) {
-        platform.keyCallback(scancode, action);
+    public static void keyCallback(int scancode, int keycode, int action) {
+        platform.keyCallback(scancode, keycode, action);
     }
 
     public static void charCallback(int codepoint) {

@@ -5,8 +5,9 @@ import de.legoshi.parkourcalc.fabric.imgui.ImGuiImpl;
 import imgui.ImGui;
 import imgui.flag.ImGuiPopupFlags;
 import com.mojang.blaze3d.platform.InputConstants;
-import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.minecraft.client.KeyboardHandler;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.Options;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import org.spongepowered.asm.mixin.Mixin;
@@ -32,8 +33,11 @@ public class KeyboardHandlerMixin {
 
         int key = input.key();
 
-        int toggleCode = KeyMappingHelper.getBoundKeyOf(FabricParkourCalculator.toggleKeyBinding).getValue();
-        if (key == toggleCode && !ImGui.getIO().getWantTextInput()) {
+        if (FabricParkourCalculator.isKeyBound(FabricParkourCalculator.toggleKeyBinding, key) && !ImGui.getIO().getWantTextInput()) {
+            return;
+        }
+
+        if (isDebugOverlayKey(input)) {
             return;
         }
 
@@ -65,7 +69,7 @@ public class KeyboardHandlerMixin {
             return;
         }
 
-        ImGuiImpl.keyCallback(key, action);
+        ImGuiImpl.keyCallback(key, input.keycode(), action);
         ci.cancel();
     }
 
@@ -75,6 +79,12 @@ public class KeyboardHandlerMixin {
             ImGuiImpl.charCallback(input.codepoint());
             ci.cancel();
         }
+    }
+
+    @Unique
+    private static boolean isDebugOverlayKey(KeyEvent input) {
+        Options options = Minecraft.getInstance().options;
+        return options.keyDebugOverlay.matches(input) || options.keyDebugModifier.matches(input);
     }
 
     @Unique

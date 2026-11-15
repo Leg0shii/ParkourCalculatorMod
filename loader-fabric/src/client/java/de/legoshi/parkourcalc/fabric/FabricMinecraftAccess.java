@@ -262,7 +262,7 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
 
     @Override
     public boolean isMousePressedLeft() {
-        return FabricInput.isMouseDown(InputConstants.MOUSE_BUTTON_LEFT);
+        return !FabricParkourCalculator.isGameScreenOpen() && FabricInput.isMouseDown(InputConstants.MOUSE_BUTTON_LEFT);
     }
 
     @Override
@@ -272,7 +272,7 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
 
     @Override
     public boolean isMousePressedRight() {
-        return FabricInput.isMouseDown(InputConstants.MOUSE_BUTTON_RIGHT);
+        return !FabricParkourCalculator.isGameScreenOpen() && FabricInput.isMouseDown(InputConstants.MOUSE_BUTTON_RIGHT);
     }
 
     @Override

@@ -25,7 +25,6 @@ public final class BoxDragController {
 
     private final BoxController boxController;
     private final StartDragHandler handler;
-    private final Runnable onStartBoxTap;
 
     private boolean wasMousePressed = false;
     private boolean pressedOverStartBox = false;
@@ -34,10 +33,9 @@ public final class BoxDragController {
     private boolean engaged = false;
     private DragState dragState = null;
 
-    public BoxDragController(BoxController boxController, StartDragHandler handler, Runnable onStartBoxTap) {
+    public BoxDragController(BoxController boxController, StartDragHandler handler) {
         this.boxController = boxController;
         this.handler = handler;
-        this.onStartBoxTap = onStartBoxTap;
     }
 
     public void tick(Vec3dCore rayOrigin, Vec3dCore rayDirection, boolean mousePressed, double cursorScreenX, double cursorScreenY, boolean uiFocused, boolean shiftHeld) {
@@ -67,9 +65,6 @@ public final class BoxDragController {
         }
 
         if (!mousePressed && wasMousePressed) {
-            if (pressedOverStartBox && !engaged && onStartBoxTap != null) {
-                onStartBoxTap.run();
-            }
             endIfDragging();
             resetState();
         }

@@ -323,7 +323,7 @@ public final class ForgeMinecraftAccess implements MinecraftAccess {
 
     @Override
     public boolean isMousePressedLeft() {
-        return Lwjgl2InputState.isMousePressedLeft();
+        return Minecraft.getMinecraft().currentScreen == null && Lwjgl2InputState.isMousePressedLeft();
     }
 
     @Override
@@ -333,7 +333,7 @@ public final class ForgeMinecraftAccess implements MinecraftAccess {
 
     @Override
     public boolean isMousePressedRight() {
-        return Lwjgl2InputState.isMousePressedRight();
+        return Minecraft.getMinecraft().currentScreen == null && Lwjgl2InputState.isMousePressedRight();
     }
 
     @Override
