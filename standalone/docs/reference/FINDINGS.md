@@ -141,7 +141,7 @@ Earlier in this turn an isolated mod-hosted prototype was drafted: a replay sess
 
 ## Scope and provenance
 
-The standalone package supplies a local Python CLI/API, a separate CasADi/IPOPT worker, independent scalar validation, time limits/cancellation, warm and fallback starts, inertia continuation, prescribed wall contacts, ladder component caps and vertical replay. Jump inputs are taps. It does not change the mod, native solver or save schema. See [README.md](README.md) for setup, request fields and usage.
+The standalone package supplies a local Python CLI/API, a separate CasADi/IPOPT worker, independent scalar validation, time limits/cancellation, warm and fallback starts, inertia continuation, prescribed wall contacts, ladder component caps and vertical replay. Jump inputs are taps. It does not change the mod, native solver or save schema. See [README.md](NUMERICAL_SOLVER.md) for setup, request fields and usage.
 
 On 2026-10-26 the user requested separating this package from inherited solver experiments. The clean branch `feature/ipopt-clean` starts at upstream main `485c0a8cd700183b59fa6bf7b9028e3ee4938ab1` and imports the final 24 standalone files from research head `5ef088b5f9d413b70a386a3ca645506ee665bff5`, plus this findings record. No existing commits are amended or rewritten. The original `feature/ipopt-standalone` branch remains intact on the user's fork as the research archive.
 

@@ -64,7 +64,7 @@ Keep the current Python numerical implementation as the single source. Retain th
 
 Both sides use the existing compiled request/result as the numerical boundary. A new snapshot/feedback wrapper can describe raw inputs, scene identity and replay status without changing version-1 equations. Deterministic event refresh can be an optional fixed-input service; it must not silently choose new key patterns. The autonomous agent can keep using the existing fixtures/API while integration develops.
 
-Publish one small example snapshot, its compiled request and its replay report when the boundary lands. Avoid making the autonomy code depend on ImGui state, a live entity or the other worktree's filesystem. Headless use can operate on a previously exported snapshot, while the live mod obtains the same data from its ports. Live cross-process orchestration/daemon protocols are not prerequisites.
+Publish one small example snapshot, its compiled request and its replay report when the boundary lands. Avoid making the src/parkour_solver code depend on ImGui state, a live entity or the other worktree's filesystem. Headless use can operate on a previously exported snapshot, while the live mod obtains the same data from its ports. Live cross-process orchestration/daemon protocols are not prerequisites.
 
 To avoid blocking the autonomous agent, deliver the first portable scene/start snapshot alongside the initial compiler/process work, before full UI integration. A bounded static example with loaded-region coverage, collision shapes, climbable information, movement properties and a clear game profile is already useful. Expand its fidelity with replay feedback later; do not make that agent wait until all integration phases finish.
 

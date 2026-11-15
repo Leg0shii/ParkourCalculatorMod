@@ -6,7 +6,7 @@ Current consolidated implementation scope/order: [ORCHESTRATOR_IMPLEMENTATION_PL
 
 The optional refinement in linear_reachability.py carries coupled linear position/velocity equations and selected horizontal clip/reset contacts. Each acceleration lies inside a16-face polygon circumscribed around the true acceleration circle. Every circle control is allowed; this is a necessary feasibility screen, not a replacement model sent to IPOPT or an objective bound. Dynamics are widened by2e-8, positional rows by2e-7 and controls by1e-9. Only HiGHS status2 (infeasible) excludes. Timeout, numerical failure, missing SciPy, nonzero inertia thresholds or ladder controls exclude nothing. The LP's numerical infeasibility verdict is not an independently checked rational certificate. Random feasible-control/selected-clip regressions guard against erroneous exclusions.
 
-Constraint-generation checkpoints save excluded row hashes/proofs and duplicate counts. Whole-obstacle exclusions save the actual separating tick/phase/axis bounds. These screens can leave substantial false positives; see [the results and remaining discovery bottleneck](experiments/orchestrator-fixes/README.md).
+Constraint-generation checkpoints save excluded row hashes/proofs and duplicate counts. Whole-obstacle exclusions save the actual separating tick/phase/axis bounds. These screens can leave substantial false positives; see [the results and remaining discovery bottleneck](../../research/orchestrator-fixes/README.md).
 
 ## Selected shared interface
 
@@ -82,4 +82,4 @@ Reproduce the two controls without IPOPT:
 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 PYTHONPATH="$PWD" .venv-guidance/bin/python standalone/autonomy/experiments/linkcraft11-opening/probe_b2_reachability.py
 ```
 
-The existing standalone Java compiler manifest must be available. Results, exact coefficients, padded envelopes and per-input exclusions are in [audit/b2-reachability.json](experiments/linkcraft11-opening/audit/b2-reachability.json). No production search/model change or claim of global route optimality is made.
+The existing standalone Java compiler manifest must be available. Results, exact coefficients, padded envelopes and per-input exclusions are in [audit/b2-reachability.json](../../research/linkcraft11-opening/audit/b2-reachability.json). No production search/model change or claim of global route optimality is made.

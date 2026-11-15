@@ -9,7 +9,7 @@ calls. Unknown mutation sets require a full checkpoint. See the
 and fixed-clock-only descriptions below record the earlier implementation.
 Keep both manifest and database companion when moving any new report.
 
-Implemented 2026-11-03 for `cell_routes.fixed_clock_experiment`. Search decisions, queues, constraints, key semantics and DFS state schema5 are unchanged. Storage has its own version1. [Measured probe](../autonomy/experiments/last-jump-runs/row-benchmark/checkpoint-results.json), [probe source](../autonomy/experiments/last-jump-runs/row-benchmark/checkpoint_probe.py).
+Implemented 2026-11-03 for `cli.fixed_clock`. Search decisions, queues, constraints, key semantics and DFS state schema5 are unchanged. Storage has its own version1. [Measured probe](../research/last-jump-runs/row-benchmark/checkpoint-results.json), [probe source](../research/last-jump-runs/row-benchmark/checkpoint_probe.py).
 
 ## What is removed
 
@@ -24,7 +24,7 @@ An output such as `/tmp/run.json.gz` is now a small JSON manifest with a compani
 `--resume` takes the manifest path, just as it took the old JSON report path. It accepts both formats. For programmatic inspection:
 
 ```python
-from standalone.autonomy.checkpoint_store import read_report
+from parkour_solver.io.checkpoint_store import read_report
 report = read_report('/tmp/run.json.gz')
 state = report.get('result', report)['searchState']
 ```
@@ -32,21 +32,21 @@ state = report.get('result', report)['searchState']
 For external tools that require ordinary JSON, export a self-contained copy:
 
 ```sh
-.venv-guidance/bin/python -m standalone.autonomy.checkpoint_store \
+.venv-guidance/bin/python -m parkour_solver.io.checkpoint_store \
   /tmp/run.json.gz --output /tmp/run-export.json.gz
 ```
 
-The export intentionally expands historical copies again. Legacy reports remain readable without conversion. `cell_routes.failure_diagnostic.read` and `experiments/dfs-interactions/summarize.py` use the shared reader; older one-off scripts that directly call `gzip`/`json` should consume an export or adopt `read_report`.
+The export intentionally expands historical copies again. Legacy reports remain readable without conversion. `research.legacy_cell_routes.failure_diagnostic.read` and `experiments/dfs-reachability.service/summarize.py` use the shared reader; older one-off scripts that directly call `gzip`/`json` should consume an export or adopt `read_report`.
 
 ## Code and callback contract
 
 | File | Responsibility |
 | --- | --- |
-| [checkpoint_store.py](../autonomy/checkpoint_store.py) | Generic lossless object encoding, sharing, transactional storage, atomic manifest publication, patch roots, final compaction, legacy reader and JSON export. Standard library only. |
-| [checkpoint_persistence.py](../autonomy/cell_routes/checkpoint_persistence.py) | Adapts DFS reports to the store; archives immutable window snapshots once; tracks every alias of the active program and writes repair updates against the frozen dispatch checkpoint. |
-| [depth_first.py](../autonomy/cell_routes/depth_first.py) | Still publishes full state at transitions. During evaluation, invokes the optional `on_progress.repair_progress(state)` method; ordinary function callbacks still receive full progress as before. |
-| [fixed_clock_experiment.py](../autonomy/cell_routes/fixed_clock_experiment.py) | Uses the adapter for progress/final persistence and the shared reader for resume. Window callback prints a summary; it no longer saves a second report copy. |
-| [test_checkpoint_store.py](../autonomy/tests/test_checkpoint_store.py) | Storage equality, mutation isolation, interruption/atomicity, legacy compatibility, compaction, pending repair restore, completed-call dedup, DFS continuation, and native callback-by-callback equality/replay. |
+| [checkpoint_store.py](../src/parkour_solver/io/checkpoint_store.py) | Generic lossless object encoding, sharing, transactional storage, atomic manifest publication, patch roots, final compaction, legacy reader and JSON export. Standard library only. |
+| [checkpoint_persistence.py](../src/parkour_solver/io/search_checkpoint.py) | Adapts DFS reports to the store; archives immutable window snapshots once; tracks every alias of the active program and writes repair updates against the frozen dispatch checkpoint. |
+| [depth_first.py](../src/parkour_solver/search/dfs.py) | Still publishes full state at transitions. During evaluation, invokes the optional `on_progress.repair_progress(state)` method; ordinary function callbacks still receive full progress as before. |
+| [fixed_clock_experiment.py](../src/parkour_solver/cli/fixed_clock.py) | Uses the adapter for progress/final persistence and the shared reader for resume. Window callback prints a summary; it no longer saves a second report copy. |
+| [test_checkpoint_store.py](../tests/unit/io/test_checkpoint_store.py) | Storage equality, mutation isolation, interruption/atomicity, legacy compatibility, compaction, pending repair restore, completed-call dedup, DFS continuation, and native callback-by-callback equality/replay. |
 
 During `evaluate_program`, the outer state changes only the active program's `repairState` and `cumulativeCalls`. The adapter persists those fields against the dispatch root, including any repeated references to that same program in records/archived refinement frames. Every update starts from that frozen root; it does not build an ever-growing patch chain. A new transition publishes a full checkpoint. **If evaluation starts mutating other outer state, extend this contract and the callback equality regression.** Snapshot handles never enter the search's runtime state.
 

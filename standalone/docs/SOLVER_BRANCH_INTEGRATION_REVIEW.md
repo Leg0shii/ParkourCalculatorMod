@@ -34,7 +34,7 @@ documentation. Existing evidence should remain immutable and source-labelled.
 
 ## Numerical row reduction and extraction: suitable to integrate
 
-In [constraints.py](../ipopt/constraints.py), absolute X/Z GE rows retain the
+In [constraints.py](../src/parkour_solver/numerics/constraints.py), absolute X/Z GE rows retain the
 largest lower bound and LE rows retain the smallest upper bound for each state.
 Other modes remove only exact duplicates of expression/operator/comparison/RHS.
 Different angular restrictions, relative operations, equalities, states and
@@ -42,7 +42,7 @@ axes remain distinct. Conflicting lower/upper bounds are retained, rather than
 silently repaired. No rounding is introduced. The original request stays intact,
 and sourceIndices maps every numerical representative back to original rows.
 
-[worker.py](../ipopt/worker.py) enables simple-bound extraction and recomputes
+[worker.py](../src/parkour_solver/numerics/worker.py) enables simple-bound extraction and recomputes
 the original assembled expressions at each candidate x, rather than trusting
 the returned g vector to have pre-extraction semantics. The monitor correction
 must accompany extraction. Parent scalar replay still checks every original
@@ -63,13 +63,13 @@ itself fix the dominant runtime stall.
 
 ## Shared persistence: useful core, incomplete wiring for anchor search
 
-[checkpoint_store.py](../autonomy/checkpoint_store.py) stores unchanged content
+[checkpoint_store.py](../src/parkour_solver/io/checkpoint_store.py) stores unchanged content
 once, commits objects before publishing an atomic root manifest, verifies stored
 content hashes on read, and supports legacy JSON plus JSON export. The manifest
 and companion SQLite database must travel together. Decoding intentionally
 returns independent mutable copies, matching JSON semantics.
 
-[checkpoint_persistence.py](../autonomy/cell_routes/checkpoint_persistence.py)
+[checkpoint_persistence.py](../src/parkour_solver/io/search_checkpoint.py)
 patches active `repairState` aliases and `cumulativeCalls` against a frozen
 dispatch checkpoint. It assumes the outer state is the direct DFS dictionary
 and an active evaluation is `stack[-1].inFlight.program`. That was appropriate
@@ -117,7 +117,7 @@ version9. Do not replace that with the older `not polish` inference, assembly
 version6 or the older DFS schema5. Mode changes must reset incompatible repair
 and constraint-generation work without dropping compatible same-policy work.
 
-The [repeated benchmark](../autonomy/experiments/last-jump-runs/row-benchmark/REAL11_INTERMEDIATE_BENCHMARK.md)
+The [repeated benchmark](../research/last-jump-runs/row-benchmark/REAL11_INTERMEDIATE_BENCHMARK.md)
 compares nine fixed continuous requests, including already-feasible seeds and
 unknowns. Successful numerical medians were approximately133–148ms for
 directional early stopping and139–151ms for pure feasibility. The pure witnesses

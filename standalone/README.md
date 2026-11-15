@@ -1,16 +1,34 @@
-# Standalone route search and IPOPT
+# Standalone parkour solver
 
-Start at [AGENTS.md](AGENTS.md). Current work is on `research/ipopt-cell-routes` in the isolated research worktree, continuing the older IPOPT consolidation. The continuous solver, movement composition, collision validation, local replay and TAS export already exist.
+The installable Python solver lives in [`src/parkour_solver`](src/parkour_solver).
+Tests, research, native bridge sources and developer tools have separate roots.
+The [layout guide](docs/LAYOUT.md) explains ownership, public entrypoints and
+compatibility; the [implementation ledger](docs/STANDALONE_REFACTOR_IMPLEMENTATION.md)
+records the tested recovery commits.
 
-Current physical anchor search is implemented through `dd738c98`. The [execution reference](docs/ANCHOR_SEARCH_EXECUTION_REFERENCE.md) gives the combination/pruning/IPOPT tables, decisions and rationale; [current evidence](autonomy/experiments/hard-jump-comparisons/README.md) records600 native tests and the cold T64 result. Earlier DFS/corridor plans are source-era design/evidence.
+From `standalone/`, install into the existing numerical environment:
 
-| Task | Entry |
+```sh
+../.venv-guidance/bin/python -m pip install --editable . --no-deps
+../.venv-guidance/bin/python -m parkour_solver --help
+```
+
+For a fresh environment, pinned extras are available; see the [runbook](docs/RUNBOOK.md).
+The parent API uses the standard library. Numerical/LP/plot dependencies load
+only when needed. Install the package in both interpreters if the worker uses a
+separate Python environment.
+
+| Need | Read |
 | --- | --- |
-| Understand current behavior and limitations | [Current state](docs/CURRENT_STATE.md) |
-| See generated combinations, pruning and IPOPT dispatch | [Execution reference](docs/ANCHOR_SEARCH_EXECUTION_REFERENCE.md) |
-| Answer Linkcraft Real11 audit questions | [Real11 guide](docs/REAL11_GUIDE.md) |
-| Understand modules/functions | [Architecture](docs/ARCHITECTURE.md), [code map](docs/CODE_MAP.md) |
-| Execute a test, solve or resume | [Runbook](docs/RUNBOOK.md) |
-| Navigate research, plans and evidence | [Documentation index](docs/DOC_INDEX.md) |
+| Current search behavior and limitations | [Current state](docs/CURRENT_STATE.md) |
+| Generated combinations, pruning and IPOPT dispatch | [Execution reference](docs/ANCHOR_SEARCH_EXECUTION_REFERENCE.md) |
+| Real11 evidence and questions | [Real11 guide](docs/REAL11_GUIDE.md) |
+| Module ownership and execution | [Architecture](docs/ARCHITECTURE.md), [code map](docs/CODE_MAP.md) |
+| Test, solve, resume, replay/export | [Runbook](docs/RUNBOOK.md), [testing](docs/TESTING.md) |
+| Plans and preserved research | [Decisions](docs/DECISIONS_AND_PLANS.md), [documentation index](docs/DOC_INDEX.md), [research guide](research/README.md) |
 
-The [optimizer contract](ipopt/README.md), [constraint generation runbook](autonomy/CONSTRAINT_GENERATION_RUNBOOK.md) and [replay contract](ipopt/REPLAY.md) supply detailed formats. [CONSOLIDATION.md](CONSOLIDATION.md) records historical integration provenance; its old branch designation is not a current instruction.
+The folder refactor preserves numerical equations, comparison/reachability policy,
+checkpoint schemas and historical evidence. Its detailed contracts remain in the
+[numerical reference](docs/reference/NUMERICAL_SOLVER.md),
+[constraint runbook](docs/design/CONSTRAINT_GENERATION_RUNBOOK.md) and
+[replay reference](docs/reference/REPLAY.md). Start agent work at [AGENTS.md](AGENTS.md).

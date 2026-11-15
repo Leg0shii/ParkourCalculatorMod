@@ -1,6 +1,6 @@
 # Time and progress comparisons: two distinct goals
 
-Authoritative user clarification, 2026-11-01. The new path is to generate the supported candidates and evaluate them in two complementary ways. We are not trying to generate candidates specifically at different completion times. See [the implementation plan](TIME_PROGRESS_IMPLEMENTATION_PLAN.md) and [implemented behavior and measurements](experiments/two-goal-comparisons/README.md). The separate comparisons are now the default checkpoint-search policy.
+Authoritative user clarification, 2026-11-01. The new path is to generate the supported candidates and evaluate them in two complementary ways. We are not trying to generate candidates specifically at different completion times. See [the implementation plan](TIME_PROGRESS_IMPLEMENTATION_PLAN.md) and [implemented behavior and measurements](../../research/two-goal-comparisons/README.md). The separate comparisons are now the default checkpoint-search policy.
 
 Latest user refinement, 2026-11-02: retain the separate time/progress comparisons, and include both horizontal position and velocity in the fixed-clock progress assessment. This is a selected design direction; current runtime retention still uses position-only clock results. Both Real11 initial0/8 setup families remain explicitly protected by the user's preceding decision. The policy/solver has not been changed by this discussion.
 

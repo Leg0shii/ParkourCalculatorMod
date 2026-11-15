@@ -1,9 +1,9 @@
 # Anchor search decisions: DFS, binary turns and observability
 
 Current decisions through runtime `dd738c98` (2026-11-11). The
-[execution reference](../docs/ANCHOR_SEARCH_EXECUTION_REFERENCE.md) is the current
+[execution reference](../ANCHOR_SEARCH_EXECUTION_REFERENCE.md) is the current
 combination/pruning/IPOPT and implementation-owner table. This O1–O7 record
-explains the choices; [current acceptance](experiments/hard-jump-comparisons/README.md)
+explains the choices; [current acceptance](../../research/hard-jump-comparisons/README.md)
 records600 native tests,131 known-witness prefix checks and80 retained-witness
 replays. The feature is complete in the session checkout; old private-worktree
 paths and planning-only authorization notes have been removed from this entry.
@@ -54,7 +54,7 @@ A = count(not grounded[t])
 span_ticks = J + R + A
 ```
 
-There is no separate effective-launch ranking metric and no need to reopen this question. Preserve the named case's existing compiled horizontal/vertical behavior and independent validation. An ordinary jump with false support assumptions remains invalid; the named cancellation is an explicitly modeled outcome rather than evidence of such a mismatch. [Existing counter](solve_spec.py), [named vertical validation](../ipopt/ladder.py), [case regressions](tests/test_stepping_cases.py).
+There is no separate effective-launch ranking metric and no need to reopen this question. Preserve the named case's existing compiled horizontal/vertical behavior and independent validation. An ordinary jump with false support assumptions remains invalid; the named cancellation is an explicitly modeled outcome rather than evidence of such a mismatch. [Existing counter](../../src/parkour_solver/search/identity.py), [named vertical validation](../../src/parkour_solver/physics/vertical.py), [case regressions](../../tests/unit/movement/test_stepping_cases.py).
 
 Same-block hops do not reset the span start. Only a required-anchor advancement does. Whole inputs retain their existing phase/counting convention, including landing then horizontal run-off during that input.
 
@@ -64,7 +64,7 @@ Same-block hops do not reset the span start. Only a required-anchor advancement 
 
 **Settled:** extend B7 one block forward in +Z and use actual landing on B7 instead of the unbounded virtual +Z finish. Keep minimum landing time, then MAXZ at that landing time.
 
-The stored box in [the accepted event fixture](experiments/event-route-discovery/real11-auto.json) is:
+The stored box in [the accepted event fixture](../../research/event-route-discovery/real11-auto.json) is:
 
 ```text
 old B7: [729, 0, -1095, 730, 7, -1094]
@@ -80,7 +80,7 @@ q_finish = (729.5, 7, -1093)
 
 X midpoint is a neutral guide choice because the objective has no X preference. Actual finite support still imposes horizontal landing bounds. The old extra task inequality X<729.7 and the old virtual height-region goal are replaced by the finite B7 landing predicate in the **new** fixture; do not accidentally keep them as additional constraints.
 
-Existing support semantics allow player-body overlap rather than requiring the center strictly inside the solid. Consequently the physical guide edge Z=−1093 is not necessarily the maximum legal player-center Z: the ordinary center bound extends by the player half-width, approximately 0.3, subject to clearance/exposed-region checks. Reuse [`route.center_bounds`](route.py) and existing finite contact regions. Do not add a new center cap at the guide point or remove normal overhang support merely to make the picture and optimum coincide.
+Existing support semantics allow player-body overlap rather than requiring the center strictly inside the solid. Consequently the physical guide edge Z=−1093 is not necessarily the maximum legal player-center Z: the ordinary center bound extends by the player half-width, approximately 0.3, subject to clearance/exposed-region checks. Reuse [`route.center_bounds`](../../src/parkour_solver/scene/route.py) and existing finite contact regions. Do not add a new center cap at the guide point or remove normal overhang support merely to make the picture and optimum coincide.
 
 This changes collision geometry and terminal validation: B7 is now a real extended solid with real contact. Use a fresh fixture/report path under the next experiment directory. Do not edit archived old fixtures/evidence or present their virtual T67 results as validation of the new finite task. The new physical fixture is implemented; archived original-box reports remain unchanged.
 
@@ -95,7 +95,7 @@ d = normalize_xz(q_N - q_E)
 objective_E = maximize(d.x * X[T_E] + d.z * Z[T_E])
 ```
 
-Reuse [`Checkpoint.objective`](cell_routes/checkpoints.py) and existing POSITION/customYaw. Physical landing constraints remain independent. No waypoint equality, progress-based pruning, slack work or constant FEASIBILITY objective is introduced.
+Reuse [`Checkpoint.objective`](../../src/parkour_solver/spatial/checkpoints.py) and existing POSITION/customYaw. Physical landing constraints remain independent. No waypoint equality, progress-based pruning, slack work or constant FEASIBILITY objective is introduced.
 
 **Settled design evidence:** the user reports another agent measured approximately equal speed for this objective with early stop. Adopt that as the design input; this session did not reproduce or inspect the other agent's measurement. No further approval or constant-objective comparison is required to proceed with this direction. Implementation/regression/cold acceptance is recorded in the current evidence linked above.
 
@@ -123,7 +123,7 @@ The default performs a guided feasibility solve after every **completed meaningf
 
 A decision level here means a completed jump/landing or selected physical contact/case choice. It does **not** mean a simulation input or a raw one-input run-hold construction node. Consecutive ordinary ground-run inputs are preparation of a run-length choice and are included in the next completed movement decision's model. Do not add an IPOPT call merely because the generator extended an ordinary run from R2 to R3. If a whole run-duration action is exposed as a meaningful decision in a different generator, count that action once, not once per input.
 
-For example, run3→jump→land on the same block is one completed movement decision including its run preparation. A second setup jump is another level. Required anchor arrival is always solved even if it occurs before the next scheduled level. Existing [`append_choice`](movement_composition.py), [`normal_choices`](open_movement.py) and named-choice boundaries provide the underlying actual choices; distinguish raw construction steps from this solve cadence explicitly.
+For example, run3→jump→land on the same block is one completed movement decision including its run preparation. A second setup jump is another level. Required anchor arrival is always solved even if it occurs before the next scheduled level. Existing [`append_choice`](../../src/parkour_solver/movement/program.py), [`normal_choices`](../../src/parkour_solver/movement/normal.py) and named-choice boundaries provide the underlying actual choices; distinguish raw construction steps from this solve cadence explicitly.
 
 Each feasible node contributes a yaw seed only; no fixed X/Z/velocity seam is created. Later node/anchor solves still optimize all earlier facings jointly from the original state. This does not introduce optional-support **comparison goals**: actual time comparisons/promotion remain at required anchors/final task. An internal feasible node is not a new required anchor.
 

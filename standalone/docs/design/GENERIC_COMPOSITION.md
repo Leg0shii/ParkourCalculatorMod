@@ -26,7 +26,7 @@ The registered generators accept `mode=open`:
 | ladder_climb | A generated region interaction containing climbing and its allowed local phases |
 | ladder_fall | A generated falling-only region interaction |
 
-Normal air leading to an event can be included in a choice. The same existing Y simulator computes its duration. Ladder generators reuse the current schedule generator and mixed-contact helpers. `ladder_ceiling` is an effect within `ladder_climb`, including its optional endpoint stops, rather than a separate route type. Its next input must remain within `ladder_climb`. Shared finite `role=ceiling` contacts still enforce the actual clip; the effect label never causes a climbing refresh or velocity reset. `ladder_ceiling.py` owns prediction/ownership and the generic composer normalizes entry-producing contacts and retimes the effects. See [LADDER_CEILING_PLAN.md](LADDER_CEILING_PLAN.md) and the [saved examples](experiments/ladder-climbing-ceiling/README.md).
+Normal air leading to an event can be included in a choice. The same existing Y simulator computes its duration. Ladder generators reuse the current schedule generator and mixed-contact helpers. `ladder_ceiling` is an effect within `ladder_climb`, including its optional endpoint stops, rather than a separate route type. Its next input must remain within `ladder_climb`. Shared finite `role=ceiling` contacts still enforce the actual clip; the effect label never causes a climbing refresh or velocity reset. `ladder_ceiling.py` owns prediction/ownership and the generic composer normalizes entry-producing contacts and retimes the effects. See [LADDER_CEILING_PLAN.md](LADDER_CEILING_PLAN.md) and the [saved examples](../../research/ladder-climbing-ceiling/README.md).
 
 `movement_search.iter_movement_programs` extends open prefixes using the enabled registry entries. New registered types participate without adding type-pair dispatch. The queue orders elapsed inputs first. Completed numerical solutions are compared by ticks and then objective. Candidate evaluation uses the existing shared movement compiler, IPOPT, scalar validation and shared finite-scene checker.
 
@@ -37,7 +37,7 @@ Normal air leading to an event can be included in a choice. The same existing Y 
 The collision-box CLI now selects generic movement composition by default:
 
 ```sh
-python3 -m standalone.autonomy.solve_blocks \
+python3 -m parkour_solver.cli.blocks \
   --input standalone/autonomy/fixtures/generic-grind-blip.json \
   --output standalone/autonomy/build/generic-result.json \
   --python "$PWD/.venv-ipopt/bin/python" \

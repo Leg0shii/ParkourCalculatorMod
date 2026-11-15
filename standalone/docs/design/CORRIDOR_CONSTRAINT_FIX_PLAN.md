@@ -2,13 +2,13 @@
 
 Current consolidated implementation scope/order: [ORCHESTRATOR_IMPLEMENTATION_PLAN.md](ORCHESTRATOR_IMPLEMENTATION_PLAN.md). This document supplies supporting detail; all workstreams included by the consolidated plan remain required even where an older section describes a separate implementation slice.
 
-2026-11-02. The behavioral fixes below are implemented in the standalone checkpoint orchestrator. Corridor checks stay enabled; their long-term value is undecided. See [the consolidated status](ORCHESTRATOR_IMPLEMENTATION_PLAN.md#implemented-status) and [results](experiments/orchestrator-fixes/README.md), including unresolved cold discovery and route-only rejects. The original diagnosis and acceptance criteria below are retained.
+2026-11-02. The behavioral fixes below are implemented in the standalone checkpoint orchestrator. Corridor checks stay enabled; their long-term value is undecided. See [the consolidated status](ORCHESTRATOR_IMPLEMENTATION_PLAN.md#implemented-status) and [results](../../research/orchestrator-fixes/README.md), including unresolved cold discovery and route-only rejects. The original diagnosis and acceptance criteria below are retained.
 
 ## Problem and evidence
 
 A preliminary solve can deliberately omit a future interaction, but current post-solve corridor and readiness checks still impose the full route. More generally, a complete candidate can reach IPOPT before its relevant obstacle choices are selected. The orchestrator then discovers missing rows after solving and can process unrelated inherited repairs first.
 
-The exact Real11 reproduction runs24 distinct fixed problems, varying an unnecessary late B2 exit gate. None includes B6 avoidance. All24 returned trajectories first fail the corridor at input59 and independently collide with B6. New late repairs are queued but not dispatched. This is not evidence that24 genuine B6 alternatives were needed. Separately, X728.9 is an artificial bound copied from a helper waypoint. See [the exact audit](experiments/linkcraft11-opening/audit/CORRIDOR_FAILURES.md).
+The exact Real11 reproduction runs24 distinct fixed problems, varying an unnecessary late B2 exit gate. None includes B6 avoidance. All24 returned trajectories first fail the corridor at input59 and independently collide with B6. New late repairs are queued but not dispatched. This is not evidence that24 genuine B6 alternatives were needed. Separately, X728.9 is an artificial bound copied from a helper waypoint. See [the exact audit](../../research/linkcraft11-opening/audit/CORRIDOR_FAILURES.md).
 
 ## Implementation sequence
 

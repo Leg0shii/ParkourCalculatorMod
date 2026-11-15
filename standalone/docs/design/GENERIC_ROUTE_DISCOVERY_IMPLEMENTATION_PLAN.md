@@ -1,14 +1,14 @@
 # Implementation plan: potential routes, relevant interactions, and shared progress guides
 
-> **Next-change authority (2026-11-04, implementation authorized):** resume from [the current anchor handoff](../docs/ANCHOR_IMPLEMENTATION_RESUME.md) and implement [the controlling plan](ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md). The user explicitly authorized implementation before compaction. The current anchor extension is implemented; see its new evidence for source-specific acceptance. Binary per-decision turnaround/observability, exact-node DFS and same-block setup are settled; inter-block revisits remain [deferred](REVISIT_DISCOVERY_DEFERRED_PLAN.md). Preserve historical evidence and other-agent isolation.
+> **Next-change authority (2026-11-04, implementation authorized):** resume from [the current anchor handoff](../ANCHOR_IMPLEMENTATION_RESUME.md) and implement [the controlling plan](ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md). The user explicitly authorized implementation before compaction. The current anchor extension is implemented; see its new evidence for source-specific acceptance. Binary per-decision turnaround/observability, exact-node DFS and same-block setup are settled; inter-block revisits remain [deferred](REVISIT_DISCOVERY_DEFERRED_PLAN.md). Preserve historical evidence and other-agent isolation.
 
-2026-11-03. Concrete follow-up to [the cited research](GENERIC_ROUTE_DISCOVERY_RESEARCH.md). Baseline: `a28e5b71`, isolated checkout `/private/tmp/parkour-real11-initial-run-ticks`, branch `research/real11-initial-run-ticks`. Implementation authorized after compaction. The event-domain, lazy physical preparation and shared dynamic DFS architecture is implemented; the planned release acceptance gates have passed, as recorded in the implementation ledger. New APIs and schemas below remain proposed unless recorded in the status ledger; links to existing functions describe the verified baseline. The existing uncommitted research, navigation updates and routing-review figures must be preserved.
+2026-11-03. Concrete follow-up to [the cited research](../research/GENERIC_ROUTE_DISCOVERY_RESEARCH.md). Baseline: `a28e5b71`, isolated checkout `/private/tmp/parkour-real11-initial-run-ticks`, branch `research/real11-initial-run-ticks`. Implementation authorized after compaction. The event-domain, lazy physical preparation and shared dynamic DFS architecture is implemented; the planned release acceptance gates have passed, as recorded in the implementation ledger. New APIs and schemas below remain proposed unless recorded in the status ledger; links to existing functions describe the verified baseline. The existing uncommitted research, navigation updates and routing-review figures must be preserved.
 
 This records the controlling plan for the **completed** event route-discovery implementation. It supersedes the earlier spatial plan where that plan makes an ordered transit-box walk the route identity or requires every input to follow that walk. The implemented [spatial baseline](SPATIAL_CORRIDOR_REFACTOR_PLAN.md) and [DFS contract](DFS_INTERACTION_IMPLEMENTATION_PLAN.md) remain the source of existing behavior and protections to preserve.
 
 ## 1. Result we are implementing
 
-Discover potential routes generically from the supplied collision geometry. Keep contacts, meaningful approaches and passages that could affect movement or progress. Remove an interaction only when a conservative check excludes it in the declared context; leave unresolved choices for movement construction and numerical solving. Route guides provide different progress interpretations without creating separate searches for equivalent ways of describing the same open space. [Research §§1–2,5–8](GENERIC_ROUTE_DISCOVERY_RESEARCH.md).
+Discover potential routes generically from the supplied collision geometry. Keep contacts, meaningful approaches and passages that could affect movement or progress. Remove an interaction only when a conservative check excludes it in the declared context; leave unresolved choices for movement construction and numerical solving. Route guides provide different progress interpretations without creating separate searches for equivalent ways of describing the same open space. [Research §§1–2,5–8](../research/GENERIC_ROUTE_DISCOVERY_RESEARCH.md).
 
 The architecture is:
 
@@ -33,13 +33,13 @@ Concrete changes from `a28e5b71`:
 - Remove automatic per-input `RouteGuards` containment in a selected air-box walk. Retain physical avoidance, selected contact/approach constraints, required task conditions and independent full-scene validation.
 - Maintain one execution owner for a compatible actual prefix/next-goal context. Alternative future guides do not each restart its B2/B3 solve.
 
-This is a guide/discovery refactor, not a new physics model, mixed-integer solver, global time bound, global peer-retention pass, or sibling decision-transfer system. [Imported protections](SPATIAL_CORRIDOR_REFACTOR_PLAN.md#0-imported-baseline-and-integration-requirements), [research §7.4](GENERIC_ROUTE_DISCOVERY_RESEARCH.md#74-optimistic-guide-grouping-is-a-weaker-operation).
+This is a guide/discovery refactor, not a new physics model, mixed-integer solver, global time bound, global peer-retention pass, or sibling decision-transfer system. [Imported protections](SPATIAL_CORRIDOR_REFACTOR_PLAN.md#0-imported-baseline-and-integration-requirements), [research §7.4](../research/GENERIC_ROUTE_DISCOVERY_RESEARCH.md#74-optimistic-guide-grouping-is-a-weaker-operation).
 
 ## 2. Non-negotiable contracts
 
 ### 2.1 Coverage and budgets
 
-Define the modeled problem by the actual scene/body, initial state, input domain, supported movement catalogue, task predicate and any **explicit domain restrictions**. Every execution admitted by that model should retain an abstract representation. This is an overapproximation objective: a potential route can still be physically impossible. No claim of end-to-end completeness follows from the current local NLP or heuristic pruning. [Research §2](GENERIC_ROUTE_DISCOVERY_RESEARCH.md#2-what-all-potential-routes-should-mean).
+Define the modeled problem by the actual scene/body, initial state, input domain, supported movement catalogue, task predicate and any **explicit domain restrictions**. Every execution admitted by that model should retain an abstract representation. This is an overapproximation objective: a potential route can still be physically impossible. No claim of end-to-end completeness follows from the current local NLP or heuristic pruning. [Research §2](../research/GENERIC_ROUTE_DISCOVERY_RESEARCH.md#2-what-all-potential-routes-should-mean).
 
 Distinguish:
 
@@ -50,7 +50,7 @@ Distinguish:
 
 An unexpanded connector is not an absent route. A materialization, queue, deadline or numerical cap suspends its cursor. Do not silently use simple paths, `max_visits=2`, or an exhausted first batch as a global route exclusion. Cycles can represent repeated movement compactly; actual programs still obey their declared input/interaction limits.
 
-The first release supports the current accepted scene/task/movement interfaces. Generic geometry does not silently enable intentional wall hits, water, new ladder behavior or unknown mechanics. Keep normal momentum, threshold zero, original-state re-solves and all earlier facings variable. Real11 keeps its descending height7 task with X<729.7, Z≥−1095.3, minimum achieved tick then maximum Z, no fake floor or opposite-side goal bounds. [Current task contract](../docs/REAL11_GUIDE.md), [`solve_scope`](solve_spec.py), [`InitialJumpDomain`](cell_routes/support_order.py).
+The first release supports the current accepted scene/task/movement interfaces. Generic geometry does not silently enable intentional wall hits, water, new ladder behavior or unknown mechanics. Keep normal momentum, threshold zero, original-state re-solves and all earlier facings variable. Real11 keeps its descending height7 task with X<729.7, Z≥−1095.3, minimum achieved tick then maximum Z, no fake floor or opposite-side goal bounds. [Current task contract](../REAL11_GUIDE.md), [`solve_scope`](../../src/parkour_solver/search/identity.py), [`InitialJumpDomain`](../../src/parkour_solver/search/domain.py).
 
 ### 2.2 Three different objects
 
@@ -60,7 +60,7 @@ The first release supports the current accepted scene/task/movement interfaces. 
 | Semantic route refinement | Actual contact sequence and committed/observed approach or passage predicates | Include arbitrary raw-cell IDs, timing samples or representative anchor coordinates as route identity |
 | Fixed-model/execution state | Existing exact program, scope, constraints, mode/resource and ownership identities | Merge different programs because their guides or endpoints agree |
 
-Grouping guides is deliberately weaker than merging physical programs. An active `left OR right` condition stays a disjunction even if one shared guide services it. Only a proof of irrelevance or exact equivalence permits removing its physical obligation. [Research §7](GENERIC_ROUTE_DISCOVERY_RESEARCH.md#7-safe-pruning-and-merging-rules).
+Grouping guides is deliberately weaker than merging physical programs. An active `left OR right` condition stays a disjunction even if one shared guide services it. Only a proof of irrelevance or exact equivalence permits removing its physical obligation. [Research §7](../research/GENERIC_ROUTE_DISCOVERY_RESEARCH.md#7-safe-pruning-and-merging-rules).
 
 ## 3. Explicit design decisions
 
@@ -79,7 +79,7 @@ These settle the research's open choices sufficiently to implement the first ver
 
 ## 4. Proposed records and identities
 
-Use JSON-serializable records with sorted canonical geometry and explicit schema/policy versions. Immutable domain data is stored once and referenced by IDs. Do not place the entire scene/graph in each route key, frame or callback snapshot. Reuse [`digest`](solve_spec.py), [`program_physics_key/program_search_key`](movement_composition.py) and [`geometry_key`](cell_routes/regions.py); do not round coordinates to merge objects.
+Use JSON-serializable records with sorted canonical geometry and explicit schema/policy versions. Immutable domain data is stored once and referenced by IDs. Do not place the entire scene/graph in each route key, frame or callback snapshot. Reuse [`digest`](../../src/parkour_solver/search/identity.py), [`program_physics_key/program_search_key`](../../src/parkour_solver/movement/program.py) and [`geometry_key`](../../src/parkour_solver/spatial/regions.py); do not round coordinates to merge objects.
 
 | Proposed record | Required fields |
 | --- | --- |
@@ -110,9 +110,9 @@ Identity rules:
 
 ### 5.1 Retain the existing covering substrate
 
-`build_route_domain(scene, task, budget) -> RouteDomain` will call the existing scene preparation, horizon-derived collision query, decomposition, contact extraction and support-component construction. Reuse [`collision_request`](cell_routes/route_queue.py) for virtual finish coverage; do not derive physical walls or guide anchors from the midpoint of its large query box.
+`build_route_domain(scene, task, budget) -> RouteDomain` will call the existing scene preparation, horizon-derived collision query, decomposition, contact extraction and support-component construction. Reuse [`collision_request`](../../src/parkour_solver/search/compat/corridor_queue.py) for virtual finish coverage; do not derive physical walls or guide anchors from the midpoint of its large query box.
 
-Store raw cells, shared interfaces and physical incidence once. Every retained free point/contact attachment must remain represented after any acceleration or summary. A construction deadline leaves an incomplete domain, or resumes its build cursor; it must not turn missing geometry into a disconnected/impossible result. Existing `max_cells` failures stay explicit rather than truncating silently. [Research §8](GENERIC_ROUTE_DISCOVERY_RESEARCH.md#8-geometry-backend-and-graph-construction-recommendation).
+Store raw cells, shared interfaces and physical incidence once. Every retained free point/contact attachment must remain represented after any acceleration or summary. A construction deadline leaves an incomplete domain, or resumes its build cursor; it must not turn missing geometry into a disconnected/impossible result. Existing `max_cells` failures stay explicit rather than truncating silently. [Research §8](../research/GENERIC_ROUTE_DISCOVERY_RESEARCH.md#8-geometry-backend-and-graph-construction-recommendation).
 
 The present overlapping cover preserves its raw base through expansion/containment. Keep that behavior until measured replacement is justified. Its boxes are guide witnesses/shortcuts, not new physical terrain or independent semantic routes.
 
@@ -191,7 +191,7 @@ Window queries cover **every relevant Y→X→Z phase**, player expansion and in
 | Unknown / not ruled out | Retain its alternatives, possibly lazily; do not label it feasible |
 | A row independently entailed by the full same context | Canonicalize through existing effective-row machinery, keeping its required event and owner/resource meaning |
 
-The physical unwanted-interaction predicate can be vacuous while arbitrary generated left/right inequalities remain restrictive. Therefore the absence test belongs **before** those alternatives are created. Do not demand that every arbitrary face inequality be tautological before recognizing an irrelevant obstacle. [Research §7.2](GENERIC_ROUTE_DISCOVERY_RESEARCH.md#72-required-interaction-versus-unwanted-interaction).
+The physical unwanted-interaction predicate can be vacuous while arbitrary generated left/right inequalities remain restrictive. Therefore the absence test belongs **before** those alternatives are created. Do not demand that every arbitrary face inequality be tautological before recognizing an irrelevant obstacle. [Research §7.2](../research/GENERIC_ROUTE_DISCOVERY_RESEARCH.md#72-required-interaction-versus-unwanted-interaction).
 
 ### 6.3 Normalization order
 
@@ -367,16 +367,16 @@ Prefer these small responsibilities; split a proposed module further only if imp
 | `cell_routes/event_routes.py` — new | Records/keys for domain, connector/event language, intents/cursors; geometry-to-event graph compilation and persistent lazy next-goal/refinement iteration |
 | `cell_routes/guides.py` — new | Local geometric guide witnesses, latent witness cursor, safe simplification, active guide stages and objective derivation |
 | `cell_routes/event_adapter.py` — new | Immutable stage provider; actual event classification/required-event checking; no inherited air-cell filters |
-| [`geometry.py`](cell_routes/geometry.py), [`regions.py`](cell_routes/regions.py) | Reuse coverage/contact/incidence functions; add raw `build_geometry_graph`, stable feature/surface metadata and immutable domain construction; overlap cover is optional acceleration |
-| [`interactions.py`](interactions.py), [`reachability.py`](reachability.py) | Shared window/role requests, proof keys/records and exact-context construction reuse; preserve named-probe unknowns |
-| [`constraint_variants.py`](constraint_variants.py) | Lazy per-item preparation, early eligibility/normalization, existing cap-aware physical products and serializable cursors |
-| [`open_movement.py`](open_movement.py), [`stepping_generation.py`](stepping_generation.py), [`case_profiles.py`](case_profiles.py) | Keep existing physics and contact builders; use the shared query before irrelevant optional branches; preserve required approach ownership |
-| [`route_progress.py`](cell_routes/route_progress.py) | Add semantic `advance_events`; reuse phase/event primitives; schema2 exact-cell audit remains available for old controls |
-| [`depth_first.py`](cell_routes/depth_first.py), [`route_queue.py`](cell_routes/route_queue.py) | Extend current owners/stage source and shared domain references; replace eager automatic walk catalogue |
-| [`checkpoint_search.py`](cell_routes/checkpoint_search.py), [`block_contacts.py`](block_contacts.py) | Wire new adapter/refinement source and selected constraints; preserve physical acceptance and exact request evidence |
-| [`comparison_goals.py`](cell_routes/comparison_goals.py), [`checkpoints.py`](cell_routes/checkpoints.py), [`terminal_goals.py`](terminal_goals.py) | Existing physical/virtual goals, landing alternatives, directions and arrival semantics; no new fixed portal clocks |
-| [`solve_spec.py`](solve_spec.py), [`movement_composition.py`](movement_composition.py), [`movement_frontier.py`](movement_frontier.py) | Actual identities, ownership/truncation, persistent generator; add only explicit policy/context hooks needed by event search |
-| [`automatic_experiment.py`](cell_routes/automatic_experiment.py), [`coverage_audit.py`](cell_routes/coverage_audit.py) | New automatic entry/state, tiered coverage reports and witness classification after unseeded discovery; old reports stay unchanged |
+| [`geometry.py`](../../src/parkour_solver/spatial/cells.py), [`regions.py`](../../src/parkour_solver/spatial/regions.py) | Reuse coverage/contact/incidence functions; add raw `build_geometry_graph`, stable feature/surface metadata and immutable domain construction; overlap cover is optional acceleration |
+| [`interactions.py`](../../src/parkour_solver/reachability/service.py), [`reachability.py`](../../src/parkour_solver/reachability/intervals.py) | Shared window/role requests, proof keys/records and exact-context construction reuse; preserve named-probe unknowns |
+| [`constraint_variants.py`](../../src/parkour_solver/constraints/variants.py) | Lazy per-item preparation, early eligibility/normalization, existing cap-aware physical products and serializable cursors |
+| [`open_movement.py`](../../src/parkour_solver/movement/normal.py), [`stepping_generation.py`](../../src/parkour_solver/movement/stepping.py), [`case_profiles.py`](../../src/parkour_solver/movement/cases.py) | Keep existing physics and contact builders; use the shared query before irrelevant optional branches; preserve required approach ownership |
+| [`route_progress.py`](../../src/parkour_solver/spatial/compat/progress.py) | Add semantic `advance_events`; reuse phase/event primitives; schema2 exact-cell audit remains available for old controls |
+| [`depth_first.py`](../../src/parkour_solver/search/dfs.py), [`route_queue.py`](../../src/parkour_solver/search/compat/corridor_queue.py) | Extend current owners/stage source and shared domain references; replace eager automatic walk catalogue |
+| [`checkpoint_search.py`](../../src/parkour_solver/search/engine.py), [`block_contacts.py`](../../src/parkour_solver/search/repair.py) | Wire new adapter/refinement source and selected constraints; preserve physical acceptance and exact request evidence |
+| [`comparison_goals.py`](../../src/parkour_solver/search/goals.py), [`checkpoints.py`](../../src/parkour_solver/spatial/checkpoints.py), [`terminal_goals.py`](../../src/parkour_solver/search/virtual_goals.py) | Existing physical/virtual goals, landing alternatives, directions and arrival semantics; no new fixed portal clocks |
+| [`solve_spec.py`](../../src/parkour_solver/search/identity.py), [`movement_composition.py`](../../src/parkour_solver/movement/program.py), [`movement_frontier.py`](../../src/parkour_solver/search/frontier.py) | Actual identities, ownership/truncation, persistent generator; add only explicit policy/context hooks needed by event search |
+| [`automatic_experiment.py`](../../src/parkour_solver/cli/solve.py), [`coverage_audit.py`](../../research/legacy_cell_routes/coverage_audit.py) | New automatic entry/state, tiered coverage reports and witness classification after unseeded discovery; old reports stay unchanged |
 
 ## 12. Persistence, versions, and configuration
 
@@ -424,7 +424,7 @@ Legacy `spatialSettings` must not be silently reinterpreted. The new CLI/API dia
 
 Use generic fixtures parametrized by source/target height, target horizontal distance, incoming velocity family and an optional neighboring obstacle. Real11 labels are explanatory only; production rules contain no B2/B3 IDs, absolute coordinates or arrival ticks.
 
-For an ordinary jump from height6 toward a height7 target, shared replay initially gives feet heights near6.42,6.75,7.00 and later a descending height crossing. This illustrates why target distance can matter before landing; it is not a complete side-collision proof. Reuse the exact command and scope in [research §6.1](GENERIC_ROUTE_DISCOVERY_RESEARCH.md#61-numerical-vertical-illustration-a-higher-target-has-a-vulnerable-approach-phase).
+For an ordinary jump from height6 toward a height7 target, shared replay initially gives feet heights near6.42,6.75,7.00 and later a descending height crossing. This illustrates why target distance can matter before landing; it is not a complete side-collision proof. Reuse the exact command and scope in [research §6.1](../research/GENERIC_ROUTE_DISCOVERY_RESEARCH.md#61-numerical-vertical-illustration-a-higher-target-has-a-vulnerable-approach-phase).
 
 | Case | Required result |
 | --- | --- |
@@ -509,7 +509,7 @@ Each feature milestone bundles its implementation, meaningful tests, fixtures an
 
 ## 15. Test and fixture matrix
 
-These are new proposed tests under `autonomy/tests`; existing suites remain regression controls. Assertions compare meaningful geometry/languages/model constraints and ownership, not internal implementation spelling.
+These are new proposed tests under `tests`; existing suites remain regression controls. Assertions compare meaningful geometry/languages/model constraints and ownership, not internal implementation spelling.
 
 | Proposed suite | Required cases |
 | --- | --- |
@@ -569,19 +569,19 @@ After the proposed test modules exist, the focused gate is:
 
 ```sh
 "$PKC_IPOPT_PYTHON" -B -m unittest \
-  standalone.autonomy.tests.test_event_domain \
-  standalone.autonomy.tests.test_event_routes \
-  standalone.autonomy.tests.test_interaction_normalization \
-  standalone.autonomy.tests.test_guide_progress \
-  standalone.autonomy.tests.test_event_search \
-  standalone.autonomy.tests.test_orchestrator_continuation \
-  standalone.autonomy.tests.test_depth_first \
-  standalone.autonomy.tests.test_semantic_search -v
+  tests.unit.spatial.test_event_domain \
+  tests.unit.spatial.test_event_routes \
+  tests.unit.reachability.test_interaction_normalization \
+  tests.unit.spatial.test_guide_progress \
+  tests.unit.search.test_event_search \
+  tests.integration.test_orchestrator_continuation \
+  tests.unit.search.test_depth_first \
+  tests.unit.search.test_semantic_search -v
 ```
 
 For the broader native gate, load the exact baseline module list from `experiments/automatic-corridors/allocation-context-final-native-2026-11-03.json`, union it with the new suites, and write a fresh text log/JSON summary. Include test-source hashes and all changed production-source hashes, timings, skips and actual counts. Never claim the old420-test report covers new runtime.
 
-Create `autonomy/experiments/event-route-discovery/` for this implementation's fixtures/scripts/evidence. Give each measured run a new source-specific subdirectory; retain original reports under `automatic-corridors/`. Proposed files:
+Create `research/event-route-discovery/` for this implementation's fixtures/scripts/evidence. Give each measured run a new source-specific subdirectory; retain original reports under `automatic-corridors/`. Proposed files:
 
 ```text
 generic-fixtures/          # far/near/corner/bridge/underpass/cycle task data
@@ -625,4 +625,4 @@ Keep the current `automatic_experiment` CLI's `--input/--output/--resume/--compi
 
 Runtime source `08b00185`, isolated branch/worktree unchanged: all447 selected native tests pass without failures/errors/skips; runtime hashes match across final native, raw/semantic/materialized coverage, seven generic/control replays and both matched cold arms. The automatic unseeded stored-Real11 task completes at T67 (first full finish16.09s, final Z≈−1093.939079) within the original300s work guard;28 calls,1635 prefixes,24/24 independent replays. Supplied control: T67 (first43.79s, Z≈−1093.823129),51 calls,511 prefixes,95/95 replays. Actual total session walls301.90s/305.76s include guard tail work. No minimum-tick/global-Z claim. Automatic is the agreed free virtual height clock (actual Y≈6.7967, airborne), not a fabricated B7 floor.
 
-See [final evidence](experiments/event-route-discovery/README.md), complete diagrams and acceptance manifest. The baseline80 historical artifact hashes are unchanged. The implementation and acceptance work is complete for this release. Remaining limits are explicit: finite geometry construction fails/suspends without a fine-grained portable build cursor; cross-owner immutable item preparation caches were not needed for the measured acceptance and remain deferred; unknown enclosure/probes/passage classification retain optimistic language; no universal route-equivalence/completeness theorem or new portal clocks, loader/physics expansion, intentional wall hits or sibling decision transfer. The full backing graph and public guide continuation retain unresolved geometric alternatives; the first release does not promise to materialize every possible guide before bounded work expires.
+See [final evidence](../../research/event-route-discovery/README.md), complete diagrams and acceptance manifest. The baseline80 historical artifact hashes are unchanged. The implementation and acceptance work is complete for this release. Remaining limits are explicit: finite geometry construction fails/suspends without a fine-grained portable build cursor; cross-owner immutable item preparation caches were not needed for the measured acceptance and remain deferred; unknown enclosure/probes/passage classification retain optimistic language; no universal route-equivalence/completeness theorem or new portal clocks, loader/physics expansion, intentional wall hits or sibling decision transfer. The full backing graph and public guide continuation retain unresolved geometric alternatives; the first release does not promise to materialize every possible guide before bounded work expires.

@@ -21,11 +21,12 @@ def verify():
     manifest=json.loads((STANDALONE_ROOT/'tools/layout-migration.json').read_text())
     preserved=0
     for row in manifest['files']:
+        assert (STANDALONE_ROOT/row['new']).is_file(), row
         if row['immutable']:
             p=STANDALONE_ROOT/row['new']
             assert hashlib.sha256(p.read_bytes()).hexdigest()==row['originalSha256'],row
             preserved+=1
-    return dict(runtimeModules=checked,forbiddenImports=0,preservedEvidenceAndFixtures=preserved,passed=True)
+    return dict(relocatedFiles=len(manifest['files']),runtimeModules=checked,forbiddenImports=0,preservedEvidenceAndFixtures=preserved,passed=True)
 
 
 def main():

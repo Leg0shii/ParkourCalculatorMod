@@ -28,7 +28,7 @@ The stream remains bounded and is not exhaustive. Unknown numerical solves, unvi
 
 ## Acceptance and regressions
 
-The new snapshots in [experiments/contact-combinations](experiments/contact-combinations/README.md) contain compiled problems, accepted candidates and shared-scene acceptance:
+The new snapshots in [experiments/contact-combinations](../../research/contact-combinations/README.md) contain compiled problems, accepted candidates and shared-scene acceptance:
 
 | Case | Inputs | Generated change |
 | --- | --- | --- |

@@ -1,8 +1,8 @@
 # Experimental route guidance
 
-Latest design decision, 2026-10-31: the user wants input-decision search to omit inertia thresholds while retaining all ordinary momentum carry. [The revised model note](../NO_THRESHOLD_DECISION_MODEL.md) explains this direction. The source and measurements documented below still use the earlier carry hull; removing it and rebenchmarking are the next implementation changes. Actual inertia-pattern refinement and tolerance calibration are deferred.
+Latest design decision, 2026-10-31: the user wants input-decision search to omit inertia thresholds while retaining all ordinary momentum carry. [The revised model note](../../docs/design/NO_THRESHOLD_DECISION_MODEL.md) explains this direction. The source and measurements documented below still use the earlier carry hull; removing it and rebenchmarking are the next implementation changes. Actual inertia-pattern refinement and tolerance calibration are deferred.
 
-This module implements the first restricted experiment in [CONVEX_ROUTE_GUIDANCE_PLAN.md](../CONVEX_ROUTE_GUIDANCE_PLAN.md). It compares a compact circle NLP, an otherwise identical compact disk NLP, and a disaggregated disk SOCP. It does not replace production route generation.
+This module implements the first restricted experiment in [CONVEX_ROUTE_GUIDANCE_PLAN.md](../../docs/design/CONVEX_ROUTE_GUIDANCE_PLAN.md). It compares a compact circle NLP, an otherwise identical compact disk NLP, and a disaggregated disk SOCP. It does not replace production route generation.
 
 The input is a supplied support sequence, a fixed final horizon, and optional horizontal passage choices. Ordinary jump profiles come from the existing vertical model. Movement coefficients come from the existing shared Java compiler. A time-expanded phase graph represents run/departure timing without materializing complete histories. Inputs keep W/sprint or the existing Force 45 policy with freely optimized facings. Each solve retains the full original horizontal position and velocity.
 
@@ -10,18 +10,21 @@ Current coverage is ordinary jumps, run timing, landing support and two-face hor
 
 ## Run
 
-From the isolated worktree, with its Java compiler already prepared:
+From `standalone/`, with the native bridge already prepared and the package installed:
 
 ```sh
-python3.12 -m venv .venv-guidance
-.venv-guidance/bin/python -m pip install -r standalone/autonomy/route_guidance/requirements.txt
-OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 .venv-guidance/bin/python \
-  -m standalone.autonomy.route_guidance.experiment \
-  --input standalone/autonomy/experiments/route-guidance/fixtures \
-  --compiler standalone/autonomy/build/compiler.json \
-  --output standalone/autonomy/build/route-guidance.json \
+../.venv-guidance/bin/python -m pip install --editable '.[research]'
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 ../.venv-guidance/bin/python \
+  -m research.route_guidance.experiment \
+  --input research/route-guidance/fixtures \
+  --compiler build/native/compiler.json \
+  --output runs/route-guidance-new.json \
   --seconds 3 --refine-seconds 3 --repeats 3
 ```
+
+Use new output paths. This is the preserved scientific prototype, separate from
+the active anchor solver; its source-era next-step notes are not current work
+authorization. See the [research guide](../README.md) and [runbook](../../docs/RUNBOOK.md).
 
 The conic backend is Clarabel, using its direct sparse interface. The two compact models use CasADi/IPOPT. Dependencies live in a separate ignored environment. The native mod disk solver is a modeling reference and is not imported or modified.
 
@@ -62,12 +65,12 @@ For each arm, it records root build/solve time and size, objective gap to the be
 
 Circle versus compact disk isolates the control-set enlargement. Comparing either with the SOCP also changes state/mode coupling. Their relative tightness must be measured; it is not justified by the circle/disk inclusion alone. A good relaxed objective need not identify a unique nearby reference trajectory, and upper-bound ordering alone does not prove an ordering of feasible alternatives.
 
-[Measured results and recommendations](../experiments/route-guidance/README.md) include repeated comparisons, independent replay and an inertia ablation. The latter fixes the inertia pattern observed in an accepted witness while keeping its facings free. `build_conic(..., carry_pattern=...)` explicitly marks that restricted model. It bounds only the specified pattern and must not replace the inclusive carry hull for a route-wide bound.
+[Measured results and recommendations](../route-guidance/README.md) include repeated comparisons, independent replay and an inertia ablation. The latter fixes the inertia pattern observed in an accepted witness while keeping its facings free. `build_conic(..., carry_pattern=...)` explicitly marks that restricted model. It bounds only the specified pattern and must not replace the inclusive carry hull for a route-wide bound.
 
 Focused verification:
 
 ```sh
 PKC_RUN_TICKS_COMPILER="$PWD/standalone/autonomy/build/compiler.json" \
 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 .venv-guidance/bin/python \
-  -m unittest standalone.autonomy.tests.test_route_guidance -v
+  -m unittest tests.research.test_route_guidance -v
 ```

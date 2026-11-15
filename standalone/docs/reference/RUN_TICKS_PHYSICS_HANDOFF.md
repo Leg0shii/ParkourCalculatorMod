@@ -10,13 +10,13 @@ The repository contains the relevant Minecraft Parkour Wiki material locally. No
 
 | Source | What to extract |
 | --- | --- |
-| [CONTEXT.md](../../CONTEXT.md) | Facing versus movement direction, feet position, stored velocity versus displacement, run ticks, tiers, run-up and jump terminology. |
-| [Movement formulas](../../docs/reference/mcpk/01-movement-formulas.md) | Ground/air acceleration, sprint-jump boost, input normalization, drag, inertia threshold and vertical recurrence. |
-| [Collisions and stepping](../../docs/reference/mcpk/03-collisions-and-stepping.md) | Player AABB, legacy Y-X-Z collision order, support/landing timing, step-assist, blips and jump-cancels. |
-| [Blocks and friction](../../docs/reference/mcpk/04-blocks-and-friction.md) | Actual shapes, normal/ice/slime friction, partial blocks, ladder activation versus solid ladder shape. |
-| [Effects, tiers and durations](../../docs/reference/mcpk/05-status-effects-tiers-jumps.md) | Useful initial flight-time hypotheses, height bands and effect differences. |
-| [Timings and momentum](../../docs/reference/mcpk/06-timings-momentum-glitches.md) | Immediate jumps versus delayed runs, why extra run ticks can change rather than uniformly improve a route. |
-| [Angles and sine table](../../docs/reference/mcpk/02-angles-and-mouse.md) | Game-facing conventions, float yaw and why a continuous witness is distinct from a game witness. |
+| [CONTEXT.md](../../../CONTEXT.md) | Facing versus movement direction, feet position, stored velocity versus displacement, run ticks, tiers, run-up and jump terminology. |
+| [Movement formulas](../../../docs/reference/mcpk/01-movement-formulas.md) | Ground/air acceleration, sprint-jump boost, input normalization, drag, inertia threshold and vertical recurrence. |
+| [Collisions and stepping](../../../docs/reference/mcpk/03-collisions-and-stepping.md) | Player AABB, legacy Y-X-Z collision order, support/landing timing, step-assist, blips and jump-cancels. |
+| [Blocks and friction](../../../docs/reference/mcpk/04-blocks-and-friction.md) | Actual shapes, normal/ice/slime friction, partial blocks, ladder activation versus solid ladder shape. |
+| [Effects, tiers and durations](../../../docs/reference/mcpk/05-status-effects-tiers-jumps.md) | Useful initial flight-time hypotheses, height bands and effect differences. |
+| [Timings and momentum](../../../docs/reference/mcpk/06-timings-momentum-glitches.md) | Immediate jumps versus delayed runs, why extra run ticks can change rather than uniformly improve a route. |
+| [Angles and sine table](../../../docs/reference/mcpk/02-angles-and-mouse.md) | Game-facing conventions, float yaw and why a continuous witness is distinct from a game witness. |
 
 Initial scope should be explicit: Minecraft 1.8.9, static normal blocks, tapped jumps, declared sprint/input policy and a fixed ordered route. Heights, ceilings, special surfaces and alternate input families can be added deliberately. A minimum within one fixed jump/input/timing family is not a global minimum over every possible Minecraft movement strategy.
 
@@ -26,16 +26,16 @@ Pointers below resolve on the clean integration branch. An agent on an older nat
 
 | Source | Use and limitation |
 | --- | --- |
-| [JumpPhysicsInputs.java](../../core/src/main/java/de/legoshi/parkourcalc/core/anglesolver/solver/JumpPhysicsInputs.java) | Per-input jump, ground/air, movement, sprint/effects and initial state. Read contactAt, slipAt, factorSprintAt, airFactorSprintAt and slice. Ground state is authored here, not inferred from block geometry. |
-| [JumpLinearModel.java](../../core/src/main/java/de/legoshi/parkourcalc/core/anglesolver/solver/JumpLinearModel.java) | precompute produces mMag, baseArg and friction for the standalone request, including the sprint-jump contribution. Reuse this rather than guessing a ground-speed constant. |
-| [ExactJumpModel.java](../../core/src/main/java/de/legoshi/parkourcalc/core/anglesolver/solver/ExactJumpModel.java) | Float/lookup-table arithmetic and movement order. Its class contract explicitly says collision-free and authored ground state. Its Y is not clamped onto block tops. It is not a world-landing oracle. |
-| [Constants.java](../../core/src/main/java/de/legoshi/parkourcalc/core/anglesolver/solver/Constants.java) | Version-sensitive float constants and movement attribute chains. |
-| [SupportOverlap.java](../../core/src/main/java/de/legoshi/parkourcalc/core/anglesolver/solver/SupportOverlap.java) | Strict legacy support overlap and exact representable center bounds; avoids hand-written .3 edge rules. |
-| [ConstraintDeriver.java](../../core/src/main/java/de/legoshi/parkourcalc/core/anglesolver/ConstraintDeriver.java) | Player-center wall offsets, support footprints, coplanar support handling and obstacle clipping. Inspect deriveWall and deriveFootprint. Click/facing-based footprint clipping can choose one usable region; it is not an exhaustive enumeration of every feasible region around obstacles. |
-| [ConstraintKeyController.java](../../core/src/main/java/de/legoshi/parkourcalc/core/ui/ConstraintKeyController.java) | How selected world geometry becomes authored support/wall constraints through the existing ports. Useful integration example, not an autonomous planner. |
-| [Simulator.java](../../core/src/main/java/de/legoshi/parkourcalc/core/ports/Simulator.java), [SimulationRunner.java](../../core/src/main/java/de/legoshi/parkourcalc/core/sim/SimulationRunner.java) | Actual Minecraft movement/collision via the loader, state snapshots and resume/checkpoint handling. |
-| [MinecraftAccess.java](../../core/src/main/java/de/legoshi/parkourcalc/core/ports/MinecraftAccess.java) | Collision-shape and climbable queries for scene export. Integration agent owns the live bridge. |
-| [StartResumeState.java](../../core/src/main/java/de/legoshi/parkourcalc/core/sim/StartResumeState.java) | Resume ground/contact/sprint/held-input state, in addition to position/velocity/facing. |
+| [JumpPhysicsInputs.java](../../../core/src/main/java/de/legoshi/parkourcalc/core/anglesolver/solver/JumpPhysicsInputs.java) | Per-input jump, ground/air, movement, sprint/effects and initial state. Read contactAt, slipAt, factorSprintAt, airFactorSprintAt and slice. Ground state is authored here, not inferred from block geometry. |
+| [JumpLinearModel.java](../../../core/src/main/java/de/legoshi/parkourcalc/core/anglesolver/solver/JumpLinearModel.java) | precompute produces mMag, baseArg and friction for the standalone request, including the sprint-jump contribution. Reuse this rather than guessing a ground-speed constant. |
+| [ExactJumpModel.java](../../../core/src/main/java/de/legoshi/parkourcalc/core/anglesolver/solver/ExactJumpModel.java) | Float/lookup-table arithmetic and movement order. Its class contract explicitly says collision-free and authored ground state. Its Y is not clamped onto block tops. It is not a world-landing oracle. |
+| [Constants.java](../../../core/src/main/java/de/legoshi/parkourcalc/core/anglesolver/solver/Constants.java) | Version-sensitive float constants and movement attribute chains. |
+| [SupportOverlap.java](../../../core/src/main/java/de/legoshi/parkourcalc/core/anglesolver/solver/SupportOverlap.java) | Strict legacy support overlap and exact representable center bounds; avoids hand-written .3 edge rules. |
+| [ConstraintDeriver.java](../../../core/src/main/java/de/legoshi/parkourcalc/core/anglesolver/ConstraintDeriver.java) | Player-center wall offsets, support footprints, coplanar support handling and obstacle clipping. Inspect deriveWall and deriveFootprint. Click/facing-based footprint clipping can choose one usable region; it is not an exhaustive enumeration of every feasible region around obstacles. |
+| [ConstraintKeyController.java](../../../core/src/main/java/de/legoshi/parkourcalc/core/ui/ConstraintKeyController.java) | How selected world geometry becomes authored support/wall constraints through the existing ports. Useful integration example, not an autonomous planner. |
+| [Simulator.java](../../../core/src/main/java/de/legoshi/parkourcalc/core/ports/Simulator.java), [SimulationRunner.java](../../../core/src/main/java/de/legoshi/parkourcalc/core/sim/SimulationRunner.java) | Actual Minecraft movement/collision via the loader, state snapshots and resume/checkpoint handling. |
+| [MinecraftAccess.java](../../../core/src/main/java/de/legoshi/parkourcalc/core/ports/MinecraftAccess.java) | Collision-shape and climbable queries for scene export. Integration agent owns the live bridge. |
+| [StartResumeState.java](../../../core/src/main/java/de/legoshi/parkourcalc/core/sim/StartResumeState.java) | Resume ground/contact/sprint/held-input state, in addition to position/velocity/facing. |
 
 JumpPhysicsInputs.copy currently shares many per-tick arrays. Clone mutable arrays before modifying a candidate in parallel or inserting rows; a new wrapper object alone does not provide independent search state. Its slice method demonstrates which lagged movement factors and per-tick fields need to follow a seam.
 
@@ -94,12 +94,12 @@ Tier tables give useful first flight-time hypotheses: the reference lists 12 inp
 
 | Source | Useful behavior and caveat |
 | --- | --- |
-| [RunTicksController.java](../../core/src/main/java/de/legoshi/parkourcalc/core/RunTicksController.java) | Removes old run rows, identifies jump taps, rebuilds inserted candidates, shifts constraints, solves prefixes and restores the document. Read start, applyStep, rebuild, dropPreviousRunTicks and pollStep. It mutates editor state, so use it as a reference rather than an off-thread headless API. |
-| [RunTicksRows.java](../../core/src/main/java/de/legoshi/parkourcalc/core/anglesolver/runticks/RunTicksRows.java) | A run row is non-JUMP with an explicit DEFAULT slipperiness override. The predicate does not require W/sprint specifically. Rows on other surfaces do not satisfy that marker. |
-| [RunTicksSearch.java](../../core/src/main/java/de/legoshi/parkourcalc/core/anglesolver/runticks/RunTicksSearch.java) | Generic prefix tree with payload/warm starts and total-added-tick rungs. In minimize mode it enumerates exact total sums. |
-| [RunTicksFilter.java](../../core/src/main/java/de/legoshi/parkourcalc/core/anglesolver/runticks/RunTicksFilter.java) | Per-jump authored RT bounds, ranges and equalities. RT belongs to the outer search, not IPOPT's scalar walls list. |
-| [AngleSolverState.java](../../core/src/main/java/de/legoshi/parkourcalc/core/anglesolver/AngleSolverState.java) | onRowsInserted/onRowsRemoved move tick-anchored constraints, references and start/landing/objective locations. |
-| [StepTimeouts.java](../../core/src/main/java/de/legoshi/parkourcalc/core/anglesolver/runticks/StepTimeouts.java), [RunTicksSettings.java](../../core/src/main/java/de/legoshi/parkourcalc/core/anglesolver/runticks/RunTicksSettings.java) | Existing native prefix timeouts/adaptation. Their roughly 200 ms defaults are not requirements for IPOPT; the user accepts several seconds. |
+| [RunTicksController.java](../../../core/src/main/java/de/legoshi/parkourcalc/core/RunTicksController.java) | Removes old run rows, identifies jump taps, rebuilds inserted candidates, shifts constraints, solves prefixes and restores the document. Read start, applyStep, rebuild, dropPreviousRunTicks and pollStep. It mutates editor state, so use it as a reference rather than an off-thread headless API. |
+| [RunTicksRows.java](../../../core/src/main/java/de/legoshi/parkourcalc/core/anglesolver/runticks/RunTicksRows.java) | A run row is non-JUMP with an explicit DEFAULT slipperiness override. The predicate does not require W/sprint specifically. Rows on other surfaces do not satisfy that marker. |
+| [RunTicksSearch.java](../../../core/src/main/java/de/legoshi/parkourcalc/core/anglesolver/runticks/RunTicksSearch.java) | Generic prefix tree with payload/warm starts and total-added-tick rungs. In minimize mode it enumerates exact total sums. |
+| [RunTicksFilter.java](../../../core/src/main/java/de/legoshi/parkourcalc/core/anglesolver/runticks/RunTicksFilter.java) | Per-jump authored RT bounds, ranges and equalities. RT belongs to the outer search, not IPOPT's scalar walls list. |
+| [AngleSolverState.java](../../../core/src/main/java/de/legoshi/parkourcalc/core/anglesolver/AngleSolverState.java) | onRowsInserted/onRowsRemoved move tick-anchored constraints, references and start/landing/objective locations. |
+| [StepTimeouts.java](../../../core/src/main/java/de/legoshi/parkourcalc/core/anglesolver/runticks/StepTimeouts.java), [RunTicksSettings.java](../../../core/src/main/java/de/legoshi/parkourcalc/core/anglesolver/runticks/RunTicksSettings.java) | Existing native prefix timeouts/adaptation. Their roughly 200 ms defaults are not requirements for IPOPT; the user accepts several seconds. |
 
 The controller inserts before a jump, copies a prior row, clears JUMP, sets W and SPRINT and gives inserted inputs DEFAULT slipperiness. It can preserve other inherited keys. It also marks the shifted jump input DEFAULT so takeoff uses ground coefficients. It copies range constraints from a preceding template and rebuilds candidates from a baseline. When designing a new block planner, derive the run corridor from the actual support; blindly copying a prior row's landing range can overconstrain a different schedule.
 
@@ -136,14 +136,14 @@ For a first implementation, exact-sum enumeration 0,1,2,... with reusable prefix
 
 Existing focused references:
 
-- [RunTicksSearchTest.java](../../core/src/test/java/de/legoshi/parkourcalc/core/anglesolver/runticks/RunTicksSearchTest.java): exact rung allocations, no repeats, starts at configured count and prefix bookkeeping.
-- [RunTicksRowsTest.java](../../core/src/test/java/de/legoshi/parkourcalc/core/anglesolver/runticks/RunTicksRowsTest.java): run-row marker versus jump/airborne rows.
-- [RunTicksFilterTest.java](../../core/src/test/java/de/legoshi/parkourcalc/core/anglesolver/runticks/RunTicksFilterTest.java): per-jump bounds.
-- [RunTicksRollbackTest.java](../../core/src/test/java/de/legoshi/parkourcalc/core/RunTicksRollbackTest.java): document restoration.
-- [SupportOverlapTest.java](../../core/src/test/java/de/legoshi/parkourcalc/anglesolver/SupportOverlapTest.java): strict edge contact and exact representable support bounds.
-- [LandingConstraintsTest.java](../../core/src/test/java/de/legoshi/parkourcalc/anglesolver/LandingConstraintsTest.java): authored footprints, ranges and unrelated constraints.
-- [AirborneStartJumpTest.java](../../core/src/test/java/de/legoshi/parkourcalc/anglesolver/AirborneStartJumpTest.java): jump eligibility at an airborne start.
-- [Standalone tests](tests/): current IPOPT API, cap/inertia/vertical and process regressions. The original handoff gives full commands and 200/400 fixture expectations.
+- [RunTicksSearchTest.java](../../../core/src/test/java/de/legoshi/parkourcalc/core/anglesolver/runticks/RunTicksSearchTest.java): exact rung allocations, no repeats, starts at configured count and prefix bookkeeping.
+- [RunTicksRowsTest.java](../../../core/src/test/java/de/legoshi/parkourcalc/core/anglesolver/runticks/RunTicksRowsTest.java): run-row marker versus jump/airborne rows.
+- [RunTicksFilterTest.java](../../../core/src/test/java/de/legoshi/parkourcalc/core/anglesolver/runticks/RunTicksFilterTest.java): per-jump bounds.
+- [RunTicksRollbackTest.java](../../../core/src/test/java/de/legoshi/parkourcalc/core/RunTicksRollbackTest.java): document restoration.
+- [SupportOverlapTest.java](../../../core/src/test/java/de/legoshi/parkourcalc/anglesolver/SupportOverlapTest.java): strict edge contact and exact representable support bounds.
+- [LandingConstraintsTest.java](../../../core/src/test/java/de/legoshi/parkourcalc/anglesolver/LandingConstraintsTest.java): authored footprints, ranges and unrelated constraints.
+- [AirborneStartJumpTest.java](../../../core/src/test/java/de/legoshi/parkourcalc/anglesolver/AirborneStartJumpTest.java): jump eligibility at an airborne start.
+- [Standalone tests](../../tests/unit/numerics): current IPOPT API, cap/inertia/vertical and process regressions. The original handoff gives full commands and 200/400 fixture expectations.
 
 Add small block-sequence cases that isolate: zero-run immediate continuation; a truly required extra tick within a declared family; width-expanded edge catches versus exact touch; arriving horizontally after the Y landing check; takeoff/landing friction differences; unequal-height/ceiling timing; enough support for every run row; extra ticks making a short support fail; two allocations of the same total having different outcomes; correct constraint/event/seed remapping after insertion; cheaper unknown candidates blocking a minimum claim; and independent candidate arrays with no cross-branch mutation.
 

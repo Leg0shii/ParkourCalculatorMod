@@ -46,7 +46,7 @@ Compile the problem with the mod input state before solving it, particularly whe
 Use the existing Gradle init script:
 
 ```sh
-./gradlew -I standalone/ipopt/export.gradle :core:replayStandaloneIpopt \
+./gradlew -I standalone/native/gradle/export.gradle :core:replayStandaloneIpopt \
   -PipoptCapture=/path/to/template.json \
   -PipoptInput=/path/to/compiled-problem.json \
   -PipoptResult=/path/to/ipopt-result.json \

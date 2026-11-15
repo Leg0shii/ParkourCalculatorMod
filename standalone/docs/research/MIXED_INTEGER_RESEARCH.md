@@ -21,7 +21,7 @@ The objective stays lexicographic: minimize elapsed ticks, then optimize the con
 
 ## The useful free-facing reformulation
 
-`ipopt/worker.py` currently forms a horizontal control vector for each tick from compiled constants `magnitude[t]` and `base[t]` and the free yaw:
+`src/parkour_solver/numerics/worker.py` currently forms a horizontal control vector for each tick from compiled constants `magnitude[t]` and `base[t]` and the free yaw:
 
 ```text
 u[t] = m[t] * (cos(base[t] + yaw[t]), sin(base[t] + yaw[t]))
@@ -81,8 +81,8 @@ Tight physical bounds and relative coordinates are important for a useful formul
 - `ladder_schedules.py`, `movement_contacts.py`: current eager combinations a backend might select symbolically instead. Repeated ladder ceilings and endpoint-stop ownership cannot be dropped.
 - `movement_composition.py`, `movement_units.py`, `route.py`: materialize selected event/control assignments, retime once and preserve the original full-state solve.
 - `compiler.py`, `CompileRunTicksPhysics.java`, `FixedMovementCompiler`, `ReplayInputState`: authoritative compiled movement/input assumptions.
-- `ipopt/solver.py`, `worker.py`, `continuation.py`: existing nonlinear refinement, inertia/clamp branches and incumbent handling.
-- `ipopt/model.py`, `obstacle_geometry.py`, shared `StaticScene`: unchanged acceptance for candidates recovered from any new backend.
+- `src/parkour_solver/numerics/solver.py`, `worker.py`, `continuation.py`: existing nonlinear refinement, inertia/clamp branches and incumbent handling.
+- `src/parkour_solver/numerics/model.py`, `obstacle_geometry.py`, shared `StaticScene`: unchanged acceptance for candidates recovered from any new backend.
 
 Spatial passage shortlisting and mixed-integer scheduling are compatible. A finite region/event graph can delimit one model, while a backend selects movement methods, state-coupled transitions and timings inside it. Passing one frozen position/velocity between graph edges would lose the original-state coupling regardless of which library is used. A full-world all-blocks/all-faces/all-ticks model could simply recreate the current combinatorial explosion in algebraic form.
 

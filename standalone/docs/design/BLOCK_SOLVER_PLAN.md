@@ -1,6 +1,6 @@
 # Block solver: continuous-model orchestration
 
-2026-10-26. Run ticks are [prototyped](RUN_TICKS_PLAN.md), and route selection plus finite obstacle avoidance are implemented. [COMPACTION_HANDOFF.md](COMPACTION_HANDOFF.md) is the current resume checkpoint. Acceptance remains a validated solve within the declared continuous model; solver-to-replay export and game end-to-end testing are out of scope.
+2026-10-26. Run ticks are [prototyped](RUN_TICKS_PLAN.md), and route selection plus finite obstacle avoidance are implemented. [COMPACTION_HANDOFF.md](../history/COMPACTION_HANDOFF.md) is the current resume checkpoint. Acceptance remains a validated solve within the declared continuous model; solver-to-replay export and game end-to-end testing are out of scope.
 
 ## Problem and boundary
 
@@ -26,7 +26,7 @@ The search objective is now fixed by user ruling: minimize total elapsed inputs,
 | --- | --- |
 | Ordered supports, supplied profiles, run search, free turning and continuous horizontal acceptance | Implemented by the run-ticks prototype |
 | Single-support footprints and wall-face derivation | Existing Java `ConstraintDeriver` and `SupportOverlap`; reuse them |
-| Scalar Y recurrence and prescribed floor/ceiling/step contacts | Existing `standalone.ipopt.ladder`; reuse it |
+| Scalar Y recurrence and prescribed floor/ceiling/step contacts | Existing `parkour_solver.physics.vertical`; reuse it |
 | Ordinary open-air air time from source/target heights | First profile-compiler slice implemented in `block_profiles.py` |
 | Intermediate support selection with fixed endpoints and sprint-jump/sprint-45 inputs | Implemented for ordinary/stair/run-off profiles in support-plane and collision-box modes, including repeated visits |
 | Optimistic transition bounds, reverse goal reachability and a route-prefix pool | Implemented, with separate accounting for heuristic pool drops and unknown numerical attempts |
@@ -48,14 +48,14 @@ For each consecutive pair, `ordinary_jump_profile` uses the existing vertical st
 
 This first slice deliberately rejects supplied air times, contact overrides, ceilings, obstacles, composite shapes and other unimplemented profile families. It cannot silently ignore them. It preserves one explicit support per route entry and does not merge separated blocks into a bounding rectangle.
 
-The fixture [blocks-flat-two-jumps.json](fixtures/blocks-flat-two-jumps.json) has no recorded states, facings or air times. The continuous integration test compiles it to `[12,12]`, runs the existing search and validates a `[0,0]` allocation. Profile tests also check the established height tiers through the numerical model's vertical validator. That first-slice checkpoint passed 37 tests with the actual Java compiler and IPOPT runtime; the current full gate passes 120.
+The fixture [blocks-flat-two-jumps.json](../../tests/fixtures/movement/blocks-flat-two-jumps.json) has no recorded states, facings or air times. The continuous integration test compiles it to `[12,12]`, runs the existing search and validates a `[0,0]` allocation. Profile tests also check the established height tiers through the numerical model's vertical validator. That first-slice checkpoint passed 37 tests with the actual Java compiler and IPOPT runtime; the current full gate passes 120.
 
 This standalone ordinary-profile helper alone is not a general block-scene acceptance test. Its metadata records that solid side faces and other supports are not checked by the Y recurrence. Scene orchestration now adds earlier-floor exclusions, and collision-box mode adds full finite-volume avoidance checks. Keep those responsibilities in orchestration rather than treating a valid Y profile as sufficient world clearance.
 
 ```python
 import json
-from standalone.autonomy.block_profiles import compile_open_air_route
-from standalone.autonomy import find_route
+from parkour_solver.movement.profiles import compile_open_air_route
+from parkour_solver.api import find_route
 
 request = json.load(open("standalone/autonomy/fixtures/blocks-flat-two-jumps.json"))
 compiled = compile_open_air_route(request)
@@ -71,7 +71,7 @@ The [obstacle and blockage design](OBSTACLES_AND_BLOCKAGES.md) now specifies ful
 
 Candidate generation starts with the normal-jump height split, approximately 1.24919 blocks, and Y-derived under/over/contact windows. Those windows restrict both profile families and horizontal reach. Generate the common left/right cross neo and wide neo passages first, with caps of two horizontal, two vertical and three combined transitions per physical block. Mixed three-transition chains and interleaving between different blocks are supported. Height/reach contradictions prune candidates, while side preference and complexity primarily choose evaluation order under the total-ticks objective.
 
-The [Stratfinder investigation](STRATFINDER_INVESTIGATION.md) checks both our native search and Curryocity's external tool. Its first proposed experiment is implemented: an optimistic support/profile graph plus a shared pool of route prefixes, using conservative reach checks and the current ordered-route solver as the inner evaluator. Different arrivals and contact profiles remain distinct; neither a visited flag nor a no-turn failure removes a free-turn route. The initial coplanar checkpoint passed a comparison with exhaustive enumeration of a small explicit support set; height-dependent and short stair profiles now pass independent full-model acceptance. Finite avoidance and one-input wall/ceiling contacts are implemented. [ONE_TICK_CONTACT_PLAN.md](ONE_TICK_CONTACT_PLAN.md) records current behavior, evidence and gaps.
+The [Stratfinder investigation](../research/STRATFINDER_INVESTIGATION.md) checks both our native search and Curryocity's external tool. Its first proposed experiment is implemented: an optimistic support/profile graph plus a shared pool of route prefixes, using conservative reach checks and the current ordered-route solver as the inner evaluator. Different arrivals and contact profiles remain distinct; neither a visited flag nor a no-turn failure removes a free-turn route. The initial coplanar checkpoint passed a comparison with exhaustive enumeration of a small explicit support set; height-dependent and short stair profiles now pass independent full-model acceptance. Finite avoidance and one-input wall/ceiling contacts are implemented. [ONE_TICK_CONTACT_PLAN.md](ONE_TICK_CONTACT_PLAN.md) records current behavior, evidence and gaps.
 
 1. **Implemented: shared compilation and one-input X/Z reversals.** Collision-box schedules use the integration agent's corrected compiler and input state. Finite reach/overlap guards, normal reset, before/after avoidance, sprint cancellation and delayed air-factor recovery are independently checked. Same-solid corner rounding after a hit remains a corridor extension.
 2. **Implemented: one-input ceiling contacts.** Generated underside profiles regenerate Y, retime finite/contact guards and shorten landing time. Existing ceiling avoidance, ordinary alternatives and selected two-input stair profiles remain. General contact-selected step/cancel discovery is still outside this slice.
@@ -82,7 +82,7 @@ The [Stratfinder investigation](STRATFINDER_INVESTIGATION.md) checks both our na
 
 ## Lessons retained from the shelved solver
 
-The [historical post-mortem](../../docs/research/block-solver.md) reports an honest result of about 16-17/53 on its old solver, with both false-positive support and multi-jump convergence problems. Those counts are not a measured ceiling for the new IPOPT implementation.
+The [historical post-mortem](../../../docs/research/block-solver.md) reports an honest result of about 16-17/53 on its old solver, with both false-positive support and multi-jump convergence problems. Those counts are not a measured ceiling for the new IPOPT implementation.
 
 - Never replace a disjoint set of supports with its bounding box. Select a support per branch or keep an explicit disjunction, and check strict membership in an actual support.
 - Keep each obstacle's actual sub-boxes and finite geometry. Do not infer that a captured route being inside broad bounds prevents a solver from exploiting gaps.

@@ -1,15 +1,15 @@
 # Writing code and fixes
 
-The current runtime baseline is `dd738c98`. Before changing candidate behavior, read the [combination/pruning/IPOPT execution reference](ANCHOR_SEARCH_EXECUTION_REFERENCE.md). Reuse `candidate_comparison` for intermediate predicates and `InteractionGate` for exact-model preparation/reachability. Do not add another local count rule, queue-wide bound scan, constant-zero default, future-count comparison for open prefixes, or source-hop ban. The hard-transfer no-stepping assumption and its ceiling-only conditional duration bounds are explicit domain policy, not a general theorem.
+The current runtime baseline is `dd738c98`. Before changing candidate behavior, read the [combination/pruning/IPOPT execution reference](ANCHOR_SEARCH_EXECUTION_REFERENCE.md). Reuse `search.comparison` for intermediate predicates and `InteractionGate` for exact-model preparation/reachability. Do not add another local count rule, queue-wide bound scan, constant-zero default, future-count comparison for open prefixes, or source-hop ban. The hard-transfer no-stepping assumption and its ceiling-only conditional duration bounds are explicit domain policy, not a general theorem.
 
 Read [AGENTS](../AGENTS.md), [current state](CURRENT_STATE.md), [architecture](ARCHITECTURE.md) and the affected module in [code map](CODE_MAP.md). The DFS/early-interaction implementation and later virtual-finish/local-run fixes imported through `61355976` are the baseline for further work. Continue in the isolated worktree and preserve unrelated edits. Only commit after a feature implementation, bundling its related documentation, tests and fixtures; investigation/planning/documentation-only turns do not require a commit. No agent delegation or external communication is required.
 
 ## Where new behavior belongs
 
-- Shared movement/contact/constraint rules: extend existing `autonomy` builders and shared Java compiler/scene helpers. Avoid a second derivation of stepping, signed blockage faces or player footprint geometry.
-- Generic reachability: `reachability.py` and callers, using actual model/scope context. Eligibility must occur before generation/derived rows/checks across all families. `linear_reachability.py` is an optional numerical relaxation screen, not a change to IPOPT physics.
-- Discrete branch traversal, comparison, persistence: `cell_routes.depth_first`, `movement_frontier`, `candidate_comparison`, `preparation_deferrals`, `cell_routes.checkpoint_search`, `comparison_goals` and existing repair/schema helpers. `time_progress` is the legacy common-clock record adapter, not the active anchor pruning owner. Do not embed fixture IDs in these modules.
-- Fixed continuous equations, scalar replay, native process lifecycle: `ipopt`. Do not place new discrete decision ownership inside the worker.
+- Shared movement/contact/constraint rules: extend existing `src/parkour_solver` builders and shared Java compiler/scene helpers. Avoid a second derivation of stepping, signed blockage faces or player footprint geometry.
+- Generic reachability: `reachability.intervals.py` and callers, using actual model/scope context. Eligibility must occur before generation/derived rows/checks across all families. `reachability.linear.py` is an optional numerical relaxation screen, not a change to IPOPT physics.
+- Discrete branch traversal, comparison, persistence: `search.dfs`, `search.frontier`, `search.comparison`, `search.deferrals`, `search.engine`, `comparison_goals` and existing repair/schema helpers. `time_progress` is the legacy common-clock record adapter, not the active anchor pruning owner. Do not embed fixture IDs in these modules.
+- Fixed continuous equations, scalar replay, native process lifecycle: `src/parkour_solver/numerics`. Do not place new discrete decision ownership inside the worker.
 - One-off reproduction/measurement: a clearly named script in an experiment directory, with settings, source/provenance and a result note. Extract shared logic into production modules when genuinely reused.
 - Mod physics inspiration and lifting: [mod references](MOD_REFERENCES.md); compile/reuse current checked-in classes rather than materializing historical copies or importing MC loader classes into core.
 
@@ -25,7 +25,7 @@ Read [AGENTS](../AGENTS.md), [current state](CURRENT_STATE.md), [architecture](A
 
 ## Style and formatting
 
-No standalone Black/Ruff/pyproject configuration is checked in at this revision. Follow the surrounding Python style, four-space indentation and existing imports/data records; avoid broad cosmetic rewrites. Keep dependencies pinned in the existing requirements files and optional at the established API boundaries. Use the standard `unittest` runner and current environment flags.
+Packaging and pinned optional dependency groups live in `pyproject.toml`; there is no standalone Black/Ruff configuration. Follow the surrounding Python style, four-space indentation and existing imports/data records; avoid broad cosmetic rewrites. Keep dependency versions pinned in the package extras; research requirements remain separate and optional at the established API boundaries. Use the standard `unittest` runner and current environment flags.
 
 Prefer pure serializable search state, stable keys and deterministic ordering. Canonicalization must include physics, contact ownership, scope and remaining resource/cap capabilities when relevant. Equal trajectories or equal jump/run counts alone do not establish equivalence. Do not use floating-point string rounding to merge distinct physical models. When saving evidence use `json.dumps(..., allow_nan=False)` and deterministic gzip `mtime=0`, preserve exact doubles, atomic progress/output writes and stable source hashes.
 

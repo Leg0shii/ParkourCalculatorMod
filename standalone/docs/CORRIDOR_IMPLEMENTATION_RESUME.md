@@ -1,12 +1,14 @@
 # Resume authorized anchor implementation and completed event baseline
 
-**Current implementation:** [ANCHOR_IMPLEMENTATION_RESUME.md](ANCHOR_IMPLEMENTATION_RESUME.md) and [new evidence](../autonomy/experiments/anchor-feasibility/README.md) supersede the historical checkpoint below. Physical tasks now use schema2/DFS8 anchor/open-span policy.
+Package/layout update: production is now installed as `parkour_solver`; see [current layout](LAYOUT.md), [runbook](RUNBOOK.md) and [refactor validation](STANDALONE_REFACTOR_IMPLEMENTATION.md). Source-era checkout paths and measurements below do not override those current commands. Solver policy and compatible checkpoint schemas are unchanged.
+
+**Current implementation:** [ANCHOR_IMPLEMENTATION_RESUME.md](ANCHOR_IMPLEMENTATION_RESUME.md) and [new evidence](../research/anchor-feasibility/README.md) supersede the historical checkpoint below. Physical tasks now use schema2/DFS8 anchor/open-span policy.
 
 ## Latest request and next plan (2026-11-04)
 
 **Implementation is explicitly authorized.** The user said "go ahead and implement", then requested compaction preparation before resuming. Start with [ANCHOR_IMPLEMENTATION_RESUME.md](ANCHOR_IMPLEMENTATION_RESUME.md), the self-contained current handoff with settled contract, exact checkout/status, first M1 actions, dependencies/commands and evidence checks. Do not request permission again or reopen mixed/uncertain heuristic proposals.
 
-Work remains `/private/tmp/parkour-real11-initial-run-ticks`, branch `research/real11-initial-run-ticks`, baseline `4cf39caa`/algorithm `08b00185`. No runtime tools or source edits began in the interrupted implementation turn; only documentation changes exist and no task processes are running. Preserve uncommitted plans/navigation/deferred design and old evidence. The [controlling plan](../autonomy/ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md), [decision doc](../autonomy/ANCHOR_POLICY_DECISIONS.md) and [deferred revisit plan](../autonomy/REVISIT_DISCOVERY_DEFERRED_PLAN.md) are saved. Begin M1 after compaction, then continue the authorized implementation. The completed/historical baseline sections below are context only.
+Work remains `/private/tmp/parkour-real11-initial-run-ticks`, branch `research/real11-initial-run-ticks`, baseline `4cf39caa`/algorithm `08b00185`. No runtime tools or source edits began in the interrupted implementation turn; only documentation changes exist and no task processes are running. Preserve uncommitted plans/navigation/deferred design and old evidence. The [controlling plan](design/ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md), [decision doc](design/ANCHOR_POLICY_DECISIONS.md) and [deferred revisit plan](design/REVISIT_DISCOVERY_DEFERRED_PLAN.md) are saved. Begin M1 after compaction, then continue the authorized implementation. The completed/historical baseline sections below are context only.
 
 ## Current implementation
 
@@ -21,11 +23,11 @@ Feature commits: `24b787e8` (M1 immutable raw geometry/domain), `5c4e2e36` (M2 s
 
 ## Validation and next action
 
-Final runtime source is `08b00185`. Its final native gate passes447 tests with zero failures/errors/skips and sourceUnchanged=true; the earlier62-test focused gate remains source-specific intermediate evidence. The generic flat gap finishes at tick14 and independently replays; finite and free virtual-finish regressions pass. Broad native and stored-Real11 raw/semantic/materialized-guide coverage pass. Final matched cold acceptance is recorded under [event-route-discovery](../autonomy/experiments/event-route-discovery/README.md). Read that evidence directory and the plan ledger for final results; do not reuse the old420-test report as coverage of new runtime.
+Final runtime source is `08b00185`. Its final native gate passes447 tests with zero failures/errors/skips and sourceUnchanged=true; the earlier62-test focused gate remains source-specific intermediate evidence. The generic flat gap finishes at tick14 and independently replays; finite and free virtual-finish regressions pass. Broad native and stored-Real11 raw/semantic/materialized-guide coverage pass. Final matched cold acceptance is recorded under [event-route-discovery](../research/event-route-discovery/README.md). Read that evidence directory and the plan ledger for final results; do not reuse the old420-test report as coverage of new runtime.
 
 The initial interrupted Real11 diagnostic is **not** acceptance: it had7 calls and accepted B2/B3 stages, exposed loose long-skip scheduling hints, and was stopped deliberately. Ordinary-flight ordering now uses existing per-flight coefficients; it remains only a scheduling hint. The saved-context M0 profile identifies raw-route guard enumeration and copying, not eager constructor cost, as the dominant work in those two contexts.
 
-M6 is complete for this release. Runtime source `08b00185`; the [final evidence](../autonomy/experiments/event-route-discovery/README.md) includes the447-test native gate, source-stable coverage/generic controls, matched runs, full-route diagram and acceptance manifest. Automatic: T67 first at16.09s, Z=−1093.939078845141,28 calls/1635 prefixes,24/24 replays; supplied: T67 first at43.79s, Z=−1093.8231290646224,51 calls/511 prefixes,95/95 replays. Actual total session walls301.90s/305.76s for declared300s guards. All runtime hashes agree and80 historical artifact hashes are unchanged. No active experiments remain; do not poll obsolete session IDs or rerun completed gates without a new change/concern. No implementation remains for that completed release. The requested next change is planned above and is not implemented. Baseline limitations/deferred work are listed in the generic plan’s final release outcome. The automatic result satisfies the agreed virtual height7 clock with actual Y≈6.7967/airborne; the supplied control is physically grounded at Y7. No fixed64 requirement or optimality claim. If the cold performance goal is unmet, preserve unknown work and profile rather than widen caps. Keep docs/manifest/report source claims exact.
+M6 is complete for this release. Runtime source `08b00185`; the [final evidence](../research/event-route-discovery/README.md) includes the447-test native gate, source-stable coverage/generic controls, matched runs, full-route diagram and acceptance manifest. Automatic: T67 first at16.09s, Z=−1093.939078845141,28 calls/1635 prefixes,24/24 replays; supplied: T67 first at43.79s, Z=−1093.8231290646224,51 calls/511 prefixes,95/95 replays. Actual total session walls301.90s/305.76s for declared300s guards. All runtime hashes agree and80 historical artifact hashes are unchanged. No active experiments remain; do not poll obsolete session IDs or rerun completed gates without a new change/concern. No implementation remains for that completed release. The requested next change is planned above and is not implemented. Baseline limitations/deferred work are listed in the generic plan’s final release outcome. The automatic result satisfies the agreed virtual height7 clock with actual Y≈6.7967/airborne; the supplied control is physically grounded at Y7. No fixed64 requirement or optimality claim. If the cold performance goal is unmet, preserve unknown work and profile rather than widen caps. Keep docs/manifest/report source claims exact.
 
 ## Historical a28e5b71 baseline
 
@@ -64,7 +66,7 @@ Preserve original-state continuous re-solves with all earlier facings free, norm
 
 ## Final verification and evidence
 
-All reports are in [automatic-corridors](../autonomy/experiments/automatic-corridors/README.md), under distinct paths; earlier failed/intermediate reports are preserved.
+All reports are in [automatic-corridors](../research/automatic-corridors/README.md), under distinct paths; earlier failed/intermediate reports are preserved.
 
 - Final `allocation-context-final-native-2026-11-03.{json,log}`:420 tests pass, zero failures/errors/skips,234.1s, sourceUnchanged=true. Explicit47-module list includes generic mixed ladder controls; dedicated ladder/climbable/vine/movement-entry modules remain outside this scope because of the documented unrelated baseline. This is not an all-suite/actual-world claim.
 - Final `coverage-allocation-context-final-2026-11-03.json.gz`: unseeded default50/5000/64/2 enumeration admits archived initial0 T64 witness as route26, independent replay passes. Controls/positions enter only after enumeration. Rectangle SVGs show raw cells and transit/support domains. Native coverage also checks B2 landing/run-off within one input.
@@ -87,7 +89,7 @@ export OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1
 export PYTHONPATH="$PWD"
 export PKC_IPOPT_PYTHON=/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/.venv-guidance/bin/python
 export PKC_RUN_TICKS_COMPILER=/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/standalone/autonomy/build/compiler.json
-"$PKC_IPOPT_PYTHON" -B -m unittest standalone.autonomy.tests.test_semantic_search standalone.autonomy.tests.test_semantic_routes standalone.autonomy.tests.test_route_regions standalone.autonomy.tests.test_route_progress standalone.autonomy.tests.test_route_guards -v
+"$PKC_IPOPT_PYTHON" -B -m unittest tests.unit.search.test_semantic_search tests.unit.spatial.test_semantic_routes tests.unit.spatial.test_route_regions tests.unit.spatial.test_route_progress tests.unit.spatial.test_route_guards -v
 ```
 
 See the evidence README for automatic cold/resume and coverage CLI commands. Always choose new output paths. No active experiment sessions remain after feature finalization; do not poll obsolete session IDs from earlier handoffs.

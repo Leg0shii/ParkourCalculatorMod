@@ -18,7 +18,7 @@ Run-off means leaving a support without jumping, then falling. It is a distinct 
 
 The departure source must also become an obstacle during subsequent intervals of vertical overlap. Collision-box mode now checks that behavior against its actual bottom/top and all later movement. The support-plane mode still lacks this volume and reports `runOffSourceObstacle: departure_exit_only_pending_y_obstacles`. [RUN_OFF_OBSTACLES.md](RUN_OFF_OBSTACLES.md) distinguishes the scopes.
 
-Example input, [fixtures/blocks-route-choice.json](fixtures/blocks-route-choice.json):
+Example input, [fixtures/blocks-route-choice.json](../../tests/fixtures/movement/blocks-route-choice.json):
 
 ```json
 {
@@ -75,11 +75,11 @@ Pool truncation is explicitly reported as `heuristicPoolDrops`, separate from gr
 
 ## Run
 
-Prepare the Java compiler and Python runtime as in [README.md](README.md), then:
+Prepare the Java compiler and Python runtime as in [README.md](../history/AUTONOMY_README.md), then:
 
 ```sh
 PKC_IPOPT_PYTHON="$PWD/.venv-ipopt/bin/python" \
-python3 -m standalone.autonomy.solve_blocks \
+python3 -m parkour_solver.cli.blocks \
   --input standalone/autonomy/fixtures/blocks-route-choice.json \
   --output standalone/autonomy/build/blocks-route-choice-result.json \
   --seconds 45 --route-seconds 4 --candidate-seconds 1 --retries 0
@@ -101,4 +101,4 @@ python3 -m standalone.autonomy.solve_blocks \
 - Unit tests retain different paths to the same support, extend unknown prefixes, permit repeated-support jumps, compile distinct repeated visits, reject composite/gap unions and unsupported geometry, distinguish compiler errors from timeouts, retain an incumbent on cancellation and expose candidate/pool limits.
 - A seeded audit forwards 100 free-facing, automatic-inertia witnesses through the existing scalar model and checks that the optimistic graph retains their landing edge, including varied initial momentum.
 
-The combined orchestration suite passes 110 tests with the actual Java compiler and IPOPT runtime. [Height/stair artifacts](experiments/height-and-stairs/README.md) include self-contained full numerical requests with generated Y contacts; those artifacts record the earlier first-feasible checkpoint. [Run-off artifacts](experiments/runoff-profiles/README.md) retain full requests and independently validated source exits. The numerical worker and native angle-solver code are unchanged. The shared scene helper supplies collision checks; intentional wall/ceiling-contact generation is next; [BLOCK_SOLVER_PLAN.md](BLOCK_SOLVER_PLAN.md) tracks the remaining profile and geometry families.
+The combined orchestration suite passes 110 tests with the actual Java compiler and IPOPT runtime. [Height/stair artifacts](../../research/height-and-stairs/README.md) include self-contained full numerical requests with generated Y contacts; those artifacts record the earlier first-feasible checkpoint. [Run-off artifacts](../../research/runoff-profiles/README.md) retain full requests and independently validated source exits. The numerical worker and native angle-solver code are unchanged. The shared scene helper supplies collision checks; intentional wall/ceiling-contact generation is next; [BLOCK_SOLVER_PLAN.md](BLOCK_SOLVER_PLAN.md) tracks the remaining profile and geometry families.

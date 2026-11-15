@@ -70,4 +70,4 @@ The accepted extra cases are corner jump cancel and corner blip-up. The partial-
 - Grind: outside/under timing, low ceiling, zero rise, air recovery and flat/non-flat following floor; ordinary ceiling impacts remain separate candidates.
 - Missing/extra/mistimed contact rejection, actual retained wall effects, ladder boundaries, carried state, jump release/cooldown through repeated short cycles, and full original-state solve.
 
-Water and performance pruning remain separate work. The reference collision probes are documented in [experiments/stepping-mechanics](experiments/stepping-mechanics/README.md); they do not by themselves certify new case-generated routes.
+Water and performance pruning remain separate work. The reference collision probes are documented in [experiments/stepping-mechanics](../../research/stepping-mechanics/README.md); they do not by themselves certify new case-generated routes.

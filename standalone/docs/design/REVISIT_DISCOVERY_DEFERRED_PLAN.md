@@ -30,9 +30,9 @@ The following preserves the earlier analysis as **future context**. References t
 
 A repeated block is not automatically a duplicate: A→B→A can return with different elapsed time, input history, speed/direction possibilities and physical commitments. Same-block jump chains and sideways bouncing between adjacent blocks may produce useful momentum with little forward displacement. We must not remove them merely because block position or guide progress repeats.
 
-The existing search has a finite maxInputs horizon (stored Real11 200), and [`append_choice`](movement_composition.py) enforces positive duration for every physical movement choice. Thus no infinite physical cycle exists within the declared finite horizon. Finite does not imply cheap: long alternating sequences can still produce many combinations. [`movement_settings`](movement_search.py) also bounds interactions/work allocations; a work slice stops with residual cursors rather than proving no route.
+The existing search has a finite maxInputs horizon (stored Real11 200), and [`append_choice`](../../src/parkour_solver/movement/program.py) enforces positive duration for every physical movement choice. Thus no infinite physical cycle exists within the declared finite horizon. Finite does not imply cheap: long alternating sequences can still produce many combinations. [`movement_settings`](../../src/parkour_solver/search/movement.py) also bounds interactions/work allocations; a work slice stops with residual cursors rather than proving no route.
 
-The [event backing graph](cell_routes/event_routes.py) is already cyclic. Its raw silent-closure seen set prevents repeated geometry expansion within one query; that set is not a global ban on physical support revisits. Do not reintroduce a catalogue of all simple/cyclic raw-cell paths just to support A→B→A.
+The [event backing graph](../../src/parkour_solver/spatial/event_routes.py) is already cyclic. Its raw silent-closure seen set prevents repeated geometry expansion within one query; that set is not a global ban on physical support revisits. Do not reintroduce a catalogue of all simple/cyclic raw-cell paths just to support A→B→A.
 
 ### Recommended controls, in order
 

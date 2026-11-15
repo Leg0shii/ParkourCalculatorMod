@@ -1,5 +1,7 @@
 # Anchor search: current resume state
 
+Package/layout update: production is now installed as `parkour_solver`; see [current layout](LAYOUT.md), [runbook](RUNBOOK.md) and [refactor validation](STANDALONE_REFACTOR_IMPLEMENTATION.md). Source-era checkout paths and measurements below do not override those current commands. Solver policy and compatible checkpoint schemas are unchanged.
+
 2026-11-11. Runtime feature `dd738c98` is complete. Continue in the checkout where
 the session starts; this session uses `research/ipopt-cell-routes` in
 `/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes`. Old private-worktree
@@ -13,7 +15,7 @@ edits, including this session's pre-existing `AGENTS.md` and `docs/CODE_MAP.md` 
    implementation owners, current fixture and measured counts.
 2. [Current state](CURRENT_STATE.md), [decisions](DECISIONS_AND_PLANS.md), and the
    [completed implementation record](HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md).
-3. [Evidence](../autonomy/experiments/hard-jump-comparisons/README.md),
+3. [Evidence](../research/hard-jump-comparisons/README.md),
    [architecture](ARCHITECTURE.md), [runbook](RUNBOOK.md) and [testing](TESTING.md).
 
 ## Settled implementation
@@ -67,7 +69,7 @@ physical B7 `[729,0,-1095,730,7,-1093]`. No fixed64, virtual +Z goal or extra
 X<729.7 row. B6 remains stored geometry; replacement extension bounds are missing.
 
 No feature implementation or solver/test process remains pending. Do not restart
-old M1 lists. Revisit generation has a [deferred plan](../autonomy/REVISIT_DISCOVERY_DEFERRED_PLAN.md).
+old M1 lists. Revisit generation has a [deferred plan](design/REVISIT_DISCOVERY_DEFERRED_PLAN.md).
 Intentional wall hits, cadence/turn tuning and measured remaining bookkeeping
 optimization are separate future work. Use fresh evidence output paths if asked
 to run another experiment; keep manifest/SQLite companions together.

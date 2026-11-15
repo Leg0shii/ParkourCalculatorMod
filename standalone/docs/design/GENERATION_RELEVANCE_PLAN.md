@@ -1,6 +1,6 @@
 # Preliminary plan: generate only relevant, distinct interaction models
 
-> Implementation boundary: `498c054c`. [DFS/interaction results](experiments/dfs-interactions/README.md) and [current state](../docs/CURRENT_STATE.md) supersede pending-status language below; the original requirements remain as design provenance.
+> Implementation boundary: `498c054c`. [DFS/interaction results](../../research/dfs-interactions/README.md) and [current state](../CURRENT_STATE.md) supersede pending-status language below; the original requirements remain as design provenance.
 
 Current consolidated scope: [DFS_INTERACTION_IMPLEMENTATION_PLAN.md](DFS_INTERACTION_IMPLEMENTATION_PLAN.md). This document supplies the interaction half; the user now also selects depth-first decision traversal and backtracking.
 
@@ -18,7 +18,7 @@ P04/P05 and the irrelevant face/gate explosion are regressions for this one inva
 
 ## Confirmed problems
 
-1. The current face grammar enumerates irrelevant gate states and inactive face prefixes, strips their rows later, then deduplicates after joining blocks and refining reachability. Exact-context probes document substantial duplicate work in [the audit](experiments/orchestrator-fixes/audit/PRUNING_FOLLOWUP.md).
+1. The current face grammar enumerates irrelevant gate states and inactive face prefixes, strips their rows later, then deduplicates after joining blocks and refining reachability. Exact-context probes document substantial duplicate work in [the audit](../../research/orchestrator-fixes/audit/PRUNING_FOLLOWUP.md).
 2. Stepping choices construct approach/contact/case bundles before checkpoint truncation. Truncation currently keeps position rows at t<=cut, while dropping finite contact events at input>=cut and case events at input>=cut. A future event can therefore leave an orphan approach row at the cut. Subsequent screening examines only the truncated model and can no longer reject the impossible full proposal that produced it.
 
 ## 1. Determine relevance before constructing decision alternatives
@@ -57,7 +57,7 @@ The saved feet Y values are7.001336 at24,7.166109 at25,7.249187 at26,7.252203 at
 
 Both rows originate in landing_wall_options for a proposed B3-to-B4 blip: horizontal approach/contact at input28, blip at input29, resulting state30. The approach row at state28 survives truncation to inputs0..27; its owner contact at input28 and case at29 are removed. P04 keeps Z[28]<=-1100.300001011921; P05 keeps X[28]>=735.3000010119209. Neither is emitted by generic ConstraintVariants obstacle avoidance.
 
-The existing shared screen already rejects both full30-input proposals with interval_reach_contradiction at state29 on X. Their required B4 contact and B3 landing footprints are incompatible there. After truncation to28, the screen returns not-ruled-out for both orphan-row prefixes. This was reproduced with existing coefficient compilation/screening and no IPOPT calls. Exact full/truncated programs and certificates are saved in [p04-p05-provenance.json.gz](experiments/orchestrator-fixes/audit/p04-p05-provenance.json.gz).
+The existing shared screen already rejects both full30-input proposals with interval_reach_contradiction at state29 on X. Their required B4 contact and B3 landing footprints are incompatible there. After truncation to28, the screen returns not-ruled-out for both orphan-row prefixes. This was reproduced with existing coefficient compilation/screening and no IPOPT calls. Exact full/truncated programs and certificates are saved in [p04-p05-provenance.json.gz](../../research/orchestrator-fixes/audit/p04-p05-provenance.json.gz).
 
 This establishes a second placement/scope gap: useful interaction information is discarded before the necessary screen runs. It is related to early generation filtering, but not the same as the irrelevant-gap duplicate enumeration.
 
@@ -70,4 +70,4 @@ This work keeps the current continuous model, free facings from the original sta
 
 The broader P03 prefix was replayed through the exact-context shared relevance helper. B4 is excluded in all84 Y/X/Z phases of inputs0..27 (all_contact_phases_unreachable), so this also covers the more restricted P04/P05 prefixes. At state28 the conservative X envelope is[737.7905441639986,745.293503318997], entirely beyond B4's expanded maximum X735.3000000119209. The last-input travel bound is8.709457205386883 while reaching B4's expanded footprint needs11.961605228096913 horizontal distance.
 
-Thus the existing reachability bound is already sufficient. Generic avoid generation correctly omits B4; the blip builder creates an approach row outside that path, then truncation drops its owner interaction before screening. Feasibility of the leftover outside inequality cannot substitute for querying reachability of B4. The plan must apply the same interaction query before named-case constraints are emitted, reject the impossible required B4 proposal, and keep the valid ordinary B2->B3 prefix without a B4 avoidance choice. [Exact phase proofs](experiments/orchestrator-fixes/audit/b4-prefix-relevance.json). No IPOPT call or runtime change was made.
+Thus the existing reachability bound is already sufficient. Generic avoid generation correctly omits B4; the blip builder creates an approach row outside that path, then truncation drops its owner interaction before screening. Feasibility of the leftover outside inequality cannot substitute for querying reachability of B4. The plan must apply the same interaction query before named-case constraints are emitted, reject the impossible required B4 proposal, and keep the valid ordinary B2->B3 prefix without a B4 avoidance choice. [Exact phase proofs](../../research/orchestrator-fixes/audit/b4-prefix-relevance.json). No IPOPT call or runtime change was made.

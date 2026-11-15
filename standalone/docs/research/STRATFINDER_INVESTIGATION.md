@@ -12,9 +12,9 @@ For our block solver, the promising design is a pool of route/profile prefixes, 
 
 - Our worktree at `54c0374`, native code unchanged from its baseline. Read the actual controller, pool driver, screens, certifier and fallback, not only the early spike document.
 - `git blame` attributes the current pad-prefix prune and best-first cross-level queue to `3085f011`, [PR #558](https://github.com/Leg0shii/ParkourCalculatorMod/pull/558), merged 2026-10-18. Read that description, [issue #554](https://github.com/Leg0shii/ParkourCalculatorMod/issues/554), and [the original issue #424](https://github.com/Leg0shii/ParkourCalculatorMod/issues/424) with `gh`.
-- The consolidated [native design record](../../docs/noturn-global-solver-design.md) contains later changes that supersede parts of [the early spike](../../docs/noturn-stratfinder-spike.md). In particular, the pool driver is implemented and is the controller's first path; Benders/homotopy research code is not the default window search.
+- The consolidated [native design record](../../../docs/noturn-global-solver-design.md) contains later changes that supersede parts of [the early spike](../../../docs/noturn-stratfinder-spike.md). In particular, the pool driver is implemented and is the controller's first path; Benders/homotopy research code is not the default window search.
 - Curryocity source cloned into ignored `build/stratfinder-source`, pinned at `988695b9b23245ded9f8ffb07c7ffd984091225d`. Its repository returned no issues or pull requests in the API queries. Read `inputCracker`, `segLerp`, `zSolver`, movement code and settings.
-- Compiled Curryocity's headless cracker and ran one narrow velocity-window case with risky pruning on/off. Results and a small reproducible probe are in [experiments/stratfinder-review](experiments/stratfinder-review/summary.json).
+- Compiled Curryocity's headless cracker and ran one narrow velocity-window case with risky pruning on/off. Results and a small reproducible probe are in [experiments/stratfinder-review](../../research/stratfinder-review/summary.json).
 - Historical native performance numbers below are reported measurements from the cited records, not new benchmark runs in this investigation. Native cold/certification suites were not rerun because this change is research documentation only.
 
 ## Ours: what actually runs

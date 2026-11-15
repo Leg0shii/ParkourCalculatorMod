@@ -66,7 +66,7 @@ Legacy real11 fixture arrays are retained for reproducible numerical benchmarks.
 The optional Java exporter now compiles 1.8.9 coefficients with the mod input state. To correct an existing request without changing the source fixture:
 
 ```sh
-./gradlew -I standalone/ipopt/export.gradle :core:compileStandaloneIpoptPhysics \
+./gradlew -I standalone/native/gradle/export.gradle :core:compileStandaloneIpoptPhysics \
   -PipoptCapture=/path/to/template.json \
   -PipoptInput=/path/to/old-problem.json \
   -PipoptOutput=/tmp/mod-movement-problem.json

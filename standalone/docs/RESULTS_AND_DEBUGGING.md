@@ -2,7 +2,7 @@
 
 For current physical-anchor search use the [execution reference](ANCHOR_SEARCH_EXECUTION_REFERENCE.md). It separates a consumed proposal, admitted program, constraint variant, evaluation, solver wrapper and worker launch; these counters must not be interchanged. A strict finish-bound exclusion is different from a recoverable peer deferral, a resource cap, an analytical absence proof, exact operational oracle rejection or suspended work.
 
-Current saved evidence: `DFS.transferTimeBounds`, `timeBoundExclusions`, `comparisonWork`, `comparisonDecisions` and the single `minimumRunExclusions` compatibility table; frame-local `tickPeers`; `interactionGate.metrics`; and the profiled arms' `requests.json` invocation fingerprints/stop/worker status. Use [matched results](../autonomy/experiments/hard-jump-comparisons/README.md) for source provenance. A common-case rejection before side fan-out creates no side programs/workers. A rejected unused tail cannot label its valid owned anchor prefix infeasible.
+Current saved evidence: `DFS.transferTimeBounds`, `timeBoundExclusions`, `comparisonWork`, `comparisonDecisions` and the single `minimumRunExclusions` compatibility table; frame-local `tickPeers`; `interactionGate.metrics`; and the profiled arms' `requests.json` invocation fingerprints/stop/worker status. Use [matched results](../research/hard-jump-comparisons/README.md) for source provenance. A common-case rejection before side fan-out creates no side programs/workers. A rejected unused tail cannot label its valid owned anchor prefix infeasible.
 
 Start with [architecture](ARCHITECTURE.md) for call flow, [runbook](RUNBOOK.md) for execution, and [Real11 guide](REAL11_GUIDE.md) for the existing corpus. Do not launch a new long solve just to answer a question already logged.
 
@@ -41,7 +41,7 @@ Read large files selectively:
 ```sh
 python3 - <<'PY'
 from pathlib import Path
-from standalone.autonomy.checkpoint_store import read_report
+from parkour_solver.io.checkpoint_store import read_report
 p = Path('/tmp/real11-cold-new.json.gz')
 report = read_report(p)  # Shared manifest/SQLite or legacy plain/gzipped JSON.
 r = report.get('result', report)
@@ -82,4 +82,4 @@ Record `arrival` is a validated goal time. `value` is that program's local objec
 
 Per-worker diagnostics now retain `request`, `problemHash` and `callOptions`, with exact magnitude/friction/base arrays, fixed constraints, contact schedule and initial state. Re-run `prepare`/`fingerprint` offline to verify the hash. Completed inner branches and contact-validation entries carry a shared `branch` key; `validationStatus` distinguishes accepted, rejected, no candidate and not-run validation. A stopped validation is not an IPOPT failure. Older cold evidence predates these additive audit fields and is explicitly labelled; its fixed program/context and hashes remain available for reconstruction with the source/compiler.
 
-[Current summary](../autonomy/experiments/dfs-interactions/evidence/summary.json) and [14-call table](../autonomy/experiments/dfs-interactions/CALLS.md) reconcile the measured cold/resume pair. `summarize.py` validates frame ownership, exact model context, request fingerprints, preserved completed history, no redispatch and independent replay results. The new traversal retains all siblings; legacy `comparison_policy`/`fair_parents`/beam settings no longer select the old traversal or permanently evict protected candidates. Read the actual `order`/`comparisonPolicy` fields.
+[Current summary](../research/dfs-interactions/evidence/summary.json) and [14-call table](../research/dfs-interactions/CALLS.md) reconcile the measured cold/resume pair. `summarize.py` validates frame ownership, exact model context, request fingerprints, preserved completed history, no redispatch and independent replay results. The new traversal retains all siblings; legacy `comparison_policy`/`fair_parents`/beam settings no longer select the old traversal or permanently evict protected candidates. Read the actual `order`/`comparisonPolicy` fields.

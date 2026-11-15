@@ -1,11 +1,11 @@
 # Plan: anchor DFS, global hard latches and observable binary turn heuristics
 
 **Implemented anchor baseline, with current follow-ups through `dd738c98`.**
-The [execution reference](../docs/ANCHOR_SEARCH_EXECUTION_REFERENCE.md) contains
+The [execution reference](../ANCHOR_SEARCH_EXECUTION_REFERENCE.md) contains
 current combination/pruning/IPOPT tables, rationale and owners. The later
-[hard-jump implementation record](../docs/HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md)
+[hard-jump implementation record](../HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md)
 controls shared comparisons, early proposal reachability and flight bounds.
-[Current evidence](experiments/hard-jump-comparisons/README.md) records600 native
+[Current evidence](../../research/hard-jump-comparisons/README.md) records600 native
 passes and cold physical T64. There is no M1 implementation to resume and no
 checkout switch authorized by the original planning worktree below.
 
@@ -37,15 +37,15 @@ Required anchor occurrences remain ordered. Same-block hops and permitted acycli
 
 | Source | Existing behavior | Work |
 | --- | --- | --- |
-| [`guides.py`](cell_routes/guides.py), [`routes.conditioned_anchor`](cell_routes/routes.py), [`Checkpoint.objective`](cell_routes/checkpoints.py) | Midpoint/clamp guide, onward global-finish direction, existing POSITION/customYaw conversion. | Backward anchor projection, finite physical B7 endpoint, next-guide-point objective and turn geometry. |
-| [`event_adapter.py`](cell_routes/event_adapter.py) | Dynamic next-contact frames; supportAllowed current+target; finite required region alternatives. | Required-anchor stages, acyclic optional contacts/same-block jumps internally, compact guide/turn refs; retain physical ORs/audit. |
-| [`depth_first.py`](cell_routes/depth_first.py) | Schema7 DFS, elapsed>full-finish bound, global run switch, saved excluded programs, no targeted restoration. | Anchor frames, global hard latches, regional priorities, shared-node statuses, actual edge recovery. |
-| [`minimum_runs.py`](cell_routes/minimum_runs.py) | Latest-jump family normalization/validated least-run representatives. | Reuse; apply recoverable deferral only to eligible ordinary preparation, with restoration bypass. |
-| [`movement_frontier.py`](movement_frontier.py) | Pending/ready full-program records, seen set, resumable expansion; no NLP at every internal node. | Actual node IDs/parent references, exact-query results and solve cadence; same-block jumps and departed-owner eligibility. |
-| [`solve_spec.py`](solve_spec.py) | Cumulative J/R and scope/model identities. | Span start/A count/binary decision mode, semantic node identity separate from repair progress. |
-| [`interactions.py`](interactions.py), [`reachability.py`](reachability.py) | Shared compiled prefix envelopes/phase geometry. | Keep physical screens; do not use envelope/probe uncertainty to choose a third heuristic mode. |
-| [`checkpoint_search.py`](cell_routes/checkpoint_search.py), [`search.py`](search.py) | Guide objective with optimize_goal=True; optimize_goal controls polish and early stop. | Separate objective/early-stop/polish; intermediate first fully validated witness, final real optimization. |
-| [`ipopt/solver.py`](../ipopt/solver.py), [`continuation.py`](../ipopt/continuation.py), [`worker.py`](../ipopt/worker.py) | Feasible seed fast return, POSITION/customYaw, stop callback. | Reuse and test, no new objective type/equation. |
+| [`guides.py`](../../src/parkour_solver/spatial/guides.py), [`routes.conditioned_anchor`](../../src/parkour_solver/spatial/compat/corridors.py), [`Checkpoint.objective`](../../src/parkour_solver/spatial/checkpoints.py) | Midpoint/clamp guide, onward global-finish direction, existing POSITION/customYaw conversion. | Backward anchor projection, finite physical B7 endpoint, next-guide-point objective and turn geometry. |
+| [`event_adapter.py`](../../src/parkour_solver/search/events/adapter.py) | Dynamic next-contact frames; supportAllowed current+target; finite required region alternatives. | Required-anchor stages, acyclic optional contacts/same-block jumps internally, compact guide/turn refs; retain physical ORs/audit. |
+| [`depth_first.py`](../../src/parkour_solver/search/dfs.py) | Schema7 DFS, elapsed>full-finish bound, global run switch, saved excluded programs, no targeted restoration. | Anchor frames, global hard latches, regional priorities, shared-node statuses, actual edge recovery. |
+| [`minimum_runs.py`](../../src/parkour_solver/search/compat/minimum_runs.py) | Latest-jump family normalization/validated least-run representatives. | Reuse; apply recoverable deferral only to eligible ordinary preparation, with restoration bypass. |
+| [`movement_frontier.py`](../../src/parkour_solver/search/frontier.py) | Pending/ready full-program records, seen set, resumable expansion; no NLP at every internal node. | Actual node IDs/parent references, exact-query results and solve cadence; same-block jumps and departed-owner eligibility. |
+| [`solve_spec.py`](../../src/parkour_solver/search/identity.py) | Cumulative J/R and scope/model identities. | Span start/A count/binary decision mode, semantic node identity separate from repair progress. |
+| [`interactions.py`](../../src/parkour_solver/reachability/service.py), [`reachability.py`](../../src/parkour_solver/reachability/intervals.py) | Shared compiled prefix envelopes/phase geometry. | Keep physical screens; do not use envelope/probe uncertainty to choose a third heuristic mode. |
+| [`checkpoint_search.py`](../../src/parkour_solver/search/engine.py), [`search.py`](../../src/parkour_solver/search/ordered_route.py) | Guide objective with optimize_goal=True; optimize_goal controls polish and early stop. | Separate objective/early-stop/polish; intermediate first fully validated witness, final real optimization. |
+| [`src/parkour_solver/numerics/solver.py`](../../src/parkour_solver/numerics/solver.py), [`continuation.py`](../../src/parkour_solver/numerics/continuation.py), [`worker.py`](../../src/parkour_solver/numerics/worker.py) | Feasible seed fast return, POSITION/customYaw, stop callback. | Reuse and test, no new objective type/equation. |
 
 The previous 447-test/T67 acceptance used original B7 and virtual task. It does not validate the extended B7 task, global latch, exact-node solve cadence or active visit restrictions. Keep all old sources/evidence unchanged.
 
@@ -221,17 +221,17 @@ Keep physical/call/time/input/method limits; discovery/refinement allocations re
 | File | Work |
 | --- | --- |
 | proposed cell_routes/anchor_policy.py | Canonical ordered milestones, cursor/span boundary and actual prior-contact audit; departed-owner filter preserving same-block jumps. |
-| proposed cell_routes/anchor_guides.py or extend [`guides.py`](cell_routes/guides.py) | Finite endpoint/backward projections,110° cues/edge regions, next-point objective, deterministic annotation data. |
-| proposed cell_routes/span_priority.py + [`solve_spec.py`](solve_spec.py) | Local counts, binary decision comparator/shared immutable key and pure exact-node identity. |
-| [`event_adapter.py`](cell_routes/event_adapter.py), [`event_routes.py`](cell_routes/event_routes.py), [`event_search.py`](cell_routes/event_search.py) | Required-anchor stage views/open acyclic and same-block support choices, shared physical/guide references; retain finite region ORs/provenance. |
-| [`depth_first.py`](cell_routes/depth_first.py) | Global monotone latch table/eligibility revision, anchor frames, full-finish backtrack, prefix statuses, targeted run recovery. |
-| [`movement_frontier.py`](movement_frontier.py), [`movement_search.py`](movement_search.py), [`movement_generation.py`](movement_generation.py) | Normal node IDs/parent/outcome and completed-decision solve interval; regional key hooks/departed-owner eligibility, no revisit-family cursors. |
-| [`candidate_comparison.py`](candidate_comparison.py), [`preparation_deferrals.py`](cell_routes/preparation_deferrals.py), [`minimum_runs.py`](cell_routes/minimum_runs.py) | One shared count/key/guard/bound predicate owner; frame-local peer storage; minimum_runs retains legacy matched-family normalization only. DFS owns scoped recovery bypass. |
-| [`checkpoint_search.py`](cell_routes/checkpoint_search.py), [`search.py`](search.py), [`block_contacts.py`](block_contacts.py) | Explicit objective/stop/polish, exact-node endpoint assembly, cadence and rejection-scope handling, physical alternatives/native audit and repair. |
-| [`interactions.py`](interactions.py), [`reachability.py`](reachability.py), [`prefix_viability.py`](prefix_viability.py) | Reuse cheap screens/envelopes and phase sweeps, no new physical equations. |
-| [`repair_state.py`](repair_state.py), [`support_order.py`](cell_routes/support_order.py), [`comparison_goals.py`](cell_routes/comparison_goals.py) | Correct scope/policy compatibility and contact helpers; strict old filters must not ban same-block setup or acyclic optional supports; apply explicit departed-owner eligibility. |
-| [`automatic_experiment.py`](cell_routes/automatic_experiment.py), fixture/plot/report drivers | New extended-B7 task, latches/regional membership/exact queried-node outcomes/cadence/call counters and source-specific diagrams. |
-| [`ipopt/solver.py`](../ipopt/solver.py), [`continuation.py`](../ipopt/continuation.py), [`worker.py`](../ipopt/worker.py), [`model.py`](../ipopt/model.py) | Reuse existing callbacks/POSITION/seed path; tests through real worker. No new objective type. Expand runtime hashes/tests if actual changes become necessary. |
+| proposed cell_routes/anchor_guides.py or extend [`guides.py`](../../src/parkour_solver/spatial/guides.py) | Finite endpoint/backward projections,110° cues/edge regions, next-point objective, deterministic annotation data. |
+| proposed cell_routes/span_priority.py + [`solve_spec.py`](../../src/parkour_solver/search/identity.py) | Local counts, binary decision comparator/shared immutable key and pure exact-node identity. |
+| [`event_adapter.py`](../../src/parkour_solver/search/events/adapter.py), [`event_routes.py`](../../src/parkour_solver/spatial/event_routes.py), [`event_search.py`](../../src/parkour_solver/search/events/engine.py) | Required-anchor stage views/open acyclic and same-block support choices, shared physical/guide references; retain finite region ORs/provenance. |
+| [`depth_first.py`](../../src/parkour_solver/search/dfs.py) | Global monotone latch table/eligibility revision, anchor frames, full-finish backtrack, prefix statuses, targeted run recovery. |
+| [`movement_frontier.py`](../../src/parkour_solver/search/frontier.py), [`movement_search.py`](../../src/parkour_solver/search/movement.py), [`movement_generation.py`](../../src/parkour_solver/movement/generation.py) | Normal node IDs/parent/outcome and completed-decision solve interval; regional key hooks/departed-owner eligibility, no revisit-family cursors. |
+| [`candidate_comparison.py`](../../src/parkour_solver/search/comparison.py), [`preparation_deferrals.py`](../../src/parkour_solver/search/deferrals.py), [`minimum_runs.py`](../../src/parkour_solver/search/compat/minimum_runs.py) | One shared count/key/guard/bound predicate owner; frame-local peer storage; minimum_runs retains legacy matched-family normalization only. DFS owns scoped recovery bypass. |
+| [`checkpoint_search.py`](../../src/parkour_solver/search/engine.py), [`search.py`](../../src/parkour_solver/search/ordered_route.py), [`block_contacts.py`](../../src/parkour_solver/search/repair.py) | Explicit objective/stop/polish, exact-node endpoint assembly, cadence and rejection-scope handling, physical alternatives/native audit and repair. |
+| [`interactions.py`](../../src/parkour_solver/reachability/service.py), [`reachability.py`](../../src/parkour_solver/reachability/intervals.py), [`prefix_viability.py`](../../src/parkour_solver/reachability/viability.py) | Reuse cheap screens/envelopes and phase sweeps, no new physical equations. |
+| [`repair_state.py`](../../src/parkour_solver/search/repair_state.py), [`support_order.py`](../../src/parkour_solver/search/domain.py), [`comparison_goals.py`](../../src/parkour_solver/search/goals.py) | Correct scope/policy compatibility and contact helpers; strict old filters must not ban same-block setup or acyclic optional supports; apply explicit departed-owner eligibility. |
+| [`automatic_experiment.py`](../../src/parkour_solver/cli/solve.py), fixture/plot/report drivers | New extended-B7 task, latches/regional membership/exact queried-node outcomes/cadence/call counters and source-specific diagrams. |
+| [`src/parkour_solver/numerics/solver.py`](../../src/parkour_solver/numerics/solver.py), [`continuation.py`](../../src/parkour_solver/numerics/continuation.py), [`worker.py`](../../src/parkour_solver/numerics/worker.py), [`model.py`](../../src/parkour_solver/numerics/model.py) | Reuse existing callbacks/POSITION/seed path; tests through real worker. No new objective type. Expand runtime hashes/tests if actual changes become necessary. |
 
 ## 13. Persistence and ownership
 
@@ -367,7 +367,7 @@ export PKC_RUN_TICKS_COMPILER=/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-c
 The proposed suites were implemented primarily in `test_anchor_policy`,
 `test_anchor_search`, `test_anchor_dfs`, `test_anchor_time_bound` and the existing
 DFS/continuation/repair suites. Later shared-helper/proposal/flight tests and the
-current600-test native gate are mapped in [testing](../docs/TESTING.md). Use its
+current600-test native gate are mapped in [testing](../TESTING.md). Use its
 current driver and fresh output paths; do not execute dated writers over evidence.
 No mod/Java/game rebuild is needed for documentation or standalone Python changes.
 
@@ -381,4 +381,4 @@ or revive separate ancestor probes/whole-span turn modes/virtual B7 semantics.
 
 M1–M5 is implemented through AnchorAdapter, anchor_policy/anchor_guides/node_feasibility/turn_observability and the existing DFS/frontier/solver paths. Internal queries occur on selected descent, not construction of an unselected sibling. Required physical arrivals bind their actual clock before comparing unused suffix lengths. Physical-task automatic state is schema2/DFS8/movement context4, with repair assembly9; missing declared anchors means one open span. Repair exhaustion is explicitly distinct from oracle rejection. Explicit initial/input/run/method caps remain effective.
 
-M6–M7 native source-stable acceptance, independent replay and matched finite-task cold measurements are recorded in [new evidence](experiments/anchor-feasibility/README.md). Inter-block returns, cadence/margin tuning and intentional wall hits remain deferred. Before this feature, the accepted baseline used original B7/virtual task fixtures, existing guides/polishing, optional event comparison frames, global run exclusion and schema7 DFS. Those historical artifacts remain unchanged.
+M6–M7 native source-stable acceptance, independent replay and matched finite-task cold measurements are recorded in [new evidence](../../research/anchor-feasibility/README.md). Inter-block returns, cadence/margin tuning and intentional wall hits remain deferred. Before this feature, the accepted baseline used original B7/virtual task fixtures, existing guides/polishing, optional event comparison frames, global run exclusion and schema7 DFS. Those historical artifacts remain unchanged.

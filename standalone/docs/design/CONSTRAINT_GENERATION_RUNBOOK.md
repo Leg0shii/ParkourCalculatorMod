@@ -1,8 +1,8 @@
 # Reusing the mod's block constraints in route discovery
 
-> Current implementation: [DFS/early-interaction results](experiments/dfs-interactions/README.md). This supersedes earlier pending-status and checkpoint-ordering descriptions below; historical evidence remains unchanged.
+> Current implementation: [DFS/early-interaction results](../../research/dfs-interactions/README.md). This supersedes earlier pending-status and checkpoint-ordering descriptions below; historical evidence remains unchanged.
 
-> Current authority: [DFS/early-interaction plan](DFS_INTERACTION_IMPLEMENTATION_PLAN.md), [current state](../docs/CURRENT_STATE.md). The seven-workstream fixes are implemented to their recorded scope; universal early builder gating, ownership and DFS remain pending. Earlier pending statements below are historical, superseded by the implemented workflow section and current plan.
+> Current authority: [DFS/early-interaction plan](DFS_INTERACTION_IMPLEMENTATION_PLAN.md), [current state](../CURRENT_STATE.md). The seven-workstream fixes are implemented to their recorded scope; universal early builder gating, ownership and DFS remain pending. Earlier pending statements below are historical, superseded by the implemented workflow section and current plan.
 
 
 Current full implementation plan: [ORCHESTRATOR_IMPLEMENTATION_PLAN.md](ORCHESTRATOR_IMPLEMENTATION_PLAN.md). Corridor logging is implemented; the seven selected behavioral workstreams are pending. Keep scope/geometry/constraint selection, comparison protections, full search resumption and dead-prefix exclusion together in acceptance.
@@ -19,17 +19,17 @@ Current full implementation plan: [ORCHESTRATOR_IMPLEMENTATION_PLAN.md](ORCHESTR
 8. **Declare the objective precisely.** For fixed spatial goals compare accepted achievement times. For fixed absolute tick h compare the same horizontal objective at h. If the user removes a final landing, set terminalSupportRequired=false and compile an open prefix ending at h; do not leave a hidden final X/Z/Y/support constraint, do not stop at an earlier goal contact, and allow overshoot. Keep the physical final block as an obstacle/support opportunity. Other required route interactions remain enforced. Unmodeled mandatory floor contact cannot disappear merely because the final landing is optional.
 9. **Retain and audit meaningful alternatives.** Use the separate time/progress results and conservative margins; preserve tradeoffs and saved work. Count caps are heuristics, not proofs. Do not increase them indiscriminately. Replay every accepted witness through the shared physics/scene helpers and compare against targeted additional-candidate or fresh-root joint references when evidence warrants it. Report supplied geometry/routes, unknowns and missing coverage explicitly.
 
-Worked records: [user blocks and bounds](experiments/linkcraft11-opening/PLAYER_BOUNDS.md), [exact corner check](experiments/linkcraft11-opening/b1-corner-check.json), and [potential improvements with revisit triggers](PRUNING_IMPROVEMENTS_BACKLOG.md).
+Worked records: [user blocks and bounds](../../research/linkcraft11-opening/PLAYER_BOUNDS.md), [exact corner check](../../research/linkcraft11-opening/b1-corner-check.json), and [potential improvements with revisit triggers](PRUNING_IMPROVEMENTS_BACKLOG.md).
 
-The [completed Real11 pilot](experiments/linkcraft11-opening/README.md) demonstrates a valid64-tick airborne continuation without a final landing constraint. It also shows why step9 needs actual complete references: a history excluded by both local time and progress later gives the best tested complete objective. Nearer support goals and support-progress proposal ordering improve discovery, but do not prove safe retention. Constructive completion using the same movement builders is currently a research probe; integrating it and reopening distinct earlier histories are follow-up work. Save the complete symbolic program, all accepted yaw inputs, geometry, contact phases, unknown attempts and independent replay, as in solution.json.gz and the evidence directory. A successful candidate remains useful when unresolved alternatives or a branch cap prevent an optimality claim.
+The [completed Real11 pilot](../../research/linkcraft11-opening/README.md) demonstrates a valid64-tick airborne continuation without a final landing constraint. It also shows why step9 needs actual complete references: a history excluded by both local time and progress later gives the best tested complete objective. Nearer support goals and support-progress proposal ordering improve discovery, but do not prove safe retention. Constructive completion using the same movement builders is currently a research probe; integrating it and reopening distinct earlier histories are follow-up work. Save the complete symbolic program, all accepted yaw inputs, geometry, contact phases, unknown attempts and independent replay, as in solution.json.gz and the evidence directory. A successful candidate remains useful when unresolved alternatives or a branch cap prevent an optimality claim.
 
-Subsequent [execution audit](experiments/linkcraft11-opening/EXECUTION_AUDIT.md) identifies an earlier prerequisite: match the decision domain to the map/user contract before applying general-purpose retention. Real11's intended case has no extra run ticks and only the B6 blockage choice. Do not create first-jump ground-delay decisions or manual checkpoint windows for that case. Reuse the normal chain as fixed prerequisites, enumerate its actual blockage variants and log every fixed call's constraints/results. The earlier retention counterexample concerns the broader run-tick experiment, not a demonstrated need to complicate this simple intended solve. Scalar feasibility alone is insufficient:21 of25 scalar-feasible returns in the successful final evaluation failed route checks and three others failed scene checking before one returned branch passed both.
+Subsequent [execution audit](../../research/linkcraft11-opening/EXECUTION_AUDIT.md) identifies an earlier prerequisite: match the decision domain to the map/user contract before applying general-purpose retention. Real11's intended case has no extra run ticks and only the B6 blockage choice. Do not create first-jump ground-delay decisions or manual checkpoint windows for that case. Reuse the normal chain as fixed prerequisites, enumerate its actual blockage variants and log every fixed call's constraints/results. The earlier retention counterexample concerns the broader run-tick experiment, not a demonstrated need to complicate this simple intended solve. Scalar feasibility alone is insufficient:21 of25 scalar-feasible returns in the successful final evaluation failed route checks and three others failed scene checking before one returned branch passed both.
 
 Latest user steering explicitly keeps both initial setup families0/8 as potentially useful. That overrides the blanket no-run exclusion above for those two choices. Preserve both through the later local decisions even if the short proxy favors one. The found complete trajectories show jump0's directional advantage only at23, and its first shared-support time lead only atB5=55 versus58. These are observed continuations, not dominance certificates. Avoid unrelated generic delay enumeration; follow the actual user-selected decision domain.
 
 ## Corridor diagnostics and future-test review
 
-Corridor checking remains enabled. Whether to keep it long term is undecided. The [bug-fix plan](CORRIDOR_CONSTRAINT_FIX_PLAN.md) separates completed instrumentation from pending behavior changes. The [Real11 exact audit](experiments/linkcraft11-opening/audit/CORRIDOR_FAILURES.md) contains a worked failure and diagram.
+Corridor checking remains enabled. Whether to keep it long term is undecided. The [bug-fix plan](CORRIDOR_CONSTRAINT_FIX_PLAN.md) separates completed instrumentation from pending behavior changes. The [Real11 exact audit](../../research/linkcraft11-opening/audit/CORRIDOR_FAILURES.md) contains a worked failure and diagram.
 
 Rejected returned candidates persist diagnostics at `result.contactAttempts[i].candidateFilter.corridorAudit`; experiment reports may nest the result under a run or evaluation. Record version1 contains:
 
@@ -45,8 +45,8 @@ These records describe final returned branch candidates. The adapter's `corridor
 To investigate a rejected record, retain the experiment's original fixture/declared scene and replay the saved data with the existing bridge, separately from the timed search:
 
 ```python
-from standalone.autonomy.block_search import prepare_scene
-from standalone.autonomy.obstacle_geometry import check_geometry
+from parkour_solver.search.support_profiles import prepare_scene
+from parkour_solver.scene.geometry import check_geometry
 
 scene = prepare_scene(fixture['request'])
 physical = check_geometry(scene['collisionScene'], audit['plan'], audit['candidate'],
@@ -70,7 +70,7 @@ A dead-prefix rejection requires an actual remaining task requirement and a cons
 
 ## Implemented orchestrator workflow, 2026-11-02
 
-This status supersedes the historical pending descriptions above. The seven-workstream implementation and measured limits are in [the results](experiments/orchestrator-fixes/README.md).
+This status supersedes the historical pending descriptions above. The seven-workstream implementation and measured limits are in [the results](../../research/orchestrator-fixes/README.md).
 
 1. Prepare the supplied geometry and original state with the existing scene/compiler bridge. The cells guide spatial routes; their seams and helper-point coordinates are not solver walls. Keep scene coverage explicit.
 2. Compose a discrete program with the existing normal/stepping/ceiling builders. Keep all facings free; use zero inertia thresholds while carrying normal momentum. Actual contact rows retain their original pre-input Y/X/Z indices.

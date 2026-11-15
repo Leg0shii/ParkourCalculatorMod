@@ -1,12 +1,12 @@
 # Standalone IPOPT handoff for the autonomous-solve agent
 
-Consolidation update, 2026-10-30: use `feature/ipopt-consolidated` and [standalone setup](../README.md). The current branch contains both orchestration and the integration/replay implementation. Earlier branch/import/ownership instructions are historical; see [CONSOLIDATION.md](../CONSOLIDATION.md).
+Consolidation update, 2026-10-30: use `feature/ipopt-consolidated` and [standalone setup](../../README.md). The current branch contains both orchestration and the integration/replay implementation. Earlier branch/import/ownership instructions are historical; see [CONSOLIDATION.md](../../CONSOLIDATION.md).
 
 Read [RECENT_REPLAY_HANDOFF.md](RECENT_REPLAY_HANDOFF.md) first for the short current handoff. Later baseline/planning paragraphs in this longer document predate the implemented local backend and are superseded by that handoff and MOVEMENT_PORT.md.
 
 Updated 2026-10-28: the current handoff now covers all replay/compiler changes since the original baseline, runnable compile/solve/replay commands, corrected 400-input success, publication/import guidance and unfinished window state carry. Final actual-world validation belongs to the mod after manual TAS import; no running client or mandatory complete-scene export is required by the standalone workflow. The implementation now exists; older statements below saying otherwise are historical.
 
-Prepared 2026-10-26. This document describes implemented behavior at clean solver baseline `498ecc1`, plus the ownership split requested by the user. Read [README.md](README.md) for the full request schema and [FINDINGS.md](FINDINGS.md) for measurements and known limitations.
+Prepared 2026-10-26. This document describes implemented behavior at clean solver baseline `498ecc1`, plus the ownership split requested by the user. Read [README.md](NUMERICAL_SOLVER.md) for the full request schema and [FINDINGS.md](FINDINGS.md) for measurements and known limitations.
 
 Local replay addition: [REPLAY.md](REPLAY.md) specifies the optional Java replay API/CLI, static scene schema, supported 1.8.9 mechanics and event-mismatch feedback. Supply complete collision boxes/ladder cells from the planner to enable discovery; no running Minecraft client is required. Existing fixtures remain usable in declared-contact mode. Replay/angle realization and TAS export belong to the integration agent; input/route/event search remains with the autonomous agent. A changed event schedule is feedback for recompilation, not an infeasibility certificate.
 
@@ -16,7 +16,7 @@ Movement compilation update: [MOVEMENT_PORT.md](MOVEMENT_PORT.md) is the current
 
 The autonomous-solve agent owns reducing the information a user must supply: discovering candidate input patterns, choosing useful subproblems/objectives, probing feasibility, retaining alternatives and assembling a good route. This agent owns the implementation work that connects the standalone solver to Minecraft and the mod: state/geometry capture, movement-coefficient compilation, game-thread boundaries, external worker invocation, replay feedback, result realization and application/UI wiring. These adapters are future integration work, not APIs already available.
 
-The integration agent's isolated checkout is `/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-mod-integration`, branch `feature/ipopt-mod-integration`, created from `feature/ipopt-clean` at `498ecc1`. Do not edit that checkout from the autonomous agent. Work in your own worktree. Prefer separate autonomy modules consuming the public solver API; coordinate shared request-schema or numerical-model changes rather than editing the same files concurrently. Do not change the other native-solver agent's handoff or checkout.
+The integration agent's isolated checkout is `/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-mod-integration`, branch `feature/ipopt-mod-integration`, created from `feature/ipopt-clean` at `498ecc1`. Do not edit that checkout from the autonomous agent. Work in your own worktree. Prefer separate src/parkour_solver modules consuming the public solver API; coordinate shared request-schema or numerical-model changes rather than editing the same files concurrently. Do not change the other native-solver agent's handoff or checkout.
 
 The detailed integration sequence is in [MOD_INTEGRATION_PLAN.md](MOD_INTEGRATION_PLAN.md). Its first shared deliveries are a reusable fixed-input compiler/process client and a portable scene/start snapshot, before full UI integration. Candidate-row realization and actual Minecraft replay feedback follow. These are planned capabilities; until they land, use the existing compiled request/API and fixtures described below.
 
@@ -67,7 +67,7 @@ From the worktree root:
 
 ```sh
 python3.12 -m venv .venv-ipopt
-.venv-ipopt/bin/python -m pip install -r standalone/ipopt/requirements.txt
+.venv-ipopt/bin/python -m pip install --editable 'standalone[numerics]'
 export PKC_IPOPT_PYTHON="$PWD/.venv-ipopt/bin/python"
 ```
 
@@ -80,13 +80,13 @@ On this machine an already installed worker is available read-only at `/Users/ar
 These commands require no Minecraft client, world, source capture or Java build:
 
 ```sh
-python3 standalone/ipopt/solve.py \
-  --input standalone/ipopt/fixtures/real11-200-ladders.json.gz \
+python3 -m parkour_solver.cli.numerical \
+  --input standalone/tests/fixtures/numerics/real11-200-ladders.json.gz \
   --python "$PWD/.venv-ipopt/bin/python" \
   --seconds 5 --output /tmp/ipopt-autonomous-200.json
 
-python3 standalone/ipopt/solve.py \
-  --input standalone/ipopt/fixtures/real11-400-ladders.json.gz \
+python3 -m parkour_solver.cli.numerical \
+  --input standalone/tests/fixtures/numerics/real11-400-ladders.json.gz \
   --python "$PWD/.venv-ipopt/bin/python" \
   --seconds 10 --output /tmp/ipopt-autonomous-400.json
 ```
@@ -110,9 +110,9 @@ Run from your worktree root, or put its root on PYTHONPATH:
 import gzip
 import json
 import os
-from standalone.ipopt import prepare, solve, validate
+from parkour_solver.numerics import prepare, solve, validate
 
-with gzip.open("standalone/ipopt/fixtures/real11-200-ladders.json.gz", "rt") as stream:
+with gzip.open("standalone/tests/fixtures/numerics/real11-200-ladders.json.gz", "rt") as stream:
     request = json.load(stream)
 
 result = solve(
@@ -169,7 +169,7 @@ The current ladder fixtures infer occupancy from recorded climb carry/collision 
 
 The convenient capture/export path still requires recorded states or a saved angle-solver seed. Compiled requests can be supplied directly without a capture, but a convenient general compiler from candidate input rows and explicit initial state/environment is integration work. In particular, changing Y/ground/ladder events may require rebuilding acceleration/friction and jump eligibility.
 
-The intended boundary is that integration supplies snapshots/compilation and replay feedback, while autonomy chooses candidate inputs, subproblems and revisions. Integration can expose geometry and detected contacts/ground/ladder state without requiring autonomy to access live Minecraft. Keep continuous-model acceptance separate from optional game replay validation. No complete scene/feedback API is implemented yet; agree the data contract before both sides add incompatible structures.
+The intended boundary is that integration supplies snapshots/compilation and replay feedback, while src/parkour_solver chooses candidate inputs, subproblems and revisions. Integration can expose geometry and detected contacts/ground/ladder state without requiring src/parkour_solver to access live Minecraft. Keep continuous-model acceptance separate from optional game replay validation. No complete scene/feedback API is implemented yet; agree the data contract before both sides add incompatible structures.
 
 Integration source navigation: core Application owns simulation retrigger and result application; AngleSolverEngine builds specs; core ports MinecraftAccess/Simulator expose world queries and replay; TickState carries position, stored velocity, ground, previous collision and live surface samples; loader SimulatorEntity delegates actual game movement to Minecraft. Use those existing paths. Avoid a second independent mod-side physics engine or another copied IPOPT worker. The old feature/ipopt-local spike predates the current package and is reference material only.
 
@@ -186,10 +186,10 @@ Endpoint objective alone can hide different intermediate paths and exit velociti
 Standard-library tests and actual-worker tests are deliberately separate:
 
 ```sh
-python3 -m unittest discover -s standalone/ipopt/tests -v
+python3 -m unittest discover -s standalone/tests/unit/numerics -t standalone -v
 
 PKC_IPOPT_PYTHON="$PWD/.venv-ipopt/bin/python" \
-  python3 -m unittest discover -s standalone/ipopt/tests -v
+  python3 -m unittest discover -s standalone/tests/unit/numerics -t standalone -v
 ```
 
 Without PKC_IPOPT_PYTHON, eight actual-worker methods are skipped. With it, all 47 tests passed on the clean baseline in about 24 seconds. Coverage includes analytic objective optima and cap-branch switching, contradictory rows returning unknown, automatic/explicit inertia, warm-start recovery, scalar collision/cap/vertical timing, resume state, process deadlines, cancellation, seed retention, rejected fake success and CLI capture attachment.
@@ -210,7 +210,7 @@ For a changed numerical model or objective policy, report first-feasible time, f
 ## Optional captured-TAS export in your worktree
 
 ```sh
-./gradlew -I standalone/ipopt/export.gradle :core:exportStandaloneIpopt \
+./gradlew -I standalone/native/gradle/export.gradle :core:exportStandaloneIpopt \
   -PipoptCapture=/absolute/path/to/captured-tas.json \
   -PipoptTicks=200 -PipoptOutput=/tmp/ipopt-autonomous-problem.json
 ```

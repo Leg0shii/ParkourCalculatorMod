@@ -4,7 +4,7 @@ Implemented 2026-11-03. Both numerical row reduction and CasADi simple-bound ext
 
 ## Numerical rows
 
-[constraints.reduce_walls](../ipopt/constraints.py) constructs a worker-local list without mutating the request:
+[constraints.reduce_walls](../src/parkour_solver/numerics/constraints.py) constructs a worker-local list without mutating the request:
 
 - For absolute X/Z inequalities on the same state, retain the largest GE bound and smallest LE bound separately.
 - For other constraints, remove only exact duplicates of the expression/comparison/RHS. Diagnostic names and ownership metadata do not distinguish numerical expressions; the complete originals remain in the request.
@@ -15,7 +15,7 @@ Implemented 2026-11-03. Both numerical row reduction and CasADi simple-bound ext
 
 ## Bound extraction and monitor correctness
 
-[worker.fixed_phase](../ipopt/worker.py) sets `detect_simple_bounds=True`. The [CasADi API](https://web.casadi.org/api/html/d4/d89/group__nlpsol.html) describes extraction of single-variable constraint entries into variable bounds. This does not relax the model or change inertia, motion equations, contacts, facing choices or tolerances.
+[worker.fixed_phase](../src/parkour_solver/numerics/worker.py) sets `detect_simple_bounds=True`. The [CasADi API](https://web.casadi.org/api/html/d4/d89/group__nlpsol.html) describes extraction of single-variable constraint entries into variable bounds. This does not relax the model or change inertia, motion equations, contacts, facing choices or tolerances.
 
 The old monitor compared the returned `g` vector to the original bounds. The earlier CasADi3.8.1 probe showed that extraction could produce a scalar-valid final point whose returned vector failed that comparison. `Monitor` now evaluates a saved CasADi function of the **unextracted assembled constraint expressions at x**. It uses this on iteration callbacks and the final solver result, retaining the same1e-8 nominal feasibility threshold. Callback sparsities still match the declared NLP. The parent independently reconstructs the trajectory and checks **every original requested constraint**, actual inertia/contact behavior and existing acceptance rules.
 
@@ -24,11 +24,11 @@ Phases report `simpleBoundExtraction: true` and `constraintRowsBeforeExtraction`
 ## Tests and measurements
 
 - **63 IPOPT tests pass**, native worker enabled, no skips, including all legacy capture, warm-start, inertia, ladder, relative/facing/nonlinear, cancellation and seed-retention checks.
-- **109 autonomy tests pass**, compiler/IPOPT enabled, no skips: checkpoint/store/repair continuation, DFS, local-run pruning, terminal goals, stepping, ceilings and contact combinations.
-- New [pure reduction tests](../ipopt/tests/test_constraints.py) cover source mapping, contradictory bounds/equalities, angular/relative distinctions, exact float values, input immutability and translated random trajectories with known feasible controls.
-- New [native worker tests](../ipopt/tests/test_worker_bounds.py) cover a misleading supplied constraint vector, nonlinear expression checks, mixed extracted/non-simple rows, final-point preservation with iteration reporting disabled, and feasibility early stopping. Returned candidates are checked against the full original request.
+- **109 src/parkour_solver tests pass**, compiler/IPOPT enabled, no skips: checkpoint/store/repair continuation, DFS, local-run pruning, terminal goals, stepping, ceilings and contact combinations.
+- New [pure reduction tests](../tests/unit/numerics/test_constraints.py) cover source mapping, contradictory bounds/equalities, angular/relative distinctions, exact float values, input immutability and translated random trajectories with known feasible controls.
+- New [native worker tests](../tests/unit/numerics/test_worker_bounds.py) cover a misleading supplied constraint vector, nonlinear expression checks, mixed extracted/non-simple rows, final-point preservation with iteration reporting disabled, and feasibility early stopping. Returned candidates are checked against the full original request.
 
-The [production probe](../autonomy/experiments/last-jump-runs/row-benchmark/production_bounds_probe.py) compares four configurations of the same archived67-input NLP over five rotated repetitions. All use the corrected monitor. [Results and source hashes](../autonomy/experiments/last-jump-runs/row-benchmark/production-bounds-results.json):
+The [production probe](../research/last-jump-runs/row-benchmark/production_bounds_probe.py) compares four configurations of the same archived67-input NLP over five rotated repetitions. All use the corrected monitor. [Results and source hashes](../research/last-jump-runs/row-benchmark/production-bounds-results.json):
 
 | Configuration | Wall rows | All scalar rows before extraction | Iterations | IPOPT-call median | Graph + setup + first solve median |
 | --- | --- | --- | --- | --- | --- |

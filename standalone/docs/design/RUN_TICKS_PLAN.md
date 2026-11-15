@@ -45,7 +45,7 @@ The full Linkcraft cold search took **80.63 seconds**, **333 probes** and **24 b
 
 The search used neither recorded facings nor recorded run counts as a seed. The fixture supplies air times, landing/contact phases and center regions; no extra authored scalar rule table is copied. It records two full-grid support inferences and a wider coplanar run strip inferred from ground samples. These are declared fixture assumptions, not discovered world geometry.
 
-The request, independently accepted solution, source identity, geometry assumptions and trace are retained in [experiments/linkcraft11-j0-j16](experiments/linkcraft11-j0-j16/README.md). All 30 autonomy tests at the run-ticks checkpoint passed with the Java compiler and actual IPOPT runtime.
+The request, independently accepted solution, source identity, geometry assumptions and trace are retained in [experiments/linkcraft11-j0-j16](../../research/linkcraft11-j0-j16/README.md). All 30 src/parkour_solver tests at the run-ticks checkpoint passed with the Java compiler and actual IPOPT runtime.
 
 The user expects 12 to be the minimum for this path. The implementation reports a best-found witness, not a mathematical certificate: cheaper local attempts can remain unknown. That distinction does not block the prototype milestone.
 
@@ -69,9 +69,9 @@ PKC_IPOPT_PYTHON="$PWD/.venv-ipopt/bin/python" \
 python3 -m unittest discover -s standalone/autonomy/tests -v
 ```
 
-- [README.md](README.md): setup, route format and search behavior.
+- [README.md](../history/AUTONOMY_README.md): setup, route format and search behavior.
 - `route.py`: schedules, support rows, entry/exit constraints and guesses.
 - `search.py`: allocation search, compilation, solver invocation and acceptance.
 - `compiler.py` and `java/CompileRunTicksPhysics.java`: existing Java model helpers.
 - [BLOCK_SOLVER_PLAN.md](BLOCK_SOLVER_PLAN.md): current next layer of orchestration.
-- [Historical block-solver post-mortem](../../docs/research/block-solver.md): prior failure modes.
+- [Historical block-solver post-mortem](../../../docs/research/block-solver.md): prior failure modes.

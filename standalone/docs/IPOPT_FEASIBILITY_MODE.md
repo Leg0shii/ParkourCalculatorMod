@@ -53,15 +53,15 @@ feasible seed returns without IPOPT.
 
 The user restored backward guide inference and onward progress objectives because
 guidance is useful for witnesses even when decision priority/pruning uses ticks.
-The [repeated nine-request Real11 benchmark](../autonomy/experiments/last-jump-runs/row-benchmark/REAL11_INTERMEDIATE_BENCHMARK.md)
+The [repeated nine-request Real11 benchmark](../research/last-jump-runs/row-benchmark/REAL11_INTERMEDIATE_BENCHMARK.md)
 measured135 fresh runs and81 warm probes. Early stopping supplied the main
 successful-case timing gain; directional early stop was about as fast as pure
 feasibility and yielded better Z progress in the successful numerical cases.
-The associated [results](../autonomy/experiments/last-jump-runs/row-benchmark/real11-intermediate-results.md)
-and [earlier probe](../autonomy/experiments/last-jump-runs/row-benchmark/feasibility-results.json)
+The associated [results](../research/last-jump-runs/row-benchmark/real11-intermediate-results.md)
+and [earlier probe](../research/last-jump-runs/row-benchmark/feasibility-results.json)
 remain source-era fixed-request evidence, not a global/end-to-end speed claim.
 
-The [current feature evidence](../autonomy/experiments/hard-jump-comparisons/README.md)
+The [current feature evidence](../research/hard-jump-comparisons/README.md)
 records600 native-enabled passes,131 known-witness prefix-bound checks and80
 post-change retained-witness replays. Combined Real11 improves T67→T64 with
 61 wrappers/55 workers versus198/159 before. Initial0-only keeps T64 with26/22

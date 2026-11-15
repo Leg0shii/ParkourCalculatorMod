@@ -82,23 +82,23 @@ Total elapsed inputs remain the primary rank; the numerical objective ranks equa
 
 ## Run and measured cases
 
-Prepare the Java coefficient compiler as in [README.md](README.md), including rebuilding it after this change, then:
+Prepare the Java coefficient compiler as in [README.md](../history/AUTONOMY_README.md), including rebuilding it after this change, then:
 
 ```sh
 PKC_IPOPT_PYTHON="$PWD/.venv-ipopt/bin/python" \
-python3 -m standalone.autonomy.solve_blocks \
+python3 -m parkour_solver.cli.blocks \
   --input standalone/autonomy/fixtures/obstacle-wide-neo.json \
   --output standalone/autonomy/build/wide-neo-result.json \
   --seconds 35 --route-seconds 25 --candidate-seconds 1 --retries 0
 ```
 
-The actual IPOPT/Java integration tests find a 12-input cross neo, a 12-input wide neo, a five-input side run-off and a 12-input passage under a ceiling. A further [interleaved wall/ceiling case](experiments/interleaved-blockages/README.md) solves in 12 inputs with two horizontal gates for the wall and two vertical gates for the ceiling; the four events interleave on one timeline while both per-block caps hold. A tall, broad wall retains no reachable passage in that fixed single-jump family and is never accepted. [Saved requests and results](experiments/obstacle-avoidance/README.md) include independent scalar and shared swept-collision checks. Gate compilation is also cross-checked against all 24 signed cases from the Minecraft-method probe.
+The actual IPOPT/Java integration tests find a 12-input cross neo, a 12-input wide neo, a five-input side run-off and a 12-input passage under a ceiling. A further [interleaved wall/ceiling case](../../research/interleaved-blockages/README.md) solves in 12 inputs with two horizontal gates for the wall and two vertical gates for the ceiling; the four events interleave on one timeline while both per-block caps hold. A tall, broad wall retains no reachable passage in that fixed single-jump family and is never accepted. [Saved requests and results](../../research/obstacle-avoidance/README.md) include independent scalar and shared swept-collision checks. Gate compilation is also cross-checked against all 24 signed cases from the Minecraft-method probe.
 
 ## Next contact families
 
 The route search now reuses existing numerical X/Z and Y contacts with the integration agent's corrected `FixedMovementCompiler`/`ReplayInputState`. Side-wall reversals use one clipped input and normal-side avoidance before/after; ceiling profiles regenerate Y and landing time. Actual intended movement, finite face/timing and collision masks pass shared scene checks. The shared compiler handles sprint loss and air-factor recovery. The constant-effective-sprint adapter remains only for legacy ordered/support-plane models.
 
-Generated ceiling durations are included before time bounds are computed. [Saved contact results](experiments/one-tick-contacts/README.md) cover a wall reversal, a three-input bonk and a simultaneous Y/X hit. Next broaden multi-leg evidence, generalize same-solid approach/exit corridors and handle contact-selected steps. One ladder/vine interaction per route is now implemented separately in [LADDER_STRATEGY_PLAN.md](LADDER_STRATEGY_PLAN.md). Replay, float-angle realization and TAS export remain with the integration agent.
+Generated ceiling durations are included before time bounds are computed. [Saved contact results](../../research/one-tick-contacts/README.md) cover a wall reversal, a three-input bonk and a simultaneous Y/X hit. Next broaden multi-leg evidence, generalize same-solid approach/exit corridors and handle contact-selected steps. One ladder/vine interaction per route is now implemented separately in [LADDER_STRATEGY_PLAN.md](LADDER_STRATEGY_PLAN.md). Replay, float-angle realization and TAS export remain with the integration agent.
 
 
 Ladder scenes use a separate bounded route evaluator with ordinary prefix/suffix profiles and one selected climbing interaction. It reuses blockage avoidance and whole-scene acceptance. Its repeated climb hits are independent of reversal-hit caps, and its results always leave minimum-time/objective proofs false. See [the ladder plan](LADDER_STRATEGY_PLAN.md) for settings, diagnostics and remaining contact-composition limits.

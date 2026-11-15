@@ -31,13 +31,13 @@ A cold run on the five-region geometry returned `unknown`, with `context_limit`,
 
 That run expanded 20 scalar prefixes, left 381 queued, and generated 12,800 local schedules before the generation deadline. It reached no complete target proposal and performed zero full numerical attempts. This is a search-coverage/work-allocation limit, distinct from an IPOPT rejection of the accepted five-region structure.
 
-[five-climbing-search-limit.json](experiments/contact-combinations/five-climbing-search-limit.json) retains the exact fixture hash, search settings, timing-window/attempt counts and work-limit outcome. [The accepted evidence folder](experiments/contact-combinations/README.md) holds both numerical witnesses. Keep cold five-region discovery as an open search-coverage item. Per the user's instruction, improve movement-type coverage before introducing route-specific pruning. Stepping/water, same-region re-entry and changing climb-wall orientation remain separately tracked follow-ups.
+[five-climbing-search-limit.json](../../research/contact-combinations/five-climbing-search-limit.json) retains the exact fixture hash, search settings, timing-window/attempt counts and work-limit outcome. [The accepted evidence folder](../../research/contact-combinations/README.md) holds both numerical witnesses. Keep cold five-region discovery as an open search-coverage item. Per the user's instruction, improve movement-type coverage before introducing route-specific pruning. Stepping/water, same-region re-entry and changing climb-wall orientation remain separately tracked follow-ups.
 
 Reproduce the cold three-region search from the worktree root:
 
 ```sh
 PKC_IPOPT_PYTHON="$PWD/.venv-ipopt/bin/python" \
-python3 -m standalone.autonomy.solve_blocks \
+python3 -m parkour_solver.cli.blocks \
   --input standalone/autonomy/fixtures/three-climbing-ladders.json \
   --output /tmp/three-climbing-search.json \
   --seconds 240 --route-seconds 180 --candidate-seconds 2 --retries 0

@@ -1,6 +1,8 @@
 # Anchor search and solver integration
 
-Current execution tables and policy/rationale: [execution reference](ANCHOR_SEARCH_EXECUTION_REFERENCE.md). The later `dd738c98` feature generalizes ordinary run-family deferral to protected hard-anchor tick comparisons, shares proposal preparation and adds ceiling-aware flight minima under the declared no-stepping transfer assumption. [Current evidence](../autonomy/experiments/hard-jump-comparisons/README.md) supersedes this integration baseline's counts. Integration is complete; the measurements below retain their source-era scope.
+Package/layout update: production is now installed as `parkour_solver`; see [current layout](LAYOUT.md), [runbook](RUNBOOK.md) and [refactor validation](STANDALONE_REFACTOR_IMPLEMENTATION.md). Source-era checkout paths and measurements below do not override those current commands. Solver policy and compatible checkpoint schemas are unchanged.
+
+Current execution tables and policy/rationale: [execution reference](ANCHOR_SEARCH_EXECUTION_REFERENCE.md). The later `dd738c98` feature generalizes ordinary run-family deferral to protected hard-anchor tick comparisons, shares proposal preparation and adds ceiling-aware flight minima under the declared no-stepping transfer assumption. [Current evidence](../research/hard-jump-comparisons/README.md) supersedes this integration baseline's counts. Integration is complete; the measurements below retain their source-era scope.
 
 2026-11-10. This implements the user's authorization following the
 [nine-commit review](SOLVER_BRANCH_INTEGRATION_REVIEW.md). The working checkout
@@ -49,7 +51,7 @@ retry it; the saved program and exclusion proof remain available. New proposals
 are still checked when examined during generation. There is no queue-wide
 time-bound refresh when the incumbent changes.
 
-This follow-up passes [51 focused checks](../autonomy/experiments/anchor-runtime-profile/lazy-bounds-2026-11-10/report.json),
+This follow-up passes [51 focused checks](../research/anchor-runtime-profile/lazy-bounds-2026-11-10/report.json),
 including assertions that unselected arrivals/refinements are not checked and
 equal optimistic finishes remain eligible. The571-test gate and300s profile below
 describe integration revision `91381e5a`; they have not been rerun to claim a new
@@ -114,7 +116,7 @@ runnable repair work still resumes in place. These deferrals are not oracle
 rejections and do not invalidate ancestors. The report counts them separately.
 
 The scoped profiling harness is in
-`autonomy/experiments/anchor-runtime-profile/`. It records inclusive/exclusive
+`research/anchor-runtime-profile/`. It records inclusive/exclusive
 wall times for copies, generator advancement, hashing, solver invocation,
 evaluation, callbacks and replay, plus per-slice work/budget statistics and
 overlapping GC. Profiling does not enter resume identity or search snapshots.
@@ -142,7 +144,7 @@ unknown/no-recovery, multiple source hops under a learned latch, external resume
 isolation, equal-time improvement, wide/diagonal/translated landing regions,
 airborne uncertainty, explicit pure versus directional stopping, nested node
 repair equality, native checkpoint publications and ordinary legacy resumes.
-The broader gate additionally runs the recorded non-ladder autonomy scope and
+The broader gate additionally runs the recorded non-ladder src/parkour_solver scope and
 all IPOPT tests. See the experiment README for fresh counts and cold outcomes.
 
 Final gate:571 tests pass with zero failures/errors/skips,248.27s,105 runtime

@@ -25,7 +25,7 @@ Here the updated coordinates are the resolved ones, including any earlier clippi
 
 The current standalone numerical API can prescribe X/Z contacts and scalar floor/ceiling contacts. It anchors the contacted coordinate and clears normal carry, but does not establish the finite face's tangential overlap or choose which obstacle is first. Those conditions belong to orchestration. `ConstraintDeriver.deriveWall` supplies the horizontal player-center boundary; its click/facing-based footprint clipping selects one region, not every possible avoidance branch.
 
-The old `SweptCollision` is recoverable from `538c92b^`. It gets the ordinary Y-X-Z sweep and first blocking box, but excludes step-assist and prioritizes a horizontal failure in its result. Its old acceptance allowed Y hits under recorded Y. It is a reference, not the new acceptance oracle. [The post-mortem](../../docs/research/block-solver.md) records that limitation; [PR #379](https://github.com/Leg0shii/ParkourCalculatorMod/pull/379) confirms the unused implementation's removal.
+The old `SweptCollision` is recoverable from `538c92b^`. It gets the ordinary Y-X-Z sweep and first blocking box, but excludes step-assist and prioritizes a horizontal failure in its result. Its old acceptance allowed Y hits under recorded Y. It is a reference, not the new acceptance oracle. [The post-mortem](../../../docs/research/block-solver.md) records that limitation; [PR #379](https://github.com/Leg0shii/ParkourCalculatorMod/pull/379) confirms the unused implementation's removal.
 
 The integration branch already supplies better shared machinery:
 
@@ -114,7 +114,7 @@ Let E(A,k) mean that the player is outside signed face A at state k. For the ord
 | X -> Y | Z-facing | E(X,k) and E(Y,k+1) |
 | Z -> Y | Z-facing | E(Z,k) and E(Y,k+1) |
 
-In general, if the first face's axis is processed earlier than the second face's axis, an outside-both state is needed. In reverse order, consecutive-state clearance suffices for the local corner handoff. The [Minecraft-method probe](experiments/blockage-order/README.md) checks all six pairs and all four sign combinations, plus outside-both controls, using Minecraft's actual AABB offset methods.
+In general, if the first face's axis is processed earlier than the second face's axis, an outside-both state is needed. In reverse order, consecutive-state clearance suffices for the local corner handoff. The [Minecraft-method probe](../../research/blockage-order/README.md) checks all six pairs and all four sign combinations, plus outside-both controls, using Minecraft's actual AABB offset methods.
 
 The rows at k are the handoff gate, not a complete arbitrary-trajectory collision test. A compiled branch also needs an outside-first approach interval and an outside-second exit interval over the relevant finite face. Otherwise a nonmonotone trajectory could enter the box before or after the gate. An edge stops being relevant when the remaining coordinate is clear of its finite span; another face/edge may then describe the passage. Preserve distinct sequences for a path that rounds multiple corners or revisits an obstacle.
 

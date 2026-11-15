@@ -1,6 +1,6 @@
 # Replay and movement handoff, updated 2026-10-28
 
-Consolidation update, 2026-10-30: the user requested one branch after the integration agent stopped. Current development is on `feature/ipopt-consolidated`; solver, orchestration, shared movement compilation and local replay are combined. See [standalone setup](../README.md) and [the consolidation record](../CONSOLIDATION.md). Branch/import instructions later in this document are historical; no cross-branch import is required on the consolidated branch. Physics/replay limitations below remain applicable.
+Consolidation update, 2026-10-30: the user requested one branch after the integration agent stopped. Current development is on `feature/ipopt-consolidated`; solver, orchestration, shared movement compilation and local replay are combined. See [standalone setup](../../README.md) and [the consolidation record](../../CONSOLIDATION.md). Branch/import instructions later in this document are historical; no cross-branch import is required on the consolidated branch. Physics/replay limitations below remain applicable.
 
 This is the cumulative update for the autonomous-solve agent, including the local replay implementation, movement compilation fix and latest user decisions. It supersedes the deployment/planning paragraphs in the older handoff.
 
@@ -39,21 +39,21 @@ Key code:
 | `core/.../replay/ReplayRows.java` | Shared effective row policy. |
 | `core/.../replay/IpoptReplay.java` | Angle repair, original-row validation and accepted TAS realization. |
 | `core/.../replay/DeclaredContacts.java`, `StaticScene.java` | Prescribed contacts or supplied-scene collision discovery. |
-| `standalone/ipopt/model.py` | Independent continuous acceptance and movement-assumption guards. |
+| `standalone/src/parkour_solver/numerics/model.py` | Independent continuous acceptance and movement-assumption guards. |
 
 Commands from your worktree root:
 
 ```sh
-./gradlew -I standalone/ipopt/export.gradle :core:compileStandaloneIpoptPhysics \
+./gradlew -I standalone/native/gradle/export.gradle :core:compileStandaloneIpoptPhysics \
   -PipoptCapture=/path/to/template.json \
   -PipoptInput=/path/to/problem.json \
   -PipoptOutput=/tmp/corrected-problem.json
 
-python3 -m standalone.ipopt.solve \
+python3 -m parkour_solver.cli.numerical \
   --input /tmp/corrected-problem.json --output /tmp/result.json \
   --python /path/to/your/ipopt/python --seconds 10
 
-./gradlew -I standalone/ipopt/export.gradle :core:replayStandaloneIpopt \
+./gradlew -I standalone/native/gradle/export.gradle :core:replayStandaloneIpopt \
   -PipoptCapture=/path/to/template.json \
   -PipoptInput=/tmp/corrected-problem.json \
   -PipoptResult=/tmp/result.json \
@@ -89,6 +89,6 @@ Latest code verification: core fast JDK 21 and Java 8 each passed 868 tests (two
 
 Implementation checkout: `/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-mod-integration`, branch `feature/ipopt-mod-integration`. The user has now authorized publishing this accumulated work to `origin/feature/ipopt-mod-integration`. Inspect the published tip before importing; do not edit this checkout or reset your own work.
 
-Your `codex/run-ticks-planning` checkout has an older upstream base and its own standalone/orchestration changes. A blanket merge would also bring unrelated upstream changes. Review the focused implementation commits `133b48c` and `af12801` and their dependencies against your base, then port/cherry-pick in your own worktree with conflict review and tests. In particular reconcile `standalone/ipopt/model.py`, shared fixture evidence and Gradle/core API differences rather than overwriting your work. The older baseline import recipe is not a recipe for this update. Documentation can be read directly from the integration checkout or fetched branch.
+Your `codex/run-ticks-planning` checkout has an older upstream base and its own standalone/orchestration changes. A blanket merge would also bring unrelated upstream changes. Review the focused implementation commits `133b48c` and `af12801` and their dependencies against your base, then port/cherry-pick in your own worktree with conflict review and tests. In particular reconcile `standalone/src/parkour_solver/numerics/model.py`, shared fixture evidence and Gradle/core API differences rather than overwriting your work. The older baseline import recipe is not a recipe for this update. Documentation can be read directly from the integration checkout or fetched branch.
 
 Details: [MOVEMENT_PORT.md](MOVEMENT_PORT.md), [REPLAY.md](REPLAY.md), [FINDINGS.md](FINDINGS.md). No other worktree was modified for this handoff.

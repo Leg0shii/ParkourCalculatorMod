@@ -2,7 +2,7 @@
 
 Current implementation authority, 2026-11-03: [DFS_INTERACTION_IMPLEMENTATION_PLAN.md](DFS_INTERACTION_IMPLEMENTATION_PLAN.md). The user replaces shortest-prefix/window-drain traversal with ordered depth-first completion and backtracking, together with the shared early interaction gate. The seven-workstream record below describes the prior implementation; its old global ordering/window behavior is superseded, not a requirement to preserve.
 
-2026-11-02. This is the authoritative implementation scope and ordering. The seven behavioral workstreams below are now wired into the standalone checkpoint orchestrator. Numerical validation is recorded in [the implementation results](experiments/orchestrator-fixes/README.md). Cold Real11 completion and broad false-pruning measurement remain open acceptance items; implementing persistence does not establish efficient complete discovery. Corridor failure logging originated in3082f8fc.
+2026-11-02. This is the authoritative implementation scope and ordering. The seven behavioral workstreams below are now wired into the standalone checkpoint orchestrator. Numerical validation is recorded in [the implementation results](../../research/orchestrator-fixes/README.md). Cold Real11 completion and broad false-pruning measurement remain open acceptance items; implementing persistence does not establish efficient complete discovery. Corridor failure logging originated in3082f8fc.
 
 ## Implemented status
 

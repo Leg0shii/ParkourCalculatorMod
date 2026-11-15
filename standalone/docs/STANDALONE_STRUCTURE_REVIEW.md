@@ -1,6 +1,6 @@
 # Standalone layout inventory and proposed structure
 
-**Proposal only. No production files have moved.** Inspected checkout HEAD
+**Approved source-era review; implementation now complete.** See the [implementation ledger](STANDALONE_REFACTOR_IMPLEMENTATION.md) and [current layout](LAYOUT.md). The inventory and proposal below describe the pre-refactor tree. Inspected checkout HEAD
 `7def2875`, runtime feature `dd738c98`, including the existing uncommitted
 `AGENTS.md` and `docs/CODE_MAP.md` edits. This review inventories the filesystem,
 reads all tracked Python modules with AST, and manually assigns the118 modules
@@ -14,15 +14,15 @@ versions as part of a layout cleanup.
 
 ## Complete inventory and what the counts mean
 
-The [audit bundle](../autonomy/experiments/structure-audit/README.md) contains:
+The [audit bundle](../research/structure-audit/README.md) contains:
 
 | Inventory | Coverage |
 | --- | --- |
-| [files.csv](../autonomy/experiments/structure-audit/snapshot-7def2875-final/files.csv) | Every2,809 physical file: current path, tracked/ignored status, bytes, type, category and proposed placement. Includes dotfiles, local runs, classes and caches. |
-| [modules.csv](../autonomy/experiments/structure-audit/snapshot-7def2875-final/modules.csv) | Every275 tracked Python file: role, destination(s), size in lines, importers, top-level definitions and static reachability flags. Multiple destinations mean extraction is required. |
-| [imports.csv](../autonomy/experiments/structure-audit/snapshot-7def2875-final/imports.csv) | Resolved local Python import edges, symbols and source lines, including function-local/conditional imports. |
-| [directories.csv](../autonomy/experiments/structure-audit/snapshot-7def2875-final/directories.csv) | Direct-child file/byte/tracked counts for every populated directory. |
-| [summary.json](../autonomy/experiments/structure-audit/snapshot-7def2875-final/summary.json) | Exact totals, reviewed categories, boundary violations, path/test coupling, large artifacts and methodology limits. |
+| [files.csv](../research/structure-audit/snapshot-7def2875-final/files.csv) | Every2,809 physical file: current path, tracked/ignored status, bytes, type, category and proposed placement. Includes dotfiles, local runs, classes and caches. |
+| [modules.csv](../research/structure-audit/snapshot-7def2875-final/modules.csv) | Every275 tracked Python file: role, destination(s), size in lines, importers, top-level definitions and static reachability flags. Multiple destinations mean extraction is required. |
+| [imports.csv](../research/structure-audit/snapshot-7def2875-final/imports.csv) | Resolved local Python import edges, symbols and source lines, including function-local/conditional imports. |
+| [directories.csv](../research/structure-audit/snapshot-7def2875-final/directories.csv) | Direct-child file/byte/tracked counts for every populated directory. |
+| [summary.json](../research/structure-audit/snapshot-7def2875-final/summary.json) | Exact totals, reviewed categories, boundary violations, path/test coupling, large artifacts and methodology limits. |
 
 The snapshot excludes this newly written review and its own audit directory to
 avoid self-inventory. Bundle-data categories include historical configs/inputs
@@ -68,16 +68,16 @@ five `.class` files, which is a particularly misleading directory name.
 
 | Current location | What it actually contains | What to extract / keep |
 | --- | --- | --- |
-| [`checkpoint_experiment.py`](../autonomy/cell_routes/checkpoint_experiment.py) | Production `replay_witness`, report summary helper, benchmark arms and CLI. DFS, event search and corridor resume import its witness validator. | Move validator to `validation/witness.py`; put reporting outside the solver kernel; keep experiment arms in research. Moving the whole file to research would break live solves/resume. |
-| [`window_experiment.py`](../autonomy/cell_routes/window_experiment.py) | Shared atomic JSON/gzip `save` plus decision-window experiment runner. The normal automatic runner imports `save` here. | `io/reports.py` owns the writer; experiment driver imports it. Runtime must not import the driver. |
-| [`automatic_experiment.py`](../autonomy/cell_routes/automatic_experiment.py) | The current generic physical task solve/resume runner, CLI, source hashing, persistence and final replay. | Promote to production API/CLI/provenance modules. The word “experiment” is misleading here. |
-| [`fixed_clock_experiment.py`](../autonomy/cell_routes/fixed_clock_experiment.py), [`two_goal_experiment.py`](../autonomy/cell_routes/two_goal_experiment.py) | A maintained compatibility runner imports generic witness enumeration from an experimental comparison driver. | Extract witness iteration to validation/reporting; keep the fixed/virtual compatibility CLI separate from comparison experiments. |
-| [`local.py`](../autonomy/cell_routes/local.py) | Search work budgets, counting compiler and scene/corridor adapter. | Split into `search/work.py`, `bridge/counting.py` and validation adapters. “local” says nothing about ownership. |
-| [`block_contacts.py`](../autonomy/block_contacts.py) | Vertical validation, floor requirements, fixed-variant repair search and numerical dispatch. | Separate validation/constraint construction from repair orchestration. Retain a single implementation of each rule. |
-| [`block_search.py`](../autonomy/block_search.py) | Scene normalization, older support-profile search and generic movement dispatch. | Scene parsing belongs to `scene/`; strategy/orchestration belongs to `search/`/API. |
-| [`ipopt/model.py`](../ipopt/model.py) | Generic input validators, request preparation, numerical scalar dynamics and validation/fingerprints. Many higher layers import its basic validators. | Factor low-level schema helpers and authoritative physics before imposing a dependency direction. Do not duplicate scalar equations into new folders. |
-| [`support_order.py`](../autonomy/cell_routes/support_order.py), [`time_progress.py`](../autonomy/cell_routes/time_progress.py) | Current initial-domain / generation-completion helpers mixed with old supplied-order/common-clock machinery. | Keep current helpers in normal search modules; retain callable compatibility policies separately. “Legacy” does not mean disposable. |
-| [`geometry.py`](../autonomy/cell_routes/geometry.py), [`regions.py`](../autonomy/cell_routes/regions.py), [`turn_observability.py`](../autonomy/cell_routes/turn_observability.py) | Runtime geometry/records and SVG/plot rendering in the same modules. | Runtime geometry/compact observations stay shipped; rendering goes to developer tools. |
+| [`checkpoint_experiment.py`](../research/legacy_cell_routes/checkpoint_experiment.py) | Production `replay_witness`, report summary helper, benchmark arms and CLI. DFS, event search and corridor resume import its witness validator. | Move validator to `validation/witness.py`; put reporting outside the solver kernel; keep experiment arms in research. Moving the whole file to research would break live solves/resume. |
+| [`window_experiment.py`](../research/legacy_cell_routes/window_experiment.py) | Shared atomic JSON/gzip `save` plus decision-window experiment runner. The normal automatic runner imports `save` here. | `io/reports.py` owns the writer; experiment driver imports it. Runtime must not import the driver. |
+| [`automatic_experiment.py`](../src/parkour_solver/cli/solve.py) | The current generic physical task solve/resume runner, CLI, source hashing, persistence and final replay. | Promote to production API/CLI/provenance modules. The word “experiment” is misleading here. |
+| [`fixed_clock_experiment.py`](../src/parkour_solver/cli/fixed_clock.py), [`two_goal_experiment.py`](../research/legacy_cell_routes/two_goal_experiment.py) | A maintained compatibility runner imports generic witness enumeration from an experimental comparison driver. | Extract witness iteration to validation/reporting; keep the fixed/virtual compatibility CLI separate from comparison experiments. |
+| [`local.py`](../src/parkour_solver/validation/scoped_scene.py) | Search work budgets, counting compiler and scene/corridor adapter. | Split into `search/work.py`, `bridge/counting.py` and validation adapters. “local” says nothing about ownership. |
+| [`block_contacts.py`](../src/parkour_solver/search/repair.py) | Vertical validation, floor requirements, fixed-variant repair search and numerical dispatch. | Separate validation/constraint construction from repair orchestration. Retain a single implementation of each rule. |
+| [`block_search.py`](../src/parkour_solver/search/support_profiles.py) | Scene normalization, older support-profile search and generic movement dispatch. | Scene parsing belongs to `scene/`; strategy/orchestration belongs to `search/`/API. |
+| [`ipopt/model.py`](../src/parkour_solver/numerics/model.py) | Generic input validators, request preparation, numerical scalar dynamics and validation/fingerprints. Many higher layers import its basic validators. | Factor low-level schema helpers and authoritative physics before imposing a dependency direction. Do not duplicate scalar equations into new folders. |
+| [`support_order.py`](../src/parkour_solver/search/domain.py), [`time_progress.py`](../src/parkour_solver/search/compat/time_progress.py) | Current initial-domain / generation-completion helpers mixed with old supplied-order/common-clock machinery. | Keep current helpers in normal search modules; retain callable compatibility policies separately. “Legacy” does not mean disposable. |
+| [`geometry.py`](../src/parkour_solver/spatial/cells.py), [`regions.py`](../src/parkour_solver/spatial/regions.py), [`turn_observability.py`](../src/parkour_solver/observability/turns.py) | Runtime geometry/records and SVG/plot rendering in the same modules. | Runtime geometry/compact observations stay shipped; rendering goes to developer tools. |
 | `route_guidance/` | Compact circle/disk/SOCP experiments and scientific reports. | Move as a research prototype, with its own extra dependencies. It is not the active anchor solver's reachability engine. |
 | `autonomy/README.md` and dozens of design files under source | Chronological plans/results intermixed with current mechanics. | Current guides in `docs/`; implemented design records in `docs/design/`; source-era records in `docs/history/`; literature reviews in `docs/research/`. Review authority per file, not by age alone. |
 

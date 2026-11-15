@@ -2,7 +2,7 @@
 
 Current runtime: `dd738c98` (2026-11-11). This is the current execution reference
 for physical required-anchor search. The [detailed implementation record](HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md)
-contains the design/caller migration; [measured evidence](../autonomy/experiments/hard-jump-comparisons/README.md)
+contains the design/caller migration; [measured evidence](../research/hard-jump-comparisons/README.md)
 contains source hashes, fixtures and validation. Historical supplied-corridor,
 virtual-finish and common-clock experiments retain their own policies.
 
@@ -98,7 +98,7 @@ programs and physical variants stay in their owning records.
 | Grounded B3@38 with later hard spans bounded10+15+9 |Elapsed38, remaining≥34 | Finish≥72; exclude against validated67 even with more-J protection. |
 | Optimistic finish equals best full finish |Any valid counts | Keep for potentially better terminal Z. |
 
-The pure predicates live only in `candidate_comparison`. `minimum_runs` retains
+The pure predicates live only in `search.comparison`. `minimum_runs` retains
 legacy matched-family normalization; `time_progress` retains legacy record APIs
 and delegates their common-clock safeguards. Those compatibility paths do not
 restore clock/progress pruning to active anchor search.
@@ -160,25 +160,25 @@ keys or adding a pose constraint. No mixed or uncertainty mode exists.
 | Guided intermediate feasibility | Early stopping is fast; configured onward objective can guide the witness when a worker is needed. | `objectiveMode=configured`, `stopOnFeasible=True`; valid seed may return without improving progress. No constant-zero default or slack proxy. |
 | Normal exact-node queries at cadence1 | Reject a selected impossible action before extending it, with unambiguous ownership. | No raw-hold NLPs or separate ancestor tests. Cadence2/4 remains a future measured tradeoff. |
 | Binary spatial turnaround, observable | A single decision needs one clear priority; witness positions can change on later re-solves. | One110° edge+margin classification, frozen key, distances/query/replay-flip records. Preliminary heuristic, not a completeness theorem. |
-| No inter-block revisits yet | Cyclic histories enlarge the decision domain and need dedicated repeat-family design. | Departed-owner filter; same-owner hops remain. [Revisit plan](../autonomy/REVISIT_DISCOVERY_DEFERRED_PLAN.md) stays deferred. |
+| No inter-block revisits yet | Cyclic histories enlarge the decision domain and need dedicated repeat-family design. | Departed-owner filter; same-owner hops remain. [Revisit plan](design/REVISIT_DISCOVERY_DEFERRED_PLAN.md) stays deferred. |
 | Real physical B7 landing; minT then MAXZ | The old unbounded +Z/fixed64 proxy did not express the intended task. | B7 extends to `[729,0,-1095,730,7,-1093]`; terminal guide `(729.5,7,-1093)` is not a player-center cap. |
 
 ## Implementation ownership and persistence
 
 | Owner | Current responsibility |
 | --- | --- |
-| [`event_search`](../autonomy/cell_routes/event_search.py), [`anchor_adapter`](../autonomy/cell_routes/anchor_adapter.py) | Physical automatic dispatch, required-anchor frames, immutable stage objectives, internal slices sharing owned live state. |
-| [`anchor_policy`](../autonomy/cell_routes/anchor_policy.py) | Owner visits, required order/caps, source preparation versus hard transfer; hard policy3. |
-| [`candidate_comparison`](../autonomy/candidate_comparison.py) | Sole intermediate count/key, OR-protection, peer verdict and strict-incumbent predicate owner; comparison policy1. |
-| [`depth_first`](../autonomy/cell_routes/depth_first.py), [`preparation_deferrals`](../autonomy/cell_routes/preparation_deferrals.py) | Traversal, validated peer index, single `minimumRunExclusions` compatibility table, selected-only checks and recovery. |
-| [`movement_generation`](../autonomy/movement_generation.py), [`movement_frontier`](../autonomy/movement_frontier.py) | Shared composition/assessment, owned endpoints, raw ordinals, projected flag, queued nodes and `nodeInFlight`. |
-| [`interactions`](../autonomy/interactions.py), [`compiler`](../autonomy/compiler.py) | Disposable bounded session cache for preparation, canonical coefficient payloads, exact envelopes/screens and common-case eligibility; proof policy2. |
-| [`reachability`](../autonomy/reachability.py), [`linear_reachability`](../autonomy/linear_reachability.py) | Conservative phase envelopes and optional optimistic LP; named internal probe uncertainty retained. |
-| [`transfer_time_bounds`](../autonomy/cell_routes/transfer_time_bounds.py), [`anchor_time_bound`](../autonomy/cell_routes/anchor_time_bound.py) | Conditional duration certificates, phase-correct state covers, H/V and paid-input residuals; transfer-bound policy1. |
-| [`anchor_guides`](../autonomy/cell_routes/anchor_guides.py), [`turn_observability`](../autonomy/cell_routes/turn_observability.py) | Backward guide plan version2, onward objective, binary boundaries and compact reproducible diagnostics. |
-| [`checkpoint_search`](../autonomy/cell_routes/checkpoint_search.py), [`constraint_variants`](../autonomy/constraint_variants.py), [`block_contacts`](../autonomy/block_contacts.py) | Fixed scoped model preparation, discrete physical alternatives, resumable repair, numerical dispatch and scene acceptance. |
-| [`node_feasibility`](../autonomy/cell_routes/node_feasibility.py), [`checkpoint_persistence`](../autonomy/cell_routes/checkpoint_persistence.py), [`checkpoint_store`](../autonomy/checkpoint_store.py) | Exact-model outcome/cadence, all mutable aliases at dispatch, lossless manifest/SQLite persistence, isolated external decode. |
-| [`ipopt.solver`](../ipopt/solver.py), [`ranking`](../autonomy/ranking.py) | Seed check/worker lifecycle/scalar validation; terminal actualT/objective ranking stays distinct from intermediate J/R/A policy. |
+| [`event_search`](../src/parkour_solver/search/events/engine.py), [`anchor_adapter`](../src/parkour_solver/search/anchors/adapter.py) | Physical automatic dispatch, required-anchor frames, immutable stage objectives, internal slices sharing owned live state. |
+| [`anchor_policy`](../src/parkour_solver/search/anchors/policy.py) | Owner visits, required order/caps, source preparation versus hard transfer; hard policy3. |
+| [`search.comparison`](../src/parkour_solver/search/comparison.py) | Sole intermediate count/key, OR-protection, peer verdict and strict-incumbent predicate owner; comparison policy1. |
+| [`depth_first`](../src/parkour_solver/search/dfs.py), [`search.deferrals`](../src/parkour_solver/search/deferrals.py) | Traversal, validated peer index, single `minimumRunExclusions` compatibility table, selected-only checks and recovery. |
+| [`movement.generation`](../src/parkour_solver/movement/generation.py), [`search.frontier`](../src/parkour_solver/search/frontier.py) | Shared composition/assessment, owned endpoints, raw ordinals, projected flag, queued nodes and `nodeInFlight`. |
+| [`reachability.service`](../src/parkour_solver/reachability/service.py), [`bridge.compiler`](../src/parkour_solver/bridge/compiler.py) | Disposable bounded session cache for preparation, canonical coefficient payloads, exact envelopes/screens and common-case eligibility; proof policy2. |
+| [`reachability.intervals`](../src/parkour_solver/reachability/intervals.py), [`reachability.linear`](../src/parkour_solver/reachability/linear.py) | Conservative phase envelopes and optional optimistic LP; named internal probe uncertainty retained. |
+| [`transfer_time_bounds`](../src/parkour_solver/search/bounds/flight.py), [`anchor_time_bound`](../src/parkour_solver/search/bounds/remaining.py) | Conditional duration certificates, phase-correct state covers, H/V and paid-input residuals; transfer-bound policy1. |
+| [`anchor_guides`](../src/parkour_solver/spatial/anchor_guides.py), [`observability.turns`](../src/parkour_solver/observability/turns.py) | Backward guide plan version2, onward objective, binary boundaries and compact reproducible diagnostics. |
+| [`checkpoint_search`](../src/parkour_solver/search/engine.py), [`constraints.variants`](../src/parkour_solver/constraints/variants.py), [`search.repair`](../src/parkour_solver/search/repair.py) | Fixed scoped model preparation, discrete physical alternatives, resumable repair, numerical dispatch and scene acceptance. |
+| [`node_feasibility`](../src/parkour_solver/search/feasibility.py), [`checkpoint_persistence`](../src/parkour_solver/io/search_checkpoint.py), [`io.checkpoint_store`](../src/parkour_solver/io/checkpoint_store.py) | Exact-model outcome/cadence, all mutable aliases at dispatch, lossless manifest/SQLite persistence, isolated external decode. |
+| [`numerics.solver`](../src/parkour_solver/numerics/solver.py), [`search.ranking`](../src/parkour_solver/search/ranking.py) | Seed check/worker lifecycle/scalar validation; terminal actualT/objective ranking stays distinct from intermediate J/R/A policy. |
 
 Physical automatic continuation is outer schema2 / DFS8 / movement context4 /
 repair assembly9. Hard3/search5/comparison1/guide2/proposal1 semantics participate
@@ -189,7 +189,7 @@ because a source-era handoff contains its absolute path.
 
 ## Current Real11 domain and measured work
 
-The [fixture](../autonomy/experiments/anchor-feasibility/real11-anchors.json) declares
+The [fixture](../research/anchor-feasibility/real11-anchors.json) declares
 B2/B3/B4/B5 anchors, normal+stepping generators, first jumps0/8, horizon200,
 64 total/per-jump run cap, 2,048 prefix cap, 32 contact branches, 128 passage
 candidates, cadence1, 2s candidate and8s score slices, 1,024 wrapper-call guard.
@@ -221,7 +221,7 @@ maps/routes or prove optimality.
 Updated final Z is−1093.2381026602416 in both arms. Combined records22 bound
 exclusions (18 with positive flight contribution),8 recoverable deferrals,
 0 restores and18 common-sequence exclusions. Its61 invoked fixed-model fingerprints
-are distinct; this is not61 duplicate solves of one model. `ipopt.model.fingerprint`
+are distinct; this is not61 duplicate solves of one model. `numerics.model.fingerprint`
 normalizes away seeds, service budgets and stopping/objective-mode flags; the
 invocation ledger records the stopping flag separately. This is model identity,
 not a byte-for-byte hash of the full request including its seed. Peer/bound predicates
@@ -232,7 +232,7 @@ feature changes do not isolate each change's individual causal contribution.
 600 native-enabled tests pass without skips; all131 archived T67/T64 prefix
 bounds and80 post-change retained-witness scene replays pass. Timings include
 instrumentation; the early combined arm overlapped a read-only audit. See the
-[evidence README](../autonomy/experiments/hard-jump-comparisons/README.md) for
+[evidence README](../research/hard-jump-comparisons/README.md) for
 exact walls, scopes and limitations. Neither these runs nor an operational IPOPT
 rejection prove global minimum time or actual-world executable replay. No further
 implementation is pending from this plan; revisits, intentional wall hits,

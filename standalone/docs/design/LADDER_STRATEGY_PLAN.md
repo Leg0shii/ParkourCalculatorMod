@@ -12,7 +12,7 @@ Climbing is separate from the one-input reversal family. A climb interval requir
 
 ## Verified movement order
 
-Checked against cached Minecraft 1.8.9 `EntityLivingBase.isOnLadder` / `moveEntityWithHeading`, the mod's `PlayerSprintMachine`, the shared `ReplayInputState` / `StaticScene`, and `standalone/ipopt/ladder.py` / `worker.py`. The cached decompilation is under ignored `build/obstacle-research/decompiled`; [the reference record](experiments/blockage-order/README.md) describes its provenance.
+Checked against cached Minecraft 1.8.9 `EntityLivingBase.isOnLadder` / `moveEntityWithHeading`, the mod's `PlayerSprintMachine`, the shared `ReplayInputState` / `StaticScene`, and `standalone/ipopt/ladder.py` / `worker.py`. The cached decompilation is under ignored `build/obstacle-research/decompiled`; [the reference record](../../research/blockage-order/README.md) describes its provenance.
 
 With p[t] before input t, retain distinct flags for climbable-cell occupancy at t and t+1, chosen keys at t, horizontal clipping during t, and stored incoming Y velocity. The stock supported predicate samples the cell at floor(X), floor(feet Y), floor(Z), with Forge's climbable hook; it is not full-body overlap with the ladder's thin collision box. The supplied static scene must declare supported ladder/vine cells explicitly. Special custom climbable hooks remain outside this inert-cell profile.
 
@@ -166,11 +166,11 @@ Record generated/screened/dropped schedules, numerical calls/timeouts, inferred 
 
 ## Implemented generator API and test evidence
 
-`generate_ladder_schedules(request)` is exported from `standalone.autonomy`. See [the sample request](fixtures/ladder-schedule-generator.json). It accepts an initial scalar Y state, a contiguous integer-height ladder region, caller-validated front/side entry windows, a target top plane, proposed side/top exit states and explicit generation limits. This is a necessary vertical/timing screen only; X/Z cells, actual wall reach and support geometry still need numerical constraints and shared scene acceptance. A ladder union with holes or custom behavior is outside this first request interface.
+`generate_ladder_schedules(request)` is exported from `parkour_solver.api`. See [the sample request](../../tests/fixtures/movement/ladder-schedule-generator.json). It accepts an initial scalar Y state, a contiguous integer-height ladder region, caller-validated front/side entry windows, a target top plane, proposed side/top exit states and explicit generation limits. This is a necessary vertical/timing screen only; X/Z cells, actual wall reach and support geometry still need numerical constraints and shared scene acceptance. A ladder union with holes or custom behavior is outside this first request interface.
 
 ```python
 import json
-from standalone.autonomy import generate_ladder_schedules
+from parkour_solver.api import generate_ladder_schedules
 
 with open("standalone/autonomy/fixtures/ladder-schedule-generator.json") as stream:
     pool = generate_ladder_schedules(json.load(stream))
@@ -182,7 +182,7 @@ Each schedule retains `entryState`, `exitState`, `exitInput`, `lastClimbEligible
 
 `trace_ladder_schedule(initial, ladder, sneak, hit, ...)` directly exposes the reused scalar recurrence, optional launch impulse and descending target-plane contact. It preserves carry through seams. A target-plane arrival with no downward clipping remains airborne until a later actual clipping input.
 
-The [saved height evidence](experiments/ladder-schedules/README.md) includes four no-Sneak schedules with the same entry/exit states:
+The [saved height evidence](../../research/ladder-schedules/README.md) includes four no-Sneak schedules with the same entry/exit states:
 
 | Stops | Exit Y | Landing input count |
 | --- | --- | --- |
@@ -216,7 +216,7 @@ Acceptance must include real IPOPT cases for front and side entry, at least one 
 
 `attempts` retains signed entry probes and unknowns, generation limits/rejections, first-hit bounds, ranking/screening counts, numerical/contact attempts and selected exit faces. `best` adds `ladderSchedule`, `ladderColumn`, complete `blockIds`, generated `plan`, the full continuous candidate and final `geometryCheck`. `validationLevel` is `continuous_ladder_with_shared_scene`; `minimumTicksProven` and `objectiveOptimalityProven` are false. A valid incumbent is retained on cancellation/deadline.
 
-Saved [cold geometry experiments](experiments/ladder-search/README.md) include front entry/top exit, signed side entry with two chosen Sneak inputs, side landing, actual thin-ladder top landing, and an ordinary-prefix/climb/suffix route. Every saved candidate is revalidated by the scalar engine and shared finite scene, including stored velocity. Mutated schedules with missing, extra or shifted hits, false occupancy and wrong carry are rejected. The geometry-only requests contain no recorded facings or picked entry/hit schedule.
+Saved [cold geometry experiments](../../research/ladder-search/README.md) include front entry/top exit, signed side entry with two chosen Sneak inputs, side landing, actual thin-ladder top landing, and an ordinary-prefix/climb/suffix route. Every saved candidate is revalidated by the scalar engine and shared finite scene, including stored velocity. Mutated schedules with missing, extra or shifted hits, false occupancy and wrong carry are rejected. The geometry-only requests contain no recorded facings or picked entry/hit schedule.
 
 Remaining work:
 

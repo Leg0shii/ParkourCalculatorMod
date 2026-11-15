@@ -1,8 +1,8 @@
 # Standalone continuous IPOPT solver
 
-Current integrated branch: `research/ipopt-cell-routes`. This package, anchor orchestration and local replay share the integrated implementation. See [current integration](../docs/ANCHOR_SEARCH_INTEGRATION.md); the earlier [consolidation details](../CONSOLIDATION.md) remain historical.
+Current integrated branch: `research/ipopt-cell-routes`. This package, anchor orchestration and local replay share the integrated implementation. See [current integration](../ANCHOR_SEARCH_INTEGRATION.md); the earlier [consolidation details](../../CONSOLIDATION.md) remain historical.
 
-This directory provides a Python API and command-line solver for fixed-input horizontal trajectories. It runs independently of Minecraft. An optional headless Java exporter reads ordinary captured TAS files using the repository's existing physics compiler. The mod's engine, UI and save format are unchanged.
+The installed `parkour_solver.numerics` package provides a Python API and command-line solver for fixed-input horizontal trajectories. It runs independently of Minecraft. An optional headless Java exporter reads ordinary captured TAS files using the repository's existing physics compiler. The mod's engine, UI and save format are unchanged.
 
 Implementation findings, validation results and archived research provenance are summarized in [FINDINGS.md](FINDINGS.md).
 
@@ -12,9 +12,9 @@ The worker dependencies are pinned and tested with Python 3.12:
 
 ```sh
 python3.12 -m venv .venv-ipopt
-.venv-ipopt/bin/python -m pip install -r standalone/ipopt/requirements.txt
-.venv-ipopt/bin/python standalone/ipopt/solve.py \
-  --input standalone/ipopt/fixtures/real11-400.json.gz \
+.venv-ipopt/bin/python -m pip install --editable 'standalone[numerics]'
+.venv-ipopt/bin/python -m parkour_solver.cli.numerical \
+  --input standalone/tests/fixtures/numerics/real11-400.json.gz \
   --seconds 10 --output /tmp/real11-result.json
 ```
 
@@ -27,11 +27,11 @@ The parent process uses only the Python standard library. To run it from a diffe
 From the repository root, with the usual JDK 21 Gradle configuration:
 
 ```sh
-./gradlew -I standalone/ipopt/export.gradle :core:exportStandaloneIpopt \
+./gradlew -I standalone/native/gradle/export.gradle :core:exportStandaloneIpopt \
   -PipoptCapture=/absolute/path/to/captured-tas.json \
   -PipoptTicks=200 -PipoptOutput=/tmp/problem.json
 
-.venv-ipopt/bin/python standalone/ipopt/solve.py \
+.venv-ipopt/bin/python -m parkour_solver.cli.numerical \
   --input /tmp/problem.json --seconds 5 --output /tmp/result.json
 ```
 
@@ -52,8 +52,8 @@ The parent validates the initial facings before launching the worker and retains
 `--ladder-capture /path/to/captured-tas.json` attaches prescribed ladder ticks and vertical references from a Minecraft 1.8.x debug capture. It identifies climb states by stored upward velocity and horizontal collision, then includes other recorded states in those climb-proven cells and authored LADDER overrides. `--capture-start` overrides the zero-based capture start; otherwise `source.startTick` is used. Initial horizontal position and velocity must match the capture. Jump inputs are treated as taps; held-jump cooldown is outside this interface.
 
 ```sh
-.venv-ipopt/bin/python standalone/ipopt/solve.py \
-  --input standalone/ipopt/fixtures/real11-400.json.gz \
+.venv-ipopt/bin/python -m parkour_solver.cli.numerical \
+  --input standalone/tests/fixtures/numerics/real11-400.json.gz \
   --ladder-capture /path/to/real/11.json \
   --seconds 10 --output /tmp/real11-ladders-result.json
 ```
@@ -75,14 +75,14 @@ With ladder/vertical fields, the candidate also includes inferred `ladderPattern
 
 ## Python API
 
-Run from the repository root or put the repository root on `PYTHONPATH`:
+After installing `parkour_solver`, imports work from any cwd. This example uses a fixture path relative to the repository root:
 
 ```python
 import gzip
 import json
-from standalone.ipopt import prepare, solve, validate
+from parkour_solver.numerics import prepare, solve, validate
 
-with gzip.open("standalone/ipopt/fixtures/real11-200.json.gz", "rt") as stream:
+with gzip.open("standalone/tests/fixtures/numerics/real11-200.json.gz", "rt") as stream:
     problem = json.load(stream)
 
 result = solve(problem, seconds=5, python_executable="/absolute/path/to/python")
@@ -94,7 +94,7 @@ if result["feasible"]:
 
 `solve` also accepts `stop_on_feasible`, a `threading.Event` as `cancel_event`, and an `on_incumbent(candidate)` callback. The callback receives a copy; keep it short. It is called for valid objective improvements, allowing a caller to save incumbents while a solve continues. Invalid API requests raise `ValueError` before starting a process. Caller orchestration chooses input patterns, stores multiple candidates and splices selected spans.
 
-`from standalone.ipopt import attach_capture` provides the same capture attachment through `attach_capture(request, capture, start=None)`. It returns a prepared copy without changing either input.
+`from parkour_solver.numerics import attach_capture` provides the same capture attachment through `attach_capture(request, capture, start=None)`. It returns a prepared copy without changing either input.
 
 ## Problem format, version 1
 
@@ -172,14 +172,14 @@ These are local optimizations and prescribed-contact continuous trajectories. Th
 Standard-library tests need no CasADi installation:
 
 ```sh
-python3 -m unittest discover -s standalone/ipopt/tests -v
+python3 -m unittest discover -s standalone/tests/unit/numerics -t standalone -v
 ```
 
 Enable the actual worker tests explicitly:
 
 ```sh
 PKC_IPOPT_PYTHON="$PWD/.venv-ipopt/bin/python" \
-  python3 -m unittest discover -s standalone/ipopt/tests -v
+  python3 -m unittest discover -s standalone/tests/unit/numerics -t standalone -v
 ```
 
 The integration tests cover a known optimum, contradictory constraints reported as unknown, both real11 spans with all facing rows and contacts, warm-start objective recovery, a cap-regime optimization with an analytic optimum, and ladder/Y capture attachment through the CLI. Ladder fixtures must match every recorded Y position and stored vertical velocity. The reduced `real11-ladder-evidence.json.gz` reproduces the inferred first-400-tick schedule without depending on an external capture file.
@@ -191,9 +191,9 @@ Other tests cover independent replay, missed and wrong-side contacts, fixed patt
 
 The worker removes exact duplicate wall expressions and retains the strongest lower/upper absolute X/Z bounds for a state. Original request rows, names/ownership and problem hashes remain intact; the parent validator checks every original row. Distinct facing bounds, relative expressions and equalities are preserved. CasADi `detect_simple_bounds` is enabled; the progress monitor evaluates unextracted constraint expressions at each iterate/final point rather than interpreting the transformed returned `g` vector. Solver tolerances and motion/contact equations are unchanged.
 
-Phase diagnostics include `wallReduction` (original/retained counts and original-index source groups), `simpleBoundExtraction`, and `constraintRowsBeforeExtraction` (after reduction, before extraction; not the final backend general-row count). [Detailed contracts, measurements and test results](../docs/IPOPT_CONSTRAINT_REDUCTION.md).
+Phase diagnostics include `wallReduction` (original/retained counts and original-index source groups), `simpleBoundExtraction`, and `constraintRowsBeforeExtraction` (after reduction, before extraction; not the final backend general-row count). [Detailed contracts, measurements and test results](../IPOPT_CONSTRAINT_REDUCTION.md).
 
 
 ## Pure feasibility (2026-11-04)
 
-Early stopping and objective choice are independent after the 2026-11-10 integration. `--feasibility-only`, `stop_on_feasible=True` and request `stopOnFeasible: true` retain the configured directional objective by default. Explicit request `objectiveMode: constant_zero` selects pure feasibility and requires feasible stopping. Default `objectiveMode: configured` does not imply optimization continued past the first feasible point. Every original constraint/contact is still checked; `candidate.objective` remains its measured value. An already valid seed can return before worker startup. [Integration and compatibility](../docs/ANCHOR_SEARCH_INTEGRATION.md), [earlier mode benchmarks](../docs/IPOPT_FEASIBILITY_MODE.md).
+Early stopping and objective choice are independent after the 2026-11-10 integration. `--feasibility-only`, `stop_on_feasible=True` and request `stopOnFeasible: true` retain the configured directional objective by default. Explicit request `objectiveMode: constant_zero` selects pure feasibility and requires feasible stopping. Default `objectiveMode: configured` does not imply optimization continued past the first feasible point. Every original constraint/contact is still checked; `candidate.objective` remains its measured value. An already valid seed can return before worker startup. [Integration and compatibility](../ANCHOR_SEARCH_INTEGRATION.md), [earlier mode benchmarks](../IPOPT_FEASIBILITY_MODE.md).

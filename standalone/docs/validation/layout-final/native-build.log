@@ -1,0 +1,40 @@
+Starting a Gradle Daemon (subsequent builds will be faster)
+Configuration on demand is an incubating feature.
+Running Stonecutter 0.9.8
+> Task :forge-core:processResources UP-TO-DATE
+> Task :core:compileJava UP-TO-DATE
+> Task :core:processResources NO-SOURCE
+> Task :core:classes UP-TO-DATE
+> Task :forge-core:compileJava UP-TO-DATE
+> Task :forge-core:classes UP-TO-DATE
+
+> Task :core:compileTestJava
+warning: [options] source value 8 is obsolete and will be removed in a future release
+warning: [options] target value 8 is obsolete and will be removed in a future release
+warning: [options] To suppress warnings about obsolete options, use -Xlint:-options.
+3 warnings
+
+> Task :core:compileRunTicksPhysics UP-TO-DATE
+
+> Task :core:prepareRunTicksCompiler
+Run-ticks compiler: /Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/standalone/build/native/compiler.json
+
+> Task :core:processTestResources
+> Task :core:testClasses
+
+> Task :core:compileStandaloneIpoptExport
+warning: [options] source value 8 is obsolete and will be removed in a future release
+warning: [options] target value 8 is obsolete and will be removed in a future release
+warning: [options] To suppress warnings about obsolete options, use -Xlint:-options.
+3 warnings
+
+[Incubating] Problems report is available at: file:///Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.6.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 10s
+8 actionable tasks: 4 executed, 4 up-to-date

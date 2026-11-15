@@ -479,7 +479,7 @@ def render_calls(calls):
 def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('--directory',type=Path,default=ROOT/'evidence')
-    parser.add_argument('--output',type=Path,default=ROOT/'audit')
+    parser.add_argument('--output',type=Path,required=True)
     parser.add_argument('--compiler',type=Path)
     args=parser.parse_args()
     reports=[read(args.directory/(name+'.json.gz')) for name in SOURCES]
@@ -488,7 +488,7 @@ def main():
         replay(audit,args.compiler)
     audit['counts']=metrics(audit)
     audit['sources']={name+'.json.gz':hashlib.sha256((args.directory/(name+'.json.gz')).read_bytes()).hexdigest() for name in SOURCES}
-    args.output.mkdir(parents=True,exist_ok=True)
+    args.output.mkdir(parents=True,exist_ok=False)
     calls=worker_ledger(audit)
     audit['workerCalls']=calls
     encoded=json.dumps(audit,indent=2,allow_nan=False).encode()

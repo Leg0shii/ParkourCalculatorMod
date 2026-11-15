@@ -2,7 +2,7 @@
 
 Current consolidated implementation scope/order: [ORCHESTRATOR_IMPLEMENTATION_PLAN.md](ORCHESTRATOR_IMPLEMENTATION_PLAN.md). This document supplies supporting detail; all workstreams included by the consolidated plan remain required even where an older section describes a separate implementation slice.
 
-2026-11-02. Both fixes are implemented in the standalone checkpoint orchestrator, including outer symbolic-generation continuation. Details and remaining acceptance limits are in [the consolidated status](ORCHESTRATOR_IMPLEMENTATION_PLAN.md#implemented-status) and [implementation results](experiments/orchestrator-fixes/README.md). The diagnosis and planned acceptance criteria below are retained as the design record. No earlier facings are frozen and no candidate caps were increased.
+2026-11-02. Both fixes are implemented in the standalone checkpoint orchestrator, including outer symbolic-generation continuation. Details and remaining acceptance limits are in [the consolidated status](ORCHESTRATOR_IMPLEMENTATION_PLAN.md#implemented-status) and [implementation results](../../research/orchestrator-fixes/README.md). The diagnosis and planned acceptance criteria below are retained as the design record. No earlier facings are frozen and no candidate caps were increased.
 
 ## Terminology
 
@@ -14,7 +14,7 @@ The inner repair search is the current orchestrator loop over constraint variant
 
 `solve_contact_branches` already returns pending/seen/unresolved branches, an incumbent, warm guesses and a compatibility context. Intermediate unknown histories can carry this state. The terminal records in `checkpoint_search.py` instead retain the incoming `decision_program` and summary but lose the outgoing terminal repair state. `fixed_clock_experiment.py --resume` loads retained parents from the last comparison window and generates finals again.
 
-On Real11 this repeats18 final candidate IDs and spends335 of383 resumed requests on those old candidates. A controlled24-call final evaluation leaves174 pending repairs, but the old outer resume starts from the incoming55-input parent's125, losing the64-input progress. See [the numerical investigation](experiments/linkcraft11-opening/OTHER_FAILURES.md).
+On Real11 this repeats18 final candidate IDs and spends335 of383 resumed requests on those old candidates. A controlled24-call final evaluation leaves174 pending repairs, but the old outer resume starts from the incoming55-input parent's125, losing the64-input progress. See [the numerical investigation](../../research/linkcraft11-opening/OTHER_FAILURES.md).
 
 ### First implementation slice
 

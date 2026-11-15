@@ -10,7 +10,7 @@ The main checkout's `standalone` may be a local symlink here. Start with `pwd -P
 
 ## Current task and authority
 
-Documentation consolidation precedes implementation. The current **approved, unimplemented** runtime change is [DFS_INTERACTION_IMPLEMENTATION_PLAN.md](autonomy/DFS_INTERACTION_IMPLEMENTATION_PLAN.md): goal-aware ordered depth-first completion, one early block/tick/phase interaction gate, effective-model deduplication and constraint ownership, with persistent backtracking. Current runtime still uses checkpoint-window traversal and shortest-prefix priority. Do not describe the plan as shipped.
+Documentation consolidation precedes implementation. The current **approved, unimplemented** runtime change is [DFS_INTERACTION_IMPLEMENTATION_PLAN.md](docs/design/DFS_INTERACTION_IMPLEMENTATION_PLAN.md): goal-aware ordered depth-first completion, one early block/tick/phase interaction gate, effective-model deduplication and constraint ownership, with persistent backtracking. Current runtime still uses checkpoint-window traversal and shortest-prefix priority. Do not describe the plan as shipped.
 
 Use [decisions and plans](docs/DECISIONS_AND_PLANS.md) to distinguish current requirements, implemented behavior, deferred ideas and history. The long research history contains superseded proposals. User corrections and current plans take priority. Real11 motivates regressions; never special-case its block IDs, ticks or coordinates in generic algorithms. No other-agent communication is needed. Commit at coherent boundaries, not after every turn. Update current docs when decisions or measured facts change.
 
@@ -29,7 +29,7 @@ Use [decisions and plans](docs/DECISIONS_AND_PLANS.md) to distinguish current re
 | --- | --- |
 | Immediate Real11 questions | [Real11 guide](docs/REAL11_GUIDE.md), then linked candidate/question/call ledgers |
 | Code structure and function flow | [Architecture](docs/ARCHITECTURE.md), [code map](docs/CODE_MAP.md), [function index](docs/FUNCTION_INDEX.md) |
-| Run, resume, build helpers, replay/export | [Runbook](docs/RUNBOOK.md); detailed [constraint runbook](autonomy/CONSTRAINT_GENERATION_RUNBOOK.md) |
+| Run, resume, build helpers, replay/export | [Runbook](docs/RUNBOOK.md); detailed [constraint runbook](docs/design/CONSTRAINT_GENERATION_RUNBOOK.md) |
 | Tests and fixtures beyond Real11 | [Testing](docs/TESTING.md) |
 | Interpret output or debug failure | [Results and debugging](docs/RESULTS_AND_DEBUGGING.md) |
 | Write a fix or add a case | [Development](docs/DEVELOPMENT.md) |

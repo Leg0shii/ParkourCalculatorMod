@@ -1,6 +1,6 @@
 # Continuous decision relaxation with full-strength controls
 
-Measured follow-up, 2026-10-31: [route-guidance results](experiments/route-guidance/README.md) now compare all three formulations. The convex disk is the recommended first backend; retaining the circle did not repair conditional ranking or consistently improve reference shape. Inertia-hull freedom is a major measured source of optimism. This supersedes the earlier circle-first preference below.
+Measured follow-up, 2026-10-31: [route-guidance results](../../research/route-guidance/README.md) now compare all three formulations. The convex disk is the recommended first backend; retaining the circle did not repair conditional ranking or consistently improve reference shape. Inertia-hull freedom is a major measured source of optimism. This supersedes the earlier circle-first preference below.
 
 Latest update, 2026-10-31: the user now welcomes disk controls when they buy convexity. [CONVEX_ROUTE_GUIDANCE_PLAN.md](CONVEX_ROUTE_GUIDANCE_PLAN.md) supersedes the circle-first experiment order below, verifies existing native disk machinery, specifies a fully convex disaggregated alternative and records the remaining implementation gaps. The compact circle/disk comparison remains useful, but changing only its control set does not convexify its mode/state products. The earlier coordinated discussion is retained below as design history.
 
