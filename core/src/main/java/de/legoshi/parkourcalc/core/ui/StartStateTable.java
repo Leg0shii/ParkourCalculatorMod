@@ -6,6 +6,7 @@ import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.anglesolver.SolverWidgets;
 import de.legoshi.parkourcalc.core.ui.theme.Controls;
 import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
+import de.legoshi.parkourcalc.core.ui.util.TooltipUtil;
 import imgui.ImDrawList;
 import imgui.ImGui;
 import imgui.flag.ImGuiCol;
@@ -102,7 +103,7 @@ public final class StartStateTable {
 
         if (setToPlayer != null) {
             if (Controls.secondaryButton(SET_TO_PLAYER_LABEL, ImGui.getContentRegionAvail().x)) setToPlayer.run();
-            if (ImGui.isItemHovered()) ImGui.setTooltip("Takes your current position and yaw as the start. Stand where the jump begins.");
+            TooltipUtil.onHover("Takes your current position and yaw as the start. Stand where the jump begins.");
             ThemeManager.sectionSpacing();
         }
         Vec3dCore pos = runner.getStartPosition();
@@ -161,14 +162,14 @@ public final class StartStateTable {
         ImGui.alignTextToFramePadding();
         ImGui.text(hint);
         ThemeManager.popTextColor();
-        if (ImGui.isItemHovered()) ImGui.setTooltip(pinned ? PINNED_TIP : DERIVED_TIP);
+        TooltipUtil.onHover(pinned ? PINNED_TIP : DERIVED_TIP);
         if (pinned) {
             ImGui.sameLine();
             if (SolverWidgets.deleteX("##resume_unpin")) {
                 runner.setStartResumeState(null);
                 reSimulate.run();
             }
-            if (ImGui.isItemHovered()) ImGui.setTooltip(UNPIN_TIP);
+            TooltipUtil.onHover(UNPIN_TIP);
         }
         ThemeManager.bottomPaddedSeparator();
     }
