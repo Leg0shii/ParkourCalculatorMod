@@ -26,6 +26,7 @@ public final class Checks {
         BY_NAME.put("translation", new TranslationCheck());
         BY_NAME.put("gapattribution", new GapAttributionCheck());
         BY_NAME.put("strafeside", new StrafeSideCheck());
+        BY_NAME.put("polish", new LatticePolishCheck());
     }
 
     private Checks() {

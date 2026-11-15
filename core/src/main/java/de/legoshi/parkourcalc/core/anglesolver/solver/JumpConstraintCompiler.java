@@ -22,6 +22,7 @@ public final class JumpConstraintCompiler {
 
         /** Max over ineq slack and |eq residual|; <= 0 (FEAS_TOL) means strictly feasible. Iterates ineq before eq. */
         public double maxViolation(double[] gameFacings, ForwardPath path) {
+            SolveClock.charge(SolveClock.VIOL, ineq.size() + eq.size());
             double v = 0.0;
             for (JumpConstraint c : ineq) v = Math.max(v, slack(c, gameFacings, path));
             for (JumpConstraint c : eq) v = Math.max(v, Math.abs(evaluate(c, gameFacings, path)));

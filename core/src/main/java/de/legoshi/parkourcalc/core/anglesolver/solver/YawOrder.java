@@ -9,6 +9,7 @@ public final class YawOrder {
     public static final double PIN_HALF_WIDTH = 1.0e-4;
     public static final double FLOAT_MARGIN_DEG = 3.0e-5;
     public static final double TIE_TOL = 1.5 * YawOrderDp.H;
+    static final int ORDER_ROUNDS = 16;
 
     public static final class Link {
         public final int hiTick;
@@ -94,7 +95,10 @@ public final class YawOrder {
             if (c.op != JumpConstraint.Op.MINUS || c.t2 < 0 || c.t2 >= n || Math.abs(c.t1 - c.t2) != 1) return null;
             Link link = c.cmp == JumpConstraint.Cmp.GE ? new Link(c.t1, c.t2, c.rhs, c) : new Link(c.t2, c.t1, -c.rhs, c);
             for (Link other : links) {
-                if (other.hiTick == link.loTick && other.loTick == link.hiTick) return null;
+                if (other.hiTick == link.loTick && other.loTick == link.hiTick
+                        && link.minTurnDeg + other.minTurnDeg > 0.0) {
+                    return null;
+                }
             }
             links.add(link);
             carried.add(c);
@@ -114,6 +118,12 @@ public final class YawOrder {
             prev = y[t];
         }
         return y;
+    }
+
+    static String flags(boolean[] f) {
+        StringBuilder sb = new StringBuilder();
+        for (boolean b : f) sb.append(b ? '1' : '0');
+        return sb.toString();
     }
 
     public List<JumpConstraint> stripped(List<JumpConstraint> constraints) {
@@ -139,18 +149,18 @@ public final class YawOrder {
             double at = s.rhs == 0.0 ? 0.0
                     : s.rhs + (s.cmp == JumpConstraint.Cmp.GE ? PIN_HALF_WIDTH : -PIN_HALF_WIDTH);
             active.add(new JumpConstraint(JumpConstraint.Mode.F, s.t1, s.t2, JumpConstraint.Op.MINUS,
-                    JumpConstraint.Cmp.GE, at - PIN_HALF_WIDTH, s.name + "eqLo"));
+                    JumpConstraint.Cmp.GE, at - PIN_HALF_WIDTH, s.name + JumpConstraint.EQ_LO_SUFFIX));
             active.add(new JumpConstraint(JumpConstraint.Mode.F, s.t1, s.t2, JumpConstraint.Op.MINUS,
-                    JumpConstraint.Cmp.LE, at + PIN_HALF_WIDTH, s.name + "eqHi"));
+                    JumpConstraint.Cmp.LE, at + PIN_HALF_WIDTH, s.name + JumpConstraint.EQ_HI_SUFFIX));
         }
         for (int b = 0; b < pinLo.length; b++) {
             if (!pinLo[b] && !pinHi[b]) continue;
             Bound bd = bounds.get(b);
             double edge = pinLo[b] ? bd.loDeg + PIN_HALF_WIDTH : bd.hiDeg - PIN_HALF_WIDTH;
             active.add(new JumpConstraint(JumpConstraint.Mode.F, bd.tick, null, JumpConstraint.Op.PLUS,
-                    JumpConstraint.Cmp.GE, edge - PIN_HALF_WIDTH, bd.source.name + "eqLo"));
+                    JumpConstraint.Cmp.GE, edge - PIN_HALF_WIDTH, bd.source.name + JumpConstraint.EQ_LO_SUFFIX));
             active.add(new JumpConstraint(JumpConstraint.Mode.F, bd.tick, null, JumpConstraint.Op.PLUS,
-                    JumpConstraint.Cmp.LE, edge + PIN_HALF_WIDTH, bd.source.name + "eqHi"));
+                    JumpConstraint.Cmp.LE, edge + PIN_HALF_WIDTH, bd.source.name + JumpConstraint.EQ_HI_SUFFIX));
         }
         return active;
     }
@@ -162,13 +172,31 @@ public final class YawOrder {
             double turn = Angles.wrapDelta(yaws[link.hiTick] - yaws[link.loTick]);
             tie[l] = turn <= link.minTurnDeg + TIE_TOL || turn >= 180.0 - TIE_TOL;
         }
+        for (int l = 0; l < tie.length; l++) {
+            Link link = links.get(l);
+            for (int m = l + 1; m < tie.length && tie[l]; m++) {
+                Link other = links.get(m);
+                if (!tie[m] || other.hiTick != link.loTick || other.loTick != link.hiTick) continue;
+                double turn = Angles.wrapDelta(yaws[link.hiTick] - yaws[link.loTick]);
+                tie[turn - link.minTurnDeg <= -turn - other.minTurnDeg ? m : l] = false;
+            }
+        }
+        double[] rel = new double[pinLo.length];
         for (int b = 0; b < pinLo.length; b++) {
             Bound bd = bounds.get(b);
             if (bd.tick >= yaws.length) continue;
             double mid = 0.5 * (bd.loDeg + bd.hiDeg);
-            double rel = mid + Angles.wrapDelta(yaws[bd.tick] - mid);
-            pinLo[b] = rel <= bd.loDeg + TIE_TOL;
-            pinHi[b] = !pinLo[b] && rel >= bd.hiDeg - TIE_TOL;
+            rel[b] = mid + Angles.wrapDelta(yaws[bd.tick] - mid);
+            pinLo[b] = rel[b] <= bd.loDeg + TIE_TOL;
+            pinHi[b] = !pinLo[b] && rel[b] >= bd.hiDeg - TIE_TOL;
+        }
+        for (int b = 0; b < pinLo.length; b++) {
+            for (int d = 0; d < pinLo.length && pinLo[b]; d++) {
+                if (!pinHi[d] || bounds.get(d).tick != bounds.get(b).tick) continue;
+                boolean nearerLo = rel[b] - bounds.get(b).loDeg <= bounds.get(d).hiDeg - rel[d];
+                if (nearerLo) pinHi[d] = false;
+                else pinLo[b] = false;
+            }
         }
     }
 

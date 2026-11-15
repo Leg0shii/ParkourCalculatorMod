@@ -115,15 +115,7 @@ public final class AngleSolverConstraintSource implements ConstraintBoxSource {
         if (!c.isRelative()) return c;
         Vec3dCore ref = boxController.getPosition(c.getRefTick());
         if (ref == null) return null;
-        double base = c.getField() == Constraint.Field.X ? ref.x : ref.z;
-        Constraint r = c.copy();
-        r.setRefTick(null);
-        r.setValue(r.getValue() + base);
-        double lo = r.getLo() + base;
-        double hi = r.getHi() + base;
-        r.setLo(lo);
-        r.setHi(hi);
-        return r;
+        return c.resolvedAgainst(c.getField() == Constraint.Field.X ? ref.x : ref.z);
     }
 
     private ConstraintPlate tagged(ConstraintPlate plate, boolean solverUnmet) {

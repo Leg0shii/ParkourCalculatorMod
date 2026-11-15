@@ -15,6 +15,7 @@ public final class SaveFile {
     public World world;
     public Start start;
     public List<Row> rows = new ArrayList<Row>();
+    public List<BlockOverride> blockOverrides;
     public AngleSolver angleSolver;
     public List<DebugTick> debug;
 
@@ -66,6 +67,17 @@ public final class SaveFile {
         public List<String> onejumpOptional;
     }
 
+    public static final class BlockOverride {
+        public int startTick;
+        public int endTick;
+        public int x;
+        public int y;
+        public int z;
+        public String block;
+        public String before;
+        public String placedBy;
+    }
+
     /** Angle Solver problem: defaults, per-tick constraints/overrides, and last solve result. */
     public static final class AngleSolver {
         public int startTick;
@@ -79,13 +91,18 @@ public final class SaveFile {
         public String effort;                            // absent in old files -> FAST
         public Boolean stopOnFeasible;                   // absent in old files -> false
         public Boolean legalMode;                        // absent in old files -> false
+        public Boolean fullTurnStart;
         public Integer optimizeSeconds;                  // absent in old files -> default
         public Integer budgetMs;                         // absent in old files -> from optimizeSeconds
         public Double smoothGiveBack;
+        public Boolean repeatable;
+        public Long solveSeed;
         public SolveBudget customBudget;
         public String graphPreset;
         public String defaultInputs;
         public String strafeSide;
+        public String smoothMode;
+        public Boolean smoothKeepSprint;
         public String defaultSprint;                     // absent in old files -> ALWAYS
         public String defaultSlipperiness;
         public List<Tick> ticks = new ArrayList<Tick>();
@@ -149,6 +166,10 @@ public final class SaveFile {
         public String slipperiness;                      // null = inherit
         public String medium;                            // null = inherit
         public Integer soulsandCells;                    // null = 1
+        public String flow;
+        public Double flowX;
+        public Double flowZ;
+        public Boolean flowLava;
         public Boolean damage;
         public List<Dose> added = new ArrayList<Dose>();
         public List<String> removed = new ArrayList<String>(); // Potion enum names
@@ -218,5 +239,9 @@ public final class SaveFile {
         public double[] serverVel;
         public Boolean serverJump;
         public double[] serverPacket;
+        public Double flowX;
+        public Double flowZ;
+        public Boolean flowLava;
+        public Boolean inWater;
     }
 }

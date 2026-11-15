@@ -147,7 +147,7 @@ public final class Constraint {
             loInclusive = true;
             hiInclusive = true;
         } else if (op != Op.IN && this.op == Op.IN) {
-            value = Math.min(lo, hi);
+            value = field == Field.DF && op == Op.EQ ? 0.0 : Math.min(lo, hi);
         }
         this.op = op;
     }
@@ -193,10 +193,6 @@ public final class Constraint {
         return op == Op.IN;
     }
 
-    public boolean isUnsupportedDf() {
-        return field == Field.DF && (isRange() || (op == Op.EQ && value != 0.0));
-    }
-
     public boolean isDirectionalDf() {
         return field == Field.DF && !isRange() && (op == Op.GE || op == Op.LE);
     }
@@ -207,6 +203,18 @@ public final class Constraint {
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public Constraint resolvedAgainst(double base) {
+        if (refTick == null) return this;
+        Constraint r = copy();
+        r.setRefTick(null);
+        r.setValue(r.getValue() + base);
+        double lo = r.getLo() + base;
+        double hi = r.getHi() + base;
+        r.setLo(lo);
+        r.setHi(hi);
+        return r;
     }
 
     public Constraint copy() {

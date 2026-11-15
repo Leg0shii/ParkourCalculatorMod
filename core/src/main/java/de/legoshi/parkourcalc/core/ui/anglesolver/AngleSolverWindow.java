@@ -32,7 +32,6 @@ import imgui.ImGuiIO;
 import imgui.ImVec2;
 import imgui.flag.ImGuiCol;
 import imgui.flag.ImGuiCond;
-import imgui.flag.ImGuiHoveredFlags;
 import imgui.flag.ImGuiInputTextFlags;
 import imgui.flag.ImGuiStyleVar;
 import imgui.flag.ImGuiWindowFlags;
@@ -70,6 +69,7 @@ public final class AngleSolverWindow implements RenderInterface {
     private static final String[] INPUTS = {"Keep", "Force 45"};
     private static final String[] INPUTS_WIDEST = {"Keep", "Force 45 (Both)"};
     private static final String STRAFE_SIDE_POPUP = "##strafe_side";
+    private static final String SMOOTH_MODE_POPUP = "##smooth_mode";
     private static final String[] SPRINTS = {"Always", "Derive"};
     private static final String[] SPRINT_TIPS = {null,
             "WARNING: derives each tick's sprint state from the current recorded path.\n"
@@ -131,6 +131,7 @@ public final class AngleSolverWindow implements RenderInterface {
     private final ImFloat runTicksSafetyMultBuf = new ImFloat();
     private final ImInt runTicksSafetyMarginBuf = new ImInt();
     private final ImInt smoothGiveBackBuf = new ImInt();
+    private final ImInt seedBuf = new ImInt();
     private final float[] budgetSliderBuf = new float[1];
     private final ImString budgetInput = new ImString(16);
     private int lastSyncedBudgetMs = -1;
@@ -605,6 +606,28 @@ public final class AngleSolverWindow implements RenderInterface {
     private static final String SMOOTH_DISABLED_TIP =
             "Smooths the turn of the solved path. Solve the range first.";
 
+    private static final String SMOOTH_INPUTS_TIP =
+            "Smooths the turn of the solved path and may also change the keys of single ticks for a calmer"
+            + " turn: W, A, S, D and sprint per tick, including a tick with no key held and a sprint reset."
+            + " Every key change is re-solved and checked against every constraint, within the same give-back"
+            + " share, and the result is never less smooth than Turn only. Apply writes the changed keys and"
+            + " switches those ticks to Keep inputs and Derive sprint. Every press starts again from the"
+            + " unsmoothed solve.";
+
+    private static final String SMOOTH_MODE_TIP =
+            "Choose what the Smooth button may change: the turn only, or the turn and the keys of single ticks.";
+
+    private static final String SMOOTH_MODE_TURN_TIP =
+            "Only the facings change; every key stays as the solve left it. The quick mode.";
+
+    private static final String SMOOTH_MODE_INPUTS_TIP =
+            "The keys of single ticks may change too (W, A, S, D, sprint, empty ticks) where that gives a"
+            + " calmer turn. Takes up to three times as long as Turn only and is never less smooth.";
+
+    private static final String SMOOTH_KEEP_SPRINT_TIP =
+            "Turn and inputs only chooses between W, W A and W D with sprint held, for maps that forbid"
+            + " releasing W, pressing S or dropping the sprint.";
+
     private static final String SMOOTH_GIVE_BACK_TIP =
             "How much of the landing offset the Smooth button may trade for a smoother turn. The offset is"
             + " the margin past the goal wall at the goal tick, the + value in the result table of the"
@@ -618,9 +641,30 @@ public final class AngleSolverWindow implements RenderInterface {
             + " of the dropped wall the run lands (the legal shortfall). Available only while exactly one"
             + " qualifying goal wall exists.";
 
+    private static final String FULL_TURN_START_TIP =
+            "Lets an Optimize solve move the start facing one full turn away, for example 315 instead of -45,"
+            + " when the jump goes further that way. A Fast solve never does, it does not run the stage that"
+            + " moves it. The direction is the same, but the game's angle table has longer"
+            + " steps there for some directions. Apply then sets the start facing to that value, so the"
+            + " player starts the jump turned once around. The gain is small, usually 1e-5 to 5e-5 blocks."
+            + " Only for a solve that starts on the first tick of the TAS without a locked yaw or an"
+            + " absolute F constraint. Turning this off again does not move a start facing that is already"
+            + " a turn away.";
+
     private static final String CUSTOM_BUDGET_TIP =
             "Run a solver graph preset instead of the plain time budget. Pick a preset in the Budget row and"
             + " open it in the editor to change its stages and per-stage budgets.";
+
+    private static final String REPEATABLE_TIP =
+            "Makes a solve give the same result every time, on any PC: the stages stop after a fixed amount"
+            + " of counted work instead of after a time on the clock. For comparing solver versions and"
+            + " settings. The budget is then an amount of work, so the real time differs from it: shorter"
+            + " on a fast PC, longer on a slow one or with few cores. Such a solve also starts fresh, it"
+            + " does not build on the previous result. Smooth is not covered.";
+
+    private static final String SEED_TIP =
+            "Changes the random draws of the search stages. The same seed gives the same result, another"
+            + " seed gives another run of the same solver. 0 is the default draw.";
 
     private static final String RUN_TICKS_TIP =
             "Before solving, try adding up to N extra running ticks in front of each jump and keep the"
@@ -655,11 +699,30 @@ public final class AngleSolverWindow implements RenderInterface {
             TooltipUtil.onHover(LEGAL_MODE_TIP + (legalWall != null ? " Goal wall: " + legalWall + "." : ""));
         }
 
+        if (Controls.checkbox("Full turn start facing", state.isFullTurnStart())) {
+            state.setFullTurnStart(!state.isFullTurnStart());
+        }
+        TooltipUtil.onHover(FULL_TURN_START_TIP);
+
         if (Controls.checkbox("Custom budget", state.isCustomBudget())) {
             state.setCustomBudget(!state.isCustomBudget());
             if (state.isCustomBudget()) refreshPresets();
         }
         TooltipUtil.onHover(CUSTOM_BUDGET_TIP);
+
+        if (Controls.checkbox("Repeatable solve", state.isRepeatable())) state.setRepeatable(!state.isRepeatable());
+        TooltipUtil.onHover(REPEATABLE_TIP);
+        if (state.isRepeatable()) {
+            ImGui.indent(OPTION_INDENT * scale);
+            Controls.pushInputFrameHeight();
+            SolverWidgets.rowLabel("Seed", runTicksLabelWidth(scale));
+            seedBuf.set((int) state.getSeed());
+            ImGui.setNextItemWidth(Math.max(40f * scale, ImGui.getContentRegionAvail().x));
+            if (ImGui.inputInt("##solveSeed", seedBuf, 1, 10)) state.setSeed(seedBuf.get());
+            Controls.popInputFrameHeight();
+            TooltipUtil.onHover(SEED_TIP);
+            ImGui.unindent(OPTION_INDENT * scale);
+        }
 
         RunTicksSettings cfg = state.getRunTicks();
         if (Controls.checkbox("Run ticks", cfg.isEnabled())) cfg.setEnabled(!cfg.isEnabled());
@@ -902,14 +965,7 @@ public final class AngleSolverWindow implements RenderInterface {
             runTicks.start();
         }
         ImGui.sameLine();
-        if (!busy && engine.canSmooth()) {
-            if (Controls.primaryButton("Smooth")) engine.smooth();
-            TooltipUtil.onHover(SMOOTH_TIP + " Runs for up to " + seconds(engine.smoothBudgetNanos())
-                    + " at " + Math.round(state.getSmoothGiveBack() * 100.0) + " % give-back.");
-        } else {
-            Controls.disabledButton("Smooth");
-            if (ImGui.isItemHovered(ImGuiHoveredFlags.AllowWhenDisabled)) TooltipUtil.wrappedTooltip(SMOOTH_DISABLED_TIP);
-        }
+        smoothButton(busy);
         ImGui.sameLine();
         if (Controls.secondaryButton("Apply state")) {
             applySurfaceState.run();
@@ -921,6 +977,42 @@ public final class AngleSolverWindow implements RenderInterface {
             ThemeManager.pushTextColor(ThemeManager.warningColor());
             ImGui.textWrapped(TELEPORT_SOLVE_BLOCKED);
             ThemeManager.popTextColor();
+        }
+    }
+
+    private void smoothButton(boolean busy) {
+        boolean inputsToo = state.getSmoothMode() == AngleSolverState.SmoothMode.INPUTS;
+        boolean canSmooth = !busy && engine.canSmooth();
+        String label = inputsToo ? "Smooth (Inputs)" : "Smooth";
+        boolean open = ImGui.isPopupOpen(SMOOTH_MODE_POPUP);
+        int clicked = SolverWidgets.splitButton("smooth", label, canSmooth, open);
+        if (clicked == 0) engine.smooth();
+        if (SolverWidgets.splitMainHovered()) {
+            if (canSmooth) {
+                TooltipUtil.wrappedTooltip((inputsToo ? SMOOTH_INPUTS_TIP : SMOOTH_TIP) + " Runs for up to "
+                        + seconds(engine.smoothBudgetNanos()) + " at " + Math.round(state.getSmoothGiveBack() * 100.0)
+                        + " % give-back.");
+            } else {
+                TooltipUtil.wrappedTooltip(SMOOTH_DISABLED_TIP);
+            }
+        } else if (SolverWidgets.splitArrowHovered() && !open) {
+            TooltipUtil.wrappedTooltip(SMOOTH_MODE_TIP);
+        }
+        if (clicked == SolverWidgets.DROPDOWN_CLICKED) {
+            ImGui.setNextWindowPos(SolverWidgets.dropdownLeft(), SolverWidgets.dropdownBottom());
+            ImGui.openPopup(SMOOTH_MODE_POPUP);
+        }
+        if (ImGui.beginPopup(SMOOTH_MODE_POPUP)) {
+            for (AngleSolverState.SmoothMode mode : AngleSolverState.SmoothMode.values()) {
+                if (ImGui.menuItem(mode.label, "", mode == state.getSmoothMode())) state.setSmoothMode(mode);
+                TooltipUtil.onHover(mode == AngleSolverState.SmoothMode.TURN ? SMOOTH_MODE_TURN_TIP : SMOOTH_MODE_INPUTS_TIP);
+            }
+            ImGui.separator();
+            if (ImGui.menuItem("Keep sprinting", "", state.isSmoothKeepSprint())) {
+                state.setSmoothKeepSprint(!state.isSmoothKeepSprint());
+            }
+            TooltipUtil.onHover(SMOOTH_KEEP_SPRINT_TIP);
+            ImGui.endPopup();
         }
     }
 

@@ -6,12 +6,16 @@ import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 import de.legoshi.parkourcalc.core.ui.MovementEffect;
 
+import java.util.Collections;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 
 public class FakePlaybackBridge implements PlaybackBridge {
 
     public boolean paused;
+    public boolean singleplayer = true;
+    public boolean multiplayerPlayback;
     public int releaseAllCalls;
     public int suppressFlightCalls;
     public int teleportCalls;
@@ -39,7 +43,8 @@ public class FakePlaybackBridge implements PlaybackBridge {
     public int endReplicaCalls;
     public int playerKeyMask;
 
-    @Override public boolean isSingleplayer() { return true; }
+    @Override public boolean isSingleplayer() { return singleplayer; }
+    @Override public boolean supportsMultiplayerPlayback() { return multiplayerPlayback; }
     @Override public boolean isGamePaused() { return paused; }
 
     @Override

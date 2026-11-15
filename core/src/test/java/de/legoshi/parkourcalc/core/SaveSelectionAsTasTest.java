@@ -6,6 +6,7 @@ import de.legoshi.parkourcalc.core.save.FileSystemSaveStore;
 import de.legoshi.parkourcalc.core.save.Result;
 import de.legoshi.parkourcalc.core.save.SaveFile;
 import de.legoshi.parkourcalc.core.save.SaveIO;
+import de.legoshi.parkourcalc.core.sim.BlockOverride;
 import de.legoshi.parkourcalc.core.sim.SimulationRunner;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputData;
@@ -119,5 +120,32 @@ public class SaveSelectionAsTasTest {
         Result<String> saved = rig.controller.saveSelectionAsNewTas("nope", new ArrayList<>(), new ArrayList<>(),
                 Vec3dCore.ZERO, Vec3dCore.ZERO, 0f, 0f, null);
         assertTrue(!saved.ok);
+    }
+
+    @Test
+    public void sliceCarriesTheBlockOverridesOntoItsTicks() throws Exception {
+        Path dir = Files.createTempDirectory("pkc-slice-overrides");
+        Rig rig = new Rig(dir);
+        for (int i = 0; i < 30; i++) rig.document.getRows().add(new InputRow());
+        rig.document.getBlockOverrides().add(new BlockOverride(1, BlockOverride.NO_END, 5, 36, 5, "minecraft:trapdoor[open=true]", "minecraft:trapdoor[open=true]"));
+        rig.document.getBlockOverrides().add(new BlockOverride(20, BlockOverride.NO_END, 5, 36, 5, "minecraft:trapdoor[open=false]", "minecraft:trapdoor[open=true]", true));
+        rig.document.getBlockOverrides().add(new BlockOverride(5, 9, 7, 36, 7, "minecraft:stone", "minecraft:air"));
+
+        List<InputRow> rows = new ArrayList<>();
+        List<Integer> sourceRows = new ArrayList<>();
+        for (int i = 15; i < 25; i++) {
+            rows.add(rig.document.getRows().get(i));
+            sourceRows.add(i);
+        }
+        Result<String> saved = rig.controller.saveSelectionAsNewTas("slice-overrides", rows, sourceRows,
+                Vec3dCore.ZERO, Vec3dCore.ZERO, 0f, 0f, null);
+        assertTrue(saved.ok);
+
+        SaveFile file = SaveIO.load(rig.store, "slice-overrides").value;
+        assertEquals(Arrays.asList(
+                new BlockOverride(1, BlockOverride.NO_END, 5, 36, 5, "minecraft:trapdoor[open=true]", "minecraft:trapdoor[open=true]"),
+                new BlockOverride(5, BlockOverride.NO_END, 5, 36, 5, "minecraft:trapdoor[open=false]", "minecraft:trapdoor[open=true]", true)),
+                SaveIO.blockOverridesOf(file));
+        assertEquals(3, rig.document.getBlockOverrides().size());
     }
 }

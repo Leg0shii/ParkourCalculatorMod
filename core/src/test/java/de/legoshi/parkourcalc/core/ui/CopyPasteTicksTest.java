@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.core.ui;
 
+import de.legoshi.parkourcalc.core.FakeMinecraftAccess;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverTable;
 import org.junit.Test;
@@ -11,6 +12,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class CopyPasteTicksTest {
 
@@ -159,5 +161,53 @@ public class CopyPasteTicksTest {
         assertNotSame(data.get(0), data.get(1));
         data.get(1).setYaw(42f);
         assertEquals(0f, data.get(0).getYaw(), 0f);
+    }
+
+    @Test
+    public void deleteWithOnlyTheStartRowSelectedChangesNothing() {
+        InputData data = dataWithYaws(0f, 1f, 2f);
+        SelectionManager sel = new SelectionManager(null);
+        int[] dirty = { -99 };
+        InputOverlay ov = overlay(data, sel, dirty);
+
+        sel.selectOnly(0);
+        ov.deleteSelectedRows();
+
+        assertEquals(3, data.size());
+        assertEquals(-99, dirty[0]);
+        assertTrue(sel.isEmpty());
+    }
+
+    @Test
+    public void deleteRemovesTheSelectedRowsAndReportsTheFirstOne() {
+        InputData data = dataWithYaws(0f, 1f, 2f, 3f);
+        SelectionManager sel = new SelectionManager(null);
+        int[] dirty = { -99 };
+        InputOverlay ov = overlay(data, sel, dirty);
+
+        sel.select(Arrays.asList(0, 2, 3), 3);
+        ov.deleteSelectedRows();
+
+        assertEquals(2, data.size());
+        assertEquals(0f, data.get(0).getYaw(), 0f);
+        assertEquals(3f, data.get(1).getYaw(), 0f);
+        assertEquals(1, dirty[0]);
+        assertTrue(sel.isEmpty());
+    }
+
+    @Test
+    public void insertingRowsAboveMovesTheShiftClickAnchor() {
+        SelectionManager sel = new SelectionManager(new FakeMinecraftAccess() {
+            @Override
+            public boolean isShiftDown() {
+                return true;
+            }
+        });
+
+        sel.selectOnly(5);
+        sel.adjustForInsert(5, 3);
+        sel.handleClick(10);
+
+        assertEquals(new TreeSet<>(Arrays.asList(8, 9, 10)), new TreeSet<>(sel.getSelected()));
     }
 }

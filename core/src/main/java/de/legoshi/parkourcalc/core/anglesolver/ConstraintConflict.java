@@ -14,7 +14,7 @@ public final class ConstraintConflict {
             if (field == Constraint.Field.RT || field == Constraint.Field.DF) continue;
             List<Constraint> same = new ArrayList<>();
             for (Constraint c : constraints) {
-                if (!c.isEnabled() || c.getField() != field || c.isRelative() || c.isVsOther() || c.isVsDz()) continue;
+                if (!c.isEnabled() || c.getField() != field || c.isRelative() || c.isVsOther()) continue;
                 if (field == Constraint.Field.F && c.isRange()) continue;
                 if (c.isRange() && empty(c.getLo(), c.isLoInclusive(), c.getHi(), c.isHiInclusive())) {
                     return at + text(c) + " is an empty range. Fix its bounds or delete it.";

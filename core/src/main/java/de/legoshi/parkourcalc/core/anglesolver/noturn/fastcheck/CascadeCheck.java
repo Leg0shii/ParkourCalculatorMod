@@ -45,10 +45,12 @@ public final class CascadeCheck implements FastCheck {
         if (rem <= 0) return FastCheckVerdict.unknown("budget after sweep");
         FastCheckVerdict v = warm.check(problem, spec, model, rem, cancel);
         if (v.kind == FastCheckVerdict.Kind.FEASIBLE) return v;
-        if (cancel != null && cancel.get()) return FastCheckVerdict.unknown("cancelled");
+        if (cancel != null && cancel.get()) return FastCheckVerdict.unknown("cancelled", v.reached);
         rem = deadline.remainingNanos();
-        if (rem < MIN_SEARCH_NANOS) return FastCheckVerdict.unknown("budget after screenWarm");
-        return search.check(problem, spec, model, rem, cancel);
+        if (rem < MIN_SEARCH_NANOS) return FastCheckVerdict.unknown("budget after screenWarm", v.reached);
+        FastCheckVerdict searched = search.check(problem, spec, model, rem, cancel);
+        if (searched.kind != FastCheckVerdict.Kind.UNKNOWN) return searched;
+        return FastCheckVerdict.unknown(searched.note, Math.min(v.reached, searched.reached));
     }
 
     @Override

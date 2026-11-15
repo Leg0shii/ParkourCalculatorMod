@@ -31,6 +31,9 @@ public final class JumpConstraint {
         LE
     }
 
+    public static final String EQ_LO_SUFFIX = "eqLo";
+    public static final String EQ_HI_SUFFIX = "eqHi";
+
     public final Mode mode;
     public final int t1;
     public final Integer t2;
@@ -53,5 +56,9 @@ public final class JumpConstraint {
         this.rhs = rhs;
         this.name = name;
         this.pin = pin;
+    }
+
+    public boolean isEqHalf() {
+        return name != null && (name.endsWith(EQ_LO_SUFFIX) || name.endsWith(EQ_HI_SUFFIX));
     }
 }

@@ -36,22 +36,4 @@ public final class ParamParse {
         }
         return out;
     }
-
-    public static double[][] pairs(String s, double[][] def) {
-        if (s == null) return def;
-        String trimmed = s.trim();
-        if (trimmed.isEmpty()) return def;
-        String[] parts = trimmed.split("[,;]+");
-        double[][] out = new double[parts.length][];
-        for (int i = 0; i < parts.length; i++) {
-            String[] pair = parts[i].trim().split(":");
-            if (pair.length != 2) return def;
-            try {
-                out[i] = new double[] {Double.parseDouble(pair[0].trim()), Double.parseDouble(pair[1].trim())};
-            } catch (NumberFormatException e) {
-                return def;
-            }
-        }
-        return out;
-    }
 }

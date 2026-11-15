@@ -37,7 +37,7 @@ public final class ScreenWitnessWarmStart implements FastCheck {
         int[] combos = NoTurnProblem.combosOf(sc, n - 1);
         boolean[] sprint = NoTurnProblem.sprintOf(sc, n - 1);
 
-        double center = driver.diskFeasibleTheta(combos, sprint, null);
+        double center = driver.diskFeasibleTheta(combos, sprint);
         double[] witness = driver.screenExact(combos, sprint, center);
         double[] warmSeed = new double[n];
         driver.fillSeed(warmSeed);
@@ -48,7 +48,8 @@ public final class ScreenWitnessWarmStart implements FastCheck {
             return FastCheckVerdict.feasible(r.yaws, r.startX, r.startZ, String.format(Locale.ROOT,
                     "screenWarm seed=%s theta=%.4f", Double.isNaN(center) ? "circle" : "disk", witness[1]));
         }
-        return FastCheckVerdict.unknown(String.format(Locale.ROOT, "screenWarm miss screenViol=%.3g", witness[5]));
+        return FastCheckVerdict.unknown(String.format(Locale.ROOT, "screenWarm miss screenViol=%.3g", witness[5]),
+                r.reached);
     }
 
     @Override

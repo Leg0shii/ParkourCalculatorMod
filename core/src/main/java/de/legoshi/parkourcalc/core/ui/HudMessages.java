@@ -38,14 +38,32 @@ public final class HudMessages {
     private final List<Entry> entries = new ArrayList<>();
     private String statusText;
     private int statusColor;
+    private String statusBoldPrefix;
+    private int statusMutedLines;
 
     public void setStatus(String text, int colorArgb) {
+        setStatus(text, colorArgb, null, 0);
+    }
+
+    public void setStatus(String text, int colorArgb, String boldPrefix, int mutedLines) {
         statusText = text;
         statusColor = colorArgb;
+        statusBoldPrefix = boldPrefix;
+        statusMutedLines = mutedLines;
     }
 
     public void clearStatus() {
         statusText = null;
+        statusBoldPrefix = null;
+        statusMutedLines = 0;
+    }
+
+    public String getStatusBoldPrefix() {
+        return statusBoldPrefix;
+    }
+
+    public int getStatusMutedLines() {
+        return statusMutedLines;
     }
 
     public String getStatusText() {

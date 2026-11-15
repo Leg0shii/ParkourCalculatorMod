@@ -1,5 +1,7 @@
 package de.legoshi.parkourcalc.core.save;
 
+import de.legoshi.parkourcalc.core.io.AtomicFiles;
+
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -136,11 +138,7 @@ public final class FileSystemSaveStore {
         Files.createDirectories(parent);
         Path tmp = parent.resolve(target.getFileName() + TMP_SUFFIX);
         Files.write(tmp, contents.getBytes(CHARSET));
-        try {
-            Files.move(tmp, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
-        } catch (IOException atomicFailed) {
-            Files.move(tmp, target, StandardCopyOption.REPLACE_EXISTING);
-        }
+        AtomicFiles.replace(tmp, target);
     }
 
     public boolean moveToRecycleBin(String name) {

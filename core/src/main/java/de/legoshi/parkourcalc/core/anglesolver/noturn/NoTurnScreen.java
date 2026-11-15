@@ -32,13 +32,11 @@ public final class NoTurnScreen {
         for (int t = 0; t < problem.n; t++) turnBaseArg[t] = lm.baseArg(t);
 
         Objective obj = problem.objective;
-        double[] xr = axisTarget(obj.tick, JumpConstraint.Mode.X, obj);
-        double[] zr = axisTarget(obj.tick, JumpConstraint.Mode.Z, obj);
-        this.targetX = xr[0];
-        this.targetZ = zr[0];
+        this.targetX = axisTarget(obj.tick, JumpConstraint.Mode.X, obj);
+        this.targetZ = axisTarget(obj.tick, JumpConstraint.Mode.Z, obj);
     }
 
-    private double[] axisTarget(int tick, JumpConstraint.Mode mode, Objective obj) {
+    private double axisTarget(int tick, JumpConstraint.Mode mode, Objective obj) {
         double lo = Double.NEGATIVE_INFINITY;
         double hi = Double.POSITIVE_INFINITY;
         boolean any = false;
@@ -61,12 +59,12 @@ public final class NoTurnScreen {
         else if (Double.isInfinite(lo)) center = hi;
         else if (Double.isInfinite(hi)) center = lo;
         else center = 0.5 * (lo + hi);
-        return new double[]{center};
+        return center;
     }
 
-    public double runupViolation(int[] combos, boolean[] sprint, boolean ja) {
+    public double runupViolation(int[] combos, boolean[] sprint) {
         if (walls.isEmpty()) return 0.0;
-        JumpPhysicsInputs sc = problem.buildSpec(combos, sprint, NoTurnKeys.WA, ja).asScenario();
+        JumpPhysicsInputs sc = problem.buildSpec(combos, sprint, NoTurnKeys.WA, false).asScenario();
         double best = Double.POSITIVE_INFINITY;
         for (int i = 0; i < 720; i++) {
             double theta = -180.0 + i * 0.5;
@@ -80,8 +78,7 @@ public final class NoTurnScreen {
     private double violAt(JumpPhysicsInputs sc, double theta) {
         int n = sc.numTicks;
         double[] yaws = new double[n];
-        for (int t = 0; t <= setupEnd && t < n; t++) yaws[t] = theta;
-        for (int t = setupEnd + 1; t < n; t++) yaws[t] = theta;
+        for (int t = 0; t < n; t++) yaws[t] = theta;
         double[] gf0 = sc.toGameFacings(Angles.wrapAll(yaws));
         ForwardPath probe = model.forward(sc, gf0);
         double px = probe.getPos(setupEnd + 1 < n ? setupEnd + 1 : n - 1, JumpPhysicsInputs.Axis.X);

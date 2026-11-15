@@ -1,6 +1,5 @@
 package de.legoshi.parkourcalc.core.anglesolver.graph.nodes;
 
-import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Candidate;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphContext;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Guarantee;
@@ -9,10 +8,12 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.NodeRuntime;
 import de.legoshi.parkourcalc.core.anglesolver.graph.ParamValues;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SmoothOutcome;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardPath;
+import de.legoshi.parkourcalc.core.anglesolver.solver.GoalWall;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Objective;
+import de.legoshi.parkourcalc.core.anglesolver.solver.SmoothPortfolio;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolverTrace;
 import de.legoshi.parkourcalc.core.anglesolver.solver.TrendFilterSmooth;
 
@@ -43,7 +44,7 @@ public final class SmoothNode implements NodeRuntime {
         if (SolverTrace.on()) SolverTrace.log("ENGINE", "smooth start giveBack=%.6f blocks", giveBack);
         TrendFilterSmooth.Report report;
         try {
-            report = TrendFilterSmooth.smoothReport(ctx.exactModel, ctx.spec, in.yaws, giveBack, deadline, nodeToken);
+            report = SmoothPortfolio.smoothReport(ctx.exactModel, ctx.spec, in.yaws, giveBack, deadline, nodeToken);
         } catch (RuntimeException e) {
             if (SolverTrace.on()) SolverTrace.log("ENGINE", "final facing smoothing failed: %s", String.valueOf(e));
             return NodeOutcome.of(Guarantee.UNCHANGED, in);
@@ -59,7 +60,7 @@ public final class SmoothNode implements NodeRuntime {
     private double giveBackBlocks(GraphContext ctx, ForwardPath path) {
         Objective obj = ctx.spec.objective;
         if (obj.isCustomAngle()) return Double.POSITIVE_INFINITY;
-        JumpConstraint wall = AngleSolverEngine.tightestGoalWall(ctx.spec.constraints, obj);
+        JumpConstraint wall = GoalWall.tightest(ctx.spec.constraints, obj);
         if (wall == null) return Double.POSITIVE_INFINITY;
         double achieved = obj.evaluate(path);
         double offset = obj.sense == Objective.Sense.MAX ? achieved - wall.rhs : wall.rhs - achieved;

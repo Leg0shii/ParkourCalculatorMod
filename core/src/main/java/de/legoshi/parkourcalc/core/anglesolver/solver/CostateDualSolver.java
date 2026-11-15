@@ -201,6 +201,38 @@ public final class CostateDualSolver {
             return new FreeP0(box.pxLo - box.px, box.pxHi - box.px,
                     box.pzLo - box.pz, box.pzHi - box.pz, obj.translationGradX(), obj.translationGradZ(), smooth);
         }
+
+        double delta(double h, int a) {
+            double lo = a == 0 ? dvLoX : dvLoZ;
+            double hi = a == 0 ? dvHiX : dvHiZ;
+            double d = h / smooth;
+            return d < lo ? lo : (d > hi ? hi : d);
+        }
+
+        double support(double h, int a) {
+            double d = delta(h, a);
+            return h * d - 0.5 * smooth * d * d;
+        }
+
+        double curvature(double h, int a) {
+            double lo = a == 0 ? dvLoX : dvLoZ;
+            double hi = a == 0 ? dvHiX : dvHiZ;
+            double d = h / smooth;
+            return (d > lo && d < hi) ? 1.0 / smooth : 0.0;
+        }
+    }
+
+    private boolean stopOnRay;
+    private double rayViolation;
+    private double[] prevLambda;
+    private double[] rayDir;
+
+    public CostateDualSolver stopOnRay(double minViolation) {
+        stopOnRay = freeP0 == null;
+        rayViolation = minViolation;
+        prevLambda = new double[m];
+        rayDir = new double[m];
+        return this;
     }
 
     /** Diagnostics: solver iterations spent in the last {@link #solve}. */
@@ -212,6 +244,10 @@ public final class CostateDualSolver {
     /** Minimize the dual with walls tightened inward by {@code margin}, warm-started from {@code warm}
      *  (null = cold, λ=0). Returns fresh arrays so the caller may keep them; internal state is reusable. */
     public Result solve(double margin, double[] warm) {
+        return solve(margin, warm, 0.0, Double.NEGATIVE_INFINITY);
+    }
+
+    public Result solve(double margin, double[] warm, double valueShift, double stopAtOrBelow) {
         lastStalled = false;
         if (m == 0) {
             // No walls: the optimum is every input along the objective (costate = c). Closed form.
@@ -234,6 +270,8 @@ public final class CostateDualSolver {
         int stall = 0;
         int it = 0;
         for (; it < MAX_ITER; it++) {
+            SolveClock.charge(SolveClock.DUAL, 4L * n * m + 64L);
+            if (phi + valueShift <= stopAtOrBelow) break;
             double pgres = 0.0;
             for (int j = 0; j < m; j++) {
                 double p = project(lambda[j] - gradient[j], eq[j]) - lambda[j];
@@ -259,6 +297,20 @@ public final class CostateDualSolver {
             System.arraycopy(ux, 0, uPrevX, 0, n);
             System.arraycopy(uz, 0, uPrevZ, 0, n);
 
+            if (stopOnRay) {
+                SolveClock.charge(SolveClock.DUAL, 2L * n * m);
+                boolean ray = recedes(lambda);
+                if (!ray && it > 0) {
+                    for (int j = 0; j < m; j++) rayDir[j] = lambda[j] - prevLambda[j];
+                    ray = recedes(rayDir);
+                }
+                if (ray) {
+                    lastIters = it;
+                    return null;
+                }
+                System.arraycopy(lambda, 0, prevLambda, 0, m);
+            }
+
             int nf = 0;
             for (int j = 0; j < m; j++) {
                 if (eq[j] || lambda[j] > 0.0 || gradient[j] < 0.0) freeIdx[nf++] = j;
@@ -282,7 +334,7 @@ public final class CostateDualSolver {
     }
 
     private double recoveredDelta(double[] lam, int a) {
-        return freeP0 == null ? 0.0 : deltaOf(hAxis(lam, a), a);
+        return freeP0 == null ? 0.0 : freeP0.delta(hAxis(lam, a), a);
     }
 
     // ---- steps (each commits lambda/gx/gz/gradient on success and returns the new dual value) -----------
@@ -398,23 +450,36 @@ public final class CostateDualSolver {
         return h;
     }
 
-    private double supportOf(double h, int a) {
-        double d = deltaOf(h, a);
-        return h * d - 0.5 * freeP0.smooth * d * d;
-    }
-
-    private double deltaOf(double h, int a) {
-        double lo = a == 0 ? freeP0.dvLoX : freeP0.dvLoZ;
-        double hi = a == 0 ? freeP0.dvHiX : freeP0.dvHiZ;
-        double d = h / freeP0.smooth;
-        return d < lo ? lo : (d > hi ? hi : d);
-    }
-
-    private double supportCurv(double h, int a) {
-        double lo = a == 0 ? freeP0.dvLoX : freeP0.dvLoZ;
-        double hi = a == 0 ? freeP0.dvHiX : freeP0.dvHiZ;
-        double d = h / freeP0.smooth;
-        return (d > lo && d < hi) ? 1.0 / freeP0.smooth : 0.0;
+    private boolean recedes(double[] d) {
+        double sum = 0.0;
+        double f = 0.0;
+        for (int j = 0; j < m; j++) {
+            double dj = d[j];
+            if (dj < 0.0 && !eq[j]) return false;
+            sum += Math.abs(dj);
+            f += dj * bPrime[j];
+        }
+        if (sum == 0.0) return false;
+        java.util.Arrays.fill(ngx, 0.0);
+        java.util.Arrays.fill(ngz, 0.0);
+        for (int j = 0; j < m; j++) {
+            double dj = d[j];
+            if (dj == 0.0) continue;
+            if (axis[j] == 0) {
+                double[] cj = coef[j];
+                for (int t = 0; t < n; t++) ngx[t] += dj * cj[t];
+            } else if (axis[j] == 1) {
+                double[] cj = coef[j];
+                for (int t = 0; t < n; t++) ngz[t] += dj * cj[t];
+            } else {
+                double[] cxj = coefX[j];
+                double[] czj = coefZ[j];
+                if (cxj != null) for (int t = 0; t < n; t++) ngx[t] += dj * cxj[t];
+                if (czj != null) for (int t = 0; t < n; t++) ngz[t] += dj * czj[t];
+            }
+        }
+        for (int t = 0; t < n; t++) f += mMag[t] * StrictMath.sqrt(ngx[t] * ngx[t] + ngz[t] * ngz[t]);
+        return f < -rayViolation * sum;
     }
 
     /** D(λ) = Σ_t m_t·sqrt(‖g_t‖^2+eps) + Σ_j λ_j b'_j, filling {@code outX,outZ} with the costates g_t. */
@@ -440,7 +505,7 @@ public final class CostateDualSolver {
         double d = 0.0;
         for (int t = 0; t < n; t++) d += mMag[t] * StrictMath.sqrt(outX[t] * outX[t] + outZ[t] * outZ[t] + EPS2);
         for (int j = 0; j < m; j++) d += lam[j] * bPrime[j];
-        if (freeP0 != null) d += supportOf(hAxis(lam, 0), 0) + supportOf(hAxis(lam, 1), 1);
+        if (freeP0 != null) d += freeP0.support(hAxis(lam, 0), 0) + freeP0.support(hAxis(lam, 1), 1);
         return d;
     }
 
@@ -469,8 +534,8 @@ public final class CostateDualSolver {
             }
         }
         if (freeP0 != null) {
-            double dsx = deltaOf(hAxis(lambda, 0), 0);
-            double dsz = deltaOf(hAxis(lambda, 1), 1);
+            double dsx = freeP0.delta(hAxis(lambda, 0), 0);
+            double dsz = freeP0.delta(hAxis(lambda, 1), 1);
             for (int j = 0; j < m; j++) {
                 if (axis[j] == 0) out[j] += p0coef[j] * dsx;
                 else if (axis[j] == 1) out[j] += p0coef[j] * dsz;
@@ -481,11 +546,12 @@ public final class CostateDualSolver {
 
     /** Free-set Hessian H_{ab} = Σ_t (m_t/‖g_t‖)·coef_i·coef_j·([axis equal] − ĝ_i·ĝ_j), i=free[a], j=free[b]. */
     private void buildHessian(int nf) {
+        SolveClock.charge(SolveClock.DUAL, (long) nf * nf * n / 2L + (long) nf * nf * nf / 6L);
         double curvX = 0.0;
         double curvZ = 0.0;
         if (freeP0 != null) {
-            curvX = supportCurv(hAxis(lambda, 0), 0);
-            curvZ = supportCurv(hAxis(lambda, 1), 1);
+            curvX = freeP0.curvature(hAxis(lambda, 0), 0);
+            curvZ = freeP0.curvature(hAxis(lambda, 1), 1);
         }
         for (int t = 0; t < n; t++) {
             double gxx = gx[t], gzz = gz[t];

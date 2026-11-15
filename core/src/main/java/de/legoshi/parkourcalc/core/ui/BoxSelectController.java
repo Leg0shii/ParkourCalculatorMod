@@ -19,9 +19,16 @@ public final class BoxSelectController {
     private double pressScreenY = 0.0;
     private boolean abandoned = false;
 
+    private final boolean commitOnPress;
+
     public BoxSelectController(Picker picker, Consumer<WorldPick> onTapCommit) {
+        this(picker, onTapCommit, false);
+    }
+
+    public BoxSelectController(Picker picker, Consumer<WorldPick> onTapCommit, boolean commitOnPress) {
         this.picker = picker;
         this.onTapCommit = onTapCommit;
+        this.commitOnPress = commitOnPress;
     }
 
     public void tick(Vec3dCore rayOrigin, Vec3dCore rayDirection, boolean mousePressed, double cursorScreenX, double cursorScreenY, boolean uiFocused) {
@@ -36,6 +43,12 @@ public final class BoxSelectController {
             pressScreenX = cursorScreenX;
             pressScreenY = cursorScreenY;
             abandoned = false;
+            if (commitOnPress) {
+                if (pressPick != null) onTapCommit.accept(pressPick);
+                resetState();
+                wasMousePressed = true;
+                return;
+            }
         }
 
         if (mousePressed && pressPick != null && !abandoned

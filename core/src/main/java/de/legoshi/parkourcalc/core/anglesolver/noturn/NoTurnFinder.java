@@ -144,7 +144,7 @@ public final class NoTurnFinder {
         for (int i = 0; i < selected.size(); i++) {
             if (cancelled()) return best();
             State s = selected.get(i);
-            double v = screen.runupViolation(s.combos, s.sprint, jaByStructure);
+            double v = screen.runupViolation(s.combos, s.sprint);
             scored.add(new Scored(s, v));
             if ((i & 31) == 0) progress.update("screen run-up " + i + "/" + selected.size(),
                     0.6 + 0.15 * i / Math.max(1, selected.size()));
@@ -157,13 +157,12 @@ public final class NoTurnFinder {
             return Double.compare(a.viol, b.viol);
         });
 
-        SolverGraph searchGraph = NoTurnCertifier.searchGraph(cfg.searchBudgetNanos);
         ExecutorService exec = Executors.newFixedThreadPool(NoTurnParallel.resolveThreads(cfg.threads));
         try {
-            certifyLadder(problem, searchGraph, exec, scored, jaByStructure);
+            certifyLadder(problem, exec, scored, jaByStructure);
             if (feasible.isEmpty() && cfg.allowJa && problem.jaAllowed() && !jaByStructure && !cancelled()) {
                 progress.update("no pure no-turn; retrying with a jump-angle", 0.97);
-                certifyLadder(problem, searchGraph, exec, scored, true);
+                certifyLadder(problem, exec, scored, true);
             }
         } finally {
             exec.shutdownNow();
@@ -186,8 +185,7 @@ public final class NoTurnFinder {
         return best();
     }
 
-    private void certifyLadder(NoTurnProblem problem, SolverGraph searchGraph, ExecutorService exec,
-                               List<Scored> scored, boolean ja) {
+    private void certifyLadder(NoTurnProblem problem, ExecutorService exec, List<Scored> scored, boolean ja) {
         java.util.TreeMap<Integer, List<Scored>> byEdge = new java.util.TreeMap<>();
         for (Scored s : scored) {
             if (s.viol > 1.0e-6) continue;
@@ -207,7 +205,7 @@ public final class NoTurnFinder {
             List<NoTurnResult> results = NoTurnParallel.collectAll(exec, take, cancel, (idx, tc) -> {
                 if (System.nanoTime() > deadline) return null;
                 State st = flist.get(idx).state;
-                return certifyCombos(problem, searchGraph, st.combos, st.sprint, ja, cfg.searchBudgetNanos, tc);
+                return certifyCombos(problem, st.combos, st.sprint, ja, cfg.searchBudgetNanos, tc);
             });
             boolean anyHere = false;
             for (NoTurnResult r : results) {
@@ -221,7 +219,7 @@ public final class NoTurnFinder {
         }
     }
 
-    private NoTurnResult certifyCombos(NoTurnProblem problem, SolverGraph graph, int[] combos, boolean[] sprint,
+    private NoTurnResult certifyCombos(NoTurnProblem problem, int[] combos, boolean[] sprint,
                                        boolean ja, long budgetNanos, AtomicBoolean cancelTok) {
         JumpSpec spec = problem.buildSpec(combos, sprint, cfg.turnCombo, ja);
         NoTurnCertifier.Result cr = new NoTurnCertifier(model, cfg.playable).certifySearch(spec, budgetNanos, cancelTok);

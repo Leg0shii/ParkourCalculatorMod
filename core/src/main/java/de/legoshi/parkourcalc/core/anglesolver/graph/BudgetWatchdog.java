@@ -1,35 +1,51 @@
 package de.legoshi.parkourcalc.core.anglesolver.graph;
 
+import de.legoshi.parkourcalc.core.anglesolver.solver.SolveClock;
+
 import java.util.concurrent.atomic.AtomicBoolean;
 
-final class BudgetWatchdog implements Runnable {
+public final class BudgetWatchdog implements Runnable {
 
     private final AtomicBoolean outer;
     private volatile AtomicBoolean current;
     private volatile long deadlineNanos;
     private volatile boolean done;
     private final Thread thread;
+    private boolean started;
 
-    BudgetWatchdog(AtomicBoolean outer) {
+    public BudgetWatchdog(AtomicBoolean outer) {
         this.outer = outer;
         this.thread = new Thread(this, "solver-graph-watchdog");
         this.thread.setDaemon(true);
-        this.thread.start();
     }
 
-    AtomicBoolean arm(long deadline) {
+    public AtomicBoolean arm(long deadline) {
+        if (!started) {
+            started = true;
+            thread.start();
+        }
         current = null;
         AtomicBoolean token = new AtomicBoolean(false);
-        deadlineNanos = deadline;
+        SolveClock clock = SolveClock.current();
+        deadlineNanos = clock == null ? deadline : 0L;
+        if (clock != null) {
+            long outerAt = clock.deadlineOf(outer);
+            long at = deadline > 0 ? Math.min(deadline, outerAt) : outerAt;
+            if (at != Long.MAX_VALUE) clock.arm(token, at);
+        }
         current = token;
         return token;
     }
 
-    void disarm() {
+    public void disarm() {
+        AtomicBoolean token = current;
         current = null;
+        SolveClock clock = SolveClock.current();
+        if (clock != null && token != null) clock.disarm(token);
     }
 
-    void shutdown() {
+    public void shutdown() {
+        disarm();
         done = true;
         thread.interrupt();
     }

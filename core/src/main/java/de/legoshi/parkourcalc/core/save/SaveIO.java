@@ -4,6 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
 import de.legoshi.parkourcalc.core.sim.AABB;
+import de.legoshi.parkourcalc.core.sim.BlockOverride;
+import de.legoshi.parkourcalc.core.sim.BlockOverrides;
 import de.legoshi.parkourcalc.core.sim.StartResumeState;
 import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
@@ -13,6 +15,8 @@ import de.legoshi.parkourcalc.core.ui.MovementEffect;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.BlockSelection;
 import de.legoshi.parkourcalc.core.anglesolver.Constraint;
+import de.legoshi.parkourcalc.core.anglesolver.FlowDirection;
+import de.legoshi.parkourcalc.core.anglesolver.FlowVector;
 import de.legoshi.parkourcalc.core.anglesolver.Medium;
 import de.legoshi.parkourcalc.core.anglesolver.Potion;
 import de.legoshi.parkourcalc.core.anglesolver.PotionDose;
@@ -66,7 +70,7 @@ public final class SaveIO {
     }
 
     public static String saveJson(SaveFile file) {
-        return new GsonBuilder().setPrettyPrinting().create().toJson(file);
+        return PRETTY_GSON.toJson(file);
     }
 
     public static String snapshotJson(FileSystemSaveStore store, InputData inputData, Vec3dCore startPos,
@@ -103,6 +107,7 @@ public final class SaveIO {
             rows.add(toSaveRow(row));
         }
         file.rows = rows;
+        file.blockOverrides = toSaveBlockOverrides(inputData.getBlockOverrides());
         file.angleSolver = toSaveAngleSolver(angleSolver);
         return file;
     }
@@ -128,12 +133,16 @@ public final class SaveIO {
         SaveFile.Resume res = toSaveResume(resume);
         if (res != null) sb.append(COMPACT_GSON.toJson(res));
         sb.append('#');
+        List<SaveFile.BlockOverride> overrides = toSaveBlockOverrides(inputData.getBlockOverrides());
+        if (overrides != null) sb.append(COMPACT_GSON.toJson(overrides));
+        sb.append('#');
         SaveFile.AngleSolver solver = toSaveAngleSolver(angleSolver);
         if (solver != null) sb.append(COMPACT_GSON.toJson(solver));
         return sb.toString();
     }
 
     private static final Gson COMPACT_GSON = new Gson();
+    private static final Gson PRETTY_GSON = new GsonBuilder().setPrettyPrinting().create();
 
     public static Result<SaveFile> load(FileSystemSaveStore store, String rawName) {
         String name = sanitizeRelative(rawName);
@@ -150,7 +159,7 @@ public final class SaveIO {
 
         SaveFile file;
         try {
-            file = new Gson().fromJson(contents, SaveFile.class);
+            file = COMPACT_GSON.fromJson(contents, SaveFile.class);
         } catch (JsonSyntaxException e) {
             return Result.failure("Save file is not valid JSON.");
         }
@@ -173,6 +182,43 @@ public final class SaveIO {
                 rows.add(toInputRow(r));
             }
         }
+    }
+
+    public static void applyBlockOverridesTo(SaveFile file, InputData inputData) {
+        inputData.getBlockOverrides().replaceAll(blockOverridesOf(file));
+    }
+
+    public static boolean blockOverridesMatch(SaveFile file, InputData inputData) {
+        return blockOverridesOf(file).equals(inputData.getBlockOverrides().all());
+    }
+
+    public static List<BlockOverride> blockOverridesOf(SaveFile file) {
+        List<BlockOverride> out = new ArrayList<>();
+        if (file == null || file.blockOverrides == null) return out;
+        for (SaveFile.BlockOverride g : file.blockOverrides) {
+            if (g == null) continue;
+            out.add(new BlockOverride(g.startTick, g.endTick, g.x, g.y, g.z, g.block, g.before,
+                    BlockOverride.PLAYER.equals(g.placedBy)));
+        }
+        return BlockOverrides.sorted(out);
+    }
+
+    private static List<SaveFile.BlockOverride> toSaveBlockOverrides(BlockOverrides blocks) {
+        if (blocks == null || blocks.isEmpty()) return null;
+        List<SaveFile.BlockOverride> out = new ArrayList<>(blocks.size());
+        for (BlockOverride b : blocks.all()) {
+            SaveFile.BlockOverride g = new SaveFile.BlockOverride();
+            g.startTick = b.startTick;
+            g.endTick = b.endTick;
+            g.x = b.x;
+            g.y = b.y;
+            g.z = b.z;
+            g.block = b.block;
+            g.before = b.before.isEmpty() ? null : b.before;
+            g.placedBy = b.player ? BlockOverride.PLAYER : null;
+            out.add(g);
+        }
+        return out;
     }
 
     /** Rebuilds the Angle Solver problem from the save. Always resets first, so a pre-feature save yields an empty solver. */
@@ -198,13 +244,18 @@ public final class SaveIO {
         state.setEffort(effort);
         state.setStopOnFeasible(a.stopOnFeasible != null && a.stopOnFeasible);
         state.setLegalMode(a.legalMode != null && a.legalMode);
+        state.setFullTurnStart(a.fullTurnStart != null && a.fullTurnStart);
         if (a.budgetMs != null) state.setBudgetMs(a.budgetMs);
         else if (a.optimizeSeconds != null && effort != AngleSolverState.Effort.FAST) state.setOptimizeSeconds(a.optimizeSeconds);
         state.setSmoothGiveBack(a.smoothGiveBack != null ? a.smoothGiveBack : 1.0);
+        state.setRepeatable(a.repeatable != null && a.repeatable);
+        state.setSeed(a.solveSeed != null ? a.solveSeed : 0L);
         applyCustomBudget(a.customBudget, state.getSolveBudget());
         state.setGraphPresetName(a.graphPreset);
         state.setDefaultInputs(parseEnum(AngleSolverState.InputMode.class, a.defaultInputs, AngleSolverState.InputMode.FORCE_45));
         state.setStrafeSide(parseEnum(AngleSolverState.StrafeSide.class, a.strafeSide, AngleSolverState.StrafeSide.A));
+        state.setSmoothMode(parseEnum(AngleSolverState.SmoothMode.class, a.smoothMode, AngleSolverState.SmoothMode.TURN));
+        state.setSmoothKeepSprint(a.smoothKeepSprint != null && a.smoothKeepSprint);
         state.setDefaultSprint(parseEnum(AngleSolverState.SprintMode.class, a.defaultSprint, AngleSolverState.SprintMode.ALWAYS));
         state.setDefaultSlipperiness(parseEnum(Slipperiness.class, a.defaultSlipperiness, Slipperiness.AIR));
 
@@ -351,7 +402,7 @@ public final class SaveIO {
 
     public static SaveFile parseSafe(String contents) {
         try {
-            return new Gson().fromJson(contents, SaveFile.class);
+            return COMPACT_GSON.fromJson(contents, SaveFile.class);
         } catch (JsonSyntaxException e) {
             return null;
         }
@@ -417,6 +468,7 @@ public final class SaveIO {
             rows.add(toSaveRow(row));
         }
         file.rows = rows;
+        file.blockOverrides = toSaveBlockOverrides(inputData.getBlockOverrides());
 
         file.angleSolver = toSaveAngleSolver(angleSolver);
 
@@ -457,6 +509,12 @@ public final class SaveIO {
             d.moveForward = s.moveForward;
             d.moveStrafe = s.moveStrafe;
         }
+        if (s.flow.pushes()) {
+            d.flowX = s.flow.x;
+            d.flowZ = s.flow.z;
+            d.flowLava = s.flow.lava ? Boolean.TRUE : null;
+        }
+        d.inWater = s.inWater ? Boolean.TRUE : null;
         if (s.server != null) {
             d.serverVel = new double[] { s.server.velocity.x, s.server.velocity.y, s.server.velocity.z };
             d.serverJump = s.server.jumpedOnPreviousMove;
@@ -613,13 +671,18 @@ public final class SaveIO {
         a.effort = s.getEffort().name();
         a.stopOnFeasible = s.isStopOnFeasible();
         a.legalMode = s.isLegalMode();
+        a.fullTurnStart = s.isFullTurnStart() ? Boolean.TRUE : null;
         a.optimizeSeconds = s.getOptimizeSeconds();
         a.budgetMs = s.getBudgetMs();
         a.smoothGiveBack = s.getSmoothGiveBack() < 1.0 ? s.getSmoothGiveBack() : null;
+        a.repeatable = s.isRepeatable() ? Boolean.TRUE : null;
+        a.solveSeed = s.getSeed() != 0L ? Long.valueOf(s.getSeed()) : null;
         a.customBudget = toSaveCustomBudget(s.getSolveBudget());
         a.graphPreset = s.getGraphPresetName();
         a.defaultInputs = s.getDefaultInputs().name();
         a.strafeSide = s.getStrafeSide() != AngleSolverState.StrafeSide.A ? s.getStrafeSide().name() : null;
+        a.smoothMode = s.getSmoothMode() != AngleSolverState.SmoothMode.TURN ? s.getSmoothMode().name() : null;
+        a.smoothKeepSprint = s.isSmoothKeepSprint() ? Boolean.TRUE : null;
         a.defaultSprint = s.getDefaultSprint().name();
         a.defaultSlipperiness = s.getDefaultSlipperiness().name();
         for (Integer tick : s.populatedTicks()) {
@@ -766,6 +829,12 @@ public final class SaveIO {
         out.slipperiness = ov.overridesSlipperiness() ? ov.getSlipperiness().name() : null;
         out.medium = ov.overridesMedium() ? ov.getMedium().name() : null;
         out.soulsandCells = ov.getMedium() == Medium.SOULSAND && ov.getSoulsandCells() > 1 ? ov.getSoulsandCells() : null;
+        out.flow = ov.overridesFlow() ? ov.getFlow().name() : null;
+        FlowVector flowVector = ov.getFlowVector();
+        boolean unitFlow = !ov.overridesFlow() || flowVector.isUnitOf(ov.getFlow());
+        out.flowX = unitFlow ? null : flowVector.x;
+        out.flowZ = unitFlow ? null : flowVector.z;
+        out.flowLava = flowVector.lava ? Boolean.TRUE : null;
         out.damage = ov.overridesDamage() ? Boolean.TRUE : null;
         for (PotionDose d : ov.getAdded()) {
             out.added.add(toSaveDose(d));
@@ -788,6 +857,12 @@ public final class SaveIO {
         Medium medium = parseEnumOrNull(Medium.class, src.medium);
         if (medium != null && medium != Medium.NONE) dst.setMedium(medium);
         if (src.soulsandCells != null && dst.getMedium() == Medium.SOULSAND) dst.setSoulsandCells(src.soulsandCells);
+        FlowDirection flow = parseEnumOrNull(FlowDirection.class, src.flow);
+        if (src.flowX != null && src.flowZ != null) {
+            dst.setFlowVector(new FlowVector(src.flowX, src.flowZ, src.flowLava != null && src.flowLava));
+        } else if (flow != null) {
+            dst.setFlow(flow);
+        }
         if (src.damage != null && src.damage) dst.setDamage(true);
         if (src.added != null) {
             for (SaveFile.Dose d : src.added) {

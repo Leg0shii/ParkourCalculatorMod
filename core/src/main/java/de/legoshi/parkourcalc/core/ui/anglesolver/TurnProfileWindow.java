@@ -20,9 +20,6 @@ import imgui.flag.ImGuiCond;
 import imgui.flag.ImGuiWindowFlags;
 import imgui.type.ImBoolean;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Locale;
 
 public final class TurnProfileWindow implements RenderInterface {
@@ -98,13 +95,13 @@ public final class TurnProfileWindow implements RenderInterface {
         TurnProfileController.Current cur = controller.current();
         float graphH = Math.max(GRAPH_MIN_H * scale, ImGui.getContentRegionAvail().y);
         if (cur == null || cur.n == 0) {
-            placeholder(graphH, null);
+            placeholder(graphH);
             return;
         }
         boolean anyFace = false;
         for (int t = 0; t < cur.n; t++) anyFace |= cur.checkYaw[t];
         if (!anyFace) {
-            placeholder(graphH, null);
+            placeholder(graphH);
             return;
         }
         graph(cur, scale, graphH, tracker.shownAttempt());
@@ -114,18 +111,15 @@ public final class TurnProfileWindow implements RenderInterface {
             "No turn to compare. Mark \"Turn\" in the input table for those ticks whose turn you want checked.",
             "Hint: right click on Turn for Still, turning on that tick fails the attempt."};
 
-    private void placeholder(float h, String error) {
+    private void placeholder(float h) {
         ImVec2 origin = ImGui.getCursorScreenPos();
         float w = ImGui.getContentRegionAvail().x;
         ImGui.invisibleButton("##onejumpEmpty", Math.max(1f, w), h);
         ImDrawList dl = ImGui.getWindowDrawList();
         dl.addRectFilled(origin.x, origin.y, origin.x + w, origin.y + h, ThemeManager.bgDarkColor(), 0f);
-        List<String> lines = new ArrayList<String>();
-        if (error != null) lines.add(error);
-        lines.addAll(Arrays.asList(HOW_TO));
         float lineH = ImGui.getTextLineHeightWithSpacing();
-        float y = origin.y + (h - lineH * lines.size()) * 0.5f;
-        for (String line : lines) {
+        float y = origin.y + (h - lineH * HOW_TO.length) * 0.5f;
+        for (String line : HOW_TO) {
             ImVec2 ts = ImGui.calcTextSize(line);
             dl.addText(origin.x + (w - ts.x) * 0.5f, y, ThemeManager.textDimColor(), line);
             y += lineH;
@@ -422,7 +416,7 @@ public final class TurnProfileWindow implements RenderInterface {
         int abs = cur.startTick + t;
         ImGui.beginTooltip();
         Fonts.pushBold();
-        ImGui.text(String.format(Locale.ROOT, "T%d%s", abs + 1, cur.still[t] ? "   still" : ""));
+        ImGui.text(String.format(Locale.ROOT, "T%d%s", cur.tasTick(t) + 1, cur.still[t] ? "   still" : ""));
         Fonts.popBold();
         float labelW = ImGui.calcTextSize("Window").x + ImGui.getStyle().getItemSpacing().x * 3f;
         tooltipRow("Ref", String.format(Locale.ROOT, "%.2f°", cur.facing[t]), ThemeManager.textColor(), labelW);

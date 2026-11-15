@@ -4,7 +4,6 @@ import de.legoshi.parkourcalc.core.ports.PlaybackBridge;
 import de.legoshi.parkourcalc.core.sim.Checkpoint;
 import de.legoshi.parkourcalc.core.sim.SimulationRunner;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
-import de.legoshi.parkourcalc.core.DebugFlags;
 import de.legoshi.parkourcalc.core.ui.InputData;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 import de.legoshi.parkourcalc.core.ui.MovementEffect;
@@ -13,6 +12,7 @@ import de.legoshi.parkourcalc.core.ui.Settings;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.IntConsumer;
 import java.util.function.Supplier;
 
 public final class PlaybackController {
@@ -50,6 +50,7 @@ public final class PlaybackController {
     private int[] lastEffectLevels = new int[MovementEffect.count()];
 
     private Supplier<StartRange> startRangeResolver;
+    private IntConsumer onReplayRow = row -> {};
     private Runnable onStart = () -> { };
     private boolean firstTickOnGround;
 
@@ -79,6 +80,11 @@ public final class PlaybackController {
     private long pausedAtNanos;
 
     private long teleportNoticeNanos;
+
+    private InputRow pressedRow;
+    private float turnYaw;
+    private float turnPitch;
+    private long appliedTicks;
 
     private final List<String> simTickDumps = new ArrayList<String>();
 
@@ -125,19 +131,28 @@ public final class PlaybackController {
         return nextTick - 1;
     }
 
+    public boolean isKeyPressed(InputRow.Key key) {
+        return running && pressedRow != null && pressedRow.isKeyActive(key);
+    }
+
+    public float tickTurnYaw() {
+        return running && pressedRow != null ? turnYaw : 0f;
+    }
+
+    public float tickTurnPitch() {
+        return running && pressedRow != null ? turnPitch : 0f;
+    }
+
+    public long appliedTicks() {
+        return appliedTicks;
+    }
+
     public boolean firstTickOnGround() {
         return firstTickOnGround;
     }
 
     public boolean canStart() {
         return bridge != null && (bridge.isSingleplayer() || bridge.supportsMultiplayerPlayback()) && inputData.size() > 0;
-    }
-
-    public String disabledReason() {
-        if (bridge == null) return "Playback unavailable.";
-        if (!bridge.isSingleplayer() && !bridge.supportsMultiplayerPlayback()) return "Playback is disabled in multiplayer.";
-        if (inputData.size() == 0) return "Input list is empty.";
-        return "";
     }
 
     public boolean canTeleportToTick() {
@@ -162,6 +177,10 @@ public final class PlaybackController {
 
     public void start(int startIndex, int stopExclusive, Vec3dCore pos, Vec3dCore vel, float yaw) {
         start(startIndex, stopExclusive, pos, vel, yaw, null);
+    }
+
+    public void setOnReplayRow(IntConsumer onReplayRow) {
+        this.onReplayRow = onReplayRow == null ? row -> {} : onReplayRow;
     }
 
     public void setOnStart(Runnable onStart) {
@@ -191,10 +210,12 @@ public final class PlaybackController {
             }
         }
         firstTickOnGround = runner.firstTickOnGround();
+        onReplayRow.accept(from);
         bridge.beginReplayLockstep();
         bridge.teleport(pos, vel, yaw, carry);
         // Drop any user-held key so the warmup runs with an empty InputRow like the simulator does.
         bridge.releaseAllKeys();
+        pressedRow = null;
         startTick = from;
         nextTick = from;
         stopTick = to;
@@ -220,10 +241,8 @@ public final class PlaybackController {
         InputRow firstRow = inputData.get(from);
         lastEffectLevels = firstRow.getEffectLevels();
         bridge.applyEffects(lastEffectLevels);
-        if (DebugFlags.PAIRED_DIAGNOSTICS) {
-            lastCapturedTick = -1;
-            bridge.beginPlaybackCapture();
-        }
+        lastCapturedTick = -1;
+        bridge.beginPlaybackCapture();
         if (settings.pairedSimulation) {
             runner.onReplayStart(from);
         }
@@ -239,6 +258,7 @@ public final class PlaybackController {
     public void stop() {
         if (!running) return;
         running = false;
+        pressedRow = null;
         warmupRemaining = 0;
         holdRemaining = 0;
         restorePending = false;
@@ -247,10 +267,9 @@ public final class PlaybackController {
         pausedAtNanos = 0L;
         if (bridge != null) {
             bridge.releaseAllKeys();
+            onReplayRow.accept(-1);
             bridge.applyEffects(new int[MovementEffect.count()]);
-            if (DebugFlags.PAIRED_DIAGNOSTICS) {
-                bridge.finishPlaybackCapture();
-            }
+            bridge.finishPlaybackCapture();
             if (settings.pairedSimulation) {
                 runner.onReplayEnd();
             }
@@ -292,6 +311,7 @@ public final class PlaybackController {
             if (pausedAtNanos == 0L) {
                 pausedAtNanos = System.nanoTime();
                 bridge.releaseAllKeys();
+                pressedRow = null;
             }
             return;
         }
@@ -304,7 +324,7 @@ public final class PlaybackController {
         if (settings.disableFlightDuringPlayback) {
             bridge.suppressFlight();
         }
-        if (nextTick >= stopTick) {
+        if (nextTick >= Math.min(stopTick, inputData.size())) {
             // Stop only once the visual has caught up to the final yaw and a tick
             // window has elapsed; a low cap can keep the ease running past the final input.
             boolean caughtUp = displayedYaw == displayTargetYaw;
@@ -313,6 +333,7 @@ public final class PlaybackController {
                 stop();
             } else {
                 bridge.releaseAllKeys();
+                pressedRow = null;
             }
             return;
         }
@@ -346,6 +367,7 @@ public final class PlaybackController {
             teleportNoticeNanos = System.nanoTime();
         }
         InputRow motion = teleportTick ? TELEPORT_NOOP_ROW : row;
+        pressedRow = motion;
         for (InputRow.Key key : InputRow.Key.values()) {
             if (key == InputRow.Key.CLOSE_INVENTORY) continue;
             bridge.setKey(key, motion.isKeyActive(key));
@@ -380,6 +402,10 @@ public final class PlaybackController {
         prevTickPitch = currentTickPitch;
         currentTickPitch = applyPitch(currentTickPitch, motion);
         bridge.setPitch(currentTickPitch);
+        onReplayRow.accept(nextTick);
+        turnYaw = displayTargetYaw - prevTickYaw;
+        turnPitch = currentTickPitch - prevTickPitch;
+        appliedTicks++;
         tickEndNanos = System.nanoTime();
         nextTick++;
         bridge.releaseReplayLockstep();
@@ -429,12 +455,10 @@ public final class PlaybackController {
             }
             bridge.dumpPlayerState(t);
         }
-        if (DebugFlags.PAIRED_DIAGNOSTICS) {
-            int t = nextTick - 1 - warmupRemaining;
-            if (t >= 0 && t != lastCapturedTick) {
-                lastCapturedTick = t;
-                bridge.capturePlaybackSample(t);
-            }
+        int captureTick = nextTick - 1 - warmupRemaining;
+        if (captureTick >= 0 && captureTick != lastCapturedTick) {
+            lastCapturedTick = captureTick;
+            bridge.capturePlaybackSample(captureTick);
         }
     }
 

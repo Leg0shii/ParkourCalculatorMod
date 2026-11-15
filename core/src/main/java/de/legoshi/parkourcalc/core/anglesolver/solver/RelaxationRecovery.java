@@ -17,14 +17,7 @@ public final class RelaxationRecovery {
         public int slpTotalCalls = 220;
     }
 
-    public static boolean DEBUG = false;
-    public static double[] debugLastStalled;
-
     private RelaxationRecovery() {
-    }
-
-    public static double[] solve(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel) {
-        return solve(exact, spec, feasTol, cancel, new Config());
     }
 
     public static double[] solve(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
@@ -45,11 +38,10 @@ public final class RelaxationRecovery {
 
         CostateDualSolver dual = new CostateDualSolver(n, cx, cz, lin.mMagAll(), walls);
         double[] mMag = lin.mMagAll();
-        long tSeed = System.nanoTime();
+        long tSeed = SolveClock.nanoTime();
 
         Seed base = seedAtMargin(exact, spec, sc, lin, cx, cz, mMag, walls, dual, 0.0, null, feasTol, cancel, cfg);
         double[] best = base.landed;
-        if (DEBUG && base.stalled != null) debugLastStalled = base.stalled.clone();
 
         double[] warmLambda = base.warm;
         for (int mi = 1; mi < cfg.seedMargins.length && best == null && !cancel.get(); mi++) {
@@ -60,8 +52,7 @@ public final class RelaxationRecovery {
                 break;
             }
         }
-        if (SolverTrace.on()) SolverTrace.log("RXT", "seedLadder done best=%s ms=%.1f", best != null, (System.nanoTime() - tSeed) / 1e6);
-        if (DEBUG) System.out.printf("  RELAX seedSlp=%s%n", best != null ? "OK" : "null");
+        if (SolverTrace.on()) SolverTrace.log("RXT", "seedLadder done best=%s ms=%.1f", best != null, (SolveClock.nanoTime() - tSeed) / 1e6);
         return best;
     }
 
@@ -97,7 +88,7 @@ public final class RelaxationRecovery {
             }
         }
         double[] lambda = warm.lambda.clone();
-        long tAl = System.nanoTime();
+        long tAl = SolveClock.nanoTime();
         double alViol = relaxedPrimal(cx, cz, mMag, walls, lambda, ux, uz, cancel, margin, cfg);
         if (Double.isNaN(alViol)) return out;
         double relaxedValue = dot(cx, cz, ux, uz);
@@ -110,7 +101,7 @@ public final class RelaxationRecovery {
         }
         if (SolverTrace.on()) {
             SolverTrace.log("RXT", "relax margin=%.2e viol=%.3e value=%.9f dual=%.9f ms=%.1f",
-                    margin, alViol, relaxedValue, warm.value, (System.nanoTime() - tAl) / 1e6);
+                    margin, alViol, relaxedValue, warm.value, (SolveClock.nanoTime() - tAl) / 1e6);
         }
         double[] seedDither = ditherSeedYaws(lin, spec.objective, ux, uz);
         double[] seedProj = projectionSeedYaws(lin, spec.objective, ux, uz);

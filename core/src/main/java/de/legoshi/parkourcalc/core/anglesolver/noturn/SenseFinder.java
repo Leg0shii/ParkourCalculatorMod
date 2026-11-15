@@ -7,6 +7,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.CertifiedBnb;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardPath;
+import de.legoshi.parkourcalc.core.anglesolver.solver.GoalWall;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
@@ -174,14 +175,13 @@ public final class SenseFinder {
         public final double offset;
         public final double[] yaws;
         public final double startYaw;
-        public final int anchor;
         public final int[] ticks;
         public final boolean[] scoped;
         public final double[] below;
         public final double[] above;
 
         Candidate(float sens, float sensLo, float sensHi, double pixelDeg, int[] pixels, double offset, double[] yaws,
-                  double startYaw, int anchor, int[] ticks, boolean[] scoped, double jumpBelow, double jumpAbove) {
+                  double startYaw, int[] ticks, boolean[] scoped, double jumpBelow, double jumpAbove) {
             this.sens = sens;
             this.sensLo = sensLo;
             this.sensHi = sensHi;
@@ -190,7 +190,6 @@ public final class SenseFinder {
             this.offset = offset;
             this.yaws = yaws;
             this.startYaw = startYaw;
-            this.anchor = anchor;
             this.ticks = ticks;
             this.scoped = scoped;
             this.below = new double[pixels.length];
@@ -302,7 +301,7 @@ public final class SenseFinder {
 
     public static Turn turnOf(ExactJumpModel model, JumpSpec spec, double[] yawsAbs, double px, double pz,
                               boolean turnsOnFirstTick) {
-        JumpPhysicsInputs sc = Scoring.pinnedScenario(spec.asScenario(), px, pz);
+        JumpPhysicsInputs sc = spec.asScenario().pinnedAt(px, pz);
         List<JumpConstraint> kept = new ArrayList<>();
         for (JumpConstraint c : spec.constraints) if (c.mode != JumpConstraint.Mode.F) kept.add(c);
         JumpConstraintCompiler.Compiled compiled = JumpConstraintCompiler.compile(new JumpSpec(sc, kept, spec.objective));
@@ -448,7 +447,7 @@ public final class SenseFinder {
         return tickWindow(turn, turn.yaws, turn.jumpTick(), WINDOW_CAP_DEG, probeNanos, cancel, progress);
     }
 
-    public static Window tickWindow(Turn turn, double[] yaws, int tick, double cap, long probeNanos, AtomicBoolean cancel,
+    private static Window tickWindow(Turn turn, double[] yaws, int tick, double cap, long probeNanos, AtomicBoolean cancel,
                                     Progress progress) {
         double carriedBelow = carriedEdge(turn, yaws, tick, -1, cap);
         double carriedAbove = carriedEdge(turn, yaws, tick, 1, cap);
@@ -524,7 +523,7 @@ public final class SenseFinder {
         }
         Objective o = turn.objective;
         Objective objective = new Objective(o.axis, o.sense, o.tick - from, 0.0, null, o.type);
-        JumpConstraint goal = AngleSolverEngine.selectLegalGoalWall(rest, objective, new String[1]);
+        JumpConstraint goal = GoalWall.selectLegal(rest, objective, new String[1]);
         if (goal == null) return null;
         List<JumpConstraint> solved = rest;
         if (mode == CertifiedBnb.Mode.OPTIMIZE) {
@@ -567,34 +566,20 @@ public final class SenseFinder {
         }
         AtomicInteger done = new AtomicInteger();
         int total = facings.size();
-        ExecutorService pool = Executors.newFixedThreadPool(Math.max(1, Math.min(threads, total)), r -> {
-            Thread t = new Thread(r, "sense-finder-anchor");
-            t.setDaemon(true);
-            t.setPriority(Thread.MIN_PRIORITY);
-            return t;
+        Anchor[] solved = new Anchor[total];
+        parallel(threads, total, i -> {
+            if (cancel != null && cancel.get()) return;
+            double f = facings.get(i);
+            Anchor a = anchorAt(turn, f, probeNanos, cancel);
+            int n = done.incrementAndGet();
+            if (progress != null) {
+                progress.update(String.format(Locale.ROOT, "re-solving the rest at jump angle %.3f°, %d of %d",
+                        f, n, total), (double) n / Math.max(1, total));
+            }
+            solved[i] = a;
         });
-        try {
-            List<Future<Anchor>> futures = new ArrayList<>();
-            for (double f : facings) {
-                futures.add(pool.submit(() -> {
-                    if (cancel != null && cancel.get()) return null;
-                    Anchor a = anchorAt(turn, f, probeNanos, cancel);
-                    int n = done.incrementAndGet();
-                    if (progress != null) {
-                        progress.update(String.format(Locale.ROOT, "re-solving the rest at jump angle %.3f°, %d of %d",
-                                f, n, total), (double) n / Math.max(1, total));
-                    }
-                    return a;
-                }));
-            }
-            for (Future<Anchor> fu : futures) {
-                Anchor a = fu.get();
-                if (a != null) out.add(a);
-            }
-        } catch (Exception ex) {
-            throw new IllegalStateException(ex);
-        } finally {
-            pool.shutdownNow();
+        for (Anchor a : solved) {
+            if (a != null) out.add(a);
         }
         out.sort(Comparator.comparingDouble(a -> unwrapNear(a.jumpFacing, f0)));
         return out;
@@ -615,13 +600,11 @@ public final class SenseFinder {
 
     private static final class Bracket {
         final int[] pixels;
-        final int anchor;
         float lo;
         float hi;
 
-        Bracket(int[] pixels, int anchor, float s) {
+        Bracket(int[] pixels, float s) {
             this.pixels = pixels;
-            this.anchor = anchor;
             this.lo = s;
             this.hi = s;
         }
@@ -667,7 +650,7 @@ public final class SenseFinder {
                     warm.put(n, pixels);
                     String key = Arrays.toString(pixels);
                     Bracket b = brackets.get(key);
-                    if (b == null) brackets.put(key, new Bracket(pixels.clone(), a, s));
+                    if (b == null) brackets.put(key, new Bracket(pixels.clone(), s));
                     else {
                         b.lo = Math.min(b.lo, s);
                         b.hi = Math.max(b.hi, s);
@@ -810,7 +793,7 @@ public final class SenseFinder {
             int a = nearestAnchor(anchors, before + n * p);
             int[] pixels = best(turn, anchors.get(a), n, p, null, cfg.ascentSweeps);
             if (pixels == null) continue;
-            Candidate c = candidate(turn, sens, sens, sens, pixels, a, window, cfg.scope(turn));
+            Candidate c = candidate(turn, sens, sens, sens, pixels, window, cfg.scope(turn));
             if (c != null && (best == null || c.offset > best.offset)) best = c;
         }
         return best;
@@ -842,10 +825,10 @@ public final class SenseFinder {
                 sens = s;
             }
         }
-        return candidate(turn, sens, landLo, landHi, b.pixels, b.anchor, window, scope);
+        return candidate(turn, sens, landLo, landHi, b.pixels, window, scope);
     }
 
-    private static Candidate candidate(Turn turn, float sens, float landLo, float landHi, int[] pixels, int anchor,
+    private static Candidate candidate(Turn turn, float sens, float landLo, float landHi, int[] pixels,
                                        Window window, boolean[] scope) {
         double p = TurnProfile.pixelDeg(sens);
         double offset = score(turn, pixels, p);
@@ -854,7 +837,7 @@ public final class SenseFinder {
         double facing = unwrapNear(yaws[turn.jumpTick()], window.center());
         double below = Math.max(0.0, facing - window.lo);
         double above = Math.max(0.0, window.hi - facing);
-        return new Candidate(sens, landLo, landHi, p, pixels.clone(), offset, yaws, turn.startYaw, anchor,
+        return new Candidate(sens, landLo, landHi, p, pixels.clone(), offset, yaws, turn.startYaw,
                 turn.turnTicks, scope, below, above);
     }
 

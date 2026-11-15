@@ -2,6 +2,8 @@ package de.legoshi.parkourcalc.anglesolver;
 
 import de.legoshi.parkourcalc.SlowSolverTests;
 import de.legoshi.parkourcalc.anglesolver.harness.Fixtures;
+import de.legoshi.parkourcalc.anglesolver.harness.ProblemCatalog;
+import de.legoshi.parkourcalc.anglesolver.harness.ProblemFixture;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
@@ -9,6 +11,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.FoldReplayDriver;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardPath;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler;
+import de.legoshi.parkourcalc.core.anglesolver.solver.JumpLinearModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.save.SaveFile;
@@ -17,6 +20,7 @@ import de.legoshi.parkourcalc.core.ui.InputData;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -28,6 +32,7 @@ public class FoldReplayDriverTest {
 
     private static final String CAPTURE = "thousand-1-dup2";
     private static final double WARM_OBJ = 6523.307720901059;
+    private static final int STALL_TICK_CAP = 60;
 
     @Test
     public void thousandWarmReplayIsBitExact() {
@@ -129,6 +134,34 @@ public class FoldReplayDriverTest {
                 }
             }
         }
+    }
+
+    @Test
+    public void aStalledDriverStopsInsteadOfReplayingARound() {
+        for (String name : ProblemCatalog.problemNames("solve")) {
+            ProblemFixture pf = ProblemFixture.load("solve", name);
+            JumpSpec spec = pf.rig().spec();
+            if (spec == null || spec.asScenario().numTicks > STALL_TICK_CAP) continue;
+            if (JumpLinearModel.hasFacingWall(spec.constraints)) continue;
+            List<FoldReplayDriver.Round> rounds = FoldReplayDriver.solve(pf.model, spec).rounds;
+            for (int i = 0; i < rounds.size(); i++) {
+                FoldReplayDriver.Round r = rounds.get(i);
+                if (Double.isNaN(r.linearBound)) continue;
+                int copies = 0;
+                for (int k = 0; k <= i; k++) {
+                    if (sameKernelRound(r, rounds.get(k))) copies++;
+                }
+                assertTrue(name + ": the driver ran the round at index " + i + " " + copies + " times",
+                        copies <= 2);
+            }
+        }
+    }
+
+    private static boolean sameKernelRound(FoldReplayDriver.Round a, FoldReplayDriver.Round b) {
+        return Double.doubleToLongBits(a.linearBound) == Double.doubleToLongBits(b.linearBound)
+                && Double.doubleToLongBits(a.px) == Double.doubleToLongBits(b.px)
+                && Double.doubleToLongBits(a.pz) == Double.doubleToLongBits(b.pz)
+                && Arrays.equals(a.yawsDeg, b.yawsDeg);
     }
 
     private static final class Loaded {

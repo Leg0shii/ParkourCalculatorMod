@@ -18,6 +18,11 @@ public final class ConstraintText {
         return String.format(Locale.ROOT, "%." + precision() + "f", v);
     }
 
+    public static String signedStat(double v) {
+        if (Double.isNaN(v)) return "-";
+        return (v >= 0 ? "+" : "") + fixedStat(v);
+    }
+
     /** Leading-space sign flag so positive yaws are the same width as negatives, keeping the yaw column digit-aligned. */
     public static String fixedYaw(double v) {
         return String.format(Locale.ROOT, "% ." + precision() + "f", v);

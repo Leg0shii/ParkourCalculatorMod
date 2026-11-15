@@ -1,7 +1,5 @@
 package de.legoshi.parkourcalc.core.anglesolver.noturn;
 
-import java.util.Arrays;
-
 public final class PoolScreenTables {
 
     public static final int SLOTS = 36;
@@ -30,7 +28,6 @@ public final class PoolScreenTables {
     public final int diskMidStride;
     public final float diskEarlyOut;
     public final float diskKeep;
-    private final String key;
 
     public PoolScreenTables(int n, int walls, int groups, int mainGroup, int[] freeGroups, int[] groupOf, float[] tab,
                      float[] coefW, float[] shift0, int[] wallAxisX, int[] wallKind, float[] objCoef, float objConst,
@@ -60,25 +57,5 @@ public final class PoolScreenTables {
         this.diskMidStride = diskMidStride;
         this.diskEarlyOut = diskEarlyOut;
         this.diskKeep = diskKeep;
-        int h = 31 * n + walls;
-        h = 31 * h + groups;
-        h = 31 * h + mainGroup;
-        h = 31 * h + Arrays.hashCode(freeGroups);
-        h = 31 * h + Arrays.hashCode(groupOf);
-        h = 31 * h + Arrays.hashCode(tab);
-        h = 31 * h + Arrays.hashCode(coefW);
-        h = 31 * h + Arrays.hashCode(shift0);
-        h = 31 * h + Arrays.hashCode(wallAxisX);
-        h = 31 * h + Arrays.hashCode(wallKind);
-        h = 31 * h + Arrays.hashCode(objCoef);
-        h = 31 * h + Float.floatToIntBits(objConst);
-        h = 31 * h + Float.floatToIntBits(loX + 3.0f * hiX + 7.0f * loZ + 11.0f * hiZ);
-        h = 31 * h + diskGrid * 1000 + diskCoarseStride * 10 + diskMidStride;
-        this.key = "n" + n + "w" + walls + "g" + groups + "m" + mainGroup + "h" + Integer.toHexString(h)
-                + (objAxisX ? "x" : "z") + (maximize ? "+" : "-");
-    }
-
-    public String key() {
-        return key;
     }
 }

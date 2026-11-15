@@ -1,5 +1,7 @@
 # No-turn stratfinder spike (ARCH-2 outer layer, issue #424)
 
+Status (2026-11-10): superseded spike note, kept as a record. The feature is View > Stratfinder (there is no Find No-Turn button anymore), the pool driver named below as the remaining build shipped as `StructurePoolDriver`, and the live record is `docs/noturn-global-solver-design.md`.
+
 A first in-game spike of the OUTER no-turn stratfinder from #424: given a jump STRUCTURE
 (space positions, run-tick placement, ground/air pattern, precise constraints) with the
 inputs and angles stripped, search the KEY schedule for a byte-exact NO-TURN (a single

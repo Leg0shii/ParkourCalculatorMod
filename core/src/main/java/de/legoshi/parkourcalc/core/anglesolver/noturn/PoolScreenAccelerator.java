@@ -39,10 +39,6 @@ public final class PoolScreenAccelerator {
         return enabled;
     }
 
-    public static boolean isAvailable() {
-        return factory != null;
-    }
-
     public static Factory get() {
         return enabled ? factory : null;
     }

@@ -503,6 +503,9 @@ public final class ForgePlaybackBridge implements PlaybackBridge {
 
     @Override
     public void capturePlaybackSample(int tickIndex) {
+        if (!de.legoshi.parkourcalc.core.DebugFlags.PAIRED_DIAGNOSTICS) {
+            return;
+        }
         net.minecraft.entity.player.EntityPlayer subject = ghostMode ? ghost : McClient.player();
         if (subject == null) return;
         EntityPlayerMP sp = serverSideSelf();

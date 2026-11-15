@@ -1,15 +1,15 @@
 package de.legoshi.parkourcalc.core.undo;
 
+import de.legoshi.parkourcalc.core.io.AtomicFiles;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
-import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
@@ -111,11 +111,7 @@ public final class UndoJournal {
                     out.write(record);
                 }
             }
-            try {
-                Files.move(tmp, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
-            } catch (AtomicMoveNotSupportedException e) {
-                Files.move(tmp, file, StandardCopyOption.REPLACE_EXISTING);
-            }
+            AtomicFiles.replace(tmp, file);
             long total = HEADER_BYTES;
             for (byte[] record : records) {
                 total += 4 + record.length;

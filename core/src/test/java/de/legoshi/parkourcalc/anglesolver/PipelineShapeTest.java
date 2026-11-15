@@ -30,12 +30,13 @@ import static org.junit.Assert.fail;
 public class PipelineShapeTest {
 
     private static final List<String> FAST_PIPELINE = Arrays.asList(
-            "seed", "horizon", "wrap0", "cap1", "freeRescue", "peel", "freeImprove", "sweep",
+            "seed", "joint", "horizon", "wrap0", "cap1", "freeRescue", "peel", "freeImprove", "sweep",
             "fold", "ladder", "cert", "bnb", "ils", "cap2", "wrap", "translate", "certify");
 
     private static final List<String> THOROUGH_PIPELINE = Arrays.asList(
-            "horizon", "wrap0", "seed", "cap1", "freeRescue", "peel", "freeImprove", "sweep",
-            "fold", "ladder", "cert", "bnb", "ils", "cap2", "wrap", "translate", "snap", "certify");
+            "cold", "horizon", "wrap0", "seed", "pick", "cap1", "freeRescue", "peel", "freeImprove", "sweep",
+            "fold", "polish0", "snap0", "ladder", "cert", "bnb", "ils", "join", "cap2", "polish", "wrap", "translate",
+            "snap", "join0", "dive", "translate3", "snap2", "certify");
 
     private static final long TIMEOUT_MS = 4000;
 

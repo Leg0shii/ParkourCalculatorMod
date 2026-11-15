@@ -34,6 +34,16 @@ public class TurnShapeTest {
     }
 
     @Test
+    public void fewerInputEdgesBreakATieAndNeverOutrankTheTurn() {
+        TurnShape steady = TurnShape.ofDeltas(new double[] {14, 16, 18, 20, 22});
+        TurnShape shaky = TurnShape.ofDeltas(new double[] {27, 16, 24, 24, 26});
+        assertTrue(steady.withEdges(2).betterThan(steady.withEdges(5)));
+        assertFalse(steady.withEdges(5).betterThan(steady.withEdges(5)));
+        assertFalse(shaky.withEdges(0).betterThan(steady.withEdges(9)));
+        assertTrue(steady.withEdges(9).betterThan(shaky.withEdges(0)));
+    }
+
+    @Test
     public void tinyWobblesBelowTheFloorsAreIgnored() {
         TurnShape s = TurnShape.ofDeltas(new double[] {10.00, 10.02, 9.99, 10.01, 0.005, -0.004});
         assertEquals(0, s.reversals);

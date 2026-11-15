@@ -1,5 +1,7 @@
 package de.legoshi.parkourcalc.core.ui;
 
+import de.legoshi.parkourcalc.core.McVersion;
+
 public enum MovementEffect {
     SPEED("Speed", "Speed", "speed", true, 8, 0),
     SLOWNESS("Slowness", "Slow", "slowness", true, 8, 0),
@@ -55,15 +57,11 @@ public enum MovementEffect {
     }
 
     public boolean availableIn(String mcVersion) {
-        int[] v = legacyVersion(mcVersion);
-        if (v == null) return true;
-        return v[0] > sinceMinor || (v[0] == sinceMinor && v[1] >= sincePatch);
+        return McVersion.atLeast(mcVersion, sinceMinor, sincePatch);
     }
 
     public static boolean wrapsAmplifier(String mcVersion) {
-        int[] v = legacyVersion(mcVersion);
-        if (v == null) return false;
-        return v[0] < 20 || (v[0] == 20 && v[1] <= 4);
+        return McVersion.atMost(mcVersion, 20, 4);
     }
 
     public static int clientAmplifier(int level, boolean byteAmplifier) {
@@ -79,18 +77,5 @@ public enum MovementEffect {
     public String describe(int level) {
         if (level <= 0) return "";
         return leveled ? tag + " " + level : tag;
-    }
-
-    private static int[] legacyVersion(String mcVersion) {
-        if (mcVersion == null || !mcVersion.startsWith("1.")) return null;
-        String[] parts = mcVersion.split("\\.");
-        return new int[] { versionPart(parts, 1), versionPart(parts, 2) };
-    }
-
-    private static int versionPart(String[] parts, int index) {
-        if (index >= parts.length) return 0;
-        int end = 0;
-        while (end < parts[index].length() && Character.isDigit(parts[index].charAt(end))) end++;
-        return end == 0 ? 0 : Integer.parseInt(parts[index].substring(0, end));
     }
 }

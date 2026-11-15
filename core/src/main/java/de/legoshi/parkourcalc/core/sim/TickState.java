@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.core.sim;
 
+import de.legoshi.parkourcalc.core.anglesolver.FlowVector;
 import de.legoshi.parkourcalc.core.anglesolver.Medium;
 
 import java.util.Collections;
@@ -35,6 +36,8 @@ public final class TickState {
     public final Medium medium;
     public final double groundFriction;
     public final int soulsandCells;
+    public final FlowVector flow;
+    public final boolean inWater;
 
     public final ServerTickSample server;
 
@@ -58,6 +61,20 @@ public final class TickState {
     public TickState(Vec3dCore position, boolean onGround, boolean sneaking, boolean wallCollision, float yaw, List<Vec3dCore> subtickPath, Vec3dCore velocity, boolean softCollision, double collisionAngleDegrees,
                      boolean sprinting, float moveForward, float moveStrafe, Medium medium, double groundFriction, int soulsandCells,
                      ServerTickSample server) {
+        this(position, onGround, sneaking, wallCollision, yaw, subtickPath, velocity, softCollision, collisionAngleDegrees,
+                sprinting, moveForward, moveStrafe, medium, groundFriction, soulsandCells, FlowVector.NONE, server);
+    }
+
+    public TickState(Vec3dCore position, boolean onGround, boolean sneaking, boolean wallCollision, float yaw, List<Vec3dCore> subtickPath, Vec3dCore velocity, boolean softCollision, double collisionAngleDegrees,
+                     boolean sprinting, float moveForward, float moveStrafe, Medium medium, double groundFriction, int soulsandCells,
+                     FlowVector flow, ServerTickSample server) {
+        this(position, onGround, sneaking, wallCollision, yaw, subtickPath, velocity, softCollision, collisionAngleDegrees,
+                sprinting, moveForward, moveStrafe, medium, groundFriction, soulsandCells, flow, false, server);
+    }
+
+    public TickState(Vec3dCore position, boolean onGround, boolean sneaking, boolean wallCollision, float yaw, List<Vec3dCore> subtickPath, Vec3dCore velocity, boolean softCollision, double collisionAngleDegrees,
+                     boolean sprinting, float moveForward, float moveStrafe, Medium medium, double groundFriction, int soulsandCells,
+                     FlowVector flow, boolean inWater, ServerTickSample server) {
         this.position = position;
         this.onGround = onGround;
         this.sneaking = sneaking;
@@ -73,6 +90,8 @@ public final class TickState {
         this.medium = medium;
         this.groundFriction = groundFriction;
         this.soulsandCells = soulsandCells;
+        this.flow = flow != null ? flow : FlowVector.NONE;
+        this.inWater = inWater;
         this.server = server;
     }
 

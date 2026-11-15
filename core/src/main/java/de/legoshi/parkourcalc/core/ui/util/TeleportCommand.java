@@ -12,7 +12,7 @@ public final class TeleportCommand {
                 + " " + wrapDegrees(yaw) + " " + pitch;
     }
 
-    private static float wrapDegrees(float value) {
+    public static float wrapDegrees(float value) {
         float f = value % 360.0f;
         if (f >= 180.0f) f -= 360.0f;
         if (f < -180.0f) f += 360.0f;

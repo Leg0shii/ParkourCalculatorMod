@@ -33,17 +33,10 @@ public final class SolveRunRecord {
         public double smoothLambda;
     }
 
-    public static final class Param {
-        public String key;
-        public Double num;
-        public Boolean flag;
-        public String str;
-    }
-
     public static final class NodeConfig {
         public String id;
         public String type;
-        public List<Param> params = new ArrayList<Param>();
+        public List<GraphPresetFile.Param> params = new ArrayList<GraphPresetFile.Param>();
     }
 
     public static final class Config {
@@ -99,6 +92,17 @@ public final class SolveRunRecord {
         public long evals;
     }
 
+    public static final class StepRun {
+        public String id;
+        public String taken;
+        public long workNanos;
+        public long[] workUnits;
+        public Double objective;
+        public Double violation;
+        public Double dualGap;
+        public boolean feasible;
+    }
+
     public static final class Race {
         public boolean spawned;
         public long spawnElapsedNanos;
@@ -117,6 +121,7 @@ public final class SolveRunRecord {
     public Outcome outcome;
     public List<Sample> trajectory = new ArrayList<Sample>();
     public List<NodeRun> nodes = new ArrayList<NodeRun>();
+    public List<StepRun> steps = new ArrayList<StepRun>();
     public Race race;
     public Counters counters;
     public String modVersion;
@@ -139,32 +144,11 @@ public final class SolveRunRecord {
             nc.id = n.id;
             nc.type = n.type.id;
             for (ParamSpec spec : n.type.params) {
-                nc.params.add(paramOf(n, spec));
+                nc.params.add(GraphPresetFile.Param.of(n, spec));
             }
             c.nodes.add(nc);
         }
         return c;
-    }
-
-    private static Param paramOf(GraphNode n, ParamSpec spec) {
-        Param p = new Param();
-        p.key = spec.key;
-        switch (spec.kind) {
-            case INT:
-                p.num = (double) n.params.getInt(spec.key);
-                break;
-            case DOUBLE:
-                p.num = n.params.getDouble(spec.key);
-                break;
-            case BOOL:
-                p.flag = n.params.getBool(spec.key);
-                break;
-            case ENUM:
-            case STRING:
-                p.str = n.params.getString(spec.key);
-                break;
-        }
-        return p;
     }
 
     public static Problem problemOf(JumpSpec spec, int jumps) {
@@ -188,8 +172,7 @@ public final class SolveRunRecord {
         double travel = 0.0;
         double maxStep = 0.0;
         for (int t = 1; t < yaws.length; t++) {
-            double d = yaws[t] - yaws[t - 1];
-            d -= 360.0 * Math.round(d / 360.0);
+            double d = Angles.turn(yaws[t - 1], yaws[t]);
             double a = Math.abs(d);
             travel += a;
             if (a > maxStep) maxStep = a;
@@ -225,6 +208,23 @@ public final class SolveRunRecord {
             r.elapsedNanos = s.elapsedNanos;
             r.taken = s.taken != null ? s.taken.name() : null;
             r.evals = s.evals;
+            out.add(r);
+        }
+        return out;
+    }
+
+    public static List<StepRun> stepRunsOf(List<GraphRunState.Step> steps) {
+        List<StepRun> out = new ArrayList<StepRun>(steps.size());
+        for (GraphRunState.Step s : steps) {
+            StepRun r = new StepRun();
+            r.id = s.nodeId;
+            r.taken = s.taken != null ? s.taken.name() : null;
+            r.workNanos = s.workNanos;
+            r.workUnits = s.workUnits;
+            r.objective = Double.isNaN(s.objective) ? null : s.objective;
+            r.violation = Double.isNaN(s.violation) ? null : s.violation;
+            r.dualGap = Double.isNaN(s.dualGap) || Double.isInfinite(s.dualGap) ? null : s.dualGap;
+            r.feasible = s.feasible;
             out.add(r);
         }
         return out;

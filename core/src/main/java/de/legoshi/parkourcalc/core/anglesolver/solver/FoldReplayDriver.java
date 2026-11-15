@@ -1,6 +1,5 @@
 package de.legoshi.parkourcalc.core.anglesolver.solver;
 
-import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,7 +24,6 @@ public final class FoldReplayDriver {
     private static final double NARROW_DELTA_FLOOR = 2.0e-5;
     private static final int NARROW_MAX_ITER = 30;
     private static final int TAIL_GATE_MAX_PAIRS = 3;
-    private static final double GNOISE = 1.0e-9;
     private static final double END_POLISH_CAP = 0.1;
     private static final double FREE_START_SMOOTH = 5.0e-4;
     private static final double COMBINED_INERTIA_SQ = 9.0e-6;
@@ -97,9 +95,32 @@ public final class FoldReplayDriver {
         }
     }
 
+    private static final class RoundStart {
+        final boolean[] zeroX;
+        final boolean[] zeroZ;
+        final int pins;
+        final int keepAliveRetries;
+        final Map<String, Double> margins;
+        final double[] prevYaws;
+
+        RoundStart(boolean[] zeroX, boolean[] zeroZ, int pins, int keepAliveRetries,
+                   Map<String, Double> margins, double[] prevYaws) {
+            this.zeroX = zeroX;
+            this.zeroZ = zeroZ;
+            this.pins = pins;
+            this.keepAliveRetries = keepAliveRetries;
+            this.margins = margins;
+            this.prevYaws = prevYaws == null ? null : prevYaws.clone();
+        }
+
+        boolean sameAs(RoundStart o) {
+            return pins == o.pins && keepAliveRetries == o.keepAliveRetries
+                    && Arrays.equals(zeroX, o.zeroX) && Arrays.equals(zeroZ, o.zeroZ)
+                    && Arrays.equals(prevYaws, o.prevYaws) && margins.equals(o.margins);
+        }
+    }
+
     public static final class Params {
-        public Map<String, Double> wallTighten;
-        public List<JumpLinearModel.Wall> extraWalls;
         public double specWallRelax;
         public double clearance;
         public Set<String> clearanceWalls;
@@ -112,22 +133,10 @@ public final class FoldReplayDriver {
     }
 
     public static Result solve(ExactJumpModel exact, JumpSpec spec) {
-        return solve(exact, spec, null, null, null, 0L);
-    }
-
-    public static Result solve(ExactJumpModel exact, JumpSpec spec, Map<String, Double> wallTighten,
-                               List<JumpLinearModel.Wall> extraWalls, AtomicBoolean cancel, long deadlineNanos) {
-        Params p = new Params();
-        p.wallTighten = wallTighten;
-        p.extraWalls = extraWalls;
-        p.cancel = cancel;
-        p.deadlineNanos = deadlineNanos;
-        return solve(exact, spec, p);
+        return solve(exact, spec, new Params());
     }
 
     public static Result solve(ExactJumpModel exact, JumpSpec spec, Params params) {
-        Map<String, Double> wallTighten = params.wallTighten;
-        List<JumpLinearModel.Wall> extraWalls = params.extraWalls;
         AtomicBoolean cancel = params.cancel;
         long deadlineNanos = params.deadlineNanos;
         JumpPhysicsInputs sc = spec.asScenario();
@@ -156,10 +165,14 @@ public final class FoldReplayDriver {
         boolean trivial = false;
         Round best = null;
         Map<String, Double> margins = new HashMap<>();
+        List<RoundStart> roundStarts = new ArrayList<>();
 
         for (int round = 0; round < MAX_ROUNDS; round++) {
             if (cancel != null && cancel.get()) break;
-            if (deadlineNanos != 0L && System.nanoTime() >= deadlineNanos) break;
+            if (deadlineNanos != 0L && SolveClock.nanoTime() >= deadlineNanos) break;
+            RoundStart start = new RoundStart(curZeroX, curZeroZ, pins.size(), keepAliveRetries, margins, prevYaws);
+            if (repeats(roundStarts, start)) break;
+            roundStarts.add(start);
 
             JumpLinearModel lin = curZeroX == null
                     ? new JumpLinearModel(sc)
@@ -173,10 +186,9 @@ public final class FoldReplayDriver {
                 trivial = true;
                 break;
             }
-            walls = adjustWalls(walls, combineTighten(wallTighten, margins), params.specWallRelax,
+            walls = adjustWalls(walls, margins, params.specWallRelax,
                     params.clearance, params.clearanceWalls);
             if (curZeroX != null) walls.addAll(lin.velocityWalls(exact.inertiaThreshold()));
-            if (extraWalls != null) walls.addAll(extraWalls);
             for (KeepAlivePin pin : pins) {
                 JumpLinearModel.Wall w = lin.keepAliveWall(pin.axis, pin.tick, exact.inertiaThreshold(), pin.positive);
                 if (w != null) walls.add(w);
@@ -191,10 +203,10 @@ public final class FoldReplayDriver {
             double dvz = sol.dvz;
 
             double[] yaws = decodeYaws(lin, sol.ux, sol.uz, prevYaws);
-            double px = free ? clamp(refPx + dvx, box.pxLo, box.pxHi) : refPx;
-            double pz = free ? clamp(refPz + dvz, box.pzLo, box.pzHi) : refPz;
+            double px = free ? box.clampX(refPx + dvx) : refPx;
+            double pz = free ? box.clampZ(refPz + dvz) : refPz;
 
-            JumpPhysicsInputs scRep = pinnedCopy(sc, px, pz);
+            JumpPhysicsInputs scRep = sc.pinnedAt(px, pz);
             double[] gf = scRep.toGameFacings(yaws);
             ForwardPath path = exact.forward(scRep, gf);
             double obj = spec.objective.evaluate(path);
@@ -237,8 +249,8 @@ public final class FoldReplayDriver {
                 if (viol >= SLP_TRIGGER) {
                     int pre = rounds.size();
                     AnchorSlp.Outcome oc = AnchorSlp.polish(exact, spec, compiled, sc, lin,
-                            yaws, gf, path, px, pz, viol, rounds, max);
-                    for (int i = pre; i < rounds.size(); i++) best = pickBetter(best, rounds.get(i), max);
+                            yaws, gf, path, px, pz, viol, rounds);
+                    best = foldRounds(best, rounds, pre, max);
                     if (oc.landed != null) {
                         landed = true;
                     } else {
@@ -266,7 +278,7 @@ public final class FoldReplayDriver {
                     int pre = rounds.size();
                     AnchorSlp.Outcome wo = BucketWalk.walkPolish(exact, spec, compiled, sc, lin,
                             curYaws, curGf, curPath, curPx, curPz, curViol, rounds);
-                    for (int i = pre; i < rounds.size(); i++) best = pickBetter(best, rounds.get(i), max);
+                    best = foldRounds(best, rounds, pre, max);
                     if (wo.landed != null) {
                         landed = true;
                     } else {
@@ -301,9 +313,9 @@ public final class FoldReplayDriver {
                     if (!flips.isEmpty()) {
                         int pre = rounds.size();
                         tailGateEnumeration(exact, spec, compiled, sc, box, free, freeP0, refPx, refPz,
-                                params, combineTighten(wallTighten, margins), extraWalls, curZeroX, curZeroZ,
+                                params, margins, curZeroX, curZeroZ,
                                 flips, path, prevYaws, rounds, cancel, deadlineNanos);
-                        for (int i = pre; i < rounds.size(); i++) best = pickBetter(best, rounds.get(i), max);
+                        best = foldRounds(best, rounds, pre, max);
                     }
                     break;
                 }
@@ -337,7 +349,7 @@ public final class FoldReplayDriver {
                     || (best.feasible() && params.objectiveRounds > 0));
         if (wantEndPolish
                 && (cancel == null || !cancel.get())
-                && (deadlineNanos == 0L || System.nanoTime() < deadlineNanos)) {
+                && (deadlineNanos == 0L || SolveClock.nanoTime() < deadlineNanos)) {
             Result pol = polishFromAnchor(exact, spec, best.yawsDeg, best.px, best.pz, params);
             rounds.addAll(pol.rounds);
             best = pickBetter(best, pol.best, max);
@@ -355,7 +367,7 @@ public final class FoldReplayDriver {
         boolean improved = fb.maxViolation < first.rounds.get(0).maxViolation;
         if (!improved) return first;
         if (params.cancel != null && params.cancel.get()) return first;
-        if (params.deadlineNanos != 0L && System.nanoTime() >= params.deadlineNanos) return first;
+        if (params.deadlineNanos != 0L && SolveClock.nanoTime() >= params.deadlineNanos) return first;
         Result second = polishPass(exact, spec, fb.yawsDeg, fb.px, fb.pz, params);
         if (second.best == null) return first;
         List<Round> merged = new ArrayList<>(first.rounds);
@@ -377,13 +389,13 @@ public final class FoldReplayDriver {
         double px = anchorPx != null ? anchorPx : refPx;
         double pz = anchorPz != null ? anchorPz : refPz;
         if (free) {
-            px = clamp(px, box.pxLo, box.pxHi);
-            pz = clamp(pz, box.pzLo, box.pzHi);
+            px = box.clampX(px);
+            pz = box.clampZ(pz);
         }
         double[] yaws = Angles.wrapAll(anchorYawsAbs);
 
         List<Round> rounds = new ArrayList<>();
-        JumpPhysicsInputs scRep = pinnedCopy(sc, px, pz);
+        JumpPhysicsInputs scRep = sc.pinnedAt(px, pz);
         double[] gf = scRep.toGameFacings(yaws);
         ForwardPath path = exact.forward(scRep, gf);
         double viol = compiled.maxViolation(gf, path);
@@ -404,7 +416,7 @@ public final class FoldReplayDriver {
                 best = pickBetter(best, pol, max);
                 px = pol.px;
                 pz = pol.pz;
-                scRep = pinnedCopy(sc, px, pz);
+                scRep = sc.pinnedAt(px, pz);
                 gf = scRep.toGameFacings(yaws);
                 path = exact.forward(scRep, gf);
                 viol = pol.maxViolation;
@@ -413,8 +425,8 @@ public final class FoldReplayDriver {
         if (viol > 0.0) {
             int pre = rounds.size();
             AnchorSlp.Outcome oc = AnchorSlp.polish(exact, spec, compiled, sc, lin, yaws, gf, path,
-                    px, pz, viol, rounds, max);
-            for (int i = pre; i < rounds.size(); i++) best = pickBetter(best, rounds.get(i), max);
+                    px, pz, viol, rounds);
+            best = foldRounds(best, rounds, pre, max);
             yaws = oc.landed != null ? oc.landed.yawsDeg : oc.yaws;
             gf = oc.gf;
             path = oc.path;
@@ -426,7 +438,7 @@ public final class FoldReplayDriver {
             int pre = rounds.size();
             AnchorSlp.Outcome wo = BucketWalk.walkPolish(exact, spec, compiled, sc, lin,
                     yaws, gf, path, px, pz, viol, rounds);
-            for (int i = pre; i < rounds.size(); i++) best = pickBetter(best, rounds.get(i), max);
+            best = foldRounds(best, rounds, pre, max);
             yaws = wo.landed != null ? wo.landed.yawsDeg : wo.yaws;
             gf = wo.gf;
             path = wo.path;
@@ -438,7 +450,7 @@ public final class FoldReplayDriver {
             int pre = rounds.size();
             AnchorSlp.Outcome so = BucketWalk.windowScan(exact, spec, compiled, sc, lin,
                     yaws, px, pz, viol, max, rounds);
-            for (int i = pre; i < rounds.size(); i++) best = pickBetter(best, rounds.get(i), max);
+            best = foldRounds(best, rounds, pre, max);
             yaws = so.landed != null ? so.landed.yawsDeg : so.yaws;
             gf = so.gf;
             path = so.path;
@@ -447,8 +459,10 @@ public final class FoldReplayDriver {
                 pre = rounds.size();
                 AnchorSlp.Outcome wo2 = BucketWalk.walkPolish(exact, spec, compiled, sc, lin,
                         yaws, gf, path, px, pz, viol, rounds);
-                for (int i = pre; i < rounds.size(); i++) best = pickBetter(best, rounds.get(i), max);
+                best = foldRounds(best, rounds, pre, max);
                 yaws = wo2.landed != null ? wo2.landed.yawsDeg : wo2.yaws;
+                gf = wo2.gf;
+                path = wo2.path;
                 px = wo2.landed != null ? wo2.landed.px : wo2.px;
                 pz = wo2.landed != null ? wo2.landed.pz : wo2.pz;
                 viol = wo2.viol;
@@ -481,7 +495,7 @@ public final class FoldReplayDriver {
                 int pre = rounds.size();
                 AnchorSlp.Outcome so = BucketWalk.windowScan(exact, spec, compiled, sc, olin,
                         improved.yawsDeg, improved.px, improved.pz, 0.0, max, rounds);
-                for (int i = pre; i < rounds.size(); i++) best = pickBetter(best, rounds.get(i), max);
+                best = foldRounds(best, rounds, pre, max);
                 if (so.landed == null) {
                     feas = improved;
                     break;
@@ -499,7 +513,6 @@ public final class FoldReplayDriver {
                                             StartBox box, boolean free, CostateDualSolver.FreeP0 freeP0,
                                             double refPx, double refPz, Params params,
                                             Map<String, Double> tighten,
-                                            List<JumpLinearModel.Wall> extraWalls,
                                             boolean[] baseZeroX, boolean[] baseZeroZ, List<int[]> flips,
                                             ForwardPath lastPath, double[] prevYaws, List<Round> rounds,
                                             AtomicBoolean cancel, long deadlineNanos) {
@@ -507,7 +520,7 @@ public final class FoldReplayDriver {
         int k = flips.size();
         for (int combo = 0; combo < (1 << k); combo++) {
             if (cancel != null && cancel.get()) return;
-            if (deadlineNanos != 0L && System.nanoTime() >= deadlineNanos) return;
+            if (deadlineNanos != 0L && SolveClock.nanoTime() >= deadlineNanos) return;
             boolean[] zx = baseZeroX.clone();
             boolean[] zz = baseZeroZ.clone();
             for (int i = 0; i < k; i++) {
@@ -526,7 +539,6 @@ public final class FoldReplayDriver {
             if (trivialFlag[0]) continue;
             walls = adjustWalls(walls, tighten, params.specWallRelax, params.clearance, params.clearanceWalls);
             walls.addAll(lin.velocityWalls(exact.inertiaThreshold()));
-            if (extraWalls != null) walls.addAll(extraWalls);
             for (int i = 0; i < k; i++) {
                 boolean zero = (combo & (1 << i)) != 0;
                 if (zero) continue;
@@ -539,9 +551,9 @@ public final class FoldReplayDriver {
                     lin, cancel, deadlineNanos, null);
             if (sol == null) continue;
             double[] yaws = decodeYaws(lin, sol.ux, sol.uz, prevYaws);
-            double px = free ? clamp(refPx + sol.dvx, box.pxLo, box.pxHi) : refPx;
-            double pz = free ? clamp(refPz + sol.dvz, box.pzLo, box.pzHi) : refPz;
-            JumpPhysicsInputs scRep = pinnedCopy(sc, px, pz);
+            double px = free ? box.clampX(refPx + sol.dvx) : refPx;
+            double pz = free ? box.clampZ(refPz + sol.dvz) : refPz;
+            JumpPhysicsInputs scRep = sc.pinnedAt(px, pz);
             double[] gf = scRep.toGameFacings(yaws);
             ForwardPath path = exact.forward(scRep, gf);
             double obj = spec.objective.evaluate(path);
@@ -558,18 +570,13 @@ public final class FoldReplayDriver {
     }
 
     private static final class ContinuousSolution {
-        final double[] gx;
-        final double[] gz;
         final double[] ux;
         final double[] uz;
         final double value;
         final double dvx;
         final double dvz;
 
-        ContinuousSolution(double[] gx, double[] gz, double[] ux, double[] uz, double value,
-                           double dvx, double dvz) {
-            this.gx = gx;
-            this.gz = gz;
+        ContinuousSolution(double[] ux, double[] uz, double value, double dvx, double dvz) {
             this.ux = ux;
             this.uz = uz;
             this.value = value;
@@ -580,8 +587,6 @@ public final class FoldReplayDriver {
 
     static final class KernelStats {
         int solves;
-        int chordTicks;
-        boolean infeasible;
     }
 
     private static boolean usable(DiskSocpKernel.Outcome oc) {
@@ -594,20 +599,6 @@ public final class FoldReplayDriver {
     private static boolean infeasibleSignal(DiskSocpKernel.Outcome oc) {
         if (oc.failCode == DiskSocpKernel.FAIL_UNBOUNDED) return true;
         return oc.result != null && oc.result.value < INFEAS_VALUE;
-    }
-
-    private static Map<String, Double> lambdaMap(List<JumpLinearModel.Wall> walls,
-                                                 List<DiskSocpKernel.ChordRow> chordRows,
-                                                 DiskSocpKernel.Result r) {
-        Map<String, Double> map = new HashMap<>();
-        int mw = walls.size();
-        for (int j = 0; j < mw && j < r.lambda.length; j++) map.put(walls.get(j).name, r.lambda[j]);
-        if (chordRows != null) {
-            for (int q = 0; q < chordRows.size() && mw + q < r.lambda.length; q++) {
-                map.put(chordRows.get(q).name, r.lambda[mw + q]);
-            }
-        }
-        return map;
     }
 
     private static List<DiskSocpKernel.ChordRow> chordRows(java.util.TreeMap<Integer, double[]> chords,
@@ -628,11 +619,10 @@ public final class FoldReplayDriver {
                                                   CostateDualSolver.FreeP0 freeP0, boolean dualFallback,
                                                   JumpLinearModel lin, AtomicBoolean cancel,
                                                   long deadlineNanos, KernelStats stats) {
-        DiskSocpKernel.Outcome base = DiskSocpKernel.solveChords(n, cx, cz, mMag, walls, freeP0, null, null);
+        DiskSocpKernel.Outcome base = DiskSocpKernel.solveChords(n, cx, cz, mMag, walls, freeP0, null);
         if (stats != null) stats.solves++;
         if (!usable(base)) {
             if (infeasibleSignal(base)) {
-                if (stats != null) stats.infeasible = true;
                 if (DEBUG) System.out.printf("    KERNEL infeasible walls=%d%n", walls.size());
                 return null;
             }
@@ -653,16 +643,14 @@ public final class FoldReplayDriver {
                     uz[t] = mMag[t] * dr.gz[t] / norm;
                 }
             }
-            return new ContinuousSolution(dr.gx, dr.gz, ux, uz, dr.value, dr.dvx, dr.dvz);
+            return new ContinuousSolution(ux, uz, dr.value, dr.dvx, dr.dvz);
         }
 
         DiskSocpKernel.Result sol = base.result;
         java.util.TreeMap<Integer, double[]> chords = new java.util.TreeMap<>();
-        Map<String, Double> warm = lambdaMap(walls, null, sol);
-        List<DiskSocpKernel.ChordRow> curRows = null;
         for (int it = 0; it < NARROW_MAX_ITER; it++) {
             if (cancel != null && cancel.get()) break;
-            if (deadlineNanos != 0L && System.nanoTime() >= deadlineNanos) break;
+            if (deadlineNanos != 0L && SolveClock.nanoTime() >= deadlineNanos) break;
             int worst = -1;
             double worstSlack = 0.0;
             for (int t = 0; t < n; t++) {
@@ -693,7 +681,7 @@ public final class FoldReplayDriver {
                 }
             }
             List<DiskSocpKernel.ChordRow> rows = chordRows(next, mMag);
-            DiskSocpKernel.Outcome cand = DiskSocpKernel.solveChords(n, cx, cz, mMag, walls, freeP0, rows, warm);
+            DiskSocpKernel.Outcome cand = DiskSocpKernel.solveChords(n, cx, cz, mMag, walls, freeP0, rows);
             if (stats != null) stats.solves++;
             if (DEBUG) {
                 System.out.printf("      narrow[%d] worst=%d slack=%.3e chords=%d usable=%b gap=%s%n",
@@ -707,7 +695,7 @@ public final class FoldReplayDriver {
                             Math.min(e.getValue()[1] / NARROW_SHRINK, NARROW_DELTA0)});
                 }
                 rows = chordRows(loose, mMag);
-                cand = DiskSocpKernel.solveChords(n, cx, cz, mMag, walls, freeP0, rows, warm);
+                cand = DiskSocpKernel.solveChords(n, cx, cz, mMag, walls, freeP0, rows);
                 if (stats != null) stats.solves++;
                 if (DEBUG) {
                     System.out.printf("      narrow[%d] loosened usable=%b%n", it, usable(cand));
@@ -716,15 +704,12 @@ public final class FoldReplayDriver {
                 next = loose;
             }
             chords = next;
-            curRows = rows;
             sol = cand.result;
-            warm = lambdaMap(walls, curRows, sol);
         }
-        if (stats != null) stats.chordTicks = chords.size();
         if (DEBUG && !chords.isEmpty()) {
             System.out.printf("    NARROW ticks=%d solves=%d%n", chords.size(), stats == null ? -1 : stats.solves);
         }
-        return new ContinuousSolution(sol.gx, sol.gz, sol.ux, sol.uz, sol.value, sol.dvx, sol.dvz);
+        return new ContinuousSolution(sol.ux, sol.uz, sol.value, sol.dvx, sol.dvz);
     }
 
     private static CostateDualSolver.FreeP0 freeStartTerm(StartBox box, Objective obj) {
@@ -769,47 +754,14 @@ public final class FoldReplayDriver {
                                          JumpConstraintCompiler.Compiled compiled, JumpPhysicsInputs sc,
                                          StartBox box, double[] yaws, double[] gf, ForwardPath path,
                                          double px, double pz, boolean[] zeroX, boolean[] zeroZ, int index) {
-        double loX = box.pxLo - px;
-        double hiX = box.pxHi - px;
-        double loZ = box.pzLo - pz;
-        double hiZ = box.pzHi - pz;
-        for (JumpConstraint c : spec.constraints) {
-            if (c.mode != JumpConstraint.Mode.X && c.mode != JumpConstraint.Mode.Z) {
-                if (JumpConstraintCompiler.slack(c, gf, path) > 0.0) return null;
-                continue;
-            }
-            int tc = c.t2 == null ? 1 : (c.op == JumpConstraint.Op.PLUS ? 2 : 0);
-            if (tc == 0) {
-                if (JumpConstraintCompiler.slack(c, gf, path) > 0.0) return null;
-                continue;
-            }
-            double e = JumpConstraintCompiler.evaluate(c, gf, path);
-            boolean axisX = c.mode == JumpConstraint.Mode.X;
-            if (c.cmp == JumpConstraint.Cmp.GE) {
-                double lo = -e / tc;
-                if (axisX) loX = Math.max(loX, lo);
-                else loZ = Math.max(loZ, lo);
-            } else if (c.cmp == JumpConstraint.Cmp.LE) {
-                double hi = -e / tc;
-                if (axisX) hiX = Math.min(hiX, hi);
-                else hiZ = Math.min(hiZ, hi);
-            } else {
-                if (e != 0.0) return null;
-                if (axisX) {
-                    loX = Math.max(loX, 0.0);
-                    hiX = Math.min(hiX, 0.0);
-                } else {
-                    loZ = Math.max(loZ, 0.0);
-                    hiZ = Math.min(hiZ, 0.0);
-                }
-            }
-        }
-        if (loX > hiX || loZ > hiZ) return null;
-        double dpx = 0.5 * (loX + hiX);
-        double dpz = 0.5 * (loZ + hiZ);
+        double[] iv = PathTranslation.hardInterval(spec.constraints, gf, path,
+                box.pxLo - px, box.pxHi - px, box.pzLo - pz, box.pzHi - pz);
+        if (iv == null) return null;
+        double dpx = 0.5 * (iv[0] + iv[1]);
+        double dpz = 0.5 * (iv[2] + iv[3]);
         double npx = px + dpx;
         double npz = pz + dpz;
-        JumpPhysicsInputs scRep = pinnedCopy(sc, npx, npz);
+        JumpPhysicsInputs scRep = sc.pinnedAt(npx, npz);
         double[] gf2 = scRep.toGameFacings(yaws);
         ForwardPath path2 = exact.forward(scRep, gf2);
         double viol = compiled.maxViolation(gf2, path2);
@@ -820,13 +772,6 @@ public final class FoldReplayDriver {
         }
         return new Round(index, Double.NaN, obj, viol, yaws.clone(), npx, npz,
                 zeroX.clone(), zeroZ.clone(), countEvents(zeroX, zeroZ), true);
-    }
-
-    static JumpPhysicsInputs pinnedCopy(JumpPhysicsInputs sc, double px, double pz) {
-        JumpPhysicsInputs c = sc.copy();
-        c.startPos = new Vec3dCore(px, sc.startPos.y, pz);
-        c.startBox = StartBox.pinned(px, pz, sc.initialVelocity.x, sc.initialVelocity.z);
-        return c;
     }
 
     private static List<JumpLinearModel.Wall> adjustWalls(List<JumpLinearModel.Wall> walls,
@@ -862,17 +807,11 @@ public final class FoldReplayDriver {
         return AnchorSlp.margins(lin, spec.constraints, yaws, box, px, pz, gf, path);
     }
 
-    private static Map<String, Double> combineTighten(Map<String, Double> caller, Map<String, Double> margins) {
-        boolean noMargins = margins == null || margins.isEmpty();
-        boolean noCaller = caller == null || caller.isEmpty();
-        if (noMargins) return caller;
-        if (noCaller) return margins;
-        Map<String, Double> out = new HashMap<>(margins);
-        for (Map.Entry<String, Double> e : caller.entrySet()) {
-            Double prev = out.get(e.getKey());
-            out.put(e.getKey(), prev == null ? e.getValue() : prev + e.getValue());
+    private static boolean repeats(List<RoundStart> seen, RoundStart start) {
+        for (RoundStart s : seen) {
+            if (s.sameAs(start)) return true;
         }
-        return out;
+        return false;
     }
 
     private static boolean containsPattern(List<boolean[][]> seen, boolean[] zx, boolean[] zz) {
@@ -889,6 +828,11 @@ public final class FoldReplayDriver {
         return c;
     }
 
+    private static Round foldRounds(Round best, List<Round> rounds, int from, boolean max) {
+        for (int i = from; i < rounds.size(); i++) best = pickBetter(best, rounds.get(i), max);
+        return best;
+    }
+
     static Round pickBetter(Round a, Round b, boolean max) {
         if (a == null) return b;
         if (b == null) return a;
@@ -903,9 +847,5 @@ public final class FoldReplayDriver {
 
     private static boolean betterObj(double a, double b, boolean max) {
         return max ? a > b : a < b;
-    }
-
-    private static double clamp(double v, double lo, double hi) {
-        return v < lo ? lo : (v > hi ? hi : v);
     }
 }

@@ -1,6 +1,5 @@
 package de.legoshi.parkourcalc.core.anglesolver.graph.nodes;
 
-import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Candidate;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphContext;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Guarantee;
@@ -9,6 +8,7 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.NodeRuntime;
 import de.legoshi.parkourcalc.core.anglesolver.graph.ParamParse;
 import de.legoshi.parkourcalc.core.anglesolver.graph.ParamValues;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ClosedFormSolve;
+import de.legoshi.parkourcalc.core.anglesolver.solver.RecoveryLadder;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SlpSolve;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -56,7 +56,7 @@ public final class DualChainNode implements NodeRuntime {
         }
         String[] chainName = new String[1];
         long ladderDeadline = capMs > 0 ? 0L : deadlineNanos;
-        double[] chain = AngleSolverEngine.dualChain(ctx.exactModel, ctx.spec, ctx.scenario, nodeToken,
+        double[] chain = RecoveryLadder.solve(ctx.exactModel, ctx.spec, ctx.scenario, nodeToken,
                 chainName, ladderDeadline, slpConfig, cfConfig, ctx.closestMiss());
         if (chain == null) {
             if (!keepBetter) ctx.chainAppend("closed form");

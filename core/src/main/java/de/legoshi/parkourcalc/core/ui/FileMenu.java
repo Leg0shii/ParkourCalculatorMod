@@ -17,7 +17,6 @@ import imgui.ImVec2;
 import imgui.flag.ImGuiKey;
 import imgui.flag.ImGuiSelectableFlags;
 import imgui.flag.ImGuiTableColumnFlags;
-import imgui.flag.ImGuiTableRowFlags;
 import imgui.flag.ImGuiWindowFlags;
 import imgui.type.ImString;
 
@@ -193,8 +192,7 @@ public final class FileMenu {
             statusMessage = null;
             return;
         }
-        float opacity = (now <= statusActiveUntilMs) ? 1f
-                : 1f - (float)(now - statusActiveUntilMs) / (float) STATUS_FADE_MS;
+        float opacity = statusOpacity(now);
         if (opacity <= 0f) {
             statusMessage = null;
             return;
@@ -254,25 +252,23 @@ public final class FileMenu {
     }
 
     private void onNewTas() {
-        Runnable proceed = () -> {
-            nameInput.set("");
-            nameModalError = null;
-            lastNameInputSeen = "";
-            nameModalConfirm = this::doNewTas;
-            pendingNamePopupId = POPUP_NAME_NEW;
-            pendingNameTitle = TITLE_NAME_NEW;
-        };
+        Runnable proceed = () -> openNameModal(POPUP_NAME_NEW, TITLE_NAME_NEW, "", this::doNewTas);
         if (controller.isDirty()) requestDiscardConfirm(proceed);
         else proceed.run();
     }
 
     private void onSaveAs() {
-        nameInput.set(controller.currentName() == null ? "" : controller.currentName());
+        openNameModal(POPUP_NAME_SAVEAS, TITLE_NAME_SAVEAS, controller.currentName() == null ? "" : controller.currentName(),
+                this::doSaveAs);
+    }
+
+    private void openNameModal(String popupId, String title, String initial, Consumer<String> confirm) {
+        nameInput.set(initial);
         nameModalError = null;
         lastNameInputSeen = nameInput.get();
-        nameModalConfirm = this::doSaveAs;
-        pendingNamePopupId = POPUP_NAME_SAVEAS;
-        pendingNameTitle = TITLE_NAME_SAVEAS;
+        nameModalConfirm = confirm;
+        pendingNamePopupId = popupId;
+        pendingNameTitle = title;
     }
 
     /** Ctrl+S: save under the current name, fall into Save As when unnamed but dirty (gh-107),
@@ -356,14 +352,18 @@ public final class FileMenu {
     }
 
     private void doNewTas(String name) {
+        confirmOverwriteThen(name, () -> finalizeNewTas(name));
+    }
+
+    private void confirmOverwriteThen(String name, Runnable save) {
         if (name.isEmpty()) { nameModalError = "Name cannot be empty."; return; }
         if (controller.exists(name)) {
             overwriteCandidateName = name;
-            overwriteModalConfirm = () -> finalizeNewTas(name);
+            overwriteModalConfirm = save;
             openOverwriteModal = true;
             return;
         }
-        finalizeNewTas(name);
+        save.run();
     }
 
     private void finalizeNewTas(String name) {
@@ -373,14 +373,7 @@ public final class FileMenu {
     }
 
     private void doSaveAs(String name) {
-        if (name.isEmpty()) { nameModalError = "Name cannot be empty."; return; }
-        if (controller.exists(name)) {
-            overwriteCandidateName = name;
-            overwriteModalConfirm = () -> finalizeSaveAs(name);
-            openOverwriteModal = true;
-            return;
-        }
-        finalizeSaveAs(name);
+        confirmOverwriteThen(name, () -> finalizeSaveAs(name));
     }
 
     private void finalizeSaveAs(String name) {
@@ -390,23 +383,12 @@ public final class FileMenu {
 
     public void promptSaveSelectionAsTas(List<InputRow> rows, List<Integer> sourceRows, Vec3dCore pos, Vec3dCore vel, float yaw, float pitch, StartResumeState resume) {
         if (rows == null || rows.isEmpty()) return;
-        nameInput.set("");
-        nameModalError = null;
-        lastNameInputSeen = "";
-        nameModalConfirm = name -> doSaveSelectionAsTas(name, rows, sourceRows, pos, vel, yaw, pitch, resume);
-        pendingNamePopupId = POPUP_NAME_SLICE;
-        pendingNameTitle = TITLE_NAME_SLICE;
+        openNameModal(POPUP_NAME_SLICE, TITLE_NAME_SLICE, "",
+                name -> doSaveSelectionAsTas(name, rows, sourceRows, pos, vel, yaw, pitch, resume));
     }
 
     private void doSaveSelectionAsTas(String name, List<InputRow> rows, List<Integer> sourceRows, Vec3dCore pos, Vec3dCore vel, float yaw, float pitch, StartResumeState resume) {
-        if (name.isEmpty()) { nameModalError = "Name cannot be empty."; return; }
-        if (controller.exists(name)) {
-            overwriteCandidateName = name;
-            overwriteModalConfirm = () -> finalizeSaveSelectionAsTas(name, rows, sourceRows, pos, vel, yaw, pitch, resume);
-            openOverwriteModal = true;
-            return;
-        }
-        finalizeSaveSelectionAsTas(name, rows, sourceRows, pos, vel, yaw, pitch, resume);
+        confirmOverwriteThen(name, () -> finalizeSaveSelectionAsTas(name, rows, sourceRows, pos, vel, yaw, pitch, resume));
     }
 
     private void finalizeSaveSelectionAsTas(String name, List<InputRow> rows, List<Integer> sourceRows, Vec3dCore pos, Vec3dCore vel, float yaw, float pitch, StartResumeState resume) {
@@ -484,12 +466,15 @@ public final class FileMenu {
         this.statusFadeUntilMs = this.statusActiveUntilMs + STATUS_FADE_MS;
     }
 
+    private float statusOpacity(long now) {
+        return (now <= statusActiveUntilMs) ? 1f : 1f - (float)(now - statusActiveUntilMs) / (float) STATUS_FADE_MS;
+    }
+
     public float statusStripHeight() {
         if (statusMessage == null) return 0f;
         long now = System.currentTimeMillis();
         if (now >= statusFadeUntilMs) return 0f;
-        float opacity = (now <= statusActiveUntilMs) ? 1f : 1f - (float)(now - statusActiveUntilMs) / (float) STATUS_FADE_MS;
-        float reservedH = ImGui.getFrameHeightWithSpacing() * Math.max(0f, opacity);
+        float reservedH = ImGui.getFrameHeightWithSpacing() * Math.max(0f, statusOpacity(now));
         if (reservedH - ImGui.getStyle().getItemSpacing().y < 1f) return 0f;
         return reservedH;
     }

@@ -1,5 +1,7 @@
 package de.legoshi.parkourcalc.core.anglesolver.solver;
 
+import de.legoshi.parkourcalc.core.anglesolver.FlowVector;
+
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 
 import java.util.ArrayList;
@@ -49,8 +51,6 @@ public final class LongRunSolver {
     /** Window sizes tried, largest first; a smaller window is the fallback when a larger one cannot be solved. */
     private static final int[] WINDOW_LADDER = {WINDOW, 7, 5, 3, 2, 1};
     private static final int[] FALLBACK_RUNGS = {7, 5, 3, 2, 1};
-
-    public static boolean DEBUG = false;
 
     public static final class LongRunConfig {
         final int[] windowLadder;
@@ -109,10 +109,6 @@ public final class LongRunSolver {
 
     private static final double[] WINDOW_MISS = new double[0];
 
-    public static double[] solve(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel) {
-        return solve(exact, spec, feasTol, cancel, LongRunConfig.defaults());
-    }
-
     public static final class FreeRun {
         public final double[] gf;
         public final double startX;
@@ -138,13 +134,13 @@ public final class LongRunSolver {
         Map<Integer, Object> retryCache = new HashMap<>();
         for (int commit : cfg.commitLadder) {
             if (cancel != null && cancel.get()) return null;
-            if (deadlineNanos > 0L && System.nanoTime() >= deadlineNanos) return null;
+            if (deadlineNanos > 0L && SolveClock.nanoTime() >= deadlineNanos) return null;
             chosen[0] = Double.NaN;
             chosen[1] = Double.NaN;
             double[] gf = runHorizon(exact, sc, spec, bounds, jumps, commit, cfg.windowLadder, cancel,
                     freeBox, chosen, retryCache, windows, deadlineNanos);
             if (gf == null || Double.isNaN(chosen[0])) continue;
-            JumpPhysicsInputs at = FreeStartSolve.copyWithStart(sc, chosen[0], chosen[1]);
+            JumpPhysicsInputs at = sc.pinnedAt(chosen[0], chosen[1]);
             double[] replay = at.toGameFacings(Angles.wrapAll(gf));
             double viol = compiled.maxViolation(replay, exact.forward(at, replay));
             if (viol <= feasTol) return new FreeRun(gf, chosen[0], chosen[1]);
@@ -169,11 +165,10 @@ public final class LongRunSolver {
         int[] bounds = jumpBoundaries(sc);
         int jumps = bounds.length - 1;
         if (jumps < 1) return null;
-        if (DEBUG) System.err.printf("LRS receding-horizon: %d jumps, %d ticks%n", jumps, sc.numTicks);
 
         for (int commit : cfg.commitLadder) {
             if (cancel != null && cancel.get()) return null;
-            if (deadlineNanos > 0L && System.nanoTime() >= deadlineNanos) return null;
+            if (deadlineNanos > 0L && SolveClock.nanoTime() >= deadlineNanos) return null;
             double[] gf = runHorizon(exact, sc, spec, bounds, jumps, commit, cfg.windowLadder, cancel, null, null, null,
                     windows, deadlineNanos);
             if (gf == null) continue;
@@ -185,7 +180,6 @@ public final class LongRunSolver {
             // Apply both recompute exactly toGameFacings(wrapAll(gf)).
             double[] replay = sc.toGameFacings(Angles.wrapAll(gf));
             double viol = compiled.maxViolation(replay, exact.forward(sc, replay));
-            if (DEBUG) System.err.printf("LRS commit=%d -> full viol=%.6f%n", commit, viol);
             if (viol <= feasTol) return gf;
         }
         return null;
@@ -207,7 +201,7 @@ public final class LongRunSolver {
         int i = 0;
         while (i < jumps) {
             if (cancel != null && cancel.get()) return null;
-            if (deadlineNanos > 0L && System.nanoTime() >= deadlineNanos) return null;
+            if (deadlineNanos > 0L && SolveClock.nanoTime() >= deadlineNanos) return null;
             boolean advanced = false;
             // Try the largest window that solves; shrink on failure for robustness near the run's end / hard spots.
             int prevWe = -1;
@@ -255,7 +249,7 @@ public final class LongRunSolver {
                     if (cached != null) {
                         fr = cached == FREE_RETRY_MISS ? null : (FreeStartSolve.Result) cached;
                     } else {
-                        JumpPhysicsInputs freeSc = FreeStartSolve.copyWithStart(sc, seedPos.x, seedPos.z);
+                        JumpPhysicsInputs freeSc = sc.pinnedAt(seedPos.x, seedPos.z);
                         freeSc.startBox = new StartBox(seedPos.x, seedPos.z, seedVel.x, seedVel.z,
                                 freeBox.pxLo, freeBox.pxHi, freeBox.pzLo, freeBox.pzHi,
                                 seedVel.x, seedVel.x, seedVel.z, seedVel.z);
@@ -278,7 +272,7 @@ public final class LongRunSolver {
                     if (fr != null && fr.feasible) {
                         chosenStart[0] = fr.startX;
                         chosenStart[1] = fr.startZ;
-                        win = FreeStartSolve.copyWithStart(sc, fr.startX, fr.startZ);
+                        win = sc.pinnedAt(fr.startX, fr.startZ);
                         yaws = Angles.wrapAll(fr.yaws);
                     }
                 }
@@ -298,7 +292,6 @@ public final class LongRunSolver {
                 break;
             }
             if (!advanced) {
-                if (DEBUG) System.err.printf("  commit=%d stuck at jump %d (tick %d)%n", commitJumps, i, bounds[i]);
                 return null;
             }
         }
@@ -343,7 +336,7 @@ public final class LongRunSolver {
         double bestObj = feasibleObjective(exact, win, compiled, first, primary);
         for (Objective alt : alternates(first, win.numTicks)) {
             if (cancel != null && cancel.get()) break;
-            if (deadlineNanos > 0L && System.nanoTime() >= deadlineNanos) break;
+            if (deadlineNanos > 0L && SolveClock.nanoTime() >= deadlineNanos) break;
             double[] seed = ClosedFormSolve.optimize(exact, new JumpSpec(win, cons, alt), 0.0, cancel);
             if (seed == null) continue;
             double[] hugged = hugObjective(exact, win, cons, first, seed, cancel);
@@ -411,9 +404,6 @@ public final class LongRunSolver {
     public static JumpSpec suffixSpec(JumpSpec full, int from, Vec3dCore pos, Vec3dCore vel, float yaw) {
         JumpPhysicsInputs sc = full.asScenario();
         JumpPhysicsInputs win = sliceScenario(sc, from, sc.numTicks, pos, vel, yaw);
-        win.incomingSprint = from == 0 ? sc.incomingSprint : sc.sprintAt(from - 1);
-        win.incomingAmp = from == 0 ? sc.incomingAmp : sc.speedAmplifierAt(from - 1);
-        win.incomingSlowness = from == 0 ? sc.incomingSlowness : Integer.valueOf(sc.slownessAmplifierAt(from - 1));
         List<JumpConstraint> cons = sliceConstraints(full, from, sc.numTicks, yaw);
         Objective obj = full.objective.tick > from
                 ? full.objective.withTick(full.objective.tick - from)
@@ -434,22 +424,30 @@ public final class LongRunSolver {
         p.jumpPerTick = sliceBool(sc.jumpPerTick, a, len);
         p.strafePerTick = sliceBool(sc.strafePerTick, a, len);
         p.yawLockedPerTick = sliceBool(sc.yawLockedPerTick, a, len);
+        p.freeStartYaw = a == 0 && sc.freeStartYaw;
         p.speedAmplifier = sliceInt(sc.speedAmplifier, a, len);
         p.slownessAmplifier = sliceInt(sc.slownessAmplifier, a, len);
         p.slipPerTick = sliceDouble(sc.slipPerTick, a, len);
         p.surfacePerTick = sliceKind(sc.surfacePerTick, a, len);
         p.soulsandCellsPerTick = sliceInt(sc.soulsandCellsPerTick, a, len);
+        p.flowPerTick = sliceFlow(sc.flowPerTick, a, len);
+        p.endFlowPerTick = sliceFlow(sc.endFlowPerTick, a, len);
+        p.ultrawarm = sc.ultrawarm;
         p.sneakPerTick = sliceBool(sc.sneakPerTick, a, len);
         p.dolphinsGracePerTick = sliceBool(sc.dolphinsGracePerTick, a, len);
         p.weavingPerTick = sliceBool(sc.weavingPerTick, a, len);
         // null arrays stay null so the slice keeps the source's legacy fallbacks (always-sprint, W held).
         p.sprintPerTick = sliceBool(sc.sprintPerTick, a, len);
         p.liveMovementFactor = sc.liveMovementFactor;
+        p.variant = sc.variant;
         p.forwardInputPerTick = sliceFloat(sc.forwardInputPerTick, a, len, 1.0F * 0.98F);
         p.strafeInputPerTick = sliceFloat(sc.strafeInputPerTick, a, len, 0.0F);
         p.damagePerTick = sliceBool(sc.damagePerTick, a, len);
         p.serverJumpPerTick = sliceBool(sc.serverJumpPerTick, a, len);
         p.packetYPerTick = sliceDouble(sc.packetYPerTick, a, len);
+        p.incomingSprint = a == 0 ? sc.incomingSprint : Boolean.valueOf(sc.sprintAt(a - 1));
+        p.incomingAmp = a == 0 ? sc.incomingAmp : Integer.valueOf(sc.speedAmplifierAt(a - 1));
+        p.incomingSlowness = a == 0 ? sc.incomingSlowness : Integer.valueOf(sc.slownessAmplifierAt(a - 1));
         p.incomingServerVelocity = a == 0 ? sc.incomingServerVelocity : null;
         return p;
     }
@@ -493,6 +491,13 @@ public final class LongRunSolver {
         if (x == null) return null;
         double[] o = new double[len];
         for (int i = 0; i < len; i++) o[i] = from + i < x.length ? x[from + i] : Double.NaN;
+        return o;
+    }
+
+    private static FlowVector[] sliceFlow(FlowVector[] x, int from, int len) {
+        if (x == null) return null;
+        FlowVector[] o = new FlowVector[len];
+        for (int i = 0; i < len; i++) o[i] = from + i < x.length && x[from + i] != null ? x[from + i] : FlowVector.NONE;
         return o;
     }
 

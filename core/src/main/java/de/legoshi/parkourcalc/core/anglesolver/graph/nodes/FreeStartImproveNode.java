@@ -11,33 +11,42 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.Scoring;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.FreeStartSolve;
+import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
+import de.legoshi.parkourcalc.core.anglesolver.solver.LatticePolish;
+import de.legoshi.parkourcalc.core.anglesolver.solver.RecoveryLadder;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolverTrace;
 import de.legoshi.parkourcalc.core.anglesolver.solver.StartBox;
-import de.legoshi.parkourcalc.core.sim.Vec3dCore;
+import de.legoshi.parkourcalc.core.anglesolver.solver.YawOrder;
+import de.legoshi.parkourcalc.core.anglesolver.solver.YawTies;
+import java.util.List;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class FreeStartImproveNode implements NodeRuntime {
 
     private final boolean jointOnly;
+    private final boolean first;
     private final int warmSec;
     private final FreeStartSolve.Config cfg;
 
     public FreeStartImproveNode(ParamValues params) {
         this.jointOnly = params.getBool("jointOnly");
+        this.first = params.getBool("first");
         this.warmSec = params.getInt("warmSec");
         this.cfg = new FreeStartSolve.Config();
         cfg.intervalMargin = params.getDouble("fsIntervalMargin");
         cfg.invariantTol = params.getDouble("fsInvariantTol");
         cfg.jointMargins = ParamParse.doubles(params.getString("fsJointMargins"), cfg.jointMargins);
         cfg.jointWrapClose = false;
+        cfg.seedLane = !first;
     }
 
     @Override
     public NodeOutcome execute(GraphContext ctx, Candidate in, AtomicBoolean nodeToken, long deadlineNanos) {
         if (!ctx.exact() || !ctx.freeStart || ctx.stageLocked()) return NodeOutcome.of(Guarantee.UNCHANGED, in);
+        if (first) return jointFirst(ctx, in, nodeToken, deadlineNanos);
         if (in != null && in.yaws != null && in.feasible && (jointOnly || warmSec <= 0)) {
             return NodeOutcome.of(Guarantee.UNCHANGED, in);
         }
@@ -56,6 +65,38 @@ public final class FreeStartImproveNode implements NodeRuntime {
         return NodeOutcome.of(Guarantee.IMPROVED, Candidate.of(ctx, improved));
     }
 
+    private NodeOutcome jointFirst(GraphContext ctx, Candidate in, AtomicBoolean cancel, long deadlineNanos) {
+        if (in != null && in.yaws != null) return NodeOutcome.of(Guarantee.UNCHANGED, in);
+        JumpPhysicsInputs sc = ctx.scenario;
+        double seedX = sc.startPos.x;
+        double seedZ = sc.startPos.z;
+        sc.startBox = ctx.freeBox;
+        FreeStartSolve.Result conv = FreeStartSolve.solveJointBest(ctx.exactModel, ctx.spec, ctx.feasTol, cancel, cfg,
+                deadlineNanos);
+        boolean landed = conv != null && conv.feasible
+                && FreeStartSolve.violationAt(ctx.exactModel, ctx.spec, conv.yaws, conv.startX, conv.startZ) <= ctx.feasTol;
+        if (!landed && conv != null && !(cancel != null && cancel.get())) {
+            LatticePolish.Result fixed = LatticePolish.repair(ctx.exactModel, ctx.spec, conv.yaws, conv.startX,
+                    conv.startZ, new LatticePolish.Config(), deadlineNanos, cancel);
+            if (SolverTrace.on()) SolverTrace.log("ENGINE", "joint first repair %s", fixed == null ? "miss" : "landed");
+            if (fixed != null && FreeStartSolve.violationAt(ctx.exactModel, ctx.spec, fixed.yaws, fixed.startX,
+                    fixed.startZ) <= ctx.feasTol) {
+                conv = new FreeStartSolve.Result(fixed.yaws, fixed.startX, fixed.startZ, true);
+                landed = true;
+            }
+        }
+        if (!landed) {
+            Scoring.adoptPinnedStart(sc, seedX, seedZ);
+            return NodeOutcome.of(Guarantee.UNCHANGED, in);
+        }
+        Scoring.adoptPinnedStart(sc, conv.startX, conv.startZ);
+        if (SolverTrace.on()) {
+            SolverTrace.log("ENGINE", "joint first adopted start=(%.5f,%.5f)", conv.startX, conv.startZ);
+        }
+        ctx.chainAppend("joint start");
+        return NodeOutcome.of(Guarantee.IMPROVED, Candidate.of(ctx, Angles.wrapAll(conv.yaws)));
+    }
+
     private double[] jointRescue(GraphContext ctx, AtomicBoolean cancel) {
         JumpPhysicsInputs sc = ctx.scenario;
         double seedX = sc.startPos.x;
@@ -68,7 +109,7 @@ public final class FreeStartImproveNode implements NodeRuntime {
         double centerZ = 0.5 * (ctx.freeBox.pzLo + ctx.freeBox.pzHi);
         boolean centerFirst = de.legoshi.parkourcalc.core.anglesolver.solver.CertifiedBnb.carriesOrder(ctx.spec);
         if (centerFirst) {
-            adoptYaws = centerChain(ctx, sc, centerX, centerZ, cancel);
+            adoptYaws = centerChain(ctx, sc, centerX, centerZ, centerFirst, cancel);
             if (adoptYaws != null) {
                 adoptX = centerX;
                 adoptZ = centerZ;
@@ -84,38 +125,48 @@ public final class FreeStartImproveNode implements NodeRuntime {
             }
         }
         if (adoptYaws == null && !centerFirst && (cancel == null || !cancel.get())) {
-            adoptYaws = centerChain(ctx, sc, centerX, centerZ, cancel);
+            adoptYaws = centerChain(ctx, sc, centerX, centerZ, centerFirst, cancel);
             if (adoptYaws != null) {
                 adoptX = centerX;
                 adoptZ = centerZ;
             }
         }
         if (adoptYaws != null) {
-            sc.startPos = new Vec3dCore(adoptX, sc.startPos.y, adoptZ);
-            sc.startBox = StartBox.pinned(adoptX, adoptZ, sc.initialVelocity.x, sc.initialVelocity.z);
+            Scoring.adoptPinnedStart(sc, adoptX, adoptZ);
             if (SolverTrace.on()) {
                 SolverTrace.log("ENGINE", "free rescue adopted start=(%.5f,%.5f)", adoptX, adoptZ);
             }
             return Angles.wrapAll(adoptYaws);
         }
-        sc.startPos = new Vec3dCore(seedX, sc.startPos.y, seedZ);
-        sc.startBox = StartBox.pinned(seedX, seedZ, sc.initialVelocity.x, sc.initialVelocity.z);
+        Scoring.adoptPinnedStart(sc, seedX, seedZ);
         return null;
     }
 
     private static double[] centerChain(GraphContext ctx, JumpPhysicsInputs sc, double centerX, double centerZ,
-                                        AtomicBoolean cancel) {
-        JumpPhysicsInputs pinned = Scoring.pinnedScenario(sc, centerX, centerZ);
-        JumpSpec pinnedSpec = new JumpSpec(pinned, ctx.spec.constraints, ctx.spec.objective);
+                                        boolean ordered, AtomicBoolean cancel) {
+        JumpPhysicsInputs pinned = sc.pinnedAt(centerX, centerZ);
         String[] via = new String[1];
-        double[] chainYaws = de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine.dualChain(
-                ctx.exactModel, pinnedSpec, pinned, cancel, via);
-        if (chainYaws == null
-                || FreeStartSolve.violationAt(ctx.exactModel, ctx.spec, chainYaws, centerX, centerZ) > ctx.feasTol) {
-            return null;
+        double[] chainYaws = chainAt(ctx, pinned, ctx.spec.constraints, centerX, centerZ, cancel, via);
+        if (chainYaws == null && ordered && (cancel == null || !cancel.get())) {
+            YawOrder order = YawOrder.carry(ctx.spec.constraints, YawTies.of(ctx.spec.constraints, sc.numTicks),
+                    sc.numTicks);
+            chainYaws = chainAt(ctx, pinned, order.stripped(ctx.spec.constraints), centerX, centerZ, cancel, via);
+            if (chainYaws != null) via[0] = via[0] + ", facing order held unasked";
         }
+        if (chainYaws == null) return null;
         if (SolverTrace.on()) SolverTrace.log("ENGINE", "free rescue center chain via=%s", via[0]);
         return chainYaws;
+    }
+
+    private static double[] chainAt(GraphContext ctx, JumpPhysicsInputs pinned, List<JumpConstraint> constraints,
+                                    double centerX, double centerZ, AtomicBoolean cancel, String[] via) {
+        double[] yaws = RecoveryLadder.solve(ctx.exactModel, new JumpSpec(pinned, constraints, ctx.spec.objective),
+                pinned, cancel, via);
+        if (yaws == null
+                || FreeStartSolve.violationAt(ctx.exactModel, ctx.spec, yaws, centerX, centerZ) > ctx.feasTol) {
+            return null;
+        }
+        return yaws;
     }
 
     private double[] improve(GraphContext ctx, double[] seedYaws, AtomicBoolean cancel) {
@@ -156,10 +207,9 @@ public final class FreeStartImproveNode implements NodeRuntime {
                 && FreeStartSolve.violationAt(exact, spec, conv.yaws, conv.startX, conv.startZ) <= feasTol) {
             double[] convYaws = Angles.wrapAll(conv.yaws);
             double convObj = spec.objective.scored(Scoring.exactObjective(ctx.model,
-                    Scoring.pinnedScenario(sc, conv.startX, conv.startZ), spec, convYaws), sc.startYaw, convYaws);
+                    sc.pinnedAt(conv.startX, conv.startZ), spec, convYaws), sc.startYaw, convYaws);
             if (!seedFeasible || (max ? convObj > seedObj : convObj < seedObj)) {
-                sc.startPos = new Vec3dCore(conv.startX, sc.startPos.y, conv.startZ);
-                sc.startBox = StartBox.pinned(conv.startX, conv.startZ, sc.initialVelocity.x, sc.initialVelocity.z);
+                Scoring.adoptPinnedStart(sc, conv.startX, conv.startZ);
                 return convYaws;
             }
         }
@@ -171,19 +221,17 @@ public final class FreeStartImproveNode implements NodeRuntime {
                 adopt = true;
             } else if (foundFeasible) {
                 double freeObj = spec.objective.scored(Scoring.exactObjective(ctx.model,
-                        Scoring.pinnedScenario(sc, foundX, foundZ), spec, foundYaws), sc.startYaw, foundYaws);
+                        sc.pinnedAt(foundX, foundZ), spec, foundYaws), sc.startYaw, foundYaws);
                 adopt = max ? freeObj > seedObj : freeObj < seedObj;
             } else if (!seedFeasible) {
                 adopt = foundViol < seedViol;
             }
         }
         if (adopt) {
-            sc.startPos = new Vec3dCore(foundX, sc.startPos.y, foundZ);
-            sc.startBox = StartBox.pinned(foundX, foundZ, sc.initialVelocity.x, sc.initialVelocity.z);
+            Scoring.adoptPinnedStart(sc, foundX, foundZ);
             return Angles.wrapAll(foundYaws);
         }
-        sc.startPos = new Vec3dCore(seedX, sc.startPos.y, seedZ);
-        sc.startBox = StartBox.pinned(seedX, seedZ, sc.initialVelocity.x, sc.initialVelocity.z);
+        Scoring.adoptPinnedStart(sc, seedX, seedZ);
         return null;
     }
 }

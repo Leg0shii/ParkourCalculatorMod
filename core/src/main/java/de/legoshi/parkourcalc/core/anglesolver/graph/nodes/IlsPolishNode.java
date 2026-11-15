@@ -8,6 +8,7 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.NodeRuntime;
 import de.legoshi.parkourcalc.core.anglesolver.graph.ParamValues;
 import de.legoshi.parkourcalc.core.anglesolver.solver.IlsPolish;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
+import de.legoshi.parkourcalc.core.anglesolver.solver.SolveClock;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolverTrace;
 import de.legoshi.parkourcalc.core.anglesolver.solver.YawTies;
 
@@ -36,7 +37,7 @@ public final class IlsPolishNode implements NodeRuntime {
         if (ctx.progress != null) ctx.progress.setStage(ctx.chainWith("ILS"));
         if (SolverTrace.on()) {
             SolverTrace.log("ENGINE", "ils start remainingMs=%d",
-                    (deadlineNanos - System.nanoTime()) / 1_000_000L);
+                    (deadlineNanos - SolveClock.nanoTime()) / 1_000_000L);
         }
         double[] ils = IlsPolish.polish(ctx.model, ctx.spec, in.yaws, deadlineNanos, Integer.MAX_VALUE,
                 ctx.sequential, nodeToken, ctx.progress, cfg);

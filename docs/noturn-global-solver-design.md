@@ -336,7 +336,7 @@ That bound alone is too loose where it matters. Once a free-direction tick sits 
 
 Zero contradictions on every capture, f2f included. On j1150 the sound check rejects nothing: 248 of its 269 relaxations end on a feasible leaf and 21 on the budget; the candidates the pool sends to certify there are near-tier lines whose byte-screen violation is 0.03 to 0.05 blocks, and the clamp slack of the last air ticks (0.05 to 0.07 blocks at the landing wall) covers exactly that margin. The unsound version's 64 to 97 percent on the same pool was bought by ignoring the clamp.
 
-**Decision.** The owner's bar for putting the check into the cascade was at least a quarter of j1150's cold near-tier certifies; the sound version rejects none of them, so it stays bench-only (`-Dpkc.fc.impl=...NoTurnJointFastCheck`), and `CascadeCheck` and `PoolCertifier` are unchanged. To put a number on what wiring it would do on the saves where it does fire, the check was placed first in `CascadeCheck` (100 ms thread-CPU cap, a rejection ends the certify) for four in-game harness runs and then removed again, with the unwired tree measured back to back on the same build (`driver=ingame -Dpkc.bench.allowJa=true -Dpkc.bench.certifySec=0 -Dpkc.bench.extraCertify=1000 -Dpkc.bench.extraSec=45`, two runs each):
+**Decision.** The owner's bar for putting the check into the cascade was at least a quarter of j1150's cold near-tier certifies; the sound version rejects none of them, so it stays bench-only (`-Dpkc.fc.impl=...NoTurnJointFastCheck`; the class and `LpFeas` live in the research source set under `core/src/research/java/`, in the same package), and `CascadeCheck` and `PoolCertifier` are unchanged. To put a number on what wiring it would do on the saves where it does fire, the check was placed first in `CascadeCheck` (100 ms thread-CPU cap, a rejection ends the certify) for four in-game harness runs and then removed again, with the unwired tree measured back to back on the same build (`driver=ingame -Dpkc.bench.allowJa=true -Dpkc.bench.certifySec=0 -Dpkc.bench.extraCertify=1000 -Dpkc.bench.extraSec=45`, two runs each):
 
 | capture | first hit, wired | first hit, unwired | distinct lines, wired | unwired |
 | --- | --- | --- | --- | --- |
@@ -356,7 +356,7 @@ Wired, the first hit is 0.2 to 0.3 s later on both saves (every candidate of the
 - `BendersMaster` certified a fat schedule and extracted a no-good cut on failure in two identical blocks; that is `fatCertifyOrCut`.
 - The benches shared a capture loader (parse, model, inputs, state, engine spec, synthetic free box) and the cold bench ran the beam finder twice with the same block; the loader is `harness/NoTurnCapture`, the beam block is `runBeam`.
 
-Left as three implementations on purpose: the single-facing byte screens in `NoTurnScreen` (720 theta steps, air aimed at the objective-side wall), `WallHomotopyDriver.ScreenCtx` (configurable theta and phi grids with a free jump angle, air aimed at the wall midpoint) and the pool driver's screen (disk relaxation, objective accumulators). They differ in the aim target and the grids, so merging them changes which candidates each driver ranks first; that is a behaviour change, not a cleanup. Verified after the fold: fast suite green; fast-check bench unchanged (cascade 10 of 10 hits, joint check 20 of 45 rejects, 0 false rejects); the cw2cw and j1150 pool dumps identical to the morning's as sets with the same scored and screened counts (the only movement is the order among entries with exactly equal violation, which two dumps of the reviewed tree also show, so it is enumeration-thread order); `-PslowTests -PverySlowTests` 801 tests, 0 failures, 35 skipped, including both V6 continuation guards and the Benders cold crack; `tableStyleCheck` and `:loader-forge-1.8.9:build` green. Net: 18 files, 280 lines added, 464 removed.
+Left as three implementations on purpose: the single-facing byte screens in `NoTurnScreen` (720 theta steps, air aimed at the objective-side wall), `WallHomotopyDriver.ScreenCtx` (configurable theta and phi grids with a free jump angle, air aimed at the wall midpoint) (removed since, together with the driver's cold entry `run()`, which nothing called; the driver is only entered through `runFromSeeds`) and the pool driver's screen (disk relaxation, objective accumulators). They differ in the aim target and the grids, so merging them changes which candidates each driver ranks first; that is a behaviour change, not a cleanup. Verified after the fold: fast suite green; fast-check bench unchanged (cascade 10 of 10 hits, joint check 20 of 45 rejects, 0 false rejects); the cw2cw and j1150 pool dumps identical to the morning's as sets with the same scored and screened counts (the only movement is the order among entries with exactly equal violation, which two dumps of the reviewed tree also show, so it is enumeration-thread order); `-PslowTests -PverySlowTests` 801 tests, 0 failures, 35 skipped, including both V6 continuation guards and the Benders cold crack; `tableStyleCheck` and `:loader-forge-1.8.9:build` green. Net: 18 files, 280 lines added, 464 removed.
 
 **Tree state.** The campaign tree, the review pass and this pass were committed as one WIP commit at the owner's request and the branch was rebased onto `dev` at 905684e4 (#473, the Fast-gate feasibility-only assertion), with no conflicts; the owner rewords or splits that commit. Gates on the rebased tree: fast suite green; `-PslowTests -PverySlowTests` 801 tests, 0 failures, 35 skipped (the inherited `CertifiedBnbEngineTest` failure is closed by #473); `tableStyleCheck` and `:loader-forge-1.8.9:build` green.
 
@@ -462,7 +462,7 @@ The weekly train run on dev after #558 failed in the very-slow tier on `NoTurnWa
 
 The stratfinder's enumeration stage (disk prefilter plus unit screen of every key schedule) now runs on the graphics card when the GPU checkbox in the Stratfinder window is on. The certify is untouched and stays byte-exact on the CPU; the GPU is a ranker, exactly the "verify the answer, not the solver" split of the issue.
 
-**Shape.** `core` gained a port, `SchedulePoolScreen` (a batch of key schedules in, per sprint variant A/B/E the disk violation and theta, the screen deficit, its theta and the objective out) with the per-problem float tables `PoolScreenTables` that `StructurePoolDriver.prepare` builds from the same `gc`/`gs`/`mag` tables, `lm.coef(s, wallTick)` and `rhs - constPos` the CPU uses. The new `gpu/` module (Java 8, JOCL 2.0.5, natives inside the jar, no Minecraft or LWJGL imports, shaded by Forge and included by Fabric) implements it with two OpenCL kernels compiled per problem shape: `disk` is the CPU disk relaxation (main unit rotated by theta, every other unit as slack, the coarse 24 / mid 6 / fine 1 grid walk over 480 cells) for all three sprint variants of a schedule; `screen` is the pure linear model with one facing per screen group (no byte-exact linearisation): the 5 or 9 cell theta window around the disk theta, four restart offsets on the centre, the joint 12 by 12 grid for two free groups, the three sweep passes with two refine levels, the two-best theta refinement and the polish, all as on the CPU, float32 with `-cl-fast-relaxed-math`. The DFS, the prefix pruning and the level structure stay on the CPU; each enumeration worker fills a batch of 262144 schedules (49 bytes each) and flushes it through one shared command queue. Candidates enter the pool with the GPU deficit; at the end of every level the kept `poolCap` are re-screened by the CPU `UnitScreen` (parallel over the workers), so the tiers, the certify order and the certify itself see exactly the numbers they saw before. The loader registers `OpenClPoolScreen.Factory` with `PoolScreenAccelerator`; nothing touches OpenCL until a search runs with the setting on, and any failure (no runtime, no device, a build error) falls back to the CPU and is shown in the Stratfinder window.
+**Shape.** `core` gained a port, `SchedulePoolScreen` (a batch of key schedules in, per sprint variant A/B/E the disk violation and theta, the screen deficit, its theta and the objective out) with the per-problem float tables `PoolScreenTables` that `StructurePoolDriver.prepare` builds from the same `gc`/`gs`/`mag` tables, `lm.coef(s, wallTick)` and `rhs - constPos` the CPU uses. The new `gpu/` module (Java 8, JOCL 2.0.5, natives inside the jar, no Minecraft or LWJGL imports, shaded by Forge and included by Fabric) implements it with two OpenCL kernels compiled per problem shape (since replaced by one program per size bucket, see the section after this one): `disk` is the CPU disk relaxation (main unit rotated by theta, every other unit as slack, the coarse 24 / mid 6 / fine 1 grid walk over 480 cells) for all three sprint variants of a schedule; `screen` is the pure linear model with one facing per screen group (no byte-exact linearisation): the 5 or 9 cell theta window around the disk theta, four restart offsets on the centre, the joint 12 by 12 grid for two free groups, the three sweep passes with two refine levels, the two-best theta refinement and the polish, as on the CPU except for the polish gate and the coarse cut named below, float32 with `-cl-fast-relaxed-math`. The DFS, the prefix pruning and the level structure stay on the CPU; each enumeration worker fills a batch of 65536 schedules (`GPU_BATCH`, 49 bytes each; 262144 is the disk chunk inside `OpenClPoolScreen`) and flushes it through one shared command queue. Candidates enter the pool with the GPU deficit; at the end of every level the kept `poolCap` are re-screened by the CPU `UnitScreen` (parallel over the workers), so the tiers, the certify order and the certify itself see exactly the numbers they saw before. The loader registers `OpenClPoolScreen.Factory` with `PoolScreenAccelerator`; nothing touches OpenCL until a search runs with the setting on, and any failure (no runtime, no device, a build error) falls back to the CPU and is shown in the Stratfinder window.
 
 **Why the pure linear model is enough for the ranker.** The affine model is exact to about 3e-4 blocks for 3 degree facing deltas (2026-10-18 measurement) and the tiers sit at 0.01 and 0.05; the CPU re-screen of the kept pool removes the remaining difference before anything is certified. The pool-as-set gate (`cmppool.py`: dump both pools with `-Dpkc.bench.dumpPool=true`, compare by keys and engage tick): on j1150 level 0 every CPU near-tier candidate is in the GPU pool; on level 1 both pools hold 3940 near-tier candidates with 3060 to 3250 common and the differences sit at the 4000-cap boundary (common candidates differ by 0.0006 median deficit, which is the CPU screen's own path dependence on the theta centre).
 
@@ -479,7 +479,7 @@ In-game-driver batch of the open d11 captures, five JVMs sharing the one card, 1
 
 **All 59 recordings, paired** (one CPU JVM and one GPU JVM per capture at the same time, in-game driver, 120 s and 6 enumeration threads each, nothing else on the box): CPU 47 of 59, GPU path 48 of 59, gained j155, lost nothing; median time to the first line 4.7 s against 2.8 s, the sum over the 47 found on both 708 s against 398 s. The big wins are the long enumerations (j1150 78 s to 9 s, j718 85 s to 41 s, j120 33 s to 3 s, j140 21 s to 3 s, j828 13 s to 1 s); j1149 is the one loss (9 s to 21 s: the GPU pool of level 0 ranks a different candidate first). The earlier five-JVM batch sharing one card (48 of 59 against the 45 of #558, gained j1150, j155 and j718) is not a timing measurement: a small kernel waits behind another JVM's long one. With the GPU on, the certify thread cap is 16 instead of 8 (`pkc.pool.gpuCertifyThreads`), which takes j718 on 16 enumeration threads from 32 s to 21 s because that save is certify-order bound.
 
-**Not done, measured as not worth it.** A coarse-stage early exit (skip refine and polish when the best window deficit is above 0.35) changed nothing on j718 (the window stage dominates); the polish gate at 0.08 and 20 trials instead of 0.15 and 40 made the screen about 25 percent cheaper per item with an identical j1150 near tier. The GPU is busy a few seconds per level on j1150; the wall time of a level is now the CPU DFS with its prefix checks plus the end-of-level re-screen, and the time to a line is the certify queue.
+**Measured, and both are in the kernel.** A coarse-stage early exit (skip refine and polish when the best window deficit is above 0.35, `COARSE_CUT`) changed nothing on j718 (the window stage dominates) and stayed in; the polish gate at 0.08 and 20 trials instead of the CPU's 0.15 and 40 made the screen about 25 percent cheaper per item with an identical j1150 near tier, so the kernel uses it while `UnitScreen` keeps 0.15 and 40. The GPU is busy a few seconds per level on j1150; the wall time of a level is now the CPU DFS with its prefix checks plus the end-of-level re-screen, and the time to a line is the certify queue.
 
 ### Shorter miss: the screen-exact tier in two passes (2026-10-20, gh-554)
 
@@ -550,8 +550,211 @@ The open levers of gh-554 were tried one by one on the CPU path (the GPU path is
 
 ### Deep search mode (2026-10-25, gh-591 lever 7)
 
-The Stratfinder's ordinary search is the pool driver and the beam finder inside the 240 s budget; the four fiddle lines (j1099, j154, j424, j716) showed that families four or more key changes deep are out of its reach, and j154 is only cracked by the Benders master, which proves key families feasible or impossible instead of enumerating schedules. The window now has a Deep search checkbox beside Human yaws with a minutes slider of its own (default 60, `NoTurnSearchController.DEFAULT_DEEP_MINUTES`): when the ordinary search ends with nothing and the box is on, `NoTurnSearchController.runDeep` runs `BendersMaster` with the configuration of `NoTurnBendersTest.j154ColdCracksThroughMaster` (`deepConfig`: the eight-combo alphabet without the idle combo, dwell 6, three edges, fat continuation, no cuts, no screen ordering, a 6 s fat certify, 12 continuations with a 25-line lead, the jump angle allowed when the problem allows it) with the master's deadline set to the slider and the continuation budget capped by it. Its stage lines show as "deep search: ...", the progress bar is the elapsed share of the budget, Cancel stops it like the ordinary search, and a found line goes through `onFound` into the list like any other line, so Optimize and the ranking apply. Off, nothing changes: `runDeep` is never called.
+The Stratfinder's ordinary search is the pool driver and the beam finder inside the 240 s budget; the four fiddle lines (j1099, j154, j424, j716) showed that families four or more key changes deep are out of its reach, and j154 is only cracked by the Benders master, which proves key families feasible or impossible instead of enumerating schedules. The window now has a Deep search checkbox beside Human yaws with a minutes slider of its own (default 60, `NoTurnSearchController.DEFAULT_DEEP_MINUTES`): when the ordinary search ends with nothing and the box is on, `NoTurnSearchController.runDeep` runs `BendersMaster` with the configuration of `NoTurnBendersTest.j154ColdCracksThroughMaster` (`deepConfig`: the eight-combo alphabet without the idle combo, dwell 6, three edges, fat continuation, no cuts, no screen ordering, a 2 s fat certify (the search budget), 12 continuations with a 25-line lead, the jump angle allowed when the problem allows it) with the master's deadline set to the slider and the continuation budget capped by it. Its stage lines show as "deep search: ...", the progress bar is the elapsed share of the budget, Cancel stops it like the ordinary search, and a found line goes through `onFound` into the list like any other line, so Optimize and the ranking apply. Off, nothing changes: `runDeep` is never called.
 
 The master is sequential by default (`Config.parallelContinuations` false) because the parallel continuation batch was never measured against it; the test's cold crack of j154 took about 55 minutes on the development box, which is why the default budget is an hour. Measured on the 4-core cloud box with the test's own configuration and its 4500 s deadline (2026-10-25, `NoTurnBendersTest.j154ColdCracksThroughMaster` with `-Dpkc.j154ColdCrack=true`): no incumbent in 75 minutes, 194 master iterations, 2548 certifies, 25 fat-feasible families, 8 continuations, the V6 ancestor proposed, certified fat and continued at continuation index 2 but never closed. So on a small box the deep search does not reach j154 inside an hour; the 55 minute crack is a figure from the many-core development box and has to be re-measured there before the default budget means anything, and the parallel continuation batch (`Config.parallelContinuations`) is the lever to measure next, since 8 sequential continuations of 600 s each is where the 75 minutes went.
 
 **Measured on the development PC and fixed (2026-10-25, 32 threads, nothing else on the box).** The same test on 30 enumeration threads: no incumbent in 84 minutes either, 194 iterations, 5918 certifies, 25 fat-feasible families, 10 continuations, the V6 ancestor proposed at iteration 99, fat-feasible, continued second, not closed. Cores were never the reason: since #558 tied tick 0 (see "Retired j154 V6 gates" above) V6 is infeasible and the feasible j154 family opens with a one-tick A tap from the ancestor `A SDx5 Sx9 WAx13 W`, which the master could not propose, because `StructurePoolDriver.enumerateRaw` applies the 6-tick minimum hold to the first segment too (and the tapped ancestor has 4 key changes against the master's cap of 3; 122872 structures at 4 changes with the hold kept, 742267 with a free first tick, against 38837). The continuation itself still works: `WallHomotopyDriver.runFromSeeds` with `buildContinuationConfig`, seeded by hand with that ancestor, closes `A SDx5 Sx8 SD WA A WAx11 W` in 160 s and 103 certifies (7 edges, ja, violation 0.0, start interior). The fix is on the proposal side and deliberately small (`Config.openingTaps`, on in `deepConfig` and in the test): when a proposed family certifies fat-feasible, the master fat-certifies its seven tick-0 tap variants (the alphabet minus the family's own opening) and keeps the feasible ones on the family, sorted by fat objective; they count neither toward the continuation lead nor the continuation cap, so the proposal order is exactly the plain master's; when the family's own continuation does not close, its taps are continued at once, all in parallel with the cores split between them (`runContinuationBatch`, 5 threads each on this box). A first version that queued the taps like families was measured and dropped: 23 of 35 taps were fat-feasible, the lead of 25 filled after 76 proposals, and nine dead 600 s continuations spent the budget before the ancestor was ever proposed. With the taps on the side: j154 cracks cold in 31 minutes (1873 s wall, 194 iterations, 4741 certifies, 25 fat-feasible families, 16 continuations): the V6 ancestor is proposed at iteration 99 and continued ninth, its own continuation fails, and of its seven taps, continued in parallel, the A-tap closes `A SDx5 Sx8 SD WA A WAx11 W` at 7 edges, objective -1599.7000741, violation 0.0, ja, start interior (-1599.7287, 4931.0602). The test's edge bound is 7 now (the tap counts as a key change under the tie). The default deep-search budget of 60 minutes therefore holds on a 32-thread box; a small box has not been re-measured since the fix.
+
+### The family stage: products of segment families (2026-11-11, gh-671)
+
+The change levels explode after 3 to 4 paid changes: on j716 level 1 has 7.1 million schedules, level 2 0.9 billion, level 3 67 billion and level 4 3,100 billion (hold rule, before pruning), and the recorded human Strats of j716, j424, j154 and j347 sit at level 4, j1099 at level 5. Three attempts to tame the tree did not carry: a sound completion bound over the DFS (20 to 30 times fewer leaves, the same wall time), a rhythm rule with separate budgets for changes on and off the jump ticks (still 23 billion schedules on j716), and a per tick probability model as the search order (45 of 59 human Strats inside the first million schedules instead of 25, but the hard jumps stay at 1e8 to 1e11).
+
+What carries is the observation that a human Strat is a product of a few reusable pieces. Cut a schedule at its jump ticks: the run-up before the first jump, one middle segment per jump, the final segment after the last jump. A **segment family** is the list of key changes in a segment with their tick offsets, counted from the segment start when the change sits in the first half of the segment and from the next jump when it sits in the second half (run-up changes count back from the first jump, final segment changes from the last jump), so one family fits segments of different length. A family and its mirror are one family. `StratFamilies` builds the families from the library `strats/schedules.txt` (`docs/research/strat-families/README.md`), places the fitting ones on the segments of a problem and gives each a cost of -log2 of its share of the weight, in half bits. A schedule is one family per segment, its cost the sum.
+
+`StructurePoolDriver` with `Config.familyStage` walks those products in cost bands of `Config.familyBandCost` half bits (`enumFamily`): segment by segment in cost order, cut when the cheapest completion leaves the band above or the dearest one stays below it, with the pad-wall prefix pruning of the change levels at every segment start. The bands are a second lane beside the change levels (`runLanes`): each lane chains its stages in its own thread and hands every finished stage to the one certify queue, so a band of a few hundred schedules never waits for the certifying thread to come back from a certify call. The change levels keep every enumeration thread until level `Config.familyAfterLevel` (1) is done or `Config.familyDelayNanos` (5 s) have passed, because most jumps are found by the first levels within seconds and the first measurement with an even split from the start made exactly those finds slower (j1150 on the development PC: 7 s to 13 s). From then on the lanes share the threads and a finished lane leaves them to the other. The certifier keeps its per stage cap while a band enumerates: a reset of the cap count while it idled was tried and made j298 scatter between 100 and 165 s instead of a steady 100 s, because the certifier was then inside a batch of lower ranked candidates when the next band arrived.
+
+Two companions made it land:
+
+- **The screen.** The byte screen (one facing per unit) misrates human Strats by up to 0.38 b; with it the human Strat of j716 was reached after 16 s and never certified, at rank 306 of the pool. A family leaf is screened by `FreeAirExact` instead: the exact minimum over the facings of the worst wall violation of this one schedule in the linear model, a free facing per untied tick, the start box as a variable, plus passes that zero the velocity components the inertia threshold would zero. It is a dual method on the active rows, so its value is a lower bound even when it stops early. 56 of the 59 recorded human Strats score under 0.002 b (the exact tier), 58 under the keep threshold of 0.01 b; j127 scores 0.136 b and is left to the change levels. Cost and the way it is called: "The speed of the family screen" below.
+- **The certify order.** Inside the exact tier the pool is ordered by family cost before presses, so the most common families are certified first. A second order runs beside it since the speed work below (`PoolCertifier.certifyFamilyByValue`). Outside the exact tier a family candidate ranks behind every byte screened candidate (`Candidate.family`): its rank value is the `FreeAirExact` lower bound, which reads smaller than a byte screen deficit, and without the rule 53 to 55 near tier family candidates were certified before the level 1 Strat of j1150 (17.6 s against 11.0 s on dev).
+
+**Measured on the development PC (2026-11-11).** GPU screen, in-game driver, inputs wiped, 6 threads, 240 s, one JVM at a time, one run per jump and arm, all 59 recordings, the jump's own rows left out of the library. Arms: dev 3ba2df4, the first commit 6bfe914 (even thread split from the start), 012935a (the head start for the change levels). **The family lane finds no recording that dev misses**: every arm finds the same 56 of 59 and misses j1099, j154 and j347. What changes is the time to the first Strat: over the 56 found the sum is 841 s on dev, 425 s on 6bfe914 and 491 s on 012935a (median 2.5, 2.1, 2.7 s).
+
+| jump | dev | 6bfe914 | 012935a |
+| --- | --- | --- | --- |
+| j716 | 120.1 | 26.8 | 26.4 |
+| j424 | 148.7 | 26.7 | 29.2 |
+| j298 | 186.7 | 98.4 | 164.9 |
+| j152 | 65.1 | 2.3 | 4.8 |
+| j132 | 21.1 | 1.1 | 2.8 |
+| j146 | 21.1 | 1.1 | 2.8 |
+| j1149 | 20.4 | 7.4 | 7.4 |
+| j119 | 17.7 | 1.0 | 2.8 |
+| j1150 | 6.9 | 13.3 | 7.6 |
+| j122 | 0.8 | 8.1 | 0.9 |
+| j342 | 2.6 | 5.0 | 2.7 |
+| j816 | 0.6 | 2.1 | 0.7 |
+| j828 | 1.0 | 2.1 | 1.0 |
+| j148 | 2.7 | 0.5 | 2.8 |
+| j127 | 4.8 | 0.9 | 4.8 |
+| j128 | 2.4 | 0.8 | 2.8 |
+
+The other jumps differ by less than about 1 s between the arms. The even split of 6bfe914 was more than 1 s slower than dev on 9 jumps (the first level finds, j122 and j1150 above all); the head start removes that and costs about 2 s on the jumps the family lane finds at once, because the certifying thread first finishes a batch of level 0 and 1 candidates. Without any head start (`-Dpkc.bench.familyDelayMs=0`) the losses come back (j122 8.1 s, j1150 61.5 s); 1 s and 12 s were tried too and 5 s kept. j298 repeated: 94 to 98 s on 6bfe914, 100 to 165 s on 012935a, a steady 99 to 101 s after the certify count reset was removed (5cc07cf).
+
+Later runs of that day had a game open on the same PC, which slows the GPU part about 1.7 times; they are only used as comparisons inside one phase. Under that load level 1 of j1150 takes about 11 s, longer than the head start, and the branch then needs 16.5 s against 11.0 s on dev because 44 exact tier family candidates are certified before the level 1 Strat. 5cc07cf itself has no clean table of its own.
+
+The family lane alone on 30 threads with 900 s did not find j154 or j1099 at that point: it screened 26 and 45 million schedules, a band takes 3 to 4 times as long as the one before, and the recorded Strats sit about 3.8e7 and 1e8 deep in the family order. `FreeAirExact` on the CPU did 3e4 to 5e4 schedules per second there.
+
+**The speed of the family screen (2026-11-11 evening).** A profile of the family lane on j154 (4 cloud cores) put 95% of the enumeration time into `FreeAirExact`, about 1.4 ms per screened schedule: 800 function evaluations and 115 Newton steps per solve from a cold start (the dual starts on one row, where the norm terms of the units that row does not touch are not smooth), and the candidates between the keep threshold and the inertia reach (60% of the screened schedules of j154) each paid a converged solve plus 1.6 inertia passes, of which under 1% end below the keep threshold. The GPU byte screen is no prefilter for it: on j154, j1099, j716 and j424 the byte deficit of the schedules the exact screen keeps spreads over the same range as the rest (0.02 to 0.75 b). What changed:
+
+- **Warm start and bound first** (`FreeAirExact.Warm`): every enumeration thread keeps the multipliers of its last four solves. Each is a feasible dual point of the next schedule, so one evaluation per slot gives a valid lower bound that rejects most schedules outright (80 to 88% of the ones over the reach on j154 and j424), and the best slot starts the solve otherwise: a tenth of the evaluations. The score of a kept schedule moves by 1e-6 at most with the start; the stateless `solve` and `solveWithInertia` are unchanged.
+- **Tables instead of a model per schedule** (`FreeAirExact.Tables`, `Screen`): the wall rows, the ties and the friction coefficients do not depend on the keys, and the input vector of a tick depends only on its combo, its sprint flag and the sprint flag before it, so 36 probe schedules give a table of per tick row terms and a schedule's matrices are 2 n short vector adds, in the same order and bit-identical to the per schedule build (`NoTurnFreeAirExactTest.theTableScreenScoresLikeTheModelBuiltPerSchedule`). A scenario with a damage tick has no tables and takes the per schedule path.
+- **Inertia passes in stages of their own** (`FAMILY_INERTIA_STAGE`, `FamilyPlan`): a plain band keeps what scores under the keep threshold and rejects everything else at the first bound over it. The candidates between the threshold and the reach are the inertia stage of that band, which runs later, when its estimated cost fits `Config.familyInertiaShare` (a quarter) of the time the plain bands have taken so far; after the last plain band the remaining inertia stages run. Only j298 and j347 of the 59 recorded Strats need the passes, and j347 has segments no family covers.
+- **Exact tier candidates go to the certifier while the band runs** (`familyEarly`): a deep band takes minutes, so every worker hands its exact tier candidates over every 2 s instead of at the end of the band.
+- **A second certify order by screen value** (`PoolCertifier.certifyFamilyByValue`): 50 of the 59 recorded Strats score at or under zero and 53 under 0.00025 b, while the exact tier of a deep search sits against its limit (j154 after 63 million schedules: 9,857 exact tier candidates, median 0.0018 b, 88 under 0.00025 b). By family cost the recorded Strat of j154 was number 8,506 of them, by score number 62. The certifier therefore alternates: one batch from the usual queue, one batch of family exact tier candidates in order of their score, the latter without the per stage certify cap. Ordering the whole exact tier by score instead made j716 slower (115 s against 70 s), because its cheap family Strat has a middling score.
+- **The certifier takes turns** (`PoolCertifier.certifyTurn`, since the PC check below): the change level candidates and the family candidates sit in two queues, and the certifier takes one batch in turn from the change levels (exact and near tier, at most `Config.maxCertify` per change level stage), from the families by cost and from the families by score; an empty source passes its turn, and an offer of a change level stage puts the change levels next. Before, one queue held both and the whole family exact tier went ahead of the near tier of a change level. That was harmless while the family lane was slow, and with the fast lane it starved the levels: the level 1 Strat of j1150 is a near tier candidate and waited behind thousands of family candidates at 500 ms each.
+
+Measured on 4 cloud cores, CPU path, cold, the jump's own rows left out, one run each (a development signal, not the PC): the family lane alone screens 63 million schedules of j154 in 185 s (before: 2.5 million in 480 s) and certifies a Strat after 186 s (`A SDx13 S WA A WAx11 W WDx10`, the recorded one beside it), and one of j1099 after 189 s (`-x12 SDx8 Sx5 WA A WAx11 W WAx10`). Neither was ever found by the pool driver before. With both lanes j716 lands after 58 s (70 s on 8adc389) and j424 after 31 s (99 s).
+
+PC check of 897b2b0 (2026-11-11 evening, GPU screen, in-game driver, inputs wiped, 240 s, one run each, no game open, own rows left out): j154 lands after 112.8 s with 6 threads and after 50.8 s with the game's 30 threads, j1099 after 36.7 s with 6 threads; dev and every earlier commit of the branch miss both. j122 0.9 s as on dev. j1150 13.7 s against 6.9 s on dev, which is what the turns above answer. With the turns, on the 4 cloud cores: j716 57 s and j424 24 s with both lanes, j154 163 s and j1099 72 s with the family lane alone; the PC has not measured them.
+
+**How far the family lane generalizes (2026-11-12).** Every "own rows left out" number above was measured with a hold out that dropped only the rows that carry the jump's number. The library also holds rows without a number, and 45 of them are exact copies of numbered rows (42 of the 59 recorded jumps have such a copy; for j1099 the recorded Strat itself stayed in the library). `StratFamilies.shippedWithout` now also drops every row with the same keys as a row of the jump. With that hold out 51 of the 59 recorded Strats are a product of known families (55 with the old one: j144, j925, j138 and j146 join j347, j155, j129 and j135). Measured on 4 cloud cores, CPU path, family lane alone, inputs wiped, one run each, seconds until the first Strat, the old hold out against the new one (120 s budget, 240 s for j154 and j1099, whose new hold out drops the rows of both because the two jumps share their second half):
+
+| jump | rows by number left out | copies left out too |
+| --- | --- | --- |
+| j132 | 1.8 | 1.7 |
+| j346 | 1.1 | 1.2 |
+| j716 | 28.9 | 26.3 |
+| j424 | 18.3 | 16.5 |
+| j152 | 2.2 | 2.1 |
+| j119 | 1.8 | 1.6 |
+| j1149 | 2.4 | 2.4 |
+| j148 | 0.4 | 0.4 |
+| j146 | 2.4 | not found |
+| j127 | not found | not found |
+| j1099 | 72 | 220 (`-x12 SDx8 Sx5 WA A WAx11 W WAx10`) |
+| j154 | 163 | not found |
+
+Of the 11 jumps the lane finds with the old hold out, 9 are still found and 8 of them at the same time. j146 is no product of other jumps' families, and the recorded Strat of j154 rises from 60 to 64 half bits, one band too deep for the budget (with the full library it lands after 101 s). So the lane generalizes where other jumps' families build the Strat cheaply, and on that day j154 landed only because the library held its own rows. On dev after #684, #687 and #690 (2026-11-15, same machine, both lanes on, the rows of j154 and j1099 and their copies left out, one run) j154 lands after 19.9 s (`A SDx13 S WA A WAx11 W WDx10`): the faster walk reaches the deeper band. The momentum lane of #696 (see "Search by change count without the library" below) does not read the library at all, so a jump the strict hold out loses is still found: lane alone on 4 cloud cores, one run, j146 after 5.8 s, j154 after 31 s, j1099 after 27 s, and a Strat on 56 of the 60 HPK jumps within 45 s (j716 and j424 need more time than that, j127 needs the three structures of the in-game driver, j347 is found by no lane).
+
+A family is also pinned to its alignment: a run-up family counts its first key from the segment start and every later change from the next jump. j154 with one idle tick put in front of the recording (jump ticks 3, 16, 29) has no run-up family "idle, A, SD", the recorded Strat moved by one tick has no family cost in any library variant, and the lane alone finds nothing in 240 s (72 million schedules; the neighbours `A SDx14 ...` and `Ax2 SDx13 ...` are in the family space and do not land). No rule for an idle opening tick is planned: a Strat never opens with a tick that can be removed.
+
+An earlier cloud comparison follows as a development record only: CPU path, 4 cloud cores, 120 s, the single pool driver. Its "not found" rows for the levels do not hold on the PC.
+
+Measured on 4 cloud cores, CPU path, cold (inputs wiped, the jump's own rows left out of the library), one run each, 120 s budget, seconds until the certified Strat. The bench's extra certify and polish put a floor of about 15 s under every find. "Levels" is dev before this stage, "families alone" the research build with the family lane only, "both lanes" this stage as it ships (`-Dpkc.bench.families=true -Dpkc.bench.familyWithout=<jump>`):
+
+| jump | levels | families alone | both lanes |
+| --- | --- | --- | --- |
+| j716 | not found | 75 | 100 |
+| j424 | not found | 94 | 117 |
+| j718 | not found | 59 | 54 |
+| j1150 | not found | 185 (300 s budget) | not found |
+| j154 | not found | not found in 300 s | not found |
+| j1099 | not found | not found in 300 s | not found |
+| j347 | not found | not found | not found |
+| j155 | not found | not found | not found |
+| j120 | 107 | 20 | 22 |
+| j315 | 84 | 27 | 40 |
+| J143 | 79 | 19 | 31 |
+| j717 | 65 | 19 | 50 |
+| j328 | 55 | 30 | 61 |
+| j140 | 53 | 19 | 20 |
+| j146 | 42 | 17 | 18 |
+| j1149 | 41 | 35 | 38 |
+| j128 | 36 | 15 | 16 |
+| j132 | 31 | 17 | 17 |
+| j147 | 29 | 22 | 28 |
+| j119 | 28 | 17 | 17 |
+| j144 | 27 | 17 | 19 |
+| j925 | 27 | 22 | 26 |
+| j346 | 17 | 16 | 17 |
+| j129 | 16 | 37 | 19 |
+| j816 | 16 | 22 | 16 |
+
+On this setup the levels find 18 of the 25 within 120 s, both lanes 20 (j716, j424 and j718 in addition), nothing is lost. Of the 17 jumps both find, the lanes are more than 3 s faster on 10, within 3 s on 5 and slower on j328 (6 s) and j129 (3 s). With half the enumeration threads the family lane reaches j716 and j424 later than alone, and j1150 (185 s alone) falls outside the budget.
+
+The test `NoTurnFamilyStageTest` runs the family lane alone without the extra certify and the polish: j132, whose recorded Strat has three paid changes, lands in 5 s, j346 in under 1 s.
+
+Open: j347 has two middle segments no family covers and j155 a run-up no family covers; the translator reads two thirds of the worded Strats.
+
+### Stored rejects in the family screen (2026-11-12, gh-683)
+
+The family screen solved one small dual problem per schedule. Its value is `-f(lambda)` with `f(lambda) = sum over units |g_k(lambda)| + lambda . b`, and that is a lower bound of the worst wall violation for ANY multiplier vector `lambda >= 0`, not only for the one the solve ends on. So the multipliers of a solve that rejected one schedule can be evaluated on every other schedule, and when the value is above the limit that schedule is rejected without a solve. `g_k` and `lambda . b` are sums over ticks of terms that depend on the tick, its keys and its sprint state only, so a stored vector carries one small table per tick and key state and the bound of a schedule is a sum of table entries plus one square root per facing unit.
+
+`FreeAirExact.CutPool` keeps up to `Config.familyCutPool` (128) such vectors per worker. A vector that rejects moves one place forward, a new vector replaces the last one when the pool is full. The family walk tells the pool its segment layout and each choice (`Screen.layout`, `Screen.choose`); the pool stores each vector's sum per segment choice and per sprint state before the segment, and the sum of the chosen segments per depth, so a leaf costs a few additions per vector tried. The three sprint variants of a schedule differ on at most three ticks after the first run tick and are checked from the same sums (`Screen.survivors`).
+
+What was tried first and dropped: a lookup table keyed by the late rows alone. The late rows of the tied part depend on the head of the schedule through two vectors only (fit error 6e-15 on j154), but the early rows (the edges of the platforms before the last jump) are active in almost every kept schedule, and a table over the three invariants with a Lipschitz margin rejects nothing at an affordable depth. Vectors keyed by a cell of those invariants were also worse than one small global pool (cell 0.02: 73 percent rejected without a solve, cell 0.05: 95 percent, one pool of 64: 99.96 percent).
+
+Two changes around it:
+
+- **Exact tier first.** A schedule within the limit needs the full solve, and near the limit the solve converges slowly (about 37 iterations, 114 microseconds). At the keep limit of 0.01 b j154 keeps 143,557 of 8.7 million schedules of one final segment, at the exact tier limit of 0.002 b 2,930 of 38.5 million. `Config.familyExactFirst` runs every band with the exact limit first (`FAMILY_EXACT_STAGE`), then the bands at the keep limit, then the inertia stages as before. 56 of the 59 recorded Strats score in the exact tier.
+- **Prefix check after the pool.** The pad-wall prefix check of the walk cost more than the pool once the pool was in, so with a pool it runs only for a schedule no vector rejects (`familyPrefixPruned`).
+
+Measured in a probe (cloud, 4 threads, full library, the cost band of the recorded Strat, exact tier limit, first sprint variant only):
+
+| jump | schedules | solve per schedule | pool |
+| --- | --- | --- | --- |
+| j154 | 38,549,014 | 28.1 s | 0.72 s (pool of 64) |
+| j1099 | 78,145,346 | 67 s | 4.0 s (pool of 256), 12 s (64), 107 s (16) |
+| j424 | 7,165,972 | 7.4 s | 4.5 s |
+| j716 | 511,861 | 0.63 s | 0.44 s |
+
+The pool keeps fewer schedules than the solve per schedule (j154: 2,743 against 2,930): the difference are schedules whose solve stalled under the limit although their true value is above it (up to 0.026 b). No schedule with a point at or under the limit was rejected.
+
+Time to the first Strat in the driver (cloud, 4 threads, CPU, family lane alone, the full library with the jump's own rows, one run each, dev d04638b against the branch):
+
+| jump | dev | branch |
+| --- | --- | --- |
+| j154 | 101 s | 28 to 39 s (five runs) |
+| j1099 | not in 45 s | 50 s |
+| j424 | 17.6 s | 4.4 s |
+| j716 | 37.6 s | 29.3 s |
+| j1150 | 7.9 s | 9.6 s |
+
+These are cloud numbers and a development signal. The walk now checks about 5 million schedules per second on the four cloud threads while the certifier uses half of them; j1150 waits on certification in both builds (its Strat is offered after 1.3 s and certified after 8 s). The library contains each jump's own rows in these runs, so they say nothing about a jump whose families are missing.
+
+The development PC, one run each (30 threads, graphics card screen on, both lanes, the full library, no game open, the same jar at ccd4a26 with the stored rejects and the exact tier first on, against both switched off with `-Dpkc.bench.familyCutPool=0 -Dpkc.bench.familyExactFirst=false`):
+
+| jump | switched off | on |
+| --- | --- | --- |
+| j154 | 26.2 s | 13.1 s |
+| j1099 | 23.0 s | 16.7 s |
+| j1150 | not run | 8.1 s |
+
+All five runs found a Strat. j154 scored 211 million schedules in its run with the change and 31 million without.
+
+`NoTurnFreeAirExactTest.storedRejectsOnlyDropSchedulesTheFullSolveDrops` holds the pool to the solve: a rejected schedule's attained violation is never under the bound that rejected it, the stored sums give the same answer as the sum over ticks, and every rejected sprint variant is over the limit in the full solve.
+
+### Subtree rejects in the family walk (2026-11-12, gh-686)
+
+A stored reject vector (gh-683) is still asked once per schedule. Its bound is `-f` with `f = base - lin + sum over units |(X_k, Y_k)|`, and every term is a sum over ticks. On j154, j1099, j716 and j1150 one facing is tied over every tick up to the tick before the last jump and every later tick has a facing of its own. For a fixed prefix of the family walk the best completion under one vector is therefore
+
+`fixed + max over the completions of [ |P + S| + rest ]`
+
+where `P` is the prefix's sum in the tied unit, `S` the completion's sum in it and `rest` its sum in every other term. With 256 directions `d_j` and `|v| <= slack * max_j d_j . v` (`slack = 1 / cos(pi / 256)`) this is at most `fixed + max_j [ slack * d_j . P + R_j ]`, where `R_j` is the best `slack * d_j . S + rest` over the choices of the remaining segments, built once per vector and layout as a table per segment and sprint state at the cut (`CutPool.rest`). A segment without a tick of the tied unit needs one number instead of 256. When that maximum is under the limit for all three sprint variants, by whichever vectors, no schedule under the prefix can pass the pool and the walk drops the whole subtree (`Screen.subtreeRejected`, asked once the first two segments are placed).
+
+One level further down the same sums give a batched test: with the prefix fixed, the value of every choice of the next segment is `fixed + choiceRest + |Q + (choiceX, choiceY)|`, one pass over three flat arrays per vector (`Screen.filterChoices`). The walk uses it on the second to last segment and on the leaves, so a rejected leaf costs three array reads instead of a call per vector.
+
+Limits. The test needs exactly one tied unit: j424 has two (ticks 0 to 23 and 24 to 38) and falls back to the per schedule check. The tables ignore the cost band, so they also count completions the current band does not hold, which only makes the test weaker. A prefix whose first run tick sits in the last three ticks before the cut is not tested, because the sprint variants would shift terms across the cut. And one vector can only reject a subtree whose completions it can separate together: on j154 a prefix with two free segments (917 x 96 completions) is dropped in 0.02 percent of the nodes, one with only the final segment free in 83 to 86 percent, so almost all of the gain is the batched test.
+
+`Config.familySubtreeCuts` (8) is the number of vectors tried per node, 0 switches both tests off. 3, 8 and 16 measure the same within noise on j154, 128 is slower.
+
+Cloud, 4 threads, CPU, family lane alone, the full library with the jump's own rows, 45 s, one run each, both columns from the same build with `-Dpkc.bench.familySubtreeCuts=0` and `=8`. The times are the moments a cost band of the exact tier is finished:
+
+| jump | band | off | on | first Strat off | first Strat on |
+| --- | --- | --- | --- | --- | --- |
+| j154 | 10 (holds the recorded Strat) | 6.9 s | 5.0 s | 16.1 s | 41.3 s |
+| j154 | 13 | not finished at 33.6 s | 15.7 s | | |
+| j1099 | 10 | 23.1 s | 22.3 s | 39.9 s | 40.6 s |
+| j1099 | 11 | not finished at 45 s | 37.6 s | | |
+| j716 | 11 | 21.4 s | 15.5 s | 16.3 s | 16.6 s |
+| j1150 | 10 | 16.2 s | 14.3 s | 10.1 s | 9.5 s |
+| j424 | 9 | 14.9 s | 14.8 s (not applicable) | 4.2 s | 4.2 s |
+
+All ten runs found a Strat. The enumeration is 1.1 to 2.1 times faster per band, and the time to the first Strat does not follow it: on these four cloud threads the certifier's queue decides it. On j154 the recorded Strat is offered when band 10 ends, about 20 kept candidates rank ahead of it by screen value at that moment (36 once band 11 is in, 55 after band 13), one batch of 20 certifies in about 6 s, and the three queues take turns. Further runs of the same builds gave 42.3 s without the test and 30.8 s, 50.1 s and no Strat in 20 s with it; a faster walk fills the queue sooner with candidates that rank ahead. On the development PC the certifier has 30 threads and the balance is different.
+
+The development PC, one run each (30 threads, graphics card screen on, both lanes, the full library, no game open, the same jar at cc10b43 with `-Dpkc.bench.familySubtreeCuts=0` and `=8`):
+
+| jump | first Strat off | first Strat on | band 10 of the exact tier off | on |
+| --- | --- | --- | --- | --- |
+| j154 | 12.9 s | 7.0 s | 895 ms | 258 ms |
+| j1099 | 16.6 s | 16.8 s | 2921 ms | 2619 ms |
+
+All four runs found a Strat. j154 is found in about half the time, j1099 is unchanged. The run without the test repeats the 13.1 s of the gh-683 run. What is left on j154 after the walk is the certifier: its order and its cost per candidate are the next lever.
+
+`NoTurnFreeAirExactTest.droppedSubtreesHoldNoScheduleTheFullSolveKeeps` builds a walk of 7 choices per segment on j154, j716 and j1099, solves all of its schedules fully and holds both tests to that: the subtree value of every node and vector is never under the best stored value of a schedule below it and within 1e-3 of it, a dropped node holds no schedule the full solve keeps, and the batched test agrees with the per schedule check on every choice. Four of five planted faults fail it (a choice missing from the rest table, a sprint variant without its shift, 16 directions instead of 256, no slack on the directions); a wrong sprint state after a choice does not.
+
+#### Search by change count without the library
+
+A research probe (`ChangeCountProbe`, kept as a patch outside the repo) walked every key schedule of j154 with a limited number of paid key changes, under the rules of the change levels (free changes to W, WA, WD on a jump tick or the tick after it, a dwell of 3 ticks), with the same two tests on a tick level table. j154 has 8.09e8 schedules at up to 2 changes, 5.43e10 at up to 3 and 2.28e12 at up to 4; its recorded Strat needs 4. Cloud, 4 threads, CPU: schedule by schedule the pool checks 6.7 million per second; with subtree drops the 2 change space is finished in 21.0 s, 9.3 percent of the 3 change space in 40 s and about 1 percent of the 4 change space in 60 s. That is about 50 times faster and still more than an hour for the level j154 needs. An audit of 800,019 schedules in dropped subtrees found none the full solve keeps. The recorded Strat scores 8.5e-5 where the kept schedules at up to 3 changes start at 4.06e-4 (median 0.0018), so the screen value separates it; the size of the space is what is missing, and that is what the library families cut down.

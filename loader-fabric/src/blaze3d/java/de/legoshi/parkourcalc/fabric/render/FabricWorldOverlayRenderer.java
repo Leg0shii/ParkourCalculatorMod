@@ -1,6 +1,8 @@
 package de.legoshi.parkourcalc.fabric.render;
 
+import de.legoshi.parkourcalc.core.BlockOverrideWorld;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
+import de.legoshi.parkourcalc.core.render.BlockOverrideOutlines;
 import de.legoshi.parkourcalc.core.anglesolver.BlockSelection;
 import de.legoshi.parkourcalc.core.perf.Perf;
 import de.legoshi.parkourcalc.core.ports.BoxRenderer;
@@ -34,15 +36,18 @@ public final class FabricWorldOverlayRenderer {
     private final SelectionManager selection;
     private final YawGizmoController yawGizmo;
     private final Supplier<AngleSolverState> angleSolver;
+    private final BlockOverrideWorld blockOverrides;
     private final CachedBoxGeometry cached = new CachedBoxGeometry();
 
     public FabricWorldOverlayRenderer(BoxController boxController, Settings settings, SelectionManager selection,
-                                      YawGizmoController yawGizmo, Supplier<AngleSolverState> angleSolver) {
+                                      YawGizmoController yawGizmo, Supplier<AngleSolverState> angleSolver,
+                                      BlockOverrideWorld blockOverrides) {
         this.boxController = boxController;
         this.settings = settings;
         this.selection = selection;
         this.yawGizmo = yawGizmo;
         this.angleSolver = angleSolver;
+        this.blockOverrides = blockOverrides;
     }
 
     public void drawAfterTranslucent() {
@@ -69,6 +74,7 @@ public final class FabricWorldOverlayRenderer {
 
         FabricBoxRenderer faces = new FabricBoxRenderer(pose, buffers.getBuffer(FabricRenderLayers.TRANSLUCENT_FACES), BoxRenderer.Mode.FACES);
         emitSelectionFaces(faces);
+        BlockOverrideOutlines.render(faces, settings, blockOverrides);
 
         FabricBoxRenderer lines = new FabricBoxRenderer(pose, buffers.getBuffer(FabricRenderLayers.LINES), BoxRenderer.Mode.LINES);
         emitSelectionLines(lines);

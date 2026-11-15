@@ -4,7 +4,8 @@ public final class WorldPick {
 
     public enum Kind {
         BOX,
-        CONSTRAINT
+        CONSTRAINT,
+        BLOCK_OVERRIDE
     }
 
     public final Kind kind;
@@ -19,6 +20,10 @@ public final class WorldPick {
 
     public static WorldPick box(int boxIndex) {
         return new WorldPick(Kind.BOX, boxIndex, null);
+    }
+
+    public static WorldPick blockOverride(int row) {
+        return new WorldPick(Kind.BLOCK_OVERRIDE, row, null);
     }
 
     public static WorldPick constraint(int tick, int[] constraintIndices) {

@@ -13,6 +13,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpLinearModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.LevelSetAscent;
+import de.legoshi.parkourcalc.core.anglesolver.solver.RecoveryLadder;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SlpSolve;
 import de.legoshi.parkourcalc.core.anglesolver.solver.YawOrder;
 import de.legoshi.parkourcalc.core.anglesolver.solver.YawTies;
@@ -85,7 +86,21 @@ public class YawOrderTest {
         List<JumpConstraint> band = new ArrayList<>();
         band.add(df(2, JumpConstraint.Cmp.GE, -1.0));
         band.add(df(2, JumpConstraint.Cmp.LE, 1.0));
-        assertNull("a dF band stays unsupported", YawOrder.carry(band, YawTies.of(band, 8), 8));
+        YawOrder banded = YawOrder.carry(band, YawTies.of(band, 8), 8);
+        assertNotNull("a dF range is carried as two links on the same pair of ticks", banded);
+        assertEquals(2, banded.links().size());
+        assertEquals(2, banded.links().get(0).hiTick);
+        assertEquals(1, banded.links().get(0).loTick);
+        assertEquals(-1.0, banded.links().get(0).minTurnDeg, 0.0);
+        assertEquals(1, banded.links().get(1).hiTick);
+        assertEquals(2, banded.links().get(1).loTick);
+        assertEquals(-1.0, banded.links().get(1).minTurnDeg, 0.0);
+
+        List<JumpConstraint> apart = new ArrayList<>();
+        apart.add(df(2, JumpConstraint.Cmp.GE, 1.0));
+        apart.add(df(2, JumpConstraint.Cmp.LE, -1.0));
+        assertNull("two walls that leave no turn between them are declined",
+                YawOrder.carry(apart, YawTies.of(apart, 8), 8));
 
         List<JumpConstraint> held = new ArrayList<>();
         held.add(df(2, JumpConstraint.Cmp.GE, -1.0e-4));
@@ -93,6 +108,40 @@ public class YawOrderTest {
         YawOrder tied = YawOrder.carry(held, YawTies.of(held, 8), 8);
         assertNotNull(tied);
         assertTrue("a dF = 0 corridor is absorbed by the tie, not carried", tied.isEmpty());
+    }
+
+    @Test
+    public void aNarrowRangeTiesOnlyTheNearerSide() {
+        List<JumpConstraint> cons = new ArrayList<>();
+        cons.add(df(2, JumpConstraint.Cmp.GE, 1.0));
+        cons.add(df(2, JumpConstraint.Cmp.LE, 1.05));
+        cons.add(new JumpConstraint(JumpConstraint.Mode.F, 0, null, JumpConstraint.Op.PLUS, JumpConstraint.Cmp.GE, 20.0, "lo"));
+        cons.add(new JumpConstraint(JumpConstraint.Mode.F, 0, null, JumpConstraint.Op.PLUS, JumpConstraint.Cmp.LE, 20.05, "hi"));
+        YawOrder order = YawOrder.carry(cons, YawTies.of(cons, 4), 4);
+        assertNotNull(order);
+        assertEquals(2, order.links().size());
+        assertEquals(2, order.bounds().size());
+        boolean[] tie = new boolean[2];
+        boolean[] pinLo = new boolean[2];
+        boolean[] pinHi = new boolean[2];
+
+        order.structureOf(new double[]{20.01, 30.0, 31.04, 31.04}, tie, pinLo, pinHi);
+        assertFalse("the turn sits next to the upper wall", tie[0]);
+        assertTrue(tie[1]);
+        assertTrue("the facing sits next to the lower wall", pinLo[0]);
+        assertFalse(pinHi[1]);
+
+        order.structureOf(new double[]{20.04, 30.0, 31.01, 31.01}, tie, pinLo, pinHi);
+        assertTrue("the turn sits next to the lower wall", tie[0]);
+        assertFalse(tie[1]);
+        assertFalse(pinLo[0]);
+        assertTrue("the facing sits next to the upper wall", pinHi[1]);
+
+        order.structureOf(new double[]{60.0, 30.0, 45.0, 45.0}, tie, pinLo, pinHi);
+        assertFalse(tie[0]);
+        assertTrue("a turn past the upper wall ties it", tie[1]);
+        assertFalse(pinLo[0]);
+        assertTrue("a facing past the upper wall pins it", pinHi[1]);
     }
 
     @Test
@@ -134,7 +183,7 @@ public class YawOrderTest {
     private static Run longestOneWayRun(ProblemFixture pf) {
         JumpSpec base = stripped(pf.specFor(AngleSolverState.Axis.X, AngleSolverState.Goal.MAX));
         String[] name = new String[1];
-        double[] yaws = AngleSolverEngine.dualChain(pf.model, base, base.asScenario(), new AtomicBoolean(false), name);
+        double[] yaws = RecoveryLadder.solve(pf.model, base, base.asScenario(), new AtomicBoolean(false), name);
         if (yaws == null) {
             CertifiedBnb.Config cfg = new CertifiedBnb.Config();
             cfg.mode = CertifiedBnb.Mode.FIRST_FEASIBLE;

@@ -10,21 +10,18 @@ import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 import de.legoshi.parkourcalc.forge.sim.SimulatorEntity;
 import net.minecraft.block.Block;
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.network.Packet;
 //? if >=1.12 {
 import net.minecraft.network.play.client.CPacketConfirmTeleport;
 import net.minecraft.network.play.client.CPacketEntityAction;
 import net.minecraft.network.play.client.CPacketKeepAlive;
 import net.minecraft.network.play.client.CPacketPlayer;
-import net.minecraft.network.play.client.CPacketPlayerTryUseItemOnBlock;
 import net.minecraft.network.play.server.SPacketEntityVelocity;
 import net.minecraft.network.play.server.SPacketKeepAlive;
 import net.minecraft.network.play.server.SPacketPlayerPosLook;
 //?} else {
 /*import net.minecraft.network.play.client.C00PacketKeepAlive;
 import net.minecraft.network.play.client.C03PacketPlayer;
-import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement;
 import net.minecraft.network.play.client.C0BPacketEntityAction;
 import net.minecraft.network.play.server.S00PacketKeepAlive;
 import net.minecraft.network.play.server.S08PacketPlayerPosLook;
@@ -35,16 +32,9 @@ import net.minecraft.server.MinecraftServer;
 //import net.minecraft.util.BlockPos;
 import net.minecraft.util.DamageSource;
 //? if >=1.12 {
-import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
-//?} else {
-/*import net.minecraft.util.MathHelper;
-import net.minecraft.util.MovingObjectPosition;
-import net.minecraft.util.Vec3;
-*///?}
+//?}
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 
@@ -61,9 +51,7 @@ public final class PairedServerSim {
 
     private static final UUID PROFILE_UUID = UUID.nameUUIDFromBytes("pkc-paired-sim".getBytes(StandardCharsets.UTF_8));
     private static final String PROFILE_NAME = "PKCPairedSim";
-    private static final int RIGHT_CLICK_DELAY_TICKS = 4;
     private static final int WARMUP_SERVER_TICKS = 2;
-    private static final double CLIENT_REACH = 4.5;
 
     private final WorldServer level;
     private final PairedServerPlayer sp;
@@ -89,8 +77,6 @@ public final class PairedServerSim {
     //?}
     private boolean lastSprinting;
     private boolean lastSneaking;
-    private boolean prevRightClick;
-    private int rightClickDelay;
     private int journalSizeAtTickStart;
     private boolean lastMoveJumped;
     private boolean shutdownDone;
@@ -248,8 +234,6 @@ public final class PairedServerSim {
         //?}
         lastSprinting = false;
         lastSneaking = false;
-        prevRightClick = false;
-        rightClickDelay = 0;
     }
 
     public void abortTick() {
@@ -297,7 +281,6 @@ public final class PairedServerSim {
         if (row != null) {
             pitch = PlaybackController.applyPitch(pitch, row);
         }
-        synthesizeUseItem(e, row);
     }
 
     //? if >=1.12 {
@@ -453,101 +436,6 @@ public final class PairedServerSim {
         //? if >=1.12 {
         prevOnGround = onGround;
         //?}
-    }
-
-    private void synthesizeUseItem(SimulatorEntity e, InputRow row) {
-        boolean rightClick = row != null && row.isKeyActive(InputRow.Key.RIGHT_CLICK);
-        if (rightClickDelay > 0) rightClickDelay--;
-        boolean fire = rightClick && (!prevRightClick || rightClickDelay == 0);
-        prevRightClick = rightClick;
-        if (!fire) return;
-        rightClickDelay = RIGHT_CLICK_DELAY_TICKS;
-        //? if >=1.12 {
-        Vec3d eye = new Vec3d(e.posX, e.posY + e.getEyeHeight(), e.posZ);
-        Vec3d look = vectorForRotation(pitch, e.rotationYaw);
-        double reach = clientBlockReach();
-        Vec3d end = eye.add(look.x * reach, look.y * reach, look.z * reach);
-        RayTraceResult hit = level.rayTraceBlocks(eye, end, false, false, true);
-        if (hit == null || hit.typeOfHit != RayTraceResult.Type.BLOCK) {
-        //?} else {
-        /*Vec3 eye = new Vec3(e.posX, e.posY + e.getEyeHeight(), e.posZ);
-        Vec3 look = vectorForRotation(pitch, e.rotationYaw);
-        double reach = clientBlockReach();
-        Vec3 end = eye.addVector(look.xCoord * reach, look.yCoord * reach, look.zCoord * reach);
-        MovingObjectPosition hit = level.rayTraceBlocks(eye, end, false, false, true);
-        if (hit == null || hit.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK) {
-        *///?}
-            addEvent(ServerSimEvent.Kind.INTERACTION_REJECTED, "no block in reach");
-            return;
-        }
-        drainServerbound();
-        BlockPos pos = hit.getBlockPos();
-        //? if >=1.12 {
-        float fx = (float) (hit.hitVec.x - pos.getX());
-        float fy = (float) (hit.hitVec.y - pos.getY());
-        float fz = (float) (hit.hitVec.z - pos.getZ());
-        //?} else {
-        /*float fx = quantizeFacing((float) (hit.hitVec.xCoord - pos.getX()));
-        float fy = quantizeFacing((float) (hit.hitVec.yCoord - pos.getY()));
-        float fz = quantizeFacing((float) (hit.hitVec.zCoord - pos.getZ()));
-        *///?}
-        int sizeBefore = journal.size();
-        BlockPos[] cube = new BlockPos[27];
-        IBlockState[] before = new IBlockState[27];
-        int n = 0;
-        for (int dx = -1; dx <= 1; dx++) {
-            for (int dy = -1; dy <= 1; dy++) {
-                for (int dz = -1; dz <= 1; dz++) {
-                    BlockPos p = pos.add(dx, dy, dz);
-                    cube[n] = p;
-                    before[n] = level.getBlockState(p);
-                    n++;
-                }
-            }
-        }
-        //? if >=1.12 {
-        handler.processTryUseItemOnBlock(new CPacketPlayerTryUseItemOnBlock(
-                pos, hit.sideHit, EnumHand.MAIN_HAND, fx, fy, fz));
-        //?} else {
-        /*handler.processPlayerBlockPlacement(new C08PacketPlayerBlockPlacement(
-                pos, hit.sideHit.getIndex(), null, fx, fy, fz));
-        *///?}
-        for (int i = 0; i < 27; i++) {
-            IBlockState after = level.getBlockState(cube[i]);
-            if (after != before[i]) {
-                journal.record(cube[i], before[i], after);
-            }
-        }
-        if (journal.size() == sizeBefore) {
-            addEvent(ServerSimEvent.Kind.INTERACTION_REJECTED, "use had no effect");
-        }
-    }
-
-    private static double clientBlockReach() {
-        net.minecraft.client.multiplayer.PlayerControllerMP controller = net.minecraft.client.Minecraft.getMinecraft().playerController;
-        return controller != null ? controller.getBlockReachDistance() : CLIENT_REACH;
-    }
-
-    //? if <1.12 {
-    /*private static float quantizeFacing(float f) {
-        return ((int) (f * 16.0F) & 255) / 16.0F;
-    }
-
-    *///?}
-    //? if >=1.12 {
-    private static Vec3d vectorForRotation(float pitch, float yaw) {
-    //?} else {
-    /*private static Vec3 vectorForRotation(float pitch, float yaw) {
-    *///?}
-        float f = MathHelper.cos(-yaw * 0.017453292F - (float) Math.PI);
-        float f1 = MathHelper.sin(-yaw * 0.017453292F - (float) Math.PI);
-        float f2 = -MathHelper.cos(-pitch * 0.017453292F);
-        float f3 = MathHelper.sin(-pitch * 0.017453292F);
-        //? if >=1.12 {
-        return new Vec3d(f1 * f2, f3, f * f2);
-        //?} else {
-        /*return new Vec3(f1 * f2, f3, f * f2);
-        *///?}
     }
 
     private void drainServerbound() {
@@ -730,8 +618,6 @@ public final class PairedServerSim {
         //?}
         c.lastSprinting = lastSprinting;
         c.lastSneaking = lastSneaking;
-        c.prevRightClick = prevRightClick;
-        c.rightClickDelay = rightClickDelay;
         c.pitch = pitch;
         c.tickIndex = tickIndex;
         c.journalSize = journal.size();
@@ -805,8 +691,6 @@ public final class PairedServerSim {
         //?}
         lastSprinting = c.lastSprinting;
         lastSneaking = c.lastSneaking;
-        prevRightClick = c.prevRightClick;
-        rightClickDelay = c.rightClickDelay;
         pitch = c.pitch;
         tickIndex = c.tickIndex;
     }
@@ -873,8 +757,6 @@ public final class PairedServerSim {
         //?}
         boolean lastSprinting;
         boolean lastSneaking;
-        boolean prevRightClick;
-        int rightClickDelay;
         float pitch;
         int tickIndex;
         int journalSize;

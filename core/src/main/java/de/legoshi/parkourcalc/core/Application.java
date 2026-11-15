@@ -2,6 +2,8 @@ package de.legoshi.parkourcalc.core;
 
 import de.legoshi.parkourcalc.core.ports.BlockPicker;
 import de.legoshi.parkourcalc.core.sim.BlockHit;
+import de.legoshi.parkourcalc.core.sim.BlockOverride;
+import de.legoshi.parkourcalc.core.sim.BlockOverrides;
 import de.legoshi.parkourcalc.core.ports.FilePickerPort;
 import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
 import de.legoshi.parkourcalc.core.ports.PickedBlock;
@@ -23,6 +25,7 @@ import de.legoshi.parkourcalc.core.ui.ConstraintSelection;
 import de.legoshi.parkourcalc.core.ui.FileMenu;
 import de.legoshi.parkourcalc.core.ui.HudMessages;
 import de.legoshi.parkourcalc.core.ui.HudMessagesPanel;
+import de.legoshi.parkourcalc.core.ui.ReplayKeystrokesPanel;
 import de.legoshi.parkourcalc.core.ui.InputData;
 import de.legoshi.parkourcalc.core.ui.InputOverlay;
 import de.legoshi.parkourcalc.core.ui.InputRow;
@@ -45,6 +48,7 @@ import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.BlockSelection;
 import de.legoshi.parkourcalc.core.anglesolver.ConstraintText;
+import de.legoshi.parkourcalc.core.anglesolver.FlowVector;
 import de.legoshi.parkourcalc.core.anglesolver.Medium;
 import de.legoshi.parkourcalc.core.anglesolver.Slipperiness;
 import de.legoshi.parkourcalc.core.anglesolver.SolveResult;
@@ -87,12 +91,15 @@ public final class Application {
     private final BoxDragController dragController;
     private final StartDragController startDragController;
     private final BoxSelectController selectController;
+    private final BoxSelectController blockPickController;
     private final YawGizmoController yawGizmo;
     private final SaveController saveController;
     private final PlaybackController playback;
 
     private Path settingsPath;
     private boolean startInitialized;
+    private BlockOverrideCheck.Pending blockCheckPending = BlockOverrideCheck.pending(Collections.<int[]>emptyList());
+    private final BlockOverrideCheck.Reach blockReach;
     private String modVersion = "?";
     private InputOverlay inputOverlay;
     private FilePickerPort filePicker;
@@ -111,9 +118,13 @@ public final class Application {
     private final OsSystemBridge systemBridge = new OsSystemBridge();
 
     private de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel forwardModel;
+    private de.legoshi.parkourcalc.core.anglesolver.solver.PhysicsVariant physicsVariant =
+            de.legoshi.parkourcalc.core.anglesolver.solver.PhysicsVariant.VANILLA;
     private de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverWindow angleSolverWindow;
     private NoTurnSearchController noTurnSearch;
     private SenseSearchController senseSearch;
+    private final BlockOverrideWorld blockOverrideWorld;
+    private final BlockPlacing blockPlacing;
 
     public Application(Simulator simulator, MinecraftAccess mc) {
         this.mc = mc;
@@ -127,6 +138,7 @@ public final class Application {
         // Start box is the "Start" anchor: draggable to reposition, and tap-selectable as path index 0.
         this.dragController = new BoxDragController(boxController, startDragController, this::commitStartTap);
         this.selectController = new BoxSelectController(this::pickWorld, this::commitWorldTap);
+        this.blockPickController = new BoxSelectController(this::pickBlockOverride, this::commitWorldTap, true);
         this.yawGizmo = new YawGizmoController(
                 boxController,
                 this::handleStartYawChange,
@@ -136,6 +148,16 @@ public final class Application {
         );
         this.playback = new PlaybackController(inputData, runner, settings);
         this.playback.setStartRangeResolver(this::resolvePlaybackStartRange);
+        this.blockOverrideWorld = new BlockOverrideWorld(inputData, selection);
+        this.playback.setOnReplayRow(blockOverrideWorld::setReplayRow);
+        this.blockOverrideWorld.setBlockReader(mc::describeBlockState);
+        this.blockOverrideWorld.setShapeSource(mc::blockShape);
+        this.blockOverrideWorld.setOnDesync((row, tick, expectedPlaced) -> pushHudMessage(
+                "Tick " + tick + ": block at " + row.x + " " + row.y + " " + row.z
+                        + (expectedPlaced ? " not placed" : " still there"), HudMessageStyle.COLOR_WARN));
+        this.blockReach = BlockOverrideCheck.reachOf(mc);
+        this.blockPlacing = new BlockPlacing(mc, inputData, blockOverrideWorld, settings, hudMessages, this::onBlockOverridesChanged);
+        this.blockPlacing.setUiOpener(this::setControlPanelOpen);
         this.recorder = new de.legoshi.parkourcalc.core.record.HumanRecorder(saveController::getSaveStore, mc::getMouseSensitivity);
     }
 
@@ -188,6 +210,14 @@ public final class Application {
         fileMenu.promptSaveSelectionAsTas(copied, sourceRows, pos, vel, yaw, pitch, resume);
     }
 
+    public void setPhysicsVariant(de.legoshi.parkourcalc.core.anglesolver.solver.PhysicsVariant variant) {
+        physicsVariant = variant == null ? de.legoshi.parkourcalc.core.anglesolver.solver.PhysicsVariant.VANILLA : variant;
+    }
+
+    public de.legoshi.parkourcalc.core.anglesolver.solver.PhysicsVariant getPhysicsVariant() {
+        return physicsVariant;
+    }
+
     public void setModVersion(String modVersion) {
         this.modVersion = modVersion;
     }
@@ -220,7 +250,7 @@ public final class Application {
         angleSolverState = new AngleSolverState();
         FileSystemSaveStore saveStore = saveController.getSaveStore();
         String mcVersion = saveStore != null ? saveStore.getMcVersion() : null;
-        forwardModel = ExactJumpModel.forMcVersion(mcVersion).withVelocityCodec(mc.velocityPacketCodec());
+        forwardModel = ExactJumpModel.forMcVersion(mcVersion, physicsVariant).withVelocityCodec(mc.velocityPacketCodec());
         inputOverlay.setMcVersion(mcVersion);
         constraintKeyController = new ConstraintKeyController(
                 mc, angleSolverState, selection, constraintSelection, saveController::markDirty,
@@ -241,6 +271,11 @@ public final class Application {
         AngleSolverEngine angleSolverEngine = new AngleSolverEngine(angleSolverState, boxController, inputData, this::onUserChange, forwardModel);
         angleSolverEngine.setOnStartMoved(runner::setStartPosition);
         angleSolverEngine.setOnStartYawChanged(runner::setStartYaw);
+        angleSolverEngine.setSprintTapLookup(tick -> {
+            StartResumeState resume = runner.describeResumeAt(tick);
+            return resume == null ? -1 : resume.sprintWindow;
+        });
+        angleSolverEngine.setUltrawarm(mc::isUltrawarm);
         this.solverEngine = angleSolverEngine;
         if (saveStore != null) {
             angleSolverEngine.setRunLog(new SolveRunLog(saveStore.getSaveDir().resolve("runs"),
@@ -267,10 +302,10 @@ public final class Application {
         runTicks = new RunTicksController(angleSolverState, angleSolverEngine, inputData, constraintSelection,
                 hudMessages, this::runSimulation, saveController::markDirty, this::pushHudMessage);
         angleSolverWindow.setRunTicksControls(runTicks);
-        noTurnSearch = new NoTurnSearchController(inputData, runner, boxController, saveController, angleSolverState,
+        noTurnSearch = new NoTurnSearchController(inputData, runner, boxController, angleSolverState,
                 angleSolverEngine, forwardModel, mc, this::onUserChange, this::pushHudMessage, runTicks::isRunning,
                 settings, this::saveSettings);
-        senseSearch = new SenseSearchController(inputData, saveController, angleSolverState, angleSolverEngine,
+        senseSearch = new SenseSearchController(inputData, angleSolverState, angleSolverEngine,
                 forwardModel, this::onUserChange, mc::getMouseSensitivity, mc::setMouseSensitivity);
         de.legoshi.parkourcalc.core.ui.anglesolver.StratfinderWindow stratfinderWindow =
                 new de.legoshi.parkourcalc.core.ui.anglesolver.StratfinderWindow(noTurnSearch);
@@ -298,8 +333,11 @@ public final class Application {
 
             @Override
             public void replaced() {
+                blockOverrideWorld.refresh(true);
                 turnProfile.onTasReplaced();
                 practiceMacro.stop();
+                noTurnSearch.onDocumentReplaced();
+                senseSearch.onDocumentReplaced();
             }
 
             @Override
@@ -370,6 +408,7 @@ public final class Application {
                 hudMessagesPanel
         );
         mainWindow.setServerEventLogPanel(serverEventLogPanel);
+        mainWindow.setReplayKeystrokesPanel(new ReplayKeystrokesPanel(playback, settings));
         mainWindow.setStratfinderMenu(stratfinderWindow::isOpen, () -> {
             if (stratfinderWindow.isOpen()) {
                 stratfinderWindow.close();
@@ -390,6 +429,8 @@ public final class Application {
                 this::saveSettings));
         overlayManager.register(onejumpKeysWindow);
         overlayManager.register(onejumpSetupWindow);
+        overlayManager.register(new de.legoshi.parkourcalc.core.ui.BlockOverridesWindow(inputData, mc, settings,
+                blockOverrideWorld, blockPlacing, this::saveSettings, this::onBlockOverridesChanged));
         overlayManager.register(new de.legoshi.parkourcalc.core.ui.RecorderWindow(recorder, settings, this::toggleRecording,
                 this::saveSettings, systemBridge));
     }
@@ -482,11 +523,14 @@ public final class Application {
         runSimulation(-1);
     }
 
-    private void runSimulation(int dirtyTick) {
+    private void runSimulation(int requestedDirtyTick) {
         if (senseSearch != null) senseSearch.invalidate();
         if (!mc.isReady()) return;
         if (!saveController.isSessionActive()) return;
         long t0 = Perf.now();
+        int overrideRow = runner.firstRowChangedBy(inputData.getBlockOverrides());
+        final int dirtyTick = requestedDirtyTick >= 0 && overrideRow >= 0
+                ? Math.min(requestedDirtyTick, overrideRow) : requestedDirtyTick;
         boolean incremental = dirtyTick > 0 && runner.canResumeFrom(dirtyTick)
                 && boxController.size() > dirtyTick && !DebugFlags.COMPARE_PARTIAL_SIM;
         List<TickState> path = mc.runOnServerThread(() -> dirtyTick < 0
@@ -520,7 +564,26 @@ public final class Application {
             selection.retainBelow(boxController.size());
         }
         if (turnProfile != null) turnProfile.refresh();
+        checkBlockOverrides();
         Perf.stop("runSimulation", t0);
+    }
+
+    private void checkBlockOverrides() {
+        long t0 = Perf.now();
+        List<int[]> waiting = new ArrayList<>();
+        blockOverrideWorld.setSimProblems(BlockOverrideCheck.run(inputData, boxController, blockReach, waiting));
+        blockCheckPending = BlockOverrideCheck.pending(waiting);
+        Perf.stop("blockOverrideCheck", t0);
+    }
+
+    private void onBlockOverridesChanged(int hint) {
+        saveController.markDirty();
+        int row = runner.firstRowChangedBy(inputData.getBlockOverrides());
+        if (row < 0 || row >= inputData.size()) {
+            checkBlockOverrides();
+            return;
+        }
+        runSimulation(row);
     }
 
     private float[] foldPitches(int count) {
@@ -529,7 +592,7 @@ public final class Application {
         pitches[0] = runner.getStartPitch();
         List<InputRow> rows = inputData.getRows();
         for (int i = 1; i < count; i++) {
-            pitches[i] = i - 1 < rows.size()
+            pitches[i] = i - 1 < rows.size() && !rows.get(i - 1).isTeleportEnabled()
                     ? PlaybackController.applyPitch(pitches[i - 1], rows.get(i - 1))
                     : pitches[i - 1];
         }
@@ -538,9 +601,12 @@ public final class Application {
 
     /** Fired by the loader on disconnect / world join. */
     public void onWorldChange() {
+        blockPlacing.reset();
+        blockOverrideWorld.releaseAll();
         runner.invalidate();
         boxController.clearAll();
         inputData.clear();
+        inputData.getBlockOverrides().clear();
         saveController.endSession();
         if (undoController != null) undoController.onDocumentReplaced(null);
         if (runTicks != null) runTicks.reset();
@@ -549,6 +615,7 @@ public final class Application {
         if (attemptTracker != null) attemptTracker.reset();
         if (recorder.isRecording()) recorder.stop();
         simulatedInUnloadedChunks = false;
+        blockCheckPending = BlockOverrideCheck.pending(Collections.<int[]>emptyList());
         hudMessages.clearStatus();
         startInitialized = false;
     }
@@ -604,8 +671,29 @@ public final class Application {
         return boxController.pickWorld(rayOrigin, rayDirection, constraintSource);
     }
 
+    private WorldPick pickBlockOverride(Vec3dCore rayOrigin, Vec3dCore rayDirection) {
+        if (!settings.viewBlockOverrides || !blockOverrideWorld.isAvailable()) return null;
+        double reach = mc.getBlockReach();
+        BlockOverride picked = blockOverrideWorld.rowAlong(rayOrigin, rayDirection, reach);
+        if (picked == null) return null;
+        BlockHit hit = mc.getLookedAtHit();
+        if (hit != null && (hit.x != picked.x || hit.y != picked.y || hit.z != picked.z)) {
+            Vec3dCore toHit = hit.hitVec == null ? null : hit.hitVec.sub(rayOrigin);
+            double world = toHit == null ? -1 : Math.sqrt(toHit.x * toHit.x + toHit.y * toHit.y + toHit.z * toHit.z);
+            double own = blockOverrideWorld.distanceAlong(rayOrigin, rayDirection, picked, reach);
+            if (world >= 0 && world + 1.0e-6 < own) return null;
+        }
+        int row = inputData.getBlockOverrides().indexOf(picked);
+        return row < 0 ? null : WorldPick.blockOverride(row);
+    }
+
     private void commitWorldTap(WorldPick pick) {
         if (pick == null) return;
+        if (pick.kind == WorldPick.Kind.BLOCK_OVERRIDE) {
+            BlockOverrides blocks = inputData.getBlockOverrides();
+            if (pick.index < blocks.size()) blockOverrideWorld.select(blocks.get(pick.index));
+            return;
+        }
         if (pick.kind == WorldPick.Kind.CONSTRAINT) {
             if (pick.index >= boxController.size() - 1) return;
             selection.selectOnly(pick.index + 1);
@@ -681,6 +769,7 @@ public final class Application {
             undoController.tick(System.nanoTime());
         }
         pollSolver();
+        blockPlacing.tick();
         if (noTurnSearch != null) noTurnSearch.poll();
         if (senseSearch != null) senseSearch.poll();
         boolean pathInert = isControlPanelOpen() || !settings.showPath;
@@ -700,6 +789,14 @@ public final class Application {
                 mc.getCursorScreenX(),
                 mc.getCursorScreenY(),
                 pathInert
+        );
+        blockPickController.tick(
+                mc.getEyePosition(),
+                mc.getLookDirection(),
+                mc.isMousePressedRight(),
+                mc.getCursorScreenX(),
+                mc.getCursorScreenY(),
+                pathInert || !settings.viewBlockOverrides || blockPlacing.isActive()
         );
         yawGizmo.tick(
                 mc.getEyePosition(),
@@ -884,8 +981,11 @@ public final class Application {
             boolean slipDefault = slip == angleSolverState.getDefaultSlipperiness();
             boolean mediumNone = medium == Medium.NONE;
             boolean damage = damageTicks.contains(t);
+            TickState pre = boxController.getState(t);
+            FlowVector flow = pre != null ? pre.flow : FlowVector.NONE;
+            boolean flows = flow.pushes();
             TickConstraints tc = angleSolverState.tickConstraintsOrNull(t);
-            if (tc == null && slipDefault && mediumNone && !damage) continue;
+            if (tc == null && slipDefault && mediumNone && !damage && !flows) continue;
             StateOverride ov = angleSolverState.tickConstraints(t).getOverride();
             ov.setDamage(damage);
             if (slipDefault) ov.clearSlipperiness();
@@ -896,23 +996,11 @@ public final class Application {
                 ov.setMedium(medium);
                 if (medium == Medium.SOULSAND) ov.setSoulsandCells(Math.max(1, s.soulsandCells));
             }
+            ov.setFlowVector(flow);
             changed = true;
         }
         if (changed) saveController.markDirty();
         if (notify) pushHudMessage("Surface state applied · T" + (start + 1) + "-T" + end);
-    }
-
-    private boolean isWalledSide(int neighborX, int blockY, int neighborZ) {
-        return mc.isBlockSolid(neighborX, blockY + 1, neighborZ)
-                || mc.isBlockSolid(neighborX, blockY + 2, neighborZ);
-    }
-
-    private int selectedSolverTick() {
-        Set<Integer> rows = selection.getSelectedRows();
-        if (!rows.isEmpty()) {
-            return rows.iterator().next();
-        }
-        return angleSolverState.getLandingTick();
     }
 
     public boolean isControlPanelOpen() {
@@ -927,7 +1015,24 @@ public final class Application {
         overlayManager.setControlPanelOpen(open);
     }
 
+    public void setOverlayOpener(java.util.function.Consumer<Boolean> opener) {
+        blockPlacing.setUiOpener(opener);
+    }
+
+    public boolean placingMouse(int button, boolean down) {
+        return blockPlacing.onMouse(button, down);
+    }
+
+    public boolean placingEscape() {
+        return blockPlacing.onEscape();
+    }
+
+    public void togglePlacing() {
+        blockPlacing.toggle();
+    }
+
     public boolean shouldSuppressLeftClick() {
+        if (blockPlacing.isActive()) return true;
         if (isPlaybackRunning()) return false;
         if (isControlPanelOpen() || !settings.showPath) return false;
         if (dragController.isDragging()) return true;
@@ -937,6 +1042,7 @@ public final class Application {
     }
 
     public boolean shouldSuppressRightClick() {
+        if (blockPlacing.isActive()) return true;
         if (isPlaybackRunning()) return false;
         if (isControlPanelOpen() || !settings.showPath) return false;
         if (yawGizmo.isEngaged()) return true;
@@ -954,10 +1060,6 @@ public final class Application {
 
     public boolean isEditingYaw() {
         return inputOverlay != null && inputOverlay.isEditingYaw();
-    }
-
-    public boolean isEditingPitch() {
-        return inputOverlay != null && inputOverlay.isEditingPitch();
     }
 
     public void navigateYaw(boolean forward) {
@@ -994,6 +1096,14 @@ public final class Application {
         if (practiceMacro != null) practiceMacro.setBridge(bridge);
     }
 
+    public void setBlockPatcher(de.legoshi.parkourcalc.core.ports.BlockPatcher patcher) {
+        blockOverrideWorld.setPatcher(patcher);
+    }
+
+    public BlockOverrideWorld getBlockOverrideWorld() {
+        return blockOverrideWorld;
+    }
+
     public PlaybackController getPlayback() {
         return playback;
     }
@@ -1004,6 +1114,8 @@ public final class Application {
 
     public void tickPlayback() {
         playback.tick();
+        blockOverrideWorld.tick();
+        if (!blockCheckPending.isEmpty() && mc.isReady() && blockCheckPending.anyLoaded(blockReach)) checkBlockOverrides();
         if (practiceMacro != null && !playback.isRunning()) practiceMacro.tick();
         if (turnProfile != null) turnProfile.tick();
     }

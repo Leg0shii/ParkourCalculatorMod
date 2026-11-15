@@ -2,9 +2,7 @@ package de.legoshi.parkourcalc.core.anglesolver.solver;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -15,8 +13,8 @@ public final class CertifiedBnb {
     private static final double INTERVAL_REL = 2.0e-7;
     private static final double INTERVAL_ABS = 1.0e-12;
     private static final double POLISH_VIOL_CAP = 5.0e-2;
+    private static final double ROUNDING_MIN_CHANCE = 1.0e-3;
     private static final double FREE_START_SMOOTH = 5.0e-4;
-    private static final int GAP_REPORT_STRIDE = 16;
     private static final double MODERN_THR_SQ = 9.0e-6;
     private static final byte FREE = 0;
     private static final byte ZERO = 1;
@@ -27,10 +25,14 @@ public final class CertifiedBnb {
     private static final byte SECTOR_ZP = 4;
     private static final byte SECTOR_ZN = 5;
     private static final byte OPEN_ANY = 6;
+    private static final byte NOZ = 7;
     private static final int FULL = Integer.MIN_VALUE;
     private static final int HALF_TURN_IDX = McSineTable.SIZE / 2;
     private static final int ORDER_PASSES = 4;
     private static final double EMPTY_ROUNDING_REL = 1.0e-13;
+    private static final double CUTOFF_MARGIN = 1.0e-9;
+    private static final double RESOLVE_SHARE = 0.2;
+    private static final double FLOOR_CUTOFF_REL = 1.0e-6;
 
     private CertifiedBnb() {
     }
@@ -49,10 +51,6 @@ public final class CertifiedBnb {
 
     public enum Mode { FIRST_FEASIBLE, OPTIMIZE }
 
-    public interface GapSink {
-        void report(double incumbentObjective, double boundObjective, double gap);
-    }
-
     public static final class Config {
         public Mode mode = Mode.FIRST_FEASIBLE;
         public int nodeCap = 64;
@@ -62,8 +60,41 @@ public final class CertifiedBnb {
         public double[] seedYaws;
         public Double seedPx;
         public Double seedPz;
-        public GapSink gapSink;
         public boolean homotopy;
+        public boolean probeGates = true;
+        public boolean resolveProbes;
+        public int incumbentPolishCap;
+        public int diveEvery;
+        public int diveLength;
+        public boolean foldTies;
+        public boolean skipSeeds;
+        public boolean excludeClamps;
+        public int batch = 1;
+        public boolean sequential;
+
+        Config copyWith(AtomicBoolean token) {
+            Config c = new Config();
+            c.mode = mode;
+            c.nodeCap = nodeCap;
+            c.polishCap = polishCap;
+            c.deadlineNanos = deadlineNanos;
+            c.cancel = token;
+            c.seedYaws = seedYaws;
+            c.seedPx = seedPx;
+            c.seedPz = seedPz;
+            c.homotopy = homotopy;
+            c.probeGates = probeGates;
+            c.resolveProbes = resolveProbes;
+            c.incumbentPolishCap = incumbentPolishCap;
+            c.diveEvery = diveEvery;
+            c.diveLength = diveLength;
+            c.foldTies = foldTies;
+            c.skipSeeds = skipSeeds;
+            c.excludeClamps = excludeClamps;
+            c.batch = batch;
+            c.sequential = sequential;
+            return c;
+        }
     }
 
     public static final class Result {
@@ -108,17 +139,16 @@ public final class CertifiedBnb {
     }
 
     private static final class Node {
-        final long id;
+        long id;
         int[] iLo;
         int[] iHi;
         final byte[] gx;
         final byte[] gz;
         final int depth;
         double score;
-        Map<String, Double> warm;
+        boolean holdsDecoded;
 
-        Node(long id, int[] iLo, int[] iHi, byte[] gx, byte[] gz, int depth, double score,
-             Map<String, Double> warm) {
+        Node(long id, int[] iLo, int[] iHi, byte[] gx, byte[] gz, int depth, double score) {
             this.id = id;
             this.iLo = iLo;
             this.iHi = iHi;
@@ -126,7 +156,6 @@ public final class CertifiedBnb {
             this.gz = gz;
             this.depth = depth;
             this.score = score;
-            this.warm = warm;
         }
     }
 
@@ -149,10 +178,14 @@ public final class CertifiedBnb {
         final double[] f4;
         final YawTies ties;
         final YawOrder order;
+        final TieFold fold;
+        final long seedMix;
         long nextId = 1L;
         int nodes;
         int kernelSolves;
         long kernelNanos;
+        boolean resolveDeadlineSet;
+        long resolveDeadline;
         int polishCalls;
         double incScore = Double.NEGATIVE_INFINITY;
         double[] incYaws;
@@ -166,17 +199,21 @@ public final class CertifiedBnb {
         double stuckScore = Double.NEGATIVE_INFINITY;
         long incVersion;
         long sweptVersion = -1L;
+        long polishedVersion = -1L;
+        int incumbentPolishes;
 
         Search(ExactJumpModel exact, JumpSpec spec, Config cfg, YawTies ties, YawOrder order) {
             this.exact = exact;
             this.spec = spec;
             this.ties = ties;
             this.order = order;
+            this.seedMix = SolveClock.seedMix();
             this.sc = spec.asScenario();
             this.compiled = JumpConstraintCompiler.compile(spec);
             this.geom = new SineTableGeometry(exact, sc);
             this.cfg = cfg;
             this.n = sc.numTicks;
+            this.fold = cfg.foldTies && ties != null ? TieFold.of(ties, geom, n) : null;
             this.max = spec.objective.sense == Objective.Sense.MAX;
             this.perAxis = exact.perAxisInertia();
             this.thr = exact.inertiaThreshold();
@@ -190,9 +227,52 @@ public final class CertifiedBnb {
             for (int t = 0; t < n; t++) this.f4[t] = freeLin.friction(t);
         }
 
+        Search(Search base, Config cfg) {
+            this.exact = base.exact;
+            this.spec = base.spec;
+            this.ties = base.ties;
+            this.order = base.order;
+            this.seedMix = base.seedMix;
+            this.fold = base.fold;
+            this.sc = base.sc;
+            this.compiled = base.compiled;
+            this.geom = base.geom;
+            this.cfg = cfg;
+            this.n = base.n;
+            this.max = base.max;
+            this.perAxis = base.perAxis;
+            this.thr = base.thr;
+            this.box = base.box;
+            this.free = base.free;
+            this.refPx = base.refPx;
+            this.refPz = base.refPz;
+            this.freeP0 = base.freeP0;
+            this.f4 = base.f4;
+            this.resolveDeadlineSet = base.resolveDeadlineSet;
+            this.resolveDeadline = base.resolveDeadline;
+            this.polishCalls = base.polishCalls;
+            this.incScore = base.incScore;
+            this.incYaws = base.incYaws;
+            this.incPx = base.incPx;
+            this.incPz = base.incPz;
+            this.incObj = base.incObj;
+            this.bestInfeasYaws = base.bestInfeasYaws;
+            this.bestInfeasViol = base.bestInfeasViol;
+            this.incVersion = base.incVersion;
+            this.sweptVersion = base.sweptVersion;
+            this.polishedVersion = base.polishedVersion;
+            this.incumbentPolishes = base.incumbentPolishes;
+        }
+
         boolean stopped() {
             if (cfg.cancel != null && cfg.cancel.get()) return true;
-            return cfg.deadlineNanos != 0L && System.nanoTime() >= cfg.deadlineNanos;
+            return cfg.deadlineNanos != 0L && SolveClock.nanoTime() >= cfg.deadlineNanos;
+        }
+
+        boolean resolveStopped() {
+            if (cfg.cancel != null && cfg.cancel.get()) return true;
+            long limit = resolveDeadline != 0L ? resolveDeadline : cfg.deadlineNanos;
+            return limit != 0L && SolveClock.nanoTime() >= limit;
         }
     }
 
@@ -201,6 +281,13 @@ public final class CertifiedBnb {
         int n = spec.asScenario().numTicks;
         YawTies ties = YawTies.of(spec.constraints, n);
         return ties != null && YawOrder.accepts(spec.constraints, ties, n);
+    }
+
+    public static boolean foldsTies(JumpSpec spec) {
+        if (!JumpLinearModel.hasFacingWall(spec.constraints)) return false;
+        int n = spec.asScenario().numTicks;
+        YawTies ties = YawTies.of(spec.constraints, n);
+        return ties != null && YawOrder.carry(spec.constraints, ties, n) != null;
     }
 
     public static boolean accepts(JumpSpec spec) {
@@ -228,6 +315,222 @@ public final class CertifiedBnb {
         }
         if (!SineTableGeometry.supported(sc)) return declined();
         Search s = new Search(exact, spec, cfg, ties, order);
+        if (!cfg.skipSeeds) seed(s, exact, spec, cfg, ties);
+
+        PriorityQueue<Node> open = new PriorityQueue<Node>(64, (a, b) -> {
+            if (a.score != b.score) return a.score > b.score ? -1 : 1;
+            return Long.compare(b.id, a.id);
+        });
+        int[] lo = new int[s.n];
+        int[] hi = new int[s.n];
+        Arrays.fill(lo, FULL);
+        Arrays.fill(hi, FULL);
+        if (s.order != null) {
+            for (YawOrder.Bound b : s.order.bounds()) {
+                if (b.tick >= s.n) continue;
+                assignArc(s, lo, hi, b.tick, SineTableGeometry.idxOf(b.loDeg), SineTableGeometry.idxOf(b.hiDeg));
+            }
+        }
+        open.add(new Node(s.nextId++, lo, hi, new byte[s.n], s.perAxis ? new byte[s.n] : null,
+                0, Double.POSITIVE_INFINITY));
+
+        boolean exhausted = s.cfg.batch > 1 ? searchBatched(s, open) : searchSerial(s, open);
+        Node top = open.peek();
+        double bestOpenScore = exhausted || top == null ? s.incScore : Math.max(top.score, s.incScore);
+        bestOpenScore = Math.max(bestOpenScore, s.stuckScore);
+        double gap = s.incYaws == null ? Double.POSITIVE_INFINITY
+                : Math.max(0.0, bestOpenScore - s.incScore);
+        boolean modelled = relaxationCoversScenario(sc);
+        boolean certified = modelled && s.incYaws != null && gap <= CERT_EPS;
+        if (certified) gap = Math.min(gap, CERT_EPS);
+        double boundObj = s.max ? bestOpenScore : -bestOpenScore;
+        boolean certifiedInfeasible = modelled && exhausted && s.incYaws == null && s.unresolved == 0;
+        return new Result(false, s.incYaws, s.incPx, s.incPz, s.incObj, s.incYaws != null,
+                boundObj, s.incYaws == null ? Double.NaN : gap, certified, s.nodes, s.kernelSolves,
+                s.kernelNanos, s.bestInfeasYaws, s.bestInfeasViol, certifiedInfeasible, s.unresolved);
+    }
+
+    private static boolean searchSerial(Search s, PriorityQueue<Node> open) {
+        boolean exhausted = false;
+        boolean dives = s.cfg.mode == Mode.OPTIMIZE && s.cfg.diveEvery > 0 && s.cfg.diveLength > 0;
+        Node dive = null;
+        int diveLeft = 0;
+        int sinceDive = 0;
+        while (true) {
+            if (s.stopped()) break;
+            if (s.cfg.mode == Mode.FIRST_FEASIBLE && s.incYaws != null) break;
+            while (s.incVersion != s.sweptVersion && !s.stopped()) {
+                s.sweptVersion = s.incVersion;
+                argmaxSweep(s);
+                if (s.incVersion == s.sweptVersion && s.incVersion != s.polishedVersion && s.incYaws != null
+                        && s.incumbentPolishes < s.cfg.incumbentPolishCap && !s.stopped()) {
+                    s.incumbentPolishes++;
+                    s.polishedVersion = s.incVersion;
+                    polishFrom(s, s.incYaws, s.incPx, s.incPz);
+                }
+            }
+            Node nd = open.peek();
+            if (nd == null) {
+                exhausted = true;
+                break;
+            }
+            if (nd.score <= s.incScore + CERT_EPS) {
+                exhausted = true;
+                break;
+            }
+            if (s.nodes >= s.cfg.nodeCap) break;
+            if (dive != null && dive.score > s.incScore + CERT_EPS) {
+                nd = dive;
+                open.remove(nd);
+            } else {
+                open.poll();
+                diveLeft = 0;
+                if (dives && ++sinceDive >= s.cfg.diveEvery) {
+                    sinceDive = 0;
+                    diveLeft = s.cfg.diveLength;
+                }
+            }
+            dive = null;
+            s.nodes++;
+            List<Node> children = evaluate(s, nd, open);
+            if (s.trivialInfeasible) {
+                exhausted = true;
+                break;
+            }
+            if (children != null) {
+                for (Node c : children) open.add(c);
+                if (diveLeft > 0 && !children.isEmpty()) {
+                    diveLeft--;
+                    dive = children.get(children.size() - 1);
+                    for (Node c : children) if (c.holdsDecoded) dive = c;
+                }
+            }
+        }
+        return exhausted;
+    }
+
+    private static boolean searchBatched(Search s, PriorityQueue<Node> open) {
+        boolean exhausted = false;
+        boolean dives = s.cfg.mode == Mode.OPTIMIZE && s.cfg.diveEvery > 0 && s.cfg.diveLength > 0;
+        int width = s.cfg.batch;
+        Node dive = null;
+        int diveLeft = 0;
+        int sinceDive = 0;
+        List<Node> batch = new ArrayList<Node>(width);
+        while (true) {
+            if (s.stopped()) break;
+            if (s.cfg.mode == Mode.FIRST_FEASIBLE && s.incYaws != null) break;
+            settleIncumbent(s);
+            batch.clear();
+            boolean diving = dive != null && dive.score > s.incScore + CERT_EPS && s.nodes < s.cfg.nodeCap;
+            if (diving) {
+                open.remove(dive);
+                batch.add(dive);
+            } else {
+                diveLeft = 0;
+            }
+            dive = null;
+            while (batch.size() < width && s.nodes + batch.size() < s.cfg.nodeCap) {
+                Node nd = open.peek();
+                if (nd == null || nd.score <= s.incScore + CERT_EPS) break;
+                open.poll();
+                batch.add(nd);
+                if (!diving && dives && ++sinceDive >= s.cfg.diveEvery) {
+                    sinceDive = 0;
+                    diveLeft = s.cfg.diveLength;
+                }
+            }
+            if (batch.isEmpty()) {
+                Node top = open.peek();
+                if (top == null || top.score <= s.incScore + CERT_EPS) exhausted = true;
+                break;
+            }
+            s.nodes += batch.size();
+            List<List<Node>> children = evaluateBatch(s, batch, open);
+            for (List<Node> kids : children) {
+                if (kids == null) continue;
+                for (Node c : kids) {
+                    c.id = s.nextId++;
+                    open.add(c);
+                }
+            }
+            if (s.trivialInfeasible) {
+                exhausted = true;
+                break;
+            }
+            List<Node> lead = children.get(0);
+            if (diveLeft > 0 && lead != null && !lead.isEmpty()) {
+                diveLeft--;
+                dive = lead.get(lead.size() - 1);
+                for (Node c : lead) if (c.holdsDecoded) dive = c;
+            }
+        }
+        return exhausted;
+    }
+
+    private static void settleIncumbent(Search s) {
+        while (s.incVersion != s.sweptVersion && !s.stopped()) {
+            s.sweptVersion = s.incVersion;
+            argmaxSweep(s);
+            if (s.incVersion == s.sweptVersion && s.incVersion != s.polishedVersion && s.incYaws != null
+                    && s.incumbentPolishes < s.cfg.incumbentPolishCap && !s.stopped()) {
+                s.incumbentPolishes++;
+                s.polishedVersion = s.incVersion;
+                polishFrom(s, s.incYaws, s.incPx, s.incPz);
+            }
+        }
+    }
+
+    private static List<List<Node>> evaluateBatch(Search s, List<Node> batch, PriorityQueue<Node> open) {
+        int m = batch.size();
+        Search[] workers = new Search[m];
+        int polishBase = s.polishCalls;
+        List<List<Node>> out = ParallelTasks.run(m, s.cfg.cancel, s.cfg.sequential, (i, token) -> {
+            Search w = new Search(s, s.cfg.copyWith(token));
+            workers[i] = w;
+            return evaluate(w, batch.get(i), open);
+        });
+        for (int i = 0; i < m; i++) {
+            if (workers[i] != null) absorb(s, workers[i], polishBase);
+        }
+        return out;
+    }
+
+    private static void absorb(Search s, Search w, int polishBase) {
+        s.kernelSolves += w.kernelSolves;
+        s.kernelNanos += w.kernelNanos;
+        s.unresolved += w.unresolved;
+        s.polishCalls += w.polishCalls - polishBase;
+        if (w.stuckScore > s.stuckScore) s.stuckScore = w.stuckScore;
+        if (w.trivialInfeasible) s.trivialInfeasible = true;
+        if (!s.resolveDeadlineSet && w.resolveDeadlineSet) {
+            s.resolveDeadlineSet = true;
+            s.resolveDeadline = w.resolveDeadline;
+        }
+        if (w.bestInfeasViol < s.bestInfeasViol) {
+            s.bestInfeasViol = w.bestInfeasViol;
+            s.bestInfeasYaws = w.bestInfeasYaws;
+        }
+        if (w.incScore > s.incScore) {
+            s.incScore = w.incScore;
+            s.incYaws = w.incYaws;
+            s.incPx = w.incPx;
+            s.incPz = w.incPz;
+            s.incObj = w.incObj;
+            s.incVersion++;
+            if (w.polishedVersion == w.incVersion) s.polishedVersion = s.incVersion;
+        }
+    }
+
+    public static boolean relaxationCoversScenario(JumpPhysicsInputs sc) {
+        if (sc.lastDamageTick() >= 0) return false;
+        for (int t = 0; t < sc.numTicks; t++) {
+            if (sc.flowAt(t).pushes() || sc.endFlowAt(t).pushes()) return false;
+        }
+        return true;
+    }
+
+    private static void seed(Search s, ExactJumpModel exact, JumpSpec spec, Config cfg, YawTies ties) {
         if (cfg.seedYaws != null && cfg.seedYaws.length == s.n) {
             double px = cfg.seedPx != null ? cfg.seedPx : s.refPx;
             double pz = cfg.seedPz != null ? cfg.seedPz : s.refPz;
@@ -273,81 +576,11 @@ public final class CertifiedBnb {
                 replayCandidate(s, Angles.wrapAll(gr.yawsDeg), gr.px, gr.pz, false);
             }
         }
-
-        PriorityQueue<Node> open = new PriorityQueue<Node>(64, (a, b) -> {
-            if (a.score != b.score) return a.score > b.score ? -1 : 1;
-            return Long.compare(b.id, a.id);
-        });
-        int[] lo = new int[s.n];
-        int[] hi = new int[s.n];
-        Arrays.fill(lo, FULL);
-        Arrays.fill(hi, FULL);
-        if (s.order != null) {
-            for (YawOrder.Bound b : s.order.bounds()) {
-                if (b.tick >= s.n) continue;
-                assignArc(s, lo, hi, b.tick, SineTableGeometry.idxOf(b.loDeg), SineTableGeometry.idxOf(b.hiDeg));
-            }
-        }
-        open.add(new Node(s.nextId++, lo, hi, new byte[s.n], s.perAxis ? new byte[s.n] : null,
-                0, Double.POSITIVE_INFINITY, null));
-
-        boolean exhausted = false;
-        while (true) {
-            if (s.stopped()) break;
-            if (s.cfg.mode == Mode.FIRST_FEASIBLE && s.incYaws != null) break;
-            while (s.incVersion != s.sweptVersion && !s.stopped()) {
-                s.sweptVersion = s.incVersion;
-                argmaxSweep(s);
-            }
-            Node nd = open.peek();
-            if (nd == null) {
-                exhausted = true;
-                break;
-            }
-            if (nd.score <= s.incScore + CERT_EPS) {
-                exhausted = true;
-                break;
-            }
-            if (s.nodes >= s.cfg.nodeCap) break;
-            open.poll();
-            s.nodes++;
-            List<Node> children = evaluate(s, nd, open);
-            if (s.trivialInfeasible) {
-                exhausted = true;
-                break;
-            }
-            if (children != null) {
-                for (Node c : children) open.add(c);
-            }
-            if (s.cfg.gapSink != null && (s.nodes % GAP_REPORT_STRIDE == 0)) {
-                reportGap(s, open);
-            }
-        }
-        Node top = open.peek();
-        double bestOpenScore = exhausted || top == null ? s.incScore : Math.max(top.score, s.incScore);
-        bestOpenScore = Math.max(bestOpenScore, s.stuckScore);
-        double gap = s.incYaws == null ? Double.POSITIVE_INFINITY
-                : Math.max(0.0, bestOpenScore - s.incScore);
-        boolean certified = s.incYaws != null && (exhausted || gap <= CERT_EPS);
-        if (certified) gap = Math.min(gap, CERT_EPS);
-        if (s.cfg.gapSink != null) reportGap(s, open);
-        double boundObj = s.max ? bestOpenScore : -bestOpenScore;
-        boolean certifiedInfeasible = exhausted && s.incYaws == null && s.unresolved == 0;
-        return new Result(false, s.incYaws, s.incPx, s.incPz, s.incObj, s.incYaws != null,
-                boundObj, s.incYaws == null ? Double.NaN : gap, certified, s.nodes, s.kernelSolves,
-                s.kernelNanos, s.bestInfeasYaws, s.bestInfeasViol, certifiedInfeasible, s.unresolved);
     }
 
     private static Result declined() {
         return new Result(true, null, 0, 0, Double.NaN, false, Double.NaN, Double.NaN, false,
                 0, 0, 0L, null, Double.POSITIVE_INFINITY, false, 0);
-    }
-
-    private static void reportGap(Search s, PriorityQueue<Node> open) {
-        Node top = open.peek();
-        double bestOpen = top == null ? s.incScore : Math.max(top.score, s.incScore);
-        double gap = s.incYaws == null ? Double.NaN : Math.max(0.0, bestOpen - s.incScore);
-        s.cfg.gapSink.report(s.incObj, s.max ? bestOpen : -bestOpen, gap);
     }
 
     private static final class Intervals {
@@ -356,8 +589,6 @@ public final class CertifiedBnb {
         byte[] effZ;
         boolean[] freeX;
         boolean[] freeZ;
-        double[] injX;
-        double[] injZ;
         double[] slackDx;
         double[] slackDz;
         boolean anyFree;
@@ -370,8 +601,6 @@ public final class CertifiedBnb {
         iv.effZ = new byte[n];
         iv.freeX = new boolean[n];
         iv.freeZ = new boolean[n];
-        iv.injX = new double[n];
-        iv.injZ = new double[n];
         iv.slackDx = new double[n + 1];
         iv.slackDz = new double[n + 1];
         double vxLo = s.sc.initialVelocity.x;
@@ -405,16 +634,12 @@ public final class CertifiedBnb {
                 if (gxState == FREE) {
                     iv.freeX[t] = true;
                     iv.anyFree = true;
-                    iv.injX[t] = s.thr + dx;
-                    dx = iv.injX[t];
                 } else if (gxState == ZERO) {
                     dx = 0.0;
                 }
                 if (gzState == FREE) {
                     iv.freeZ[t] = true;
                     iv.anyFree = true;
-                    iv.injZ[t] = s.thr + dz;
-                    dz = iv.injZ[t];
                 } else if (gzState == ZERO) {
                     dz = 0.0;
                 }
@@ -440,10 +665,6 @@ public final class CertifiedBnb {
                     iv.freeX[t] = true;
                     iv.freeZ[t] = true;
                     iv.anyFree = true;
-                    iv.injX[t] = s.thr + dx;
-                    iv.injZ[t] = s.thr + dz;
-                    dx = iv.injX[t];
-                    dz = iv.injZ[t];
                 } else if (st != OPEN_ANY) {
                     double sectorBound = s.thr / StrictMath.sqrt(2.0);
                     if (st == SECTOR_XP) vxLo = Math.max(vxLo, sectorBound);
@@ -480,6 +701,7 @@ public final class CertifiedBnb {
 
     private static byte resolveAxis(Search s, byte fixed, double lo, double hi) {
         double thr = s.thr;
+        if (thr == 0.0) return fixed == FREE ? OPEN_ANY : fixed;
         if (fixed == ZERO) {
             if (lo >= thr || hi <= -thr) return (byte) -1;
             return ZERO;
@@ -492,6 +714,12 @@ public final class CertifiedBnb {
             if (lo > -thr) return (byte) -1;
             return NEG;
         }
+        if (fixed == NOZ) {
+            if (lo > -thr && hi < thr) return (byte) -1;
+            if (lo >= thr) return POS;
+            if (hi <= -thr) return NEG;
+            return NOZ;
+        }
         if (lo >= thr) return POS;
         if (hi <= -thr) return NEG;
         if (lo > -thr && hi < thr) return ZERO;
@@ -499,6 +727,7 @@ public final class CertifiedBnb {
     }
 
     private static double[] applyAxis(byte state, double lo, double hi, double thr) {
+        if (state == OPEN_ANY || state == NOZ) return new double[]{lo, hi};
         if (state == ZERO) return new double[]{0.0, 0.0};
         if (state == POS) {
             double nl = Math.max(lo, thr);
@@ -523,6 +752,7 @@ public final class CertifiedBnb {
             if (minNormSq >= MODERN_THR_SQ) return (byte) -1;
             return ZERO;
         }
+        if (fixed == OPEN_ANY && maxNormSq < MODERN_THR_SQ) return (byte) -1;
         if (fixed != FREE) return fixed;
         if (maxNormSq < MODERN_THR_SQ) return ZERO;
         if (minNormSq >= MODERN_THR_SQ) return OPEN_ANY;
@@ -539,65 +769,32 @@ public final class CertifiedBnb {
         boolean[] zx = new boolean[s.n];
         boolean[] zz = new boolean[s.n];
         for (int t = 0; t < s.n; t++) {
-            if (s.perAxis) {
-                zx[t] = iv.effX[t] == ZERO;
-                zz[t] = iv.effZ[t] == ZERO;
-            } else {
-                zx[t] = iv.effX[t] == ZERO;
-                zz[t] = zx[t];
-            }
+            zx[t] = iv.effX[t] == ZERO;
+            zz[t] = s.perAxis ? iv.effZ[t] == ZERO : zx[t];
         }
         JumpLinearModel lin = new JumpLinearModel(s.sc, zx, zz, true);
         double[] cx = new double[s.n];
         double[] cz = new double[s.n];
         lin.objectiveVectors(s.spec.objective, cx, cz);
         boolean[] trivialFlag = {false};
-        List<JumpLinearModel.Wall> specWalls = lin.compileWalls(s.spec.constraints, 0.0, trivialFlag);
+        List<JumpLinearModel.Wall> specWalls = lin.compileAxisWalls(s.spec.constraints, 0.0, trivialFlag);
         if (trivialFlag[0]) {
             s.trivialInfeasible = true;
             return null;
         }
-        List<JumpLinearModel.Wall> rows = new ArrayList<JumpLinearModel.Wall>();
-        for (JumpLinearModel.Wall w : specWalls) {
-            double slack = rowSlack(s, iv, w);
-            if (w.eq && slack > 0.0) {
-                double[] neg = new double[s.n];
-                for (int t = 0; t < s.n; t++) neg[t] = -w.coef[t];
-                rows.add(new JumpLinearModel.Wall(w.axis, w.coef, w.bPrime + slack, false, w.name + "&hi", w.p0coef));
-                rows.add(new JumpLinearModel.Wall(w.axis, neg, -w.bPrime + slack, false, w.name + "&lo", -w.p0coef));
-            } else if (slack > 0.0) {
-                rows.add(new JumpLinearModel.Wall(w.axis, w.coef, w.bPrime + slack, w.eq, w.name, w.p0coef));
-            } else {
-                rows.add(w);
-            }
-        }
-        addGateRows(s, nd, iv, lin, rows);
-        List<DiskSocpKernel.ChordRow> chords = new ArrayList<DiskSocpKernel.ChordRow>();
-        for (int t = 0; t < s.n; t++) {
-            if (nd.iLo[t] == FULL) continue;
-            SineTableGeometry.RangeInfo r = ri[t];
-            double rad = s.geom.radiusUpper(t);
-            if (r.uxHi < rad) rows.add(boxRow(s.n, 0, t, 1.0, r.uxHi, "bxh@" + t));
-            if (r.uxLo > -rad) rows.add(boxRow(s.n, 0, t, -1.0, -r.uxLo, "bxl@" + t));
-            if (r.uzHi < rad) rows.add(boxRow(s.n, 1, t, 1.0, r.uzHi, "bzh@" + t));
-            if (r.uzLo > -rad) rows.add(boxRow(s.n, 1, t, -1.0, -r.uzLo, "bzl@" + t));
-            if (r.hasChord) chords.add(new DiskSocpKernel.ChordRow(t, r.chordAx, r.chordAz, r.chordRhs, "arc@" + t));
-        }
-        double[] mMagB = new double[s.n];
-        for (int t = 0; t < s.n; t++) mMagB[t] = s.geom.radiusUpper(t);
-
-        long k0 = System.nanoTime();
-        DiskSocpKernel.Outcome oc = DiskSocpKernel.solveChords(s.n, cx, cz, mMagB, rows, s.freeP0, chords, nd.warm);
-        s.kernelSolves++;
-        s.kernelNanos += System.nanoTime() - k0;
+        Relaxation rx = relax(s, nd, iv, lin, ri, cx, cz, specWalls, null);
+        List<JumpLinearModel.Wall> rows = rx.rows;
+        int boxStart = rx.boxStart;
+        double cp = rx.cp;
+        double floor = rx.floor;
+        DiskSocpKernel.Outcome oc = rx.oc;
         double[] gxv;
         double[] gzv;
         double[] lambda;
         double[] ux = null;
         double[] uz = null;
-        int chordCount = chords.size();
-        boolean unbounded = oc.failCode == DiskSocpKernel.FAIL_UNBOUNDED;
-        if (unbounded && s.incYaws != null) return null;
+        int chordCount = rx.chords.size();
+        boolean unbounded = oc.failCode == DiskSocpKernel.FAIL_UNBOUNDED || oc.failCode == DiskSocpKernel.FAIL_CUTOFF;
         if (oc.result != null) {
             gxv = oc.result.gx;
             gzv = oc.result.gz;
@@ -605,24 +802,381 @@ public final class CertifiedBnb {
             ux = oc.result.ux;
             uz = oc.result.uz;
         } else {
-            CostateDualSolver.Result dr = new CostateDualSolver(s.n, cx, cz, mMagB, rows, s.freeP0).solve(0.0, null);
+            CostateDualSolver.Result dr = new CostateDualSolver(s.n, cx, cz, rx.mMagB, rx.kernelRows, s.freeP0)
+                    .solve(0.0, null);
             if (dr == null) {
-                s.unresolved++;
+                dropUnresolved(s, nd);
                 return null;
             }
             gxv = dr.gx;
             gzv = dr.gz;
             lambda = dr.lambda;
             chordCount = 0;
-            chords = new ArrayList<DiskSocpKernel.ChordRow>();
         }
 
+        double[] supports = new double[s.n];
+        double[] magnitudeOut = new double[1];
+        double val = relaxedValue(s, nd, iv, cx, cz, rx, gxv, gzv, lambda, chordCount, supports, magnitudeOut);
+        double magnitude = magnitudeOut[0];
+        boolean empty = val < floor - (CERT_EPS * (1.0 + Math.abs(floor)) + EMPTY_ROUNDING_REL * magnitude);
+        double dualValue = val + (s.max ? cp : -cp);
+        double score = dualValue;
+        if (score > nd.score) score = nd.score;
+        nd.score = score;
+        if (SolverTrace.on()) {
+            SolverTrace.log("CERT", "node=%d depth=%d score=%.9f inc=%.9f open=%d", nd.id, nd.depth,
+                    score, s.incScore, open.size());
+        }
+        if (score <= s.incScore + CERT_EPS) return null;
+        if ((empty || unbounded) && s.incYaws == null && s.bestInfeasYaws == null) {
+            double[] attempt = decode(s, nd, lin, gxv, gzv);
+            if (attempt != null) replayCandidate(s, attempt, s.refPx, s.refPz, true);
+        }
+        if (empty) return null;
+        if (unbounded) {
+            dropUnresolved(s, nd);
+            return null;
+        }
+
+        double leafPx = s.refPx;
+        double leafPz = s.refPz;
+        if (s.free && oc.result != null) {
+            leafPx = s.box.clampX(s.refPx + oc.result.dvx);
+            leafPz = s.box.clampZ(s.refPz + oc.result.dvz);
+        }
+        double[] dirX = gxv;
+        double[] dirZ = gzv;
+        if (ux != null) {
+            dirX = ux.clone();
+            dirZ = uz.clone();
+            alignWithCostate(s.n, gxv, gzv, dirX, dirZ);
+        }
+        double[] decoded = decode(s, nd, lin, dirX, dirZ);
+        ForwardPath decPath = null;
+        boolean[] decZx = new boolean[s.n];
+        boolean[] decZz = new boolean[s.n];
+        if (decoded != null) {
+            decPath = replayCandidate(s, decoded, leafPx, leafPz, true);
+            if (decPath != null) FoldReplayDriver.extractPattern(s.exact, decPath, s.n, decZx, decZz);
+        }
+        if (ux != null && decoded != null && !(s.cfg.mode == Mode.FIRST_FEASIBLE && s.incYaws != null)) {
+            double[] roundX = dirX.clone();
+            double[] roundZ = dirZ.clone();
+            if (flipInteriorTicks(s, nd.id, roundX, roundZ)) {
+                double[] rounded = decode(s, nd, lin, roundX, roundZ);
+                if (!Arrays.equals(rounded, decoded)) replayCandidate(s, rounded, leafPx, leafPz, true);
+            }
+        }
+        if (s.cfg.mode == Mode.FIRST_FEASIBLE && s.incYaws != null) return null;
+
+        if (s.fold != null && s.cfg.excludeClamps && iv.anyFree && nd.depth == 0) {
+            Node tightened = excludeClamps(s, nd, iv, ri);
+            if (tightened != null) {
+                List<Node> requeued = new ArrayList<Node>(1);
+                requeued.add(tightened);
+                return requeued;
+            }
+        }
+        if (s.fold == null && s.cfg.probeGates && iv.anyFree && s.incYaws != null && decPath != null
+                && nd.depth == 0) {
+            Node settled = settleGates(s, nd, iv, lin, ri, cx, cz, specWalls, rows, boxStart, lambda, gxv, gzv,
+                    supports, dualValue, decPath, decZx, decZz);
+            if (settled != null) {
+                List<Node> requeued = new ArrayList<Node>(1);
+                requeued.add(settled);
+                return requeued;
+            }
+        }
+
+        if (s.ties == null) {
+            boolean allNarrow = true;
+            for (int t = 0; t < s.n; t++) {
+                if (!s.geom.hasInput(t)) continue;
+                if (s.geom.bucketSpan(loDeg(nd, t), hiDeg(nd, t)) > 64) {
+                    allNarrow = false;
+                    break;
+                }
+            }
+            boolean closeBound = !iv.anyFree && !s.free;
+            if (allNarrow && leafClose(s, nd, lin, cx, cz, rows.subList(0, boxStart), leafPx, leafPz, closeBound)) {
+                return null;
+            }
+        }
+        List<Node> children = branch(s, nd, iv, lin, gxv, gzv, ux, uz, decoded, decPath, decZx, decZz);
+        if (children == null || children.isEmpty()) {
+            dropUnresolved(s, nd);
+            if (SolverTrace.on()) {
+                StringBuilder sb = new StringBuilder();
+                for (int t = 0; t < s.n; t++) {
+                    sb.append(s.geom.hasInput(t) ? s.geom.bucketSpan(loDeg(nd, t), hiDeg(nd, t)) : 0).append(',');
+                }
+                SolverTrace.log("CERT", "stuck node=%d depth=%d score=%.9f anyFree=%s spans=%s",
+                        nd.id, nd.depth, nd.score, iv.anyFree, sb);
+            }
+            return null;
+        }
+        return children;
+    }
+
+    private static final class Relaxation {
+        List<JumpLinearModel.Wall> rows;
+        List<JumpLinearModel.Wall> kernelRows;
+        List<DiskSocpKernel.ChordRow> chords;
+        int boxStart;
+        double[] mMagB;
+        double cp;
+        double floor;
+        DiskSocpKernel.Outcome oc;
+    }
+
+    private static Relaxation relax(Search s, Node nd, Intervals iv, JumpLinearModel lin,
+                                    SineTableGeometry.RangeInfo[] ri, double[] cx, double[] cz,
+                                    List<JumpLinearModel.Wall> specWalls, JumpLinearModel.Wall extra) {
+        List<JumpLinearModel.Wall> rows = new ArrayList<JumpLinearModel.Wall>(specWalls);
+        addGateRows(s, nd, iv, lin, rows);
+        if (extra != null) rows.add(extra);
+        int boxStart = rows.size();
+        List<JumpLinearModel.Wall> kernelRows = new ArrayList<JumpLinearModel.Wall>(rows);
+        List<DiskSocpKernel.ChordRow> chords = new ArrayList<DiskSocpKernel.ChordRow>();
+        List<DiskSocpKernel.ChordRow> kernelChords = new ArrayList<DiskSocpKernel.ChordRow>();
+        for (int t = 0; t < s.n; t++) {
+            if (nd.iLo[t] == FULL) continue;
+            SineTableGeometry.RangeInfo r = ri[t];
+            double rad = s.geom.radiusUpper(t);
+            double reachX = impulseReach(s, iv, t, 1.0, 0.0);
+            double reachZ = impulseReach(s, iv, t, 0.0, 1.0);
+            if (r.uxHi < rad) addBoxRow(rows, kernelRows, s.n, 0, t, 1.0, r.uxHi, reachX, "bxh@" + t);
+            if (r.uxLo > -rad) addBoxRow(rows, kernelRows, s.n, 0, t, -1.0, -r.uxLo, reachX, "bxl@" + t);
+            if (r.uzHi < rad) addBoxRow(rows, kernelRows, s.n, 1, t, 1.0, r.uzHi, reachZ, "bzh@" + t);
+            if (r.uzLo > -rad) addBoxRow(rows, kernelRows, s.n, 1, t, -1.0, -r.uzLo, reachZ, "bzl@" + t);
+            if (r.hasChord) {
+                DiskSocpKernel.ChordRow chord = new DiskSocpKernel.ChordRow(t, r.chordAx, r.chordAz, r.chordRhs,
+                        "arc@" + t);
+                double reach = impulseReach(s, iv, t, r.chordAx, r.chordAz);
+                chords.add(chord);
+                kernelChords.add(reach > 0.0 ? new DiskSocpKernel.ChordRow(t, r.chordAx, r.chordAz,
+                        r.chordRhs - reach, "arc@" + t) : chord);
+            }
+        }
+        double[] mMagB = new double[s.n];
+        for (int t = 0; t < s.n; t++) mMagB[t] = s.geom.radiusUpper(t) + impulseRadius(s, iv, t);
+
+        double cp = lin.objectiveConst(s.spec.objective);
+        if (s.fold != null) return relaxFolded(s, nd, iv, cx, cz, rows, kernelRows, boxStart, mMagB, cp);
+        long k0 = SolveClock.nanoTime();
+        double floor = relaxationFloor(s, cx, cz, mMagB);
+        double cutoff = floor - FLOOR_CUTOFF_REL * (1.0 + Math.abs(floor));
+        if (s.incYaws != null) {
+            double target = s.incScore + CERT_EPS - (s.max ? cp : -cp);
+            cutoff = Math.max(cutoff, target - CUTOFF_MARGIN * (1.0 + Math.abs(target)));
+        }
+        DiskSocpKernel.Outcome oc = DiskSocpKernel.solveChords(s.n, cx, cz, mMagB, kernelRows, s.freeP0,
+                kernelChords, cutoff);
+        s.kernelSolves++;
+        s.kernelNanos += SolveClock.nanoTime() - k0;
+        Relaxation rx = new Relaxation();
+        rx.rows = rows;
+        rx.kernelRows = kernelRows;
+        rx.chords = chords;
+        rx.boxStart = boxStart;
+        rx.mMagB = mMagB;
+        rx.cp = cp;
+        rx.floor = floor;
+        rx.oc = oc;
+        return rx;
+    }
+
+    private static Relaxation relaxFolded(Search s, Node nd, Intervals iv, double[] cx, double[] cz,
+                                          List<JumpLinearModel.Wall> rows, List<JumpLinearModel.Wall> kernelRows,
+                                          int boxStart, double[] mMagB, double cp) {
+        TieFold f = s.fold;
+        int[] source = new int[2 * rows.size()];
+        double[] sign = new double[2 * rows.size()];
+        List<JumpLinearModel.Wall> folded = f.foldRows(rows, source, sign);
+        int[] pushTick = new int[s.n];
+        int pushes = 0;
+        for (int t = 0; t < s.n; t++) if (impulseRadius(s, iv, t) > 0.0) pushTick[pushes++] = t;
+        int dims = f.dims + pushes;
+        double[] fx = new double[dims];
+        double[] fz = new double[dims];
+        double[] mag = new double[dims];
+        double[] foldX = new double[f.dims];
+        double[] foldZ = new double[f.dims];
+        f.foldVector(cx, cz, foldX, foldZ);
+        System.arraycopy(foldX, 0, fx, 0, f.dims);
+        System.arraycopy(foldZ, 0, fz, 0, f.dims);
+        Arrays.fill(mag, 0, f.dims, 1.0);
+        for (int k = 0; k < pushes; k++) {
+            int t = pushTick[k];
+            fx[f.dims + k] = cx[t];
+            fz[f.dims + k] = cz[t];
+            mag[f.dims + k] = impulseRadius(s, iv, t);
+        }
+        if (pushes > 0) {
+            List<JumpLinearModel.Wall> widened = new ArrayList<JumpLinearModel.Wall>(folded.size());
+            for (int k = 0; k < folded.size(); k++) {
+                JumpLinearModel.Wall w = folded.get(k);
+                JumpLinearModel.Wall src = rows.get(source[k]);
+                double[] ax = Arrays.copyOf(w.coefX, dims);
+                double[] az = Arrays.copyOf(w.coefZ, dims);
+                for (int q = 0; q < pushes; q++) {
+                    int t = pushTick[q];
+                    if (src.coefX != null && t < src.coefX.length) ax[f.dims + q] = sign[k] * src.coefX[t];
+                    if (src.coefZ != null && t < src.coefZ.length) az[f.dims + q] = sign[k] * src.coefZ[t];
+                }
+                widened.add(new JumpLinearModel.Wall(ax, az, w.bPrime, w.eq, w.name, w.p0coefX, w.p0coefZ, w.boxAxis));
+            }
+            folded = widened;
+        }
+        double[] lo = new double[s.n];
+        double[] hi = new double[s.n];
+        for (int t = 0; t < s.n; t++) {
+            lo[t] = loDeg(nd, t);
+            hi[t] = hiDeg(nd, t);
+        }
+        long k0 = SolveClock.nanoTime();
+        DiskSocpKernel.Outcome oc = DiskSocpKernel.solveChords(dims, fx, fz, mag, folded, s.freeP0,
+                f.chords(lo, hi), Double.NEGATIVE_INFINITY);
+        s.kernelSolves++;
+        s.kernelNanos += SolveClock.nanoTime() - k0;
+        DiskSocpKernel.Outcome mapped = oc;
+        if (oc.result != null) {
+            DiskSocpKernel.Result r = oc.result;
+            double[] lambda = new double[rows.size()];
+            for (int k = 0; k < folded.size() && k < r.lambda.length; k++) {
+                lambda[source[k]] += sign[k] * r.lambda[k];
+            }
+            double[] gx = new double[s.n];
+            double[] gz = new double[s.n];
+            trajectoryCostates(s, cx, cz, rows, rows.size(), lambda, gx, gz);
+            double[] ux = new double[s.n];
+            double[] uz = new double[s.n];
+            f.tickVectors(r.ux, r.uz, ux, uz);
+            mapped = new DiskSocpKernel.Outcome(new DiskSocpKernel.Result(gx, gz, ux, uz, lambda, r.value,
+                    r.converged, r.iters, r.gap, r.dvx, r.dvz), oc.failCode, oc.failIter, oc.failMu);
+        }
+        Relaxation rx = new Relaxation();
+        rx.rows = rows;
+        rx.kernelRows = kernelRows;
+        rx.chords = new ArrayList<DiskSocpKernel.ChordRow>();
+        rx.boxStart = boxStart;
+        rx.mMagB = mMagB;
+        rx.cp = cp;
+        rx.floor = foldFloor(s, iv, cx, cz);
+        rx.oc = mapped;
+        return rx;
+    }
+
+    private static double foldFloor(Search s, Intervals iv, double[] cx, double[] cz) {
+        TieFold f = s.fold;
+        double[] fx = new double[f.dims];
+        double[] fz = new double[f.dims];
+        f.foldVector(cx, cz, fx, fz);
+        double floor = f.pinnedDot(cx, cz);
+        for (int v = 0; v < f.dims; v++) floor -= StrictMath.hypot(fx[v], fz[v]);
+        for (int t = 0; t < s.n; t++) {
+            floor -= StrictMath.hypot(cx[t], cz[t]) * (f.delta[t] + impulseRadius(s, iv, t));
+        }
+        if (s.freeP0 != null) {
+            double hx = s.freeP0.objDevX;
+            double hz = s.freeP0.objDevZ;
+            floor += hx >= 0.0 ? hx * s.freeP0.dvLoX : hx * s.freeP0.dvHiX;
+            floor += hz >= 0.0 ? hz * s.freeP0.dvLoZ : hz * s.freeP0.dvHiZ;
+        }
+        return floor;
+    }
+
+    private static Node excludeClamps(Search s, Node nd, Intervals iv, SineTableGeometry.RangeInfo[] ri) {
+        byte other = s.perAxis ? NOZ : OPEN_ANY;
+        Node tightened = excludeCase(s, nd, iv, ri, ZERO, other);
+        if (tightened == null && !s.stopped()) tightened = excludeCase(s, nd, iv, ri, other, ZERO);
+        return tightened;
+    }
+
+    private static Node excludeCase(Search s, Node nd, Intervals iv, SineTableGeometry.RangeInfo[] ri, byte tested,
+                                    byte remaining) {
+        byte[] gx = nd.gx.clone();
+        byte[] gz = s.perAxis ? nd.gz.clone() : null;
+        boolean changed = false;
+        for (int t = 1; t < s.n && !s.stopped(); t++) {
+            for (int axis = 0; axis < (s.perAxis ? 2 : 1); axis++) {
+                if (!(axis == 0 ? iv.freeX[t] : iv.freeZ[t])) continue;
+                byte[] cgx = gx.clone();
+                byte[] cgz = gz != null ? gz.clone() : null;
+                if (axis == 0) cgx[t] = tested;
+                else cgz[t] = tested;
+                if (caseExcluded(s, new Node(nd.id, nd.iLo, nd.iHi, cgx, cgz, nd.depth, nd.score), ri)) {
+                    if (axis == 0) gx[t] = remaining;
+                    else gz[t] = remaining;
+                    changed = true;
+                }
+            }
+        }
+        return changed ? new Node(s.nextId++, nd.iLo, nd.iHi, gx, gz, nd.depth, nd.score) : null;
+    }
+
+    private static boolean caseExcluded(Search s, Node probe, SineTableGeometry.RangeInfo[] ri) {
+        Intervals iv = propagate(s, probe, ri);
+        if (iv.infeasible) return true;
+        boolean[] zx = new boolean[s.n];
+        boolean[] zz = new boolean[s.n];
+        for (int t = 0; t < s.n; t++) {
+            zx[t] = iv.effX[t] == ZERO;
+            zz[t] = s.perAxis ? iv.effZ[t] == ZERO : zx[t];
+        }
+        JumpLinearModel lin = new JumpLinearModel(s.sc, zx, zz, true);
+        double[] cx = new double[s.n];
+        double[] cz = new double[s.n];
+        lin.objectiveVectors(s.spec.objective, cx, cz);
+        boolean[] trivialFlag = {false};
+        List<JumpLinearModel.Wall> specWalls = lin.compileAxisWalls(s.spec.constraints, 0.0, trivialFlag);
+        if (trivialFlag[0]) return true;
+        Relaxation rx = relax(s, probe, iv, lin, ri, cx, cz, specWalls, null);
+        if (rx.oc.result == null) return false;
+        double[] magnitude = new double[1];
+        double val = relaxedValue(s, probe, iv, cx, cz, rx, rx.oc.result.gx, rx.oc.result.gz, rx.oc.result.lambda,
+                0, new double[s.n], magnitude);
+        if (val < rx.floor - (CERT_EPS * (1.0 + Math.abs(rx.floor)) + EMPTY_ROUNDING_REL * magnitude[0])) return true;
+        return s.incYaws != null && val + (s.max ? rx.cp : -rx.cp) <= s.incScore + CERT_EPS;
+    }
+
+    private static double relaxedValue(Search s, Node nd, Intervals iv, double[] cx, double[] cz, Relaxation rx,
+                                       double[] gxv, double[] gzv, double[] lambda, int chordCount,
+                                       double[] supports, double[] magnitudeOut) {
+        List<JumpLinearModel.Wall> rows = rx.rows;
         double val = 0.0;
         double magnitude = 0.0;
-        for (int t = 0; t < s.n; t++) {
-            double sup = s.geom.support(t, gxv[t], gzv[t], loDeg(nd, t), hiDeg(nd, t));
-            val += sup;
-            magnitude += Math.abs(sup);
+        if (s.fold != null) {
+            TieFold f = s.fold;
+            double[] fx = new double[f.dims];
+            double[] fz = new double[f.dims];
+            f.foldVector(gxv, gzv, fx, fz);
+            double[] lo = new double[s.n];
+            double[] hi = new double[s.n];
+            for (int t = 0; t < s.n; t++) {
+                lo[t] = loDeg(nd, t);
+                hi[t] = hiDeg(nd, t);
+            }
+            for (int v = 0; v < f.dims; v++) {
+                double sup = f.arcSupport(v, fx[v], fz[v], lo, hi);
+                val += sup;
+                magnitude += Math.abs(sup);
+            }
+            double pinned = f.pinnedDot(gxv, gzv);
+            val += pinned;
+            magnitude += Math.abs(pinned);
+            for (int t = 0; t < s.n; t++) {
+                double err = StrictMath.hypot(gxv[t], gzv[t]) * f.delta[t];
+                val += err;
+                magnitude += err;
+            }
+        } else {
+            for (int t = 0; t < s.n; t++) {
+                double sup = s.geom.support(t, gxv[t], gzv[t], loDeg(nd, t), hiDeg(nd, t));
+                supports[t] = sup;
+                val += sup;
+                magnitude += Math.abs(sup);
+            }
         }
         for (int j = 0; j < rows.size() && j < lambda.length; j++) {
             JumpLinearModel.Wall w = rows.get(j);
@@ -632,8 +1186,8 @@ public final class CertifiedBnb {
         }
         for (int q = 0; q < chordCount && rows.size() + q < lambda.length; q++) {
             double lj = Math.max(lambda[rows.size() + q], 0.0);
-            val += lj * (-chords.get(q).rhs);
-            magnitude += Math.abs(lj * chords.get(q).rhs);
+            val += lj * (-rx.chords.get(q).rhs);
+            magnitude += Math.abs(lj * rx.chords.get(q).rhs);
         }
         if (s.freeP0 != null) {
             double hx = s.freeP0.objDevX;
@@ -649,83 +1203,62 @@ public final class CertifiedBnb {
             val += startX + startZ;
             magnitude += Math.abs(startX) + Math.abs(startZ);
         }
-        boolean empty = relaxationEmpty(s, cx, cz, mMagB, val, magnitude);
-        for (int t = 0; t < s.n; t++) {
-            if (iv.freeX[t]) val += iv.injX[t] * Math.abs(cx[t]);
-            if (iv.freeZ[t]) val += iv.injZ[t] * Math.abs(cz[t]);
+        if (iv.anyFree) {
+            double allowance = impulseAllowance(s, iv, cx, cz, rows, rx.boxStart, lambda);
+            val += allowance;
+            magnitude += allowance;
         }
-        double cp = lin.objectiveConst(s.spec.objective);
-        double score = val + (s.max ? cp : -cp);
-        if (score > nd.score) score = nd.score;
-        nd.score = score;
-        Map<String, Double> wm = new HashMap<String, Double>();
-        for (int j = 0; j < rows.size() && j < lambda.length; j++) {
-            wm.put(rows.get(j).name, lambda[j]);
-        }
-        for (int q = 0; q < chordCount && rows.size() + q < lambda.length; q++) {
-            wm.put(chords.get(q).name, lambda[rows.size() + q]);
-        }
-        nd.warm = wm;
-        if (SolverTrace.on()) {
-            SolverTrace.log("CERT", "node=%d depth=%d score=%.9f inc=%.9f open=%d", nd.id, nd.depth,
-                    score, s.incScore, open.size());
-        }
-        if (score <= s.incScore + CERT_EPS) return null;
-        if (empty) return null;
-        if (unbounded) {
-            s.unresolved++;
-            return null;
-        }
-
-        double leafPx = s.refPx;
-        double leafPz = s.refPz;
-        if (s.free && oc.result != null) {
-            leafPx = clamp(s.refPx + oc.result.dvx, s.box.pxLo, s.box.pxHi);
-            leafPz = clamp(s.refPz + oc.result.dvz, s.box.pzLo, s.box.pzHi);
-        }
-        double[] decoded = decode(s, nd, lin, ux != null ? ux : gxv, uz != null ? uz : gzv);
-        ForwardPath decPath = null;
-        boolean[] decZx = new boolean[s.n];
-        boolean[] decZz = new boolean[s.n];
-        if (decoded != null) {
-            decPath = replayCandidate(s, decoded, leafPx, leafPz, true);
-            if (decPath != null) FoldReplayDriver.extractPattern(s.exact, decPath, s.n, decZx, decZz);
-        }
-        if (s.cfg.mode == Mode.FIRST_FEASIBLE && s.incYaws != null) return null;
-
-        if (s.ties == null) {
-            boolean allNarrow = true;
-            for (int t = 0; t < s.n; t++) {
-                if (!s.geom.hasInput(t)) continue;
-                if (s.geom.bucketSpan(loDeg(nd, t), hiDeg(nd, t)) > 64) {
-                    allNarrow = false;
-                    break;
-                }
-            }
-            boolean closeBound = !iv.anyFree && !s.free;
-            if (allNarrow && leafClose(s, nd, lin, cx, cz, rows, leafPx, leafPz, closeBound)) {
-                return null;
-            }
-        }
-        List<Node> children = branch(s, nd, iv, lin, gxv, gzv, ux, uz, decoded, decPath, decZx, decZz);
-        if (children == null || children.isEmpty()) {
-            s.stuckScore = Math.max(s.stuckScore, nd.score);
-            s.unresolved++;
-            if (SolverTrace.on()) {
-                StringBuilder sb = new StringBuilder();
-                for (int t = 0; t < s.n; t++) {
-                    sb.append(s.geom.hasInput(t) ? s.geom.bucketSpan(loDeg(nd, t), hiDeg(nd, t)) : 0).append(',');
-                }
-                SolverTrace.log("CERT", "stuck node=%d depth=%d score=%.9f anyFree=%s spans=%s",
-                        nd.id, nd.depth, nd.score, iv.anyFree, sb);
-            }
-            return null;
-        }
-        return children;
+        magnitudeOut[0] = magnitude;
+        return val;
     }
 
-    private static boolean relaxationEmpty(Search s, double[] cx, double[] cz, double[] mMagB, double dualValue,
-                                           double magnitude) {
+    private static final class GateCase {
+        final int tick;
+        final int axis;
+        final byte natural;
+        final JumpLinearModel.Wall[] rows;
+        final double share;
+
+        GateCase(int tick, int axis, byte natural, JumpLinearModel.Wall[] rows, double share) {
+            this.tick = tick;
+            this.axis = axis;
+            this.natural = natural;
+            this.rows = rows;
+            this.share = share;
+        }
+    }
+
+    private static boolean probeExcludes(GateProbe probe, JumpLinearModel.Wall[] rows) {
+        if (rows == null) return false;
+        for (JumpLinearModel.Wall row : rows) {
+            if (!probe.excludes(row)) return false;
+        }
+        return true;
+    }
+
+    private static boolean resolveExcludes(Search s, Node nd, Intervals iv, JumpLinearModel lin,
+                                           SineTableGeometry.RangeInfo[] ri, double[] cx, double[] cz,
+                                           List<JumpLinearModel.Wall> specWalls, GateProbe probe,
+                                           JumpLinearModel.Wall[] rows) {
+        if (rows == null) return false;
+        for (JumpLinearModel.Wall row : rows) {
+            if (row == null) return false;
+            if (probe.excludes(row)) continue;
+            Relaxation rx = relax(s, nd, iv, lin, ri, cx, cz, specWalls, row);
+            if (rx.oc.result == null) return false;
+            double val = relaxedValue(s, nd, iv, cx, cz, rx, rx.oc.result.gx, rx.oc.result.gz,
+                    rx.oc.result.lambda, rx.chords.size(), new double[s.n], new double[1]);
+            if (val + (s.max ? rx.cp : -rx.cp) > s.incScore + CERT_EPS) return false;
+        }
+        return true;
+    }
+
+    private static void dropUnresolved(Search s, Node nd) {
+        s.unresolved++;
+        s.stuckScore = Math.max(s.stuckScore, nd.score);
+    }
+
+    private static double relaxationFloor(Search s, double[] cx, double[] cz, double[] mMagB) {
         double floor = 0.0;
         for (int t = 0; t < s.n; t++) floor -= mMagB[t] * StrictMath.hypot(cx[t], cz[t]);
         if (s.freeP0 != null) {
@@ -734,8 +1267,7 @@ public final class CertifiedBnb {
             floor += hx >= 0.0 ? hx * s.freeP0.dvLoX : hx * s.freeP0.dvHiX;
             floor += hz >= 0.0 ? hz * s.freeP0.dvLoZ : hz * s.freeP0.dvHiZ;
         }
-        double margin = CERT_EPS * (1.0 + Math.abs(floor)) + EMPTY_ROUNDING_REL * magnitude;
-        return dualValue < floor - margin;
+        return floor;
     }
 
     private static JumpLinearModel.Wall boxRow(int n, int axis, int t, double sign, double bound, String name) {
@@ -744,14 +1276,141 @@ public final class CertifiedBnb {
         return new JumpLinearModel.Wall(axis, coef, bound, false, name, 0.0);
     }
 
-    private static double rowSlack(Search s, Intervals iv, JumpLinearModel.Wall w) {
-        double slack = 0.0;
-        for (int t = 0; t < s.n; t++) {
-            if (w.coef[t] == 0.0) continue;
-            if (w.axis == 0 && iv.freeX[t]) slack += iv.injX[t] * Math.abs(w.coef[t]);
-            if (w.axis == 1 && iv.freeZ[t]) slack += iv.injZ[t] * Math.abs(w.coef[t]);
+    private static void addBoxRow(List<JumpLinearModel.Wall> rows, List<JumpLinearModel.Wall> kernelRows, int n,
+                                  int axis, int t, double sign, double bound, double reach, String name) {
+        JumpLinearModel.Wall row = boxRow(n, axis, t, sign, bound, name);
+        rows.add(row);
+        kernelRows.add(reach > 0.0 ? boxRow(n, axis, t, sign, bound + reach, name) : row);
+    }
+
+    private static double impulseReach(Search s, Intervals iv, int t, double ax, double az) {
+        if (!s.perAxis) return iv.freeX[t] ? s.thr * StrictMath.hypot(ax, az) : 0.0;
+        return (iv.freeX[t] ? s.thr * Math.abs(ax) : 0.0) + (iv.freeZ[t] ? s.thr * Math.abs(az) : 0.0);
+    }
+
+    private static double impulseRadius(Search s, Intervals iv, int t) {
+        if (s.perAxis && iv.freeX[t] && iv.freeZ[t]) return s.thr * StrictMath.sqrt(2.0);
+        return iv.freeX[t] || iv.freeZ[t] ? s.thr : 0.0;
+    }
+
+    private static double impulseAllowance(Search s, Intervals iv, double[] cx, double[] cz,
+                                           List<JumpLinearModel.Wall> rows, int trajectoryRows, double[] lambda) {
+        double[] tx = new double[s.n];
+        double[] tz = new double[s.n];
+        trajectoryCostates(s, cx, cz, rows, trajectoryRows, lambda, tx, tz);
+        double allowance = 0.0;
+        for (int t = 0; t < s.n; t++) allowance += impulseReach(s, iv, t, tx[t], tz[t]);
+        return allowance;
+    }
+
+    private static void trajectoryCostates(Search s, double[] cx, double[] cz, List<JumpLinearModel.Wall> rows,
+                                           int trajectoryRows, double[] lambda, double[] tx, double[] tz) {
+        System.arraycopy(cx, 0, tx, 0, s.n);
+        System.arraycopy(cz, 0, tz, 0, s.n);
+        for (int j = 0; j < trajectoryRows && j < lambda.length; j++) {
+            JumpLinearModel.Wall w = rows.get(j);
+            double lj = w.eq ? lambda[j] : Math.max(lambda[j], 0.0);
+            if (lj == 0.0) continue;
+            if (w.coefX != null) for (int t = 0; t < w.coefX.length && t < s.n; t++) tx[t] -= lj * w.coefX[t];
+            if (w.coefZ != null) for (int t = 0; t < w.coefZ.length && t < s.n; t++) tz[t] -= lj * w.coefZ[t];
         }
-        return slack;
+    }
+
+    private static Node settleGates(Search s, Node nd, Intervals iv, JumpLinearModel lin,
+                                    SineTableGeometry.RangeInfo[] ri, double[] cx, double[] cz,
+                                    List<JumpLinearModel.Wall> specWalls,
+                                    List<JumpLinearModel.Wall> rows, int trajectoryRows, double[] lambda,
+                                    double[] gxv, double[] gzv, double[] supports, double dualValue,
+                                    ForwardPath decPath, boolean[] decZx, boolean[] decZz) {
+        double[] tx = new double[s.n];
+        double[] tz = new double[s.n];
+        trajectoryCostates(s, cx, cz, rows, trajectoryRows, lambda, tx, tz);
+        double[] lo = new double[s.n];
+        double[] hi = new double[s.n];
+        double firstStep = 1.0e-3;
+        for (int t = 0; t < s.n; t++) {
+            lo[t] = loDeg(nd, t);
+            hi[t] = hiDeg(nd, t);
+            firstStep = Math.max(firstStep, Math.max(Math.abs(cx[t]), Math.abs(cz[t])));
+        }
+        GateProbe probe = new GateProbe(s.geom, (t, ax, az) -> impulseReach(s, iv, t, ax, az), lo, hi, gxv, gzv,
+                tx, tz, supports, dualValue, s.incScore + CERT_EPS, firstStep);
+        double sector = s.thr / StrictMath.sqrt(2.0);
+        List<GateCase> cases = new ArrayList<GateCase>();
+        for (int t = 1; t < s.n; t++) {
+            if (s.perAxis) {
+                for (int axis = 0; axis < 2; axis++) {
+                    if (!(axis == 0 ? iv.freeX[t] : iv.freeZ[t])) continue;
+                    double d = axis == 0 ? iv.slackDx[t] : iv.slackDz[t];
+                    double v = axis == 0 ? decPath.velX[t] : decPath.velZ[t];
+                    byte natural = (axis == 0 ? decZx[t] : decZz[t]) ? ZERO : (v >= 0.0 ? POS : NEG);
+                    JumpLinearModel.Wall[] exclusion = null;
+                    if (natural == ZERO) {
+                        double b = s.thr - d;
+                        if (b > 1.0e-12) {
+                            exclusion = new JumpLinearModel.Wall[]{lin.keepAliveWall(axis, t, b, true),
+                                    lin.keepAliveWall(axis, t, b, false)};
+                        }
+                    } else {
+                        exclusion = new JumpLinearModel.Wall[]{
+                                lin.keepAliveWall(axis, t, -(s.thr + d), natural == NEG)};
+                    }
+                    cases.add(new GateCase(t, axis, natural, exclusion, s.thr * Math.abs(axis == 0 ? tx[t] : tz[t])));
+                }
+            } else if (iv.effX[t] == FREE) {
+                double vx = decPath.velX[t];
+                double vz = decPath.velZ[t];
+                byte natural;
+                JumpLinearModel.Wall[] exclusion = null;
+                if (decZx[t]) {
+                    natural = ZERO;
+                    double bx = sector - iv.slackDx[t];
+                    double bz = sector - iv.slackDz[t];
+                    if (bx > 1.0e-12 && bz > 1.0e-12) {
+                        exclusion = new JumpLinearModel.Wall[]{lin.keepAliveWall(0, t, bx, true),
+                                lin.keepAliveWall(0, t, bx, false), lin.keepAliveWall(1, t, bz, true),
+                                lin.keepAliveWall(1, t, bz, false)};
+                    }
+                } else if (Math.abs(vx) >= Math.abs(vz)) {
+                    natural = vx >= 0.0 ? SECTOR_XP : SECTOR_XN;
+                    exclusion = new JumpLinearModel.Wall[]{
+                            lin.keepAliveWall(0, t, -(s.thr + iv.slackDx[t]), vx < 0.0)};
+                } else {
+                    natural = vz >= 0.0 ? SECTOR_ZP : SECTOR_ZN;
+                    exclusion = new JumpLinearModel.Wall[]{
+                            lin.keepAliveWall(1, t, -(s.thr + iv.slackDz[t]), vz < 0.0)};
+                }
+                cases.add(new GateCase(t, 0, natural, exclusion, s.thr * StrictMath.hypot(tx[t], tz[t])));
+            }
+        }
+        List<GateCase> settled = new ArrayList<GateCase>();
+        List<GateCase> open = new ArrayList<GateCase>();
+        for (GateCase c : cases) {
+            if (probeExcludes(probe, c.rows)) settled.add(c);
+            else open.add(c);
+        }
+        if (s.cfg.resolveProbes && !open.isEmpty()) {
+            if (!s.resolveDeadlineSet) {
+                s.resolveDeadlineSet = true;
+                if (s.cfg.deadlineNanos != 0L) {
+                    long now = SolveClock.nanoTime();
+                    s.resolveDeadline = now + (long) (RESOLVE_SHARE * (s.cfg.deadlineNanos - now));
+                }
+            }
+            open.sort((a, b) -> Double.compare(b.share, a.share));
+            for (GateCase c : open) {
+                if (s.resolveStopped()) break;
+                if (resolveExcludes(s, nd, iv, lin, ri, cx, cz, specWalls, probe, c.rows)) settled.add(c);
+            }
+        }
+        if (settled.isEmpty()) return null;
+        byte[] ngx = nd.gx.clone();
+        byte[] ngz = s.perAxis ? nd.gz.clone() : null;
+        for (GateCase c : settled) {
+            if (c.axis == 0) ngx[c.tick] = c.natural;
+            else ngz[c.tick] = c.natural;
+        }
+        return new Node(s.nextId++, nd.iLo, nd.iHi, ngx, ngz, nd.depth, nd.score);
     }
 
     private static void addGateRows(Search s, Node nd, Intervals iv, JumpLinearModel lin,
@@ -759,8 +1418,8 @@ public final class CertifiedBnb {
         double sector = s.thr / StrictMath.sqrt(2.0);
         for (int t = 1; t < s.n; t++) {
             if (s.perAxis) {
-                addAxisGateRows(s, iv, lin, rows, 0, t, iv.effX[t], nd.gx[t], iv.slackDx[t]);
-                addAxisGateRows(s, iv, lin, rows, 1, t, iv.effZ[t], nd.gz[t], iv.slackDz[t]);
+                addAxisGateRows(s, lin, rows, 0, t, iv.effX[t], nd.gx[t], iv.slackDx[t]);
+                addAxisGateRows(s, lin, rows, 1, t, iv.effZ[t], nd.gz[t], iv.slackDz[t]);
             } else {
                 byte st = iv.effX[t];
                 byte fixed = nd.gx[t];
@@ -786,7 +1445,7 @@ public final class CertifiedBnb {
         }
     }
 
-    private static void addAxisGateRows(Search s, Intervals iv, JumpLinearModel lin,
+    private static void addAxisGateRows(Search s, JumpLinearModel lin,
                                         List<JumpLinearModel.Wall> rows, int axis, int t, byte st,
                                         byte fixed, double d) {
         if (st == ZERO) {
@@ -805,6 +1464,42 @@ public final class CertifiedBnb {
         JumpLinearModel.Wall hiW = lin.keepAliveWall(axis, t, -b, false);
         if (loW != null) rows.add(loW);
         if (hiW != null) rows.add(hiW);
+    }
+
+    private static boolean flipInteriorTicks(Search s, long nodeId, double[] ux, double[] uz) {
+        boolean any = false;
+        for (int t = 0; t < s.n; t++) {
+            if (!s.geom.hasInput(t)) continue;
+            double radius = s.geom.radiusUpper(t);
+            if (radius <= 0.0) continue;
+            double fill = Math.min(1.0, StrictMath.hypot(ux[t], uz[t]) / radius);
+            double chance = 0.5 * (1.0 - fill);
+            if (chance < ROUNDING_MIN_CHANCE) continue;
+            if (unitDraw(nodeId ^ s.seedMix, t) < chance) {
+                ux[t] = -ux[t];
+                uz[t] = -uz[t];
+                any = true;
+            }
+        }
+        return any;
+    }
+
+    private static double unitDraw(long nodeId, int tick) {
+        long h = nodeId * 0x9E3779B97F4A7C15L + (tick + 1) * 0xBF58476D1CE4E5B9L;
+        h = (h ^ (h >>> 30)) * 0xBF58476D1CE4E5B9L;
+        h = (h ^ (h >>> 27)) * 0x94D049BB133111EBL;
+        h ^= h >>> 31;
+        return (h >>> 11) * (1.0 / 9007199254740992.0);
+    }
+
+    private static void alignWithCostate(int n, double[] gx, double[] gz, double[] ux, double[] uz) {
+        for (int t = 0; t < n; t++) {
+            double costate = StrictMath.hypot(gx[t], gz[t]);
+            if (costate <= 0.0) continue;
+            double length = StrictMath.hypot(ux[t], uz[t]);
+            ux[t] = length * gx[t] / costate;
+            uz[t] = length * gz[t] / costate;
+        }
     }
 
     private static double[] decode(Search s, Node nd, JumpLinearModel lin, double[] ux, double[] uz) {
@@ -887,13 +1582,16 @@ public final class CertifiedBnb {
     }
 
     private static ForwardPath replayCandidate(Search s, double[] yaws, double px, double pz, boolean allowPolish) {
-        JumpPhysicsInputs scRep = FoldReplayDriver.pinnedCopy(s.sc, px, pz);
+        JumpPhysicsInputs scRep = s.sc.pinnedAt(px, pz);
         double[] gf = scRep.toGameFacings(yaws);
         ForwardPath path = s.exact.forward(scRep, gf);
         double viol = s.compiled.maxViolation(gf, path);
         double obj = s.spec.objective.evaluate(path);
+        long acceptedAs = -1L;
         if (viol == 0.0) {
+            long before = s.incVersion;
             acceptIncumbent(s, yaws, px, pz, obj);
+            if (s.incVersion != before) acceptedAs = s.incVersion;
         } else if (viol < s.bestInfeasViol) {
             s.bestInfeasViol = viol;
             s.bestInfeasYaws = yaws.clone();
@@ -901,22 +1599,28 @@ public final class CertifiedBnb {
         if (allowPolish && s.polishCalls < s.cfg.polishCap
                 && (viol == 0.0 ? s.cfg.mode == Mode.OPTIMIZE : viol < POLISH_VIOL_CAP)) {
             s.polishCalls++;
-            FoldReplayDriver.Params p = new FoldReplayDriver.Params();
-            p.cancel = s.cfg.cancel;
-            p.deadlineNanos = s.cfg.deadlineNanos;
-            p.objectiveRounds = s.cfg.mode == Mode.OPTIMIZE ? 8 : 0;
-            FoldReplayDriver.Result pr = FoldReplayDriver.polishFromAnchor(s.exact, s.spec, yaws, px, pz, p);
-            FoldReplayDriver.Round b = pr.best;
-            if (b != null) {
-                if (b.feasible()) {
-                    acceptIncumbent(s, b.yawsDeg, b.px, b.pz, b.objective);
-                } else if (b.maxViolation < s.bestInfeasViol) {
-                    s.bestInfeasViol = b.maxViolation;
-                    s.bestInfeasYaws = b.yawsDeg.clone();
-                }
-            }
+            polishFrom(s, yaws, px, pz);
+            if (acceptedAs == s.incVersion) s.polishedVersion = acceptedAs;
         }
         return path;
+    }
+
+    private static void polishFrom(Search s, double[] yaws, double px, double pz) {
+        FoldReplayDriver.Params p = new FoldReplayDriver.Params();
+        p.cancel = s.cfg.cancel;
+        p.deadlineNanos = s.cfg.deadlineNanos;
+        p.objectiveRounds = s.cfg.mode == Mode.OPTIMIZE ? 8 : 0;
+        FoldReplayDriver.Result pr = FoldReplayDriver.polishFromAnchor(s.exact, s.spec, yaws, px, pz, p);
+        FoldReplayDriver.Round b = pr.best;
+        if (b == null) return;
+        if (b.feasible()) {
+            long before = s.incVersion;
+            acceptIncumbent(s, b.yawsDeg, b.px, b.pz, b.objective);
+            if (s.incVersion != before) s.polishedVersion = s.incVersion;
+        } else if (b.maxViolation < s.bestInfeasViol) {
+            s.bestInfeasViol = b.maxViolation;
+            s.bestInfeasYaws = b.yawsDeg.clone();
+        }
     }
 
     private static void acceptIncumbent(Search s, double[] yaws, double px, double pz, double obj) {
@@ -935,7 +1639,7 @@ public final class CertifiedBnb {
         if (s.incYaws == null || s.ties != null) return;
         int window = s.exact.sine262() ? 4 : 64;
         double[] yaws = s.incYaws.clone();
-        JumpPhysicsInputs scRep = FoldReplayDriver.pinnedCopy(s.sc, s.incPx, s.incPz);
+        JumpPhysicsInputs scRep = s.sc.pinnedAt(s.incPx, s.incPz);
         double[] gf = scRep.toGameFacings(yaws);
         ForwardPath path = s.exact.forward(scRep, gf);
         double bestObj = s.spec.objective.evaluate(path);
@@ -1041,8 +1745,6 @@ public final class CertifiedBnb {
         }
         List<JumpLinearModel.Wall> kept = new ArrayList<JumpLinearModel.Wall>();
         for (JumpLinearModel.Wall w : rows) {
-            if (w.name != null && (w.name.startsWith("bxh@") || w.name.startsWith("bxl@")
-                    || w.name.startsWith("bzh@") || w.name.startsWith("bzl@"))) continue;
             if (w.eq) return false;
             kept.add(w);
         }
@@ -1093,12 +1795,12 @@ public final class CertifiedBnb {
         if (st.bestVal > Double.NEGATIVE_INFINITY) {
             double[] yaws = realizeCombo(s, cands, st.bestPick);
             if (yaws != null) {
-                JumpPhysicsInputs scRep = FoldReplayDriver.pinnedCopy(s.sc, px, pz);
-                double[] gf = scRep.toGameFacings(yaws);
-                ForwardPath rp = s.exact.forward(scRep, gf);
-                double rv = s.compiled.maxViolation(gf, rp);
-                double ro = s.spec.objective.evaluate(rp);
                 if (SolverTrace.on()) {
+                    JumpPhysicsInputs scRep = s.sc.pinnedAt(px, pz);
+                    double[] gf = scRep.toGameFacings(yaws);
+                    ForwardPath rp = s.exact.forward(scRep, gf);
+                    double rv = s.compiled.maxViolation(gf, rp);
+                    double ro = s.spec.objective.evaluate(rp);
                     double cpv = lin.objectiveConst(s.spec.objective);
                     SolverTrace.log("CERT", "leaf argmax lin=%.12f replayObj=%.12f viol=%.3e",
                             st.bestVal + (s.max ? cpv : -cpv), ro, rv);
@@ -1131,7 +1833,7 @@ public final class CertifiedBnb {
             float target = cands[t][picks[t]];
             boolean locked = s.sc.yawLockedPerTick != null && t < s.sc.yawLockedPerTick.length
                     && s.sc.yawLockedPerTick[t];
-            long want = s262 ? cell262(s, t, target) : FacingLattice.jointCellId(target, modern, boostTick(s, t));
+            long want = FacingLattice.jointCellId(target, modern, s262, BucketWalk.boostTick(s.exact, s.sc, t));
             boolean landed = false;
             double base = Angles.wrap((double) target);
             for (int k = 0; k <= 8 && !landed; k++) {
@@ -1139,12 +1841,12 @@ public final class CertifiedBnb {
                     double cand = base + sgn * k * (double) Math.ulp(target);
                     float ent;
                     if (locked) {
-                        ent = (float) cand;
+                        ent = s.sc.lockedFacing(t, cand);
                     } else {
                         double delta = Angles.wrapDelta(cand - prevAbs);
                         ent = entity + (float) delta;
                     }
-                    long got = s262 ? cell262f(s, t, ent) : FacingLattice.jointCellId(ent, modern, boostTick(s, t));
+                    long got = FacingLattice.jointCellId(ent, modern, s262, BucketWalk.boostTick(s.exact, s.sc, t));
                     if (got == want) {
                         yaws[t] = cand;
                         entity = ent;
@@ -1160,30 +1862,20 @@ public final class CertifiedBnb {
         return yaws;
     }
 
-    private static boolean boostTick(Search s, int t) {
-        boolean grounded = !Double.isNaN(s.sc.slipAt(t));
-        return !s.exact.modern() && grounded && s.sc.jumpAt(t) && s.sc.sprintAt(t);
-    }
-
-    private static long cell262(Search s, int t, float gf) {
-        return cell262f(s, t, gf);
-    }
-
-    private static long cell262f(Search s, int t, float gf) {
-        float rad = gf * (float) (Math.PI / 180.0);
-        long sin = (long) ((double) rad * McSineTable.INDEX_FROM_RAD_262) & 65535L;
-        long cos = (long) ((double) rad * McSineTable.INDEX_FROM_RAD_262 + McSineTable.COS_INDEX_OFFSET_262) & 65535L;
-        return (sin << 16) | cos;
-    }
-
     private static void leafDfs(Search s, LeafState st, int t, double prefix, double[][] wallPref) {
         if (st.steps >= LEAF_DFS_CAP) return;
-        if ((st.steps & 4095L) == 0L && s.stopped()) {
-            st.steps = LEAF_DFS_CAP;
-            return;
+        if ((st.steps & 4095L) == 0L) {
+            SolveClock.charge(SolveClock.LEAF, 4096L * (st.walls.length + 2));
+            if (s.stopped()) {
+                st.steps = LEAF_DFS_CAP;
+                return;
+            }
         }
         st.steps++;
         int n = st.scores.length;
+        for (int j = 0; j < st.walls.length; j++) {
+            if (wallPref[t][j] + st.wallSuffixMin[j][t] > st.wallRhs[j]) return;
+        }
         if (t == n) {
             if (prefix > st.bestVal) {
                 st.bestVal = prefix;
@@ -1192,9 +1884,6 @@ public final class CertifiedBnb {
             return;
         }
         if (prefix + st.suffix[t] <= st.bestVal) return;
-        for (int j = 0; j < st.walls.length; j++) {
-            if (wallPref[t][j] + st.wallSuffixMin[j][t] > st.wallRhs[j]) return;
-        }
         int[] order = st.order[t];
         for (int oi = 0; oi < order.length; oi++) {
             int i = order[oi];
@@ -1211,23 +1900,9 @@ public final class CertifiedBnb {
 
     private static float[] leafCandidates(Search s, int t, double lo, double hi) {
         double mid = 0.5 * (lo + hi);
-        float center = (float) mid;
-        if (!s.exact.sine262()) {
-            boolean grounded = !Double.isNaN(s.sc.slipAt(t));
-            boolean boostTick = !s.exact.modern() && grounded && s.sc.jumpAt(t) && s.sc.sprintAt(t);
-            int half = Math.max(1, (int) Math.ceil((hi - lo) * 0.5 * SineTableGeometry.IDX_PER_DEG)
-                    + SineTableGeometry.SLOP_IDX);
-            return FacingLattice.cellRepresentatives(center, -half, half, s.exact.modern(), boostTick);
-        }
         int half = Math.max(1, (int) Math.ceil((hi - lo) * 0.5 * SineTableGeometry.IDX_PER_DEG)
                 + SineTableGeometry.SLOP_IDX);
-        float[] out = new float[2 * half + 1];
-        for (int i = 0; i < out.length; i++) {
-            int k = i - half;
-            double adj = BucketWalk.centerAdjustDeg(center, s.exact.modern(), true) + k * BucketWalk.BUCKET_DEG;
-            out[i] = (float) (mid + adj);
-        }
-        return out;
+        return BucketWalk.candidates(s.exact, s.sc, t, (float) mid, mid, half);
     }
 
     private static List<Node> branch(Search s, Node nd, Intervals iv, JumpLinearModel lin,
@@ -1241,7 +1916,7 @@ public final class CertifiedBnb {
         for (int t = 1; t < s.n; t++) {
             if (s.perAxis) {
                 if (iv.freeX[t]) {
-                    double imp = gateImpactOf(s, iv.injX[t], lin, t, 0, decPath, decZx, nd.gx[t]);
+                    double imp = gateImpactOf(s, s.thr, lin, t, 0, decPath);
                     if (imp > gateImpact) {
                         gateImpact = imp;
                         gateAxis = 0;
@@ -1249,7 +1924,7 @@ public final class CertifiedBnb {
                     }
                 }
                 if (iv.freeZ[t]) {
-                    double imp = gateImpactOf(s, iv.injZ[t], lin, t, 1, decPath, decZz, nd.gz[t]);
+                    double imp = gateImpactOf(s, s.thr, lin, t, 1, decPath);
                     if (imp > gateImpact) {
                         gateImpact = imp;
                         gateAxis = 1;
@@ -1257,7 +1932,7 @@ public final class CertifiedBnb {
                     }
                 }
             } else if (iv.effX[t] == FREE) {
-                double imp = gateImpactOf(s, iv.injX[t] + iv.injZ[t], lin, t, 0, decPath, decZx, nd.gx[t]);
+                double imp = gateImpactOf(s, 2.0 * s.thr, lin, t, 0, decPath);
                 if (imp > gateImpact) {
                     gateImpact = imp;
                     gateAxis = 0;
@@ -1291,7 +1966,6 @@ public final class CertifiedBnb {
             }
         }
         List<Node> out = new ArrayList<Node>();
-        Map<String, Double> warm = nd.warm;
         if (gateTick >= 0) {
             if (s.perAxis) {
                 byte preferred = POS;
@@ -1302,9 +1976,9 @@ public final class CertifiedBnb {
                 }
                 for (byte st : new byte[]{ZERO, POS, NEG}) {
                     if (st == preferred) continue;
-                    addGateChild(s, out, nd, gateAxis, gateTick, st, warm);
+                    addGateChild(s, out, nd, gateAxis, gateTick, st);
                 }
-                addGateChild(s, out, nd, gateAxis, gateTick, preferred, warm);
+                addGateChild(s, out, nd, gateAxis, gateTick, preferred);
             } else {
                 byte preferred = SECTOR_XP;
                 if (decPath != null) {
@@ -1316,9 +1990,9 @@ public final class CertifiedBnb {
                 }
                 for (byte st : new byte[]{ZERO, SECTOR_XP, SECTOR_XN, SECTOR_ZP, SECTOR_ZN}) {
                     if (st == preferred) continue;
-                    addGateChild(s, out, nd, 0, gateTick, st, warm);
+                    addGateChild(s, out, nd, 0, gateTick, st);
                 }
-                addGateChild(s, out, nd, 0, gateTick, preferred, warm);
+                addGateChild(s, out, nd, 0, gateTick, preferred);
             }
             return out;
         }
@@ -1328,44 +2002,52 @@ public final class CertifiedBnb {
             int a0 = SineTableGeometry.idxOf(theta - 90.0);
             int a1 = SineTableGeometry.idxOf(theta + 90.0);
             int b1 = SineTableGeometry.idxOf(theta + 270.0);
-            out.add(childArc(s, nd, arcTick, a0, a1));
+            Node around = childArc(s, nd, arcTick, a0, a1);
+            around.holdsDecoded = true;
+            out.add(around);
             out.add(childArc(s, nd, arcTick, a1, b1));
         } else {
             int loT = nd.iLo[arcTick];
             int hiT = nd.iHi[arcTick];
             int mid = (loT + hiT) >> 1;
-            out.add(childArc(s, nd, arcTick, loT, mid));
-            out.add(childArc(s, nd, arcTick, mid + 1, hiT));
+            Node low = childArc(s, nd, arcTick, loT, mid);
+            Node high = childArc(s, nd, arcTick, mid + 1, hiT);
+            if (decoded != null) {
+                int c = SineTableGeometry.idxOf(decoded[arcTick]);
+                c += McSineTable.SIZE * (int) Math.round((double) (mid - c) / McSineTable.SIZE);
+                if (c <= mid) low.holdsDecoded = true;
+                else high.holdsDecoded = true;
+            }
+            out.add(low);
+            out.add(high);
         }
         return out;
     }
 
     private static void addGateChild(Search s, List<Node> out, Node nd, int gateAxis, int gateTick,
-                                     byte st, Map<String, Double> warm) {
+                                     byte st) {
         if (s.perAxis) {
             byte[] ngx = nd.gx.clone();
             byte[] ngz = nd.gz.clone();
             if (gateAxis == 0) ngx[gateTick] = st;
             else ngz[gateTick] = st;
-            out.add(new Node(s.nextId++, nd.iLo, nd.iHi, ngx, ngz, nd.depth + 1, nd.score, warm));
+            out.add(new Node(s.nextId++, nd.iLo, nd.iHi, ngx, ngz, nd.depth + 1, nd.score));
         } else {
             byte[] ngx = nd.gx.clone();
             ngx[gateTick] = st;
-            out.add(new Node(s.nextId++, nd.iLo, nd.iHi, ngx, null, nd.depth + 1, nd.score, warm));
+            out.add(new Node(s.nextId++, nd.iLo, nd.iHi, ngx, null, nd.depth + 1, nd.score));
         }
     }
 
     private static double gateImpactOf(Search s, double inj, JumpLinearModel lin, int t, int axis,
-                                       ForwardPath decPath, boolean[] decZero, byte fixedState) {
+                                       ForwardPath decPath) {
         double band = 0.0;
         if (decPath != null) {
             double v = axis == 0 ? decPath.velX[t] : decPath.velZ[t];
             double av = Math.abs(v);
             if (av >= 0.25 * s.thr && av <= 4.0 * s.thr) band = 1.0;
-            if (t > 0) {
-                double pv = axis == 0 ? decPath.velX[t - 1] : decPath.velZ[t - 1];
-                if (pv * v < 0.0) band = Math.max(band, 1.0);
-            }
+            double pv = axis == 0 ? decPath.velX[t - 1] : decPath.velZ[t - 1];
+            if (pv * v < 0.0) band = Math.max(band, 1.0);
         }
         double coefScale = Math.abs(lin.coefAxis(axis, t, s.spec.objective.tick));
         return inj * (1.0 + coefScale) * (1.0 + band);
@@ -1375,7 +2057,7 @@ public final class CertifiedBnb {
         int[] nlo = nd.iLo.clone();
         int[] nhi = nd.iHi.clone();
         assignArc(s, nlo, nhi, t, iLo, iHi);
-        return new Node(s.nextId++, nlo, nhi, nd.gx, nd.gz, nd.depth + 1, nd.score, nd.warm);
+        return new Node(s.nextId++, nlo, nhi, nd.gx, nd.gz, nd.depth + 1, nd.score);
     }
 
     private static void assignArc(Search s, int[] nlo, int[] nhi, int t, int iLo, int iHi) {
@@ -1521,7 +2203,7 @@ public final class CertifiedBnb {
         int[] nhi = nd.iHi.clone();
         assignArc(s, nlo, nhi, l.loTick, (int) aLo, (int) aHi);
         assignArc(s, nlo, nhi, l.hiTick, (int) (bLo - shift), (int) (bHi - shift));
-        return new Node(s.nextId++, nlo, nhi, nd.gx, nd.gz, nd.depth + 1, nd.score, nd.warm);
+        return new Node(s.nextId++, nlo, nhi, nd.gx, nd.gz, nd.depth + 1, nd.score);
     }
 
     private static boolean leafOrderOk(LeafState st, int t, int i) {
@@ -1545,9 +2227,5 @@ public final class CertifiedBnb {
 
     private static CostateDualSolver.FreeP0 freeStartTerm(StartBox box, Objective obj) {
         return CostateDualSolver.FreeP0.forObjective(box, obj, FREE_START_SMOOTH);
-    }
-
-    private static double clamp(double v, double lo, double hi) {
-        return v < lo ? lo : (v > hi ? hi : v);
     }
 }

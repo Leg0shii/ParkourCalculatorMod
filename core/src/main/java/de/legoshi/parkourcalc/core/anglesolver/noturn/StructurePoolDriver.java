@@ -6,6 +6,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpLinearModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
+import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Objective;
 
 import java.util.ArrayList;
@@ -24,7 +25,7 @@ public final class StructurePoolDriver {
         }
     }
 
-    public static final class Config {
+    public static final class Config implements Cloneable {
         public int maxEdges = 3;
         public int minDwell = 3;
         public int[] alphabet = {NoTurnKeys.NONE, NoTurnKeys.W, NoTurnKeys.WA, NoTurnKeys.WD,
@@ -60,8 +61,42 @@ public final class StructurePoolDriver {
         public boolean allowJa = false;
         public boolean jaAllPass = false;
         public int minLevel = 0;
+        public boolean familyStage = false;
+        public boolean changeLevels = true;
+        public StratFamilies families = null;
+        public int familyBandCost = 4;
+        public double familyKeep = 0.01;
+        public int familyCutPool = 128;
+        public boolean familyExactFirst = true;
+        public int familySubtreeCuts = 8;
+        public double familyReach = 0.06;
+        public double familyInertiaShare = 0.25;
+        public int familyAfterLevel = 1;
+        public long familyDelayNanos = 0L;
+        public long familyOfferNanos = 0L;
+        public boolean streamCertify = true;
+        public boolean momentumStage = false;
+        public int momentumMaxLevel = 6;
+        public int momentumTapLevel = 4;
+        public int momentumNearLevel = 1;
+        public double momentumKeep = 0.0005;
+        public double momentumNearKeep = 0.002;
+        public int momentumKeptCap = 5000;
+        public int momentumChangeCost = 6;
+        public double momentumMemoryShare = 1.0 / 6.0;
+        public int momentumThreadShare = 4;
+        public long momentumDelayNanos = 0L;
+        public boolean sharedExplore = false;
         public boolean playable = false;
         public int threads = 0;
+
+        public Config copy() {
+            try {
+                return (Config) super.clone();
+            } catch (CloneNotSupportedException e) {
+                throw new AssertionError(e);
+            }
+        }
     }
 
     public static final class Candidate {
@@ -74,11 +109,13 @@ public final class StructurePoolDriver {
         public final double diskTheta;
         public final double byteTheta;
         public final double byteViol;
-        public final double byteObjective;
         boolean flash;
+        int familyCost;
+        boolean family;
+        boolean momentum;
 
         Candidate(int[] combos, boolean[] sprint, int engage, int edges, int presses, double diskTheta,
-                  double byteTheta, double byteViol, double byteObjective) {
+                  double byteTheta, double byteViol) {
             this.combos = combos;
             this.sprint = sprint;
             this.engage = engage;
@@ -88,7 +125,6 @@ public final class StructurePoolDriver {
             this.diskTheta = diskTheta;
             this.byteTheta = byteTheta;
             this.byteViol = byteViol;
-            this.byteObjective = byteObjective;
         }
     }
 
@@ -98,14 +134,11 @@ public final class StructurePoolDriver {
     private final Progress progress;
 
     NoTurnProblem problem;
-    private NoTurnModel nt;
     private int n;
     boolean maximize;
     boolean objAxisX;
     int objTick;
-    private int objAxis;
 
-    private double refX, refZ;
     double loShiftX, hiShiftX, loShiftZ, hiShiftZ;
 
     private Group[] groups;
@@ -129,11 +162,6 @@ public final class StructurePoolDriver {
 
     private double[] cosG;
     private double[] sinG;
-
-    private int[] evG;
-    private double[] evV;
-    private double[] evO;
-    private int evCount;
 
     private int[] slotRun;
     private int[] slotNo;
@@ -235,7 +263,7 @@ public final class StructurePoolDriver {
 
     public void prepare(NoTurnProblem problem) {
         this.problem = problem;
-        this.nt = new NoTurnModel(problem);
+        NoTurnModel nt = new NoTurnModel(problem);
         this.n = problem.n;
         this.baseCombos = problem.baseCombos();
         this.baseSprint = problem.baseSprint();
@@ -243,10 +271,10 @@ public final class StructurePoolDriver {
         this.maximize = obj.sense == Objective.Sense.MAX;
         this.objAxisX = obj.axis == JumpPhysicsInputs.Axis.X;
         this.objTick = obj.tick;
-        this.objAxis = objAxisX ? 0 : 1;
+        int objAxis = objAxisX ? 0 : 1;
 
-        this.refX = problem.refStart().x;
-        this.refZ = problem.refStart().z;
+        double refX = problem.refStart().x;
+        double refZ = problem.refStart().z;
         if (problem.freeBox != null) {
             loShiftX = problem.freeBox.pxLo - refX;
             hiShiftX = problem.freeBox.pxHi - refX;
@@ -340,11 +368,6 @@ public final class StructurePoolDriver {
             cosG[g] = StrictMath.cos(th);
             sinG[g] = StrictMath.sin(th);
         }
-
-        int cap = 3 * cfg.diskGrid + 16;
-        this.evG = new int[cap];
-        this.evV = new double[cap];
-        this.evO = new double[cap];
 
         this.slotRun = new int[NoTurnKeys.COUNT];
         this.slotNo = new int[NoTurnKeys.COUNT];
@@ -535,7 +558,7 @@ public final class StructurePoolDriver {
                 double diskTheta = r[base + 1];
                 int engageTick = NoTurnKeys.firstSprint(sprint);
                 Candidate c = new Candidate(combos.clone(), sprint.clone(), engageTick, countEdges(combos),
-                        countPresses(combos), diskTheta, r[base + 3], sViol, r[base + 4]);
+                        countPresses(combos), diskTheta, r[base + 3], sViol);
                 if (watchHash != null && watched(combos) >= 0) System.out.println("[watch] gpu scored v=" + v + " diskViol=" + diskViol
                         + " sViol=" + sViol + " engage=" + engageTick + " beamWants=" + (beamHeap != null && beamHeap.wants(sViol)) + " keys=" + NoTurnKeys.describe(combos));
                 if (beamHeap != null) beamHeap.offer(c);
@@ -549,7 +572,10 @@ public final class StructurePoolDriver {
     private Candidate rescreen(Candidate c) {
         double[] bs = byteScreen(c.combos, c.sprint, c.diskTheta);
         byteScreened++;
-        return new Candidate(c.combos, c.sprint, c.engage, c.edges, c.presses, c.diskTheta, bs[1], bs[0], bs[2]);
+        Candidate out = new Candidate(c.combos, c.sprint, c.engage, c.edges, c.presses, c.diskTheta, bs[1], bs[0]);
+        out.familyCost = c.familyCost;
+        out.family = c.family;
+        return out;
     }
 
     private static void rescreenRange(StructurePoolDriver w, List<Candidate> list, int from, int to) {
@@ -724,34 +750,24 @@ public final class StructurePoolDriver {
         return s * cfg.slackScale;
     }
 
-    public double diskFeasibleTheta(int[] combos, boolean[] sprint, double[] outBestObj) {
+    public double diskFeasibleTheta(int[] combos, boolean[] sprint) {
         computeGroupCoefs(fullCombos(combos), fullSprint(sprint));
-        double bestTheta = scanGrid(curObjA, curObjB);
-        if (outBestObj != null) outBestObj[0] = diskScanObj;
-        return bestTheta;
+        return scanGrid(curObjA, curObjB);
     }
-
-    private double diskScanObj;
 
     private void evalAt(int g, double objA, double objB) {
         double v = evalTheta(cosG[g], sinG[g], objA, objB);
-        int i = evCount++;
-        evG[i] = g;
-        evV[i] = v;
         if (v < lastMinViol || (v == lastMinViol && g < minViolCenter)) {
             lastMinViol = v;
             minViolCenter = g;
         }
         if (v <= 0.0) {
             double o = diskLastObj;
-            evO[i] = o;
             boolean better = maximize ? o > bestObjVal : o < bestObjVal;
             if (better || (o == bestObjVal && (bestObjCenter < 0 || g < bestObjCenter))) {
                 bestObjVal = o;
                 bestObjCenter = g;
             }
-        } else {
-            evO[i] = Double.NaN;
         }
     }
 
@@ -781,7 +797,6 @@ public final class StructurePoolDriver {
         int N = cfg.diskGrid;
         int s1 = Math.max(1, cfg.diskCoarseStride);
         int s2 = Math.max(1, cfg.diskMidStride);
-        evCount = 0;
         resetCenters();
         for (int g = 0; g < N; g += s1) evalAt(g, objA, objB);
         if (lastMinViol <= cfg.diskEarlyOutViol) {
@@ -797,14 +812,11 @@ public final class StructurePoolDriver {
 
         double step = 2.0 * Math.PI / N;
         if (bestObjCenter >= 0) {
-            diskScanObj = bestObjVal;
             return Angles.deg(-Math.PI + bestObjCenter * step);
         }
         if (lastMinViol <= cfg.diskKeep && minViolCenter >= 0) {
-            diskScanObj = Double.NaN;
             return Angles.deg(-Math.PI + minViolCenter * step);
         }
-        diskScanObj = maximize ? Double.NEGATIVE_INFINITY : Double.POSITIVE_INFINITY;
         return Double.NaN;
     }
 
@@ -936,10 +948,6 @@ public final class StructurePoolDriver {
 
     private int effMaxEdges() {
         return scoreLevel >= 0 ? scoreLevel : cfg.maxEdges;
-    }
-
-    private boolean freeChange(int combo) {
-        return freeChange(cfg, combo);
     }
 
     private static boolean freeChange(Config cfg, int combo) {
@@ -1139,6 +1147,18 @@ public final class StructurePoolDriver {
     }
 
     private void evalComplete(int[] combos) {
+        if (familySegments != null) {
+            if (familyRejects(combos)) {
+                scored++;
+                return;
+            }
+            if (familyLate && familyPrefixPruned(combos)) {
+                pruned++;
+                return;
+            }
+            evalCpu(combos);
+            return;
+        }
         if (tapsStage) {
             if (countEdges(combos) > scoreLevel || !hasTap(combos)) return;
         } else if (scoreLevel >= 0 && countEdges(combos) != scoreLevel) return;
@@ -1201,6 +1221,10 @@ public final class StructurePoolDriver {
         double diskTheta = scanGrid(objA, objB);
         scored++;
         if (Double.isNaN(diskTheta)) return;
+        if (familySegments != null) {
+            familyScreen(combos, sprint, diskTheta);
+            return;
+        }
         if (lastMinViol > cfg.byteFeasible && goodInPool >= cfg.poolCap
                 && (beamHeap == null || !beamHeap.wants(lastMinViol))) return;
         int engageTick = NoTurnKeys.firstSprint(sprint);
@@ -1211,11 +1235,490 @@ public final class StructurePoolDriver {
                     + " diskTheta=" + diskTheta + " viol=" + bs[0]);
         }
         Candidate c = new Candidate(combos.clone(), sprint.clone(), engageTick, countEdges(combos), countPresses(combos),
-                diskTheta, bs[1], bs[0], bs[2]);
+                diskTheta, bs[1], bs[0]);
         if (beamHeap != null) beamHeap.offer(c);
         pool.add(c);
         if (certifyTier(cfg, c) < SCREEN_MISS_TIER) goodInPool++;
         if (pool.size() > cfg.poolCap * 4) trimPool();
+    }
+
+    static final double FREE_AIR_VIOL_SCALE = 5.0;
+    static final double FREE_AIR_DISK_MARGIN = 0.01;
+    static final int FREE_AIR_INERTIA_PASSES = 3;
+
+    private void familyScreen(int[] combos, boolean[] sprint, double diskTheta) {
+        double reach = familyInertia ? cfg.familyReach : 0.0;
+        if (lastMinViol > cfg.familyKeep + reach + FREE_AIR_DISK_MARGIN) return;
+        FreeAirExact.Result fa = familyScore(combos, sprint);
+        byteScreened++;
+        if (watchHash != null && watched(combos) >= 0) {
+            System.out.println("[watch] family screen" + (familyInertia ? " inertia" : "") + " dual="
+                    + (fa == null ? "none" : String.valueOf(fa.dual)) + " cost=" + familyCost + " keys="
+                    + NoTurnKeys.describe(combos));
+        }
+        if (fa == null || fa.dual > familyLimit()) return;
+        Candidate c = new Candidate(combos.clone(), sprint.clone(), NoTurnKeys.firstSprint(sprint), countEdges(combos),
+                countPresses(combos), diskTheta, diskTheta, Math.max(0.0, fa.dual) * FREE_AIR_VIOL_SCALE);
+        c.familyCost = familyCost;
+        c.family = true;
+        if (familyEarly != null && certifyTier(cfg, c) == SCREEN_EXACT_TIER) {
+            familyEarlyBuf.add(c);
+            long now = System.nanoTime();
+            if (now >= familyEarlyAt) {
+                familyEarly.accept(familyEarlyBuf);
+                familyEarlyBuf = new ArrayList<>();
+                familyEarlyAt = now + cfg.familyOfferNanos;
+            }
+            return;
+        }
+        pool.add(c);
+        if (certifyTier(cfg, c) < SCREEN_MISS_TIER) goodInPool++;
+        if (pool.size() > cfg.poolCap * 4) trimPool();
+    }
+
+    private double familyLimit() {
+        return familyExact ? Math.min(cfg.familyKeep, cfg.byteExact / FREE_AIR_VIOL_SCALE) : cfg.familyKeep;
+    }
+
+    private boolean familyRejects(int[] combos) {
+        if (familyFast == null) return false;
+        double limit = familyReject();
+        boolean[] sprint = sprintABuf;
+        int firstRun = -1;
+        for (int t = 0; t < n; t++) {
+            sprint[t] = NoTurnKeys.isRun(combos[t]);
+            if (sprint[t] && firstRun < 0) firstRun = t;
+        }
+        if (familyFast.survivors(combos, sprint, firstRun, limit) != 0) return false;
+        return true;
+    }
+
+    private boolean familyPrefixPruned(int[] combos) {
+        int checked = 0;
+        for (int index = Math.min(2, familySegments.length - 1); index < familySegments.length; index++) {
+            StratFamilies.Segment segment = familySegments[index];
+            int active = checked;
+            while (active < groups.length && groups[active].tick <= segment.start) active++;
+            if (n - segment.start > 3 && active > checked && active > 0
+                    && prefixInfeasible(combos, segment.start, active)) return true;
+            checked = active;
+        }
+        return false;
+    }
+
+    private FreeAirExact.Result familyScore(int[] combos, boolean[] sprint) {
+        if (familyFast == null) {
+            JumpSpec spec = problem.buildSpec(combos, sprint, cfg.turnCombo, cfg.allowJa);
+            return familyInertia
+                    ? FreeAirExact.inertiaRescue(spec, model.inertiaThreshold(), model.perAxisInertia(), cfg.familyKeep,
+                            cfg.familyReach, FREE_AIR_INERTIA_PASSES, familyWarm)
+                    : FreeAirExact.solve(spec, cfg.familyKeep, familyWarm);
+        }
+        if (!familyInertia) return familyFast.solve(combos, sprint, familyLimit());
+        FreeAirExact.Result plain = familyFast.solve(combos, sprint, cfg.familyKeep + cfg.familyReach);
+        if (plain.dual <= cfg.familyKeep || plain.yaws == null) return null;
+        return FreeAirExact.rescue(problem.buildSpec(combos, sprint, cfg.turnCombo, cfg.allowJa), plain,
+                model.inertiaThreshold(), model.perAxisInertia(), cfg.familyKeep, FREE_AIR_INERTIA_PASSES);
+    }
+
+    private java.util.function.Consumer<List<Candidate>> familyEarly;
+    private List<Candidate> familyEarlyBuf = new ArrayList<>();
+    private long familyEarlyAt;
+
+    private FreeAirExact.Tables familyTables;
+    private boolean familyTablesBuilt;
+    private FreeAirExact.Screen familyFast;
+
+    static final int FAMILY_STAGE = -2;
+    static final int FAMILY_INERTIA_STAGE = -1_000_000;
+    static final int FAMILY_EXACT_STAGE = -2_000_000;
+    static final int MOMENTUM_STAGE = -3_000_000;
+    static final int MOMENTUM_STRICT = 0;
+    static final int MOMENTUM_TAPS = 1;
+    static final int MOMENTUM_NEAR = 2;
+    static final int MOMENTUM_KINDS = 3;
+
+    static final class MomentumStep {
+        final int level;
+        final int kind;
+        final int variant;
+
+        MomentumStep(int level, int kind, int variant) {
+            this.level = level;
+            this.kind = kind;
+            this.variant = variant;
+        }
+    }
+
+    static List<MomentumStep> momentumSteps(Config cfg) {
+        List<MomentumStep> steps = new ArrayList<>();
+        boolean taps = cfg.minDwell > 1;
+        boolean near = cfg.momentumNearKeep > cfg.momentumKeep;
+        for (int level = 0; level <= cfg.momentumMaxLevel; level++) {
+            addMomentumSteps(steps, level, MOMENTUM_STRICT);
+            if (near && level <= cfg.momentumNearLevel) addMomentumSteps(steps, level, MOMENTUM_NEAR);
+            if (taps && level > 0 && level - 1 <= cfg.momentumTapLevel) addMomentumSteps(steps, level - 1, MOMENTUM_TAPS);
+        }
+        if (taps && cfg.momentumMaxLevel <= cfg.momentumTapLevel) {
+            addMomentumSteps(steps, cfg.momentumMaxLevel, MOMENTUM_TAPS);
+        }
+        return steps;
+    }
+
+    private static void addMomentumSteps(List<MomentumStep> steps, int level, int kind) {
+        for (int variant = 0; variant < MomentumRules.SPRINT_VARIANTS; variant++) {
+            steps.add(new MomentumStep(level, kind, variant));
+        }
+    }
+
+    static final class MomentumPlan extends StagePlan {
+        private final List<MomentumStep> steps;
+        private final boolean[] over;
+        private int at;
+
+        MomentumPlan(List<MomentumStep> steps, boolean[] over) {
+            super(new ArrayList<>());
+            this.steps = steps;
+            this.over = over;
+        }
+
+        @Override
+        int next() {
+            while (at < steps.size()) {
+                int index = at++;
+                if (!over[steps.get(index).kind]) return MOMENTUM_STAGE - index;
+            }
+            return NO_STAGE;
+        }
+
+        @Override
+        boolean background() {
+            return true;
+        }
+    }
+
+    private List<MomentumStep> runMomentumSteps;
+    private final boolean[] momentumOver = new boolean[MOMENTUM_KINDS];
+    private List<MomentumSearch.Cut> momentumPool = new ArrayList<>();
+    private final java.util.Set<String> momentumSent = java.util.concurrent.ConcurrentHashMap.newKeySet();
+    private java.util.function.Consumer<List<Candidate>> momentumEarly;
+
+    private synchronized FreeAirExact.Tables freeAirTables(NoTurnProblem problem) {
+        if (!familyTablesBuilt) {
+            familyTables = FreeAirExact.Tables.of(problem, cfg.turnCombo, cfg.allowJa);
+            familyTablesBuilt = true;
+        }
+        return familyTables;
+    }
+
+    private LevelResult enumerateMomentum(final NoTurnProblem problem, int threads, int stage,
+                                          final AtomicBoolean stopFlag) {
+        final MomentumStep step = runMomentumSteps.get(MOMENTUM_STAGE - stage);
+        boolean taps = step.kind == MOMENTUM_TAPS;
+        MomentumRules rules = new MomentumRules(problem, cfg, step.level, taps ? 1 : cfg.minDwell);
+        MomentumRules known = taps ? new MomentumRules(problem, cfg, step.level, cfg.minDwell) : null;
+        MomentumSearch.Settings settings = new MomentumSearch.Settings();
+        settings.threads = threads;
+        settings.keep = step.kind == MOMENTUM_NEAR ? cfg.momentumNearKeep : cfg.momentumKeep;
+        settings.keptCap = cfg.momentumKeptCap;
+        settings.memoryShare = cfg.momentumMemoryShare;
+        final List<Candidate> buffer = new ArrayList<>();
+        final java.util.function.Consumer<List<Candidate>> early = momentumEarly;
+        final long[] offerAt = {0L};
+        MomentumSearch.Sink sink = (combos, variant, value) -> {
+            boolean[] sprint = new boolean[combos.length];
+            MomentumRules.sprintOf(combos, variant, sprint);
+            Candidate c = new Candidate(combos, sprint, NoTurnKeys.firstSprint(sprint), countEdges(cfg, problem, combos),
+                    countPresses(cfg, problem, combos), 0.0, 0.0, Math.max(0.0, value) * FREE_AIR_VIOL_SCALE);
+            c.family = true;
+            c.momentum = true;
+            c.familyCost = cfg.momentumChangeCost * NoTurnKeys.countEdges(combos);
+            List<Candidate> ready = null;
+            synchronized (buffer) {
+                buffer.add(c);
+                long now = System.nanoTime();
+                if (early != null && now >= offerAt[0]) {
+                    ready = new ArrayList<>(buffer);
+                    buffer.clear();
+                    offerAt[0] = now + cfg.familyOfferNanos;
+                }
+            }
+            if (ready != null) early.accept(ready);
+        };
+        MomentumSearch search = new MomentumSearch(freeAirTables(problem), rules, known, problem.jumpTicks, step.variant,
+                settings, momentumPool, momentumSent, () -> stopFlag.get() || cancelled(), sink);
+        MomentumSearch.Outcome outcome = search.run();
+        momentumPool = search.pool();
+        if (outcome != MomentumSearch.Outcome.COMPLETE) {
+            momentumOver[step.kind] = true;
+            if (step.kind == MOMENTUM_STRICT) momentumOver[MOMENTUM_TAPS] = true;
+        }
+        List<Candidate> rest;
+        synchronized (buffer) {
+            rest = new ArrayList<>(buffer);
+            buffer.clear();
+        }
+        return new LevelResult(rest, search.nodes.get(), search.screens.get(), 0, null);
+    }
+
+    private boolean familyInertia;
+    private boolean familyExact;
+
+    private final FreeAirExact.Warm familyWarm = new FreeAirExact.Warm();
+
+    private StratFamilies.Segment[] familySegments;
+    private int[] familyMinRest;
+    private int[] familyMaxRest;
+    private int familyLo;
+    private int familyHi;
+    private int familyCost;
+
+    static boolean isFamilyStage(int stage) {
+        return stage <= FAMILY_STAGE && stage > MOMENTUM_STAGE;
+    }
+
+    static boolean isMomentumStage(int stage) {
+        return stage <= MOMENTUM_STAGE && stage != NO_STAGE;
+    }
+
+    static boolean isFamilyInertiaStage(int stage) {
+        return stage <= FAMILY_INERTIA_STAGE && stage > FAMILY_EXACT_STAGE;
+    }
+
+    static boolean isFamilyExactStage(int stage) {
+        return stage <= FAMILY_EXACT_STAGE && stage > MOMENTUM_STAGE;
+    }
+
+    static int familyBandOf(int stage) {
+        if (isFamilyExactStage(stage)) return FAMILY_EXACT_STAGE - stage;
+        return isFamilyInertiaStage(stage) ? FAMILY_INERTIA_STAGE - stage : FAMILY_STAGE - stage;
+    }
+
+    static final int NO_STAGE = Integer.MIN_VALUE;
+    static final double FAMILY_INERTIA_COST_GUESS = 10.0;
+    static final long FAMILY_INERTIA_MEASURED_NANOS = 50_000_000L;
+
+    static class StagePlan {
+        private final List<Integer> stages;
+        private int at;
+
+        StagePlan(List<Integer> stages) {
+            this.stages = stages;
+        }
+
+        int next() {
+            return at < stages.size() ? stages.get(at++) : NO_STAGE;
+        }
+
+        void finished(int stage, long nanos) {
+        }
+
+        boolean background() {
+            return false;
+        }
+    }
+
+    static final class FamilyPlan extends StagePlan {
+        private final int bands;
+        private final double inertiaShare;
+        private final long[] plainNanos;
+        private int plainNext;
+        private int exactNext;
+        private int inertiaNext;
+        private long plainTotal;
+        private long inertiaTotal;
+        private double costRatio = FAMILY_INERTIA_COST_GUESS;
+
+        FamilyPlan(int bands, double inertiaShare) {
+            this(bands, inertiaShare, false);
+        }
+
+        FamilyPlan(int bands, double inertiaShare, boolean exactFirst) {
+            super(new ArrayList<Integer>());
+            this.exactNext = exactFirst ? 0 : bands;
+            this.bands = bands;
+            this.inertiaShare = inertiaShare;
+            this.plainNanos = new long[bands];
+        }
+
+        @Override
+        int next() {
+            if (exactNext < bands) return FAMILY_EXACT_STAGE - exactNext++;
+            if (inertiaShare > 0.0 && inertiaNext < plainNext) {
+                double estimate = plainNanos[inertiaNext] * costRatio;
+                if (plainNext >= bands || inertiaTotal + estimate <= inertiaShare * plainTotal) {
+                    return FAMILY_INERTIA_STAGE - inertiaNext++;
+                }
+            }
+            return plainNext < bands ? FAMILY_STAGE - plainNext++ : NO_STAGE;
+        }
+
+        @Override
+        void finished(int stage, long nanos) {
+            if (isFamilyExactStage(stage)) return;
+            int band = familyBandOf(stage);
+            if (!isFamilyInertiaStage(stage)) {
+                plainNanos[band] = nanos;
+                plainTotal += nanos;
+                return;
+            }
+            inertiaTotal += nanos;
+            if (plainNanos[band] >= FAMILY_INERTIA_MEASURED_NANOS) {
+                costRatio = Math.max(1.0, (double) nanos / plainNanos[band]);
+            }
+        }
+    }
+
+    static int familyBands(StratFamilies.Segment[] segments, int bandCost) {
+        int span = StratFamilies.maxCost(segments) - StratFamilies.minCost(segments);
+        return 1 + (span + bandCost - 1) / bandCost;
+    }
+
+    private void enterFamilyBand(StratFamilies.Segment[] segments, int band) {
+        familySegments = segments;
+        int count = segments.length;
+        familyMinRest = new int[count + 1];
+        familyMaxRest = new int[count + 1];
+        for (int i = count - 1; i >= 0; i--) {
+            familyMinRest[i] = familyMinRest[i + 1] + segments[i].cost[0];
+            familyMaxRest[i] = familyMaxRest[i + 1] + segments[i].cost[segments[i].cost.length - 1];
+        }
+        familyHi = familyMinRest[0] + cfg.familyBandCost * band;
+        familyLo = band == 0 ? Integer.MIN_VALUE : familyHi - cfg.familyBandCost;
+    }
+
+    private List<int[]> familyHeadsInBand(StratFamilies.Segment[] segments, int band) {
+        int count = segments.length;
+        int[] minRest = new int[count + 1];
+        int[] maxRest = new int[count + 1];
+        for (int i = count - 1; i >= 0; i--) {
+            minRest[i] = minRest[i + 1] + segments[i].cost[0];
+            maxRest[i] = maxRest[i + 1] + segments[i].cost[segments[i].cost.length - 1];
+        }
+        int hi = minRest[0] + cfg.familyBandCost * band;
+        int lo = band == 0 ? Integer.MIN_VALUE : hi - cfg.familyBandCost;
+        int rest = Math.min(2, count);
+        List<int[]> all = familyHeads(segments);
+        List<int[]> heads = new ArrayList<>();
+        for (int[] head : all) {
+            int cost = segments[0].cost[head[0]] + (count > 1 ? segments[1].cost[head[1]] : 0);
+            if (cost + minRest[rest] > hi || cost + maxRest[rest] <= lo) continue;
+            heads.add(new int[]{head[0], head[1], cost});
+        }
+        heads.sort((x, y) -> Integer.compare(x[2], y[2]));
+        return heads;
+    }
+
+    private static List<int[]> familyHeads(StratFamilies.Segment[] segments) {
+        List<int[]> heads = new ArrayList<>();
+        int second = segments.length > 1 ? segments[1].cost.length : 1;
+        for (int a = 0; a < segments[0].cost.length; a++) {
+            for (int b = 0; b < second; b++) heads.add(new int[]{a, b});
+        }
+        return heads;
+    }
+
+    private void enumFamilyHead(int[] combos, int[] head) {
+        StratFamilies.Segment first = familySegments[0];
+        if (familyLate) {
+            int[] starts = new int[familySegments.length];
+            int[] options = new int[familySegments.length];
+            for (int i = 0; i < starts.length; i++) {
+                starts[i] = familySegments[i].start;
+                options[i] = familySegments[i].cost.length;
+            }
+            int[][][] keys = null;
+            if (cfg.familySubtreeCuts > 0) {
+                keys = new int[starts.length][][];
+                for (int i = 0; i < starts.length && keys != null; i++) {
+                    int end = i + 1 < starts.length ? starts[i + 1] : n;
+                    if ((i == 0 && starts[i] != 0) || familySegments[i].length != end - starts[i]) keys = null;
+                    else keys[i] = familySegments[i].keys;
+                }
+            }
+            familyFast.layout(starts, options, keys);
+            familyFast.choose(0, head[0]);
+            if (starts.length > 1) familyFast.choose(1, head[1]);
+        }
+        int cost = first.cost[head[0]];
+        System.arraycopy(first.keys[head[0]], 0, combos, first.start, first.length);
+        if (familySegments.length == 1) {
+            enumFamily(combos, 1, cost, 0);
+            return;
+        }
+        StratFamilies.Segment second = familySegments[1];
+        cost += second.cost[head[1]];
+        if (cost + familyMinRest[2] > familyHi || cost + familyMaxRest[2] <= familyLo) return;
+        System.arraycopy(second.keys[head[1]], 0, combos, second.start, second.length);
+        enumFamily(combos, 2, cost, 0);
+    }
+
+    private boolean familyLate;
+
+    private byte[][] familyAlive;
+
+    private void enumFamily(int[] combos, int index, int cost, int checkedGroups) {
+        if (cancelled()) return;
+        if (index >= familySegments.length) {
+            if (cost > familyLo && cost <= familyHi) {
+                familyCost = cost;
+                evalComplete(combos);
+            }
+            return;
+        }
+        StratFamilies.Segment segment = familySegments[index];
+        int active = checkedGroups;
+        while (active < groups.length && groups[active].tick <= segment.start) active++;
+        if (!familyLate && n - segment.start > 3 && active > checkedGroups && active > 0
+                && prefixInfeasible(combos, segment.start, active)) {
+            pruned++;
+            return;
+        }
+        boolean subtree = familyLate && cfg.familySubtreeCuts > 0 && index >= 2;
+        boolean last = index + 1 == familySegments.length;
+        int firstRun = -1;
+        if (subtree) {
+            boolean[] sprint = sprintABuf;
+            for (int t = 0; t < segment.start; t++) {
+                sprint[t] = NoTurnKeys.isRun(combos[t]);
+                if (sprint[t] && firstRun < 0) firstRun = t;
+            }
+            if (index == 2 && familyFast.subtreeRejected(index, combos, sprint, firstRun, familyReject(),
+                    cfg.familySubtreeCuts)) {
+                pruned++;
+                return;
+            }
+        }
+        int lo = 0;
+        while (lo < segment.cost.length && cost + segment.cost[lo] + familyMaxRest[index + 1] <= familyLo) lo++;
+        int hi = lo;
+        while (hi < segment.cost.length && cost + segment.cost[hi] + familyMinRest[index + 1] <= familyHi) hi++;
+        boolean filtered = false;
+        byte[] alive = null;
+        if (subtree && hi > lo) {
+            if (familyAlive == null || familyAlive.length != familySegments.length) familyAlive = new byte[familySegments.length][];
+            if (familyAlive[index] == null || familyAlive[index].length < segment.cost.length) {
+                familyAlive[index] = new byte[segment.cost.length];
+            }
+            alive = familyAlive[index];
+            filtered = familyFast.filterChoices(index, lo, hi, combos, sprintABuf, firstRun, familyReject(),
+                    cfg.familySubtreeCuts, alive);
+        }
+        for (int i = lo; i < hi; i++) {
+            int next = cost + segment.cost[i];
+            if (filtered && alive[i] == 0) {
+                if (last) scored++;
+                else pruned++;
+                continue;
+            }
+            System.arraycopy(segment.keys[i], 0, combos, segment.start, segment.length);
+            if (familyLate) familyFast.choose(index, i);
+            enumFamily(combos, index + 1, next, active);
+        }
+    }
+
+    private double familyReject() {
+        return familyInertia ? cfg.familyKeep + cfg.familyReach : familyLimit();
     }
 
     private void trimPool() {
@@ -1235,10 +1738,12 @@ public final class StructurePoolDriver {
             int tb = certifyTier(cfg, b);
             if (ta != tb) return Integer.compare(ta, tb);
             if (ta == SCREEN_EXACT_TIER) {
+                if (a.familyCost != b.familyCost) return Integer.compare(a.familyCost, b.familyCost);
                 if (a.presses != b.presses) return Integer.compare(a.presses, b.presses);
                 if (a.backward != b.backward) return Integer.compare(a.backward, b.backward);
                 return Double.compare(a.byteViol, b.byteViol);
             }
+            if (a.family != b.family) return a.family ? 1 : -1;
             int byViol = Double.compare(a.byteViol, b.byteViol);
             if (byViol != 0) return byViol;
             if (a.presses != b.presses) return Integer.compare(a.presses, b.presses);
@@ -1266,8 +1771,8 @@ public final class StructurePoolDriver {
         int ra = NoTurnCertifier.reversals(a.yaws);
         int rb = NoTurnCertifier.reversals(b.yaws);
         if (ra != rb) return ra < rb;
-        long turnA = Math.round(maxTurnDeg(a.yaws));
-        long turnB = Math.round(maxTurnDeg(b.yaws));
+        long turnA = Math.round(NoTurnRanking.turnDeg(a));
+        long turnB = Math.round(NoTurnRanking.turnDeg(b));
         if (turnA != turnB) return turnA < turnB;
         if (a.jaAll != b.jaAll) return !a.jaAll;
         if (a.ja != b.ja) return !a.ja;
@@ -1299,6 +1804,7 @@ public final class StructurePoolDriver {
         final long byteScreened;
         final long pruned;
         final List<Candidate> beam;
+        String note = "";
 
         LevelResult(List<Candidate> pool, long scored, long byteScreened, long pruned, List<Candidate> beam) {
             this.pool = pool;
@@ -1429,6 +1935,14 @@ public final class StructurePoolDriver {
     static final int REPAIR_STAGE = -1;
 
     private static final String WATCH = System.getProperty("pkc.pool.watch", "");
+    private static final String[] WATCH_PARTS = WATCH.isEmpty() ? new String[0] : WATCH.split(";");
+
+    static boolean watching(int[] combos) {
+        if (WATCH_PARTS.length == 0) return false;
+        String keys = NoTurnKeys.describe(combos);
+        for (String part : WATCH_PARTS) if (part.trim().equals(keys)) return true;
+        return false;
+    }
     private long[] watchHash;
     private String[] watchKeys;
 
@@ -1699,6 +2213,7 @@ public final class StructurePoolDriver {
             return null;
         }
         long start = System.nanoTime();
+        runStartNanos = start;
         progress.update("enumerating low-edge schedules", 0.0);
 
         prepare(problem);
@@ -1717,7 +2232,21 @@ public final class StructurePoolDriver {
         final AtomicBoolean stopEnum = new AtomicBoolean(false);
         deadlineNanos = deadline;
         PoolCertifier certifier = new PoolCertifier(model, cfg, cancel, progress, problem, deadline, multi);
-        ExecutorService pipeExec = Executors.newSingleThreadExecutor();
+        runFamilySegments = null;
+        if (cfg.familyStage && problem.jumpTicks.length > 0 && (cfg.families != null || StratFamilies.available())) {
+            StratFamilies library = cfg.families != null ? cfg.families : StratFamilies.shipped();
+            runFamilySegments = library.segmentsFor(n, problem.jumpTicks);
+        }
+        runMomentumSteps = null;
+        java.util.Arrays.fill(momentumOver, false);
+        momentumPool = new ArrayList<>();
+        momentumSent.clear();
+        if (cfg.momentumStage && problem.jumpTicks.length > 0) {
+            FreeAirExact.Tables tables = freeAirTables(problem);
+            if (tables != null && MomentumSearch.walkedTicks(tables, problem.jumpTicks) > 0) runMomentumSteps = momentumSteps(cfg);
+        }
+        final boolean laned = runFamilySegments != null || runMomentumSteps != null;
+        ExecutorService pipeExec = laned ? Executors.newFixedThreadPool(3) : Executors.newSingleThreadExecutor();
         try {
             int lastStage = cfg.maxEdges + (cfg.tapsStage && cfg.minDwell > 1 ? 1 : 0);
             int firstLevel = Math.max(0, Math.min(cfg.minLevel, cfg.maxEdges));
@@ -1727,7 +2256,22 @@ public final class StructurePoolDriver {
                 if (cfg.repairStage && cfg.repairWidth > 0 && level == cfg.repairAfterLevel) stages.add(REPAIR_STAGE);
             }
             beam = new ArrayList<>();
-            LevelResult current = enumerateLevel(problem, enumThreads, stages.get(0), stopEnum);
+            if (laned) {
+                List<StagePlan> lanes = new ArrayList<>();
+                if (runFamilySegments != null) {
+                    lanes.add(new FamilyPlan(familyBands(runFamilySegments, cfg.familyBandCost),
+                            cfg.familyReach > 0.0 ? cfg.familyInertiaShare : 0.0, cfg.familyExactFirst));
+                }
+                if (runMomentumSteps != null) lanes.add(new MomentumPlan(runMomentumSteps, momentumOver));
+                if (cfg.changeLevels) lanes.add(new StagePlan(stages));
+                int heldUntilStages = stages.indexOf(Integer.valueOf(cfg.familyAfterLevel)) + 1;
+                boolean hold = runFamilySegments != null && cfg.changeLevels && cfg.familyDelayNanos > 0L
+                        && heldUntilStages > 0;
+                runLanes(problem, certifier, pipeExec, lanes, hold ? 0 : -1, heldUntilStages,
+                        start + cfg.familyDelayNanos, enumThreads, stopEnum);
+                stages = new ArrayList<>();
+            }
+            LevelResult current = stages.isEmpty() ? null : enumerateLevel(problem, enumThreads, stages.get(0), stopEnum);
             for (int si = 0; si < stages.size(); si++) {
                 final int level = stages.get(si);
                 if (current.beam != null) {
@@ -1810,14 +2354,13 @@ public final class StructurePoolDriver {
             "jump angle on every jump"};
 
     private NoTurnResult runRounds(NoTurnProblem problem, SolverGraph graph, long start) {
-        prepare(problem);
         NoTurnProblem[] structures = {problem, NoTurnProblem.fromJaLast(problem.baseSpec, model),
                 NoTurnProblem.from(problem.baseSpec, model, true)};
         int threads = Math.max(1, NoTurnParallel.resolveThreads(cfg.threads));
         int per = Math.max(1, threads / structures.length);
         List<StructurePoolDriver> drivers = new ArrayList<>();
         for (int si = 0; si < structures.length; si++) {
-            Config cfg2 = copyConfig(cfg);
+            Config cfg2 = cfg.copy();
             cfg2.threads = per;
             cfg2.allowJa = false;
             cfg2.jaAllPass = false;
@@ -1866,47 +2409,6 @@ public final class StructurePoolDriver {
     }
 
 
-    private static Config copyConfig(Config c) {
-        Config o = new Config();
-        o.maxEdges = c.maxEdges;
-        o.minDwell = c.minDwell;
-        o.alphabet = c.alphabet;
-        o.takeoffCombos = c.takeoffCombos;
-        o.tapsStage = c.tapsStage;
-        o.repairStage = c.repairStage;
-        o.repairAfterLevel = c.repairAfterLevel;
-        o.repairWidth = c.repairWidth;
-        o.repairPairs = c.repairPairs;
-        o.repairRounds = c.repairRounds;
-        o.repairBudgetNanos = c.repairBudgetNanos;
-        o.repairPoolCap = c.repairPoolCap;
-        o.repairFlashNanos = c.repairFlashNanos;
-        o.diskGrid = c.diskGrid;
-        o.diskCoarseStride = c.diskCoarseStride;
-        o.diskMidStride = c.diskMidStride;
-        o.diskEarlyOutViol = c.diskEarlyOutViol;
-        o.diskKeep = c.diskKeep;
-        o.slackScale = c.slackScale;
-        o.byteExact = c.byteExact;
-        o.byteFeasible = c.byteFeasible;
-        o.poolCap = c.poolCap;
-        o.perEdgeCertify = c.perEdgeCertify;
-        o.maxCertify = c.maxCertify;
-        o.extraCertify = c.extraCertify;
-        o.extraCertifyNanos = c.extraCertifyNanos;
-        o.certifyBudgetNanos = c.certifyBudgetNanos;
-        o.searchBudgetNanos = c.searchBudgetNanos;
-        o.nearSearchBudgetNanos = c.nearSearchBudgetNanos;
-        o.totalBudgetNanos = c.totalBudgetNanos;
-        o.turnCombo = c.turnCombo;
-        o.allowJa = c.allowJa;
-        o.jaAllPass = c.jaAllPass;
-        o.minLevel = c.minLevel;
-        o.playable = c.playable;
-        o.threads = c.threads;
-        return o;
-    }
-
     private static LevelResult awaitLevel(java.util.concurrent.Future<LevelResult> f) {
         try {
             return f.get();
@@ -1915,10 +2417,279 @@ public final class StructurePoolDriver {
         }
     }
 
+    private StratFamilies.Segment[] runFamilySegments;
+
+    private static final class StageResult {
+        final int stage;
+        final LevelResult result;
+        final boolean early;
+
+        StageResult(int stage, LevelResult result, boolean early) {
+            this.stage = stage;
+            this.result = result;
+            this.early = early;
+        }
+    }
+
+    private final Object beamLock = new Object();
+
+    private void runLanes(final NoTurnProblem problem, PoolCertifier certifier, ExecutorService exec,
+                          final List<StagePlan> lanes, final int heldLane, final int heldUntilStages,
+                          final long heldUntilNanos, final int enumThreads, final AtomicBoolean stopEnum) {
+        familyEarly = null;
+        final int laneCount = lanes.size();
+        final java.util.concurrent.ConcurrentLinkedQueue<StageResult> finished =
+                new java.util.concurrent.ConcurrentLinkedQueue<>();
+        final java.util.concurrent.atomic.AtomicInteger active = new java.util.concurrent.atomic.AtomicInteger();
+        final java.util.concurrent.atomic.AtomicInteger ended = new java.util.concurrent.atomic.AtomicInteger();
+        final java.util.concurrent.atomic.AtomicInteger freeStages = new java.util.concurrent.atomic.AtomicInteger();
+        final boolean hold = heldLane >= 0 && laneCount > 1;
+        List<java.util.concurrent.Future<?>> futures = new ArrayList<>();
+        for (int index = 0; index < laneCount; index++) {
+            final int lane = index;
+            final boolean held = hold && lane == heldLane;
+            final boolean background = lanes.get(lane).background();
+            if (!held && !background) active.incrementAndGet();
+            futures.add(exec.submit(() -> {
+                try {
+                    if (held) {
+                        while (!stopEnum.get() && System.nanoTime() < heldUntilNanos
+                                && freeStages.get() < heldUntilStages && ended.get() == 0) {
+                            try {
+                                Thread.sleep(5L);
+                            } catch (InterruptedException e) {
+                                Thread.currentThread().interrupt();
+                                return;
+                            }
+                        }
+                        if (!background) active.incrementAndGet();
+                    }
+                    if (background) {
+                        while (!stopEnum.get() && !cancelled()
+                                && System.nanoTime() - runStartNanos < cfg.momentumDelayNanos) {
+                            try {
+                                Thread.sleep(5L);
+                            } catch (InterruptedException e) {
+                                Thread.currentThread().interrupt();
+                                return;
+                            }
+                        }
+                    }
+                    StagePlan plan = lanes.get(lane);
+                    while (true) {
+                        if (stopEnum.get() || cancelled()) break;
+                        int stage = plan.next();
+                        if (stage == NO_STAGE) break;
+                        int busy = active.get();
+                        int threads = background
+                                ? busy > 0 ? Math.max(1, enumThreads / cfg.momentumThreadShare) : enumThreads
+                                : Math.max(1, enumThreads / Math.max(1, busy));
+                        if (isFamilyStage(stage)) {
+                            final int early = stage;
+                            familyEarly = list -> finished.add(
+                                    new StageResult(early, new LevelResult(list, 0, 0, 0, null), true));
+                        }
+                        if (isMomentumStage(stage)) {
+                            final int early = stage;
+                            momentumEarly = list -> finished.add(
+                                    new StageResult(early, new LevelResult(list, 0, 0, 0, null), true));
+                        }
+                        long stageStart = System.nanoTime();
+                        LevelResult result = enumerateLevel(problem, threads, stage, stopEnum);
+                        plan.finished(stage, System.nanoTime() - stageStart);
+                        if (STAGE_TIMES) {
+                            System.out.println("STAGE " + stageLabel(stage) + " threads=" + threads + " scored="
+                                    + result.scored + " screened=" + result.byteScreened + " kept=" + result.pool.size()
+                                    + " ms=" + (System.nanoTime() - stageStart) / 1_000_000L + " atMs="
+                                    + (System.nanoTime() - runStartNanos) / 1_000_000L + result.note + runtimeNote()
+                                    + (stopEnum.get() ? " cut" : ""));
+                        }
+                        if (stopEnum.get()) break;
+                        if (result.beam != null) {
+                            synchronized (beamLock) {
+                                beam = mergeBeam(beam, result.beam, cfg.repairWidth);
+                            }
+                        }
+                        finished.add(new StageResult(stage, result, false));
+                        if (!held) freeStages.incrementAndGet();
+                    }
+                } finally {
+                    if (!background) active.decrementAndGet();
+                    ended.incrementAndGet();
+                }
+            }));
+        }
+        while (true) {
+            StageResult next;
+            while ((next = finished.poll()) != null) offerStage(certifier, next.result, next.stage, next.early);
+            if (cancelled() || certifier.variationsOver()) break;
+            if (cfg.streamCertify) {
+                if (certifier.stream()) continue;
+                if (ended.get() == laneCount && finished.isEmpty()) break;
+                continue;
+            }
+            if (ended.get() == laneCount && finished.isEmpty()) break;
+            if (certifier.certifyTurn()) continue;
+            if (certifier.certifyNext(false, true) || certifier.certifyNext(false, false)) continue;
+            try {
+                Thread.sleep(2L);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
+        certifier.land(cancelled() || certifier.variationsOver());
+        stopEnum.set(true);
+        for (java.util.concurrent.Future<?> f : futures) {
+            try {
+                f.get();
+            } catch (InterruptedException | java.util.concurrent.ExecutionException e) {
+                throw new IllegalStateException(e);
+            }
+        }
+        stopEnum.set(false);
+    }
+
+    private void offerStage(PoolCertifier certifier, LevelResult current, int stage, boolean early) {
+        if (early) {
+            pool.addAll(current.pool);
+            watchRank("early offer " + stageLabel(stage), current.pool);
+            certifier.offer(current.pool);
+            return;
+        }
+        pool.addAll(current.pool);
+        scored += current.scored;
+        byteScreened += current.byteScreened;
+        pruned += current.pruned;
+        List<Candidate> ranked = new ArrayList<>(current.pool);
+        ranked.sort(rankPool());
+        int cap = stage == REPAIR_STAGE ? Integer.MAX_VALUE : cfg.poolCap;
+        watchRank("offer " + stageLabel(stage) + " (" + ranked.size() + " kept)", ranked);
+        if (ranked.size() > cap) ranked.subList(cap, ranked.size()).clear();
+        certifier.offer(ranked);
+        certifier.resetCertifyCount();
+        if (!isFamilyStage(stage) && !isMomentumStage(stage)) certifier.openChangeTurns();
+        if (stage == REPAIR_STAGE) certifier.liftCertifyCap();
+        progress.update("certify " + stageLabel(stage) + " (" + ranked.size() + " kept, " + scored + " scored)", 0.4);
+    }
+
+    private static final boolean STAGE_TIMES = Boolean.getBoolean("pkc.pool.stageTimes");
+
+    static String runtimeNote() {
+        long gc = 0L;
+        for (java.lang.management.GarbageCollectorMXBean bean
+                : java.lang.management.ManagementFactory.getGarbageCollectorMXBeans()) {
+            gc += Math.max(0L, bean.getCollectionTime());
+        }
+        java.lang.management.CompilationMXBean jit = java.lang.management.ManagementFactory.getCompilationMXBean();
+        long compile = jit != null && jit.isCompilationTimeMonitoringSupported() ? jit.getTotalCompilationTime() : -1L;
+        return " gcMs=" + gc + " jitMs=" + compile + " live=" + Thread.activeCount();
+    }
+
+    private long runStartNanos;
+
+    private String stageLabel(int stage) {
+        return stage == REPAIR_STAGE ? "repair"
+                : isMomentumStage(stage) ? momentumLabel(runMomentumSteps.get(MOMENTUM_STAGE - stage))
+                : isFamilyStage(stage) ? "families band=" + familyBandOf(stage)
+                        + (isFamilyInertiaStage(stage) ? " inertia" : isFamilyExactStage(stage) ? " exact" : "")
+                : "edges=" + Math.min(stage, cfg.maxEdges) + (stage > cfg.maxEdges ? " taps" : "");
+    }
+
+    private static String momentumLabel(MomentumStep step) {
+        return "momentum changes=" + step.level + (step.kind == MOMENTUM_TAPS ? " taps" : step.kind == MOMENTUM_NEAR ? " near" : "")
+                + (step.variant > 0 ? " sprint+" + step.variant : "");
+    }
+
+    private final List<FreeAirExact.Screen> familyScreens = new ArrayList<>();
+
+    private LevelResult enumerateFamilyBand(NoTurnProblem problem, int threads, int band, boolean inertia,
+                                            boolean exact, AtomicBoolean stopFlag) {
+        final StratFamilies.Segment[] segments = runFamilySegments;
+        final long setupStart = System.nanoTime();
+        final java.util.concurrent.atomic.AtomicLong workerCpu = new java.util.concurrent.atomic.AtomicLong();
+        final List<int[]> heads = familyHeadsInBand(segments, band);
+        freeAirTables(problem);
+        final java.util.concurrent.atomic.AtomicInteger next = new java.util.concurrent.atomic.AtomicInteger();
+        List<StructurePoolDriver> workers = new ArrayList<>();
+        int workerCount = Math.max(1, Math.min(threads, heads.size()));
+        for (int i = 0; i < workerCount; i++) {
+            StructurePoolDriver w = new StructurePoolDriver(model, cfg, cancel, null);
+            w.stop = stopFlag;
+            w.deadlineNanos = deadlineNanos;
+            w.prepare(problem);
+            w.scoreLevel = 0;
+            w.enterFamilyBand(segments, band);
+            w.familyInertia = inertia;
+            w.familyExact = exact;
+            if (familyTables != null) {
+                while (familyScreens.size() <= i) {
+                    familyScreens.add(new FreeAirExact.Screen(familyTables, cfg.familyCutPool));
+                }
+                w.familyFast = familyScreens.get(i);
+                w.familyLate = cfg.familyCutPool > 0;
+            }
+            w.familyEarly = familyEarly;
+            w.familyEarlyAt = System.nanoTime() + cfg.familyOfferNanos;
+            workers.add(w);
+        }
+        final long setupNanos = System.nanoTime() - setupStart;
+        ExecutorService exec = Executors.newFixedThreadPool(workerCount);
+        List<java.util.concurrent.Future<?>> futures = new ArrayList<>();
+        try {
+            for (final StructurePoolDriver w : workers) {
+                futures.add(exec.submit(() -> {
+                    long cpu = STAGE_TIMES ? PoolCertifier.threadCpu() : 0L;
+                    try {
+                        int[] combos = new int[n];
+                        int h;
+                        while ((h = next.getAndIncrement()) < heads.size()) {
+                            if (w.cancelled()) return;
+                            w.enumFamilyHead(combos, heads.get(h));
+                        }
+                    } finally {
+                        if (STAGE_TIMES) workerCpu.addAndGet(PoolCertifier.threadCpu() - cpu);
+                    }
+                }));
+            }
+            for (java.util.concurrent.Future<?> f : futures) {
+                try {
+                    f.get();
+                } catch (InterruptedException | java.util.concurrent.ExecutionException e) {
+                    throw new IllegalStateException(e);
+                }
+            }
+        } finally {
+            exec.shutdownNow();
+        }
+        List<Candidate> out = new ArrayList<>();
+        long scoredSum = 0;
+        long screenedSum = 0;
+        long prunedSum = 0;
+        for (StructurePoolDriver w : workers) {
+            out.addAll(w.pool);
+            out.addAll(w.familyEarlyBuf);
+            scoredSum += w.scored;
+            screenedSum += w.byteScreened;
+            prunedSum += w.pruned;
+        }
+        LevelResult result = new LevelResult(out, scoredSum, screenedSum, prunedSum, null);
+        if (STAGE_TIMES) {
+            result.note = " heads=" + heads.size() + " setupMs=" + setupNanos / 1_000_000L + " workerCpuMs="
+                    + workerCpu.get() / 1_000_000L;
+        }
+        return result;
+    }
+
     private LevelResult enumerateLevel(NoTurnProblem problem, int threads, int level, AtomicBoolean stopFlag) {
         if (level == REPAIR_STAGE) {
             stop = stopFlag;
             return repairStage(problem, threads);
+        }
+        if (isMomentumStage(level)) return enumerateMomentum(problem, threads, level, stopFlag);
+        if (isFamilyStage(level)) {
+            return enumerateFamilyBand(problem, threads, familyBandOf(level), isFamilyInertiaStage(level),
+                    isFamilyExactStage(level), stopFlag);
         }
         final boolean collectBeam = cfg.repairStage && cfg.repairWidth > 0 && level <= cfg.repairAfterLevel;
         if (threads <= 1) {
@@ -2029,14 +2800,5 @@ public final class StructurePoolDriver {
             pr += w.pruned;
         }
         return new LevelResult(out, sc, bs, pr, levelBeam);
-    }
-
-    static double maxTurnDeg(double[] yaws) {
-        if (yaws == null || yaws.length < 2) return 0.0;
-        double m = 0.0;
-        for (int t = 1; t < yaws.length; t++) {
-            m = Math.max(m, Math.abs(Angles.wrapDelta(yaws[t] - yaws[t - 1])));
-        }
-        return m;
     }
 }

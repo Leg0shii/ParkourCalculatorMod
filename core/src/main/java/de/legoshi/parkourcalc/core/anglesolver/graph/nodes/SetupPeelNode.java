@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.core.anglesolver.graph.nodes;
 
+import de.legoshi.parkourcalc.core.anglesolver.graph.BudgetWatchdog;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Candidate;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphContext;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Guarantee;
@@ -15,6 +16,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.LongRunSolver;
+import de.legoshi.parkourcalc.core.anglesolver.solver.SolveClock;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolverTrace;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 
@@ -44,7 +46,7 @@ public final class SetupPeelNode implements NodeRuntime {
         if (in != null && in.yaws != null) return NodeOutcome.of(Guarantee.NONE, in);
         if (ctx.jumpCount() <= 1) return NodeOutcome.of(Guarantee.NONE, in);
         if (ctx.foldableDf() && ctx.overallDeadline() > 0) {
-            long cap = System.nanoTime() + FOLD_PEEL_CAP_NANOS;
+            long cap = SolveClock.nanoTime() + FOLD_PEEL_CAP_NANOS;
             deadlineNanos = deadlineNanos > 0 ? Math.min(deadlineNanos, cap) : cap;
         }
         double[] peeled = peel(ctx, nodeToken, deadlineNanos);
@@ -62,7 +64,7 @@ public final class SetupPeelNode implements NodeRuntime {
         while (lead < n && !Double.isNaN(sc.slipAt(lead)) && !sc.jumpAt(lead)) lead++;
         if (lead < 1 || lead >= n) return null;
 
-        long stageDeadline = deadlineNanos > 0 ? deadlineNanos : System.nanoTime() + 12_000_000_000L;
+        long stageDeadline = deadlineNanos > 0 ? deadlineNanos : SolveClock.nanoTime() + 12_000_000_000L;
         if (SolverTrace.on()) SolverTrace.log("ENGINE", "setup peel start lead=%d", lead);
 
         List<JumpConstraint> prefixCons = new ArrayList<>();
@@ -77,13 +79,10 @@ public final class SetupPeelNode implements NodeRuntime {
         int steps = (int) Math.round(360.0 / stepDeg);
         double[] best = null;
         double bestViol = Double.POSITIVE_INFINITY;
-        PeelWatchdog watchdog = new PeelWatchdog(cancel);
-        Thread watchdogThread = new Thread(watchdog, "angle-solver-peel-watchdog");
-        watchdogThread.setDaemon(true);
-        watchdogThread.start();
+        BudgetWatchdog watchdog = new BudgetWatchdog(cancel);
         try {
             for (int k = 0; k < steps; k++) {
-                if (cancel.get() || System.nanoTime() > stageDeadline) break;
+                if (cancel.get() || SolveClock.nanoTime() > stageDeadline) break;
                 double[] yaws = new double[n];
                 java.util.Arrays.fill(yaws, Angles.wrap(sc.startYaw + k * stepDeg));
                 double[] gf = sc.toGameFacings(yaws);
@@ -94,9 +93,9 @@ public final class SetupPeelNode implements NodeRuntime {
                         new Vec3dCore(path.velX[lead], path.velY[lead], path.velZ[lead]),
                         (float) gf[lead - 1]);
                 AtomicBoolean candCancel = watchdog.arm(
-                        Math.min(stageDeadline, System.nanoTime() + candidateMs * 1_000_000L));
+                        Math.min(stageDeadline, SolveClock.nanoTime() + candidateMs * 1_000_000L));
                 double[] tailYaws = LongRunSolver.solve(em, tail, ctx.feasTol, candCancel, cfg);
-                watchdog.current = null;
+                watchdog.disarm();
                 if (tailYaws == null) {
                     if (SolverTrace.on()) SolverTrace.log("ENGINE", "peel cand=%.1f tail miss", yaws[0]);
                     continue;
@@ -113,44 +112,11 @@ public final class SetupPeelNode implements NodeRuntime {
                 }
             }
         } finally {
-            watchdog.done = true;
-            watchdogThread.interrupt();
+            watchdog.shutdown();
         }
         if (SolverTrace.on()) {
             SolverTrace.log("ENGINE", "setup peel %s", best == null ? "miss" : "best viol=" + bestViol);
         }
         return best;
-    }
-
-    private static final class PeelWatchdog implements Runnable {
-        private final AtomicBoolean outer;
-        volatile AtomicBoolean current;
-        volatile long deadlineNanos;
-        volatile boolean done;
-
-        PeelWatchdog(AtomicBoolean outer) {
-            this.outer = outer;
-        }
-
-        AtomicBoolean arm(long deadline) {
-            current = null;
-            AtomicBoolean token = new AtomicBoolean(false);
-            deadlineNanos = deadline;
-            current = token;
-            return token;
-        }
-
-        @Override
-        public void run() {
-            while (!done) {
-                AtomicBoolean c = current;
-                if (c != null && (outer.get() || System.nanoTime() > deadlineNanos)) c.set(true);
-                try {
-                    Thread.sleep(20L);
-                } catch (InterruptedException e) {
-                    return;
-                }
-            }
-        }
     }
 }

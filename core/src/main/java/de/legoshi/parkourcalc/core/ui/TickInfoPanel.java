@@ -5,6 +5,7 @@ import de.legoshi.parkourcalc.core.imgui.RenderInterface;
 import de.legoshi.parkourcalc.core.sim.SimulationRunner;
 import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
+import de.legoshi.parkourcalc.core.ui.util.TeleportCommand;
 import de.legoshi.parkourcalc.core.ui.util.TooltipUtil;
 import imgui.ImGui;
 import imgui.ImGuiIO;
@@ -59,13 +60,6 @@ public final class TickInfoPanel implements RenderInterface {
             p = PlaybackController.applyPitch(p, inputData.get(i));
         }
         return p;
-    }
-
-    private static float wrapDegrees(float value) {
-        float f = value % 360.0f;
-        if (f >= 180.0f) f -= 360.0f;
-        if (f < -180.0f) f += 360.0f;
-        return f;
     }
 
     private static int clampPrecision(int p) {
@@ -194,7 +188,7 @@ public final class TickInfoPanel implements RenderInterface {
                 rowNum(stat.label(), appliedYaw, decimals, tip);
                 break;
             case IN_GAME_YAW:
-                rowNum(stat.label(), wrapDegrees(appliedYaw), decimals, tip);
+                rowNum(stat.label(), TeleportCommand.wrapDegrees(appliedYaw), decimals, tip);
                 break;
             case PITCH:
                 rowNum(stat.label(), appliedPitch, decimals, tip);

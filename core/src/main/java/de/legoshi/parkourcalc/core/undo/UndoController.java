@@ -1,5 +1,7 @@
 package de.legoshi.parkourcalc.core.undo;
 
+import de.legoshi.parkourcalc.core.io.WriterThread;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -7,7 +9,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -259,29 +260,11 @@ public final class UndoController<T> {
     }
 
     private void drainWorker() {
-        if (worker == null) return;
-        try {
-            worker.submit(() -> { }).get(30, TimeUnit.SECONDS);
-        } catch (Exception ignored) {
-        }
+        WriterThread.drain(worker, 30);
     }
 
     private static ExecutorService worker() {
-        if (worker == null) {
-            ExecutorService executor = Executors.newSingleThreadExecutor(r -> {
-                Thread t = new Thread(r, "pkc-undo-writer");
-                t.setDaemon(true);
-                return t;
-            });
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                executor.shutdown();
-                try {
-                    executor.awaitTermination(3, TimeUnit.SECONDS);
-                } catch (InterruptedException ignored) {
-                }
-            }, "pkc-undo-flush"));
-            worker = executor;
-        }
+        if (worker == null) worker = WriterThread.create("pkc-undo-writer", "pkc-undo-flush");
         return worker;
     }
 

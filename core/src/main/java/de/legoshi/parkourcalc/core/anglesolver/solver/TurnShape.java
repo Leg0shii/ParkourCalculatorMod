@@ -13,12 +13,22 @@ public final class TurnShape {
     public final int accelFlips;
     public final double snapDeg;
     public final double jerkDeg;
+    public final int edges;
 
     private TurnShape(int reversals, int accelFlips, double snapDeg, double jerkDeg) {
+        this(reversals, accelFlips, snapDeg, jerkDeg, 0);
+    }
+
+    private TurnShape(int reversals, int accelFlips, double snapDeg, double jerkDeg, int edges) {
         this.reversals = reversals;
         this.accelFlips = accelFlips;
         this.snapDeg = snapDeg;
         this.jerkDeg = jerkDeg;
+        this.edges = edges;
+    }
+
+    public TurnShape withEdges(int edges) {
+        return new TurnShape(reversals, accelFlips, snapDeg, jerkDeg, edges);
     }
 
     public static double[] deltas(double anchorYaw, double[] absWrapped) {
@@ -89,11 +99,13 @@ public final class TurnShape {
         if (reversals != o.reversals) return reversals < o.reversals;
         if (accelFlips != o.accelFlips) return accelFlips < o.accelFlips;
         if (Math.abs(snapDeg - o.snapDeg) > TOL) return snapDeg < o.snapDeg;
-        return jerkDeg < o.jerkDeg - TOL;
+        if (Math.abs(jerkDeg - o.jerkDeg) > TOL) return jerkDeg < o.jerkDeg;
+        return edges < o.edges;
     }
 
     @Override
     public String toString() {
-        return String.format(Locale.ROOT, "rev=%d flips=%d snap=%.2f jerk=%.2f", reversals, accelFlips, snapDeg, jerkDeg);
+        String base = String.format(Locale.ROOT, "rev=%d flips=%d snap=%.2f jerk=%.2f", reversals, accelFlips, snapDeg, jerkDeg);
+        return edges > 0 ? base + " edges=" + edges : base;
     }
 }

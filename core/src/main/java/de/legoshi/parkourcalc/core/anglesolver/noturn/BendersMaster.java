@@ -1,6 +1,5 @@
 package de.legoshi.parkourcalc.core.anglesolver.noturn;
 
-import de.legoshi.parkourcalc.core.anglesolver.graph.BuiltinGraphs;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphRunner;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
@@ -60,10 +59,7 @@ public final class BendersMaster {
         public int refineExtraAfterIncumbent = 8;
         public long deadlineNanos = 480_000_000_000L;
 
-        public int delta0OptimizeSec = 8;
-        public int fatOptimizeSec = 4;
         public long delta0CertifyNanos = 12_000_000_000L;
-        public long fatCertifyNanos = 6_000_000_000L;
         public long searchBudgetNanos = 2_000_000_000L;
         public long continuationBudgetNanos = 90_000_000_000L;
         public int threads = 0;
@@ -88,7 +84,6 @@ public final class BendersMaster {
         public boolean v6AncestorProposed;
         public boolean v6AncestorCertifiedFat;
         public boolean v6AncestorContinued;
-        public boolean v6Closed;
         public int closedContinuationIndex = -1;
         public int ancestorContinuationIndex = -1;
         public double bestObjective = Double.NaN;
@@ -110,7 +105,6 @@ public final class BendersMaster {
     private final AtomicBoolean cancel;
     private final Progress progress;
     private final Trace trace = new Trace();
-    private SolverGraph searchGraph;
 
     public BendersMaster(ExactJumpModel model, Config cfg, AtomicBoolean cancel, Progress progress) {
         this.model = model;
@@ -129,7 +123,6 @@ public final class BendersMaster {
             return null;
         }
         long deadline = System.nanoTime() + cfg.deadlineNanos;
-        searchGraph = NoTurnCertifier.searchGraph(cfg.searchBudgetNanos);
 
         int setupEnd = problem.setupEnd;
         boolean takeoffW = problem.jump[setupEnd];
@@ -154,8 +147,6 @@ public final class BendersMaster {
 
         NoTurnProblem wpFat = widened(problem, cfg.fatDelta);
         NoTurnProblem wp0 = widened(problem, 0.0);
-        SolverGraph fatGraph = BuiltinGraphs.optimize(cfg.fatOptimizeSec);
-        SolverGraph delta0Graph = BuiltinGraphs.optimize(cfg.delta0OptimizeSec);
 
         log("master start: structures=" + raw.size() + " diskFeasible=" + trace.diskFeasibleCount
                 + " mode=" + cfg.mode + " alphabet=" + cfg.alphabet.length
@@ -165,13 +156,13 @@ public final class BendersMaster {
 
         if (cfg.deepPairRepair) {
             return polishResult(problem,
-                    solveDeepFamily(problem, master, screens, wpFat, wp0, fatGraph, deadline),
+                    solveDeepFamily(problem, master, screens, wpFat, wp0, deadline),
                     finalGraph);
         }
 
         if (cfg.mode == SlaveMode.FAT_CONTINUATION) {
             return polishResult(problem,
-                    solveFatContinuation(problem, master, screens, iis, wpFat, fatGraph, finalGraph, deadline),
+                    solveFatContinuation(problem, master, screens, iis, wpFat, finalGraph, deadline),
                     finalGraph);
         }
 
@@ -197,12 +188,9 @@ public final class BendersMaster {
             }
 
             Screen sc = screens.get(NoTurnKeys.key(sigma));
-            if (cfg.screenSkip && sc != null) {
-                boolean skip = !sc.diskFeasible || (sc.screened && sc.viol > cfg.screenKeep);
-                if (skip) {
-                    trace.screenSkipped++;
-                    continue;
-                }
+            if (screenSkips(sc)) {
+                trace.screenSkipped++;
+                continue;
             }
 
             boolean isV6Anc = isV6Ancestor(sigma, setupEnd);
@@ -212,9 +200,8 @@ public final class BendersMaster {
                         + " edges=" + edges + " screenViol=" + (sc == null ? "-" : sc.viol));
             }
 
-            int engage = (sc != null && sc.engage != Integer.MAX_VALUE) ? sc.engage : 0;
-            NoTurnResult survivor = slave(problem, wp0, wpFat, delta0Graph, fatGraph, finalGraph,
-                    sigma, engage, isV6Anc, iis, master, deadline);
+            int engage = engageOf(sc);
+            NoTurnResult survivor = slave(problem, wp0, sigma, engage, iis, master, deadline);
             if (survivor != null) {
                 if (incumbent == null || survivor.edges < incumbent.edges
                         || (survivor.edges == incumbent.edges && better(problem.objective, survivor, incumbent))) {
@@ -243,7 +230,7 @@ public final class BendersMaster {
 
     private NoTurnResult solveDeepFamily(NoTurnProblem problem, MinTvMaster master,
                                          Map<String, Screen> screens, NoTurnProblem wpFat, NoTurnProblem wp0,
-                                         SolverGraph fatGraph, long deadline) {
+                                         long deadline) {
         long now = System.nanoTime();
         long collectDeadline = now + Math.max(0L, (deadline - now) / 4);
         List<int[]> seeds = new ArrayList<>();
@@ -257,16 +244,13 @@ public final class BendersMaster {
             trace.masterIterations++;
             trace.smallestEdgeReached = Math.min(trace.smallestEdgeReached, NoTurnKeys.countEdges(sigma));
             Screen sc = screens.get(NoTurnKeys.key(sigma));
-            if (cfg.screenSkip && sc != null) {
-                boolean skip = !sc.diskFeasible || (sc.screened && sc.viol > cfg.screenKeep);
-                if (skip) {
-                    trace.screenSkipped++;
-                    continue;
-                }
+            if (screenSkips(sc)) {
+                trace.screenSkipped++;
+                continue;
             }
-            int engage = (sc != null && sc.engage != Integer.MAX_VALUE) ? sc.engage : 0;
+            int engage = engageOf(sc);
             boolean[] sprint = NoTurnKeys.latchSprint(sigma, engage);
-            NoTurnCertifier.Result rf = certify(wpFat, sigma, sprint, fatGraph, cfg.fatCertifyNanos);
+            NoTurnCertifier.Result rf = certify(wpFat, sigma, sprint);
             trace.certifies++;
             if (rf == null || !rf.feasible) continue;
             trace.fatFeasible++;
@@ -379,8 +363,7 @@ public final class BendersMaster {
 
     private NoTurnResult solveFatContinuation(NoTurnProblem problem, MinTvMaster master,
                                               Map<String, Screen> screens, IisExtractor iis,
-                                              NoTurnProblem wpFat, SolverGraph fatGraph,
-                                              SolverGraph finalGraph, long deadline) {
+                                              NoTurnProblem wpFat, SolverGraph finalGraph, long deadline) {
         List<FatFeasible> pool = new ArrayList<>();
         java.util.Set<String> continued = new java.util.LinkedHashSet<>();
         boolean exhausted = false;
@@ -401,21 +384,18 @@ public final class BendersMaster {
                 trace.smallestEdgeReached = Math.min(trace.smallestEdgeReached, edges);
 
                 Screen sc = screens.get(NoTurnKeys.key(sigma));
-                if (cfg.screenSkip && sc != null) {
-                    boolean skip = !sc.diskFeasible || (sc.screened && sc.viol > cfg.screenKeep);
-                    if (skip) {
-                        trace.screenSkipped++;
-                        continue;
-                    }
+                if (screenSkips(sc)) {
+                    trace.screenSkipped++;
+                    continue;
                 }
                 boolean isV6Anc = isV6Ancestor(sigma, problem.setupEnd);
                 if (isV6Anc) {
                     trace.v6AncestorProposed = true;
                     log("*** V6 ancestor proposed at iter " + trace.masterIterations + " edges=" + edges);
                 }
-                int engage = (sc != null && sc.engage != Integer.MAX_VALUE) ? sc.engage : 0;
+                int engage = engageOf(sc);
                 boolean[] sprint = NoTurnKeys.latchSprint(sigma, engage);
-                NoTurnCertifier.Result rf = fatCertifyOrCut(problem, wpFat, fatGraph, master, iis, sigma, sprint, null);
+                NoTurnCertifier.Result rf = fatCertifyOrCut(problem, wpFat, master, iis, sigma, sprint, null);
                 if (rf == null) continue;
                 trace.fatFeasible++;
                 FatFeasible ff = new FatFeasible(sigma.clone(), edges, rf.objective, isV6Anc);
@@ -427,7 +407,7 @@ public final class BendersMaster {
                     log("  fat-feasible#" + trace.fatFeasible + " edges=" + edges + " obj=" + fmt(rf.objective)
                             + " [" + NoTurnKeys.describe(sigma) + "]");
                 }
-                if (cfg.openingTaps) expandOpeningTaps(problem, wpFat, fatGraph, master, iis, ff, engage, deadline);
+                if (cfg.openingTaps) expandOpeningTaps(problem, wpFat, master, iis, ff, engage, deadline);
             }
 
             boolean canRefill = !exhausted && trace.certifies < cfg.maxCertifies;
@@ -476,12 +456,10 @@ public final class BendersMaster {
     private static final class ContOutcome {
         final NoTurnResult result;
         final long certifies;
-        final boolean rediscoveredV6;
 
-        ContOutcome(NoTurnResult result, long certifies, boolean rediscoveredV6) {
+        ContOutcome(NoTurnResult result, long certifies) {
             this.result = result;
             this.certifies = certifies;
-            this.rediscoveredV6 = rediscoveredV6;
         }
     }
 
@@ -493,13 +471,12 @@ public final class BendersMaster {
         List<int[]> seeds = new ArrayList<>();
         seeds.add(sigma);
         NoTurnResult cont = hom.runFromSeeds(problem, finalGraph, seeds);
-        return new ContOutcome(cont, hom.trace().certifies, hom.trace().rediscoveredV6);
+        return new ContOutcome(cont, hom.trace().certifies);
     }
 
     private NoTurnResult runContinuation(NoTurnProblem problem, SolverGraph finalGraph, int[] sigma) {
         ContOutcome o = runHomotopy(problem, finalGraph, sigma, cancel, 0);
         trace.certifies += o.certifies;
-        if (o.result != null && o.result.violation <= 0.0 && o.rediscoveredV6) trace.v6Closed = true;
         return o.result;
     }
 
@@ -507,7 +484,7 @@ public final class BendersMaster {
         return (int) (trace.continuations - trace.tapContinuations);
     }
 
-    private void expandOpeningTaps(NoTurnProblem problem, NoTurnProblem wpFat, SolverGraph fatGraph,
+    private void expandOpeningTaps(NoTurnProblem problem, NoTurnProblem wpFat,
                                    MinTvMaster master, IisExtractor iis, FatFeasible base, int engage, long deadline) {
         for (int c : cfg.alphabet) {
             if (c == base.combos[0] || cancelled() || System.nanoTime() >= deadline || trace.certifies >= cfg.maxCertifies) continue;
@@ -515,7 +492,7 @@ public final class BendersMaster {
             sigma[0] = c;
             boolean isAnc = isV6AncestorTap(sigma, problem.setupEnd);
             trace.openingTapCertifies++;
-            NoTurnCertifier.Result rf = fatCertifyOrCut(problem, wpFat, fatGraph, master, iis, sigma,
+            NoTurnCertifier.Result rf = fatCertifyOrCut(problem, wpFat, master, iis, sigma,
                     NoTurnKeys.latchSprint(sigma, engage), null);
             if (rf == null) continue;
             trace.openingTapFeasible++;
@@ -609,10 +586,7 @@ public final class BendersMaster {
                 if (cancelled() || flag.get()) return null;
                 ContOutcome o = runHomotopy(problem, finalGraph, sigma, flag, inner);
                 certAcc.addAndGet(o.certifies);
-                if (o.result != null && o.result.violation <= 0.0) {
-                    if (o.rediscoveredV6) trace.v6Closed = true;
-                    return o.result;
-                }
+                if (o.result != null && o.result.violation <= 0.0) return o.result;
                 return null;
             }));
         }
@@ -662,75 +636,39 @@ public final class BendersMaster {
         return null;
     }
 
-    private NoTurnResult slave(NoTurnProblem problem, NoTurnProblem wp0, NoTurnProblem wpFat,
-                               SolverGraph delta0Graph, SolverGraph fatGraph, SolverGraph finalGraph,
-                               int[] sigma, int engage, boolean isV6Anc, IisExtractor iis,
-                               MinTvMaster master, long deadline) {
+    private NoTurnResult slave(NoTurnProblem problem, NoTurnProblem wp0, int[] sigma, int engage,
+                               IisExtractor iis, MinTvMaster master, long deadline) {
         int firstRun = firstRun(sigma);
         int edges = NoTurnKeys.countEdges(sigma);
 
-        if (cfg.mode == SlaveMode.DELTA0_ONLY) {
-            int[] engages = engageCandidates(firstRun, engage);
-            NoTurnCertifier.Result worst = null;
-            boolean[] worstSprint = null;
-            for (int eng : engages) {
-                if (cancelled() || System.nanoTime() >= deadline || trace.certifies >= cfg.maxCertifies) break;
-                boolean[] sprint = NoTurnKeys.latchSprint(sigma, eng);
-                NoTurnCertifier.Result r = certify(wp0, sigma, sprint, delta0Graph, cfg.delta0CertifyNanos);
-                trace.certifies++;
-                if (r != null && r.feasible) {
-                    log("  delta=0 close (engage=" + eng + ") edges=" + edges + " obj=" + fmt(r.objective)
-                            + " [" + NoTurnKeys.describe(sigma) + "]");
-                    return bind(sigma, sprint, edges, r);
-                }
-                if (worst == null || (r != null && r.violation < worst.violation)) {
-                    worst = r;
-                    worstSprint = sprint;
-                }
+        int[] engages = engageCandidates(firstRun, engage);
+        NoTurnCertifier.Result worst = null;
+        boolean[] worstSprint = null;
+        for (int eng : engages) {
+            if (cancelled() || System.nanoTime() >= deadline || trace.certifies >= cfg.maxCertifies) break;
+            boolean[] sprint = NoTurnKeys.latchSprint(sigma, eng);
+            NoTurnCertifier.Result r = certify(wp0, sigma, sprint);
+            trace.certifies++;
+            if (r != null && r.feasible) {
+                log("  delta=0 close (engage=" + eng + ") edges=" + edges + " obj=" + fmt(r.objective)
+                        + " [" + NoTurnKeys.describe(sigma) + "]");
+                return bind(sigma, sprint, edges, r);
             }
-            if (cfg.useCuts) {
-                NoGoodCut cut = iis.extract(sigma, worstSprint != null ? worstSprint : NoTurnKeys.latchSprint(sigma, engage),
-                        worst == null ? null : worst.yaws,
-                        worst == null ? problem.refStart().x : worst.startX,
-                        worst == null ? problem.refStart().z : worst.startZ);
-                if (cut != null && cut.size() < sigma.length) {
-                    master.addCut(cut);
-                    trace.noGoodCuts++;
-                    log("  delta=0 infeasible -> " + cut.describe());
-                }
+            if (worst == null || (r != null && r.violation < worst.violation)) {
+                worst = r;
+                worstSprint = sprint;
             }
-            return null;
         }
-
-        boolean[] sprint = NoTurnKeys.latchSprint(sigma, engage);
-        NoTurnCertifier.Result rf = fatCertifyOrCut(problem, wpFat, fatGraph, master, iis, sigma, sprint,
-                "  fat-infeasible -> ");
-        if (rf == null) return null;
-        trace.fatFeasible++;
-        if (isV6Anc) {
-            trace.v6AncestorCertifiedFat = true;
-            log("  *** V6 ancestor FAT-FEASIBLE obj=" + fmt(rf.objective));
-        } else {
-            log("  fat-feasible#" + trace.fatFeasible + " edges=" + edges + " obj=" + fmt(rf.objective)
-                    + " [" + NoTurnKeys.describe(sigma) + "] -> continuation");
-        }
-
-        if (trace.continuations < cfg.continuationCap && System.nanoTime() < deadline) {
-            trace.continuations++;
-            WallHomotopyDriver.Config hc = continuationConfig();
-            WallHomotopyDriver hom = new WallHomotopyDriver(model, hc, cancel, (s, f) -> { });
-            List<int[]> seeds = new ArrayList<>();
-            seeds.add(sigma);
-            NoTurnResult cont = hom.runFromSeeds(problem, finalGraph, seeds);
-            trace.certifies += hom.trace().certifies;
-            if (cont != null && cont.violation <= 0.0) {
-                if (hom.trace().rediscoveredV6) trace.v6Closed = true;
-                log("  continuation CLOSED edges=" + cont.edges + " obj=" + fmt(cont.objective)
-                        + " [" + NoTurnKeys.describe(cont.combos) + "]");
-                return cont;
+        if (cfg.useCuts) {
+            NoGoodCut cut = iis.extract(sigma, worstSprint != null ? worstSprint : NoTurnKeys.latchSprint(sigma, engage),
+                    worst == null ? null : worst.yaws,
+                    worst == null ? problem.refStart().x : worst.startX,
+                    worst == null ? problem.refStart().z : worst.startZ);
+            if (cut != null && cut.size() < sigma.length) {
+                master.addCut(cut);
+                trace.noGoodCuts++;
+                log("  delta=0 infeasible -> " + cut.describe());
             }
-            log("  continuation did not close (tracked to delta="
-                    + fmt(hom.trace().smallestDeltaTracked) + ")");
         }
         return null;
     }
@@ -753,8 +691,6 @@ public final class BendersMaster {
         hc.beamPerEdge = 2;
         hc.repairKeepPerTick = 7;
         hc.repairWindowRadiusMax = 1;
-        hc.rungOptimizeSec = 3;
-        hc.rungCertifyNanos = 4_500_000_000L;
         hc.repairCertifyCap = 40;
         hc.repairAllowPairs = false;
         hc.excludeJumpTicksFromRepair = false;
@@ -778,7 +714,7 @@ public final class BendersMaster {
             int fr = firstRun(c);
             sc.engage = fr >= 0 ? fr : Integer.MAX_VALUE;
             boolean[] spr0 = NoTurnKeys.latchSprint(c, 0);
-            double diskTheta = screen.diskFeasibleTheta(c, spr0, null);
+            double diskTheta = screen.diskFeasibleTheta(c, spr0);
             if (!Double.isNaN(diskTheta)) {
                 sc.diskFeasible = true;
                 trace.diskFeasibleCount++;
@@ -824,8 +760,7 @@ public final class BendersMaster {
         return out;
     }
 
-    private NoTurnCertifier.Result certify(NoTurnProblem wp, int[] combos, boolean[] sprint,
-                                           SolverGraph graph, long budget) {
+    private NoTurnCertifier.Result certify(NoTurnProblem wp, int[] combos, boolean[] sprint) {
         JumpSpec spec = wp.buildSpec(combos, sprint, cfg.turnCombo, cfg.ja);
         long t0 = System.nanoTime();
         NoTurnCertifier.Result r = new NoTurnCertifier(model).certifySearch(spec, cfg.searchBudgetNanos, cancel);
@@ -845,8 +780,7 @@ public final class BendersMaster {
     }
 
     private NoTurnResult bind(int[] combos, boolean[] sprint, int edges, NoTurnCertifier.Result r) {
-        int engage = -1;
-        for (int t = 0; t < sprint.length; t++) if (sprint[t]) { engage = t; break; }
+        int engage = NoTurnKeys.firstSprint(sprint);
         return new NoTurnResult(combos.clone(), sprint.clone(), cfg.turnCombo, cfg.ja, edges, engage,
                 r.objective, r.violation, r.startX, r.startZ, r.yaws);
     }
@@ -856,10 +790,10 @@ public final class BendersMaster {
         return problem.widened(delta);
     }
 
-    private NoTurnCertifier.Result fatCertifyOrCut(NoTurnProblem problem, NoTurnProblem wpFat, SolverGraph fatGraph,
+    private NoTurnCertifier.Result fatCertifyOrCut(NoTurnProblem problem, NoTurnProblem wpFat,
                                                    MinTvMaster master, IisExtractor iis, int[] sigma, boolean[] sprint,
                                                    String cutLog) {
-        NoTurnCertifier.Result rf = certify(wpFat, sigma, sprint, fatGraph, cfg.fatCertifyNanos);
+        NoTurnCertifier.Result rf = certify(wpFat, sigma, sprint);
         trace.certifies++;
         if (rf != null && rf.feasible) return rf;
         if (cfg.useCuts) {
@@ -873,6 +807,15 @@ public final class BendersMaster {
             }
         }
         return null;
+    }
+
+    private boolean screenSkips(Screen sc) {
+        if (!cfg.screenSkip || sc == null) return false;
+        return !sc.diskFeasible || (sc.screened && sc.viol > cfg.screenKeep);
+    }
+
+    private static int engageOf(Screen sc) {
+        return (sc != null && sc.engage != Integer.MAX_VALUE) ? sc.engage : 0;
     }
 
     private static int firstRun(int[] combos) {

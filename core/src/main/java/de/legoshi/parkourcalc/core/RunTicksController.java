@@ -450,6 +450,7 @@ public final class RunTicksController implements RunTicksControls {
         final Map<Integer, TickConstraints> ticks = new LinkedHashMap<Integer, TickConstraints>();
         int startTick;
         int landingTick;
+        int objectiveTick;
 
         static DocumentSnapshot capture(InputData inputs, AngleSolverState state) {
             DocumentSnapshot snapshot = new DocumentSnapshot();
@@ -457,13 +458,11 @@ public final class RunTicksController implements RunTicksControls {
             for (Integer tick : state.populatedTicks()) {
                 TickConstraints source = state.tickConstraintsOrNull(tick);
                 if (source == null) continue;
-                TickConstraints copy = new TickConstraints();
-                for (Constraint c : source.getConstraints()) copy.getConstraints().add(c.copy());
-                copy.getOverride().copyFrom(source.getOverride());
-                snapshot.ticks.put(tick, copy);
+                snapshot.ticks.put(tick, source.copy());
             }
             snapshot.startTick = state.getStartTick();
             snapshot.landingTick = state.getLandingTick();
+            snapshot.objectiveTick = state.getObjectiveTick();
             return snapshot;
         }
 
@@ -488,6 +487,7 @@ public final class RunTicksController implements RunTicksControls {
             }
             state.setStartTick(startTick);
             state.setLandingTick(landingTick);
+            state.setObjectiveTick(objectiveTick);
         }
     }
 }

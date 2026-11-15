@@ -12,8 +12,6 @@ import de.legoshi.parkourcalc.core.save.SaveIO;
 import de.legoshi.parkourcalc.core.ui.InputData;
 import org.junit.Test;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -53,55 +51,17 @@ public class TurnProfileTest {
     }
 
     @Test
-    public void recordedSolveIsPinnedOnTheTurnAndHeldOnTheRunUp() {
+    public void theRecordedPathLandsAndATurnedOneMisses() {
         Loaded l = load("d10", J335);
-        TurnProfile p = TurnProfile.compute(l.model, l.spec, l.recorded, new AtomicBoolean(false));
-        assertTrue(p.lands);
-        assertTrue(p.complete);
-        assertEquals(21, p.n);
-        for (int t = 1; t <= 9; t++) assertTrue("run-up tick " + t + " is held", p.held[t]);
-        assertFalse(p.held[10]);
-        for (int t = 10; t <= 15; t++) {
-            assertTrue("tick " + t + " width " + p.width(t), p.width(t) < TurnProfile.SIG_ANGLE_DEG);
-            assertEquals(TurnProfile.TickClass.PINNED, p.classify(t, TurnProfile.pixelDeg(0.5f)));
-        }
-        assertTrue("tick 20 may under-turn by degrees: " + p.below[20], p.below[20] > 15.0);
-        assertTrue("tick 20 may not over-turn: " + p.above[20], p.above[20] < TurnProfile.SIG_ANGLE_DEG);
-        assertEquals(TurnProfile.TickClass.FREE, p.classify(20, TurnProfile.pixelDeg(0.5f)));
-    }
-
-    @Test
-    public void carriedWindowsNeverWidenTowardTheStart() {
-        Loaded l = load("d10", J335);
-        TurnProfile p = TurnProfile.compute(l.model, l.spec, l.recorded, new AtomicBoolean(false));
-        for (int t = 10; t + 1 < p.n; t++) {
-            assertTrue(p.below[t] <= p.below[t + 1] + 1e-9);
-            assertTrue(p.above[t] <= p.above[t + 1] + 1e-9);
-        }
-    }
-
-    @Test
-    public void aPathThatMissesHasNoBand() {
-        Loaded l = load("d10", J335);
+        assertTrue(TurnProfile.lands(l.model, l.spec, l.recorded));
         double[] off = l.recorded.clone();
         off[12] += 5.0;
-        TurnProfile p = TurnProfile.compute(l.model, l.spec, off, new AtomicBoolean(false));
-        assertFalse(p.lands);
-        for (int t = 0; t < p.n; t++) assertEquals(0.0, p.width(t), 0.0);
+        assertFalse(TurnProfile.lands(l.model, l.spec, off));
     }
 
     @Test
     public void pixelSizeMatchesTheGameFormula() {
         assertEquals(0.15, TurnProfile.pixelDeg(0.5f), 1e-9);
         assertTrue(TurnProfile.pixelDeg(0.1f) < TurnProfile.pixelDeg(0.5f));
-    }
-
-    @Test
-    public void heldTicksComeFromFacingTies() {
-        Loaded l = load("d10", J335);
-        boolean[] held = TurnProfile.heldTicks(l.spec, l.spec.asScenario().numTicks);
-        int count = 0;
-        for (boolean h : held) if (h) count++;
-        assertEquals(9, count);
     }
 }

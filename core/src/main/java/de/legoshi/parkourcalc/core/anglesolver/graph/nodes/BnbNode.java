@@ -6,9 +6,9 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.Guarantee;
 import de.legoshi.parkourcalc.core.anglesolver.graph.NodeOutcome;
 import de.legoshi.parkourcalc.core.anglesolver.graph.NodeRuntime;
 import de.legoshi.parkourcalc.core.anglesolver.graph.ParamValues;
-import de.legoshi.parkourcalc.core.anglesolver.graph.Scoring;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.BoundPrunedRecovery;
+import de.legoshi.parkourcalc.core.anglesolver.solver.SolveClock;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolverTrace;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -18,20 +18,18 @@ public final class BnbNode implements NodeRuntime {
     private final int ffSec;
     private final int tickCap;
     private final String labelSuffix;
-    private final BoundPrunedRecovery.Config cfg;
 
     public BnbNode(ParamValues params) {
         this.ffSec = params.getInt("ffSec");
         this.tickCap = params.getInt("tickCap");
         this.labelSuffix = params.getString("labelSuffix");
-        this.cfg = new BoundPrunedRecovery.Config();
     }
 
     @Override
     public NodeOutcome execute(GraphContext ctx, Candidate in, AtomicBoolean nodeToken, long deadlineNanos) {
         boolean optimize = in != null && in.yaws != null && in.feasible;
         Guarantee miss = in != null && in.yaws != null ? Guarantee.UNCHANGED : Guarantee.NONE;
-        long now = System.nanoTime();
+        long now = SolveClock.nanoTime();
         long budgetNanos;
         if (optimize) {
             if (deadlineNanos <= 0) return NodeOutcome.of(miss, in);
@@ -55,15 +53,10 @@ public final class BnbNode implements NodeRuntime {
             SolverTrace.log("ENGINE", "bnb %s budgetMs=%d", optimize ? "optimize" : "rescue",
                     budgetNanos / 1_000_000L);
         }
-        double stopAt = Double.NaN;
-        if (!optimize) {
-            double cap = Scoring.objectiveCap(ctx.spec);
-            stopAt = Double.isNaN(cap) ? (max ? -1.0e300 : 1.0e300)
-                    : (max ? cap - Scoring.CAP_GAP_TOL : cap + Scoring.CAP_GAP_TOL);
-        }
+        double stopAt = optimize ? Double.NaN : (max ? -1.0e300 : 1.0e300);
         double[] warm = in != null ? in.yaws : null;
         double[] bnb = BoundPrunedRecovery.solve(ctx.exactModel, ctx.spec, ctx.feasTol, nodeToken,
-                budgetNanos, stopAt, cfg, ctx.closestMiss(), warm);
+                budgetNanos, stopAt, ctx.closestMiss(), warm);
         if (SolverTrace.on()) SolverTrace.log("ENGINE", "bnb %s", bnb != null ? "solved" : "miss");
         if (bnb == null) return NodeOutcome.of(miss, in);
         double[] yaws = Angles.wrapAll(bnb);

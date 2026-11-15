@@ -30,7 +30,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class NoTurnColdBench {
 
-    private final long t0 = System.nanoTime();
+    private long t0 = System.nanoTime();
     private final StringBuilder report = new StringBuilder();
     private final List<double[]> certifySpans = new ArrayList<>();
     private long certifyStart = -1L;
@@ -255,7 +255,7 @@ public class NoTurnColdBench {
             if (Boolean.getBoolean("pkc.bench.screenExact")) {
                 StructurePoolDriver sdrv = new StructurePoolDriver(model, new StructurePoolDriver.Config(), cancel, null);
                 sdrv.prepare(p);
-                double center = sdrv.diskFeasibleTheta(combos, sprint, null);
+                double center = sdrv.diskFeasibleTheta(combos, sprint);
                 String thetaOverride = System.getProperty("pkc.bench.screenTheta");
                 if (thetaOverride != null) center = Double.parseDouble(thetaOverride);
                 double[] se = sdrv.screenExact(combos, sprint, center);
@@ -292,8 +292,46 @@ public class NoTurnColdBench {
             if (Integer.getInteger("pkc.bench.minDwell", -1) > 0) cfg.minDwell = Integer.getInteger("pkc.bench.minDwell");
             if (Integer.getInteger("pkc.bench.perEdgeCertify", -1) > 0) cfg.perEdgeCertify = Integer.getInteger("pkc.bench.perEdgeCertify");
             cfg.playable = Boolean.getBoolean("pkc.bench.playable");
+            cfg.sharedExplore = Boolean.getBoolean("pkc.bench.sharedExplore");
             if (System.getProperty("pkc.bench.taps") != null) cfg.tapsStage = Boolean.parseBoolean(System.getProperty("pkc.bench.taps"));
             if (System.getProperty("pkc.bench.repair") != null) cfg.repairStage = Boolean.parseBoolean(System.getProperty("pkc.bench.repair"));
+            if (Boolean.getBoolean("pkc.bench.families")) {
+                cfg.familyStage = true;
+                String without = System.getProperty("pkc.bench.familyWithout", "").trim();
+                if (!without.isEmpty()) {
+                    String[] tok = without.split(",");
+                    int[] jumps = new int[tok.length];
+                    for (int i = 0; i < tok.length; i++) jumps[i] = Integer.parseInt(tok[i].trim());
+                    cfg.families = de.legoshi.parkourcalc.core.anglesolver.noturn.StratFamilies.shippedWithout(jumps);
+                }
+                cfg.changeLevels = !Boolean.getBoolean("pkc.bench.familyOnly");
+                cfg.familyDelayNanos = Long.getLong("pkc.bench.familyDelayMs", cfg.familyDelayNanos / 1_000_000L) * 1_000_000L;
+                cfg.familyOfferNanos = Long.getLong("pkc.bench.familyOfferMs", cfg.familyOfferNanos / 1_000_000L) * 1_000_000L;
+                cfg.streamCertify = Boolean.parseBoolean(System.getProperty("pkc.bench.streamCertify",
+                        String.valueOf(cfg.streamCertify)));
+                cfg.familyInertiaShare = Double.parseDouble(System.getProperty("pkc.bench.familyInertiaShare", String.valueOf(cfg.familyInertiaShare)));
+                cfg.familyReach = Double.parseDouble(System.getProperty("pkc.bench.familyReach", String.valueOf(cfg.familyReach)));
+                cfg.familyCutPool = Integer.getInteger("pkc.bench.familyCutPool", cfg.familyCutPool);
+                cfg.familySubtreeCuts = Integer.getInteger("pkc.bench.familySubtreeCuts", cfg.familySubtreeCuts);
+                cfg.familyExactFirst = Boolean.parseBoolean(System.getProperty("pkc.bench.familyExactFirst",
+                        String.valueOf(cfg.familyExactFirst)));
+                line("families: on without=" + without + " changeLevels=" + cfg.changeLevels);
+            }
+            if (Boolean.getBoolean("pkc.bench.momentum")) {
+                cfg.momentumStage = true;
+                if (Boolean.getBoolean("pkc.bench.momentumOnly")) cfg.changeLevels = false;
+                cfg.momentumMaxLevel = Integer.getInteger("pkc.bench.momentumMaxLevel", cfg.momentumMaxLevel);
+                cfg.momentumTapLevel = Integer.getInteger("pkc.bench.momentumTapLevel", cfg.momentumTapLevel);
+                cfg.momentumNearLevel = Integer.getInteger("pkc.bench.momentumNearLevel", cfg.momentumNearLevel);
+                cfg.momentumMemoryShare = Double.parseDouble(System.getProperty("pkc.bench.momentumMemoryShare",
+                        String.valueOf(cfg.momentumMemoryShare)));
+                cfg.momentumThreadShare = Integer.getInteger("pkc.bench.momentumThreadShare", cfg.momentumThreadShare);
+                cfg.momentumDelayNanos = Long.getLong("pkc.bench.momentumDelayMs", 0L) * 1_000_000L;
+                cfg.momentumKeptCap = Integer.getInteger("pkc.bench.momentumKeptCap", cfg.momentumKeptCap);
+                cfg.momentumKeep = Double.parseDouble(System.getProperty("pkc.bench.momentumKeep",
+                        String.valueOf(cfg.momentumKeep)));
+                line("momentum: on changeLevels=" + cfg.changeLevels + " families=" + cfg.familyStage);
+            }
             if (Integer.getInteger("pkc.bench.repairWidth", -1) >= 0) cfg.repairWidth = Integer.getInteger("pkc.bench.repairWidth");
             if (Integer.getInteger("pkc.bench.repairPairs", -1) >= 0) cfg.repairPairs = Integer.getInteger("pkc.bench.repairPairs");
             if (Integer.getInteger("pkc.bench.repairRounds", -1) >= 0) cfg.repairRounds = Integer.getInteger("pkc.bench.repairRounds");
@@ -322,6 +360,35 @@ public class NoTurnColdBench {
                     + "s allowJa=" + cfg.allowJa);
             if (Integer.getInteger("pkc.bench.extraCertify", -1) >= 0) cfg.extraCertify = Integer.getInteger("pkc.bench.extraCertify");
             if (Long.getLong("pkc.bench.extraSec", -1L) >= 0) cfg.extraCertifyNanos = Long.getLong("pkc.bench.extraSec") * 1_000_000_000L;
+            int warmRuns = Integer.getInteger("pkc.bench.warmRuns", 0);
+            for (int w = 0; w < warmRuns; w++) {
+                final long warmStart = System.nanoTime();
+                final double[] first = {-1.0};
+                NoTurnResult wr = new StructurePoolDriver(model, cfg, cancel, new StructurePoolDriver.Progress() {
+                    @Override
+                    public void update(String s, double f) {
+                    }
+
+                    @Override
+                    public void found(NoTurnResult r) {
+                        if (first[0] < 0.0) first[0] = (System.nanoTime() - warmStart) / 1e9;
+                    }
+                }).run(p, graph);
+                line(String.format(Locale.ROOT, "warm run %d: first=%.3fs wall=%.1fs found=%s", w + 1, first[0],
+                        (System.nanoTime() - warmStart) / 1e9, wr != null));
+            }
+            if (warmRuns > 0) t0 = System.nanoTime();
+            long warmupSec = Long.getLong("pkc.bench.warmup", 0L);
+            if (warmupSec > 0L) {
+                long warmStart = System.nanoTime();
+                int warmThreads = Integer.getInteger("pkc.bench.warmupThreads",
+                        de.legoshi.parkourcalc.core.StratfinderWarmup.threads());
+                int warmFound = de.legoshi.parkourcalc.core.StratfinderWarmup.run(model, cfg, warmupSec * 1_000_000_000L,
+                        warmThreads, new AtomicBoolean());
+                line(String.format(Locale.ROOT, "warm-up: wall=%.1fs threads=%d found=%d",
+                        (System.nanoTime() - warmStart) / 1e9, warmThreads, warmFound));
+                t0 = System.nanoTime();
+            }
             StructurePoolDriver drv = new StructurePoolDriver(model, cfg, cancel, new StructurePoolDriver.Progress() {
                 @Override
                 public void update(String s, double f) {
@@ -380,10 +447,7 @@ public class NoTurnColdBench {
                 cfg.alphabet = new int[]{NoTurnKeys.SD, NoTurnKeys.S, NoTurnKeys.WA, NoTurnKeys.W, NoTurnKeys.WD,
                         NoTurnKeys.SA, NoTurnKeys.A, NoTurnKeys.D, NoTurnKeys.NONE};
             }
-            if (certifySec > 0) {
-                cfg.delta0CertifyNanos = certifySec * 1_000_000_000L;
-                cfg.fatCertifyNanos = certifySec * 1_000_000_000L;
-            }
+            if (certifySec > 0) cfg.delta0CertifyNanos = certifySec * 1_000_000_000L;
             cfg.deepPairRepair = Boolean.parseBoolean(System.getProperty("pkc.bench.deepPairRepair", "true"));
             if (cfg.deepPairRepair) cfg.maxCertifies = Math.max(cfg.maxCertifies, 100000);
             line("benders cfg: ja=" + cfg.ja + " mode=" + cfg.mode + " minDwell=" + cfg.minDwell + " maxEdges="

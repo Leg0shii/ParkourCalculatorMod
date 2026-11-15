@@ -76,6 +76,17 @@ public final class ChipFlow {
         }
     }
 
+    public static void body(ImDrawList dl, ImVec2 mn, ImVec2 mx, int fill, int border, float thickness) {
+        float rounding = CHIP_ROUNDING * ThemeManager.uiScale();
+        dl.addRectFilled(mn.x, mn.y, mx.x, mx.y, ThemeManager.panelColor(), rounding);
+        dl.addRectFilled(mn.x, mn.y, mx.x, mx.y, fill, rounding);
+        dl.addRect(mn.x, mn.y, mx.x, mx.y, border, rounding, 0, thickness);
+    }
+
+    public static void dimSource(ImDrawList dl, ImVec2 mn, ImVec2 mx) {
+        dl.addRectFilled(mn.x, mn.y, mx.x, mx.y, ThemeManager.bgTintColor(0.6f), CHIP_ROUNDING * ThemeManager.uiScale());
+    }
+
     public static void dropShadow(ImDrawList dl, ImVec2 mn, ImVec2 mx) {
         float s = ThemeManager.uiScale();
         for (int k = 1; k <= 3; k++) {

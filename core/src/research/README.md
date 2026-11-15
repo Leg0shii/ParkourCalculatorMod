@@ -26,8 +26,9 @@ anglesolver/
   CorpusBench.java         manual OLD-vs-NEW full-corpus bench (STEP 9): all captures at FAST/THOROUGH,
                            external wall-clock + engine shipped objective + independent recompute (yaw-lock
                            flag). PKC_CORPUS=1 to run; PKC_CORPUS_TIER/RUNS/OPT_SEC/FILTER/TAG/TIMEOUT_MS
-                           tune it. Drop into a git worktree at the OLD commit to bench both trees; compare
-                           with docs/research/solver-rework-2026-08/benchmark/compare.py
+                           tune it. Drop into a git worktree at the OLD commit to bench both trees (the compare.py
+                           it was paired with sat in docs/research/solver-rework-2026-08/, which is
+                           gitignored and not in the repository)
   FreeStartSweepBench.java manual free-start sweep over captures/hpk/ (synthesized tick-0 box, base +
                            (+2.3,+1.7)-shifted seed variants, FAST, per-node timing from the run
                            record); -Dpkc.sweep=1 to run, -Dpkc.sweep.{tag,variants,filter,timeoutMs,
@@ -42,11 +43,11 @@ anglesolver/
                            optional PKC_SOLVE_EFFORT and PKC_SOLVE_TIMEOUT_MS
   StructureDump.java       export a capture's compiled linear structure (walls, objective vectors,
                            per-tick mMag/baseArg/friction, start box, warm replay) as json for the
-                           research/copt harness; PKC_STRUCT_FILE=<capture>, PKC_STRUCT_OUT=<json>,
+                           research/copt harness (gitignored, not in the repository); PKC_STRUCT_FILE=<capture>, PKC_STRUCT_OUT=<json>,
                            optional PKC_STRUCT_ZERO=<pattern json> folds an inertia-gate zeroing
                            pattern (pattern-aware JumpLinearModel + velocityWalls); run --no-daemon
   NoTurnReplay.java        byte-exact replay of a no-turn decode (keys + yaws + sprint + start) from
-                           research/copt through ExactJumpModel against a capture's compiled spec;
+                           research/copt (gitignored) through ExactJumpModel against a capture's compiled spec;
                            PKC_NOTURN_CAPTURE, PKC_NOTURN_FILE, PKC_NOTURN_OUT; reports objective,
                            per-constraint violations, positions and carry velocities (gate patterns)
   SolveNodeStatsScreen.java  per-node timing dump over problems/solve at expect efforts;
@@ -66,14 +67,27 @@ anglesolver/
                            base:key=v1,v2;key2=... cross-producted per entry: taser<sec> takes l
                            (engine path via setSmoothLambda), and a bare entry with no params
                            reuses the static preset of that exact id
-                           (parse coverage: RunMatrixSweepTest)
+                           (parse coverage: RunMatrixSweepTest, which runs only through :core:research)
   RazorColdT1.java         THE HEADLINE GATE: cold 5.4375 from t1 (razor-proof-t1 capture, free
                            start, no yaw seeds) through the live engine; PKC_RAZORT1=1 +
                            PKC_RAZORT1_TAG to run; PASS = success + fresh-reparse viol <= 0;
                            report at build/reports/razort1-<tag>.txt
   CertBnbProbe.java        env-gated certified-B&B probe: PKC_CERTBNB_CAPTURES (comma list),
                            PKC_CERTBNB_OUT/NODES/MS/MODE; nodeCap=1 dumps root bounds for the COPT
-                           root-bound validation (research/copt/certbnb_rootcheck.py)
+                           root-bound validation (research/copt/certbnb_rootcheck.py, gitignored)
+  CertBnbRunSet.java       before/after run set for the fold driver, the wall-homotopy ladder and
+                           the certified B&B: every problems/solve capture (PKC_RUNSET_EFFORTS,
+                           default FAST,THOROUGH, "-" for none) and PKC_RUNSET_WITNESS oracle
+                           instances per capture (WitnessProblem, PKC_RUNSET_WITNESS_SEED, default 5)
+                           through the kinds driver, ladder, ff (first feasible), seed (Optimize
+                           with node cap 0) and opt (Optimize, PKC_RUNSET_NODES nodes, default
+                           1500), unseeded and without a deadline (PKC_RUNSET_WATCHDOG_MS cancels
+                           a run, default 60000, flagged in the cancelled column); one TSV line
+                           per run with a signature of the raw bits of landing, bound, gap, node
+                           and kernel solve counts, then wall and kernel milliseconds;
+                           PKC_RUNSET=1 to run, PKC_RUNSET_OUT/FILTER/KINDS/REPEATS tune it. A
+                           change that must not alter results is proven by `diff` over the
+                           first six columns of two runs
   FoldDriverProbe.java     run the fold driver headlessly on any capture; PKC_FOLD_CAPTURE=<path or
                            pool name>, optional PKC_FOLD_OUT/PKC_FOLD_DEBUG/PKC_FOLD_SEED/
                            PKC_FOLD_REF (box-reference multi-start override); prints per-round
@@ -91,7 +105,33 @@ anglesolver/
                            given schedule (driver=keys), or runs the pool / in-game / beam / benders
                            drivers with per-certify timings; pkc.bench.{driver,graph,freeBox,startTick,
                            allowJa,playable,threads,searchSec,nearSearchMs,certifySec,totalSec,maxCertify,
-                           extraCertify,extraSec,dumpPool,out}; keys/engage/repeat/cascade for
+                           extraCertify,extraSec,dumpPool,out}; families=true turns the family stage on,
+                           familyWithout=<jump numbers> leaves those jumps' rows and their copies out of the library,
+                           familyOnly=true turns the change levels off,
+                           sharedExplore=true certifies waiting candidates beside the neighbours of a found Strat (#704),
+                           familyDelayMs=<ms> sets how long the change levels keep every thread,
+                           familyReach=<b> and familyInertiaShare=<fraction> set the inertia stages (reach 0 turns them off),
+                           familyCutPool=<count> sets the stored reject vectors per worker (0 turns the pool off),
+                           familyExactFirst=false runs every band at the keep limit only,
+                           familySubtreeCuts=<count> sets how many stored vectors a subtree test tries (0 turns it off),
+                           momentum=true turns the momentum lane on (#696), momentumOnly=true turns the change levels off,
+                           momentumMaxLevel, momentumTapLevel, momentumNearLevel, momentumKeep, momentumKeptCap,
+                           momentumMemoryShare and momentumThreadShare set its levels, limits, memory and thread share,
+                           momentumDelayMs=<ms> starts the lane that long after the search,
+                           warmRuns=<count> runs that many searches in the same Java process before the measured
+                           one (one "warm run" line each, then the clock restarts), which shows the share of the
+                           JIT warm-up in a first search,
+                           warmup=<s> runs the game's warm-up search (StratfinderWarmup, the bundled jump, #699)
+                           that long before the measured search and restarts the clock (one "warm-up" line),
+                           warmupThreads=<count> sets its threads (default: half the processors, as in the game),
+                           -Dpkc.pool.stageTimes=true prints one STAGE line per finished stage (a family band with
+                           its heads, the setup time on the lane thread and the summed thread time of its workers,
+                           every stage with the GC and JIT totals and the live thread count) and every 2 s one
+                           CERTIFY line of the stream certifier (flights and waiting candidates per pass, mean wall
+                           and thread time of a flight per pass), -Dpkc.deadline.wallFloor=false switches the
+                           wall floor of the thread time deadlines off for a comparison,
+                           -Dpkc.pool.flashPassMs sets its first pass (16, 0 is off), -Dpkc.pool.watch="<keys>;<keys>"
+                           follows schedules through the screens and the certify passes; keys/engage/repeat/cascade for
                            driver=keys, dfMarks to add dF=0 marks, contCap/contLead/contSec/parCont/
                            deepPairRepair for driver=benders; pair with -Dpkc.graphTrace=true (per-node
                            ms plus one [pool]/[whd]/[bm] line per certify), -Dpkc.solver.trace=<tag>,
@@ -107,13 +147,96 @@ anglesolver/
                            and counts a CONTRADICTION whenever it says INFEASIBLE while the main impl
                            returned a byte-verified FEASIBLE witness (the real-pool soundness audit of
                            a rejection check: feed it pool dumps plus the in-game found lines)
+  core/anglesolver/noturn/fastcheck/NoTurnJointFastCheck.java, LpFeas.java
+                           the joint sound rejection FastCheck and its small simplex (bench-only, not in
+                           the mod jar); select with -Dpkc.fc.impl or -Dpkc.fc.audit =
+                           de.legoshi.parkourcalc.core.anglesolver.noturn.fastcheck.NoTurnJointFastCheck
+  core/anglesolver/noturn/OptimizeGraphCheck.java
+                           FastCheck that certifies with the 6 s Optimize graph; select with
+                           -Dpkc.fc.impl=de.legoshi.parkourcalc.core.anglesolver.noturn.OptimizeGraphCheck
   RunUpSweepProbe.java     free-start run-up sweep on one save; PKC_SOLVE_FILE=<save.json> plus
                            PKC_GRAPH_FILE=<graph.json> (docs/research/freestart-runup-sweep-2026-09-05.md)
+  bench/SolverBench.java   THE SOLVER BENCHMARK (run): solves a jump set with the solver option
+                           Repeatable solve on, so a result is the same on every machine and under any
+                           load and several JVMs may run side by side, as long as no solve hits the
+                           clock's safety stop (real time over six times the budget, at least 180 s):
+                           such a solve is marked overran, left out of every table and solved again
+                           when the run is started again, so at 30 s run at most two JVMs side by side
+                           on four cores. -Dpkc.bench.out=<file.jsonl> to
+                           run (one JSON line per solve, appended; a run that is started again skips
+                           what the file already holds). -Dpkc.bench.sets=hpk (captures/hpk and
+                           captures/hpk_human, the release set), hpkstart (the /hpk_human corpus) or
+                           dev:<problem folder> (for example dev:solve), comma list;
+                           -Dpkc.bench.categories=human,theoretical (human: the jump as recorded;
+                           theoretical: Force 45 on every tick, F and dF constraints dropped; dev sets
+                           run as saved, category asis); -Dpkc.bench.modes=start,lastjump (lastjump
+                           starts at the last grounded jump tick from the recorded state);
+                           -Dpkc.bench.strengths=fast,1s,10s,30s (Fast, or an Optimize budget);
+                           -Dpkc.bench.seeds=0,1,2 (the solver option Seed); -Dpkc.bench.variant=<label>
+                           with -Dpkc.bench.graph="drop:ils;set:polish.reserveFraction=0.1" to ablate a
+                           stage or change a node param of the builtin graph (drop:<node>@<branch> when
+                           a node has several successors); -Dpkc.bench.filter=<regex on the jump key>,
+                           -Dpkc.bench.shard=<i>/<n>, -Dpkc.bench.build=<label written into every
+                           record>, -Dpkc.bench.verify=<n> solves every n-th task twice and fails the
+                           run when facings, objective or work counters differ,
+                           -Dpkc.bench.sequential=true, -Dpkc.bench.wall=true (option off, wall clock
+                           budgets, not repeatable). A record holds the jump (id, warp, name,
+                           difficulty), category, mode, strength, seed, variant and graph hash, the
+                           problem with its goal wall (the engine's `GoalWall.tightest`: the tightest
+                           row on the objective axis at the objective tick on the side the objective
+                           moves away from), the result (lands, verdict, objective, offset past that
+                           wall, stage chain), wall and work time with the work counters, one entry per stage
+                           visit (work time and landing after it), the facings and start (for a turn
+                           profile), the yaw smoothness numbers, and empty stratfinder fields
+  bench/SolverBenchReport.java  the benchmark's tables, Markdown on stdout or into the file
+                           -Dpkc.bench.reportOut: -Dpkc.bench.in=<files, a
+                           name may hold one *> and -Dpkc.bench.report=sheet (offset per jump, category
+                           and strength, Fast times; -Dpkc.bench.variant, -Dpkc.bench.mode), seeds
+                           (best, median, worst over the seeds of config -Dpkc.bench.a), stages (work
+                           share and gain per stage of config a), compare (config b against config a
+                           by the win/loss rule printed with it), scaling (distance to the best known
+                           landing per budget, needs -Dpkc.bench.reference), portfolio (best of K seeds
+                           at a budget against one run at K times the budget, -Dpkc.bench.variant),
+                           reference (raise the best known landings in the file -Dpkc.bench.reference
+                           from the inputs), ladder (every strength of -Dpkc.bench.variant against the
+                           next lower one by the same rule), distance (per jump the distance of config
+                           a to the best known landing and a summary per category, needs
+                           -Dpkc.bench.reference), identity (the same runs in -Dpkc.bench.other must
+                           be identical). A config is <variant>|<fast or seconds>, for example
+                           "base|10s"
+  bench/CannotLandProbe.java  the certified search on a jump set without a landing, one line per jump and
+                           category (declined, feasible, certified infeasible, unresolved, nodes, kernel
+                           solves, ms, closest miss); -Dpkc.cl.{sets,jumps,categories,ms,nodes},
+                           -Dpkc.cl.fold, -Dpkc.cl.exclude, -Dpkc.cl.skipseeds (the tie fold proof
+                           search), -Dpkc.cl.resolve, -Dpkc.cl.dump (constraints), -Dpkc.cl.export=<dir>
+                           (writes RelaxationExport JSON instead of solving), -Dpkc.cl.replay="<input
+                           angles> dpx dpz" (replays one point through the linear and exact model)
+  bench/StratMutExport.java  stratfinder style key schedules of a capture folder (the recorded keys plus
+                           one tick key shifts, args: folder, out dir, ms, shifts per jump), each run
+                           through the certified search and written as RelaxationExport JSON;
+                           -Dpkc.cl.fold, -Dpkc.cl.exclude, -Dpkc.cl.skipseeds, -Dpkc.cl.noexport
+  core/anglesolver/solver/RelaxationExport.java
+                           JSON of a spec's linear relaxation (walls, per tick radii, velocity rows,
+                           tie groups, start box) for offline relaxations in Python
   HpkStartBenchmark.java   cold-solve benchmark over the hpk_human corpus against reference
                            objectives; -Dpkc.bench.{only,skip,graph,effort,optsec,timeoutms,out},
                            -Dpkc.bench.gate fails the run when a jump misses its reference by more
                            than -Dpkc.bench.tol (default 1e-5); not env-gated, it runs whenever selected
+  LatticePolishSweep.java  lattice polish from the closed form seed on every capture under a folder,
+                           each result replayed byte-exact; -Dpkc.polish.sweep=<folder> (for example
+                           core/src/test/resources), -Dpkc.polish.only=<name part>,
+                           -Dpkc.polish.turns=true switches the Full turn start facing option on,
+                           -Dpkc.polish.optimize=true runs the stage with the Optimize graph's
+                           parameters, -Dpkc.polish.rounds=<n> sets the grid search rounds,
+                           -Dpkc.polish.ms=<n> gives every spec that many milliseconds
+                           (docs/research/lattice-polish-2026-11-10.md)
   SmoothFileScreen.java    smoothing pass on a saved solve; PKC_SOLVE_FILE=<save.json>
+  SmoothWatchBench.java    current smoother (TrendFilterSmooth) against the watch-score portfolio
+                           (SmoothPortfolio) on Fast solves; -Dpkc.smoothbench=<capture or save path,...>
+                           to run, -Dpkc.smoothbench.{budgetMs,solveMs,runs,tag} tune it; one row per
+                           path with the WatchScore parts at build/reports/smoothbench-<tag>.tsv and
+                           the turn profiles and paths at smoothbench-<tag>.jsonl (the input of the
+                           turn viewer page); run via direct java -cp, wall-clock budgets need a quiet machine
   render/GizmoDragConstraintBench.java  gizmo drag constraint timing; PKC_BENCH=1
   render/PathRebuildBenchmark.java      path rebuild timing; PKC_BENCH=1
 ```

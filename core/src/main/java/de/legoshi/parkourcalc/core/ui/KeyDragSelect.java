@@ -43,10 +43,6 @@ public class KeyDragSelect {
         targetValue = !currentValue;
     }
 
-    public boolean isActive() {
-        return activeColumn != null;
-    }
-
     public boolean isInDragRange(Object key, int rowIndex) {
         if (activeColumn != key || startRow == -1) {
             return false;
@@ -75,11 +71,7 @@ public class KeyDragSelect {
             return;
         }
 
-        if (ImGui.isMouseDown(0)) {
-            updateCurrentRow();
-        } else {
-            // Mouse released - will be handled by apply()
-        }
+        if (ImGui.isMouseDown(0)) updateCurrentRow();
     }
 
     private int rowAtY(float y) {

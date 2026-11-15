@@ -19,7 +19,6 @@ public final class NoTurnModel {
     public final double[] cosTheta = new double[GRID];
 
     private final double[] f4;
-    private final boolean[] contact;
     private final boolean[] isJump;
     private final double[] accelSprint;
     private final double[] accelNoSprint;
@@ -49,14 +48,12 @@ public final class NoTurnModel {
             cosTheta[g] = StrictMath.cos(th);
         }
         this.f4 = new double[n];
-        this.contact = new boolean[n];
         this.isJump = new boolean[n];
         this.accelSprint = new double[n];
         this.accelNoSprint = new double[n];
         for (int t = 0; t < n; t++) {
             double slipOv = problem.base.slipAt(t);
             boolean c = !Double.isNaN(slipOv);
-            contact[t] = c;
             isJump[t] = problem.base.jumpAt(t) && c;
             int amp = problem.base.factorAmpAt(t);
             int slow = problem.base.factorSlownessAt(t);
@@ -101,14 +98,6 @@ public final class NoTurnModel {
 
     public double f4(int t) {
         return f4[t];
-    }
-
-    public boolean contact(int t) {
-        return contact[t];
-    }
-
-    public boolean isJump(int t) {
-        return isJump[t];
     }
 
     public void magArg(int t, int combo, boolean sprintEff, boolean sprintNow, double[] out) {

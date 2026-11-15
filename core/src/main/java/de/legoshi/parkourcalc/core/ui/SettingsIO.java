@@ -6,13 +6,14 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.annotations.SerializedName;
+import de.legoshi.parkourcalc.core.io.AtomicFiles;
 
 import java.io.IOException;
 import java.io.Reader;
-import java.io.Writer;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -60,9 +61,10 @@ public final class SettingsIO {
         try {
             Path parent = file.getParent();
             if (parent != null) Files.createDirectories(parent);
-            try (Writer writer = Files.newBufferedWriter(file)) {
-                new GsonBuilder().setPrettyPrinting().create().toJson(settings, writer);
-            }
+            String json = new GsonBuilder().setPrettyPrinting().create().toJson(settings);
+            Path tmp = file.resolveSibling(file.getFileName() + ".tmp");
+            Files.write(tmp, json.getBytes(StandardCharsets.UTF_8));
+            AtomicFiles.replace(tmp, file);
         } catch (IOException ignored) {
         }
     }

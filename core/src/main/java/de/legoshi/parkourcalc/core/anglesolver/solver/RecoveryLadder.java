@@ -13,6 +13,18 @@ public final class RecoveryLadder {
     }
 
     public static double[] solve(ExactJumpModel em, JumpSpec spec, JumpPhysicsInputs sc,
+                                 AtomicBoolean cancel, String[] nameOut) {
+        return solve(em, spec, sc, cancel, nameOut, 0L, new SlpSolve.Config(), new ClosedFormSolve.Config(), null);
+    }
+
+    public static double[] solve(ExactJumpModel em, JumpSpec spec, JumpPhysicsInputs sc,
+                                 AtomicBoolean cancel, String[] nameOut, long deadlineNanos,
+                                 SlpSolve.Config slpCfg, ClosedFormSolve.Config cfCfg, ClosestMiss miss) {
+        return solve(em, spec, sc, cancel, nameOut, deadlineNanos, slpCfg, cfCfg,
+                new RelaxationRecovery.Config(), miss);
+    }
+
+    public static double[] solve(ExactJumpModel em, JumpSpec spec, JumpPhysicsInputs sc,
                                  AtomicBoolean cancel, String[] nameOut, long deadlineNanos,
                                  SlpSolve.Config slpCfg, ClosedFormSolve.Config cfCfg,
                                  RelaxationRecovery.Config rrCfg, ClosestMiss miss) {
@@ -30,7 +42,7 @@ public final class RecoveryLadder {
             if (SolverTrace.on()) SolverTrace.log("CHAIN", "slp solved");
             return levelSetTopUp(em, spec, yaws, cancel, "closed form -> SLP", nameOut);
         }
-        if (deadlineNanos == 0L || deadlineNanos - System.nanoTime() >= RELAX_MIN_REMAINING_NANOS) {
+        if (deadlineNanos == 0L || deadlineNanos - SolveClock.nanoTime() >= RELAX_MIN_REMAINING_NANOS) {
             if (SolverTrace.on()) SolverTrace.log("CHAIN", "relaxation start");
             yaws = RelaxationRecovery.solve(em, spec, FEAS_TOL, cancel, rrCfg);
             if (yaws != null) {

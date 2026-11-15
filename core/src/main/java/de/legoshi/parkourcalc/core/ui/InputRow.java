@@ -63,6 +63,7 @@ public class InputRow {
 
     public void applyForce45(boolean strafe, int strafeSign) {
         setKeyActive(Key.W, true);
+        setKeyActive(Key.S, false);
         setKeyActive(Key.SPRINT, true);
         setKeyActive(Key.A, strafe && strafeSign > 0);
         setKeyActive(Key.D, strafe && strafeSign < 0);

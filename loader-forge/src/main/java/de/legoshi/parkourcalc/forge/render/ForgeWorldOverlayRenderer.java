@@ -1,6 +1,8 @@
 package de.legoshi.parkourcalc.forge.render;
 
+import de.legoshi.parkourcalc.core.BlockOverrideWorld;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
+import de.legoshi.parkourcalc.core.render.BlockOverrideOutlines;
 import de.legoshi.parkourcalc.core.anglesolver.BlockSelection;
 import de.legoshi.parkourcalc.core.perf.Perf;
 import de.legoshi.parkourcalc.core.ports.BoxRenderer;
@@ -41,15 +43,18 @@ public final class ForgeWorldOverlayRenderer {
     private final SelectionManager selection;
     private final YawGizmoController yawGizmo;
     private final Supplier<AngleSolverState> angleSolver;
+    private final BlockOverrideWorld blockOverrides;
     private final ForgeCachedBoxGeometry cached = new ForgeCachedBoxGeometry();
 
     public ForgeWorldOverlayRenderer(BoxController boxController, Settings settings, SelectionManager selection,
-                                       YawGizmoController yawGizmo, Supplier<AngleSolverState> angleSolver) {
+                                       YawGizmoController yawGizmo, Supplier<AngleSolverState> angleSolver,
+                                       BlockOverrideWorld blockOverrides) {
         this.boxController = boxController;
         this.settings = settings;
         this.selection = selection;
         this.yawGizmo = yawGizmo;
         this.angleSolver = angleSolver;
+        this.blockOverrides = blockOverrides;
     }
 
     public void render(float partialTicks) {
@@ -124,6 +129,18 @@ public final class ForgeWorldOverlayRenderer {
                 }
                 tess.draw();
             }
+        }
+
+        if (BlockOverrideOutlines.shouldRender(settings, blockOverrides)) {
+            Tessellator tess = Tessellator.getInstance();
+            //? if >=1.12 {
+            BufferBuilder buf = tess.getBuffer();
+            //?} else {
+            /*WorldRenderer buf = tess.getWorldRenderer();
+            *///?}
+            buf.begin(GL11.GL_TRIANGLES, DefaultVertexFormats.POSITION_COLOR);
+            BlockOverrideOutlines.render(new ForgeBoxRenderer(buf, camX, camY, camZ, BoxRenderer.Mode.FACES), settings, blockOverrides);
+            tess.draw();
         }
 
         if (settings.showHitDistanceLines && settings.hitDistanceSelectedOnly) {

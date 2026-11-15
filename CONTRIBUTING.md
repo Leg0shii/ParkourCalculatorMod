@@ -19,7 +19,7 @@ Fixes:
 
 The weekly train: `weekly-train.yml` opens a `dev` to `main` PR on Sundays when `dev` is ahead. Merge it with a **merge commit, never squash**; the changelog is built from the individual commits it carries. A `dev` ruleset blocks the auto-delete-on-merge from removing the branch.
 
-Shipping is automated: every `feat:` / `fix:` / `feat!:` commit reaching `main` updates a rolling `chore(main): release X.Y.Z` PR. Merge that PR to release; release-please tags `vX.Y.Z` and cuts the GitHub Release as a draft. Publishing the draft (after a changelog glance) triggers `release.yml`, which runs the chiseled build, attaches every target jar (one per `loader-<x>/versions/<mc>`), and publishes one Modrinth version per target.
+Shipping is automated: every `feat:` / `fix:` / `feat!:` commit reaching `main` updates a rolling `chore(main): release X.Y.Z` PR. Merge that PR to release; release-please tags `vX.Y.Z` and cuts the GitHub Release as a draft. Publishing the draft (after a changelog glance) triggers `release.yml`, which builds every target (`./gradlew build`), attaches every target jar (one per `loader-<x>/versions/<mc>`), and publishes one Modrinth version per target.
 
 To release only some targets (a hotfix that touches one loader), commit `.github/release-targets.json` on `main` before the release PR merges, for example `{"version": "1.16.1", "targets": ["fabric/1.20.4"]}`. `release.yml` honours the file only when its `version` equals the tag being released, so a stale file never narrows a later release; it builds just the listed targets (plus the core test suite) and attaches and publishes only their jars.
 
@@ -35,7 +35,7 @@ To release only some targets (a hotfix that touches one loader), commit `.github
 Unsure which? Ask what a user updating the jar would notice. Must *do* something to upgrade: `feat!:`. New capability: `feat:`. A bug they hit is gone: `fix:`. Nothing: `chore:` / `refactor:` / `docs:` / `test:` / `ci:`.
 
 Project-specific calls:
-- Changing the save format, or removing/renaming an `InputData` field: `feat!:`. It breaks roundtrip with existing saves and Stratfinder/Mothball interop.
+- Changing the save format, or removing/renaming an `InputData` field: `feat!:`. It breaks roundtrip with existing saves.
 - Dropping a Minecraft version (loader removed): `feat!:`. Adding one (new loader module): `feat:`.
 - Making the simulator match real MC physics more closely: `fix:`. The simulator is the source of truth, so divergence from MC is by definition a bug.
 

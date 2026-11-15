@@ -6,6 +6,7 @@ import de.legoshi.parkourcalc.core.ui.InputData;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public final class SimulationRunner {
@@ -20,6 +21,9 @@ public final class SimulationRunner {
     private final List<TickState> path = new ArrayList<>();
     private final List<Checkpoint> checkpoints = new ArrayList<>();
     private final List<ServerSimEvent> serverEvents = new ArrayList<>();
+    private List<BlockOverride> simulatedOverrides = Collections.emptyList();
+    private BlockOverrides simulatedTable;
+    private int simulatedModCount;
 
     private float startPitch = PlaybackController.DEFAULT_PITCH;
 
@@ -38,7 +42,7 @@ public final class SimulationRunner {
         path.add(snapshot());
         checkpoints.add(simulator.saveCheckpoint());
 
-        replayFrom(0, inputData.getRows());
+        replayFrom(0, inputData.getRows(), inputData.getBlockOverrides());
         simulator.onPassEnd();
         return path;
     }
@@ -66,14 +70,31 @@ public final class SimulationRunner {
         }
         simulator.takeServerSimEvents();
 
-        replayFrom(dirtyTick, inputData.getRows());
+        replayFrom(dirtyTick, inputData.getRows(), inputData.getBlockOverrides());
         simulator.onPassEnd();
         return path;
     }
 
-    private void replayFrom(int startRow, List<InputRow> rows) {
+    private void replayFrom(int startRow, List<InputRow> rows, BlockOverrides blockOverrides) {
+        try {
+            replayRows(startRow, rows, blockOverrides);
+        } finally {
+            simulator.setBlockPatches(Collections.<BlockPatch>emptyList());
+        }
+        simulatedOverrides = new ArrayList<>(blockOverrides.all());
+        simulatedTable = blockOverrides;
+        simulatedModCount = blockOverrides.modCount();
+    }
+
+    public int firstRowChangedBy(BlockOverrides blockOverrides) {
+        if (blockOverrides == simulatedTable && blockOverrides.modCount() == simulatedModCount) return -1;
+        return BlockOverrides.firstChangedRow(simulatedOverrides, blockOverrides.all());
+    }
+
+    private void replayRows(int startRow, List<InputRow> rows, BlockOverrides blockOverrides) {
         for (int i = startRow; i < rows.size(); i++) {
             InputRow row = rows.get(i);
+            simulator.setBlockPatches(blockOverrides.patchesAtRow(i));
             if (row.isTeleportEnabled()) {
                 simulator.teleport(
                         new Vec3dCore(row.getTeleportX(), row.getTeleportY(), row.getTeleportZ()),
@@ -119,6 +140,8 @@ public final class SimulationRunner {
                 simulator.getCurrentTickMedium(),
                 simulator.getCurrentTickGroundFriction(),
                 simulator.getCurrentTickSoulsandCells(),
+                simulator.getCurrentTickFlow(),
+                simulator.isCurrentTickInWater(),
                 simulator.getCurrentServerSample()
         );
     }
@@ -128,15 +151,13 @@ public final class SimulationRunner {
         return checkpoints.get(index);
     }
 
-    public List<TickState> getPath() {
-        return java.util.Collections.unmodifiableList(path);
-    }
-
     /** Drop the cached entity and any state captured against the old world. */
     public void invalidate() {
         path.clear();
         checkpoints.clear();
         serverEvents.clear();
+        simulatedOverrides = Collections.emptyList();
+        simulatedTable = null;
         simulator.invalidate();
     }
 

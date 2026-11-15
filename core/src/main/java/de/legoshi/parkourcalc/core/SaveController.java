@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.core;
 
+import de.legoshi.parkourcalc.core.io.WriterThread;
 import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
 import de.legoshi.parkourcalc.core.save.FileSystemSaveStore;
 import de.legoshi.parkourcalc.core.save.Result;
@@ -8,6 +9,7 @@ import de.legoshi.parkourcalc.core.save.SaveFile;
 import de.legoshi.parkourcalc.core.save.SaveIO;
 import de.legoshi.parkourcalc.core.save.SaveInfo;
 import de.legoshi.parkourcalc.core.save.WorldDescriptor;
+import de.legoshi.parkourcalc.core.sim.BlockOverrides;
 import de.legoshi.parkourcalc.core.sim.SimulationRunner;
 import de.legoshi.parkourcalc.core.sim.StartResumeState;
 import de.legoshi.parkourcalc.core.sim.TickState;
@@ -31,8 +33,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.function.IntConsumer;
 
 public final class SaveController {
@@ -153,9 +153,10 @@ public final class SaveController {
         SaveFile f = SaveIO.parseSafe(json);
         if (f == null || f.start == null) return;
         if (solverEngine != null) solverEngine.onProblemReplaced();
-        boolean incremental = retriggerFrom != null && startMatches(f.start);
+        boolean incremental = retriggerFrom != null && startMatches(f.start) && SaveIO.blockOverridesMatch(f, inputData);
         int dirtyTick = incremental ? firstChangedRow(f.rows) : -1;
         SaveIO.applyRowsTo(f, inputData);
+        SaveIO.applyBlockOverridesTo(f, inputData);
         SaveIO.applyAngleSolverTo(f, angleSolver);
         resolveGraphPreset();
         markDirty();
@@ -215,6 +216,7 @@ public final class SaveController {
         if (rows == null || rows.isEmpty()) return Result.failure("No ticks selected.");
         InputData slice = new InputData();
         for (InputRow row : rows) slice.getRows().add(row);
+        slice.getBlockOverrides().replaceAll(BlockOverrides.slice(inputData.getBlockOverrides().all(), sourceRows));
         AngleSolverState sliceSolver = SaveIO.sliceAngleSolverState(angleSolver, sourceRows);
         return SaveIO.save(store, rawName, slice, startPos, startVel, startYaw, startPitch, resume, sliceSolver, null, false);
     }
@@ -233,7 +235,7 @@ public final class SaveController {
         writeExecutor().execute(() -> {
             try {
                 target.write(sanitized, SaveIO.saveJson(file));
-            } catch (IOException e) {
+            } catch (IOException | RuntimeException e) {
                 pendingWriteError = "Failed to write save: " + e.getMessage();
             }
         });
@@ -247,30 +249,12 @@ public final class SaveController {
     }
 
     private static ExecutorService writeExecutor() {
-        if (writeExecutor == null) {
-            ExecutorService executor = Executors.newSingleThreadExecutor(r -> {
-                Thread t = new Thread(r, "pkc-save-writer");
-                t.setDaemon(true);
-                return t;
-            });
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                executor.shutdown();
-                try {
-                    executor.awaitTermination(3, TimeUnit.SECONDS);
-                } catch (InterruptedException ignored) {
-                }
-            }, "pkc-save-flush"));
-            writeExecutor = executor;
-        }
+        if (writeExecutor == null) writeExecutor = WriterThread.create("pkc-save-writer", "pkc-save-flush");
         return writeExecutor;
     }
 
     public void flushPendingWrites() {
-        if (writeExecutor == null) return;
-        try {
-            writeExecutor.submit(() -> { }).get(10, TimeUnit.SECONDS);
-        } catch (Exception ignored) {
-        }
+        WriterThread.drain(writeExecutor, 10);
     }
 
     public String drainWriteError() {
@@ -292,6 +276,7 @@ public final class SaveController {
         sessionActive = true;
         if (solverEngine != null) solverEngine.onProblemReplaced();
         SaveIO.applyRowsTo(result.value, inputData);
+        SaveIO.applyBlockOverridesTo(result.value, inputData);
         SaveIO.applyAngleSolverTo(result.value, angleSolver, inputData.size());
         resolveGraphPreset();
         // Must precede the setStart* calls: invalidate clears pending*, which they then refill.
@@ -392,6 +377,7 @@ public final class SaveController {
     public void newSession() {
         sessionActive = true;
         inputData.clear();
+        inputData.getBlockOverrides().clear();
         if (solverEngine != null) solverEngine.onProblemReplaced();
         if (angleSolver != null) angleSolver.reset();
         discardCurrent();
@@ -438,7 +424,7 @@ public final class SaveController {
 
     public boolean exists(String name) {
         if (store == null) return false;
-        String sanitized = SaveIO.sanitize(name);
+        String sanitized = SaveIO.sanitizeRelative(name);
         if (sanitized == null) return false;
         flushPendingWrites();
         return store.exists(sanitized);

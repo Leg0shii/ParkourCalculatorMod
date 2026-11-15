@@ -11,7 +11,7 @@ public final class FacingPrefold {
     private static final double PIN_MATCH_TOL = 1.0e-9;
     private static final double OFFSET_ZERO_TOL = 1.0e-12;
     private static final double BASE_ARG_TOL = 1.0e-12;
-    private static final double RAD = Math.PI / 180.0;
+    private static final double RAD = Angles.RAD_PER_DEG;
 
     public static final class Reduced {
         public final int n;
@@ -174,10 +174,10 @@ public final class FacingPrefold {
         for (JumpConstraint c : constraints) {
             if (c.mode != JumpConstraint.Mode.F) continue;
             if (c.t2 != null) {
-                if (c.cmp != JumpConstraint.Cmp.EQ && !(c.name != null && (c.name.endsWith("eqLo") || c.name.endsWith("eqHi")))) return false;
+                if (c.cmp != JumpConstraint.Cmp.EQ && !c.isEqHalf()) return false;
                 continue;
             }
-            if (c.name == null || !(c.name.endsWith("eqLo") || c.name.endsWith("eqHi"))) return false;
+            if (!c.isEqHalf()) return false;
         }
         return true;
     }
@@ -191,7 +191,7 @@ public final class FacingPrefold {
     }
 
     public static FacingPrefold analyze(List<JumpConstraint> constraints, JumpLinearModel lin) {
-        if (!hasFacing(constraints)) {
+        if (!JumpLinearModel.hasFacingWall(constraints)) {
             return new FacingPrefold(lin.n, true, lin.n, null, null, null, null, null);
         }
         Parsed p = parse(constraints, lin);
@@ -200,7 +200,7 @@ public final class FacingPrefold {
     }
 
     public static ChainScan scannable(List<JumpConstraint> constraints, JumpLinearModel lin) {
-        if (!hasFacing(constraints)) return null;
+        if (!JumpLinearModel.hasFacingWall(constraints)) return null;
         Parsed p = parse(constraints, lin);
         if (p == null) return null;
         int open = -1;
@@ -211,13 +211,6 @@ public final class FacingPrefold {
             }
         }
         return open < 0 ? null : new ChainScan(p, open);
-    }
-
-    private static boolean hasFacing(List<JumpConstraint> constraints) {
-        for (JumpConstraint c : constraints) {
-            if (c.mode == JumpConstraint.Mode.F) return true;
-        }
-        return false;
     }
 
     private static Parsed parse(List<JumpConstraint> constraints, JumpLinearModel lin) {
@@ -372,7 +365,7 @@ public final class FacingPrefold {
 
     public Reduced reduce(double[] cx, double[] cz, double[] mMagAll, List<JumpLinearModel.Wall> walls) {
         if (identity) return new Reduced(n, cx, cz, mMagAll, walls);
-        if (rotated()) return reduceRotated(cx, cz, walls);
+        if (rotated() || hasPlanarWall(walls)) return reduceRotated(cx, cz, walls);
         double[] rcx = new double[vars];
         double[] rcz = new double[vars];
         for (int t = 0; t < n; t++) {
@@ -397,6 +390,11 @@ public final class FacingPrefold {
         double[] ones = new double[vars];
         Arrays.fill(ones, 1.0);
         return new Reduced(vars, rcx, rcz, ones, reduced);
+    }
+
+    private static boolean hasPlanarWall(List<JumpLinearModel.Wall> walls) {
+        for (JumpLinearModel.Wall w : walls) if (w.axis == 2) return true;
+        return false;
     }
 
     private Reduced reduceRotated(double[] cx, double[] cz, List<JumpLinearModel.Wall> walls) {
@@ -447,6 +445,7 @@ public final class FacingPrefold {
     }
 
     public double[] expand(JumpLinearModel lin, Objective obj, double[] costateX, double[] costateZ) {
+        double[] dir = JumpLinearModel.objectiveDirection(obj);
         double[] yaws = new double[n];
         for (int t = 0; t < n; t++) {
             int v = identity ? t : varOf[t];
@@ -457,18 +456,8 @@ public final class FacingPrefold {
             double gx = costateX[v];
             double gz = costateZ[v];
             if (gx * gx + gz * gz < 1.0e-18) {
-                boolean max = obj.sense == Objective.Sense.MAX;
-                if (obj.isCustomAngle()) {
-                    double rad = Angles.rad(obj.customYaw);
-                    gx = (max ? 1.0 : -1.0) * -StrictMath.sin(rad);
-                    gz = (max ? 1.0 : -1.0) * StrictMath.cos(rad);
-                } else if (obj.axis == JumpPhysicsInputs.Axis.X) {
-                    gx = max ? 1.0 : -1.0;
-                    gz = 0.0;
-                } else {
-                    gx = 0.0;
-                    gz = max ? 1.0 : -1.0;
-                }
+                gx = dir[0];
+                gz = dir[1];
             }
             yaws[t] = lin.recoverYawDeg(identity ? t : repOf[v], gx, gz);
             if (!identity) {
@@ -484,14 +473,33 @@ public final class FacingPrefold {
         return axis == 0 ? mMag[t] * StrictMath.cos(phi) : mMag[t] * StrictMath.sin(phi);
     }
 
-    private static void tighten(double[] lo, double[] hi, int t, JumpConstraint.Cmp cmp, double rhs) {
+    static void tighten(double[] lo, double[] hi, int t, JumpConstraint.Cmp cmp, double rhs) {
         if (cmp != JumpConstraint.Cmp.LE && rhs > lo[t]) lo[t] = rhs;
         if (cmp != JumpConstraint.Cmp.GE && rhs < hi[t]) hi[t] = rhs;
     }
 
-    private static double[] filled(int n, double v) {
+    static double[] filled(int n, double v) {
         double[] a = new double[n];
         Arrays.fill(a, v);
         return a;
+    }
+
+    public static FacingPrefold chainPrefold(JumpSpec spec, JumpPhysicsInputs sc) {
+        if (!JumpLinearModel.hasFacingWall(spec.constraints)) return null;
+        FacingPrefold pre = analyze(spec.constraints, new JumpLinearModel(sc));
+        if (pre == null || pre.isIdentity()) return null;
+        return pre;
+    }
+
+    public static boolean overconstrainedChain(JumpSpec spec, JumpPhysicsInputs sc) {
+        FacingPrefold pre = chainPrefold(spec, sc);
+        return (pre != null && pre.pinnedYaws() != null) || singleHeadingChain(spec, sc, pre);
+    }
+
+    public static boolean singleHeadingChain(JumpSpec spec, JumpPhysicsInputs sc, FacingPrefold pre) {
+        if (!JumpLinearModel.hasFacingWall(spec.constraints)) return false;
+        if (pre != null) return pre.varCount() == 1 && pre.pinnedTicks() == 0;
+        ChainScan scan = scannable(spec.constraints, new JumpLinearModel(sc));
+        return scan != null && scan.singleHeading();
     }
 }

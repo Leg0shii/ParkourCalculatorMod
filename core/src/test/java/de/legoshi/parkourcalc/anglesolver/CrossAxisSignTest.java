@@ -3,6 +3,7 @@ package de.legoshi.parkourcalc.anglesolver;
 import de.legoshi.parkourcalc.anglesolver.harness.Fixtures;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
+import de.legoshi.parkourcalc.core.anglesolver.solver.CertifiedBnb;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ClosedFormSolve;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardPath;
@@ -11,6 +12,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpLinearModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
+import de.legoshi.parkourcalc.core.anglesolver.solver.Objective;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SlpSolve;
 import de.legoshi.parkourcalc.core.save.SaveFile;
 import de.legoshi.parkourcalc.core.save.SaveIO;
@@ -24,6 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -46,7 +49,11 @@ public class CrossAxisSignTest {
     }
 
     private static Loaded load() {
-        SaveFile file = SaveIO.parseSafe(Fixtures.rawPool(CAPTURE));
+        return load(CAPTURE);
+    }
+
+    private static Loaded load(String capture) {
+        SaveFile file = SaveIO.parseSafe(Fixtures.rawPool(capture));
         assertNotNull(file);
         ExactJumpModel model = ExactJumpModel.forMcVersion(file.mcVersion);
         InputData inputs = new InputData();
@@ -134,5 +141,57 @@ public class CrossAxisSignTest {
                     JumpLinearModel.crossAxisHalfSlack(c, 1.0, path));
             assertEquals(c.name, expected, halves, 1e-12);
         }
+    }
+
+    @Test
+    public void certifiedSearchNeverCallsTheJumpInfeasible() {
+        Loaded l = load();
+        CertifiedBnb.Config cfg = new CertifiedBnb.Config();
+        cfg.mode = CertifiedBnb.Mode.FIRST_FEASIBLE;
+        cfg.nodeCap = 40;
+        cfg.cancel = new AtomicBoolean(false);
+        cfg.seedYaws = new double[l.spec.asScenario().numTicks];
+        CertifiedBnb.Result r = CertifiedBnb.solve(l.model, l.spec, cfg);
+        assertFalse("a jump with a recorded solution must not be certified infeasible", r.certifiedInfeasible);
+    }
+
+    @Test
+    public void facingPinKeepsTheCrossAxisWalls() {
+        Loaded l = load();
+        JumpPhysicsInputs sc = l.spec.asScenario();
+        double[] free = ClosedFormSolve.optimize(l.model, l.spec, 0.0, new AtomicBoolean(false));
+        assertNotNull(free);
+        for (int tick : new int[] {0, 5, 20}) {
+            List<JumpConstraint> cons = new ArrayList<>(l.spec.constraints);
+            cons.add(new JumpConstraint(JumpConstraint.Mode.F, tick, null, JumpConstraint.Op.PLUS,
+                    JumpConstraint.Cmp.GE, free[tick] - 1.0e-4, "pin@" + tick + "eqLo"));
+            cons.add(new JumpConstraint(JumpConstraint.Mode.F, tick, null, JumpConstraint.Op.PLUS,
+                    JumpConstraint.Cmp.LE, free[tick] + 1.0e-4, "pin@" + tick + "eqHi"));
+            JumpSpec pinned = new JumpSpec(sc, cons, l.spec.objective);
+            double[] yaws = ClosedFormSolve.optimize(l.model, pinned, 0.0, new AtomicBoolean(false));
+            assertNotNull("pin at tick " + tick, yaws);
+            double[] gf = sc.toGameFacings(yaws);
+            assertTrue(JumpConstraintCompiler.compile(pinned).maxViolation(gf, l.model.forward(sc, gf)) <= 0.0);
+        }
+    }
+
+    @Test
+    public void dualBoundCoversBothDominantSigns() {
+        Loaded l = load("gh398-optimize-2jump");
+        JumpPhysicsInputs sc = l.spec.asScenario();
+        List<JumpConstraint> crossOnly = new ArrayList<>();
+        for (JumpConstraint c : l.spec.constraints) if (JumpLinearModel.isCrossAxis(c)) crossOnly.add(c);
+        assertEquals(1, crossOnly.size());
+        Objective objective = new Objective(JumpPhysicsInputs.Axis.Z, Objective.Sense.MIN, l.spec.objective.tick);
+        JumpSpec withCross = new JumpSpec(sc, crossOnly, objective);
+        double[] free = ClosedFormSolve.optimize(l.model, new JumpSpec(sc, new ArrayList<JumpConstraint>(), objective),
+                0.0, new AtomicBoolean(false));
+        assertNotNull(free);
+        double[] gf = sc.toGameFacings(free);
+        ForwardPath path = l.model.forward(sc, gf);
+        assertTrue(JumpConstraintCompiler.compile(withCross).maxViolation(gf, path) <= 0.0);
+        double bound = ClosedFormSolve.dualBound(withCross);
+        assertTrue("a feasible path at " + objective.evaluate(path) + " lies beyond the bound " + bound,
+                Double.isNaN(bound) || objective.evaluate(path) >= bound - 1.0e-4);
     }
 }

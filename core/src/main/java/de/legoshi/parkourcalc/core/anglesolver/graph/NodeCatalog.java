@@ -8,7 +8,10 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.FoldDriverNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.FreeStartImproveNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.HomotopyLadderNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.IlsPolishNode;
+import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.InputSmoothNode;
+import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.JoinLanesNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.LabelNode;
+import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.LatticePolishNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.LeafSnapNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.MarkSettledNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.ReportNode;
@@ -18,6 +21,7 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.RouterNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.SeedSweepNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.SetupPeelNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.SmoothNode;
+import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.StartPickNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.TranslatedStartNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.WrapIlsNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.WrapYawsNode;
@@ -133,6 +137,7 @@ public final class NodeCatalog {
                 .param(ParamSpec.text("windowLadder", "Window ladder (blank = auto)", ""))
                 .param(ParamSpec.text("commitLadder", "Commit ladder (blank = auto)", ""))
                 .param(ParamSpec.integer("budgetSec", "Budget (s)", 0, 600, 0))
+                .param(ParamSpec.bool("keepIncoming", "Run beside a landing that is already there", false))
                 .budgetParam("budgetSec")
                 .fallback(Guarantee.NONE)
                 .factory(RecedingHorizonNode::new)
@@ -158,6 +163,8 @@ public final class NodeCatalog {
                 .branch(Branch.preserves(Guarantee.UNCHANGED))
                 .param(ParamSpec.integer("budgetSec", "Max time (s)", 0, 600, 20))
                 .param(ParamSpec.bool("jointOnly", "Joint rescue only", false))
+                .param(ParamSpec.bool("first", "First landing for start and facings together", false))
+                .param(ParamSpec.integer("budgetMs", "Max time (ms)", 0, 600000, 0))
                 .param(ParamSpec.decimal("fsIntervalMargin", "Pin interval margin", 0.0, 1.0, 1.0e-3))
                 .param(ParamSpec.decimal("fsInvariantTol", "Invariant slack tolerance", 0.0, 1.0, 1.0e-6))
                 .param(ParamSpec.text("fsJointMargins", "Joint margin ladder",
@@ -192,6 +199,9 @@ public final class NodeCatalog {
                 .param(ParamSpec.integer("ffNodeCap", "First-feasible node cap", 0, 1000000, 32))
                 .param(ParamSpec.integer("tickCap", "Tick cap", 0, 100000, BuiltinGraphs.IMPROVE_TICK_CAP))
                 .param(ParamSpec.bool("exhaust", "Exhaust while nothing lands", false))
+                .param(ParamSpec.bool("dive", "Second pass in dive order", false))
+                .param(ParamSpec.integer("batch", "Nodes per round", 1, 64, 1))
+                .param(ParamSpec.bool(GraphRunner.LANE_PARAM, "Run beside the chain", false))
                 .param(ParamSpec.text("labelSuffix", "Chain suffix", ""))
                 .budgetParam("budgetSec")
                 .fallback(Guarantee.UNCHANGED)
@@ -277,8 +287,30 @@ public final class NodeCatalog {
                 .branch(Branch.feasible(Guarantee.ADOPTED))
                 .branch(Branch.preserves(Guarantee.REJECTED))
                 .param(ParamSpec.integer("pairPass", "Pair pass", 0, 1, 0))
+                .param(ParamSpec.bool("repeat", "Repeat until nothing improves", false))
+                .param(ParamSpec.bool(GraphRunner.LANE_PARAM, "Run beside the chain", false))
                 .fallback(Guarantee.REJECTED)
                 .factory(LeafSnapNode::new)
+                .build());
+        register(NodeType.builder("latticePolish", "Lattice polish", NodeCategory.POLISH)
+                .requires(InputRequirement.ANY)
+                .branch(Branch.feasible(Guarantee.IMPROVED))
+                .branch(Branch.preserves(Guarantee.UNCHANGED))
+                .param(ParamSpec.integer("facings", "Tied facing steps tried", 1, 1000, 5))
+                .param(ParamSpec.integer("searches", "Lattice searches", 1, 1000, 3))
+                .param(ParamSpec.integer("adjusters", "Ticks adjusted together", 2, 12, 8))
+                .param(ParamSpec.integer("tableSize", "Combinations per half", 9, 200000, 2200))
+                .param(ParamSpec.integer("window", "Neighbours scanned", 1, 4096, 24))
+                .param(ParamSpec.integer("rounds", "Grid search rounds", 1, 256, 16))
+                .param(ParamSpec.integer("work", "Smooth solve work limit (millions)", 1, 1000000, 100))
+                .param(ParamSpec.bool("turns", "Try the start facing one turn away", true))
+                .param(ParamSpec.decimal(GraphRunner.RESERVE_FRACTION_PARAM, "Reserved share of the solve time", 0.0, 1.0,
+                        BuiltinGraphs.POLISH_RESERVE_FRACTION))
+                .param(ParamSpec.integer(GraphRunner.RESERVE_CAP_PARAM, "Reserve cap (s, 0 = none)", 0, 600,
+                        BuiltinGraphs.POLISH_RESERVE_CAP_SEC))
+                .param(ParamSpec.bool(GraphRunner.LANE_PARAM, "Run beside the chain", false))
+                .fallback(Guarantee.UNCHANGED)
+                .factory(LatticePolishNode::new)
                 .build());
         register(NodeType.builder("smooth", "Smoothing", NodeCategory.POLISH)
                 .requires(InputRequirement.ANY)
@@ -291,6 +323,34 @@ public final class NodeCatalog {
                         BuiltinGraphs.SMOOTH_RESERVE_CAP_SEC))
                 .fallback(Guarantee.UNCHANGED)
                 .factory(SmoothNode::new)
+                .build());
+        register(NodeType.builder("inputSmooth", "Smoothing (inputs)", NodeCategory.POLISH)
+                .requires(InputRequirement.ANY)
+                .branch(Branch.feasible(Guarantee.IMPROVED))
+                .branch(Branch.preserves(Guarantee.UNCHANGED))
+                .param(ParamSpec.decimal("giveBack", "Give-back share of the offset", 0.0, 1.0, 1.0))
+                .param(ParamSpec.bool("allowA", "May strafe with A", true))
+                .param(ParamSpec.bool("allowD", "May strafe with D", true))
+                .param(ParamSpec.bool("keepSprint", "Keep sprinting (W and sprint held on every tick)", false))
+                .param(ParamSpec.decimal(GraphRunner.RESERVE_FRACTION_PARAM, "Reserved share of the solve time", 0.0, 1.0,
+                        BuiltinGraphs.SMOOTH_RESERVE_FRACTION))
+                .param(ParamSpec.integer(GraphRunner.RESERVE_CAP_PARAM, "Reserve cap (s, 0 = none)", 0, 600,
+                        3 * BuiltinGraphs.SMOOTH_RESERVE_CAP_SEC))
+                .fallback(Guarantee.UNCHANGED)
+                .factory(InputSmoothNode::new)
+                .build());
+        register(NodeType.builder("joinLanes", "Join lanes", NodeCategory.CONTROL)
+                .requires(InputRequirement.ANY)
+                .branch(Branch.preserves(Guarantee.DONE))
+                .param(ParamSpec.text("of", "Only the lane started at", ""))
+                .fallback(Guarantee.DONE)
+                .factory(JoinLanesNode::new)
+                .build());
+        register(NodeType.builder("pickStart", "Pick start", NodeCategory.CONTROL)
+                .requires(InputRequirement.ANY)
+                .branch(Branch.preserves(Guarantee.DONE))
+                .fallback(Guarantee.DONE)
+                .factory(StartPickNode::new)
                 .build());
         register(NodeType.builder("translatedStart", "Translated start", NodeCategory.RECOVERY)
                 .requires(InputRequirement.ANY)

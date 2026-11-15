@@ -22,6 +22,10 @@ public class KeyboardHandlerMixin {
     private void onKey(long window, int action, KeyEvent input, CallbackInfo ci) {
         FabricParkourCalculator.recordKey(input.key(), action);
         if (!FabricParkourCalculator.isUiFocused()) {
+            if (action == InputConstants.PRESS && input.key() == InputConstants.KEY_ESCAPE && FabricParkourCalculator.placingEscape()) {
+                ci.cancel();
+                return;
+            }
             if (action == InputConstants.PRESS && FabricParkourCalculator.swallowsEditChord(input.key())) ci.cancel();
             return;
         }

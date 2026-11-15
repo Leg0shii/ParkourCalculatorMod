@@ -34,13 +34,13 @@ The arc runs from manual planning to full autonomy. Every level stands on one fo
 
 This mod is the successor to the standalone desktop [ParkourCalculator](https://github.com/Leg0shii/ParkourCalculator) (JavaFX). The desktop app proved the concept across several Minecraft versions and even did AI pathfinding, but required rebuilding worlds in an external 3D editor. The mod removes that friction by operating directly on the loaded Minecraft world: no alt-tabbing, no reconstructed geometry.
 
-It ships for Fabric 26.3, Forge 1.12.2, and Forge 1.8.9 in parallel. The Fabric loader tracks the newest Minecraft version; the two Forge loaders exist because the speedrun community is still anchored on those eras.
+It ships for Fabric 26.3, 1.21.3 and 1.20.4 and for Forge 1.12.2 and 1.8.9 in parallel. The Fabric loader tracks the newest Minecraft version; the two Forge loaders exist because the speedrun community is still anchored on those eras.
 
 
 ## Design principles
 
 - **Simulation accuracy is non-negotiable.** Movement is computed by a real `PlayerEntity` subclass (or its 1.8.9 / 1.12.2 equivalent), byte-exact against Minecraft. Any divergence from the game's physics is a bug, never an optimization. The 1e-4 goal is only reachable because the model is bit-exact; approximate physics cannot certify a frame-perfect jump.
 - **UX first.** The ideal interaction is two blocks in, a route out. Everything short of that ideal should still be fast, legible, and entirely in-game.
-- **Client-side only.** The mod reads world state but never modifies it and never touches the server.
+- **Client-side only.** The mod has no server-side component and never sends anything to a multiplayer server. In singleplayer, Block Overrides and the paired simulation use the integrated server.
 - **Minimal dependencies.** Fabric API on Fabric, nothing extra on Forge, imgui-java for the overlay. No heavyweight frameworks.
-- **Community interop.** Save/load uses mothball-string notation so setups roundtrip with Stratfinder and other Mothball tooling.
+- **Community interop.** A goal, not built yet: saves are JSON today, and a mothball-string notation that lets setups roundtrip with Mothball tooling does not exist in the code.
