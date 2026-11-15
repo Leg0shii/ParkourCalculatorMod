@@ -54,6 +54,7 @@ public final class MomentumSearch {
     private static final long[] PROBE_SURVIVORS = {200, 1000, 3000, 10000};
     private static final long PROBE_SUFFIXES = 300_000L;
     private static final int KEYS = FreeAirExact.Tables.KEYS;
+    private static final int FINALS_TICKS = 14;
 
     static {
         for (int i = 0; i < DIRS; i++) {
@@ -71,6 +72,7 @@ public final class MomentumSearch {
         int end;
         double[] vx;
         double[] vy;
+        double[] vs;
         byte[] combos;
     }
 
@@ -129,19 +131,28 @@ public final class MomentumSearch {
         boolean[] fresh;
     }
 
-    public static int tiedTicks(FreeAirExact.Tables tables) {
+    public static int walkedTicks(FreeAirExact.Tables tables, int[] jumpTicks) {
         int n = tables.ticks();
         if (n == 0) return -1;
-        int main = tables.unitOf(0);
-        if (main < 0) return -1;
-        int end = 0;
-        while (end < n && tables.unitOf(end) == main) end++;
         Set<Integer> seen = new HashSet<>();
-        for (int t = end; t < n; t++) {
+        for (int t = 0; t < n; t++) {
             int unit = tables.unitOf(t);
-            if (unit < 0 || unit == main || !seen.add(unit)) return -1;
+            if (unit < 0) return -1;
+            if ((t == 0 || unit != tables.unitOf(t - 1)) && !seen.add(unit)) return -1;
         }
-        return end;
+        int free = n;
+        while (free > 0 && (free == 1 || tables.unitOf(free - 1) != tables.unitOf(free - 2))) free--;
+        int last = free;
+        if (n - free > FINALS_TICKS) {
+            last = n - FINALS_TICKS;
+            for (int jump : jumpTicks) {
+                if (jump > free && n - jump <= FINALS_TICKS) {
+                    last = jump;
+                    break;
+                }
+            }
+        }
+        return Math.max(1, last);
     }
 
     public final AtomicLong nodes = new AtomicLong();
@@ -156,6 +167,7 @@ public final class MomentumSearch {
     private final Sink sink;
     private final int n;
     private final int last;
+    private final boolean[] joins;
     private final int states;
     private final double keep;
     private final int variant;
@@ -194,7 +206,9 @@ public final class MomentumSearch {
         this.sink = sink;
         this.sent = sent;
         this.n = rules.n;
-        this.last = tiedTicks(tables);
+        this.last = walkedTicks(tables, jumpTicks);
+        this.joins = new boolean[n + 1];
+        for (int t = 1; t < n; t++) joins[t] = tables.unitOf(t) == tables.unitOf(t - 1);
         this.states = rules.states;
         this.keep = settings.keep;
         this.variant = variant;
@@ -245,7 +259,7 @@ public final class MomentumSearch {
     private double cutValue(Cut cut, int[] combos) {
         double sx = 0.0;
         double sy = 0.0;
-        double air = 0.0;
+        double total = 0.0;
         int phase = 0;
         for (int t = 0; t < n; t++) {
             int combo = combos[t];
@@ -254,15 +268,16 @@ public final class MomentumSearch {
             boolean sprint = run && nextPhase > variant;
             boolean before = t == 0 ? sprint : NoTurnKeys.isRun(combos[t - 1]) && phase > variant;
             int at = t * KEYS + FreeAirExact.Tables.key(combo, sprint, before);
-            if (t < last) {
-                sx += cut.x[at];
-                sy += cut.y[at];
-            } else {
-                air += len(cut.x[at], cut.y[at]);
+            sx += cut.x[at];
+            sy += cut.y[at];
+            if (!joins[t + 1]) {
+                total += len(sx, sy);
+                sx = 0.0;
+                sy = 0.0;
             }
             phase = nextPhase;
         }
-        return -(cut.base + len(sx, sy) + air);
+        return -(cut.base + total);
     }
 
     private int stateAt(int[] combos, int tick) {
@@ -369,7 +384,7 @@ public final class MomentumSearch {
         cuts = chosen.toArray(new Cut[0]);
         cutCount = cuts.length;
         long room = (long) (Runtime.getRuntime().maxMemory() * settings.memoryShare);
-        suffixLimit = Math.max(1000L, Math.min(settings.maxSuffixes, room / (16L * cutCount + 96L + last)));
+        suffixLimit = Math.max(1000L, Math.min(settings.maxSuffixes, room / (24L * cutCount + 112L + last)));
         finalsLimit = Math.max(1000L, Math.min(settings.maxFinals, room / (8L * cutCount + 16L)));
         need = new double[cutCount];
         for (int c = 0; c < cutCount; c++) need[c] = -cuts[c].base - keep;
@@ -421,6 +436,18 @@ public final class MomentumSearch {
         if (failure[0] != null) throw new IllegalStateException(failure[0]);
     }
 
+    private boolean single(int t) {
+        return !joins[t] && !joins[t + 1];
+    }
+
+    private static void collapse(double[] values) {
+        if (values == null) return;
+        double best = Double.NEGATIVE_INFINITY;
+        for (double value : values) if (value > best) best = value;
+        if (best == Double.NEGATIVE_INFINITY) return;
+        Arrays.fill(values, best > 0 ? best * SEC : best);
+    }
+
     private void prepare() {
         forward = new double[m][cutCount][][];
         maxAir = new double[cutCount][];
@@ -447,12 +474,18 @@ public final class MomentumSearch {
                             Arrays.fill(to, Double.NEGATIVE_INFINITY);
                             after[next] = to;
                         }
-                        for (int d = 0; d < DIRS; d++) {
-                            double value = from[d] + x * DX[d] + y * DY[d];
-                            if (value > to[d]) to[d] = value;
+                        if (single(t)) {
+                            double value = from[0] + len(x, y);
+                            if (value > to[0]) Arrays.fill(to, value);
+                        } else {
+                            for (int d = 0; d < DIRS; d++) {
+                                double value = from[d] + x * DX[d] + y * DY[d];
+                                if (value > to[d]) to[d] = value;
+                            }
                         }
                     }
                 }
+                if (joins[t] && !joins[t + 1]) for (double[] to : after) collapse(to);
                 current = after;
                 if (k < m && t + 1 == bounds[k]) forward[k++][c] = current;
             }
@@ -501,11 +534,11 @@ public final class MomentumSearch {
                     double[] e = new double[DIRS];
                     Arrays.fill(e, Double.NEGATIVE_INFINITY);
                     for (Suffix s : list) {
-                        double air = maxAir[c][s.end];
+                        double rest = s.vs[c] + maxAir[c][s.end];
                         double x = s.vx[c];
                         double y = s.vy[c];
                         for (int d = 0; d < DIRS; d++) {
-                            double value = x * DX[d] + y * DY[d] + air;
+                            double value = x * DX[d] + y * DY[d] + rest;
                             if (value > e[d]) e[d] = value;
                         }
                     }
@@ -530,11 +563,17 @@ public final class MomentumSearch {
                             best = new double[DIRS];
                             Arrays.fill(best, Double.NEGATIVE_INFINITY);
                         }
-                        for (int d = 0; d < DIRS; d++) {
-                            double value = x * DX[d] + y * DY[d] + a[d];
-                            if (value > best[d]) best[d] = value;
+                        if (single(t)) {
+                            double value = len(x, y) + a[0];
+                            if (value > best[0]) Arrays.fill(best, value);
+                        } else {
+                            for (int d = 0; d < DIRS; d++) {
+                                double value = x * DX[d] + y * DY[d] + a[d];
+                                if (value > best[d]) best[d] = value;
+                            }
                         }
                     }
+                    if (!joins[t] && joins[t + 1]) collapse(best);
                     current[st] = best;
                 }
                 support[c][t - t0] = current;
@@ -547,10 +586,15 @@ public final class MomentumSearch {
         final int k;
         final int t0;
         final int t1;
+        final int firstEnd;
         final double[][][][] support;
         final List<Suffix>[] sigma;
         final double[][] px;
         final double[][] py;
+        final double[][] ps;
+        final double[] fx;
+        final double[] fy;
+        final double[] headBound;
         final int[] combos = new int[n];
         final int[] order;
         final int[] key = new int[1];
@@ -560,9 +604,7 @@ public final class MomentumSearch {
         final List<int[]> sample = new ArrayList<>();
         final FreeAirExact.Screen screen = new FreeAirExact.Screen(tables);
         final boolean[] sprint = new boolean[n];
-        final double[] vx;
-        final double[] vy;
-        final double[] norm2;
+        final double[] total;
         final Random random;
         final long suffixShare;
         int startState;
@@ -576,16 +618,24 @@ public final class MomentumSearch {
             this.k = k;
             this.t0 = bounds[k - 1];
             this.t1 = bounds[k];
+            int end = t0;
+            if (joins[t0]) {
+                end = t0 + 1;
+                while (joins[end]) end++;
+            }
+            this.firstEnd = end;
             this.support = support;
             this.sigma = sigma;
             this.px = new double[t1 - t0 + 1][cutCount];
             this.py = new double[t1 - t0 + 1][cutCount];
+            this.ps = new double[t1 - t0 + 1][cutCount];
+            this.fx = new double[cutCount];
+            this.fy = new double[cutCount];
+            this.headBound = new double[cutCount];
             this.order = new int[cutCount];
             for (int i = 0; i < cutCount; i++) order[i] = i;
             this.head = new double[cutCount][];
-            this.vx = new double[cutCount];
-            this.vy = new double[cutCount];
-            this.norm2 = new double[cutCount];
+            this.total = new double[cutCount];
             this.random = new Random(31L * index + 7L);
             this.suffixShare = suffixBudget == Long.MAX_VALUE ? Long.MAX_VALUE : Math.max(1L, suffixBudget / threads);
         }
@@ -597,14 +647,14 @@ public final class MomentumSearch {
             for (int c = 0; c < cutCount; c++) head[c] = forward[k - 1][c][state];
             Arrays.fill(px[0], 0.0);
             Arrays.fill(py[0], 0.0);
-            int next = rules.next(t0, state, first, variant, key);
-            if (next < 0 || support[0][1][next] == null) return;
-            int at = t0 * KEYS + key[0];
-            for (int c = 0; c < cutCount; c++) {
-                px[1][c] = cuts[c].x[at];
-                py[1][c] = cuts[c].y[at];
+            Arrays.fill(ps[0], 0.0);
+            if (!joins[t0]) {
+                Arrays.fill(fx, 0.0);
+                Arrays.fill(fy, 0.0);
+                for (int c = 0; c < cutCount; c++) headBound[c] = head[c][0];
             }
-            combos[t0] = first;
+            int next = advance(t0, state, 0, first);
+            if (next < 0) return;
             walked++;
             if (t0 + 1 == t1) {
                 if (second == rules.alphabet[0]) walk(t0 + 1, next, 1);
@@ -615,38 +665,89 @@ public final class MomentumSearch {
         }
 
         void step(int t, int state, int depth, int combo) {
+            int next = advance(t, state, depth, combo);
+            if (next >= 0) walk(t + 1, next, depth + 1);
+        }
+
+        int advance(int t, int state, int depth, int combo) {
             int next = rules.next(t, state, combo, variant, key);
-            if (next < 0) return;
-            if (support[0][t + 1 - t0][next] == null) return;
+            if (next < 0) return -1;
+            if (support[0][t + 1 - t0][next] == null) return -1;
             int at = t * KEYS + key[0];
             double[] x0 = px[depth];
             double[] y0 = py[depth];
+            double[] s0 = ps[depth];
             double[] x1 = px[depth + 1];
             double[] y1 = py[depth + 1];
+            double[] s1 = ps[depth + 1];
+            boolean ends = !joins[t + 1];
+            boolean firstEnds = ends && t + 1 == firstEnd;
             for (int c = 0; c < cutCount; c++) {
-                x1[c] = x0[c] + cuts[c].x[at];
-                y1[c] = y0[c] + cuts[c].y[at];
+                double x = x0[c] + cuts[c].x[at];
+                double y = y0[c] + cuts[c].y[at];
+                if (!ends) {
+                    x1[c] = x;
+                    y1[c] = y;
+                    s1[c] = s0[c];
+                    continue;
+                }
+                x1[c] = 0.0;
+                y1[c] = 0.0;
+                if (firstEnds) {
+                    fx[c] = x;
+                    fy[c] = y;
+                    headBound[c] = joined(head[c], x, y) * SEC;
+                    s1[c] = s0[c];
+                } else {
+                    s1[c] = s0[c] + len(x, y);
+                }
             }
             combos[t] = combo;
-            walk(t + 1, next, depth + 1);
+            return next;
+        }
+
+        double joined(double[] before, double x, double y) {
+            double best = Double.NEGATIVE_INFINITY;
+            for (int d = 0; d < DIRS; d++) {
+                double value = before[d] + x * DX[d] + y * DY[d];
+                if (value > best) best = value;
+            }
+            return best;
         }
 
         boolean alive(int t, int state, int depth, int limit) {
             double[] x = px[depth];
             double[] y = py[depth];
+            double[] s = ps[depth];
+            boolean open = t < firstEnd;
+            boolean runs = joins[t];
             for (int i = 0; i < limit; i++) {
                 int c = order[i];
                 double[] after = support[c][t - t0][state];
                 if (after == null) return false;
-                double[] before = head[c];
-                double xc = x[c];
-                double yc = y[c];
-                double best = Double.NEGATIVE_INFINITY;
-                for (int d = 0; d < DIRS; d++) {
-                    double value = before[d] + xc * DX[d] + yc * DY[d] + after[d];
-                    if (value > best) best = value;
+                double value;
+                if (!runs) {
+                    value = headBound[c] + s[c] + after[0];
+                } else {
+                    double[] before = head[c];
+                    double xc = x[c];
+                    double yc = y[c];
+                    double best = Double.NEGATIVE_INFINITY;
+                    if (open) {
+                        for (int d = 0; d < DIRS; d++) {
+                            double v = before[d] + xc * DX[d] + yc * DY[d] + after[d];
+                            if (v > best) best = v;
+                        }
+                        value = best * SEC;
+                    } else {
+                        for (int d = 0; d < DIRS; d++) {
+                            double v = xc * DX[d] + yc * DY[d] + after[d];
+                            if (v > best) best = v;
+                        }
+                        value = headBound[c] + s[c] + best * SEC;
+                    }
                 }
-                if (best * SEC < need[c] - EPS) {
+                if (value < need[c] - EPS) {
                     promote(i);
                     return false;
                 }
@@ -693,25 +794,27 @@ public final class MomentumSearch {
         void leaf(int state, int depth) {
             double[] x = px[depth];
             double[] y = py[depth];
+            double[] s = ps[depth];
             if (sigma == null && k == 1) {
-                System.arraycopy(x, 0, vx, 0, cutCount);
-                System.arraycopy(y, 0, vy, 0, cutCount);
+                System.arraycopy(s, 0, total, 0, cutCount);
                 finish(state);
                 return;
             }
             if (sigma == null) {
-                Suffix s = new Suffix();
-                s.start = startState;
-                s.end = state;
-                s.vx = x.clone();
-                s.vy = y.clone();
-                s.combos = new byte[t1 - t0];
-                for (int t = t0; t < t1; t++) s.combos[t - t0] = (byte) combos[t];
-                keep(s);
+                Suffix made = new Suffix();
+                made.start = startState;
+                made.end = state;
+                made.vx = fx.clone();
+                made.vy = fy.clone();
+                made.vs = s.clone();
+                made.combos = new byte[t1 - t0];
+                for (int t = t0; t < t1; t++) made.combos[t - t0] = (byte) combos[t];
+                keep(made);
                 return;
             }
             List<Suffix> list = sigma[state];
             if (list == null) return;
+            boolean open = t1 < firstEnd;
             for (Suffix suffix : list) {
                 if (abort || taskAbort) return;
                 boolean dead = false;
@@ -720,17 +823,8 @@ public final class MomentumSearch {
                     double sx = x[c] + suffix.vx[c];
                     double sy = y[c] + suffix.vy[c];
                     double value;
-                    if (k == 1) {
-                        value = Math.sqrt(sx * sx + sy * sy);
-                    } else {
-                        double[] before = head[c];
-                        double best = Double.NEGATIVE_INFINITY;
-                        for (int d = 0; d < DIRS; d++) {
-                            double v = before[d] + sx * DX[d] + sy * DY[d];
-                            if (v > best) best = v;
-                        }
-                        value = best * SEC;
-                    }
+                    if (open) value = joined(head[c], sx, sy) * SEC + suffix.vs[c];
+                    else value = headBound[c] + s[c] + len(sx, sy) + suffix.vs[c];
                     if (value + maxAir[c][suffix.end] < need[c] - EPS) {
                         dead = true;
                         promote(i);
@@ -740,25 +834,34 @@ public final class MomentumSearch {
                 if (dead) continue;
                 if (k == 1) {
                     for (int c = 0; c < cutCount; c++) {
-                        vx[c] = x[c] + suffix.vx[c];
-                        vy[c] = y[c] + suffix.vy[c];
+                        total[c] = s[c] + len(x[c] + suffix.vx[c], y[c] + suffix.vy[c]) + suffix.vs[c];
                     }
                     for (int t = t1; t < last; t++) combos[t] = suffix.combos[t - t1];
                     finish(suffix.end);
                 } else {
-                    Suffix s = new Suffix();
-                    s.start = startState;
-                    s.end = suffix.end;
-                    s.vx = new double[cutCount];
-                    s.vy = new double[cutCount];
+                    Suffix made = new Suffix();
+                    made.start = startState;
+                    made.end = suffix.end;
+                    made.vx = new double[cutCount];
+                    made.vy = new double[cutCount];
+                    made.vs = new double[cutCount];
                     for (int c = 0; c < cutCount; c++) {
-                        s.vx[c] = x[c] + suffix.vx[c];
-                        s.vy[c] = y[c] + suffix.vy[c];
+                        double sx = x[c] + suffix.vx[c];
+                        double sy = y[c] + suffix.vy[c];
+                        if (open) {
+                            made.vx[c] = sx;
+                            made.vy[c] = sy;
+                            made.vs[c] = suffix.vs[c];
+                        } else {
+                            made.vx[c] = fx[c];
+                            made.vy[c] = fy[c];
+                            made.vs[c] = s[c] + len(sx, sy) + suffix.vs[c];
+                        }
                     }
-                    s.combos = new byte[last - t0];
-                    for (int t = t0; t < t1; t++) s.combos[t - t0] = (byte) combos[t];
-                    System.arraycopy(suffix.combos, 0, s.combos, t1 - t0, suffix.combos.length);
-                    keep(s);
+                    made.combos = new byte[last - t0];
+                    for (int t = t0; t < t1; t++) made.combos[t - t0] = (byte) combos[t];
+                    System.arraycopy(suffix.combos, 0, made.combos, t1 - t0, suffix.combos.length);
+                    keep(made);
                 }
             }
         }
@@ -775,8 +878,7 @@ public final class MomentumSearch {
             Finals list = finals.computeIfAbsent(end, MomentumSearch.this::buildFinals);
             int count = list.keys.size;
             if (count == 0) return;
-            for (int c = 0; c < cutCount; c++) norm2[c] = vx[c] * vx[c] + vy[c] * vy[c];
-            double room = need[0] - Math.sqrt(norm2[0]) - EPS;
+            double room = need[0] - total[0] - EPS;
             double[] first = list.air[0];
             int lo = 0;
             int hi = count;
@@ -789,8 +891,7 @@ public final class MomentumSearch {
                 if (abort || taskAbort) return;
                 boolean dead = false;
                 for (int c = 1; c < cutCount; c++) {
-                    double missing = need[c] - list.air[c][f];
-                    if (missing > 0 && norm2[c] < missing * missing * (1 - 1e-9) - 1e-12) {
+                    if (total[c] < need[c] - list.air[c][f] - EPS) {
                         dead = true;
                         break;
                     }

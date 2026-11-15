@@ -35,7 +35,11 @@ public class NoTurnMomentumSearchTest {
     private static final String J135 = "hpk/d9/j135_Waza_to_Cobblewall_-0.5";
     private static final String J344 = "hpk/d10/j344_Butterfly_Neo_to_Cobblewall_-0.5";
     private static final String J342 = "hpk/d10/j342_3bc_Trapdoor_to_Trapdoor_Cross_Neo";
-    private static final String J424 = "hpk/d10/j424_1.4375bm_Double_Winged_Neo__0.25";
+    private static final String J152 = "hpk/d10/j152_Slab_to_Fence_3x3";
+    private static final String J828 = "hpk/d11/j828-1bm_5.3125-1.5";
+    private static final String J718 = "hpk/d11/j718-2bm__Z__Pane_to_Pane_Neo";
+    private static final String J246 = "hpk/d9/j246__X__1.9375bm_Triple_Neo";
+    private static final String J134 = "hpk/d9/j134_T_3mm_4jmm_4_1";
     private static final double KEEP = 0.0005;
     private static final double EDGE = 2e-5;
 
@@ -136,6 +140,19 @@ public class NoTurnMomentumSearchTest {
     }
 
     @Test
+    public void theSearchKeepsWhatAFullWalkKeepsWithSeveralFacingParts() throws Exception {
+        assertTrue(new Jump(J152).sameAsAFullWalk(1, 3) > 0);
+        assertTrue(new Jump(J828).sameAsAFullWalk(0, 3) > 0);
+        assertTrue(new Jump(J246).sameAsAFullWalk(1, 3) > 0);
+        assertTrue(new Jump(J718).sameAsAFullWalk(1, 3) > 0);
+    }
+
+    @Test
+    public void theSearchKeepsWhatAFullWalkKeepsWithATurnOnEveryJump() throws Exception {
+        assertTrue(new Jump(J134).sameAsAFullWalk(0, 3) > 0);
+    }
+
+    @Test
     public void noNeighbourOfAKeptScheduleIsMissing() throws Exception {
         Jump jump = new Jump(J315);
         int changes = 2;
@@ -221,19 +238,16 @@ public class NoTurnMomentumSearchTest {
     }
 
     @Test
-    public void aRunUpWithTwoFacingPartsRunsWithoutTheLane() throws Exception {
-        NoTurnProblem p = cold(J424);
-        StructurePoolDriver.Config cfg = new StructurePoolDriver.Config();
-        cfg.momentumStage = true;
-        cfg.maxEdges = 0;
-        cfg.tapsStage = false;
-        cfg.repairStage = false;
-        cfg.certifyBudgetNanos = 0L;
-        cfg.extraCertify = 0;
-        cfg.totalBudgetNanos = 3_000_000_000L;
+    public void theLaneAloneFindsAStratWithTwoFacingParts() throws Exception {
+        NoTurnProblem p = cold(J152);
+        StructurePoolDriver.Config cfg = laneAlone();
         StructurePoolDriver driver = new StructurePoolDriver(p.model, cfg, new AtomicBoolean(false), (stage, frac) -> { });
-        driver.run(p, BuiltinGraphs.optimize(6));
-        assertTrue(driver.scoredCount() > 0);
+        long t0 = System.nanoTime();
+        NoTurnResult best = driver.run(p, BuiltinGraphs.optimize(6));
+        System.out.println(J152 + " momentum lane: " + (best == null ? "nothing" : NoTurnKeys.describe(best.combos))
+                + " scored=" + driver.scoredCount() + " wall=" + (System.nanoTime() - t0) / 1e9 + "s");
+        assertNotNull("a Strat from the momentum lane", best);
+        assertTrue("byte-exact", best.violation <= 0.0);
     }
 
     @Test
