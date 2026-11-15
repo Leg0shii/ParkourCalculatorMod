@@ -1,0 +1,8737 @@
+{
+  "totals": {
+    "visits": 15183845,
+    "emptyEffective": 13513816,
+    "generatedChildren": 15178691,
+    "childrenWithNoSuffix": 6647816,
+    "duplicate_node": 14340595,
+    "covered": 26613,
+    "terminal_mask": 175134,
+    "terminal_previous_y": 0,
+    "duplicate_option": 150818,
+    "compile_failed": 0,
+    "returned": 1144,
+    "expanded": 489541
+  },
+  "blocks": {
+    "b6": {
+      "visits": 529850,
+      "emptyEffective": 518363,
+      "generatedChildren": 529757,
+      "childrenWithNoSuffix": 118646,
+      "duplicate_node": 498490,
+      "covered": 18,
+      "terminal_mask": 4493,
+      "terminal_previous_y": 0,
+      "duplicate_option": 7899,
+      "compile_failed": 0,
+      "returned": 111,
+      "expanded": 18839
+    },
+    "b7": {
+      "visits": 14653995,
+      "emptyEffective": 12995453,
+      "generatedChildren": 14648934,
+      "childrenWithNoSuffix": 6529170,
+      "duplicate_node": 13842105,
+      "covered": 26595,
+      "terminal_mask": 170641,
+      "terminal_previous_y": 0,
+      "duplicate_option": 142919,
+      "compile_failed": 0,
+      "returned": 1033,
+      "expanded": 470702
+    }
+  },
+  "chains": [
+    {
+      "block": "b7",
+      "chain": [
+        "Y-",
+        "X+",
+        "Z-",
+        "X-"
+      ],
+      "counts": {
+        "visits": 105754,
+        "emptyEffective": 80471,
+        "generatedChildren": 105729,
+        "childrenWithNoSuffix": 42487,
+        "duplicate_node": 100911,
+        "covered": 200,
+        "terminal_mask": 1436,
+        "terminal_previous_y": 0,
+        "duplicate_option": 325,
+        "compile_failed": 0,
+        "returned": 45,
+        "expanded": 2837
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y-",
+        "X+",
+        "Z-",
+        "Y-"
+      ],
+      "counts": {
+        "visits": 105754,
+        "emptyEffective": 80471,
+        "generatedChildren": 105729,
+        "childrenWithNoSuffix": 44491,
+        "duplicate_node": 100911,
+        "covered": 200,
+        "terminal_mask": 1506,
+        "terminal_previous_y": 0,
+        "duplicate_option": 300,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2837
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y-",
+        "X+",
+        "Z-",
+        "Y+"
+      ],
+      "counts": {
+        "visits": 104330,
+        "emptyEffective": 79436,
+        "generatedChildren": 104353,
+        "childrenWithNoSuffix": 43017,
+        "duplicate_node": 99530,
+        "covered": 200,
+        "terminal_mask": 1456,
+        "terminal_previous_y": 0,
+        "duplicate_option": 350,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2794
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X-",
+        "Z-",
+        "X+",
+        "Y-"
+      ],
+      "counts": {
+        "visits": 103017,
+        "emptyEffective": 79115,
+        "generatedChildren": 102992,
+        "childrenWithNoSuffix": 43060,
+        "duplicate_node": 98199,
+        "covered": 200,
+        "terminal_mask": 1481,
+        "terminal_previous_y": 0,
+        "duplicate_option": 250,
+        "compile_failed": 0,
+        "returned": 50,
+        "expanded": 2837
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X-",
+        "Z-",
+        "X+",
+        "Y+"
+      ],
+      "counts": {
+        "visits": 103017,
+        "emptyEffective": 79115,
+        "generatedChildren": 102992,
+        "childrenWithNoSuffix": 41654,
+        "duplicate_node": 98199,
+        "covered": 200,
+        "terminal_mask": 1431,
+        "terminal_previous_y": 0,
+        "duplicate_option": 350,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2837
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y+",
+        "X+",
+        "Z-",
+        "X-"
+      ],
+      "counts": {
+        "visits": 97358,
+        "emptyEffective": 74089,
+        "generatedChildren": 97335,
+        "childrenWithNoSuffix": 39128,
+        "duplicate_node": 92901,
+        "covered": 184,
+        "terminal_mask": 1322,
+        "terminal_previous_y": 0,
+        "duplicate_option": 340,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2611
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y+",
+        "X+",
+        "Z-",
+        "Y-"
+      ],
+      "counts": {
+        "visits": 97358,
+        "emptyEffective": 74089,
+        "generatedChildren": 97335,
+        "childrenWithNoSuffix": 40961,
+        "duplicate_node": 92901,
+        "covered": 184,
+        "terminal_mask": 1386,
+        "terminal_previous_y": 0,
+        "duplicate_option": 276,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2611
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y+",
+        "X+",
+        "Z-",
+        "Y+"
+      ],
+      "counts": {
+        "visits": 97358,
+        "emptyEffective": 74089,
+        "generatedChildren": 97335,
+        "childrenWithNoSuffix": 39644,
+        "duplicate_node": 92901,
+        "covered": 184,
+        "terminal_mask": 1340,
+        "terminal_previous_y": 0,
+        "duplicate_option": 322,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2611
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y-",
+        "Z-",
+        "X+",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 95903,
+        "emptyEffective": 72818,
+        "generatedChildren": 95880,
+        "childrenWithNoSuffix": 38350,
+        "duplicate_node": 91446,
+        "covered": 184,
+        "terminal_mask": 1363,
+        "terminal_previous_y": 0,
+        "duplicate_option": 322,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2588
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y+",
+        "Z-",
+        "X+",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 95903,
+        "emptyEffective": 72818,
+        "generatedChildren": 95880,
+        "childrenWithNoSuffix": 38350,
+        "duplicate_node": 91446,
+        "covered": 184,
+        "terminal_mask": 1363,
+        "terminal_previous_y": 0,
+        "duplicate_option": 322,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2588
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y-",
+        "Z-",
+        "X+",
+        "Y-"
+      ],
+      "counts": {
+        "visits": 94609,
+        "emptyEffective": 72818,
+        "generatedChildren": 94586,
+        "childrenWithNoSuffix": 39621,
+        "duplicate_node": 90198,
+        "covered": 184,
+        "terminal_mask": 1363,
+        "terminal_previous_y": 0,
+        "duplicate_option": 276,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2588
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y-",
+        "Z-",
+        "X+",
+        "Y+"
+      ],
+      "counts": {
+        "visits": 94609,
+        "emptyEffective": 72818,
+        "generatedChildren": 94586,
+        "childrenWithNoSuffix": 38327,
+        "duplicate_node": 90198,
+        "covered": 184,
+        "terminal_mask": 1317,
+        "terminal_previous_y": 0,
+        "duplicate_option": 322,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2588
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y+",
+        "Z-",
+        "X+",
+        "Y-"
+      ],
+      "counts": {
+        "visits": 94609,
+        "emptyEffective": 72818,
+        "generatedChildren": 94586,
+        "childrenWithNoSuffix": 39621,
+        "duplicate_node": 90198,
+        "covered": 184,
+        "terminal_mask": 1363,
+        "terminal_previous_y": 0,
+        "duplicate_option": 276,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2588
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y+",
+        "Z-",
+        "X+",
+        "Y+"
+      ],
+      "counts": {
+        "visits": 94609,
+        "emptyEffective": 72818,
+        "generatedChildren": 94586,
+        "childrenWithNoSuffix": 38327,
+        "duplicate_node": 90198,
+        "covered": 184,
+        "terminal_mask": 1317,
+        "terminal_previous_y": 0,
+        "duplicate_option": 322,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2588
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z+",
+        "X+",
+        "Z-",
+        "Y-"
+      ],
+      "counts": {
+        "visits": 94609,
+        "emptyEffective": 71547,
+        "generatedChildren": 94586,
+        "childrenWithNoSuffix": 39621,
+        "duplicate_node": 90198,
+        "covered": 184,
+        "terminal_mask": 1363,
+        "terminal_previous_y": 0,
+        "duplicate_option": 276,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2588
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z+",
+        "X+",
+        "Z-",
+        "Y+"
+      ],
+      "counts": {
+        "visits": 94609,
+        "emptyEffective": 71547,
+        "generatedChildren": 94586,
+        "childrenWithNoSuffix": 38327,
+        "duplicate_node": 90198,
+        "covered": 184,
+        "terminal_mask": 1317,
+        "terminal_previous_y": 0,
+        "duplicate_option": 322,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2588
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y-",
+        "X-",
+        "Z-",
+        "X+"
+      ],
+      "counts": {
+        "visits": 93125,
+        "emptyEffective": 80471,
+        "generatedChildren": 93100,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 88707,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1556,
+        "compile_failed": 0,
+        "returned": 50,
+        "expanded": 2812
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+",
+        "Z-",
+        "X-",
+        "Y-"
+      ],
+      "counts": {
+        "visits": 92194,
+        "emptyEffective": 79115,
+        "generatedChildren": 92169,
+        "childrenWithNoSuffix": 81429,
+        "duplicate_node": 87351,
+        "covered": 570,
+        "terminal_mask": 1381,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2892
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+",
+        "Z-",
+        "X-",
+        "Y+"
+      ],
+      "counts": {
+        "visits": 92194,
+        "emptyEffective": 79115,
+        "generatedChildren": 92169,
+        "childrenWithNoSuffix": 81429,
+        "duplicate_node": 87351,
+        "covered": 570,
+        "terminal_mask": 1381,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2892
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+",
+        "Z-",
+        "Y-",
+        "X-"
+      ],
+      "counts": {
+        "visits": 90813,
+        "emptyEffective": 77734,
+        "generatedChildren": 90788,
+        "childrenWithNoSuffix": 80596,
+        "duplicate_node": 85995,
+        "covered": 500,
+        "terminal_mask": 1356,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2962
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+",
+        "Z-",
+        "Y-",
+        "X+"
+      ],
+      "counts": {
+        "visits": 90813,
+        "emptyEffective": 77734,
+        "generatedChildren": 90788,
+        "childrenWithNoSuffix": 5674,
+        "duplicate_node": 85995,
+        "covered": 500,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1356,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2962
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+",
+        "Z-",
+        "Y-",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 90813,
+        "emptyEffective": 77734,
+        "generatedChildren": 90788,
+        "childrenWithNoSuffix": 80596,
+        "duplicate_node": 85995,
+        "covered": 500,
+        "terminal_mask": 1356,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2962
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+",
+        "Z-",
+        "Y+",
+        "X-"
+      ],
+      "counts": {
+        "visits": 90813,
+        "emptyEffective": 77734,
+        "generatedChildren": 90788,
+        "childrenWithNoSuffix": 79165,
+        "duplicate_node": 85995,
+        "covered": 550,
+        "terminal_mask": 1356,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2912
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+",
+        "Z-",
+        "Y+",
+        "X+"
+      ],
+      "counts": {
+        "visits": 90813,
+        "emptyEffective": 77734,
+        "generatedChildren": 90788,
+        "childrenWithNoSuffix": 4243,
+        "duplicate_node": 85995,
+        "covered": 550,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1356,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2912
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+",
+        "Z-",
+        "Y+",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 90813,
+        "emptyEffective": 77734,
+        "generatedChildren": 90788,
+        "childrenWithNoSuffix": 79165,
+        "duplicate_node": 85995,
+        "covered": 550,
+        "terminal_mask": 1356,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2912
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X-",
+        "Z-",
+        "Y-",
+        "X+"
+      ],
+      "counts": {
+        "visits": 90388,
+        "emptyEffective": 77734,
+        "generatedChildren": 90363,
+        "childrenWithNoSuffix": 5599,
+        "duplicate_node": 85995,
+        "covered": 150,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1356,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2887
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X-",
+        "Z-",
+        "Y+",
+        "X+"
+      ],
+      "counts": {
+        "visits": 90388,
+        "emptyEffective": 77734,
+        "generatedChildren": 90363,
+        "childrenWithNoSuffix": 4193,
+        "duplicate_node": 85995,
+        "covered": 175,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1356,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2862
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X-",
+        "Z+",
+        "X+",
+        "Y-"
+      ],
+      "counts": {
+        "visits": 90163,
+        "emptyEffective": 79115,
+        "generatedChildren": 90138,
+        "childrenWithNoSuffix": 41629,
+        "duplicate_node": 85770,
+        "covered": 0,
+        "terminal_mask": 1431,
+        "terminal_previous_y": 0,
+        "duplicate_option": 150,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2812
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X-",
+        "Z+",
+        "X+",
+        "Y+"
+      ],
+      "counts": {
+        "visits": 90163,
+        "emptyEffective": 79115,
+        "generatedChildren": 90138,
+        "childrenWithNoSuffix": 40248,
+        "duplicate_node": 85770,
+        "covered": 0,
+        "terminal_mask": 1406,
+        "terminal_previous_y": 0,
+        "duplicate_option": 175,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2812
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X-",
+        "Y-",
+        "X+",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 89913,
+        "emptyEffective": 77709,
+        "generatedChildren": 89888,
+        "childrenWithNoSuffix": 50,
+        "duplicate_node": 85520,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1506,
+        "compile_failed": 0,
+        "returned": 100,
+        "expanded": 2787
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X-",
+        "Y-",
+        "X+",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 89913,
+        "emptyEffective": 77709,
+        "generatedChildren": 89888,
+        "childrenWithNoSuffix": 41579,
+        "duplicate_node": 85520,
+        "covered": 0,
+        "terminal_mask": 1431,
+        "terminal_previous_y": 0,
+        "duplicate_option": 175,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2787
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X-",
+        "Y+",
+        "X+",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 89913,
+        "emptyEffective": 77709,
+        "generatedChildren": 89888,
+        "childrenWithNoSuffix": 50,
+        "duplicate_node": 85520,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1606,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2787
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X-",
+        "Y+",
+        "X+",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 89913,
+        "emptyEffective": 77709,
+        "generatedChildren": 89888,
+        "childrenWithNoSuffix": 41579,
+        "duplicate_node": 85520,
+        "covered": 0,
+        "terminal_mask": 1431,
+        "terminal_previous_y": 0,
+        "duplicate_option": 175,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2787
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+",
+        "Y-",
+        "Z-",
+        "X-"
+      ],
+      "counts": {
+        "visits": 88757,
+        "emptyEffective": 76353,
+        "generatedChildren": 88732,
+        "childrenWithNoSuffix": 39755,
+        "duplicate_node": 84189,
+        "covered": 150,
+        "terminal_mask": 1396,
+        "terminal_previous_y": 0,
+        "duplicate_option": 175,
+        "compile_failed": 0,
+        "returned": 10,
+        "expanded": 2837
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+",
+        "Y-",
+        "Z-",
+        "X+"
+      ],
+      "counts": {
+        "visits": 88757,
+        "emptyEffective": 76353,
+        "generatedChildren": 88732,
+        "childrenWithNoSuffix": 125,
+        "duplicate_node": 84189,
+        "covered": 150,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1581,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2837
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+",
+        "Y+",
+        "Z-",
+        "X-"
+      ],
+      "counts": {
+        "visits": 88757,
+        "emptyEffective": 76353,
+        "generatedChildren": 88732,
+        "childrenWithNoSuffix": 39730,
+        "duplicate_node": 84189,
+        "covered": 175,
+        "terminal_mask": 1396,
+        "terminal_previous_y": 0,
+        "duplicate_option": 185,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2812
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+",
+        "Y+",
+        "Z-",
+        "X+"
+      ],
+      "counts": {
+        "visits": 88757,
+        "emptyEffective": 76353,
+        "generatedChildren": 88732,
+        "childrenWithNoSuffix": 100,
+        "duplicate_node": 84189,
+        "covered": 175,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1581,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2812
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X-",
+        "Y-",
+        "Z-",
+        "X+"
+      ],
+      "counts": {
+        "visits": 88557,
+        "emptyEffective": 76353,
+        "generatedChildren": 88532,
+        "childrenWithNoSuffix": 50,
+        "duplicate_node": 84189,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1531,
+        "compile_failed": 0,
+        "returned": 50,
+        "expanded": 2787
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X-",
+        "Y+",
+        "Z-",
+        "X+"
+      ],
+      "counts": {
+        "visits": 88557,
+        "emptyEffective": 76353,
+        "generatedChildren": 88532,
+        "childrenWithNoSuffix": 50,
+        "duplicate_node": 84189,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1581,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2787
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y-",
+        "X+",
+        "Z+",
+        "X-"
+      ],
+      "counts": {
+        "visits": 87669,
+        "emptyEffective": 76143,
+        "generatedChildren": 87705,
+        "childrenWithNoSuffix": 78693,
+        "duplicate_node": 83472,
+        "covered": 168,
+        "terminal_mask": 1326,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2703
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y+",
+        "X-",
+        "Z-",
+        "X+"
+      ],
+      "counts": {
+        "visits": 85735,
+        "emptyEffective": 74089,
+        "generatedChildren": 85712,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 81669,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1478,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2588
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y-",
+        "X+",
+        "Z+",
+        "Y-"
+      ],
+      "counts": {
+        "visits": 85528,
+        "emptyEffective": 74089,
+        "generatedChildren": 85505,
+        "childrenWithNoSuffix": 76608,
+        "duplicate_node": 81462,
+        "covered": 161,
+        "terminal_mask": 1271,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2634
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y-",
+        "X+",
+        "Z+",
+        "Y+"
+      ],
+      "counts": {
+        "visits": 85528,
+        "emptyEffective": 74089,
+        "generatedChildren": 85505,
+        "childrenWithNoSuffix": 76608,
+        "duplicate_node": 81462,
+        "covered": 161,
+        "terminal_mask": 1271,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2634
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y+",
+        "X+",
+        "Z+",
+        "X-"
+      ],
+      "counts": {
+        "visits": 85528,
+        "emptyEffective": 74089,
+        "generatedChildren": 85505,
+        "childrenWithNoSuffix": 76608,
+        "duplicate_node": 81462,
+        "covered": 161,
+        "terminal_mask": 1271,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2634
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y+",
+        "X+",
+        "Z+",
+        "Y-"
+      ],
+      "counts": {
+        "visits": 85528,
+        "emptyEffective": 74089,
+        "generatedChildren": 85505,
+        "childrenWithNoSuffix": 76608,
+        "duplicate_node": 81462,
+        "covered": 161,
+        "terminal_mask": 1271,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2634
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y+",
+        "X+",
+        "Z+",
+        "Y+"
+      ],
+      "counts": {
+        "visits": 85528,
+        "emptyEffective": 74089,
+        "generatedChildren": 85505,
+        "childrenWithNoSuffix": 76608,
+        "duplicate_node": 81462,
+        "covered": 161,
+        "terminal_mask": 1271,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2634
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y-",
+        "Z+",
+        "X+",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 84257,
+        "emptyEffective": 72818,
+        "generatedChildren": 84234,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 80214,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1455,
+        "compile_failed": 0,
+        "returned": 23,
+        "expanded": 2565
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y+",
+        "Z+",
+        "X+",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 84257,
+        "emptyEffective": 72818,
+        "generatedChildren": 84234,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 80214,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1478,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2565
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-",
+        "X+",
+        "Z+",
+        "Y-"
+      ],
+      "counts": {
+        "visits": 83400,
+        "emptyEffective": 71547,
+        "generatedChildren": 83377,
+        "childrenWithNoSuffix": 74158,
+        "duplicate_node": 78966,
+        "covered": 506,
+        "terminal_mask": 1248,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2680
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-",
+        "X+",
+        "Z+",
+        "Y+"
+      ],
+      "counts": {
+        "visits": 83400,
+        "emptyEffective": 71547,
+        "generatedChildren": 83377,
+        "childrenWithNoSuffix": 74158,
+        "duplicate_node": 78966,
+        "covered": 506,
+        "terminal_mask": 1248,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2680
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y-",
+        "Z+",
+        "X+",
+        "Y-"
+      ],
+      "counts": {
+        "visits": 82986,
+        "emptyEffective": 72818,
+        "generatedChildren": 82963,
+        "childrenWithNoSuffix": 38304,
+        "duplicate_node": 78966,
+        "covered": 0,
+        "terminal_mask": 1317,
+        "terminal_previous_y": 0,
+        "duplicate_option": 138,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2565
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y-",
+        "Z+",
+        "X+",
+        "Y+"
+      ],
+      "counts": {
+        "visits": 82986,
+        "emptyEffective": 72818,
+        "generatedChildren": 82963,
+        "childrenWithNoSuffix": 37033,
+        "duplicate_node": 78966,
+        "covered": 0,
+        "terminal_mask": 1294,
+        "terminal_previous_y": 0,
+        "duplicate_option": 161,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2565
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y+",
+        "Z+",
+        "X+",
+        "Y-"
+      ],
+      "counts": {
+        "visits": 82986,
+        "emptyEffective": 72818,
+        "generatedChildren": 82963,
+        "childrenWithNoSuffix": 38304,
+        "duplicate_node": 78966,
+        "covered": 0,
+        "terminal_mask": 1317,
+        "terminal_previous_y": 0,
+        "duplicate_option": 138,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2565
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y+",
+        "Z+",
+        "X+",
+        "Y+"
+      ],
+      "counts": {
+        "visits": 82986,
+        "emptyEffective": 72818,
+        "generatedChildren": 82963,
+        "childrenWithNoSuffix": 37033,
+        "duplicate_node": 78966,
+        "covered": 0,
+        "terminal_mask": 1294,
+        "terminal_previous_y": 0,
+        "duplicate_option": 161,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2565
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-",
+        "Y-",
+        "X+",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 82963,
+        "emptyEffective": 71524,
+        "generatedChildren": 82940,
+        "childrenWithNoSuffix": 92,
+        "duplicate_node": 78736,
+        "covered": 138,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1478,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2611
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-",
+        "Y-",
+        "X+",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 82963,
+        "emptyEffective": 71524,
+        "generatedChildren": 82940,
+        "childrenWithNoSuffix": 38327,
+        "duplicate_node": 78736,
+        "covered": 138,
+        "terminal_mask": 1317,
+        "terminal_previous_y": 0,
+        "duplicate_option": 161,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2611
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-",
+        "Y+",
+        "X+",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 82963,
+        "emptyEffective": 71524,
+        "generatedChildren": 82940,
+        "childrenWithNoSuffix": 69,
+        "duplicate_node": 78736,
+        "covered": 161,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1478,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2588
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-",
+        "Y+",
+        "X+",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 82963,
+        "emptyEffective": 71524,
+        "generatedChildren": 82940,
+        "childrenWithNoSuffix": 38304,
+        "duplicate_node": 78736,
+        "covered": 161,
+        "terminal_mask": 1317,
+        "terminal_previous_y": 0,
+        "duplicate_option": 161,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2588
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z+",
+        "Y-",
+        "X+",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 82756,
+        "emptyEffective": 71524,
+        "generatedChildren": 82733,
+        "childrenWithNoSuffix": 23,
+        "duplicate_node": 78736,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1478,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2542
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z+",
+        "Y-",
+        "X+",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 82756,
+        "emptyEffective": 71524,
+        "generatedChildren": 82733,
+        "childrenWithNoSuffix": 38258,
+        "duplicate_node": 78736,
+        "covered": 0,
+        "terminal_mask": 1317,
+        "terminal_previous_y": 0,
+        "duplicate_option": 161,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2542
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-",
+        "X+",
+        "Y-",
+        "X-"
+      ],
+      "counts": {
+        "visits": 80858,
+        "emptyEffective": 70299,
+        "generatedChildren": 80835,
+        "childrenWithNoSuffix": 71616,
+        "duplicate_node": 76493,
+        "covered": 460,
+        "terminal_mask": 1225,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2680
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-",
+        "X+",
+        "Y-",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 80858,
+        "emptyEffective": 70299,
+        "generatedChildren": 80835,
+        "childrenWithNoSuffix": 5130,
+        "duplicate_node": 76493,
+        "covered": 460,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1225,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2680
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-",
+        "X+",
+        "Y-",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 80858,
+        "emptyEffective": 70299,
+        "generatedChildren": 80835,
+        "childrenWithNoSuffix": 71616,
+        "duplicate_node": 76493,
+        "covered": 460,
+        "terminal_mask": 1225,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2680
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-",
+        "X+",
+        "Y+",
+        "X-"
+      ],
+      "counts": {
+        "visits": 80858,
+        "emptyEffective": 70299,
+        "generatedChildren": 80835,
+        "childrenWithNoSuffix": 70322,
+        "duplicate_node": 76493,
+        "covered": 506,
+        "terminal_mask": 1225,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2634
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-",
+        "X+",
+        "Y+",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 80858,
+        "emptyEffective": 70299,
+        "generatedChildren": 80835,
+        "childrenWithNoSuffix": 3836,
+        "duplicate_node": 76493,
+        "covered": 506,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1225,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2634
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-",
+        "X+",
+        "Y+",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 80858,
+        "emptyEffective": 70299,
+        "generatedChildren": 80835,
+        "childrenWithNoSuffix": 70322,
+        "duplicate_node": 76493,
+        "covered": 506,
+        "terminal_mask": 1225,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2634
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y-",
+        "X-",
+        "Z+",
+        "X+"
+      ],
+      "counts": {
+        "visits": 80471,
+        "emptyEffective": 80471,
+        "generatedChildren": 80446,
+        "childrenWithNoSuffix": 1381,
+        "duplicate_node": 76278,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1381,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2812
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z+",
+        "X+",
+        "Y-",
+        "X-"
+      ],
+      "counts": {
+        "visits": 80467,
+        "emptyEffective": 70299,
+        "generatedChildren": 80444,
+        "childrenWithNoSuffix": 71547,
+        "duplicate_node": 76493,
+        "covered": 138,
+        "terminal_mask": 1225,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2611
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z+",
+        "X+",
+        "Y-",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 80467,
+        "emptyEffective": 70299,
+        "generatedChildren": 80444,
+        "childrenWithNoSuffix": 5061,
+        "duplicate_node": 76493,
+        "covered": 138,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1225,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2611
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z+",
+        "X+",
+        "Y-",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 80467,
+        "emptyEffective": 70299,
+        "generatedChildren": 80444,
+        "childrenWithNoSuffix": 71547,
+        "duplicate_node": 76493,
+        "covered": 138,
+        "terminal_mask": 1225,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2611
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z+",
+        "X+",
+        "Y+",
+        "X-"
+      ],
+      "counts": {
+        "visits": 80467,
+        "emptyEffective": 70299,
+        "generatedChildren": 80444,
+        "childrenWithNoSuffix": 70276,
+        "duplicate_node": 76493,
+        "covered": 161,
+        "terminal_mask": 1225,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2588
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z+",
+        "X+",
+        "Y+",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 80467,
+        "emptyEffective": 70299,
+        "generatedChildren": 80444,
+        "childrenWithNoSuffix": 3790,
+        "duplicate_node": 76493,
+        "covered": 161,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1225,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2588
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z+",
+        "X+",
+        "Y+",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 80467,
+        "emptyEffective": 70299,
+        "generatedChildren": 80444,
+        "childrenWithNoSuffix": 70276,
+        "duplicate_node": 76493,
+        "covered": 161,
+        "terminal_mask": 1225,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2588
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+",
+        "Z+",
+        "X-",
+        "Y-"
+      ],
+      "counts": {
+        "visits": 79340,
+        "emptyEffective": 79115,
+        "generatedChildren": 79315,
+        "childrenWithNoSuffix": 79190,
+        "duplicate_node": 74922,
+        "covered": 175,
+        "terminal_mask": 1381,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2862
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+",
+        "Z+",
+        "X-",
+        "Y+"
+      ],
+      "counts": {
+        "visits": 79340,
+        "emptyEffective": 79115,
+        "generatedChildren": 79315,
+        "childrenWithNoSuffix": 79190,
+        "duplicate_node": 74922,
+        "covered": 175,
+        "terminal_mask": 1381,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2862
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z+",
+        "Y-",
+        "Z-",
+        "X+"
+      ],
+      "counts": {
+        "visits": 79131,
+        "emptyEffective": 68160,
+        "generatedChildren": 79231,
+        "childrenWithNoSuffix": 23,
+        "duplicate_node": 75219,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1455,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2457
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z+",
+        "Y+",
+        "X+",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 78821,
+        "emptyEffective": 68102,
+        "generatedChildren": 78799,
+        "childrenWithNoSuffix": 22,
+        "duplicate_node": 74984,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1411,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2426
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z+",
+        "Y+",
+        "X+",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 78821,
+        "emptyEffective": 68102,
+        "generatedChildren": 78799,
+        "childrenWithNoSuffix": 36433,
+        "duplicate_node": 74984,
+        "covered": 0,
+        "terminal_mask": 1257,
+        "terminal_previous_y": 0,
+        "duplicate_option": 154,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2426
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+",
+        "Z+",
+        "Y-",
+        "X-"
+      ],
+      "counts": {
+        "visits": 77959,
+        "emptyEffective": 77734,
+        "generatedChildren": 77934,
+        "childrenWithNoSuffix": 77784,
+        "duplicate_node": 73566,
+        "covered": 175,
+        "terminal_mask": 1356,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2862
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+",
+        "Z+",
+        "Y-",
+        "X+"
+      ],
+      "counts": {
+        "visits": 77959,
+        "emptyEffective": 77734,
+        "generatedChildren": 77934,
+        "childrenWithNoSuffix": 1506,
+        "duplicate_node": 73566,
+        "covered": 175,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1356,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2862
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+",
+        "Z+",
+        "Y-",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 77959,
+        "emptyEffective": 77734,
+        "generatedChildren": 77934,
+        "childrenWithNoSuffix": 1506,
+        "duplicate_node": 73566,
+        "covered": 175,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1356,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2862
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+",
+        "Z+",
+        "Y+",
+        "X-"
+      ],
+      "counts": {
+        "visits": 77959,
+        "emptyEffective": 77734,
+        "generatedChildren": 77934,
+        "childrenWithNoSuffix": 77784,
+        "duplicate_node": 73566,
+        "covered": 175,
+        "terminal_mask": 1356,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2862
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+",
+        "Z+",
+        "Y+",
+        "X+"
+      ],
+      "counts": {
+        "visits": 77959,
+        "emptyEffective": 77734,
+        "generatedChildren": 77934,
+        "childrenWithNoSuffix": 1506,
+        "duplicate_node": 73566,
+        "covered": 175,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1356,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2862
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+",
+        "Z+",
+        "Y+",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 77959,
+        "emptyEffective": 77734,
+        "generatedChildren": 77934,
+        "childrenWithNoSuffix": 1506,
+        "duplicate_node": 73566,
+        "covered": 175,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1356,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2862
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+",
+        "Y-",
+        "X-",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 77909,
+        "emptyEffective": 77709,
+        "generatedChildren": 77884,
+        "childrenWithNoSuffix": 100,
+        "duplicate_node": 73541,
+        "covered": 150,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1381,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2837
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+",
+        "Y-",
+        "X-",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 77909,
+        "emptyEffective": 77709,
+        "generatedChildren": 77884,
+        "childrenWithNoSuffix": 77734,
+        "duplicate_node": 73541,
+        "covered": 150,
+        "terminal_mask": 1381,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2837
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+",
+        "Y+",
+        "X-",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 77909,
+        "emptyEffective": 77709,
+        "generatedChildren": 77884,
+        "childrenWithNoSuffix": 75,
+        "duplicate_node": 73541,
+        "covered": 175,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1381,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2812
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+",
+        "Y+",
+        "X-",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 77909,
+        "emptyEffective": 77709,
+        "generatedChildren": 77884,
+        "childrenWithNoSuffix": 77709,
+        "duplicate_node": 73541,
+        "covered": 175,
+        "terminal_mask": 1381,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2812
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X-",
+        "Z+",
+        "Y-",
+        "X+"
+      ],
+      "counts": {
+        "visits": 77734,
+        "emptyEffective": 77734,
+        "generatedChildren": 77709,
+        "childrenWithNoSuffix": 1431,
+        "duplicate_node": 73566,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1356,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2812
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X-",
+        "Z+",
+        "Y+",
+        "X+"
+      ],
+      "counts": {
+        "visits": 77734,
+        "emptyEffective": 77734,
+        "generatedChildren": 77709,
+        "childrenWithNoSuffix": 1431,
+        "duplicate_node": 73566,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1356,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2812
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z+",
+        "Y+",
+        "Z-",
+        "X+"
+      ],
+      "counts": {
+        "visits": 77630,
+        "emptyEffective": 66911,
+        "generatedChildren": 77608,
+        "childrenWithNoSuffix": 22,
+        "duplicate_node": 73815,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1389,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2426
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y-",
+        "X-",
+        "Z-",
+        "Y-"
+      ],
+      "counts": {
+        "visits": 77595,
+        "emptyEffective": 67011,
+        "generatedChildren": 77574,
+        "childrenWithNoSuffix": 35868,
+        "duplicate_node": 73899,
+        "covered": 0,
+        "terminal_mask": 1218,
+        "terminal_previous_y": 0,
+        "duplicate_option": 126,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2352
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y-",
+        "X-",
+        "Z-",
+        "Y+"
+      ],
+      "counts": {
+        "visits": 77595,
+        "emptyEffective": 67011,
+        "generatedChildren": 77574,
+        "childrenWithNoSuffix": 34692,
+        "duplicate_node": 73899,
+        "covered": 0,
+        "terminal_mask": 1197,
+        "terminal_previous_y": 0,
+        "duplicate_option": 147,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2352
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y+",
+        "X-",
+        "Z-",
+        "Y-"
+      ],
+      "counts": {
+        "visits": 77595,
+        "emptyEffective": 67011,
+        "generatedChildren": 77574,
+        "childrenWithNoSuffix": 35868,
+        "duplicate_node": 73899,
+        "covered": 0,
+        "terminal_mask": 1218,
+        "terminal_previous_y": 0,
+        "duplicate_option": 126,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2352
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y+",
+        "X-",
+        "Z-",
+        "Y+"
+      ],
+      "counts": {
+        "visits": 77595,
+        "emptyEffective": 67011,
+        "generatedChildren": 77574,
+        "childrenWithNoSuffix": 34692,
+        "duplicate_node": 73899,
+        "covered": 0,
+        "terminal_mask": 1197,
+        "terminal_previous_y": 0,
+        "duplicate_option": 147,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2352
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+",
+        "Y-",
+        "Z+",
+        "X-"
+      ],
+      "counts": {
+        "visits": 76553,
+        "emptyEffective": 76353,
+        "generatedChildren": 76528,
+        "childrenWithNoSuffix": 76403,
+        "duplicate_node": 72210,
+        "covered": 150,
+        "terminal_mask": 1356,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2837
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+",
+        "Y-",
+        "Z+",
+        "X+"
+      ],
+      "counts": {
+        "visits": 76553,
+        "emptyEffective": 76353,
+        "generatedChildren": 76528,
+        "childrenWithNoSuffix": 125,
+        "duplicate_node": 72210,
+        "covered": 150,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1356,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2837
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+",
+        "Y+",
+        "Z+",
+        "X-"
+      ],
+      "counts": {
+        "visits": 76553,
+        "emptyEffective": 76353,
+        "generatedChildren": 76528,
+        "childrenWithNoSuffix": 76378,
+        "duplicate_node": 72210,
+        "covered": 175,
+        "terminal_mask": 1356,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2812
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+",
+        "Y+",
+        "Z+",
+        "X+"
+      ],
+      "counts": {
+        "visits": 76553,
+        "emptyEffective": 76353,
+        "generatedChildren": 76528,
+        "childrenWithNoSuffix": 100,
+        "duplicate_node": 72210,
+        "covered": 175,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1356,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2812
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X-",
+        "Y-",
+        "Z+",
+        "X+"
+      ],
+      "counts": {
+        "visits": 76353,
+        "emptyEffective": 76353,
+        "generatedChildren": 76328,
+        "childrenWithNoSuffix": 50,
+        "duplicate_node": 72210,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1356,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2787
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X-",
+        "Y+",
+        "Z+",
+        "X+"
+      ],
+      "counts": {
+        "visits": 76353,
+        "emptyEffective": 76353,
+        "generatedChildren": 76328,
+        "childrenWithNoSuffix": 50,
+        "duplicate_node": 72210,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1356,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2787
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y-",
+        "Z-",
+        "X-",
+        "Y-"
+      ],
+      "counts": {
+        "visits": 76251,
+        "emptyEffective": 65856,
+        "generatedChildren": 76230,
+        "childrenWithNoSuffix": 67705,
+        "duplicate_node": 72576,
+        "covered": 155,
+        "terminal_mask": 1155,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2365
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y-",
+        "Z-",
+        "X-",
+        "Y+"
+      ],
+      "counts": {
+        "visits": 76251,
+        "emptyEffective": 65856,
+        "generatedChildren": 76230,
+        "childrenWithNoSuffix": 67705,
+        "duplicate_node": 72576,
+        "covered": 155,
+        "terminal_mask": 1155,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2365
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y-",
+        "Z-",
+        "X-",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 76251,
+        "emptyEffective": 65856,
+        "generatedChildren": 76230,
+        "childrenWithNoSuffix": 66550,
+        "duplicate_node": 72576,
+        "covered": 155,
+        "terminal_mask": 1155,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2365
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y+",
+        "Z-",
+        "X-",
+        "Y-"
+      ],
+      "counts": {
+        "visits": 76251,
+        "emptyEffective": 65856,
+        "generatedChildren": 76230,
+        "childrenWithNoSuffix": 67705,
+        "duplicate_node": 72576,
+        "covered": 155,
+        "terminal_mask": 1155,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2365
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y+",
+        "Z-",
+        "X-",
+        "Y+"
+      ],
+      "counts": {
+        "visits": 76251,
+        "emptyEffective": 65856,
+        "generatedChildren": 76230,
+        "childrenWithNoSuffix": 67705,
+        "duplicate_node": 72576,
+        "covered": 155,
+        "terminal_mask": 1155,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2365
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y+",
+        "Z-",
+        "X-",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 76251,
+        "emptyEffective": 65856,
+        "generatedChildren": 76230,
+        "childrenWithNoSuffix": 66550,
+        "duplicate_node": 72576,
+        "covered": 155,
+        "terminal_mask": 1155,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2365
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X-",
+        "Z-",
+        "Y-",
+        "X-"
+      ],
+      "counts": {
+        "visits": 75306,
+        "emptyEffective": 64722,
+        "generatedChildren": 75285,
+        "childrenWithNoSuffix": 67053,
+        "duplicate_node": 71631,
+        "covered": 126,
+        "terminal_mask": 1134,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2415
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X-",
+        "Z-",
+        "Y-",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 75306,
+        "emptyEffective": 64722,
+        "generatedChildren": 75285,
+        "childrenWithNoSuffix": 67053,
+        "duplicate_node": 71631,
+        "covered": 126,
+        "terminal_mask": 1134,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2415
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X-",
+        "Z-",
+        "Y+",
+        "X-"
+      ],
+      "counts": {
+        "visits": 75306,
+        "emptyEffective": 64722,
+        "generatedChildren": 75285,
+        "childrenWithNoSuffix": 65877,
+        "duplicate_node": 71631,
+        "covered": 147,
+        "terminal_mask": 1134,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2394
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X-",
+        "Z-",
+        "Y+",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 75306,
+        "emptyEffective": 64722,
+        "generatedChildren": 75285,
+        "childrenWithNoSuffix": 65877,
+        "duplicate_node": 71631,
+        "covered": 147,
+        "terminal_mask": 1134,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2394
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z+",
+        "X-",
+        "Z-",
+        "Y-"
+      ],
+      "counts": {
+        "visits": 75096,
+        "emptyEffective": 64701,
+        "generatedChildren": 75075,
+        "childrenWithNoSuffix": 34650,
+        "duplicate_node": 71442,
+        "covered": 0,
+        "terminal_mask": 1197,
+        "terminal_previous_y": 0,
+        "duplicate_option": 126,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2331
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z+",
+        "X-",
+        "Z-",
+        "Y+"
+      ],
+      "counts": {
+        "visits": 75096,
+        "emptyEffective": 64701,
+        "generatedChildren": 75075,
+        "childrenWithNoSuffix": 33495,
+        "duplicate_node": 71442,
+        "covered": 0,
+        "terminal_mask": 1176,
+        "terminal_previous_y": 0,
+        "duplicate_option": 147,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2331
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y+",
+        "X-",
+        "Z+",
+        "X+"
+      ],
+      "counts": {
+        "visits": 74089,
+        "emptyEffective": 74089,
+        "generatedChildren": 74066,
+        "childrenWithNoSuffix": 1271,
+        "duplicate_node": 70230,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1271,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2588
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X-",
+        "Y-",
+        "Z-",
+        "X-"
+      ],
+      "counts": {
+        "visits": 73773,
+        "emptyEffective": 63567,
+        "generatedChildren": 73752,
+        "childrenWithNoSuffix": 33063,
+        "duplicate_node": 70119,
+        "covered": 0,
+        "terminal_mask": 1168,
+        "terminal_previous_y": 0,
+        "duplicate_option": 155,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2331
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X-",
+        "Y+",
+        "Z-",
+        "X-"
+      ],
+      "counts": {
+        "visits": 73773,
+        "emptyEffective": 63567,
+        "generatedChildren": 73752,
+        "childrenWithNoSuffix": 33063,
+        "duplicate_node": 70119,
+        "covered": 0,
+        "terminal_mask": 1168,
+        "terminal_previous_y": 0,
+        "duplicate_option": 155,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2331
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z+",
+        "Y-",
+        "Z-",
+        "X-"
+      ],
+      "counts": {
+        "visits": 73752,
+        "emptyEffective": 63546,
+        "generatedChildren": 73731,
+        "childrenWithNoSuffix": 33042,
+        "duplicate_node": 70119,
+        "covered": 0,
+        "terminal_mask": 1168,
+        "terminal_previous_y": 0,
+        "duplicate_option": 155,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2310
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z+",
+        "Y+",
+        "Z-",
+        "X-"
+      ],
+      "counts": {
+        "visits": 73752,
+        "emptyEffective": 63546,
+        "generatedChildren": 73731,
+        "childrenWithNoSuffix": 33042,
+        "duplicate_node": 70119,
+        "covered": 0,
+        "terminal_mask": 1168,
+        "terminal_previous_y": 0,
+        "duplicate_option": 155,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2310
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-",
+        "X-",
+        "Y-",
+        "X+"
+      ],
+      "counts": {
+        "visits": 70506,
+        "emptyEffective": 70299,
+        "generatedChildren": 70483,
+        "childrenWithNoSuffix": 2625,
+        "duplicate_node": 66509,
+        "covered": 170,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1225,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2602
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-",
+        "X-",
+        "Y+",
+        "X+"
+      ],
+      "counts": {
+        "visits": 70506,
+        "emptyEffective": 70299,
+        "generatedChildren": 70483,
+        "childrenWithNoSuffix": 2625,
+        "duplicate_node": 66509,
+        "covered": 170,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1225,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2602
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-",
+        "Y-",
+        "Z+",
+        "X+"
+      ],
+      "counts": {
+        "visits": 70483,
+        "emptyEffective": 70276,
+        "generatedChildren": 70460,
+        "childrenWithNoSuffix": 115,
+        "duplicate_node": 66486,
+        "covered": 138,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1248,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2611
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-",
+        "Y+",
+        "Z+",
+        "X+"
+      ],
+      "counts": {
+        "visits": 70483,
+        "emptyEffective": 70276,
+        "generatedChildren": 70460,
+        "childrenWithNoSuffix": 92,
+        "duplicate_node": 66486,
+        "covered": 161,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1248,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2588
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z+",
+        "X-",
+        "Y-",
+        "X+"
+      ],
+      "counts": {
+        "visits": 70299,
+        "emptyEffective": 70299,
+        "generatedChildren": 70276,
+        "childrenWithNoSuffix": 2565,
+        "duplicate_node": 66509,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1225,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2565
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z+",
+        "X-",
+        "Y+",
+        "X+"
+      ],
+      "counts": {
+        "visits": 70299,
+        "emptyEffective": 70299,
+        "generatedChildren": 70276,
+        "childrenWithNoSuffix": 2565,
+        "duplicate_node": 66509,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1225,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2565
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y-",
+        "Z+",
+        "X-",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 65856,
+        "emptyEffective": 65856,
+        "generatedChildren": 65835,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 62370,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1155,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2331
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y+",
+        "Z+",
+        "X-",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 65856,
+        "emptyEffective": 65856,
+        "generatedChildren": 65835,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 62370,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1155,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2331
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-",
+        "X-",
+        "Z+",
+        "Y-"
+      ],
+      "counts": {
+        "visits": 64890,
+        "emptyEffective": 64701,
+        "generatedChildren": 64869,
+        "childrenWithNoSuffix": 64735,
+        "duplicate_node": 61236,
+        "covered": 155,
+        "terminal_mask": 1134,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2365
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-",
+        "X-",
+        "Z+",
+        "Y+"
+      ],
+      "counts": {
+        "visits": 64890,
+        "emptyEffective": 64701,
+        "generatedChildren": 64869,
+        "childrenWithNoSuffix": 64735,
+        "duplicate_node": 61236,
+        "covered": 155,
+        "terminal_mask": 1134,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2365
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-",
+        "Y-",
+        "X-",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 64869,
+        "emptyEffective": 64680,
+        "generatedChildren": 64848,
+        "childrenWithNoSuffix": 84,
+        "duplicate_node": 61215,
+        "covered": 126,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1155,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2373
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-",
+        "Y-",
+        "X-",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 64869,
+        "emptyEffective": 64680,
+        "generatedChildren": 64848,
+        "childrenWithNoSuffix": 64722,
+        "duplicate_node": 61215,
+        "covered": 126,
+        "terminal_mask": 1155,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2373
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-",
+        "Y+",
+        "X-",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 64869,
+        "emptyEffective": 64680,
+        "generatedChildren": 64848,
+        "childrenWithNoSuffix": 63,
+        "duplicate_node": 61215,
+        "covered": 147,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1155,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2352
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-",
+        "Y+",
+        "X-",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 64869,
+        "emptyEffective": 64680,
+        "generatedChildren": 64848,
+        "childrenWithNoSuffix": 64701,
+        "duplicate_node": 61215,
+        "covered": 147,
+        "terminal_mask": 1155,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2352
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X-",
+        "Z+",
+        "Y-",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 64722,
+        "emptyEffective": 64722,
+        "generatedChildren": 64701,
+        "childrenWithNoSuffix": 1197,
+        "duplicate_node": 61236,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1134,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2352
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X-",
+        "Z+",
+        "Y+",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 64722,
+        "emptyEffective": 64722,
+        "generatedChildren": 64701,
+        "childrenWithNoSuffix": 1197,
+        "duplicate_node": 61236,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1134,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2352
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z+",
+        "Y-",
+        "X-",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 64680,
+        "emptyEffective": 64680,
+        "generatedChildren": 64659,
+        "childrenWithNoSuffix": 21,
+        "duplicate_node": 61215,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1155,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2310
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z+",
+        "Y+",
+        "X-",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 64680,
+        "emptyEffective": 64680,
+        "generatedChildren": 64659,
+        "childrenWithNoSuffix": 21,
+        "duplicate_node": 61215,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1155,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2310
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-",
+        "X-",
+        "Y-",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 63756,
+        "emptyEffective": 63567,
+        "generatedChildren": 63735,
+        "childrenWithNoSuffix": 2386,
+        "duplicate_node": 60123,
+        "covered": 155,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1113,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2365
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-",
+        "X-",
+        "Y-",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 63756,
+        "emptyEffective": 63567,
+        "generatedChildren": 63735,
+        "childrenWithNoSuffix": 63601,
+        "duplicate_node": 60123,
+        "covered": 155,
+        "terminal_mask": 1113,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2365
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-",
+        "X-",
+        "Y+",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 63756,
+        "emptyEffective": 63567,
+        "generatedChildren": 63735,
+        "childrenWithNoSuffix": 2386,
+        "duplicate_node": 60123,
+        "covered": 155,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1113,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2365
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-",
+        "X-",
+        "Y+",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 63756,
+        "emptyEffective": 63567,
+        "generatedChildren": 63735,
+        "childrenWithNoSuffix": 63601,
+        "duplicate_node": 60123,
+        "covered": 155,
+        "terminal_mask": 1113,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2365
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-",
+        "Y-",
+        "Z+",
+        "X-"
+      ],
+      "counts": {
+        "visits": 63735,
+        "emptyEffective": 63546,
+        "generatedChildren": 63714,
+        "childrenWithNoSuffix": 63609,
+        "duplicate_node": 60102,
+        "covered": 126,
+        "terminal_mask": 1134,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2373
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-",
+        "Y+",
+        "Z+",
+        "X-"
+      ],
+      "counts": {
+        "visits": 63735,
+        "emptyEffective": 63546,
+        "generatedChildren": 63714,
+        "childrenWithNoSuffix": 63588,
+        "duplicate_node": 60102,
+        "covered": 147,
+        "terminal_mask": 1134,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2352
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z+",
+        "X-",
+        "Y-",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 63567,
+        "emptyEffective": 63567,
+        "generatedChildren": 63546,
+        "childrenWithNoSuffix": 2331,
+        "duplicate_node": 60123,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1113,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2331
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z+",
+        "X-",
+        "Y+",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 63567,
+        "emptyEffective": 63567,
+        "generatedChildren": 63546,
+        "childrenWithNoSuffix": 2331,
+        "duplicate_node": 60123,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1113,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 2331
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y-",
+        "X+",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 54058,
+        "emptyEffective": 41629,
+        "generatedChildren": 54033,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 51021,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1581,
+        "compile_failed": 0,
+        "returned": 50,
+        "expanded": 1406
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y-",
+        "X+",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 54058,
+        "emptyEffective": 41629,
+        "generatedChildren": 54033,
+        "childrenWithNoSuffix": 42985,
+        "duplicate_node": 51021,
+        "covered": 0,
+        "terminal_mask": 1456,
+        "terminal_previous_y": 0,
+        "duplicate_option": 175,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1406
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y+",
+        "X+",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 54058,
+        "emptyEffective": 41629,
+        "generatedChildren": 54033,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 51021,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1631,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1406
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y+",
+        "X+",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 54058,
+        "emptyEffective": 41629,
+        "generatedChildren": 54033,
+        "childrenWithNoSuffix": 42985,
+        "duplicate_node": 51021,
+        "covered": 0,
+        "terminal_mask": 1456,
+        "terminal_previous_y": 0,
+        "duplicate_option": 175,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1406
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+",
+        "Z-",
+        "X-"
+      ],
+      "counts": {
+        "visits": 53352,
+        "emptyEffective": 40273,
+        "generatedChildren": 53327,
+        "childrenWithNoSuffix": 41131,
+        "duplicate_node": 49890,
+        "covered": 200,
+        "terminal_mask": 1436,
+        "terminal_previous_y": 0,
+        "duplicate_option": 325,
+        "compile_failed": 0,
+        "returned": 45,
+        "expanded": 1456
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+",
+        "Z-",
+        "X+"
+      ],
+      "counts": {
+        "visits": 53352,
+        "emptyEffective": 40273,
+        "generatedChildren": 53327,
+        "childrenWithNoSuffix": 25,
+        "duplicate_node": 49890,
+        "covered": 200,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1781,
+        "compile_failed": 0,
+        "returned": 25,
+        "expanded": 1456
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+",
+        "Z-",
+        "Y-"
+      ],
+      "counts": {
+        "visits": 53352,
+        "emptyEffective": 40273,
+        "generatedChildren": 53327,
+        "childrenWithNoSuffix": 43135,
+        "duplicate_node": 49890,
+        "covered": 200,
+        "terminal_mask": 1506,
+        "terminal_previous_y": 0,
+        "duplicate_option": 250,
+        "compile_failed": 0,
+        "returned": 50,
+        "expanded": 1456
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+",
+        "Z-",
+        "Y+"
+      ],
+      "counts": {
+        "visits": 53352,
+        "emptyEffective": 40273,
+        "generatedChildren": 53327,
+        "childrenWithNoSuffix": 41704,
+        "duplicate_node": 49890,
+        "covered": 200,
+        "terminal_mask": 1456,
+        "terminal_previous_y": 0,
+        "duplicate_option": 350,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1456
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-",
+        "X+",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 53127,
+        "emptyEffective": 40248,
+        "generatedChildren": 53102,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 49665,
+        "covered": 200,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1756,
+        "compile_failed": 0,
+        "returned": 75,
+        "expanded": 1431
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-",
+        "X+",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 53127,
+        "emptyEffective": 40248,
+        "generatedChildren": 53102,
+        "childrenWithNoSuffix": 41654,
+        "duplicate_node": 49665,
+        "covered": 200,
+        "terminal_mask": 1481,
+        "terminal_previous_y": 0,
+        "duplicate_option": 350,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1431
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X-",
+        "Z-",
+        "X+"
+      ],
+      "counts": {
+        "visits": 52927,
+        "emptyEffective": 40273,
+        "generatedChildren": 52902,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 49890,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1506,
+        "compile_failed": 0,
+        "returned": 100,
+        "expanded": 1431
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y-",
+        "X+",
+        "Y-"
+      ],
+      "counts": {
+        "visits": 52677,
+        "emptyEffective": 41629,
+        "generatedChildren": 52652,
+        "childrenWithNoSuffix": 42985,
+        "duplicate_node": 49665,
+        "covered": 0,
+        "terminal_mask": 1456,
+        "terminal_previous_y": 0,
+        "duplicate_option": 150,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1406
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y-",
+        "X+",
+        "Y+"
+      ],
+      "counts": {
+        "visits": 52677,
+        "emptyEffective": 41629,
+        "generatedChildren": 52652,
+        "childrenWithNoSuffix": 41604,
+        "duplicate_node": 49665,
+        "covered": 0,
+        "terminal_mask": 1431,
+        "terminal_previous_y": 0,
+        "duplicate_option": 175,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1406
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y-",
+        "Z-",
+        "X+"
+      ],
+      "counts": {
+        "visits": 52677,
+        "emptyEffective": 40248,
+        "generatedChildren": 52652,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 49665,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1556,
+        "compile_failed": 0,
+        "returned": 50,
+        "expanded": 1406
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y+",
+        "X+",
+        "Y-"
+      ],
+      "counts": {
+        "visits": 52677,
+        "emptyEffective": 41629,
+        "generatedChildren": 52652,
+        "childrenWithNoSuffix": 42985,
+        "duplicate_node": 49665,
+        "covered": 0,
+        "terminal_mask": 1456,
+        "terminal_previous_y": 0,
+        "duplicate_option": 150,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1406
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y+",
+        "X+",
+        "Y+"
+      ],
+      "counts": {
+        "visits": 52677,
+        "emptyEffective": 41629,
+        "generatedChildren": 52652,
+        "childrenWithNoSuffix": 41604,
+        "duplicate_node": 49665,
+        "covered": 0,
+        "terminal_mask": 1431,
+        "terminal_previous_y": 0,
+        "duplicate_option": 175,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1406
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y+",
+        "Z-",
+        "X+"
+      ],
+      "counts": {
+        "visits": 52677,
+        "emptyEffective": 40248,
+        "generatedChildren": 52652,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 49665,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1606,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1406
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z+",
+        "X+",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 52677,
+        "emptyEffective": 40248,
+        "generatedChildren": 52652,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 49665,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1606,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1406
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z+",
+        "X+",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 52677,
+        "emptyEffective": 40248,
+        "generatedChildren": 52652,
+        "childrenWithNoSuffix": 41604,
+        "duplicate_node": 49665,
+        "covered": 0,
+        "terminal_mask": 1431,
+        "terminal_previous_y": 0,
+        "duplicate_option": 175,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1406
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-",
+        "X+",
+        "Y-"
+      ],
+      "counts": {
+        "visits": 51721,
+        "emptyEffective": 40248,
+        "generatedChildren": 51696,
+        "childrenWithNoSuffix": 41679,
+        "duplicate_node": 48309,
+        "covered": 200,
+        "terminal_mask": 1481,
+        "terminal_previous_y": 0,
+        "duplicate_option": 300,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1431
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-",
+        "X+",
+        "Y+"
+      ],
+      "counts": {
+        "visits": 51721,
+        "emptyEffective": 40248,
+        "generatedChildren": 51696,
+        "childrenWithNoSuffix": 40273,
+        "duplicate_node": 48309,
+        "covered": 200,
+        "terminal_mask": 1431,
+        "terminal_previous_y": 0,
+        "duplicate_option": 350,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1431
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z+",
+        "X+",
+        "Y-"
+      ],
+      "counts": {
+        "visits": 51296,
+        "emptyEffective": 40248,
+        "generatedChildren": 51271,
+        "childrenWithNoSuffix": 41604,
+        "duplicate_node": 48309,
+        "covered": 0,
+        "terminal_mask": 1431,
+        "terminal_previous_y": 0,
+        "duplicate_option": 150,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1406
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z+",
+        "X+",
+        "Y+"
+      ],
+      "counts": {
+        "visits": 51296,
+        "emptyEffective": 40248,
+        "generatedChildren": 51271,
+        "childrenWithNoSuffix": 40223,
+        "duplicate_node": 48309,
+        "covered": 0,
+        "terminal_mask": 1406,
+        "terminal_previous_y": 0,
+        "duplicate_option": 175,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1406
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X-",
+        "Z-",
+        "X-"
+      ],
+      "counts": {
+        "visits": 44121,
+        "emptyEffective": 33537,
+        "generatedChildren": 44100,
+        "childrenWithNoSuffix": 34244,
+        "duplicate_node": 41580,
+        "covered": 0,
+        "terminal_mask": 1189,
+        "terminal_previous_y": 0,
+        "duplicate_option": 155,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1197
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X-",
+        "Z-",
+        "Y-"
+      ],
+      "counts": {
+        "visits": 44121,
+        "emptyEffective": 33537,
+        "generatedChildren": 44100,
+        "childrenWithNoSuffix": 35868,
+        "duplicate_node": 41580,
+        "covered": 0,
+        "terminal_mask": 1218,
+        "terminal_previous_y": 0,
+        "duplicate_option": 126,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1197
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X-",
+        "Z-",
+        "Y+"
+      ],
+      "counts": {
+        "visits": 44121,
+        "emptyEffective": 33537,
+        "generatedChildren": 44100,
+        "childrenWithNoSuffix": 34692,
+        "duplicate_node": 41580,
+        "covered": 0,
+        "terminal_mask": 1197,
+        "terminal_previous_y": 0,
+        "duplicate_option": 147,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1197
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y-",
+        "Z-",
+        "X-"
+      ],
+      "counts": {
+        "visits": 43911,
+        "emptyEffective": 33516,
+        "generatedChildren": 43890,
+        "childrenWithNoSuffix": 34210,
+        "duplicate_node": 41391,
+        "covered": 0,
+        "terminal_mask": 1189,
+        "terminal_previous_y": 0,
+        "duplicate_option": 147,
+        "compile_failed": 0,
+        "returned": 8,
+        "expanded": 1176
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y-",
+        "Z-",
+        "Y-"
+      ],
+      "counts": {
+        "visits": 43911,
+        "emptyEffective": 33516,
+        "generatedChildren": 43890,
+        "childrenWithNoSuffix": 35805,
+        "duplicate_node": 41391,
+        "covered": 0,
+        "terminal_mask": 1218,
+        "terminal_previous_y": 0,
+        "duplicate_option": 126,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1176
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y-",
+        "Z-",
+        "Y+"
+      ],
+      "counts": {
+        "visits": 43911,
+        "emptyEffective": 33516,
+        "generatedChildren": 43890,
+        "childrenWithNoSuffix": 34650,
+        "duplicate_node": 41391,
+        "covered": 0,
+        "terminal_mask": 1197,
+        "terminal_previous_y": 0,
+        "duplicate_option": 147,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1176
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y+",
+        "Z-",
+        "X-"
+      ],
+      "counts": {
+        "visits": 43911,
+        "emptyEffective": 33516,
+        "generatedChildren": 43890,
+        "childrenWithNoSuffix": 34210,
+        "duplicate_node": 41391,
+        "covered": 0,
+        "terminal_mask": 1189,
+        "terminal_previous_y": 0,
+        "duplicate_option": 155,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1176
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y+",
+        "Z-",
+        "Y-"
+      ],
+      "counts": {
+        "visits": 43911,
+        "emptyEffective": 33516,
+        "generatedChildren": 43890,
+        "childrenWithNoSuffix": 35805,
+        "duplicate_node": 41391,
+        "covered": 0,
+        "terminal_mask": 1218,
+        "terminal_previous_y": 0,
+        "duplicate_option": 126,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1176
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y+",
+        "Z-",
+        "Y+"
+      ],
+      "counts": {
+        "visits": 43911,
+        "emptyEffective": 33516,
+        "generatedChildren": 43890,
+        "childrenWithNoSuffix": 34650,
+        "duplicate_node": 41391,
+        "covered": 0,
+        "terminal_mask": 1197,
+        "terminal_previous_y": 0,
+        "duplicate_option": 147,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1176
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+",
+        "Z+",
+        "X-"
+      ],
+      "counts": {
+        "visits": 40498,
+        "emptyEffective": 40273,
+        "generatedChildren": 40473,
+        "childrenWithNoSuffix": 40323,
+        "duplicate_node": 37461,
+        "covered": 175,
+        "terminal_mask": 1381,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1481
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+",
+        "Z+",
+        "X+"
+      ],
+      "counts": {
+        "visits": 40498,
+        "emptyEffective": 40273,
+        "generatedChildren": 40473,
+        "childrenWithNoSuffix": 100,
+        "duplicate_node": 37461,
+        "covered": 175,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1381,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1481
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+",
+        "Z+",
+        "Y-"
+      ],
+      "counts": {
+        "visits": 40498,
+        "emptyEffective": 40273,
+        "generatedChildren": 40473,
+        "childrenWithNoSuffix": 40323,
+        "duplicate_node": 37461,
+        "covered": 175,
+        "terminal_mask": 1381,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1481
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+",
+        "Z+",
+        "Y+"
+      ],
+      "counts": {
+        "visits": 40498,
+        "emptyEffective": 40273,
+        "generatedChildren": 40473,
+        "childrenWithNoSuffix": 40323,
+        "duplicate_node": 37461,
+        "covered": 175,
+        "terminal_mask": 1381,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1481
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X-",
+        "Z+",
+        "X+"
+      ],
+      "counts": {
+        "visits": 40273,
+        "emptyEffective": 40273,
+        "generatedChildren": 40248,
+        "childrenWithNoSuffix": 25,
+        "duplicate_node": 37461,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1381,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1431
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y-",
+        "Z+",
+        "X+"
+      ],
+      "counts": {
+        "visits": 40248,
+        "emptyEffective": 40248,
+        "generatedChildren": 40223,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 37461,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1381,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1406
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y+",
+        "Z+",
+        "X+"
+      ],
+      "counts": {
+        "visits": 40248,
+        "emptyEffective": 40248,
+        "generatedChildren": 40223,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 37461,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1381,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1406
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+",
+        "Y-",
+        "X-"
+      ],
+      "counts": {
+        "visits": 39092,
+        "emptyEffective": 38892,
+        "generatedChildren": 39067,
+        "childrenWithNoSuffix": 38917,
+        "duplicate_node": 36105,
+        "covered": 150,
+        "terminal_mask": 1356,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1481
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+",
+        "Y-",
+        "X+"
+      ],
+      "counts": {
+        "visits": 39092,
+        "emptyEffective": 38892,
+        "generatedChildren": 39067,
+        "childrenWithNoSuffix": 100,
+        "duplicate_node": 36105,
+        "covered": 150,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1356,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1481
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+",
+        "Y-",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 39092,
+        "emptyEffective": 38892,
+        "generatedChildren": 39067,
+        "childrenWithNoSuffix": 100,
+        "duplicate_node": 36105,
+        "covered": 150,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1331,
+        "compile_failed": 0,
+        "returned": 25,
+        "expanded": 1481
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+",
+        "Y-",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 39092,
+        "emptyEffective": 38892,
+        "generatedChildren": 39067,
+        "childrenWithNoSuffix": 38917,
+        "duplicate_node": 36105,
+        "covered": 150,
+        "terminal_mask": 1356,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1481
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+",
+        "Y+",
+        "X-"
+      ],
+      "counts": {
+        "visits": 39092,
+        "emptyEffective": 38892,
+        "generatedChildren": 39067,
+        "childrenWithNoSuffix": 38892,
+        "duplicate_node": 36105,
+        "covered": 175,
+        "terminal_mask": 1356,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1456
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+",
+        "Y+",
+        "X+"
+      ],
+      "counts": {
+        "visits": 39092,
+        "emptyEffective": 38892,
+        "generatedChildren": 39067,
+        "childrenWithNoSuffix": 75,
+        "duplicate_node": 36105,
+        "covered": 175,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1356,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1456
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+",
+        "Y+",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 39092,
+        "emptyEffective": 38892,
+        "generatedChildren": 39067,
+        "childrenWithNoSuffix": 75,
+        "duplicate_node": 36105,
+        "covered": 175,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1356,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1456
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+",
+        "Y+",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 39092,
+        "emptyEffective": 38892,
+        "generatedChildren": 39067,
+        "childrenWithNoSuffix": 38892,
+        "duplicate_node": 36105,
+        "covered": 175,
+        "terminal_mask": 1356,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1456
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-",
+        "Y-",
+        "X+"
+      ],
+      "counts": {
+        "visits": 39092,
+        "emptyEffective": 38867,
+        "generatedChildren": 39067,
+        "childrenWithNoSuffix": 100,
+        "duplicate_node": 36105,
+        "covered": 150,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1356,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1481
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-",
+        "Y+",
+        "X+"
+      ],
+      "counts": {
+        "visits": 39092,
+        "emptyEffective": 38867,
+        "generatedChildren": 39067,
+        "childrenWithNoSuffix": 75,
+        "duplicate_node": 36105,
+        "covered": 175,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1356,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1456
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X-",
+        "Y-",
+        "X+"
+      ],
+      "counts": {
+        "visits": 38892,
+        "emptyEffective": 38892,
+        "generatedChildren": 38867,
+        "childrenWithNoSuffix": 50,
+        "duplicate_node": 36105,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1331,
+        "compile_failed": 0,
+        "returned": 25,
+        "expanded": 1431
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X-",
+        "Y+",
+        "X+"
+      ],
+      "counts": {
+        "visits": 38892,
+        "emptyEffective": 38892,
+        "generatedChildren": 38867,
+        "childrenWithNoSuffix": 50,
+        "duplicate_node": 36105,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1356,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1431
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z+",
+        "Y-",
+        "X+"
+      ],
+      "counts": {
+        "visits": 38867,
+        "emptyEffective": 38867,
+        "generatedChildren": 38842,
+        "childrenWithNoSuffix": 25,
+        "duplicate_node": 36105,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1356,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1406
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z+",
+        "Y+",
+        "X+"
+      ],
+      "counts": {
+        "visits": 38867,
+        "emptyEffective": 38867,
+        "generatedChildren": 38842,
+        "childrenWithNoSuffix": 25,
+        "duplicate_node": 36105,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1356,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1406
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y-",
+        "X-",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 34671,
+        "emptyEffective": 34671,
+        "generatedChildren": 34650,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 32319,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1176,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1176
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y+",
+        "X-",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 34671,
+        "emptyEffective": 34671,
+        "generatedChildren": 34650,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 32319,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1176,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1176
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-",
+        "X-",
+        "Y-"
+      ],
+      "counts": {
+        "visits": 33705,
+        "emptyEffective": 33516,
+        "generatedChildren": 33684,
+        "childrenWithNoSuffix": 33550,
+        "duplicate_node": 31185,
+        "covered": 155,
+        "terminal_mask": 1155,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1210
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-",
+        "X-",
+        "Y+"
+      ],
+      "counts": {
+        "visits": 33705,
+        "emptyEffective": 33516,
+        "generatedChildren": 33684,
+        "childrenWithNoSuffix": 33550,
+        "duplicate_node": 31185,
+        "covered": 155,
+        "terminal_mask": 1155,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1210
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-",
+        "X-",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 33705,
+        "emptyEffective": 33516,
+        "generatedChildren": 33684,
+        "childrenWithNoSuffix": 34,
+        "duplicate_node": 31185,
+        "covered": 155,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1155,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1210
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-",
+        "X-",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 33705,
+        "emptyEffective": 33516,
+        "generatedChildren": 33684,
+        "childrenWithNoSuffix": 33529,
+        "duplicate_node": 31185,
+        "covered": 155,
+        "terminal_mask": 1155,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1210
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z+",
+        "X-",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 33516,
+        "emptyEffective": 33516,
+        "generatedChildren": 33495,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 31185,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1155,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1176
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-",
+        "Y-",
+        "X-"
+      ],
+      "counts": {
+        "visits": 32550,
+        "emptyEffective": 32361,
+        "generatedChildren": 32529,
+        "childrenWithNoSuffix": 32403,
+        "duplicate_node": 30051,
+        "covered": 126,
+        "terminal_mask": 1134,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1239
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-",
+        "Y-",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 32550,
+        "emptyEffective": 32361,
+        "generatedChildren": 32529,
+        "childrenWithNoSuffix": 84,
+        "duplicate_node": 30051,
+        "covered": 126,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1134,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1239
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-",
+        "Y-",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 32550,
+        "emptyEffective": 32361,
+        "generatedChildren": 32529,
+        "childrenWithNoSuffix": 32403,
+        "duplicate_node": 30051,
+        "covered": 126,
+        "terminal_mask": 1134,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1239
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-",
+        "Y+",
+        "X-"
+      ],
+      "counts": {
+        "visits": 32550,
+        "emptyEffective": 32361,
+        "generatedChildren": 32529,
+        "childrenWithNoSuffix": 32382,
+        "duplicate_node": 30051,
+        "covered": 147,
+        "terminal_mask": 1134,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1218
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-",
+        "Y+",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 32550,
+        "emptyEffective": 32361,
+        "generatedChildren": 32529,
+        "childrenWithNoSuffix": 63,
+        "duplicate_node": 30051,
+        "covered": 147,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1134,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1218
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-",
+        "Y+",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 32550,
+        "emptyEffective": 32361,
+        "generatedChildren": 32529,
+        "childrenWithNoSuffix": 32382,
+        "duplicate_node": 30051,
+        "covered": 147,
+        "terminal_mask": 1134,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1218
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X-",
+        "Y-",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 32382,
+        "emptyEffective": 32382,
+        "generatedChildren": 32361,
+        "childrenWithNoSuffix": 42,
+        "duplicate_node": 30051,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1134,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1197
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X-",
+        "Y+",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 32382,
+        "emptyEffective": 32382,
+        "generatedChildren": 32361,
+        "childrenWithNoSuffix": 42,
+        "duplicate_node": 30051,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1134,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1197
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z+",
+        "Y-",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 32361,
+        "emptyEffective": 32361,
+        "generatedChildren": 32340,
+        "childrenWithNoSuffix": 21,
+        "duplicate_node": 30051,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1134,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1176
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z+",
+        "Y+",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 32361,
+        "emptyEffective": 32361,
+        "generatedChildren": 32340,
+        "childrenWithNoSuffix": 21,
+        "duplicate_node": 30051,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1134,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 1176
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Y-",
+        "X+",
+        "Z-",
+        "X-"
+      ],
+      "counts": {
+        "visits": 9801,
+        "emptyEffective": 9414,
+        "generatedChildren": 9798,
+        "childrenWithNoSuffix": 4734,
+        "duplicate_node": 9292,
+        "covered": 0,
+        "terminal_mask": 169,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 5,
+        "expanded": 335
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Y+",
+        "X+",
+        "Z-",
+        "X-"
+      ],
+      "counts": {
+        "visits": 9801,
+        "emptyEffective": 9414,
+        "generatedChildren": 9798,
+        "childrenWithNoSuffix": 4734,
+        "duplicate_node": 9292,
+        "covered": 0,
+        "terminal_mask": 169,
+        "terminal_previous_y": 0,
+        "duplicate_option": 5,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 335
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Y-",
+        "X-",
+        "Z-",
+        "X+"
+      ],
+      "counts": {
+        "visits": 9801,
+        "emptyEffective": 9414,
+        "generatedChildren": 9798,
+        "childrenWithNoSuffix": 4734,
+        "duplicate_node": 9292,
+        "covered": 0,
+        "terminal_mask": 169,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 5,
+        "expanded": 335
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Y+",
+        "X-",
+        "Z-",
+        "X+"
+      ],
+      "counts": {
+        "visits": 9801,
+        "emptyEffective": 9414,
+        "generatedChildren": 9798,
+        "childrenWithNoSuffix": 4734,
+        "duplicate_node": 9292,
+        "covered": 0,
+        "terminal_mask": 169,
+        "terminal_previous_y": 0,
+        "duplicate_option": 5,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 335
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Y-",
+        "Z+",
+        "X-",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 9358,
+        "emptyEffective": 9249,
+        "generatedChildren": 9355,
+        "childrenWithNoSuffix": 57,
+        "duplicate_node": 8861,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 159,
+        "compile_failed": 0,
+        "returned": 5,
+        "expanded": 333
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Y-",
+        "Z+",
+        "X+",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 9358,
+        "emptyEffective": 9249,
+        "generatedChildren": 9355,
+        "childrenWithNoSuffix": 57,
+        "duplicate_node": 8861,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 162,
+        "compile_failed": 0,
+        "returned": 2,
+        "expanded": 333
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Y+",
+        "Z+",
+        "X-",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 9358,
+        "emptyEffective": 9249,
+        "generatedChildren": 9355,
+        "childrenWithNoSuffix": 57,
+        "duplicate_node": 8861,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 164,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 333
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Y+",
+        "Z+",
+        "X+",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 9358,
+        "emptyEffective": 9249,
+        "generatedChildren": 9355,
+        "childrenWithNoSuffix": 57,
+        "duplicate_node": 8861,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 164,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 333
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X-",
+        "Y-",
+        "Z-",
+        "X-"
+      ],
+      "counts": {
+        "visits": 9355,
+        "emptyEffective": 9084,
+        "generatedChildren": 9352,
+        "childrenWithNoSuffix": 4570,
+        "duplicate_node": 8856,
+        "covered": 0,
+        "terminal_mask": 164,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 3,
+        "expanded": 332
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X-",
+        "Y+",
+        "Z-",
+        "X-"
+      ],
+      "counts": {
+        "visits": 9355,
+        "emptyEffective": 9084,
+        "generatedChildren": 9352,
+        "childrenWithNoSuffix": 4570,
+        "duplicate_node": 8856,
+        "covered": 0,
+        "terminal_mask": 164,
+        "terminal_previous_y": 0,
+        "duplicate_option": 3,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 332
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X+",
+        "Y-",
+        "Z-",
+        "X-"
+      ],
+      "counts": {
+        "visits": 9355,
+        "emptyEffective": 9084,
+        "generatedChildren": 9352,
+        "childrenWithNoSuffix": 4570,
+        "duplicate_node": 8856,
+        "covered": 0,
+        "terminal_mask": 164,
+        "terminal_previous_y": 0,
+        "duplicate_option": 3,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 332
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X+",
+        "Y+",
+        "Z-",
+        "X-"
+      ],
+      "counts": {
+        "visits": 9355,
+        "emptyEffective": 9084,
+        "generatedChildren": 9352,
+        "childrenWithNoSuffix": 4570,
+        "duplicate_node": 8856,
+        "covered": 0,
+        "terminal_mask": 164,
+        "terminal_previous_y": 0,
+        "duplicate_option": 3,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 332
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X-",
+        "Y-",
+        "Z-",
+        "X+"
+      ],
+      "counts": {
+        "visits": 9355,
+        "emptyEffective": 9084,
+        "generatedChildren": 9352,
+        "childrenWithNoSuffix": 4570,
+        "duplicate_node": 8856,
+        "covered": 0,
+        "terminal_mask": 164,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 3,
+        "expanded": 332
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X-",
+        "Y+",
+        "Z-",
+        "X+"
+      ],
+      "counts": {
+        "visits": 9355,
+        "emptyEffective": 9084,
+        "generatedChildren": 9352,
+        "childrenWithNoSuffix": 4570,
+        "duplicate_node": 8856,
+        "covered": 0,
+        "terminal_mask": 164,
+        "terminal_previous_y": 0,
+        "duplicate_option": 3,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 332
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X+",
+        "Y-",
+        "Z-",
+        "X+"
+      ],
+      "counts": {
+        "visits": 9355,
+        "emptyEffective": 9084,
+        "generatedChildren": 9352,
+        "childrenWithNoSuffix": 4570,
+        "duplicate_node": 8856,
+        "covered": 0,
+        "terminal_mask": 164,
+        "terminal_previous_y": 0,
+        "duplicate_option": 3,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 332
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X+",
+        "Y+",
+        "Z-",
+        "X+"
+      ],
+      "counts": {
+        "visits": 9355,
+        "emptyEffective": 9084,
+        "generatedChildren": 9352,
+        "childrenWithNoSuffix": 4570,
+        "duplicate_node": 8856,
+        "covered": 0,
+        "terminal_mask": 164,
+        "terminal_previous_y": 0,
+        "duplicate_option": 3,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 332
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z+",
+        "Y-",
+        "Z-",
+        "X-"
+      ],
+      "counts": {
+        "visits": 9353,
+        "emptyEffective": 9084,
+        "generatedChildren": 9350,
+        "childrenWithNoSuffix": 4568,
+        "duplicate_node": 8856,
+        "covered": 0,
+        "terminal_mask": 164,
+        "terminal_previous_y": 0,
+        "duplicate_option": 3,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 330
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z+",
+        "Y+",
+        "Z-",
+        "X-"
+      ],
+      "counts": {
+        "visits": 9353,
+        "emptyEffective": 9084,
+        "generatedChildren": 9350,
+        "childrenWithNoSuffix": 4568,
+        "duplicate_node": 8856,
+        "covered": 0,
+        "terminal_mask": 164,
+        "terminal_previous_y": 0,
+        "duplicate_option": 3,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 330
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z+",
+        "Y-",
+        "Z-",
+        "X+"
+      ],
+      "counts": {
+        "visits": 9353,
+        "emptyEffective": 9084,
+        "generatedChildren": 9350,
+        "childrenWithNoSuffix": 4568,
+        "duplicate_node": 8856,
+        "covered": 0,
+        "terminal_mask": 164,
+        "terminal_previous_y": 0,
+        "duplicate_option": 3,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 330
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z+",
+        "Y+",
+        "Z-",
+        "X+"
+      ],
+      "counts": {
+        "visits": 9353,
+        "emptyEffective": 9084,
+        "generatedChildren": 9350,
+        "childrenWithNoSuffix": 4568,
+        "duplicate_node": 8856,
+        "covered": 0,
+        "terminal_mask": 164,
+        "terminal_previous_y": 0,
+        "duplicate_option": 3,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 330
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X-",
+        "Z+",
+        "Y-",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 9251,
+        "emptyEffective": 9249,
+        "generatedChildren": 9248,
+        "childrenWithNoSuffix": 170,
+        "duplicate_node": 8754,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 162,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 335
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X-",
+        "Z+",
+        "Y+",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 9251,
+        "emptyEffective": 9249,
+        "generatedChildren": 9248,
+        "childrenWithNoSuffix": 170,
+        "duplicate_node": 8754,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 162,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 335
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X+",
+        "Z+",
+        "Y-",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 9251,
+        "emptyEffective": 9249,
+        "generatedChildren": 9248,
+        "childrenWithNoSuffix": 170,
+        "duplicate_node": 8754,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 162,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 335
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X+",
+        "Z+",
+        "Y+",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 9251,
+        "emptyEffective": 9249,
+        "generatedChildren": 9248,
+        "childrenWithNoSuffix": 170,
+        "duplicate_node": 8754,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 162,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 335
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z-",
+        "Y-",
+        "X-",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 9196,
+        "emptyEffective": 9084,
+        "generatedChildren": 9193,
+        "childrenWithNoSuffix": 8,
+        "duplicate_node": 8697,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 164,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 335
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z-",
+        "Y-",
+        "X+",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 9196,
+        "emptyEffective": 9084,
+        "generatedChildren": 9193,
+        "childrenWithNoSuffix": 8,
+        "duplicate_node": 8697,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 164,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 335
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z-",
+        "Y+",
+        "X-",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 9196,
+        "emptyEffective": 9084,
+        "generatedChildren": 9193,
+        "childrenWithNoSuffix": 8,
+        "duplicate_node": 8697,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 164,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 335
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z-",
+        "Y+",
+        "X+",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 9196,
+        "emptyEffective": 9084,
+        "generatedChildren": 9193,
+        "childrenWithNoSuffix": 8,
+        "duplicate_node": 8697,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 164,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 335
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X-",
+        "Y-",
+        "X+",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 9193,
+        "emptyEffective": 9084,
+        "generatedChildren": 9190,
+        "childrenWithNoSuffix": 5,
+        "duplicate_node": 8697,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 159,
+        "compile_failed": 0,
+        "returned": 5,
+        "expanded": 332
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X-",
+        "Y+",
+        "X+",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 9193,
+        "emptyEffective": 9084,
+        "generatedChildren": 9190,
+        "childrenWithNoSuffix": 5,
+        "duplicate_node": 8697,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 164,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 332
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X+",
+        "Y-",
+        "X-",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 9193,
+        "emptyEffective": 9084,
+        "generatedChildren": 9190,
+        "childrenWithNoSuffix": 5,
+        "duplicate_node": 8697,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 162,
+        "compile_failed": 0,
+        "returned": 2,
+        "expanded": 332
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X+",
+        "Y+",
+        "X-",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 9193,
+        "emptyEffective": 9084,
+        "generatedChildren": 9190,
+        "childrenWithNoSuffix": 5,
+        "duplicate_node": 8697,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 164,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 332
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z+",
+        "Y-",
+        "X-",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 9191,
+        "emptyEffective": 9084,
+        "generatedChildren": 9188,
+        "childrenWithNoSuffix": 3,
+        "duplicate_node": 8697,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 164,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 330
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z+",
+        "Y-",
+        "X+",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 9191,
+        "emptyEffective": 9084,
+        "generatedChildren": 9188,
+        "childrenWithNoSuffix": 3,
+        "duplicate_node": 8697,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 164,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 330
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z+",
+        "Y+",
+        "X-",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 9191,
+        "emptyEffective": 9084,
+        "generatedChildren": 9188,
+        "childrenWithNoSuffix": 3,
+        "duplicate_node": 8697,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 164,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 330
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z+",
+        "Y+",
+        "X+",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 9191,
+        "emptyEffective": 9084,
+        "generatedChildren": 9188,
+        "childrenWithNoSuffix": 3,
+        "duplicate_node": 8697,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 164,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 330
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z-",
+        "X-",
+        "Y-",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 9036,
+        "emptyEffective": 8922,
+        "generatedChildren": 9033,
+        "childrenWithNoSuffix": 282,
+        "duplicate_node": 8540,
+        "covered": 3,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 159,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 334
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z-",
+        "X-",
+        "Y+",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 9036,
+        "emptyEffective": 8922,
+        "generatedChildren": 9033,
+        "childrenWithNoSuffix": 282,
+        "duplicate_node": 8540,
+        "covered": 3,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 159,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 334
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z-",
+        "X+",
+        "Y-",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 9036,
+        "emptyEffective": 8922,
+        "generatedChildren": 9033,
+        "childrenWithNoSuffix": 282,
+        "duplicate_node": 8540,
+        "covered": 3,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 159,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 334
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z-",
+        "X+",
+        "Y+",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 9036,
+        "emptyEffective": 8922,
+        "generatedChildren": 9033,
+        "childrenWithNoSuffix": 282,
+        "duplicate_node": 8540,
+        "covered": 3,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 159,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 334
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z+",
+        "X-",
+        "Y-",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 9031,
+        "emptyEffective": 8922,
+        "generatedChildren": 9028,
+        "childrenWithNoSuffix": 277,
+        "duplicate_node": 8540,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 159,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 332
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z+",
+        "X-",
+        "Y+",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 9031,
+        "emptyEffective": 8922,
+        "generatedChildren": 9028,
+        "childrenWithNoSuffix": 277,
+        "duplicate_node": 8540,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 159,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 332
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z+",
+        "X+",
+        "Y-",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 9031,
+        "emptyEffective": 8922,
+        "generatedChildren": 9028,
+        "childrenWithNoSuffix": 277,
+        "duplicate_node": 8540,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 159,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 332
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z+",
+        "X+",
+        "Y+",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 9031,
+        "emptyEffective": 8922,
+        "generatedChildren": 9028,
+        "childrenWithNoSuffix": 277,
+        "duplicate_node": 8540,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 159,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 332
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X+",
+        "Z-",
+        "X-"
+      ],
+      "counts": {
+        "visits": 7119,
+        "emptyEffective": 6388,
+        "generatedChildren": 7123,
+        "childrenWithNoSuffix": 6387,
+        "duplicate_node": 6652,
+        "covered": 0,
+        "terminal_mask": 226,
+        "terminal_previous_y": 0,
+        "duplicate_option": 9,
+        "compile_failed": 0,
+        "returned": 4,
+        "expanded": 228
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X-",
+        "Z-",
+        "X-"
+      ],
+      "counts": {
+        "visits": 7116,
+        "emptyEffective": 6388,
+        "generatedChildren": 7112,
+        "childrenWithNoSuffix": 6386,
+        "duplicate_node": 6652,
+        "covered": 0,
+        "terminal_mask": 226,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 11,
+        "expanded": 227
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X-",
+        "Z-",
+        "X+"
+      ],
+      "counts": {
+        "visits": 5071,
+        "emptyEffective": 4791,
+        "generatedChildren": 5068,
+        "childrenWithNoSuffix": 4734,
+        "duplicate_node": 4727,
+        "covered": 0,
+        "terminal_mask": 169,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 5,
+        "expanded": 170
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X+",
+        "Z-",
+        "X+"
+      ],
+      "counts": {
+        "visits": 5071,
+        "emptyEffective": 4791,
+        "generatedChildren": 5068,
+        "childrenWithNoSuffix": 4734,
+        "duplicate_node": 4727,
+        "covered": 0,
+        "terminal_mask": 169,
+        "terminal_previous_y": 0,
+        "duplicate_option": 3,
+        "compile_failed": 0,
+        "returned": 2,
+        "expanded": 170
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Y-",
+        "Z-",
+        "X-"
+      ],
+      "counts": {
+        "visits": 5065,
+        "emptyEffective": 4791,
+        "generatedChildren": 5062,
+        "childrenWithNoSuffix": 4732,
+        "duplicate_node": 4727,
+        "covered": 0,
+        "terminal_mask": 167,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 3,
+        "expanded": 168
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Y+",
+        "Z-",
+        "X-"
+      ],
+      "counts": {
+        "visits": 5065,
+        "emptyEffective": 4791,
+        "generatedChildren": 5062,
+        "childrenWithNoSuffix": 4732,
+        "duplicate_node": 4727,
+        "covered": 0,
+        "terminal_mask": 167,
+        "terminal_previous_y": 0,
+        "duplicate_option": 3,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 168
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Y-",
+        "Z-",
+        "X+"
+      ],
+      "counts": {
+        "visits": 5065,
+        "emptyEffective": 4791,
+        "generatedChildren": 5062,
+        "childrenWithNoSuffix": 4732,
+        "duplicate_node": 4727,
+        "covered": 0,
+        "terminal_mask": 167,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 3,
+        "expanded": 168
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Y+",
+        "Z-",
+        "X+"
+      ],
+      "counts": {
+        "visits": 5065,
+        "emptyEffective": 4791,
+        "generatedChildren": 5062,
+        "childrenWithNoSuffix": 4732,
+        "duplicate_node": 4727,
+        "covered": 0,
+        "terminal_mask": 167,
+        "terminal_previous_y": 0,
+        "duplicate_option": 3,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 168
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Y-",
+        "X-",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 4900,
+        "emptyEffective": 4791,
+        "generatedChildren": 4897,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 4565,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 162,
+        "compile_failed": 0,
+        "returned": 5,
+        "expanded": 168
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Y-",
+        "X+",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 4900,
+        "emptyEffective": 4791,
+        "generatedChildren": 4897,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 4565,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 165,
+        "compile_failed": 0,
+        "returned": 2,
+        "expanded": 168
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Y+",
+        "X-",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 4900,
+        "emptyEffective": 4791,
+        "generatedChildren": 4897,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 4565,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 167,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 168
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Y+",
+        "X+",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 4900,
+        "emptyEffective": 4791,
+        "generatedChildren": 4897,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 4565,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 167,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 168
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z-",
+        "X-",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 4740,
+        "emptyEffective": 4626,
+        "generatedChildren": 4737,
+        "childrenWithNoSuffix": 3,
+        "duplicate_node": 4403,
+        "covered": 3,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 159,
+        "compile_failed": 0,
+        "returned": 5,
+        "expanded": 170
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z-",
+        "X+",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 4740,
+        "emptyEffective": 4626,
+        "generatedChildren": 4737,
+        "childrenWithNoSuffix": 3,
+        "duplicate_node": 4403,
+        "covered": 3,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 162,
+        "compile_failed": 0,
+        "returned": 2,
+        "expanded": 170
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z+",
+        "X-",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 4735,
+        "emptyEffective": 4626,
+        "generatedChildren": 4732,
+        "childrenWithNoSuffix": 1,
+        "duplicate_node": 4403,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 164,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 168
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z+",
+        "X+",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 4735,
+        "emptyEffective": 4626,
+        "generatedChildren": 4732,
+        "childrenWithNoSuffix": 1,
+        "duplicate_node": 4403,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 164,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 168
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z-",
+        "Y-",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 4631,
+        "emptyEffective": 4626,
+        "generatedChildren": 4628,
+        "childrenWithNoSuffix": 8,
+        "duplicate_node": 4296,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 162,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 173
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z-",
+        "Y+",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 4631,
+        "emptyEffective": 4626,
+        "generatedChildren": 4628,
+        "childrenWithNoSuffix": 8,
+        "duplicate_node": 4296,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 162,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 173
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X-",
+        "Y-",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 4628,
+        "emptyEffective": 4626,
+        "generatedChildren": 4625,
+        "childrenWithNoSuffix": 5,
+        "duplicate_node": 4296,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 159,
+        "compile_failed": 0,
+        "returned": 3,
+        "expanded": 170
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X-",
+        "Y+",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 4628,
+        "emptyEffective": 4626,
+        "generatedChildren": 4625,
+        "childrenWithNoSuffix": 5,
+        "duplicate_node": 4296,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 162,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 170
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X+",
+        "Y-",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 4628,
+        "emptyEffective": 4626,
+        "generatedChildren": 4625,
+        "childrenWithNoSuffix": 5,
+        "duplicate_node": 4296,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 162,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 170
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X+",
+        "Y+",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 4628,
+        "emptyEffective": 4626,
+        "generatedChildren": 4625,
+        "childrenWithNoSuffix": 5,
+        "duplicate_node": 4296,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 162,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 170
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z+",
+        "Y-",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 4626,
+        "emptyEffective": 4626,
+        "generatedChildren": 4623,
+        "childrenWithNoSuffix": 3,
+        "duplicate_node": 4296,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 162,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 168
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z+",
+        "Y+",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 4626,
+        "emptyEffective": 4626,
+        "generatedChildren": 4623,
+        "childrenWithNoSuffix": 3,
+        "duplicate_node": 4296,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 162,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 168
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 1656,
+        "emptyEffective": 1431,
+        "generatedChildren": 1631,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1531,
+        "compile_failed": 0,
+        "returned": 100,
+        "expanded": 25
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 1656,
+        "emptyEffective": 1431,
+        "generatedChildren": 1631,
+        "childrenWithNoSuffix": 1456,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 1456,
+        "terminal_previous_y": 0,
+        "duplicate_option": 175,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 25
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+",
+        "Y-"
+      ],
+      "counts": {
+        "visits": 1631,
+        "emptyEffective": 1431,
+        "generatedChildren": 1606,
+        "childrenWithNoSuffix": 1456,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 1456,
+        "terminal_previous_y": 0,
+        "duplicate_option": 125,
+        "compile_failed": 0,
+        "returned": 25,
+        "expanded": 25
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+",
+        "Y+"
+      ],
+      "counts": {
+        "visits": 1631,
+        "emptyEffective": 1431,
+        "generatedChildren": 1606,
+        "childrenWithNoSuffix": 1431,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 1431,
+        "terminal_previous_y": 0,
+        "duplicate_option": 175,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 25
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-",
+        "X+"
+      ],
+      "counts": {
+        "visits": 1631,
+        "emptyEffective": 1406,
+        "generatedChildren": 1606,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1556,
+        "compile_failed": 0,
+        "returned": 50,
+        "expanded": 25
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y-",
+        "X+"
+      ],
+      "counts": {
+        "visits": 1406,
+        "emptyEffective": 1406,
+        "generatedChildren": 1381,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1381,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 25
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y+",
+        "X+"
+      ],
+      "counts": {
+        "visits": 1406,
+        "emptyEffective": 1406,
+        "generatedChildren": 1381,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1381,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 25
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z+",
+        "X+"
+      ],
+      "counts": {
+        "visits": 1406,
+        "emptyEffective": 1406,
+        "generatedChildren": 1381,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1381,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 25
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-",
+        "X-"
+      ],
+      "counts": {
+        "visits": 1365,
+        "emptyEffective": 1176,
+        "generatedChildren": 1344,
+        "childrenWithNoSuffix": 1189,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 1189,
+        "terminal_previous_y": 0,
+        "duplicate_option": 147,
+        "compile_failed": 0,
+        "returned": 8,
+        "expanded": 21
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-",
+        "Y-"
+      ],
+      "counts": {
+        "visits": 1365,
+        "emptyEffective": 1176,
+        "generatedChildren": 1344,
+        "childrenWithNoSuffix": 1218,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 1218,
+        "terminal_previous_y": 0,
+        "duplicate_option": 126,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 21
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-",
+        "Y+"
+      ],
+      "counts": {
+        "visits": 1365,
+        "emptyEffective": 1176,
+        "generatedChildren": 1344,
+        "childrenWithNoSuffix": 1197,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 1197,
+        "terminal_previous_y": 0,
+        "duplicate_option": 147,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 21
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X-",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 1257,
+        "emptyEffective": 1257,
+        "generatedChildren": 1235,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1235,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 22
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y-",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 1178,
+        "emptyEffective": 1178,
+        "generatedChildren": 1213,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1134,
+        "compile_failed": 0,
+        "returned": 22,
+        "expanded": 22
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Y+",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 1176,
+        "emptyEffective": 1176,
+        "generatedChildren": 1155,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 1155,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 21
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z-",
+        "X-"
+      ],
+      "counts": {
+        "visits": 305,
+        "emptyEffective": 282,
+        "generatedChildren": 428,
+        "childrenWithNoSuffix": 284,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 224,
+        "terminal_previous_y": 0,
+        "duplicate_option": 54,
+        "compile_failed": 0,
+        "returned": 20,
+        "expanded": 7
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z-",
+        "X+"
+      ],
+      "counts": {
+        "visits": 173,
+        "emptyEffective": 168,
+        "generatedChildren": 170,
+        "childrenWithNoSuffix": 167,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 167,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 3,
+        "expanded": 3
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X-",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 170,
+        "emptyEffective": 168,
+        "generatedChildren": 167,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 162,
+        "compile_failed": 0,
+        "returned": 5,
+        "expanded": 3
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X+",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 170,
+        "emptyEffective": 168,
+        "generatedChildren": 167,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 165,
+        "compile_failed": 0,
+        "returned": 2,
+        "expanded": 3
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Y-",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 168,
+        "emptyEffective": 168,
+        "generatedChildren": 165,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 162,
+        "compile_failed": 0,
+        "returned": 3,
+        "expanded": 3
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Y+",
+        "Z-"
+      ],
+      "counts": {
+        "visits": 168,
+        "emptyEffective": 168,
+        "generatedChildren": 165,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 165,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 3
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "X+"
+      ],
+      "counts": {
+        "visits": 25,
+        "emptyEffective": 25,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 25,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b7",
+      "chain": [
+        "Z-"
+      ],
+      "counts": {
+        "visits": 22,
+        "emptyEffective": 22,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 22,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z-"
+      ],
+      "counts": {
+        "visits": 3,
+        "emptyEffective": 3,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 3,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z-",
+        "X-",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Y-",
+        "Z-",
+        "X-",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Y+",
+        "Z-",
+        "X-",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X-"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Y-",
+        "X-"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Y+",
+        "X-"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z+",
+        "X-"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X-",
+        "Y-",
+        "X-"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X-",
+        "Y+",
+        "X-"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X-",
+        "Z+",
+        "X-"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X+",
+        "Y-",
+        "X-"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X+",
+        "Y+",
+        "X-"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X+",
+        "Z+",
+        "X-"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Y-",
+        "Z+",
+        "X-"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Y+",
+        "Z+",
+        "X-"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z-",
+        "Y-",
+        "X-"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z-",
+        "Y+",
+        "X-"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z+",
+        "Y-",
+        "X-"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z+",
+        "Y+",
+        "X-"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X-",
+        "Y-",
+        "Z+",
+        "X-"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X-",
+        "Y+",
+        "Z+",
+        "X-"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X-",
+        "Z-",
+        "Y-",
+        "X-"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X-",
+        "Z-",
+        "Y+",
+        "X-"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X-",
+        "Z+",
+        "Y-",
+        "X-"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X-",
+        "Z+",
+        "Y+",
+        "X-"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X+",
+        "Y-",
+        "Z+",
+        "X-"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X+",
+        "Y+",
+        "Z+",
+        "X-"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X+",
+        "Z-",
+        "Y-",
+        "X-"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X+",
+        "Z-",
+        "Y+",
+        "X-"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X+",
+        "Z+",
+        "Y-",
+        "X-"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X+",
+        "Z+",
+        "Y+",
+        "X-"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Y-",
+        "X+",
+        "Z+",
+        "X-"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Y+",
+        "X+",
+        "Z+",
+        "X-"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z-",
+        "X+",
+        "Y-",
+        "X-"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z-",
+        "X+",
+        "Y+",
+        "X-"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z-",
+        "Y-",
+        "Z+",
+        "X-"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z-",
+        "Y+",
+        "Z+",
+        "X-"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z+",
+        "X+",
+        "Y-",
+        "X-"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z+",
+        "X+",
+        "Y+",
+        "X-"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X-",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Y-",
+        "X-",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Y+",
+        "X-",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z+",
+        "X-",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X+",
+        "Y-",
+        "X-",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X+",
+        "Y+",
+        "X-",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z-",
+        "Y-",
+        "X-",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z-",
+        "Y+",
+        "X-",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z+",
+        "Y-",
+        "X-",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z+",
+        "Y+",
+        "X-",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z-",
+        "X+",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Y-",
+        "Z-",
+        "X+",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Y+",
+        "Z-",
+        "X+",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X+",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Y-",
+        "X+",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Y+",
+        "X+",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z+",
+        "X+",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X-",
+        "Y-",
+        "X+",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "X-",
+        "Y+",
+        "X+",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z-",
+        "Y-",
+        "X+",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z-",
+        "Y+",
+        "X+",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z+",
+        "Y-",
+        "X+",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    },
+    {
+      "block": "b6",
+      "chain": [
+        "Z+",
+        "Y+",
+        "X+",
+        "Z+"
+      ],
+      "counts": {
+        "visits": 0,
+        "emptyEffective": 0,
+        "generatedChildren": 0,
+        "childrenWithNoSuffix": 0,
+        "duplicate_node": 0,
+        "covered": 0,
+        "terminal_mask": 0,
+        "terminal_previous_y": 0,
+        "duplicate_option": 0,
+        "compile_failed": 0,
+        "returned": 0,
+        "expanded": 0
+      }
+    }
+  ],
+  "exactRepeatedStateExamples": [
+    {
+      "block": "b7",
+      "context": "237012a6b49cce074c3337c9f352bcc40ab17658d65a3ac40a9b68549db8917b",
+      "through": 64,
+      "chain": [
+        "Y-",
+        "X+",
+        "Z-",
+        "X-"
+      ],
+      "required": {
+        "X": [
+          56,
+          57
+        ],
+        "Z": [
+          55,
+          56,
+          57
+        ]
+      },
+      "first": {
+        "depth": 3,
+        "start": 47,
+        "gates": [
+          0,
+          0,
+          46
+        ],
+        "effective": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "repeated": {
+        "depth": 3,
+        "start": 47,
+        "gates": [
+          0,
+          1,
+          46
+        ],
+        "effective": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "block": "b7",
+      "context": "237012a6b49cce074c3337c9f352bcc40ab17658d65a3ac40a9b68549db8917b",
+      "through": 64,
+      "chain": [
+        "Y-",
+        "X+",
+        "Z-",
+        "Y-"
+      ],
+      "required": {
+        "X": [
+          56,
+          57
+        ],
+        "Z": [
+          55,
+          56,
+          57
+        ]
+      },
+      "first": {
+        "depth": 3,
+        "start": 48,
+        "gates": [
+          0,
+          0,
+          47
+        ],
+        "effective": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "repeated": {
+        "depth": 3,
+        "start": 48,
+        "gates": [
+          0,
+          1,
+          47
+        ],
+        "effective": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "block": "b7",
+      "context": "237012a6b49cce074c3337c9f352bcc40ab17658d65a3ac40a9b68549db8917b",
+      "through": 64,
+      "chain": [
+        "Y-",
+        "X+",
+        "Z-",
+        "Y+"
+      ],
+      "required": {
+        "X": [
+          56,
+          57
+        ],
+        "Z": [
+          55,
+          56,
+          57
+        ]
+      },
+      "first": {
+        "depth": 3,
+        "start": 47,
+        "gates": [
+          0,
+          0,
+          46
+        ],
+        "effective": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "repeated": {
+        "depth": 3,
+        "start": 47,
+        "gates": [
+          0,
+          1,
+          46
+        ],
+        "effective": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "block": "b7",
+      "context": "237012a6b49cce074c3337c9f352bcc40ab17658d65a3ac40a9b68549db8917b",
+      "through": 64,
+      "chain": [
+        "X-",
+        "Z-",
+        "X+",
+        "Y-"
+      ],
+      "required": {
+        "X": [
+          56,
+          57
+        ],
+        "Z": [
+          55,
+          56,
+          57
+        ]
+      },
+      "first": {
+        "depth": 3,
+        "start": 61,
+        "gates": [
+          0,
+          4,
+          60
+        ],
+        "effective": "1695075c984744f18f96c5e102d59aba916adaf01c3f8af4c6485f3c07268e6b"
+      },
+      "repeated": {
+        "depth": 3,
+        "start": 61,
+        "gates": [
+          0,
+          1,
+          60
+        ],
+        "effective": "1695075c984744f18f96c5e102d59aba916adaf01c3f8af4c6485f3c07268e6b"
+      }
+    },
+    {
+      "block": "b7",
+      "context": "237012a6b49cce074c3337c9f352bcc40ab17658d65a3ac40a9b68549db8917b",
+      "through": 64,
+      "chain": [
+        "X-",
+        "Z-",
+        "X+",
+        "Y+"
+      ],
+      "required": {
+        "X": [
+          56,
+          57
+        ],
+        "Z": [
+          55,
+          56,
+          57
+        ]
+      },
+      "first": {
+        "depth": 3,
+        "start": 60,
+        "gates": [
+          0,
+          4,
+          59
+        ],
+        "effective": "1695075c984744f18f96c5e102d59aba916adaf01c3f8af4c6485f3c07268e6b"
+      },
+      "repeated": {
+        "depth": 3,
+        "start": 60,
+        "gates": [
+          0,
+          1,
+          59
+        ],
+        "effective": "1695075c984744f18f96c5e102d59aba916adaf01c3f8af4c6485f3c07268e6b"
+      }
+    },
+    {
+      "block": "b7",
+      "context": "237012a6b49cce074c3337c9f352bcc40ab17658d65a3ac40a9b68549db8917b",
+      "through": 64,
+      "chain": [
+        "Y+",
+        "X+",
+        "Z-",
+        "X-"
+      ],
+      "required": {
+        "X": [
+          56,
+          57
+        ],
+        "Z": [
+          55,
+          56,
+          57
+        ]
+      },
+      "first": {
+        "depth": 3,
+        "start": 47,
+        "gates": [
+          0,
+          0,
+          46
+        ],
+        "effective": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "repeated": {
+        "depth": 3,
+        "start": 47,
+        "gates": [
+          0,
+          1,
+          46
+        ],
+        "effective": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "block": "b7",
+      "context": "237012a6b49cce074c3337c9f352bcc40ab17658d65a3ac40a9b68549db8917b",
+      "through": 64,
+      "chain": [
+        "Y+",
+        "X+",
+        "Z-",
+        "Y-"
+      ],
+      "required": {
+        "X": [
+          56,
+          57
+        ],
+        "Z": [
+          55,
+          56,
+          57
+        ]
+      },
+      "first": {
+        "depth": 3,
+        "start": 48,
+        "gates": [
+          0,
+          0,
+          47
+        ],
+        "effective": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "repeated": {
+        "depth": 3,
+        "start": 48,
+        "gates": [
+          0,
+          1,
+          47
+        ],
+        "effective": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "block": "b7",
+      "context": "237012a6b49cce074c3337c9f352bcc40ab17658d65a3ac40a9b68549db8917b",
+      "through": 64,
+      "chain": [
+        "Y+",
+        "X+",
+        "Z-",
+        "Y+"
+      ],
+      "required": {
+        "X": [
+          56,
+          57
+        ],
+        "Z": [
+          55,
+          56,
+          57
+        ]
+      },
+      "first": {
+        "depth": 3,
+        "start": 47,
+        "gates": [
+          0,
+          0,
+          46
+        ],
+        "effective": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "repeated": {
+        "depth": 3,
+        "start": 47,
+        "gates": [
+          0,
+          1,
+          46
+        ],
+        "effective": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "block": "b7",
+      "context": "237012a6b49cce074c3337c9f352bcc40ab17658d65a3ac40a9b68549db8917b",
+      "through": 64,
+      "chain": [
+        "Y-",
+        "Z-",
+        "X+",
+        "Z+"
+      ],
+      "required": {
+        "X": [
+          56,
+          57
+        ],
+        "Z": [
+          55,
+          56,
+          57
+        ]
+      },
+      "first": {
+        "depth": 3,
+        "start": 54,
+        "gates": [
+          0,
+          0,
+          54
+        ],
+        "effective": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "repeated": {
+        "depth": 3,
+        "start": 54,
+        "gates": [
+          0,
+          1,
+          54
+        ],
+        "effective": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    {
+      "block": "b7",
+      "context": "237012a6b49cce074c3337c9f352bcc40ab17658d65a3ac40a9b68549db8917b",
+      "through": 64,
+      "chain": [
+        "Y+",
+        "Z-",
+        "X+",
+        "Z+"
+      ],
+      "required": {
+        "X": [
+          56,
+          57
+        ],
+        "Z": [
+          55,
+          56,
+          57
+        ]
+      },
+      "first": {
+        "depth": 3,
+        "start": 54,
+        "gates": [
+          0,
+          0,
+          54
+        ],
+        "effective": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "repeated": {
+        "depth": 3,
+        "start": 54,
+        "gates": [
+          0,
+          1,
+          54
+        ],
+        "effective": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    }
+  ],
+  "completedRows": 1387,
+  "evaluations": 53
+}

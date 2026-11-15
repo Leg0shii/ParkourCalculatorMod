@@ -172,5 +172,93 @@ class BookkeepingProfileTests(unittest.TestCase):
         self.assertEqual(len(runtime.buckets), 3)
 
 
+class EnumerationProfileTests(unittest.TestCase):
+    def test_repeated_contexts_share_report_rows_without_losing_counts(self):
+        from parkour_solver.constraints.variants import ConstraintVariants
+        from tools.profiling.enumeration import EnumerationProfile,instrumented_option
+        profile=EnumerationProfile(); function=instrumented_option(ConstraintVariants.option,profile)
+        first=None
+        for _ in range(2):
+            source=self.source();cursor={}
+            while function(source,source.items[0],cursor) is not None:pass
+            snapshot=profile.snapshot()
+            if first is None:
+                first=(len(profile.rows),snapshot['totals']['visits'])
+        self.assertEqual(len(profile.rows),first[0])
+        self.assertEqual(snapshot['totals']['visits'],first[1]*2)
+        self.assertTrue(snapshot['exitsPartitionVisits'])
+
+    def test_enumeration_hooks_restore_after_exception_without_global_probe(self):
+        from contextlib import nullcontext
+        from parkour_solver.constraints.variants import ConstraintVariants
+        from parkour_solver.search import engine
+        from tools.profiling.enumeration import EnumerationProfile,instrument
+        original, evaluate = ConstraintVariants.option, engine.evaluate_program
+        with self.assertRaisesRegex(RuntimeError,'stop'):
+            with instrument(EnumerationProfile(),nullcontext()):
+                self.assertIsNot(ConstraintVariants.option,original)
+                raise RuntimeError('stop')
+        self.assertIs(ConstraintVariants.option,original)
+        self.assertIs(engine.evaluate_program,evaluate)
+        self.assertNotIn('_enumeration_probe',original.__globals__)
+
+    @staticmethod
+    def source(state=None):
+        from parkour_solver.constraints.variants import ConstraintVariants
+        from parkour_solver.reachability.intervals import reachable_envelopes
+        model=dict(ticks=4,position=[-1.,0.],velocity=[0.,0.],magnitude=[1.]*4,friction=[.9]*4,walls=[])
+        return ConstraintVariants(dict(passageCaps=dict(horizontal=2,vertical=2,total=3),
+            supportClearance=0.,contactEvents=[]),dict(position=[1.]*5),
+            dict(events=[dict(jump=0,runTicks=0)]),dict(solids=[[0.,0.,-.2,1.,3.,.2]]),
+            reachable_envelopes(model,[1.]*5),dict(through=4,solidIndices=[0]),state=state)
+
+    def test_option_observations_preserve_outputs_cursors_and_exit_partition(self):
+        from parkour_solver.constraints.variants import ConstraintVariants
+        from tools.profiling.enumeration import EnumerationProfile,instrumented_option
+        original=ConstraintVariants.option
+        def consume(source, function):
+            cursor={};values=[]
+            while True:
+                value=function(source,source.items[0],cursor)
+                if value is None:break
+                values.append(value)
+            return values,cursor
+        expected=consume(self.source(),original)
+        p=EnumerationProfile()
+        actual=consume(self.source(),instrumented_option(original,p))
+        self.assertEqual(actual,expected)
+        summary=p.snapshot()
+        self.assertTrue(summary['exitsPartitionVisits'])
+        self.assertGreater(summary['totals']['visits'],len(actual[0]))
+        self.assertEqual(summary['totals']['returned'],len(actual[0]))
+
+    def test_json_interruption_cursor_is_identical_with_observations(self):
+        import json
+        from parkour_solver.constraints.variants import ConstraintVariants
+        from tools.profiling.enumeration import EnumerationProfile,instrumented_option
+        def partial(function):
+            source=self.source();source.prepare_item(source.items[0]);cursor={};count=0;values=[]
+            def check():
+                nonlocal count
+                count+=1
+                if count>25:raise TimeoutError('fixed work')
+            source.check=check
+            with self.assertRaises(TimeoutError):
+                while True:
+                    value=function(source,source.items[0],cursor)
+                    if value is None:break
+                    values.append(value)
+            return values,json.loads(json.dumps(cursor)),json.loads(json.dumps(source.items[0]))
+        expected=partial(ConstraintVariants.option)
+        p=EnumerationProfile()
+        self.assertEqual(partial(instrumented_option(ConstraintVariants.option,p)),expected)
+        self.assertTrue(p.snapshot()['exitsPartitionVisits'])
+
+    def test_source_change_is_rejected_instead_of_silent_miscount(self):
+        from tools.profiling.enumeration import EnumerationProfile,instrumented_option
+        with self.assertRaisesRegex(RuntimeError,'source changed'):
+            instrumented_option(self.source,EnumerationProfile())
+
+
 if __name__ == '__main__':
     unittest.main()

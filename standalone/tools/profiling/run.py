@@ -61,7 +61,7 @@ def main():
     parser.add_argument('--input',type=Path,required=True)
     parser.add_argument('--output',type=Path,required=True)
     parser.add_argument('--seconds',type=float,default=300.)
-    parser.add_argument('--profile-mode',choices=('legacy','bookkeeping','none'),default='legacy')
+    parser.add_argument('--profile-mode',choices=('legacy','bookkeeping','enumeration','none'),default='legacy')
     parser.add_argument('--sample-every',type=int,default=1024)
     parser.add_argument('--sample-limit',type=int,default=256)
     parser.add_argument('--allocation-samples',type=int,default=0)
@@ -101,11 +101,16 @@ def main():
     save(args.output/'provenance.json',provenance)
     profile = RuntimeProfile()
     bookkeeping = None
-    if args.profile_mode == 'bookkeeping':
+    enumeration = None
+    if args.profile_mode in ('bookkeeping','enumeration'):
         from tools.profiling.bookkeeping import BookkeepingProfile, instrument as instrument_bookkeeping
         bookkeeping = BookkeepingProfile(profile, sample_every=args.sample_every,
             sample_limit=args.sample_limit, allocation_samples=args.allocation_samples)
         hooks = instrument_bookkeeping(bookkeeping)
+        if args.profile_mode == 'enumeration':
+            from tools.profiling.enumeration import EnumerationProfile, instrument as instrument_enumeration
+            enumeration = EnumerationProfile()
+            hooks = instrument_enumeration(enumeration, hooks)
     else:
         hooks = instrument(profile) if args.profile_mode == 'legacy' else nullcontext()
     cancelled = threading.Event()
@@ -190,6 +195,9 @@ def main():
         if bookkeeping is not None:
             save(args.output/'bookkeeping.json',bookkeeping.snapshot())
             save(args.output/'digest-examples.json',bookkeeping.examples)
+        if enumeration is not None:
+            save(args.output/'enumeration.json',enumeration.snapshot())
+            save(args.output/'option-cases.json',enumeration.cases)
 
 
 if __name__ == '__main__':

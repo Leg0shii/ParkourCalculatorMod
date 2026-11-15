@@ -14,6 +14,12 @@ implementation remain subsequent work. The final native gate passes 617 tests
 (the existing 610 plus seven profiler checks), with no failures/errors/skips.
 The recorded gate also needs the pinned `research` extra for its Clarabel checks.
 
+Enumeration follow-up: the [block/chain attribution and fixed-work option replay](../research/enumeration-attribution/README.md)
+identify B7 and already-seen internal states as the dominant work. The new
+observer does not change production generation, ordering or pruning. Its option
+replay is narrower than the full continuation/oracle controls still required
+before implementation.
+
 ## 1. Starting point and worktree coordination
 
 Production baseline: `a11b9b18` on `research/ipopt-cell-routes`. A later docs-only

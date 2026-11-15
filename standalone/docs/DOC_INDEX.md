@@ -132,6 +132,7 @@ control work; inclusion here is not authorization to implement a historical plan
 | [research/decision-windows/RESULTS.md](../research/decision-windows/RESULTS.md) | Frozen source-era evidence; use research guide for reproduction: Joint windows: what survives later comparison |
 | [research/dfs-interactions/CALLS.md](../research/dfs-interactions/CALLS.md) | Frozen source-era evidence; use research guide for reproduction: DFS cold/resume worker calls |
 | [research/dfs-interactions/README.md](../research/dfs-interactions/README.md) | Frozen source-era evidence; use research guide for reproduction: Goal-aware DFS and early interaction eligibility |
+| [research/enumeration-attribution/README.md](../research/enumeration-attribution/README.md) | Frozen source-era evidence; use research guide for reproduction: Why collision-avoidance enumeration visits millions of entries |
 | [research/event-route-discovery/README.md](../research/event-route-discovery/README.md) | Frozen source-era evidence; use research guide for reproduction: Event route discovery implementation evidence |
 | [research/event-route-discovery/matched-contact-regions-2026-11-03/INTERRUPTED.md](../research/event-route-discovery/matched-contact-regions-2026-11-03/INTERRUPTED.md) | Frozen source-era evidence; use research guide for reproduction: INTERRUPTED.md |
 | [research/failure-fixes/README.md](../research/failure-fixes/README.md) | Frozen source-era evidence; use research guide for reproduction: Generic scheduling, incumbent and initialization fixes |

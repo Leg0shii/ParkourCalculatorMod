@@ -1,0 +1,499 @@
+{
+  "casesSHA256": "fef943092499807c6a5b6ba083f39b76055da873f56c0e277deacfa7d03bbebc",
+  "rows": [
+    {
+      "metadata": {
+        "evaluation": 5,
+        "context": "c2266d6f6c969622fddee2c4cf3dc3249ff5ddce92106ba0cf819b3e961e4717",
+        "block": "b6",
+        "solidIndex": 5,
+        "box": [
+          730,
+          0,
+          -1095,
+          731,
+          20,
+          -1094
+        ],
+        "through": 57,
+        "required": {
+          "X": [
+            56,
+            57
+          ],
+          "Z": [
+            56,
+            57
+          ]
+        }
+      },
+      "runs": {
+        "unwrapped": [
+          {
+            "seconds": 0.23685016483068466,
+            "checks": 20001,
+            "emitted": 6,
+            "termination": "fixed_work",
+            "exactOutputAndCursorSHA256": "c287df97a64b486733ef03e7026d68d2a0048ce4b1a6370a9fb65377289928bb"
+          },
+          {
+            "seconds": 0.2378925420343876,
+            "checks": 20001,
+            "emitted": 6,
+            "termination": "fixed_work",
+            "exactOutputAndCursorSHA256": "c287df97a64b486733ef03e7026d68d2a0048ce4b1a6370a9fb65377289928bb"
+          },
+          {
+            "seconds": 0.23861796036362648,
+            "checks": 20001,
+            "emitted": 6,
+            "termination": "fixed_work",
+            "exactOutputAndCursorSHA256": "c287df97a64b486733ef03e7026d68d2a0048ce4b1a6370a9fb65377289928bb"
+          }
+        ],
+        "observed": [
+          {
+            "seconds": 0.24735821038484573,
+            "checks": 20001,
+            "emitted": 6,
+            "termination": "fixed_work",
+            "exactOutputAndCursorSHA256": "c287df97a64b486733ef03e7026d68d2a0048ce4b1a6370a9fb65377289928bb",
+            "counts": {
+              "visits": 19983,
+              "emptyEffective": 19979,
+              "generatedChildren": 20024,
+              "childrenWithNoSuffix": 11,
+              "duplicate_node": 18339,
+              "covered": 2,
+              "terminal_mask": 0,
+              "terminal_previous_y": 0,
+              "duplicate_option": 938,
+              "compile_failed": 0,
+              "returned": 6,
+              "expanded": 698
+            }
+          },
+          {
+            "seconds": 0.2494504600763321,
+            "checks": 20001,
+            "emitted": 6,
+            "termination": "fixed_work",
+            "exactOutputAndCursorSHA256": "c287df97a64b486733ef03e7026d68d2a0048ce4b1a6370a9fb65377289928bb",
+            "counts": {
+              "visits": 19983,
+              "emptyEffective": 19979,
+              "generatedChildren": 20024,
+              "childrenWithNoSuffix": 11,
+              "duplicate_node": 18339,
+              "covered": 2,
+              "terminal_mask": 0,
+              "terminal_previous_y": 0,
+              "duplicate_option": 938,
+              "compile_failed": 0,
+              "returned": 6,
+              "expanded": 698
+            }
+          },
+          {
+            "seconds": 0.24624745920300484,
+            "checks": 20001,
+            "emitted": 6,
+            "termination": "fixed_work",
+            "exactOutputAndCursorSHA256": "c287df97a64b486733ef03e7026d68d2a0048ce4b1a6370a9fb65377289928bb",
+            "counts": {
+              "visits": 19983,
+              "emptyEffective": 19979,
+              "generatedChildren": 20024,
+              "childrenWithNoSuffix": 11,
+              "duplicate_node": 18339,
+              "covered": 2,
+              "terminal_mask": 0,
+              "terminal_previous_y": 0,
+              "duplicate_option": 938,
+              "compile_failed": 0,
+              "returned": 6,
+              "expanded": 698
+            }
+          }
+        ]
+      },
+      "medianSeconds": {
+        "unwrapped": 0.2378925420343876,
+        "observed": 0.24735821038484573
+      },
+      "observationOverheadRatio": 1.0397896809606157
+    },
+    {
+      "metadata": {
+        "evaluation": 7,
+        "context": "ba9ac0a771d965da7715474a90ad9fddae78a11a323e460d4d18b1e205c4f1f4",
+        "block": "b7",
+        "solidIndex": 6,
+        "box": [
+          729,
+          0,
+          -1095,
+          730,
+          7,
+          -1093
+        ],
+        "through": 67,
+        "required": {
+          "X": [
+            59,
+            60
+          ],
+          "Z": [
+            58,
+            59,
+            60
+          ]
+        }
+      },
+      "runs": {
+        "unwrapped": [
+          {
+            "seconds": 0.24617716297507286,
+            "checks": 20001,
+            "emitted": 14,
+            "termination": "fixed_work",
+            "exactOutputAndCursorSHA256": "d19a1203039f5960914eac854c3911560086bd4fec2553fb027da36907b40b41"
+          },
+          {
+            "seconds": 0.24521837756037712,
+            "checks": 20001,
+            "emitted": 14,
+            "termination": "fixed_work",
+            "exactOutputAndCursorSHA256": "d19a1203039f5960914eac854c3911560086bd4fec2553fb027da36907b40b41"
+          },
+          {
+            "seconds": 0.24776087701320648,
+            "checks": 20001,
+            "emitted": 14,
+            "termination": "fixed_work",
+            "exactOutputAndCursorSHA256": "d19a1203039f5960914eac854c3911560086bd4fec2553fb027da36907b40b41"
+          }
+        ],
+        "observed": [
+          {
+            "seconds": 0.25725699961185455,
+            "checks": 20001,
+            "emitted": 14,
+            "termination": "fixed_work",
+            "exactOutputAndCursorSHA256": "d19a1203039f5960914eac854c3911560086bd4fec2553fb027da36907b40b41",
+            "counts": {
+              "visits": 19981,
+              "emptyEffective": 19352,
+              "generatedChildren": 19980,
+              "childrenWithNoSuffix": 5342,
+              "duplicate_node": 18121,
+              "covered": 45,
+              "terminal_mask": 353,
+              "terminal_previous_y": 0,
+              "duplicate_option": 783,
+              "compile_failed": 0,
+              "returned": 14,
+              "expanded": 665
+            }
+          },
+          {
+            "seconds": 0.3144253343343735,
+            "checks": 20001,
+            "emitted": 14,
+            "termination": "fixed_work",
+            "exactOutputAndCursorSHA256": "d19a1203039f5960914eac854c3911560086bd4fec2553fb027da36907b40b41",
+            "counts": {
+              "visits": 19981,
+              "emptyEffective": 19352,
+              "generatedChildren": 19980,
+              "childrenWithNoSuffix": 5342,
+              "duplicate_node": 18121,
+              "covered": 45,
+              "terminal_mask": 353,
+              "terminal_previous_y": 0,
+              "duplicate_option": 783,
+              "compile_failed": 0,
+              "returned": 14,
+              "expanded": 665
+            }
+          },
+          {
+            "seconds": 0.2583608701825142,
+            "checks": 20001,
+            "emitted": 14,
+            "termination": "fixed_work",
+            "exactOutputAndCursorSHA256": "d19a1203039f5960914eac854c3911560086bd4fec2553fb027da36907b40b41",
+            "counts": {
+              "visits": 19981,
+              "emptyEffective": 19352,
+              "generatedChildren": 19980,
+              "childrenWithNoSuffix": 5342,
+              "duplicate_node": 18121,
+              "covered": 45,
+              "terminal_mask": 353,
+              "terminal_previous_y": 0,
+              "duplicate_option": 783,
+              "compile_failed": 0,
+              "returned": 14,
+              "expanded": 665
+            }
+          }
+        ]
+      },
+      "medianSeconds": {
+        "unwrapped": 0.24617716297507286,
+        "observed": 0.2583608701825142
+      },
+      "observationOverheadRatio": 1.0494916224567712
+    },
+    {
+      "metadata": {
+        "evaluation": 10,
+        "context": "4173d6ecd570ee8d6cb1704dc26137cfc6c2628b8ff0c5b274657bcfba540661",
+        "block": "b6",
+        "solidIndex": 5,
+        "box": [
+          730,
+          0,
+          -1095,
+          731,
+          20,
+          -1094
+        ],
+        "through": 58,
+        "required": {
+          "X": [
+            56,
+            57,
+            58
+          ],
+          "Z": [
+            56,
+            57,
+            58
+          ]
+        }
+      },
+      "runs": {
+        "unwrapped": [
+          {
+            "seconds": 0.2436433769762516,
+            "checks": 20001,
+            "emitted": 12,
+            "termination": "fixed_work",
+            "exactOutputAndCursorSHA256": "88c8fda784b13670ad2aef039a9a10c6faf562884d78c3acbc7a2ff95288550e"
+          },
+          {
+            "seconds": 0.2467764988541603,
+            "checks": 20001,
+            "emitted": 12,
+            "termination": "fixed_work",
+            "exactOutputAndCursorSHA256": "88c8fda784b13670ad2aef039a9a10c6faf562884d78c3acbc7a2ff95288550e"
+          },
+          {
+            "seconds": 0.24112199991941452,
+            "checks": 20001,
+            "emitted": 12,
+            "termination": "fixed_work",
+            "exactOutputAndCursorSHA256": "88c8fda784b13670ad2aef039a9a10c6faf562884d78c3acbc7a2ff95288550e"
+          }
+        ],
+        "observed": [
+          {
+            "seconds": 0.2513115406036377,
+            "checks": 20001,
+            "emitted": 12,
+            "termination": "fixed_work",
+            "exactOutputAndCursorSHA256": "88c8fda784b13670ad2aef039a9a10c6faf562884d78c3acbc7a2ff95288550e",
+            "counts": {
+              "visits": 19983,
+              "emptyEffective": 19633,
+              "generatedChildren": 20062,
+              "childrenWithNoSuffix": 16,
+              "duplicate_node": 18370,
+              "covered": 2,
+              "terminal_mask": 0,
+              "terminal_previous_y": 0,
+              "duplicate_option": 899,
+              "compile_failed": 0,
+              "returned": 12,
+              "expanded": 700
+            }
+          },
+          {
+            "seconds": 0.2563880831003189,
+            "checks": 20001,
+            "emitted": 12,
+            "termination": "fixed_work",
+            "exactOutputAndCursorSHA256": "88c8fda784b13670ad2aef039a9a10c6faf562884d78c3acbc7a2ff95288550e",
+            "counts": {
+              "visits": 19983,
+              "emptyEffective": 19633,
+              "generatedChildren": 20062,
+              "childrenWithNoSuffix": 16,
+              "duplicate_node": 18370,
+              "covered": 2,
+              "terminal_mask": 0,
+              "terminal_previous_y": 0,
+              "duplicate_option": 899,
+              "compile_failed": 0,
+              "returned": 12,
+              "expanded": 700
+            }
+          },
+          {
+            "seconds": 0.2536577917635441,
+            "checks": 20001,
+            "emitted": 12,
+            "termination": "fixed_work",
+            "exactOutputAndCursorSHA256": "88c8fda784b13670ad2aef039a9a10c6faf562884d78c3acbc7a2ff95288550e",
+            "counts": {
+              "visits": 19983,
+              "emptyEffective": 19633,
+              "generatedChildren": 20062,
+              "childrenWithNoSuffix": 16,
+              "duplicate_node": 18370,
+              "covered": 2,
+              "terminal_mask": 0,
+              "terminal_previous_y": 0,
+              "duplicate_option": 899,
+              "compile_failed": 0,
+              "returned": 12,
+              "expanded": 700
+            }
+          }
+        ]
+      },
+      "medianSeconds": {
+        "unwrapped": 0.2436433769762516,
+        "observed": 0.2536577917635441
+      },
+      "observationOverheadRatio": 1.0411027581031624
+    },
+    {
+      "metadata": {
+        "evaluation": 19,
+        "context": "1e5c61ecd3b3461a370a9a9c85c6698d3669a96c816f9d738771ea4da7951c36",
+        "block": "b7",
+        "solidIndex": 6,
+        "box": [
+          729,
+          0,
+          -1095,
+          730,
+          7,
+          -1093
+        ],
+        "through": 64,
+        "required": {
+          "X": [
+            56,
+            57
+          ],
+          "Z": [
+            55,
+            56,
+            57
+          ]
+        }
+      },
+      "runs": {
+        "unwrapped": [
+          {
+            "seconds": 0.21531237661838531,
+            "checks": 20001,
+            "emitted": 15,
+            "termination": "fixed_work",
+            "exactOutputAndCursorSHA256": "608c8d276c4f74e5a15654a9a57508a6073b9fe479bef2ef8f30b4876a48c08d"
+          },
+          {
+            "seconds": 0.21580083295702934,
+            "checks": 20001,
+            "emitted": 15,
+            "termination": "fixed_work",
+            "exactOutputAndCursorSHA256": "608c8d276c4f74e5a15654a9a57508a6073b9fe479bef2ef8f30b4876a48c08d"
+          },
+          {
+            "seconds": 0.2172868736088276,
+            "checks": 20001,
+            "emitted": 15,
+            "termination": "fixed_work",
+            "exactOutputAndCursorSHA256": "608c8d276c4f74e5a15654a9a57508a6073b9fe479bef2ef8f30b4876a48c08d"
+          }
+        ],
+        "observed": [
+          {
+            "seconds": 0.22435362637043,
+            "checks": 20001,
+            "emitted": 15,
+            "termination": "fixed_work",
+            "exactOutputAndCursorSHA256": "608c8d276c4f74e5a15654a9a57508a6073b9fe479bef2ef8f30b4876a48c08d",
+            "counts": {
+              "visits": 19979,
+              "emptyEffective": 19317,
+              "generatedChildren": 20032,
+              "childrenWithNoSuffix": 6633,
+              "duplicate_node": 17999,
+              "covered": 59,
+              "terminal_mask": 445,
+              "terminal_previous_y": 0,
+              "duplicate_option": 751,
+              "compile_failed": 0,
+              "returned": 15,
+              "expanded": 710
+            }
+          },
+          {
+            "seconds": 0.22799350321292877,
+            "checks": 20001,
+            "emitted": 15,
+            "termination": "fixed_work",
+            "exactOutputAndCursorSHA256": "608c8d276c4f74e5a15654a9a57508a6073b9fe479bef2ef8f30b4876a48c08d",
+            "counts": {
+              "visits": 19979,
+              "emptyEffective": 19317,
+              "generatedChildren": 20032,
+              "childrenWithNoSuffix": 6633,
+              "duplicate_node": 17999,
+              "covered": 59,
+              "terminal_mask": 445,
+              "terminal_previous_y": 0,
+              "duplicate_option": 751,
+              "compile_failed": 0,
+              "returned": 15,
+              "expanded": 710
+            }
+          },
+          {
+            "seconds": 0.22529366984963417,
+            "checks": 20001,
+            "emitted": 15,
+            "termination": "fixed_work",
+            "exactOutputAndCursorSHA256": "608c8d276c4f74e5a15654a9a57508a6073b9fe479bef2ef8f30b4876a48c08d",
+            "counts": {
+              "visits": 19979,
+              "emptyEffective": 19317,
+              "generatedChildren": 20032,
+              "childrenWithNoSuffix": 6633,
+              "duplicate_node": 17999,
+              "covered": 59,
+              "terminal_mask": 445,
+              "terminal_previous_y": 0,
+              "duplicate_option": 751,
+              "compile_failed": 0,
+              "returned": 15,
+              "expanded": 710
+            }
+          }
+        ]
+      },
+      "medianSeconds": {
+        "unwrapped": 0.21580083295702934,
+        "observed": 0.22529366984963417
+      },
+      "observationOverheadRatio": 1.0439888797579158
+    }
+  ],
+  "allOutputAndCursorHashesEqual": true,
+  "accounting": "Same prepared inputs/check budget, fresh cursor each repetition; source preparation/native startup excluded. Observation overhead, not production speedup. Cursor/output equality includes order and exact rows."
+}

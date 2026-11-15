@@ -23,6 +23,7 @@ revision and use its recorded patch/configuration. Current controls belong in
 | --- | --- |
 | `python -m tools.profiling.run` | Cold current task run, scoped bookkeeping timings, source/config hashes and retained-witness replays. |
 | [Bookkeeping setup and measurements](bookkeeping-measurement/README.md) | Isolated baseline, sampled digest/preparation/copy measurements, hook calibration and durable resume; no production optimization. |
+| [Enumeration attribution](enumeration-attribution/README.md) | Exact block/side-chain/exit counters and fixed-work option replay identify duplicate internal states around B7; production search unchanged. |
 | `python tools/native_gate.py` | Explicit recorded native acceptance scope, plus packaging/profiler regressions. |
 | `python -m tools.audit_candidates` | Offline saved cold-candidate/worker ledger, optional independent Java replay. |
 | `python -m tools.witness_bound_audit` | Current optimistic bound checks over every prefix of supplied archived valid finishes. |
