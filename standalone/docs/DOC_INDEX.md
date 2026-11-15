@@ -13,6 +13,8 @@ control work; inclusion here is not authorization to implement a historical plan
 | [docs/ANCHOR_SEARCH_EXECUTION_REFERENCE.md](ANCHOR_SEARCH_EXECUTION_REFERENCE.md) | Current navigation / implementation or evidence record: Anchor search: combinations, pruning and IPOPT dispatch |
 | [docs/ANCHOR_SEARCH_INTEGRATION.md](ANCHOR_SEARCH_INTEGRATION.md) | Current navigation / implementation or evidence record: Anchor search and solver integration |
 | [docs/ARCHITECTURE.md](ARCHITECTURE.md) | Current navigation / implementation or evidence record: Architecture and execution flow |
+| [docs/BOOKKEEPING_PERFORMANCE_AGENT_HANDOFF.md](BOOKKEEPING_PERFORMANCE_AGENT_HANDOFF.md) | Current navigation / implementation or evidence record: Agent handoff: measured bookkeeping costs |
+| [docs/BRANCH_SCHEDULING_INVESTIGATION.md](BRANCH_SCHEDULING_INVESTIGATION.md) | Current navigation / implementation or evidence record: Branch scheduling: recognize stronger continuations before finishing a subtree |
 | [docs/CHECKPOINT_STORAGE.md](CHECKPOINT_STORAGE.md) | Current navigation / implementation or evidence record: Search checkpoint storage |
 | [docs/CODE_MAP.md](CODE_MAP.md) | Current navigation / implementation or evidence record: Production code map |
 | [docs/CORRIDOR_AGENT_HANDOFF.md](CORRIDOR_AGENT_HANDOFF.md) | Current navigation / implementation or evidence record: Handoff: changes since the standalone AGENTS consolidation |
@@ -119,6 +121,7 @@ control work; inclusion here is not authorization to implement a historical plan
 | [research/automatic-corridors/routing-review-2026-11-03/README.md](../research/automatic-corridors/routing-review-2026-11-03/README.md) | Frozen source-era evidence; use research guide for reproduction: Current routing and the cold-search bottleneck |
 | [research/block-route-search/README.md](../research/block-route-search/README.md) | Frozen source-era evidence; use research guide for reproduction: Fixed endpoints, variable intermediate supports |
 | [research/blockage-order/README.md](../research/blockage-order/README.md) | Frozen source-era evidence; use research guide for reproduction: Directed blockage timing checked against Minecraft |
+| [research/bookkeeping-baseline/README.md](../research/bookkeeping-baseline/README.md) | Frozen source-era evidence; use research guide for reproduction: Bookkeeping baseline evidence |
 | [research/cell-routes/IMPLEMENTATION_NOTES.md](../research/cell-routes/IMPLEMENTATION_NOTES.md) | Frozen source-era evidence; use research guide for reproduction: Cell-route experiment |
 | [research/cell-routes/README.md](../research/cell-routes/README.md) | Frozen source-era evidence; use research guide for reproduction: Cell-route experiment results |
 | [research/checkpoint-guidance/README.md](../research/checkpoint-guidance/README.md) | Frozen source-era evidence; use research guide for reproduction: Geometric checkpoint guidance |

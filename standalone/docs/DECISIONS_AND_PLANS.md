@@ -1,5 +1,7 @@
 # Decisions and plan authority
 
+2026-11-15 parallel work: [bookkeeping performance handoff](BOOKKEEPING_PERFORMANCE_AGENT_HANDOFF.md) assigns behavior-preserving hashing/preparation/snapshot optimization to a separate branch/worktree. This session investigates [branch scheduling](BRANCH_SCHEDULING_INVESTIGATION.md): earlier service for promising protected alternatives, with switching distinct from proof-based exclusion. That scheduler is proposed, not implemented; current DFS/comparison semantics remain the runtime baseline.
+
 2026-11-15 initial-domain decision: remove the explicit `[0,8]` whitelist from the maintained Real11 case; let existing producers/screens, hard-arrival comparisons and finish bounds select work. [Unrestricted evidence](../research/initial-domain-selection/README.md) confirms first0/8 numerical preparation and recoverable9–12 deferral. [Configuration/CI audit](INITIAL_DOMAIN_AND_CONFIG_AUDIT.md) records remaining supplied inputs and policies. Archived fixtures and generic explicit-domain controls remain unchanged; no new route/pruning policy is introduced.
 
 The approved standalone structure refactor is implemented: [layout](LAYOUT.md), [implementation ledger](STANDALONE_REFACTOR_IMPLEMENTATION.md). This changes file ownership/entrypoints, preserves all physical and decision policy versions, and leaves revisit/other deferred work deferred. The inventory/review is now a source-era proposal record, not a new pending task.
