@@ -210,6 +210,15 @@ public final class WitnessProblem {
             c.hi = value + margins[r.nextInt(margins.length)];
             c.loInclusive = true;
             c.hiInclusive = true;
+        } else if (kind.equals("DF") && tick % 3 == 0) {
+            c = new SaveFile.Constraint();
+            c.range = true;
+            c.field = field;
+            c.op = "IN";
+            c.lo = value - margin;
+            c.hi = value + margin;
+            c.loInclusive = true;
+            c.hiInclusive = true;
         } else if (kind.equals("FEQ")) {
             c = scalar(field, "EQ", value, refTick, versusOtherAxis);
         } else if (kind.equals("DFEQ")) {
