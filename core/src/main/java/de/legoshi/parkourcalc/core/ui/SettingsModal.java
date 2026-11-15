@@ -65,6 +65,7 @@ public final class SettingsModal {
     private static final float BLOCK_OVERRIDE_WIDTH_SLIDER_W = 180f;
     private static final String TT_KEEP_INPUT_TABLE = "Keeps the input table window drawn as a display-only overlay even when the main UI is closed. It cannot be edited while closed.";
     private static final String TT_KEEP_TICK_INFO = "Keeps the Tick Info window drawn even when the main UI is closed.";
+    private static final String TT_KEEP_SERVER_EVENTS = "Keeps the Server Events window drawn even when the main UI is closed, so the events of each run show live.";
     private static final String TT_UNDO_REDO_WITHOUT_UI = "Ctrl+Z / Ctrl+Y (or Ctrl+Shift+Z) undo and redo TAS edits even while the main UI is closed. Disabled while a Minecraft screen such as chat or the inventory is open.";
     private static final String TT_HUD_MESSAGE_COUNT = "How many messages the notification stack shows at once. Older messages drop off the bottom.";
     private static final String TT_HUD_MESSAGE_SCALE = "Text size of the notification stack, as a multiplier of the UI font size. The window grows with the text.";
@@ -276,6 +277,9 @@ public final class SettingsModal {
         if (beginLayoutTable("##settings_panels")) {
             checkboxRow("Input table", "##keep_input_table", settings.keepInputTableOpen, TT_KEEP_INPUT_TABLE, v -> settings.keepInputTableOpen = v);
             checkboxRow("Tick Info", "##keep_tick_info", settings.keepTickInfoOpen, TT_KEEP_TICK_INFO, v -> settings.keepTickInfoOpen = v);
+            if (settings.pairedSimulation) {
+                checkboxRow("Server Events", "##keep_server_events", settings.keepServerEventsOpen, TT_KEEP_SERVER_EVENTS, v -> settings.keepServerEventsOpen = v);
+            }
             checkboxRow("Undo/redo hotkeys", "##undo_redo_without_ui", settings.undoRedoWithoutUi, TT_UNDO_REDO_WITHOUT_UI, v -> settings.undoRedoWithoutUi = v);
             ThemeManager.endStandardFormTable();
         }
