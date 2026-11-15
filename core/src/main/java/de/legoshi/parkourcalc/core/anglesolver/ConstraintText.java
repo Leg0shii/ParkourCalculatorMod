@@ -2,6 +2,7 @@ package de.legoshi.parkourcalc.core.anglesolver;
 
 import de.legoshi.parkourcalc.core.ui.Settings;
 
+import java.math.BigDecimal;
 import java.util.Locale;
 
 /** Number / chip formatting shared by the model (result lines) and the renderers (chips). */
@@ -26,6 +27,12 @@ public final class ConstraintText {
     /** Leading-space sign flag so positive yaws are the same width as negatives, keeping the yaw column digit-aligned. */
     public static String fixedYaw(double v) {
         return String.format(Locale.ROOT, "% ." + precision() + "f", v);
+    }
+
+    public static String exact(double v) {
+        if (Double.isNaN(v) || Double.isInfinite(v)) return Double.toString(v);
+        if (v == 0.0) return "0";
+        return new BigDecimal(Double.toString(v)).stripTrailingZeros().toPlainString();
     }
 
     public static String num(double v) {
