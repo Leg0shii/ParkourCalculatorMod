@@ -30,7 +30,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class NoTurnColdBench {
 
-    private final long t0 = System.nanoTime();
+    private long t0 = System.nanoTime();
     private final StringBuilder report = new StringBuilder();
     private final List<double[]> certifySpans = new ArrayList<>();
     private long certifyStart = -1L;
@@ -345,6 +345,17 @@ public class NoTurnColdBench {
                     + "s allowJa=" + cfg.allowJa);
             if (Integer.getInteger("pkc.bench.extraCertify", -1) >= 0) cfg.extraCertify = Integer.getInteger("pkc.bench.extraCertify");
             if (Long.getLong("pkc.bench.extraSec", -1L) >= 0) cfg.extraCertifyNanos = Long.getLong("pkc.bench.extraSec") * 1_000_000_000L;
+            long warmupSec = Long.getLong("pkc.bench.warmup", 0L);
+            if (warmupSec > 0L) {
+                long warmStart = System.nanoTime();
+                int warmThreads = Integer.getInteger("pkc.bench.warmupThreads",
+                        de.legoshi.parkourcalc.core.StratfinderWarmup.threads());
+                int warmFound = de.legoshi.parkourcalc.core.StratfinderWarmup.run(model, cfg, warmupSec * 1_000_000_000L,
+                        warmThreads, new AtomicBoolean());
+                line(String.format(Locale.ROOT, "warm-up: wall=%.1fs threads=%d found=%d",
+                        (System.nanoTime() - warmStart) / 1e9, warmThreads, warmFound));
+                t0 = System.nanoTime();
+            }
             StructurePoolDriver drv = new StructurePoolDriver(model, cfg, cancel, new StructurePoolDriver.Progress() {
                 @Override
                 public void update(String s, double f) {

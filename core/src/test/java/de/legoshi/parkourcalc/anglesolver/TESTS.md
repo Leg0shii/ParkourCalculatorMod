@@ -278,6 +278,9 @@ anglesolver/
   NoTurnSharedExploreTest.java  (SlowSolverTests) StructurePoolDriver with Config.sharedExplore (#704) on j315,
                            family lane, full library, 10 s after the first Strat on two threads: the list
                            holds Strats with at least three different run-ups, all byte-exact
+  ../core/NoTurnWarmupTest.java  StratfinderWarmup (in the package of the class, slow): the bundled jump is a
+                           search problem on every shipped game version, the warm-up search lands Strats with
+                           the 1.8.9 and the 26.3 model, a cancel ends it
   SenseFinderTest.java     Sense Finder on hpk_human/d10/j703 built from the plain Angle Solver setup (fast):
                            the turn, the carried jump window, every row over 0 to 200% re-forwards to its
                            offset, the three sort orders, later-tick margins never below the carried edge

@@ -114,6 +114,9 @@ anglesolver/
                            familyCutPool=<count> sets the stored reject vectors per worker (0 turns the pool off),
                            familyExactFirst=false runs every band at the keep limit only,
                            familySubtreeCuts=<count> sets how many stored vectors a subtree test tries (0 turns it off),
+                           warmup=<s> runs the game's warm-up search (StratfinderWarmup, the bundled jump, #699)
+                           that long before the measured search and restarts the clock (one "warm-up" line),
+                           warmupThreads=<count> sets its threads (default: half the processors, as in the game),
                            -Dpkc.pool.stageTimes=true prints one STAGE line per finished stage; keys/engage/repeat/cascade for
                            driver=keys, dfMarks to add dF=0 marks, contCap/contLead/contSec/parCont/
                            deepPairRepair for driver=benders; pair with -Dpkc.graphTrace=true (per-node
