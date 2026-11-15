@@ -75,6 +75,7 @@ public final class StructurePoolDriver {
         public long familyDelayNanos = 0L;
         public long familyOfferNanos = 0L;
         public boolean streamCertify = true;
+        public boolean sharedExplore = false;
         public boolean playable = false;
         public int threads = 0;
 

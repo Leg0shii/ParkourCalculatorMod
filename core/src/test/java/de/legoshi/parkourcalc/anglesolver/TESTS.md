@@ -275,6 +275,9 @@ anglesolver/
   NoTurnFamilyStageTest.java  (SlowSolverTests) StructurePoolDriver with the family lane alone, cold, the
                            jump's own rows and their copies left out of the library: j346 and j132 land
                            byte-exact and the Strat is a product of library families
+  NoTurnSharedExploreTest.java  (SlowSolverTests) StructurePoolDriver with Config.sharedExplore (#704) on j315,
+                           family lane, full library, 10 s after the first Strat on two threads: the list
+                           holds Strats with at least three different run-ups, all byte-exact
   ../core/NoTurnWarmupTest.java  StratfinderWarmup (in the package of the class, slow): the bundled jump is a
                            search problem on every shipped game version, the warm-up search lands Strats with
                            the 1.8.9 and the 26.3 model, a cancel ends it
