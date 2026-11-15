@@ -30,15 +30,22 @@ final class YawOrderDp {
             off[t] = ties == null ? 0.0 : ties.offsetOf(t);
             pin[t] = ties == null || ties.varOf(t) >= 0 ? Double.NaN : ties.pinOf(t);
         }
-        int[] linkOf = new int[units];
-        Arrays.fill(linkOf, -1);
+        boolean[] linked = new boolean[units];
+        double[] turnLo = new double[units];
+        double[] turnHi = new double[units];
+        Arrays.fill(turnLo, NEG);
+        Arrays.fill(turnHi, Double.POSITIVE_INFINITY);
         for (int l = 0; l < order.links().size(); l++) {
             YawOrder.Link link = order.links().get(l);
             int a = Math.min(link.hiTick, link.loTick);
             int b = Math.max(link.hiTick, link.loTick);
             if (b >= n || unitOf[a] == unitOf[b]) continue;
-            if (unitOf[b] != unitOf[a] + 1 || linkOf[unitOf[b]] >= 0) return null;
-            linkOf[unitOf[b]] = l;
+            int u = unitOf[b];
+            if (u != unitOf[a] + 1) return null;
+            double shift = off[a] - off[b];
+            linked[u] = true;
+            turnLo[u] = Math.max(turnLo[u], link.hiTick == b ? link.minTurnDeg + shift : -180.0 + shift);
+            turnHi[u] = Math.min(turnHi[u], link.hiTick == b ? 180.0 + shift : -link.minTurnDeg + shift);
         }
 
         double[] prev = null;
@@ -72,8 +79,7 @@ final class YawOrderDp {
             }
             if (u > 0) {
                 int[] ptr = new int[N];
-                int l = linkOf[u];
-                if (l < 0) {
+                if (!linked[u]) {
                     int bestJ = 0;
                     for (int j = 1; j < N; j++) if (prev[j] > prev[bestJ]) bestJ = j;
                     for (int j = 0; j < N; j++) {
@@ -81,22 +87,13 @@ final class YawOrderDp {
                         ptr[j] = bestJ;
                     }
                 } else {
-                    YawOrder.Link link = order.links().get(l);
-                    int a = Math.min(link.hiTick, link.loTick);
-                    int b = Math.max(link.hiTick, link.loTick);
-                    double shift = off[a] - off[b];
-                    double lo;
-                    double hi;
-                    if (link.hiTick == b) {
-                        lo = link.minTurnDeg + shift;
-                        hi = 180.0 + shift;
-                    } else {
-                        lo = -180.0 + shift;
-                        hi = -link.minTurnDeg + shift;
+                    int wLo = (int) Math.ceil(turnLo[u] / H - 1.0e-9);
+                    int wHi = (int) Math.floor(turnHi[u] / H + 1.0e-9);
+                    if (wHi < wLo) {
+                        if (turnHi[u] < turnLo[u]) return null;
+                        wLo = (int) Math.round(0.5 * (turnLo[u] + turnHi[u]) / H);
+                        wHi = wLo;
                     }
-                    int wLo = (int) Math.ceil(lo / H - 1.0e-9);
-                    int wHi = (int) Math.floor(hi / H + 1.0e-9);
-                    if (wHi < wLo) return null;
                     slidingMax(prev, cur, ptr, wLo, wHi);
                 }
                 back[u] = ptr;

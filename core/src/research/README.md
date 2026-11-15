@@ -110,6 +110,9 @@ anglesolver/
                            familyOnly=true turns the change levels off,
                            familyDelayMs=<ms> sets how long the change levels keep every thread,
                            familyReach=<b> and familyInertiaShare=<fraction> set the inertia stages (reach 0 turns them off),
+                           familyCutPool=<count> sets the stored reject vectors per worker (0 turns the pool off),
+                           familyExactFirst=false runs every band at the keep limit only,
+                           familySubtreeCuts=<count> sets how many stored vectors a subtree test tries (0 turns it off),
                            -Dpkc.pool.stageTimes=true prints one STAGE line per finished stage; keys/engage/repeat/cascade for
                            driver=keys, dfMarks to add dF=0 marks, contCap/contLead/contSec/parCont/
                            deepPairRepair for driver=benders; pair with -Dpkc.graphTrace=true (per-node
@@ -183,6 +186,20 @@ anglesolver/
                            -Dpkc.bench.reference), identity (the same runs in -Dpkc.bench.other must
                            be identical). A config is <variant>|<fast or seconds>, for example
                            "base|10s"
+  bench/CannotLandProbe.java  the certified search on a jump set without a landing, one line per jump and
+                           category (declined, feasible, certified infeasible, unresolved, nodes, kernel
+                           solves, ms, closest miss); -Dpkc.cl.{sets,jumps,categories,ms,nodes},
+                           -Dpkc.cl.fold, -Dpkc.cl.exclude, -Dpkc.cl.skipseeds (the tie fold proof
+                           search), -Dpkc.cl.resolve, -Dpkc.cl.dump (constraints), -Dpkc.cl.export=<dir>
+                           (writes RelaxationExport JSON instead of solving), -Dpkc.cl.replay="<input
+                           angles> dpx dpz" (replays one point through the linear and exact model)
+  bench/StratMutExport.java  stratfinder style key schedules of a capture folder (the recorded keys plus
+                           one tick key shifts, args: folder, out dir, ms, shifts per jump), each run
+                           through the certified search and written as RelaxationExport JSON;
+                           -Dpkc.cl.fold, -Dpkc.cl.exclude, -Dpkc.cl.skipseeds, -Dpkc.cl.noexport
+  core/anglesolver/solver/RelaxationExport.java
+                           JSON of a spec's linear relaxation (walls, per tick radii, velocity rows,
+                           tie groups, start box) for offline relaxations in Python
   HpkStartBenchmark.java   cold-solve benchmark over the hpk_human corpus against reference
                            objectives; -Dpkc.bench.{only,skip,graph,effort,optsec,timeoutms,out},
                            -Dpkc.bench.gate fails the run when a jump misses its reference by more

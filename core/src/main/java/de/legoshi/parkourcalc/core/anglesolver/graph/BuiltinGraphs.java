@@ -5,6 +5,7 @@ public final class BuiltinGraphs {
     public static final int IMPROVE_TICK_CAP = 256;
 
     public static final int FAST_SEED_CAP_MS = 500;
+    public static final int JOINT_FIRST_CAP_MS = 1000;
 
     public static final String FAST_PRESET = "Fast";
     public static final String MULTI_START_PRESET = "Fast (multi-start)";
@@ -24,6 +25,8 @@ public final class BuiltinGraphs {
     public static final int SWEEP_ILS_FROM_SEC = 20;
     public static final int BOTH_STARTS_BELOW_SEC = 2;
     public static final int COLD_START_CAP_MS = 500;
+
+    public static final int TREE_BATCH = 8;
 
     public static final int POLISH_FACINGS = 64;
     public static final int POLISH_SEARCHES = 21;
@@ -74,39 +77,43 @@ public final class BuiltinGraphs {
     }
 
     public static SolverGraph fast() {
-        return build(FAST_PRESET, 10, 3, 0, true, false, FAST_SEED_CAP_MS, 0);
+        return build(FAST_PRESET, 10, 3, 0, true, false, FAST_SEED_CAP_MS, 0, true);
     }
 
     public static SolverGraph fast(int budgetMs) {
         int seedCapMs = budgetMs > 0 && budgetMs < 1000 ? budgetMs : FAST_SEED_CAP_MS;
-        return build(FAST_PRESET, 10, 3, 0, true, false, seedCapMs, 0);
+        return build(FAST_PRESET, 10, 3, 0, true, false, seedCapMs, 0, true);
+    }
+
+    public static SolverGraph fastAtStart() {
+        return build(FAST_PRESET, 10, 3, 0, true, false, FAST_SEED_CAP_MS, 0, false);
     }
 
     public static SolverGraph fastMultiStart() {
-        return build(MULTI_START_PRESET, 10, 3, 0, true, false, FAST_SEED_CAP_MS, SWEEP_SEEDS);
+        return build(MULTI_START_PRESET, 10, 3, 0, true, false, FAST_SEED_CAP_MS, SWEEP_SEEDS, true);
     }
 
     public static SolverGraph fastRunTicks() {
-        return build("Fast (run ticks)", 10, 3, 0, true, false, 0, 0);
+        return build("Fast (run ticks)", 10, 3, 0, true, false, 0, 0, true);
     }
 
     public static SolverGraph optimize(int optimizeSeconds) {
-        return build(OPTIMIZE_PRESET, 10, 3, optimizeSeconds > 0 ? optimizeSeconds : 120, false, true, 0, SWEEP_SEEDS);
+        return build(OPTIMIZE_PRESET, 10, 3, optimizeSeconds > 0 ? optimizeSeconds : 120, false, true, 0, SWEEP_SEEDS,
+                false);
     }
 
     public static SolverGraph fromBudget(boolean stopOnFeasible, boolean ilsExhaustive,
                                          boolean useWindowSolver, int window, int commit, int timeBudgetSeconds) {
-        return build("Custom", window, commit, timeBudgetSeconds, false, true, 0, SWEEP_SEEDS);
+        return build("Custom", window, commit, timeBudgetSeconds, false, true, 0, SWEEP_SEEDS, false);
     }
 
     private static SolverGraph build(String name, int window, int commit, int t, boolean seedFirst,
-                                     boolean leafSnap, int seedCapMs, int sweepSeeds) {
+                                     boolean leafSnap, int seedCapMs, int sweepSeeds, boolean jointStart) {
         boolean fastTier = t <= 0;
         int tp = fastTier ? 120 : t;
         long reserveNanos = fastTier ? 0L
                 : GraphRunner.reserveNanos(WRAP_RESERVE_FRACTION, WRAP_RESERVE_CAP_SEC, t * 1_000_000_000L);
         int stageSec = Math.max(1, tp - (int) ((reserveNanos + 999_999_999L) / 1_000_000_000L));
-        int improveSec = Math.max(1, Math.min(60, stageSec / 3));
         int ffSec = fastTier ? 3 : Math.max(1, Math.min(30, stageSec / 2));
         int horizonSec = fastTier ? 0 : Math.max(2, Math.min(12, stageSec / 3));
 
@@ -118,6 +125,12 @@ public final class BuiltinGraphs {
             g.add("seeds", "seedSweep")
                     .set("seeds", "seeds", sweepSeeds)
                     .set("seeds", "budgetSec", sweepSec);
+        }
+        boolean jointFirst = jointStart && fastTier && seedFirst;
+        if (jointFirst) {
+            g.add("joint", "freeStartImprove")
+                    .set("joint", "first", true)
+                    .set("joint", "budgetMs", JOINT_FIRST_CAP_MS);
         }
         boolean bothStarts = !fastTier && !seedFirst && t < BOTH_STARTS_BELOW_SEC;
         if (bothStarts) {
@@ -170,18 +183,31 @@ public final class BuiltinGraphs {
                 .set("fold", "budgetSec", fastTier ? 0 : Math.max(2, stageSec / 2))
                 .set("fold", "ascentMs", fastTier ? 0 : 60000)
                 .set("fold", "tickCap", IMPROVE_TICK_CAP);
+        if (!fastTier) {
+            g.add("polish0", "latticePolish")
+                    .set("polish0", GraphRunner.LANE_PARAM, true);
+            if (leafSnap) {
+                g.add("snap0", "leafSnap")
+                        .set("snap0", "pairPass", 1)
+                        .set("snap0", GraphRunner.LANE_PARAM, true);
+            }
+        }
         g.add("ladder", "homotopyLadder");
         g.add("cert", "certBnb")
-                .set("cert", "budgetSec", fastTier ? 0 : Math.max(ffSec, improveSec))
+                .set("cert", "budgetSec", fastTier ? 0 : tp)
                 .set("cert", "ffSec", ffSec)
                 .set("cert", "ffNodeCap", fastTier ? 32 : 256)
                 .set("cert", "tickCap", IMPROVE_TICK_CAP);
+        if (!fastTier) {
+            g.set("cert", "batch", TREE_BATCH).set("cert", GraphRunner.LANE_PARAM, true);
+        }
         g.add("bnb", "bnb")
                 .set("bnb", "budgetSec", fastTier ? 0 : Math.max(3, stageSec / 2))
                 .set("bnb", "ffSec", fastTier ? 40 : Math.max(3, stageSec / 3))
                 .set("bnb", "tickCap", IMPROVE_TICK_CAP);
         g.add("ils", "ilsPolish")
                 .set("ils", "budgetSec", fastTier ? 0 : Math.max(1, stageSec - 4));
+        if (!fastTier) g.add("join", "joinLanes").set("join", "of", "cert");
         g.add("cap2", "capCertify")
                 .set("cap2", "computeDualGap", false)
                 .set("cap2", "skipIfSettled", true);
@@ -202,12 +228,14 @@ public final class BuiltinGraphs {
                     .set("snap", "pairPass", fastTier ? 0 : 1);
         }
         if (!fastTier) {
+            g.add("join0", "joinLanes").set("join0", "of", "polish0");
             g.add("dive", "certBnb")
                     .set("dive", "budgetSec", t)
                     .set("dive", "ffSec", 0)
                     .set("dive", "ffNodeCap", 0)
                     .set("dive", "tickCap", IMPROVE_TICK_CAP)
                     .set("dive", "dive", true)
+                    .set("dive", "batch", TREE_BATCH)
                     .set("dive", "labelSuffix", " (dive order)");
             g.add("translate3", "translatedStart");
             if (leafSnap) {
@@ -221,14 +249,20 @@ public final class BuiltinGraphs {
                 .set("certify", "ffSec", 0)
                 .set("certify", "ffNodeCap", 0)
                 .set("certify", "tickCap", IMPROVE_TICK_CAP)
-                .set("certify", "exhaust", true);
+                .set("certify", "exhaust", true)
+                .set("certify", "batch", fastTier ? 1 : TREE_BATCH);
         g.add("emit", "emit");
 
         String first = sweep ? "seeds" : "entry";
         if (sweep) chain(g, "entry", "seeds");
         if (seedFirst) {
             chain(g, first, "seed");
-            chain(g, "seed", "horizon");
+            if (jointFirst) {
+                chain(g, "seed", "joint");
+                chain(g, "joint", "horizon");
+            } else {
+                chain(g, "seed", "horizon");
+            }
             chain(g, "horizon", "wrap0");
             chain(g, "wrap0", "cap1");
         } else if (bothStarts) {
@@ -259,11 +293,25 @@ public final class BuiltinGraphs {
         } else {
             g.edge("translate2", Guarantee.DONE, "sweep");
         }
-        chain(g, "fold", "ladder");
+        if (fastTier) {
+            chain(g, "fold", "ladder");
+        } else if (leafSnap) {
+            chain(g, "fold", "polish0");
+            chain(g, "polish0", "snap0");
+            chain(g, "snap0", "ladder");
+        } else {
+            chain(g, "fold", "polish0");
+            chain(g, "polish0", "ladder");
+        }
         chain(g, "ladder", "cert");
         chain(g, "cert", "bnb");
         chain(g, "bnb", "ils");
-        chain(g, "ils", "cap2");
+        if (fastTier) {
+            chain(g, "ils", "cap2");
+        } else {
+            chain(g, "ils", "join");
+            chain(g, "join", "cap2");
+        }
         if (fastTier) {
             chain(g, "cap2", "wrap");
         } else {
@@ -277,7 +325,8 @@ public final class BuiltinGraphs {
             last = "snap";
         }
         if (!fastTier) {
-            chain(g, last, "dive");
+            chain(g, last, "join0");
+            chain(g, "join0", "dive");
             chain(g, "dive", "translate3");
             last = "translate3";
             if (leafSnap) {
