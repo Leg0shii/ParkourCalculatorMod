@@ -40,7 +40,7 @@ service before wall/call/catalogue caps. IPOPT never chooses these discrete meth
 | Compound choice arriving at E before an unused tail ends | Derive the actual owned E prefix, with only its committed rows/events and its own T/J/R/A. | Check owned prefix separately. Rejection of an unused extension is scoped to the extension. | Valid owned arrival remains eligible; an impossible tail does not force its rejection. Legacy fixed-checkpoint controls retain their full-first checks. |
 | `S → C → S`, or revisiting a departed owner | Not generated in the current physical-anchor domain. Same-owner patches are tracked by physical owner. | Departed-owner filter plus emitted-program audit. Repeated required anchors are also unsupported. | No. Current-owner `S→S` hops are different and remain legal. |
 | Arbitrary intentional wall-hit combinations | Deferred feature; named cases can still carry their required finite contact. | No new intentional-hit generator in this feature. | Not an additional search family. |
-| First jump at9/10/11 rather than0/8 | Supported by the generic initial-domain API, but absent from this Real11 fixture's explicit `[0,8]` selection. | `InitialJumpDomain` rejects a first grounded jump outside the supplied set; a jump-free prefix remains eligible only through the largest allowed first-jump input. | Not in the current Real11 run. This is a fixture restriction, not a proved useless-delay bound. |
+| First jump at9/10/11 rather than0/8 | The maintained Real11 case has no whitelist; archived controls retain `[0,8]`. | Shared physical screening, hard-anchor peer deferral and strict finish bounds choose work. Explicit `initialJumpInputs` remains available for controlled experiments. | In the unrestricted control, first0/8 were queried;9–12 arrivals were recoverably deferred before numerical work. See [audit](INITIAL_DOMAIN_AND_CONFIG_AUDIT.md). |
 
 Ordinary landing durations are not independent air-tick permutations. The model
 finds the descending support-height crossing, then choices compose that history.
@@ -190,7 +190,7 @@ because a source-era handoff contains its absolute path.
 ## Current Real11 domain and measured work
 
 The [fixture](../research/anchor-feasibility/real11-anchors.json) declares
-B2/B3/B4/B5 anchors, normal+stepping generators, first jumps0/8, horizon200,
+B2/B3/B4/B5 anchors, normal+stepping generators, horizon200,
 64 total/per-jump run cap, 2,048 prefix cap, 32 contact branches, 128 passage
 candidates, cadence1, 2s candidate and8s score slices, 1,024 wrapper-call guard.
 These caps/domain choices are not proofs that excluded alternatives cannot help.
@@ -237,3 +237,5 @@ exact walls, scopes and limitations. Neither these runs nor an operational IPOPT
 rejection prove global minimum time or actual-world executable replay. No further
 implementation is pending from this plan; revisits, intentional wall hits,
 cadence/turn tuning and remaining bookkeeping optimization require separate work.
+
+The maintained Real11 case now omits the initial `[0,8]` filter. The [unrestricted control](../research/initial-domain-selection/README.md) verifies natural first0/8 query selection and recoverable9–12 deferral. Earlier measured arms above retain their recorded restricted domains. Domain identity changes, while solver policy versions do not.

@@ -1,13 +1,21 @@
 # Real11 finite physical-anchor case
 
-`physical-anchors.json` is a byte-identical promoted copy of
+`physical-anchors.json` derives from
 [the recorded anchor-feasibility fixture](../../research/anchor-feasibility/real11-anchors.json).
-It declares ordered anchors, finite extended B7, original state, movement domain,
-initial-jump inputs `[0,8]` and budgets. It is input data, not a runtime dependency.
-The fixture retains stored B6; the reported wider B6 still lacks replacement
-coordinates and is not silently inferred.
+It declares ordered anchors, finite extended B7, original state, movement domain
+and budgets. The maintained case omits `initialJumpInputs`: the orchestrator
+selects initial preparation through existing reachability, hard-anchor tick
+comparison and finish bounds. Archived `[0,8]` fixtures are unchanged.
 
-Use the [runbook](../../docs/RUNBOOK.md) to run it with an installed solver and
-native compiler. For local budget/domain experiments copy it to a new path and
-record the change. Physical/numerical acceptance concerns the supplied scene;
-actual-world or executable-angle replay is a separate check.
+The [unrestricted initial-delay control](../../research/initial-domain-selection/README.md)
+found T64 with only0/8 receiving first-anchor feasibility work;9–12 were saved
+as recoverable alternatives without numerical calls. This is observed behavior
+in that run, not a new generic `[0,8]` rule.
+
+The fixture retains stored B6; the reported wider B6 still lacks replacement
+coordinates and is not silently inferred. Use the [runbook](../../docs/RUNBOOK.md)
+with an installed solver and native compiler. For local budget/domain experiments
+copy the case to a new path and record the change. Old restricted checkpoints
+require their original domain for exact resume; the unrestricted domain has a
+different context. Supplied-scene acceptance and actual-world/executable-angle
+replay remain separate checks.

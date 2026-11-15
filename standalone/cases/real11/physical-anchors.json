@@ -165,12 +165,9 @@
     "control": "autonomy/experiments/event-route-discovery/real11-auto.json",
     "purpose": "Declared anchors, physical extended B7 landing, minimize T then maximize Z",
     "geometryCaveat": "B7 extended +Z by one block; B6 unchanged because replacement bounds unspecified",
-    "routingPolicy": "anchorSearch version1; no inter-block returns; local same-block hops permitted"
+    "routingPolicy": "anchorSearch version1; no inter-block returns; local same-block hops permitted",
+    "initialDelayPolicy": "No first-jump whitelist; shared reachability, hard-anchor tick deferral and strict finish bounds select primary attempts."
   },
-  "initialJumpInputs": [
-    0,
-    8
-  ],
   "terminalGoal": {
     "kind": "landing",
     "block": "b7"

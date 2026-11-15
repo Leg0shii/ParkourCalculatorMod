@@ -1,0 +1,354 @@
+[
+  {
+    "report": "research/hard-jump-comparisons/2026-11-11/updated-combined/report.json.gz",
+    "manifestSHA256": "9dbd3315ee0d71e42b50e02ecf41228482caa62aa0394cce13304550229fdbc6",
+    "initialJumpInputs": [
+      0,
+      8
+    ],
+    "finish": 64,
+    "work": {
+      "solverCalls": 61,
+      "workerLaunches": 55,
+      "feasibleSeedReturns": 6,
+      "maxSolverCalls": 1024
+    },
+    "expandedPrefixes": 35,
+    "hardLatches": {
+      "b1\u2192b2": {
+        "version": 3,
+        "revision": 1,
+        "candidate": "e64ce8074540031447aa4ec3be92447d0b4e119da2aacf7bbbf59e2328bf96d6",
+        "frame": 0,
+        "model": "152cc0fae942c4ddff2443d6ee775c27460bc3d3b5c71afb1eea910fb8afc861",
+        "inputs": 17,
+        "transferStructure": {
+          "version": 3,
+          "valid": true,
+          "reason": null,
+          "source": "b1",
+          "target": "b2",
+          "spanStart": 0,
+          "preparationThrough": 8,
+          "preparationJumps": [],
+          "transferJumps": [
+            8
+          ],
+          "arrival": 17,
+          "transferSteppingInputs": [],
+          "assumption": "hard_transfer_without_stepping"
+        }
+      },
+      "b2\u2192b3": {
+        "version": 3,
+        "revision": 2,
+        "candidate": "b2fc7f32bfc4e852ca06b061e021bfe504cb0541ac448b1f32e5bd5e32a6f9dc",
+        "frame": 1,
+        "model": "081e903bc2a7a58bf18cfaee42529c50ee564232b464c9ab76f7d5faf4117c33",
+        "inputs": 28,
+        "transferStructure": {
+          "version": 3,
+          "valid": true,
+          "reason": null,
+          "source": "b2",
+          "target": "b3",
+          "spanStart": 17,
+          "preparationThrough": 19,
+          "preparationJumps": [],
+          "transferJumps": [
+            19
+          ],
+          "arrival": 28,
+          "transferSteppingInputs": [],
+          "assumption": "hard_transfer_without_stepping"
+        }
+      },
+      "b3\u2192b4": {
+        "version": 3,
+        "revision": 3,
+        "candidate": "08385b4eb1a2e6d67ed3498c9a3c828bf52f32d3d820b7b758088e0af1fc9051",
+        "frame": 2,
+        "model": "507e99de3a62a997fd81726a5087c183151185fe5434f6afa9c205b2959ba2a9",
+        "inputs": 40,
+        "transferStructure": {
+          "version": 3,
+          "valid": true,
+          "reason": null,
+          "source": "b3",
+          "target": "b4",
+          "spanStart": 28,
+          "preparationThrough": 30,
+          "preparationJumps": [],
+          "transferJumps": [
+            30
+          ],
+          "arrival": 40,
+          "transferSteppingInputs": [],
+          "assumption": "hard_transfer_without_stepping"
+        }
+      },
+      "b4\u2192b5": {
+        "version": 3,
+        "revision": 4,
+        "candidate": "cab92e7255e56353059228c0cbde5104117299ed3ae7d546248f077d12b34656",
+        "frame": 3,
+        "model": "8d0afc63d8abcb30e067904f745f219cc299db18c7b9bdac8f83cd77296a5d13",
+        "inputs": 58,
+        "transferStructure": {
+          "version": 3,
+          "valid": true,
+          "reason": null,
+          "source": "b4",
+          "target": "b5",
+          "spanStart": 40,
+          "preparationThrough": 43,
+          "preparationJumps": [],
+          "transferJumps": [
+            43
+          ],
+          "arrival": 58,
+          "transferSteppingInputs": [],
+          "assumption": "hard_transfer_without_stepping"
+        }
+      },
+      "b5\u2192b7": {
+        "version": 3,
+        "revision": 5,
+        "candidate": "3fbd818109b0fb73d252427f1f2ff832e0e8a5fe1c94a71f08d63886d96955a3",
+        "frame": 4,
+        "model": "a10d339cd9ae1ec8e082af7451e1f017968b55fcd110cee4702205031ef0cf45",
+        "inputs": 67,
+        "transferStructure": {
+          "version": 3,
+          "valid": true,
+          "reason": null,
+          "source": "b5",
+          "target": "b7",
+          "spanStart": 58,
+          "preparationThrough": 58,
+          "preparationJumps": [],
+          "transferJumps": [
+            58
+          ],
+          "arrival": 67,
+          "transferSteppingInputs": [],
+          "assumption": "hard_transfer_without_stepping"
+        }
+      }
+    },
+    "rootArrivalAttempts": [
+      {
+        "frame": 0,
+        "candidate": "e64ce8074540031447aa4ec3be92447d0b4e119da2aacf7bbbf59e2328bf96d6",
+        "status": "feasible",
+        "arrival": 17,
+        "tried": true,
+        "work": {
+          "solverCalls": 1,
+          "workerLaunches": 0,
+          "feasibleSeedReturns": 1
+        },
+        "firstJump": 8,
+        "jumps": [
+          8
+        ],
+        "terminalSupport": "b2",
+        "T": 17,
+        "J": 1,
+        "R": 8,
+        "A": 8
+      },
+      {
+        "frame": 0,
+        "candidate": "b44b9200f51a40bfbd708c07a25a63299444466ad833a8ab500f40590ac8ca7b",
+        "status": "feasible",
+        "arrival": 21,
+        "tried": true,
+        "work": {
+          "solverCalls": 1,
+          "workerLaunches": 1,
+          "feasibleSeedReturns": 0
+        },
+        "firstJump": 0,
+        "jumps": [
+          0,
+          12
+        ],
+        "terminalSupport": "b2",
+        "T": 21,
+        "J": 2,
+        "R": 0,
+        "A": 19
+      }
+    ],
+    "firstJumpsAtRootArrivals": [
+      0,
+      8
+    ],
+    "firstSpanQueries": [
+      {
+        "decision": "96cf0302c023ec34eb4999acbdad4325bb0033ed2c5cb9e126218b29fc85ee02",
+        "kind": "anchor",
+        "counts": {
+          "T": 17,
+          "J": 1,
+          "R": 8,
+          "A": 8,
+          "start": 0
+        },
+        "program": null,
+        "queries": [
+          {
+            "status": "feasible",
+            "metrics": {
+              "numericalProposals": 1,
+              "solverCalls": 1,
+              "acceptedBranches": 1,
+              "workerLaunches": 0,
+              "feasibleSeedReturns": 1,
+              "uniqueCompletePrograms": 0,
+              "unitsByType": {},
+              "firstProposalSeconds": 0.02101908251643181,
+              "firstAcceptedSeconds": 0.03131933510303497,
+              "maxSolverCalls": 6,
+              "termination": null
+            },
+            "service": {
+              "latchRevision": 0,
+              "hardLatched": false,
+              "runDeferralEnabled": false,
+              "tickDeferralEnabled": false,
+              "comparisonPolicy": 1
+            }
+          },
+          {
+            "status": "feasible",
+            "metrics": {
+              "workerLaunches": 0,
+              "feasibleSeedReturns": 0,
+              "uniqueCompletePrograms": 0,
+              "unitsByType": {},
+              "firstProposalSeconds": null,
+              "firstAcceptedSeconds": null,
+              "maxSolverCalls": 6,
+              "termination": null
+            },
+            "service": {
+              "latchRevision": 5,
+              "hardLatched": true,
+              "runDeferralEnabled": true,
+              "tickDeferralEnabled": true,
+              "comparisonPolicy": 1
+            }
+          }
+        ]
+      },
+      {
+        "decision": "983f6447da3447945e4694a6fa320af04191f9cc8582d011665aab01a58a3673",
+        "kind": "node",
+        "counts": {
+          "T": 12,
+          "J": 1,
+          "R": 0,
+          "A": 11,
+          "start": 0
+        },
+        "program": {
+          "firstJump": 0,
+          "jumps": [
+            0
+          ],
+          "terminalSupport": "b1",
+          "T": 12,
+          "J": 1,
+          "R": 0,
+          "A": 11
+        },
+        "queries": [
+          {
+            "status": "feasible",
+            "metrics": {
+              "numericalProposals": 1,
+              "solverCalls": 1,
+              "acceptedBranches": 1,
+              "workerLaunches": 0,
+              "feasibleSeedReturns": 1,
+              "uniqueCompletePrograms": 0,
+              "unitsByType": {},
+              "firstProposalSeconds": 0.012513082474470139,
+              "firstAcceptedSeconds": 0.01718762144446373,
+              "maxSolverCalls": 6,
+              "termination": null
+            },
+            "service": {
+              "latchRevision": 5,
+              "hardLatched": true,
+              "runDeferralEnabled": true,
+              "tickDeferralEnabled": true,
+              "comparisonPolicy": 1
+            }
+          }
+        ]
+      },
+      {
+        "decision": "d70614ccd7e3b5b615f20918bd29745b5a1a2410349dc5a965db9d6340d69ff8",
+        "kind": "anchor",
+        "counts": {
+          "T": 21,
+          "J": 2,
+          "R": 0,
+          "A": 19,
+          "start": 0
+        },
+        "program": null,
+        "queries": [
+          {
+            "status": "feasible",
+            "metrics": {
+              "numericalProposals": 1,
+              "solverCalls": 1,
+              "acceptedBranches": 1,
+              "workerLaunches": 1,
+              "feasibleSeedReturns": 0,
+              "uniqueCompletePrograms": 0,
+              "unitsByType": {},
+              "firstProposalSeconds": 0.020070374011993408,
+              "firstAcceptedSeconds": 0.23462628945708275,
+              "maxSolverCalls": 6,
+              "termination": null
+            },
+            "service": {
+              "latchRevision": 5,
+              "hardLatched": true,
+              "runDeferralEnabled": true,
+              "tickDeferralEnabled": true,
+              "comparisonPolicy": 1
+            }
+          },
+          {
+            "status": "feasible",
+            "metrics": {
+              "workerLaunches": 0,
+              "feasibleSeedReturns": 0,
+              "uniqueCompletePrograms": 0,
+              "unitsByType": {},
+              "firstProposalSeconds": null,
+              "firstAcceptedSeconds": null,
+              "maxSolverCalls": 6,
+              "termination": null
+            },
+            "service": {
+              "latchRevision": 5,
+              "hardLatched": true,
+              "runDeferralEnabled": true,
+              "tickDeferralEnabled": true,
+              "comparisonPolicy": 1
+            }
+          }
+        ]
+      }
+    ],
+    "rootDeferrals": [],
+    "scope": "Saved root arrival records, meaningful-node observations and recoverable deferrals; not every generated/screened descriptor."
+  }
+]

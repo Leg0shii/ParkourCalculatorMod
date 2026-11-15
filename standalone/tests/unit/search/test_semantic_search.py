@@ -153,6 +153,7 @@ class SemanticStageTests(unittest.TestCase):
         self.assertFalse(hasattr(domain,'remaining'))
         p['profile'].update(airtime=12,jump=[False]*9+[True]+[False]*2,grounded=[True]*13)
         self.assertFalse(domain(p))
+        self.assertTrue(InitialJumpDomain(None,max_inputs=30)(p))
         p['profile']['jump'][9]=False;p['profile']['jump'][8]=True
         self.assertTrue(domain(p))
 

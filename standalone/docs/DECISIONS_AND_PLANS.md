@@ -1,5 +1,7 @@
 # Decisions and plan authority
 
+2026-11-15 initial-domain decision: remove the explicit `[0,8]` whitelist from the maintained Real11 case; let existing producers/screens, hard-arrival comparisons and finish bounds select work. [Unrestricted evidence](../research/initial-domain-selection/README.md) confirms first0/8 numerical preparation and recoverable9–12 deferral. [Configuration/CI audit](INITIAL_DOMAIN_AND_CONFIG_AUDIT.md) records remaining supplied inputs and policies. Archived fixtures and generic explicit-domain controls remain unchanged; no new route/pruning policy is introduced.
+
 The approved standalone structure refactor is implemented: [layout](LAYOUT.md), [implementation ledger](STANDALONE_REFACTOR_IMPLEMENTATION.md). This changes file ownership/entrypoints, preserves all physical and decision policy versions, and leaves revisit/other deferred work deferred. The inventory/review is now a source-era proposal record, not a new pending task.
 
 Folder-structure follow-up: [inventory and proposed layout](STANDALONE_STRUCTURE_REVIEW.md) separates runtime, research, tests, tooling, native sources, cases, docs and local outputs. This is a review/proposal, not an instruction to apply moves or change solver policy. Full file and Python dependency ledgers are linked there.

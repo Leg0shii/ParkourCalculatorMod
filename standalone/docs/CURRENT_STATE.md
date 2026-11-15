@@ -37,9 +37,9 @@ external resume decodes isolated mutable values and checks the saved incumbent.
 
 ## Current Real11 task and evidence
 
-The [fixture](../research/anchor-feasibility/real11-anchors.json) supplies
-B2/B3/B4/B5 anchors, normal+stepping, first jumps0/8, horizon200 and declared caps.
-These are configuration, not proof that first jumps9/10/11 are useless. B7 is the
+The [maintained case](../cases/real11/physical-anchors.json) supplies
+B2/B3/B4/B5 anchors, normal+stepping, horizon200 and declared caps, with no first-jump whitelist.
+The [unrestricted control](../research/initial-domain-selection/README.md) naturally queries first jumps0/8 and recoverably defers9–12 before numerical work; it finds T64 with55/55 retained-witness replays. Archived controls below keep their original `[0,8]` domain. B7 is the
 physical extended box `[729,0,-1095,730,7,-1093]`; actual landing minimizes T then
 maximizes Z. Guide `(729.5,7,-1093)` is not a center-coordinate cap. The old
 virtual goal, extra X<729.7 row and fixed64 task are absent.

@@ -1,5 +1,7 @@
 # Linkcraft Real11 opening: agent guide
 
+2026-11-15 initial-domain follow-up: the [maintained case](../cases/real11/physical-anchors.json) now omits the old `[0,8]` filter. The [unrestricted control](../research/initial-domain-selection/README.md) naturally queried0/8 and deferred9–12 before numerical work, reaching T64 with55/55 independent replays. [Configuration audit](INITIAL_DOMAIN_AND_CONFIG_AUDIT.md) distinguishes task inputs, inferred choices and policy constants; older results below retain their recorded domains.
+
 Current combination/pruning/IPOPT tables and decisions: [execution reference](ANCHOR_SEARCH_EXECUTION_REFERENCE.md). Source-era sections below preserve their own task/policy/results.
 
 2026-11-11: [implemented shared comparisons/reachability](HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md)

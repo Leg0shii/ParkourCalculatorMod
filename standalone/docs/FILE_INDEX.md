@@ -14,7 +14,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 
 | File | Bytes |
 | --- | ---: |
-| [AGENTS.md](../AGENTS.md) | 3375 |
+| [AGENTS.md](../AGENTS.md) | 3959 |
 
 ## CONSOLIDATION.md
 
@@ -43,36 +43,37 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 
 | File | Bytes |
 | --- | ---: |
-| [cases/real11/README.md](../cases/real11/README.md) | 782 |
-| [cases/real11/physical-anchors.json](../cases/real11/physical-anchors.json) | 3649 |
+| [cases/real11/README.md](../cases/real11/README.md) | 1285 |
+| [cases/real11/physical-anchors.json](../cases/real11/physical-anchors.json) | 3757 |
 
 ## docs
 
 | File | Bytes |
 | --- | ---: |
 | [docs/ANCHOR_IMPLEMENTATION_RESUME.md](ANCHOR_IMPLEMENTATION_RESUME.md) | 4767 |
-| [docs/ANCHOR_SEARCH_EXECUTION_REFERENCE.md](ANCHOR_SEARCH_EXECUTION_REFERENCE.md) | 26348 |
+| [docs/ANCHOR_SEARCH_EXECUTION_REFERENCE.md](ANCHOR_SEARCH_EXECUTION_REFERENCE.md) | 26719 |
 | [docs/ANCHOR_SEARCH_INTEGRATION.md](ANCHOR_SEARCH_INTEGRATION.md) | 10453 |
 | [docs/ARCHITECTURE.md](ARCHITECTURE.md) | 15586 |
 | [docs/CHECKPOINT_STORAGE.md](CHECKPOINT_STORAGE.md) | 6930 |
 | [docs/CODE_MAP.md](CODE_MAP.md) | 23647 |
 | [docs/CORRIDOR_AGENT_HANDOFF.md](CORRIDOR_AGENT_HANDOFF.md) | 17543 |
 | [docs/CORRIDOR_IMPLEMENTATION_RESUME.md](CORRIDOR_IMPLEMENTATION_RESUME.md) | 15728 |
-| [docs/CURRENT_STATE.md](CURRENT_STATE.md) | 9065 |
-| [docs/DECISIONS_AND_PLANS.md](DECISIONS_AND_PLANS.md) | 24848 |
-| [docs/DEVELOPMENT.md](DEVELOPMENT.md) | 6697 |
-| [docs/DOC_INDEX.md](DOC_INDEX.md) | 31999 |
-| [docs/FILE_INDEX.md](FILE_INDEX.md) | 166440 |
+| [docs/CURRENT_STATE.md](CURRENT_STATE.md) | 9271 |
+| [docs/DECISIONS_AND_PLANS.md](DECISIONS_AND_PLANS.md) | 25413 |
+| [docs/DEVELOPMENT.md](DEVELOPMENT.md) | 11551 |
+| [docs/DOC_INDEX.md](DOC_INDEX.md) | 32412 |
+| [docs/FILE_INDEX.md](FILE_INDEX.md) | 167838 |
 | [docs/FUNCTION_INDEX.md](FUNCTION_INDEX.md) | 63828 |
 | [docs/HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md](HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md) | 66291 |
+| [docs/INITIAL_DOMAIN_AND_CONFIG_AUDIT.md](INITIAL_DOMAIN_AND_CONFIG_AUDIT.md) | 5889 |
 | [docs/IPOPT_CONSTRAINT_REDUCTION.md](IPOPT_CONSTRAINT_REDUCTION.md) | 5578 |
 | [docs/IPOPT_FEASIBILITY_MODE.md](IPOPT_FEASIBILITY_MODE.md) | 4790 |
 | [docs/LAYOUT.md](LAYOUT.md) | 5275 |
 | [docs/MOD_REFERENCES.md](MOD_REFERENCES.md) | 5109 |
 | [docs/README.md](README.md) | 3066 |
-| [docs/REAL11_GUIDE.md](REAL11_GUIDE.md) | 21088 |
+| [docs/REAL11_GUIDE.md](REAL11_GUIDE.md) | 21578 |
 | [docs/RESULTS_AND_DEBUGGING.md](RESULTS_AND_DEBUGGING.md) | 11248 |
-| [docs/RUNBOOK.md](RUNBOOK.md) | 7903 |
+| [docs/RUNBOOK.md](RUNBOOK.md) | 7978 |
 | [docs/SOLVER_BRANCH_INTEGRATION_REVIEW.md](SOLVER_BRANCH_INTEGRATION_REVIEW.md) | 11279 |
 | [docs/STANDALONE_REFACTOR_IMPLEMENTATION.md](STANDALONE_REFACTOR_IMPLEMENTATION.md) | 4239 |
 | [docs/STANDALONE_STRUCTURE_REVIEW.md](STANDALONE_STRUCTURE_REVIEW.md) | 23061 |
@@ -138,7 +139,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/reference/FINDINGS.md](reference/FINDINGS.md) | 65477 |
 | [docs/reference/MOD_INTEGRATION_PLAN.md](reference/MOD_INTEGRATION_PLAN.md) | 32257 |
 | [docs/reference/MOVEMENT_PORT.md](reference/MOVEMENT_PORT.md) | 11077 |
-| [docs/reference/NUMERICAL_SOLVER.md](reference/NUMERICAL_SOLVER.md) | 19643 |
+| [docs/reference/NUMERICAL_SOLVER.md](reference/NUMERICAL_SOLVER.md) | 19698 |
 | [docs/reference/RECENT_REPLAY_HANDOFF.md](reference/RECENT_REPLAY_HANDOFF.md) | 10644 |
 | [docs/reference/REPLAY.md](reference/REPLAY.md) | 8680 |
 | [docs/reference/RUN_TICKS_PHYSICS_HANDOFF.md](reference/RUN_TICKS_PHYSICS_HANDOFF.md) | 23863 |
@@ -154,6 +155,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/validation/layout-final/cold-witness-bounds.json](validation/layout-final/cold-witness-bounds.json) | 9978 |
 | [docs/validation/layout-final/fresh-bridge-replay.json](validation/layout-final/fresh-bridge-replay.json) | 256 |
 | [docs/validation/layout-final/layout.json](validation/layout-final/layout.json) | 136 |
+| [docs/validation/layout-final/links.json](validation/layout-final/links.json) | 79 |
 | [docs/validation/layout-final/native-build.log](validation/layout-final/native-build.log) | 1863 |
 | [docs/validation/layout-final/real11-control.json.gz](validation/layout-final/real11-control.json.gz) | 23691 |
 | [docs/validation/layout-final/real11-provenance.json](validation/layout-final/real11-provenance.json) | 19790 |
@@ -723,6 +725,14 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [research/height-and-stairs/staircase-request.json](../research/height-and-stairs/staircase-request.json) | 5705 |
 | [research/height-and-stairs/staircase-result.json](../research/height-and-stairs/staircase-result.json) | 51163 |
 | [research/height-and-stairs/summary.json](../research/height-and-stairs/summary.json) | 2026 |
+| [research/initial-domain-selection/README.md](../research/initial-domain-selection/README.md) | 4394 |
+| [research/initial-domain-selection/audit.py](../research/initial-domain-selection/audit.py) | 3946 |
+| [research/initial-domain-selection/configs/real11-unrestricted.json](../research/initial-domain-selection/configs/real11-unrestricted.json) | 3808 |
+| [research/initial-domain-selection/evidence/2026-11-15/provenance.json](../research/initial-domain-selection/evidence/2026-11-15/provenance.json) | 19987 |
+| [research/initial-domain-selection/evidence/2026-11-15/requests.json](../research/initial-domain-selection/evidence/2026-11-15/requests.json) | 15207 |
+| [research/initial-domain-selection/evidence/2026-11-15/restricted-first-anchor-audit.json](../research/initial-domain-selection/evidence/2026-11-15/restricted-first-anchor-audit.json) | 10131 |
+| [research/initial-domain-selection/evidence/2026-11-15/summary.json](../research/initial-domain-selection/evidence/2026-11-15/summary.json) | 376833 |
+| [research/initial-domain-selection/evidence/2026-11-15/unrestricted-first-anchor-audit.json](../research/initial-domain-selection/evidence/2026-11-15/unrestricted-first-anchor-audit.json) | 14906 |
 | [research/interleaved-blockages/README.md](../research/interleaved-blockages/README.md) | 2757 |
 | [research/interleaved-blockages/request.json](../research/interleaved-blockages/request.json) | 6321 |
 | [research/interleaved-blockages/result.json](../research/interleaved-blockages/result.json) | 109546 |
@@ -997,7 +1007,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [research/route-guidance/fixtures/run-allocation.json](../research/route-guidance/fixtures/run-allocation.json) | 906 |
 | [research/route-guidance/fixtures/timing-and-passage.json](../research/route-guidance/fixtures/timing-and-passage.json) | 1841 |
 | [research/route-guidance/fixtures/turning-support.json](../research/route-guidance/fixtures/turning-support.json) | 912 |
-| [research/route_guidance/README.md](../research/route_guidance/README.md) | 8586 |
+| [research/route_guidance/README.md](../research/route_guidance/README.md) | 8744 |
 | [research/route_guidance/__init__.py](../research/route_guidance/__init__.py) | 83 |
 | [research/route_guidance/compact.py](../research/route_guidance/compact.py) | 8544 |
 | [research/route_guidance/conic.py](../research/route_guidance/conic.py) | 11165 |
@@ -1362,7 +1372,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [tests/unit/search/test_minimum_runs.py](../tests/unit/search/test_minimum_runs.py) | 9196 |
 | [tests/unit/search/test_search.py](../tests/unit/search/test_search.py) | 6711 |
 | [tests/unit/search/test_search_fixes.py](../tests/unit/search/test_search_fixes.py) | 5767 |
-| [tests/unit/search/test_semantic_search.py](../tests/unit/search/test_semantic_search.py) | 16695 |
+| [tests/unit/search/test_semantic_search.py](../tests/unit/search/test_semantic_search.py) | 16761 |
 | [tests/unit/search/test_terminal_goals.py](../tests/unit/search/test_terminal_goals.py) | 5652 |
 | [tests/unit/search/test_time_progress.py](../tests/unit/search/test_time_progress.py) | 8821 |
 | [tests/unit/search/test_transfer_time_bounds.py](../tests/unit/search/test_transfer_time_bounds.py) | 5243 |

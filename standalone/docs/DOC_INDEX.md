@@ -24,6 +24,7 @@ control work; inclusion here is not authorization to implement a historical plan
 | [docs/FILE_INDEX.md](FILE_INDEX.md) | Current navigation / implementation or evidence record: Tracked standalone file index |
 | [docs/FUNCTION_INDEX.md](FUNCTION_INDEX.md) | Current navigation / implementation or evidence record: Production function index |
 | [docs/HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md](HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md) | Current navigation / implementation or evidence record: Hard-jump comparisons, proposal reachability and transfer-time bounds |
+| [docs/INITIAL_DOMAIN_AND_CONFIG_AUDIT.md](INITIAL_DOMAIN_AND_CONFIG_AUDIT.md) | Current navigation / implementation or evidence record: Initial-delay selection and remaining supplied policies |
 | [docs/IPOPT_CONSTRAINT_REDUCTION.md](IPOPT_CONSTRAINT_REDUCTION.md) | Current navigation / implementation or evidence record: IPOPT constraint cleanup |
 | [docs/IPOPT_FEASIBILITY_MODE.md](IPOPT_FEASIBILITY_MODE.md) | Current navigation / implementation or evidence record: Intermediate feasibility: objective, stopping and worker dispatch |
 | [docs/LAYOUT.md](LAYOUT.md) | Current navigation / implementation or evidence record: Standalone ownership and package layout |
@@ -134,6 +135,7 @@ control work; inclusion here is not authorization to implement a historical plan
 | [research/failure-rootcause/RESULTS.md](../research/failure-rootcause/RESULTS.md) | Frozen source-era evidence; use research guide for reproduction: Generic causes of the bounded-search failures |
 | [research/hard-jump-comparisons/README.md](../research/hard-jump-comparisons/README.md) | Frozen source-era evidence; use research guide for reproduction: Shared hard-jump comparisons and proposal reachability |
 | [research/height-and-stairs/README.md](../research/height-and-stairs/README.md) | Frozen source-era evidence; use research guide for reproduction: Different heights and short stair profiles |
+| [research/initial-domain-selection/README.md](../research/initial-domain-selection/README.md) | Frozen source-era evidence; use research guide for reproduction: Initial-delay selection without a fixture whitelist |
 | [research/interleaved-blockages/README.md](../research/interleaved-blockages/README.md) | Frozen source-era evidence; use research guide for reproduction: Interleaved wall and ceiling blockages |
 | [research/ladder-climbing-ceiling/README.md](../research/ladder-climbing-ceiling/README.md) | Frozen source-era evidence; use research guide for reproduction: Climbing with ceiling contacts and endpoint stops |
 | [research/ladder-schedules/README.md](../research/ladder-schedules/README.md) | Frozen source-era evidence; use research guide for reproduction: Ladder schedule height checks |

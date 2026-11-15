@@ -1,0 +1,524 @@
+[
+  {
+    "report": "runs/initial-domain-selection-unrestricted-2026-11-15/report.json.gz",
+    "manifestSHA256": "c09d5432be74244d65f1d766deee0649cb500df3584d35d861636e2c6275fbf6",
+    "initialJumpInputs": null,
+    "finish": 64,
+    "work": {
+      "solverCalls": 61,
+      "workerLaunches": 55,
+      "feasibleSeedReturns": 6,
+      "maxSolverCalls": 1024
+    },
+    "expandedPrefixes": 39,
+    "hardLatches": {
+      "b1\u2192b2": {
+        "version": 3,
+        "revision": 1,
+        "candidate": "e64ce8074540031447aa4ec3be92447d0b4e119da2aacf7bbbf59e2328bf96d6",
+        "frame": 0,
+        "model": "152cc0fae942c4ddff2443d6ee775c27460bc3d3b5c71afb1eea910fb8afc861",
+        "inputs": 17,
+        "transferStructure": {
+          "version": 3,
+          "valid": true,
+          "reason": null,
+          "source": "b1",
+          "target": "b2",
+          "spanStart": 0,
+          "preparationThrough": 8,
+          "preparationJumps": [],
+          "transferJumps": [
+            8
+          ],
+          "arrival": 17,
+          "transferSteppingInputs": [],
+          "assumption": "hard_transfer_without_stepping"
+        }
+      },
+      "b2\u2192b3": {
+        "version": 3,
+        "revision": 2,
+        "candidate": "b2fc7f32bfc4e852ca06b061e021bfe504cb0541ac448b1f32e5bd5e32a6f9dc",
+        "frame": 1,
+        "model": "081e903bc2a7a58bf18cfaee42529c50ee564232b464c9ab76f7d5faf4117c33",
+        "inputs": 28,
+        "transferStructure": {
+          "version": 3,
+          "valid": true,
+          "reason": null,
+          "source": "b2",
+          "target": "b3",
+          "spanStart": 17,
+          "preparationThrough": 19,
+          "preparationJumps": [],
+          "transferJumps": [
+            19
+          ],
+          "arrival": 28,
+          "transferSteppingInputs": [],
+          "assumption": "hard_transfer_without_stepping"
+        }
+      },
+      "b3\u2192b4": {
+        "version": 3,
+        "revision": 3,
+        "candidate": "08385b4eb1a2e6d67ed3498c9a3c828bf52f32d3d820b7b758088e0af1fc9051",
+        "frame": 2,
+        "model": "507e99de3a62a997fd81726a5087c183151185fe5434f6afa9c205b2959ba2a9",
+        "inputs": 40,
+        "transferStructure": {
+          "version": 3,
+          "valid": true,
+          "reason": null,
+          "source": "b3",
+          "target": "b4",
+          "spanStart": 28,
+          "preparationThrough": 30,
+          "preparationJumps": [],
+          "transferJumps": [
+            30
+          ],
+          "arrival": 40,
+          "transferSteppingInputs": [],
+          "assumption": "hard_transfer_without_stepping"
+        }
+      },
+      "b4\u2192b5": {
+        "version": 3,
+        "revision": 4,
+        "candidate": "cab92e7255e56353059228c0cbde5104117299ed3ae7d546248f077d12b34656",
+        "frame": 3,
+        "model": "8d0afc63d8abcb30e067904f745f219cc299db18c7b9bdac8f83cd77296a5d13",
+        "inputs": 58,
+        "transferStructure": {
+          "version": 3,
+          "valid": true,
+          "reason": null,
+          "source": "b4",
+          "target": "b5",
+          "spanStart": 40,
+          "preparationThrough": 43,
+          "preparationJumps": [],
+          "transferJumps": [
+            43
+          ],
+          "arrival": 58,
+          "transferSteppingInputs": [],
+          "assumption": "hard_transfer_without_stepping"
+        }
+      },
+      "b5\u2192b7": {
+        "version": 3,
+        "revision": 5,
+        "candidate": "3fbd818109b0fb73d252427f1f2ff832e0e8a5fe1c94a71f08d63886d96955a3",
+        "frame": 4,
+        "model": "a10d339cd9ae1ec8e082af7451e1f017968b55fcd110cee4702205031ef0cf45",
+        "inputs": 67,
+        "transferStructure": {
+          "version": 3,
+          "valid": true,
+          "reason": null,
+          "source": "b5",
+          "target": "b7",
+          "spanStart": 58,
+          "preparationThrough": 58,
+          "preparationJumps": [],
+          "transferJumps": [
+            58
+          ],
+          "arrival": 67,
+          "transferSteppingInputs": [],
+          "assumption": "hard_transfer_without_stepping"
+        }
+      }
+    },
+    "rootArrivalAttempts": [
+      {
+        "frame": 0,
+        "candidate": "e64ce8074540031447aa4ec3be92447d0b4e119da2aacf7bbbf59e2328bf96d6",
+        "status": "feasible",
+        "arrival": 17,
+        "tried": true,
+        "work": {
+          "solverCalls": 1,
+          "workerLaunches": 0,
+          "feasibleSeedReturns": 1
+        },
+        "firstJump": 8,
+        "jumps": [
+          8
+        ],
+        "terminalSupport": "b2",
+        "T": 17,
+        "J": 1,
+        "R": 8,
+        "A": 8
+      },
+      {
+        "frame": 0,
+        "candidate": "b44b9200f51a40bfbd708c07a25a63299444466ad833a8ab500f40590ac8ca7b",
+        "status": "feasible",
+        "arrival": 21,
+        "tried": true,
+        "work": {
+          "solverCalls": 1,
+          "workerLaunches": 1,
+          "feasibleSeedReturns": 0
+        },
+        "firstJump": 0,
+        "jumps": [
+          0,
+          12
+        ],
+        "terminalSupport": "b2",
+        "T": 21,
+        "J": 2,
+        "R": 0,
+        "A": 19
+      }
+    ],
+    "firstJumpsAtRootArrivals": [
+      0,
+      8
+    ],
+    "firstSpanQueries": [
+      {
+        "decision": "96cf0302c023ec34eb4999acbdad4325bb0033ed2c5cb9e126218b29fc85ee02",
+        "kind": "anchor",
+        "counts": {
+          "T": 17,
+          "J": 1,
+          "R": 8,
+          "A": 8,
+          "start": 0
+        },
+        "program": null,
+        "queries": [
+          {
+            "status": "feasible",
+            "metrics": {
+              "numericalProposals": 1,
+              "solverCalls": 1,
+              "acceptedBranches": 1,
+              "workerLaunches": 0,
+              "feasibleSeedReturns": 1,
+              "uniqueCompletePrograms": 0,
+              "unitsByType": {},
+              "firstProposalSeconds": 0.021892208606004715,
+              "firstAcceptedSeconds": 0.031751252710819244,
+              "maxSolverCalls": 6,
+              "termination": null
+            },
+            "service": {
+              "latchRevision": 0,
+              "hardLatched": false,
+              "runDeferralEnabled": false,
+              "tickDeferralEnabled": false,
+              "comparisonPolicy": 1
+            }
+          },
+          {
+            "status": "feasible",
+            "metrics": {
+              "workerLaunches": 0,
+              "feasibleSeedReturns": 0,
+              "uniqueCompletePrograms": 0,
+              "unitsByType": {},
+              "firstProposalSeconds": null,
+              "firstAcceptedSeconds": null,
+              "maxSolverCalls": 6,
+              "termination": null
+            },
+            "service": {
+              "latchRevision": 5,
+              "hardLatched": true,
+              "runDeferralEnabled": true,
+              "tickDeferralEnabled": true,
+              "comparisonPolicy": 1
+            }
+          }
+        ]
+      },
+      {
+        "decision": "983f6447da3447945e4694a6fa320af04191f9cc8582d011665aab01a58a3673",
+        "kind": "node",
+        "counts": {
+          "T": 12,
+          "J": 1,
+          "R": 0,
+          "A": 11,
+          "start": 0
+        },
+        "program": {
+          "firstJump": 0,
+          "jumps": [
+            0
+          ],
+          "terminalSupport": "b1",
+          "T": 12,
+          "J": 1,
+          "R": 0,
+          "A": 11
+        },
+        "queries": [
+          {
+            "status": "feasible",
+            "metrics": {
+              "numericalProposals": 1,
+              "solverCalls": 1,
+              "acceptedBranches": 1,
+              "workerLaunches": 0,
+              "feasibleSeedReturns": 1,
+              "uniqueCompletePrograms": 0,
+              "unitsByType": {},
+              "firstProposalSeconds": 0.009443748742341995,
+              "firstAcceptedSeconds": 0.0143035389482975,
+              "maxSolverCalls": 6,
+              "termination": null
+            },
+            "service": {
+              "latchRevision": 5,
+              "hardLatched": true,
+              "runDeferralEnabled": true,
+              "tickDeferralEnabled": true,
+              "comparisonPolicy": 1
+            }
+          }
+        ]
+      },
+      {
+        "decision": "d70614ccd7e3b5b615f20918bd29745b5a1a2410349dc5a965db9d6340d69ff8",
+        "kind": "anchor",
+        "counts": {
+          "T": 21,
+          "J": 2,
+          "R": 0,
+          "A": 19,
+          "start": 0
+        },
+        "program": null,
+        "queries": [
+          {
+            "status": "feasible",
+            "metrics": {
+              "numericalProposals": 1,
+              "solverCalls": 1,
+              "acceptedBranches": 1,
+              "workerLaunches": 1,
+              "feasibleSeedReturns": 0,
+              "uniqueCompletePrograms": 0,
+              "unitsByType": {},
+              "firstProposalSeconds": 0.018366001546382904,
+              "firstAcceptedSeconds": 0.11728029325604439,
+              "maxSolverCalls": 6,
+              "termination": null
+            },
+            "service": {
+              "latchRevision": 5,
+              "hardLatched": true,
+              "runDeferralEnabled": true,
+              "tickDeferralEnabled": true,
+              "comparisonPolicy": 1
+            }
+          },
+          {
+            "status": "feasible",
+            "metrics": {
+              "workerLaunches": 0,
+              "feasibleSeedReturns": 0,
+              "uniqueCompletePrograms": 0,
+              "unitsByType": {},
+              "firstProposalSeconds": null,
+              "firstAcceptedSeconds": null,
+              "maxSolverCalls": 6,
+              "termination": null
+            },
+            "service": {
+              "latchRevision": 5,
+              "hardLatched": true,
+              "runDeferralEnabled": true,
+              "tickDeferralEnabled": true,
+              "comparisonPolicy": 1
+            }
+          }
+        ]
+      }
+    ],
+    "rootDeferrals": [
+      {
+        "frame": 0,
+        "restored": false,
+        "reason": "higher_ticks_without_structural_advantage",
+        "comparison": {
+          "version": 1,
+          "action": "defer_preparation",
+          "candidateId": "a70a2c03e9f2ddfbc27459e49dbe42a4f12c280dd9c6278c7c6b883c8a32d199",
+          "peerId": "e64ce8074540031447aa4ec3be92447d0b4e119da2aacf7bbbf59e2328bf96d6",
+          "contextId": "157ed516fffda871ffe68bf28cbf7274a390641722d55aaf0fafb7dfdb1ba552",
+          "priorityKey": [
+            18,
+            -1,
+            9,
+            "a70a2c03e9f2ddfbc27459e49dbe42a4f12c280dd9c6278c7c6b883c8a32d199"
+          ],
+          "protectionReasons": [],
+          "peerLookupAllowed": true,
+          "elapsedT": 18,
+          "candidateCounts": {
+            "T": 18,
+            "J": 1,
+            "R": 9,
+            "A": 8
+          },
+          "peerCounts": {
+            "T": 17,
+            "J": 1,
+            "R": 8,
+            "A": 8
+          },
+          "peerChecks": 1
+        },
+        "firstJump": 9,
+        "jumps": [
+          9
+        ],
+        "terminalSupport": "b2",
+        "T": 18,
+        "J": 1,
+        "R": 9,
+        "A": 8
+      },
+      {
+        "frame": 0,
+        "restored": false,
+        "reason": "higher_ticks_without_structural_advantage",
+        "comparison": {
+          "version": 1,
+          "action": "defer_preparation",
+          "candidateId": "e81ec2939826304c30cdd15a296b6e0028b5c06ecc09f9662359431f84423df0",
+          "peerId": "e64ce8074540031447aa4ec3be92447d0b4e119da2aacf7bbbf59e2328bf96d6",
+          "contextId": "157ed516fffda871ffe68bf28cbf7274a390641722d55aaf0fafb7dfdb1ba552",
+          "priorityKey": [
+            19,
+            -1,
+            10,
+            "e81ec2939826304c30cdd15a296b6e0028b5c06ecc09f9662359431f84423df0"
+          ],
+          "protectionReasons": [],
+          "peerLookupAllowed": true,
+          "elapsedT": 19,
+          "candidateCounts": {
+            "T": 19,
+            "J": 1,
+            "R": 10,
+            "A": 8
+          },
+          "peerCounts": {
+            "T": 17,
+            "J": 1,
+            "R": 8,
+            "A": 8
+          },
+          "peerChecks": 1
+        },
+        "firstJump": 10,
+        "jumps": [
+          10
+        ],
+        "terminalSupport": "b2",
+        "T": 19,
+        "J": 1,
+        "R": 10,
+        "A": 8
+      },
+      {
+        "frame": 0,
+        "restored": false,
+        "reason": "higher_ticks_without_structural_advantage",
+        "comparison": {
+          "version": 1,
+          "action": "defer_preparation",
+          "candidateId": "a3cf1385bc11d2ebbf6e618acc152a2be09186ae228d8a861ade8591baeeb1ff",
+          "peerId": "e64ce8074540031447aa4ec3be92447d0b4e119da2aacf7bbbf59e2328bf96d6",
+          "contextId": "157ed516fffda871ffe68bf28cbf7274a390641722d55aaf0fafb7dfdb1ba552",
+          "priorityKey": [
+            20,
+            -1,
+            11,
+            "a3cf1385bc11d2ebbf6e618acc152a2be09186ae228d8a861ade8591baeeb1ff"
+          ],
+          "protectionReasons": [],
+          "peerLookupAllowed": true,
+          "elapsedT": 20,
+          "candidateCounts": {
+            "T": 20,
+            "J": 1,
+            "R": 11,
+            "A": 8
+          },
+          "peerCounts": {
+            "T": 17,
+            "J": 1,
+            "R": 8,
+            "A": 8
+          },
+          "peerChecks": 1
+        },
+        "firstJump": 11,
+        "jumps": [
+          11
+        ],
+        "terminalSupport": "b2",
+        "T": 20,
+        "J": 1,
+        "R": 11,
+        "A": 8
+      },
+      {
+        "frame": 0,
+        "restored": false,
+        "reason": "higher_ticks_without_structural_advantage",
+        "comparison": {
+          "version": 1,
+          "action": "defer_preparation",
+          "candidateId": "5b6846407718ea9f7b4aa38356ea820b3c552573ffcfb68b49134379775efa00",
+          "peerId": "e64ce8074540031447aa4ec3be92447d0b4e119da2aacf7bbbf59e2328bf96d6",
+          "contextId": "157ed516fffda871ffe68bf28cbf7274a390641722d55aaf0fafb7dfdb1ba552",
+          "priorityKey": [
+            21,
+            -1,
+            12,
+            "5b6846407718ea9f7b4aa38356ea820b3c552573ffcfb68b49134379775efa00"
+          ],
+          "protectionReasons": [],
+          "peerLookupAllowed": true,
+          "elapsedT": 21,
+          "candidateCounts": {
+            "T": 21,
+            "J": 1,
+            "R": 12,
+            "A": 8
+          },
+          "peerCounts": {
+            "T": 17,
+            "J": 1,
+            "R": 8,
+            "A": 8
+          },
+          "peerChecks": 1
+        },
+        "firstJump": 12,
+        "jumps": [
+          12
+        ],
+        "terminalSupport": "b2",
+        "T": 21,
+        "J": 1,
+        "R": 12,
+        "A": 8
+      }
+    ],
+    "scope": "Saved root arrival records, meaningful-node observations and recoverable deferrals; not every generated/screened descriptor."
+  }
+]

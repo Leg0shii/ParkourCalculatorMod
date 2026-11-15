@@ -74,7 +74,8 @@ counts, skips, exclusions and evidence-integrity results.
 
 [Execution reference](ANCHOR_SEARCH_EXECUTION_REFERENCE.md) describes current
 combinations, pruning, bounds and dispatch. The curated Real11 case declares
-finite physical B7, anchors and initial-jump domain `[0,8]`; its origins are in
+finite physical B7 and anchors, with initial preparation selected by the orchestrator
+without a first-jump whitelist; its origins and domain change are in
 [cases/real11](../cases/real11/README.md). Run from `standalone/`:
 
 ```sh
