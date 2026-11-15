@@ -569,6 +569,12 @@ public class ConstraintVisualizationTest {
         assertEquals(WorldPick.Kind.BOX, boxPick.kind);
         assertEquals(1, boxPick.index);
 
+        WorldPick startPick = boxes.pickWorld(new Vec3dCore(0.5, 100.0, 0.5), down, src);
+        assertEquals(WorldPick.Kind.BOX, startPick.kind);
+        assertEquals(0, startPick.index);
+
+        assertNull(boxes.pickWorld(new Vec3dCore(2.5, 100.0, 0.5), down, src));
+
         WorldPick conPick = boxes.pickWorld(new Vec3dCore(5.0, 100.0, 8.5), down, src);
         assertEquals(WorldPick.Kind.CONSTRAINT, conPick.kind);
         assertEquals(1, conPick.index);

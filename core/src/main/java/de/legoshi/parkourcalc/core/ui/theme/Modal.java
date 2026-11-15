@@ -3,6 +3,8 @@ package de.legoshi.parkourcalc.core.ui.theme;
 import imgui.ImDrawList;
 import imgui.ImGui;
 import imgui.ImVec2;
+import imgui.flag.ImGuiFocusedFlags;
+import imgui.flag.ImGuiKey;
 import imgui.flag.ImGuiWindowFlags;
 
 /**
@@ -12,6 +14,9 @@ import imgui.flag.ImGuiWindowFlags;
 public final class Modal {
 
     private static final float CLOSE_ARM_HALF = 0.20f; // half-length of each close-glyph arm, in font-size units (smaller than the native close cross)
+
+    private static String focusedLastFrame;
+    private static String focusedThisFrame;
 
     public static boolean begin(String title, String popupId) {
         return begin(title, popupId, 0);
@@ -27,8 +32,25 @@ public final class Modal {
         ThemeManager.drawModalTitle(title);
         boolean close = drawHeaderClose();
         ThemeManager.popHeaderChrome();
-        if (close) ImGui.closeCurrentPopup();
+        if (close || escapeCloses(popupId)) ImGui.closeCurrentPopup();
         return true;
+    }
+
+    public static boolean anyFocused() {
+        return focusedThisFrame != null;
+    }
+
+    public static void endFrame() {
+        focusedLastFrame = focusedThisFrame;
+        focusedThisFrame = null;
+    }
+
+    private static boolean escapeCloses(String popupId) {
+        if (!ImGui.isWindowFocused(ImGuiFocusedFlags.RootAndChildWindows)) return false;
+        focusedThisFrame = popupId;
+        return popupId.equals(focusedLastFrame)
+                && !ImGui.isAnyItemActive()
+                && ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Escape), false);
     }
 
     public static void end() {

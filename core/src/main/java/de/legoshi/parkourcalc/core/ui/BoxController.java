@@ -236,7 +236,7 @@ public final class BoxController {
 
     public WorldPick pickWorld(Vec3dCore rayOrigin, Vec3dCore rayDirection, ConstraintBoxSource source) {
         int box = pickBoxIndex(rayOrigin, rayDirection);
-        if (box > 0 && box < positions.size() - 1) return WorldPick.box(box);
+        if (box >= 0 && box < positions.size() - 1) return WorldPick.box(box);
 
         double bestT = PICK_REACH;
         int bestTick = -1;
