@@ -66,6 +66,7 @@ final class PoolCertifier {
         this.threads = Math.min(cap, NoTurnParallel.resolveThreads(cfg.threads));
         this.exec = Executors.newFixedThreadPool(threads);
         this.flights = new ExecutorCompletionService<>(exec);
+        this.warmFlights = new ExecutorCompletionService<>(exec);
         this.deadline = deadline;
         this.maximize = problem.objective.sense == Objective.Sense.MAX;
         this.maxCertify = multi ? Math.max(cfg.maxCertify, MULTI_MAX_CERTIFY) : cfg.maxCertify;
@@ -140,6 +141,13 @@ final class PoolCertifier {
     }
 
     private final ExecutorCompletionService<Flight> flights;
+    private final ExecutorCompletionService<WarmFlight> warmFlights;
+    private final ArrayDeque<NoTurnResult> warmSeeds = new ArrayDeque<>();
+    private final ArrayDeque<WarmItem> warmItems = new ArrayDeque<>();
+    private final AtomicBoolean warmStop = new AtomicBoolean(false);
+    private int warmFlying;
+    private int warmTries;
+    private int warmStrats;
     private final List<Flight> flying = new ArrayList<>();
     private final Set<String> flyingKeys = new HashSet<>();
     private final List<Candidate> momentumQueue = new ArrayList<>();
@@ -154,10 +162,13 @@ final class PoolCertifier {
 
     boolean stream() {
         boolean moved = collect(0L);
-        if (stopped()) return !flying.isEmpty() || moved;
+        moved |= collectWarm();
+        if (stopped()) return !flying.isEmpty() || warmFlying > 0 || moved;
+        moved |= launchWarm(Math.max(1, threads / 2));
         moved |= launch();
+        moved |= launchWarm(threads - flying.size());
         if (moved) return true;
-        if (!flying.isEmpty()) {
+        if (!flying.isEmpty() || warmFlying > 0) {
             collect(STREAM_WAIT_MS);
             return true;
         }
@@ -170,12 +181,17 @@ final class PoolCertifier {
     }
 
     void land(boolean abort) {
-        if (abort) for (Flight f : flying) f.cancel.set(true);
-        while (!flying.isEmpty()) {
+        if (abort) {
+            for (Flight f : flying) f.cancel.set(true);
+            warmStop.set(true);
+        }
+        while (!flying.isEmpty() || warmFlying > 0) {
             if (!abort && (stopped() || Thread.currentThread().isInterrupted())) {
                 for (Flight f : flying) f.cancel.set(true);
+                warmStop.set(true);
             }
             collect(STREAM_WAIT_MS);
+            collectWarm();
         }
         settle();
     }
@@ -206,7 +222,7 @@ final class PoolCertifier {
                     + lostFlights + " wallMs=" + wall + " cpuMs=" + cpu + " atMs="
                     + (System.nanoTime() - streamStart) / 1_000_000L + StructurePoolDriver.runtimeNote());
         }
-        while (flying.size() < threads && !stopped()) {
+        while (flying.size() < threads - warmSlots() && !stopped()) {
             CertifyLadder.Ticket next = nextTicket();
             if (next == null) break;
             final Flight f = new Flight(next);
@@ -314,7 +330,7 @@ final class PoolCertifier {
         } else {
             tried.add(f.key);
         }
-        if (best != null) extraCerts += Math.min(1.0, (double) f.ticket.budget / SHORT_PASS_NANOS);
+        if (best != null && !cfg.sharedExplore) extraCerts += Math.min(1.0, (double) f.ticket.budget / SHORT_PASS_NANOS);
         if (f.result == null) return;
         boolean hadBest = best != null;
         found.add(keyOf(f.result));
@@ -322,9 +338,84 @@ final class PoolCertifier {
         if (!hadBest) extraDeadline = System.nanoTime() + cfg.extraCertifyNanos;
         progress.update("certify streaming: " + certs + " certified (parallel " + threads + ") best=" + best.describe(),
                 fraction());
+        if (cfg.sharedExplore) {
+            warmSeeds.add(f.result);
+            return;
+        }
         List<NoTurnResult> hits = new ArrayList<>(1);
         hits.add(f.result);
         exploreWarm(hits);
+    }
+
+    private static final class WarmFlight {
+        final WarmItem item;
+        NoTurnResult result;
+
+        WarmFlight(WarmItem item) {
+            this.item = item;
+        }
+    }
+
+    private int warmSlots() {
+        if (!cfg.sharedExplore) return 0;
+        int waiting = warmFlying + warmItems.size() + (warmSeeds.isEmpty() ? 0 : 1);
+        return Math.min(Math.max(1, threads / 2), waiting);
+    }
+
+    private WarmItem nextWarm() {
+        while (warmItems.isEmpty() && !warmSeeds.isEmpty()) warmItems.addAll(neighbours(warmSeeds.poll()));
+        return warmItems.poll();
+    }
+
+    private boolean launchWarm(int cap) {
+        if (!cfg.sharedExplore) return false;
+        boolean launched = false;
+        while (warmFlying < cap && flying.size() + warmFlying < threads && !stopped()) {
+            WarmItem item = nextWarm();
+            if (item == null) break;
+            final WarmFlight w = new WarmFlight(item);
+            warmFlying++;
+            warmFlights.submit(() -> {
+                try {
+                    long budget = Math.min(WARM_BUDGET_NANOS, extraDeadline - System.nanoTime());
+                    if (budget > 0 && !warmStop.get()) w.result = certifyWarmOne(w.item, budget, warmStop);
+                } catch (RuntimeException | Error e) {
+                    w.result = null;
+                }
+                return w;
+            });
+            launched = true;
+        }
+        return launched;
+    }
+
+    private boolean collectWarm() {
+        boolean any = false;
+        java.util.concurrent.Future<WarmFlight> done = warmFlights.poll();
+        while (done != null) {
+            warmFlying--;
+            warmTries++;
+            WarmFlight w;
+            try {
+                w = done.get();
+            } catch (InterruptedException | java.util.concurrent.ExecutionException e) {
+                w = null;
+            }
+            NoTurnResult r = w == null ? null : w.result;
+            if (r != null && found.add(keyOf(r))) {
+                warmStrats++;
+                if (StructurePoolDriver.betterResult(maximize, r, best)) best = r;
+                progress.found(r);
+                warmSeeds.add(r);
+            }
+            any = true;
+            done = warmFlights.poll();
+        }
+        if (any) {
+            progress.update("explore neighbours: " + warmStrats + " strats from " + warmTries + " warm certifies (shared)",
+                    fraction());
+        }
+        return any;
     }
 
     private boolean stopped() {

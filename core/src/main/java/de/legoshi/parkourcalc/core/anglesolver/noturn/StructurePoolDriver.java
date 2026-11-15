@@ -86,6 +86,7 @@ public final class StructurePoolDriver {
         public double momentumMemoryShare = 1.0 / 6.0;
         public int momentumThreadShare = 4;
         public long momentumDelayNanos = 0L;
+        public boolean sharedExplore = false;
         public boolean playable = false;
         public int threads = 0;
 

@@ -275,6 +275,9 @@ anglesolver/
   NoTurnFamilyStageTest.java  (SlowSolverTests) StructurePoolDriver with the family lane alone, cold, the
                            jump's own rows and their copies left out of the library: j346 and j132 land
                            byte-exact and the Strat is a product of library families
+  NoTurnSharedExploreTest.java  (SlowSolverTests) StructurePoolDriver with Config.sharedExplore (#704) on j315,
+                           family lane, full library, 10 s after the first Strat on two threads: the list
+                           holds Strats with at least three different run-ups, all byte-exact
   NoTurnMomentumRulesTest.java  MomentumRules, the change level rules of the momentum lane (#696) as one state
                            per tick: a change on a jump tick or the tick after it is free, a short hold away
                            from a jump needs the tap rules, the three sprint variants, and where the walked
