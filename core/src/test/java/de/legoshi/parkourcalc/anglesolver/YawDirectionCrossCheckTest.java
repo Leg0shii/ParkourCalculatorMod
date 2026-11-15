@@ -62,15 +62,26 @@ public class YawDirectionCrossCheckTest {
         final int tick;
         final String op;
         final double rhs;
+        final double hi;
 
         Row(int tick, String op, double rhs) {
+            this(tick, op, rhs, rhs);
+        }
+
+        Row(int tick, String op, double rhs, double hi) {
             this.tick = tick;
             this.op = op;
             this.rhs = rhs;
+            this.hi = hi;
+        }
+
+        static Row band(int tick, double lo, double hi) {
+            return new Row(tick, "IN", lo, hi);
         }
 
         @Override
         public String toString() {
+            if (op.equals("IN")) return String.format(java.util.Locale.ROOT, "T%d[%.4f,%.4f]", tick + 1, rhs, hi);
             return "T" + (tick + 1) + (op.equals("GE") ? ">=" : op.equals("LE") ? "<=" : "=") + (rhs == 0.0 ? "0" : String.format(java.util.Locale.ROOT, "%.4f", rhs));
         }
     }
@@ -86,6 +97,10 @@ public class YawDirectionCrossCheckTest {
 
         Row oneWay() {
             return new Row(tick, turn >= 0.0 ? "GE" : "LE", 0.0);
+        }
+
+        Row band(double below, double above) {
+            return Row.band(tick, turn - below, turn + above);
         }
 
         Row atLeast(double margin) {
@@ -139,10 +154,14 @@ public class YawDirectionCrossCheckTest {
             file.angleSolver.ticks.add(entry);
         }
         SaveFile.Constraint c = new SaveFile.Constraint();
-        c.range = false;
+        c.range = r.op.equals("IN");
         c.field = "DF";
-        c.op = r.op;
+        c.op = c.range ? null : r.op;
         c.value = r.rhs;
+        c.lo = r.rhs;
+        c.hi = r.hi;
+        c.loInclusive = true;
+        c.hiInclusive = true;
         entry.constraints.add(c);
     }
 
@@ -240,6 +259,29 @@ public class YawDirectionCrossCheckTest {
             mixed.add(new Row(still3.get(0).tick, "EQ", 0.0));
             add(labels, variants, optimize, "withDfZero", mixed, 0);
         }
+        List<Row> band = new ArrayList<>();
+        List<Row> bandNarrow = new ArrayList<>();
+        List<Row> bandOneSided = new ArrayList<>();
+        for (Turn t : random3) {
+            band.add(t.band(0.5, 0.5));
+            bandNarrow.add(t.band(0.01, 0.01));
+            bandOneSided.add(t.turn >= 0.0 ? t.band(0.0, 2.0) : t.band(2.0, 0.0));
+        }
+        add(labels, variants, optimize, "band0.5", band, 0);
+        add(labels, variants, optimize, "band0.01", bandNarrow, 0);
+        List<Row> exact = new ArrayList<>();
+        for (Turn t : random3) exact.add(new Row(t.tick, "EQ", t.turn));
+        add(labels, variants, optimize, "exact", exact, 0);
+        add(labels, variants, optimize, "bandEdge", bandOneSided, 0);
+        List<Row> bandAll = new ArrayList<>();
+        for (Turn t : turning) bandAll.add(t.band(1.0, 1.0));
+        add(labels, variants, optimize, "bandAll1.0", bandAll, 0);
+        List<Row> bandStill = new ArrayList<>();
+        for (Turn t : still3) bandStill.add(Row.band(t.tick, -0.5, 0.5));
+        add(labels, variants, optimize, "bandStill", bandStill, 0);
+        if (!turning.isEmpty() && turning.get(0).tick == ys.get(0).tick - 1) {
+            add(labels, variants, optimize, "bandSeam", Collections.singletonList(turning.get(0).band(0.5, 0.5)), 0);
+        }
         boolean withOptimize = ys.size() <= OPTIMIZE_TICK_CAP;
 
         List<String> failures = new ArrayList<>();
@@ -248,7 +290,13 @@ public class YawDirectionCrossCheckTest {
             Run r = solve(ProblemFixture.load("solve", name), variants.get(v), optimize.get(v));
             if (v == 0 && withOptimize) {
                 int seconds = (int) Math.max(OPTIMIZE_SECONDS_MIN, 3L * ((r.ms + 999L) / 1000L));
-                add(labels, variants, optimize, "optimize" + seconds + "s", rows(random3), seconds);
+                List<Row> timed = new ArrayList<>(rows(random3));
+                for (Turn t : turning) {
+                    if (random3.contains(t)) continue;
+                    timed.add(t.band(0.5, 0.5));
+                    break;
+                }
+                add(labels, variants, optimize, "optimize" + seconds + "s", timed, seconds);
             }
             System.out.printf("XCHK %-26s %-12s %s %6d ms met=%s solver=%s rows=%s%n", name, labels.get(v),
                     r.ok() ? "OK  " : "FAIL", r.ms,
@@ -256,7 +304,7 @@ public class YawDirectionCrossCheckTest {
                     r.result == null ? "-" : r.result.getSolver(), variants.get(v));
             if (!r.ok()) failures.add(labels.get(v) + " " + variants.get(v));
         }
-        assertTrue(name + ": one-way dF rows the solved path already satisfies must still solve: " + failures,
+        assertTrue(name + ": dF rows the solved path already satisfies must still solve: " + failures,
                 failures.isEmpty());
     }
 

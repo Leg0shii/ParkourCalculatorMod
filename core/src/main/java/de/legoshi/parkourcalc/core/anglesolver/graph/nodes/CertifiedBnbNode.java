@@ -27,6 +27,8 @@ public final class CertifiedBnbNode implements NodeRuntime {
     private static final int DIVE_EVERY = 20;
     private static final int DIVE_LENGTH = 40;
     private static final long DIVE_TAIL_NANOS = 200_000_000L;
+    private static final int PROVE_NODE_CAP = 4096;
+    private static final long PROVE_NANOS = 500_000_000L;
 
     private final int ffSec;
     private final int ffNodeCap;
@@ -34,6 +36,7 @@ public final class CertifiedBnbNode implements NodeRuntime {
     private final boolean exhaust;
     private final boolean dive;
     private final String labelSuffix;
+    private final int batch;
 
     public CertifiedBnbNode(ParamValues params) {
         this.ffSec = params.getInt("ffSec");
@@ -42,6 +45,7 @@ public final class CertifiedBnbNode implements NodeRuntime {
         this.exhaust = params.getBool("exhaust");
         this.dive = params.getBool("dive");
         this.labelSuffix = params.getString("labelSuffix");
+        this.batch = Math.max(1, params.getInt("batch"));
     }
 
     @Override
@@ -98,9 +102,15 @@ public final class CertifiedBnbNode implements NodeRuntime {
             cfg.diveEvery = DIVE_EVERY;
             cfg.diveLength = DIVE_LENGTH;
         }
+        cfg.batch = batch;
+        cfg.sequential = ctx.sequential;
         cfg.cancel = cancelToken;
         cfg.deadlineNanos = solveDeadline;
         cfg.homotopy = ctx.foldableDf() && ctx.overallDeadline() > 0;
+        if (exhaust) {
+            cfg.foldTies = true;
+            cfg.excludeClamps = true;
+        }
         if (in != null && in.yaws != null) {
             cfg.seedYaws = in.yaws;
             cfg.seedPx = ctx.scenario.startPos.x;
@@ -108,6 +118,11 @@ public final class CertifiedBnbNode implements NodeRuntime {
         }
         long solveStart = SolveClock.nanoTime();
         CertifiedBnb.Result res = CertifiedBnb.solve(exact, dspec, cfg);
+        if (!optimize && !exhaust && !dive && !res.declined && !res.feasible && !res.certifiedInfeasible
+                && (cancelToken == null || !cancelToken.get()) && CertifiedBnb.foldsTies(dspec)) {
+            CertifiedBnb.Result proof = prove(exact, dspec, cancelToken, deadlineNanos);
+            if (proof.feasible || proof.certifiedInfeasible) res = proof;
+        }
         long solveNanos = SolveClock.nanoTime() - solveStart;
         if (SolverTrace.on()) {
             SolverTrace.log("CERT", "done declined=%s feasible=%s obj=%s bound=%s gap=%s certified=%s"
@@ -148,6 +163,21 @@ public final class CertifiedBnbNode implements NodeRuntime {
         Candidate out = Candidate.of(ctx, res.yawsDeg);
         if (optimize && !Double.isNaN(res.gap)) out = out.withDualGap(res.gap);
         return NodeOutcome.of(optimize ? Guarantee.IMPROVED : Guarantee.FOUND, out);
+    }
+
+    private static CertifiedBnb.Result prove(ExactJumpModel exact, JumpSpec spec, AtomicBoolean cancel,
+                                             long deadlineNanos) {
+        CertifiedBnb.Config cfg = new CertifiedBnb.Config();
+        cfg.mode = CertifiedBnb.Mode.FIRST_FEASIBLE;
+        cfg.nodeCap = PROVE_NODE_CAP;
+        cfg.polishCap = 0;
+        cfg.foldTies = true;
+        cfg.excludeClamps = true;
+        cfg.skipSeeds = true;
+        cfg.cancel = cancel;
+        long until = SolveClock.nanoTime() + PROVE_NANOS;
+        cfg.deadlineNanos = deadlineNanos > 0 ? Math.min(deadlineNanos, until) : until;
+        return CertifiedBnb.solve(exact, spec, cfg);
     }
 
     private static double objectiveAfterStartMove(GraphContext ctx, double[] yaws, double px, double pz) {

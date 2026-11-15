@@ -222,6 +222,19 @@ public final class CostateDualSolver {
         }
     }
 
+    private boolean stopOnRay;
+    private double rayViolation;
+    private double[] prevLambda;
+    private double[] rayDir;
+
+    public CostateDualSolver stopOnRay(double minViolation) {
+        stopOnRay = freeP0 == null;
+        rayViolation = minViolation;
+        prevLambda = new double[m];
+        rayDir = new double[m];
+        return this;
+    }
+
     /** Diagnostics: solver iterations spent in the last {@link #solve}. */
     public int lastIters;
     /** Diagnostics: final projected-gradient residual of the last {@link #solve}. */
@@ -231,6 +244,10 @@ public final class CostateDualSolver {
     /** Minimize the dual with walls tightened inward by {@code margin}, warm-started from {@code warm}
      *  (null = cold, λ=0). Returns fresh arrays so the caller may keep them; internal state is reusable. */
     public Result solve(double margin, double[] warm) {
+        return solve(margin, warm, 0.0, Double.NEGATIVE_INFINITY);
+    }
+
+    public Result solve(double margin, double[] warm, double valueShift, double stopAtOrBelow) {
         lastStalled = false;
         if (m == 0) {
             // No walls: the optimum is every input along the objective (costate = c). Closed form.
@@ -254,6 +271,7 @@ public final class CostateDualSolver {
         int it = 0;
         for (; it < MAX_ITER; it++) {
             SolveClock.charge(SolveClock.DUAL, 4L * n * m + 64L);
+            if (phi + valueShift <= stopAtOrBelow) break;
             double pgres = 0.0;
             for (int j = 0; j < m; j++) {
                 double p = project(lambda[j] - gradient[j], eq[j]) - lambda[j];
@@ -278,6 +296,20 @@ public final class CostateDualSolver {
             if (it > 0 && du <= U_TOL) break;
             System.arraycopy(ux, 0, uPrevX, 0, n);
             System.arraycopy(uz, 0, uPrevZ, 0, n);
+
+            if (stopOnRay) {
+                SolveClock.charge(SolveClock.DUAL, 2L * n * m);
+                boolean ray = recedes(lambda);
+                if (!ray && it > 0) {
+                    for (int j = 0; j < m; j++) rayDir[j] = lambda[j] - prevLambda[j];
+                    ray = recedes(rayDir);
+                }
+                if (ray) {
+                    lastIters = it;
+                    return null;
+                }
+                System.arraycopy(lambda, 0, prevLambda, 0, m);
+            }
 
             int nf = 0;
             for (int j = 0; j < m; j++) {
@@ -416,6 +448,38 @@ public final class CostateDualSolver {
             else if (axis[j] == 2) h += lam[j] * (a == 0 ? p0coefX[j] : p0coefZ[j]);
         }
         return h;
+    }
+
+    private boolean recedes(double[] d) {
+        double sum = 0.0;
+        double f = 0.0;
+        for (int j = 0; j < m; j++) {
+            double dj = d[j];
+            if (dj < 0.0 && !eq[j]) return false;
+            sum += Math.abs(dj);
+            f += dj * bPrime[j];
+        }
+        if (sum == 0.0) return false;
+        java.util.Arrays.fill(ngx, 0.0);
+        java.util.Arrays.fill(ngz, 0.0);
+        for (int j = 0; j < m; j++) {
+            double dj = d[j];
+            if (dj == 0.0) continue;
+            if (axis[j] == 0) {
+                double[] cj = coef[j];
+                for (int t = 0; t < n; t++) ngx[t] += dj * cj[t];
+            } else if (axis[j] == 1) {
+                double[] cj = coef[j];
+                for (int t = 0; t < n; t++) ngz[t] += dj * cj[t];
+            } else {
+                double[] cxj = coefX[j];
+                double[] czj = coefZ[j];
+                if (cxj != null) for (int t = 0; t < n; t++) ngx[t] += dj * cxj[t];
+                if (czj != null) for (int t = 0; t < n; t++) ngz[t] += dj * czj[t];
+            }
+        }
+        for (int t = 0; t < n; t++) f += mMag[t] * StrictMath.sqrt(ngx[t] * ngx[t] + ngz[t] * ngz[t]);
+        return f < -rayViolation * sum;
     }
 
     /** D(λ) = Σ_t m_t·sqrt(‖g_t‖^2+eps) + Σ_j λ_j b'_j, filling {@code outX,outZ} with the costates g_t. */
