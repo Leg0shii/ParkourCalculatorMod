@@ -162,6 +162,8 @@ public final class NodeCatalog {
                 .branch(Branch.preserves(Guarantee.UNCHANGED))
                 .param(ParamSpec.integer("budgetSec", "Max time (s)", 0, 600, 20))
                 .param(ParamSpec.bool("jointOnly", "Joint rescue only", false))
+                .param(ParamSpec.bool("first", "First landing for start and facings together", false))
+                .param(ParamSpec.integer("budgetMs", "Max time (ms)", 0, 600000, 0))
                 .param(ParamSpec.decimal("fsIntervalMargin", "Pin interval margin", 0.0, 1.0, 1.0e-3))
                 .param(ParamSpec.decimal("fsInvariantTol", "Invariant slack tolerance", 0.0, 1.0, 1.0e-6))
                 .param(ParamSpec.text("fsJointMargins", "Joint margin ladder",
