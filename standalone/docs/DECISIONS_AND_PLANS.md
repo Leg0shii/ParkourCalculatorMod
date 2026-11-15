@@ -1,5 +1,7 @@
 # Decisions and plan authority
 
+Folder-structure follow-up: [inventory and proposed layout](STANDALONE_STRUCTURE_REVIEW.md) separates runtime, research, tests, tooling, native sources, cases, docs and local outputs. This is a review/proposal, not an instruction to apply moves or change solver policy. Full file and Python dependency ledgers are linked there.
+
 2026-11-11 controlling implementation: the [hard-jump comparison/reachability plan](HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md)
 is implemented; its ledger and [feature evidence](../autonomy/experiments/hard-jump-comparisons/README.md)
 record acceptance. The user confirmed more J OR fewer R normally / fewer A in a

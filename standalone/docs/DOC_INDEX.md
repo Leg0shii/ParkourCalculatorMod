@@ -1,5 +1,7 @@
 # Documentation index
 
+Proposed folder cleanup: [standalone inventory and structure review](STANDALONE_STRUCTURE_REVIEW.md), with every-file/module/import ledgers. Investigation only; no production moves or new solver policy.
+
 Current execution tables, decisions/rationale and module ownership: [anchor execution reference](ANCHOR_SEARCH_EXECUTION_REFERENCE.md).
 
 Current hard-jump implementation: [shared comparison/reachability plan](HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md)
@@ -17,6 +19,7 @@ All tracked standalone Markdown plus this consolidation. Read [AGENTS](../AGENTS
 
 | Document | Topic | Authority/status |
 | --- | --- | --- |
+| [docs/STANDALONE_STRUCTURE_REVIEW.md](STANDALONE_STRUCTURE_REVIEW.md) | Exhaustive on-disk/tracked inventory, production/research split, target tree and staged migration | Proposed structure only; current code stays in place |
 | [docs/ANCHOR_SEARCH_EXECUTION_REFERENCE.md](ANCHOR_SEARCH_EXECUTION_REFERENCE.md) | Combination catalogue, pruning/deferral/solver tables, decisions/rationale, owners, configuration and measured work | Current physical-anchor execution reference at `dd738c98` |
 | [docs/CHECKPOINT_STORAGE.md](CHECKPOINT_STORAGE.md) | Shared checkpoint format, resume/export, callback contract and measured cleanup | Current implementation/runbook |
 | [docs/IPOPT_CONSTRAINT_REDUCTION.md](IPOPT_CONSTRAINT_REDUCTION.md) | Numerical row reduction, extraction/monitor contract, provenance and validation | Current implementation/reference |

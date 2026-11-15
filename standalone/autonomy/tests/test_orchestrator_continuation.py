@@ -246,7 +246,7 @@ class OuterResumeTests(unittest.TestCase):
              patch('standalone.autonomy.cell_routes.depth_first.iter_movement_programs',side_effect=generated), \
              patch('standalone.autonomy.cell_routes.depth_first.generate_choices',side_effect=lambda *args,**kwargs:(v for v in ())), \
              patch('standalone.autonomy.cell_routes.checkpoint_search.evaluate_program',side_effect=evaluate), \
-             patch('standalone.autonomy.cell_routes.checkpoint_experiment.replay_witness',return_value=dict(passed=True)):
+             patch('standalone.autonomy.witness.replay_witness',return_value=dict(passed=True)):
             first=find_checkpoint_route(scene,Compiler(),max_solver_calls=1,**options)
             saved=json.loads(json.dumps(first['searchState']))
             second=find_checkpoint_route(scene,Compiler(),max_solver_calls=5,resume_state=saved,**options)

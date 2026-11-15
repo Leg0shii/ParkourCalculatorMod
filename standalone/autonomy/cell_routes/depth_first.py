@@ -62,7 +62,7 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
                  cancel_event, on_progress, on_window, time_margin, progress_margin, route_report,
                  window_plan, comparison_policy, minimum_run_pruning, _owned_state=False):
     from .checkpoint_search import evaluate_program
-    from .checkpoint_experiment import replay_witness
+    from ..witness import replay_witness
 
     anchor_route = hasattr(adapter, 'anchor_policy')
     event_route = getattr(adapter, 'search_contract', None) == 'event_goals_v1'

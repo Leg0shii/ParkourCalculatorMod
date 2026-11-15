@@ -11,11 +11,11 @@ from standalone.autonomy.block_search import prepare_scene
 from standalone.autonomy.compiler import JavaCompiler
 from .checkpoints import Checkpoint
 from .checkpoint_search import find_checkpoint_route
-from .checkpoint_experiment import replay_witness
+from ..witness import replay_witness
 from .geometry import decompose
 from .routes import corridor_for_points,landmarks
 from .support_order import SupportOrder
-from .two_goal_experiment import witnesses
+from ..witness import witnesses
 from standalone.autonomy.checkpoint_store import CheckpointStore, read_report
 from .checkpoint_persistence import SearchCheckpoint
 from standalone.autonomy.solve_spec import full_witness

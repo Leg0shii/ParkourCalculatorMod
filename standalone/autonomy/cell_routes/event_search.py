@@ -79,7 +79,7 @@ def search_event_routes(request, compiler, *, task_goal=None, discovery=None, an
     state['sessions']+=1
     saved_best=(state.get('dfs') or {}).get('best') or state.get('best')
     if saved is not None and saved_best is not None:
-        from .checkpoint_experiment import replay_witness
+        from ..witness import replay_witness
         if not replay_witness(scene,saved_best,counted)['passed']:
             raise ValueError('Saved automatic incumbent no longer passes independent replay')
         state['best']=saved_best

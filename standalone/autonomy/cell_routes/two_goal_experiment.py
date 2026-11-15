@@ -1,3 +1,4 @@
+from ..witness import witnesses
 import argparse
 import copy
 import json
@@ -17,14 +18,6 @@ from .window_experiment import run_fixture
 from standalone.autonomy.solve_spec import full_witness
 
 
-def witnesses(result):
-    if result.get('best') is not None and full_witness(result['best']):yield result['best']
-    for window in result.get('windows',[]):
-        for candidate in window['candidates']:
-            if 'witness' in candidate and full_witness(candidate['witness']):yield candidate['witness']
-            spatial=candidate.get('spatial_probe',{})
-            if spatial.get('best') is not None and full_witness(spatial['best']):yield spatial['best']
-    for rescue in result.get('rescues',[]):yield from witnesses(rescue['result'])
 
 
 def competitive_followup(run,prior):

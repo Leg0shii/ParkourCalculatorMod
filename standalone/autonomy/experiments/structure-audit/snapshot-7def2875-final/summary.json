@@ -1,0 +1,1014 @@
+{
+  "sourceRevision": "7def28752194e2c23c2773b24f28651aafd9512f",
+  "root": "/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/standalone",
+  "dirtyPathsBefore": [
+    "standalone/AGENTS.md",
+    "standalone/docs/CODE_MAP.md"
+  ],
+  "scope": "All physical files under standalone, including ignored files; no followed directory symlinks. Audit bundle and review document excluded to avoid self-inventory.",
+  "physicalFiles": 2809,
+  "physicalBytes": 903522063,
+  "trackedFiles": 1199,
+  "trackedBytes": 703002475,
+  "trackedPython": 275,
+  "trackedByRole": {
+    "entry_document": {
+      "files": 2,
+      "bytes": 4965
+    },
+    "design_or_history_document": {
+      "files": 68,
+      "bytes": 1612651
+    },
+    "capability_documentation": {
+      "files": 4,
+      "bytes": 58431
+    },
+    "runtime_api": {
+      "files": 3,
+      "bytes": 883
+    },
+    "runtime_split": {
+      "files": 9,
+      "bytes": 138886
+    },
+    "runtime": {
+      "files": 48,
+      "bytes": 457401
+    },
+    "runtime_compat": {
+      "files": 11,
+      "bytes": 102366
+    },
+    "mixed_cli": {
+      "files": 2,
+      "bytes": 11432
+    },
+    "mixed_runtime_research": {
+      "files": 2,
+      "bytes": 11705
+    },
+    "research_driver": {
+      "files": 12,
+      "bytes": 87895
+    },
+    "runtime_plotting_split": {
+      "files": 3,
+      "bytes": 38618
+    },
+    "runtime_capability": {
+      "files": 15,
+      "bytes": 151977
+    },
+    "native_build_script": {
+      "files": 2,
+      "bytes": 4612
+    },
+    "research_document_or_metadata": {
+      "files": 68,
+      "bytes": 674001
+    },
+    "experiment_driver": {
+      "files": 61,
+      "bytes": 338329
+    },
+    "research_evidence": {
+      "files": 684,
+      "bytes": 697588731
+    },
+    "archived_source_snapshot": {
+      "files": 21,
+      "bytes": 123080
+    },
+    "test_fixture": {
+      "files": 61,
+      "bytes": 139544
+    },
+    "native_bridge_source": {
+      "files": 4,
+      "bytes": 36212
+    },
+    "research_prototype": {
+      "files": 10,
+      "bytes": 73738
+    },
+    "dependency_manifest": {
+      "files": 3,
+      "bytes": 129
+    },
+    "runtime_cli": {
+      "files": 3,
+      "bytes": 8031
+    },
+    "test": {
+      "files": 79,
+      "bytes": 689088
+    },
+    "current_documentation": {
+      "files": 24,
+      "bytes": 649770
+    }
+  },
+  "physicalByRole": {
+    "entry_document": {
+      "files": 2,
+      "bytes": 4965
+    },
+    "design_or_history_document": {
+      "files": 68,
+      "bytes": 1612651
+    },
+    "capability_documentation": {
+      "files": 4,
+      "bytes": 58431
+    },
+    "runtime_api": {
+      "files": 3,
+      "bytes": 883
+    },
+    "local_cache": {
+      "files": 186,
+      "bytes": 2518787
+    },
+    "runtime_split": {
+      "files": 9,
+      "bytes": 138886
+    },
+    "runtime": {
+      "files": 48,
+      "bytes": 457401
+    },
+    "local_run_or_scratch": {
+      "files": 1397,
+      "bytes": 194562434
+    },
+    "local_native_build": {
+      "files": 6,
+      "bytes": 23937
+    },
+    "runtime_compat": {
+      "files": 11,
+      "bytes": 102366
+    },
+    "mixed_cli": {
+      "files": 2,
+      "bytes": 11432
+    },
+    "mixed_runtime_research": {
+      "files": 2,
+      "bytes": 11705
+    },
+    "research_driver": {
+      "files": 12,
+      "bytes": 87895
+    },
+    "runtime_plotting_split": {
+      "files": 3,
+      "bytes": 38618
+    },
+    "runtime_capability": {
+      "files": 15,
+      "bytes": 151977
+    },
+    "native_build_script": {
+      "files": 2,
+      "bytes": 4612
+    },
+    "research_document_or_metadata": {
+      "files": 68,
+      "bytes": 674001
+    },
+    "local_research_result": {
+      "files": 21,
+      "bytes": 3414430
+    },
+    "experiment_driver": {
+      "files": 61,
+      "bytes": 338329
+    },
+    "research_evidence": {
+      "files": 684,
+      "bytes": 697588731
+    },
+    "archived_source_snapshot": {
+      "files": 21,
+      "bytes": 123080
+    },
+    "test_fixture": {
+      "files": 61,
+      "bytes": 139544
+    },
+    "native_bridge_source": {
+      "files": 4,
+      "bytes": 36212
+    },
+    "research_prototype": {
+      "files": 10,
+      "bytes": 73738
+    },
+    "dependency_manifest": {
+      "files": 3,
+      "bytes": 129
+    },
+    "runtime_cli": {
+      "files": 3,
+      "bytes": 8031
+    },
+    "test": {
+      "files": 79,
+      "bytes": 689088
+    },
+    "current_documentation": {
+      "files": 24,
+      "bytes": 649770
+    }
+  },
+  "codeOutsideTestsAndExperiments": 118,
+  "reviewedCodeByRole": {
+    "runtime_api": 3,
+    "runtime_split": 9,
+    "runtime": 48,
+    "runtime_compat": 11,
+    "mixed_cli": 2,
+    "mixed_runtime_research": 2,
+    "research_driver": 12,
+    "runtime_plotting_split": 3,
+    "runtime_capability": 15,
+    "research_prototype": 10,
+    "runtime_cli": 3
+  },
+  "anchorStaticClosure": 81,
+  "anchorWithInitializers": 83,
+  "supportedApiStaticClosure": 83,
+  "runtimeToMixedOrResearchEdges": [
+    {
+      "importer": "autonomy/cell_routes/automatic_experiment.py",
+      "line": 16,
+      "imported": "autonomy/cell_routes/checkpoint_experiment.py",
+      "symbols": "replay_witness",
+      "importer_role": "mixed_cli",
+      "imported_role": "mixed_runtime_research"
+    },
+    {
+      "importer": "autonomy/cell_routes/automatic_experiment.py",
+      "line": 19,
+      "imported": "autonomy/cell_routes/window_experiment.py",
+      "symbols": "save",
+      "importer_role": "mixed_cli",
+      "imported_role": "mixed_runtime_research"
+    },
+    {
+      "importer": "autonomy/cell_routes/depth_first.py",
+      "line": 65,
+      "imported": "autonomy/cell_routes/checkpoint_experiment.py",
+      "symbols": "replay_witness",
+      "importer_role": "runtime",
+      "imported_role": "mixed_runtime_research"
+    },
+    {
+      "importer": "autonomy/cell_routes/event_search.py",
+      "line": 82,
+      "imported": "autonomy/cell_routes/checkpoint_experiment.py",
+      "symbols": "replay_witness",
+      "importer_role": "runtime",
+      "imported_role": "mixed_runtime_research"
+    },
+    {
+      "importer": "autonomy/cell_routes/fixed_clock_experiment.py",
+      "line": 14,
+      "imported": "autonomy/cell_routes/checkpoint_experiment.py",
+      "symbols": "replay_witness",
+      "importer_role": "mixed_cli",
+      "imported_role": "mixed_runtime_research"
+    },
+    {
+      "importer": "autonomy/cell_routes/fixed_clock_experiment.py",
+      "line": 18,
+      "imported": "autonomy/cell_routes/two_goal_experiment.py",
+      "symbols": "witnesses",
+      "importer_role": "mixed_cli",
+      "imported_role": "research_driver"
+    },
+    {
+      "importer": "autonomy/cell_routes/route_queue.py",
+      "line": 75,
+      "imported": "autonomy/cell_routes/checkpoint_experiment.py",
+      "symbols": "replay_witness",
+      "importer_role": "runtime_compat",
+      "imported_role": "mixed_runtime_research"
+    },
+    {
+      "importer": "autonomy/cell_routes/window_experiment.py",
+      "line": 12,
+      "imported": "autonomy/cell_routes/checkpoint_experiment.py",
+      "symbols": "brief.replay_witness",
+      "importer_role": "mixed_runtime_research",
+      "imported_role": "mixed_runtime_research"
+    }
+  ],
+  "knownDynamicEntries": [
+    {
+      "path": "ipopt/worker.py",
+      "invoker": "ipopt/solver.py:_worker_command",
+      "reason": "Launched by file path/subprocess; static import closure cannot identify this required runtime entry."
+    }
+  ],
+  "testsWithExperimentPathReferences": [
+    "autonomy/tests/test_anchor_policy.py",
+    "autonomy/tests/test_block_route_witnesses.py",
+    "autonomy/tests/test_candidate_audit.py",
+    "autonomy/tests/test_cell_experiment.py",
+    "autonomy/tests/test_checkpoint_guidance.py",
+    "autonomy/tests/test_climbable_search.py",
+    "autonomy/tests/test_comparison_goals.py",
+    "autonomy/tests/test_decision_windows.py",
+    "autonomy/tests/test_depth_first.py",
+    "autonomy/tests/test_full_route_witness.py",
+    "autonomy/tests/test_generic_composition.py",
+    "autonomy/tests/test_hanging_vines.py",
+    "autonomy/tests/test_ladder_ceiling.py",
+    "autonomy/tests/test_ladder_composition.py",
+    "autonomy/tests/test_long_ladder_chains.py",
+    "autonomy/tests/test_minimum_runs.py",
+    "autonomy/tests/test_movement_composition.py",
+    "autonomy/tests/test_movement_contacts.py",
+    "autonomy/tests/test_movement_entry.py",
+    "autonomy/tests/test_obstacles.py",
+    "autonomy/tests/test_proposal_analysis.py",
+    "autonomy/tests/test_route_guidance.py",
+    "autonomy/tests/test_semantic_search.py",
+    "autonomy/tests/test_transfer_time_bounds.py"
+  ],
+  "testToTestImports": [
+    {
+      "importer": "autonomy/tests/test_anchor_dfs.py",
+      "line": 9,
+      "imported": "autonomy/tests/test_anchor_policy.py",
+      "symbols": "scene.history",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_anchor_dfs.py",
+      "line": 185,
+      "imported": "autonomy/tests/test_checkpoint_guidance.py",
+      "symbols": "flat_scene",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_anchor_dfs.py",
+      "line": 186,
+      "imported": "autonomy/tests/test_minimum_runs.py",
+      "symbols": "flight",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_anchor_policy.py",
+      "line": 14,
+      "imported": "autonomy/tests/test_checkpoint_guidance.py",
+      "symbols": "flat_scene",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_anchor_search.py",
+      "line": 15,
+      "imported": "autonomy/tests/test_checkpoint_guidance.py",
+      "symbols": "flat_scene",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_anchor_search.py",
+      "line": 16,
+      "imported": "autonomy/tests/test_repair_resume.py",
+      "symbols": "route.outcome.VERTICAL",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_cell_experiment.py",
+      "line": 12,
+      "imported": "autonomy/tests/test_search.py",
+      "symbols": "route",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_cell_experiment.py",
+      "line": 59,
+      "imported": "autonomy/tests/test_cell_routes.py",
+      "symbols": "side_scene",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_cell_local.py",
+      "line": 12,
+      "imported": "autonomy/tests/test_cell_routes.py",
+      "symbols": "side_scene",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_checkpoint_guidance.py",
+      "line": 22,
+      "imported": "autonomy/tests/test_cell_routes.py",
+      "symbols": "side_scene",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_checkpoint_guidance.py",
+      "line": 23,
+      "imported": "autonomy/tests/test_search.py",
+      "symbols": "route",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_checkpoint_store.py",
+      "line": 12,
+      "imported": "autonomy/tests/test_repair_resume.py",
+      "symbols": "test_repair_resume",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_checkpoint_store.py",
+      "line": 13,
+      "imported": "autonomy/tests/test_depth_first.py",
+      "symbols": "test_depth_first",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_checkpoint_store.py",
+      "line": 216,
+      "imported": "autonomy/tests/test_checkpoint_guidance.py",
+      "symbols": "flat_scene",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_checkpoint_store.py",
+      "line": 242,
+      "imported": "autonomy/tests/test_checkpoint_guidance.py",
+      "symbols": "flat_scene",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_comparison_goals.py",
+      "line": 19,
+      "imported": "autonomy/tests/test_checkpoint_guidance.py",
+      "symbols": "flat_scene.programs",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_decision_windows.py",
+      "line": 16,
+      "imported": "autonomy/tests/test_checkpoint_guidance.py",
+      "symbols": "flat_scene",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_depth_first.py",
+      "line": 13,
+      "imported": "autonomy/tests/test_checkpoint_guidance.py",
+      "symbols": "flat_scene",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_event_domain.py",
+      "line": 8,
+      "imported": "autonomy/tests/test_route_regions.py",
+      "symbols": "task_scene",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_event_routes.py",
+      "line": 5,
+      "imported": "autonomy/tests/test_route_regions.py",
+      "symbols": "task_scene",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_event_search.py",
+      "line": 11,
+      "imported": "autonomy/tests/test_checkpoint_guidance.py",
+      "symbols": "flat_scene",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_event_search.py",
+      "line": 12,
+      "imported": "autonomy/tests/test_depth_first.py",
+      "symbols": "program",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_failure_diagnostic.py",
+      "line": 7,
+      "imported": "autonomy/tests/test_checkpoint_guidance.py",
+      "symbols": "flat_scene",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_feasibility_mode.py",
+      "line": 15,
+      "imported": "autonomy/tests/test_checkpoint_guidance.py",
+      "symbols": "flat_scene.programs",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_fixed_clock_goal.py",
+      "line": 16,
+      "imported": "autonomy/tests/test_checkpoint_guidance.py",
+      "symbols": "flat_scene.programs",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_generic_composition.py",
+      "line": 72,
+      "imported": "autonomy/tests/test_stepping_cases.py",
+      "symbols": "fixture",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_generic_composition.py",
+      "line": 257,
+      "imported": "autonomy/tests/test_ladder_composition.py",
+      "symbols": "airborne_case",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_guide_progress.py",
+      "line": 5,
+      "imported": "autonomy/tests/test_route_regions.py",
+      "symbols": "task_scene",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_hanging_vines.py",
+      "line": 14,
+      "imported": "autonomy/tests/test_ladder_composition.py",
+      "symbols": "airborne_case",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_ladder_ceiling.py",
+      "line": 134,
+      "imported": "autonomy/tests/test_movement_contacts.py",
+      "symbols": "small_request",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_ladder_generation_speed.py",
+      "line": 8,
+      "imported": "autonomy/tests/test_ladder_schedules.py",
+      "symbols": "request",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_minimum_runs.py",
+      "line": 14,
+      "imported": "autonomy/tests/test_checkpoint_guidance.py",
+      "symbols": "flat_scene",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_movement_composition.py",
+      "line": 21,
+      "imported": "autonomy/tests/test_ladder_composition.py",
+      "symbols": "airborne_case",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_movement_contacts.py",
+      "line": 13,
+      "imported": "autonomy/tests/test_ladder_composition.py",
+      "symbols": "airborne_case",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_movement_entry.py",
+      "line": 19,
+      "imported": "autonomy/tests/test_ladder_composition.py",
+      "symbols": "airborne_case",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_movement_units.py",
+      "line": 7,
+      "imported": "autonomy/tests/test_ladder_composition.py",
+      "symbols": "airborne_case",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_obstacles.py",
+      "line": 13,
+      "imported": "autonomy/tests/test_block_search.py",
+      "symbols": "Coefficients",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_orchestrator_continuation.py",
+      "line": 16,
+      "imported": "autonomy/tests/test_checkpoint_guidance.py",
+      "symbols": "flat_scene.programs",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_orchestrator_continuation.py",
+      "line": 18,
+      "imported": "autonomy/tests/test_time_progress.py",
+      "symbols": "label",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_proposal_analysis.py",
+      "line": 10,
+      "imported": "autonomy/tests/test_checkpoint_guidance.py",
+      "symbols": "flat_scene",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_proposal_analysis.py",
+      "line": 11,
+      "imported": "autonomy/tests/test_minimum_runs.py",
+      "symbols": "flight",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_repair_resume.py",
+      "line": 13,
+      "imported": "autonomy/tests/test_checkpoint_guidance.py",
+      "symbols": "flat_scene.programs",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_route_guards.py",
+      "line": 7,
+      "imported": "autonomy/tests/test_route_progress.py",
+      "symbols": "line_route",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_route_regions.py",
+      "line": 8,
+      "imported": "autonomy/tests/test_cell_geometry.py",
+      "symbols": "scene_for",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_search_fixes.py",
+      "line": 8,
+      "imported": "autonomy/tests/test_checkpoint_guidance.py",
+      "symbols": "flat_scene",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_search_fixes.py",
+      "line": 78,
+      "imported": "autonomy/tests/test_acceptance.py",
+      "symbols": "NoMovementCompiler",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_search_fixes.py",
+      "line": 79,
+      "imported": "autonomy/tests/test_search.py",
+      "symbols": "route",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_semantic_routes.py",
+      "line": 7,
+      "imported": "autonomy/tests/test_cell_routes.py",
+      "symbols": "side_scene",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_semantic_routes.py",
+      "line": 8,
+      "imported": "autonomy/tests/test_route_regions.py",
+      "symbols": "task_scene",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_semantic_search.py",
+      "line": 14,
+      "imported": "autonomy/tests/test_cell_routes.py",
+      "symbols": "side_scene",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_semantic_search.py",
+      "line": 15,
+      "imported": "autonomy/tests/test_semantic_routes.py",
+      "symbols": "support_scene",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_semantic_search.py",
+      "line": 16,
+      "imported": "autonomy/tests/test_checkpoint_guidance.py",
+      "symbols": "flat_scene",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_semantic_search.py",
+      "line": 22,
+      "imported": "autonomy/tests/test_depth_first.py",
+      "symbols": "program",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_semantic_search.py",
+      "line": 67,
+      "imported": "autonomy/tests/test_depth_first.py",
+      "symbols": "program",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_terminal_goals.py",
+      "line": 10,
+      "imported": "autonomy/tests/test_checkpoint_guidance.py",
+      "symbols": "flat_scene",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_time_progress.py",
+      "line": 75,
+      "imported": "autonomy/tests/test_checkpoint_guidance.py",
+      "symbols": "flat_scene",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_transfer_time_bounds.py",
+      "line": 14,
+      "imported": "autonomy/tests/test_checkpoint_guidance.py",
+      "symbols": "flat_scene",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "autonomy/tests/test_transfer_time_bounds.py",
+      "line": 15,
+      "imported": "autonomy/tests/test_proposal_analysis.py",
+      "symbols": "Coefficients",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "ipopt/tests/test_capture.py",
+      "line": 10,
+      "imported": "ipopt/tests/test_model.py",
+      "symbols": "problem",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "ipopt/tests/test_constraints.py",
+      "line": 8,
+      "imported": "ipopt/tests/test_model.py",
+      "symbols": "problem",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "ipopt/tests/test_continuation.py",
+      "line": 5,
+      "imported": "ipopt/tests/test_model.py",
+      "symbols": "problem",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "ipopt/tests/test_integration.py",
+      "line": 13,
+      "imported": "ipopt/tests/test_model.py",
+      "symbols": "problem",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "ipopt/tests/test_ladder_model.py",
+      "line": 6,
+      "imported": "ipopt/tests/test_model.py",
+      "symbols": "problem",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "ipopt/tests/test_movement.py",
+      "line": 5,
+      "imported": "ipopt/tests/test_model.py",
+      "symbols": "problem",
+      "importer_role": "test",
+      "imported_role": "test"
+    },
+    {
+      "importer": "ipopt/tests/test_solver.py",
+      "line": 12,
+      "imported": "ipopt/tests/test_model.py",
+      "symbols": "problem",
+      "importer_role": "test",
+      "imported_role": "test"
+    }
+  ],
+  "modulesUsingFileRelativePaths": [
+    "autonomy/cell_routes/automatic_experiment.py",
+    "autonomy/cell_routes/failure_diagnostic.py",
+    "autonomy/cell_routes/window_diagnostic.py",
+    "autonomy/experiments/anchor-candidate-audit/plan_probe.py",
+    "autonomy/experiments/anchor-feasibility/acceptance_manifest.py",
+    "autonomy/experiments/anchor-feasibility/measure.py",
+    "autonomy/experiments/anchor-feasibility/native_gate.py",
+    "autonomy/experiments/anchor-initial0-audit-2026-11-04/check.py",
+    "autonomy/experiments/anchor-runtime-profile/integrated-2026-11-10/combined-300s/instrumentation/profile_run.py",
+    "autonomy/experiments/anchor-runtime-profile/integrated-2026-11-10/combined-final-300s/instrumentation/profile_run.py",
+    "autonomy/experiments/anchor-runtime-profile/profile_run.py",
+    "autonomy/experiments/anchor-transfer-preparation/cold.py",
+    "autonomy/experiments/anchor-transfer-preparation/verify.py",
+    "autonomy/experiments/automatic-corridors/compare.py",
+    "autonomy/experiments/automatic-corridors/compare_generic.py",
+    "autonomy/experiments/automatic-corridors/routing-review-2026-11-03/inspect_routing.py",
+    "autonomy/experiments/cell-routes/run_benchmarks.py",
+    "autonomy/experiments/checkpoint-guidance/plot_diagnostic.py",
+    "autonomy/experiments/decision-windows/analyze_results.py",
+    "autonomy/experiments/dfs-interactions/measure_generation.py",
+    "autonomy/experiments/event-route-discovery/acceptance_manifest.py",
+    "autonomy/experiments/event-route-discovery/compare.py",
+    "autonomy/experiments/event-route-discovery/coverage.py",
+    "autonomy/experiments/event-route-discovery/generic_matrix.py",
+    "autonomy/experiments/event-route-discovery/native_gate.py",
+    "autonomy/experiments/event-route-discovery/plot_cold.py",
+    "autonomy/experiments/event-route-discovery/plot_guides.py",
+    "autonomy/experiments/event-route-discovery/profile_saved_contexts.py",
+    "autonomy/experiments/hard-jump-comparisons/2026-11-11/baseline-combined/instrumentation/profile_run.py",
+    "autonomy/experiments/hard-jump-comparisons/2026-11-11/baseline-initial0/instrumentation/profile_run.py",
+    "autonomy/experiments/hard-jump-comparisons/2026-11-11/smoke-combined/instrumentation/profile_run.py",
+    "autonomy/experiments/hard-jump-comparisons/2026-11-11/updated-combined/instrumentation/profile_run.py",
+    "autonomy/experiments/hard-jump-comparisons/2026-11-11/updated-initial0/instrumentation/profile_run.py",
+    "autonomy/experiments/hard-jump-comparisons/native_gate.py",
+    "autonomy/experiments/last-jump-runs/row-benchmark/callback_probe.py",
+    "autonomy/experiments/last-jump-runs/row-benchmark/checkpoint_probe.py",
+    "autonomy/experiments/last-jump-runs/row-benchmark/extraction_probe.py",
+    "autonomy/experiments/last-jump-runs/row-benchmark/feasibility_probe.py",
+    "autonomy/experiments/last-jump-runs/row-benchmark/production_bounds_probe.py",
+    "autonomy/experiments/last-jump-runs/row-benchmark/real11_intermediate_benchmark.py",
+    "autonomy/experiments/last-jump-runs/summarize_retry.py",
+    "autonomy/experiments/linkcraft11-opening/audit_trace.py",
+    "autonomy/experiments/linkcraft11-opening/measure_setup_crossover.py",
+    "autonomy/experiments/linkcraft11-opening/probe_b2_reachability.py",
+    "autonomy/experiments/linkcraft11-opening/probe_corridor_failures.py",
+    "autonomy/experiments/linkcraft11-opening/probe_other_failures.py",
+    "autonomy/experiments/linkcraft11-opening/replay_solution.py",
+    "autonomy/experiments/linkcraft11-opening/summarize_evidence.py",
+    "autonomy/experiments/linkcraft11-opening/summarize_other_failures.py",
+    "autonomy/experiments/orchestrator-fixes/audit_candidates.py",
+    "autonomy/experiments/orchestrator-fixes/audit_generation.py",
+    "autonomy/experiments/orchestrator-fixes/regressions.py",
+    "autonomy/tests/test_anchor_policy.py",
+    "autonomy/tests/test_block_profiles.py",
+    "autonomy/tests/test_block_route_witnesses.py",
+    "autonomy/tests/test_candidate_audit.py",
+    "autonomy/tests/test_ceiling_contacts.py",
+    "autonomy/tests/test_cell_experiment.py",
+    "autonomy/tests/test_checkpoint_guidance.py",
+    "autonomy/tests/test_climbable_search.py",
+    "autonomy/tests/test_contacts.py",
+    "autonomy/tests/test_decision_windows.py",
+    "autonomy/tests/test_depth_first.py",
+    "autonomy/tests/test_full_route_witness.py",
+    "autonomy/tests/test_generic_composition.py",
+    "autonomy/tests/test_hanging_vines.py",
+    "autonomy/tests/test_hit_events.py",
+    "autonomy/tests/test_integration.py",
+    "autonomy/tests/test_ladder_ceiling.py",
+    "autonomy/tests/test_ladder_composition.py",
+    "autonomy/tests/test_long_ladder_chains.py",
+    "autonomy/tests/test_minimum_runs.py",
+    "autonomy/tests/test_movement_composition.py",
+    "autonomy/tests/test_movement_contacts.py",
+    "autonomy/tests/test_movement_entry.py",
+    "autonomy/tests/test_obstacles.py",
+    "autonomy/tests/test_proposal_analysis.py",
+    "autonomy/tests/test_route_guidance.py",
+    "autonomy/tests/test_semantic_search.py",
+    "autonomy/tests/test_stepping_cases.py",
+    "autonomy/tests/test_transfer_time_bounds.py",
+    "ipopt/solver.py",
+    "ipopt/tests/test_capture.py",
+    "ipopt/tests/test_integration.py"
+  ],
+  "staticAnalysisLimit": "AST includes all conditional/lazy imports and whole modules; it is not dynamic/function reachability, a completeness proof, or a dead-code deletion test.",
+  "largestTracked": [
+    {
+      "path": "autonomy/experiments/anchor-transfer-preparation/combined-300s-2026-11-04/combined.json.gz",
+      "bytes": 64983180
+    },
+    {
+      "path": "autonomy/experiments/event-route-discovery/matched-forward-service-2026-11-03/supplied.json.gz",
+      "bytes": 60846132
+    },
+    {
+      "path": "autonomy/experiments/anchor-transfer-preparation/initial0-90s-2026-11-04/initial0.json.gz",
+      "bytes": 48011222
+    },
+    {
+      "path": "autonomy/experiments/anchor-feasibility/matched-2026-11-04/guided_polish_control.json.gz",
+      "bytes": 46215796
+    },
+    {
+      "path": "autonomy/experiments/anchor-feasibility/matched-2026-11-04/guided_early_stop.json.gz",
+      "bytes": 45398772
+    },
+    {
+      "path": "autonomy/experiments/automatic-corridors/matched-streaming-2026-11-03/supplied.json.gz",
+      "bytes": 27563560
+    },
+    {
+      "path": "autonomy/experiments/automatic-corridors/matched-allocation-context-2026-11-03/supplied.json.gz",
+      "bytes": 26351803
+    },
+    {
+      "path": "autonomy/experiments/automatic-corridors/matched-contact-promotion-2026-11-03/supplied.json.gz",
+      "bytes": 25709743
+    },
+    {
+      "path": "autonomy/experiments/automatic-corridors/matched-2026-11-03/supplied.json.gz",
+      "bytes": 25688701
+    },
+    {
+      "path": "autonomy/experiments/event-route-discovery/matched-forward-service-2026-11-03/automatic.json.gz",
+      "bytes": 24565655
+    },
+    {
+      "path": "autonomy/experiments/hard-jump-comparisons/2026-11-11/baseline-combined/report.json.gz.store.sqlite3",
+      "bytes": 22274048
+    },
+    {
+      "path": "autonomy/experiments/anchor-runtime-profile/integrated-2026-11-10/combined-final-300s/report.json.gz.store.sqlite3",
+      "bytes": 21762048
+    },
+    {
+      "path": "autonomy/experiments/anchor-feasibility/generic-2026-11-04/turn-negative-x.json.gz",
+      "bytes": 14068122
+    },
+    {
+      "path": "autonomy/experiments/anchor-feasibility/generic-2026-11-04/turn-positive-x.json.gz",
+      "bytes": 13895243
+    },
+    {
+      "path": "autonomy/experiments/hard-jump-comparisons/2026-11-11/baseline-initial0/report.json.gz.store.sqlite3",
+      "bytes": 10289152
+    }
+  ],
+  "moduleDestinations": "Proposed, not approved moves. Semicolon-separated destinations require extraction before relocation. Compatibility/capability code is not automatically research."
+}

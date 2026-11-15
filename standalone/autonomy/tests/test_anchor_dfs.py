@@ -61,7 +61,7 @@ class AnchorDFSTests(unittest.TestCase):
         with patch('standalone.autonomy.cell_routes.checkpoint_search._motion_bound',return_value={}), \
              patch('standalone.autonomy.cell_routes.depth_first.iter_movement_programs',side_effect=generate), \
              patch('standalone.autonomy.cell_routes.checkpoint_search.evaluate_program',side_effect=evaluate), \
-             patch('standalone.autonomy.cell_routes.checkpoint_experiment.replay_witness',return_value=dict(passed=True)):
+             patch('standalone.autonomy.witness.replay_witness',return_value=dict(passed=True)):
             result=find_checkpoint_route(s,object(),anchor_search=dict(anchors=['mid'],observability=logging,
                 solveEveryDecisionLevels=interval),minimum_run_pruning=False,seconds=seconds,score_seconds=2,
                 max_solver_calls=calls,resume_state=resume,on_progress=on_progress,cancel_event=cancel_event)

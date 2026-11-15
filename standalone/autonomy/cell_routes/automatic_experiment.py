@@ -1,3 +1,4 @@
+from ..provenance import source_hashes
 """Run/resume untimed routing from unordered geometry and the task predicate."""
 
 import argparse
@@ -13,20 +14,14 @@ import time
 
 from ..block_search import prepare_scene
 from ..compiler import JavaCompiler
-from .checkpoint_experiment import replay_witness
+from ..witness import replay_witness
 from .checkpoint_search import find_checkpoint_route
 from .support_order import InitialJumpDomain
-from .window_experiment import save
+from ..reports import save
 from ..checkpoint_store import CheckpointStore, read_report
 from .checkpoint_persistence import SearchCheckpoint
 
 
-def source_hashes():
-    root=Path(__file__).resolve().parents[3]
-    sources=sorted((root/'standalone/autonomy/cell_routes').glob('*.py'))
-    sources += sorted((root/'standalone/autonomy').glob('*.py'))
-    sources += sorted((root/'standalone/ipopt').glob('*.py'))
-    return {str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for p in sources}
 
 
 def run(fixture,compiler,*,python_executable=None,resume_state=None,on_progress=None,cancel_event=None):

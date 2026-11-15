@@ -72,7 +72,7 @@ def search_routes(request, compiler, *, task_goal=None, spatial_settings=None, *
     if saved is not None:
         state=copy.deepcopy(saved)
         if state['best'] is not None:
-            from .checkpoint_experiment import replay_witness
+            from ..witness import replay_witness
             if not replay_witness(scene,state['best'],compiler)['passed']:
                 raise ValueError('Saved automatic incumbent no longer passes independent replay')
         if len(state['catalogueVariants']) < spatial['max_routes'] and state['routeGeneration']['termination'] in ('expansion_limit','deadline'):

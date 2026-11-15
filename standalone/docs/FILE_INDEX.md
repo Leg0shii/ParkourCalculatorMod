@@ -1,5 +1,7 @@
 # Complete standalone file inventory
 
+Folder review: [structure proposal](STANDALONE_STRUCTURE_REVIEW.md) and [complete file/module/import inventory](../autonomy/experiments/structure-audit/README.md) at source `7def2875`. The generated CSV accounts for tracked and ignored files; proposed destinations are not completed moves.
+
 Current [execution reference](ANCHOR_SEARCH_EXECUTION_REFERENCE.md): combination/pruning/IPOPT tables, rationale, implementation owners, configuration and evidence.
 
 2026-11-11 implementation additions:

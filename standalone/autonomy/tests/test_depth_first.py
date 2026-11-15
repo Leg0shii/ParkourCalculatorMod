@@ -72,7 +72,7 @@ class DepthFirstTests(unittest.TestCase):
              patch('standalone.autonomy.cell_routes.depth_first.iter_movement_programs',side_effect=generate), \
              patch('standalone.autonomy.cell_routes.depth_first.generate_choices',side_effect=lambda *args,**kwargs:(v for v in ())), \
              patch('standalone.autonomy.cell_routes.checkpoint_search.evaluate_program',side_effect=evaluate), \
-             patch('standalone.autonomy.cell_routes.checkpoint_experiment.replay_witness',return_value=dict(passed=True)):
+             patch('standalone.autonomy.witness.replay_witness',return_value=dict(passed=True)):
             return find_checkpoint_route(scene,object(),spatial_points=[[.5,1,.5],[5.5,1,.5]],
                 checkpoints=[] if getattr(self,'no_clocks',False) else [dict(tick=10)],spatial_goals=[dict(kind='landing',block='goal')],terminal_checkpoint=cp,
                 seconds=3,max_solver_calls=limit,resume_state=state,program_filter=Policy(),

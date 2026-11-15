@@ -1,3 +1,5 @@
+from ..witness import replay_witness
+from ..reports import brief
 import argparse
 import gzip
 import json
@@ -17,47 +19,8 @@ from standalone.ipopt import prepare, validate
 from .checkpoint_search import find_checkpoint_route
 
 
-def replay_witness(scene, best, compiler):
-    import math
-    route = prepare_route(best['route'])
-    if route['initial'] != scene['initial']:
-        raise ValueError('Replay changed the original initial state')
-    plan = schedule(route, [0])
-    vertical = validate_vertical_schedule(route, best['profiles'], plan)
-    if not vertical['feasible']:
-        return dict(passed=False, reason='vertical_replay')
-    plan['vertical'] = vertical['vertical']
-    coefficients = compiler.compile(route, plan, 5)
-    problem = prepare(dict(coefficients, version=1, ticks=plan['ticks'],
-        position=scene['initial']['position'][::2], velocity=scene['initial']['velocity'][::2],
-        yaw=best['candidate']['yaw'], threshold=route.get('physicsThreshold', .005),
-        walls=plan['walls'], contacts=plan['contacts'],
-        objective=dict(route.get('guideObjective', route['objective']), tick=plan['ticks'])))
-    candidate = validate(problem, problem['yaw'])
-    support_ok = all(supports(route['blocks'][index], *candidate['positions'][tick], kind=kind)
-                     for tick, index, kind in plan['supportChecks'])
-    candidate['rawMovement'] = [[(v if abs(v) >= problem['threshold'] else 0) + problem['magnitude'][t]*q
-        for v, q in zip(candidate['velocity'][t], (math.cos(problem['base'][t]+math.radians(yaw)),
-                                                  math.sin(problem['base'][t]+math.radians(yaw))))]
-        for t, yaw in enumerate(problem['yaw'])]
-    candidate['friction'] = problem['friction']
-    checked = check_geometry(scene['collisionScene'], plan, candidate, vertical, compiler, 5)
-    same = candidate['positions'] == best['candidate']['positions'] and candidate['velocity'] == best['candidate']['velocity']
-    return dict(passed=candidate['feasible'] and support_ok and checked['feasible'] and same,
-                scalarFeasible=candidate['feasible'], supports=support_ok, geometry=checked,
-                exactHorizontalReplay=same, ticks=plan['ticks'], threshold=problem['threshold'],
-                objective=candidate['objective'], objectiveHasY=False)
 
 
-def brief(result):
-    best = result.get('best')
-    return dict(status=result['status'], termination=result['termination'], elapsedSeconds=result['elapsedSeconds'],
-        ticks=best['plan']['ticks'] if best else None, objective=best['candidate']['objective'] if best else None,
-        calls=result['work'].get('solverCalls', 0), firstAcceptedSeconds=result['work']['firstAcceptedSeconds'],
-        expandedPrefixes=result.get('expandedPrefixes'),
-        scoreComparisons=sum(w['scored'] for w in result['windows']),
-        checkpointUnknowns=sum(w['unknown'] for w in result['windows']),
-        heuristicDrops=sum(w['heuristicDrops'] for w in result['windows']))
 
 
 def run_fixture(fixture, compiler, *, arm='guided', settings=None, python_executable=None, cancel_event=None):
