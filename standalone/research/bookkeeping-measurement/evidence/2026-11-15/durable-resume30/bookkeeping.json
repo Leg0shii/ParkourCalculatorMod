@@ -1,0 +1,1256 @@
+{
+  "digests": {
+    "parkour_solver.search.events.engine:search_event_routes:55": {
+      "calls": 1,
+      "samples": 1,
+      "bodySeconds": 5.599856376647949e-05,
+      "payloadBytes": 2555,
+      "maxPayloadBytes": 2555,
+      "diagnosticSeconds": 3.8836151361465454e-05,
+      "sampledDistinct": 1,
+      "sampledRepeated": 0,
+      "topSampledValues": [
+        [
+          "bec9744e4bd04b145133c5e1496616dc90e4d77dd2a9308ed6174f8a5c6b6a95",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.spatial.anchor_guides:build_guides:75": {
+      "calls": 1,
+      "samples": 1,
+      "bodySeconds": 5.3998082876205444e-05,
+      "payloadBytes": 1611,
+      "maxPayloadBytes": 1611,
+      "diagnosticSeconds": 3.9249658584594727e-05,
+      "sampledDistinct": 1,
+      "sampledRepeated": 0,
+      "topSampledValues": [
+        [
+          "474d5f71c2f2d3fca54f01e527997794bcc896f8dabcdd8d669683f6b42359c7",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.search.identity:motion_record:19": {
+      "calls": 13,
+      "samples": 4,
+      "bodySeconds": 9.12100076675415e-05,
+      "payloadBytes": 4484,
+      "maxPayloadBytes": 1611,
+      "diagnosticSeconds": 8.479133248329163e-05,
+      "sampledDistinct": 3,
+      "sampledRepeated": 1,
+      "topSampledValues": [
+        [
+          "a8f8220b30d6087336847b3499e50a7773c9963280ee587bb0a4a3b30692af35",
+          2
+        ],
+        [
+          "c7dd9573db59b464c0ed81aa427656a1c3a03d4c50499306ee5b574118cc605d",
+          1
+        ],
+        [
+          "4247c3ef7ccf5d5425d40b12f10bbf8683360a5e7c28df3d9f5f9ca842060291",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.search.dfs:search_goals:89": {
+      "calls": 2,
+      "samples": 2,
+      "bodySeconds": 9.833276271820068e-05,
+      "payloadBytes": 6976,
+      "maxPayloadBytes": 3488,
+      "diagnosticSeconds": 8.037686347961426e-05,
+      "sampledDistinct": 1,
+      "sampledRepeated": 1,
+      "topSampledValues": [
+        [
+          "ee5581d878785c0cca177f2a5effce3f45263bce09dbb33ef9c21b0526993e08",
+          2
+        ]
+      ]
+    },
+    "parkour_solver.search.dfs:decision_family:36": {
+      "calls": 8,
+      "samples": 4,
+      "bodySeconds": 2.5082379579544067e-05,
+      "payloadBytes": 232,
+      "maxPayloadBytes": 60,
+      "diagnosticSeconds": 2.129003405570984e-05,
+      "sampledDistinct": 3,
+      "sampledRepeated": 1,
+      "topSampledValues": [
+        [
+          "3836802cac45413d204bea42ed9ba991c933f3555fa5f68d6211b37075530ce4",
+          2
+        ],
+        [
+          "b4e4931a97808fdab54b57e8bcca91a067059701b4145f6ae84e8d4862dcd20b",
+          1
+        ],
+        [
+          "3946242981154445117a2e45aa622d85976ee9ecdb85890e14e170ab1cb8d1ba",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.search.dfs:candidate_key:21": {
+      "calls": 35,
+      "samples": 6,
+      "bodySeconds": 7.895007729530334e-05,
+      "payloadBytes": 26592,
+      "maxPayloadBytes": 7025,
+      "diagnosticSeconds": 8.196011185646057e-05,
+      "sampledDistinct": 4,
+      "sampledRepeated": 2,
+      "topSampledValues": [
+        [
+          "ecc3a343d0236bade16f390790f8c76a82d2123bf76162adc5418cb3349ebc1f",
+          3
+        ],
+        [
+          "32f27aaf3d0eed40f9e482048b2a9463f958ac4497e38f476e1fe53cabbba057",
+          1
+        ],
+        [
+          "1baffac1d32b4f2c1ffc84a2846ee95af2f70183f44235db47e11188894a50db",
+          1
+        ],
+        [
+          "add92dc0f0d88819a82c6c80f85dc232652911866e3c5c88bdf5827b0fa43e1e",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.search.anchors.adapter:for_goal:59": {
+      "calls": 4,
+      "samples": 3,
+      "bodySeconds": 7.67931342124939e-05,
+      "payloadBytes": 3726,
+      "maxPayloadBytes": 1257,
+      "diagnosticSeconds": 5.4292380809783936e-05,
+      "sampledDistinct": 3,
+      "sampledRepeated": 0,
+      "topSampledValues": [
+        [
+          "b562d8005e54b84c6b38d5ce38d2286f91373f9c893a50703f90dd818ccfbd93",
+          1
+        ],
+        [
+          "f087065271629cf51f77d2820e7ce2f74d5ff5754adafdab5b223769281163e0",
+          1
+        ],
+        [
+          "97186968703b8cb78f9eee601f647e2959fe8f44eaa246fe941f8cbf6ec0ae4c",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.search.anchors.policy:<lambda>:71": {
+      "calls": 144,
+      "samples": 8,
+      "bodySeconds": 3.083422780036926e-05,
+      "payloadBytes": 996,
+      "maxPayloadBytes": 128,
+      "diagnosticSeconds": 4.192441701889038e-05,
+      "sampledDistinct": 4,
+      "sampledRepeated": 4,
+      "topSampledValues": [
+        [
+          "60eb7a6ad6d249ee3720a55ba5b17c58fb01db089e9769a05b13a0c9bcae4d9a",
+          4
+        ],
+        [
+          "982905cc95f94f2d0e0bc8e38902cfe0dba1e5bf029d6c3559368b0ccfbc7406",
+          2
+        ],
+        [
+          "92acbe78e9cc5fda48c444a9f038d1ba7e14566b19eea0a04b294c23286fa2c8",
+          1
+        ],
+        [
+          "a57a43f97f14d27a85a85c798ee1aace2954eb55da73ffeeb1be4c6f96517afc",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.search.dfs:score_key:255": {
+      "calls": 3,
+      "samples": 2,
+      "bodySeconds": 4.880130290985107e-06,
+      "payloadBytes": 272,
+      "maxPayloadBytes": 136,
+      "diagnosticSeconds": 6.459653377532959e-06,
+      "sampledDistinct": 2,
+      "sampledRepeated": 0,
+      "topSampledValues": [
+        [
+          "b44b9200f51a40bfbd708c07a25a63299444466ad833a8ab500f40590ac8ca7b",
+          1
+        ],
+        [
+          "25a1dd3d0489cac244aba8fd7ab0b0d68d951ac91696a5402263a7e8d9a5e4a2",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.reachability.service:prepare:120": {
+      "calls": 18,
+      "samples": 5,
+      "bodySeconds": 0.0002156272530555725,
+      "payloadBytes": 34002,
+      "maxPayloadBytes": 8245,
+      "diagnosticSeconds": 0.00019100308418273926,
+      "sampledDistinct": 5,
+      "sampledRepeated": 0,
+      "topSampledValues": [
+        [
+          "05275fd70ca32697c00775adf62c817611e2b62026fd83c0387ccd328e1a24d6",
+          1
+        ],
+        [
+          "5398cb73420ab6a7ce8622c0b21132513b3abe3ed73bf1b5e64310c26996c2e3",
+          1
+        ],
+        [
+          "5eca74132abca818c08572cb9854c825dea87aa2de446c1313538bb2014eb1c1",
+          1
+        ],
+        [
+          "8e1d3b2afdef7959491662a2301f7587d53075b7156b791bee34dba638a1b2e0",
+          1
+        ],
+        [
+          "700c74bdaa042369dec6fa369ef9d691b60368b79368beb7c2fa9047872e4508",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.reachability.service:analyze_model:135": {
+      "calls": 18,
+      "samples": 5,
+      "bodySeconds": 0.00019762292504310608,
+      "payloadBytes": 13410,
+      "maxPayloadBytes": 3076,
+      "diagnosticSeconds": 0.00018470361828804016,
+      "sampledDistinct": 5,
+      "sampledRepeated": 0,
+      "topSampledValues": [
+        [
+          "04a2fdeb4b01efa5ed972d474510d7e4536d74e50277befc22134e8dda2044ff",
+          1
+        ],
+        [
+          "7a801e693f5fcffe88e200bb9650652d7383eaa5d0daeeccbf40299d1d2146f8",
+          1
+        ],
+        [
+          "4171def09f7fb4cbfdbf65c618c71f01e985b9ca710cf2738c8c666bdb4bb4cb",
+          1
+        ],
+        [
+          "afe6debd381c44dfb77057b7ed1ca60cc6045d6b62ccdfd2c21677f1db451609",
+          1
+        ],
+        [
+          "932388594d943bc1ca31802e961f1240829705c7088b724f209439b662b4d4e7",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.reachability.service:interaction_context_key:20": {
+      "calls": 26,
+      "samples": 5,
+      "bodySeconds": 0.0008799172937870026,
+      "payloadBytes": 53195,
+      "maxPayloadBytes": 20619,
+      "diagnosticSeconds": 0.0008057951927185059,
+      "sampledDistinct": 5,
+      "sampledRepeated": 0,
+      "topSampledValues": [
+        [
+          "f1f0b62ae300272c2c3f7f6322c761d4febed2d2894f83d87130aa8383c8edcd",
+          1
+        ],
+        [
+          "715ff2af288be9390ac4ce6af4e83c1718bb616ab37589eb3fa2705471bfe48b",
+          1
+        ],
+        [
+          "a244902aaaab57e57ee96ab1aa35792feeb251f25e6bf0c61d1f3938a26bb751",
+          1
+        ],
+        [
+          "09723aefbfc7a3033e173cff8bc7745e92a04e835ad08f8cf0def64962b38a41",
+          1
+        ],
+        [
+          "ebe211629c0a1bedab0dec9a3d8a623d21dca5543fce7d881ae93c338d36d22e",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.reachability.service:build:145": {
+      "calls": 13,
+      "samples": 4,
+      "bodySeconds": 0.0003837086260318756,
+      "payloadBytes": 21914,
+      "maxPayloadBytes": 7106,
+      "diagnosticSeconds": 0.0003454238176345825,
+      "sampledDistinct": 4,
+      "sampledRepeated": 0,
+      "topSampledValues": [
+        [
+          "8c82fc14fa850b38e54502ddb9332a62543014180d1cd93667893d93a324c3e5",
+          1
+        ],
+        [
+          "fddf16b4a9b16e40750b9c4ff3a60f5267f55681f1fbde4d9ece4ac953bdd4fa",
+          1
+        ],
+        [
+          "d3ddfd53fdf85f2be0d2cdc9d688423f0cc5b1009183c1263ff6514240847f2c",
+          1
+        ],
+        [
+          "6af4e16e8a1df69aea911da0b35fe787f5cb698c30ebd6abd23657fcfe35bcb5",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.search.identity:solve_identity:55": {
+      "calls": 4,
+      "samples": 3,
+      "bodySeconds": 0.000326499342918396,
+      "payloadBytes": 35351,
+      "maxPayloadBytes": 15074,
+      "diagnosticSeconds": 0.0003204531967639923,
+      "sampledDistinct": 3,
+      "sampledRepeated": 0,
+      "topSampledValues": [
+        [
+          "0e7edcdd4cb4ed84b0b020524d5ddca10b7059f81186d796a52385a5edf381d6",
+          1
+        ],
+        [
+          "e3b5028749e8d135953238e128bfdb2d5692911ec65c4305a7811dd171bf3024",
+          1
+        ],
+        [
+          "97954a615cddebb99d4b42387fed98255d1016352cd4d6eb89b9c4db15ffe512",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.constraints.variants:__init__:17": {
+      "calls": 4,
+      "samples": 3,
+      "bodySeconds": 0.0005594119429588318,
+      "payloadBytes": 44559,
+      "maxPayloadBytes": 19237,
+      "diagnosticSeconds": 0.0005164593458175659,
+      "sampledDistinct": 3,
+      "sampledRepeated": 0,
+      "topSampledValues": [
+        [
+          "4e9b0cf814f181ec54e23d049e2e6c1d0b28f40238709be1bc32b762d219587f",
+          1
+        ],
+        [
+          "c0863446aca9ea94323c91c44db709afdf6fcb58950a94552884231f17ecb414",
+          1
+        ],
+        [
+          "95f59ee6dadfbdb02b802fceb3ad1fd7e553340b298ee86eba4da4e4ba07f40d",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.reachability.service:query_interaction:38": {
+      "calls": 1085,
+      "samples": 11,
+      "bodySeconds": 4.937499761581421e-05,
+      "payloadBytes": 2665,
+      "maxPayloadBytes": 243,
+      "diagnosticSeconds": 5.6337565183639526e-05,
+      "sampledDistinct": 11,
+      "sampledRepeated": 0,
+      "topSampledValues": [
+        [
+          "2fbf4adc78ae3356d709db52256ff2593a8bf3806883b38168bce461a11bf55e",
+          1
+        ],
+        [
+          "ee9e7d74db338c25adee0f313a74405dfe718e89f24674408c0ed60ba818c762",
+          1
+        ],
+        [
+          "763b0b7b33ad01b75eeb4c11f34a29cb14c4d97bd68d2932df7e98e31df42f4f",
+          1
+        ],
+        [
+          "94b9b3eaa35885b13e6ab98761f802d1da388e1b0488072959e528658c1b6091",
+          1
+        ],
+        [
+          "97c98714a8d7149575914633788560c6a8f24af4c60515bb034aef523f47f633",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.constraints.variants:effective_key:226": {
+      "calls": 2,
+      "samples": 2,
+      "bodySeconds": 4.708766937255859e-06,
+      "payloadBytes": 4,
+      "maxPayloadBytes": 2,
+      "diagnosticSeconds": 5.584210157394409e-06,
+      "sampledDistinct": 1,
+      "sampledRepeated": 1,
+      "topSampledValues": [
+        [
+          "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          2
+        ]
+      ]
+    },
+    "parkour_solver.constraints.variants:_next_variant:347": {
+      "calls": 2,
+      "samples": 2,
+      "bodySeconds": 4.459172487258911e-06,
+      "payloadBytes": 144,
+      "maxPayloadBytes": 72,
+      "diagnosticSeconds": 5.62518835067749e-06,
+      "sampledDistinct": 1,
+      "sampledRepeated": 1,
+      "topSampledValues": [
+        [
+          "95cf5de3e57e57df514d8c33c119ce3a50347210e5d1c0ab25aaf28a52801554",
+          2
+        ]
+      ]
+    },
+    "parkour_solver.search.dfs:frame:160": {
+      "calls": 2,
+      "samples": 2,
+      "bodySeconds": 3.791600465774536e-05,
+      "payloadBytes": 2999,
+      "maxPayloadBytes": 1730,
+      "diagnosticSeconds": 3.850087523460388e-05,
+      "sampledDistinct": 2,
+      "sampledRepeated": 0,
+      "topSampledValues": [
+        [
+          "bbd6b94c52e7ead3a3fc7664347e30dc61111e23456bb13b5a8b3798363f9659",
+          1
+        ],
+        [
+          "1e06f7b6ab483949c3fd2ffb88f6f87f5b84994c92665c77549cad134b81e246",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.search.anchors.adapter:next_goals:42": {
+      "calls": 2,
+      "samples": 2,
+      "bodySeconds": 2.720952033996582e-05,
+      "payloadBytes": 2555,
+      "maxPayloadBytes": 1508,
+      "diagnosticSeconds": 2.637505531311035e-05,
+      "sampledDistinct": 2,
+      "sampledRepeated": 0,
+      "topSampledValues": [
+        [
+          "2f2a26d3b26111065f74c6731c80d633732d156d703f06e7a25b7fa0b93a530d",
+          1
+        ],
+        [
+          "70a60016d716391b71641034150087e95807a682364d43b2e905f273aa6d928d",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.search.frontier:persistent_programs:30": {
+      "calls": 2,
+      "samples": 2,
+      "bodySeconds": 0.00013899430632591248,
+      "payloadBytes": 15297,
+      "maxPayloadBytes": 8527,
+      "diagnosticSeconds": 9.737908840179443e-05,
+      "sampledDistinct": 2,
+      "sampledRepeated": 0,
+      "topSampledValues": [
+        [
+          "58e8645717d2b34390b4c39b6e7322680cc7d597f548f39ff9837a23046d4902",
+          1
+        ],
+        [
+          "8d493ddecfca78fe185a1bcd3b92fbfe5c983c6eb9fb1249cfff345626cdc054",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.search.frontier:persistent_programs:144": {
+      "calls": 8,
+      "samples": 4,
+      "bodySeconds": 4.7791749238967896e-05,
+      "payloadBytes": 17605,
+      "maxPayloadBytes": 5689,
+      "diagnosticSeconds": 5.174800753593445e-05,
+      "sampledDistinct": 2,
+      "sampledRepeated": 2,
+      "topSampledValues": [
+        [
+          "7137024946379fe34f873a67db99636fd99e01078b344b8e7a67c172f229176d",
+          3
+        ],
+        [
+          "62b2a107f4abe9fc8499d10527bcbc7e5cbf049aa8e53f2a39cefb3f4276e820",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.reachability.service:query:206": {
+      "calls": 6,
+      "samples": 3,
+      "bodySeconds": 3.6578625440597534e-05,
+      "payloadBytes": 13633,
+      "maxPayloadBytes": 5689,
+      "diagnosticSeconds": 3.6910176277160645e-05,
+      "sampledDistinct": 2,
+      "sampledRepeated": 1,
+      "topSampledValues": [
+        [
+          "7137024946379fe34f873a67db99636fd99e01078b344b8e7a67c172f229176d",
+          2
+        ],
+        [
+          "62b2a107f4abe9fc8499d10527bcbc7e5cbf049aa8e53f2a39cefb3f4276e820",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.search.frontier:persistent_programs:193": {
+      "calls": 2,
+      "samples": 2,
+      "bodySeconds": 3.345683217048645e-05,
+      "payloadBytes": 12273,
+      "maxPayloadBytes": 6995,
+      "diagnosticSeconds": 3.287568688392639e-05,
+      "sampledDistinct": 2,
+      "sampledRepeated": 0,
+      "topSampledValues": [
+        [
+          "0ff785872acaacc2973646cf13ee58fd9abf644c96e933bb3055ae76f9a0de74",
+          1
+        ],
+        [
+          "4cff8be272ebcaf98496ba0d72f06f1e287470ec7ddeba10ff7f246eb62f20f7",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.search.dfs:tick_label:285": {
+      "calls": 2,
+      "samples": 2,
+      "bodySeconds": 1.125037670135498e-05,
+      "payloadBytes": 658,
+      "maxPayloadBytes": 329,
+      "diagnosticSeconds": 1.5832483768463135e-05,
+      "sampledDistinct": 2,
+      "sampledRepeated": 0,
+      "topSampledValues": [
+        [
+          "65e77a19edb3ba1c8db5d515e665a6c14ed79b43d64c2115ca0182cb826dd54b",
+          1
+        ],
+        [
+          "a778361dc9adae2752fe42aa999bc4b2c4bb34f24965118b0af281da507af59c",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.search.feasibility:node_identity:30": {
+      "calls": 2,
+      "samples": 2,
+      "bodySeconds": 4.633516073226929e-05,
+      "payloadBytes": 13178,
+      "maxPayloadBytes": 7506,
+      "diagnosticSeconds": 4.7709792852401733e-05,
+      "sampledDistinct": 2,
+      "sampledRepeated": 0,
+      "topSampledValues": [
+        [
+          "c8a17b6c59382b3b1caa83a52389600a2a69b648d0e912c3257cdb602a4be4fb",
+          1
+        ],
+        [
+          "a369fee4d3c858ee827e7b8ecabd0d2782e428362aa277bb326092d363a21f40",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.search.dfs:<lambda>:578": {
+      "calls": 2,
+      "samples": 2,
+      "bodySeconds": 2.954527735710144e-05,
+      "payloadBytes": 11940,
+      "maxPayloadBytes": 6867,
+      "diagnosticSeconds": 3.253668546676636e-05,
+      "sampledDistinct": 2,
+      "sampledRepeated": 0,
+      "topSampledValues": [
+        [
+          "4cb3ceaaeb025f235e72c1f5788758b596b73953d1986585db50f6cc6f49d376",
+          1
+        ],
+        [
+          "e6793a5e2de628967332c4d2df7362eecf16e33331f04e9fde50745b1bf2635c",
+          1
+        ]
+      ]
+    }
+  },
+  "copies": {
+    "parkour_solver.scene.normalize:prepare_scene:10": {
+      "calls": 5,
+      "bodySeconds": 0.00021561607718467712,
+      "maxSeconds": 4.6372413635253906e-05,
+      "samples": 3,
+      "payloadBytes": 3180,
+      "maxPayloadBytes": 1060,
+      "diagnosticSeconds": 0.00010071694850921631,
+      "allocations": []
+    },
+    "parkour_solver.scene.geometry:normalize_geometry:60": {
+      "calls": 35,
+      "bodySeconds": 6.603449583053589e-05,
+      "maxSeconds": 3.330409526824951e-06,
+      "samples": 6,
+      "payloadBytes": 184,
+      "maxPayloadBytes": 32,
+      "diagnosticSeconds": 4.914775490760803e-05,
+      "allocations": []
+    },
+    "parkour_solver.scene.route:prepare_route:13": {
+      "calls": 37,
+      "bodySeconds": 0.005235094577074051,
+      "maxSeconds": 0.0008872896432876587,
+      "samples": 6,
+      "payloadBytes": 9796,
+      "maxPayloadBytes": 5684,
+      "diagnosticSeconds": 0.00019424781203269958,
+      "allocations": []
+    },
+    "parkour_solver.movement.units:movement_unit:15": {
+      "calls": 55,
+      "bodySeconds": 4.8823654651641846e-05,
+      "maxSeconds": 1.959502696990967e-06,
+      "samples": 6,
+      "payloadBytes": 12,
+      "maxPayloadBytes": 2,
+      "diagnosticSeconds": 5.0570815801620483e-05,
+      "allocations": []
+    },
+    "parkour_solver.search.goals:goal_spec:16": {
+      "calls": 2,
+      "bodySeconds": 3.6694109439849854e-06,
+      "maxSeconds": 1.8775463104248047e-06,
+      "samples": 2,
+      "payloadBytes": 68,
+      "maxPayloadBytes": 34,
+      "diagnosticSeconds": 8.206814527511597e-06,
+      "allocations": []
+    },
+    "parkour_solver.movement.contact_combinations:merge_contacts:25": {
+      "calls": 482,
+      "bodySeconds": 0.0015994571149349213,
+      "maxSeconds": 1.600012183189392e-05,
+      "samples": 9,
+      "payloadBytes": 956,
+      "maxPayloadBytes": 146,
+      "diagnosticSeconds": 0.00021658837795257568,
+      "allocations": []
+    },
+    "parkour_solver.movement.units:shifted_unit:133": {
+      "calls": 114,
+      "bodySeconds": 0.0004441402852535248,
+      "maxSeconds": 4.8354268074035645e-06,
+      "samples": 7,
+      "payloadBytes": 706,
+      "maxPayloadBytes": 103,
+      "diagnosticSeconds": 6.480887532234192e-05,
+      "allocations": []
+    },
+    "parkour_solver.numerics.model:prepare:16": {
+      "calls": 29,
+      "bodySeconds": 0.004121299833059311,
+      "maxSeconds": 0.0007783770561218262,
+      "samples": 5,
+      "payloadBytes": 49653,
+      "maxPayloadBytes": 36604,
+      "diagnosticSeconds": 0.0006384365260601044,
+      "allocations": []
+    },
+    "parkour_solver.search.engine:evaluate_program:91": {
+      "calls": 4,
+      "bodySeconds": 1.3787299394607544e-05,
+      "maxSeconds": 5.461275577545166e-06,
+      "samples": 3,
+      "payloadBytes": 170,
+      "maxPayloadBytes": 61,
+      "diagnosticSeconds": 1.9628554582595825e-05,
+      "allocations": []
+    },
+    "parkour_solver.search.identity:solve_scope:27": {
+      "calls": 4,
+      "bodySeconds": 3.5800039768218994e-06,
+      "maxSeconds": 9.98377799987793e-07,
+      "samples": 3,
+      "payloadBytes": 6,
+      "maxPayloadBytes": 2,
+      "diagnosticSeconds": 8.288770914077759e-06,
+      "allocations": []
+    },
+    "parkour_solver.constraints.variants:__init__:45": {
+      "calls": 3,
+      "bodySeconds": 7.920712232589722e-05,
+      "maxSeconds": 3.3292919397354126e-05,
+      "samples": 2,
+      "payloadBytes": 2158,
+      "maxPayloadBytes": 1265,
+      "diagnosticSeconds": 5.4333359003067017e-05,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:solve_contact_branches:26": {
+      "calls": 4,
+      "bodySeconds": 0.0007360838353633881,
+      "maxSeconds": 0.0002209208905696869,
+      "samples": 3,
+      "payloadBytes": 24448,
+      "maxPayloadBytes": 10640,
+      "diagnosticSeconds": 0.0002954937517642975,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:snapshot:96": {
+      "calls": 32,
+      "bodySeconds": 7.025524973869324e-05,
+      "maxSeconds": 8.668750524520874e-06,
+      "samples": 6,
+      "payloadBytes": 1158,
+      "maxPayloadBytes": 662,
+      "diagnosticSeconds": 7.044151425361633e-05,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:snapshot:97": {
+      "calls": 16,
+      "bodySeconds": 0.002364911139011383,
+      "maxSeconds": 0.0006986670196056366,
+      "samples": 5,
+      "payloadBytes": 23226,
+      "maxPayloadBytes": 23218,
+      "diagnosticSeconds": 0.00031695514917373657,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:snapshot:98": {
+      "calls": 32,
+      "bodySeconds": 5.161389708518982e-05,
+      "maxSeconds": 7.871538400650024e-06,
+      "samples": 6,
+      "payloadBytes": 181,
+      "maxPayloadBytes": 169,
+      "diagnosticSeconds": 2.3953616619110107e-05,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:snapshot:99": {
+      "calls": 32,
+      "bodySeconds": 4.938244819641113e-05,
+      "maxSeconds": 5.539506673812866e-06,
+      "samples": 6,
+      "payloadBytes": 68,
+      "maxPayloadBytes": 20,
+      "diagnosticSeconds": 2.156198024749756e-05,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:snapshot:100": {
+      "calls": 16,
+      "bodySeconds": 2.0362436771392822e-05,
+      "maxSeconds": 2.08243727684021e-06,
+      "samples": 5,
+      "payloadBytes": 70,
+      "maxPayloadBytes": 22,
+      "diagnosticSeconds": 1.428648829460144e-05,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:snapshot:101": {
+      "calls": 16,
+      "bodySeconds": 0.04753291234374046,
+      "maxSeconds": 0.007156629115343094,
+      "samples": 5,
+      "payloadBytes": 1012767,
+      "maxPayloadBytes": 419885,
+      "diagnosticSeconds": 0.007088962942361832,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:snapshot:102": {
+      "calls": 16,
+      "bodySeconds": 0.000805683434009552,
+      "maxSeconds": 0.00023300200700759888,
+      "samples": 5,
+      "payloadBytes": 8984,
+      "maxPayloadBytes": 8976,
+      "diagnosticSeconds": 0.00013742595911026,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:snapshot:103": {
+      "calls": 16,
+      "bodySeconds": 9.720399975776672e-05,
+      "maxSeconds": 2.5540590286254883e-05,
+      "samples": 5,
+      "payloadBytes": 927,
+      "maxPayloadBytes": 919,
+      "diagnosticSeconds": 2.454221248626709e-05,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:offer:53": {
+      "calls": 2,
+      "bodySeconds": 6.32554292678833e-06,
+      "maxSeconds": 3.248453140258789e-06,
+      "samples": 2,
+      "payloadBytes": 4,
+      "maxPayloadBytes": 2,
+      "diagnosticSeconds": 1.0669231414794922e-05,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:offer:56": {
+      "calls": 2,
+      "bodySeconds": 1.8738210201263428e-06,
+      "maxSeconds": 1.039355993270874e-06,
+      "samples": 2,
+      "payloadBytes": 4,
+      "maxPayloadBytes": 2,
+      "diagnosticSeconds": 4.958361387252808e-06,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:offer:61": {
+      "calls": 6,
+      "bodySeconds": 4.082918167114258e-06,
+      "maxSeconds": 7.934868335723877e-07,
+      "samples": 3,
+      "payloadBytes": 6,
+      "maxPayloadBytes": 2,
+      "diagnosticSeconds": 7.342547178268433e-06,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:offer:62": {
+      "calls": 2,
+      "bodySeconds": 9.085983037948608e-06,
+      "maxSeconds": 5.461275577545166e-06,
+      "samples": 2,
+      "payloadBytes": 654,
+      "maxPayloadBytes": 414,
+      "diagnosticSeconds": 2.1167099475860596e-05,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:save_branch:88": {
+      "calls": 6,
+      "bodySeconds": 5.245581269264221e-05,
+      "maxSeconds": 1.2207776308059692e-05,
+      "samples": 3,
+      "payloadBytes": 1272,
+      "maxPayloadBytes": 482,
+      "diagnosticSeconds": 4.317238926887512e-05,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:solve_contact_branches:183": {
+      "calls": 2,
+      "bodySeconds": 0.0003382861614227295,
+      "maxSeconds": 0.00019320473074913025,
+      "samples": 2,
+      "payloadBytes": 13808,
+      "maxPayloadBytes": 8124,
+      "diagnosticSeconds": 0.00020554661750793457,
+      "allocations": []
+    },
+    "parkour_solver.search.ordered_route:publish:255": {
+      "calls": 4,
+      "bodySeconds": 0.0012827590107917786,
+      "maxSeconds": 0.0007570870220661163,
+      "samples": 3,
+      "payloadBytes": 19834,
+      "maxPayloadBytes": 8330,
+      "diagnosticSeconds": 0.0003005377948284149,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:enrich:233": {
+      "calls": 4,
+      "bodySeconds": 0.001855459064245224,
+      "maxSeconds": 0.0005889981985092163,
+      "samples": 3,
+      "payloadBytes": 60785,
+      "maxPayloadBytes": 25059,
+      "diagnosticSeconds": 0.000872533768415451,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:enrich:239": {
+      "calls": 4,
+      "bodySeconds": 4.958361387252808e-06,
+      "maxSeconds": 1.5012919902801514e-06,
+      "samples": 3,
+      "payloadBytes": 6,
+      "maxPayloadBytes": 2,
+      "diagnosticSeconds": 8.586794137954712e-06,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:enrich:240": {
+      "calls": 4,
+      "bodySeconds": 5.9157609939575195e-06,
+      "maxSeconds": 1.7508864402770996e-06,
+      "samples": 3,
+      "payloadBytes": 12,
+      "maxPayloadBytes": 4,
+      "diagnosticSeconds": 1.008063554763794e-05,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:snapshot:91": {
+      "calls": 24,
+      "bodySeconds": 0.00373787060379982,
+      "maxSeconds": 0.000746455043554306,
+      "samples": 5,
+      "payloadBytes": 23205,
+      "maxPayloadBytes": 23180,
+      "diagnosticSeconds": 0.00031612440943717957,
+      "allocations": []
+    },
+    "parkour_solver.search.ordered_route:evaluate:274": {
+      "calls": 2,
+      "bodySeconds": 0.0003947503864765167,
+      "maxSeconds": 0.0002294592559337616,
+      "samples": 2,
+      "payloadBytes": 20377,
+      "maxPayloadBytes": 11933,
+      "diagnosticSeconds": 0.0002780444920063019,
+      "allocations": []
+    },
+    "parkour_solver.search.ordered_route:probe:41": {
+      "calls": 2,
+      "bodySeconds": 0.0009748749434947968,
+      "maxSeconds": 0.0005650408565998077,
+      "samples": 2,
+      "payloadBytes": 49684,
+      "maxPayloadBytes": 28953,
+      "diagnosticSeconds": 0.0007037483155727386,
+      "allocations": []
+    },
+    "parkour_solver.search.ordered_route:probe:42": {
+      "calls": 6,
+      "bodySeconds": 0.0003759153187274933,
+      "maxSeconds": 0.0002164989709854126,
+      "samples": 3,
+      "payloadBytes": 86,
+      "maxPayloadBytes": 66,
+      "diagnosticSeconds": 1.0963529348373413e-05,
+      "allocations": []
+    },
+    "parkour_solver.search.ordered_route:search_allocations:121": {
+      "calls": 2,
+      "bodySeconds": 5.438923835754395e-07,
+      "maxSeconds": 2.942979335784912e-07,
+      "samples": 2,
+      "payloadBytes": 8,
+      "maxPayloadBytes": 4,
+      "diagnosticSeconds": 5.412846803665161e-06,
+      "allocations": []
+    },
+    "parkour_solver.search.ordered_route:find_route:304": {
+      "calls": 2,
+      "bodySeconds": 0.0003320835530757904,
+      "maxSeconds": 0.00019950047135353088,
+      "samples": 2,
+      "payloadBytes": 14220,
+      "maxPayloadBytes": 8330,
+      "diagnosticSeconds": 0.00019920989871025085,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:solve_contact_branches:370": {
+      "calls": 2,
+      "bodySeconds": 0.0012074224650859833,
+      "maxSeconds": 0.0007232949137687683,
+      "samples": 2,
+      "payloadBytes": 55940,
+      "maxPayloadBytes": 32760,
+      "diagnosticSeconds": 0.0007165372371673584,
+      "allocations": []
+    },
+    "parkour_solver.spatial.checkpoints:retain_prefix:92": {
+      "calls": 4,
+      "bodySeconds": 0.030169792473316193,
+      "maxSeconds": 0.009286664426326752,
+      "samples": 3,
+      "payloadBytes": 1250858,
+      "maxPayloadBytes": 520232,
+      "diagnosticSeconds": 0.01037628948688507,
+      "allocations": []
+    },
+    "parkour_solver.movement.vertical_profiles:trace_ladder_schedule:45": {
+      "calls": 28,
+      "bodySeconds": 0.00011826679110527039,
+      "maxSeconds": 7.584691047668457e-06,
+      "samples": 5,
+      "payloadBytes": 93,
+      "maxPayloadBytes": 44,
+      "diagnosticSeconds": 3.197789192199707e-05,
+      "allocations": []
+    },
+    "parkour_solver.movement.program:profile_from_trace:52": {
+      "calls": 48,
+      "bodySeconds": 0.0002225227653980255,
+      "maxSeconds": 1.8209218978881836e-05,
+      "samples": 6,
+      "payloadBytes": 12,
+      "maxPayloadBytes": 2,
+      "diagnosticSeconds": 3.0625611543655396e-05,
+      "allocations": []
+    },
+    "parkour_solver.movement.program:profile_from_trace:53": {
+      "calls": 24,
+      "bodySeconds": 0.0008481629192829132,
+      "maxSeconds": 8.662417531013489e-05,
+      "samples": 5,
+      "payloadBytes": 11014,
+      "maxPayloadBytes": 3672,
+      "diagnosticSeconds": 0.00017242878675460815,
+      "allocations": []
+    },
+    "parkour_solver.movement.program:movement_choice:74": {
+      "calls": 12,
+      "bodySeconds": 9.42125916481018e-06,
+      "maxSeconds": 1.0021030902862549e-06,
+      "samples": 4,
+      "payloadBytes": 8,
+      "maxPayloadBytes": 2,
+      "diagnosticSeconds": 1.6413629055023193e-05,
+      "allocations": []
+    },
+    "parkour_solver.movement.program:append_choice:154": {
+      "calls": 12,
+      "bodySeconds": 9.920448064804077e-06,
+      "maxSeconds": 9.126961231231689e-07,
+      "samples": 4,
+      "payloadBytes": 8,
+      "maxPayloadBytes": 2,
+      "diagnosticSeconds": 1.5329569578170776e-05,
+      "allocations": []
+    },
+    "parkour_solver.movement.program:append_choice:161": {
+      "calls": 12,
+      "bodySeconds": 0.0001323707401752472,
+      "maxSeconds": 1.3418495655059814e-05,
+      "samples": 4,
+      "payloadBytes": 951,
+      "maxPayloadBytes": 318,
+      "diagnosticSeconds": 2.8759241104125977e-05,
+      "allocations": []
+    },
+    "parkour_solver.movement.program:_events:102": {
+      "calls": 12,
+      "bodySeconds": 1.0844320058822632e-05,
+      "maxSeconds": 2.6263296604156494e-06,
+      "samples": 4,
+      "payloadBytes": 8,
+      "maxPayloadBytes": 2,
+      "diagnosticSeconds": 1.1160969734191895e-05,
+      "allocations": []
+    },
+    "parkour_solver.movement.program:profile_from_trace:55": {
+      "calls": 12,
+      "bodySeconds": 0.00020638108253479004,
+      "maxSeconds": 5.3670257329940796e-05,
+      "samples": 4,
+      "payloadBytes": 1379,
+      "maxPayloadBytes": 425,
+      "diagnosticSeconds": 2.948567271232605e-05,
+      "allocations": []
+    },
+    "parkour_solver.movement.program:append_choice:195": {
+      "calls": 12,
+      "bodySeconds": 2.7488917112350464e-05,
+      "maxSeconds": 2.4139881134033203e-06,
+      "samples": 4,
+      "payloadBytes": 416,
+      "maxPayloadBytes": 104,
+      "diagnosticSeconds": 1.850724220275879e-05,
+      "allocations": []
+    },
+    "parkour_solver.movement.program:append_choice:204": {
+      "calls": 24,
+      "bodySeconds": 6.150826811790466e-05,
+      "maxSeconds": 6.038695573806763e-06,
+      "samples": 5,
+      "payloadBytes": 1839,
+      "maxPayloadBytes": 594,
+      "diagnosticSeconds": 5.774572491645813e-05,
+      "allocations": []
+    },
+    "parkour_solver.movement.generation:propose_choices:49": {
+      "calls": 24,
+      "bodySeconds": 1.1995434761047363e-05,
+      "maxSeconds": 1.4603137969970703e-06,
+      "samples": 5,
+      "payloadBytes": 72,
+      "maxPayloadBytes": 39,
+      "diagnosticSeconds": 1.7583370208740234e-05,
+      "allocations": []
+    },
+    "parkour_solver.constraints.variants:__init__:42": {
+      "calls": 1,
+      "bodySeconds": 9.116530418395996e-05,
+      "maxSeconds": 9.116530418395996e-05,
+      "samples": 1,
+      "payloadBytes": 3570,
+      "maxPayloadBytes": 3570,
+      "diagnosticSeconds": 6.200000643730164e-05,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:solve_contact_branches:45": {
+      "calls": 1,
+      "bodySeconds": 6.668269634246826e-07,
+      "maxSeconds": 6.668269634246826e-07,
+      "samples": 1,
+      "payloadBytes": 4,
+      "maxPayloadBytes": 4,
+      "diagnosticSeconds": 3.416091203689575e-06,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:solve_contact_branches:65": {
+      "calls": 1,
+      "bodySeconds": 1.166015863418579e-06,
+      "maxSeconds": 1.166015863418579e-06,
+      "samples": 1,
+      "payloadBytes": 2,
+      "maxPayloadBytes": 2,
+      "diagnosticSeconds": 2.123415470123291e-06,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:solve_contact_branches:66": {
+      "calls": 1,
+      "bodySeconds": 7.525086402893066e-07,
+      "maxSeconds": 7.525086402893066e-07,
+      "samples": 1,
+      "payloadBytes": 2,
+      "maxPayloadBytes": 2,
+      "diagnosticSeconds": 1.8700957298278809e-06,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:solve_contact_branches:71": {
+      "calls": 1,
+      "bodySeconds": 8.381903171539307e-07,
+      "maxSeconds": 8.381903171539307e-07,
+      "samples": 1,
+      "payloadBytes": 2,
+      "maxPayloadBytes": 2,
+      "diagnosticSeconds": 1.6614794731140137e-06,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:solve_contact_branches:118": {
+      "calls": 1,
+      "bodySeconds": 3.3155083656311035e-07,
+      "maxSeconds": 3.3155083656311035e-07,
+      "samples": 1,
+      "payloadBytes": 4,
+      "maxPayloadBytes": 4,
+      "diagnosticSeconds": 1.8775463104248047e-06,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:solve_contact_branches:119": {
+      "calls": 1,
+      "bodySeconds": 2.4959444999694824e-07,
+      "maxSeconds": 2.4959444999694824e-07,
+      "samples": 1,
+      "payloadBytes": 4,
+      "maxPayloadBytes": 4,
+      "diagnosticSeconds": 1.7918646335601807e-06,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:solve_contact_branches:120": {
+      "calls": 1,
+      "bodySeconds": 7.897615432739258e-07,
+      "maxSeconds": 7.897615432739258e-07,
+      "samples": 1,
+      "payloadBytes": 2,
+      "maxPayloadBytes": 2,
+      "diagnosticSeconds": 1.6689300537109375e-06,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:solve_contact_branches:121": {
+      "calls": 1,
+      "bodySeconds": 7.078051567077637e-07,
+      "maxSeconds": 7.078051567077637e-07,
+      "samples": 1,
+      "payloadBytes": 2,
+      "maxPayloadBytes": 2,
+      "diagnosticSeconds": 1.6242265701293945e-06,
+      "allocations": []
+    }
+  },
+  "caches": {
+    "preparation": {
+      "calls": 18,
+      "hits": 5,
+      "misses": 13,
+      "bodySeconds": 0.011223461478948593,
+      "keyTrackingTruncated": false,
+      "maxCacheEntries": 41,
+      "distinctKeys": 13,
+      "repeatedKeys": 5
+    },
+    "coefficient": {
+      "calls": 18,
+      "hits": 7,
+      "misses": 11,
+      "bodySeconds": 0.04341183602809906,
+      "keyTrackingTruncated": false,
+      "maxCacheEntries": 41,
+      "distinctKeys": 11,
+      "repeatedKeys": 7
+    },
+    "analysis": {
+      "calls": 18,
+      "hits": 5,
+      "misses": 13,
+      "bodySeconds": 0.2368849664926529,
+      "keyTrackingTruncated": false,
+      "maxCacheEntries": 41,
+      "distinctKeys": 13,
+      "repeatedKeys": 5
+    },
+    "screen": {
+      "calls": 4,
+      "hits": 0,
+      "misses": 4,
+      "bodySeconds": 0.02657899260520935,
+      "keyTrackingTruncated": false,
+      "maxCacheEntries": 39,
+      "distinctKeys": 4,
+      "repeatedKeys": 0
+    }
+  },
+  "functions": {
+    "variants.prepare_item": {
+      "calls": 16,
+      "samples": 1,
+      "bodySeconds": 2.33575701713562e-06
+    },
+    "variants.effective_key": {
+      "calls": 2,
+      "samples": 1,
+      "bodySeconds": 9.626150131225586e-06
+    }
+  },
+  "sampleEvery": 4096,
+  "sampleLimitPerSite": 16384,
+  "allocationSamplesPerCopySite": 0,
+  "accounting": "Call counts exact; digest body time, bytes and repeats sampled. Copy body times inclusive/overlapping. JSON bytes are not heap bytes. Allocation samples repeat copies separately. Diagnostics and hooks add overhead; no recoverable-speedup claim."
+}

@@ -1,0 +1,119 @@
+{
+  "version": 1,
+  "buckets": {
+    "program.program_physics_key": {
+      "calls": 89,
+      "inclusiveSeconds": 0.012992888689041138,
+      "selfSeconds": 0.012992888689041138,
+      "maxSeconds": 0.00029766932129859924
+    },
+    "program.program_search_key": {
+      "calls": 49,
+      "inclusiveSeconds": 0.007608409970998764,
+      "selfSeconds": 0.0004126504063606262,
+      "maxSeconds": 0.0003076232969760895
+    },
+    "callback.durable.transition": {
+      "calls": 17,
+      "inclusiveSeconds": 22.369303077459335,
+      "selfSeconds": 22.369303077459335,
+      "maxSeconds": 2.5445192083716393
+    },
+    "callback.durable.dispatch": {
+      "calls": 4,
+      "inclusiveSeconds": 6.632285051047802,
+      "selfSeconds": 6.632285051047802,
+      "maxSeconds": 1.7848792895674706
+    },
+    "program.compile_program": {
+      "calls": 13,
+      "inclusiveSeconds": 0.0037592463195323944,
+      "selfSeconds": 0.0037592463195323944,
+      "maxSeconds": 0.0007016211748123169
+    },
+    "preparation.prepare": {
+      "calls": 18,
+      "inclusiveSeconds": 0.015301622450351715,
+      "selfSeconds": 0.008787382394075394,
+      "maxSeconds": 0.0013730376958847046
+    },
+    "identity.solve_scope": {
+      "calls": 4,
+      "inclusiveSeconds": 6.73830509185791e-05,
+      "selfSeconds": 6.73830509185791e-05,
+      "maxSeconds": 1.8417835235595703e-05
+    },
+    "preparation.analyze_model": {
+      "calls": 18,
+      "inclusiveSeconds": 0.28662434220314026,
+      "selfSeconds": 0.28662434220314026,
+      "maxSeconds": 0.23244241625070572
+    },
+    "identity.solve_identity": {
+      "calls": 4,
+      "inclusiveSeconds": 0.0014023296535015106,
+      "selfSeconds": 0.0008124113082885742,
+      "maxSeconds": 0.0004631243646144867
+    },
+    "callback.durable.repair": {
+      "calls": 12,
+      "inclusiveSeconds": 0.19844957441091537,
+      "selfSeconds": 0.19844957441091537,
+      "maxSeconds": 0.038374461233615875
+    },
+    "identity.validation_prefix": {
+      "calls": 4,
+      "inclusiveSeconds": 8.042901754379272e-06,
+      "selfSeconds": 8.042901754379272e-06,
+      "maxSeconds": 5.707144737243652e-06
+    },
+    "solver.invoke": {
+      "calls": 2,
+      "inclusiveSeconds": 0.2352951616048813,
+      "selfSeconds": 0.1740366630256176,
+      "maxSeconds": 0.18532445281744003
+    },
+    "numerical.evaluate": {
+      "calls": 4,
+      "inclusiveSeconds": 1.0992940850555897,
+      "selfSeconds": 0.7118279710412025,
+      "maxSeconds": 0.6752758771181107
+    },
+    "preparation.analyze": {
+      "calls": 14,
+      "inclusiveSeconds": 0.2885960750281811,
+      "selfSeconds": 0.00017223134636878967,
+      "maxSeconds": 0.23382699862122536
+    },
+    "run.search_and_final_replay": {
+      "calls": 1,
+      "inclusiveSeconds": 31.897615667432547,
+      "selfSeconds": 1.4980767518281937,
+      "maxSeconds": 31.897615667432547
+    },
+    "postrun.accepted_replays": {
+      "calls": 1,
+      "inclusiveSeconds": 0.07352312281727791,
+      "selfSeconds": 0.07352312281727791,
+      "maxSeconds": 0.07352312281727791
+    },
+    "postrun.durable_finish": {
+      "calls": 1,
+      "inclusiveSeconds": 1.4738552086055279,
+      "selfSeconds": 1.4738552086055279,
+      "maxSeconds": 1.4738552086055279
+    }
+  },
+  "sessions": [],
+  "active": [],
+  "accounting": "Inclusive buckets overlap; selfSeconds exclude instrumented children. Unwrapped work stays in its parent.",
+  "wallSeconds": 33.89070662856102,
+  "cpuSeconds": 32.692592,
+  "maxRssBytes": 686587904,
+  "error": null,
+  "gc": {
+    "calls": 6061,
+    "seconds": 4.285284571349621
+  },
+  "cancelled": false
+}

@@ -122,6 +122,7 @@ control work; inclusion here is not authorization to implement a historical plan
 | [research/block-route-search/README.md](../research/block-route-search/README.md) | Frozen source-era evidence; use research guide for reproduction: Fixed endpoints, variable intermediate supports |
 | [research/blockage-order/README.md](../research/blockage-order/README.md) | Frozen source-era evidence; use research guide for reproduction: Directed blockage timing checked against Minecraft |
 | [research/bookkeeping-baseline/README.md](../research/bookkeeping-baseline/README.md) | Frozen source-era evidence; use research guide for reproduction: Bookkeeping baseline evidence |
+| [research/bookkeeping-measurement/README.md](../research/bookkeeping-measurement/README.md) | Frozen source-era evidence; use research guide for reproduction: Bookkeeping setup and measurement |
 | [research/cell-routes/IMPLEMENTATION_NOTES.md](../research/cell-routes/IMPLEMENTATION_NOTES.md) | Frozen source-era evidence; use research guide for reproduction: Cell-route experiment |
 | [research/cell-routes/README.md](../research/cell-routes/README.md) | Frozen source-era evidence; use research guide for reproduction: Cell-route experiment results |
 | [research/checkpoint-guidance/README.md](../research/checkpoint-guidance/README.md) | Frozen source-era evidence; use research guide for reproduction: Geometric checkpoint guidance |

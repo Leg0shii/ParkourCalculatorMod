@@ -6,6 +6,14 @@ investigate repeated hashing, model preparation and snapshots while preserving
 exact resume and ownership behavior. Branch scheduling is separate work in the
 original session; do not combine policy changes with bookkeeping optimization.
 
+Setup/measurement update (2026-11-15): steps 1–2 are complete on the isolated
+`research/bookkeeping-performance` branch, based on `0f6b873c`. See the
+[measurements and reproducibility record](../research/bookkeeping-measurement/README.md).
+No production optimization has landed; fixed-work continuation controls and
+implementation remain subsequent work. The final native gate passes 617 tests
+(the existing 610 plus seven profiler checks), with no failures/errors/skips.
+The recorded gate also needs the pinned `research` extra for its Clarabel checks.
+
 ## 1. Starting point and worktree coordination
 
 Production baseline: `a11b9b18` on `research/ipopt-cell-routes`. A later docs-only

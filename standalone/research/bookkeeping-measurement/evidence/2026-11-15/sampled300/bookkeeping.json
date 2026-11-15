@@ -1,0 +1,1638 @@
+{
+  "digests": {
+    "parkour_solver.search.events.engine:search_event_routes:55": {
+      "calls": 1,
+      "samples": 1,
+      "bodySeconds": 5.9954822063446045e-05,
+      "payloadBytes": 2555,
+      "maxPayloadBytes": 2555,
+      "diagnosticSeconds": 4.675239324569702e-05,
+      "sampledDistinct": 1,
+      "sampledRepeated": 0,
+      "topSampledValues": [
+        [
+          "bec9744e4bd04b145133c5e1496616dc90e4d77dd2a9308ed6174f8a5c6b6a95",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.spatial.anchor_guides:build_guides:75": {
+      "calls": 1,
+      "samples": 1,
+      "bodySeconds": 5.3707510232925415e-05,
+      "payloadBytes": 1611,
+      "maxPayloadBytes": 1611,
+      "diagnosticSeconds": 5.6084245443344116e-05,
+      "sampledDistinct": 1,
+      "sampledRepeated": 0,
+      "topSampledValues": [
+        [
+          "474d5f71c2f2d3fca54f01e527997794bcc896f8dabcdd8d669683f6b42359c7",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.search.identity:motion_record:19": {
+      "calls": 168,
+      "samples": 8,
+      "bodySeconds": 0.00017562881112098694,
+      "payloadBytes": 7665,
+      "maxPayloadBytes": 2857,
+      "diagnosticSeconds": 0.00016349554061889648,
+      "sampledDistinct": 7,
+      "sampledRepeated": 1,
+      "topSampledValues": [
+        [
+          "c7dd9573db59b464c0ed81aa427656a1c3a03d4c50499306ee5b574118cc605d",
+          2
+        ],
+        [
+          "43a6c485c5a7dec2aeeab474f1dba3f2fc0c58fe31a46b0a33bb1e3a7759a392",
+          1
+        ],
+        [
+          "cf2e5fd7fc21ed5e41467ce7cd6d871ff5d392249e612beb3c40ed43415760ab",
+          1
+        ],
+        [
+          "ea8628dcfa69f8c34430c58ee18efe8c18c6a530824e06a80ae6eea0fd6f112a",
+          1
+        ],
+        [
+          "1521346098358c8a68120fe7285fcae5274d44e25a661aa580ed23da5b634ac3",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.search.dfs:search_goals:89": {
+      "calls": 33,
+      "samples": 6,
+      "bodySeconds": 0.00035351142287254333,
+      "payloadBytes": 20928,
+      "maxPayloadBytes": 3488,
+      "diagnosticSeconds": 0.00025449320673942566,
+      "sampledDistinct": 1,
+      "sampledRepeated": 5,
+      "topSampledValues": [
+        [
+          "ee5581d878785c0cca177f2a5effce3f45263bce09dbb33ef9c21b0526993e08",
+          6
+        ]
+      ]
+    },
+    "parkour_solver.search.dfs:candidate_key:21": {
+      "calls": 1442,
+      "samples": 11,
+      "bodySeconds": 0.0002193748950958252,
+      "payloadBytes": 89082,
+      "maxPayloadBytes": 22564,
+      "diagnosticSeconds": 0.00024188682436943054,
+      "sampledDistinct": 9,
+      "sampledRepeated": 2,
+      "topSampledValues": [
+        [
+          "a31493438ab8de08829532861566beb3d9f76cbf55e0becaf999a5b6eaf1ba67",
+          2
+        ],
+        [
+          "0143cb653466a748b0f40e588650abbe18954e6d97d3bae616e31990659a5d57",
+          2
+        ],
+        [
+          "2fd6d8bc417ecd5701f4596728531c964a4e4096f02ec2012255486573e1580b",
+          1
+        ],
+        [
+          "6d961a852aa6294bbfdedbb6f35627de7d666a31ecd44c686d396d03e38193fb",
+          1
+        ],
+        [
+          "9e0b832d53bc3f2adf26d6269230cf060e96ccdb2a3566106a5a8001de6cb38b",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.search.dfs:frame:160": {
+      "calls": 17,
+      "samples": 5,
+      "bodySeconds": 0.0001057945191860199,
+      "payloadBytes": 9346,
+      "maxPayloadBytes": 2964,
+      "diagnosticSeconds": 0.00010653212666511536,
+      "sampledDistinct": 5,
+      "sampledRepeated": 0,
+      "topSampledValues": [
+        [
+          "4b250ab10ffd875cb888ba6a44bb836263e8fe0861591e1163b5d5c983779578",
+          1
+        ],
+        [
+          "722104ff6563938f4ac8383011a08a06f37b42e99bd5841163dca85209e3364f",
+          1
+        ],
+        [
+          "6515176268e19d06b9f89269b52324229f19ecb281da6c81ff68bf71fb7cd123",
+          1
+        ],
+        [
+          "3dfef563f18fdd24c01e9b7a1cc043f24ed3eb5f3bb0c7b1464d0d62fb4fd2e2",
+          1
+        ],
+        [
+          "2567b8a1d215c189a90b3602a7fb6ac3ef814aa9d4253c7bece920d83013b8c0",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.search.anchors.adapter:next_goals:42": {
+      "calls": 11,
+      "samples": 4,
+      "bodySeconds": 5.474686622619629e-05,
+      "payloadBytes": 4473,
+      "maxPayloadBytes": 1756,
+      "diagnosticSeconds": 4.5958906412124634e-05,
+      "sampledDistinct": 4,
+      "sampledRepeated": 0,
+      "topSampledValues": [
+        [
+          "979c0a53e958937c9e65c96c7357aa96323c36ce13156be51df4ec8d9c449515",
+          1
+        ],
+        [
+          "80c5eda24455349dc279e573b23c3ae0bdcb274c4921c874b96a7e1675e5ce65",
+          1
+        ],
+        [
+          "768e5194e93b6a359bb0fee96ed89daefa78f65758a7fa8ddc8d6b9255805031",
+          1
+        ],
+        [
+          "70a60016d716391b71641034150087e95807a682364d43b2e905f273aa6d928d",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.search.anchors.adapter:for_goal:59": {
+      "calls": 64,
+      "samples": 7,
+      "bodySeconds": 0.00013103336095809937,
+      "payloadBytes": 8028,
+      "maxPayloadBytes": 1255,
+      "diagnosticSeconds": 0.00011000409722328186,
+      "sampledDistinct": 6,
+      "sampledRepeated": 1,
+      "topSampledValues": [
+        [
+          "e5c6d3ce958f7ff938d383f75b5ffd687192fa32eb5ef97916ff3577422ffb13",
+          2
+        ],
+        [
+          "b562d8005e54b84c6b38d5ce38d2286f91373f9c893a50703f90dd818ccfbd93",
+          1
+        ],
+        [
+          "be1bcfef13eeb0ade73cd9631ffb7e8ee60945eac4233700aefdbf1e515e7f2a",
+          1
+        ],
+        [
+          "76233052a2a9e3dafe51756d1f014346d101fb5ceb4a0181d4994e62a32c528b",
+          1
+        ],
+        [
+          "9b7b48e790cf375836f521591ce257a7e3538cb5960066f2c1f20dad786fafb0",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.search.frontier:persistent_programs:30": {
+      "calls": 25,
+      "samples": 5,
+      "bodySeconds": 0.00033566728234291077,
+      "payloadBytes": 68694,
+      "maxPayloadBytes": 24770,
+      "diagnosticSeconds": 0.00028908997774124146,
+      "sampledDistinct": 5,
+      "sampledRepeated": 0,
+      "topSampledValues": [
+        [
+          "4a32e6b85de33fcf0f375242cd93a45265267131309d46ae8f4820935c6c7a75",
+          1
+        ],
+        [
+          "56f07019bf37f5b3275fe2b5e6f67cbec5fbae5686f00eb151daa002b9b28488",
+          1
+        ],
+        [
+          "0eebbfb012e98568a76e4010670d8412bb0e6ce8b370d60c8ea86b7af3904e7f",
+          1
+        ],
+        [
+          "79acc52816d748fe96164a6e3fc51b128cf78ce532306e8ec086bcdbb87379d3",
+          1
+        ],
+        [
+          "370d4eecdd8b1b6375cced50aaf36b109a3174afabaf9ffda22c05eaca15e770",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.search.frontier:persistent_programs:144": {
+      "calls": 184,
+      "samples": 8,
+      "bodySeconds": 9.636953473091125e-05,
+      "payloadBytes": 37164,
+      "maxPayloadBytes": 16121,
+      "diagnosticSeconds": 0.0001070462167263031,
+      "sampledDistinct": 6,
+      "sampledRepeated": 2,
+      "topSampledValues": [
+        [
+          "51dc0ae715576c2045f0c71c977f0ac2a3fbacb4fe8fee2f40a7770845d28bfc",
+          3
+        ],
+        [
+          "1ce5fae2d251a8aec4f9157da657d4535fe74ecadf957378bb0f21db7fd6a133",
+          1
+        ],
+        [
+          "9885b298294adbda28eddad3e494f39b51a87ac052cc2b7532db45c40a9cbba9",
+          1
+        ],
+        [
+          "2c244d2fd69451fbbe660d2e6b79c7f4d7a75445d150084eb33e0081b5270ba1",
+          1
+        ],
+        [
+          "cb7e3fab0f27a66485b7b81fced9f883887bb3bca9d52891a89979a89eb25e3a",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.reachability.service:query:206": {
+      "calls": 656,
+      "samples": 10,
+      "bodySeconds": 7.558241486549377e-05,
+      "payloadBytes": 28158,
+      "maxPayloadBytes": 17243,
+      "diagnosticSeconds": 9.166821837425232e-05,
+      "sampledDistinct": 6,
+      "sampledRepeated": 4,
+      "topSampledValues": [
+        [
+          "51dc0ae715576c2045f0c71c977f0ac2a3fbacb4fe8fee2f40a7770845d28bfc",
+          5
+        ],
+        [
+          "1ce5fae2d251a8aec4f9157da657d4535fe74ecadf957378bb0f21db7fd6a133",
+          1
+        ],
+        [
+          "9885b298294adbda28eddad3e494f39b51a87ac052cc2b7532db45c40a9cbba9",
+          1
+        ],
+        [
+          "2c244d2fd69451fbbe660d2e6b79c7f4d7a75445d150084eb33e0081b5270ba1",
+          1
+        ],
+        [
+          "7ff8789a86f8114cab216ceb3ac9f5eecea7e837c2b06fdf4c6cbb81c2db62f1",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.reachability.service:prepare:120": {
+      "calls": 462,
+      "samples": 9,
+      "bodySeconds": 0.00037812069058418274,
+      "payloadBytes": 59459,
+      "maxPayloadBytes": 16887,
+      "diagnosticSeconds": 0.00034308061003685,
+      "sampledDistinct": 8,
+      "sampledRepeated": 1,
+      "topSampledValues": [
+        [
+          "3ce75bf500d7f53d44db6633e884c71ae2df6967856618698b4fd604961a7a98",
+          2
+        ],
+        [
+          "b832f32c3d9a4ffd158eddb879c9dcf1a73b723514fe886ce6c46206ee35e7c5",
+          1
+        ],
+        [
+          "ae7b8dc45ad42ae55088a07b1d4d19ace683632588c8d43c2e198d9900f873a7",
+          1
+        ],
+        [
+          "5388f24e37be2d18cbaead0eb36a5b4011bee650d131f1475106707a1b24f027",
+          1
+        ],
+        [
+          "659bfc0922799cd641f89b2633c2f4b9429600390fe8db0d116216e43c3f2502",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.reachability.service:analyze_model:135": {
+      "calls": 462,
+      "samples": 9,
+      "bodySeconds": 0.00027834251523017883,
+      "payloadBytes": 18535,
+      "maxPayloadBytes": 4625,
+      "diagnosticSeconds": 0.0002659149467945099,
+      "sampledDistinct": 8,
+      "sampledRepeated": 1,
+      "topSampledValues": [
+        [
+          "845e8a79f4ff725c51f9dad878f83ea83065760303fa7c3426efae5400eb8f83",
+          2
+        ],
+        [
+          "2a36588017a4e7838f376fdd958e7f17b95f34601b81aecc856c39c93353d8b0",
+          1
+        ],
+        [
+          "cdacf115f5ecdedbd95ce1f3514bdf1265dec7d07461167057b19b438e12db51",
+          1
+        ],
+        [
+          "d35ec47b97478399d9b34c78071a13c15c13765464e71140d76b3db3675f078a",
+          1
+        ],
+        [
+          "550e3b3f0367872e8c578ad84a0fa34ef78e6d0af6f9028de773f16002a8d1b0",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.reachability.service:interaction_context_key:20": {
+      "calls": 596,
+      "samples": 10,
+      "bodySeconds": 0.0023695938289165497,
+      "payloadBytes": 142154,
+      "maxPayloadBytes": 63998,
+      "diagnosticSeconds": 0.002282746136188507,
+      "sampledDistinct": 10,
+      "sampledRepeated": 0,
+      "topSampledValues": [
+        [
+          "577c07a70c4fd5f14d54033d1b2061e048c1347edd1ec233c8eca66385dacdd2",
+          1
+        ],
+        [
+          "8b1eae7da90685154b8267b7524f24e396bee025104275faf9e1f0f18c6026a5",
+          1
+        ],
+        [
+          "6ef43eca5cecb57e68217dcd1829cb1dc6b84e00830734105c727fa22afafda5",
+          1
+        ],
+        [
+          "5a41c1f88cf78387db52f9eff8442c770efd00f211ad6fe42cfc4a6312783ddf",
+          1
+        ],
+        [
+          "594a7e2fb8bc693b0cc7f3cbdfbab06c1e3838503dcacaae9edd73885ea83645",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.reachability.service:build:145": {
+      "calls": 232,
+      "samples": 8,
+      "bodySeconds": 0.00047117099165916443,
+      "payloadBytes": 29396,
+      "maxPayloadBytes": 11351,
+      "diagnosticSeconds": 0.0004507414996623993,
+      "sampledDistinct": 8,
+      "sampledRepeated": 0,
+      "topSampledValues": [
+        [
+          "793b26aacfa6b51e37d521056c81a4ab68bb2cb829216003a9326f6a783f1fec",
+          1
+        ],
+        [
+          "87302db7e54f5106c468dd570f605f34403e15cc24fa96c01932293e2bcda676",
+          1
+        ],
+        [
+          "7600bb81f516244feefa00e384f5bf8e2b64b0f6ee8dedeb4eb669d9c633fda8",
+          1
+        ],
+        [
+          "07aca99cdf28e4fc917f3b50ad21f4e4fafe3ea7918c8bdcb4a32a4219ff5144",
+          1
+        ],
+        [
+          "a083fa235b763e2fb1be81217b76c46ec8eef2857ad077d40ee99f99812e1aa9",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.reachability.service:query_interaction:38": {
+      "calls": 14483,
+      "samples": 16,
+      "bodySeconds": 7.729232311248779e-05,
+      "payloadBytes": 4232,
+      "maxPayloadBytes": 288,
+      "diagnosticSeconds": 0.00010650604963302612,
+      "sampledDistinct": 16,
+      "sampledRepeated": 0,
+      "topSampledValues": [
+        [
+          "2b0f04dae48fa1332e756ac06fb08e038e9892bb6149d62c4bb9880e1366e2e3",
+          1
+        ],
+        [
+          "8f3a9a284623de38bd8775ee243d795a7fa5d06bec79f54631f326402e328daf",
+          1
+        ],
+        [
+          "1c13bbffb96d666fc6a22c62466775d854e53274c5f5a68d4b81a0002a516df3",
+          1
+        ],
+        [
+          "82c6548b949ecee5dd1c263bc88584d1859278e9c47cc77c3dbd19d3149d506a",
+          1
+        ],
+        [
+          "05eced9860daf834aaebcbb3cf1395775aa8784c8cb70dd61146e0ada3581db7",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.search.anchors.policy:<lambda>:71": {
+      "calls": 6830,
+      "samples": 14,
+      "bodySeconds": 5.998462438583374e-05,
+      "payloadBytes": 1726,
+      "maxPayloadBytes": 124,
+      "diagnosticSeconds": 8.796900510787964e-05,
+      "sampledDistinct": 6,
+      "sampledRepeated": 8,
+      "topSampledValues": [
+        [
+          "1a3ec2332f51b817c7b647e05c414cdb789862533fd6b72ee0aa6f8ccb41ea3a",
+          5
+        ],
+        [
+          "982905cc95f94f2d0e0bc8e38902cfe0dba1e5bf029d6c3559368b0ccfbc7406",
+          2
+        ],
+        [
+          "f4d47b649c08f5d845b61223569181f6af4b381b699a97f1278a4783994bbeb3",
+          2
+        ],
+        [
+          "3a1ce2928a4237c9ec4ea4b0e98730b17954a3fd45bbe9a59322fe910432c2c7",
+          2
+        ],
+        [
+          "f99296de6f580eefba43af4198fcd57d98bb822f6bc1674959e9295bde4ab6df",
+          2
+        ]
+      ]
+    },
+    "parkour_solver.search.feasibility:node_identity:30": {
+      "calls": 34,
+      "samples": 6,
+      "bodySeconds": 0.00013849511742591858,
+      "payloadBytes": 39240,
+      "maxPayloadBytes": 14770,
+      "diagnosticSeconds": 0.00013379380106925964,
+      "sampledDistinct": 6,
+      "sampledRepeated": 0,
+      "topSampledValues": [
+        [
+          "983f6447da3447945e4694a6fa320af04191f9cc8582d011665aab01a58a3673",
+          1
+        ],
+        [
+          "eb5b6cf10eb2eef8a597e23ef42847c20e09779d565f413d6cb090cfe956535d",
+          1
+        ],
+        [
+          "8c9c3c30bb2afd1181411a732277e713130049d534d11f5e2dfaac51c825db4c",
+          1
+        ],
+        [
+          "35f7f80e0aaba80a17dae91aa81ebc0c01300c211c3ce7e57dffb475c07b8dc9",
+          1
+        ],
+        [
+          "ae5ed5bf49895d2089a4e5ec15c9d0a254a5dd3561d816190b1d19dae8b699c8",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.search.dfs:<lambda>:578": {
+      "calls": 14,
+      "samples": 4,
+      "bodySeconds": 0.00012741610407829285,
+      "payloadBytes": 54092,
+      "maxPayloadBytes": 22569,
+      "diagnosticSeconds": 0.0001499578356742859,
+      "sampledDistinct": 4,
+      "sampledRepeated": 0,
+      "topSampledValues": [
+        [
+          "607d5318140787c7cfe663196b4fcf87d7c1b6d153f6d5036399cd8137a9a562",
+          1
+        ],
+        [
+          "88be2ee848a644b33bd5d2335d5795a352e17df79171880c48c96fba122317a1",
+          1
+        ],
+        [
+          "5a514f244ddb9d8fdd062ba74c387b29b7787c7a35ef68deb4e7921cd884a06d",
+          1
+        ],
+        [
+          "fc6d3c6b6b7c6b3650406670803e1c004b3bdbfae2704f0ddade4875ec09e8d0",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.search.dfs:decision_family:36": {
+      "calls": 66,
+      "samples": 7,
+      "bodySeconds": 0.00012457743287086487,
+      "payloadBytes": 406,
+      "maxPayloadBytes": 60,
+      "diagnosticSeconds": 4.67151403427124e-05,
+      "sampledDistinct": 6,
+      "sampledRepeated": 1,
+      "topSampledValues": [
+        [
+          "cb1c4f549d8373f9d8d0db416496a669c9c5aba4a99de7c1d3b58493f12795b2",
+          2
+        ],
+        [
+          "046320ae126508acc7f0e8b1e83f61c05e2ddd9a37f2610c28c0f21f0c35e785",
+          1
+        ],
+        [
+          "3946242981154445117a2e45aa622d85976ee9ecdb85890e14e170ab1cb8d1ba",
+          1
+        ],
+        [
+          "25ca5bfc29fb0fc38d442f33e311fe71c4b63fe3f8eb2c32086ae8ab39c8411d",
+          1
+        ],
+        [
+          "9f41a40fb7436c78eae849b16f09f88f5ca3f22dfabb3cfa92090ee0851b8d41",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.search.dfs:score_key:255": {
+      "calls": 14,
+      "samples": 4,
+      "bodySeconds": 1.0378658771514893e-05,
+      "payloadBytes": 544,
+      "maxPayloadBytes": 136,
+      "diagnosticSeconds": 1.591816544532776e-05,
+      "sampledDistinct": 4,
+      "sampledRepeated": 0,
+      "topSampledValues": [
+        [
+          "e64ce8074540031447aa4ec3be92447d0b4e119da2aacf7bbbf59e2328bf96d6",
+          1
+        ],
+        [
+          "ff2192e0369ef42c18bb5ea5199888d0892257c26851aeb7d8bbbec41a35ac58",
+          1
+        ],
+        [
+          "08385b4eb1a2e6d67ed3498c9a3c828bf52f32d3d820b7b758088e0af1fc9051",
+          1
+        ],
+        [
+          "1f0a7eb4e5c726d31101e57a0718bd021bf166fce99092cf04149a09fbdd31dc",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.search.identity:solve_identity:55": {
+      "calls": 53,
+      "samples": 6,
+      "bodySeconds": 0.0009234584867954254,
+      "payloadBytes": 116710,
+      "maxPayloadBytes": 30653,
+      "diagnosticSeconds": 0.0008621253073215485,
+      "sampledDistinct": 6,
+      "sampledRepeated": 0,
+      "topSampledValues": [
+        [
+          "152cc0fae942c4ddff2443d6ee775c27460bc3d3b5c71afb1eea910fb8afc861",
+          1
+        ],
+        [
+          "6b2f3e13b96a9920edcace29162f2c4cc6431cf53603696be15973e5edbceb28",
+          1
+        ],
+        [
+          "507e99de3a62a997fd81726a5087c183151185fe5434f6afa9c205b2959ba2a9",
+          1
+        ],
+        [
+          "8d0afc63d8abcb30e067904f745f219cc299db18c7b9bdac8f83cd77296a5d13",
+          1
+        ],
+        [
+          "e3b5028749e8d135953238e128bfdb2d5692911ec65c4305a7811dd171bf3024",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.constraints.variants:__init__:17": {
+      "calls": 53,
+      "samples": 6,
+      "bodySeconds": 0.0023620016872882843,
+      "payloadBytes": 191813,
+      "maxPayloadBytes": 54590,
+      "diagnosticSeconds": 0.002171248197555542,
+      "sampledDistinct": 6,
+      "sampledRepeated": 0,
+      "topSampledValues": [
+        [
+          "54efef71578c9c47f227e4657a6d71086fa50b76b9b5dc6de45b85947959c040",
+          1
+        ],
+        [
+          "0a2311ac447ce522994d8c8be0bf35b7ecc98dbe9b015c4ab52d28a1a03e2a55",
+          1
+        ],
+        [
+          "1971d34adeced63e7b597b49341b6648d42a11e087e4bee84f4ecf25c3525c85",
+          1
+        ],
+        [
+          "4173d6ecd570ee8d6cb1704dc26137cfc6c2628b8ff0c5b274657bcfba540661",
+          1
+        ],
+        [
+          "c0863446aca9ea94323c91c44db709afdf6fcb58950a94552884231f17ecb414",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.constraints.variants:effective_key:226": {
+      "calls": 16766863,
+      "samples": 4106,
+      "bodySeconds": 0.007891803979873657,
+      "payloadBytes": 47148,
+      "maxPayloadBytes": 146,
+      "diagnosticSeconds": 0.019155796617269516,
+      "sampledDistinct": 17,
+      "sampledRepeated": 4089,
+      "topSampledValues": [
+        [
+          "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          3626
+        ],
+        [
+          "1695075c984744f18f96c5e102d59aba916adaf01c3f8af4c6485f3c07268e6b",
+          203
+        ],
+        [
+          "2a9e1b3f9576640721282ced1551966952c5cd41e674125aeed3e2f0991ee1c3",
+          163
+        ],
+        [
+          "c9a92f6e7a476eb702cf5dcb10b52310893d175a9bd98f768c932d8523b74172",
+          23
+        ],
+        [
+          "c2dced1e36f191c82364d51a1f359ab2a8a0b9b0fc262305e4be5a8809e9ac9f",
+          22
+        ]
+      ]
+    },
+    "parkour_solver.constraints.variants:_next_variant:347": {
+      "calls": 789,
+      "samples": 10,
+      "bodySeconds": 3.133341670036316e-05,
+      "payloadBytes": 1318,
+      "maxPayloadBytes": 172,
+      "diagnosticSeconds": 7.391348481178284e-05,
+      "sampledDistinct": 8,
+      "sampledRepeated": 2,
+      "topSampledValues": [
+        [
+          "95cf5de3e57e57df514d8c33c119ce3a50347210e5d1c0ab25aaf28a52801554",
+          3
+        ],
+        [
+          "af314f0b5aa68a473fe6475fcd6a428c9c8e908d60dd70435ee14eb2bad17400",
+          1
+        ],
+        [
+          "f201eee6de26072efa7e409a95bfc16ba6cc8d8d24eb288e8a9ccbd46d1673e0",
+          1
+        ],
+        [
+          "9babd78c2e7f178bdf32f4d4f219ac5427aafea77caec73f93448cb34baa216c",
+          1
+        ],
+        [
+          "49d47d65466257ae36985ce496a0679d6856fe01419f858f27ebdd2c6944e440",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.search.dfs:tick_label:285": {
+      "calls": 11,
+      "samples": 4,
+      "bodySeconds": 2.2839754819869995e-05,
+      "payloadBytes": 1315,
+      "maxPayloadBytes": 329,
+      "diagnosticSeconds": 3.4283846616744995e-05,
+      "sampledDistinct": 4,
+      "sampledRepeated": 0,
+      "topSampledValues": [
+        [
+          "157ed516fffda871ffe68bf28cbf7274a390641722d55aaf0fafb7dfdb1ba552",
+          1
+        ],
+        [
+          "fc5cb98a3b7ce394c9d1e6c26931f93ad97bd7644faffc27f93be1c18eed36e8",
+          1
+        ],
+        [
+          "22627dc788ee76312d2b4264d4990eba5581d6eb24aa8b161bb550af1a4b6c92",
+          1
+        ],
+        [
+          "a778361dc9adae2752fe42aa999bc4b2c4bb34f24965118b0af281da507af59c",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.search.frontier:persistent_programs:193": {
+      "calls": 38,
+      "samples": 6,
+      "bodySeconds": 0.00023961812257766724,
+      "payloadBytes": 95875,
+      "maxPayloadBytes": 22021,
+      "diagnosticSeconds": 0.00032907724380493164,
+      "sampledDistinct": 6,
+      "sampledRepeated": 0,
+      "topSampledValues": [
+        [
+          "df723c85be82b8234cb51058037062a9582f9077a20ec30a797af859045dac1d",
+          1
+        ],
+        [
+          "d73260787fb91ae782a7053f95947456f8a5523b19310e78e8e3a9bf73d27b4a",
+          1
+        ],
+        [
+          "8997e33e77083b288445b25bf07d5355cce41adccacad2d8c62d2bd73d7617f9",
+          1
+        ],
+        [
+          "2a29aa39e06c6038657652c6a742733fafa2c8f6e96cb7323121d7f82d7ee508",
+          1
+        ],
+        [
+          "308f9dd102348b5dea00acae5c10d82ddd1c00510f2249f86802a028b7ec3c28",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.constraints.variants:_next_variant:382": {
+      "calls": 1136,
+      "samples": 11,
+      "bodySeconds": 4.279240965843201e-05,
+      "payloadBytes": 1570,
+      "maxPayloadBytes": 175,
+      "diagnosticSeconds": 0.00010549649596214294,
+      "sampledDistinct": 11,
+      "sampledRepeated": 0,
+      "topSampledValues": [
+        [
+          "7715545ab80e50063e8cd4dff69a64f919fd28682cde34de61cdee3cd1070be3",
+          1
+        ],
+        [
+          "bc8dc816e234e86a8c8ba693b09e6f516de5e8d469c2298afb65b54031a001d1",
+          1
+        ],
+        [
+          "336d916fd71fbc308ecb2c8880958e257139516dd666a2f7f840b7459affae02",
+          1
+        ],
+        [
+          "b6298b508dbadd113f4bc79d4c802461bad6cf93a8c71a22f40a2d59c2d10579",
+          1
+        ],
+        [
+          "960e4d3f3cfcfec81d5180794906ad2209708e5bad6107f5aaa9d086d622fd28",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.constraints.variants:option:265": {
+      "calls": 16599412,
+      "samples": 4065,
+      "bodySeconds": 0.008861124515533447,
+      "payloadBytes": 323304,
+      "maxPayloadBytes": 80,
+      "diagnosticSeconds": 0.0234597846865654,
+      "sampledDistinct": 3694,
+      "sampledRepeated": 371,
+      "topSampledValues": [
+        [
+          "e40260b1350216de6f4ebb1f3865a38f67ad7a961a51d7a34c2495c0ac2c6714",
+          4
+        ],
+        [
+          "003375d95003b08f7346dc8ef38f8b6cdc8e238e7c79766d3a1fe6db75da9e50",
+          4
+        ],
+        [
+          "cf25f42377cce8e92a5027d7a497dc1d86c706e69c94bc134bd5cd6584d77962",
+          4
+        ],
+        [
+          "43cd32432cb45fe4fa2b59649dfee38f13ae3ec6af61f0b81ce9ab364e996ea8",
+          4
+        ],
+        [
+          "b31dc357045786b8a8868ddd4a0980664d098e98c6d1584c197ceee6da8a3200",
+          3
+        ]
+      ]
+    },
+    "parkour_solver.constraints.variants:option:293": {
+      "calls": 165526,
+      "samples": 53,
+      "bodySeconds": 0.00013623759150505066,
+      "payloadBytes": 6042,
+      "maxPayloadBytes": 114,
+      "diagnosticSeconds": 0.0003117658197879791,
+      "sampledDistinct": 20,
+      "sampledRepeated": 33,
+      "topSampledValues": [
+        [
+          "f90459b5e2d39d6b2fccfda0a6e24da9bf81984043d526a981db068e07c35211",
+          11
+        ],
+        [
+          "3e8e9ba6be70f3c628eae729104a20af05eb85910c0e9e09872a5c145e3672af",
+          8
+        ],
+        [
+          "3d09535c6eef3a9cf5dabae9958ccf3e48d27d356090c29e5854f587d653d3f1",
+          6
+        ],
+        [
+          "a6f357be539467ee1bc2993715e7c60d1ad6ce376b6d745b38586ad7d32e84d5",
+          4
+        ],
+        [
+          "cdae144fc0789598936b1d72d9a4366bc74bdd664a6b59b1c8435b06956f14a2",
+          3
+        ]
+      ]
+    },
+    "parkour_solver.constraints.variants:excluded:205": {
+      "calls": 408,
+      "samples": 9,
+      "bodySeconds": 0.00020420551300048828,
+      "payloadBytes": 8961,
+      "maxPayloadBytes": 1436,
+      "diagnosticSeconds": 0.00020634010434150696,
+      "sampledDistinct": 7,
+      "sampledRepeated": 2,
+      "topSampledValues": [
+        [
+          "ff06f42746e0674870d1e8595ccf15325ddb6894f1fdea65bc8cad27de63074a",
+          3
+        ],
+        [
+          "4c1c7e875a63ba794d050b20398e158201465c77ba723ba8fdc4cd767a2b1338",
+          1
+        ],
+        [
+          "36d41d02fad61db59fb7597faf17b6409ec464485430dbf8d83d28035034d8c9",
+          1
+        ],
+        [
+          "0e001fe8e786989d74755f9a34aa34ce9d84fb0e311e10b77945bd1bf24daca1",
+          1
+        ],
+        [
+          "ae039dc2311e45a851de2f891a8fd037a3fa7b4bc4e67148b52bde71bc094856",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.search.dfs:score:709": {
+      "calls": 44,
+      "samples": 6,
+      "bodySeconds": 1.9866973161697388e-05,
+      "payloadBytes": 816,
+      "maxPayloadBytes": 136,
+      "diagnosticSeconds": 8.425489068031311e-05,
+      "sampledDistinct": 6,
+      "sampledRepeated": 0,
+      "topSampledValues": [
+        [
+          "818bfe8045e8a3899390b293df0d0ece759ef61126ec88a6b1178f46d702f29a",
+          1
+        ],
+        [
+          "a11a485676c4f58b08fa5ec664ce8e046990bd3988ff5486d544ed67baddb063",
+          1
+        ],
+        [
+          "0f638c38d459593ed3c4be17f30b9bde2015cd7c685edeac43ea66575875f278",
+          1
+        ],
+        [
+          "edc4213a9f23947d35c3ee3f5a4a53a573d492fc6eeb76d2f4bf00706dcfdf67",
+          1
+        ],
+        [
+          "eba753032e5c08cb4dacc6397281b931043e5db55bbd50372f51811354f1cb05",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.search.bounds.flight:transfer_bounds:95": {
+      "calls": 5,
+      "samples": 3,
+      "bodySeconds": 1.712515950202942e-05,
+      "payloadBytes": 1014,
+      "maxPayloadBytes": 342,
+      "diagnosticSeconds": 1.8540769815444946e-05,
+      "sampledDistinct": 3,
+      "sampledRepeated": 0,
+      "topSampledValues": [
+        [
+          "e0429bc9f638d4aebcfd6839da120c7077ab6febf8fe62fdb3741a6ec9150d06",
+          1
+        ],
+        [
+          "28c637c9b554043348e4e7f0a85b760b8c86a7cfc12b5bd3604f80ead82ac501",
+          1
+        ],
+        [
+          "9e6fc4ccbfb4e5d17c313a9c8774252e9795299bd877b1851913a17af4180503",
+          1
+        ]
+      ]
+    }
+  },
+  "copies": {
+    "parkour_solver.scene.normalize:prepare_scene:10": {
+      "calls": 4,
+      "bodySeconds": 0.00017775967717170715,
+      "maxSeconds": 4.842132329940796e-05,
+      "samples": 3,
+      "payloadBytes": 3180,
+      "maxPayloadBytes": 1060,
+      "diagnosticSeconds": 0.0001203678548336029,
+      "allocations": []
+    },
+    "parkour_solver.scene.geometry:normalize_geometry:60": {
+      "calls": 28,
+      "bodySeconds": 5.319342017173767e-05,
+      "maxSeconds": 3.0025839805603027e-06,
+      "samples": 5,
+      "payloadBytes": 152,
+      "maxPayloadBytes": 32,
+      "diagnosticSeconds": 3.980472683906555e-05,
+      "allocations": []
+    },
+    "parkour_solver.scene.route:prepare_route:13": {
+      "calls": 591,
+      "bodySeconds": 0.15919622778892517,
+      "maxSeconds": 0.006962832063436508,
+      "samples": 10,
+      "payloadBytes": 24261,
+      "maxPayloadBytes": 18125,
+      "diagnosticSeconds": 0.0010010823607444763,
+      "allocations": []
+    },
+    "parkour_solver.movement.units:movement_unit:15": {
+      "calls": 649,
+      "bodySeconds": 0.0007357113063335419,
+      "maxSeconds": 5.9332698583602905e-05,
+      "samples": 10,
+      "payloadBytes": 20,
+      "maxPayloadBytes": 2,
+      "diagnosticSeconds": 0.0003701746463775635,
+      "allocations": []
+    },
+    "parkour_solver.search.goals:goal_spec:16": {
+      "calls": 2,
+      "bodySeconds": 9.667128324508667e-06,
+      "maxSeconds": 7.621943950653076e-06,
+      "samples": 2,
+      "payloadBytes": 68,
+      "maxPayloadBytes": 34,
+      "diagnosticSeconds": 9.413808584213257e-06,
+      "allocations": []
+    },
+    "parkour_solver.movement.vertical_profiles:trace_ladder_schedule:45": {
+      "calls": 906,
+      "bodySeconds": 0.007677372545003891,
+      "maxSeconds": 3.3292919397354126e-05,
+      "samples": 10,
+      "payloadBytes": 970,
+      "maxPayloadBytes": 784,
+      "diagnosticSeconds": 0.0006417185068130493,
+      "allocations": []
+    },
+    "parkour_solver.movement.program:profile_from_trace:52": {
+      "calls": 1500,
+      "bodySeconds": 0.01878325268626213,
+      "maxSeconds": 8.495897054672241e-05,
+      "samples": 11,
+      "payloadBytes": 22,
+      "maxPayloadBytes": 2,
+      "diagnosticSeconds": 0.0007427111268043518,
+      "allocations": []
+    },
+    "parkour_solver.movement.program:profile_from_trace:53": {
+      "calls": 750,
+      "bodySeconds": 0.06396156549453735,
+      "maxSeconds": 0.0004758313298225403,
+      "samples": 10,
+      "payloadBytes": 26324,
+      "maxPayloadBytes": 12488,
+      "diagnosticSeconds": 0.0006885863840579987,
+      "allocations": []
+    },
+    "parkour_solver.movement.program:movement_choice:74": {
+      "calls": 375,
+      "bodySeconds": 0.00031111016869544983,
+      "maxSeconds": 4.630535840988159e-06,
+      "samples": 9,
+      "payloadBytes": 18,
+      "maxPayloadBytes": 2,
+      "diagnosticSeconds": 0.00021374225616455078,
+      "allocations": []
+    },
+    "parkour_solver.movement.program:append_choice:154": {
+      "calls": 375,
+      "bodySeconds": 0.0003283172845840454,
+      "maxSeconds": 2.9169023036956787e-06,
+      "samples": 9,
+      "payloadBytes": 18,
+      "maxPayloadBytes": 2,
+      "diagnosticSeconds": 0.00023928284645080566,
+      "allocations": []
+    },
+    "parkour_solver.movement.program:append_choice:161": {
+      "calls": 375,
+      "bodySeconds": 0.014722798019647598,
+      "maxSeconds": 0.00012221187353134155,
+      "samples": 9,
+      "payloadBytes": 4234,
+      "maxPayloadBytes": 1554,
+      "diagnosticSeconds": 0.0002782009541988373,
+      "allocations": []
+    },
+    "parkour_solver.movement.units:shifted_unit:133": {
+      "calls": 3894,
+      "bodySeconds": 0.02184714749455452,
+      "maxSeconds": 0.005451001226902008,
+      "samples": 12,
+      "payloadBytes": 1217,
+      "maxPayloadBytes": 105,
+      "diagnosticSeconds": 0.001662667840719223,
+      "allocations": []
+    },
+    "parkour_solver.movement.program:_events:102": {
+      "calls": 375,
+      "bodySeconds": 0.00028355419635772705,
+      "maxSeconds": 1.5050172805786133e-06,
+      "samples": 9,
+      "payloadBytes": 18,
+      "maxPayloadBytes": 2,
+      "diagnosticSeconds": 0.0001976415514945984,
+      "allocations": []
+    },
+    "parkour_solver.movement.program:profile_from_trace:55": {
+      "calls": 375,
+      "bodySeconds": 0.015197232365608215,
+      "maxSeconds": 8.033215999603271e-05,
+      "samples": 9,
+      "payloadBytes": 5156,
+      "maxPayloadBytes": 1659,
+      "diagnosticSeconds": 0.00034294649958610535,
+      "allocations": []
+    },
+    "parkour_solver.movement.program:append_choice:195": {
+      "calls": 375,
+      "bodySeconds": 0.0008647069334983826,
+      "maxSeconds": 4.708766937255859e-06,
+      "samples": 9,
+      "payloadBytes": 936,
+      "maxPayloadBytes": 104,
+      "diagnosticSeconds": 0.0002326779067516327,
+      "allocations": []
+    },
+    "parkour_solver.movement.program:append_choice:204": {
+      "calls": 641,
+      "bodySeconds": 0.0017058402299880981,
+      "maxSeconds": 1.3958662748336792e-05,
+      "samples": 10,
+      "payloadBytes": 2121,
+      "maxPayloadBytes": 1134,
+      "diagnosticSeconds": 0.00037360936403274536,
+      "allocations": []
+    },
+    "parkour_solver.numerics.model:prepare:16": {
+      "calls": 571,
+      "bodySeconds": 0.10821317881345749,
+      "maxSeconds": 0.0011564604938030243,
+      "samples": 10,
+      "payloadBytes": 14150,
+      "maxPayloadBytes": 2952,
+      "diagnosticSeconds": 0.0010987408459186554,
+      "allocations": []
+    },
+    "parkour_solver.movement.contact_combinations:merge_contacts:25": {
+      "calls": 25955,
+      "bodySeconds": 0.08456883952021599,
+      "maxSeconds": 0.002028539776802063,
+      "samples": 16,
+      "payloadBytes": 1177,
+      "maxPayloadBytes": 142,
+      "diagnosticSeconds": 0.009946953505277634,
+      "allocations": []
+    },
+    "parkour_solver.movement.generation:propose_choices:49": {
+      "calls": 424,
+      "bodySeconds": 0.00027467310428619385,
+      "maxSeconds": 6.278976798057556e-05,
+      "samples": 9,
+      "payloadBytes": 69,
+      "maxPayloadBytes": 18,
+      "diagnosticSeconds": 0.00024902448058128357,
+      "allocations": []
+    },
+    "parkour_solver.search.engine:evaluate_program:91": {
+      "calls": 21,
+      "bodySeconds": 6.592646241188049e-05,
+      "maxSeconds": 7.081776857376099e-06,
+      "samples": 5,
+      "payloadBytes": 292,
+      "maxPayloadBytes": 61,
+      "diagnosticSeconds": 7.099658250808716e-05,
+      "allocations": []
+    },
+    "parkour_solver.search.identity:solve_scope:27": {
+      "calls": 53,
+      "bodySeconds": 7.126480340957642e-05,
+      "maxSeconds": 2.4996697902679443e-06,
+      "samples": 6,
+      "payloadBytes": 12,
+      "maxPayloadBytes": 2,
+      "diagnosticSeconds": 0.00012450292706489563,
+      "allocations": []
+    },
+    "parkour_solver.constraints.variants:__init__:45": {
+      "calls": 15,
+      "bodySeconds": 0.0005587898194789886,
+      "maxSeconds": 5.3334981203079224e-05,
+      "samples": 4,
+      "payloadBytes": 6359,
+      "maxPayloadBytes": 2811,
+      "diagnosticSeconds": 0.00017955154180526733,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:solve_contact_branches:26": {
+      "calls": 53,
+      "bodySeconds": 0.02058662474155426,
+      "maxSeconds": 0.0008834972977638245,
+      "samples": 6,
+      "payloadBytes": 105991,
+      "maxPayloadBytes": 29993,
+      "diagnosticSeconds": 0.001416478306055069,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:snapshot:96": {
+      "calls": 1408,
+      "bodySeconds": 0.03405902162194252,
+      "maxSeconds": 0.00036958232522010803,
+      "samples": 11,
+      "payloadBytes": 7559,
+      "maxPayloadBytes": 2611,
+      "diagnosticSeconds": 0.0013974830508232117,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:snapshot:97": {
+      "calls": 704,
+      "bodySeconds": 14.951356668025255,
+      "maxSeconds": 0.19482116401195526,
+      "samples": 10,
+      "payloadBytes": 1458706,
+      "maxPayloadBytes": 1209185,
+      "diagnosticSeconds": 0.021905045956373215,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:snapshot:98": {
+      "calls": 1408,
+      "bodySeconds": 0.02753160148859024,
+      "maxSeconds": 0.0005785822868347168,
+      "samples": 11,
+      "payloadBytes": 15720,
+      "maxPayloadBytes": 12286,
+      "diagnosticSeconds": 0.0011981576681137085,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:snapshot:99": {
+      "calls": 1408,
+      "bodySeconds": 0.2516857385635376,
+      "maxSeconds": 0.10942791774868965,
+      "samples": 11,
+      "payloadBytes": 26156,
+      "maxPayloadBytes": 19818,
+      "diagnosticSeconds": 0.0013466998934745789,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:snapshot:100": {
+      "calls": 704,
+      "bodySeconds": 1.4311943016946316,
+      "maxSeconds": 0.11091770604252815,
+      "samples": 10,
+      "payloadBytes": 109608,
+      "maxPayloadBytes": 85143,
+      "diagnosticSeconds": 0.0021104030311107635,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:snapshot:101": {
+      "calls": 704,
+      "bodySeconds": 18.344830133020878,
+      "maxSeconds": 0.1496163308620453,
+      "samples": 10,
+      "payloadBytes": 9657288,
+      "maxPayloadBytes": 3884733,
+      "diagnosticSeconds": 0.08681595325469971,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:snapshot:102": {
+      "calls": 704,
+      "bodySeconds": 4.120087265968323,
+      "maxSeconds": 0.12038816884160042,
+      "samples": 10,
+      "payloadBytes": 675268,
+      "maxPayloadBytes": 497396,
+      "diagnosticSeconds": 0.010194782167673111,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:snapshot:103": {
+      "calls": 704,
+      "bodySeconds": 0.39561154693365097,
+      "maxSeconds": 0.1044776663184166,
+      "samples": 10,
+      "payloadBytes": 47924,
+      "maxPayloadBytes": 38940,
+      "diagnosticSeconds": 0.0011677779257297516,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:offer:53": {
+      "calls": 475,
+      "bodySeconds": 0.01144120842218399,
+      "maxSeconds": 6.112456321716309e-05,
+      "samples": 9,
+      "payloadBytes": 3249,
+      "maxPayloadBytes": 632,
+      "diagnosticSeconds": 0.0007635615766048431,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:offer:56": {
+      "calls": 475,
+      "bodySeconds": 0.00979146733880043,
+      "maxSeconds": 0.0014852508902549744,
+      "samples": 9,
+      "payloadBytes": 3249,
+      "maxPayloadBytes": 632,
+      "diagnosticSeconds": 0.0006185546517372131,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:offer:61": {
+      "calls": 183,
+      "bodySeconds": 0.001769132912158966,
+      "maxSeconds": 4.975125193595886e-05,
+      "samples": 8,
+      "payloadBytes": 1673,
+      "maxPayloadBytes": 880,
+      "diagnosticSeconds": 0.0001526474952697754,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:offer:62": {
+      "calls": 61,
+      "bodySeconds": 0.0007891878485679626,
+      "maxSeconds": 8.745864033699036e-05,
+      "samples": 6,
+      "payloadBytes": 4248,
+      "maxPayloadBytes": 1310,
+      "diagnosticSeconds": 0.00020548701286315918,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:save_branch:88": {
+      "calls": 101,
+      "bodySeconds": 0.0036700665950775146,
+      "maxSeconds": 7.79964029788971e-05,
+      "samples": 7,
+      "payloadBytes": 7114,
+      "maxPayloadBytes": 2677,
+      "diagnosticSeconds": 0.0004471801221370697,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:solve_contact_branches:183": {
+      "calls": 61,
+      "bodySeconds": 0.037599895149469376,
+      "maxSeconds": 0.011257544159889221,
+      "samples": 6,
+      "payloadBytes": 115752,
+      "maxPayloadBytes": 34378,
+      "diagnosticSeconds": 0.001613963395357132,
+      "allocations": []
+    },
+    "parkour_solver.search.ordered_route:publish:255": {
+      "calls": 230,
+      "bodySeconds": 0.10473676770925522,
+      "maxSeconds": 0.0009624175727367401,
+      "samples": 8,
+      "payloadBytes": 150657,
+      "maxPayloadBytes": 31423,
+      "diagnosticSeconds": 0.0024549663066864014,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:enrich:233": {
+      "calls": 76,
+      "bodySeconds": 0.09292019531130791,
+      "maxSeconds": 0.004195164889097214,
+      "samples": 7,
+      "payloadBytes": 377895,
+      "maxPayloadBytes": 91196,
+      "diagnosticSeconds": 0.006829526275396347,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:enrich:239": {
+      "calls": 76,
+      "bodySeconds": 0.0013254322111606598,
+      "maxSeconds": 6.770715117454529e-05,
+      "samples": 7,
+      "payloadBytes": 1913,
+      "maxPayloadBytes": 561,
+      "diagnosticSeconds": 0.0009279809892177582,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:enrich:240": {
+      "calls": 76,
+      "bodySeconds": 0.001214534044265747,
+      "maxSeconds": 9.487569332122803e-05,
+      "samples": 7,
+      "payloadBytes": 1927,
+      "maxPayloadBytes": 563,
+      "diagnosticSeconds": 0.00025732070207595825,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:snapshot:91": {
+      "calls": 8804,
+      "bodySeconds": 1.366448700428009,
+      "maxSeconds": 0.1086619608104229,
+      "samples": 16,
+      "payloadBytes": 106864,
+      "maxPayloadBytes": 70695,
+      "diagnosticSeconds": 0.006957001984119415,
+      "allocations": []
+    },
+    "parkour_solver.search.ordered_route:evaluate:274": {
+      "calls": 61,
+      "bodySeconds": 0.03244303539395332,
+      "maxSeconds": 0.0009706616401672363,
+      "samples": 6,
+      "payloadBytes": 154439,
+      "maxPayloadBytes": 44504,
+      "diagnosticSeconds": 0.0025262758135795593,
+      "allocations": []
+    },
+    "parkour_solver.search.ordered_route:probe:41": {
+      "calls": 61,
+      "bodySeconds": 0.07500011846423149,
+      "maxSeconds": 0.00251954048871994,
+      "samples": 6,
+      "payloadBytes": 347158,
+      "maxPayloadBytes": 99973,
+      "diagnosticSeconds": 0.005046769976615906,
+      "allocations": []
+    },
+    "parkour_solver.search.ordered_route:probe:42": {
+      "calls": 183,
+      "bodySeconds": 0.03130849078297615,
+      "maxSeconds": 0.0009551681578159332,
+      "samples": 8,
+      "payloadBytes": 302,
+      "maxPayloadBytes": 66,
+      "diagnosticSeconds": 0.0002586096525192261,
+      "allocations": []
+    },
+    "parkour_solver.search.ordered_route:search_allocations:121": {
+      "calls": 61,
+      "bodySeconds": 2.4672597646713257e-05,
+      "maxSeconds": 7.078051567077637e-07,
+      "samples": 6,
+      "payloadBytes": 24,
+      "maxPayloadBytes": 4,
+      "diagnosticSeconds": 0.00027632713317871094,
+      "allocations": []
+    },
+    "parkour_solver.search.ordered_route:find_route:304": {
+      "calls": 56,
+      "bodySeconds": 0.024387888610363007,
+      "maxSeconds": 0.0009373761713504791,
+      "samples": 6,
+      "payloadBytes": 129160,
+      "maxPayloadBytes": 35978,
+      "diagnosticSeconds": 0.0016712993383407593,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:solve_contact_branches:370": {
+      "calls": 55,
+      "bodySeconds": 0.09252870082855225,
+      "maxSeconds": 0.0032057911157608032,
+      "samples": 6,
+      "payloadBytes": 456489,
+      "maxPayloadBytes": 123536,
+      "diagnosticSeconds": 0.005710575729608536,
+      "allocations": []
+    },
+    "parkour_solver.spatial.checkpoints:retain_prefix:92": {
+      "calls": 483,
+      "bodySeconds": 37.45025551319122,
+      "maxSeconds": 0.23980507999658585,
+      "samples": 9,
+      "payloadBytes": 19146800,
+      "maxPayloadBytes": 4694849,
+      "diagnosticSeconds": 0.17992693558335304,
+      "allocations": []
+    },
+    "parkour_solver.movement.program:append_choice:156": {
+      "calls": 18,
+      "bodySeconds": 0.00013851001858711243,
+      "maxSeconds": 8.210539817810059e-06,
+      "samples": 5,
+      "payloadBytes": 1222,
+      "maxPayloadBytes": 250,
+      "diagnosticSeconds": 7.06985592842102e-05,
+      "allocations": []
+    },
+    "parkour_solver.constraints.variants:__init__:42": {
+      "calls": 38,
+      "bodySeconds": 0.9755654893815517,
+      "maxSeconds": 0.10035087540745735,
+      "samples": 6,
+      "payloadBytes": 10087175,
+      "maxPayloadBytes": 3884733,
+      "diagnosticSeconds": 0.0717904232442379,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:solve_contact_branches:45": {
+      "calls": 38,
+      "bodySeconds": 0.0004991330206394196,
+      "maxSeconds": 2.0001083612442017e-05,
+      "samples": 6,
+      "payloadBytes": 6102,
+      "maxPayloadBytes": 1250,
+      "diagnosticSeconds": 0.0002762898802757263,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:solve_contact_branches:65": {
+      "calls": 38,
+      "bodySeconds": 0.007870025932788849,
+      "maxSeconds": 0.0009161271154880524,
+      "samples": 6,
+      "payloadBytes": 26791,
+      "maxPayloadBytes": 20802,
+      "diagnosticSeconds": 0.00024294108152389526,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:solve_contact_branches:66": {
+      "calls": 38,
+      "bodySeconds": 0.06823638454079628,
+      "maxSeconds": 0.005331747233867645,
+      "samples": 6,
+      "payloadBytes": 166335,
+      "maxPayloadBytes": 144372,
+      "diagnosticSeconds": 0.0017755627632141113,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:solve_contact_branches:71": {
+      "calls": 38,
+      "bodySeconds": 0.00014671310782432556,
+      "maxSeconds": 5.004182457923889e-05,
+      "samples": 6,
+      "payloadBytes": 12,
+      "maxPayloadBytes": 2,
+      "diagnosticSeconds": 3.933906555175781e-05,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:solve_contact_branches:118": {
+      "calls": 38,
+      "bodySeconds": 0.0597010962665081,
+      "maxSeconds": 0.0024050846695899963,
+      "samples": 6,
+      "payloadBytes": 460503,
+      "maxPayloadBytes": 106545,
+      "diagnosticSeconds": 0.005811706185340881,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:solve_contact_branches:119": {
+      "calls": 38,
+      "bodySeconds": 0.0015534013509750366,
+      "maxSeconds": 6.654113531112671e-05,
+      "samples": 6,
+      "payloadBytes": 10776,
+      "maxPayloadBytes": 2622,
+      "diagnosticSeconds": 0.0003386959433555603,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:solve_contact_branches:120": {
+      "calls": 38,
+      "bodySeconds": 0.0010669194161891937,
+      "maxSeconds": 6.662309169769287e-05,
+      "samples": 6,
+      "payloadBytes": 17231,
+      "maxPayloadBytes": 12832,
+      "diagnosticSeconds": 0.00016174465417861938,
+      "allocations": []
+    },
+    "parkour_solver.search.repair:solve_contact_branches:121": {
+      "calls": 38,
+      "bodySeconds": 0.7886470817029476,
+      "maxSeconds": 0.13649658486247063,
+      "samples": 6,
+      "payloadBytes": 2067940,
+      "maxPayloadBytes": 1428491,
+      "diagnosticSeconds": 0.027040742337703705,
+      "allocations": []
+    }
+  },
+  "caches": {
+    "preparation": {
+      "calls": 462,
+      "hits": 230,
+      "misses": 232,
+      "bodySeconds": 0.3513759486377239,
+      "keyTrackingTruncated": false,
+      "maxCacheEntries": 512,
+      "distinctKeys": 231,
+      "repeatedKeys": 231
+    },
+    "coefficient": {
+      "calls": 462,
+      "hits": 254,
+      "misses": 208,
+      "bodySeconds": 0.3395010679960251,
+      "keyTrackingTruncated": false,
+      "maxCacheEntries": 512,
+      "distinctKeys": 207,
+      "repeatedKeys": 255
+    },
+    "analysis": {
+      "calls": 462,
+      "hits": 230,
+      "misses": 232,
+      "bodySeconds": 0.2771501764655113,
+      "keyTrackingTruncated": false,
+      "maxCacheEntries": 512,
+      "distinctKeys": 232,
+      "repeatedKeys": 230
+    },
+    "screen": {
+      "calls": 70,
+      "hits": 0,
+      "misses": 70,
+      "bodySeconds": 0.9288902841508389,
+      "keyTrackingTruncated": false,
+      "maxCacheEntries": 512,
+      "distinctKeys": 70,
+      "repeatedKeys": 0
+    }
+  },
+  "functions": {
+    "variants.prepare_item": {
+      "calls": 2756,
+      "samples": 1,
+      "bodySeconds": 2.250075340270996e-06
+    },
+    "variants.effective_key": {
+      "calls": 16766863,
+      "samples": 4094,
+      "bodySeconds": 0.0351078137755394
+    }
+  },
+  "sampleEvery": 4096,
+  "sampleLimitPerSite": 16384,
+  "allocationSamplesPerCopySite": 0,
+  "accounting": "Call counts exact; digest body time, bytes and repeats sampled. Copy body times inclusive/overlapping. JSON bytes are not heap bytes. Allocation samples repeat copies separately. Diagnostics and hooks add overhead; no recoverable-speedup claim."
+}
