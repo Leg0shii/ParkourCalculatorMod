@@ -52,7 +52,7 @@ public final class WorkDeadline {
     }
 
     private static long readNow(Clock c) {
-        return c == Clock.THREAD_CPU ? CPU.getCurrentThreadCpuTime() : System.nanoTime();
+        return c == Clock.THREAD_CPU ? CPU.getCurrentThreadCpuTime() : SolveClock.nanoTime();
     }
 
     private static ThreadMXBean threadCpuBean() {

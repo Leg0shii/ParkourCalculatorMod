@@ -17,6 +17,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.LongRunSolver;
+import de.legoshi.parkourcalc.core.anglesolver.solver.SolveClock;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolverTrace;
 import de.legoshi.parkourcalc.core.anglesolver.solver.StartBox;
 import de.legoshi.parkourcalc.core.anglesolver.solver.YawTies;
@@ -68,7 +69,7 @@ public final class FacingStepNode implements NodeRuntime {
                 return NodeOutcome.of(miss, in);
             }
             state.max = ctx.maximize();
-            state.loopDeadline = System.nanoTime() + budgetSec * 1_000_000_000L;
+            state.loopDeadline = SolveClock.nanoTime() + budgetSec * 1_000_000_000L;
             state.originalStart = new Vec3dCore(sc.startPos.x, sc.startPos.y, sc.startPos.z);
             boolean incumbentFeasible = in != null && in.yaws != null && in.feasible;
             state.incumbentFeasible = incumbentFeasible;
@@ -84,7 +85,7 @@ public final class FacingStepNode implements NodeRuntime {
         long loopEnd = state.loopDeadline;
         if (deadlineNanos > 0) loopEnd = Math.min(loopEnd, deadlineNanos);
         if ((state.incumbentFeasible || state.best.yaws != null) && state.workIdx < state.work.size()
-                && System.nanoTime() < loopEnd
+                && SolveClock.nanoTime() < loopEnd
                 && !(nodeToken != null && nodeToken.get())) {
             Work w = state.work.get(state.workIdx++);
             if (ctx.freeStart) Scoring.adoptPinnedStart(sc, w.startX, w.startZ);
@@ -140,11 +141,11 @@ public final class FacingStepNode implements NodeRuntime {
         List<Seed> seeds = new ArrayList<>();
         for (Double y0 : bucketYaws) {
             if (cancel != null && cancel.get()) break;
-            if (deadlineNanos > 0 && System.nanoTime() >= deadlineNanos) break;
+            if (deadlineNanos > 0 && SolveClock.nanoTime() >= deadlineNanos) break;
             double yaw0 = y0;
             Bucket bd = prep(ctx, yaw0, lead);
             if (bd == null) continue;
-            long seedDeadline = System.nanoTime() + SEED_MS * 1_000_000L;
+            long seedDeadline = SolveClock.nanoTime() + SEED_MS * 1_000_000L;
             if (deadlineNanos > 0) seedDeadline = Math.min(seedDeadline, deadlineNanos);
             double[] tail = solveSeed(ctx, bd, seedDeadline, cancel);
             if (tail == null) continue;

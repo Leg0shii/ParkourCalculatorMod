@@ -135,16 +135,16 @@ public class SolveFailureDiagnosticsTest {
         Ctx ctx = build(state -> {
             at[0] = state.getStartTick() + 2;
             state.tickConstraints(at[0]).getConstraints()
-                    .add(Constraint.range(Constraint.Field.DF, -1.0, 1.0, true, true));
+                    .add(Constraint.scalar(Constraint.Field.DF, Constraint.Op.GE, 1.0));
+            state.tickConstraints(at[0]).getConstraints()
+                    .add(Constraint.scalar(Constraint.Field.DF, Constraint.Op.LE, -1.0));
         });
         SolveResult r = solve(ctx);
 
         assertNotNull("engine returned no result", r);
-        assertFalse("a dF band is unsupported and must not solve", r.isSuccess());
+        assertFalse("a turn of at least a degree both ways on one tick must not solve", r.isSuccess());
         assertEquals("a declined problem was never searched, so nothing is ruled out",
                 SolveResult.Verdict.UNDETERMINED, r.getVerdict());
-        assertEquals("failed solve must name the unsupported dF as the cause",
-                AngleSolverEngine.DF_UNSUPPORTED_NOTICE, r.getNotice());
         assertFalse("a declined solve must still report the current path's values", r.getOutcomes().isEmpty());
         assertEquals("current path", detail(r, "Values from"));
     }

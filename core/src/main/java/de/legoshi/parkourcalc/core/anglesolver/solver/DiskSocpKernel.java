@@ -122,7 +122,7 @@ public final class DiskSocpKernel {
         int inequalities = 0;
         for (int j = 0; j < mw; j++) {
             JumpLinearModel.Wall w = walls.get(j);
-            axis[j] = w.axis;
+            axis[j] = w.boxAxis;
             eq[j] = w.eq;
             if (!w.eq) inequalities++;
             double[] wx = w.axis == 2 ? w.coefX : (w.axis == 0 ? w.coef : null);
@@ -350,7 +350,9 @@ public final class DiskSocpKernel {
         double lowBound = primalLowBound();
         int nearOptimumCount = 0;
         int iters = 0;
+        final long stepUnits = (long) m * m * (n + m) / 2L + 4L * m * n + 64L;
         for (int it = 0; it < MAX_ITERS; it++) {
+            SolveClock.charge(SolveClock.KERNEL, stepUnits);
             measure();
             double mu = gap / complementarityCount;
             double value = boundValue(lambda, gx, gz);

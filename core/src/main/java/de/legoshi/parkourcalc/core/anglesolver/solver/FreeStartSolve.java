@@ -17,6 +17,7 @@ public final class FreeStartSolve {
         public double invariantTol = 1.0e-6;
         public double[] jointMargins = {0.0, 1.0e-4, 3.0e-4, 6.0e-4, 1.2e-3, 2.5e-3, 5.0e-3, 1.0e-2};
         public boolean jointWrapClose = true;
+        public boolean seedLane = true;
     }
 
     private static final int JOINT_PATTERN_CAP = 8;
@@ -42,7 +43,7 @@ public final class FreeStartSolve {
         public final double startZ;
         public final boolean feasible;
 
-        Result(double[] yaws, double startX, double startZ, boolean feasible) {
+        public Result(double[] yaws, double startX, double startZ, boolean feasible) {
             this.yaws = yaws;
             this.startX = startX;
             this.startZ = startZ;
@@ -126,7 +127,7 @@ public final class FreeStartSolve {
     }
 
     private static boolean past(long deadlineNanos) {
-        return deadlineNanos > 0L && System.nanoTime() >= deadlineNanos;
+        return deadlineNanos > 0L && SolveClock.nanoTime() >= deadlineNanos;
     }
 
     public static Result solveJointBest(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
@@ -242,7 +243,7 @@ public final class FreeStartSolve {
             if (r != null && r.feasible) return r;
         }
 
-        if (!past(deadlineNanos)) {
+        if (cfg.seedLane && !past(deadlineNanos)) {
             Result fb = solve(exact, spec, feasTol, cancel);
             if (fb != null) {
                 if (SolverTrace.on()) SolverTrace.log("FREE", "joint seed-lane win feasible=%s", fb.feasible);
@@ -398,7 +399,7 @@ public final class FreeStartSolve {
         wcfg.roundCap = 1;
         wcfg.evalCap = 4_000_000;
         wcfg.reaccumScore = true;
-        long wrapDeadline = System.nanoTime() + JOINT_WRAP_CLOSE_NANOS;
+        long wrapDeadline = SolveClock.nanoTime() + JOINT_WRAP_CLOSE_NANOS;
         if (deadlineNanos > 0L && deadlineNanos < wrapDeadline) wrapDeadline = deadlineNanos;
         WrapWindowIls.Result w = WrapWindowIls.polish(exact, atSpec, gf, dom, wcfg, wrapDeadline, cancel);
         if (w == null || w.viol > JOINT_WRAP_REPAIR_GATE) {

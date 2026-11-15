@@ -1,6 +1,7 @@
 package de.legoshi.parkourcalc.core.anglesolver.solver;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -224,6 +225,7 @@ public final class GateFoldFinder {
         double pxStep = free ? (box.pxHi - box.pxLo) / 256.0 : 0.0;
         double pzStep = free ? (box.pzHi - box.pzLo) / 256.0 : 0.0;
         boolean objSweep = optimize && bestViol == 0.0;
+        double[] vo = new double[2];
         boolean improved = true;
         for (int pass = 0; pass < 8 && improved; pass++) {
             improved = false;
@@ -236,11 +238,11 @@ public final class GateFoldFinder {
                     double cand = center + i * step;
                     red[v] = cand;
                     double[] full = ties.expand(red);
-                    double vio = specViol(exact, sc, compiled, full, px, pz);
-                    if (vio < bestViol - 1.0e-12
-                            || (vio == bestViol && betterObjLat(objOf(exact, sc, spec, full, px, pz), bestObj, max))) {
+                    violAndObjective(exact, sc, compiled, spec, full, px, pz, vo);
+                    double vio = vo[0];
+                    if (vio < bestViol - 1.0e-12 || (vio == bestViol && betterObjLat(vo[1], bestObj, max))) {
                         bestViol = vio;
-                        bestObj = objOf(exact, sc, spec, full, px, pz);
+                        bestObj = vo[1];
                         bestCand = cand;
                         improved = true;
                     }
@@ -259,14 +261,15 @@ public final class GateFoldFinder {
                         double cand = clamp(cur + i * st, lo, hi);
                         double npx = axis == 0 ? cand : px;
                         double npz = axis == 0 ? pz : cand;
-                        double vio = specViol(exact, sc, compiled, full, npx, npz);
+                        violAndObjective(exact, sc, compiled, spec, full, npx, npz, vo);
+                        double vio = vo[0];
                         boolean take = vio < bestViol - 1.0e-12;
                         if (!take && objSweep && vio == 0.0 && bestViol == 0.0) {
-                            take = betterObjLat(objOf(exact, sc, spec, full, npx, npz), bestObj, max);
+                            take = betterObjLat(vo[1], bestObj, max);
                         }
                         if (take) {
                             bestViol = vio;
-                            if (objSweep && vio == 0.0) bestObj = objOf(exact, sc, spec, full, npx, npz);
+                            if (objSweep && vio == 0.0) bestObj = vo[1];
                             bestCand = cand;
                             improved = true;
                         }
@@ -276,8 +279,8 @@ public final class GateFoldFinder {
             }
         }
         double[] full = ties.expand(red);
-        return new Result(Angles.wrapAll(full), px, pz, objOf(exact, sc, spec, full, px, pz),
-                specViol(exact, sc, compiled, full, px, pz));
+        violAndObjective(exact, sc, compiled, spec, full, px, pz, vo);
+        return new Result(Angles.wrapAll(full), px, pz, vo[1], vo[0]);
     }
 
     private static boolean betterObjLat(double a, double b, boolean max) {
@@ -335,6 +338,10 @@ public final class GateFoldFinder {
         double[] theta = start.clone();
         double px = refPx;
         double pz = refPz;
+        boolean[] lastZx = null;
+        boolean[] lastZz = null;
+        boolean lastSettled = false;
+        boolean[] rungFree = {false};
         for (int r = 0; r <= HOMO_RUNGS; r++) {
             if (cancel != null && cancel.get()) break;
             if (deadline.over()) break;
@@ -342,8 +349,13 @@ public final class GateFoldFinder {
             boolean[] zx = new boolean[n];
             boolean[] zz = new boolean[n];
             linFull.zeroingPattern(Angles.wrapAll(theta), thrRung, perAxis, zx, zz);
+            if (lastSettled && Arrays.equals(zx, lastZx) && Arrays.equals(zz, lastZz)) continue;
+            rungFree[0] = false;
             double[] step = continuationStep(sc, ties, zx, zz, spec, theta, px, pz, box, free,
-                    refPx, refPz, thrRung, cancel, deadline);
+                    refPx, refPz, thrRung, cancel, deadline, rungFree);
+            lastZx = zx;
+            lastZz = zz;
+            lastSettled = rungFree[0] && (step == null || sameState(step, theta, px, pz));
             if (step == null) continue;
             System.arraycopy(step, 0, theta, 0, n);
             px = step[n];
@@ -429,14 +441,20 @@ public final class GateFoldFinder {
     private static double[] continuationStep(JumpPhysicsInputs sc, YawTies ties, boolean[] zx, boolean[] zz,
                                              JumpSpec spec, double[] thetaFull, double px0, double pz0,
                                              StartBox box, boolean free, double refPx, double refPz,
-                                             double thrRung, AtomicBoolean cancel, WorkDeadline deadline) {
+                                             double thrRung, AtomicBoolean cancel, WorkDeadline deadline,
+                                             boolean[] rungFree) {
         int n = sc.numTicks;
         JumpLinearModel lin = new JumpLinearModel(sc, zx, zz);
         boolean[] trivial = {false};
         List<JumpLinearModel.Wall> walls =
                 new ArrayList<JumpLinearModel.Wall>(lin.compileWalls(spec.constraints, 0.0, trivial));
-        if (trivial[0]) return null;
-        walls.addAll(lin.velocityWalls(thrRung));
+        if (trivial[0]) {
+            rungFree[0] = true;
+            return null;
+        }
+        List<JumpLinearModel.Wall> gateWalls = lin.velocityWalls(thrRung);
+        rungFree[0] = gateWalls.isEmpty();
+        walls.addAll(gateWalls);
         int m = walls.size();
         if (m == 0) return null;
         int dims = ties.dims();
@@ -488,6 +506,13 @@ public final class GateFoldFinder {
         outp[n] = px;
         outp[n + 1] = pz;
         return outp;
+    }
+
+    private static boolean sameState(double[] step, double[] theta, double px, double pz) {
+        int n = theta.length;
+        if (step[n] != px || step[n + 1] != pz) return false;
+        for (int t = 0; t < n; t++) if (step[t] != theta[t]) return false;
+        return true;
     }
 
     private static double linResidual(JumpLinearModel lin, List<JumpLinearModel.Wall> walls, double[] theta,
@@ -597,7 +622,10 @@ public final class GateFoldFinder {
         double tr = TR_START;
         Result best = null;
         double bestSpec = Double.POSITIVE_INFINITY;
-        double curMerit = merit(exact, sc, compiled, theta, px, pz, forcedTicks, exact.inertiaThreshold());
+        double[] point = new double[3];
+        double[] candPoint = new double[3];
+        evalPoint(exact, sc, compiled, spec, theta, px, pz, forcedTicks, exact.inertiaThreshold(), point);
+        double curMerit = point[0];
         int stall = 0;
 
         for (int it = 0; it < SLP_ITERS; it++) {
@@ -607,10 +635,10 @@ public final class GateFoldFinder {
             double[][] rows = new double[m][vars];
             double[] wv = new double[m];
             linearizeWalls(walls, n, dims, col, ux, uz, free, px, pz, refPx, refPz, rows, wv);
-            double curSpec = specViol(exact, sc, compiled, theta, px, pz);
+            double curSpec = point[1];
             if (curSpec < bestSpec) {
                 bestSpec = curSpec;
-                best = new Result(Angles.wrapAll(theta), px, pz, objOf(exact, sc, spec, theta, px, pz), curSpec);
+                best = new Result(Angles.wrapAll(theta), px, pz, point[2], curSpec);
             }
             if (curSpec == 0.0) break;
 
@@ -624,13 +652,17 @@ public final class GateFoldFinder {
                 cpx = box.clampX(px + d[dims] * START_SCALE);
                 cpz = box.clampZ(pz + d[dims + 1] * START_SCALE);
             }
-            double candMerit = merit(exact, sc, compiled, cand, cpx, cpz, forcedTicks, exact.inertiaThreshold());
+            evalPoint(exact, sc, compiled, spec, cand, cpx, cpz, forcedTicks, exact.inertiaThreshold(), candPoint);
+            double candMerit = candPoint[0];
             double step = maxStep(d, vars);
             if (candMerit < curMerit - 1.0e-12) {
                 theta = cand;
                 px = cpx;
                 pz = cpz;
                 curMerit = candMerit;
+                double[] swap = point;
+                point = candPoint;
+                candPoint = swap;
                 stall = 0;
                 if (step > 0.8 * tr) tr = Math.min(tr * 2.0, TR_MAX);
             } else {
@@ -673,8 +705,10 @@ public final class GateFoldFinder {
         double[] uz = new double[n];
         double tr = OBJ_TR_START;
         int stall = 0;
-        double bestObj = objOf(exact, sc, spec, theta, px, pz);
-        Result best = new Result(Angles.wrapAll(theta), px, pz, bestObj, specViol(exact, sc, compiled, theta, px, pz));
+        double[] vo = new double[2];
+        violAndObjective(exact, sc, compiled, spec, theta, px, pz, vo);
+        double bestObj = vo[1];
+        Result best = new Result(Angles.wrapAll(theta), px, pz, bestObj, vo[0]);
         if (!best.feasible()) return null;
 
         for (int it = 0; it < OBJ_ITERS; it++) {
@@ -704,8 +738,9 @@ public final class GateFoldFinder {
                 cpx = box.clampX(px + d[dims] * START_SCALE);
                 cpz = box.clampZ(pz + d[dims + 1] * START_SCALE);
             }
-            double cViol = specViol(exact, sc, compiled, cand, cpx, cpz);
-            double cObj = objOf(exact, sc, spec, cand, cpx, cpz);
+            violAndObjective(exact, sc, compiled, spec, cand, cpx, cpz, vo);
+            double cViol = vo[0];
+            double cObj = vo[1];
             double step = maxStep(d, vars);
             if (cViol == 0.0 && betterObjLat(cObj, bestObj, max)) {
                 theta = cand;
@@ -734,9 +769,9 @@ public final class GateFoldFinder {
         return out;
     }
 
-    private static double merit(ExactJumpModel exact, JumpPhysicsInputs sc,
-                                JumpConstraintCompiler.Compiled compiled, double[] theta,
-                                double px, double pz, int[] forced, double thr) {
+    private static void evalPoint(ExactJumpModel exact, JumpPhysicsInputs sc,
+                                  JumpConstraintCompiler.Compiled compiled, JumpSpec spec, double[] theta,
+                                  double px, double pz, int[] forced, double thr, double[] out) {
         JumpPhysicsInputs rep = sc.pinnedAt(px, pz);
         double[] gf = rep.toGameFacings(Angles.wrapAll(theta));
         ForwardPath path = exact.forward(rep, gf);
@@ -748,21 +783,19 @@ public final class GateFoldFinder {
             double over = Math.abs(v) - thr;
             if (over > 0.0) gate += over;
         }
-        return sv + GATE_MERIT_W * gate;
+        out[0] = sv + GATE_MERIT_W * gate;
+        out[1] = sv;
+        out[2] = spec.objective.evaluate(path);
     }
 
-    private static double specViol(ExactJumpModel exact, JumpPhysicsInputs sc,
-                                   JumpConstraintCompiler.Compiled compiled, double[] theta, double px, double pz) {
+    private static void violAndObjective(ExactJumpModel exact, JumpPhysicsInputs sc,
+                                         JumpConstraintCompiler.Compiled compiled, JumpSpec spec, double[] theta,
+                                         double px, double pz, double[] out) {
         JumpPhysicsInputs rep = sc.pinnedAt(px, pz);
         double[] gf = rep.toGameFacings(Angles.wrapAll(theta));
-        return compiled.maxViolation(gf, exact.forward(rep, gf));
-    }
-
-    private static double objOf(ExactJumpModel exact, JumpPhysicsInputs sc, JumpSpec spec,
-                                double[] theta, double px, double pz) {
-        JumpPhysicsInputs rep = sc.pinnedAt(px, pz);
-        double[] gf = rep.toGameFacings(Angles.wrapAll(theta));
-        return spec.objective.evaluate(exact.forward(rep, gf));
+        ForwardPath path = exact.forward(rep, gf);
+        out[0] = compiled.maxViolation(gf, path);
+        out[1] = spec.objective.evaluate(path);
     }
 
     private static Result evalAbsolute(ExactJumpModel exact, JumpPhysicsInputs sc,
@@ -770,8 +803,9 @@ public final class GateFoldFinder {
                                        StartBox box) {
         double px = box != null ? box.px : sc.startPos.x;
         double pz = box != null ? box.pz : sc.startPos.z;
-        double v = specViol(exact, sc, compiled, yaws, px, pz);
-        return new Result(Angles.wrapAll(yaws), px, pz, objOf(exact, sc, spec, yaws, px, pz), v);
+        double[] vo = new double[2];
+        violAndObjective(exact, sc, compiled, spec, yaws, px, pz, vo);
+        return new Result(Angles.wrapAll(yaws), px, pz, vo[1], vo[0]);
     }
 
     private static Result translatePolish(ExactJumpModel exact, JumpPhysicsInputs sc,
@@ -798,8 +832,9 @@ public final class GateFoldFinder {
                 npz = refPz + (max ? hiZ : loZ);
             }
         }
-        double v = specViol(exact, sc, compiled, yaws, npx, npz);
-        return new Result(yaws, npx, npz, objOf(exact, sc, spec, yaws, npx, npz), v);
+        double[] vo = new double[2];
+        violAndObjective(exact, sc, compiled, spec, yaws, npx, npz, vo);
+        return new Result(yaws, npx, npz, vo[1], vo[0]);
     }
 
     private static double[] seedFromDual(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc, YawTies ties) {

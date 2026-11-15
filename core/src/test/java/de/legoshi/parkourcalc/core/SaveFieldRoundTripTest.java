@@ -266,4 +266,22 @@ public class SaveFieldRoundTripTest {
 
         assertNotNull(state.tickConstraintsOrNull(84));
     }
+
+    @Test
+    public void repeatableSolveAndItsSeedSurviveSaveRoundTrip() throws Exception {
+        AngleSolverState in = new AngleSolverState();
+        assertFalse(saveAndReload(in).isRepeatable());
+        in.setRepeatable(true);
+        in.setSeed(41L);
+        AngleSolverState out = saveAndReload(in);
+        assertTrue(out.isRepeatable());
+        assertEquals(41L, out.getSeed());
+    }
+
+    @Test
+    public void aSaveWithoutTheRepeatableOptionLoadsWithItOff() {
+        AngleSolverState state = load("{\"version\":1,\"angleSolver\":{}}");
+        assertFalse(state.isRepeatable());
+        assertEquals(0L, state.getSeed());
+    }
 }

@@ -177,7 +177,7 @@ public final class SlpSolve {
         if (ties != null) theta = ties.expand(ties.reduce(theta));
         if (ties == null && !yawIneq.isEmpty()) theta = YawOrder.carryFreeTicks(lin, sc.startYaw, theta);
 
-        long t0 = System.nanoTime();
+        long t0 = SolveClock.nanoTime();
         if (SolverTrace.on()) {
             SolverTrace.log("SLP", "start n=%d m=%d seed=%s budget=%d/%d bestEffort=%s inertiaAware=%s fold=%s",
                     n, m, seedAbsWrapped != null ? "given" : "dual", cfg.phase1Calls, cfg.totalCalls, bestEffort,
@@ -344,7 +344,7 @@ public final class SlpSolve {
                 if (endViol > phase1Gate) {
                     if (SolverTrace.on()) {
                         SolverTrace.log("SLP", "phase1 infeasible viol=%.3e lps=%d ms=%.1f%s",
-                                endViol, lpCalls, (System.nanoTime() - t0) / 1e6, bestEffort ? " (best effort kept)" : "");
+                                endViol, lpCalls, (SolveClock.nanoTime() - t0) / 1e6, bestEffort ? " (best effort kept)" : "");
                     }
                     if (!inertiaAware && !bestEffort) {
                         return optimize(exact, spec, feasTol, cancel, targetClearance, hugObjective,
@@ -365,7 +365,7 @@ public final class SlpSolve {
         if (SolverTrace.on()) {
             SolverTrace.log("SLP", "end viol=%.3e obj=%.9f lps=%d ms=%.1f %s", finalViol,
                     spec.objective.evaluate(path), lpCalls,
-                    (System.nanoTime() - t0) / 1e6, finalViol <= feasTol ? "feasible" : (bestEffort ? "best effort" : "null"));
+                    (SolveClock.nanoTime() - t0) / 1e6, finalViol <= feasTol ? "feasible" : (bestEffort ? "best effort" : "null"));
         }
         if (finalViol <= feasTol) return yaws;
         if (miss != null) miss.offer(yaws, finalViol);

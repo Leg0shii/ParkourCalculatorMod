@@ -61,6 +61,7 @@ public class WitnessOracleTest {
             CertifiedBnb.Result first = search(p, CertifiedBnb.Mode.FIRST_FEASIBLE);
             if (first.declined) continue;
             checkLanding(p, first);
+            checkLanding(p, prove(p));
             CertifiedBnb.Result best = search(p, CertifiedBnb.Mode.OPTIMIZE);
             checkLanding(p, best);
             if (best.feasible && !Double.isNaN(best.boundObjective)) {
@@ -119,6 +120,17 @@ public class WitnessOracleTest {
         CertifiedBnb.Config cfg = new CertifiedBnb.Config();
         cfg.mode = mode;
         cfg.nodeCap = NODE_CAP;
+        cfg.cancel = new AtomicBoolean(false);
+        cfg.deadlineNanos = System.nanoTime() + SEARCH_BUDGET_MS * 1_000_000L;
+        return CertifiedBnb.solve(p.fixture.model, p.spec, cfg);
+    }
+
+    private static CertifiedBnb.Result prove(WitnessProblem p) {
+        CertifiedBnb.Config cfg = new CertifiedBnb.Config();
+        cfg.nodeCap = NODE_CAP;
+        cfg.foldTies = true;
+        cfg.excludeClamps = true;
+        cfg.skipSeeds = true;
         cfg.cancel = new AtomicBoolean(false);
         cfg.deadlineNanos = System.nanoTime() + SEARCH_BUDGET_MS * 1_000_000L;
         return CertifiedBnb.solve(p.fixture.model, p.spec, cfg);

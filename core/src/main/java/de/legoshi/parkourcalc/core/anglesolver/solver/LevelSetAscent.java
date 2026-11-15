@@ -27,7 +27,7 @@ public final class LevelSetAscent {
         if (witness == null) return null;
         if (spec.objective.isCustomAngle()) return witness;
         if (JumpLinearModel.hasFacingWall(spec.constraints)) return null;
-        double bound = ClosedFormSolve.dualBound(spec);
+        double bound = ClosedFormSolve.linearReach(spec);
         if (Double.isNaN(bound)) return null;
 
         boolean max = spec.objective.sense == Objective.Sense.MAX;

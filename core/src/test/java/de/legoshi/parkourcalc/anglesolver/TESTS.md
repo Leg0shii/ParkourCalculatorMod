@@ -43,7 +43,10 @@ anglesolver/
                            longest one-way run, the first (seam) and last tick, zero-turn ticks held
                            >= 0 and <= 0, a minimum turn 0.01 and 1e-3 deg under the real one, a
                            dF = 0 next to one-way rows, and the random rows on a 3 s Optimize (up to
-                           60 ticks). Found the free-start gap (df-openchain-free-start, j925, j335)
+                           60 ticks, with a range on one more turning tick). The same with dF ranges
+                           around the solved turns: half a degree either way on the random ticks, a
+                           hundredth, the turn on the range's edge, a degree on every turning tick,
+                           zero-turn ticks, the seam, and the exact turns as dF = v. Found the free-start gap (df-openchain-free-start, j925, j335)
                            and the relaxation-recovery gate (j022 min turn) on 2026-10-18. The
                            Optimize budget is three times the FAST time of the same rows, at least
                            6 s: the dual chain only runs its relaxation recovery with 3 s left
@@ -138,7 +141,23 @@ anglesolver/
                            #462 the infeasibility certificate: a wall 0.5 and 1e-3 past the tiny
                            instance's certified optimum is certified infeasible (exhausted tree, no
                            unresolved drop), a feasible instance never carries one, an expired
-                           deadline or a zero node cap leaves infeasibility uncertified
+                           deadline or a zero node cap leaves infeasibility uncertified;
+                           gate probing (SlowSolverTests): six seeded 3-tick jumps with carries near the
+                           inertia threshold certify the same optimum with and without probing (cases
+                           picked so that a wrong probe row, target or sector moves it), and on j021,
+                           loopmm-3jump-lands and j002 probing cuts the 150-node gap to under a quarter
+                           without the bound falling below a landing either run found;
+                           landing polish (SlowSolverTests): on j016 at 300 nodes the search that polishes
+                           every new incumbent (Config.incumbentPolishCap 12) lands more than 5e-5 further
+                           than the one that does not, byte-exact, and its bound stays above both landings;
+                           dive order (SlowSolverTests): a second pass on j016 seeded with the first landing
+                           ends where the first did in the same node order and more than 5e-5 further in
+                           the dive order (Config.diveEvery 20, diveLength 40), with a gap under 1e-5
+  GateProbeTest.java       the one-row dual probe behind CertifiedBnb.settleGates: for random directions on
+                           1.8.9 and 1.21.5 the probe value at any multiplier is at least the objective of
+                           every sampled cell path on the row's side, and a side that holds a path is never
+                           excluded; the multiplier search reaches a drop a dense scan finds; the convex
+                           floor that stops a hopeless probe early never exceeds a convex function
   InertiaImpulseModelTest.java  the premise of the certified bound's inertia allowance and of the leaf's
                            exact inputs: on every solve capture without damage or flow, for random yaw
                            paths (constant, drifting, random, reversing), the byte-exact position at
@@ -149,10 +168,16 @@ anglesolver/
                            and full turns (four versions, with and without a jump, directions inside
                            the arc, opposite it, near an end and random, scales 1e-6 to 1e6) the
                            support equals, bit for bit, the largest support of the arc's 48-index pieces
+  SineTableSlipTest.java   the cosine slips the support admits (SineTableGeometry.slipExists): millions of
+                           float facings up to 90000 degrees, plus every float next to a quarter turn,
+                           through both radian casts and both tables, never look up a slip the rule
+                           excludes; the support covers every real cell on four versions, and for facings
+                           in [0, 90) and [-180, -90) it exceeds the best real cell nearby by under 2e-6
+                           (4.8e-5 before the rule)
   WitnessOracleTest.java   soundness oracle (SlowSolverTests, one case per solve/ capture): a random yaw path
                            is forwarded byte-exactly from a launch turned by a random quarter turn, and
                            1 to 4 UI constraints of every kind (X, Z, ranges, tick references, dX, dZ,
-                           dX vs dZ, F, dF) are derived from it with margins from 0 to 0.05, so a path
+                           dX vs dZ, F, dF, dF ranges) are derived from it with margins from 0 to 0.05, so a path
                            exists by construction; the certified B&B must never certify infeasible, its
                            landing must verify, its bound and a certified optimum must not lie short of
                            the hill-climbed path, the closed form bound neither (pinned starts, 1e-4);
@@ -163,7 +188,7 @@ anglesolver/
                            coupling coefficients and the linear path stays within the sine table
                            residual of the exact path (the prefix sum cancellation the oracle found)
   SolveFailureDiagnosticsTest.java  what a failed j004 solve reports: every constraint and the missed tick, the
-                           closest attempt's values, the dF-band decline, the same-tick conflict; #462
+                           closest attempt's values, a declined dF pair, the same-tick conflict; #462
                            the verdict end to end through the engine: the conflict and a wall half a
                            block past the optimum are INFEASIBLE (the latter certified by the B&B in a
                            handful of nodes), a wall 1e-3 past it is UNDETERMINED with no notice and
@@ -178,6 +203,48 @@ anglesolver/
                            pipeline stage sequence at BOTH built-in tiers (THOROUGH probed at 1 s);
                            deadline-truncated runs must be a prefix of it, and so must a run the
                            certified B&B ends early with an infeasibility certificate (#462)
+  ClosedFormBoundScopeTest.java  the closed form bound declines where its linear model does not cover the
+                           scenario: NaN on the two damage captures (j344-fall-damage, synth-damage-reset)
+                           and on a jump with a water flow push at tick start or tick end, a number on
+                           a plain jump (j016)
+  SolveClockTest.java      the work clock behind the Repeatable solve option: without a clock the time is
+                           the wall clock, with one it moves only with charged work and the same work
+                           gives the same time, an armed token fires at its deadline, a join takes the
+                           longest task or the shared load over the virtual workers, a fork stops at
+                           its own deadline, an armed token tells its deadline (a fired one is due
+                           now), a serial fork counts every task inside it (a join there
+                           is the summed work, a fork below it is serial too), a cancel fires every
+                           token and hurries, the wall limit marks the solve as not repeatable, the
+                           seed reaches every fork
+  LatticePolishClockTest.java  the lattice polish on the work clock (j013, Optimize parameters): the
+                           Newton rounds and the grid search charge the clock, a work budget ends the
+                           search early, close to the budget, and at the same point in every run (same
+                           result, same counters)
+  PatternSearchClockTest.java  the pattern B&B on the work clock (j021-rinav1-01, a budget of 400 ms): a
+                           cancel flag armed on the clock at 30 ms ends the search within 20 ms of
+                           that, although its own budget is longer, and a search cut that way counts
+                           the same work in a second run
+  RepeatableSolveTest.java  (slow) the Repeatable solve option end to end on j016, free-translate-edge
+                           (free start) and gh553-j345 (pattern B&B): a second solve on the same
+                           engine and a fresh engine on one thread end on the same facings, objective,
+                           stages and work time bit for bit, a seed repeats too, and without the
+                           option a solve carries no work time
+  ProvenBoundGapTest.java  (slow) the result's "Dual bound gap" on a repeatable Optimize of 2 s: it is
+                           measured against the tightest bound of the certified passes (nix-t25 under
+                           0.1 where the closed form gap is 0.25, j021 under 0.01), a jump with a
+                           carried facing row shows a gap (gh553-j345), a damage tick shows none
+  graph/SeedSweepClockTest.java  the seed sweep on the work clock (j016 with a start box of 0.05 around
+                           its start, 64 seeds): without a budget every seed runs, a work budget of
+                           4 ms ends the sweep within 1 ms of it with some seeds left out, and a
+                           budgeted sweep ends on the same facings, counters and work time in a second
+                           run and on one thread
+  graph/LeafSnapNodeTest.java  the leaf snap node's repeat param: on j017 (certified landing after 60 nodes)
+                           one snap improves the landing, a repeat without a time budget is that one
+                           call, the repeated snap ends more than 1e-4 further, byte-exact with no
+                           violation, and at a point where one more snap finds nothing better
+                           on j024 (25 snap ticks, one call only looks at the last 12) the repeat also
+                           goes through the earlier ticks and ends more than 5e-5 further than the
+                           last twelve alone, at a point no window improves
   NoTurnDriversTest.java   #424 the no-turn drivers on the two hpk_precise structures (slow):
                            the certifier drives the inner engine as the byte-exact oracle on j1150
                            with a dF=0 chain and lands a clean no-turn (viol 0, obj near the

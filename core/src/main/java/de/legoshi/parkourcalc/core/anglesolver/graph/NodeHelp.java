@@ -8,6 +8,10 @@ public final class NodeHelp {
     private static final Map<String, String> NODES = new HashMap<>();
     private static final Map<String, String> SHARED_PARAMS = new HashMap<>();
     private static final Map<String, Map<String, String>> NODE_PARAMS = new HashMap<>();
+    private static final String LANE_HELP = "Start this stage and let the next stages run at the same time, each"
+            + " on its own cores. Stages next to each other that both have this on run one after the other in the"
+            + " same lane. The lane works on the landing it was handed; a Join lanes stage further down waits for"
+            + " it and keeps the better of the two landings.";
 
     private NodeHelp() {
     }
@@ -138,6 +142,9 @@ public final class NodeHelp {
 
         node("recedingHorizon", "Builds a multi-jump route from scratch by solving a few ticks at a time and"
                 + " locking in the front of it as it goes. Only runs for routes longer than one jump.");
+        param("recedingHorizon", "keepIncoming", "Normally this stage is skipped when a landing is already"
+                + " there. With this on and a free start block it builds its own route anyway and sets the"
+                + " earlier landing aside; a Pick start stage further down then keeps the better of the two.");
 
         node("setupPeel", "A backup route finder for multi-jumps. It spins the starting aim all the way"
                 + " around and, for each promising start, tries to solve the rest of the route, keeping the"
@@ -163,6 +170,9 @@ public final class NodeHelp {
         param("freeStartImprove", "jointOnly", "Only do the rescue pass that moves the start to make the"
                 + " jump land, and skip the extra pass that improves an already-landing jump. Keeps this"
                 + " stage focused on rescue.");
+        param("freeStartImprove", "first", "Run as the first landing stage of a Fast solve: when nothing"
+                + " lands yet, solve the standing spot and the aim angles together, and when that only nearly"
+                + " lands, finish it with the exact model of the lattice polish. Does nothing once the jump lands.");
         param("freeStartImprove", "fsIntervalMargin", "Safety margin used when pinning the free start,"
                 + " 0 to 1. Larger is more cautious about where the start may sit.");
         param("freeStartImprove", "fsInvariantTol", "How much slack to allow in the internal consistency"
@@ -189,6 +199,14 @@ public final class NodeHelp {
                 + " while the jump does not land yet, so the search can rule a landing out for certain."
                 + " Does nothing once a landing exists or without a time budget. Meant for a stage at the"
                 + " end of the pipeline, after every other stage has had its turn.");
+        param("certBnb", "dive", "Search again from the landing found so far, visiting the branches in another"
+                + " order: every 20 branches it follows one branch down for up to 40 steps. Which landing a"
+                + " search finds depends on the order, so a second order can find a better one. Does nothing"
+                + " while the jump does not land, or once the landing is proven best.");
+        param("certBnb", "batch", "How many branches the search works on at once, each on its own processor"
+                + " core. The search takes its best branches in rounds of this size and merges their results in"
+                + " a fixed order, so the result is the same on every machine; 1 searches one branch at a time.");
+        param("certBnb", GraphRunner.LANE_PARAM, LANE_HELP);
 
         node("foldDriver", "Another angle solver that repeatedly replays and adjusts the jump. It can try"
                 + " several different starting guesses and finish with a fine nudge pass.");
@@ -208,6 +226,7 @@ public final class NodeHelp {
 
         node("ilsPolish", "Fine-tunes a jump that already lands: it repeatedly shakes up a few angles and"
                 + " keeps the change only if the result is better.");
+        param("ilsPolish", GraphRunner.LANE_PARAM, LANE_HELP);
         param("ilsPolish", "perturbTicksMin", "The fewest ticks a single shake disturbs. Larger makes"
                 + " coarser changes.");
         param("ilsPolish", "perturbTicksSpan", "Extra random ticks a shake may disturb on top of the"
@@ -268,8 +287,12 @@ public final class NodeHelp {
 
         node("leafSnap", "Snaps each aim angle onto the nearest exact value the game can actually use,"
                 + " keeping the snap only if the jump still lands.");
+        param("leafSnap", GraphRunner.LANE_PARAM, LANE_HELP);
         param("leafSnap", "pairPass", "Turn on a second, more thorough snapping pass that adjusts angles in"
                 + " pairs. 0 off, 1 on. Slower but can land a cleaner result.");
+        param("leafSnap", "repeat", "Snap again from the snapped result until a snap finds nothing better or"
+                + " the time is up. Each snap only looks at exact values close to the angles it starts from,"
+                + " so a repeat can reach further. A snap also only looks at the last 12 turning ticks of the jump; the repeat then goes through the earlier ones, 12 at a time. Needs a time budget.");
 
         node("latticePolish", "Takes a jump that already lands to the best nearby solution the game's angle"
                 + " grid allows. It first finds the exact smooth optimum for the start spot and every aim"
@@ -291,6 +314,7 @@ public final class NodeHelp {
         param("latticePolish", "work", "How much work the smooth solves may spend before the stage gives up,"
                 + " counted in steps so the same jump always gets the same result. A long jump with many"
                 + " free ticks needs more.");
+        param("latticePolish", GraphRunner.LANE_PARAM, LANE_HELP);
         param("latticePolish", "turns", "Also tries the same jump with the start facing one full turn away, for"
                 + " example 315 instead of -45, and Apply then sets the start facing there. The game's angle table"
                 + " has longer steps there for some directions, so the jump can reach further. Only when the solve"
@@ -300,6 +324,14 @@ public final class NodeHelp {
         param("latticePolish", "reserveFraction", "The share of the whole solve time held back for this stage, so"
                 + " the stages before it cannot use up the budget. Only matters when the solve has a time budget.");
         param("latticePolish", "reserveCapSec", "The most seconds the reserve may hold back. 0 means no cap.");
+
+        node("joinLanes", "Waits for every stage that was started to run beside the chain and keeps the"
+                + " better landing of the chain and those stages. Does nothing when no such stage runs.");
+        param("joinLanes", "of", "Wait only for the lane that was started at the stage with this name and"
+                + " leave the others running. Empty waits for all of them.");
+
+        node("pickStart", "When a Receding horizon stage has set an earlier landing aside, compares it with"
+                + " the current one and continues with the one that lands further. Does nothing otherwise.");
 
         node("translatedStart", "Only with a free start block: slides the whole solution's start spot to the"
                 + " best position that still lands the jump.");

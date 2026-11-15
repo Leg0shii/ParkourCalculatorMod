@@ -79,7 +79,7 @@ public final class BucketAscentPolish {
         double bestScore = score(model, scenario, c, obj, sign, best);
 
         if (cfg.restarts > 0) {
-            Random rng = new Random(0x9E3779B97F4A7C15L ^ n);
+            Random rng = new Random(0x9E3779B97F4A7C15L ^ n ^ SolveClock.seedMix());
             for (int r = 0; r < cfg.restarts; r++) {
                 if (cancel != null && cancel.get()) throw new SolveCancelledException();
                 double[] y = best.clone();

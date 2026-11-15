@@ -33,6 +33,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Objective;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardPath;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
+import de.legoshi.parkourcalc.core.anglesolver.solver.SolveClock;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolveProgress;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolverTrace;
 import de.legoshi.parkourcalc.core.anglesolver.solver.StartBox;
@@ -184,6 +185,21 @@ public final class AngleSolverEngine {
     }
 
     private volatile boolean sequentialSolve;
+    private volatile boolean lastSolveOverran;
+    private volatile String lastSolveWork;
+    private volatile long lastSolveWorkNanos;
+
+    public String lastSolveWork() {
+        return lastSolveWork;
+    }
+
+    public long lastSolveWorkNanos() {
+        return lastSolveWorkNanos;
+    }
+
+    public boolean lastSolveOverran() {
+        return lastSolveOverran;
+    }
 
     public void setSequentialSolve(boolean sequential) {
         this.sequentialSolve = sequential;
@@ -260,6 +276,7 @@ public final class AngleSolverEngine {
         r.race = rec.race;
         if (ctx != null) {
             r.nodes = SolveRunRecord.nodeRunsOf(ctx.runState.statuses());
+            r.steps = SolveRunRecord.stepRunsOf(ctx.runState.steps());
             SolveRunRecord.Counters counters = new SolveRunRecord.Counters();
             counters.smoothingEvals = ctx.smoothingEvals.get();
             r.counters = counters;
@@ -660,8 +677,11 @@ public final class AngleSolverEngine {
     }
 
     private static final long SMOOTH_BUTTON_BUDGET_NANOS = 6_000_000_000L;
+    private static final long REPEATABLE_WALL_FACTOR = 6L;
+    private static final long REPEATABLE_WALL_FLOOR_NANOS = 30_000_000_000L;
     public static final long SMOOTH_INPUTS_FACTOR = 3L;
     public static final String WATCH_SCORE_DETAIL = "Watch score";
+    public static final String DRIVE_CHANGES_DETAIL = "Forward key changes";
 
     private void start(Job job, AngleSolverState.Effort effort) {
         long t0 = System.nanoTime();
@@ -688,14 +708,30 @@ public final class AngleSolverEngine {
                 progress, t0);
         recording = rec;
         solving = true;
+        boolean repeatable = state.isRepeatable() && !isSmoothJob(job);
+        long seed = state.getSeed();
         Thread worker = new Thread(() -> {
+            SolveClock clock = repeatable
+                    ? SolveClock.install(token,
+                            REPEATABLE_WALL_FACTOR * Math.max(job.deadlineNanos, REPEATABLE_WALL_FLOOR_NANOS), seed)
+                    : null;
             try {
-                long firstStart = System.nanoTime();
-                Outcome o = runJob(job, token, progress, rec);
-                if (o != null && !token.get() && job.legalFallback != null && !o.result.isSuccess()) {
-                    long remaining = job.deadlineNanos > 0 ? job.deadlineNanos - (System.nanoTime() - firstStart) : 0L;
-                    if (job.deadlineNanos <= 0 || remaining > 0) {
-                        o = runLegalFallback(job.legalFallback.withDeadline(remaining), token, progress, rec);
+                Outcome o;
+                try {
+                    long firstStart = SolveClock.nanoTime();
+                    o = runJob(job, token, progress, rec);
+                    if (o != null && !token.get() && job.legalFallback != null && !o.result.isSuccess()) {
+                        long remaining = job.deadlineNanos > 0 ? job.deadlineNanos - (SolveClock.nanoTime() - firstStart) : 0L;
+                        if (job.deadlineNanos <= 0 || remaining > 0) {
+                            o = runLegalFallback(job.legalFallback.withDeadline(remaining), token, progress, rec);
+                        }
+                    }
+                } finally {
+                    if (clock != null) {
+                        lastSolveOverran = clock.overran();
+                        lastSolveWork = clock.describe();
+                        lastSolveWorkNanos = clock.elapsedNanos();
+                        clock.uninstall();
                     }
                 }
                 if (o != null && !token.get()) pending = o;
@@ -719,6 +755,7 @@ public final class AngleSolverEngine {
 
     private void offerIncumbent(Job job, AngleSolverState.Effort effort) {
         if (effort == AngleSolverState.Effort.FAST || BuiltinGraphs.FAST_PRESET.equals(job.graph.name)) return;
+        if (state.isRepeatable()) return;
         Plan prev = lastPlan;
         SolveResult prevResult = state.getResult();
         if (prev == null || prevResult == null || !prevResult.isSuccess() || prev.lockYaws) return;
@@ -939,8 +976,8 @@ public final class AngleSolverEngine {
     private static boolean consumeFirstTickZeroTurn(List<ConstraintAt> uiCons, Set<Constraint> consumed) {
         boolean any = false;
         for (ConstraintAt ca : uiCons) {
-            if (ca.absTick != 0 || ca.c.getField() != Constraint.Field.DF || ca.c.isUnsupportedDf()
-                    || ca.c.getOp() != Constraint.Op.EQ) continue;
+            if (ca.absTick != 0 || ca.c.getField() != Constraint.Field.DF
+                    || ca.c.getOp() != Constraint.Op.EQ || ca.c.getValue() != 0.0) continue;
             consumed.add(ca.c);
             any = true;
         }
@@ -1206,7 +1243,7 @@ public final class AngleSolverEngine {
         }
         GraphContext ctx = new GraphContext(spec, model, freeBox, job.legalFallback != null ? null : job.legalGoal,
                 FEAS_TOL, cancel, progress, sequentialSolve, job.longRun);
-        if (job.deadlineNanos > 0) ctx.setOverallDeadline(System.nanoTime() + job.deadlineNanos);
+        if (job.deadlineNanos > 0) ctx.setOverallDeadline(SolveClock.nanoTime() + job.deadlineNanos);
         if (rec != null) rec.ctx = ctx;
         lastRunState = ctx.runState;
         currentGraphContext = ctx;
@@ -1239,12 +1276,10 @@ public final class AngleSolverEngine {
                     null, null, null, ctx.chain(), null);
             SolveResult fail = failureResult(job, sc, ctx, System.nanoTime() - solveStart);
             if (ctx.chain() != null) fail.setSolver(ctx.chain());
-            if (proof != null) {
-                fail.markCertifiedInfeasible();
+            if (proof != null) fail.markCertifiedInfeasible();
+            if (proof != null && pinnedYaws == null && !singleHeading) {
                 fail.setNoticeLabel(CERTIFIED_INFEASIBLE_LABEL);
                 fail.setNotice(proof);
-            } else if (hasUnsupportedDf(job)) {
-                fail.setNotice(DF_UNSUPPORTED_NOTICE);
             } else if (pinnedYaws != null) {
                 fail.setNoticeLabel(OVERCONSTRAINED_LABEL);
                 fail.setNotice(pinnedChainNotice(sc, ctx.violationOf(pinnedYaws), freeBox != null));
@@ -1261,6 +1296,11 @@ public final class AngleSolverEngine {
         if (Double.isNaN(dualGap) && ctx.dualGapRequested() && !Double.isNaN(ctx.reachBound()) && cand.feasible) {
             double bound = ctx.reachBound();
             dualGap = Math.max(0.0, ctx.maximize() ? bound - cand.objective : cand.objective - bound);
+        }
+        double proven = ctx.provenBound();
+        if (!Double.isNaN(proven) && cand.feasible) {
+            double provenGap = Math.max(0.0, ctx.maximize() ? proven - cand.objective : cand.objective - proven);
+            if (Double.isNaN(dualGap) || provenGap < dualGap) dualGap = provenGap;
         }
         long solveNanos = System.nanoTime() - solveStart;
         if (SolverTrace.on()) {
@@ -1368,6 +1408,7 @@ public final class AngleSolverEngine {
         result.addDetail("Inputs changed", io.changed + (io.changed == 1 ? " tick" : " ticks") + " (" + io.tried + " tried)");
         result.addDetail(WATCH_SCORE_DETAIL, String.format(java.util.Locale.ROOT, "%.2f (Turn only %.2f)", io.watchCost,
                 io.plainWatchCost));
+        result.addDetail(DRIVE_CHANGES_DETAIL, io.driveChanges + " (was " + io.plainDriveChanges + ")");
         result.setInputChanges(io.inputs.clone());
         for (int k = 0; k < io.inputs.length; k++) {
             TickInputs after = io.inputs[k];
@@ -1417,11 +1458,6 @@ public final class AngleSolverEngine {
         return null;
     }
 
-    private static boolean hasUnsupportedDf(Job job) {
-        for (ConstraintAt ca : job.uiConstraints) if (ca.c.isUnsupportedDf()) return true;
-        return false;
-    }
-
     public static final String OVERCONSTRAINED_LABEL = "Overconstrained";
     public static final String INFEASIBLE_LABEL = "Infeasible constraints";
     public static final String CERTIFIED_INFEASIBLE_LABEL = "Certified infeasible";
@@ -1451,13 +1487,6 @@ public final class AngleSolverEngine {
     public static final String RANGE_MOVED_NOTICE =
             "Rows or the solve range changed while the solve ran, so its result no longer fits the rows."
             + " Solve again.";
-
-    public static final String DF_UNSUPPORTED_NOTICE =
-            "This jump carries a delta-facing (dF) band constraint. dF supports = 0 (hold the facing),"
-            + " >= (turn one way, at least the given degrees per tick) and <= (the other way); a band"
-            + " is not supported, so every solver stage declines the problem before searching and the"
-            + " solve cannot succeed while one is present. Re-select the dF field on that constraint"
-            + " to reset it to dF = 0, or delete the constraint.";
 
     public static final String DF_DIRECTION_LABEL = "Direction unverified";
 
@@ -1678,6 +1707,11 @@ public final class AngleSolverEngine {
     // The solver chain is not a detail row: the UI lists it in its own numbered section from getSolver().
     private void addBaseDetails(SolveResult r, long solveNanos) {
         r.addDetail("Runtime", ConstraintText.duration(solveNanos));
+        SolveClock clock = SolveClock.current();
+        if (clock != null) {
+            r.addDetail("Work time", ConstraintText.duration(clock.elapsedNanos())
+                    + (clock.overran() ? " (safety stop, not repeatable)" : ""));
+        }
         r.addDetail("Finished", r.getFinishedAt());
         r.addDetail("Model", model.getClass().getSimpleName());
     }
@@ -2007,8 +2041,10 @@ public final class AngleSolverEngine {
      *  fields, see addScalarOrRange), or a single comparison wall. */
     private void addRelative(List<JumpConstraint> out, JumpConstraint.Mode mode, int t1, int t2, Constraint c, String tag) {
         if (c.isRange()) {
-            out.add(new JumpConstraint(mode, t1, t2, JumpConstraint.Op.MINUS, JumpConstraint.Cmp.GE, c.getLo(), tag + "lo"));
-            out.add(new JumpConstraint(mode, t1, t2, JumpConstraint.Op.MINUS, JumpConstraint.Cmp.LE, c.getHi(), tag + "hi"));
+            double lo = mode == JumpConstraint.Mode.F ? turnRangeLo(c) : c.getLo();
+            double hi = mode == JumpConstraint.Mode.F ? turnRangeHi(c) : c.getHi();
+            out.add(new JumpConstraint(mode, t1, t2, JumpConstraint.Op.MINUS, JumpConstraint.Cmp.GE, lo, tag + "lo"));
+            out.add(new JumpConstraint(mode, t1, t2, JumpConstraint.Op.MINUS, JumpConstraint.Cmp.LE, hi, tag + "hi"));
         } else if (c.getOp() == Constraint.Op.EQ) {
             out.add(new JumpConstraint(mode, t1, t2, JumpConstraint.Op.MINUS, JumpConstraint.Cmp.GE, c.getValue() - MET_TOL, tag + "eqLo"));
             out.add(new JumpConstraint(mode, t1, t2, JumpConstraint.Op.MINUS, JumpConstraint.Cmp.LE, c.getValue() + MET_TOL, tag + "eqHi"));
@@ -2032,14 +2068,22 @@ public final class AngleSolverEngine {
     private void addSeamDeltaFacing(List<JumpConstraint> out, Constraint c, String tag, float seedYaw) {
         double base = seedYaw;
         if (c.isRange()) {
-            out.add(new JumpConstraint(JumpConstraint.Mode.F, 0, null, JumpConstraint.Op.PLUS, JumpConstraint.Cmp.GE, base + c.getLo(), tag + "lo"));
-            out.add(new JumpConstraint(JumpConstraint.Mode.F, 0, null, JumpConstraint.Op.PLUS, JumpConstraint.Cmp.LE, base + c.getHi(), tag + "hi"));
+            out.add(new JumpConstraint(JumpConstraint.Mode.F, 0, null, JumpConstraint.Op.PLUS, JumpConstraint.Cmp.GE, base + turnRangeLo(c), tag + "lo"));
+            out.add(new JumpConstraint(JumpConstraint.Mode.F, 0, null, JumpConstraint.Op.PLUS, JumpConstraint.Cmp.LE, base + turnRangeHi(c), tag + "hi"));
         } else if (c.getOp() == Constraint.Op.EQ) {
             out.add(new JumpConstraint(JumpConstraint.Mode.F, 0, null, JumpConstraint.Op.PLUS, JumpConstraint.Cmp.GE, base + c.getValue() - MET_TOL, tag + "eqLo"));
             out.add(new JumpConstraint(JumpConstraint.Mode.F, 0, null, JumpConstraint.Op.PLUS, JumpConstraint.Cmp.LE, base + c.getValue() + MET_TOL, tag + "eqHi"));
         } else {
             out.add(new JumpConstraint(JumpConstraint.Mode.F, 0, null, JumpConstraint.Op.PLUS, cmp(c.getOp()), base + c.getValue(), tag));
         }
+    }
+
+    static double turnRangeLo(Constraint c) {
+        return Math.max(c.getLo(), c.getHi() - 180.0);
+    }
+
+    static double turnRangeHi(Constraint c) {
+        return Math.min(c.getHi(), c.getLo() + 180.0);
     }
 
     private static JumpConstraint.Cmp cmp(Constraint.Op op) {
@@ -2119,14 +2163,15 @@ public final class AngleSolverEngine {
     }
 
     public static boolean satisfied(Constraint c, double found) {
+        boolean angular = c.getField() == Constraint.Field.F || c.getField() == Constraint.Field.DF;
         if (c.isRange()) {
-            boolean lo = c.isLoInclusive() ? found >= c.getLo() - FEAS_TOL : found > c.getLo() - FEAS_TOL;
-            boolean hi = c.isHiInclusive() ? found <= c.getHi() + FEAS_TOL : found < c.getHi() + FEAS_TOL;
+            double at = angular ? aroundRange(c, found) : found;
+            boolean lo = c.isLoInclusive() ? at >= c.getLo() - FEAS_TOL : at > c.getLo() - FEAS_TOL;
+            boolean hi = c.isHiInclusive() ? at <= c.getHi() + FEAS_TOL : at < c.getHi() + FEAS_TOL;
             return lo && hi;
         }
         double v = c.getValue();
         // Facings are angular: compare the wrapped difference so e.g. -179 satisfies a +179 target.
-        boolean angular = c.getField() == Constraint.Field.F || c.getField() == Constraint.Field.DF;
         double f = angular ? v + Angles.wrap(found - v) : found;
         // Walls (the inequalities) are gated strictly at FEAS_TOL, so "Solved" never counts a clip as met;
         // only the exact target (=) keeps MET_TOL, since a single facing/position bucket is never hit to the bit.
@@ -2140,6 +2185,11 @@ public final class AngleSolverEngine {
         }
     }
 
+    private static double aroundRange(Constraint c, double found) {
+        double mid = 0.5 * (c.getLo() + c.getHi());
+        return mid + Angles.wrap(found - mid);
+    }
+
     private static Objective.Sense objectiveSense(Objective o, Constraint c, int segTick) {
         if (o.isCustomAngle() || !c.isRange() || segTick != o.tick) return null;
         JumpPhysicsInputs.Axis axis = c.getField() == Constraint.Field.X ? JumpPhysicsInputs.Axis.X
@@ -2151,10 +2201,12 @@ public final class AngleSolverEngine {
         String field = ConstraintText.fieldLabel(c);
         String tickLabel = "T" + (absTick + 1);
         if (c.isRange()) {
+            boolean angular = c.getField() == Constraint.Field.F || c.getField() == Constraint.Field.DF;
+            double at = angular ? aroundRange(c, found) : found;
             double margin;
             if (sense == Objective.Sense.MAX) margin = found - c.getLo();
             else if (sense == Objective.Sense.MIN) margin = c.getHi() - found;
-            else margin = Math.min(found - c.getLo(), c.getHi() - found);
+            else margin = Math.min(at - c.getLo(), c.getHi() - at);
             String marginStr = (margin >= 0 ? "+" : "") + ConstraintText.fixedStat(margin);
             return new SolveResult.Outcome(field, tickLabel, ConstraintText.chip(c), ConstraintText.fixedStat(found), marginStr, met);
         }

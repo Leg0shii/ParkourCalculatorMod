@@ -169,6 +169,8 @@ public final class AngleSolverState {
     private int budgetMs = DEFAULT_BUDGET_MS;
     private double smoothLambda;
     private double smoothGiveBack = 1.0;
+    private boolean repeatable;
+    private long seed;
     private final SolveBudget solveBudget = new SolveBudget();
     private final RunTicksSettings runTicks = new RunTicksSettings();
     private String graphPresetName;
@@ -371,6 +373,22 @@ public final class AngleSolverState {
 
     public void setSmoothGiveBack(double v) {
         smoothGiveBack = Double.isNaN(v) ? 1.0 : Math.max(0.0, Math.min(1.0, v));
+    }
+
+    public boolean isRepeatable() {
+        return repeatable;
+    }
+
+    public void setRepeatable(boolean repeatable) {
+        this.repeatable = repeatable;
+    }
+
+    public long getSeed() {
+        return seed;
+    }
+
+    public void setSeed(long seed) {
+        this.seed = seed;
     }
 
     public SolveBudget getSolveBudget() {
@@ -833,6 +851,8 @@ public final class AngleSolverState {
         runTicks.resetToDefaults();
         smoothLambda = 0.0;
         smoothGiveBack = 1.0;
+        repeatable = false;
+        seed = 0L;
     }
 
 }

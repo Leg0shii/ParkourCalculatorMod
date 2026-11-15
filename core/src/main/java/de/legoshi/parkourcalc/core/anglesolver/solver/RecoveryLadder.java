@@ -42,7 +42,7 @@ public final class RecoveryLadder {
             if (SolverTrace.on()) SolverTrace.log("CHAIN", "slp solved");
             return levelSetTopUp(em, spec, yaws, cancel, "closed form -> SLP", nameOut);
         }
-        if (deadlineNanos == 0L || deadlineNanos - System.nanoTime() >= RELAX_MIN_REMAINING_NANOS) {
+        if (deadlineNanos == 0L || deadlineNanos - SolveClock.nanoTime() >= RELAX_MIN_REMAINING_NANOS) {
             if (SolverTrace.on()) SolverTrace.log("CHAIN", "relaxation start");
             yaws = RelaxationRecovery.solve(em, spec, FEAS_TOL, cancel, rrCfg);
             if (yaws != null) {
