@@ -275,6 +275,9 @@ anglesolver/
   NoTurnFamilyStageTest.java  (SlowSolverTests) StructurePoolDriver with the family lane alone, cold, the
                            jump's own rows and their copies left out of the library: j346 and j132 land
                            byte-exact and the Strat is a product of library families
+  ../core/NoTurnWarmupTest.java  StratfinderWarmup (in the package of the class, slow): the bundled jump is a
+                           search problem on every shipped game version, the warm-up search lands Strats with
+                           the 1.8.9 and the 26.3 model, a cancel ends it
   SenseFinderTest.java     Sense Finder on hpk_human/d10/j703 built from the plain Angle Solver setup (fast):
                            the turn, the carried jump window, every row over 0 to 200% re-forwards to its
                            offset, the three sort orders, later-tick margins never below the carried edge
