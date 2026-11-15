@@ -36,6 +36,7 @@ public final class CertifiedBnbNode implements NodeRuntime {
     private final boolean exhaust;
     private final boolean dive;
     private final String labelSuffix;
+    private final int batch;
 
     public CertifiedBnbNode(ParamValues params) {
         this.ffSec = params.getInt("ffSec");
@@ -44,6 +45,7 @@ public final class CertifiedBnbNode implements NodeRuntime {
         this.exhaust = params.getBool("exhaust");
         this.dive = params.getBool("dive");
         this.labelSuffix = params.getString("labelSuffix");
+        this.batch = Math.max(1, params.getInt("batch"));
     }
 
     @Override
@@ -100,6 +102,8 @@ public final class CertifiedBnbNode implements NodeRuntime {
             cfg.diveEvery = DIVE_EVERY;
             cfg.diveLength = DIVE_LENGTH;
         }
+        cfg.batch = batch;
+        cfg.sequential = ctx.sequential;
         cfg.cancel = cancelToken;
         cfg.deadlineNanos = solveDeadline;
         cfg.homotopy = ctx.foldableDf() && ctx.overallDeadline() > 0;

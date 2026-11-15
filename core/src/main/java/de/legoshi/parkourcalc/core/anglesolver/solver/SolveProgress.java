@@ -88,6 +88,15 @@ public final class SolveProgress {
         accept(absWrappedYaws, objective, violation, feasible, stage, node);
     }
 
+    public synchronized void reportAt(double[] absWrappedYaws, double objective, double violation, boolean feasible,
+                                      String fromStage, String node, double startX, double startZ) {
+        if (absWrappedYaws == null) return;
+        if (!accept(absWrappedYaws, objective, violation, feasible, fromStage, node)) return;
+        bestStartX = startX;
+        bestStartZ = startZ;
+        bestHasStart = true;
+    }
+
     private boolean accept(double[] yaws, double objective, double violation, boolean feasible,
                            String fromStage, String node) {
         double scored = scoredOf(objective, yaws);
