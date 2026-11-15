@@ -26,7 +26,6 @@ public final class StartStateTable {
     private static final int PRECISION = 5;
     private static final String COPY_TELEPORT_LABEL = "Copy teleport command";
     private static final String SET_TO_PLAYER_LABEL = "Set to player";
-    private static final String HELP_MARKER = "(?)";
     private static final String PINNED_HINT = "set by hand";
     private static final String DERIVED_HINT = "from the world";
     private static final String PINNED_TIP = "The resume state is fixed: the simulation starts with these values whatever the world says.";
@@ -153,19 +152,15 @@ public final class StartStateTable {
         ImGui.alignTextToFramePadding();
         ImGui.textDisabled("Resume state");
         String hint = pinned ? PINNED_HINT : DERIVED_HINT;
+        float hintW = ImGui.calcTextSize(hint).x;
         float spacing = ImGui.getStyle().getItemSpacing().x;
-        float trailW = ImGui.calcTextSize(hint).x + spacing + ImGui.calcTextSize(HELP_MARKER).x
-                + (pinned ? spacing + SolverWidgets.deleteXWidth() : 0f);
+        float trailW = hintW + (pinned ? spacing + SolverWidgets.deleteXWidth() : 0f);
         ImGui.sameLine();
         float avail = ImGui.getContentRegionAvail().x;
         if (avail > trailW) ImGui.setCursorPosX(ImGui.getCursorPosX() + avail - trailW);
         ThemeManager.pushTextColor(ThemeManager.textDimColor());
         ImGui.alignTextToFramePadding();
         ImGui.text(hint);
-        ThemeManager.popTextColor();
-        ImGui.sameLine();
-        ThemeManager.pushTextColor(ThemeManager.textMutedColor());
-        ImGui.text(HELP_MARKER);
         ThemeManager.popTextColor();
         TooltipUtil.onHover(pinned ? PINNED_TIP : DERIVED_TIP);
         if (pinned) {
