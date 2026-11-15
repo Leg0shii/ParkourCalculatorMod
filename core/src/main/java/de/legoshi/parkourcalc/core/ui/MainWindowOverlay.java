@@ -173,6 +173,9 @@ public final class MainWindowOverlay implements RenderInterface {
             dismissTransientPopups();
         }
         if (settings.keepTickInfoOpen) tickInfoPanel.render(io);
+        if (settings.pairedSimulation && settings.keepServerEventsOpen && serverEventLogPanel != null) {
+            serverEventLogPanel.render(io);
+        }
         hudMessagesPanel.render(io, false);
         if (replayKeystrokesPanel != null) replayKeystrokesPanel.render(io, false);
     }
