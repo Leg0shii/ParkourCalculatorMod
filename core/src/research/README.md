@@ -108,6 +108,7 @@ anglesolver/
                            extraCertify,extraSec,dumpPool,out}; families=true turns the family stage on,
                            familyWithout=<jump numbers> leaves those jumps' rows and their copies out of the library,
                            familyOnly=true turns the change levels off,
+                           sharedExplore=true certifies waiting candidates beside the neighbours of a found Strat (#704),
                            familyDelayMs=<ms> sets how long the change levels keep every thread,
                            familyReach=<b> and familyInertiaShare=<fraction> set the inertia stages (reach 0 turns them off),
                            familyCutPool=<count> sets the stored reject vectors per worker (0 turns the pool off),

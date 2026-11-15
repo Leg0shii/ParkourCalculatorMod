@@ -275,6 +275,9 @@ anglesolver/
   NoTurnFamilyStageTest.java  (SlowSolverTests) StructurePoolDriver with the family lane alone, cold, the
                            jump's own rows and their copies left out of the library: j346 and j132 land
                            byte-exact and the Strat is a product of library families
+  NoTurnSharedExploreTest.java  (SlowSolverTests) StructurePoolDriver with Config.sharedExplore (#704) on j315,
+                           family lane, full library, 10 s after the first Strat on two threads: the list
+                           holds Strats with at least three different run-ups, all byte-exact
   SenseFinderTest.java     Sense Finder on hpk_human/d10/j703 built from the plain Angle Solver setup (fast):
                            the turn, the carried jump window, every row over 0 to 200% re-forwards to its
                            offset, the three sort orders, later-tick margins never below the carried edge

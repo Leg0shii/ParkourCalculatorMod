@@ -292,6 +292,7 @@ public class NoTurnColdBench {
             if (Integer.getInteger("pkc.bench.minDwell", -1) > 0) cfg.minDwell = Integer.getInteger("pkc.bench.minDwell");
             if (Integer.getInteger("pkc.bench.perEdgeCertify", -1) > 0) cfg.perEdgeCertify = Integer.getInteger("pkc.bench.perEdgeCertify");
             cfg.playable = Boolean.getBoolean("pkc.bench.playable");
+            cfg.sharedExplore = Boolean.getBoolean("pkc.bench.sharedExplore");
             if (System.getProperty("pkc.bench.taps") != null) cfg.tapsStage = Boolean.parseBoolean(System.getProperty("pkc.bench.taps"));
             if (System.getProperty("pkc.bench.repair") != null) cfg.repairStage = Boolean.parseBoolean(System.getProperty("pkc.bench.repair"));
             if (Boolean.getBoolean("pkc.bench.families")) {
