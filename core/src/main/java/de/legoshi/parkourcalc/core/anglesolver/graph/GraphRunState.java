@@ -88,6 +88,23 @@ public final class GraphRunState {
         }
     }
 
+    public synchronized int stepCount() {
+        return steps.size();
+    }
+
+    public int absorb(GraphRunState other, int at) {
+        List<Step> otherSteps = other.steps();
+        List<NodeStatus> otherStatuses = other.statuses();
+        synchronized (this) {
+            steps.addAll(Math.max(0, Math.min(at, steps.size())), otherSteps);
+            for (NodeStatus st : otherStatuses) {
+                if (!statuses.containsKey(st.nodeId)) statuses.put(st.nodeId, st);
+            }
+            version++;
+        }
+        return otherSteps.size();
+    }
+
     public synchronized int version() {
         return version;
     }
