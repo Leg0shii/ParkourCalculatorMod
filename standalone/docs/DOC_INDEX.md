@@ -14,13 +14,14 @@ control work; inclusion here is not authorization to implement a historical plan
 | [docs/ANCHOR_SEARCH_INTEGRATION.md](ANCHOR_SEARCH_INTEGRATION.md) | Current navigation / implementation or evidence record: Anchor search and solver integration |
 | [docs/ARCHITECTURE.md](ARCHITECTURE.md) | Current navigation / implementation or evidence record: Architecture and execution flow |
 | [docs/BOOKKEEPING_PERFORMANCE_AGENT_HANDOFF.md](BOOKKEEPING_PERFORMANCE_AGENT_HANDOFF.md) | Current navigation / implementation or evidence record: Agent handoff: measured bookkeeping costs |
-| [docs/BRANCH_SCHEDULING_INVESTIGATION.md](BRANCH_SCHEDULING_INVESTIGATION.md) | Current navigation / implementation or evidence record: Branch scheduling: recognize stronger continuations before finishing a subtree |
+| [docs/BRANCH_SCHEDULING_INVESTIGATION.md](BRANCH_SCHEDULING_INVESTIGATION.md) | Current navigation / implementation or evidence record: Concrete solver-orchestration improvements |
 | [docs/CHECKPOINT_STORAGE.md](CHECKPOINT_STORAGE.md) | Current navigation / implementation or evidence record: Search checkpoint storage |
 | [docs/CODE_MAP.md](CODE_MAP.md) | Current navigation / implementation or evidence record: Production code map |
 | [docs/CORRIDOR_AGENT_HANDOFF.md](CORRIDOR_AGENT_HANDOFF.md) | Current navigation / implementation or evidence record: Handoff: changes since the standalone AGENTS consolidation |
 | [docs/CORRIDOR_IMPLEMENTATION_RESUME.md](CORRIDOR_IMPLEMENTATION_RESUME.md) | Current navigation / implementation or evidence record: Resume authorized anchor implementation and completed event baseline |
 | [docs/CURRENT_STATE.md](CURRENT_STATE.md) | Current navigation / implementation or evidence record: Current standalone state |
 | [docs/DECISIONS_AND_PLANS.md](DECISIONS_AND_PLANS.md) | Current navigation / implementation or evidence record: Decisions and plan authority |
+| [docs/DEFERRED_WORK.md](DEFERRED_WORK.md) | Current navigation / implementation or evidence record: Deferred work and unimplemented follow-ups |
 | [docs/DEVELOPMENT.md](DEVELOPMENT.md) | Current navigation / implementation or evidence record: Writing code and fixes |
 | [docs/DOC_INDEX.md](DOC_INDEX.md) | Current navigation / implementation or evidence record: Documentation index |
 | [docs/FILE_INDEX.md](FILE_INDEX.md) | Current navigation / implementation or evidence record: Tracked standalone file index |

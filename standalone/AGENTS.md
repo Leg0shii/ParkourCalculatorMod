@@ -15,6 +15,7 @@ Use [current state](docs/CURRENT_STATE.md) for ongoing work and [decisions and p
 | Need | Read |
 | --- | --- |
 | Current capabilities and active plans | [Current state](docs/CURRENT_STATE.md), [decisions and plans](docs/DECISIONS_AND_PLANS.md) |
+| Deferred work and resumption pointers | [Deferred-work register](docs/DEFERRED_WORK.md) |
 | Immediate Real11 questions | [Real11 guide](docs/REAL11_GUIDE.md), then linked candidate/question/call ledgers |
 | Code structure and function flow | [Architecture](docs/ARCHITECTURE.md), [code map](docs/CODE_MAP.md), [function index](docs/FUNCTION_INDEX.md) |
 | Run, resume, build helpers, replay/export | [Runbook](docs/RUNBOOK.md); detailed [constraint runbook](docs/design/CONSTRAINT_GENERATION_RUNBOOK.md) |

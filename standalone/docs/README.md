@@ -8,7 +8,7 @@ A fresh agent should start at [standalone/AGENTS.md](../AGENTS.md) and [current 
 | Answer a Real11 question now | [Real11 guide](REAL11_GUIDE.md) → exact audit/question/call artifact |
 | Understand execution and file ownership | [Architecture](ARCHITECTURE.md) → [code map](CODE_MAP.md) → [function index](FUNCTION_INDEX.md) |
 | Run/debug a case | [Runbook](RUNBOOK.md) → [testing](TESTING.md) → [results and debugging](RESULTS_AND_DEBUGGING.md) |
-| Implement the approved changes | [Decisions/plans](DECISIONS_AND_PLANS.md) → [current plan](design/DFS_INTERACTION_IMPLEMENTATION_PLAN.md) → [development](DEVELOPMENT.md) |
+| Find current authority or resume deferred work | [Decisions/plans](DECISIONS_AND_PLANS.md) → [deferred-work register](DEFERRED_WORK.md) → selected detailed plan; [development](DEVELOPMENT.md) for implementation |
 | Reuse prior mod work | [Mod references](MOD_REFERENCES.md) → existing compiler/constraint/scene classes |
 | Find older evidence or any file | [Document index](DOC_INDEX.md) → [complete file inventory](FILE_INDEX.md) |
 

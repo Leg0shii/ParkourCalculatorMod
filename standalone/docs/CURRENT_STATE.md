@@ -1,6 +1,6 @@
 # Current standalone state
 
-Active follow-up investigations: [bookkeeping performance](BOOKKEEPING_PERFORMANCE_AGENT_HANDOFF.md) is handed to another agent/worktree; [branch scheduling](BRANCH_SCHEDULING_INVESTIGATION.md) remains in this session. Both start from `a11b9b18`; this handoff adds no runtime or pruning change. The current code still descends by DFS, while the proposal makes retained continuations compete earlier by optimistic finish.
+Follow-up status2026-11-15: the user has **deferred interleaving/scheduler implementation**. The [preserved plan](BRANCH_SCHEDULING_INVESTIGATION.md) retains the existing tick priority, work-category/outcome clarifications, ownership/cost analysis and resumption checks; none is implemented by this documentation. Current code remains DFS. The separate [bookkeeping performance handoff](BOOKKEEPING_PERFORMANCE_AGENT_HANDOFF.md) is not paused by this request. Use the [deferred-work register](DEFERRED_WORK.md) for other preserved follow-ups and their actual status.
 
 2026-11-15: package/layout refactor through `9c79e741`; solver behavior remains feature `dd738c98`. Production is installed from `src/parkour_solver`, with separate tests/tools/research/native roots. See [layout](LAYOUT.md) and the [refactor ledger](STANDALONE_REFACTOR_IMPLEMENTATION.md). Start with the [execution reference](ANCHOR_SEARCH_EXECUTION_REFERENCE.md)
 for the combination catalogue, pruning/deferral table, IPOPT dispatch boundaries,
@@ -74,11 +74,7 @@ not cover unknown world geometry.
 
 ## Deferred work
 
-Inter-block revisits/repeated anchors have a [preserved future plan](design/REVISIT_DISCOVERY_DEFERRED_PLAN.md).
-Intentional wall hits, cadence2/4 comparison, turnaround-margin tuning, root-service
-fairness changes, remaining bookkeeping optimization and actual-world/export
-acceptance are separate work. Hard-latch/count policy intentionally narrows or
-orders a bounded search; it is not a global completeness/optimality theorem.
+The [central deferred-work register](DEFERRED_WORK.md) links the preserved scheduler plan, revisit design, intentional wall hits, water, cadence/turn tuning, inertia follow-up, proposed research and outstanding acceptance/input work. It distinguishes user deferrals from unapproved ideas and completed source-era backlog claims. Bookkeeping optimization is separately assigned, not deferred by the scheduling pause. Hard-latch/count policy remains a bounded heuristic/domain policy, not a global optimality theorem.
 
 ## Source-era history
 

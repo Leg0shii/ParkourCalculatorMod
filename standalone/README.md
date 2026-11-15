@@ -25,7 +25,7 @@ separate Python environment.
 | Real11 evidence and questions | [Real11 guide](docs/REAL11_GUIDE.md) |
 | Module ownership and execution | [Architecture](docs/ARCHITECTURE.md), [code map](docs/CODE_MAP.md) |
 | Test, solve, resume, replay/export | [Runbook](docs/RUNBOOK.md), [testing](docs/TESTING.md) |
-| Plans and preserved research | [Decisions](docs/DECISIONS_AND_PLANS.md), [documentation index](docs/DOC_INDEX.md), [research guide](research/README.md) |
+| Plans, deferred work and preserved research | [Decisions](docs/DECISIONS_AND_PLANS.md), [deferred-work register](docs/DEFERRED_WORK.md), [documentation index](docs/DOC_INDEX.md), [research guide](research/README.md) |
 
 The folder refactor preserves numerical equations, comparison/reachability policy,
 checkpoint schemas and historical evidence. Its detailed contracts remain in the

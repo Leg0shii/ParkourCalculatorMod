@@ -1,5 +1,7 @@
 # Current pruning and orchestration handoff
 
+> Source-era backlog/handoff: some pending items below are implemented or superseded. Use the [current deferred-work register](../DEFERRED_WORK.md), [current state](../CURRENT_STATE.md) and [decisions](../DECISIONS_AND_PLANS.md) before resuming work; this record is not new implementation authorization.
+
 2026-11-03. Start with [standalone/AGENTS.md](../../AGENTS.md), then [current state](../CURRENT_STATE.md). The active isolated branch is `research/ipopt-cell-routes`, worktree `/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes`. No other-agent coordination is required. Root AGENTS is unchanged.
 
 Documentation consolidation is complete. [Goal-aware DFS and early interaction eligibility](../design/DFS_INTERACTION_IMPLEMENTATION_PLAN.md) is now implemented, with [results and validation](../../research/dfs-interactions/README.md). The old global checkpoint-window barrier is removed. The earlier seven workstreams remain and the newer change wires early gating through open builders, preserves ownership through projection/promotion and saves DFS/backtracking state. Current schema is version5; raw historical checkpoint queues are incompatible.

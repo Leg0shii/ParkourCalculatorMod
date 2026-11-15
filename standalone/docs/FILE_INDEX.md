@@ -14,7 +14,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 
 | File | Bytes |
 | --- | ---: |
-| [AGENTS.md](../AGENTS.md) | 3959 |
+| [AGENTS.md](../AGENTS.md) | 4051 |
 
 ## CONSOLIDATION.md
 
@@ -26,7 +26,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 
 | File | Bytes |
 | --- | ---: |
-| [README.md](../README.md) | 1926 |
+| [README.md](../README.md) | 1990 |
 
 ## autonomy
 
@@ -54,17 +54,18 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/ANCHOR_SEARCH_EXECUTION_REFERENCE.md](ANCHOR_SEARCH_EXECUTION_REFERENCE.md) | 26719 |
 | [docs/ANCHOR_SEARCH_INTEGRATION.md](ANCHOR_SEARCH_INTEGRATION.md) | 10453 |
 | [docs/ARCHITECTURE.md](ARCHITECTURE.md) | 15586 |
-| [docs/BOOKKEEPING_PERFORMANCE_AGENT_HANDOFF.md](BOOKKEEPING_PERFORMANCE_AGENT_HANDOFF.md) | 17179 |
-| [docs/BRANCH_SCHEDULING_INVESTIGATION.md](BRANCH_SCHEDULING_INVESTIGATION.md) | 10066 |
+| [docs/BOOKKEEPING_PERFORMANCE_AGENT_HANDOFF.md](BOOKKEEPING_PERFORMANCE_AGENT_HANDOFF.md) | 17258 |
+| [docs/BRANCH_SCHEDULING_INVESTIGATION.md](BRANCH_SCHEDULING_INVESTIGATION.md) | 34085 |
 | [docs/CHECKPOINT_STORAGE.md](CHECKPOINT_STORAGE.md) | 6930 |
 | [docs/CODE_MAP.md](CODE_MAP.md) | 23647 |
 | [docs/CORRIDOR_AGENT_HANDOFF.md](CORRIDOR_AGENT_HANDOFF.md) | 17543 |
 | [docs/CORRIDOR_IMPLEMENTATION_RESUME.md](CORRIDOR_IMPLEMENTATION_RESUME.md) | 15728 |
-| [docs/CURRENT_STATE.md](CURRENT_STATE.md) | 9693 |
-| [docs/DECISIONS_AND_PLANS.md](DECISIONS_AND_PLANS.md) | 25913 |
+| [docs/CURRENT_STATE.md](CURRENT_STATE.md) | 9924 |
+| [docs/DECISIONS_AND_PLANS.md](DECISIONS_AND_PLANS.md) | 26386 |
+| [docs/DEFERRED_WORK.md](DEFERRED_WORK.md) | 18451 |
 | [docs/DEVELOPMENT.md](DEVELOPMENT.md) | 11551 |
-| [docs/DOC_INDEX.md](DOC_INDEX.md) | 33012 |
-| [docs/FILE_INDEX.md](FILE_INDEX.md) | 168794 |
+| [docs/DOC_INDEX.md](DOC_INDEX.md) | 33123 |
+| [docs/FILE_INDEX.md](FILE_INDEX.md) | 168848 |
 | [docs/FUNCTION_INDEX.md](FUNCTION_INDEX.md) | 63828 |
 | [docs/HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md](HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md) | 66291 |
 | [docs/INITIAL_DOMAIN_AND_CONFIG_AUDIT.md](INITIAL_DOMAIN_AND_CONFIG_AUDIT.md) | 5889 |
@@ -72,7 +73,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/IPOPT_FEASIBILITY_MODE.md](IPOPT_FEASIBILITY_MODE.md) | 4790 |
 | [docs/LAYOUT.md](LAYOUT.md) | 5275 |
 | [docs/MOD_REFERENCES.md](MOD_REFERENCES.md) | 5109 |
-| [docs/README.md](README.md) | 3066 |
+| [docs/README.md](README.md) | 3106 |
 | [docs/REAL11_GUIDE.md](REAL11_GUIDE.md) | 21578 |
 | [docs/RESULTS_AND_DEBUGGING.md](RESULTS_AND_DEBUGGING.md) | 11248 |
 | [docs/RUNBOOK.md](RUNBOOK.md) | 7978 |
@@ -115,7 +116,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/design/ORCHESTRATOR_CONTRACT.md](design/ORCHESTRATOR_CONTRACT.md) | 2449 |
 | [docs/design/ORCHESTRATOR_IMPLEMENTATION_PLAN.md](design/ORCHESTRATOR_IMPLEMENTATION_PLAN.md) | 21248 |
 | [docs/design/PROVISIONAL_ROUTE_GUIDANCE.md](design/PROVISIONAL_ROUTE_GUIDANCE.md) | 10015 |
-| [docs/design/PRUNING_IMPROVEMENTS_BACKLOG.md](design/PRUNING_IMPROVEMENTS_BACKLOG.md) | 25838 |
+| [docs/design/PRUNING_IMPROVEMENTS_BACKLOG.md](design/PRUNING_IMPROVEMENTS_BACKLOG.md) | 26143 |
 | [docs/design/REFERENCE_STRATEGY_EVALUATION.md](design/REFERENCE_STRATEGY_EVALUATION.md) | 12900 |
 | [docs/design/REVISIT_DISCOVERY_DEFERRED_PLAN.md](design/REVISIT_DISCOVERY_DEFERRED_PLAN.md) | 10280 |
 | [docs/design/ROUTE_BASELINE_GUIDANCE.md](design/ROUTE_BASELINE_GUIDANCE.md) | 12654 |
@@ -149,7 +150,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/research/HEURISTIC_SOURCE_REVIEW.md](research/HEURISTIC_SOURCE_REVIEW.md) | 19457 |
 | [docs/research/MIXED_INTEGER_RESEARCH.md](research/MIXED_INTEGER_RESEARCH.md) | 15552 |
 | [docs/research/PRUNING_RESEARCH.md](research/PRUNING_RESEARCH.md) | 286325 |
-| [docs/research/PRUNING_RESEARCH_HANDOFF.md](research/PRUNING_RESEARCH_HANDOFF.md) | 3858 |
+| [docs/research/PRUNING_RESEARCH_HANDOFF.md](research/PRUNING_RESEARCH_HANDOFF.md) | 4163 |
 | [docs/research/PRUNING_RESEARCH_HISTORY.md](research/PRUNING_RESEARCH_HISTORY.md) | 75365 |
 | [docs/research/SPATIAL_ROUTE_RESEARCH.md](research/SPATIAL_ROUTE_RESEARCH.md) | 45521 |
 | [docs/research/STRATFINDER_INVESTIGATION.md](research/STRATFINDER_INVESTIGATION.md) | 16321 |

@@ -1,5 +1,7 @@
 # Deferred pruning and orchestration improvements
 
+> Source-era backlog/handoff: some pending items below are implemented or superseded. Use the [current deferred-work register](../DEFERRED_WORK.md), [current state](../CURRENT_STATE.md) and [decisions](../DECISIONS_AND_PLANS.md) before resuming work; this record is not new implementation authorization.
+
 Selected current implementation scope: [ORCHESTRATOR_IMPLEMENTATION_PLAN.md](ORCHESTRATOR_IMPLEMENTATION_PLAN.md). It groups the approved fixes into seven workstreams; remaining rows are research/backlog items unless included there. Corridor logging is already complete.
 
 Current implementation status: G2/P2 outer and terminal continuation, Q1 compatible active assembly/latest valid guesses, M1 scoped upfront constraints, S1/R1 state/schedule guards and conservative E3 first-floor exclusion are wired into the standalone checkpoint orchestrator. Initial0/8 selection is explicit fixture input. See [results and remaining acceptance items](../../research/orchestrator-fixes/README.md). G3 efficient cold coverage, broader E3 future-chain proof, D1 later-decision domain reduction and measured false-pruning on harder maps remain open. The historical proposals in the table below are retained; their old pending wording does not override this status.
