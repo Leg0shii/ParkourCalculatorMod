@@ -646,3 +646,94 @@ On this setup the levels find 18 of the 25 within 120 s, both lanes 20 (j716, j4
 The test `NoTurnFamilyStageTest` runs the family lane alone without the extra certify and the polish: j132, whose recorded Strat has three paid changes, lands in 5 s, j346 in under 1 s.
 
 Open: j347 has two middle segments no family covers and j155 a run-up no family covers; the translator reads two thirds of the worded Strats.
+
+### Stored rejects in the family screen (2026-11-12, gh-683)
+
+The family screen solved one small dual problem per schedule. Its value is `-f(lambda)` with `f(lambda) = sum over units |g_k(lambda)| + lambda . b`, and that is a lower bound of the worst wall violation for ANY multiplier vector `lambda >= 0`, not only for the one the solve ends on. So the multipliers of a solve that rejected one schedule can be evaluated on every other schedule, and when the value is above the limit that schedule is rejected without a solve. `g_k` and `lambda . b` are sums over ticks of terms that depend on the tick, its keys and its sprint state only, so a stored vector carries one small table per tick and key state and the bound of a schedule is a sum of table entries plus one square root per facing unit.
+
+`FreeAirExact.CutPool` keeps up to `Config.familyCutPool` (128) such vectors per worker. A vector that rejects moves one place forward, a new vector replaces the last one when the pool is full. The family walk tells the pool its segment layout and each choice (`Screen.layout`, `Screen.choose`); the pool stores each vector's sum per segment choice and per sprint state before the segment, and the sum of the chosen segments per depth, so a leaf costs a few additions per vector tried. The three sprint variants of a schedule differ on at most three ticks after the first run tick and are checked from the same sums (`Screen.survivors`).
+
+What was tried first and dropped: a lookup table keyed by the late rows alone. The late rows of the tied part depend on the head of the schedule through two vectors only (fit error 6e-15 on j154), but the early rows (the edges of the platforms before the last jump) are active in almost every kept schedule, and a table over the three invariants with a Lipschitz margin rejects nothing at an affordable depth. Vectors keyed by a cell of those invariants were also worse than one small global pool (cell 0.02: 73 percent rejected without a solve, cell 0.05: 95 percent, one pool of 64: 99.96 percent).
+
+Two changes around it:
+
+- **Exact tier first.** A schedule within the limit needs the full solve, and near the limit the solve converges slowly (about 37 iterations, 114 microseconds). At the keep limit of 0.01 b j154 keeps 143,557 of 8.7 million schedules of one final segment, at the exact tier limit of 0.002 b 2,930 of 38.5 million. `Config.familyExactFirst` runs every band with the exact limit first (`FAMILY_EXACT_STAGE`), then the bands at the keep limit, then the inertia stages as before. 56 of the 59 recorded Strats score in the exact tier.
+- **Prefix check after the pool.** The pad-wall prefix check of the walk cost more than the pool once the pool was in, so with a pool it runs only for a schedule no vector rejects (`familyPrefixPruned`).
+
+Measured in a probe (cloud, 4 threads, full library, the cost band of the recorded Strat, exact tier limit, first sprint variant only):
+
+| jump | schedules | solve per schedule | pool |
+| --- | --- | --- | --- |
+| j154 | 38,549,014 | 28.1 s | 0.72 s (pool of 64) |
+| j1099 | 78,145,346 | 67 s | 4.0 s (pool of 256), 12 s (64), 107 s (16) |
+| j424 | 7,165,972 | 7.4 s | 4.5 s |
+| j716 | 511,861 | 0.63 s | 0.44 s |
+
+The pool keeps fewer schedules than the solve per schedule (j154: 2,743 against 2,930): the difference are schedules whose solve stalled under the limit although their true value is above it (up to 0.026 b). No schedule with a point at or under the limit was rejected.
+
+Time to the first Strat in the driver (cloud, 4 threads, CPU, family lane alone, the full library with the jump's own rows, one run each, dev d04638b against the branch):
+
+| jump | dev | branch |
+| --- | --- | --- |
+| j154 | 101 s | 28 to 39 s (five runs) |
+| j1099 | not in 45 s | 50 s |
+| j424 | 17.6 s | 4.4 s |
+| j716 | 37.6 s | 29.3 s |
+| j1150 | 7.9 s | 9.6 s |
+
+These are cloud numbers and a development signal. The walk now checks about 5 million schedules per second on the four cloud threads while the certifier uses half of them; j1150 waits on certification in both builds (its Strat is offered after 1.3 s and certified after 8 s). The library contains each jump's own rows in these runs, so they say nothing about a jump whose families are missing.
+
+The development PC, one run each (30 threads, graphics card screen on, both lanes, the full library, no game open, the same jar at ccd4a26 with the stored rejects and the exact tier first on, against both switched off with `-Dpkc.bench.familyCutPool=0 -Dpkc.bench.familyExactFirst=false`):
+
+| jump | switched off | on |
+| --- | --- | --- |
+| j154 | 26.2 s | 13.1 s |
+| j1099 | 23.0 s | 16.7 s |
+| j1150 | not run | 8.1 s |
+
+All five runs found a Strat. j154 scored 211 million schedules in its run with the change and 31 million without.
+
+`NoTurnFreeAirExactTest.storedRejectsOnlyDropSchedulesTheFullSolveDrops` holds the pool to the solve: a rejected schedule's attained violation is never under the bound that rejected it, the stored sums give the same answer as the sum over ticks, and every rejected sprint variant is over the limit in the full solve.
+
+### Subtree rejects in the family walk (2026-11-12, gh-686)
+
+A stored reject vector (gh-683) is still asked once per schedule. Its bound is `-f` with `f = base - lin + sum over units |(X_k, Y_k)|`, and every term is a sum over ticks. On j154, j1099, j716 and j1150 one facing is tied over every tick up to the tick before the last jump and every later tick has a facing of its own. For a fixed prefix of the family walk the best completion under one vector is therefore
+
+`fixed + max over the completions of [ |P + S| + rest ]`
+
+where `P` is the prefix's sum in the tied unit, `S` the completion's sum in it and `rest` its sum in every other term. With 256 directions `d_j` and `|v| <= slack * max_j d_j . v` (`slack = 1 / cos(pi / 256)`) this is at most `fixed + max_j [ slack * d_j . P + R_j ]`, where `R_j` is the best `slack * d_j . S + rest` over the choices of the remaining segments, built once per vector and layout as a table per segment and sprint state at the cut (`CutPool.rest`). A segment without a tick of the tied unit needs one number instead of 256. When that maximum is under the limit for all three sprint variants, by whichever vectors, no schedule under the prefix can pass the pool and the walk drops the whole subtree (`Screen.subtreeRejected`, asked once the first two segments are placed).
+
+One level further down the same sums give a batched test: with the prefix fixed, the value of every choice of the next segment is `fixed + choiceRest + |Q + (choiceX, choiceY)|`, one pass over three flat arrays per vector (`Screen.filterChoices`). The walk uses it on the second to last segment and on the leaves, so a rejected leaf costs three array reads instead of a call per vector.
+
+Limits. The test needs exactly one tied unit: j424 has two (ticks 0 to 23 and 24 to 38) and falls back to the per schedule check. The tables ignore the cost band, so they also count completions the current band does not hold, which only makes the test weaker. A prefix whose first run tick sits in the last three ticks before the cut is not tested, because the sprint variants would shift terms across the cut. And one vector can only reject a subtree whose completions it can separate together: on j154 a prefix with two free segments (917 x 96 completions) is dropped in 0.02 percent of the nodes, one with only the final segment free in 83 to 86 percent, so almost all of the gain is the batched test.
+
+`Config.familySubtreeCuts` (8) is the number of vectors tried per node, 0 switches both tests off. 3, 8 and 16 measure the same within noise on j154, 128 is slower.
+
+Cloud, 4 threads, CPU, family lane alone, the full library with the jump's own rows, 45 s, one run each, both columns from the same build with `-Dpkc.bench.familySubtreeCuts=0` and `=8`. The times are the moments a cost band of the exact tier is finished:
+
+| jump | band | off | on | first Strat off | first Strat on |
+| --- | --- | --- | --- | --- | --- |
+| j154 | 10 (holds the recorded Strat) | 6.9 s | 5.0 s | 16.1 s | 41.3 s |
+| j154 | 13 | not finished at 33.6 s | 15.7 s | | |
+| j1099 | 10 | 23.1 s | 22.3 s | 39.9 s | 40.6 s |
+| j1099 | 11 | not finished at 45 s | 37.6 s | | |
+| j716 | 11 | 21.4 s | 15.5 s | 16.3 s | 16.6 s |
+| j1150 | 10 | 16.2 s | 14.3 s | 10.1 s | 9.5 s |
+| j424 | 9 | 14.9 s | 14.8 s (not applicable) | 4.2 s | 4.2 s |
+
+All ten runs found a Strat. The enumeration is 1.1 to 2.1 times faster per band, and the time to the first Strat does not follow it: on these four cloud threads the certifier's queue decides it. On j154 the recorded Strat is offered when band 10 ends, about 20 kept candidates rank ahead of it by screen value at that moment (36 once band 11 is in, 55 after band 13), one batch of 20 certifies in about 6 s, and the three queues take turns. Further runs of the same builds gave 42.3 s without the test and 30.8 s, 50.1 s and no Strat in 20 s with it; a faster walk fills the queue sooner with candidates that rank ahead. On the development PC the certifier has 30 threads and the balance is different.
+
+The development PC, one run each (30 threads, graphics card screen on, both lanes, the full library, no game open, the same jar at cc10b43 with `-Dpkc.bench.familySubtreeCuts=0` and `=8`):
+
+| jump | first Strat off | first Strat on | band 10 of the exact tier off | on |
+| --- | --- | --- | --- | --- |
+| j154 | 12.9 s | 7.0 s | 895 ms | 258 ms |
+| j1099 | 16.6 s | 16.8 s | 2921 ms | 2619 ms |
+
+All four runs found a Strat. j154 is found in about half the time, j1099 is unchanged. The run without the test repeats the 13.1 s of the gh-683 run. What is left on j154 after the walk is the certifier: its order and its cost per candidate are the next lever.
+
+`NoTurnFreeAirExactTest.droppedSubtreesHoldNoScheduleTheFullSolveKeeps` builds a walk of 7 choices per segment on j154, j716 and j1099, solves all of its schedules fully and holds both tests to that: the subtree value of every node and vector is never under the best stored value of a schedule below it and within 1e-3 of it, a dropped node holds no schedule the full solve keeps, and the batched test agrees with the per schedule check on every choice. Four of five planted faults fail it (a choice missing from the rest table, a sprint variant without its shift, 16 directions instead of 256, no slack on the directions); a wrong sprint state after a choice does not.
+
+#### Search by change count without the library
+
+A research probe (`ChangeCountProbe`, kept as a patch outside the repo) walked every key schedule of j154 with a limited number of paid key changes, under the rules of the change levels (free changes to W, WA, WD on a jump tick or the tick after it, a dwell of 3 ticks), with the same two tests on a tick level table. j154 has 8.09e8 schedules at up to 2 changes, 5.43e10 at up to 3 and 2.28e12 at up to 4; its recorded Strat needs 4. Cloud, 4 threads, CPU: schedule by schedule the pool checks 6.7 million per second; with subtree drops the 2 change space is finished in 21.0 s, 9.3 percent of the 3 change space in 40 s and about 1 percent of the 4 change space in 60 s. That is about 50 times faster and still more than an hour for the level j154 needs. An audit of 800,019 schedules in dropped subtrees found none the full solve keeps. The recorded Strat scores 8.5e-5 where the kept schedules at up to 3 changes start at 4.06e-4 (median 0.0018), so the screen value separates it; the size of the space is what is missing, and that is what the library families cut down.
