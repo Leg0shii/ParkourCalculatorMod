@@ -68,6 +68,7 @@ public final class StructurePoolDriver {
         public double familyKeep = 0.01;
         public int familyCutPool = 128;
         public boolean familyExactFirst = true;
+        public int familySubtreeCuts = 8;
         public double familyReach = 0.06;
         public double familyInertiaShare = 0.25;
         public int familyAfterLevel = 1;
@@ -1266,7 +1267,7 @@ public final class StructurePoolDriver {
 
     private boolean familyRejects(int[] combos) {
         if (familyFast == null) return false;
-        double limit = familyInertia ? cfg.familyKeep + cfg.familyReach : familyLimit();
+        double limit = familyReject();
         boolean[] sprint = sprintABuf;
         int firstRun = -1;
         for (int t = 0; t < n; t++) {
@@ -1455,7 +1456,16 @@ public final class StructurePoolDriver {
                 starts[i] = familySegments[i].start;
                 options[i] = familySegments[i].cost.length;
             }
-            familyFast.layout(starts, options);
+            int[][][] keys = null;
+            if (cfg.familySubtreeCuts > 0) {
+                keys = new int[starts.length][][];
+                for (int i = 0; i < starts.length && keys != null; i++) {
+                    int end = i + 1 < starts.length ? starts[i + 1] : n;
+                    if ((i == 0 && starts[i] != 0) || familySegments[i].length != end - starts[i]) keys = null;
+                    else keys[i] = familySegments[i].keys;
+                }
+            }
+            familyFast.layout(starts, options, keys);
             familyFast.choose(0, head[0]);
             if (starts.length > 1) familyFast.choose(1, head[1]);
         }
@@ -1474,6 +1484,8 @@ public final class StructurePoolDriver {
 
     private boolean familyLate;
 
+    private byte[][] familyAlive;
+
     private void enumFamily(int[] combos, int index, int cost, int checkedGroups) {
         if (cancelled()) return;
         if (index >= familySegments.length) {
@@ -1491,14 +1503,51 @@ public final class StructurePoolDriver {
             pruned++;
             return;
         }
-        for (int i = 0; i < segment.cost.length; i++) {
+        boolean subtree = familyLate && cfg.familySubtreeCuts > 0 && index >= 2;
+        boolean last = index + 1 == familySegments.length;
+        int firstRun = -1;
+        if (subtree) {
+            boolean[] sprint = sprintABuf;
+            for (int t = 0; t < segment.start; t++) {
+                sprint[t] = NoTurnKeys.isRun(combos[t]);
+                if (sprint[t] && firstRun < 0) firstRun = t;
+            }
+            if (index == 2 && familyFast.subtreeRejected(index, combos, sprint, firstRun, familyReject(),
+                    cfg.familySubtreeCuts)) {
+                pruned++;
+                return;
+            }
+        }
+        int lo = 0;
+        while (lo < segment.cost.length && cost + segment.cost[lo] + familyMaxRest[index + 1] <= familyLo) lo++;
+        int hi = lo;
+        while (hi < segment.cost.length && cost + segment.cost[hi] + familyMinRest[index + 1] <= familyHi) hi++;
+        boolean filtered = false;
+        byte[] alive = null;
+        if (subtree && hi > lo) {
+            if (familyAlive == null || familyAlive.length != familySegments.length) familyAlive = new byte[familySegments.length][];
+            if (familyAlive[index] == null || familyAlive[index].length < segment.cost.length) {
+                familyAlive[index] = new byte[segment.cost.length];
+            }
+            alive = familyAlive[index];
+            filtered = familyFast.filterChoices(index, lo, hi, combos, sprintABuf, firstRun, familyReject(),
+                    cfg.familySubtreeCuts, alive);
+        }
+        for (int i = lo; i < hi; i++) {
             int next = cost + segment.cost[i];
-            if (next + familyMinRest[index + 1] > familyHi) break;
-            if (next + familyMaxRest[index + 1] <= familyLo) continue;
+            if (filtered && alive[i] == 0) {
+                if (last) scored++;
+                else pruned++;
+                continue;
+            }
             System.arraycopy(segment.keys[i], 0, combos, segment.start, segment.length);
             if (familyLate) familyFast.choose(index, i);
             enumFamily(combos, index + 1, next, active);
         }
+    }
+
+    private double familyReject() {
+        return familyInertia ? cfg.familyKeep + cfg.familyReach : familyLimit();
     }
 
     private void trimPool() {

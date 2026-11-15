@@ -175,4 +175,171 @@ public class NoTurnFreeAirExactTest {
             assertTrue(capture + " dropped nothing", dropped > 0);
         }
     }
+
+    @Test
+    public void droppedSubtreesHoldNoScheduleTheFullSolveKeeps() throws Exception {
+        StructurePoolDriver.Config cfg = new StructurePoolDriver.Config();
+        String[] captures = {"hpk/d12/j154_1bm_Head_Butterfly_Neo", "hpk/d11/j716-1bm_Cobblewall_to_Cobblewall_Winged_Neo",
+                "hpk/d11/j1099-1.1875bm_Head_Butterfly_Neo_fail"};
+        java.util.Random random = new java.util.Random(685L);
+        double limit = cfg.familyKeep + 1.0e-12;
+        long nodeDrops = 0;
+        long choiceDrops = 0;
+        for (String capture : captures) {
+            NoTurnProblem p = NoTurnCapture.problem(capture);
+            FreeAirExact.Tables tables = FreeAirExact.Tables.of(p, cfg.turnCombo, cfg.allowJa);
+            int cuts = 32;
+            FreeAirExact.Screen pooled = new FreeAirExact.Screen(tables, cuts);
+            FreeAirExact.Screen full = new FreeAirExact.Screen(tables);
+            int count = p.jumpTicks.length + (p.jumpTicks[0] > 0 ? 1 : 0);
+            int[] starts = new int[count];
+            for (int i = 0; i < p.jumpTicks.length; i++) starts[i + count - p.jumpTicks.length] = p.jumpTicks[i];
+            int[] ends = new int[count];
+            for (int i = 0; i < count; i++) ends[i] = i + 1 < count ? starts[i + 1] : p.n;
+            int width = 7;
+            int[] options = new int[count];
+            int[][][] keys = new int[count][width][];
+            int[] human = p.baseCombos();
+            for (int segment = 0; segment < count; segment++) {
+                options[segment] = width;
+                int plain = segment == 0 ? 0 : random.nextInt(width);
+                for (int option = 0; option < width; option++) {
+                    int[] block = java.util.Arrays.copyOfRange(human, starts[segment], ends[segment]);
+                    int edits = option == plain ? 0 : 1 + random.nextInt(2);
+                    for (int e = 0; e < edits; e++) {
+                        int t = random.nextInt(block.length);
+                        int combo = random.nextInt(NoTurnKeys.COUNT);
+                        int end = Math.min(block.length, t + 1 + random.nextInt(3));
+                        for (; t < end; t++) block[t] = combo;
+                    }
+                    keys[segment][option] = block;
+                }
+            }
+            int[] span = new int[count + 1];
+            span[count] = 1;
+            for (int i = count - 1; i >= 0; i--) span[i] = span[i + 1] * width;
+            int leaves = span[0];
+            int[] combos = new int[p.n];
+            boolean[] sprint = new boolean[p.n];
+            boolean[][] variant = new boolean[3][p.n];
+            double[][] reached = new double[leaves][3];
+            for (int leaf = 0; leaf < leaves; leaf++) {
+                int firstRun = place(keys, starts, span, leaf, 0, count, combos, sprint);
+                for (int kind = 0; kind <= 2; kind++) {
+                    for (int t = 0; t < p.n; t++) variant[kind][t] = sprint[t] && t >= firstRun + kind;
+                    reached[leaf][kind] = full.solve(combos, variant[kind], Double.POSITIVE_INFINITY).primal;
+                }
+                if (leaf % 7 == 0) pooled.solve(combos, sprint, cfg.familyKeep);
+            }
+            assertTrue(capture + " stored no reject", pooled.poolSolves() > 0);
+            int[] stored = new int[leaves];
+            double[][][] value = new double[leaves][3][];
+            pooled.layout(starts, options, keys);
+            for (int leaf = 0; leaf < leaves; leaf++) {
+                int firstRun = place(keys, starts, span, leaf, 0, count, combos, sprint);
+                stored[leaf] = pooled.survivors(combos, sprint, firstRun, cfg.familyKeep);
+            }
+            for (int leaf = 0; leaf < leaves; leaf++) {
+                int firstRun = place(keys, starts, span, leaf, 0, count, combos, sprint);
+                for (int kind = 0; kind <= 2; kind++) {
+                    for (int t = 0; t < p.n; t++) variant[kind][t] = sprint[t] && t >= firstRun + kind;
+                    value[leaf][kind] = pooled.storedValues(combos, variant[kind]);
+                }
+            }
+            double loosest = 0.0;
+            for (int index = 2; index < count; index++) {
+                for (int prefix = 0; prefix < leaves / span[index]; prefix++) {
+                    int base = prefix * span[index];
+                    pooled.layout(starts, options, keys);
+                    int firstRun = place(keys, starts, span, base, 0, index, combos, sprint);
+                    for (int segment = 0; segment < index; segment++) pooled.choose(segment, base / span[segment + 1] % width);
+                    double[] bound = pooled.subtreeValues(index, combos, sprint, firstRun);
+                    String label = capture + " segment " + index + " after " + NoTurnKeys.describe(
+                            java.util.Arrays.copyOf(combos, starts[index]));
+                    if (bound == null) continue;
+                    for (int c = 0; c < bound.length / 3; c++) {
+                        for (int kind = 0; kind <= 2; kind++) {
+                            double lowest = Double.POSITIVE_INFINITY;
+                            for (int leaf = base; leaf < base + span[index]; leaf++) {
+                                lowest = Math.min(lowest, value[leaf][kind][c]);
+                            }
+                            assertTrue(label + " vector " + c + " variant " + kind + " subtree value " + bound[3 * c + kind]
+                                    + " above its lowest schedule " + lowest, bound[3 * c + kind] <= lowest + 1.0e-11);
+                            loosest = Math.max(loosest, lowest - bound[3 * c + kind]);
+                        }
+                    }
+                }
+            }
+            assertTrue(capture + " subtree values are loose by " + loosest, loosest < 1.0e-3);
+            long leafDrops = 0;
+            byte[] alive = new byte[width];
+            for (int index = 2; index < count; index++) {
+                for (int prefix = 0; prefix < leaves / span[index]; prefix++) {
+                    int base = prefix * span[index];
+                    pooled.layout(starts, options, keys);
+                    int firstRun = place(keys, starts, span, base, 0, index, combos, sprint);
+                    for (int segment = 0; segment < index; segment++) pooled.choose(segment, base / span[segment + 1] % width);
+                    String label = capture + " segment " + index + " after " + NoTurnKeys.describe(
+                            java.util.Arrays.copyOf(combos, starts[index]));
+                    double[] bound = pooled.subtreeValues(index, combos, sprint, firstRun);
+                    boolean expected = bound != null && rejectsAll(bound, limit) == 7;
+                    boolean dropped = pooled.subtreeRejected(index, combos, sprint, firstRun, cfg.familyKeep, cuts);
+                    assertEquals(label + " subtree decision", expected, dropped);
+                    if (dropped) {
+                        nodeDrops++;
+                        for (int leaf = base; leaf < base + span[index]; leaf++) {
+                            assertEquals(label + " dropped, schedule " + leaf + " passes the stored rejects", 0, stored[leaf]);
+                            for (int kind = 0; kind <= 2; kind++) {
+                                assertTrue(label + " dropped, schedule " + leaf + " variant " + kind + " reaches "
+                                        + reached[leaf][kind], reached[leaf][kind] > cfg.familyKeep);
+                            }
+                        }
+                    }
+                    boolean filtered = pooled.filterChoices(index, 0, width, combos, sprint, firstRun, cfg.familyKeep, cuts, alive);
+                    if (index + 1 == count) assertEquals(label + " last choices filtered", bound != null, filtered);
+                    if (!filtered) continue;
+                    byte[] masks = alive.clone();
+                    for (int option = 0; option < width; option++) {
+                        int from = base + option * span[index + 1];
+                        if (index + 1 == count) {
+                            assertEquals(label + " choice " + option, stored[from], masks[option]);
+                            leafDrops += 3 - Integer.bitCount(masks[option]);
+                            continue;
+                        }
+                        System.arraycopy(keys[index][option], 0, combos, starts[index], ends[index] - starts[index]);
+                        for (int t = starts[index]; t < ends[index]; t++) sprint[t] = NoTurnKeys.isRun(combos[t]);
+                        pooled.choose(index, option);
+                        int child = rejectsAll(pooled.subtreeValues(index + 1, combos, sprint, firstRun), limit);
+                        assertEquals(label + " choice " + option, 7 & ~child, masks[option]);
+                        choiceDrops += Integer.bitCount(child);
+                    }
+                }
+            }
+            assertTrue(capture + " dropped no last choice", leafDrops > 0);
+        }
+        assertTrue("dropped no segment node", nodeDrops > 0);
+        assertTrue("dropped no choice with a free rest", choiceDrops > 0);
+    }
+
+    private static int place(int[][][] keys, int[] starts, int[] span, int leaf, int from, int to, int[] combos,
+                             boolean[] sprint) {
+        int width = keys[0].length;
+        for (int segment = from; segment < to; segment++) {
+            int[] block = keys[segment][leaf / span[segment + 1] % width];
+            System.arraycopy(block, 0, combos, starts[segment], block.length);
+        }
+        int end = to < starts.length ? starts[to] : combos.length;
+        int firstRun = -1;
+        for (int t = 0; t < end; t++) {
+            sprint[t] = NoTurnKeys.isRun(combos[t]);
+            if (sprint[t] && firstRun < 0) firstRun = t;
+        }
+        return firstRun;
+    }
+
+    private static int rejectsAll(double[] values, double limit) {
+        int rejected = 0;
+        for (int i = 0; i < values.length; i++) if (values[i] > limit) rejected |= 1 << (i % 3);
+        return rejected;
+    }
 }
