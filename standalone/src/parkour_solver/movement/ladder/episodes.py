@@ -1,7 +1,7 @@
 import copy
 
 from parkour_solver.physics.vertical import REST_CARRY, f32
-from parkour_solver.numerics.model import integer
+from parkour_solver.schema import integer
 from parkour_solver.movement.contact_profiles import contact_profile
 from parkour_solver.movement.ladder.schedules import trace_ladder_schedule
 from parkour_solver.movement.ladder.contacts import climb_contacts

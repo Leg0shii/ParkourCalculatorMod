@@ -46,7 +46,7 @@ class WorkerBoundTests(unittest.TestCase):
             from unittest.mock import patch
             from parkour_solver.numerics import worker
             from parkour_solver.numerics.model import prepare,validate
-            from tests.unit.numerics.test_model import problem
+            from tests.support.numerical_model import problem
             from parkour_solver.numerics.constraints import reduce_walls
             request = problem(2)
             request.update(velocity=[0.,0.],magnitude=[.1,.1],base=[0.,0.],yaw=[90.,90.])

@@ -9,7 +9,7 @@ import unittest
 from unittest import mock
 
 import parkour_solver.numerics.solver as solver
-from tests.unit.numerics.test_model import problem
+from tests.support.numerical_model import problem
 
 
 class ProcessTests(unittest.TestCase):

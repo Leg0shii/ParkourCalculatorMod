@@ -1,12 +1,13 @@
 import copy
 import time
 
-from parkour_solver.numerics import prepare, validate; from parkour_solver.numerics import solve
+from parkour_solver.numerics import prepare, validate
+from parkour_solver.numerics import solve
 from parkour_solver.physics.vertical import f32
 from parkour_solver.movement.contact_combinations import compile_contact_events, merge_contacts
 from parkour_solver.scene.ladders import entry_channels, region_contains, schedule_constraints
 from parkour_solver.numerics.builders import _raw_candidate, _vertical, ladder_waypoints, waypoint_seed
-from parkour_solver.scene.geometry import check_geometry
+from parkour_solver.validation.scene import check_geometry
 
 
 def build_entry_problem(context, column, wall, channel, entry, compiler, seconds, *,

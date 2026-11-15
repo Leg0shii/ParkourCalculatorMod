@@ -70,8 +70,8 @@ class GenericCompositionTests(unittest.TestCase):
 
 class GenericOpenGenerationTests(unittest.TestCase):
     def test_all_stepping_cases_end_at_their_event_instead_of_a_forced_landing_tail(self):
-        from tests.unit.movement.test_stepping_cases import fixture
-        from parkour_solver.search.support_profiles import prepare_scene
+        from tests.support.stepping_cases import fixture
+        from parkour_solver.scene.normalize import prepare_scene
         for name in ['normal_step', 'slab_boost', 'blip', 'blip_up', 'corner_blip_up', 'corner_jump_cancel', 'grind']:
             data = fixture(name)
             scene = prepare_scene(data['request'])
@@ -138,8 +138,9 @@ class GenericQueueTests(unittest.TestCase):
     def test_new_registered_types_and_cost_order_need_no_pair_specific_queue_logic(self):
         import json
         from pathlib import Path
-        from parkour_solver.search.support_profiles import prepare_scene
-        from parkour_solver.search.movement import iter_movement_programs, movement_settings
+        from parkour_solver.scene.normalize import prepare_scene
+        from parkour_solver.search.movement import iter_movement_programs
+        from parkour_solver.movement.settings import movement_settings
         from parkour_solver.movement.generation import GENERATORS, register_movement_type
         from parkour_solver.movement.units import MOVEMENT_TYPES
         from parkour_solver.movement.program import movement_choice
@@ -170,7 +171,7 @@ class GenericQueueTests(unittest.TestCase):
         import threading
         import time
         from pathlib import Path
-        from parkour_solver.search.support_profiles import prepare_scene
+        from parkour_solver.scene.normalize import prepare_scene
         from parkour_solver.search.movement import iter_movement_programs
         scene = prepare_scene(json.loads((AUTONOMY_DATA / 'fixtures/generic-grind-blip.json').read_text()))
         cancel = threading.Event()
@@ -185,8 +186,10 @@ class GenericQueueTests(unittest.TestCase):
 import json
 import os
 from pathlib import Path
-from parkour_solver.search.repair import floor_checks, solve_contact_branches
-from parkour_solver.search.support_profiles import prepare_scene, find_blocks
+from parkour_solver.constraints.contacts import floor_checks
+from parkour_solver.search.repair import solve_contact_branches
+from parkour_solver.scene.normalize import prepare_scene
+from parkour_solver.search.support_profiles import find_blocks
 from parkour_solver.bridge.compiler import JavaCompiler
 from parkour_solver.movement.program import compile_program
 
@@ -255,7 +258,7 @@ class GenericNumericalTests(unittest.TestCase):
         self.assertEqual([t for t, jump in enumerate(best['plan']['jump']) if jump], [0, 8])
 
     def test_two_airborne_ladders_continue_into_blip_without_a_support_reset(self):
-        from tests.unit.movement.test_ladder_composition import airborne_case
+        from tests.support.ladder_composition import airborne_case
         from parkour_solver.movement.ladder.generation import ladder_event_choice
         scene, _, previous = airborne_case()
         scene['blocks'].append(dict(id='goal', sourceBlock='goal', solidIndex=3, bounds=[1,2,3,4], top=3.5))

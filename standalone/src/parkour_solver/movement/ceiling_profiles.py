@@ -1,7 +1,7 @@
 import copy
 
 from parkour_solver.physics.vertical import REST_CARRY, f32, vertical_move, vertical_step, vertical_carry
-from parkour_solver.numerics.model import integer, number
+from parkour_solver.schema import integer, number
 from parkour_solver.movement.profiles import ordinary_jump_profile
 from parkour_solver.scene.geometry import BODY_HEIGHT
 
@@ -41,7 +41,6 @@ def ceiling_sequence(schedule, box, *, start=0):
             return []
         vy = vertical_carry(move, schedule['ladderTicks'][tick + 1], schedule['trace']['hit'][tick])
     return selected
-
 
 
 def ceiling_profile(source_top, target_top, box, solid_index, block_id, *, max_inputs=200):

@@ -9,7 +9,7 @@ import hashlib
 import json
 from pathlib import Path
 
-from parkour_solver.search.support_profiles import prepare_scene
+from parkour_solver.scene.normalize import prepare_scene
 from parkour_solver.search.engine import _key
 from parkour_solver.movement.program import compile_program
 from parkour_solver.scene.route import prepare_route, schedule
@@ -209,7 +209,7 @@ def extract(reports):
 
 def replay(audit,manifest):
     from parkour_solver.bridge.compiler import JavaCompiler
-    from parkour_solver.scene.geometry import check_geometry
+    from parkour_solver.validation.scene import check_geometry
     with JavaCompiler(json.loads(manifest.read_text())) as compiler:
         for program in audit['programs']:
             program['coefficients']=compiler.compile(program['compiledRoute'],program['basePlan'],5)

@@ -1,9 +1,9 @@
 import time
 
 try:
-    from parkour_solver.numerics.model import validate
+    from parkour_solver.validation.numerical import validate
 except ImportError:
-    from parkour_solver.numerics.model import validate
+    from parkour_solver.validation.numerical import validate
 
 
 class Incumbent:

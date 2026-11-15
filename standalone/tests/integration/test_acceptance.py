@@ -1,14 +1,9 @@
+from tests.support.acceptance import NoMovementCompiler
 import unittest
 from unittest.mock import patch
 
 from parkour_solver.scene.route import HALF_WIDTH
 from parkour_solver.search.ordered_route import find_route
-
-
-class NoMovementCompiler:
-    def compile(self, route, plan, seconds):
-        return {'magnitude': [0.0] * plan['ticks'], 'friction': [.91] * plan['ticks'],
-                'base': [0.0] * plan['ticks']}
 
 
 class AcceptanceTests(unittest.TestCase):

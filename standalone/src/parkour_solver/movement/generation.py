@@ -1,6 +1,6 @@
 import copy
 
-from parkour_solver.numerics.model import integer
+from parkour_solver.schema import integer
 from parkour_solver.movement.units import MOVEMENT_TYPES, movement_unit
 
 

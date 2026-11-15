@@ -9,7 +9,7 @@ import subprocess
 import sys
 import threading
 
-from parkour_solver.search.support_profiles import prepare_scene
+from parkour_solver.scene.normalize import prepare_scene
 from parkour_solver.bridge.compiler import JavaCompiler
 from research.legacy_cell_routes.checkpoint_experiment import brief, replay_witness
 from parkour_solver.search.engine import find_checkpoint_route
@@ -20,8 +20,6 @@ def run_fixture(fixture, compiler, *, gap=None, settings=None, python_executable
         spatial_points=fixture.get('spatialPoints'),objective_gap=gap,
         python_executable=python_executable,cancel_event=cancel_event,
         **dict(fixture.get('settings',{}),**(settings or {})))
-
-
 
 
 def main():

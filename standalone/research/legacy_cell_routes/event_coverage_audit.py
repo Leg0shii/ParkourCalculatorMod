@@ -1,6 +1,6 @@
 """Separate raw, semantic-language and materialized-guide coverage evidence."""
 
-from parkour_solver.search.support_profiles import prepare_scene
+from parkour_solver.scene.normalize import prepare_scene
 from research.legacy_cell_routes.checkpoint_experiment import replay_witness
 from parkour_solver.spatial.event_routes import build_route_domain, build_event_graph, initial_cursor, next_goals, support_episodes
 from parkour_solver.search.events.engine import discovery_settings

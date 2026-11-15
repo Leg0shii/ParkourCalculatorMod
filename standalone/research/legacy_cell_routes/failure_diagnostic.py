@@ -9,12 +9,14 @@ import sys
 import time
 from unittest.mock import patch
 
-from parkour_solver.search.repair import contact_conflicts, floor_checks, solve_contact_branches, validate_vertical_schedule
-from parkour_solver.search.support_profiles import prepare_scene
+from parkour_solver.constraints.contacts import contact_conflicts, floor_checks
+from parkour_solver.search.repair import solve_contact_branches; from parkour_solver.validation.vertical import validate_vertical_schedule
+from parkour_solver.scene.normalize import prepare_scene
 from parkour_solver.bridge.compiler import JavaCompiler
 from parkour_solver.movement.program import compile_program, truncate_program
-from parkour_solver.search.movement import iter_movement_programs, movement_settings, screen_program
-from parkour_solver.scene.geometry import check_geometry
+from parkour_solver.search.movement import iter_movement_programs, screen_program
+from parkour_solver.movement.settings import movement_settings
+from parkour_solver.validation.scene import check_geometry
 from parkour_solver.scene.route import prepare_route, schedule, supports
 import parkour_solver.search.ordered_route as search
 from parkour_solver.numerics import prepare, validate
@@ -24,7 +26,8 @@ from parkour_solver.spatial.checkpoints import checkpoint, retain_prefix
 from parkour_solver.search.compat.decision_windows import DecisionPolicy, plan_windows
 from research.legacy_cell_routes.generation_diagnostic import KeyAudit, QueueAudit, instrumented_generator, save
 from parkour_solver.spatial.cells import decompose
-from parkour_solver.validation.scoped_scene import CorridorAdapter, CountingCompiler, SearchWork
+from parkour_solver.validation.scoped_scene import CorridorAdapter
+from parkour_solver.bridge.counting import CountingCompiler; from parkour_solver.search.work import SearchWork
 from parkour_solver.spatial.compat.corridors import audit_candidate, corridor_for_points, landmarks
 
 

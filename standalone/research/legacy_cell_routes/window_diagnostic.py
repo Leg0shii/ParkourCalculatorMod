@@ -8,7 +8,7 @@ import subprocess
 import sys
 import time
 
-from parkour_solver.search.support_profiles import prepare_scene
+from parkour_solver.scene.normalize import prepare_scene
 from parkour_solver.bridge.compiler import JavaCompiler
 from parkour_solver.movement.program import truncate_program
 from research.legacy_cell_routes.checkpoint_experiment import brief, replay_witness
@@ -16,7 +16,8 @@ from parkour_solver.search.engine import _key, _motion_bound, evaluate_program, 
 from parkour_solver.spatial.checkpoints import checkpoint, retain_prefix
 from parkour_solver.search.compat.decision_windows import DecisionPolicy, plan_windows, score_features
 from parkour_solver.spatial.cells import decompose
-from parkour_solver.validation.scoped_scene import CorridorAdapter, SearchWork
+from parkour_solver.validation.scoped_scene import CorridorAdapter
+from parkour_solver.search.work import SearchWork
 from parkour_solver.spatial.compat.corridors import corridor_for_points, landmarks
 from research.legacy_cell_routes.window_experiment import save
 

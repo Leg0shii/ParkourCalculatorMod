@@ -1,7 +1,7 @@
 import copy
 
 from parkour_solver.physics.vertical import f32, vertical_move
-from parkour_solver.numerics.model import number
+from parkour_solver.schema import number
 
 
 KIND = 'landing_height_region'

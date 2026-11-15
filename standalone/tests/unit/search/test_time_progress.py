@@ -1,15 +1,8 @@
+from tests.support.time_progress import label
 import copy
 import unittest
 
 from parkour_solver.search.compat.time_progress import retain_two_goals
-
-
-def label(name,tick,score,*,clock='clock:10',goal='landing:G'):
-    state=dict(motion=dict(schedule=['A']*10,phase='same',jumps=1,runs=0),forwardVelocity=0.,speed=0.)
-    record=dict(id=name,required_spatial=[goal],required_clocks=[clock],
-        spatial_results={goal:dict(status='feasible' if tick is not None else 'unknown',ticks=tick)},
-        clock_results={clock:dict(status='feasible' if score is not None else 'unknown',objective=score,state=state)})
-    return record,dict(name=name)
 
 
 class TimeProgressTests(unittest.TestCase):
@@ -72,7 +65,7 @@ class ComparisonAuditTests(unittest.TestCase):
     def test_numerical_error_cannot_be_reported_as_completed_reference(self):
         from unittest.mock import patch
         from research.legacy_cell_routes.comparison_audit import run_full_audit
-        from tests.unit.spatial.test_checkpoint_guidance import flat_scene
+        from tests.support.checkpoint_guidance import flat_scene
         scene=flat_scene()
         source=dict(corridor=dict(points=[[.5,1,.5],[5.5,1,.5]]))
         entries=[dict(id='error',selection='resource_cap',

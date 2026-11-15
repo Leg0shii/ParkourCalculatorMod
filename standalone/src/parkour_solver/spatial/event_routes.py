@@ -7,7 +7,7 @@ reachability and its individual air-cell walks are never route identities.
 import json
 from dataclasses import asdict, dataclass
 
-from parkour_solver.search.movement import movement_settings
+from parkour_solver.movement.settings import movement_settings
 from parkour_solver.scene.geometry import BODY_HEIGHT, expanded_box
 from parkour_solver.scene.route import HALF_WIDTH
 from parkour_solver.spatial.cells import contains, decompose, intersection

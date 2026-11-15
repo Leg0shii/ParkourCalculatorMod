@@ -1,6 +1,6 @@
 import copy
 
-from parkour_solver.numerics.model import integer
+from parkour_solver.schema import integer
 
 
 MOVEMENT_TYPES = {'normal': {'ladder': False}, 'ladder_climb': {'ladder': True},

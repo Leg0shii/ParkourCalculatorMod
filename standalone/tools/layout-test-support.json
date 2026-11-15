@@ -1,0 +1,148 @@
+[
+  {
+    "source": "tests/integration/test_acceptance.py",
+    "destination": "tests/support/acceptance.py",
+    "symbols": [
+      "NoMovementCompiler"
+    ]
+  },
+  {
+    "source": "tests/integration/test_movement_contacts.py",
+    "destination": "tests/support/movement_contacts.py",
+    "symbols": [
+      "small_request"
+    ]
+  },
+  {
+    "source": "tests/integration/test_repair_resume.py",
+    "destination": "tests/support/repair_resume.py",
+    "symbols": [
+      "route",
+      "best",
+      "outcome",
+      "VERTICAL"
+    ]
+  },
+  {
+    "source": "tests/unit/movement/test_ladder_composition.py",
+    "destination": "tests/support/ladder_composition.py",
+    "symbols": [
+      "airborne_case"
+    ]
+  },
+  {
+    "source": "tests/unit/movement/test_ladder_schedules.py",
+    "destination": "tests/support/ladder_schedules.py",
+    "symbols": [
+      "request"
+    ]
+  },
+  {
+    "source": "tests/unit/movement/test_stepping_cases.py",
+    "destination": "tests/support/stepping_cases.py",
+    "symbols": [
+      "FIXTURES",
+      "fixture"
+    ]
+  },
+  {
+    "source": "tests/unit/numerics/test_model.py",
+    "destination": "tests/support/numerical_model.py",
+    "symbols": [
+      "problem"
+    ]
+  },
+  {
+    "source": "tests/unit/reachability/test_proposal_analysis.py",
+    "destination": "tests/support/proposal_analysis.py",
+    "symbols": [
+      "Coefficients"
+    ]
+  },
+  {
+    "source": "tests/unit/search/test_anchor_policy.py",
+    "destination": "tests/support/anchor_policy.py",
+    "symbols": [
+      "scene",
+      "history"
+    ]
+  },
+  {
+    "source": "tests/unit/search/test_block_search.py",
+    "destination": "tests/support/block_coefficients.py",
+    "symbols": [
+      "Coefficients"
+    ]
+  },
+  {
+    "source": "tests/unit/search/test_depth_first.py",
+    "destination": "tests/support/depth_first.py",
+    "symbols": [
+      "program"
+    ]
+  },
+  {
+    "source": "tests/unit/search/test_minimum_runs.py",
+    "destination": "tests/support/minimum_runs.py",
+    "symbols": [
+      "flight"
+    ]
+  },
+  {
+    "source": "tests/unit/search/test_search.py",
+    "destination": "tests/support/ordered_route.py",
+    "symbols": [
+      "route"
+    ]
+  },
+  {
+    "source": "tests/unit/search/test_time_progress.py",
+    "destination": "tests/support/time_progress.py",
+    "symbols": [
+      "label"
+    ]
+  },
+  {
+    "source": "tests/unit/spatial/test_cell_geometry.py",
+    "destination": "tests/support/cell_geometry.py",
+    "symbols": [
+      "scene_for"
+    ]
+  },
+  {
+    "source": "tests/unit/spatial/test_cell_routes.py",
+    "destination": "tests/support/cell_routes.py",
+    "symbols": [
+      "side_scene"
+    ]
+  },
+  {
+    "source": "tests/unit/spatial/test_checkpoint_guidance.py",
+    "destination": "tests/support/checkpoint_guidance.py",
+    "symbols": [
+      "flat_scene",
+      "programs"
+    ]
+  },
+  {
+    "source": "tests/unit/spatial/test_route_progress.py",
+    "destination": "tests/support/route_progress.py",
+    "symbols": [
+      "line_route"
+    ]
+  },
+  {
+    "source": "tests/unit/spatial/test_route_regions.py",
+    "destination": "tests/support/route_regions.py",
+    "symbols": [
+      "task_scene"
+    ]
+  },
+  {
+    "source": "tests/unit/spatial/test_semantic_routes.py",
+    "destination": "tests/support/semantic_routes.py",
+    "symbols": [
+      "support_scene"
+    ]
+  }
+]

@@ -4,11 +4,12 @@ import math
 import time
 
 from parkour_solver.movement.program import program_search_key, truncate_program
-from parkour_solver.search.movement import iter_movement_programs, movement_settings, screen_program
+from parkour_solver.search.movement import iter_movement_programs, screen_program
+from parkour_solver.movement.settings import movement_settings
 from parkour_solver.search.ranking import candidate_rank
-from parkour_solver.numerics.model import integer, number
+from parkour_solver.schema import integer, number
 from parkour_solver.spatial.checkpoints import checkpoint
-from parkour_solver.search.compat.time_progress import generation_exhausted
+from parkour_solver.search.completion import generation_exhausted
 
 
 def goal_spec(scene, spec=None):
@@ -46,7 +47,6 @@ def goal_key(scene,spec,corridor=None):
                            initial=scene['initial']),sort_keys=True)
 
 
-
 def region_arrival(candidate,spec,adapter):
     for tick in range(spec['first_tick'],len(candidate['positions'])):
         x,z=candidate['positions'][tick]
@@ -58,7 +58,6 @@ def region_arrival(candidate,spec,adapter):
         if checkpoint(adapter.corridor,adapter.gates,kwargs).stage(prefix,adapter.gates)['accepted']:
             return tick
     return None
-
 
 
 def landing_satisfied(scene,block_id,vertical):

@@ -9,9 +9,10 @@ import sys
 import tempfile
 import unittest
 
-from parkour_solver.numerics.model import prepare, validate
+from parkour_solver.numerics.model import prepare
+from parkour_solver.validation.numerical import validate
 from parkour_solver.numerics.solver import solve
-from tests.unit.numerics.test_model import problem
+from tests.support.numerical_model import problem
 
 
 RUNTIME = os.environ.get('PKC_IPOPT_PYTHON')

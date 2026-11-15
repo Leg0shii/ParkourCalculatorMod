@@ -13,8 +13,8 @@ from parkour_solver.search.bounds.remaining import remaining_bound
 from parkour_solver.search.bounds.flight import transfer_bounds, transfer_bound, state_covers
 from parkour_solver.movement.program import append_choice, boundary_state
 from parkour_solver.movement.normal import event_choice
-from tests.unit.spatial.test_checkpoint_guidance import flat_scene
-from tests.unit.reachability.test_proposal_analysis import Coefficients
+from tests.support.checkpoint_guidance import flat_scene
+from tests.support.proposal_analysis import Coefficients
 
 
 class TransferTimeBoundTests(unittest.TestCase):
@@ -24,7 +24,7 @@ class TransferTimeBoundTests(unittest.TestCase):
         cls.data=json.loads(gzip.decompress((base/'anchor-contexts.json.gz').read_bytes()))
 
     def real11(self):
-        from parkour_solver.search.support_profiles import prepare_scene
+        from parkour_solver.scene.normalize import prepare_scene
         x=self.data;s=prepare_scene(x['request'])
         s['movementSearch']['types']=['normal','ceiling','stepping']
         g=build_guides(x['domain'],x['policy']);c=Coefficients()

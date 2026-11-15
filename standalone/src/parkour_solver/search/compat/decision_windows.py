@@ -1,6 +1,6 @@
 import copy
 
-from parkour_solver.numerics.model import integer, number
+from parkour_solver.schema import integer, number
 
 
 KINDS = ('jump', 'stepping', 'ceiling', 'landing', 'passage')

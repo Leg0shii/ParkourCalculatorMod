@@ -5,10 +5,12 @@ import os
 from pathlib import Path
 import unittest
 
-from parkour_solver.search.repair import floor_checks, solve_contact_branches
-from parkour_solver.search.support_profiles import prepare_scene, compile_block_path
+from parkour_solver.constraints.contacts import floor_checks
+from parkour_solver.search.repair import solve_contact_branches
+from parkour_solver.scene.normalize import prepare_scene
+from parkour_solver.search.support_profiles import compile_block_path
 from parkour_solver.bridge.compiler import JavaCompiler
-from parkour_solver.scene.geometry import check_geometry
+from parkour_solver.validation.scene import check_geometry
 from parkour_solver.numerics import prepare, validate
 
 

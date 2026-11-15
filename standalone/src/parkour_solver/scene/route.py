@@ -2,8 +2,8 @@ import copy
 import math
 
 from parkour_solver.physics.vertical import f32
-from parkour_solver.numerics.model import integer, number
-from parkour_solver.search.ranking import objective_spec
+from parkour_solver.schema import integer, number
+from parkour_solver.scene.objectives import objective_spec
 
 
 HALF_WIDTH = f32(0.6) / 2

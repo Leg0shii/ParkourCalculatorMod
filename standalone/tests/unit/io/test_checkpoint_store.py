@@ -9,8 +9,8 @@ from unittest.mock import patch
 
 from parkour_solver.io.checkpoint_store import CheckpointStore, read_report
 from parkour_solver.io.search_checkpoint import SearchCheckpoint
-import tests.integration.test_repair_resume as repair_tests
-import tests.unit.search.test_depth_first as dfs_tests
+import tests.support.repair_resume as repair_tests
+import tests.support.depth_first as dfs_tests
 
 
 class StoreCase(unittest.TestCase):
@@ -138,7 +138,7 @@ class SearchCheckpointTests(StoreCase):
         self.assertEqual(restored['validation'],[dict(passed=True)])
 
     def test_completed_repair_is_not_resolved_after_persistent_resume(self):
-        helper = repair_tests.RepairResumeTests()
+        helper = repair_tests.RepairHarness()
         first = helper.invoke(repair_tests.route(),lambda *a,**k:repair_tests.outcome(),lambda *a:dict(accepted=True))
         state = self.state()
         with CheckpointStore(self.path) as store:
@@ -154,7 +154,7 @@ class SearchCheckpointTests(StoreCase):
         self.assertEqual(second['attempts'],[])
 
     def test_dfs_continues_siblings_without_repeating_completed_calls(self):
-        helper = dfs_tests.DepthFirstTests()
+        helper = dfs_tests.DepthFirstHarness()
         helper.calls = []
         with CheckpointStore(self.path) as store:
             helper.progress = SearchCheckpoint(store,{})
@@ -169,7 +169,7 @@ class SearchCheckpointTests(StoreCase):
         self.assertEqual(read_report(self.path)['result'],json.loads(json.dumps(second)))
 
     def test_dfs_mid_solve_publication_restores_the_active_candidate(self):
-        helper = dfs_tests.DepthFirstTests()
+        helper = dfs_tests.DepthFirstHarness()
         helper.calls, helper.interrupt_once = [], (17,30)
         with CheckpointStore(self.path) as store:
             helper.progress = SearchCheckpoint(store,{})
@@ -186,7 +186,7 @@ class SearchCheckpointTests(StoreCase):
         self.assertEqual(second['best']['candidate']['objective'],21.)
 
     def test_interrupted_repair_keeps_pending_branch_and_audit(self):
-        helper = repair_tests.RepairResumeTests()
+        helper = repair_tests.RepairHarness()
         state = self.state()
         with CheckpointStore(self.path) as store:
             writer = SearchCheckpoint(store,{})
@@ -213,7 +213,7 @@ class NativeCheckpointTests(StoreCase):
         from parkour_solver.bridge.compiler import JavaCompiler
         from parkour_solver.search.engine import find_checkpoint_route
         from parkour_solver.search.domain import InitialJumpDomain
-        from tests.unit.spatial.test_checkpoint_guidance import flat_scene
+        from tests.support.checkpoint_guidance import flat_scene
         scene=flat_scene();scene['movementSearch'].update(maxInputs=28,maxPrefixes=64)
         checked=[];owners=[];testcase=self
         class CheckedWriter(SearchCheckpoint):
@@ -238,8 +238,8 @@ class NativeCheckpointTests(StoreCase):
         from parkour_solver.bridge.compiler import JavaCompiler
         from parkour_solver.search.engine import find_checkpoint_route
         from research.legacy_cell_routes.checkpoint_experiment import replay_witness
-        from parkour_solver.search.domain import SupportOrder
-        from tests.unit.spatial.test_checkpoint_guidance import flat_scene
+        from parkour_solver.search.compat.support_order import SupportOrder
+        from tests.support.checkpoint_guidance import flat_scene
         scene = flat_scene()
         scene['movementSearch']['maxInputs'] = 20
         scene['objective'] = dict(axis='X',sense='MAX')

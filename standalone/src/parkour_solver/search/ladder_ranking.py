@@ -4,7 +4,7 @@ import time
 from collections import deque
 
 from parkour_solver.numerics import prepare, validate
-from parkour_solver.numerics.model import integer
+from parkour_solver.schema import integer
 from parkour_solver.movement.contacts import contact_signature, interleave_families
 
 

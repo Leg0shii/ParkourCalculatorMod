@@ -1,10 +1,11 @@
+from tests.support.anchor_policy import scene, history
 from tests.support.paths import AUTONOMY_DATA
 import copy
 import json
 import math
 import unittest
 
-from parkour_solver.search.support_profiles import prepare_scene
+from parkour_solver.scene.normalize import prepare_scene
 from parkour_solver.search.anchors.policy import audit, local_counts, priority, settings, visit_state, within_caps, single_jump_structure, transfer_structure
 from parkour_solver.spatial.anchor_guides import build_guides, classify, nearest, onward_objective
 from parkour_solver.search.anchors.adapter import AnchorAdapter
@@ -12,28 +13,7 @@ from parkour_solver.spatial.event_routes import build_route_domain, build_event_
 from parkour_solver.search.feasibility import node_identity, outcome, policy_spec
 from parkour_solver.observability.turns import record, replay, summary
 from parkour_solver.movement.program import empty_program
-from tests.unit.spatial.test_checkpoint_guidance import flat_scene
-
-
-def scene():
-    return prepare_scene(dict(version=1,sceneModel='collision_boxes',maxWallHits=0,
-        initial=dict(position=[.5,1,.5],velocity=[0,-.0784000015258789,0],yaw=0),
-        geometryBounds=[-5,-5,-5,12,10,10],startBlock='start',goalBlock='goal',blocks=[
-            dict(id='start',boxes=[[0,0,0,1,1,1]]),dict(id='mid',boxes=[[4,0,0,5,2,1]]),
-            dict(id='optional',boxes=[[6,0,0,7,2,1]]),dict(id='goal',boxes=[[0,0,2,1,3,3]])],
-        objective=dict(axis='Z',sense='MAX'),movementSearch=dict(types=['normal'],maxInputs=60)))
-
-
-def history(s,names):
-    p=empty_program(s['initial'],threshold=0.)
-    n=len(names)
-    p['profile'].update(airtime=n,position=[1.]*(n+1),velocity=[0.]*(n+1),
-        grounded=[True]*(n+1),jump=[True]*n,sneak=[False]*n,ladderTicks=[False]*(n+1))
-    p['profile']['contactEvents']=[dict(offset=i,axis='Y',direction=-1,
-        box=s['collisionScene']['solids'][next(b['solidIndex'] for b in s['blocks'] if b['id']==name)])
-        for i,name in enumerate(names)]
-    p['terminalSupport']=names[-1] if names else s['startBlock']
-    return p
+from tests.support.checkpoint_guidance import flat_scene
 
 
 class AnchorPolicyTests(unittest.TestCase):

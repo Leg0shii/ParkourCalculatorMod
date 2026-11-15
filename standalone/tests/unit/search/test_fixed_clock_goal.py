@@ -6,19 +6,19 @@ from pathlib import Path
 import time
 import unittest
 
-from parkour_solver.search.support_profiles import prepare_scene
+from parkour_solver.scene.normalize import prepare_scene
 from parkour_solver.spatial.checkpoints import Checkpoint, checkpoint
 from parkour_solver.search.engine import find_checkpoint_route
 from research.legacy_cell_routes.checkpoint_experiment import replay_witness
 from parkour_solver.spatial.compat.corridors import Corridor
 from parkour_solver.bridge.compiler import JavaCompiler
 from parkour_solver.search.movement import iter_movement_programs
-from tests.unit.spatial.test_checkpoint_guidance import flat_scene, programs
+from tests.support.checkpoint_guidance import flat_scene, programs
 
 
 class FixedClockTests(unittest.TestCase):
     def test_priority_proposes_the_actual_intermediate_contact_before_an_air_gap(self):
-        from parkour_solver.search.domain import SupportOrder
+        from parkour_solver.search.compat.support_order import SupportOrder
         scene=flat_scene()
         policy=SupportOrder(scene,['goal'],32)
         def first(priority):
@@ -92,7 +92,8 @@ class FixedClockNumericalTests(unittest.TestCase):
         from unittest.mock import patch
         from parkour_solver.spatial.cells import decompose
         from parkour_solver.spatial.compat.corridors import corridor_for_points, landmarks
-        from parkour_solver.validation.scoped_scene import CorridorAdapter, SearchWork
+        from parkour_solver.validation.scoped_scene import CorridorAdapter
+        from parkour_solver.search.work import SearchWork
         from parkour_solver.search.engine import evaluate_program, _motion_bound
         from parkour_solver.movement.normal import event_choice
         from parkour_solver.movement.program import empty_program, append_choice
@@ -125,7 +126,7 @@ class FixedClockNumericalTests(unittest.TestCase):
 
 class SupportOrderTests(unittest.TestCase):
     def test_route_order_preserves_timings_and_does_not_require_terminal_landing(self):
-        from parkour_solver.search.domain import SupportOrder
+        from parkour_solver.search.compat.support_order import SupportOrder
         scene=flat_scene()
         policy=SupportOrder(scene,['goal'],8)
         goal=scene['collisionScene']['solids'][1]

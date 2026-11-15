@@ -1,14 +1,16 @@
 import copy
 import time
 
-from parkour_solver.search.support_profiles import prepare_scene
-from parkour_solver.search.movement import iter_movement_programs, movement_settings, screen_program
+from parkour_solver.scene.normalize import prepare_scene
+from parkour_solver.search.movement import iter_movement_programs, screen_program
+from parkour_solver.movement.settings import movement_settings
 from parkour_solver.search.ranking import candidate_rank
-from parkour_solver.numerics.model import integer, number
+from parkour_solver.schema import integer, number
 from parkour_solver.spatial.cells import decompose
-from parkour_solver.validation.scoped_scene import CorridorAdapter, CountingCompiler, SearchWork
+from parkour_solver.validation.scoped_scene import CorridorAdapter
+from parkour_solver.bridge.counting import CountingCompiler; from parkour_solver.search.work import SearchWork
 from parkour_solver.spatial.compat.corridors import corridor_for_points, landmarks
-from parkour_solver.search.compat.time_progress import generation_exhausted
+from parkour_solver.search.completion import generation_exhausted
 
 
 def audit_pool(entries, evaluate, *, objective, incumbent=None, on_candidate=None):

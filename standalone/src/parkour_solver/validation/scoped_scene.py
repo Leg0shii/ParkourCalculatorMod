@@ -1,4 +1,5 @@
-from parkour_solver.search.work import SearchWork, CountingCompiler
+from parkour_solver.search.work import SearchWork
+from parkour_solver.bridge.counting import CountingCompiler
 import collections
 import copy
 import hashlib
@@ -9,10 +10,6 @@ from parkour_solver.spatial.cells import intersection
 from parkour_solver.spatial.compat.corridors import audit_candidate, horizontal_trace
 from parkour_solver.spatial.compat.corridor_guards import movement_regions
 from parkour_solver.scene.geometry import expanded_box
-
-
-
-
 
 
 class CorridorAdapter:

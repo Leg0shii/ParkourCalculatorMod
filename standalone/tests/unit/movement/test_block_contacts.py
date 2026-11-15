@@ -1,9 +1,10 @@
 import copy
 import unittest
 
-from parkour_solver.search.repair import avoid_contact_rows, contact_conflicts, floor_checks
+from parkour_solver.constraints.contacts import avoid_contact_rows, contact_conflicts, floor_checks
 from parkour_solver.movement.profiles import ordinary_jump_profile, runoff_profile, stair_jump_profile
-from parkour_solver.search.support_profiles import compile_block_path, prepare_scene
+from parkour_solver.search.support_profiles import compile_block_path
+from parkour_solver.scene.normalize import prepare_scene
 from parkour_solver.scene.route import schedule
 
 

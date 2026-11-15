@@ -2,7 +2,7 @@ import copy
 from dataclasses import asdict, dataclass
 import math
 
-from parkour_solver.numerics.model import integer, number
+from parkour_solver.schema import integer, number
 from parkour_solver.spatial.compat.corridors import crossings
 
 

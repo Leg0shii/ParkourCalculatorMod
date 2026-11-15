@@ -6,9 +6,9 @@ from pathlib import Path
 import unittest
 
 from parkour_solver.scene.route import schedule, supports
-from parkour_solver.search.repair import contact_conflicts
+from parkour_solver.constraints.contacts import contact_conflicts
 from parkour_solver.bridge.compiler import JavaCompiler
-from parkour_solver.scene.geometry import check_geometry
+from parkour_solver.validation.scene import check_geometry
 from parkour_solver.constraints.avoidance import DEFAULT_CAPS, gate_timeline, within_caps
 from parkour_solver.numerics import prepare, validate
 from parkour_solver.numerics.model import fingerprint

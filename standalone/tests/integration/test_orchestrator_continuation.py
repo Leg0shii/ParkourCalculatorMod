@@ -11,11 +11,12 @@ from unittest.mock import patch
 from parkour_solver.reachability.intervals import reachable_envelopes, interaction_reachability
 from parkour_solver.search.identity import solve_scope, processing_key, motion_record
 from parkour_solver.reachability.viability import prefix_viability
-from parkour_solver.search.movement import iter_movement_programs, movement_settings
+from parkour_solver.search.movement import iter_movement_programs
+from parkour_solver.movement.settings import movement_settings
 from parkour_solver.movement.program import empty_program, program_physics_key
-from tests.unit.spatial.test_checkpoint_guidance import flat_scene, programs
+from tests.support.checkpoint_guidance import flat_scene, programs
 from parkour_solver.search.compat.time_progress import retain_two_goals
-from tests.unit.search.test_time_progress import label
+from tests.support.time_progress import label
 from parkour_solver.numerics import prepare, validate
 
 
@@ -262,7 +263,8 @@ class ScopedNumericalTests(unittest.TestCase):
         from parkour_solver.bridge.compiler import JavaCompiler
         from parkour_solver.spatial.cells import decompose
         from parkour_solver.spatial.compat.corridors import corridor_for_points, landmarks
-        from parkour_solver.validation.scoped_scene import CorridorAdapter, SearchWork
+        from parkour_solver.validation.scoped_scene import CorridorAdapter
+        from parkour_solver.search.work import SearchWork
         from parkour_solver.search.engine import evaluate_program, _motion_bound
         from research.legacy_cell_routes.checkpoint_experiment import replay_witness
         scene=flat_scene()

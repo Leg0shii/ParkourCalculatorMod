@@ -4,10 +4,12 @@ import math
 
 if __package__:
     from parkour_solver.physics.vertical import CLIMB_CARRY, f32, vertical_carry, vertical_move
-    from parkour_solver.numerics.model import TOLERANCE, number, prepare
+    from parkour_solver.schema import TOLERANCE, number
+    from parkour_solver.numerics.model import prepare
 else:
     from parkour_solver.physics.vertical import CLIMB_CARRY, f32, vertical_carry, vertical_move
-    from parkour_solver.numerics.model import TOLERANCE, number, prepare
+    from parkour_solver.schema import TOLERANCE, number
+    from parkour_solver.numerics.model import prepare
 
 
 def cell(state):

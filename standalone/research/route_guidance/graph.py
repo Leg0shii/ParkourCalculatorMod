@@ -5,7 +5,7 @@ from parkour_solver.movement.profiles import compile_open_air_route
 from parkour_solver.constraints.avoidance import consecutive, intervals
 from parkour_solver.scene.route import center_bounds
 from parkour_solver.physics.vertical import REST_CARRY
-from parkour_solver.numerics.model import integer, number
+from parkour_solver.schema import integer, number
 
 
 def carry_vertices(lower, upper, threshold):

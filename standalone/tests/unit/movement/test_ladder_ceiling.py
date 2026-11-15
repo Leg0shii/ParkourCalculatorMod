@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 import unittest
 
-from parkour_solver.search.support_profiles import prepare_scene
+from parkour_solver.scene.normalize import prepare_scene
 from parkour_solver.movement.ceiling_profiles import ceiling_contact, ceiling_opportunities
 from parkour_solver.movement.contact_profiles import contact_opportunities
 from parkour_solver.movement.ladder.ceiling import own_ceiling_contacts, own_schedule_ceilings, predict_ceiling_sequences
@@ -132,7 +132,7 @@ class LadderCeilingTests(unittest.TestCase):
         self.assertEqual(own_ceiling_contacts([plain], [dict(type='normal', start=0, end=2)])[0], [plain])
 
     def test_regeneration_owns_the_changed_exit_and_rejects_direct_fall_successor(self):
-        from tests.integration.test_movement_contacts import small_request
+        from tests.support.movement_contacts import small_request
         from parkour_solver.movement.ladder.schedules import generate_ladder_schedules
         request = small_request()
         baseline = generate_ladder_schedules(request)['schedules']
@@ -217,7 +217,7 @@ class LadderCeilingNumericalTests(unittest.TestCase):
 
     def test_saved_examples_match_fixture_and_pass_scalar_and_shared_scene_acceptance(self):
         import hashlib
-        from parkour_solver.scene.geometry import check_geometry
+        from parkour_solver.validation.scene import check_geometry
         from parkour_solver.numerics import prepare, validate
         for name in ('continuous', 'beginning-stop', 'end-stop', 'both-stops'):
             path = ROOT / 'experiments/ladder-climbing-ceiling' / (name + '.json')
@@ -235,8 +235,9 @@ class LadderCeilingNumericalTests(unittest.TestCase):
                 self.assertEqual(evidence['plan']['ticks'], 10 if evidence['endStop'] else 12)
 
     def test_fresh_joint_solves_for_climbing_and_each_endpoint_stop_combination(self):
-        from parkour_solver.search.repair import floor_checks, solve_contact_branches
-        from parkour_solver.scene.geometry import check_geometry
+        from parkour_solver.constraints.contacts import floor_checks
+        from parkour_solver.search.repair import solve_contact_branches
+        from parkour_solver.validation.scene import check_geometry
         results = {}
         for beginning in (False, True):
             for ending in (False, True):

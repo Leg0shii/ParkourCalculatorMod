@@ -1,3 +1,4 @@
+from tests.support.cell_geometry import scene_for
 import itertools
 import random
 import unittest
@@ -5,11 +6,6 @@ import unittest
 from parkour_solver.spatial.cells import contains, decompose, dimension, intersection, segment_covered
 from parkour_solver.scene.geometry import BODY_HEIGHT, expanded_box
 from parkour_solver.scene.route import HALF_WIDTH
-
-
-def scene_for(solids, bounds=(-5, -5, -5, 6, 6, 6)):
-    return dict(collisionScene=dict(bounds=list(bounds), solids=solids),
-                blocks=[dict(id=str(i), sourceBlock=str(i), solidIndex=i) for i in range(len(solids))])
 
 
 class CellGeometryTests(unittest.TestCase):

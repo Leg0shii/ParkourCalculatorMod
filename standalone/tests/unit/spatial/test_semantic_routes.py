@@ -1,18 +1,12 @@
+from tests.support.semantic_routes import support_scene
 import json
 import unittest
 
 from parkour_solver.spatial.cells import decompose
 from parkour_solver.spatial.regions import build_route_graph
 from parkour_solver.spatial.compat.corridors import conditioned_anchor, corridor_from_walk, enumerate_routes
-from tests.unit.spatial.test_cell_routes import side_scene
-from tests.unit.spatial.test_route_regions import task_scene
-
-
-def support_scene():
-    scene=side_scene()
-    scene['blocks'][1]['top']=1
-    scene['collisionScene']['solids'][1][4]=1
-    return scene
+from tests.support.cell_routes import side_scene
+from tests.support.route_regions import task_scene
 
 
 class SemanticRouteTests(unittest.TestCase):

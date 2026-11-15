@@ -3,8 +3,9 @@ import json
 import unittest
 
 from research.legacy_cell_routes.generation_diagnostic import KeyAudit, QueueAudit, instrumented_generator
-from parkour_solver.search.movement import iter_movement_programs, movement_settings
-from tests.unit.spatial.test_checkpoint_guidance import flat_scene
+from parkour_solver.search.movement import iter_movement_programs
+from parkour_solver.movement.settings import movement_settings
+from tests.support.checkpoint_guidance import flat_scene
 
 
 class FailureDiagnosticTests(unittest.TestCase):

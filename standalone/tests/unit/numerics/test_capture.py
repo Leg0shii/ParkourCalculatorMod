@@ -7,8 +7,9 @@ import unittest
 
 from parkour_solver.io.capture import attach_capture
 from parkour_solver.physics.vertical import CLIMB_CARRY, vertical_carry, vertical_step
-from parkour_solver.numerics.model import fingerprint, prepare, validate
-from tests.unit.numerics.test_model import problem
+from parkour_solver.numerics.model import fingerprint, prepare
+from parkour_solver.validation.numerical import validate
+from tests.support.numerical_model import problem
 
 
 FIXTURES = NUMERICAL_DATA / 'fixtures'

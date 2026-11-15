@@ -2,7 +2,7 @@ import unittest
 
 from parkour_solver.numerics.continuation import Incumbent, run
 from parkour_solver.numerics.model import prepare
-from tests.unit.numerics.test_model import problem
+from tests.support.numerical_model import problem
 
 
 class ContinuationTests(unittest.TestCase):

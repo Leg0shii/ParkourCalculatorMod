@@ -1,3 +1,4 @@
+from tests.support.movement_contacts import small_request
 from tests.support.paths import AUTONOMY_DATA
 import copy
 import json
@@ -11,23 +12,19 @@ from parkour_solver.movement.contact_combinations import contact_combinations
 from parkour_solver.movement.contacts import contact_variants, mixed_schedule_pool, program_seed
 from parkour_solver.movement.ladder.schedules import generate_ladder_schedules
 from parkour_solver.movement.ladder.transfers import open_program, append_ladder_programs, recompose, finish_programs
-from tests.unit.movement.test_ladder_composition import airborne_case
-from parkour_solver.scene.geometry import BODY_HEIGHT, check_geometry
-from parkour_solver.search.support_profiles import prepare_scene, compile_block_path
-from parkour_solver.search.repair import solve_contact_branches, floor_checks
+from tests.support.ladder_composition import airborne_case
+from parkour_solver.scene.geometry import BODY_HEIGHT
+from parkour_solver.validation.scene import check_geometry
+from parkour_solver.scene.normalize import prepare_scene
+from parkour_solver.search.support_profiles import compile_block_path
+from parkour_solver.search.repair import solve_contact_branches
+from parkour_solver.constraints.contacts import floor_checks
 from parkour_solver.bridge.compiler import JavaCompiler
 from parkour_solver.numerics import prepare, validate
 from parkour_solver.physics.vertical import CLIMB_CARRY
 
 
 ROOT = AUTONOMY_DATA
-
-
-def small_request():
-    return {'version':1,'initial':{'position':.8,'velocity':CLIMB_CARRY,'onGround':False},
-        'region':{'minY':0,'maxY':1},'entries':[{'family':'front','firstCandidateState':0}],
-        'finishAtExit':True,'entryDelay':0,'exitKinds':['top'],'maxInputs':5,
-        'maxSchedules':1000,'maxSkeletons':2000,'maxMaskWork':30000}
 
 
 class MovementContactTests(unittest.TestCase):

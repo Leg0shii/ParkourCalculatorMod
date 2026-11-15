@@ -1,17 +1,9 @@
 import json
 import math
 
-from parkour_solver.numerics.model import integer, number
+from parkour_solver.schema import integer, number
 from parkour_solver.search.identity import motion_record, processing_key
 from parkour_solver.search.comparison import compare_candidates, measurements as _measurements, TOLERANCE
-
-
-
-def generation_exhausted(report):
-    return (report.get('termination')=='exhausted' and not report.get('queueDrops',0)
-        and not report.get('remainingPrefixes',0)
-        and all(generation_exhausted(parent) for parent in report.get('parents',[]))
-        and not any(row.get('termination')=='choice_limit' for row in report.get('generation',[])))
 
 
 def protections(candidate, peer, progress_margin):

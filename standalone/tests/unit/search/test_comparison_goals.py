@@ -9,15 +9,16 @@ from parkour_solver.spatial.checkpoints import checkpoint
 from parkour_solver.search.engine import _motion_bound, evaluate_program
 from parkour_solver.search.goals import goal_spec, probe_spatial
 from parkour_solver.spatial.cells import decompose
-from parkour_solver.validation.scoped_scene import CorridorAdapter, SearchWork
+from parkour_solver.validation.scoped_scene import CorridorAdapter
+from parkour_solver.search.work import SearchWork
 from parkour_solver.spatial.compat.corridors import corridor_for_points, landmarks
 from parkour_solver.search.compat.time_progress import clock_result, retain_two_goals
 from research.legacy_cell_routes.window_diagnostic import controls
 from research.legacy_cell_routes.checkpoint_experiment import replay_witness
-from parkour_solver.search.support_profiles import prepare_scene
+from parkour_solver.scene.normalize import prepare_scene
 from parkour_solver.bridge.compiler import JavaCompiler
 from parkour_solver.movement.program import truncate_program
-from tests.unit.spatial.test_checkpoint_guidance import flat_scene, programs
+from tests.support.checkpoint_guidance import flat_scene, programs
 
 
 class ComparisonGoalTests(unittest.TestCase):

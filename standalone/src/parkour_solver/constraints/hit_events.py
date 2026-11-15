@@ -1,7 +1,7 @@
 import copy
 import math
 
-from parkour_solver.numerics.model import integer, number
+from parkour_solver.schema import integer, number
 from parkour_solver.scene.route import HALF_WIDTH, center_bounds
 
 

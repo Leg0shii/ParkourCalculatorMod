@@ -14,7 +14,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--input', required=True)
     parser.add_argument('--output', required=True)
-    parser.add_argument('--compiler', default=__import__('os').environ.get('PKC_RUN_TICKS_COMPILER','build/native/compiler.json'))
+    parser.add_argument('--compiler', default=os.environ.get('PKC_RUN_TICKS_COMPILER','build/native/compiler.json'))
     parser.add_argument('--python', default=os.environ.get('PKC_IPOPT_PYTHON'))
     parser.add_argument('--seconds', type=float, default=60)
     parser.add_argument('--candidate-seconds', type=float, default=2)

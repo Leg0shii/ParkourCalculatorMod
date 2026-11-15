@@ -5,7 +5,7 @@ import unittest
 from parkour_solver.spatial.event_routes import RouteDomain, build_route_domain, support_episodes
 from parkour_solver.spatial.cells import contains, decompose
 from parkour_solver.spatial.regions import build_geometry_graph, support_components
-from tests.unit.spatial.test_route_regions import task_scene
+from tests.support.route_regions import task_scene
 from parkour_solver.scene.route import HALF_WIDTH
 
 

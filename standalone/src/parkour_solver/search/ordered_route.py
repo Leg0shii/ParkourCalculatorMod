@@ -2,8 +2,10 @@ import copy
 import math
 import time
 
-from parkour_solver.numerics import prepare, validate; from parkour_solver.numerics import solve
-from parkour_solver.numerics.model import fingerprint, number
+from parkour_solver.numerics import prepare, validate
+from parkour_solver.numerics import solve
+from parkour_solver.numerics.model import fingerprint
+from parkour_solver.schema import number
 from parkour_solver.scene.route import initial_guess, prepare_route, schedule, supports
 from parkour_solver.reachability.screen import contradiction
 from parkour_solver.search.ranking import objective_seed, passage_seed
@@ -161,7 +163,7 @@ def find_route(request, compiler, *, seconds=60, candidate_seconds=2, retries=1,
                     'plan': plan}
         try:
             if route.get('verticalProfiles'):
-                from parkour_solver.search.repair import validate_vertical_schedule
+                from parkour_solver.validation.vertical import validate_vertical_schedule
                 vertical = validate_vertical_schedule(route, route['verticalProfiles'], plan)
                 if not vertical['feasible']:
                     return {'status': 'blocked', 'plan': plan, 'certificate': {'reason': 'vertical_schedule'}}

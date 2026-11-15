@@ -6,7 +6,8 @@ from pathlib import Path
 import subprocess
 import sys
 
-from parkour_solver.numerics import prepare, validate; from parkour_solver.numerics import solve
+from parkour_solver.numerics import prepare, validate
+from parkour_solver.numerics import solve
 from research.legacy_cell_routes.failure_diagnostic import read
 from research.legacy_cell_routes.generation_diagnostic import save
 

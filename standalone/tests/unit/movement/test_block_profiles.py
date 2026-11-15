@@ -6,7 +6,8 @@ import unittest
 
 from parkour_solver.movement.profiles import compile_open_air_route, ordinary_jump_profile, runoff_profile, stair_jump_profile
 from parkour_solver.physics.vertical import REST_CARRY
-from parkour_solver.numerics.model import prepare, validate
+from parkour_solver.numerics.model import prepare
+from parkour_solver.validation.numerical import validate
 
 
 FIXTURE = AUTONOMY_DATA / 'fixtures' / 'blocks-flat-two-jumps.json'

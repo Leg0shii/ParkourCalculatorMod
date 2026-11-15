@@ -8,13 +8,13 @@ import time
 import unittest
 from unittest.mock import patch
 
-from parkour_solver.search.support_profiles import prepare_scene
+from parkour_solver.scene.normalize import prepare_scene
 from research.legacy_cell_routes.checkpoint_experiment import replay_witness
 from parkour_solver.search.engine import find_checkpoint_route
 from parkour_solver.search.compat.decision_windows import DecisionPolicy, fair_programs, plan_windows, retain_candidates
 from parkour_solver.bridge.compiler import JavaCompiler
 from parkour_solver.search.movement import iter_movement_programs
-from tests.unit.spatial.test_checkpoint_guidance import flat_scene
+from tests.support.checkpoint_guidance import flat_scene
 
 
 def decision(name, lo, hi, **kwargs):

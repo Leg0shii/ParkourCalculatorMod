@@ -7,11 +7,13 @@ import json
 from pathlib import Path
 import subprocess
 
-from parkour_solver.search.support_profiles import prepare_scene
+from parkour_solver.scene.normalize import prepare_scene
 from parkour_solver.bridge.compiler import JavaCompiler
 from research.legacy_cell_routes.checkpoint_experiment import replay_witness
-from parkour_solver.spatial.cells import decompose, diagnostic_svg as cell_svg
-from parkour_solver.spatial.regions import annotate_normal_proposals, build_route_graph, diagnostic_svg
+from parkour_solver.spatial.cells import decompose
+from tools.plotting.cells import diagnostic_svg as cell_svg
+from parkour_solver.spatial.regions import annotate_normal_proposals, build_route_graph
+from tools.plotting.regions import diagnostic_svg
 from parkour_solver.search.compat.corridor_queue import collision_request
 from parkour_solver.spatial.compat.corridors import enumerate_routes
 from parkour_solver.search.compat.semantic_adapter import SemanticCorridorAdapter

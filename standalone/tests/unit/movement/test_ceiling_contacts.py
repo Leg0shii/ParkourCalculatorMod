@@ -5,9 +5,10 @@ import os
 from pathlib import Path
 import unittest
 
-from parkour_solver.search.repair import validate_vertical_schedule
+from parkour_solver.validation.vertical import validate_vertical_schedule
 from parkour_solver.movement.profiles import ordinary_jump_profile
-from parkour_solver.search.support_profiles import build_transition_graph, compile_block_path, find_blocks, prepare_scene
+from parkour_solver.search.support_profiles import build_transition_graph, compile_block_path, find_blocks
+from parkour_solver.scene.normalize import prepare_scene
 from parkour_solver.movement.ceiling_contacts import ceiling_profile
 from parkour_solver.bridge.compiler import JavaCompiler
 from parkour_solver.scene.route import schedule
@@ -86,7 +87,7 @@ class CeilingContactIntegrationTests(unittest.TestCase):
             self.assertTrue(validate_vertical_schedule(compiled['route'], compiled['profiles'], plan)['feasible'])
             missing = copy.deepcopy(best['plan'])
             missing['sceneContacts'] = []
-            from parkour_solver.scene.geometry import check_geometry
+            from parkour_solver.validation.scene import check_geometry
             vertical = {'vertical': best['vertical'], **{k: best['candidate'][k] for k in ('y', 'vy', 'onGround')}}
             missed = check_geometry(scene['collisionScene'], missing, best['candidate'], vertical, compiler, 5)
             self.assertFalse(missed['feasible'])

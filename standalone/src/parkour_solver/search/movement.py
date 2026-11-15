@@ -1,31 +1,15 @@
+from parkour_solver.movement.settings import movement_settings
 import copy
 import heapq
 import json
 import math
 import time
 
-from parkour_solver.numerics.model import integer, number
+from parkour_solver.schema import integer, number
 from parkour_solver.movement.cases import entry_possible
 from parkour_solver.movement.program import append_choice, boundary_state, compile_program, empty_program, truncate_program, program_search_key
 from parkour_solver.movement.generation import GENERATORS, generate_choices, propose_choices, assess_proposal
 from parkour_solver.search.comparison import compare_candidates
-
-
-def movement_settings(scene):
-    settings = dict(scene.get('movementSearch', {}))
-    defaults = dict(maxInputs=200, maxPrefixes=256, maxQueuedPrefixes=512, maxChoicesPerType=64,
-                    maxInteractions=200, maxEntryInputs=14, expansionsPerProposal=8,
-                    types=list(GENERATORS))
-    if set(settings) - set(defaults):
-        raise ValueError('Unsupported movement search settings')
-    for key, value in defaults.items():
-        settings.setdefault(key, value)
-        if key != 'types':
-            integer(settings[key], key, 0 if key == 'maxEntryInputs' else 1, 200 if key in ('maxInputs', 'maxInteractions') else 200000)
-    if not isinstance(settings['types'], list) or not settings['types'] or len(set(settings['types'])) != len(settings['types']) \
-            or any(kind not in GENERATORS for kind in settings['types']):
-        raise ValueError('Select registered movement types')
-    return settings
 
 
 def iter_movement_programs(scene, *, settings=None, deadline=None, cancel_event=None, report=None, screen=None,
@@ -228,8 +212,9 @@ def iter_movement_programs(scene, *, settings=None, deadline=None, cancel_event=
 def find_movement_blocks(request, compiler, *, seconds=60, candidate_seconds=2, retries=1,
                          improve=False, python_executable=None, cancel_event=None, on_attempt=None,
                          route_seconds=8, context_adapter=None, candidate_filter=None, work=None):
-    from parkour_solver.search.support_profiles import prepare_scene
-    from parkour_solver.search.repair import floor_checks, solve_contact_branches
+    from parkour_solver.scene.normalize import prepare_scene
+    from parkour_solver.constraints.contacts import floor_checks
+    from parkour_solver.search.repair import solve_contact_branches
     from parkour_solver.search.ranking import candidate_rank
     for name, value in [('seconds', seconds), ('candidate_seconds', candidate_seconds), ('route_seconds', route_seconds)]:
         if number(value, name) <= 0:

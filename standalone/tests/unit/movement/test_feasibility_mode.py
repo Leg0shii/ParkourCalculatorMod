@@ -9,10 +9,11 @@ from parkour_solver.spatial.checkpoints import Checkpoint
 from parkour_solver.search.engine import evaluate_program, _motion_bound
 from research.legacy_cell_routes.checkpoint_experiment import replay_witness
 from parkour_solver.spatial.cells import decompose
-from parkour_solver.validation.scoped_scene import CorridorAdapter, SearchWork
+from parkour_solver.validation.scoped_scene import CorridorAdapter
+from parkour_solver.search.work import SearchWork
 from parkour_solver.spatial.compat.corridors import corridor_for_points, landmarks
 from parkour_solver.bridge.compiler import JavaCompiler
-from tests.unit.spatial.test_checkpoint_guidance import flat_scene, programs
+from tests.support.checkpoint_guidance import flat_scene, programs
 
 
 @unittest.skipUnless(os.environ.get('PKC_RUN_TICKS_COMPILER') and os.environ.get('PKC_IPOPT_PYTHON'),

@@ -7,11 +7,13 @@ import unittest
 
 from parkour_solver.api import find_route, prepare_route, schedule
 from parkour_solver.movement.profiles import compile_open_air_route
-from parkour_solver.search.support_profiles import compile_block_path, find_blocks, prepare_scene
+from parkour_solver.search.support_profiles import compile_block_path, find_blocks
+from parkour_solver.scene.normalize import prepare_scene
 from parkour_solver.bridge.compiler import JavaCompiler
 from parkour_solver.scene.route import initial_guess, supports
-from parkour_solver.search.repair import validate_vertical_schedule
-from parkour_solver.scene.geometry import BODY_HEIGHT, check_geometry
+from parkour_solver.validation.vertical import validate_vertical_schedule
+from parkour_solver.scene.geometry import BODY_HEIGHT
+from parkour_solver.validation.scene import check_geometry
 from parkour_solver.numerics import prepare, validate
 
 

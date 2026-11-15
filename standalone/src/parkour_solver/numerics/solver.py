@@ -8,9 +8,11 @@ import threading
 import time
 
 if __package__:
-    from parkour_solver.numerics.model import TOLERANCE, fingerprint, prepare, validate
+    from parkour_solver.schema import TOLERANCE
+    from parkour_solver.numerics.model import fingerprint, prepare; from parkour_solver.validation.numerical import validate
 else:
-    from parkour_solver.numerics.model import TOLERANCE, fingerprint, prepare, validate
+    from parkour_solver.schema import TOLERANCE
+    from parkour_solver.numerics.model import fingerprint, prepare; from parkour_solver.validation.numerical import validate
 
 
 def _command(python_executable):

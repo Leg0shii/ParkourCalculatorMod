@@ -3,13 +3,14 @@ import unittest
 from unittest.mock import patch
 
 from parkour_solver.spatial.cells import Cell, Decomposition, decompose
-from parkour_solver.validation.scoped_scene import CorridorAdapter, SearchWork
+from parkour_solver.validation.scoped_scene import CorridorAdapter
+from parkour_solver.search.work import SearchWork
 from parkour_solver.spatial.compat.corridors import Corridor, corridor_for_points, landmarks
 from parkour_solver.movement.program import boundary_state, empty_program
 from parkour_solver.movement.generation import generate_choices
 from parkour_solver.movement.contacts import contact_variants
 from parkour_solver.movement.ladder.generation import ladder_choices
-from tests.unit.spatial.test_cell_routes import side_scene
+from tests.support.cell_routes import side_scene
 
 
 class CellLocalTests(unittest.TestCase):

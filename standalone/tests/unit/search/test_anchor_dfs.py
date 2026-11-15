@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 from parkour_solver.search.engine import find_checkpoint_route
 from parkour_solver.search.feasibility import solve_due
-from tests.unit.search.test_anchor_policy import scene, history
+from tests.support.anchor_policy import scene, history
 
 
 def extend(s,parent,target,n,extra=False):
@@ -181,9 +181,9 @@ class AnchorDFSTests(unittest.TestCase):
         self.assertFalse(solve_due(dict(decisionDepth=1,lastSolvedDepth=1),1))
 
     def run_recovery_tree(self, reject_first=True, oracle=True, include_setup=False, finish_tick=30):
-        from parkour_solver.search.support_profiles import prepare_scene
-        from tests.unit.spatial.test_checkpoint_guidance import flat_scene
-        from tests.unit.search.test_minimum_runs import flight
+        from parkour_solver.scene.normalize import prepare_scene
+        from tests.support.checkpoint_guidance import flat_scene
+        from tests.support.minimum_runs import flight
         s=flat_scene();s['goalBlock']='finish';s['maxTotalRunTicks']=60;s['maxRunTicksPerJump']=60
         # Extend the normalized scene through its raw request representation.
         raw={k:v for k,v in s.items() if k not in ('collisionScene',)}

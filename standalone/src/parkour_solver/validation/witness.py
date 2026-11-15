@@ -1,7 +1,7 @@
 """Independent witness replay and iteration, shared by runtime and tools."""
 
-from parkour_solver.search.repair import validate_vertical_schedule
-from parkour_solver.scene.geometry import check_geometry
+from parkour_solver.validation.vertical import validate_vertical_schedule
+from parkour_solver.validation.scene import check_geometry
 from parkour_solver.scene.route import prepare_route, schedule, supports
 from parkour_solver.search.identity import full_witness
 from parkour_solver.numerics import prepare, validate
@@ -37,7 +37,6 @@ def replay_witness(scene, best, compiler):
                 scalarFeasible=candidate['feasible'], supports=support_ok, geometry=checked,
                 exactHorizontalReplay=same, ticks=plan['ticks'], threshold=problem['threshold'],
                 objective=candidate['objective'], objectiveHasY=False)
-
 
 
 def witnesses(result):

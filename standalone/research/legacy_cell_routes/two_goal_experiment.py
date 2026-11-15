@@ -9,7 +9,7 @@ import sys
 
 from parkour_solver.search.comparison import compare_candidates
 
-from parkour_solver.search.support_profiles import prepare_scene
+from parkour_solver.scene.normalize import prepare_scene
 from parkour_solver.bridge.compiler import JavaCompiler
 from research.legacy_cell_routes.checkpoint_experiment import brief, replay_witness
 from research.legacy_cell_routes.comparison_audit import run_full_audit, source_entries
@@ -17,8 +17,6 @@ from research.legacy_cell_routes.failure_diagnostic import read
 from research.legacy_cell_routes.generation_diagnostic import save
 from research.legacy_cell_routes.window_experiment import run_fixture
 from parkour_solver.search.identity import full_witness
-
-
 
 
 def competitive_followup(run,prior):

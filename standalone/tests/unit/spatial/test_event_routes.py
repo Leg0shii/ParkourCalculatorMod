@@ -2,7 +2,7 @@ import json
 import unittest
 
 from parkour_solver.spatial.event_routes import build_route_domain, build_event_graph, initial_cursor, next_goals, advance_cursor, semantic_prefix
-from tests.unit.spatial.test_route_regions import task_scene
+from tests.support.route_regions import task_scene
 
 
 class EventRouteTests(unittest.TestCase):

@@ -1,9 +1,11 @@
+from tests.support.block_coefficients import Coefficients
 import copy
 import random
 import threading
 import unittest
 
-from parkour_solver.search.support_profiles import build_transition_graph, compile_block_path, find_blocks, prepare_scene, search_block_paths
+from parkour_solver.search.support_profiles import build_transition_graph, compile_block_path, find_blocks, search_block_paths
+from parkour_solver.scene.normalize import prepare_scene
 from parkour_solver.scene.route import HALF_WIDTH, schedule
 from parkour_solver.numerics import prepare, validate
 
@@ -17,16 +19,6 @@ def scene():
                        {'id': 'c', 'bounds': [0, 1, 3, 4], 'top': 1},
                        {'id': 'goal', 'bounds': [7, 8, 0, 1], 'top': 1}],
             'maxJumps': 4, 'maxTotalRunTicks': 2}
-
-
-class Coefficients:
-    def compile(self, route, plan, seconds):
-        return {'magnitude': [.3 if j else .1 if g else .02 for g, j in zip(plan['grounded'], plan['jump'])],
-                'friction': [.5 if g else .9 for g in plan['grounded']], 'base': [0] * len(plan['jump'])}
-
-    def derive_footprints(self, route, seconds):
-        return [[b['bounds'][0] - HALF_WIDTH, b['bounds'][1] + HALF_WIDTH,
-                 b['bounds'][2] - HALF_WIDTH, b['bounds'][3] + HALF_WIDTH] for b in route['blocks']]
 
 
 def accepted(cost=0, ticks=24, objective=0):

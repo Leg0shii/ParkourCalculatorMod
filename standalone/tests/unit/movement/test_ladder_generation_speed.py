@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import parkour_solver.movement.ladder.schedules as schedules
 import parkour_solver.movement.vertical_profiles as vertical
-from tests.unit.movement.test_ladder_schedules import request
+from tests.support.ladder_schedules import request
 from parkour_solver.physics.vertical import CLIMB_CARRY, REST_CARRY
 
 

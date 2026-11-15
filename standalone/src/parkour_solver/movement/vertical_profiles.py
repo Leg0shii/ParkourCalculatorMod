@@ -2,7 +2,7 @@ import copy
 import math
 
 from parkour_solver.physics.vertical import f32, vertical_carry, vertical_move, vertical_step
-from parkour_solver.numerics.model import integer, number
+from parkour_solver.schema import integer, number
 
 
 def _flags(values, name, length=None):

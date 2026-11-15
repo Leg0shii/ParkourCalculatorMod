@@ -2,7 +2,7 @@ import unittest
 
 from parkour_solver.spatial.event_routes import build_route_domain, build_event_graph, initial_cursor, next_goals
 from parkour_solver.spatial.guides import guide_for, segment_in_cover, outgoing_objective
-from tests.unit.spatial.test_route_regions import task_scene
+from tests.support.route_regions import task_scene
 
 
 class GuideTests(unittest.TestCase):

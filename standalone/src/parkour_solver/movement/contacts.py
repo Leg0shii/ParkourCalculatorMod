@@ -4,7 +4,7 @@ import time
 from collections import deque
 
 from parkour_solver.physics.vertical import f32
-from parkour_solver.numerics.model import integer
+from parkour_solver.schema import integer
 from parkour_solver.movement.contact_combinations import contact_combinations, merge_contacts
 from parkour_solver.movement.contact_profiles import contact_opportunities
 from parkour_solver.movement.ladder.schedules import generate_ladder_schedules

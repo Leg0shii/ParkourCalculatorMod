@@ -5,13 +5,14 @@ import time
 
 from parkour_solver.search.comparison import POLICY_VERSION as COMPARISON_POLICY_VERSION
 
-from parkour_solver.search.support_profiles import prepare_scene
-from parkour_solver.search.movement import movement_settings
+from parkour_solver.scene.normalize import prepare_scene
+from parkour_solver.movement.settings import movement_settings
 from parkour_solver.search.identity import digest
 from parkour_solver.search.goals import goal_spec
 from parkour_solver.spatial.event_routes import RouteDomain, build_route_domain, build_event_graph
 from parkour_solver.search.events.adapter import EventGuideAdapter
-from parkour_solver.validation.scoped_scene import CountingCompiler, SearchWork
+from parkour_solver.bridge.counting import CountingCompiler
+from parkour_solver.search.work import SearchWork
 from parkour_solver.search.compat.corridor_queue import collision_request
 
 

@@ -3,9 +3,10 @@ import unittest
 from unittest.mock import patch
 
 from parkour_solver.search.repair import solve_contact_branches
-from parkour_solver.search.movement import iter_movement_programs, movement_settings
+from parkour_solver.search.movement import iter_movement_programs
+from parkour_solver.movement.settings import movement_settings
 from parkour_solver.search.ranking import objective_seed
-from tests.unit.spatial.test_checkpoint_guidance import flat_scene
+from tests.support.checkpoint_guidance import flat_scene
 
 
 class SearchFixTests(unittest.TestCase):
@@ -75,8 +76,8 @@ class SearchFixTests(unittest.TestCase):
 
     def test_only_complete_plans_publish_outer_incumbents(self):
         from parkour_solver.search.ordered_route import find_route
-        from tests.integration.test_acceptance import NoMovementCompiler
-        from tests.unit.search.test_search import route
+        from tests.support.acceptance import NoMovementCompiler
+        from tests.support.ordered_route import route
         from parkour_solver.numerics import validate
         request = route(2)
         request['blocks'] = [dict(bounds=[0, 1, 0, 1], top=1) for _ in range(3)]

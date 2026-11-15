@@ -1,3 +1,4 @@
+from tests.support.stepping_cases import FIXTURES, fixture
 from tests.support.paths import AUTONOMY_DATA
 import copy
 import itertools
@@ -6,23 +7,18 @@ import os
 from pathlib import Path
 import unittest
 
-from parkour_solver.search.repair import floor_checks, solve_contact_branches, validate_vertical_schedule
-from parkour_solver.search.support_profiles import build_transition_graph, compile_block_path, find_blocks, prepare_scene
+from parkour_solver.constraints.contacts import floor_checks
+from parkour_solver.search.repair import solve_contact_branches; from parkour_solver.validation.vertical import validate_vertical_schedule
+from parkour_solver.search.support_profiles import build_transition_graph, compile_block_path, find_blocks
+from parkour_solver.scene.normalize import prepare_scene
 from parkour_solver.movement.cases import case_profile, corner_rows, entry_possible
 from parkour_solver.bridge.compiler import JavaCompiler
 from parkour_solver.movement.generation import generate_choices
 from parkour_solver.movement.units import compile_units, overlay_program, profile_program, shifted_unit
-from parkour_solver.scene.geometry import check_geometry
+from parkour_solver.validation.scene import check_geometry
 from parkour_solver.scene.route import prepare_route, schedule
 from parkour_solver.numerics import prepare
 from parkour_solver.physics.vertical import REST_CARRY, f32, vertical_step
-
-
-FIXTURES = AUTONOMY_DATA / 'fixtures/stepping'
-
-
-def fixture(name):
-    return json.loads((FIXTURES / (name + '.json')).read_text())
 
 
 def generated(data):

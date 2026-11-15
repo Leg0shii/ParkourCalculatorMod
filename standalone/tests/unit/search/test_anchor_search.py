@@ -7,13 +7,13 @@ import unittest
 from unittest.mock import patch
 
 from parkour_solver.movement.program import empty_program
-from parkour_solver.search.movement import movement_settings
+from parkour_solver.movement.settings import movement_settings
 from parkour_solver.search.frontier import persistent_programs
 from parkour_solver.search.anchors.policy import local_counts, single_jump_structure
 from parkour_solver.search.feasibility import meaningful_choice
-from parkour_solver.cli.solve import run
-from tests.unit.spatial.test_checkpoint_guidance import flat_scene
-from tests.integration.test_repair_resume import route, outcome, VERTICAL
+from parkour_solver.search.application import run
+from tests.support.checkpoint_guidance import flat_scene
+from tests.support.repair_resume import route, outcome, VERTICAL
 from parkour_solver.search.repair import solve_contact_branches
 
 

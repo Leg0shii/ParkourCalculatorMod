@@ -10,7 +10,8 @@ import unittest
 from parkour_solver.scene.route import center_bounds, schedule
 from research.route_guidance.graph import assignments, build_family, carry_vertices, decisions, edge_path, fixed_values
 from parkour_solver.physics.vertical import REST_CARRY
-from parkour_solver.numerics.model import prepare, validate
+from parkour_solver.numerics.model import prepare
+from parkour_solver.validation.numerical import validate
 
 
 ROOT = AUTONOMY_DATA

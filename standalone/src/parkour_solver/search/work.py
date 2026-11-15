@@ -1,4 +1,6 @@
 """Search budgets and compiler accounting, independent of route adapters."""
+
+from parkour_solver.bridge.counting import CountingCompiler
 import collections
 import hashlib
 import json
@@ -57,30 +59,3 @@ class SearchWork:
             unitsByType=dict(self.program_domains), firstProposalSeconds=self.first_proposal,
             firstAcceptedSeconds=self.first_accepted, maxSolverCalls=self.max_solver_calls,
             termination=self.termination)
-
-
-
-class CountingCompiler:
-    def __init__(self, compiler):
-        self.compiler = compiler
-        self.counts = collections.Counter()
-        self.seconds = collections.Counter()
-
-    def __getattr__(self, name):
-        value = getattr(self.compiler, name)
-        if not callable(value) or name not in ('compile', 'derive_footprints', 'derive_standing_footprints', 'check_scene'):
-            return value
-        def invoke(*args, **kwargs):
-            started = time.monotonic()
-            self.counts[name] += 1
-            try:
-                result = value(*args, **kwargs)
-                if name == 'check_scene' and not result.get('feasible'):
-                    self.counts['sceneValidationFailures'] += 1
-                return result
-            finally:
-                self.seconds[name] += time.monotonic() - started
-        return invoke
-
-    def summary(self):
-        return dict(calls=dict(self.counts), elapsedSeconds=dict(self.seconds))

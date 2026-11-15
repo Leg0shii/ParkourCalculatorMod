@@ -1,3 +1,4 @@
+from tests.support.ladder_schedules import request
 import copy
 import itertools
 import math
@@ -33,14 +34,6 @@ def reference_y(y, vy, ladder, sneak, hit, target=None, landing_from=0):
         if landed:
             break
     return positions, velocities, grounded, moves
-
-
-def request():
-    return {'version': 1, 'initial': {'position': 2., 'velocity': REST_CARRY},
-            'region': {'minY': 0, 'maxY': 5},
-            'entries': [{'family': 'front', 'firstValidatedState': 1, 'unresolvedStates': [0]}],
-            'targetTop': 0., 'maxInputs': 25, 'entryDelay': 0, 'exitStates': [7],
-            'exitKinds': ['side'], 'maxSchedules': 300, 'maxSkeletons': 100, 'maxMaskWork': 10000}
 
 
 class ClimbPatternTests(unittest.TestCase):

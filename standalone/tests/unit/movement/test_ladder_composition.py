@@ -1,3 +1,4 @@
+from tests.support.ladder_composition import airborne_case
 from tests.support.paths import AUTONOMY_DATA
 import copy
 import hashlib
@@ -12,35 +13,16 @@ from parkour_solver.scene.ladders import ladder_columns, ladder_regions, climb_w
 from parkour_solver.movement.ladder.contacts import ceiling_sequence, with_contacts
 from parkour_solver.movement.ladder.schedules import generate_ladder_schedules, trace_ladder_schedule
 from parkour_solver.movement.ladder.episodes import compose_ladder_episodes
-from parkour_solver.search.support_profiles import prepare_scene, compile_block_path, find_blocks
-from parkour_solver.search.repair import floor_checks, solve_contact_branches, validate_vertical_schedule
+from parkour_solver.scene.normalize import prepare_scene
+from parkour_solver.search.support_profiles import compile_block_path, find_blocks
+from parkour_solver.constraints.contacts import floor_checks
+from parkour_solver.search.repair import solve_contact_branches; from parkour_solver.validation.vertical import validate_vertical_schedule
 from parkour_solver.bridge.compiler import JavaCompiler
 from parkour_solver.scene.route import prepare_route, schedule
 from parkour_solver.physics.vertical import REST_CARRY, CLIMB_CARRY, f32
 
 
 ROOT = AUTONOMY_DATA
-
-
-def airborne_case():
-    request = {'version': 1, 'sceneModel': 'collision_boxes', 'geometryBounds': [-8,-5,-8,8,12,8],
-        'initial': {'position': [.6,1,-.2], 'velocity': [.1,REST_CARRY,.3]}, 'blocks': [
-            {'id': 'start', 'boxes': [[-1,0,-1,1,1,0]]}, {'id': 'a', 'boxes': [[1,0,0,2,2,1]]},
-            {'id': 'b', 'boxes': [[1,0,2,2,3,3]]}], 'startBlock': 'start', 'goalBlock': 'b',
-        'climbableCells': [[0,y,0] for y in range(2)] + [[0,y,2] for y in range(3)],
-        'maxJumps': 1, 'maxRunTicksPerJump': 0, 'maxTotalRunTicks': 0, 'maxContactCombinations': 0}
-    scene = prepare_scene(request)
-    columns = ladder_columns(request['climbableCells'])
-    walls = [next(w for w in climb_walls(c, scene['collisionScene']['solids']) if w['axis'] == 'X' and w['direction'] == 1) for c in columns]
-    episodes = []
-    for col, wall, entry, leave, hits in [(columns[0], walls[0], 1, 6, range(5)),
-                                         (columns[1], walls[1], 11, 25, range(10, 24))]:
-        face = next(f for f in entry_channels(col, wall) if f['family'] == 'side' and f['direction'] == -1)
-        exit_face = next(f for f in exit_faces(col, [.7, 2.5]) if f['axis'] == 'Z' and f['direction'] == 1)
-        episodes.append({'column': col, 'wall': wall, 'entryState': entry, 'exitState': leave,
-                         'hitInputs': list(hits), 'entryFace': face, 'exitFace': exit_face, 'exitKind': 'top'})
-    program = compose_ladder_episodes(1, 3, episodes, max_inputs=60)
-    return scene, episodes, program
 
 
 class LadderRegionTests(unittest.TestCase):
@@ -170,7 +152,7 @@ class LadderCompositionIntegrationTests(unittest.TestCase):
 @unittest.skipUnless(os.environ.get('PKC_RUN_TICKS_COMPILER'), 'Set PKC_RUN_TICKS_COMPILER')
 class CompositionEvidenceTests(unittest.TestCase):
     def test_saved_multiple_ladder_ceiling_transfer_and_contact_blockage_contracts(self):
-        from parkour_solver.scene.geometry import check_geometry
+        from parkour_solver.validation.scene import check_geometry
         from parkour_solver.constraints.avoidance import gate_timeline
         from parkour_solver.numerics import prepare, validate
         with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:

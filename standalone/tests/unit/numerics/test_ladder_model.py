@@ -2,8 +2,9 @@ import copy
 import unittest
 
 from parkour_solver.physics.vertical import CAP, CLIMB_CARRY, REST_CARRY, Y_DRAG
-from parkour_solver.numerics.model import prepare, validate
-from tests.unit.numerics.test_model import problem
+from parkour_solver.numerics.model import prepare
+from parkour_solver.validation.numerical import validate
+from tests.support.numerical_model import problem
 
 
 def vertical(ticks):

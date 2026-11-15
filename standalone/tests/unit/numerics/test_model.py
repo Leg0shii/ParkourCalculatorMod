@@ -1,15 +1,10 @@
+from tests.support.numerical_model import problem
 import copy
 import math
 import unittest
 
-from parkour_solver.numerics.model import fingerprint, prepare, validate, wrap
-
-
-def problem(ticks=2):
-    return {'version': 1, 'ticks': ticks, 'position': [0.0, 0.0], 'velocity': [0.1, 0.2],
-            'magnitude': [0.0] * ticks, 'friction': [0.5] * ticks, 'base': [math.pi / 2] * ticks,
-            'yaw': [0.0] * ticks, 'threshold': 0.0, 'contacts': [], 'walls': [],
-            'objective': {'axis': 'X', 'sense': 'MAX', 'tick': ticks}, 'seconds': 2.0}
+from parkour_solver.numerics.model import fingerprint, prepare
+from parkour_solver.validation.numerical import validate; from parkour_solver.physics.angles import wrap
 
 
 class ModelTests(unittest.TestCase):

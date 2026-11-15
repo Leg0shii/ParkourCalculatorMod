@@ -3,16 +3,18 @@ import hashlib
 import math
 import time
 
-from parkour_solver.search.repair import floor_checks, solve_contact_branches
-from parkour_solver.search.support_profiles import prepare_scene
+from parkour_solver.constraints.contacts import floor_checks
+from parkour_solver.search.repair import solve_contact_branches
+from parkour_solver.scene.normalize import prepare_scene
 from parkour_solver.movement.program import compile_program, program_physics_key
-from parkour_solver.search.movement import movement_settings
+from parkour_solver.movement.settings import movement_settings
 from parkour_solver.scene.route import supports
-from parkour_solver.numerics.model import integer, number
+from parkour_solver.schema import integer, number
 from parkour_solver.spatial.checkpoints import checkpoint
 from parkour_solver.search.compat.decision_windows import DecisionPolicy, plan_windows
 from parkour_solver.spatial.cells import decompose
-from parkour_solver.validation.scoped_scene import CorridorAdapter, CountingCompiler, SearchWork
+from parkour_solver.validation.scoped_scene import CorridorAdapter
+from parkour_solver.bridge.counting import CountingCompiler; from parkour_solver.search.work import SearchWork
 from parkour_solver.spatial.compat.corridors import corridor_for_points, landmarks
 from parkour_solver.search.goals import goal_spec, landing_satisfied
 from parkour_solver.search.identity import solve_scope, solve_identity, validation_prefix
@@ -116,7 +118,7 @@ def evaluate_program(scene, program, compiler, adapter, work, motion_bound, *, c
         return verdict
 
     from parkour_solver.scene.route import schedule
-    from parkour_solver.search.repair import validate_vertical_schedule
+    from parkour_solver.validation.vertical import validate_vertical_schedule
     plan = schedule(route, [0])
     vertical = prepared['vertical']
     if not vertical['feasible']:

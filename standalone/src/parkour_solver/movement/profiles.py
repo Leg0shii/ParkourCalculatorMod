@@ -2,7 +2,7 @@ import copy
 from functools import lru_cache
 
 from parkour_solver.physics.vertical import REST_CARRY, f32, vertical_carry, vertical_step
-from parkour_solver.numerics.model import integer, number
+from parkour_solver.schema import integer, number
 from parkour_solver.scene.route import prepare_route
 
 

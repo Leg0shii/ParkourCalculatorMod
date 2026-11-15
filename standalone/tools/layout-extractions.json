@@ -1,0 +1,243 @@
+{
+  "extractions": [
+    {
+      "source": "src/parkour_solver/numerics/model.py",
+      "symbols": [
+        "number",
+        "integer"
+      ],
+      "destination": "src/parkour_solver/schema.py"
+    },
+    {
+      "source": "src/parkour_solver/numerics/model.py",
+      "symbols": [
+        "wrap"
+      ],
+      "destination": "src/parkour_solver/physics/angles.py"
+    },
+    {
+      "source": "src/parkour_solver/numerics/model.py",
+      "symbols": [
+        "validate"
+      ],
+      "destination": "src/parkour_solver/validation/numerical.py"
+    },
+    {
+      "source": "src/parkour_solver/search/ranking.py",
+      "symbols": [
+        "objective_spec"
+      ],
+      "destination": "src/parkour_solver/scene/objectives.py"
+    },
+    {
+      "source": "src/parkour_solver/search/movement.py",
+      "symbols": [
+        "movement_settings"
+      ],
+      "destination": "src/parkour_solver/movement/settings.py"
+    },
+    {
+      "source": "src/parkour_solver/search/climbable.py",
+      "symbols": [
+        "ladder_settings"
+      ],
+      "destination": "src/parkour_solver/movement/ladder/settings.py"
+    },
+    {
+      "source": "src/parkour_solver/search/support_profiles.py",
+      "symbols": [
+        "prepare_scene"
+      ],
+      "destination": "src/parkour_solver/scene/normalize.py"
+    },
+    {
+      "source": "src/parkour_solver/search/repair.py",
+      "symbols": [
+        "floor_checks",
+        "contact_conflicts",
+        "avoid_contact_rows"
+      ],
+      "destination": "src/parkour_solver/constraints/contacts.py"
+    },
+    {
+      "source": "src/parkour_solver/search/repair.py",
+      "symbols": [
+        "validate_vertical_schedule"
+      ],
+      "destination": "src/parkour_solver/validation/vertical.py"
+    },
+    {
+      "source": "src/parkour_solver/scene/geometry.py",
+      "symbols": [
+        "check_geometry"
+      ],
+      "destination": "src/parkour_solver/validation/scene.py"
+    },
+    {
+      "source": "src/parkour_solver/search/work.py",
+      "symbols": [
+        "CountingCompiler"
+      ],
+      "destination": "src/parkour_solver/bridge/counting.py"
+    },
+    {
+      "source": "src/parkour_solver/search/domain.py",
+      "symbols": [
+        "SupportOrder"
+      ],
+      "destination": "src/parkour_solver/search/compat/support_order.py"
+    },
+    {
+      "source": "src/parkour_solver/search/compat/time_progress.py",
+      "symbols": [
+        "generation_exhausted"
+      ],
+      "destination": "src/parkour_solver/search/completion.py"
+    },
+    {
+      "source": "src/parkour_solver/cli/solve.py",
+      "symbols": [
+        "run"
+      ],
+      "destination": "src/parkour_solver/search/application.py"
+    },
+    {
+      "source": "src/parkour_solver/spatial/cells.py",
+      "symbols": [
+        "diagnostic_svg"
+      ],
+      "destination": "tools/plotting/cells.py"
+    },
+    {
+      "source": "src/parkour_solver/spatial/regions.py",
+      "symbols": [
+        "diagnostic_svg"
+      ],
+      "destination": "tools/plotting/regions.py"
+    },
+    {
+      "source": "src/parkour_solver/observability/turns.py",
+      "symbols": [
+        "draw"
+      ],
+      "destination": "tools/plotting/turns.py"
+    }
+  ],
+  "symbolMoves": [
+    {
+      "source": "parkour_solver.numerics.model",
+      "name": "number",
+      "target": "parkour_solver.schema"
+    },
+    {
+      "source": "parkour_solver.numerics.model",
+      "name": "integer",
+      "target": "parkour_solver.schema"
+    },
+    {
+      "source": "parkour_solver.numerics.model",
+      "name": "TOLERANCE",
+      "target": "parkour_solver.schema"
+    },
+    {
+      "source": "parkour_solver.numerics.model",
+      "name": "wrap",
+      "target": "parkour_solver.physics.angles"
+    },
+    {
+      "source": "parkour_solver.numerics.model",
+      "name": "validate",
+      "target": "parkour_solver.validation.numerical"
+    },
+    {
+      "source": "parkour_solver.search.ranking",
+      "name": "objective_spec",
+      "target": "parkour_solver.scene.objectives"
+    },
+    {
+      "source": "parkour_solver.search.movement",
+      "name": "movement_settings",
+      "target": "parkour_solver.movement.settings"
+    },
+    {
+      "source": "parkour_solver.search.climbable",
+      "name": "ladder_settings",
+      "target": "parkour_solver.movement.ladder.settings"
+    },
+    {
+      "source": "parkour_solver.search.support_profiles",
+      "name": "prepare_scene",
+      "target": "parkour_solver.scene.normalize"
+    },
+    {
+      "source": "parkour_solver.search.repair",
+      "name": "floor_checks",
+      "target": "parkour_solver.constraints.contacts"
+    },
+    {
+      "source": "parkour_solver.search.repair",
+      "name": "contact_conflicts",
+      "target": "parkour_solver.constraints.contacts"
+    },
+    {
+      "source": "parkour_solver.search.repair",
+      "name": "avoid_contact_rows",
+      "target": "parkour_solver.constraints.contacts"
+    },
+    {
+      "source": "parkour_solver.search.repair",
+      "name": "validate_vertical_schedule",
+      "target": "parkour_solver.validation.vertical"
+    },
+    {
+      "source": "parkour_solver.scene.geometry",
+      "name": "check_geometry",
+      "target": "parkour_solver.validation.scene"
+    },
+    {
+      "source": "parkour_solver.search.work",
+      "name": "CountingCompiler",
+      "target": "parkour_solver.bridge.counting"
+    },
+    {
+      "source": "parkour_solver.validation.scoped_scene",
+      "name": "CountingCompiler",
+      "target": "parkour_solver.bridge.counting"
+    },
+    {
+      "source": "parkour_solver.validation.scoped_scene",
+      "name": "SearchWork",
+      "target": "parkour_solver.search.work"
+    },
+    {
+      "source": "parkour_solver.search.domain",
+      "name": "SupportOrder",
+      "target": "parkour_solver.search.compat.support_order"
+    },
+    {
+      "source": "parkour_solver.search.compat.time_progress",
+      "name": "generation_exhausted",
+      "target": "parkour_solver.search.completion"
+    },
+    {
+      "source": "parkour_solver.cli.solve",
+      "name": "run",
+      "target": "parkour_solver.search.application"
+    },
+    {
+      "source": "parkour_solver.spatial.cells",
+      "name": "diagnostic_svg",
+      "target": "tools.plotting.cells"
+    },
+    {
+      "source": "parkour_solver.spatial.regions",
+      "name": "diagnostic_svg",
+      "target": "tools.plotting.regions"
+    },
+    {
+      "source": "parkour_solver.observability.turns",
+      "name": "draw",
+      "target": "tools.plotting.turns"
+    }
+  ]
+}

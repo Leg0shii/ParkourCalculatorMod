@@ -7,7 +7,7 @@ import unittest
 from parkour_solver.search.virtual_goals import prepare_goal, height_clock, bind_goal, satisfied
 from parkour_solver.movement.program import empty_program, append_choice
 from parkour_solver.movement.normal import event_choice
-from tests.unit.spatial.test_checkpoint_guidance import flat_scene
+from tests.support.checkpoint_guidance import flat_scene
 
 
 class TerminalGoalTests(unittest.TestCase):
@@ -58,7 +58,7 @@ class TerminalGoalNumericalTests(unittest.TestCase):
         from parkour_solver.bridge.compiler import JavaCompiler
         from parkour_solver.search.engine import find_checkpoint_route
         from research.legacy_cell_routes.checkpoint_experiment import replay_witness
-        from parkour_solver.search.domain import SupportOrder
+        from parkour_solver.search.compat.support_order import SupportOrder
         scene=flat_scene();scene['movementSearch']['maxInputs']=20
         scene['objective']=dict(axis='X',sense='MAX')
         goal=dict(kind='landing_height_region',height=2.,

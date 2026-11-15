@@ -1,5 +1,6 @@
 from parkour_solver.io.provenance import source_revision
 import argparse
+import os
 import copy
 import json
 import math
@@ -8,14 +9,14 @@ import subprocess
 import sys
 import itertools
 
-from parkour_solver.search.support_profiles import prepare_scene
+from parkour_solver.scene.normalize import prepare_scene
 from parkour_solver.bridge.compiler import JavaCompiler
 from parkour_solver.spatial.checkpoints import Checkpoint
 from parkour_solver.search.engine import find_checkpoint_route
 from parkour_solver.validation.witness import replay_witness
 from parkour_solver.spatial.cells import decompose
 from parkour_solver.spatial.compat.corridors import corridor_for_points, landmarks
-from parkour_solver.search.domain import SupportOrder
+from parkour_solver.search.compat.support_order import SupportOrder
 from parkour_solver.validation.witness import witnesses
 from parkour_solver.io.checkpoint_store import CheckpointStore, read_report
 from parkour_solver.io.search_checkpoint import SearchCheckpoint
@@ -84,7 +85,7 @@ def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('--input',type=Path,required=True)
     parser.add_argument('--output',type=Path,required=True)
-    parser.add_argument('--compiler',type=Path,default=Path(__import__('os').environ.get('PKC_RUN_TICKS_COMPILER','build/native/compiler.json')))
+    parser.add_argument('--compiler',type=Path,default=Path(os.environ.get('PKC_RUN_TICKS_COMPILER','build/native/compiler.json')))
     parser.add_argument('--resume',type=Path)
     parser.add_argument('--retry-unknown',action='store_true')
     args=parser.parse_args()

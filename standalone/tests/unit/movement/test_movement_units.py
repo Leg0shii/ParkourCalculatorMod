@@ -4,7 +4,7 @@ import unittest
 
 from parkour_solver.movement.ladder.schedules import generate_ladder_schedules, climb_variants
 from parkour_solver.movement.units import ladder_units, movement_program, compile_units, exit_matches
-from tests.unit.movement.test_ladder_composition import airborne_case
+from tests.support.ladder_composition import airborne_case
 from parkour_solver.movement.ladder.episodes import compose_ladder_episodes
 from parkour_solver.physics.vertical import REST_CARRY
 

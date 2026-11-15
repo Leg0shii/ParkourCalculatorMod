@@ -12,8 +12,8 @@ from parkour_solver.movement.ladder.schedules import generate_ladder_schedules
 from parkour_solver.movement.ladder.transfers import append_ladder_programs, open_program
 from parkour_solver.movement.generation import generate_unit_programs
 from parkour_solver.movement.units import compile_units
-from tests.unit.movement.test_ladder_composition import airborne_case
-from parkour_solver.scene.geometry import check_geometry
+from tests.support.ladder_composition import airborne_case
+from parkour_solver.validation.scene import check_geometry
 from parkour_solver.numerics import prepare, validate
 
 

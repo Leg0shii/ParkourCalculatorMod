@@ -6,7 +6,7 @@ import subprocess
 import sys
 import time
 
-from parkour_solver.search.support_profiles import prepare_scene
+from parkour_solver.scene.normalize import prepare_scene
 from parkour_solver.bridge.compiler import JavaCompiler
 from research.legacy_cell_routes.checkpoint_experiment import replay_witness
 from parkour_solver.search.engine import _motion_bound, evaluate_program
@@ -14,7 +14,8 @@ from parkour_solver.spatial.checkpoints import retain_unresolved
 from research.legacy_cell_routes.failure_diagnostic import read
 from research.legacy_cell_routes.generation_diagnostic import save
 from parkour_solver.spatial.cells import decompose
-from parkour_solver.validation.scoped_scene import CorridorAdapter, SearchWork
+from parkour_solver.validation.scoped_scene import CorridorAdapter
+from parkour_solver.search.work import SearchWork
 from parkour_solver.spatial.compat.corridors import corridor_for_points, landmarks
 
 

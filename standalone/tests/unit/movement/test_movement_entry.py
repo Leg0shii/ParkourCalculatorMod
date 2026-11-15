@@ -9,16 +9,17 @@ import unittest
 from unittest.mock import patch
 
 from parkour_solver.search.climbable import entry_context
-from parkour_solver.search.support_profiles import prepare_scene
+from parkour_solver.scene.normalize import prepare_scene
 from parkour_solver.movement.ladder.episodes import compose_ladder_episodes
 from parkour_solver.bridge.compiler import JavaCompiler
 from parkour_solver.scene.ladders import entry_channels
 from parkour_solver.movement.ladder.transfers import append_ladder_programs, open_program
 from parkour_solver.search.entry import build_entry_problem, probe_region_entries, entry_contact_options
 from parkour_solver.numerics.builders import _raw_candidate
-from parkour_solver.scene.geometry import check_geometry
-from tests.unit.movement.test_ladder_composition import airborne_case
-from parkour_solver.numerics import validate; from parkour_solver.numerics import solve
+from parkour_solver.validation.scene import check_geometry
+from tests.support.ladder_composition import airborne_case
+from parkour_solver.numerics import validate
+from parkour_solver.numerics import solve
 from parkour_solver.physics.vertical import CLIMB_CARRY
 
 

@@ -12,7 +12,6 @@ def save(path, report):
     temporary.replace(path)
 
 
-
 def brief(result):
     best = result.get('best')
     return dict(status=result['status'], termination=result['termination'], elapsedSeconds=result['elapsedSeconds'],

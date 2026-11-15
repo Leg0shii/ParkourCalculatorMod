@@ -17,15 +17,18 @@ import threading
 import time
 
 from parkour_solver.numerics import prepare, validate
-from parkour_solver.search.repair import validate_vertical_schedule
-from parkour_solver.search.support_profiles import prepare_scene
+from parkour_solver.validation.vertical import validate_vertical_schedule
+from parkour_solver.scene.normalize import prepare_scene
 from parkour_solver.bridge.compiler import JavaCompiler
-from parkour_solver.search.movement import find_movement_blocks, iter_movement_programs, movement_settings
-from parkour_solver.scene.geometry import check_geometry
+from parkour_solver.search.movement import find_movement_blocks, iter_movement_programs
+from parkour_solver.movement.settings import movement_settings
+from parkour_solver.validation.scene import check_geometry
 from parkour_solver.search.ranking import candidate_rank
 from parkour_solver.scene.route import prepare_route, supports
-from parkour_solver.spatial.cells import decompose, diagnostic_svg, segment_intervals
-from parkour_solver.validation.scoped_scene import CorridorAdapter, CountingCompiler, SearchWork
+from parkour_solver.spatial.cells import decompose, segment_intervals
+from tools.plotting.cells import diagnostic_svg
+from parkour_solver.validation.scoped_scene import CorridorAdapter
+from parkour_solver.bridge.counting import CountingCompiler; from parkour_solver.search.work import SearchWork
 from parkour_solver.spatial.compat.corridors import Corridor, corridor_for_points, enumerate_routes, horizontal_trace, landmarks, prescribed_projection, signature
 
 

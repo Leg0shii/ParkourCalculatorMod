@@ -12,15 +12,15 @@ from parkour_solver.spatial.regions import build_route_graph
 from parkour_solver.spatial.compat.corridors import enumerate_routes
 from parkour_solver.search.compat.semantic_adapter import SemanticCorridorAdapter
 from parkour_solver.search.domain import InitialJumpDomain
-from tests.unit.spatial.test_cell_routes import side_scene
-from tests.unit.spatial.test_semantic_routes import support_scene
-from tests.unit.spatial.test_checkpoint_guidance import flat_scene
+from tests.support.cell_routes import side_scene
+from tests.support.semantic_routes import support_scene
+from tests.support.checkpoint_guidance import flat_scene
 
 
 class SemanticStageTests(unittest.TestCase):
     def test_first_ready_proposal_is_scored_before_requesting_more(self):
         from parkour_solver.search.engine import find_checkpoint_route
-        from tests.unit.search.test_depth_first import program
+        from tests.support.depth_first import program
         scene=support_scene();g=build_route_graph(scene,decompose(scene))
         routes,_=enumerate_routes(scene,decompose(scene),route_graph=g,max_routes=12,max_visits=1)
         route=next(r for r in routes if len(SemanticCorridorAdapter(scene,r).goals())==2)
@@ -65,7 +65,7 @@ class SemanticStageTests(unittest.TestCase):
 
     def test_expired_slice_commits_a_scored_arrival_before_suspending(self):
         from parkour_solver.search.engine import find_checkpoint_route
-        from tests.unit.search.test_depth_first import program
+        from tests.support.depth_first import program
         scene=support_scene();d=decompose(scene);g=build_route_graph(scene,d)
         routes,_=enumerate_routes(scene,d,route_graph=g,max_routes=12,max_visits=1)
         route=next(r for r in routes if len(SemanticCorridorAdapter(scene,r).goals())==2)
@@ -189,7 +189,7 @@ class SemanticNumericalTests(unittest.TestCase):
     def test_stored_real11_witness_has_an_unseeded_automatic_corridor(self):
         from research.legacy_cell_routes.coverage_audit import audit
         from parkour_solver.search.goals import _landing_prefixes
-        from parkour_solver.search.support_profiles import prepare_scene
+        from parkour_solver.scene.normalize import prepare_scene
         from parkour_solver.spatial.compat.corridors import Corridor
         root=AUTONOMY_DATA/'experiments'
         fixture=json.loads((root/'automatic-corridors/fixture.json').read_text())

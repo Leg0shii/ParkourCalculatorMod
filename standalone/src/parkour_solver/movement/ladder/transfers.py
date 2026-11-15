@@ -1,7 +1,7 @@
 import copy
 import time
 import heapq
-from parkour_solver.numerics.model import integer
+from parkour_solver.schema import integer
 
 from parkour_solver.movement.ladder.episodes import compose_ladder_episodes
 from parkour_solver.scene.ladders import entry_channels, exit_faces

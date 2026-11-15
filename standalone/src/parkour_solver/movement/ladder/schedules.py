@@ -4,7 +4,7 @@ from collections import defaultdict, deque
 from itertools import combinations
 
 from parkour_solver.physics.vertical import f32, vertical_carry, vertical_move, vertical_step
-from parkour_solver.numerics.model import integer, number
+from parkour_solver.schema import integer, number
 from parkour_solver.movement.units import exit_matches
 from parkour_solver.movement.vertical_profiles import trace_ladder_schedule
 from parkour_solver.movement.generation import generate_unit_programs, materialize_generated_units, sneak_domain

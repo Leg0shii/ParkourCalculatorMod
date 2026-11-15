@@ -4,7 +4,7 @@ import unittest
 
 from parkour_solver.spatial.compat.corridor_guards import movement_regions
 from parkour_solver.constraints.route_guards import RouteGuards
-from tests.unit.spatial.test_route_progress import line_route
+from tests.support.route_progress import line_route
 
 
 class RouteGuardTests(unittest.TestCase):

@@ -5,12 +5,12 @@ from pathlib import Path
 import unittest
 from unittest.mock import patch
 
-from parkour_solver.search.support_profiles import prepare_scene
+from parkour_solver.scene.normalize import prepare_scene
 from research.legacy_cell_routes.experiment import compact, run_arm, verify_witness
-from parkour_solver.validation.scoped_scene import SearchWork
+from parkour_solver.search.work import SearchWork
 from parkour_solver.bridge.compiler import JavaCompiler
 from parkour_solver.search.ordered_route import find_route
-from tests.unit.search.test_search import route
+from tests.support.ordered_route import route
 
 
 ROOT = AUTONOMY_DATA / 'experiments/cell-routes/controls'
@@ -57,7 +57,7 @@ class CellExperimentTests(unittest.TestCase):
     def test_deadline_retains_active_prefix_generation_records(self):
         from parkour_solver.movement.generation import GENERATORS
         from parkour_solver.search.movement import iter_movement_programs
-        from tests.unit.spatial.test_cell_routes import side_scene
+        from tests.support.cell_routes import side_scene
         scene = side_scene()
         scene['movementSearch']['types'] = ['normal']
         class TimedGenerator:

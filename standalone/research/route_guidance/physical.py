@@ -5,10 +5,11 @@ import time
 
 import numpy as np
 
-from parkour_solver.search.repair import validate_vertical_schedule
-from parkour_solver.scene.geometry import check_geometry
+from parkour_solver.validation.vertical import validate_vertical_schedule
+from parkour_solver.validation.scene import check_geometry
 from parkour_solver.scene.route import initial_guess, schedule, supports
-from parkour_solver.numerics import prepare, validate; from parkour_solver.numerics import solve
+from parkour_solver.numerics import prepare, validate
+from parkour_solver.numerics import solve
 from research.route_guidance.graph import assignments, edge_path
 
 

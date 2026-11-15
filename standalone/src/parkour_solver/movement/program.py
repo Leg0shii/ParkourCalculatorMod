@@ -3,7 +3,7 @@ import hashlib
 import json
 
 from parkour_solver.physics.vertical import vertical_carry
-from parkour_solver.numerics.model import integer, number
+from parkour_solver.schema import integer, number
 from parkour_solver.movement.contact_combinations import merge_contacts
 from parkour_solver.movement.units import compile_units, profile_program, shifted_unit
 from parkour_solver.movement.vertical_profiles import trace_ladder_schedule
@@ -258,7 +258,6 @@ def program_physics_key(program):
         key=lambda row: json.dumps(row, sort_keys=True))
     return json.dumps([profile, program['terminalSupport'], program.get('threshold', .005),
                        program['ladderEvents']], sort_keys=True)
-
 
 
 def program_search_key(program):

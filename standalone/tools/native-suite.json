@@ -1,5 +1,5 @@
 {
-  "source": "dd738c98 acceptance",
+  "source": "dd738c98 acceptance (same 600 tests) plus 10 package/profiler boundary regressions",
   "modules": [
     "tests.integration.test_acceptance",
     "tests.unit.movement.test_block_contacts",
@@ -70,7 +70,10 @@
     "tests.unit.numerics.test_model",
     "tests.unit.numerics.test_movement",
     "tests.unit.numerics.test_solver",
-    "tests.unit.numerics.test_worker_bounds"
+    "tests.unit.numerics.test_worker_bounds",
+    "tests.integration.test_package_layout",
+    "tests.integration.test_profiling"
   ],
-  "excluded": "Dedicated ladder/climbable/vine/movement-entry modules, as in baseline; generic mixed ladder controls remain included"
+  "excluded": "Dedicated ladder/climbable/vine/movement-entry modules, as in baseline; generic mixed ladder controls remain included",
+  "baselineTests": 600
 }

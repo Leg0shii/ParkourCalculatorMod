@@ -4,13 +4,14 @@ import json
 from pathlib import Path
 import unittest
 
-from parkour_solver.search.support_profiles import build_transition_graph, compile_block_path, prepare_scene
+from parkour_solver.search.support_profiles import build_transition_graph, compile_block_path
+from parkour_solver.scene.normalize import prepare_scene
 from parkour_solver.movement.profiles import normal_jump_height
 from parkour_solver.constraints.avoidance import DEFAULT_CAPS, blockage_counts, blockage_usage, compile_passages, faces, gate_timeline, outside, passage_options, passage_y_valid, within_caps
 from parkour_solver.scene.geometry import BODY_HEIGHT, expanded_box
 from parkour_solver.scene.route import HALF_WIDTH, prepare_route, schedule
 from parkour_solver.search.ranking import passage_seed
-from tests.unit.search.test_block_search import Coefficients
+from tests.support.block_coefficients import Coefficients
 from parkour_solver.numerics import prepare
 
 

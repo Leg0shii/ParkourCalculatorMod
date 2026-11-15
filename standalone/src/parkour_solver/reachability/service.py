@@ -114,7 +114,7 @@ class InteractionGate:
     def prepare(self, program, *, scene=None, require_complete=False):
         from parkour_solver.movement.program import compile_program, program_physics_key
         from parkour_solver.scene.route import prepare_route, schedule
-        from parkour_solver.search.repair import validate_vertical_schedule
+        from parkour_solver.validation.vertical import validate_vertical_schedule
         from parkour_solver.search.identity import digest
         scene=self.scene if scene is None else scene
         key=('prepared',digest(dict(scene={k:v for k,v in scene.items() if k!='movementSearch'},

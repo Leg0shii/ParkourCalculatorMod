@@ -1,3 +1,5 @@
+from parkour_solver.validation.vertical import validate_vertical_schedule
+from parkour_solver.constraints.contacts import floor_checks, contact_conflicts, avoid_contact_rows
 import copy
 import heapq
 import time
@@ -8,113 +10,9 @@ from parkour_solver.scene.route import center_bounds, supports
 from parkour_solver.search.ranking import candidate_rank
 from parkour_solver.search.ordered_route import find_route
 from parkour_solver.constraints.avoidance import blockage_usage, gate_timeline, passage_options, passage_y_valid, within_caps
-from parkour_solver.scene.geometry import check_geometry
+from parkour_solver.validation.scene import check_geometry
 from parkour_solver.constraints.hit_events import wall_hit_options
 from parkour_solver.search.repair_state import branch_key, compatible, context as repair_context
-
-
-def floor_checks(scene, block_ids, profiles, *, envelopes=None):
-    checks = []
-    by_id = {b['id']: b for b in scene['blocks']}
-    for leg, profile in enumerate(profiles):
-        target_top = by_id[block_ids[leg + 1]]['top']
-        jumps = profile.get('jump', [True] + [False] * (profile['airtime'] - 1))
-        config = {'threshold': profile.get('threshold', .005), 'jumpVelocity': [f32(.42) if j else None for j in jumps],
-                  'sneak': profile.get('sneak', [False] * profile['airtime'])}
-        for offset in range(profile['airtime']):
-            y = profile['position'][offset]
-            next_y = profile['position'][offset + 1]
-            movement = vertical_move(config, offset, profile['velocity'][offset], profile.get('ladderTicks', [False] * (profile['airtime'] + 1))[offset])
-            if movement >= 0:
-                continue
-            for block in scene['blocks']:
-                if envelopes is not None:
-                    from parkour_solver.reachability.service import block_interaction
-                    box = scene['collisionScene']['solids'][block['solidIndex']]
-                    if block_interaction(envelopes,box,offset,('Y',))['ruledOut']:
-                        continue
-                top = block['top']
-                planned_floor = any(e['offset'] == offset and e.get('role') in ('landing', 'step')
-                                    and e['plane'] == top and e['box'] == scene['collisionScene']['solids'][block['solidIndex']]
-                                    for e in profile.get('contactEvents', []))
-                if next_y <= top <= y and not planned_floor and not (offset + 1 == profile['airtime'] and top == target_top):
-                    checks.append({'leg': leg, 'offset': offset, 'block': copy.deepcopy(block), 'reason': 'earlier_floor'})
-        for block in scene['blocks']:
-            if envelopes is not None:
-                from parkour_solver.reachability.service import block_interaction
-                box = scene['collisionScene']['solids'][block['solidIndex']]
-                if block_interaction(envelopes,box,0)['ruledOut']:
-                    continue
-            selected_step = profile.get('profileKind') in ('stair', 'step') and block['id'] == block_ids[leg + 1]
-            selected_step |= any(e['input'] == 0 and e['case'] in ('normal_step', 'slab_boost')
-                                 and e['box'] == scene['collisionScene']['solids'][block['solidIndex']]
-                                 for e in profile.get('caseEvents', []))
-            step_config = dict(config, contacts=[{'state': 1, 'plane': block['top'], 'direction': -1, 'step': True}])
-            _, _, _, failures = vertical_step(step_config, 0, profile['position'][0], profile['velocity'][0], False, True, 0)
-            if not selected_step and not failures:
-                checks.append({'leg': leg, 'offset': 1, 'block': copy.deepcopy(block), 'reason': 'unplanned_stair'})
-    return checks
-
-
-def contact_conflicts(checks, plan, candidate):
-    conflicts = []
-    for check in checks:
-        tick = plan['events'][check['leg']]['jump'] + check['offset']
-        x, z = candidate['positions'][tick]
-        if supports(check['block'], x, z):
-            conflicts.append(dict(check, state=tick, position=[x, z]))
-    return conflicts
-
-
-def avoid_contact_rows(conflict, clearance):
-    bounds = center_bounds(conflict['block'])
-    x, z = conflict['position']
-    rows = []
-    for axis, coordinate, lo, hi in [('X', x, bounds[0], bounds[1]), ('Z', z, bounds[2], bounds[3])]:
-        for cmp, edge in [('LE', lo - clearance), ('GE', hi + clearance)]:
-            rows.append((abs(coordinate - edge), {'leg': conflict['leg'], 'offset': conflict['offset'],
-                                                 'mode': axis, 'cmp': cmp, 'rhs': edge,
-                                                 'name': conflict['reason'] + ':' + conflict['block']['id']}))
-    return [row for _, row in sorted(rows, key=lambda value: value[0])]
-
-
-def validate_vertical_schedule(route, profiles, plan):
-    n = plan['ticks']
-    contacts = []
-    for event, profile in zip(plan['events'], profiles):
-        if event['landing'] is not None:
-            for contact in profile['contacts']:
-                contacts.append(dict(contact, state=event['jump'] + contact['state']))
-        for tick in range(event['landed'], event['jump']):
-            contacts.append({'state': tick + 1, 'plane': profile['position'][0], 'direction': -1})
-    from parkour_solver.movement.contact_combinations import merge_contacts
-    contacts = merge_contacts([dict(c, axis=1) for c in contacts] + plan.get('verticalContacts', []))
-    vertical = {'profile': 'minecraft-1.8.9', 'position': route['initial']['position'][1],
-                'velocity': route['initial']['velocity'][1], 'onGround': True,
-                'previousHorizontalCollision': False, 'threshold': route.get('physicsThreshold', .005),
-                'jumpVelocity': [f32(.42) if jump else None for jump in plan['jump']],
-                'sneak': plan.get('sneak', [False] * n),
-                'contacts': [{k: v for k, v in c.items() if k != 'axis'} for c in contacts]}
-    x, synthetic_hits = 0., []
-    hit_states = {c['state'] for c in plan.get('contacts', [])}
-    for t in range(n):
-        x += .05 if t + 1 in hit_states else .1
-        if t + 1 in hit_states:
-            synthetic_hits.append({'state': t + 1, 'axis': 0, 'direction': 1, 'plane': x})
-    problem = prepare({'version': 1, 'ticks': n, 'position': [0, 0], 'velocity': [0, 0],
-                       'magnitude': [.1] * n, 'friction': [0] * n, 'base': [0] * n, 'yaw': [0] * n,
-                       'contacts': synthetic_hits, 'ladderTicks': plan.get('ladderTicks', [False] * (n + 1)),
-                       'objective': {'axis': 'X', 'sense': 'MAX', 'tick': n}, 'vertical': vertical})
-    checked = validate(problem, problem['yaw'])
-    last_profile = profiles[len(plan['events']) - 1] if profiles else {}
-    terminal_ground = last_profile['grounded'][-1] if plan['stage'] == 'jump' and last_profile.get('composition') == 'movement_program' else True
-    matched = True
-    for event, profile in zip(plan['events'], profiles):
-        if profile.get('composition') == 'movement_program' and event['landing'] is not None:
-            first, end = event['jump'], event['landing'] + 1
-            matched &= checked['y'][first:end] == profile['position'] and checked['vy'][first:end] == profile['velocity']
-    return {'feasible': matched and checked['feasible'] and checked['onGround'] == plan['grounded'] + [terminal_ground],
-            'vertical': vertical, 'y': checked['y'], 'vy': checked['vy'], 'onGround': checked['onGround']}
 
 
 def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candidate_seconds, retries,

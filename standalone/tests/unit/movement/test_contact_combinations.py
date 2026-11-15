@@ -12,7 +12,8 @@ from parkour_solver.bridge.compiler import JavaCompiler
 from parkour_solver.movement.ladder.schedules import trace_ladder_schedule
 from parkour_solver.scene.route import HALF_WIDTH, prepare_route, schedule
 from parkour_solver.scene.geometry import BODY_HEIGHT
-from parkour_solver.numerics import prepare, validate; from parkour_solver.numerics import solve
+from parkour_solver.numerics import prepare, validate
+from parkour_solver.numerics import solve
 from parkour_solver.physics.vertical import CLIMB_CARRY, REST_CARRY, f32
 
 
@@ -223,8 +224,10 @@ class CombinationSceneTests(unittest.TestCase):
                      'Set PKC_RUN_TICKS_COMPILER and PKC_IPOPT_PYTHON')
 class StepCombinationIntegrationTests(unittest.TestCase):
     def test_ipopt_step_and_two_wall_contacts_share_one_movement(self):
-        from parkour_solver.search.support_profiles import prepare_scene, compile_block_path
-        from parkour_solver.search.repair import floor_checks, solve_contact_branches
+        from parkour_solver.scene.normalize import prepare_scene
+        from parkour_solver.search.support_profiles import compile_block_path
+        from parkour_solver.constraints.contacts import floor_checks
+        from parkour_solver.search.repair import solve_contact_branches
         floor, stair = [-2,0,-2,1,1,3], [1,0,-2,3,1.5,3]
         xwall, zwall = [1.5,0,-3,2,6,3], [-3,0,1.5,3,6,2]
         r = {'version':1,'sceneModel':'collision_boxes','geometryBounds':[-8,-5,-8,8,12,8],
@@ -249,8 +252,10 @@ class StepCombinationIntegrationTests(unittest.TestCase):
         self.assertEqual(result['best']['candidate']['y'][1],1.5)
 
     def test_ipopt_ceiling_x_z_ladder_refresh_then_ceiling_stop_and_land(self):
-        from parkour_solver.search.support_profiles import prepare_scene, compile_block_path
-        from parkour_solver.search.repair import floor_checks, solve_contact_branches
+        from parkour_solver.scene.normalize import prepare_scene
+        from parkour_solver.search.support_profiles import compile_block_path
+        from parkour_solver.constraints.contacts import floor_checks
+        from parkour_solver.search.repair import solve_contact_branches
         floor, goal = [-2,0,-2,.5,1,.85], [.5,0,-2,.85,1,.85]
         xwall, zwall, ceiling = [.85,0,-2,2,5,2], [-2,0,.85,2,5,2], [-2,2.85,-2,2,4,2]
         request = {'version':1,'sceneModel':'collision_boxes','geometryBounds':[-8,-5,-8,8,12,8],

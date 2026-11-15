@@ -67,7 +67,7 @@ class ConstraintVariants:
         """
         if 'contactCheck' in item:
             self.check()
-            from parkour_solver.search.repair import avoid_contact_rows
+            from parkour_solver.constraints.contacts import avoid_contact_rows
             from parkour_solver.scene.route import center_bounds
             check = item['contactCheck']
             b, t = center_bounds(check['block']), check['offset']

@@ -3,13 +3,13 @@ import json
 import unittest
 from unittest.mock import patch
 
-from parkour_solver.search.support_profiles import prepare_scene
+from parkour_solver.scene.normalize import prepare_scene
 from parkour_solver.search.engine import find_checkpoint_route
 from parkour_solver.spatial.event_routes import build_route_domain, build_event_graph, initial_cursor, next_goals
 from parkour_solver.search.events.adapter import EventGuideAdapter
 from parkour_solver.search.events.engine import discovery_settings
-from tests.unit.spatial.test_checkpoint_guidance import flat_scene
-from tests.unit.search.test_depth_first import program
+from tests.support.checkpoint_guidance import flat_scene
+from tests.support.depth_first import program
 from parkour_solver.movement.program import empty_program, boundary_state
 from parkour_solver.movement.generation import generate_choices
 

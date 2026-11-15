@@ -4,8 +4,9 @@ import random
 import unittest
 
 from parkour_solver.numerics.constraints import reduce_walls
-from parkour_solver.numerics.model import prepare, validate, fingerprint
-from tests.unit.numerics.test_model import problem
+from parkour_solver.numerics.model import prepare, fingerprint
+from parkour_solver.validation.numerical import validate
+from tests.support.numerical_model import problem
 
 
 class NumericalConstraintTests(unittest.TestCase):

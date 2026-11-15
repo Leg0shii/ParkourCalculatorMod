@@ -1,3 +1,4 @@
+from tests.support.checkpoint_guidance import flat_scene, programs
 from tests.support.paths import AUTONOMY_DATA
 import copy
 import itertools
@@ -9,35 +10,23 @@ import time
 import threading
 import unittest
 
-from parkour_solver.search.support_profiles import prepare_scene
+from parkour_solver.scene.normalize import prepare_scene
 from parkour_solver.spatial.checkpoints import checkpoint, horizontal_segments, retain_prefix
 from parkour_solver.search.engine import ScopedWork, evaluate_program, _motion_bound
 from parkour_solver.spatial.cells import decompose
-from parkour_solver.validation.scoped_scene import CorridorAdapter, SearchWork
+from parkour_solver.validation.scoped_scene import CorridorAdapter
+from parkour_solver.search.work import SearchWork
 from parkour_solver.spatial.compat.corridors import Corridor, audit_candidate, corridor_for_points, landmarks
 from parkour_solver.bridge.compiler import JavaCompiler
 from parkour_solver.movement.program import append_choice, compile_program, empty_program, truncate_program
 from parkour_solver.movement.generation import generate_choices
 from parkour_solver.search.movement import iter_movement_programs
 from parkour_solver.scene.route import prepare_route, schedule
-from tests.unit.spatial.test_cell_routes import side_scene
-from tests.unit.search.test_search import route
+from tests.support.cell_routes import side_scene
+from tests.support.ordered_route import route
 
 
 ROOT = AUTONOMY_DATA
-
-
-def flat_scene():
-    return prepare_scene(dict(version=1, sceneModel='collision_boxes', geometryBounds=[-10,-5,-10,20,12,10],
-        initial=dict(position=[.5,1,.5], velocity=[.25,-.0784000015258789,0], yaw=-90),
-        startBlock='start', goalBlock='goal', maxWallHits=0, maxContactCombinations=0,
-        blocks=[dict(id='start', boxes=[[-2,0,-2,3,1,2]]), dict(id='goal', boxes=[[5,0,-1,6,1,1]])],
-        movementSearch=dict(types=['normal'], maxInputs=30, maxPrefixes=96, maxQueuedPrefixes=128, maxChoicesPerType=16)))
-
-
-def programs(scene, tick):
-    return list(itertools.islice(iter_movement_programs(scene, checkpoint_tick=tick, threshold=0.,
-                    deadline=time.monotonic()+3), 64))
 
 
 class CheckpointTests(unittest.TestCase):
@@ -170,7 +159,8 @@ class CheckpointNumericalTests(unittest.TestCase):
 
     def test_repair_does_not_replace_a_supplied_seed_with_a_rejected_proposal(self):
         import gzip
-        from parkour_solver.search.repair import floor_checks, solve_contact_branches
+        from parkour_solver.constraints.contacts import floor_checks
+        from parkour_solver.search.repair import solve_contact_branches
         from research.legacy_cell_routes.checkpoint_experiment import replay_witness
         records = json.loads(gzip.decompress((ROOT/'experiments/failure-fixes/evidence/fix-warm.json.gz').read_bytes()))['runs']
         saved = next(r for r in records if r['name']=='turn-blockage-alternate_turn'

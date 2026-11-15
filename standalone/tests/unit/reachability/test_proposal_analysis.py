@@ -1,3 +1,4 @@
+from tests.support.proposal_analysis import Coefficients
 from tests.support.paths import REGRESSION_FIXTURES
 from tests.support.paths import AUTONOMY_DATA
 import gzip
@@ -9,18 +10,8 @@ from unittest.mock import Mock, patch
 
 from parkour_solver.reachability.service import InteractionGate
 from parkour_solver.search.movement import screen_program
-from tests.unit.spatial.test_checkpoint_guidance import flat_scene
-from tests.unit.search.test_minimum_runs import flight
-
-
-class Coefficients:
-    def __init__(self):
-        self.calls=0
-
-    def compile(self, route, plan, seconds):
-        self.calls+=1
-        n=plan['ticks']
-        return dict(magnitude=[1.]*n,friction=[.9]*n,base=[0.]*n)
+from tests.support.checkpoint_guidance import flat_scene
+from tests.support.minimum_runs import flight
 
 
 class ProposalAnalysisTests(unittest.TestCase):
@@ -99,7 +90,7 @@ class ProposalOwnershipTests(unittest.TestCase):
 class Real11JointPrerequisiteTests(unittest.TestCase):
     def test_b3_lower_higher_conjunction_rejects_before_wall_and_corner_fanout(self):
         from parkour_solver.bridge.compiler import JavaCompiler
-        from parkour_solver.search.support_profiles import prepare_scene
+        from parkour_solver.scene.normalize import prepare_scene
         from parkour_solver.movement.program import boundary_state
         from parkour_solver.movement.stepping import open_stepping_choices
         from parkour_solver.search.anchors.adapter import AnchorAdapter

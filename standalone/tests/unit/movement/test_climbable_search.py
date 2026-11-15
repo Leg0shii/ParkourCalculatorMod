@@ -6,14 +6,16 @@ import os
 from pathlib import Path
 import unittest
 
-from parkour_solver.search.support_profiles import find_blocks, prepare_scene
-from parkour_solver.search.repair import validate_vertical_schedule
-from parkour_solver.search.climbable import ladder_settings, run_allocations
+from parkour_solver.search.support_profiles import find_blocks
+from parkour_solver.scene.normalize import prepare_scene
+from parkour_solver.validation.vertical import validate_vertical_schedule
+from parkour_solver.movement.ladder.settings import ladder_settings
+from parkour_solver.search.climbable import run_allocations
 from parkour_solver.bridge.compiler import JavaCompiler
 from parkour_solver.movement.ladder.events import compile_ladder_events
 from parkour_solver.scene.ladders import climb_walls, entry_channels, ladder_columns, schedule_constraints
 from parkour_solver.movement.ladder.schedules import generate_ladder_schedules
-from parkour_solver.scene.geometry import check_geometry
+from parkour_solver.validation.scene import check_geometry
 from parkour_solver.scene.route import prepare_route, schedule
 from parkour_solver.numerics import prepare, validate
 
