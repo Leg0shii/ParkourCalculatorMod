@@ -1,0 +1,238 @@
+import copy
+import time
+
+from parkour_solver.movement.cases import entry_possible
+from parkour_solver.movement.program import append_choice, boundary_state, empty_program, program_physics_key, program_search_key, truncate_program
+from parkour_solver.movement.generation import generate_choices, propose_choices, assess_proposal
+from parkour_solver.search.identity import digest, processing_key
+from parkour_solver.search.comparison import POLICY_VERSION as COMPARISON_POLICY_VERSION
+
+
+def persistent_programs(scene, *, settings, report, continuation=None, deadline=None, cancel_event=None, work=None,
+                        initial_programs=None, checkpoint_tick=None, threshold=.005, screen=None,
+                        context_adapter=None, program_filter=None, stop_on_goal=True, terminal_goal=None, stop_supports=None,
+                        node_evaluator=None, priority_key=None, policy_context=None, **kwargs):
+    initial = empty_program(scene['initial'], threshold=threshold)
+    initial['terminalSupport'] = scene['startBlock']
+    seeds = [initial] if initial_programs is None else initial_programs
+    # The scene also carries movementSearch. Hash its physical fields here;
+    # settings below already owns the domain and deliberately excludes slices.
+    context_value = dict(version=3, comparisonPolicy=COMPARISON_POLICY_VERSION, proposalPolicy=1, scene={k:v for k,v in scene.items() if k!='movementSearch'}, settings={k: v for k, v in settings.items() if k not in
+        ('maxPrefixes', 'maxQueuedPrefixes', 'maxChoicesPerType', 'expansionsPerProposal')},
+        roots=[program_search_key(p) for p in seeds], checkpoint=checkpoint_tick, threshold=threshold,
+        stopOnGoal=stop_on_goal)
+    if terminal_goal is not None:
+        context_value['terminalGoal']=terminal_goal
+    if stop_supports is not None:
+        context_value['stopSupports']=stop_supports
+    if policy_context is not None:
+        context_value.update(version=4,decisionPolicy=policy_context)
+    context=digest(context_value)
+    if continuation is not None and continuation.get('context') != context:
+        raise ValueError('Incompatible movement generation checkpoint')
+    state = copy.deepcopy(continuation) if continuation is not None else dict(version=4 if policy_context is not None else 3, context=context,
+        pending=copy.deepcopy(seeds), ready=[], expansion=None, seen=[], generated=0, expanded=0, emitted=0,
+        screened=0, policyRejections=0, exhausted=False)
+    state.setdefault('exclusions', [])
+    if node_evaluator is not None:
+        state.setdefault('nodes', {})
+        state.setdefault('deferredNodes', [])
+    seen = set(state['seen'])
+    expanded = 0
+    iterator, iterator_key = None, None
+    initial_bounds = [scene['initial']['position'][0]]*2+[scene['initial']['position'][2]]*2
+
+    def budget():
+        if cancel_event is not None and cancel_event.is_set():
+            raise TimeoutError('cancelled')
+        if work is not None:
+            work.check()
+        if deadline is not None and time.monotonic() >= deadline:
+            raise TimeoutError('deadline')
+
+    def complete(p):
+        if terminal_goal is not None:
+            return p.get('terminalGoal')==terminal_goal
+        return (checkpoint_tick is not None and p['profile']['airtime'] == checkpoint_tick or
+            stop_on_goal and p['profile']['grounded'][-1] and p['terminalSupport'] in (stop_supports or [scene['goalBlock']])
+            and p['profile']['airtime'] > 0)
+
+    def key(p):
+        return priority_key(p) if priority_key else processing_key(p, digest(program_physics_key(p)))
+
+    def take(items):
+        p = min(items, key=key)
+        items.remove(p)
+        return p
+
+    def project_owned(program):
+        from parkour_solver.search.goals import _landing_prefixes
+        arrivals=[p for block in (stop_supports or [scene['goalBlock']])
+                  for p in _landing_prefixes(scene,program,block,reuse_full=True)]
+        if not arrivals:return program
+        owned=min(arrivals,key=lambda p:(p['profile']['airtime'],p['terminalSupport']))
+        owned['ownedEndpoint']=owned['profile']['airtime']
+        return owned
+
+    def update(reason='running'):
+        report.update(termination=reason, expandedPrefixes=expanded, totalExpandedPrefixes=state['expanded'],
+            generated=state['generated'], emittedPrograms=state['emitted'], screenedPrefixes=state['screened'],
+            remainingPrefixes=len(state['pending'])+len(state['ready'])+len(state.get('deferredNodes',[]))+int(state['expansion'] is not None)+int(state.get('nodeInFlight') is not None),
+            deferredNodes=len(state.get('deferredNodes',[])),
+            queuedCompletePrograms=len(state['ready']), queueDrops=0, partialQueueDrops=0, completeQueueDrops=0,
+            policyRejections=state['policyRejections'], queuePolicy='persistent', types=settings['types'],
+            explicitProgramPriority=False, deferredPrefixes=max(0, len(state['pending'])-settings['maxQueuedPrefixes']),
+            continuation=state, minimumTicksProven=False)
+
+    try:
+        while state['pending'] or state['ready'] or state['expansion'] is not None or state.get('nodeInFlight') is not None:
+            budget()
+            e = state['expansion']
+            if state['ready'] and (e is None or e.get('cursor', 0) % settings['maxChoicesPerType'] == 0):
+                program = take(state['ready'])
+                if program_filter is not None and not program_filter(program):
+                    state['policyRejections'] += 1
+                    continue
+                state['emitted'] += 1
+                program['terminal'] = 'open' if checkpoint_tick is not None else 'landed'
+                update()
+                yield program
+                continue
+            if e is None:
+                if expanded >= settings['maxPrefixes']:
+                    update('prefix_limit')
+                    return
+                program = state.get('nodeInFlight') or take(state['pending'])
+                if program_filter is not None and not program_filter(program):
+                    state['policyRejections'] += 1
+                    state.pop('nodeInFlight',None)
+                    continue
+                if complete(program):
+                    state['ready'].append(program)
+                    continue
+                if program['profile']['airtime'] >= settings['maxInputs'] or program['interactions'] >= settings['maxInteractions']:
+                    state.pop('nodeInFlight',None)
+                    continue
+                if node_evaluator is not None and program.get('needsNodeSolve'):
+                    # Query a decision when it is selected for descent. Merely
+                    # constructing an unselected sibling must not spend NLPs.
+                    state['nodeInFlight']=program
+                    update()
+                    result=node_evaluator(program,state['nodes'],False)
+                    state['nodeInFlight']=program=result['program']
+                    if result.get('deferUnknown'):
+                        state['deferredNodes'].append(program)
+                        state.pop('nodeInFlight',None)
+                        update()
+                        continue
+                    if result['status'] in ('suspended','error'):
+                        update(result['status'])
+                        return
+                    state.pop('nodeInFlight',None)
+                    if result['status'] in ('oracle_rejected','exhausted'):
+                        update()
+                        continue
+                    program.pop('needsNodeSolve',None)
+                e = dict(program=program, kind=0, cursor=0)
+                state['expansion'] = e
+                expanded += 1
+                state['expanded'] += 1
+            if e['kind'] == len(settings['types']):
+                state['expansion'] = None
+                iterator, iterator_key = None, None
+                continue
+            ident = (digest(program_physics_key(e['program'])), e['kind'])
+            if iterator_key != ident:
+                p = e['program']
+                remaining = settings['maxInputs']-p['profile']['airtime']
+                context_data = dict(mode='open', scene=scene, program=p, state=boundary_state(p), maxInputs=remaining,
+                    maxEntryInputs=settings['maxEntryInputs'], checkBudget=budget, deadline=deadline,
+                    cancelEvent=cancel_event, normalGap=checkpoint_tick is not None, generationRecords=[])
+                if terminal_goal is not None:
+                    context_data['terminalGoal']=terminal_goal
+                if threshold != .005:
+                    context_data['threshold'] = threshold
+                if checkpoint_tick is not None:
+                    context_data['normalGapInputs'] = checkpoint_tick-p['profile']['airtime']
+                if context_adapter is not None:
+                    context_adapter(context_data)
+                bind=None
+                if terminal_goal is not None:
+                    from parkour_solver.search.virtual_goals import bind_goal
+                    bind=lambda p:bind_goal(p,terminal_goal,scene.get('supportClearance',1e-6))
+                iterator=iter(propose_choices(settings['types'][e['kind']],context_data,
+                    source=generate_choices(settings['types'][e['kind']],context_data),start=e['cursor'],
+                    max_inputs=settings['maxInputs'],inherit_decisions=node_evaluator is not None,
+                    project=project_owned if node_evaluator is not None and stop_on_goal else None,bind=bind))
+                iterator_key = ident
+            if 'choice' not in e:
+                try:
+                    proposal = next(iterator)
+                except StopIteration:
+                    e.update(kind=e['kind']+1, cursor=0)
+                    iterator, iterator_key = None, None
+                    continue
+                e['choice'] = proposal['choice']
+                e['child'] = proposal['program']
+                e['fullProgram'] = proposal['fullProgram']
+                e['projected'] = proposal['projected']
+                e['cursor'] = proposal['ordinal']+1
+                state['generated'] += 1
+            child=e['child']
+            if child is not None and screen is not None and not e.get('proposalChecked'):
+                # Commit the raw ordinal/owned view before the budgeted query.
+                update()
+                result=assess_proposal(dict(program=child,fullProgram=e['fullProgram'],projected=e['projected']),screen,
+                                       context_data.get('interactionGate'))
+                e['proposalChecked']=True
+                if result['fullProof'] is not None:
+                    state['exclusions'].append(dict(id=digest(program_physics_key(e['fullProgram'])),
+                        ticks=e['fullProgram']['profile']['airtime'],proof=result['fullProof'],scope='unused_extension'))
+                if result['proof'] is not None:
+                    state['screened'] += 1
+                    state['exclusions'].append(dict(id=digest(program_physics_key(child)),
+                        ticks=child['profile']['airtime'],proof=result['proof'],scope='owned_proposal'))
+                    for field in ('choice','child','fullProgram','projected','proposalChecked'):e.pop(field,None)
+                    update()
+                    continue
+            before_projection=child
+            if child is not None and checkpoint_tick is not None and child['profile']['airtime'] > checkpoint_tick:
+                child = truncate_program(child, checkpoint_tick)
+            accepted = child is not None and entry_possible(child['profile'], initial_bounds)
+            if accepted and program_filter is not None and not program_filter(child):
+                state['policyRejections'] += 1
+                accepted = False
+            if accepted and context_data.get('prefixFilter') is not None and not context_data['prefixFilter'](child):
+                accepted = False
+            identity = program_search_key(child) if accepted else None
+            if identity in seen:
+                accepted = False
+            if accepted and screen is not None and child is not before_projection:
+                proof = screen(child)
+                if proof is not None:
+                    state['screened'] += 1
+                    state['exclusions'].append(dict(id=digest(identity), ticks=child['profile']['airtime'], proof=proof))
+                    accepted = False
+            if accepted:
+                if node_evaluator is not None:
+                    from parkour_solver.search.feasibility import meaningful_choice, node_identity
+                    parent=e['program']; meaningful=meaningful_choice(e['choice'])
+                    child.setdefault('decisionDepth',parent.get('decisionDepth',0)+int(meaningful))
+                    child.setdefault('lastSolvedDepth',parent.get('lastSolvedDepth',0))
+                    child.setdefault('decisionParent',parent.get('decisionNode') if meaningful else parent.get('decisionParent'))
+                    child.setdefault('decisionNode',node_identity(child,policy_context) if meaningful else parent.get('decisionNode'))
+                    if meaningful and not complete(child):
+                        child['needsNodeSolve']=True
+                identity = program_search_key(child)
+                seen.add(identity)
+                state['seen'].append(identity)
+                (state['ready'] if complete(child) else state['pending']).append(child)
+            for field in ('choice','child','fullProgram','projected','proposalChecked'):e.pop(field,None)
+            update()
+        state['exhausted'] = True
+        update('numerical_unknown' if state.get('deferredNodes') else 'exhausted')
+    except TimeoutError as error:
+        update(work.termination if work is not None and work.termination else str(error))
+    finally:
+        if not state['exhausted'] and report.get('termination') == 'running':
+            update('consumer_closed')

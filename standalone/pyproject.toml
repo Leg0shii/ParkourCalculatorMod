@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "parkour-solver"
+version = "0.1.0"
+description = "Headless parkour decision search, fixed-program optimization and validation"
+requires-python = ">=3.12"
+
+[project.optional-dependencies]
+numerics = ["casadi==3.8.1", "numpy==2.5.4"]
+reachability = ["numpy==2.5.4", "scipy==1.18.1"]
+research = ["casadi==3.8.1", "numpy==2.5.4", "scipy==1.18.1", "clarabel==0.11.1"]
+plot = ["matplotlib==3.11.2"]
+
+[project.scripts]
+parkour-solve = "parkour_solver.cli.solve:main"
+parkour-blocks = "parkour_solver.cli.blocks:main"
+parkour-route = "parkour_solver.cli.ordered_route:main"
+parkour-ipopt = "parkour_solver.cli.numerical:main"
+parkour-fixed-clock = "parkour_solver.cli.fixed_clock:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["parkour_solver*"]

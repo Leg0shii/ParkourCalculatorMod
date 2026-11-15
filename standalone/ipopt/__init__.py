@@ -1,5 +1,2 @@
-from .model import prepare, validate
-from .solver import solve
-from .capture import attach_capture
-
-__all__ = ['prepare', 'solve', 'validate', 'attach_capture']
+"""Compatibility facade; use parkour_solver.numerics for new callers."""
+from parkour_solver.numerics import prepare, solve, validate, attach_capture

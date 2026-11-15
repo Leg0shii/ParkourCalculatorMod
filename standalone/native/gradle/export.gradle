@@ -1,0 +1,53 @@
+gradle.afterProject { core ->
+    if (core.path != ':core') return
+    def standalone = new File(gradle.rootProject.projectDir, 'standalone')
+    def forgeCore = gradle.rootProject.project(':forge-core')
+    def replayClasspath = core.sourceSets.test.runtimeClasspath + core.files(core.provider { forgeCore.sourceSets.main.output })
+    core.tasks.register('compileStandaloneIpoptExport', JavaCompile) {
+        dependsOn core.tasks.named('testClasses'), ':forge-core:classes'
+        source new File(standalone, 'native/java/ipopt')
+        classpath = replayClasspath
+        destinationDirectory = new File(standalone, 'build/native/ipopt/classes')
+        options.release = 8
+    }
+    core.tasks.register('exportStandaloneIpopt', JavaExec) {
+        dependsOn core.tasks.named('compileStandaloneIpoptExport')
+        classpath = replayClasspath + core.files(new File(standalone, 'build/native/ipopt/classes'))
+        mainClass = 'de.legoshi.parkourcalc.anglesolver.harness.ExportStandaloneIpopt'
+        doFirst {
+            if (!core.findProperty('ipoptCapture') || !core.findProperty('ipoptOutput')) {
+                throw new GradleException('Set -PipoptCapture=/path/to/capture.json and -PipoptOutput=/path/to/problem.json')
+            }
+            args core.property('ipoptCapture').toString(), core.property('ipoptOutput').toString(),
+                    (core.findProperty('ipoptTicks') ?: '').toString(),
+                    (core.findProperty('ipoptStart') ?: '').toString(),
+                    (core.findProperty('ipoptInputs') ?: '').toString(),
+                    (core.findProperty('ipoptSprint') ?: '').toString()
+        }
+    }
+    core.tasks.register('replayStandaloneIpopt', JavaExec) {
+        dependsOn core.tasks.named('compileStandaloneIpoptExport')
+        workingDir gradle.rootProject.projectDir
+        classpath = replayClasspath + core.files(new File(standalone, 'build/native/ipopt/classes'))
+        mainClass = 'de.legoshi.parkourcalc.anglesolver.harness.ReplayStandaloneIpopt'
+        doFirst {
+            def required = ['ipoptCapture', 'ipoptInput', 'ipoptResult', 'ipoptOutput', 'ipoptReport']
+            required.each { if (!core.findProperty(it)) throw new GradleException('Set -P' + it + '=/path/to/file.json') }
+            args required.collect { core.property(it).toString() } + [
+                    (core.findProperty('ipoptScene') ?: '').toString(),
+                    (core.findProperty('ipoptReplaySeconds') ?: '5').toString(),
+                    (core.findProperty('ipoptGiveBack') ?: '0.0001').toString()]
+        }
+    }
+    core.tasks.register('compileStandaloneIpoptPhysics', JavaExec) {
+        dependsOn core.tasks.named('compileStandaloneIpoptExport')
+        workingDir gradle.rootProject.projectDir
+        classpath = replayClasspath + core.files(new File(standalone, 'build/native/ipopt/classes'))
+        mainClass = 'de.legoshi.parkourcalc.anglesolver.harness.CompileStandaloneIpoptPhysics'
+        doFirst {
+            def required = ['ipoptCapture', 'ipoptInput', 'ipoptOutput']
+            required.each { if (!core.findProperty(it)) throw new GradleException('Set -P' + it + '=/path/to/file.json') }
+            args required.collect { core.property(it).toString() }
+        }
+    }
+}
