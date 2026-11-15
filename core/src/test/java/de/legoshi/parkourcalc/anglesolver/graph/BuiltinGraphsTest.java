@@ -22,7 +22,7 @@ import static org.junit.Assert.assertTrue;
 public class BuiltinGraphsTest {
 
     private static final List<String> FAST_NODES = Arrays.asList(
-            "entry", "horizon", "wrap0", "seed", "cap1", "freeRescue", "peel", "freeImprove",
+            "entry", "joint", "horizon", "wrap0", "seed", "cap1", "freeRescue", "peel", "freeImprove",
             "sweep", "translate2", "fold", "ladder", "cert", "bnb", "ils", "cap2",
             "wrap", "translate", "certify", "emit");
 
@@ -32,18 +32,20 @@ public class BuiltinGraphsTest {
             "wrap", "translate", "snap", "dive", "translate3", "snap2", "certify", "emit");
 
     private static final List<String> MULTI_START_NODES = Arrays.asList(
-            "entry", "seeds", "horizon", "wrap0", "seed", "cap1", "freeRescue", "peel", "freeImprove",
+            "entry", "seeds", "joint", "horizon", "wrap0", "seed", "cap1", "freeRescue", "peel", "freeImprove",
             "sweep", "translate2", "fold", "ladder", "cert", "bnb", "ils", "cap2",
             "wrap", "translate", "certify", "emit");
 
     private static final String[][] FAST_PAIRS = {
-            {"entry", "seed"}, {"seed", "horizon"}, {"horizon", "wrap0"}, {"wrap0", "cap1"},
+            {"entry", "seed"}, {"seed", "joint"}, {"joint", "horizon"}, {"horizon", "wrap0"},
+            {"wrap0", "cap1"},
             {"cap1", "freeRescue"}, {"freeRescue", "peel"}, {"peel", "freeImprove"}, {"freeImprove", "sweep"},
             {"fold", "ladder"}, {"ladder", "cert"}, {"cert", "bnb"}, {"bnb", "ils"},
             {"ils", "cap2"}, {"cap2", "wrap"}, {"wrap", "translate"}, {"translate", "certify"}, {"certify", "emit"}};
 
     private static final String[][] MULTI_START_PAIRS = {
-            {"entry", "seeds"}, {"seeds", "seed"}, {"seed", "horizon"}, {"horizon", "wrap0"}, {"wrap0", "cap1"},
+            {"entry", "seeds"}, {"seeds", "seed"}, {"seed", "joint"}, {"joint", "horizon"},
+            {"horizon", "wrap0"}, {"wrap0", "cap1"},
             {"cap1", "freeRescue"}, {"freeRescue", "peel"}, {"peel", "freeImprove"}, {"freeImprove", "sweep"},
             {"fold", "ladder"}, {"ladder", "cert"}, {"cert", "bnb"}, {"bnb", "ils"},
             {"ils", "cap2"}, {"cap2", "wrap"}, {"wrap", "translate"}, {"translate", "certify"}, {"certify", "emit"}};
@@ -103,6 +105,9 @@ public class BuiltinGraphsTest {
         assertLinear(fast, FAST_PAIRS);
         assertLoopEdges(fast, false, false);
         assertNull("fast has no leaf snap stage", fast.node("snap"));
+        assertTrue(fast.node("joint").params.getBool("first"));
+        assertNull("a seed of the sweep keeps its own start", BuiltinGraphs.fastAtStart().node("joint"));
+        assertNull("optimize opens with the horizon", BuiltinGraphs.optimize(50).node("joint"));
     }
 
     @Test

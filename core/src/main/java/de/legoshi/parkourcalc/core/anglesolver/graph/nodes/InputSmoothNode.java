@@ -92,7 +92,7 @@ public final class InputSmoothNode implements NodeRuntime {
     }
 
     private static InputSmooth.Resolver resolver(GraphContext ctx) {
-        SolverGraph fast = BuiltinGraphs.fast();
+        SolverGraph fast = BuiltinGraphs.fastAtStart();
         return (guarded, seed, deadline, cancel) -> {
             AtomicBoolean token = cancel != null ? cancel : new AtomicBoolean(false);
             GraphContext sub = new GraphContext(guarded, ctx.model, null, null, ctx.feasTol, token, null, true,

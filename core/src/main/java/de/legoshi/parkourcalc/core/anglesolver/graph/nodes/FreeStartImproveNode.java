@@ -14,6 +14,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.FreeStartSolve;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
+import de.legoshi.parkourcalc.core.anglesolver.solver.LatticePolish;
 import de.legoshi.parkourcalc.core.anglesolver.solver.RecoveryLadder;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolverTrace;
 import de.legoshi.parkourcalc.core.anglesolver.solver.StartBox;
@@ -26,22 +27,26 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public final class FreeStartImproveNode implements NodeRuntime {
 
     private final boolean jointOnly;
+    private final boolean first;
     private final int warmSec;
     private final FreeStartSolve.Config cfg;
 
     public FreeStartImproveNode(ParamValues params) {
         this.jointOnly = params.getBool("jointOnly");
+        this.first = params.getBool("first");
         this.warmSec = params.getInt("warmSec");
         this.cfg = new FreeStartSolve.Config();
         cfg.intervalMargin = params.getDouble("fsIntervalMargin");
         cfg.invariantTol = params.getDouble("fsInvariantTol");
         cfg.jointMargins = ParamParse.doubles(params.getString("fsJointMargins"), cfg.jointMargins);
         cfg.jointWrapClose = false;
+        cfg.seedLane = !first;
     }
 
     @Override
     public NodeOutcome execute(GraphContext ctx, Candidate in, AtomicBoolean nodeToken, long deadlineNanos) {
         if (!ctx.exact() || !ctx.freeStart || ctx.stageLocked()) return NodeOutcome.of(Guarantee.UNCHANGED, in);
+        if (first) return jointFirst(ctx, in, nodeToken, deadlineNanos);
         if (in != null && in.yaws != null && in.feasible && (jointOnly || warmSec <= 0)) {
             return NodeOutcome.of(Guarantee.UNCHANGED, in);
         }
@@ -58,6 +63,38 @@ public final class FreeStartImproveNode implements NodeRuntime {
         if (improved == null) return NodeOutcome.of(Guarantee.UNCHANGED, in);
         ctx.chainAppend("free start");
         return NodeOutcome.of(Guarantee.IMPROVED, Candidate.of(ctx, improved));
+    }
+
+    private NodeOutcome jointFirst(GraphContext ctx, Candidate in, AtomicBoolean cancel, long deadlineNanos) {
+        if (in != null && in.yaws != null) return NodeOutcome.of(Guarantee.UNCHANGED, in);
+        JumpPhysicsInputs sc = ctx.scenario;
+        double seedX = sc.startPos.x;
+        double seedZ = sc.startPos.z;
+        sc.startBox = ctx.freeBox;
+        FreeStartSolve.Result conv = FreeStartSolve.solveJointBest(ctx.exactModel, ctx.spec, ctx.feasTol, cancel, cfg,
+                deadlineNanos);
+        boolean landed = conv != null && conv.feasible
+                && FreeStartSolve.violationAt(ctx.exactModel, ctx.spec, conv.yaws, conv.startX, conv.startZ) <= ctx.feasTol;
+        if (!landed && conv != null && !(cancel != null && cancel.get())) {
+            LatticePolish.Result fixed = LatticePolish.repair(ctx.exactModel, ctx.spec, conv.yaws, conv.startX,
+                    conv.startZ, new LatticePolish.Config(), deadlineNanos, cancel);
+            if (SolverTrace.on()) SolverTrace.log("ENGINE", "joint first repair %s", fixed == null ? "miss" : "landed");
+            if (fixed != null && FreeStartSolve.violationAt(ctx.exactModel, ctx.spec, fixed.yaws, fixed.startX,
+                    fixed.startZ) <= ctx.feasTol) {
+                conv = new FreeStartSolve.Result(fixed.yaws, fixed.startX, fixed.startZ, true);
+                landed = true;
+            }
+        }
+        if (!landed) {
+            Scoring.adoptPinnedStart(sc, seedX, seedZ);
+            return NodeOutcome.of(Guarantee.UNCHANGED, in);
+        }
+        Scoring.adoptPinnedStart(sc, conv.startX, conv.startZ);
+        if (SolverTrace.on()) {
+            SolverTrace.log("ENGINE", "joint first adopted start=(%.5f,%.5f)", conv.startX, conv.startZ);
+        }
+        ctx.chainAppend("joint start");
+        return NodeOutcome.of(Guarantee.IMPROVED, Candidate.of(ctx, Angles.wrapAll(conv.yaws)));
     }
 
     private double[] jointRescue(GraphContext ctx, AtomicBoolean cancel) {

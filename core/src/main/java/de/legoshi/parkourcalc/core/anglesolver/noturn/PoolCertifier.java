@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -62,6 +63,7 @@ final class PoolCertifier {
         int cap = PoolScreenAccelerator.get() != null ? GPU_CERTIFY_THREAD_CAP : CERTIFY_THREAD_CAP;
         this.threads = Math.min(cap, NoTurnParallel.resolveThreads(cfg.threads));
         this.exec = Executors.newFixedThreadPool(threads);
+        this.flights = new ExecutorCompletionService<>(exec);
         this.deadline = deadline;
         this.maximize = problem.objective.sense == Objective.Sense.MAX;
         this.maxCertify = multi ? Math.max(cfg.maxCertify, MULTI_MAX_CERTIFY) : cfg.maxCertify;
@@ -93,6 +95,209 @@ final class PoolCertifier {
 
     void shutdown() {
         exec.shutdownNow();
+    }
+
+    private static final class Flight {
+        final Candidate candidate;
+        final String key;
+        final long budget;
+        final boolean shortPass;
+        final AtomicBoolean cancel = new AtomicBoolean(false);
+        NoTurnResult result;
+
+        Flight(Candidate candidate, String key, long budget, boolean shortPass) {
+            this.candidate = candidate;
+            this.key = key;
+            this.budget = budget;
+            this.shortPass = shortPass;
+        }
+    }
+
+    private final ExecutorCompletionService<Flight> flights;
+    private final List<Flight> flying = new ArrayList<>();
+    private final Set<String> flyingKeys = new HashSet<>();
+    private int streamSlot;
+    private boolean fallbackFamily;
+
+    boolean stream() {
+        boolean moved = collect(0L);
+        if (stopped()) return !flying.isEmpty() || moved;
+        moved |= launch();
+        if (moved) return true;
+        if (!flying.isEmpty()) {
+            collect(STREAM_WAIT_MS);
+            return true;
+        }
+        try {
+            Thread.sleep(STREAM_WAIT_MS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        return false;
+    }
+
+    void land(boolean abort) {
+        if (abort) for (Flight f : flying) f.cancel.set(true);
+        while (!flying.isEmpty()) {
+            if (!abort && (stopped() || Thread.currentThread().isInterrupted())) {
+                for (Flight f : flying) f.cancel.set(true);
+            }
+            collect(STREAM_WAIT_MS);
+        }
+    }
+
+    private boolean launch() {
+        boolean launched = false;
+        sortQueues();
+        if (byValueDirty) {
+            byValue.sort(BY_VALUE);
+            byValueDirty = false;
+        }
+        if (retryDirty) {
+            retryQueue.sort(StructurePoolDriver.rankOrder(cfg));
+            retryDirty = false;
+        }
+        while (flying.size() < threads && !stopped()) {
+            Flight next = nextFlight();
+            if (next == null) break;
+            final Flight f = next;
+            flying.add(f);
+            flyingKeys.add(f.key);
+            certs++;
+            flights.submit(() -> {
+                try {
+                    if (!f.cancel.get() && System.nanoTime() <= deadline) {
+                        f.result = certifyOne(f.candidate, false, f.budget, f.cancel);
+                        if (f.result != null) progress.found(f.result);
+                    }
+                } catch (RuntimeException e) {
+                    f.result = null;
+                }
+                return f;
+            });
+            launched = true;
+        }
+        return launched;
+    }
+
+    private Flight nextFlight() {
+        for (int k = 0; k < STREAM_ORDER.length; k++) {
+            int source = STREAM_ORDER[streamSlot];
+            streamSlot = (streamSlot + 1) % STREAM_ORDER.length;
+            Flight f = flightFrom(source);
+            if (f != null) return f;
+        }
+        if (certs >= maxCertify) return null;
+        for (int k = 0; k < 2; k++) {
+            fallbackFamily = !fallbackFamily;
+            Candidate c = poll(fallbackFamily ? familyQueue : queue, false, true);
+            if (c != null) return flightOf(c, false);
+        }
+        if (SHORT_PASS_NANOS >= RETRY_PASS_NANOS) {
+            Candidate c = poll(retryQueue, false, false);
+            if (c != null) return flightOf(c, true);
+        }
+        return null;
+    }
+
+    private Flight flightFrom(int source) {
+        if (source == CHANGE_TURN) {
+            if (changeLeft <= 0) return null;
+            Candidate c = poll(queue, true, true);
+            if (c == null) return null;
+            changeLeft--;
+            return flightOf(c, false);
+        }
+        if (source == FAMILY_COST_TURN) {
+            Candidate c = poll(familyQueue, true, true);
+            return c == null ? null : flightOf(c, false);
+        }
+        if (source == VALUE_TURN) {
+            Candidate c = poll(byValue, false, true);
+            return c == null ? null : flightOf(c, false);
+        }
+        if (SHORT_PASS_NANOS >= RETRY_PASS_NANOS) return null;
+        Candidate c = poll(retryQueue, false, false);
+        if (c == null) return null;
+        return new Flight(c, scheduleKey(c.combos, c.engage, false), RETRY_PASS_NANOS, false);
+    }
+
+    private Candidate poll(List<Candidate> from, boolean goodOnly, boolean skipShortTried) {
+        int i = 0;
+        Candidate pick = null;
+        while (i < from.size()) {
+            Candidate c = from.get(i);
+            if (goodOnly && StructurePoolDriver.certifyTier(cfg, c) >= StructurePoolDriver.SCREEN_MISS_TIER) break;
+            i++;
+            String key = scheduleKey(c.combos, c.engage, false);
+            if (found.contains(key) || tried.contains(key) || flyingKeys.contains(key)) continue;
+            if (skipShortTried && c.family && shortTried.contains(key)) continue;
+            pick = c;
+            break;
+        }
+        if (i > 0) from.subList(0, i).clear();
+        return pick;
+    }
+
+    private Flight flightOf(Candidate c, boolean longPass) {
+        boolean exact = StructurePoolDriver.certifyTier(cfg, c) == StructurePoolDriver.SCREEN_EXACT_TIER;
+        boolean flash = c.flash && !longPass && cfg.repairFlashNanos > 0;
+        boolean shortPass = flash || (!longPass && SHORT_PASS_NANOS < (exact ? cfg.searchBudgetNanos : nearBudgetNanos));
+        long budget = flash ? cfg.repairFlashNanos
+                : shortPass ? SHORT_PASS_NANOS : exact ? cfg.searchBudgetNanos : nearBudgetNanos;
+        return new Flight(c, scheduleKey(c.combos, c.engage, false), budget, shortPass);
+    }
+
+    private boolean collect(long waitMs) {
+        boolean any = false;
+        java.util.concurrent.Future<Flight> done;
+        try {
+            done = waitMs > 0L ? flights.poll(waitMs, java.util.concurrent.TimeUnit.MILLISECONDS) : flights.poll();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            done = null;
+        }
+        while (done != null) {
+            Flight f;
+            try {
+                f = done.get();
+            } catch (InterruptedException | java.util.concurrent.ExecutionException e) {
+                f = null;
+            }
+            if (f != null) {
+                flying.remove(f);
+                flyingKeys.remove(f.key);
+                landed(f);
+                any = true;
+            }
+            done = flights.poll();
+        }
+        return any;
+    }
+
+    private void landed(Flight f) {
+        Candidate c = f.candidate;
+        if (f.cancel.get() && f.result == null) return;
+        if (f.shortPass && f.result == null) {
+            boolean first = !c.family || shortTried.add(f.key);
+            if (first) {
+                retryQueue.add(c);
+                retryDirty = true;
+            }
+        } else {
+            tried.add(f.key);
+        }
+        if (best != null) extraCerts++;
+        if (f.result == null) return;
+        boolean hadBest = best != null;
+        found.add(keyOf(f.result));
+        if (best == null || StructurePoolDriver.betterResult(maximize, f.result, best)) best = f.result;
+        if (!hadBest) extraDeadline = System.nanoTime() + cfg.extraCertifyNanos;
+        progress.update("certify streaming: " + certs + " certified (parallel " + threads + ") best=" + best.describe(),
+                fraction());
+        List<NoTurnResult> hits = new ArrayList<>(1);
+        hits.add(f.result);
+        exploreWarm(hits);
     }
 
     private boolean stopped() {
@@ -140,6 +345,12 @@ final class PoolCertifier {
     private static final int FAMILY_COST_TURN = 1;
     private static final int RETRY_TURN = 3;
     private static final int TURNS = 4;
+    private static final int VALUE_TURN = 2;
+    private static final int[] STREAM_ORDER = {CHANGE_TURN, FAMILY_COST_TURN, VALUE_TURN, CHANGE_TURN, FAMILY_COST_TURN,
+            VALUE_TURN, CHANGE_TURN, FAMILY_COST_TURN, VALUE_TURN, CHANGE_TURN, FAMILY_COST_TURN, VALUE_TURN, CHANGE_TURN,
+            FAMILY_COST_TURN, VALUE_TURN, RETRY_TURN};
+    private static final long STREAM_WAIT_MS = 2L;
+
     private static final int RETRY_BATCH = 4;
     private static final long RETRY_PASS_NANOS = 500_000_000L;
     private int turn;
