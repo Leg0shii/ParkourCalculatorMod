@@ -1240,7 +1240,7 @@ public final class VelocityMapWidget {
         } else {
             sb.append("infeasible");
         }
-        ImGui.setTooltip(sb.toString());
+        TooltipUtil.wrappedTooltip(sb.toString());
     }
 
     private static String v0Line(double vx, double vz) {
@@ -1279,7 +1279,7 @@ public final class VelocityMapWidget {
         sb.append(v0Line(vx, vz));
         if (c == null || !c.constraintsMet) sb.append("no solution");
         else appendLanding(sb, c);
-        ImGui.setTooltip(sb.toString());
+        TooltipUtil.wrappedTooltip(sb.toString());
     }
 
     private float vxToScreen(double vx, float x0, float cw) {

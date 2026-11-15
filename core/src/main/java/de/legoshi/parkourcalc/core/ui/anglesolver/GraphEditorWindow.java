@@ -444,7 +444,7 @@ public final class GraphEditorWindow implements RenderInterface {
             ImGui.text(s.label);
             ThemeManager.popTextColor();
             if (ImGui.isItemClicked()) focusNodeId = s.nodeId;
-            if (ImGui.isItemHovered()) ImGui.setTooltip(stepTooltip(s));
+            TooltipUtil.onHover(stepTooltip(s));
         }
         if (running && runSteps.size() != breadcrumbSeenSteps) {
             ImGui.setScrollX(ImGui.getScrollMaxX());
@@ -542,7 +542,7 @@ public final class GraphEditorWindow implements RenderInterface {
         if (nearest.stage != null) b.append("  (").append(nearest.stage).append(')');
         b.append("\nobj ").append(ConstraintText.fixedStat(nearest.obj));
         b.append("  viol ").append(ConstraintText.fixedStat(nearest.viol));
-        ImGui.setTooltip(b.toString());
+        TooltipUtil.wrappedTooltip(b.toString());
     }
 
     private int nodeStripColor(String nodeId) {

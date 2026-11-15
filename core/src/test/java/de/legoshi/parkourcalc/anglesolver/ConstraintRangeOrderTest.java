@@ -51,6 +51,18 @@ public class ConstraintRangeOrderTest {
     }
 
     @Test
+    public void typedBoundsKeepTheirFieldsUntilTheRangeIsOrdered() {
+        Constraint c = Constraint.range(Constraint.Field.X, -250.0, -249.0, true, true);
+        c.setHi(-251.0);
+        assertEquals(-250.0, c.getTypedLo(), EPS);
+        assertEquals(-251.0, c.getTypedHi(), EPS);
+        assertEquals(-251.0, c.getLo(), EPS);
+        c.orderRange();
+        assertEquals(-251.0, c.getTypedLo(), EPS);
+        assertEquals(-250.0, c.getTypedHi(), EPS);
+    }
+
+    @Test
     public void reversedSetterBoundsReadNormalized() {
         Constraint c = Constraint.scalar(Constraint.Field.Z, Constraint.Op.EQ, -250.0);
         c.setOp(Constraint.Op.IN);

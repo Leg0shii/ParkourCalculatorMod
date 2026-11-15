@@ -3,8 +3,10 @@ package de.legoshi.parkourcalc.core.ui;
 import de.legoshi.parkourcalc.core.sim.SimulationRunner;
 import de.legoshi.parkourcalc.core.sim.StartResumeState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
+import de.legoshi.parkourcalc.core.ui.anglesolver.SolverWidgets;
 import de.legoshi.parkourcalc.core.ui.theme.Controls;
 import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
+import de.legoshi.parkourcalc.core.ui.util.TooltipUtil;
 import imgui.ImDrawList;
 import imgui.ImGui;
 import imgui.flag.ImGuiCol;
@@ -24,6 +26,11 @@ public final class StartStateTable {
     private static final int PRECISION = 5;
     private static final String COPY_TELEPORT_LABEL = "Copy teleport command";
     private static final String SET_TO_PLAYER_LABEL = "Set to player";
+    private static final String PINNED_HINT = "set by hand";
+    private static final String DERIVED_HINT = "from the world";
+    private static final String PINNED_TIP = "The resume state is fixed: the simulation starts with these values whatever the world says.";
+    private static final String DERIVED_TIP = "The resume state follows the world at the start position. Editing any value fixes all of them.";
+    private static final String UNPIN_TIP = "Stop fixing the resume state and take it from the world again.";
 
     private final SimulationRunner runner;
     private final Runnable reSimulate;
@@ -96,7 +103,7 @@ public final class StartStateTable {
 
         if (setToPlayer != null) {
             if (Controls.secondaryButton(SET_TO_PLAYER_LABEL, ImGui.getContentRegionAvail().x)) setToPlayer.run();
-            if (ImGui.isItemHovered()) ImGui.setTooltip("Takes your current position and yaw as the start. Stand where the jump begins.");
+            TooltipUtil.onHover("Takes your current position and yaw as the start. Stand where the jump begins.");
             ThemeManager.sectionSpacing();
         }
         Vec3dCore pos = runner.getStartPosition();
@@ -124,7 +131,7 @@ public final class StartStateTable {
         }
 
         ThemeManager.sectionSpacing();
-        sectionHeader("Resume state");
+        resumeHeader();
         resumeEditor();
 
         float spacingY = ImGui.getStyle().getItemSpacing().y;
@@ -138,6 +145,33 @@ public final class StartStateTable {
         ThemeManager.popDrawerChildBg();
 
         measuredContentH = bodyH + 2f * pad;
+    }
+
+    private void resumeHeader() {
+        boolean pinned = runner.getStartResumeState() != null;
+        ImGui.alignTextToFramePadding();
+        ImGui.textDisabled("Resume state");
+        String hint = pinned ? PINNED_HINT : DERIVED_HINT;
+        float hintW = ImGui.calcTextSize(hint).x;
+        float spacing = ImGui.getStyle().getItemSpacing().x;
+        float trailW = hintW + (pinned ? spacing + SolverWidgets.deleteXWidth() : 0f);
+        ImGui.sameLine();
+        float avail = ImGui.getContentRegionAvail().x;
+        if (avail > trailW) ImGui.setCursorPosX(ImGui.getCursorPosX() + avail - trailW);
+        ThemeManager.pushTextColor(ThemeManager.textDimColor());
+        ImGui.alignTextToFramePadding();
+        ImGui.text(hint);
+        ThemeManager.popTextColor();
+        TooltipUtil.onHover(pinned ? PINNED_TIP : DERIVED_TIP);
+        if (pinned) {
+            ImGui.sameLine();
+            if (SolverWidgets.deleteX("##resume_unpin")) {
+                runner.setStartResumeState(null);
+                reSimulate.run();
+            }
+            TooltipUtil.onHover(UNPIN_TIP);
+        }
+        ThemeManager.bottomPaddedSeparator();
     }
 
     private void sectionHeader(String title) {

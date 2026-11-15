@@ -3,6 +3,7 @@ package de.legoshi.parkourcalc.core.ui.anglesolver;
 import de.legoshi.parkourcalc.core.ui.theme.Controls;
 import de.legoshi.parkourcalc.core.ui.theme.Fonts;
 import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
+import de.legoshi.parkourcalc.core.ui.util.TooltipUtil;
 import imgui.ImDrawList;
 import imgui.ImGui;
 import imgui.ImVec2;
@@ -257,7 +258,7 @@ public final class SolverWidgets {
             if (i == 0) { left = mn.x; top = mn.y; bottom = mx.y; }
             right = mx.x + arrowW;
             if (hover && tooltips != null && i < tooltips.length && tooltips[i] != null) {
-                ImGui.setTooltip(tooltips[i]);
+                TooltipUtil.wrappedTooltip(tooltips[i]);
             }
             int fill = on ? onBg : (hover ? ThemeManager.accentTintColor(0.18f) : offBg);
             dl.addRectFilled(mn.x, mn.y, mx.x, mx.y, fill, 0f);
