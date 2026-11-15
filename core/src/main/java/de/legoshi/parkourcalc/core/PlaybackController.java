@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.IntConsumer;
+import java.util.function.LongSupplier;
 import java.util.function.Supplier;
 
 public final class PlaybackController {
@@ -21,6 +22,8 @@ public final class PlaybackController {
     private static final int WARMUP_TICKS = 2;
 
     private static final long TICK_NANOS = 50_000_000L;
+    private static final long MIN_TICK_NANOS = 1_000_000L;
+    private static final long MAX_TICK_NANOS = 10_000_000_000L;
     private static final float MAX_FRAME_DT_SECONDS = 0.1f;
 
     private static final long TELEPORT_NOTICE_HOLD_NANOS = 1_000_000_000L;
@@ -63,6 +66,10 @@ public final class PlaybackController {
     private float prevTickYaw;
     private float displayTargetYaw;
     private long tickEndNanos;
+    private long lastTickNanos;
+    private long lastIntervalNanos;
+    private long prevIntervalNanos;
+    private LongSupplier clock = System::nanoTime;
 
     // displayedYaw is the camera yaw; it equals the ideal lerp value when the
     // recording's angular speed is under the cap, otherwise lags at the cap rate.
@@ -238,6 +245,7 @@ public final class PlaybackController {
         pitchEngaged = true;
         tickEndNanos = 0L;
         lastFrameNanos = 0L;
+        resetTickInterval();
         InputRow firstRow = inputData.get(from);
         lastEffectLevels = firstRow.getEffectLevels();
         bridge.applyEffects(lastEffectLevels);
@@ -265,6 +273,7 @@ public final class PlaybackController {
         tickEndNanos = 0L;
         lastFrameNanos = 0L;
         pausedAtNanos = 0L;
+        resetTickInterval();
         if (bridge != null) {
             bridge.releaseAllKeys();
             onReplayRow.accept(-1);
@@ -279,7 +288,7 @@ public final class PlaybackController {
 
     public float teleportNoticeAlpha() {
         if (teleportNoticeNanos == 0L) return 0f;
-        long age = System.nanoTime() - teleportNoticeNanos;
+        long age = clock.getAsLong() - teleportNoticeNanos;
         if (age < 0L) {
             teleportNoticeNanos = 0L;
             return 0f;
@@ -309,18 +318,20 @@ public final class PlaybackController {
             // dropped once so nothing is held into the pause screen; the next live tick re-applies
             // its row's full key state anyway.
             if (pausedAtNanos == 0L) {
-                pausedAtNanos = System.nanoTime();
+                pausedAtNanos = clock.getAsLong();
                 bridge.releaseAllKeys();
                 pressedRow = null;
             }
             return;
         }
         if (pausedAtNanos != 0L) {
-            long pausedFor = System.nanoTime() - pausedAtNanos;
+            long pausedFor = clock.getAsLong() - pausedAtNanos;
             if (tickEndNanos != 0L) tickEndNanos += pausedFor;
             if (lastFrameNanos != 0L) lastFrameNanos += pausedFor;
+            if (lastTickNanos != 0L) lastTickNanos += pausedFor;
             pausedAtNanos = 0L;
         }
+        measureTickInterval();
         if (settings.disableFlightDuringPlayback) {
             bridge.suppressFlight();
         }
@@ -328,7 +339,7 @@ public final class PlaybackController {
             // Stop only once the visual has caught up to the final yaw and a tick
             // window has elapsed; a low cap can keep the ease running past the final input.
             boolean caughtUp = displayedYaw == displayTargetYaw;
-            boolean windowElapsed = tickEndNanos != 0L && System.nanoTime() - tickEndNanos >= TICK_NANOS;
+            boolean windowElapsed = tickEndNanos != 0L && clock.getAsLong() - tickEndNanos >= tickNanos();
             if (caughtUp && windowElapsed) {
                 stop();
             } else {
@@ -364,7 +375,7 @@ public final class PlaybackController {
             bridge.teleportInPlace(
                     new Vec3dCore(row.getTeleportX(), row.getTeleportY(), row.getTeleportZ()),
                     Vec3dCore.GROUND_REST_VELOCITY, currentTickYaw);
-            teleportNoticeNanos = System.nanoTime();
+            teleportNoticeNanos = clock.getAsLong();
         }
         InputRow motion = teleportTick ? TELEPORT_NOOP_ROW : row;
         pressedRow = motion;
@@ -406,9 +417,34 @@ public final class PlaybackController {
         turnYaw = displayTargetYaw - prevTickYaw;
         turnPitch = currentTickPitch - prevTickPitch;
         appliedTicks++;
-        tickEndNanos = System.nanoTime();
+        tickEndNanos = clock.getAsLong();
         nextTick++;
         bridge.releaseReplayLockstep();
+    }
+
+    public void setClock(LongSupplier clock) {
+        this.clock = clock;
+    }
+
+    public long tickNanos() {
+        if (lastIntervalNanos <= 0L || prevIntervalNanos <= 0L) return TICK_NANOS;
+        long interval = Math.min(lastIntervalNanos, prevIntervalNanos);
+        return Math.max(MIN_TICK_NANOS, Math.min(MAX_TICK_NANOS, interval));
+    }
+
+    private void measureTickInterval() {
+        long now = clock.getAsLong();
+        if (lastTickNanos != 0L) {
+            prevIntervalNanos = lastIntervalNanos;
+            lastIntervalNanos = now - lastTickNanos;
+        }
+        lastTickNanos = now;
+    }
+
+    private void resetTickInterval() {
+        lastTickNanos = 0L;
+        lastIntervalNanos = 0L;
+        prevIntervalNanos = 0L;
     }
 
     private static float clampPitch(float pitch) {
@@ -469,7 +505,7 @@ public final class PlaybackController {
         // The menu still renders frames while paused; the camera ease must not progress through them.
         if (pausedAtNanos != 0L || bridge.isGamePaused()) return;
 
-        long now = System.nanoTime();
+        long now = clock.getAsLong();
         float dt;
         if (lastFrameNanos == 0L) {
             dt = 0f;
@@ -480,7 +516,7 @@ public final class PlaybackController {
         lastFrameNanos = now;
 
         long elapsed = now - tickEndNanos;
-        float partial = elapsed / (float) TICK_NANOS;
+        float partial = elapsed / (float) tickNanos();
         if (partial < 0f) partial = 0f;
         if (partial > 1f) partial = 1f;
         float idealYaw = prevTickYaw + (displayTargetYaw - prevTickYaw) * partial;
