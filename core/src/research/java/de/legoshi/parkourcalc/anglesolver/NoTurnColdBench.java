@@ -302,6 +302,9 @@ public class NoTurnColdBench {
                 cfg.familyDelayNanos = Long.getLong("pkc.bench.familyDelayMs", cfg.familyDelayNanos / 1_000_000L) * 1_000_000L;
                 cfg.familyInertiaShare = Double.parseDouble(System.getProperty("pkc.bench.familyInertiaShare", String.valueOf(cfg.familyInertiaShare)));
                 cfg.familyReach = Double.parseDouble(System.getProperty("pkc.bench.familyReach", String.valueOf(cfg.familyReach)));
+                cfg.familyCutPool = Integer.getInteger("pkc.bench.familyCutPool", cfg.familyCutPool);
+                cfg.familyExactFirst = Boolean.parseBoolean(System.getProperty("pkc.bench.familyExactFirst",
+                        String.valueOf(cfg.familyExactFirst)));
                 line("families: on without=" + without + " changeLevels=" + cfg.changeLevels);
             }
             if (Integer.getInteger("pkc.bench.repairWidth", -1) >= 0) cfg.repairWidth = Integer.getInteger("pkc.bench.repairWidth");
