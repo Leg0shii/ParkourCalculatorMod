@@ -1,32 +1,20 @@
 # Standalone agent entry point
 
-Read this first, then [docs/CURRENT_STATE.md](docs/CURRENT_STATE.md) and task-specific links below. This is the standalone workspace inside Parkour Calculator, not a separate physics project. Read the parent [domain glossary](../CONTEXT.md) when movement terminology is unfamiliar. The root `AGENTS.md` still applies; the user explicitly scopes ordinary iteration to standalone tests rather than the mod's full Gradle test gate.
+This file is the entry point for work in `standalone/`. Start with the user's task and read only the supporting documentation needed for it. Current tasks, branch names, implementation plans and experiment status belong in the linked documentation, not here.
 
-## Find the right checkout
+## Scope and checkout
 
-Current research branch: `research/ipopt-cell-routes`. Physical worktree on this machine: `/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes`. Older instructions naming `feature/ipopt-consolidated` describe consolidation ancestry, not the current working branch. Continue in the isolated worktree; do not implement in the main checkout.
+Standalone work uses this file's guidance. Read the repository-root `AGENTS.md` and the affected module's guidance only when the task actually touches the mod: inspecting or changing its source, reusing its physics or constraint APIs, or integrating with its UI, simulation or loaders. Ordinary standalone Python, documentation and experiment work does not require the root instructions or mod-wide build/test gates.
 
-The main checkout's `standalone` may be a local symlink here. Start with `pwd -P`, then `git rev-parse --show-toplevel` from the resolved directory. Run repository-root commands from that physical worktree. Do not use the symlink's logical parent as the repository root. The link is local setup, not a tracked portable checkout layout.
+Work in the checkout where the session started. If the path is symlinked or a command needs the repository root, use `pwd -P` and `git rev-parse --show-toplevel` to identify the physical worktree. Resolve parent-repository references there; do not switch to another checkout based on an old path in a document. Preserve unrelated edits.
 
-## Current task and authority
+## Orientation
 
-Documentation consolidation precedes implementation. The current **approved, unimplemented** runtime change is [DFS_INTERACTION_IMPLEMENTATION_PLAN.md](docs/design/DFS_INTERACTION_IMPLEMENTATION_PLAN.md): goal-aware ordered depth-first completion, one early block/tick/phase interaction gate, effective-model deduplication and constraint ownership, with persistent backtracking. Current runtime still uses checkpoint-window traversal and shortest-prefix priority. Do not describe the plan as shipped.
-
-Use [decisions and plans](docs/DECISIONS_AND_PLANS.md) to distinguish current requirements, implemented behavior, deferred ideas and history. The long research history contains superseded proposals. User corrections and current plans take priority. Real11 motivates regressions; never special-case its block IDs, ticks or coordinates in generic algorithms. No other-agent communication is needed. Commit at coherent boundaries, not after every turn. Update current docs when decisions or measured facts change.
-
-## Modeling rules
-
-- The orchestrator chooses **all discrete inputs, events and hard constraints before IPOPT**. Reuse existing movement/constraint builders. Facings remain variables.
-- Every re-solve starts at the full original position and stored velocity; commit decisions, never intermediate optimized X/Z/velocity or earlier facings.
-- Current decision research disables **inertia thresholds**, not momentum. Carry normal velocity. Focus on normal/run/jump/landing/stepping/ceiling/blockage; water, ladder expansion and intentional wall-hit search are deferred. Existing ladder/replay implementations remain available.
-- State `t` is before input `t`; input `t` produces state `t+1`. AABBs are `[minX,minY,minZ,maxX,maxY,maxZ]`. Raw collision boxes, player-center support bounds, cells and guide points differ.
-- Unknown/timeouts/caps/local NLP failure are not infeasibility or optimality certificates. Numerical feasibility, vertical validity, scene acceptance, corridor acceptance and executable replay are separate claims.
-- Compare time at the same spatial goal, objective at the same absolute tick with compatible schedules. Preserve agreed position/velocity/schedule protections, close alternatives and unfinished work. Margins remain 0.25 blocks and 1 tick.
-
-## Read only what the task needs
+Use [current state](docs/CURRENT_STATE.md) for ongoing work and [decisions and plans](docs/DECISIONS_AND_PLANS.md) to distinguish implemented behavior, approved changes, deferred ideas and historical proposals. A linked plan is context, not an instruction to begin that work. Verify relevant claims against the current code.
 
 | Need | Read |
 | --- | --- |
+| Current capabilities and active plans | [Current state](docs/CURRENT_STATE.md), [decisions and plans](docs/DECISIONS_AND_PLANS.md) |
 | Immediate Real11 questions | [Real11 guide](docs/REAL11_GUIDE.md), then linked candidate/question/call ledgers |
 | Code structure and function flow | [Architecture](docs/ARCHITECTURE.md), [code map](docs/CODE_MAP.md), [function index](docs/FUNCTION_INDEX.md) |
 | Run, resume, build helpers, replay/export | [Runbook](docs/RUNBOOK.md); detailed [constraint runbook](docs/design/CONSTRAINT_GENERATION_RUNBOOK.md) |
@@ -36,4 +24,12 @@ Use [decisions and plans](docs/DECISIONS_AND_PLANS.md) to distinguish current re
 | Reuse mod physics/constraints | [Mod references](docs/MOD_REFERENCES.md) |
 | Find any document or tracked file | [Documentation index](docs/DOC_INDEX.md), [file index](docs/FILE_INDEX.md) |
 
-Use focused standalone tests and widen according to affected scope. Do not launch Minecraft, rebuild helpers unnecessarily or run mod test suites for documentation/Python-only iteration. See the runbook for native-worker dependencies and exact commands. Preserve historical evidence; produce new runs in new output paths.
+## Working practices
+
+- Reuse existing models, movement/constraint builders and validation paths. Read the affected module's conventions before changing behavior; keep fixture-specific data out of generic algorithms.
+- Follow the [feature workflow](docs/DEVELOPMENT.md#keeping-the-codebase-clean) for every implementation: identify the existing owner and callers, keep shared rules in one implementation, and use the [layout](docs/LAYOUT.md) to place production code, tools, research and data.
+- Finish features with a cleanup review: remove superseded paths and temporary instrumentation, check dependency boundaries, run appropriate tests, and update affected documentation. Commit coherent working features with their related tests/docs/fixtures; documentation-only work does not require a commit.
+- Run focused standalone checks and widen according to the affected scope. See the runbook and testing guide for commands and native dependencies. Rebuild helpers only when needed; launch Minecraft or run mod checks only when the task calls for them.
+- Distinguish numerical feasibility, scene validation and executable replay. A timeout, cap or local solver failure is not an infeasibility or optimality certificate.
+- Preserve historical evidence and write new experiment runs to new output paths. Record source revision, settings and validation scope when reporting measurements.
+- Update relevant current documentation when behavior, commands or measured facts change. Keep task history and detailed design records out of this entry point.

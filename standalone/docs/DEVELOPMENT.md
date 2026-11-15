@@ -13,6 +13,81 @@ Read [AGENTS](../AGENTS.md), [current state](CURRENT_STATE.md), [architecture](A
 - One-off reproduction/measurement: a clearly named script in an experiment directory, with settings, source/provenance and a result note. Extract shared logic into production modules when genuinely reused.
 - Mod physics inspiration and lifting: [mod references](MOD_REFERENCES.md); compile/reuse current checked-in classes rather than materializing historical copies or importing MC loader classes into core.
 
+## Keeping the codebase clean
+
+Apply this workflow to each feature, including small fixes. Cleanup belongs in
+the implementation, with the tests and documentation for that feature.
+
+1. **Find the owner before writing code.** Read the affected module and search
+   for existing helpers and callers. Name which module owns the new behavior
+   and which callers need it. Extend that owner where appropriate; introduce a
+   new module when it has a distinct responsibility. Avoid general `utils` or
+   `helpers` dumping grounds and a separate module for every small function.
+2. **Keep each shared rule authoritative.** Comparison/pruning predicates,
+   reachability preparation, movement physics, constraint construction and
+   validation should each have one maintained implementation of their rule.
+   When two callers need the same behavior, make them call the shared helper.
+   Pass differing policy or context explicitly. Investigate existing differences
+   before merging similar-looking code: matching shapes do not establish matching
+   semantics. Tests should check behavior, rather than copy the rule under test.
+3. **Keep responsibilities and dependencies clear.** Parsing belongs in `scene`
+   or `schema`, numerical work in `numerics`, traversal in `search`, and physical
+   acceptance in `validation`. CLI modules handle arguments and IO and delegate
+   behavior to application/library services. Split a module when it mixes
+   responsibilities or requires unrelated dependencies; line count alone is not
+   a reason to split. Production cannot import research, tools, tests or fixtures;
+   schema/physics/scene primitives cannot depend on search. Optional numerical
+   and plotting dependencies must stay optional at ordinary API import time.
+4. **Put experiments and data in their own homes.** Follow [layout](LAYOUT.md):
+   reusable developer commands go in `tools`, scientific probes in a named
+   `research` topic, local outputs in ignored `runs`, reusable test builders in
+   `tests/support`, minimal regression inputs in `tests/fixtures`, and curated
+   runnable tasks in `cases`. Promote an experiment's useful logic into its
+   production owner and make maintained drivers call it. Keep frozen source
+   snapshots as evidence; runtime must never load them. Avoid fixture IDs,
+   coordinates and saved benchmark paths in generic algorithms.
+5. **Complete the replacement in the same feature.** Update all maintained
+   callers, remove superseded implementations, dead imports, temporary prints
+   and one-off instrumentation. Keep useful diagnostics in the existing
+   observability/tooling paths. Retain compatibility only for a named supported
+   contract, with a reason and relevant coverage. Avoid leaving old/new solver
+   paths or feature flags merely because migration was unfinished. Preserve
+   unrelated edits and frozen historical evidence.
+6. **Review the final diff as a maintainer.** Check for duplicated rules, hidden
+   fixture dependencies, new coupling, unnecessary abstraction and behavior
+   changes disguised as cleanup. Keep renames/extractions distinguishable from
+   policy changes; update identity/schema versions only when semantics require
+   it. Run the checks below, update the current contract/docs, and commit at a
+   coherent working boundary. For a longer feature, use tested recovery commits.
+
+Before completing a feature, run from `standalone/` using the installed development
+interpreter:
+
+```sh
+python -m tools.validate_layout
+python -m unittest tests.integration.test_package_layout
+```
+
+The layout validator checks production imports, relocation targets and protected
+evidence hashes. Package tests additionally check primitive/search dependency
+direction, shared test builders, runtime provenance, light imports and installed
+API/worker behavior outside the checkout cwd. Set the native environment from the
+[runbook](RUNBOOK.md) when verifying the real worker; otherwise that test skips.
+These checks catch specific structural regressions, not duplicated algorithms or
+every possible dynamic import. Ownership and semantic duplication still require
+review.
+
+Also run focused tests for the changed behavior and affected consumers of shared
+helpers. Use the selected native gate for changes spanning solver orchestration,
+worker, replay or persistence boundaries; report its scope and skips. Do not run
+long cold experiments for every small edit. When modules/functions/files move or
+public APIs change, refresh the affected navigation and commands; the index
+generator rewrites generated files, so inspect/reconcile local edits first.
+Run `python -m tools.check_docs` when documentation changes. Documentation-only
+work needs the relevant documentation checks, not numerical reruns or a mandatory
+commit. No new formatter, arbitrary file-size cap or broad rewrite is required by
+this workflow.
+
 ## Fix workflow
 
 1. Trace root cause with the [debugging workflow](RESULTS_AND_DEBUGGING.md); distinguish generation, assembly, numerical solve, validation, retention and continuation failures.
