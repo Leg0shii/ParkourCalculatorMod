@@ -1,5 +1,85 @@
 # Changelog
 
+## [1.18.0](https://github.com/Leg0shii/ParkourCalculatorMod/compare/v1.17.0...v1.18.0) (2026-11-15)
+
+
+### Features
+
+* block overrides that follow the selected tick in singleplayer ([#277](https://github.com/Leg0shii/ParkourCalculatorMod/issues/277)) ([#615](https://github.com/Leg0shii/ParkourCalculatorMod/issues/615)) ([b719633](https://github.com/Leg0shii/ParkourCalculatorMod/commit/b71963359e5e8a148fe7322af0672584de44b8c1))
+* **fabric:** follow BPKMod's movement rules in the simulator and the solver ([#545](https://github.com/Leg0shii/ParkourCalculatorMod/issues/545)) ([137e92d](https://github.com/Leg0shii/ParkourCalculatorMod/commit/137e92d2fa20076bf46411fc61ce3df808011e98))
+* Keep yaw constant (dF = 0) on the selected rows from the tick right-click menu ([79c7bef](https://github.com/Leg0shii/ParkourCalculatorMod/commit/79c7befd5e4598cd22205ebbf25c7fe4e9e509c0))
+* Keep yaw constant (dF = 0) on the selected rows from the tick right-click menu ([383b02d](https://github.com/Leg0shii/ParkourCalculatorMod/commit/383b02dc0ebe4c438a3317c2821cca5a055dc947)), closes [#489](https://github.com/Leg0shii/ParkourCalculatorMod/issues/489)
+* **playback:** add a mouse turn pad, resizing and a View toggle to the keystrokes panel ([55da931](https://github.com/Leg0shii/ParkourCalculatorMod/commit/55da931527c3e9bdbf8dc55aeb3e2adc80efd155))
+* **playback:** glide the mouse movement dot every frame and give all key labels one font size ([f400f29](https://github.com/Leg0shii/ParkourCalculatorMod/commit/f400f2928970a814ab8c1221aecd50febe8b7f32))
+* **playback:** make the keystrokes mouse pad and its scrolling trail optional ([cf8ad34](https://github.com/Leg0shii/ParkourCalculatorMod/commit/cf8ad346d279affd6262e6cf9ec59985dabedddb))
+* **playback:** scroll the turn trail down the pad and fit key labels ([6bf4e10](https://github.com/Leg0shii/ParkourCalculatorMod/commit/6bf4e1094055ec5f73a65d80d163c27c1805e718))
+* **playback:** show keystrokes during client-sided replay ([0469662](https://github.com/Leg0shii/ParkourCalculatorMod/commit/0469662c62cccf216c25d14a94f3fbdd2b3675c6))
+* **playback:** show keystrokes during client-sided replay ([962b878](https://github.com/Leg0shii/ParkourCalculatorMod/commit/962b878236d3d5317b7332cdb108dfbda95ac3ac)), closes [#240](https://github.com/Leg0shii/ParkourCalculatorMod/issues/240)
+* **playback:** toggle keystrokes, mouse strokes and mouse movement separately from the View menu ([872e998](https://github.com/Leg0shii/ParkourCalculatorMod/commit/872e998817940b36be5eb5ae407c86616013282c))
+* **research:** solver benchmark on the work clock (HPK set, human strat and theoretical) ([#674](https://github.com/Leg0shii/ParkourCalculatorMod/issues/674)) ([ea9e1e9](https://github.com/Leg0shii/ParkourCalculatorMod/commit/ea9e1e9146ffedde8a57f7f27e984c22cf084b1d))
+* **solver:** dF ranges and exact turns solve ([#695](https://github.com/Leg0shii/ParkourCalculatorMod/issues/695)) ([ecca999](https://github.com/Leg0shii/ParkourCalculatorMod/commit/ecca999820ac91ab0a89f485703fabd9fd99865d))
+* **solver:** lattice polish repeats its grid search from its own result ([#663](https://github.com/Leg0shii/ParkourCalculatorMod/issues/663)) ([e3c4748](https://github.com/Leg0shii/ParkourCalculatorMod/commit/e3c474827740ab7ddcc1ab00bc79ef473f45b4eb))
+* **solver:** lattice polish stage in Optimize solves the start position and the facings together ([#657](https://github.com/Leg0shii/ParkourCalculatorMod/issues/657)) ([f122634](https://github.com/Leg0shii/ParkourCalculatorMod/commit/f122634187b1fd88bb6a5270fafb9530ae3078e2))
+* **solver:** lattice polish takes facing inequalities and cross-axis walls ([#660](https://github.com/Leg0shii/ParkourCalculatorMod/issues/660)) ([2c33da4](https://github.com/Leg0shii/ParkourCalculatorMod/commit/2c33da4b031b5fbd146430b04a8b30962920e9fd))
+* **solver:** let the joint start repair hop inertia patterns ([#693](https://github.com/Leg0shii/ParkourCalculatorMod/issues/693)) ([ba97c6b](https://github.com/Leg0shii/ParkourCalculatorMod/commit/ba97c6bee6f5350d920d2dd29f54124d0a104711))
+* **solver:** model the flowing water and lava push per tick ([6b52979](https://github.com/Leg0shii/ParkourCalculatorMod/commit/6b52979275742f68646a6a969bee54fa621e661b))
+* **solver:** option to start a jump one full turn away, off by default ([#661](https://github.com/Leg0shii/ParkourCalculatorMod/issues/661)) ([80a1c45](https://github.com/Leg0shii/ParkourCalculatorMod/commit/80a1c45a5ea4424d30eef7da218aed444c5e29bf))
+* **solver:** repeatable solve option with a work clock and a seed ([#669](https://github.com/Leg0shii/ParkourCalculatorMod/issues/669)) ([2f022e6](https://github.com/Leg0shii/ParkourCalculatorMod/commit/2f022e6c7d68e806dd7e458eae2ca26153dd7029))
+* **solver:** settle open inertia cases with a second probe, show the gap against the certified bound ([#676](https://github.com/Leg0shii/ParkourCalculatorMod/issues/676)) ([1914188](https://github.com/Leg0shii/ParkourCalculatorMod/commit/19141887ba4c44cfd9ef53ad62efd2777a1af724))
+* **solver:** Smooth (Turn and inputs) may change keys and releases them with a minimum thrust plan ([#670](https://github.com/Leg0shii/ParkourCalculatorMod/issues/670)) ([23c7d3a](https://github.com/Leg0shii/ParkourCalculatorMod/commit/23c7d3a806febf4ddccbbc91c99d39b4f54078ae))
+* **solver:** Smooth picks the turn that is pleasant to watch ([#668](https://github.com/Leg0shii/ParkourCalculatorMod/issues/668)) ([f52f7b7](https://github.com/Leg0shii/ParkourCalculatorMod/commit/f52f7b70660ff5bdf4111a982cab520ee5fd3deb))
+* **solver:** solve start and facings together as a Fast stage on free starts ([#692](https://github.com/Leg0shii/ParkourCalculatorMod/issues/692)) ([beb6344](https://github.com/Leg0shii/ParkourCalculatorMod/commit/beb63449dcdaebbd82644b3aefa3a7649635ba8d))
+* **stratfinder:** a momentum lane that finds Strats without the Strat library ([#697](https://github.com/Leg0shii/ParkourCalculatorMod/issues/697)) ([3dcc499](https://github.com/Leg0shii/ParkourCalculatorMod/commit/3dcc4996a3b99eacc226d2a5a56e62b6d1336175))
+* **stratfinder:** certify waiting candidates beside the neighbours of a found Strat ([#705](https://github.com/Leg0shii/ParkourCalculatorMod/issues/705)) ([9c640e6](https://github.com/Leg0shii/ParkourCalculatorMod/commit/9c640e61b20be071a9771b5d9eee290e2fb97a0b))
+* **stratfinder:** drop whole subtrees of the family walk with a stored reject vector ([#687](https://github.com/Leg0shii/ParkourCalculatorMod/issues/687)) ([e70a762](https://github.com/Leg0shii/ParkourCalculatorMod/commit/e70a7620ba7acd2ea3367c04786a23b75bcf7589)), closes [#686](https://github.com/Leg0shii/ParkourCalculatorMod/issues/686)
+* **stratfinder:** reuse reject vectors across schedules in the family screen ([#684](https://github.com/Leg0shii/ParkourCalculatorMod/issues/684)) ([4fbb7eb](https://github.com/Leg0shii/ParkourCalculatorMod/commit/4fbb7eb2d07fbf244bd7f09d2af1e57b07e1fc6b)), closes [#683](https://github.com/Leg0shii/ParkourCalculatorMod/issues/683)
+* **stratfinder:** search over Strat families beside the change levels ([#671](https://github.com/Leg0shii/ParkourCalculatorMod/issues/671)) ([#672](https://github.com/Leg0shii/ParkourCalculatorMod/issues/672)) ([5bc1f50](https://github.com/Leg0shii/ParkourCalculatorMod/commit/5bc1f507777b3f0dbf593ae3907f371ea72c4a11))
+* **stratfinder:** warm the search code up before the first search ([#703](https://github.com/Leg0shii/ParkourCalculatorMod/issues/703)) ([1717d87](https://github.com/Leg0shii/ParkourCalculatorMod/commit/1717d87df914fb5c5a25bafadce39a5984aa6bfa))
+
+
+### Bug Fixes
+
+* deep review cleanup (scenario copies, cross-axis certificates, stale results, dead code) ([#647](https://github.com/Leg0shii/ParkourCalculatorMod/issues/647)) ([245abd0](https://github.com/Leg0shii/ParkourCalculatorMod/commit/245abd030fed251f31e5d25e01f761ec1e2f54fc))
+* **overrides:** right click check, replay ownership, save as new TAS and long-run cost ([#650](https://github.com/Leg0shii/ParkourCalculatorMod/issues/650)) ([dc77030](https://github.com/Leg0shii/ParkourCalculatorMod/commit/dc770302100a7c2617f545e600662eff2db1051a))
+* **solver:** an Optimize under 2 s opens with both starts ([#678](https://github.com/Leg0shii/ParkourCalculatorMod/issues/678)) ([692e433](https://github.com/Leg0shii/ParkourCalculatorMod/commit/692e4333b16236a08f6af3e62a95ab6667401a54))
+* **solver:** long window precision and unresolved-branch bounds, found by a new witness oracle test ([#648](https://github.com/Leg0shii/ParkourCalculatorMod/issues/648)) ([7202d63](https://github.com/Leg0shii/ParkourCalculatorMod/commit/7202d63440a33441e20664e1cef13d1fce6b7576))
+* **solver:** Smooth (Turn and inputs) releases keys only where it pays ([#673](https://github.com/Leg0shii/ParkourCalculatorMod/issues/673)) ([09d0ecd](https://github.com/Leg0shii/ParkourCalculatorMod/commit/09d0ecd42299ac0e3e46f8e03e4c562bd38c2899))
+* **solver:** stop the lattice polish stage at its deadline ([#675](https://github.com/Leg0shii/ParkourCalculatorMod/issues/675)) ([d04638b](https://github.com/Leg0shii/ParkourCalculatorMod/commit/d04638bddc354d10c136b05f2d8138a62211d521))
+* **solver:** the closed form bound declines on damage and flow jumps ([#666](https://github.com/Leg0shii/ParkourCalculatorMod/issues/666)) ([d42a283](https://github.com/Leg0shii/ParkourCalculatorMod/commit/d42a283c091daa8786482580bf3b1230812a8f7b))
+* **solver:** the dual kernel restarts cold when its warm start collapses a cone ([#652](https://github.com/Leg0shii/ParkourCalculatorMod/issues/652)) ([5b9dbcb](https://github.com/Leg0shii/ParkourCalculatorMod/commit/5b9dbcb1a7494afb4abb57aced264d599fec780d))
+* **solver:** the pattern search rescue ends at its first landing and tries patterns by bound ([#688](https://github.com/Leg0shii/ParkourCalculatorMod/issues/688)) ([6ed7a5f](https://github.com/Leg0shii/ParkourCalculatorMod/commit/6ed7a5fb5d945035c8373245bdbfc263d7d1a186))
+
+
+### Performance Improvements
+
+* **solver:** certified search stops a node's dual solve once its value prunes the node ([#649](https://github.com/Leg0shii/ParkourCalculatorMod/issues/649)) ([af4924d](https://github.com/Leg0shii/ParkourCalculatorMod/commit/af4924d1109936d7c0e819b7a92508c182245211))
+* **solver:** cheaper pricing and start basis in the trust region LP ([#681](https://github.com/Leg0shii/ParkourCalculatorMod/issues/681)) ([29a65fb](https://github.com/Leg0shii/ParkourCalculatorMod/commit/29a65fbbb33ce53081475ee977376e4045bb603e))
+* **solver:** one forward per point and no repeated rung in the gate fold finder ([#685](https://github.com/Leg0shii/ParkourCalculatorMod/issues/685)) ([bc90b44](https://github.com/Leg0shii/ParkourCalculatorMod/commit/bc90b44978463441327560d4476e2949af2aeafa))
+* **solver:** Optimize runs the certified search a second time in dive order behind the pipeline ([#664](https://github.com/Leg0shii/ParkourCalculatorMod/issues/664)) ([15e14b9](https://github.com/Leg0shii/ParkourCalculatorMod/commit/15e14b9599276ac5d5417df18c20f5d037aaa9f8))
+* **solver:** Optimize shows its end landing early, polish beside the chain ([#698](https://github.com/Leg0shii/ParkourCalculatorMod/issues/698)) ([df61637](https://github.com/Leg0shii/ParkourCalculatorMod/commit/df61637beaf8fb343d60a69944f78b9c439030c5))
+* **solver:** primal-dual interior point kernel for the certified search ([#653](https://github.com/Leg0shii/ParkourCalculatorMod/issues/653)) ([c993183](https://github.com/Leg0shii/ParkourCalculatorMod/commit/c99318352f06519697b8f6fcbc5ceb3932446e0c))
+* **solver:** prove tied misses with a tie fold relaxation in the certified search ([#694](https://github.com/Leg0shii/ParkourCalculatorMod/issues/694)) ([03d99f8](https://github.com/Leg0shii/ParkourCalculatorMod/commit/03d99f8804dcc143e731d22fab9900e44d15d21c))
+* **solver:** the certified bound admits only the cosine slips a float facing can produce ([#658](https://github.com/Leg0shii/ParkourCalculatorMod/issues/658)) ([611f65a](https://github.com/Leg0shii/ParkourCalculatorMod/commit/611f65adbd4b8ac16ef9e737c1e7aa0ba9f8b698))
+* **solver:** the certified bound charges an open inertia case once, as a bounded impulse ([#655](https://github.com/Leg0shii/ParkourCalculatorMod/issues/655)) ([be78e58](https://github.com/Leg0shii/ParkourCalculatorMod/commit/be78e58f1709340e8b736323a460b7cc4625c823))
+* **solver:** the certified search settles open inertia cases at the root from the dual ([#659](https://github.com/Leg0shii/ParkourCalculatorMod/issues/659)) ([4dd6de0](https://github.com/Leg0shii/ParkourCalculatorMod/commit/4dd6de058c82fc1738b8800fe3318c9b86a168db))
+* **solver:** the exact support scans a certified window of the sine table ([#654](https://github.com/Leg0shii/ParkourCalculatorMod/issues/654)) ([ddc5506](https://github.com/Leg0shii/ParkourCalculatorMod/commit/ddc5506629159192bf7dd88dfdfc01354b771312))
+* **solver:** the facing sweep polishes its candidates only from an Optimize of 20 s ([#677](https://github.com/Leg0shii/ParkourCalculatorMod/issues/677)) ([98b9917](https://github.com/Leg0shii/ParkourCalculatorMod/commit/98b9917aa5b7a216d37b9829050509bd3a967d7d))
+* **solver:** the fold driver stops on a repeated round and the dual kernel builds its Newton matrix faster ([#651](https://github.com/Leg0shii/ParkourCalculatorMod/issues/651)) ([3ba2df4](https://github.com/Leg0shii/ParkourCalculatorMod/commit/3ba2df41b48b00c11df1b163554093560cd4ce2f))
+* **solver:** the last leaf snap of Optimize repeats until a snap finds nothing better, on every tick window ([#665](https://github.com/Leg0shii/ParkourCalculatorMod/issues/665)) ([3558519](https://github.com/Leg0shii/ParkourCalculatorMod/commit/3558519a5289311f78ee21dc6be7871b60606467))
+* **solver:** the Optimize certified search polishes every landing that becomes the incumbent ([#662](https://github.com/Leg0shii/ParkourCalculatorMod/issues/662)) ([7a34068](https://github.com/Leg0shii/ParkourCalculatorMod/commit/7a34068bad63ffe94965bbc1480d3160109a14c2))
+* **stratfinder:** short first certify pass with a retry turn ([#682](https://github.com/Leg0shii/ParkourCalculatorMod/issues/682)) ([bfda301](https://github.com/Leg0shii/ParkourCalculatorMod/commit/bfda3011b3a8e88442b6c8109ebaf966b0000962))
+* **stratfinder:** start the family lane at once and certify as a stream ([#690](https://github.com/Leg0shii/ParkourCalculatorMod/issues/690)) ([6eb86c0](https://github.com/Leg0shii/ParkourCalculatorMod/commit/6eb86c0e3e1fd83be7902d6c34dec90d830db94d)), closes [#689](https://github.com/Leg0shii/ParkourCalculatorMod/issues/689)
+
+
+### Code Refactoring
+
+* **playback:** show the keystrokes panel from the View menu only ([2944840](https://github.com/Leg0shii/ParkourCalculatorMod/commit/294484060afd43bc19bc4dea96e2654d76a3e437))
+
+
+### Miscellaneous Chores
+
+* weekly release train ([#706](https://github.com/Leg0shii/ParkourCalculatorMod/issues/706)) ([9402209](https://github.com/Leg0shii/ParkourCalculatorMod/commit/940220953e5ae9a67c9e909b367ecbbf08969a6c))
+
 ## [1.17.0](https://github.com/Leg0shii/ParkourCalculatorMod/compare/v1.16.1...v1.17.0) (2026-10-25)
 
 
