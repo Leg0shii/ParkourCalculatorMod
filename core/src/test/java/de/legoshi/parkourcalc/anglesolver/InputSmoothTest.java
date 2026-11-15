@@ -145,6 +145,23 @@ public class InputSmoothTest {
     }
 
     @Test
+    public void countsReleasesSprintResetsAndBackTapsButNoStrafeChange() {
+        JumpPhysicsInputs sc = TickInputs.editable(force45());
+        assertEquals("W then W A, the forward key never changes", 0, InputSmooth.driveChanges(sc));
+        TickInputs.NONE.applyTo(sc, 2);
+        assertEquals("one released tick is a release and a press", 2, InputSmooth.driveChanges(sc));
+        new TickInputs(false, true, false, false, false).applyTo(sc, 3);
+        assertEquals("a lone strafe key is still released", 2, InputSmooth.driveChanges(sc));
+        new TickInputs(false, false, true, false, false).applyTo(sc, 3);
+        assertEquals("a back tap after the release", 3, InputSmooth.driveChanges(sc));
+        new TickInputs(true, false, false, false, false).applyTo(sc, 4);
+        new TickInputs(true, false, false, false, false).applyTo(sc, 5);
+        assertEquals("walking instead of sprinting is no extra change at the same edge", 3, InputSmooth.driveChanges(sc));
+        new TickInputs(true, false, false, false, true).applyTo(sc, 5);
+        assertEquals("a sprint restart is a change", 4, InputSmooth.driveChanges(sc));
+    }
+
+    @Test
     public void countsEveryKeyChangeBetweenNeighbouringTicksAsAnEdge() {
         JumpPhysicsInputs sc = TickInputs.editable(force45());
         assertEquals("W then five W A ticks", 1, InputSmooth.edges(sc));

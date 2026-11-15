@@ -106,7 +106,7 @@ anglesolver/
                            drivers with per-certify timings; pkc.bench.{driver,graph,freeBox,startTick,
                            allowJa,playable,threads,searchSec,nearSearchMs,certifySec,totalSec,maxCertify,
                            extraCertify,extraSec,dumpPool,out}; families=true turns the family stage on,
-                           familyWithout=<jump number> leaves that jump's rows out of the library,
+                           familyWithout=<jump numbers> leaves those jumps' rows and their copies out of the library,
                            familyOnly=true turns the change levels off,
                            familyDelayMs=<ms> sets how long the change levels keep every thread,
                            familyReach=<b> and familyInertiaShare=<fraction> set the inertia stages (reach 0 turns them off),
@@ -203,6 +203,20 @@ anglesolver/
                            -Dpkc.bench.reference), identity (the same runs in -Dpkc.bench.other must
                            be identical). A config is <variant>|<fast or seconds>, for example
                            "base|10s"
+  bench/CannotLandProbe.java  the certified search on a jump set without a landing, one line per jump and
+                           category (declined, feasible, certified infeasible, unresolved, nodes, kernel
+                           solves, ms, closest miss); -Dpkc.cl.{sets,jumps,categories,ms,nodes},
+                           -Dpkc.cl.fold, -Dpkc.cl.exclude, -Dpkc.cl.skipseeds (the tie fold proof
+                           search), -Dpkc.cl.resolve, -Dpkc.cl.dump (constraints), -Dpkc.cl.export=<dir>
+                           (writes RelaxationExport JSON instead of solving), -Dpkc.cl.replay="<input
+                           angles> dpx dpz" (replays one point through the linear and exact model)
+  bench/StratMutExport.java  stratfinder style key schedules of a capture folder (the recorded keys plus
+                           one tick key shifts, args: folder, out dir, ms, shifts per jump), each run
+                           through the certified search and written as RelaxationExport JSON;
+                           -Dpkc.cl.fold, -Dpkc.cl.exclude, -Dpkc.cl.skipseeds, -Dpkc.cl.noexport
+  core/anglesolver/solver/RelaxationExport.java
+                           JSON of a spec's linear relaxation (walls, per tick radii, velocity rows,
+                           tie groups, start box) for offline relaxations in Python
   HpkStartBenchmark.java   cold-solve benchmark over the hpk_human corpus against reference
                            objectives; -Dpkc.bench.{only,skip,graph,effort,optsec,timeoutms,out},
                            -Dpkc.bench.gate fails the run when a jump misses its reference by more

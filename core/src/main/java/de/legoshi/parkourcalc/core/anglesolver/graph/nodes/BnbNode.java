@@ -6,7 +6,6 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.Guarantee;
 import de.legoshi.parkourcalc.core.anglesolver.graph.NodeOutcome;
 import de.legoshi.parkourcalc.core.anglesolver.graph.NodeRuntime;
 import de.legoshi.parkourcalc.core.anglesolver.graph.ParamValues;
-import de.legoshi.parkourcalc.core.anglesolver.graph.Scoring;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.BoundPrunedRecovery;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolveClock;
@@ -54,12 +53,7 @@ public final class BnbNode implements NodeRuntime {
             SolverTrace.log("ENGINE", "bnb %s budgetMs=%d", optimize ? "optimize" : "rescue",
                     budgetNanos / 1_000_000L);
         }
-        double stopAt = Double.NaN;
-        if (!optimize) {
-            double cap = Scoring.objectiveCap(ctx.spec);
-            stopAt = Double.isNaN(cap) ? (max ? -1.0e300 : 1.0e300)
-                    : (max ? cap - Scoring.CAP_GAP_TOL : cap + Scoring.CAP_GAP_TOL);
-        }
+        double stopAt = optimize ? Double.NaN : (max ? -1.0e300 : 1.0e300);
         double[] warm = in != null ? in.yaws : null;
         double[] bnb = BoundPrunedRecovery.solve(ctx.exactModel, ctx.spec, ctx.feasTol, nodeToken,
                 budgetNanos, stopAt, ctx.closestMiss(), warm);
