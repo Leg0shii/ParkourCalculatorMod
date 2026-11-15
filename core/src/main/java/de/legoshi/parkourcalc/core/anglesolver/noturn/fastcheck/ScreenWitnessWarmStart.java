@@ -48,7 +48,8 @@ public final class ScreenWitnessWarmStart implements FastCheck {
             return FastCheckVerdict.feasible(r.yaws, r.startX, r.startZ, String.format(Locale.ROOT,
                     "screenWarm seed=%s theta=%.4f", Double.isNaN(center) ? "circle" : "disk", witness[1]));
         }
-        return FastCheckVerdict.unknown(String.format(Locale.ROOT, "screenWarm miss screenViol=%.3g", witness[5]));
+        return FastCheckVerdict.unknown(String.format(Locale.ROOT, "screenWarm miss screenViol=%.3g", witness[5]),
+                r.reached);
     }
 
     @Override

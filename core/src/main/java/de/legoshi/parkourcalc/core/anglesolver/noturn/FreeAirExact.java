@@ -15,6 +15,7 @@ public final class FreeAirExact {
 
     private static final double EPS2 = 1.0e-18;
     private static final double GAP_TOL = 1.0e-9;
+    private static final double STALL_GAP = 1.0e-6;
     private static final int MAX_OUTER = 400;
     private static final int MAX_NEWTON = 60;
     private static final int WARM_SLOTS = 4;
@@ -109,8 +110,53 @@ public final class FreeAirExact {
             return Double.doubleToLongBits(a) == Double.doubleToLongBits(b);
         }
 
-        private static int key(int combo, boolean sprint, boolean sprintBefore) {
+        static int key(int combo, boolean sprint, boolean sprintBefore) {
             return (combo << 2) | (sprint ? 2 : 0) | (sprintBefore ? 1 : 0);
+        }
+
+        static final int KEYS = NoTurnKeys.COUNT << 2;
+
+        int ticks() {
+            return shape.n;
+        }
+
+        int rows() {
+            return shape.rows;
+        }
+
+        int unitOf(int tick) {
+            return shape.unitOfTick[tick];
+        }
+
+        double rejectTerms(double[] lambda, double[] sumX, double[] sumY) {
+            double start = 0.0;
+            double boxX = 0.0;
+            double boxZ = 0.0;
+            for (int j = 0; j < shape.rows; j++) {
+                double l = lambda[j];
+                if (l == 0.0) continue;
+                start += l * (shape.rowStart[j] + shape.rowShift[j]);
+                if (shape.boxUnitX >= 0) boxX += l * fixedX[j][shape.boxUnitX];
+                if (shape.boxUnitZ >= 0) boxZ += l * fixedX[j][shape.boxUnitZ];
+            }
+            for (int t = 0; t < shape.n; t++) {
+                for (int key = 0; key < KEYS; key++) {
+                    double[] x = termX[t][key];
+                    if (x == null) continue;
+                    double[] y = termY[t][key];
+                    double sx = 0.0;
+                    double sy = 0.0;
+                    for (int j : rowsAt[t]) {
+                        double l = lambda[j];
+                        if (l == 0.0) continue;
+                        sx += l * x[j];
+                        sy += l * y[j];
+                    }
+                    sumX[t * KEYS + key] = sx;
+                    sumY[t * KEYS + key] = sy;
+                }
+            }
+            return start + Math.abs(boxX) + Math.abs(boxZ);
         }
     }
 
@@ -176,7 +222,12 @@ public final class FreeAirExact {
         public Result solve(int[] combos, boolean[] sprint, double rejectAbove) {
             if (pool == null) {
                 solver.load(tables, combos, sprint);
-                return solver.screen(rejectAbove, warm, null);
+                Result r = solver.screen(rejectAbove, warm, null);
+                if (r.dual <= rejectAbove && r.primal > rejectAbove + STALL_GAP) {
+                    Result cold = solver.screen(rejectAbove, null, null);
+                    if (cold.dual > r.dual) r = cold;
+                }
+                return r;
             }
             double bound = pool.bound(combos, sprint, rejectAbove);
             if (bound > rejectAbove) {

@@ -278,6 +278,31 @@ anglesolver/
   NoTurnSharedExploreTest.java  (SlowSolverTests) StructurePoolDriver with Config.sharedExplore (#704) on j315,
                            family lane, full library, 10 s after the first Strat on two threads: the list
                            holds Strats with at least three different run-ups, all byte-exact
+  NoTurnMomentumRulesTest.java  MomentumRules, the change level rules of the momentum lane (#696) as one state
+                           per tick: a change on a jump tick or the tick after it is free, a short hold away
+                           from a jump needs the tap rules, the three sprint variants, and where the walked
+                           ticks end on one tied run-up (j154), two tied parts (j424), tied parts to the
+                           last tick (j144) and a turn on every jump (j155); fast
+  NoTurnMomentumSearchTest.java  (SlowSolverTests) MomentumSearch against a full walk of the rules with one
+                           FreeAirExact solve per schedule (j135 with and without taps, j344 across a join,
+                           j342 with one change; several facing parts: j152, j828, j246 and j718; a
+                           turn on every jump: j134): nothing under the limit is dropped, nothing over it kept;
+                           on j315 no neighbour of a kept schedule (a change one tick earlier or later, a
+                           hold with other keys) is under the limit and missing; StructurePoolDriver with
+                           the momentum lane alone lands j315 cold without the Strat library and j152 (two
+                           facing parts), and a cancel ends a running lane
+  ../core/anglesolver/noturn/NoTurnCertifyLadderTest.java  CertifyLadder, the order of the stream certifier
+                           (in the package of the class): a miss climbs the 16, 100 and 500 ms passes and
+                           then leaves, a flood of momentum candidates holds a family candidate back by at
+                           most one round of the sources, a better screen value overtakes in the later
+                           passes, the passes share the granted time 4 to 2 to 1, a second copy of a
+                           schedule does not start again, what is left goes back to the batch queues; fast
+  ../core/anglesolver/solver/WorkDeadlineTest.java  WorkDeadline (in the package of the class): a thread time
+                           budget never ends before the same wall time has passed, a sleeping thread does not
+                           spend it, a capped deadline ends no later than its parent, a cap on no deadline is
+                           a wall deadline; on a metered thread (SolveClock.meter) a budget waits for its
+                           counted work, ends on time once it has it and ends at its cap without it, and the
+                           meter leaves SolveClock.nanoTime and current alone; fast
   ../core/NoTurnWarmupTest.java  StratfinderWarmup (in the package of the class, slow): the bundled jump is a
                            search problem on every shipped game version, the warm-up search lands Strats with
                            the 1.8.9 and the 26.3 model, a cancel ends it
