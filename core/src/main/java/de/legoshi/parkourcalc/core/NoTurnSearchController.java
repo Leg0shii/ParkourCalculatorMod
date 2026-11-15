@@ -320,6 +320,7 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
         poolCfg.extraCertify = 1000;
         poolCfg.extraCertifyNanos = 45_000_000_000L;
         poolCfg.playable = playable;
+        poolCfg.sharedExplore = true;
         return poolCfg;
     }
 
