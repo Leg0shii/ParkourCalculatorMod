@@ -155,6 +155,10 @@ contains exactly two parts: detect adjacent coplanar faces across all six
 orientations, and represent the exact merged cover plus its original members
 for later decisions. B9a/B9b/B10 provide one underside example; matching top and
 side faces follow the same rule. Implementation has not begun.
+The detailed plan covers internal/partly hidden faces, exact nonrectangular
+unions, source contributions, orientation/coordinate conventions and later-query
+contracts. [Geometry-only probe](../research/real11-extension/face-detection-plan-probe.json)
+records the proposed boundary calculation for this input.
 
 The earlier [combination probe](../research/real11-extension/ceiling-preprocessing-audit.json)
 and [profile probe](../research/real11-extension/profile-dedup-audit.json) preserve

@@ -24,3 +24,9 @@ The [single face-merging plan](../../docs/design/FACE_MERGING_IMPLEMENTATION_PLA
 contains only detection of adjacent coplanar faces in all six orientations and
 representation of their exact unions/source membership for later decisions.
 The probes above do not add bug-fix or solver-integration work to that plan.
+
+[Face-detection planning probe](face-detection-plan-probe.json) explores the
+recommended physical-boundary rule using existing subtraction/union primitives.
+It records input/source hashes, normal-side occlusion conditions, counts and
+partial/hidden B9 face examples. This is planning evidence, not a production
+face catalog, player-clearance check or route solve.

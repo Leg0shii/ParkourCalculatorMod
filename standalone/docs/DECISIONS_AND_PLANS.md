@@ -5,6 +5,9 @@ contains exactly two parts: detecting adjacent coplanar faces in any of the six
 orientations, and representing exact merged covers with source membership for
 later decisions. It replaces the former ceiling-only/integration/bug-fix plan;
 that extra work has been removed from this task. Implementation has not begun.
+The detailed plan recommends clipping internal/buried face portions before
+grouping, while retaining raw source faces, and specifies geometric IDs,
+component-specific provenance and the physical/player-coordinate distinction.
 
 2026-11-15 longer-course geometry: use [extended Real11 geometry and bounds](REAL11_EXTENDED_GEOMETRY.md)
 for the newly supplied B8–B22. The final user correction withdraws the proposed
