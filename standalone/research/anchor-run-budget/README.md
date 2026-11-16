@@ -35,6 +35,12 @@ retry numerical unknowns already recorded by an earlier run.
 
 ## Validation
 
+The subsequent [candidate audit](RUN8_CANDIDATE_AUDIT.md) identifies the exact
+additional run-8 obstacle passages and their outcomes. Finishing the current DFS
+branch is intentional; the audit changes no scheduling policy.
+The [B6 follow-up](B6_PASSAGE_CHECKS.md) separates the two physical sides from
+redundant phase descriptions and identifies which checks reject each timing.
+
 Focused regressions cover 90 requests across multiple route evaluations in one
 allocation, despite legacy local settings of one call and 0.01 seconds; the
 global deadline; JSON continuation; pending work at global call exhaustion and

@@ -1,5 +1,14 @@
 # Current standalone state
 
+On `perf/early-passage-screen`, obstacle assignments receive the existing full
+pre-solver reachability/linear checks before downstream alternatives are generated.
+Adding B7 rechecks accumulated B6+B7 constraints; the angle solver stays coupled.
+The captured B6 catalogue loses237 of277 descriptions before B7 generation.
+See [implementation and validation](../research/early-passage-screen/README.md).
+Native636 passes with zero skips. The cold control reduces B7 enumeration visits
+39.75%, makes59 requests versus49, and retains the same T67/Z; all50 retained
+witnesses replay. Pre-change checkpoint compatibility also passes.
+
 On `fix/anchor-run-budgets`, physical anchor search now runs continuously under
 the session deadline and global call guard, with per-request timeouts and no
 service-turn/per-program time or call quotas. Unstarted repair work remains

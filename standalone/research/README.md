@@ -26,6 +26,7 @@ revision and use its recorded patch/configuration. Current controls belong in
 | [Enumeration attribution](enumeration-attribution/README.md) | Exact block/side-chain/exit counters and fixed-work option replay identify duplicate internal states around B7; production search unchanged. |
 | [Enumeration reduction](enumeration-reduction/README.md) | Implemented early suppression of already-visited children, canonical key memoization, ordered-catalogue equivalence, timing and legacy-resume evidence. |
 | [Continuous anchor run budget](anchor-run-budget/README.md) | Removes anchor service-turn/per-program quotas, preserves unstarted repair work and measures native, cold and continuation behavior. |
+| [Early passage screening](early-passage-screen/README.md) | Checks accumulated obstacle constraints before downstream generation while retaining coupled numerical solves. |
 | `python tools/native_gate.py` | Explicit recorded native acceptance scope, plus packaging/profiler regressions. |
 | `python -m tools.audit_candidates` | Offline saved cold-candidate/worker ledger, optional independent Java replay. |
 | `python -m tools.witness_bound_audit` | Current optimistic bound checks over every prefix of supplied archived valid finishes. |

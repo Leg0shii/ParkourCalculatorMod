@@ -114,7 +114,9 @@ control work; inclusion here is not authorization to implement a historical plan
 | [research/anchor-candidate-audit/README.md](../research/anchor-candidate-audit/README.md) | Frozen source-era evidence; use research guide for reproduction: Real11 candidate inventory |
 | [research/anchor-feasibility/README.md](../research/anchor-feasibility/README.md) | Frozen source-era evidence; use research guide for reproduction: Anchor DFS and physical Real11 finish |
 | [research/anchor-initial0-audit-2026-11-04/README.md](../research/anchor-initial0-audit-2026-11-04/README.md) | Frozen source-era evidence; use research guide for reproduction: Why the anchor run missed initial-0 / T64 |
-| [research/anchor-run-budget/README.md](../research/anchor-run-budget/README.md) | Current implementation and measured validation: Continuous anchor search under the run budget |
+| [research/anchor-run-budget/B6_PASSAGE_CHECKS.md](../research/anchor-run-budget/B6_PASSAGE_CHECKS.md) | Current implementation or investigation: B6 passage choices and pre-solver rejection |
+| [research/anchor-run-budget/README.md](../research/anchor-run-budget/README.md) | Frozen source-era evidence; use research guide for reproduction: Continuous anchor search under the run budget |
+| [research/anchor-run-budget/RUN8_CANDIDATE_AUDIT.md](../research/anchor-run-budget/RUN8_CANDIDATE_AUDIT.md) | Current implementation or investigation: Additional run-8 candidates |
 | [research/anchor-runtime-profile/README.md](../research/anchor-runtime-profile/README.md) | Frozen source-era evidence; use research guide for reproduction: Coordinated anchor/solver integration and runtime profiling |
 | [research/anchor-transfer-preparation/README.md](../research/anchor-transfer-preparation/README.md) | Frozen source-era evidence; use research guide for reproduction: Hard transfer with source-local preparation |
 | [research/automatic-corridors/README.md](../research/automatic-corridors/README.md) | Frozen source-era evidence; use research guide for reproduction: Automatic semantic corridors on the stored Real11 scene |
@@ -133,6 +135,7 @@ control work; inclusion here is not authorization to implement a historical plan
 | [research/decision-windows/RESULTS.md](../research/decision-windows/RESULTS.md) | Frozen source-era evidence; use research guide for reproduction: Joint windows: what survives later comparison |
 | [research/dfs-interactions/CALLS.md](../research/dfs-interactions/CALLS.md) | Frozen source-era evidence; use research guide for reproduction: DFS cold/resume worker calls |
 | [research/dfs-interactions/README.md](../research/dfs-interactions/README.md) | Frozen source-era evidence; use research guide for reproduction: Goal-aware DFS and early interaction eligibility |
+| [research/early-passage-screen/README.md](../research/early-passage-screen/README.md) | Current implementation or investigation: Screen accumulated passage constraints before extension |
 | [research/enumeration-attribution/README.md](../research/enumeration-attribution/README.md) | Frozen source-era evidence; use research guide for reproduction: Why collision-avoidance enumeration visits millions of entries |
 | [research/enumeration-reduction/README.md](../research/enumeration-reduction/README.md) | Frozen source-era evidence; use research guide for reproduction: Suppress already-visited constraint children before queueing |
 | [research/event-route-discovery/README.md](../research/event-route-discovery/README.md) | Frozen source-era evidence; use research guide for reproduction: Event route discovery implementation evidence |

@@ -2,6 +2,7 @@ import copy
 import itertools
 import json
 import unittest
+from unittest.mock import patch
 
 from parkour_solver.constraints.variants import ConstraintVariants
 from parkour_solver.reachability.service import query_interaction, normalize_alternatives
@@ -21,6 +22,61 @@ def source(state=None):
 
 
 class InteractionNormalizationTests(unittest.TestCase):
+    def staged(self, alternatives, suffix, state=None):
+        owner=source()
+        owner.items[:]=[dict(rows=alternatives),dict(rows=[suffix])]
+        if state is not None:
+            owner.state=copy.deepcopy(state)
+            owner.state['items']=owner.items
+            owner.seen=set(owner.state['seen'])
+            owner.partial_seen=set(owner.state['partialSeen'])
+        return owner
+
+    def test_impossible_prefix_is_rejected_before_enumerating_next_obstacle(self):
+        row=lambda axis,value:dict(leg=0,offset=1,mode=axis,cmp='GE',rhs=value)
+        bad=[row('X',.8),row('Z',.8)]
+        good=[row('X',-.1)];suffix=[row('Z',.2)]
+        owner=self.staged([bad,good],suffix)
+        downstream=[];actual=owner.option
+        def option(item,cursor):
+            if item is owner.items[1]:downstream.append(True)
+            return actual(item,cursor)
+        with patch.object(owner,'option',side_effect=option):result=list(owner)
+        self.assertEqual(len(result),1)
+        self.assertEqual(len(downstream),2)  # One option, then exhaustion; never the bad prefix.
+        self.assertEqual({(r['mode'],r['offset'],r['rhs']) for r in result[0]['rows']},
+                         {('X',1,-.1),('Z',1,.2)})
+        self.assertTrue(any(x['proof']['reason']=='norm_reach_contradiction'
+                            for x in owner.state['screenExclusions']))
+
+    def test_individually_possible_obstacles_are_rechecked_together(self):
+        x=dict(leg=0,offset=1,mode='X',cmp='GE',rhs=.8)
+        z=dict(leg=0,offset=1,mode='Z',cmp='GE',rhs=.8)
+        owner=self.staged([[x]],[z])
+        self.assertFalse(owner._screen([x])['ruledOut'])
+        self.assertFalse(owner._screen([z])['ruledOut'])
+        self.assertEqual(list(owner),[])
+        self.assertEqual(owner.state['screenExclusions'][-1]['proof']['reason'],'norm_reach_contradiction')
+
+    def test_legacy_pending_prefix_is_screened_before_resuming_next_obstacle(self):
+        rows=[dict(leg=0,offset=1,mode=axis,cmp='GE',rhs=.8) for axis in ('X','Z')]
+        owner=self.staged([rows],[dict(leg=0,offset=2,mode='Z',cmp='GE',rhs=.1)])
+        saved=json.loads(json.dumps(owner.state))
+        saved['pending']=[dict(item=1,rows=rows,passages=[],cursor=dict(index=0))]
+        restored=self.staged([rows],owner.items[1]['rows'][0],saved)
+        with patch.object(restored,'option',side_effect=AssertionError('Expanded rejected legacy prefix')):
+            self.assertEqual(list(restored),[])
+
+    def test_unknown_relaxation_does_not_exclude_prefix(self):
+        # Individually broad bounds admit these rows; exact acceleration coupling
+        # would reject them. A missing/unknown linear check must retain the work.
+        rows=[dict(leg=0,offset=1,mode='X',cmp='GE',rhs=1.),
+              dict(leg=0,offset=2,mode='X',cmp='LE',rhs=0.)]
+        owner=self.staged([rows],[dict(leg=0,offset=1,mode='Z',cmp='GE',rhs=-.1)])
+        with patch('parkour_solver.reachability.linear.linear_exclusion',return_value=None):
+            self.assertFalse(owner._screen(rows)['ruledOut'])
+            self.assertEqual(len(list(owner)),1)
+
     def test_far_avoid_is_omitted_but_absent_required_contact_rejects_owner(self):
         request = dict(box=[100., 0., 0., 101., 3., 1.], role='unwanted_contact',
             windows=[dict(tick=t, phase=p) for t in range(3) for p in ('Y','X','Z')])

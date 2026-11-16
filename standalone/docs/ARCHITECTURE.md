@@ -47,6 +47,13 @@ Global hard-jump latches live outside frames and survive backtracking. Policy3 e
 
 ## One numerical request
 
+`ConstraintVariants` screens each accumulated obstacle prefix before extending
+it, recomputing reachable bounds with its rows and applying optional linear
+exclusion. Later choices are checked with all prior rows, preserving coupling.
+Passing does not establish feasibility. Compatible old pending nodes are checked
+before continuation. The full assignment still uses the coupled numerical solver
+and physical validation. See [early passage screening](../research/early-passage-screen/README.md).
+
 Physical anchor search gives its DFS the remaining session deadline and global
 solver-call allowance. It does not impose service-turn or per-program time/call
 quotas: `score_seconds`, `score_call_limit` and `final_call_limit` apply only to

@@ -7,6 +7,7 @@ from parkour_solver.constraints.avoidance import faces, face_chains, intervals, 
 from parkour_solver.scene.geometry import expanded_box
 from parkour_solver.reachability.service import query_interaction, interaction_context_key, PROOF_POLICY
 from parkour_solver.reachability.intervals import interaction_reachability
+from parkour_solver.reachability.screen import contradiction
 from parkour_solver.search.identity import digest
 
 
@@ -258,6 +259,17 @@ class ConstraintVariants:
     def excluded(self, rows, proof):
         self.state['screenExclusions'].append(dict(rowsHash=digest(rows),proof=proof))
 
+    def _screen(self, rows):
+        proof=interaction_reachability(self.envelopes,rows)
+        if proof['ruledOut']:
+            return proof
+        model=self.envelopes.get('model')
+        if model is not None:
+            certificate=contradiction(model,rows)
+            if certificate is not None:
+                return dict(ruledOut=True,**certificate)
+        return proof
+
     def face_row(self, face, t):
         margin = face_clearance(self.route, 0, t, face, self.route['supportClearance'])
         return dict(mode=face['axis'], t1=t, cmp='GE' if face['direction'] > 0 else 'LE',
@@ -397,18 +409,21 @@ class ConstraintVariants:
         while self.state['pending']:
             self.check()
             node = self.state['pending'][-1]
+            # Older cursors can already be inside a later item's catalogue.
+            # Screen their accumulated constraints before extending it too.
+            if not node.get('prefixScreened'):
+                proof=self._screen(node['rows'])
+                if proof['ruledOut']:
+                    self.excluded(node['rows'],proof)
+                    self.state['pending'].pop()
+                    continue
+                node['prefixScreened']=True
             if node['item'] == len(self.items):
                 self.state['pending'].pop()
                 rows = [dict(r, t1=r.get('t1', r['offset'])) for r in node['rows']]
                 key = digest([self.effective_key(rows), [(p['solidIndex'], p['blockageCounts']) for p in node['passages']]])
                 if key in self.seen:
                     self.state['duplicateVariants'] += 1
-                    continue
-                proof = interaction_reachability(self.envelopes, rows, refine=True)
-                if proof['ruledOut']:
-                    self.excluded(rows,proof)
-                    self.seen.add(key)
-                    self.state['seen'].append(key)
                     continue
                 self.seen.add(key)
                 self.state['seen'].append(key)
@@ -427,12 +442,13 @@ class ConstraintVariants:
                 self.state['pending'].pop()
                 continue
             rows = node['rows']+option['rows']
-            proof = interaction_reachability(self.envelopes, rows)
+            proof = self._screen(rows)
             if proof['ruledOut']:
                 self.excluded(rows,proof)
                 continue
             child = dict(item=node['item']+1, rows=rows,
-                         passages=node['passages']+([option['passage']] if 'passage' in option else []))
+                         passages=node['passages']+([option['passage']] if 'passage' in option else []),
+                         prefixScreened=True)
             # Keep resource usage in a partial identity: equal rows alone do not
             # make different remaining blockage budgets interchangeable.
             partial_key = digest([child['item'], self.effective_key(rows),

@@ -1,4 +1,5 @@
 import random
+import copy
 import unittest
 
 from parkour_solver.reachability.screen import contradiction
@@ -6,6 +7,15 @@ from parkour_solver.numerics import prepare, validate
 
 
 class ScreenTests(unittest.TestCase):
+    def test_extra_prefix_rows_use_existing_model_without_mutating_it(self):
+        p=dict(ticks=1,position=[0.,0.],velocity=[0.,0.],magnitude=[1.],friction=[.9],walls=[])
+        before=copy.deepcopy(p)
+        rows=[dict(mode=axis,offset=1,cmp='GE',rhs=.8) for axis in ('X','Z')]
+        self.assertIsNone(contradiction(p,rows[:1]))
+        self.assertEqual(contradiction(p,rows)['reason'],'norm_reach_contradiction')
+        self.assertEqual(p,before)
+        self.assertNotIn('t1',rows[0])
+
     def test_unreachable_wall_is_rejected(self):
         p = {'ticks': 1, 'position': [0, 0], 'velocity': [0, 0], 'magnitude': [.1],
              'friction': [.91], 'walls': [{'mode': 'X', 't1': 1, 'cmp': 'GE', 'rhs': .2}]}
