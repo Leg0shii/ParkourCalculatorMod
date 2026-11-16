@@ -92,6 +92,10 @@ Hard requirements:
 
 ## 4. Shared ownership and data contracts
 
+Preprocessing has three lifetimes: scene geometry, anchor-span eligibility, and
+exact proposed-movement specialization. A physical block never receives one
+permanent exclusive label such as ceiling/obstacle/landing.
+
 ### 4.1 Finite-contact identity and scalar/finite separation
 
 Extend `movement/contact_combinations.py`, the existing contact merge/validation
@@ -180,6 +184,58 @@ If patches overlap, exact duplicate effective models may share work only while
 preserving distinct required ownership/resource observations. Geometry-only
 aliasing is insufficient for a general program merge.
 
+### 4.4 Anchor-span views and exact decision specialization
+
+**Scene lifetime:** compute potential underside groups once. Original top
+surfaces and full collision solids already supply landing/obstacle geometry.
+For B9a/B9b, the catalog contains a shared underside at9 and separate tops at
+10.5/9.5 simultaneously. This geometric fact does not depend on anchor order.
+The catalog does not assert that all those interactions are possible in every
+span, or that an underside group replaces the full blocks.
+
+**Anchor-span lifetime:** prepare a conservative view for ordered S→E:
+
+- E is the required arrival; S retains the existing legal setup hops.
+- Optional landing eligibility follows current `AnchorAdapter.context` and
+  physical domain/latch/visit rules. Existing future-anchor restrictions and
+  departed-owner rules remain authoritative; no new landing whitelist.
+- Each other member retains a set of possible interaction roles: landing,
+  upward ceiling contact, side/full-solid obstruction, or proved irrelevant.
+  These roles can overlap. In particular a landing target is still an obstacle
+  during an incorrect approach and can have a reachable underside.
+- Index applicable face groups and retain original member/top references. A
+  span-wide ceiling-only simplification is allowed only if a conservative bound
+  covers **all admitted preparations/optional contacts/decisions and incoming
+  states** in that span, including its remaining horizon and mechanics. An
+  ordinary single-jump arc, straight guide or one incoming witness is not such
+  a bound. If that enclosure is unavailable, keep multiple potential roles.
+
+Attach this view at `AnchorAdapter.for_goal/context`, using its actual
+`anchorIndex`, policy/domain, remaining resources and permissions. Non-anchor
+event search uses the corresponding request/context; shared geometry must not
+require anchors. The span view is an index/eligibility view, not a new hard
+corridor, artificial future clock or future-anchor row in an internal query.
+
+**Exact proposed-movement lifetime:** after fixing a proposed scalar schedule
+and its actual query window, use the existing `InteractionGate`/phase envelopes
+to select applicable roles and prove any scoped avoidance equivalence in P4.
+Decisions within the same anchor span may therefore have different views. Known
+endpoint Y alone does not bound intended/probe Y; keep the existing unknowns for
+stepping/ceiling outcomes. Unknown role relevance retains the original choices.
+
+For a lower movement under B9a/B9b, the chosen/proven context may need only their
+shared underside. In a later movement landing on B9a, its10.5 top and B9b's9.5
+top remain separate choices and original side collision geometry remains active.
+No destruction/reconstruction of physical blocks is required when advancing
+anchors; only the view over the persistent geometry catalog changes.
+
+Cache keys follow lifetime: geometry keys include the exact scene/body/face
+policy; span indexes also include source/target, visit/latch/landing permissions,
+mechanics, resources/horizon and the enclosure they actually cover; exact proofs
+add the program/model, constraints, phase/window and active scope. Do not cache
+an exact-model proof solely under the anchor pair. Only a proved span-wide
+enclosure can authorize reuse across all its covered candidate models.
+
 ## 5. Implementation sequence and recoverable commits
 
 ### P1 — Correct finite-contact coverage before optimization
@@ -211,6 +267,8 @@ baseline. Do not judge the optimization against accidentally lost coverage.
 2. Add catalog ownership to `RouteDomain`/adapter context. Build once for a scene;
    keep the JSON catalog immutable and refer to stable face/patch IDs. Reuse it
    across internally owned slices rather than copying it per frontier entry.
+   Build the anchor-span index described in §4.4 over this same catalog; preserve
+   multiple potential roles until their actual relevance is established.
 3. Give support-profile/timeline/mixed-ladder entrypoints one equivalent catalog
    built at their existing scene/pool preparation boundary. Add optional prepared
    catalog parameters where their public API currently takes raw solids; absence
@@ -268,6 +326,8 @@ hits. Unconditional full-volume merging is invalid because the tops differ.
 1. Add a group preparation path to `ConstraintVariants` and shared interaction
    preparation. Use existing original-state envelopes and actual Y/X/Z probe
    windows. Do not classify a block as ceiling-only from the route label.
+   A valid span-wide enclosure can serve all candidate models it covers;
+   otherwise establish the equivalence for the exact proposed model/window.
 2. A sufficient initial proof for this specific reduction is: throughout every
    relevant probe window, the conservative feet-Y upper bound is **strictly
    below the minimum physical top of every grouped member**. All members then
