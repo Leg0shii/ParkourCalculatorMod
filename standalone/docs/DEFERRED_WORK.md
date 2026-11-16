@@ -1,6 +1,6 @@
 # Deferred work and unimplemented follow-ups
 
-Status reviewed2026-11-15; search policy remains `a11b9b18`, with the completed
+Status reviewed2026-11-16; search policy remains `a11b9b18`, with the completed
 physical face-catalog feature recorded below. This is the central **index**, not another implementation
 plan. It links detailed designs and records why an item is not current work.
 User instructions and [current state](CURRENT_STATE.md) control authorization.
@@ -17,6 +17,7 @@ and current state rather than leaving a second active plan.
 
 | ID | Topic / status | Detailed record | Scope and condition for returning |
 | --- | --- | --- | --- |
+| E1 | **Longer Real11 fixture trials — user deferred pending the other agent's solver improvements** | [Experiment and resume checklist](../research/real11-long-solve/README.md#status-and-resumption) | Preserve fixed initial-0 decisions through B5@55 and the latest manifest/SQLite pair. B7@64 is validated; B20/B22 remain unachieved. Review and integrate the other agent's completed improvements before returning, revalidate the prefix and B7 witness, and verify exact-resume compatibility. No further trial is currently running or requested. This does not pause that agent or activate S1. |
 | S1 | **Interleaved ordinary-continuation scheduling — user deferred now** | [Concrete orchestration plan](BRANCH_SCHEDULING_INVESTIGATION.md) | Preserve the existing absolute T/−J/R-or-A key, logically interleave meaningful work, and keep bounds as selected-work exclusions. No priority-by-optimistic-finish rewrite. Resume only when the user requests it; no runtime scheduler change has been made. |
 | S2 | Work eligibility/lifecycle and feasibility-outcome cleanup — clarified, unimplemented; no implementation scheduled | [Same orchestration plan](BRANCH_SCHEDULING_INVESTIGATION.md#1-simplify-work-categories-and-keep-execution-state-separate), [outcome mapping](BRANCH_SCHEDULING_INVESTIGATION.md#2-normalize-feasibility-outcomes-at-one-boundary) | Ordinary/recovery-only/excluded eligibility; paused versus completed/error execution state; normally completed failed oracle check rejects its exact model under the agreed assumption. Remaining work after a feasible witness is ordinary. Preserve these clarifications for resumption; current `unresolved`/`refinements` implementation still exists. These details may be scoped independently later, not assumed part of a bookkeeping patch. The narrow empty-exhausted-domain retry fix in the longer Real11 trial is implemented separately; it does not implement this larger restructuring. |
 | S3 | Separate terminal landing feasibility from subsequent MAXZ optimization — unapproved option | [Remaining decisions](BRANCH_SCHEDULING_INVESTIGATION.md#remaining-decisions-before-implementation) | Not necessary merely to unify ordinary work. Current terminal solve intent remains configured optimization. Requires a measured benefit, explicit user decision, identity/version changes and equal-T objective tests. |

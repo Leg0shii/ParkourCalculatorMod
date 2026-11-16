@@ -5,6 +5,35 @@ and unit B7. Ordered physical arrivals are B2→B3→B4→B5→B7→B20→B22; B
 terminal landing, implicit in the anchor policy rather than repeated in its list.
 The task minimizes achieved finish T, then maximizes Z at equal T.
 
+## Status and resumption
+
+**2026-11-16: user deferred further trials until the other agent finishes the
+solver improvements.** No further solve is running. The fixture, saved work and
+historical evidence below remain intact; the separate agent's assignment stays
+active. The known [bookkeeping handoff](../../docs/BOOKKEEPING_PERFORMANCE_AGENT_HANDOFF.md)
+owns hashing, preparation and snapshot costs while preserving policy and exact
+resume/ownership. Do not infer that its current implementation progress is known.
+
+When returning:
+
+1. Review the other agent's branch/base, ordered commits, changed-file ownership,
+   tests and measured results before integrating. Account for this branch's
+   completed face catalog and `4ace2b8a` empty-exhausted-domain fix; preserve
+   pending constraint-generation cursors and exact-node outcome distinctions.
+2. Revalidate the fixed55-input root and retained B7 witness against all24 scene
+   solids with the integrated solver. Keep the earlier facings free and the same
+   B2/B3/B4/B5/B7/B20→B22 task; do not freeze a B5 state or import an old finish.
+3. Check the latest manifest and its paired SQLite store for compatibility under
+   the integrated code. Exact continuation is preferred only when supported.
+   If incompatible, record the reason and start a fresh seeded experiment from
+   `initial0-fixed-b5.json`; do not claim exact resume or discard the old pair.
+4. Use a fresh output path and record source revision, environment/settings,
+   resume mode and validation scope. Last validated required arrival is B7@64;
+   pending optional B11@68 work inside B7→B20 was dominated by constraint
+   enumeration/dedup. Profile that work separately from numerical solve time.
+5. Keep the original extended-B7 benchmark and scheduler/interleaving deferral
+   separate. This task has unit B6/B7 and no validated B20/B22 finish yet.
+
 Inputs:
 
 - [Unseeded task](../../cases/real11/extended-anchors.json): complete extended
@@ -106,7 +135,8 @@ runs/real11-long-fixed-b5-resume120-2026-11-15/report.json.gz
 runs/real11-long-fixed-b5-resume120-2026-11-15/report.json.gz.store.sqlite3
 ```
 
-Use the ordinary CLI's `--resume` with that manifest and a fresh output path.
+After the deferral ends and compatibility is verified, use the ordinary CLI's
+`--resume` with that manifest and a fresh output path.
 The run used only a timing override (`seconds=120`, `score_seconds=30`); those
 are not physical-domain changes. Root/model/pending-work ownership is preserved.
 

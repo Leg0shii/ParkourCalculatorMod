@@ -1,5 +1,13 @@
 # Decisions and plan authority
 
+2026-11-16 user decision: defer further longer Real11 fixture experiments until
+the other agent completes the solver improvements. Keep the fixed run-0 decisions
+through B5@55, original-state free facings, extended geometry and B7/B20/B22
+arrivals. Review the returned commits before integration, then follow the
+[saved experiment checklist](../research/real11-long-solve/README.md#status-and-resumption).
+Do not silently resume an incompatible checkpoint or restart the deferred
+scheduler work. This deferral does not pause the separate agent.
+
 2026-11-15 longer-task decision: [extended Real11](../cases/real11/extended-anchors.json)
 uses B2/B3/B4/B5/B7/B20 and terminal B22. The [seeded experiment](../research/real11-long-solve/README.md)
 retains the run-0 movement/contact schedule through B5@55 and free original-state

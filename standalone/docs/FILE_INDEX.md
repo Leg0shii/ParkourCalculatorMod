@@ -62,9 +62,9 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/CODE_MAP.md](CODE_MAP.md) | 23926 |
 | [docs/CORRIDOR_AGENT_HANDOFF.md](CORRIDOR_AGENT_HANDOFF.md) | 17543 |
 | [docs/CORRIDOR_IMPLEMENTATION_RESUME.md](CORRIDOR_IMPLEMENTATION_RESUME.md) | 15728 |
-| [docs/CURRENT_STATE.md](CURRENT_STATE.md) | 11956 |
-| [docs/DECISIONS_AND_PLANS.md](DECISIONS_AND_PLANS.md) | 28335 |
-| [docs/DEFERRED_WORK.md](DEFERRED_WORK.md) | 19029 |
+| [docs/CURRENT_STATE.md](CURRENT_STATE.md) | 12444 |
+| [docs/DECISIONS_AND_PLANS.md](DECISIONS_AND_PLANS.md) | 28881 |
+| [docs/DEFERRED_WORK.md](DEFERRED_WORK.md) | 19625 |
 | [docs/DEVELOPMENT.md](DEVELOPMENT.md) | 11551 |
 | [docs/DOC_INDEX.md](DOC_INDEX.md) | 33898 |
 | [docs/FILE_INDEX.md](FILE_INDEX.md) | 170947 |
@@ -998,7 +998,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [research/real11-extension/face-detection-plan-probe.json](../research/real11-extension/face-detection-plan-probe.json) | 3968 |
 | [research/real11-extension/player-bounds.json](../research/real11-extension/player-bounds.json) | 32629 |
 | [research/real11-extension/profile-dedup-audit.json](../research/real11-extension/profile-dedup-audit.json) | 1894 |
-| [research/real11-long-solve/README.md](../research/real11-long-solve/README.md) | 6571 |
+| [research/real11-long-solve/README.md](../research/real11-long-solve/README.md) | 8503 |
 | [research/real11-long-solve/corrected-runs-summary.json](../research/real11-long-solve/corrected-runs-summary.json) | 4279 |
 | [research/real11-long-solve/first300-summary.json](../research/real11-long-solve/first300-summary.json) | 1398 |
 | [research/real11-long-solve/initial0-fixed-b5.json](../research/real11-long-solve/initial0-fixed-b5.json) | 51145 |

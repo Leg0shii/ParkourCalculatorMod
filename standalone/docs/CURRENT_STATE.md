@@ -1,5 +1,12 @@
 # Current standalone state
 
+2026-11-16 user deferral: **pause further longer Real11 trials until the other
+agent finishes the solver improvements**. Preserve the fixed-B5 fixture and
+latest manifest/SQLite pair; do not start another solve as background follow-up.
+The [experiment resume checklist](../research/real11-long-solve/README.md#status-and-resumption)
+records the integration review, compatibility and validation checks required
+before returning. The other agent's assignment remains active independently.
+
 2026-11-15 longer Real11 trial: [new task and fixed-B5 experiment](../research/real11-long-solve/README.md)
 add required B7/B20 and terminal B22. Existing initial-program support fixes
 initial-0 decisions through B5@55 while all earlier facings remain free. The first
