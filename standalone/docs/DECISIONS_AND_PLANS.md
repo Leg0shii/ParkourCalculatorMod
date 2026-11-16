@@ -4,7 +4,8 @@
 contains exactly two parts: detecting adjacent coplanar faces in any of the six
 orientations, and representing exact merged covers with source membership for
 later decisions. It replaces the former ceiling-only/integration/bug-fix plan;
-that extra work has been removed from this task. Implementation has not begun.
+that extra work has been removed from this task. Detection is implemented and
+tested; representation queries/serialization/reporting are in progress.
 The detailed plan recommends clipping internal/buried face portions before
 grouping, while retaining raw source faces, and specifies geometric IDs,
 component-specific provenance and the physical/player-coordinate distinction.

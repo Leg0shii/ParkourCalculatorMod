@@ -10,7 +10,8 @@ two parts: detect adjacent coplanar faces across all six orientations, and
 represent their exact unions with original block/solid membership for later
 decisions. The detailed proposal includes physical-boundary exposure, partial
 occlusion, component-specific contributions, stable IDs and catalog queries.
-It has not been implemented.
+Detection is implemented with12 focused tests; catalog queries, serialization
+and the optional report are in progress.
 
 Follow-up status2026-11-15: the user has **deferred interleaving/scheduler implementation**. The [preserved plan](BRANCH_SCHEDULING_INVESTIGATION.md) retains the existing tick priority, work-category/outcome clarifications, ownership/cost analysis and resumption checks; none is implemented by this documentation. Current code remains DFS. The separate [bookkeeping performance handoff](BOOKKEEPING_PERFORMANCE_AGENT_HANDOFF.md) is not paused by this request. Use the [deferred-work register](DEFERRED_WORK.md) for other preserved follow-ups and their actual status.
 

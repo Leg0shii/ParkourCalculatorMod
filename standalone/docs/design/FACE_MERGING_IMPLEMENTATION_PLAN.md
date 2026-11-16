@@ -1,6 +1,7 @@
 # Adjacent-face merging: implementation plan
 
-2026-11-15. Status: detailed proposal; implementation has not begun. Inspected
+2026-11-15. Status: detection implemented and its12 focused tests pass; catalog
+queries, serialization and reporting are in progress. Inspected planning
 baseline `b535224c`. Scope remains exactly two parts: detecting adjacent faces
 across all six orientations, and representing them for later decisions.
 

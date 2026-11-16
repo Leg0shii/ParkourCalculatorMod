@@ -1080,6 +1080,27 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 | `advance_cursor` | [295](../src/parkour_solver/spatial/event_routes.py#L295) | function |
 | `observed_route` | [307](../src/parkour_solver/spatial/event_routes.py#L307) | function |
 
+## spatial/faces.py
+
+| Symbol | Line | Kind |
+| --- | ---: | --- |
+| `SourceSolid` | [16](../src/parkour_solver/spatial/faces.py#L16) | class |
+| `SourceFace` | [24](../src/parkour_solver/spatial/faces.py#L24) | class |
+| `FaceContribution` | [33](../src/parkour_solver/spatial/faces.py#L33) | class |
+| `MergedFace` | [39](../src/parkour_solver/spatial/faces.py#L39) | class |
+| `FaceCatalog` | [50](../src/parkour_solver/spatial/faces.py#L50) | class |
+| `_coordinate` | [57](../src/parkour_solver/spatial/faces.py#L57) | function |
+| `_sources` | [68](../src/parkour_solver/spatial/faces.py#L68) | function |
+| `_embed` | [97](../src/parkour_solver/spatial/faces.py#L97) | function |
+| `_project` | [101](../src/parkour_solver/spatial/faces.py#L101) | function |
+| `_cover` | [105](../src/parkour_solver/spatial/faces.py#L105) | function |
+| `_overlap` | [109](../src/parkour_solver/spatial/faces.py#L109) | function |
+| `_adjacent` | [116](../src/parkour_solver/spatial/faces.py#L116) | function |
+| `_check` | [121](../src/parkour_solver/spatial/faces.py#L121) | function |
+| `_source_faces` | [126](../src/parkour_solver/spatial/faces.py#L126) | function |
+| `_merged_faces` | [159](../src/parkour_solver/spatial/faces.py#L159) | function |
+| `merge_faces` | [194](../src/parkour_solver/spatial/faces.py#L194) | function |
+
 ## spatial/guides.py
 
 | Symbol | Line | Kind |

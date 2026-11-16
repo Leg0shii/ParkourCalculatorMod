@@ -154,7 +154,8 @@ The [single implementation plan](design/FACE_MERGING_IMPLEMENTATION_PLAN.md)
 contains exactly two parts: detect adjacent coplanar faces across all six
 orientations, and represent the exact merged cover plus its original members
 for later decisions. B9a/B9b/B10 provide one underside example; matching top and
-side faces follow the same rule. Implementation has not begun.
+side faces follow the same rule. Detection is implemented; catalog queries and
+reporting are in progress.
 The detailed plan covers internal/partly hidden faces, exact nonrectangular
 unions, source contributions, orientation/coordinate conventions and later-query
 contracts. [Geometry-only probe](../research/real11-extension/face-detection-plan-probe.json)
