@@ -16,3 +16,10 @@ combination dedup keeps just the first finite box. Reversing the input reverses
 the retained box. The annotated report explains current partial simplifications,
 this coverage gap and the proposed role-specific face-union extension. No
 ceiling-generator/constraint behavior was changed by the investigation.
+
+[Profile-collector audit](profile-dedup-audit.json) independently isolates the
+second geometry-blind key: two valid11-tick singleton profiles are offered by an
+injected combination iterator, but only one is retained. This probe bypasses
+the first dedup deliberately; it makes no numerical/full-scene claim.
+The [single implementation plan](../../docs/design/CEILING_FACE_PREPROCESSING_IMPLEMENTATION_PLAN.md)
+now owns the proposed fixes, shared ceiling representation and acceptance.

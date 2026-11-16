@@ -1,5 +1,11 @@
 # Decisions and plan authority
 
+2026-11-15 requested proposal: the [ceiling-face preprocessing implementation plan](design/CEILING_FACE_PREPROCESSING_IMPLEMENTATION_PLAN.md)
+defines the finite-contact coverage fix at both dedup stages, shared underside
+catalog, generator/constraint/validation integration, conditional avoidance reuse,
+resource/scope preservation and resume/acceptance. It has not been implemented.
+This is distinct from scheduler deferral and the separate bookkeeping assignment.
+
 2026-11-15 longer-course geometry: use [extended Real11 geometry and bounds](REAL11_EXTENDED_GEOMETRY.md)
 for the newly supplied B8–B22. The final user correction withdraws the proposed
 B6 extension: B6 remains physical X[730,731]. B7 returns to unit size. B9's two

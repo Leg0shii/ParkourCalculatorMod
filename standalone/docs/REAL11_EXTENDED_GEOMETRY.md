@@ -202,39 +202,20 @@ Do not treat this representative selection as the desired merge. Likewise,
 compiling finite rows for both members conjunctively would require contact with
 both boxes; the intended condition is contact with **either part of the union**.
 
-### Recommended extension and boundaries
+### Concrete implementation plan
 
-1. Keep the original immutable solids and owner-specific supports. Precompute
-   exact exposed faces indexed by axis, normal direction, plane and compatible
-   contact behavior. Reuse contact patches and canonical planar-cover machinery;
-   preserve original member/owner provenance.
-2. Group coplanar compatible face patches with an exact union. For B9a/B9b this
-   is a rectangle; concave/disconnected unions retain separate rectangles or
-   symbolic alternatives. A bounding rectangle cannot fill a gap or a hole.
-3. Make ceiling proposal, reachability and fixed constraint assembly share that
-   face descriptor. One candidate may cover a rectangular union directly;
-   nonrectangular membership needs exact alternatives. Selected contacts must
-   validate against the original member boxes, not a fictitious solid.
-4. Keep landing/task/anchor identities independent. A ceiling contact names the
-   face group and its members; it does not satisfy landing on either member.
-   Preserve different continuation consequences, named-case semantics, resource
-   accounting, query phases, exact identity and resume ownership.
-5. Avoidance may use a ceiling-only view **only when the actual scoped motion
-   context rules out relevant side/top behavior**; otherwise retain the full
-   per-solid alternatives. A stage name or one witness remaining below is not
-   sufficient, because earlier facings remain free in later solves. Pure face
-   grouping can be precomputed globally; its use as a substitute for full-box
-   constraints is contextual.
-6. Repair the existing combination key alongside coverage representation: keep
-   distinct finite domains until their union is represented, rather than dropping
-   all but the first. Cover both input orders, same-plane separated rectangles,
-   holes, different planes/behaviors, finite clearances, original scene replay,
-   owner-specific landings and exact save/resume in acceptance tests.
+The [single implementation plan](design/CEILING_FACE_PREPROCESSING_IMPLEMENTATION_PLAN.md)
+now owns sequencing, data contracts, exact finite-domain identity, all generation/
+compilation consumers, scoped avoidance reuse, resource accounting, resume and
+acceptance. It is proposed, not implemented. It supersedes this investigation's
+initial recommendation list.
 
-This is physical-model simplification before branch products. It is separate
-from the deferred scheduler/interleaving proposal and from the other agent's
-policy-preserving bookkeeping optimization. Potential time savings are not yet
-measured.
+The follow-up source audit also found a second geometry-blind key in
+`generate_contact_profiles`: after combination generation, it deduplicates profiles
+by tick/axis/direction/plane. P1 fixes both stages and shares the identity with
+other contact signatures. Original-scene collision validation, owner-specific
+landing surfaces and the deferred scheduler/bookkeeping boundaries remain as
+specified in that plan.
 
 ## Reproduce and existing helpers
 

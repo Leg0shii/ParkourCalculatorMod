@@ -45,6 +45,7 @@ control work; inclusion here is not authorization to implement a historical plan
 | [docs/design/ANCHOR_POLICY_DECISIONS.md](design/ANCHOR_POLICY_DECISIONS.md) | Design contract; check decisions index for implemented/deferred scope: Anchor search decisions: DFS, binary turns and observability |
 | [docs/design/BLOCK_ROUTE_SEARCH.md](design/BLOCK_ROUTE_SEARCH.md) | Design contract; check decisions index for implemented/deferred scope: Block-route selection prototype |
 | [docs/design/BLOCK_SOLVER_PLAN.md](design/BLOCK_SOLVER_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Block solver: continuous-model orchestration |
+| [docs/design/CEILING_FACE_PREPROCESSING_IMPLEMENTATION_PLAN.md](design/CEILING_FACE_PREPROCESSING_IMPLEMENTATION_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Ceiling-face preprocessing and finite-contact coverage: implementation plan |
 | [docs/design/CELL_ROUTE_EXPERIMENT_PLAN.md](design/CELL_ROUTE_EXPERIMENT_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Cell-route experiment plan |
 | [docs/design/CONSTRAINT_GENERATION_RUNBOOK.md](design/CONSTRAINT_GENERATION_RUNBOOK.md) | Design contract; check decisions index for implemented/deferred scope: Reusing the mod's block constraints in route discovery |
 | [docs/design/CONTACT_COMBINATIONS.md](design/CONTACT_COMBINATIONS.md) | Design contract; check decisions index for implemented/deferred scope: Contact combination implementation |
