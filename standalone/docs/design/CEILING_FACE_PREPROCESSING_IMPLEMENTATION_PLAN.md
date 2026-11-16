@@ -3,8 +3,9 @@
 2026-11-15. Status: concrete proposal requested by the user; **implementation has
 not begun**. Baseline `65ed610a` in the starting checkout. This is the single
 implementation plan for the [Real11 investigation](../REAL11_EXTENDED_GEOMETRY.md#preprocessing-investigation-shared-ceilings-distinct-landings).
-It covers the correctness fix before the optimization, includes scoped avoidance
-reuse, and preserves original collision solids and owner-specific landings.
+It covers the correctness fix before shared ceiling-face generation and preserves
+original collision solids and owner-specific landings. No anchor-specific role
+classification or new avoidance-product coalescing is needed for this feature.
 The deferred scheduler and separately assigned bookkeeping task remain separate.
 
 ## 1. Intended result and scope
@@ -22,9 +23,9 @@ Implement:
 2. Precompute immutable, provenance-preserving ordinary ceiling-face groups.
 3. Generate and compile exact finite contact domains from those groups across
    open, support/profile, timeline and mixed-ladder consumers.
-4. Reuse grouped work for obstacle avoidance only under an explicit scoped
-   equivalence proof; retain original alternatives whenever that proof or
-   per-member resource equivalence is unavailable.
+4. Use the existing generators and interaction checks to determine which
+   interaction is being proposed. Ceiling-related checks consume shared faces;
+   original per-solid avoidance and landing checks retain their geometry.
 5. Preserve replay, phase order, bounds, original-state re-solving, identity,
    exact continuation and auditability.
 
@@ -45,7 +46,7 @@ change in this work.
 | [`movement/ceiling_generation.py`](../../src/parkour_solver/movement/ceiling_generation.py), [`ceiling_profiles.py`](../../src/parkour_solver/movement/ceiling_profiles.py) | Ordinary ceiling generation is per block/solid. Share face groups before contact/profile products; keep named edge-dependent cases separate. |
 | [`movement/ladder/ceiling.py`](../../src/parkour_solver/movement/ladder/ceiling.py) | Ownership/effect construction reads a single `box`. Preserve ladder owner/successor/refresh behavior and support the shared finite-domain descriptor. |
 | [`spatial/cells.py`](../../src/parkour_solver/spatial/cells.py), [`regions.py`](../../src/parkour_solver/spatial/regions.py), [`event_routes.py`](../../src/parkour_solver/spatial/event_routes.py) | Exact free-volume union, planar `canonical_cover`, contact patches and coplanar **top** surface grouping exist. Reuse them; underside grouping is missing. |
-| [`constraints/variants.py`](../../src/parkour_solver/constraints/variants.py) | Avoidance preparation/products are per active solid, with per-owner blockage counts and resumable cursors. This is where scoped group reuse belongs. |
+| [`constraints/variants.py`](../../src/parkour_solver/constraints/variants.py) | Avoidance preparation/products are per active solid, with per-owner blockage counts and resumable cursors. Their existing per-solid domain/accounting remains in place; no new grouped avoidance items are required. |
 | [`constraints/hit_events.py`](../../src/parkour_solver/constraints/hit_events.py), `compile_contact_events` | Compile finite constraints from a single actual box. Add the shared face-patch lowering, rather than constructing a fictitious merged solid. |
 | [`validation/scene.py`](../../src/parkour_solver/validation/scene.py), [`native bridge`](../../native/java/autonomy/CompileRunTicksPhysics.java) | Original-scene checking already accepts a planned contact's `boxes` alternatives. `matchesFace` checks an actual scene member. Reuse this existing contract. |
 | [`search/identity.py`](../../src/parkour_solver/search/identity.py), [`movement/program.py`](../../src/parkour_solver/movement/program.py) | Scope validation and several identity/composition paths assume event `box`. Audit/update all readers before emitting grouped events. |
@@ -92,9 +93,10 @@ Hard requirements:
 
 ## 4. Shared ownership and data contracts
 
-Preprocessing has three lifetimes: scene geometry, anchor-span eligibility, and
-exact proposed-movement specialization. A physical block never receives one
-permanent exclusive label such as ceiling/obstacle/landing.
+Precompute shared underside geometry once per scene. Existing movement decisions
+and scoped interaction checks consume it where they already handle ceilings.
+A physical block never receives one permanent exclusive label such as
+ceiling/obstacle/landing; no additional anchor-span classification layer is added.
 
 ### 4.1 Finite-contact identity and scalar/finite separation
 
@@ -184,57 +186,35 @@ If patches overlap, exact duplicate effective models may share work only while
 preserving distinct required ownership/resource observations. Geometry-only
 aliasing is insufficient for a general program merge.
 
-### 4.4 Anchor-span views and exact decision specialization
+### 4.4 Use existing interaction decisions; no anchor classification
 
-**Scene lifetime:** compute potential underside groups once. Original top
-surfaces and full collision solids already supply landing/obstacle geometry.
-For B9a/B9b, the catalog contains a shared underside at9 and separate tops at
-10.5/9.5 simultaneously. This geometric fact does not depend on anchor order.
-The catalog does not assert that all those interactions are possible in every
-span, or that an underside group replaces the full blocks.
+The scene catalog stores shared undersides alongside the existing distinct top
+surfaces and full original boxes. A ceiling generator/check requests the shared
+underside descriptor; a landing generator requests an original top; full-solid
+avoidance and independent scene validation retain the original volumes. The same
+physical block can participate in several roles within one proposed program.
 
-**Anchor-span lifetime:** prepare a conservative view for ordered S→E:
+For B9a/B9b/B10, precompute the exact common underside union atY9. A proposed
+ceiling hit uses that union at feetY≈7.2. A later proposed landing on B9a still
+uses top10.5, with B9b/B10 tops9.5/10 retained. There is no anchor-dependent
+rebuild, permanent role label or duplication of the existing decision process.
 
-- E is the required arrival; S retains the existing legal setup hops.
-- Optional landing eligibility follows current `AnchorAdapter.context` and
-  physical domain/latch/visit rules. Existing future-anchor restrictions and
-  departed-owner rules remain authoritative; no new landing whitelist.
-- Each other member retains a set of possible interaction roles: landing,
-  upward ceiling contact, side/full-solid obstruction, or proved irrelevant.
-  These roles can overlap. In particular a landing target is still an obstacle
-  during an incorrect approach and can have a reachable underside.
-- Index applicable face groups and retain original member/top references. A
-  span-wide ceiling-only simplification is allowed only if a conservative bound
-  covers **all admitted preparations/optional contacts/decisions and incoming
-  states** in that span, including its remaining horizon and mechanics. An
-  ordinary single-jump arc, straight guide or one incoming witness is not such
-  a bound. If that enclosure is unavailable, keep multiple potential roles.
+Anchor order continues to govern the existing required/optional landing rules;
+this feature does not add new anchor filters, role masks, span indexes or
+span-wide proof caches. Generic non-anchor search uses the same face catalog.
+Original solids are not replaced by a rectangular full-height obstacle.
 
-Attach this view at `AnchorAdapter.for_goal/context`, using its actual
-`anchorIndex`, policy/domain, remaining resources and permissions. Non-anchor
-event search uses the corresponding request/context; shared geometry must not
-require anchors. The span view is an index/eligibility view, not a new hard
-corridor, artificial future clock or future-anchor row in an internal query.
+Shared face reachability remains scoped to the actual proposed program, contact
+phase/window, body/clearance and active members. A group is unreachable only if
+all permitted member/patch alternatives are excluded. Keep the existing unknown
+probe behavior. Cache geometry by exact scene/body/policy and model proofs by
+actual model/phase/scope; no anchor-pair classification key is introduced.
 
-**Exact proposed-movement lifetime:** after fixing a proposed scalar schedule
-and its actual query window, use the existing `InteractionGate`/phase envelopes
-to select applicable roles and prove any scoped avoidance equivalence in P4.
-Decisions within the same anchor span may therefore have different views. Known
-endpoint Y alone does not bound intended/probe Y; keep the existing unknowns for
-stepping/ceiling outcomes. Unknown role relevance retains the original choices.
-
-For a lower movement under B9a/B9b, the chosen/proven context may need only their
-shared underside. In a later movement landing on B9a, its10.5 top and B9b's9.5
-top remain separate choices and original side collision geometry remains active.
-No destruction/reconstruction of physical blocks is required when advancing
-anchors; only the view over the persistent geometry catalog changes.
-
-Cache keys follow lifetime: geometry keys include the exact scene/body/face
-policy; span indexes also include source/target, visit/latch/landing permissions,
-mechanics, resources/horizon and the enclosure they actually cover; exact proofs
-add the program/model, constraints, phase/window and active scope. Do not cache
-an exact-model proof solely under the anchor pair. Only a proved span-wide
-enclosure can authorize reuse across all its covered candidate models.
+`ConstraintVariants` still checks full collision volumes per original solid;
+shared numerical row reduction remains available afterward. Coalescing arbitrary
+avoidance products would be a separate model/resource equivalence task and is
+not required to merge ceiling contacts correctly. Do not expand this feature
+into that task or claim it removes all per-solid avoidance work.
 
 ## 5. Implementation sequence and recoverable commits
 
@@ -267,8 +247,6 @@ baseline. Do not judge the optimization against accidentally lost coverage.
 2. Add catalog ownership to `RouteDomain`/adapter context. Build once for a scene;
    keep the JSON catalog immutable and refer to stable face/patch IDs. Reuse it
    across internally owned slices rather than copying it per frontier entry.
-   Build the anchor-span index described in §4.4 over this same catalog; preserve
-   multiple potential roles until their actual relevance is established.
 3. Give support-profile/timeline/mixed-ladder entrypoints one equivalent catalog
    built at their existing scene/pool preparation boundary. Add optional prepared
    catalog parameters where their public API currently takes raw solids; absence
@@ -318,59 +296,7 @@ Commit once grouped contacts work from proposal through original-scene replay,
 with coverage equivalent to the corrected P1 baseline. Do not ship a catalog
 that only the diagram/reporter uses.
 
-### P4 — Scope-safe avoidance reuse before obstacle products
-
-This stage addresses unintended obstacle interaction, not just selected head
-hits. Unconditional full-volume merging is invalid because the tops differ.
-
-1. Add a group preparation path to `ConstraintVariants` and shared interaction
-   preparation. Use existing original-state envelopes and actual Y/X/Z probe
-   windows. Do not classify a block as ceiling-only from the route label.
-   A valid span-wide enclosure can serve all candidate models it covers;
-   otherwise establish the equivalence for the exact proposed model/window.
-2. A sufficient initial proof for this specific reduction is: throughout every
-   relevant probe window, the conservative feet-Y upper bound is **strictly
-   below the minimum physical top of every grouped member**. All members then
-   have the same relevant lower Y boundary and their differing upper caps cannot
-   affect that window. Unknown/unbounded Y, stepping probes or equality at the
-   shortest top fails this test and uses original per-solid preparation.
-3. Under that proof, represent the union's forbidden interior as the exact
-   horizontal member cover above the common underside-minus-body-height plane,
-   within the certified window. For a rectangular union this shares one exterior
-   face set. For nonrectangular cover, avoidance is a **conjunction** of avoiding
-   every component, each with its own exterior alternatives; it is not the OR
-   used by a required contact. Retain original items if that exact product is
-   not representable with unchanged member accounting. These
-   are scoped constraint domains, **not replacement collisionScene solids**.
-4. Share plane/probe work and compatible rows before constructing Cartesian
-   products. Keep proof IDs, original member masks and each member's original
-   blockage budget/witness. Use the existing masks/tables to establish which
-   per-member legal avoidance chains witness a shared option. Retain distinct
-   resource states whenever future choices can distinguish them; group counts
-   do not replace original per-owner caps.
-5. Merge an option only when both its geometric domain and its legal per-member
-   accounting are represented exactly. If that proof is unavailable, share the
-   inexpensive geometry/plane calculations but retain the original item/options.
-   Do not force a single arbitrary member chain or silently loosen/tighten caps.
-6. If a member is already proved irrelevant by the shared gate, normalize it out
-   in that exact role/window and recompute the active cover. Unknown retains it.
-   Required landing/contact obligations are not removed with unwanted-contact
-   proofs. A grouped broad-phase miss must cover all member alternatives.
-7. Full scene checking and diagnostics still report actual original solid indices.
-   Resumable group preparation records the exact unprocessed phase/item/option,
-   and interrupted proof construction commits no partial equivalence assertion.
-
-Acceptance: exhaustive tiny fixed-horizon controls compare corrected ungrouped
-versus grouped permitted models/coverage under original caps, including paths
-along different exterior faces, phase changes, finite gaps, different member
-caps and unknown probes. Equal sampled trajectories alone are insufficient.
-If a case cannot be represented with existing accounting, retain its per-member
-options and record the fallback reason. This fallback is a precise semantic
-condition, not a user-facing old/new feature flag.
-
-Commit scoped reuse separately so its coverage and cost effects are reviewable.
-
-### P5 — Resume, observability, docs and final validation
+### P4 — Resume, observability, docs and final validation
 
 **Compatibility:** add shared contact-identity/face-preprocessing policy constants
 to generator, domain, DFS, exact solve and repair/variant context identities.
@@ -393,8 +319,8 @@ bookkeeping cache semantics without reviewing the separately assigned work.
 - raw member faces, groups, clearanced patches and ordinary proposals emitted;
 - exact duplicate contacts removed versus different domains retained;
 - scalar plane/hit calculations reused, member coverage in each selected event;
-- scoped avoidance groups attempted/admitted/fallbacks, proof IDs and original
-  member resource contexts;
+- shared ceiling reachability queries, excluded members/patches, proof IDs and
+  active scopes; existing per-solid avoidance counts remain distinguishable;
 - prefix/proposal/profile/constraint-variant counts, NLP calls and worker time;
 - geometry preparation and identity overhead, separately from numerical time.
 
@@ -450,8 +376,8 @@ No user decision is required to choose the implementation mechanics above. The
 following are limits, not hidden assumptions:
 
 - Named edge cases are not interchangeable with ordinary ceiling hits.
-- Arbitrary avoidance products may remain per-member when scoped equivalence or
-  original resource accounting cannot be certified. The report must say why.
+- Original full-solid avoidance remains per-member. Merging selected ceiling
+  geometry does not promise to merge the entire obstacle-product search.
 - Correctness fixes can increase legal work before grouping reduces duplication.
 - Performance benefit is unmeasured until fixed-work controls run.
 - The longer Real11 task still needs anchors/finish/budgets; that does not block
@@ -466,5 +392,4 @@ a conflicting second instruction set.
 | P1: complete finite-contact identity fix | Planned |
 | P2: shared immutable ceiling catalog | Planned |
 | P3: generators, constraints, validation and bounds | Planned |
-| P4: scope-safe avoidance reuse | Planned |
-| P5: resume, observability and acceptance | Planned |
+| P4: resume, observability and acceptance | Planned |

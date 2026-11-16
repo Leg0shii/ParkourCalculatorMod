@@ -206,9 +206,11 @@ both boxes; the intended condition is contact with **either part of the union**.
 
 The [single implementation plan](design/CEILING_FACE_PREPROCESSING_IMPLEMENTATION_PLAN.md)
 now owns sequencing, data contracts, exact finite-domain identity, all generation/
-compilation consumers, scoped avoidance reuse, resource accounting, resume and
+compilation consumers, existing interaction selection, resource accounting, resume and
 acceptance. It is proposed, not implemented. It supersedes this investigation's
-initial recommendation list.
+initial recommendation list. No anchor-span role classifier is needed: precompute
+undersides once and let existing ceiling/landing/obstacle consumers use the
+appropriate representation. Full-solid avoidance remains per original member.
 
 The follow-up source audit also found a second geometry-blind key in
 `generate_contact_profiles`: after combination generation, it deduplicates profiles

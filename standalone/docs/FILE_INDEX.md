@@ -61,9 +61,9 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/CODE_MAP.md](CODE_MAP.md) | 23788 |
 | [docs/CORRIDOR_AGENT_HANDOFF.md](CORRIDOR_AGENT_HANDOFF.md) | 17543 |
 | [docs/CORRIDOR_IMPLEMENTATION_RESUME.md](CORRIDOR_IMPLEMENTATION_RESUME.md) | 15728 |
-| [docs/CURRENT_STATE.md](CURRENT_STATE.md) | 10885 |
-| [docs/DECISIONS_AND_PLANS.md](DECISIONS_AND_PLANS.md) | 27485 |
-| [docs/DEFERRED_WORK.md](DEFERRED_WORK.md) | 19277 |
+| [docs/CURRENT_STATE.md](CURRENT_STATE.md) | 10960 |
+| [docs/DECISIONS_AND_PLANS.md](DECISIONS_AND_PLANS.md) | 27562 |
+| [docs/DEFERRED_WORK.md](DEFERRED_WORK.md) | 19285 |
 | [docs/DEVELOPMENT.md](DEVELOPMENT.md) | 11551 |
 | [docs/DOC_INDEX.md](DOC_INDEX.md) | 33752 |
 | [docs/FILE_INDEX.md](FILE_INDEX.md) | 169767 |
@@ -75,7 +75,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/LAYOUT.md](LAYOUT.md) | 5275 |
 | [docs/MOD_REFERENCES.md](MOD_REFERENCES.md) | 5109 |
 | [docs/README.md](README.md) | 3106 |
-| [docs/REAL11_EXTENDED_GEOMETRY.md](REAL11_EXTENDED_GEOMETRY.md) | 15301 |
+| [docs/REAL11_EXTENDED_GEOMETRY.md](REAL11_EXTENDED_GEOMETRY.md) | 15516 |
 | [docs/REAL11_GUIDE.md](REAL11_GUIDE.md) | 21982 |
 | [docs/RESULTS_AND_DEBUGGING.md](RESULTS_AND_DEBUGGING.md) | 11248 |
 | [docs/RUNBOOK.md](RUNBOOK.md) | 8853 |
@@ -87,7 +87,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/design/ANCHOR_POLICY_DECISIONS.md](design/ANCHOR_POLICY_DECISIONS.md) | 27139 |
 | [docs/design/BLOCK_ROUTE_SEARCH.md](design/BLOCK_ROUTE_SEARCH.md) | 14357 |
 | [docs/design/BLOCK_SOLVER_PLAN.md](design/BLOCK_SOLVER_PLAN.md) | 14484 |
-| [docs/design/CEILING_FACE_PREPROCESSING_IMPLEMENTATION_PLAN.md](design/CEILING_FACE_PREPROCESSING_IMPLEMENTATION_PLAN.md) | 30605 |
+| [docs/design/CEILING_FACE_PREPROCESSING_IMPLEMENTATION_PLAN.md](design/CEILING_FACE_PREPROCESSING_IMPLEMENTATION_PLAN.md) | 25646 |
 | [docs/design/CELL_ROUTE_EXPERIMENT_PLAN.md](design/CELL_ROUTE_EXPERIMENT_PLAN.md) | 20833 |
 | [docs/design/CONSTRAINT_GENERATION_RUNBOOK.md](design/CONSTRAINT_GENERATION_RUNBOOK.md) | 19962 |
 | [docs/design/CONTACT_COMBINATIONS.md](design/CONTACT_COMBINATIONS.md) | 9174 |

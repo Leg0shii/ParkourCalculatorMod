@@ -2,7 +2,8 @@
 
 2026-11-15 requested proposal: the [ceiling-face preprocessing implementation plan](design/CEILING_FACE_PREPROCESSING_IMPLEMENTATION_PLAN.md)
 defines the finite-contact coverage fix at both dedup stages, shared underside
-catalog, generator/constraint/validation integration, conditional avoidance reuse,
+catalog and generator/constraint/validation integration using existing interaction
+decisions, with no anchor-specific classification or new avoidance grouping,
 resource/scope preservation and resume/acceptance. It has not been implemented.
 This is distinct from scheduler deferral and the separate bookkeeping assignment.
 

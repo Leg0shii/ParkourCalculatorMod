@@ -9,7 +9,8 @@ The same report's [preprocessing investigation](REAL11_EXTENDED_GEOMETRY.md#prep
 records existing geometry/row simplification and missing shared ceiling-face
 generation. The [concrete ceiling/coverage plan](design/CEILING_FACE_PREPROCESSING_IMPLEMENTATION_PLAN.md)
 fixes geometry-blind dedup at combination and profile collection, then adds exact
-face groups, end-to-end compilation and scoped avoidance reuse. It is proposed,
+face groups and end-to-end compilation using existing interaction decisions.
+It adds no anchor-role layer or grouped full-solid avoidance. It is proposed,
 not implemented; scheduler and bookkeeping work remain separate.
 
 Follow-up status2026-11-15: the user has **deferred interleaving/scheduler implementation**. The [preserved plan](BRANCH_SCHEDULING_INVESTIGATION.md) retains the existing tick priority, work-category/outcome clarifications, ownership/cost analysis and resumption checks; none is implemented by this documentation. Current code remains DFS. The separate [bookkeeping performance handoff](BOOKKEEPING_PERFORMANCE_AGENT_HANDOFF.md) is not paused by this request. Use the [deferred-work register](DEFERRED_WORK.md) for other preserved follow-ups and their actual status.
