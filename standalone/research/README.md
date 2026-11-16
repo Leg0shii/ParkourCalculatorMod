@@ -21,7 +21,7 @@ revision and use its recorded patch/configuration. Current controls belong in
 
 | Current tool | Purpose |
 | --- | --- |
-| `python -m tools.geometry_bounds` | Static player collision/landing-cover report using production scene decomposition, including neighboring solids. |
+| `python -m tools.geometry_bounds` | Static player collision/landing-cover report; `--faces` adds the production catalog of merged exposed physical faces across all six orientations. |
 | `python -m tools.profiling.run` | Cold current task run, scoped bookkeeping timings, source/config hashes and retained-witness replays. |
 | `python tools/native_gate.py` | Explicit recorded native acceptance scope, plus packaging/profiler regressions. |
 | `python -m tools.audit_candidates` | Offline saved cold-candidate/worker ledger, optional independent Java replay. |

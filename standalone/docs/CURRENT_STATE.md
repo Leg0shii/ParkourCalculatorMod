@@ -5,13 +5,17 @@ record B8–B22, original unit B6 (latest user correction), unit B7 and the B13 
 This is separate geometry-only preparation; new task anchors, finish and budgets
 are not inferred, and no longer-course numerical solve has run. The existing
 extended-B7 benchmark and its measurements below retain their original input.
-The [face-merging plan](design/FACE_MERGING_IMPLEMENTATION_PLAN.md) now has exactly
+The [implemented face-merging contract](design/FACE_MERGING_IMPLEMENTATION_PLAN.md) has exactly
 two parts: detect adjacent coplanar faces across all six orientations, and
 represent their exact unions with original block/solid membership for later
-decisions. The detailed proposal includes physical-boundary exposure, partial
+decisions. It includes physical-boundary exposure, partial
 occlusion, component-specific contributions, stable IDs and catalog queries.
-Detection is implemented with12 focused tests; catalog queries, serialization
-and the optional report are in progress.
+Both parts are complete: immutable catalog queries/serialization and
+`tools.geometry_bounds --faces` are available, with54 focused/compatibility/package
+checks. Real11 has102 merged faces from144 source faces; source-specific static
+validation is in the [record](../research/real11-extension/face-catalog-validation.json).
+The catalog is available for later decision integration; current generators still
+use their existing geometry contracts.
 
 Follow-up status2026-11-15: the user has **deferred interleaving/scheduler implementation**. The [preserved plan](BRANCH_SCHEDULING_INVESTIGATION.md) retains the existing tick priority, work-category/outcome clarifications, ownership/cost analysis and resumption checks; none is implemented by this documentation. Current code remains DFS. The separate [bookkeeping performance handoff](BOOKKEEPING_PERFORMANCE_AGENT_HANDOFF.md) is not paused by this request. Use the [deferred-work register](DEFERRED_WORK.md) for other preserved follow-ups and their actual status.
 

@@ -6,6 +6,8 @@ They keep B6 at its original unit footprint, restore unit B7 and add B8–B22
 (including B9a/B9b and the compound B13 stair). This file is geometry-only;
 the longer task's ordered anchors, finish and budgets have not been specified.
 It can be inspected with `python -m tools.geometry_bounds`.
+Add `--faces` to include the merged physical-face catalog; the existing bounds
+remain available in the same report.
 
 `physical-anchors.json` derives from
 [the recorded anchor-feasibility fixture](../../research/anchor-feasibility/real11-anchors.json).

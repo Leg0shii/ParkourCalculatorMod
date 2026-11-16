@@ -1,7 +1,7 @@
 # Deferred work and unimplemented follow-ups
 
-Status reviewed2026-11-15, current runtime `a11b9b18` plus documentation-only
-handoff/planning commits. This is the central **index**, not another implementation
+Status reviewed2026-11-15; search policy remains `a11b9b18`, with the completed
+physical face-catalog feature recorded below. This is the central **index**, not another implementation
 plan. It links detailed designs and records why an item is not current work.
 User instructions and [current state](CURRENT_STATE.md) control authorization.
 Do not start an item just because an older document says "next" or "pending".
@@ -48,7 +48,6 @@ user deferrals and are not automatically the next task.
 | R2 | Provisional whole-route drafts, future geometry context and decision-cluster experiments — research, not selected current scheduling | [Provisional guidance](design/PROVISIONAL_ROUTE_GUIDANCE.md), [reference strategies](design/REFERENCE_STRATEGY_EVALUATION.md), [upfront composition](design/UPFRONT_BRANCH_COMPILATION_PLAN.md) | Soft backward/onward guides and fixed alternatives per query already exist. Additional coherent future rollouts/clusters are experimental; do not restore authored clocks, fix optimized seams or enumerate every future combination. Keep this distinct from the deferred tick-priority interleaving plan. |
 | R3 | Convex/mixed-decision guidance and generic mixed-integer backends — experimental/unapproved | [Convex guidance scope](design/CONVEX_ROUTE_GUIDANCE_PLAN.md), [continuous decision relaxation](design/CONTINUOUS_DECISION_RELAXATION.md), [no-threshold prototype proposal](design/NO_THRESHOLD_DECISION_MODEL.md), [dynamic transitions](design/DYNAMIC_CONTACT_DECISIONS.md), [route MIP](design/ROUTE_MIP_RELAXATION.md), [generic backend research](research/MIXED_INTEGER_RESEARCH.md) | The disk/SOCP research prototype exists separately from production. Its proposed model updates, mixed step/ceiling transitions and alternative backend comparisons are not the active anchor solver. Verify one-hot/model inclusion, domain parity and independent replay before interpreting any relaxed result as a bound or feasible route. |
 | R4 | Multiplier/active-set/face-based schedule pruning and specialized exact-Y caching — historical research, not a selected new policy | [Generation performance proposal](design/GENERATION_PERFORMANCE_PLAN.md), [pruning research](research/PRUNING_RESEARCH.md), [ladder completion scope](design/LADDER_COMPLETION.md) | Do not use a local multiplier or one witness's Y/active face to eliminate other histories without a justified model. Ordinary identical-content preparation caching belongs to the separate bookkeeping task; do not confuse that performance work with new pruning or a new ladder-specific cache design. |
-| R5 | Adjacent-face merging — implementation in progress | [Single implementation plan](design/FACE_MERGING_IMPLEMENTATION_PLAN.md) | Detect all six orientations with proposed physical exposure/partial-occlusion handling; represent exact covers, component-specific source contributions, IDs and queries for later decisions. The former ceiling-only, bug-fix and solver-integration scope remains removed. |
 
 ## Separate assigned work: not deferred by the scheduler pause
 
@@ -65,6 +64,7 @@ interfaces first rather than overwriting either branch.
 
 | Old pending claim / idea | Current resolution / reference |
 | --- | --- |
+| Adjacent-face detection and representation (former R5) | Both parts are implemented: all six exposed orientations, exact member covers, immutable queries/serialization and `geometry_bounds --faces`. [Contract](design/FACE_MERGING_IMPLEMENTATION_PLAN.md), [static Real11 validation](../research/real11-extension/face-catalog-validation.json). Solver-generator integration and the earlier contact-dedup findings were excluded from this feature. |
 | First jumps must be supplied as `[0,8]` | Removed from maintained Real11 case; unrestricted control naturally queries0/8 and defers9–12. [Evidence](../research/initial-domain-selection/README.md). |
 | Outer frontier, terminal repair or raw generation cannot resume | Existing continuation/ownership and shared persistence are implemented. [Architecture](ARCHITECTURE.md), [storage contract](CHECKPOINT_STORAGE.md). S1 may change scheduling but must preserve them. |
 | No shared early relevance, dedup or owned-tail handling | Implemented in current producer/gate/model pipeline. [Execution reference](ANCHOR_SEARCH_EXECUTION_REFERENCE.md), [implemented plan](HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md). |

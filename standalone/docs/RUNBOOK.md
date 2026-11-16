@@ -89,6 +89,13 @@ conventions, body-overlap endpoints, neighbor cuts and standing headroom.
 Static geometry is not a jump/replay check. That input is geometry-only; the
 existing runnable benchmark below remains a distinct task.
 
+Add `--faces` to the bounds command to include merged physical faces in all six
+orientations. JSON adds `faceCatalog` and `faceStatistics`; optional Markdown
+includes each face's normal, plane, exact rectangle cover and source parts. The
+[face catalog API and implementation](design/FACE_MERGING_IMPLEMENTATION_PLAN.md)
+preserve original member regions, internal-face clipping, holes and catalog
+identity. These physical covers are separate from the player-expanded bounds.
+
 ## Current physical-anchor solve, profile and resume
 
 [Execution reference](ANCHOR_SEARCH_EXECUTION_REFERENCE.md) describes current

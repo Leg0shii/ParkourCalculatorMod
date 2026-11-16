@@ -154,12 +154,14 @@ The [single implementation plan](design/FACE_MERGING_IMPLEMENTATION_PLAN.md)
 contains exactly two parts: detect adjacent coplanar faces across all six
 orientations, and represent the exact merged cover plus its original members
 for later decisions. B9a/B9b/B10 provide one underside example; matching top and
-side faces follow the same rule. Detection is implemented; catalog queries and
-reporting are in progress.
-The detailed plan covers internal/partly hidden faces, exact nonrectangular
+side faces follow the same rule. Both detection and representation are implemented.
+The contract covers internal/partly hidden faces, exact nonrectangular
 unions, source contributions, orientation/coordinate conventions and later-query
 contracts. [Geometry-only probe](../research/real11-extension/face-detection-plan-probe.json)
 records the proposed boundary calculation for this input.
+The [production validation record](../research/real11-extension/face-catalog-validation.json)
+confirms102 merged faces from144 raw faces, including the shared B9a/B9b/B10
+underside and B9a's partial side. Use `--faces` below for all six orientations.
 
 The earlier [combination probe](../research/real11-extension/ceiling-preprocessing-audit.json)
 and [profile probe](../research/real11-extension/profile-dedup-audit.json) preserve
@@ -180,6 +182,12 @@ fixture with a `request` object. From `standalone/`, with the package installed:
   --output runs/real11-bounds-new/player-bounds.json \
   --markdown runs/real11-bounds-new/player-bounds.md
 ```
+
+Add `--faces` to the command to include the physical-face catalog and statistics
+in JSON, plus an all-orientation face/member table in Markdown. The default
+bounds-only report is unchanged. Face coordinates are physical surfaces; they
+do not include player expansion. The [face API](../src/parkour_solver/spatial/faces.py)
+also supports exact source contribution queries and validated catalog loading.
 
 [Exact report](../research/real11-extension/player-bounds.json) retains all
 float-derived bounds and the full physical input per box. The older

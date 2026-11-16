@@ -1,12 +1,15 @@
 """Physical face unions checked against source geometry and an occupancy oracle."""
 import copy
+from dataclasses import FrozenInstanceError
 from fractions import Fraction
 import itertools
+import json
 import math
 import random
 import unittest
 
-from parkour_solver.spatial.faces import TANGENT_AXES, merge_faces
+from parkour_solver.spatial.faces import FaceCatalog, TANGENT_AXES, merge_faces
+from parkour_solver.spatial.regions import geometry_key
 from tests.support.cell_geometry import scene_for
 
 
@@ -171,8 +174,139 @@ class FaceDetectionTests(unittest.TestCase):
                             left[v] = right[v] = uv[1]
                             low, high = occupied(left), occupied(right)
                             for sign, expected in ((1, low and not high), (-1, high and not low)):
-                                actual = any(inside(f.cover, uv) for f in oriented(catalog, axis, sign, plane))
+                                faces = oriented(catalog, axis, sign, plane)
+                                actual = any(inside(f.cover, uv) for f in faces)
                                 self.assertEqual(actual, expected, (trial, axis, plane, sign, uv))
+                                expected_sources = {(j, axis, sign) for j, b in enumerate(rational)
+                                    if expected and b[axis if sign < 0 else axis+3] == plane
+                                    and b[u] < uv[0] < b[u+3] and b[v] < uv[1] < b[v+3]}
+                                actual_sources = {key for f in faces for key in catalog.contributors_at(
+                                    f.id, [float(uv[0]), float(uv[1])], boundary='open')}
+                                self.assertEqual(actual_sources, expected_sources,
+                                                 (trial, axis, plane, sign, uv))
+
+
+class FaceRepresentationTests(unittest.TestCase):
+    def chain(self):
+        scene = scene_for([[0, 0, 0, 1, 1, 1], [1, 0, 0, 2, 1, 1], [2, 0, 0, 3, 1, 1]])
+        for i, b in enumerate(scene['blocks']):
+            b.update(id='chain#'+str(i), sourceBlock='chain')
+        return merge_faces(scene)
+
+    def test_reverse_lookups_keep_compound_parts_and_hidden_faces(self):
+        catalog = self.chain()
+        self.assertEqual(len(catalog.faces_for_block('chain')), 6)
+        self.assertEqual(len(catalog.by_part['chain#1']), 4)
+        self.assertEqual(len(catalog.faces_for_solid(1)), 4)
+        self.assertEqual(catalog.by_source_face[(1, 0, -1)], ())
+        top, = oriented(catalog, 1, 1)
+        self.assertIs(catalog.face(top.id), top)
+        self.assertIn(top.id, catalog.by_source_face[(1, 1, 1)])
+        with self.assertRaises(KeyError):
+            catalog.faces_for_block('unknown')
+        with self.assertRaises(ValueError):
+            catalog.faces_for_solid(True)
+
+    def test_point_rectangle_and_boundary_queries_preserve_member_domains(self):
+        catalog = self.chain()
+        top, = oriented(catalog, 1, 1)
+        self.assertEqual(catalog.contributors_at(top.id, [.5, .5], boundary='open'), ((0, 1, 1),))
+        self.assertEqual(catalog.contributors_at(top.id, [1, .5], boundary='closed'), ((0, 1, 1), (1, 1, 1)))
+        self.assertEqual(catalog.contributors_at(top.id, [1, .5], boundary='open'), ())
+        self.assertEqual(catalog.contributors_over(top.id, [.5, .2, 1.5, .8]), ((0, 1, 1), (1, 1, 1)))
+        self.assertEqual(catalog.contributors_over(top.id, [1, .2, 1, .8]), ())
+        self.assertEqual(catalog.contributors_over(top.id, [1, .2, 1, .8], positive_area=False),
+                         ((0, 1, 1), (1, 1, 1)))
+
+    def test_open_membership_does_not_treat_cover_encoding_seams_as_boundaries(self):
+        catalog = merge_faces(scene_for([[0, 0, 0, 2, 2, 1], [0, 1, 1, 1, 2, 2]]))
+        face, = oriented(catalog, 2, 1, 1)
+        self.assertEqual(catalog.contributors_at(face.id, [1, .5], boundary='open'), ((0, 2, 1),))
+        self.assertEqual(catalog.contributors_at(face.id, [1, 1], boundary='open'), ())
+
+    def test_duplicate_source_members_all_reported_and_holes_have_none(self):
+        catalog = merge_faces(scene_for([[0, 0, 0, 1, 1, 1]]*2))
+        top, = oriented(catalog, 1, 1)
+        self.assertEqual(catalog.contributors_at(top.id, [.5, .5], boundary='open'), ((0, 1, 1), (1, 1, 1)))
+        ring = merge_faces(scene_for([[0, 0, 0, 3, 1, 1], [0, 0, 2, 3, 1, 3],
+                                     [0, 0, 1, 1, 1, 2], [2, 0, 1, 3, 1, 2]]))
+        top, = oriented(ring, 1, 1)
+        self.assertEqual(ring.contributors_over(top.id, [1.1, 1.1, 1.9, 1.9]), ())
+        self.assertEqual(ring.contributors_at(top.id, [1.5, 1.5], boundary='closed'), ())
+
+    def test_selected_members_can_disconnect_cover_without_revealing_hidden_geometry(self):
+        catalog = self.chain()
+        top, = oriented(catalog, 1, 1)
+        self.assertEqual(catalog.cover_for_sources(top.id, [(0, 1, 1), (2, 1, 1)]),
+                         ((0, 0, 1, 1), (2, 0, 3, 1)))
+        self.assertEqual(catalog.cover_for_sources(top.id, []), ())
+        self.assertEqual(catalog.cover_for_sources(top.id, [(0, 0, -1)]), ())
+        split = merge_faces(scene_for([[0, 0, 0, 3, 1, 1], [1, 1, 0, 2, 2, 1]]))
+        for face in oriented(split, 1, 1, 1):
+            self.assertEqual(split.cover_for_sources(face.id, [(0, 1, 1)]), face.cover)
+        exposed = merge_faces(scene_for([[0, 0, 0, 3, 1, 1]]))
+        whole, = oriented(exposed, 1, 1)
+        self.assertEqual(whole.cover, ((0, 0, 3, 1),))
+
+    def test_round_trip_and_exports_are_independent_and_records_are_immutable(self):
+        catalog = self.chain()
+        saved = json.loads(json.dumps(catalog.to_dict(), allow_nan=False))
+        loaded = FaceCatalog.from_dict(saved, expected_scene_key=catalog.scene_key)
+        self.assertEqual(loaded, catalog)
+        saved['solids'][0]['box'][0] = -100
+        self.assertEqual(loaded.solids[0].box[0], 0)
+        exported = loaded.to_dict()
+        exported['faces'].clear()
+        self.assertEqual(len(catalog.to_dict()['faces']), 6)
+        with self.assertRaises(TypeError):
+            catalog.by_block['chain'] = ()
+        with self.assertRaises(FrozenInstanceError):
+            catalog.faces[0].plane = 99
+        with self.assertRaises(TypeError):
+            catalog.faces[0].cover[0][0] = 99
+        self.assertIs(copy.deepcopy(catalog), catalog)
+        self.assertEqual(FaceCatalog.from_dict(merge_faces(scene_for([])).to_dict()).faces, ())
+
+    def test_tampered_geometry_provenance_and_schema_rejected_even_with_new_hash(self):
+        original = self.chain().to_dict()
+        mutations = [lambda x: x.update(version=True), lambda x: x.update(version=99),
+                     lambda x: x.update(sceneKey='other'), lambda x: x.update(extra='unknown'),
+                     lambda x: x['sourceFaces'][0].update(exposedCover=[]),
+                     lambda x: x['faces'][0]['contributions'][0].update(sourceFaceKey=[999, 0, 1]),
+                     lambda x: x['faces'][0].update(cover=[[0, 0, 100, 100]]),
+                     lambda x: x['faces'][0].update(normalSign=True),
+                     lambda x: x['solids'][0].update(solidIndex=True),
+                     lambda x: x['solids'][0].update(extra='unknown')]
+        for mutate in mutations:
+            saved = copy.deepcopy(original)
+            mutate(saved)
+            saved['catalogId'] = 'face-catalog:' + geometry_key({k: v for k, v in saved.items() if k != 'catalogId'})
+            with self.subTest(mutate=mutate), self.assertRaises(ValueError):
+                FaceCatalog.from_dict(saved)
+        saved = copy.deepcopy(original)
+        saved['faces'][0]['plane'] += .5
+        with self.assertRaisesRegex(ValueError, 'hash'):
+            FaceCatalog.from_dict(saved)
+        with self.assertRaisesRegex(ValueError, 'different scene'):
+            FaceCatalog.from_dict(original, expected_scene_key='wrong')
+
+    def test_query_validation_and_catalog_identity_changes(self):
+        catalog = self.chain()
+        top, = oriented(catalog, 1, 1)
+        invalid = [lambda: catalog.contributors_at(top.id, [0, 0], boundary='maybe'),
+                   lambda: catalog.contributors_at(top.id, [True, 0], boundary='closed'),
+                   lambda: catalog.contributors_over(top.id, [1, 0, 0, 1]),
+                   lambda: catalog.contributors_over(top.id, [0, 0, 1, 1], positive_area=1),
+                   lambda: catalog.cover_for_sources(top.id, [(True, 1, 1)])]
+        for query in invalid:
+            with self.assertRaises(ValueError):
+                query()
+        with self.assertRaises(KeyError):
+            catalog.cover_for_sources(top.id, [(99, 1, 1)])
+        scene = scene_for([[0, 0, 0, 1, 1, 1], [1, 0, 0, 2, 1, 1], [2, 0, 0, 3, 1, 1]])
+        other = merge_faces(scene)
+        self.assertEqual({f.id for f in catalog.faces}, {f.id for f in other.faces})
+        self.assertNotEqual(catalog.catalog_id, other.catalog_id)
 
 
 if __name__ == '__main__':

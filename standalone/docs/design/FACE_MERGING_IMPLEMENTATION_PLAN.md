@@ -1,12 +1,13 @@
 # Adjacent-face merging: implementation plan
 
-2026-11-15. Status: detection implemented and its12 focused tests pass; catalog
-queries, serialization and reporting are in progress. Inspected planning
+2026-11-15. Status: **both parts implemented** in
+[spatial/faces.py](../../src/parkour_solver/spatial/faces.py) and the optional
+`tools.geometry_bounds --faces` report. Inspected planning
 baseline `b535224c`. Scope remains exactly two parts: detecting adjacent faces
 across all six orientations, and representing them for later decisions.
 
-Owner: one new `src/parkour_solver/spatial/faces.py` module and focused tests in
-`tests/unit/spatial/test_faces.py`. The proposed representation is geometric:
+Owner: `src/parkour_solver/spatial/faces.py` and focused tests in
+`tests/unit/spatial/test_faces.py`. The representation is geometric:
 it does not classify blocks by anchor span or assign ceiling/wall/landing roles.
 The two existing contact-dedup findings remain evidence, not additional work in
 this plan. No movement-generator, numerical model or DFS rewrite is included.
@@ -61,11 +62,11 @@ conversion to the chosen finite-double representation would change its value.
 One-box and empty geometry utility cases return valid catalogs without task
 requirements. No faces are created on geometry-coverage bounds.
 
-### 1.3 Recommended boundary rule: remove hidden portions before grouping
+### 1.3 Implemented boundary rule: remove hidden portions before grouping
 
 The earlier sketch merged all raw box faces. That would retain internal seams
-and could connect groups through faces buried inside another solid. Recommend
-that MergedFace represents the **exposed physical boundary of the supplied solid
+and could connect groups through faces buried inside another solid.
+MergedFace represents the **exposed physical boundary of the supplied solid
 union**. Retain every raw SourceFace and its exposed cover for provenance.
 
 Exposure is physical geometry, not a statement that the player's body can reach
@@ -170,9 +171,9 @@ oriented patch must have solid inward and empty outward. Compare the complete
 catalog cover to that oracle on small generated scenes. This checks boundary
 coverage without duplicating the proposed subtraction/adjacency algorithm.
 
-A first tested implementation commit may contain the geometry builder and basic
-immutable records needed to inspect its result. Part2 completes the consumer
-representation; no temporary parallel detector remains afterward.
+The first tested implementation checkpoint is `753cfd2a`: geometry builder and
+immutable records,12 new detection tests and33 combined geometry/package checks.
+The completed representation uses this same detector; no parallel path remains.
 
 ## 2. Represent merged faces for later decisions
 
@@ -346,3 +347,31 @@ only if implementation actually changes those consumers. Commit the complete
 representation/report feature with its tests/docs and remove temporary probes.
 The result is a tested catalog available for later decision work, not a claim
 that the current solver has started consuming merged faces.
+
+Implemented usage (normalized collision geometry only):
+
+```python
+from parkour_solver.spatial.faces import FaceCatalog, merge_faces
+
+catalog = merge_faces(scene)
+for face_id in catalog.faces_for_block('b9b'):
+    face = catalog.face(face_id)
+    print(face.axis, face.normal_sign, face.plane, face.cover)
+saved = catalog.to_dict()
+restored = FaceCatalog.from_dict(saved, expected_scene_key=catalog.scene_key)
+```
+
+Loading validates the hash and rebuilds once from the stored original solids to
+check exposure, canonical geometry and membership, including self-consistent
+but incorrect edited catalogs. Lookups use prebuilt read-only indexes; they do
+not rehash or rebuild the scene. Open point membership handles internal cover
+encoding seams as interior. Immutable catalog deep copies share the catalog;
+JSON exports are independent mutable values.
+
+Completion validation:20 face tests,6 bounds/report tests and the existing
+cell/region/event-domain/package checks,54 tests total with no skips. The
+[Real11 validation record](../../research/real11-extension/face-catalog-validation.json)
+records exact input/source hashes and static checks. Its24 solids/144 raw faces
+produce102 merged faces with147 cover rectangles;15 source faces are fully hidden
+and16 partially hidden. The old bounds report is unchanged after removing the
+two optional face fields. These counts do not imply fewer numerical calls.

@@ -1,12 +1,12 @@
 # Decisions and plan authority
 
 2026-11-15 user-directed scope: the [single face-merging plan](design/FACE_MERGING_IMPLEMENTATION_PLAN.md)
-contains exactly two parts: detecting adjacent coplanar faces in any of the six
+implements exactly two parts: detecting adjacent coplanar faces in any of the six
 orientations, and representing exact merged covers with source membership for
 later decisions. It replaces the former ceiling-only/integration/bug-fix plan;
-that extra work has been removed from this task. Detection is implemented and
-tested; representation queries/serialization/reporting are in progress.
-The detailed plan recommends clipping internal/buried face portions before
+that extra work has been removed from this task. Both parts, catalog queries,
+serialization and `--faces` reporting are implemented and tested.
+The implementation clips internal/buried face portions before
 grouping, while retaining raw source faces, and specifies geometric IDs,
 component-specific provenance and the physical/player-coordinate distinction.
 
