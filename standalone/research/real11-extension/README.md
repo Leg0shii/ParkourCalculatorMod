@@ -13,13 +13,14 @@ Reproduce with the command in the annotated report. No numerical solve was run.
 [Ceiling-preprocessing audit](ceiling-preprocessing-audit.json) records direct
 helper calls at source `c241ac57`: B9a/B9b share an underside plane but existing
 combination dedup keeps just the first finite box. Reversing the input reverses
-the retained box. The annotated report explains current partial simplifications,
-this coverage gap and the proposed role-specific face-union extension. No
+the retained box. The audit is source-specific evidence of that coverage gap. No
 ceiling-generator/constraint behavior was changed by the investigation.
 
 [Profile-collector audit](profile-dedup-audit.json) independently isolates the
 second geometry-blind key: two valid11-tick singleton profiles are offered by an
 injected combination iterator, but only one is retained. This probe bypasses
 the first dedup deliberately; it makes no numerical/full-scene claim.
-The [single implementation plan](../../docs/design/CEILING_FACE_PREPROCESSING_IMPLEMENTATION_PLAN.md)
-now owns the proposed fixes, shared ceiling representation and acceptance.
+The [single face-merging plan](../../docs/design/FACE_MERGING_IMPLEMENTATION_PLAN.md)
+contains only detection of adjacent coplanar faces in all six orientations and
+representation of their exact unions/source membership for later decisions.
+The probes above do not add bug-fix or solver-integration work to that plan.

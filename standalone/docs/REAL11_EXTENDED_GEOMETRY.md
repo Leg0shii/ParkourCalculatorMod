@@ -148,76 +148,18 @@ or reachability/landing-time proofs.
   Available bounds are X[731.3,734.3], Z[−1095.3,−1093.7], feetY9. The
   earlier no-surface result belonged only to the now-withdrawn wide-B6 geometry.
 
-## Preprocessing investigation: shared ceilings, distinct landings
+## Face-merging preprocessing
 
-2026-11-15 follow-up. The user proposes grouping B9a/B9b when they act as a
-ceiling while keeping their different landing heights. This is a useful
-**interaction-specific face grouping**, not a replacement of their physical
-collision volumes. The following describes inspected behavior and a recommended
-extension; no ceiling-preprocessing implementation has been made.
+The [single implementation plan](design/FACE_MERGING_IMPLEMENTATION_PLAN.md)
+contains exactly two parts: detect adjacent coplanar faces across all six
+orientations, and represent the exact merged cover plus its original members
+for later decisions. B9a/B9b/B10 provide one underside example; matching top and
+side faces follow the same rule. Implementation has not begun.
 
-| Existing owner | What it already simplifies | What it does not provide |
-| --- | --- | --- |
-| [Cell decomposition](../src/parkour_solver/spatial/cells.py) | Subtracts the union of expanded solids and merges compatible free-space boxes. | Does not replace per-box ceiling movement/contact generation with a shared ceiling surface. |
-| [Surface groups](../src/parkour_solver/spatial/event_routes.py) | Groups connected coplanar **landing/walkable** patches, retaining owners and exact covers. | Does not group underside/wall contacts; unequal B9a/B9b top heights remain separate. |
-| [Numerical row reduction](../src/parkour_solver/numerics/constraints.py) | Removes equivalent rows/keeps stronger simple bounds inside one assembled numerical model. | Does not prevent generation of separate B9a/B9b branches or combine their finite contact domains. |
-| [Scene contact merging](../src/parkour_solver/movement/contact_combinations.py) | `merge_contacts(scene=True)` can retain multiple original boxes for an explicitly supplied compatible same-state/axis contact. | This is scene-check metadata, not automatic ceiling discovery or a numerical union of finite footprints. |
-
-The active open [ceiling generator](../src/parkour_solver/movement/ceiling_generation.py)
-iterates `scene['blocks']`; [ceiling opportunities](../src/parkour_solver/movement/ceiling_profiles.py)
-iterate solids/ticks. [ConstraintVariants](../src/parkour_solver/constraints/variants.py)
-also prepares avoidance items per active solid. Thus existing geometric/row
-simplification does not eliminate this repeated interaction work at its source.
-Requested ceiling hits and unwanted ceiling avoidance are distinct consumers;
-grouping only requested hits would leave the avoidance work unchanged.
-
-### Concrete B9 example
-
-- B9a: physical underside Y9, top10.5, X[730,731], Z[−1093,−1092].
-- B9b: physical underside Y9, top9.5, X[730,731], Z[−1092,−1091].
-- Their underside union is one rectangle at Y9, X[730,731], Z[−1093,−1091].
-  Before other obstacles/clearances clip it, the corresponding contact domain
-  is feetY≈7.2, center X[729.7,731.3], Z[−1093.3,−1090.7].
-- Top landing surfaces remain at10.5 and9.5. Replacing the full volumes by
-  their bounding box would invent material above B9b and erase that distinction.
-- B10 also has underside Y9 and is adjacent, so the same rule can group its
-  underside too, regardless of its different top10. Actual exposed patches and
-  the other collision boxes remain authoritative.
-
-### Gap found in existing combination deduplication
-
-`contact_combinations` currently keys an opportunity by
-`(leg, offset, axis, plane, direction, role)` and keeps the first representative.
-It does not include or union finite box coverage. Directly proposing B9a/B9b
-ceiling contacts at the same input produces two opportunities but one singleton
-combination, retaining only the first box. Reversing box order changes which box
-survives. At center X730.5/Z−1091.5, the body overlaps B9b's underside and not
-B9a's, demonstrating the missing footprint coverage of a first-B9a representative.
-[Direct-call evidence](../research/real11-extension/ceiling-preprocessing-audit.json)
-records both input orders. This is a helper-level coverage gap, not a measured
-failure of the longer solve or of the separate open-ceiling generator. Callers
-include support-profile/contact-combination and mixed ladder generation paths.
-
-Do not treat this representative selection as the desired merge. Likewise,
-compiling finite rows for both members conjunctively would require contact with
-both boxes; the intended condition is contact with **either part of the union**.
-
-### Concrete implementation plan
-
-The [single implementation plan](design/CEILING_FACE_PREPROCESSING_IMPLEMENTATION_PLAN.md)
-now owns sequencing, data contracts, exact finite-domain identity, all generation/
-compilation consumers, existing interaction selection, resource accounting, resume and
-acceptance. It is proposed, not implemented. It supersedes this investigation's
-initial recommendation list. No anchor-span role classifier is needed: precompute
-undersides once and let existing ceiling/landing/obstacle consumers use the
-appropriate representation. Full-solid avoidance remains per original member.
-
-The follow-up source audit also found a second geometry-blind key in
-`generate_contact_profiles`: after combination generation, it deduplicates profiles
-by tick/axis/direction/plane. P1 fixes both stages and shares the identity with
-other contact signatures. Original-scene collision validation, owner-specific
-landing surfaces and the deferred scheduler/bookkeeping boundaries remain as
-specified in that plan.
+The earlier [combination probe](../research/real11-extension/ceiling-preprocessing-audit.json)
+and [profile probe](../research/real11-extension/profile-dedup-audit.json) preserve
+source-specific findings about geometry-blind contact dedup. They are evidence,
+not additional instructions in this face-merging plan.
 
 ## Reproduce and existing helpers
 

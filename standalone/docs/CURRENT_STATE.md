@@ -5,13 +5,10 @@ record B8–B22, original unit B6 (latest user correction), unit B7 and the B13 
 This is separate geometry-only preparation; new task anchors, finish and budgets
 are not inferred, and no longer-course numerical solve has run. The existing
 extended-B7 benchmark and its measurements below retain their original input.
-The same report's [preprocessing investigation](REAL11_EXTENDED_GEOMETRY.md#preprocessing-investigation-shared-ceilings-distinct-landings)
-records existing geometry/row simplification and missing shared ceiling-face
-generation. The [concrete ceiling/coverage plan](design/CEILING_FACE_PREPROCESSING_IMPLEMENTATION_PLAN.md)
-fixes geometry-blind dedup at combination and profile collection, then adds exact
-face groups and end-to-end compilation using existing interaction decisions.
-It adds no anchor-role layer or grouped full-solid avoidance. It is proposed,
-not implemented; scheduler and bookkeeping work remain separate.
+The [face-merging plan](design/FACE_MERGING_IMPLEMENTATION_PLAN.md) now has exactly
+two parts: detect adjacent coplanar faces across all six orientations, and
+represent their exact unions with original block/solid membership for later
+decisions. It has not been implemented.
 
 Follow-up status2026-11-15: the user has **deferred interleaving/scheduler implementation**. The [preserved plan](BRANCH_SCHEDULING_INVESTIGATION.md) retains the existing tick priority, work-category/outcome clarifications, ownership/cost analysis and resumption checks; none is implemented by this documentation. Current code remains DFS. The separate [bookkeeping performance handoff](BOOKKEEPING_PERFORMANCE_AGENT_HANDOFF.md) is not paused by this request. Use the [deferred-work register](DEFERRED_WORK.md) for other preserved follow-ups and their actual status.
 

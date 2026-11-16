@@ -61,12 +61,12 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/CODE_MAP.md](CODE_MAP.md) | 23788 |
 | [docs/CORRIDOR_AGENT_HANDOFF.md](CORRIDOR_AGENT_HANDOFF.md) | 17543 |
 | [docs/CORRIDOR_IMPLEMENTATION_RESUME.md](CORRIDOR_IMPLEMENTATION_RESUME.md) | 15728 |
-| [docs/CURRENT_STATE.md](CURRENT_STATE.md) | 10960 |
-| [docs/DECISIONS_AND_PLANS.md](DECISIONS_AND_PLANS.md) | 27562 |
-| [docs/DEFERRED_WORK.md](DEFERRED_WORK.md) | 19285 |
+| [docs/CURRENT_STATE.md](CURRENT_STATE.md) | 10610 |
+| [docs/DECISIONS_AND_PLANS.md](DECISIONS_AND_PLANS.md) | 27442 |
+| [docs/DEFERRED_WORK.md](DEFERRED_WORK.md) | 18951 |
 | [docs/DEVELOPMENT.md](DEVELOPMENT.md) | 11551 |
-| [docs/DOC_INDEX.md](DOC_INDEX.md) | 33752 |
-| [docs/FILE_INDEX.md](FILE_INDEX.md) | 169767 |
+| [docs/DOC_INDEX.md](DOC_INDEX.md) | 33691 |
+| [docs/FILE_INDEX.md](FILE_INDEX.md) | 169738 |
 | [docs/FUNCTION_INDEX.md](FUNCTION_INDEX.md) | 63828 |
 | [docs/HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md](HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md) | 66291 |
 | [docs/INITIAL_DOMAIN_AND_CONFIG_AUDIT.md](INITIAL_DOMAIN_AND_CONFIG_AUDIT.md) | 5889 |
@@ -75,7 +75,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/LAYOUT.md](LAYOUT.md) | 5275 |
 | [docs/MOD_REFERENCES.md](MOD_REFERENCES.md) | 5109 |
 | [docs/README.md](README.md) | 3106 |
-| [docs/REAL11_EXTENDED_GEOMETRY.md](REAL11_EXTENDED_GEOMETRY.md) | 15516 |
+| [docs/REAL11_EXTENDED_GEOMETRY.md](REAL11_EXTENDED_GEOMETRY.md) | 11102 |
 | [docs/REAL11_GUIDE.md](REAL11_GUIDE.md) | 21982 |
 | [docs/RESULTS_AND_DEBUGGING.md](RESULTS_AND_DEBUGGING.md) | 11248 |
 | [docs/RUNBOOK.md](RUNBOOK.md) | 8853 |
@@ -87,7 +87,6 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/design/ANCHOR_POLICY_DECISIONS.md](design/ANCHOR_POLICY_DECISIONS.md) | 27139 |
 | [docs/design/BLOCK_ROUTE_SEARCH.md](design/BLOCK_ROUTE_SEARCH.md) | 14357 |
 | [docs/design/BLOCK_SOLVER_PLAN.md](design/BLOCK_SOLVER_PLAN.md) | 14484 |
-| [docs/design/CEILING_FACE_PREPROCESSING_IMPLEMENTATION_PLAN.md](design/CEILING_FACE_PREPROCESSING_IMPLEMENTATION_PLAN.md) | 25646 |
 | [docs/design/CELL_ROUTE_EXPERIMENT_PLAN.md](design/CELL_ROUTE_EXPERIMENT_PLAN.md) | 20833 |
 | [docs/design/CONSTRAINT_GENERATION_RUNBOOK.md](design/CONSTRAINT_GENERATION_RUNBOOK.md) | 19962 |
 | [docs/design/CONTACT_COMBINATIONS.md](design/CONTACT_COMBINATIONS.md) | 9174 |
@@ -96,6 +95,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/design/CORRIDOR_CONSTRAINT_FIX_PLAN.md](design/CORRIDOR_CONSTRAINT_FIX_PLAN.md) | 9158 |
 | [docs/design/DFS_INTERACTION_IMPLEMENTATION_PLAN.md](design/DFS_INTERACTION_IMPLEMENTATION_PLAN.md) | 26415 |
 | [docs/design/DYNAMIC_CONTACT_DECISIONS.md](design/DYNAMIC_CONTACT_DECISIONS.md) | 10201 |
+| [docs/design/FACE_MERGING_IMPLEMENTATION_PLAN.md](design/FACE_MERGING_IMPLEMENTATION_PLAN.md) | 4609 |
 | [docs/design/GENERATION_PERFORMANCE_PLAN.md](design/GENERATION_PERFORMANCE_PLAN.md) | 5435 |
 | [docs/design/GENERATION_RELEVANCE_PLAN.md](design/GENERATION_RELEVANCE_PLAN.md) | 11575 |
 | [docs/design/GENERIC_COMPOSITION.md](design/GENERIC_COMPOSITION.md) | 7234 |
@@ -991,7 +991,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [research/orchestrator-fixes/evidence/two-jump-audit.json.gz](../research/orchestrator-fixes/evidence/two-jump-audit.json.gz) | 277240 |
 | [research/orchestrator-fixes/evidence/two-jump-search.json.gz](../research/orchestrator-fixes/evidence/two-jump-search.json.gz) | 508388 |
 | [research/orchestrator-fixes/regressions.py](../research/orchestrator-fixes/regressions.py) | 5454 |
-| [research/real11-extension/README.md](../research/real11-extension/README.md) | 1652 |
+| [research/real11-extension/README.md](../research/real11-extension/README.md) | 1719 |
 | [research/real11-extension/ceiling-preprocessing-audit.json](../research/real11-extension/ceiling-preprocessing-audit.json) | 1254 |
 | [research/real11-extension/player-bounds.json](../research/real11-extension/player-bounds.json) | 32629 |
 | [research/real11-extension/profile-dedup-audit.json](../research/real11-extension/profile-dedup-audit.json) | 1894 |

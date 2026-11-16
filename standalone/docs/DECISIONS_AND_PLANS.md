@@ -1,11 +1,10 @@
 # Decisions and plan authority
 
-2026-11-15 requested proposal: the [ceiling-face preprocessing implementation plan](design/CEILING_FACE_PREPROCESSING_IMPLEMENTATION_PLAN.md)
-defines the finite-contact coverage fix at both dedup stages, shared underside
-catalog and generator/constraint/validation integration using existing interaction
-decisions, with no anchor-specific classification or new avoidance grouping,
-resource/scope preservation and resume/acceptance. It has not been implemented.
-This is distinct from scheduler deferral and the separate bookkeeping assignment.
+2026-11-15 user-directed scope: the [single face-merging plan](design/FACE_MERGING_IMPLEMENTATION_PLAN.md)
+contains exactly two parts: detecting adjacent coplanar faces in any of the six
+orientations, and representing exact merged covers with source membership for
+later decisions. It replaces the former ceiling-only/integration/bug-fix plan;
+that extra work has been removed from this task. Implementation has not begun.
 
 2026-11-15 longer-course geometry: use [extended Real11 geometry and bounds](REAL11_EXTENDED_GEOMETRY.md)
 for the newly supplied B8–B22. The final user correction withdraws the proposed

@@ -45,7 +45,6 @@ control work; inclusion here is not authorization to implement a historical plan
 | [docs/design/ANCHOR_POLICY_DECISIONS.md](design/ANCHOR_POLICY_DECISIONS.md) | Design contract; check decisions index for implemented/deferred scope: Anchor search decisions: DFS, binary turns and observability |
 | [docs/design/BLOCK_ROUTE_SEARCH.md](design/BLOCK_ROUTE_SEARCH.md) | Design contract; check decisions index for implemented/deferred scope: Block-route selection prototype |
 | [docs/design/BLOCK_SOLVER_PLAN.md](design/BLOCK_SOLVER_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Block solver: continuous-model orchestration |
-| [docs/design/CEILING_FACE_PREPROCESSING_IMPLEMENTATION_PLAN.md](design/CEILING_FACE_PREPROCESSING_IMPLEMENTATION_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Ceiling-face preprocessing and finite-contact coverage: implementation plan |
 | [docs/design/CELL_ROUTE_EXPERIMENT_PLAN.md](design/CELL_ROUTE_EXPERIMENT_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Cell-route experiment plan |
 | [docs/design/CONSTRAINT_GENERATION_RUNBOOK.md](design/CONSTRAINT_GENERATION_RUNBOOK.md) | Design contract; check decisions index for implemented/deferred scope: Reusing the mod's block constraints in route discovery |
 | [docs/design/CONTACT_COMBINATIONS.md](design/CONTACT_COMBINATIONS.md) | Design contract; check decisions index for implemented/deferred scope: Contact combination implementation |
@@ -54,6 +53,7 @@ control work; inclusion here is not authorization to implement a historical plan
 | [docs/design/CORRIDOR_CONSTRAINT_FIX_PLAN.md](design/CORRIDOR_CONSTRAINT_FIX_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Corridor and constraint scope fix |
 | [docs/design/DFS_INTERACTION_IMPLEMENTATION_PLAN.md](design/DFS_INTERACTION_IMPLEMENTATION_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Consolidated plan: depth-first decisions and shared interaction eligibility |
 | [docs/design/DYNAMIC_CONTACT_DECISIONS.md](design/DYNAMIC_CONTACT_DECISIONS.md) | Design contract; check decisions index for implemented/deferred scope: Ceiling and stepping decisions change the transition law |
+| [docs/design/FACE_MERGING_IMPLEMENTATION_PLAN.md](design/FACE_MERGING_IMPLEMENTATION_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Adjacent-face merging: implementation plan |
 | [docs/design/GENERATION_PERFORMANCE_PLAN.md](design/GENERATION_PERFORMANCE_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Schedule-generation performance follow-ups |
 | [docs/design/GENERATION_RELEVANCE_PLAN.md](design/GENERATION_RELEVANCE_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Preliminary plan: generate only relevant, distinct interaction models |
 | [docs/design/GENERIC_COMPOSITION.md](design/GENERIC_COMPOSITION.md) | Design contract; check decisions index for implemented/deferred scope: Generic movement programs |
