@@ -14,6 +14,7 @@ Use [current state](docs/CURRENT_STATE.md) for ongoing work and [decisions and p
 
 | Need | Read |
 | --- | --- |
+| New Codex/Claude sessions and parallel-worker setup | [Agent setup](docs/AGENT_SETUP.md) |
 | Current capabilities and active plans | [Current state](docs/CURRENT_STATE.md), [decisions and plans](docs/DECISIONS_AND_PLANS.md) |
 | Deferred work and resumption pointers | [Deferred-work register](docs/DEFERRED_WORK.md) |
 | Immediate Real11 questions | [Real11 guide](docs/REAL11_GUIDE.md), then linked candidate/question/call ledgers |

@@ -14,7 +14,13 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 
 | File | Bytes |
 | --- | ---: |
-| [AGENTS.md](../AGENTS.md) | 4051 |
+| [AGENTS.md](../AGENTS.md) | 4144 |
+
+## CLAUDE.md
+
+| File | Bytes |
+| --- | ---: |
+| [CLAUDE.md](../CLAUDE.md) | 4144 |
 
 ## CONSOLIDATION.md
 
@@ -52,6 +58,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 
 | File | Bytes |
 | --- | ---: |
+| [docs/AGENT_SETUP.md](AGENT_SETUP.md) | 3322 |
 | [docs/ANCHOR_IMPLEMENTATION_RESUME.md](ANCHOR_IMPLEMENTATION_RESUME.md) | 4767 |
 | [docs/ANCHOR_SEARCH_EXECUTION_REFERENCE.md](ANCHOR_SEARCH_EXECUTION_REFERENCE.md) | 26942 |
 | [docs/ANCHOR_SEARCH_INTEGRATION.md](ANCHOR_SEARCH_INTEGRATION.md) | 10453 |
@@ -59,15 +66,15 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/BOOKKEEPING_PERFORMANCE_AGENT_HANDOFF.md](BOOKKEEPING_PERFORMANCE_AGENT_HANDOFF.md) | 17258 |
 | [docs/BRANCH_SCHEDULING_INVESTIGATION.md](BRANCH_SCHEDULING_INVESTIGATION.md) | 34085 |
 | [docs/CHECKPOINT_STORAGE.md](CHECKPOINT_STORAGE.md) | 6930 |
-| [docs/CODE_MAP.md](CODE_MAP.md) | 23926 |
+| [docs/CODE_MAP.md](CODE_MAP.md) | 24456 |
 | [docs/CORRIDOR_AGENT_HANDOFF.md](CORRIDOR_AGENT_HANDOFF.md) | 17543 |
 | [docs/CORRIDOR_IMPLEMENTATION_RESUME.md](CORRIDOR_IMPLEMENTATION_RESUME.md) | 15728 |
 | [docs/CURRENT_STATE.md](CURRENT_STATE.md) | 12444 |
 | [docs/DECISIONS_AND_PLANS.md](DECISIONS_AND_PLANS.md) | 28881 |
 | [docs/DEFERRED_WORK.md](DEFERRED_WORK.md) | 19625 |
 | [docs/DEVELOPMENT.md](DEVELOPMENT.md) | 11551 |
-| [docs/DOC_INDEX.md](DOC_INDEX.md) | 33898 |
-| [docs/FILE_INDEX.md](FILE_INDEX.md) | 170947 |
+| [docs/DOC_INDEX.md](DOC_INDEX.md) | 34150 |
+| [docs/FILE_INDEX.md](FILE_INDEX.md) | 171080 |
 | [docs/FUNCTION_INDEX.md](FUNCTION_INDEX.md) | 66459 |
 | [docs/HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md](HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md) | 66291 |
 | [docs/INITIAL_DOMAIN_AND_CONFIG_AUDIT.md](INITIAL_DOMAIN_AND_CONFIG_AUDIT.md) | 5889 |

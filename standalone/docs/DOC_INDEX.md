@@ -6,9 +6,11 @@ control work; inclusion here is not authorization to implement a historical plan
 | Document | Status / purpose |
 | --- | --- |
 | [AGENTS.md](../AGENTS.md) | Current navigation / implementation or evidence record: Standalone agent entry point |
+| [CLAUDE.md](../CLAUDE.md) | Current navigation / implementation or evidence record: Standalone agent entry point |
 | [CONSOLIDATION.md](../CONSOLIDATION.md) | Current navigation / implementation or evidence record: Standalone branch consolidation |
 | [README.md](../README.md) | Current navigation / implementation or evidence record: Standalone parkour solver |
 | [cases/real11/README.md](../cases/real11/README.md) | Current navigation / implementation or evidence record: Real11 finite physical-anchor case |
+| [docs/AGENT_SETUP.md](AGENT_SETUP.md) | Current navigation / implementation or evidence record: Shared Codex and Claude Code setup |
 | [docs/ANCHOR_IMPLEMENTATION_RESUME.md](ANCHOR_IMPLEMENTATION_RESUME.md) | Current navigation / implementation or evidence record: Anchor search: current resume state |
 | [docs/ANCHOR_SEARCH_EXECUTION_REFERENCE.md](ANCHOR_SEARCH_EXECUTION_REFERENCE.md) | Current navigation / implementation or evidence record: Anchor search: combinations, pruning and IPOPT dispatch |
 | [docs/ANCHOR_SEARCH_INTEGRATION.md](ANCHOR_SEARCH_INTEGRATION.md) | Current navigation / implementation or evidence record: Anchor search and solver integration |
