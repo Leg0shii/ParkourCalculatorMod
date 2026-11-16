@@ -1,5 +1,11 @@
 # Current standalone state
 
+2026-11-15 geometry follow-up: [longer Real11 input and bounds](REAL11_EXTENDED_GEOMETRY.md)
+record B8–B22, original unit B6 (latest user correction), unit B7 and the B13 stair.
+This is separate geometry-only preparation; new task anchors, finish and budgets
+are not inferred, and no longer-course numerical solve has run. The existing
+extended-B7 benchmark and its measurements below retain their original input.
+
 Follow-up status2026-11-15: the user has **deferred interleaving/scheduler implementation**. The [preserved plan](BRANCH_SCHEDULING_INVESTIGATION.md) retains the existing tick priority, work-category/outcome clarifications, ownership/cost analysis and resumption checks; none is implemented by this documentation. Current code remains DFS. The separate [bookkeeping performance handoff](BOOKKEEPING_PERFORMANCE_AGENT_HANDOFF.md) is not paused by this request. Use the [deferred-work register](DEFERRED_WORK.md) for other preserved follow-ups and their actual status.
 
 2026-11-15: package/layout refactor through `9c79e741`; solver behavior remains feature `dd738c98`. Production is installed from `src/parkour_solver`, with separate tests/tools/research/native roots. See [layout](LAYOUT.md) and the [refactor ledger](STANDALONE_REFACTOR_IMPLEMENTATION.md). Start with the [execution reference](ANCHOR_SEARCH_EXECUTION_REFERENCE.md)
@@ -68,8 +74,8 @@ src/parkour_solver ladder/climbable/vine/movement-entry modules. No mod build/ga
 new native-helper rebuild was needed. See [testing](TESTING.md).
 
 The wall guards ended both runs; global minimum T/Z and actual-world executable
-replay are not established. B6 remains the stored box because replacement bounds
-for its reported rightward extension have not been supplied. Current controls do
+replay are not established. The latest user correction confirms unit B6; the
+longer-course geometry above is separate from these measured controls. They do
 not cover unknown world geometry.
 
 ## Deferred work

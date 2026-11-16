@@ -70,6 +70,25 @@ variables absent means skips, not native acceptance. See [testing](TESTING.md).
 Use a new gate directory; its report records source hashes, source stability,
 counts, skips, exclusions and evidence-integrity results.
 
+## Static player bounds without a solve
+
+The [geometry bounds tool](../tools/geometry_bounds.py) accepts a collision scene
+or a task fixture's `request`, uses existing spatial geometry, and reports exact
+expanded obstacles plus exposed landing covers. No native bridge or numerical
+dependencies are needed; install the package first. Use a fresh output path:
+
+```sh
+../.venv-guidance/bin/python -B -m tools.geometry_bounds \
+  --input cases/real11/extended-geometry.json \
+  --output runs/real11-bounds-new/player-bounds.json \
+  --markdown runs/real11-bounds-new/player-bounds.md
+```
+
+The [extended Real11 report](REAL11_EXTENDED_GEOMETRY.md) explains coordinate
+conventions, body-overlap endpoints, neighbor cuts and standing headroom.
+Static geometry is not a jump/replay check. That input is geometry-only; the
+existing runnable benchmark below remains a distinct task.
+
 ## Current physical-anchor solve, profile and resume
 
 [Execution reference](ANCHOR_SEARCH_EXECUTION_REFERENCE.md) describes current

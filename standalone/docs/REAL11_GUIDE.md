@@ -1,5 +1,11 @@
 # Linkcraft Real11 opening: agent guide
 
+2026-11-15 continuation geometry: [new bounds report](REAL11_EXTENDED_GEOMETRY.md)
+and [input](../cases/real11/extended-geometry.json) add B8–B22, restore unit B7
+and keep B6 unit-sized as finally corrected by the user. This is geometry-only;
+no new terminal task or cold-solve result is inferred. The extended-B7 benchmark
+and older wider/missing-B6 caveats below describe their recorded source era.
+
 2026-11-15 initial-domain follow-up: the [maintained case](../cases/real11/physical-anchors.json) now omits the old `[0,8]` filter. The [unrestricted control](../research/initial-domain-selection/README.md) naturally queried0/8 and deferred9–12 before numerical work, reaching T64 with55/55 independent replays. [Configuration audit](INITIAL_DOMAIN_AND_CONFIG_AUDIT.md) distinguishes task inputs, inferred choices and policy constants; older results below retain their recorded domains.
 
 Current combination/pruning/IPOPT tables and decisions: [execution reference](ANCHOR_SEARCH_EXECUTION_REFERENCE.md). Source-era sections below preserve their own task/policy/results.

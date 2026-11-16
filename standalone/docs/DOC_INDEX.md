@@ -33,6 +33,7 @@ control work; inclusion here is not authorization to implement a historical plan
 | [docs/LAYOUT.md](LAYOUT.md) | Current navigation / implementation or evidence record: Standalone ownership and package layout |
 | [docs/MOD_REFERENCES.md](MOD_REFERENCES.md) | Current navigation / implementation or evidence record: Reusing the broader Parkour Calculator |
 | [docs/README.md](README.md) | Current navigation / implementation or evidence record: Standalone documentation guide |
+| [docs/REAL11_EXTENDED_GEOMETRY.md](REAL11_EXTENDED_GEOMETRY.md) | Current navigation / implementation or evidence record: Real11 extended geometry and player bounds |
 | [docs/REAL11_GUIDE.md](REAL11_GUIDE.md) | Current navigation / implementation or evidence record: Linkcraft Real11 opening: agent guide |
 | [docs/RESULTS_AND_DEBUGGING.md](RESULTS_AND_DEBUGGING.md) | Current navigation / implementation or evidence record: Results, terminology and debugging |
 | [docs/RUNBOOK.md](RUNBOOK.md) | Current navigation / implementation or evidence record: Standalone runbook |
@@ -169,6 +170,7 @@ control work; inclusion here is not authorization to implement a historical plan
 | [research/orchestrator-fixes/audit/CANDIDATE_QUESTIONS.md](../research/orchestrator-fixes/audit/CANDIDATE_QUESTIONS.md) | Frozen source-era evidence; use research guide for reproduction: Real11 candidate questions, answered in order |
 | [research/orchestrator-fixes/audit/PRUNING_FOLLOWUP.md](../research/orchestrator-fixes/audit/PRUNING_FOLLOWUP.md) | Frozen source-era evidence; use research guide for reproduction: Follow-up: what can actually be pruned |
 | [research/orchestrator-fixes/audit/WORKER_CALLS.md](../research/orchestrator-fixes/audit/WORKER_CALLS.md) | Frozen source-era evidence; use research guide for reproduction: Every cold Real11 worker-call slot |
+| [research/real11-extension/README.md](../research/real11-extension/README.md) | Frozen source-era evidence; use research guide for reproduction: Real11 extension: geometry evidence |
 | [research/route-guidance/README.md](../research/route-guidance/README.md) | Frozen source-era evidence; use research guide for reproduction: Route-guidance model comparison |
 | [research/route_guidance/README.md](../research/route_guidance/README.md) | Research evidence / prototype; see research guide: Experimental route guidance |
 | [research/runoff-profiles/README.md](../research/runoff-profiles/README.md) | Frozen source-era evidence; use research guide for reproduction: Automatically selected run-off profiles |

@@ -43,7 +43,8 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 
 | File | Bytes |
 | --- | ---: |
-| [cases/real11/README.md](../cases/real11/README.md) | 1285 |
+| [cases/real11/README.md](../cases/real11/README.md) | 1797 |
+| [cases/real11/extended-geometry.json](../cases/real11/extended-geometry.json) | 4110 |
 | [cases/real11/physical-anchors.json](../cases/real11/physical-anchors.json) | 3757 |
 
 ## docs
@@ -57,15 +58,15 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/BOOKKEEPING_PERFORMANCE_AGENT_HANDOFF.md](BOOKKEEPING_PERFORMANCE_AGENT_HANDOFF.md) | 17258 |
 | [docs/BRANCH_SCHEDULING_INVESTIGATION.md](BRANCH_SCHEDULING_INVESTIGATION.md) | 34085 |
 | [docs/CHECKPOINT_STORAGE.md](CHECKPOINT_STORAGE.md) | 6930 |
-| [docs/CODE_MAP.md](CODE_MAP.md) | 23647 |
+| [docs/CODE_MAP.md](CODE_MAP.md) | 23788 |
 | [docs/CORRIDOR_AGENT_HANDOFF.md](CORRIDOR_AGENT_HANDOFF.md) | 17543 |
 | [docs/CORRIDOR_IMPLEMENTATION_RESUME.md](CORRIDOR_IMPLEMENTATION_RESUME.md) | 15728 |
-| [docs/CURRENT_STATE.md](CURRENT_STATE.md) | 9924 |
-| [docs/DECISIONS_AND_PLANS.md](DECISIONS_AND_PLANS.md) | 26386 |
-| [docs/DEFERRED_WORK.md](DEFERRED_WORK.md) | 18451 |
+| [docs/CURRENT_STATE.md](CURRENT_STATE.md) | 10335 |
+| [docs/DECISIONS_AND_PLANS.md](DECISIONS_AND_PLANS.md) | 27018 |
+| [docs/DEFERRED_WORK.md](DEFERRED_WORK.md) | 18571 |
 | [docs/DEVELOPMENT.md](DEVELOPMENT.md) | 11551 |
-| [docs/DOC_INDEX.md](DOC_INDEX.md) | 33123 |
-| [docs/FILE_INDEX.md](FILE_INDEX.md) | 168848 |
+| [docs/DOC_INDEX.md](DOC_INDEX.md) | 33477 |
+| [docs/FILE_INDEX.md](FILE_INDEX.md) | 169378 |
 | [docs/FUNCTION_INDEX.md](FUNCTION_INDEX.md) | 63828 |
 | [docs/HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md](HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md) | 66291 |
 | [docs/INITIAL_DOMAIN_AND_CONFIG_AUDIT.md](INITIAL_DOMAIN_AND_CONFIG_AUDIT.md) | 5889 |
@@ -74,9 +75,10 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/LAYOUT.md](LAYOUT.md) | 5275 |
 | [docs/MOD_REFERENCES.md](MOD_REFERENCES.md) | 5109 |
 | [docs/README.md](README.md) | 3106 |
-| [docs/REAL11_GUIDE.md](REAL11_GUIDE.md) | 21578 |
+| [docs/REAL11_EXTENDED_GEOMETRY.md](REAL11_EXTENDED_GEOMETRY.md) | 10383 |
+| [docs/REAL11_GUIDE.md](REAL11_GUIDE.md) | 21982 |
 | [docs/RESULTS_AND_DEBUGGING.md](RESULTS_AND_DEBUGGING.md) | 11248 |
-| [docs/RUNBOOK.md](RUNBOOK.md) | 7978 |
+| [docs/RUNBOOK.md](RUNBOOK.md) | 8853 |
 | [docs/SOLVER_BRANCH_INTEGRATION_REVIEW.md](SOLVER_BRANCH_INTEGRATION_REVIEW.md) | 11279 |
 | [docs/STANDALONE_REFACTOR_IMPLEMENTATION.md](STANDALONE_REFACTOR_IMPLEMENTATION.md) | 4239 |
 | [docs/STANDALONE_STRUCTURE_REVIEW.md](STANDALONE_STRUCTURE_REVIEW.md) | 23061 |
@@ -199,7 +201,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 
 | File | Bytes |
 | --- | ---: |
-| [research/README.md](../research/README.md) | 2497 |
+| [research/README.md](../research/README.md) | 2878 |
 | [research/__init__.py](../research/__init__.py) | 65 |
 | [research/anchor-candidate-audit/.gitignore](../research/anchor-candidate-audit/.gitignore) | 109 |
 | [research/anchor-candidate-audit/README.md](../research/anchor-candidate-audit/README.md) | 10897 |
@@ -988,6 +990,8 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [research/orchestrator-fixes/evidence/two-jump-audit.json.gz](../research/orchestrator-fixes/evidence/two-jump-audit.json.gz) | 277240 |
 | [research/orchestrator-fixes/evidence/two-jump-search.json.gz](../research/orchestrator-fixes/evidence/two-jump-search.json.gz) | 508388 |
 | [research/orchestrator-fixes/regressions.py](../research/orchestrator-fixes/regressions.py) | 5454 |
+| [research/real11-extension/README.md](../research/real11-extension/README.md) | 699 |
+| [research/real11-extension/player-bounds.json](../research/real11-extension/player-bounds.json) | 32629 |
 | [research/route-guidance/README.md](../research/route-guidance/README.md) | 14776 |
 | [research/route-guidance/evidence/aggregate.json](../research/route-guidance/evidence/aggregate.json) | 19135 |
 | [research/route-guidance/evidence/conditional-rankings.svg](../research/route-guidance/evidence/conditional-rankings.svg) | 76070 |
@@ -1290,6 +1294,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [tests/integration/test_block_route_witnesses.py](../tests/integration/test_block_route_witnesses.py) | 10629 |
 | [tests/integration/test_full_route_witness.py](../tests/integration/test_full_route_witness.py) | 1854 |
 | [tests/integration/test_generic_composition.py](../tests/integration/test_generic_composition.py) | 17795 |
+| [tests/integration/test_geometry_bounds.py](../tests/integration/test_geometry_bounds.py) | 2915 |
 | [tests/integration/test_integration.py](../tests/integration/test_integration.py) | 26629 |
 | [tests/integration/test_movement_contacts.py](../tests/integration/test_movement_contacts.py) | 11415 |
 | [tests/integration/test_orchestrator_continuation.py](../tests/integration/test_orchestrator_continuation.py) | 19182 |
@@ -1406,6 +1411,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [tools/audit_candidates.py](../tools/audit_candidates.py) | 47018 |
 | [tools/check_docs.py](../tools/check_docs.py) | 1545 |
 | [tools/docs_index.py](../tools/docs_index.py) | 6567 |
+| [tools/geometry_bounds.py](../tools/geometry_bounds.py) | 4729 |
 | [tools/layout-extractions.json](../tools/layout-extractions.json) | 6510 |
 | [tools/layout-migration.json](../tools/layout-migration.json) | 361754 |
 | [tools/layout-test-support.json](../tools/layout-test-support.json) | 3356 |
