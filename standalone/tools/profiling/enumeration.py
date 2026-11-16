@@ -152,6 +152,10 @@ def instrumented_option(original, profile):
                     self.markers['bind'] += 1
                     return [node]+self.statements('_enum_stats = _enumeration_probe.bind(self, item)',node)
                 if target in ('node_key','key'):
+                    if target=='node_key' and isinstance(node.value.func,ast.Attribute) and node.value.func.attr=='node':
+                        self.markers[target] += 1
+                        return [node]+self.statements(
+                            '_enum_stats.node(cursor, depth, start, gates, keys.effective(cursor["chain"], depth, start, gates))',node)
                     element = node.value.args[0].elts[-1 if target=='node_key' else 0]
                     variable = '_enum_effective' if target=='node_key' else '_enum_leaf_effective'
                     replacement = ast.NamedExpr(target=ast.Name(id=variable,ctx=ast.Store()),value=element)

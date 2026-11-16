@@ -6,11 +6,10 @@ investigate repeated hashing, model preparation and snapshots while preserving
 exact resume and ownership behavior. Branch scheduling is separate work in the
 original session; do not combine policy changes with bookkeeping optimization.
 
-Setup/measurement update (2026-11-15): steps 1–2 are complete on the isolated
+Setup/measurement record (2026-11-15): steps 1–2 completed on the isolated
 `research/bookkeeping-performance` branch, based on `0f6b873c`. See the
 [measurements and reproducibility record](../research/bookkeeping-measurement/README.md).
-No production optimization has landed; fixed-work continuation controls and
-implementation remain subsequent work. The final native gate passes 617 tests
+That stage introduced no production optimization. Its native gate passed 617 tests
 (the existing 610 plus seven profiler checks), with no failures/errors/skips.
 The recorded gate also needs the pinned `research` extra for its Clarabel checks.
 
@@ -19,6 +18,13 @@ identify B7 and already-seen internal states as the dominant work. The new
 observer does not change production generation, ordering or pruning. Its option
 replay is narrower than the full continuation/oracle controls still required
 before implementation.
+
+Implementation follow-up: [already-visited child suppression](../research/enumeration-reduction/README.md)
+is now implemented on this branch. Complete ordered catalogues and final cursor
+hashes match the reference, with 94.1–94.7% fewer checks and 2.9–3.6x faster
+enumeration. Native627 and legacy resume pass. The cold control retains T64 and
+all witness replays, but has a worse Z endpoint in its finite budget; see the
+report before making an end-to-end quality/speedup claim.
 
 ## 1. Starting point and worktree coordination
 

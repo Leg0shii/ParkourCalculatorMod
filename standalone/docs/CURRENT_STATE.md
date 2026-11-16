@@ -2,6 +2,12 @@
 
 Active follow-up investigations: [bookkeeping performance](BOOKKEEPING_PERFORMANCE_AGENT_HANDOFF.md) is handed to another agent/worktree; [branch scheduling](BRANCH_SCHEDULING_INVESTIGATION.md) remains in this session. Both start from `a11b9b18`; this handoff adds no runtime or pruning change. The current code still descends by DFS, while the proposal makes retained continuations compete earlier by optimistic finish.
 
+On `research/bookkeeping-performance`, [already-visited child suppression](../research/enumeration-reduction/README.md)
+now removes duplicate constraint queue visits while preserving ordered unique
+options and legacy cursor compatibility. Its fixed-work enumeration improves
+2.9–3.6x; native627 passes. The timed cold control preserves T64/replay but has a
+worse Z endpoint, so improved whole-search quality is not established.
+
 2026-11-15: package/layout refactor through `9c79e741`; solver behavior remains feature `dd738c98`. Production is installed from `src/parkour_solver`, with separate tests/tools/research/native roots. See [layout](LAYOUT.md) and the [refactor ledger](STANDALONE_REFACTOR_IMPLEMENTATION.md). Start with the [execution reference](ANCHOR_SEARCH_EXECUTION_REFERENCE.md)
 for the combination catalogue, pruning/deferral table, IPOPT dispatch boundaries,
 settled decisions/rationale and module ownership. The [decisions index](DECISIONS_AND_PLANS.md)

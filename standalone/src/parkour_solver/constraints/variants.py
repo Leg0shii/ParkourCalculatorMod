@@ -1,12 +1,66 @@
 import copy
 import time
 import itertools
+from bisect import bisect_left, bisect_right
 
 from parkour_solver.constraints.avoidance import faces, face_chains, intervals, consecutive, blockage_counts, compile_passages, passage_kind, face_clearance
 from parkour_solver.scene.geometry import expanded_box
 from parkour_solver.reachability.service import query_interaction, interaction_context_key, PROOF_POLICY
 from parkour_solver.reachability.intervals import interaction_reachability
 from parkour_solver.search.identity import digest
+
+
+class _OptionKeys:
+    """Disposable keys for one call over an already prepared, unchanged item.
+
+    Freeze effective face rows at this boundary. Nothing is cached across an
+    item/route/envelope mutation, a returned option, or external resume. Hashes
+    still come from the existing canonical identity functions.
+    """
+    LIMIT = 1024
+
+    def __init__(self, source, item):
+        self.source = source
+        self.chains = tuple(tuple(chain) for chain in item['chains'])
+        faces = tuple(dict(face) for face in item['faces'])
+        self.chosen = tuple(tuple(faces[i] for i in chain) for chain in self.chains)
+        self.rows, self.ticks, self.tokens = [], [], []
+        empty = source.effective_key(())
+        for face in item['faces']:
+            ticks, tokens = [], []
+            if face['axis'] != 'Y':
+                for tick in item['required'][face['axis']]:
+                    row = source.face_row(face,tick)
+                    if source.effective_key((row,)) == empty:
+                        continue
+                    ticks.append(tick); tokens.append(len(self.rows))
+                    self.rows.append(tuple(row.items()))
+            self.ticks.append(tuple(ticks)); self.tokens.append(tuple(tokens))
+        self.row_keys, self.node_keys = {():empty}, {}
+
+    @staticmethod
+    def remember(cache, key, value):
+        if len(cache) >= _OptionKeys.LIMIT:
+            cache.pop(next(iter(cache)))
+        cache[key] = value
+        return value
+
+    def effective(self, chain, depth, start, gates):
+        ranges = intervals(self.chosen[chain][:depth+1],gates,0,start)
+        tokens = tuple(token for face,(begin,end) in zip(self.chains[chain],ranges[:-1])
+            for token in self.tokens[face][bisect_left(self.ticks[face],begin):bisect_right(self.ticks[face],end)])
+        if tokens in self.row_keys:
+            return self.row_keys[tokens]
+        # Tokens refer to frozen rows, retaining order and exact scalar types,
+        # including signed zero. Python float equality is not a cache identity.
+        return self.remember(self.row_keys,tokens,
+            self.source.effective_key(dict(self.rows[token]) for token in tokens))
+
+    def node(self, chain, depth, start, gates):
+        key = (chain,depth,start,self.effective(chain,depth,start,gates))
+        if key in self.node_keys:
+            return self.node_keys[key]
+        return self.remember(self.node_keys,key,digest(list(key)))
 
 
 class ConstraintVariants:
@@ -247,6 +301,7 @@ class ConstraintVariants:
         option_seen = set(cursor['seenOptions'])
         cursor.setdefault('seenNodes', [])
         node_seen = set(cursor['seenNodes'])
+        keys = _OptionKeys(self,item)
         while cursor['chain'] < len(item['chains']):
             self.check()
             chain = item['chains'][cursor['chain']]
@@ -259,10 +314,7 @@ class ConstraintVariants:
                 cursor['started'] = False
                 continue
             depth, start, gates = cursor['frontier'].pop()
-            ranges = intervals(chosen[:depth+1], gates, 0, start)
-            paid = [row for face, (a, b) in zip(chosen, ranges[:-1])
-                    for row in self.segment_rows(item, face, a, b)]
-            node_key = digest([cursor['chain'], depth, start, self.effective_key(paid)])
+            node_key = keys.node(cursor['chain'],depth,start,gates)
             if node_key in node_seen:
                 continue
             node_seen.add(node_key)
@@ -304,7 +356,11 @@ class ConstraintVariants:
                     break
                 beginning = gate+int(consecutive(chosen[depth], chosen[depth+1]))
                 if beginning <= self.through:
-                    next_nodes.append([depth+1, beginning, gates+[gate]])
+                    child = [depth+1, beginning, gates+[gate]]
+                    # Only omit states already popped, never states merely
+                    # queued: the first-popped gate history must still win.
+                    if keys.node(cursor['chain'],*child) not in node_seen:
+                        next_nodes.append(child)
             def rank(node):
                 ranges = intervals(chosen[:depth+2], node[2], 0, node[1])
                 paid = sum(sum(item['costs'][chain[j]][a:b+1]) for j, (a, b) in enumerate(ranges[:-1])) if ranges else float('inf')

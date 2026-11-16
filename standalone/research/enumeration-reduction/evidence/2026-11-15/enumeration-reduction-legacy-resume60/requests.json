@@ -1,0 +1,47 @@
+[
+  {
+    "index": 1,
+    "fingerprint": "9e4dc0c7561745c3fb99a9bac92d778374392e3efa2d38f4459f1ed1c6d17d4d",
+    "ticks": 21,
+    "stopOnFeasible": true,
+    "status": "feasible",
+    "workerLaunched": true,
+    "workerStatus": null
+  },
+  {
+    "index": 2,
+    "fingerprint": "8abfa224a01f4387d6463ace46223c21946b4251e565dc59ccbc404204af980f",
+    "ticks": 30,
+    "stopOnFeasible": true,
+    "status": "feasible",
+    "workerLaunched": false,
+    "workerStatus": null
+  },
+  {
+    "index": 3,
+    "fingerprint": "9be0445d534def86098936046067a7291bbd7a7b4833ad21c984d5b64644c1df",
+    "ticks": 40,
+    "stopOnFeasible": true,
+    "status": "feasible",
+    "workerLaunched": false,
+    "workerStatus": null
+  },
+  {
+    "index": 4,
+    "fingerprint": "0dc56ca5c3ea6e23e7531faa8972ed93d50e212e1920181a35506ffbed3cb3c1",
+    "ticks": 55,
+    "stopOnFeasible": true,
+    "status": "feasible",
+    "workerLaunched": true,
+    "workerStatus": null
+  },
+  {
+    "index": 5,
+    "fingerprint": "1f1a52e04e4a81c07d23ca0aa92729b384ce81a29a21f0b505a275e1f54487f2",
+    "ticks": 64,
+    "stopOnFeasible": false,
+    "status": "feasible",
+    "workerLaunched": true,
+    "workerStatus": "Solve_Succeeded"
+  }
+]
