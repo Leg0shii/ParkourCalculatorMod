@@ -61,12 +61,12 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/CODE_MAP.md](CODE_MAP.md) | 23788 |
 | [docs/CORRIDOR_AGENT_HANDOFF.md](CORRIDOR_AGENT_HANDOFF.md) | 17543 |
 | [docs/CORRIDOR_IMPLEMENTATION_RESUME.md](CORRIDOR_IMPLEMENTATION_RESUME.md) | 15728 |
-| [docs/CURRENT_STATE.md](CURRENT_STATE.md) | 10335 |
+| [docs/CURRENT_STATE.md](CURRENT_STATE.md) | 10728 |
 | [docs/DECISIONS_AND_PLANS.md](DECISIONS_AND_PLANS.md) | 27018 |
-| [docs/DEFERRED_WORK.md](DEFERRED_WORK.md) | 18571 |
+| [docs/DEFERRED_WORK.md](DEFERRED_WORK.md) | 19281 |
 | [docs/DEVELOPMENT.md](DEVELOPMENT.md) | 11551 |
 | [docs/DOC_INDEX.md](DOC_INDEX.md) | 33477 |
-| [docs/FILE_INDEX.md](FILE_INDEX.md) | 169378 |
+| [docs/FILE_INDEX.md](FILE_INDEX.md) | 169514 |
 | [docs/FUNCTION_INDEX.md](FUNCTION_INDEX.md) | 63828 |
 | [docs/HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md](HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md) | 66291 |
 | [docs/INITIAL_DOMAIN_AND_CONFIG_AUDIT.md](INITIAL_DOMAIN_AND_CONFIG_AUDIT.md) | 5889 |
@@ -75,7 +75,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/LAYOUT.md](LAYOUT.md) | 5275 |
 | [docs/MOD_REFERENCES.md](MOD_REFERENCES.md) | 5109 |
 | [docs/README.md](README.md) | 3106 |
-| [docs/REAL11_EXTENDED_GEOMETRY.md](REAL11_EXTENDED_GEOMETRY.md) | 10383 |
+| [docs/REAL11_EXTENDED_GEOMETRY.md](REAL11_EXTENDED_GEOMETRY.md) | 16711 |
 | [docs/REAL11_GUIDE.md](REAL11_GUIDE.md) | 21982 |
 | [docs/RESULTS_AND_DEBUGGING.md](RESULTS_AND_DEBUGGING.md) | 11248 |
 | [docs/RUNBOOK.md](RUNBOOK.md) | 8853 |
@@ -990,7 +990,8 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [research/orchestrator-fixes/evidence/two-jump-audit.json.gz](../research/orchestrator-fixes/evidence/two-jump-audit.json.gz) | 277240 |
 | [research/orchestrator-fixes/evidence/two-jump-search.json.gz](../research/orchestrator-fixes/evidence/two-jump-search.json.gz) | 508388 |
 | [research/orchestrator-fixes/regressions.py](../research/orchestrator-fixes/regressions.py) | 5454 |
-| [research/real11-extension/README.md](../research/real11-extension/README.md) | 699 |
+| [research/real11-extension/README.md](../research/real11-extension/README.md) | 1167 |
+| [research/real11-extension/ceiling-preprocessing-audit.json](../research/real11-extension/ceiling-preprocessing-audit.json) | 1254 |
 | [research/real11-extension/player-bounds.json](../research/real11-extension/player-bounds.json) | 32629 |
 | [research/route-guidance/README.md](../research/route-guidance/README.md) | 14776 |
 | [research/route-guidance/evidence/aggregate.json](../research/route-guidance/evidence/aggregate.json) | 19135 |

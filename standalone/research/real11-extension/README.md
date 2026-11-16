@@ -9,3 +9,10 @@ revision `e891f264` plus the new reporting adapter. No production code changed.
 The earlier unit/extended-B7 benchmark measurements are separate.
 
 Reproduce with the command in the annotated report. No numerical solve was run.
+
+[Ceiling-preprocessing audit](ceiling-preprocessing-audit.json) records direct
+helper calls at source `c241ac57`: B9a/B9b share an underside plane but existing
+combination dedup keeps just the first finite box. Reversing the input reverses
+the retained box. The annotated report explains current partial simplifications,
+this coverage gap and the proposed role-specific face-union extension. No
+ceiling-generator/constraint behavior was changed by the investigation.

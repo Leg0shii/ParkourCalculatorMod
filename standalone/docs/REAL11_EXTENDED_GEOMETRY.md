@@ -148,6 +148,94 @@ or reachability/landing-time proofs.
   Available bounds are X[731.3,734.3], Z[−1095.3,−1093.7], feetY9. The
   earlier no-surface result belonged only to the now-withdrawn wide-B6 geometry.
 
+## Preprocessing investigation: shared ceilings, distinct landings
+
+2026-11-15 follow-up. The user proposes grouping B9a/B9b when they act as a
+ceiling while keeping their different landing heights. This is a useful
+**interaction-specific face grouping**, not a replacement of their physical
+collision volumes. The following describes inspected behavior and a recommended
+extension; no ceiling-preprocessing implementation has been made.
+
+| Existing owner | What it already simplifies | What it does not provide |
+| --- | --- | --- |
+| [Cell decomposition](../src/parkour_solver/spatial/cells.py) | Subtracts the union of expanded solids and merges compatible free-space boxes. | Does not replace per-box ceiling movement/contact generation with a shared ceiling surface. |
+| [Surface groups](../src/parkour_solver/spatial/event_routes.py) | Groups connected coplanar **landing/walkable** patches, retaining owners and exact covers. | Does not group underside/wall contacts; unequal B9a/B9b top heights remain separate. |
+| [Numerical row reduction](../src/parkour_solver/numerics/constraints.py) | Removes equivalent rows/keeps stronger simple bounds inside one assembled numerical model. | Does not prevent generation of separate B9a/B9b branches or combine their finite contact domains. |
+| [Scene contact merging](../src/parkour_solver/movement/contact_combinations.py) | `merge_contacts(scene=True)` can retain multiple original boxes for an explicitly supplied compatible same-state/axis contact. | This is scene-check metadata, not automatic ceiling discovery or a numerical union of finite footprints. |
+
+The active open [ceiling generator](../src/parkour_solver/movement/ceiling_generation.py)
+iterates `scene['blocks']`; [ceiling opportunities](../src/parkour_solver/movement/ceiling_profiles.py)
+iterate solids/ticks. [ConstraintVariants](../src/parkour_solver/constraints/variants.py)
+also prepares avoidance items per active solid. Thus existing geometric/row
+simplification does not eliminate this repeated interaction work at its source.
+Requested ceiling hits and unwanted ceiling avoidance are distinct consumers;
+grouping only requested hits would leave the avoidance work unchanged.
+
+### Concrete B9 example
+
+- B9a: physical underside Y9, top10.5, X[730,731], Z[−1093,−1092].
+- B9b: physical underside Y9, top9.5, X[730,731], Z[−1092,−1091].
+- Their underside union is one rectangle at Y9, X[730,731], Z[−1093,−1091].
+  Before other obstacles/clearances clip it, the corresponding contact domain
+  is feetY≈7.2, center X[729.7,731.3], Z[−1093.3,−1090.7].
+- Top landing surfaces remain at10.5 and9.5. Replacing the full volumes by
+  their bounding box would invent material above B9b and erase that distinction.
+- B10 also has underside Y9 and is adjacent, so the same rule can group its
+  underside too, regardless of its different top10. Actual exposed patches and
+  the other collision boxes remain authoritative.
+
+### Gap found in existing combination deduplication
+
+`contact_combinations` currently keys an opportunity by
+`(leg, offset, axis, plane, direction, role)` and keeps the first representative.
+It does not include or union finite box coverage. Directly proposing B9a/B9b
+ceiling contacts at the same input produces two opportunities but one singleton
+combination, retaining only the first box. Reversing box order changes which box
+survives. At center X730.5/Z−1091.5, the body overlaps B9b's underside and not
+B9a's, demonstrating the missing footprint coverage of a first-B9a representative.
+[Direct-call evidence](../research/real11-extension/ceiling-preprocessing-audit.json)
+records both input orders. This is a helper-level coverage gap, not a measured
+failure of the longer solve or of the separate open-ceiling generator. Callers
+include support-profile/contact-combination and mixed ladder generation paths.
+
+Do not treat this representative selection as the desired merge. Likewise,
+compiling finite rows for both members conjunctively would require contact with
+both boxes; the intended condition is contact with **either part of the union**.
+
+### Recommended extension and boundaries
+
+1. Keep the original immutable solids and owner-specific supports. Precompute
+   exact exposed faces indexed by axis, normal direction, plane and compatible
+   contact behavior. Reuse contact patches and canonical planar-cover machinery;
+   preserve original member/owner provenance.
+2. Group coplanar compatible face patches with an exact union. For B9a/B9b this
+   is a rectangle; concave/disconnected unions retain separate rectangles or
+   symbolic alternatives. A bounding rectangle cannot fill a gap or a hole.
+3. Make ceiling proposal, reachability and fixed constraint assembly share that
+   face descriptor. One candidate may cover a rectangular union directly;
+   nonrectangular membership needs exact alternatives. Selected contacts must
+   validate against the original member boxes, not a fictitious solid.
+4. Keep landing/task/anchor identities independent. A ceiling contact names the
+   face group and its members; it does not satisfy landing on either member.
+   Preserve different continuation consequences, named-case semantics, resource
+   accounting, query phases, exact identity and resume ownership.
+5. Avoidance may use a ceiling-only view **only when the actual scoped motion
+   context rules out relevant side/top behavior**; otherwise retain the full
+   per-solid alternatives. A stage name or one witness remaining below is not
+   sufficient, because earlier facings remain free in later solves. Pure face
+   grouping can be precomputed globally; its use as a substitute for full-box
+   constraints is contextual.
+6. Repair the existing combination key alongside coverage representation: keep
+   distinct finite domains until their union is represented, rather than dropping
+   all but the first. Cover both input orders, same-plane separated rectangles,
+   holes, different planes/behaviors, finite clearances, original scene replay,
+   owner-specific landings and exact save/resume in acceptance tests.
+
+This is physical-model simplification before branch products. It is separate
+from the deferred scheduler/interleaving proposal and from the other agent's
+policy-preserving bookkeeping optimization. Potential time savings are not yet
+measured.
+
 ## Reproduce and existing helpers
 
 Existing production geometry helpers are sufficient; there was no maintained
