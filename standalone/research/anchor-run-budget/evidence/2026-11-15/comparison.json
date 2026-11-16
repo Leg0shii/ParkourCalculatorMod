@@ -1,0 +1,61 @@
+{
+  "beforeEnumeration": {
+    "ticks": 64,
+    "objective": -1093.2381026602416,
+    "searchSeconds": 302.4471614584327,
+    "wrappers": 61,
+    "workers": 55,
+    "expandedPrefixes": 39,
+    "validatedWitnesses": 57,
+    "allReplaysPassed": true
+  },
+  "beforeBudgets": {
+    "ticks": 64,
+    "objective": -1093.4443574703134,
+    "searchSeconds": 302.75591162219644,
+    "wrappers": 72,
+    "workers": 66,
+    "expandedPrefixes": 39,
+    "validatedWitnesses": 61,
+    "allReplaysPassed": true
+  },
+  "continuous": {
+    "ticks": 67,
+    "objective": -1093.823129063534,
+    "searchSeconds": 303.4884398765862,
+    "wrappers": 49,
+    "workers": 47,
+    "expandedPrefixes": 21,
+    "validatedWitnesses": 41,
+    "allReplaysPassed": true
+  },
+  "continuousDetails": {
+    "allocations": [
+      {
+        "calls": 49,
+        "expanded": 21,
+        "termination": "deadline",
+        "beforeDepth": -1,
+        "afterDepth": 3,
+        "advanced": true
+      }
+    ],
+    "requestsByTicks": {
+      "17": 1,
+      "27": 1,
+      "28": 1,
+      "40": 1,
+      "57": 1,
+      "58": 2,
+      "67": 42
+    },
+    "evaluationTimings": {
+      "calls": 9,
+      "inclusiveSeconds": 294.1509218849242,
+      "selfSeconds": 283.652326349169,
+      "maxSeconds": 200.5929993763566
+    },
+    "firstFullSolutionSeconds": 208.5796746276319
+  },
+  "resumePriorFeasiblePairsRepeated": []
+}

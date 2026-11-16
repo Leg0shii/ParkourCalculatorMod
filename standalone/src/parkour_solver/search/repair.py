@@ -148,9 +148,12 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
                 return finish(best_result)
             return finish({'status': 'cancelled', 'termination': 'cancelled', 'best': None,
                     'attempts': inner_attempts, 'contactAttempts': attempts})
-        if work is not None and work.termination:
-            termination = work.termination
-            break
+        if work is not None:
+            try:
+                work.check()
+            except TimeoutError as error:
+                termination = str(error)
+                break
         remaining = deadline - time.monotonic()
         if remaining <= 0:
             termination = 'deadline'
@@ -168,6 +171,17 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
                       route.get('hitEvents', []), reference_yaw or route.get('warmYaw'), variant.get('selectedPassages', []))
             if not queue:
                 continue
+        # Generation can consume the remaining budget. Leave the next branch
+        # queued instead of dispatching it into an unstarted unknown attempt.
+        if work is not None:
+            try:
+                work.check()
+            except TimeoutError as error:
+                termination = str(error)
+                break
+        if time.monotonic() >= deadline:
+            termination = 'deadline'
+            break
         score, _, rows, passages, hits, proposal_yaw = heapq.heappop(queue)
         in_flight = save_branch(score, rows, passages, hits, proposal_yaw)
         publish()

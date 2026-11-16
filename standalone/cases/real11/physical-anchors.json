@@ -147,13 +147,10 @@
   "settings": {
     "seconds": 300,
     "candidate_seconds": 2,
-    "score_seconds": 8,
     "max_solver_calls": 1024,
     "max_candidates": 20,
     "beam_width": 8,
     "unknown_slots": 1,
-    "score_call_limit": 6,
-    "final_call_limit": 24,
     "fair_parents": true,
     "spatial_seconds": 5,
     "spatial_calls": 6,

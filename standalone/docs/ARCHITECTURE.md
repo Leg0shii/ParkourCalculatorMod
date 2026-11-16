@@ -47,6 +47,15 @@ Global hard-jump latches live outside frames and survive backtracking. Policy3 e
 
 ## One numerical request
 
+Physical anchor search gives its DFS the remaining session deadline and global
+solver-call allowance. It does not impose service-turn or per-program time/call
+quotas: `score_seconds`, `score_call_limit` and `final_call_limit` apply only to
+non-anchor search. Each numerical request still uses `candidate_seconds`.
+Progress callbacks, cancellation, generation limits and external continuation
+remain active. Repair checks the budget before taking a pending branch, including
+after generation, so unstarted work remains pending rather than becoming an
+unknown numerical result. See the [run-budget change](../research/anchor-run-budget/README.md).
+
 `compile_program` → `scene.route.schedule` → `validate_vertical_schedule` → Java coefficients → scoped reach envelopes → `ConstraintVariants` → fixed walls/contacts/inputs → `solve_contact_branches` → worker → scalar validation → vertical check → `CorridorAdapter.candidate` (scoped scene/corridor checks) → retention or terminal incumbent.
 
 Re-solves use the original horizontal initial state and free earlier yaw variables. Saved witnesses can initialize yaw, not become seam constraints. Multiple numerical requests for one jump schedule can select different hard obstacle-face/tick/contact constraints. Distinct descriptions may also generate identical effective models; early partial-model canonicalization addresses that before expensive work.

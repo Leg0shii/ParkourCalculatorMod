@@ -110,13 +110,42 @@ pass. Only `constraints/variants.py` changes in the 131-module production tree.
 
 The fresh cold control meets the handoff's T64/replay acceptance. It **does not
 show improved end-to-end solution quality**: Z is worse in this single timed
-control. Numerical request logs have an eight-request common prefix, after
-which the faster implementation evaluates additional T67 variants before the
-next intermediate query. The finite service budgets and subsequent numerical
-path differ. That explains why request counts cannot be treated as identical
-fixed work; it does not establish a causal explanation for all of the Z change.
-The proven performance result is the complete-catalogue comparison above.
-No scheduling/policy change was added to compensate for the timed result.
+control: the endpoint loses **0.20625481007186863 blocks** at the same T64.
+Follow-up inspection identifies the missed winning branch, rather than merely
+attributing the difference to timing:
+
+- The old winner's fingerprint is
+  `be95000c50b6f192cb3dfcea2156aa733aba2949b4b4ae7a4fd40a46f1125527`.
+  It succeeded at old ledger invocation 23 and is absent from the new ledger.
+- Both runs generated that exact repair branch in context
+  `1e5c61ecd3b3461a370a9a9c85c6698d3669a96c816f9d738771ea4da7951c36`.
+  The new run's second attempt in that context instead records
+  `status=unknown, error=numerical_call_limit`, with no numerical diagnostics
+  or problem hashes. The branch remains first in its final unresolved list.
+- Event search gives each slice a shared six-call budget (`score_call_limit`),
+  even though the per-final-evaluation allowance is 24 and global allowance
+  1024. The shared budget was exhausted before this branch's worker launch.
+  `retry_unknown=False` leaves unresolved branches parked on subsequent slices,
+  while fresh constraint generation continues. Faster enumeration changes which
+  branch encounters that boundary; a generated but never-solved branch therefore
+  misses later fresh budgets.
+- The retained new winner is old ledger invocation 17 / new invocation 24,
+  fingerprint `1f1a52e04e4a81c07d23ca0aa92729b384ce81a29a21f0b505a275e1f54487f2`.
+  It transitions around B6 one tick earlier: X at state 57 must already be
+  at most `729.6999989880791`. The old winner permits the transition a tick later
+  and has X `729.8616187010521` at that state, outside the new bound by
+  `0.1616197129729926` blocks. The old winning model and path were therefore
+  unavailable to the new run's completed solves.
+
+The missed branch is a budget/retry scheduling interaction exposed by this
+optimization; exact catalogue equivalence does not establish equal timed search
+coverage. The proven performance result remains the complete-catalogue comparison
+above. At this optimization baseline no scheduling fix was applied; the subsequent
+user-approved [run-budget change](../anchor-run-budget/README.md) removes those
+anchor service limits. Extracted requests, winning
+branches, repair logs and generator states are under the ignored
+`runs/endpoint-regression-investigation/`; the paired original reports and
+request ledgers remain unchanged.
 
 The old implementation's durable checkpoint from the earlier 60-second control
 also resumes with `exact=true`. It makes five numerical invocations / three

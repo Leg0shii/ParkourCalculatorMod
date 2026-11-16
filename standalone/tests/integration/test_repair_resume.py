@@ -12,10 +12,53 @@ from parkour_solver.search.engine import _key
 from parkour_solver.movement.program import compile_program, program_physics_key
 from parkour_solver.search.movement import iter_movement_programs
 from parkour_solver.search.repair_state import compatible, context
+from parkour_solver.search.work import SearchWork
 from tests.support.checkpoint_guidance import flat_scene, programs
 
 
 class RepairResumeTests(RepairHarness, unittest.TestCase):
+    def test_exhausted_call_budget_keeps_unstarted_branch_pending_without_unknown_retry(self):
+        rows=[dict(leg=0,offset=1,mode='X',cmp='GE',rhs=v) for v in (1,2)]
+        def filter_candidate(*args):return dict(accepted=False,alternatives=[[r] for r in rows])
+        seeded=self.invoke(route(),lambda *a,**k:outcome(),filter_candidate)
+        work=SearchWork(1)
+        work.before_solve({})
+        first=self.invoke(route(),lambda *a,**k:self.fail('Dispatched beyond the run budget'),filter_candidate,
+            work=work,resume_state=json.loads(json.dumps(seeded['repairState'])),retry_unresolved=False)
+        self.assertEqual(first['termination'],'numerical_call_limit')
+        self.assertEqual(len(first['repairState']['pending']),2)
+        self.assertEqual(first['repairState']['unresolved'],[])
+        self.assertEqual(first['repairState']['completed'],seeded['repairState']['completed'])
+        requests=[]
+        def solve(request,*args,**kwargs):
+            requests.append(request['constraints'])
+            return outcome()
+        resumed=self.invoke(route(),solve,lambda *a:dict(accepted=True),
+            resume_state=json.loads(json.dumps(first['repairState'])),retry_unresolved=False)
+        self.assertEqual(requests,[[rows[0]]])
+        self.assertEqual(resumed['status'],'feasible')
+
+    def test_generation_expiry_preserves_new_branch_before_dispatch(self):
+        row=dict(leg=0,offset=1,mode='X',cmp='GE',rhs=1)
+        clock=[100.]
+        def variants():
+            clock[0]+=2.
+            yield dict(rows=[row])
+        with patch('time.monotonic',side_effect=lambda:clock[0]):
+            first=self.invoke(route(),lambda *a,**k:self.fail('Dispatched after generation expired'),
+                lambda *a:dict(accepted=True),initial_variants=variants(),work=SearchWork(2,deadline=101.))
+        self.assertEqual(first['termination'],'deadline')
+        self.assertTrue(any(b['rows']==[row] for b in first['repairState']['pending']))
+        self.assertEqual(first['repairState']['unresolved'],[])
+        requests=[]
+        def solve(request,*args,**kwargs):
+            requests.append(request['constraints'])
+            return outcome()
+        resumed=self.invoke(route(),solve,lambda *a:dict(accepted=True),
+            resume_state=json.loads(json.dumps(first['repairState'])),retry_unresolved=False)
+        self.assertEqual(requests,[[row]])
+        self.assertEqual(resumed['status'],'feasible')
+
     def test_extended_program_keeps_guess_without_copying_exact_old_problem_work(self):
         scene=flat_scene()
         parent=next(p for p in programs(scene,2) if p['profile']['jump'][0])

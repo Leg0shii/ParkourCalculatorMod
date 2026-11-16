@@ -167,7 +167,7 @@ keys or adding a pose constraint. No mixed or uncertainty mode exists.
 
 | Owner | Current responsibility |
 | --- | --- |
-| [`event_search`](../src/parkour_solver/search/events/engine.py), [`anchor_adapter`](../src/parkour_solver/search/anchors/adapter.py) | Physical automatic dispatch, required-anchor frames, immutable stage objectives, internal slices sharing owned live state. |
+| [`event_search`](../src/parkour_solver/search/events/engine.py), [`anchor_adapter`](../src/parkour_solver/search/anchors/adapter.py) | Physical automatic dispatch, required-anchor frames, immutable stage objectives, continuous anchor DFS under the session budget. |
 | [`anchor_policy`](../src/parkour_solver/search/anchors/policy.py) | Owner visits, required order/caps, source preparation versus hard transfer; hard policy3. |
 | [`search.comparison`](../src/parkour_solver/search/comparison.py) | Sole intermediate count/key, OR-protection, peer verdict and strict-incumbent predicate owner; comparison policy1. |
 | [`depth_first`](../src/parkour_solver/search/dfs.py), [`search.deferrals`](../src/parkour_solver/search/deferrals.py) | Traversal, validated peer index, single `minimumRunExclusions` compatibility table, selected-only checks and recovery. |

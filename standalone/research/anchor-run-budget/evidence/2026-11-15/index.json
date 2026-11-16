@@ -1,0 +1,48 @@
+{
+  "baseRevision": "86c06e39b59c4a1cc813164cdd18bbdb24382cb7",
+  "branch": "fix/anchor-run-budgets",
+  "files": {
+    "cold-provenance.json": {
+      "bytes": 20794,
+      "sha256": "43293869245ef5f67ff03f1797952357311cac1da871814b2e9f3d35947f10a9"
+    },
+    "cold-requests.json": {
+      "bytes": 12310,
+      "sha256": "1fb8a5e477032ede839d52acfa1dfb99e58fc8006df56cae571416c35e22c4d0"
+    },
+    "cold-summary.json": {
+      "bytes": 4034,
+      "sha256": "5037f4f044598ff90d3d8820ac01098bd18d30db9c6ea6de7b1c6454aed110df"
+    },
+    "comparison.json": {
+      "bytes": 1379,
+      "sha256": "13dd6c699090488cf21032a25c6d9319910a400e1461142ed2dbc5f9d24ee723"
+    },
+    "implementation.patch": {
+      "bytes": 13311,
+      "sha256": "756b29bf3178a041298b6b556e20df8b2f3b9947f352c43c52e53f432ae37255"
+    },
+    "native-report.json": {
+      "bytes": 18561,
+      "sha256": "acb361a6c8daf18858967afb74f1fd561a279ae72475f58d37ceca773725c8be"
+    },
+    "resume-provenance.json": {
+      "bytes": 20882,
+      "sha256": "a19fc7f70fc0d898aabfd958b33b456f0dfa432f06dfb59fd96b9d37421385ef"
+    },
+    "resume-requests.json": {
+      "bytes": 238,
+      "sha256": "44b47feb38175ba031ce35c9fee8e12c3946eaae413711083c40ca0ebdd25581"
+    },
+    "resume-summary.json": {
+      "bytes": 3966,
+      "sha256": "4f8b74dffd24c450834021c9844a288f91515ec7751f791c8a822bd5c2a66a9a"
+    }
+  },
+  "rawRuns": [
+    "runs/anchor-run-budget-native",
+    "runs/anchor-run-budget-cold300",
+    "runs/anchor-run-budget-legacy-resume10"
+  ],
+  "notes": "Production source patch and per-source hashes identify the uncommitted implementation measured on the base revision. Original manifest/SQLite pairs remain unchanged in their raw run directories."
+}

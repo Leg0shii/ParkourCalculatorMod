@@ -114,6 +114,7 @@ control work; inclusion here is not authorization to implement a historical plan
 | [research/anchor-candidate-audit/README.md](../research/anchor-candidate-audit/README.md) | Frozen source-era evidence; use research guide for reproduction: Real11 candidate inventory |
 | [research/anchor-feasibility/README.md](../research/anchor-feasibility/README.md) | Frozen source-era evidence; use research guide for reproduction: Anchor DFS and physical Real11 finish |
 | [research/anchor-initial0-audit-2026-11-04/README.md](../research/anchor-initial0-audit-2026-11-04/README.md) | Frozen source-era evidence; use research guide for reproduction: Why the anchor run missed initial-0 / T64 |
+| [research/anchor-run-budget/README.md](../research/anchor-run-budget/README.md) | Current implementation and measured validation: Continuous anchor search under the run budget |
 | [research/anchor-runtime-profile/README.md](../research/anchor-runtime-profile/README.md) | Frozen source-era evidence; use research guide for reproduction: Coordinated anchor/solver integration and runtime profiling |
 | [research/anchor-transfer-preparation/README.md](../research/anchor-transfer-preparation/README.md) | Frozen source-era evidence; use research guide for reproduction: Hard transfer with source-local preparation |
 | [research/automatic-corridors/README.md](../research/automatic-corridors/README.md) | Frozen source-era evidence; use research guide for reproduction: Automatic semantic corridors on the stored Real11 scene |

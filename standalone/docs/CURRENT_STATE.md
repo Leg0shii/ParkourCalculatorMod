@@ -1,5 +1,15 @@
 # Current standalone state
 
+On `fix/anchor-run-budgets`, physical anchor search now runs continuously under
+the session deadline and global call guard, with per-request timeouts and no
+service-turn/per-program time or call quotas. Unstarted repair work remains
+pending at budget exhaustion. See the [implementation and validation](../research/anchor-run-budget/README.md).
+This user-approved scheduling change follows the bookkeeping optimization below;
+it does not implement the separate proposed branch-priority scheduler.
+Native631 passes. The new 300-second control is worse at T67 versus T64: 42 of
+49 requests refine 67-tick journeys and no 64-tick request is reached. All 41
+retained witnesses replay; compatible durable continuation also passes.
+
 Active follow-up investigations: [bookkeeping performance](BOOKKEEPING_PERFORMANCE_AGENT_HANDOFF.md) is handed to another agent/worktree; [branch scheduling](BRANCH_SCHEDULING_INVESTIGATION.md) remains in this session. Both start from `a11b9b18`; this handoff adds no runtime or pruning change. The current code still descends by DFS, while the proposal makes retained continuations compete earlier by optimistic finish.
 
 On `research/bookkeeping-performance`, [already-visited child suppression](../research/enumeration-reduction/README.md)
@@ -40,8 +50,12 @@ points are not discrete input clocks or fixed dynamic seams.
 Physical automatic continuation is outer schema2 / DFS8 / movement context4 /
 repair assembly9. Hard3/search5/comparison1/guide2/proposal1 semantic identities
 also matter; schema equality does not make old policy checkpoints compatible.
-Storage remains manifest/SQLite version1. Internal slices reuse owned live state;
-external resume decodes isolated mutable values and checks the saved incumbent.
+Storage remains manifest/SQLite version1. Physical anchor DFS now uses the session's
+global deadline/call allowance continuously, without service-turn or per-program
+quotas; per-request solver timeouts remain. Non-anchor event search retains its
+internal slices. External resume decodes isolated mutable values and checks the
+saved incumbent. The [run-budget change](../research/anchor-run-budget/README.md)
+records the removed limits and continuation checks.
 
 ## Current Real11 task and evidence
 

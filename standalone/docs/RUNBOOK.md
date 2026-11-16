@@ -98,6 +98,13 @@ independent retained-witness replay; inclusive timings overlap. Profiling overhe
 and local solver behavior affect the work fitting a time budget. No archived
 facings or trajectories are seeded into a cold profile.
 
+Physical anchor mode uses `seconds` and `max_solver_calls` for the whole session,
+and `candidate_seconds` for each numerical request. Legacy `score_seconds`,
+`score_call_limit` and `final_call_limit` settings remain accepted for older input
+files but do not limit anchor search. Non-anchor modes retain their existing
+service budgets. Changing these budgets does not change physical model identities
+or invalidate compatible checkpoints; it can change work reached before timeout.
+
 `--resume` restores saved search state only when its exact context matches.
 Compatible JSON/shared-store identities are preserved by this folder move; solver
 policy changes still require their usual compatibility checks. Each re-solve

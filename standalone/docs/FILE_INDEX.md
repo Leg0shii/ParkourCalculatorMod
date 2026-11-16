@@ -44,27 +44,27 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | File | Bytes |
 | --- | ---: |
 | [cases/real11/README.md](../cases/real11/README.md) | 1285 |
-| [cases/real11/physical-anchors.json](../cases/real11/physical-anchors.json) | 3757 |
+| [cases/real11/physical-anchors.json](../cases/real11/physical-anchors.json) | 3678 |
 
 ## docs
 
 | File | Bytes |
 | --- | ---: |
 | [docs/ANCHOR_IMPLEMENTATION_RESUME.md](ANCHOR_IMPLEMENTATION_RESUME.md) | 4767 |
-| [docs/ANCHOR_SEARCH_EXECUTION_REFERENCE.md](ANCHOR_SEARCH_EXECUTION_REFERENCE.md) | 26719 |
+| [docs/ANCHOR_SEARCH_EXECUTION_REFERENCE.md](ANCHOR_SEARCH_EXECUTION_REFERENCE.md) | 26725 |
 | [docs/ANCHOR_SEARCH_INTEGRATION.md](ANCHOR_SEARCH_INTEGRATION.md) | 10453 |
-| [docs/ARCHITECTURE.md](ARCHITECTURE.md) | 15586 |
+| [docs/ARCHITECTURE.md](ARCHITECTURE.md) | 16233 |
 | [docs/BOOKKEEPING_PERFORMANCE_AGENT_HANDOFF.md](BOOKKEEPING_PERFORMANCE_AGENT_HANDOFF.md) | 18532 |
 | [docs/BRANCH_SCHEDULING_INVESTIGATION.md](BRANCH_SCHEDULING_INVESTIGATION.md) | 10066 |
 | [docs/CHECKPOINT_STORAGE.md](CHECKPOINT_STORAGE.md) | 6930 |
 | [docs/CODE_MAP.md](CODE_MAP.md) | 24970 |
 | [docs/CORRIDOR_AGENT_HANDOFF.md](CORRIDOR_AGENT_HANDOFF.md) | 17543 |
 | [docs/CORRIDOR_IMPLEMENTATION_RESUME.md](CORRIDOR_IMPLEMENTATION_RESUME.md) | 15728 |
-| [docs/CURRENT_STATE.md](CURRENT_STATE.md) | 10124 |
+| [docs/CURRENT_STATE.md](CURRENT_STATE.md) | 11149 |
 | [docs/DECISIONS_AND_PLANS.md](DECISIONS_AND_PLANS.md) | 25913 |
 | [docs/DEVELOPMENT.md](DEVELOPMENT.md) | 11551 |
-| [docs/DOC_INDEX.md](DOC_INDEX.md) | 33655 |
-| [docs/FILE_INDEX.md](FILE_INDEX.md) | 189881 |
+| [docs/DOC_INDEX.md](DOC_INDEX.md) | 33852 |
+| [docs/FILE_INDEX.md](FILE_INDEX.md) | 198626 |
 | [docs/FUNCTION_INDEX.md](FUNCTION_INDEX.md) | 64297 |
 | [docs/HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md](HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md) | 66291 |
 | [docs/INITIAL_DOMAIN_AND_CONFIG_AUDIT.md](INITIAL_DOMAIN_AND_CONFIG_AUDIT.md) | 5889 |
@@ -75,7 +75,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/README.md](README.md) | 3066 |
 | [docs/REAL11_GUIDE.md](REAL11_GUIDE.md) | 21578 |
 | [docs/RESULTS_AND_DEBUGGING.md](RESULTS_AND_DEBUGGING.md) | 11248 |
-| [docs/RUNBOOK.md](RUNBOOK.md) | 7978 |
+| [docs/RUNBOOK.md](RUNBOOK.md) | 8460 |
 | [docs/SOLVER_BRANCH_INTEGRATION_REVIEW.md](SOLVER_BRANCH_INTEGRATION_REVIEW.md) | 11279 |
 | [docs/STANDALONE_REFACTOR_IMPLEMENTATION.md](STANDALONE_REFACTOR_IMPLEMENTATION.md) | 4239 |
 | [docs/STANDALONE_STRUCTURE_REVIEW.md](STANDALONE_STRUCTURE_REVIEW.md) | 23061 |
@@ -198,7 +198,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 
 | File | Bytes |
 | --- | ---: |
-| [research/README.md](../research/README.md) | 3128 |
+| [research/README.md](../research/README.md) | 3327 |
 | [research/__init__.py](../research/__init__.py) | 65 |
 | [research/anchor-candidate-audit/.gitignore](../research/anchor-candidate-audit/.gitignore) | 109 |
 | [research/anchor-candidate-audit/README.md](../research/anchor-candidate-audit/README.md) | 10897 |
@@ -258,6 +258,17 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [research/anchor-initial0-audit-2026-11-04/README.md](../research/anchor-initial0-audit-2026-11-04/README.md) | 3015 |
 | [research/anchor-initial0-audit-2026-11-04/check.py](../research/anchor-initial0-audit-2026-11-04/check.py) | 5951 |
 | [research/anchor-initial0-audit-2026-11-04/result.json](../research/anchor-initial0-audit-2026-11-04/result.json) | 14395 |
+| [research/anchor-run-budget/README.md](../research/anchor-run-budget/README.md) | 6010 |
+| [research/anchor-run-budget/evidence/2026-11-15/cold-provenance.json](../research/anchor-run-budget/evidence/2026-11-15/cold-provenance.json) | 20794 |
+| [research/anchor-run-budget/evidence/2026-11-15/cold-requests.json](../research/anchor-run-budget/evidence/2026-11-15/cold-requests.json) | 12310 |
+| [research/anchor-run-budget/evidence/2026-11-15/cold-summary.json](../research/anchor-run-budget/evidence/2026-11-15/cold-summary.json) | 4034 |
+| [research/anchor-run-budget/evidence/2026-11-15/comparison.json](../research/anchor-run-budget/evidence/2026-11-15/comparison.json) | 1379 |
+| [research/anchor-run-budget/evidence/2026-11-15/implementation.patch](../research/anchor-run-budget/evidence/2026-11-15/implementation.patch) | 13311 |
+| [research/anchor-run-budget/evidence/2026-11-15/index.json](../research/anchor-run-budget/evidence/2026-11-15/index.json) | 1731 |
+| [research/anchor-run-budget/evidence/2026-11-15/native-report.json](../research/anchor-run-budget/evidence/2026-11-15/native-report.json) | 18561 |
+| [research/anchor-run-budget/evidence/2026-11-15/resume-provenance.json](../research/anchor-run-budget/evidence/2026-11-15/resume-provenance.json) | 20882 |
+| [research/anchor-run-budget/evidence/2026-11-15/resume-requests.json](../research/anchor-run-budget/evidence/2026-11-15/resume-requests.json) | 238 |
+| [research/anchor-run-budget/evidence/2026-11-15/resume-summary.json](../research/anchor-run-budget/evidence/2026-11-15/resume-summary.json) | 3966 |
 | [research/anchor-runtime-profile/README.md](../research/anchor-runtime-profile/README.md) | 4980 |
 | [research/anchor-runtime-profile/integrated-2026-11-10/combined-300s/instrumentation/profile_run.py](../research/anchor-runtime-profile/integrated-2026-11-10/combined-300s/instrumentation/profile_run.py) | 6916 |
 | [research/anchor-runtime-profile/integrated-2026-11-10/combined-300s/instrumentation/runtime_profile.py](../research/anchor-runtime-profile/integrated-2026-11-10/combined-300s/instrumentation/runtime_profile.py) | 6409 |
@@ -682,7 +693,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [research/enumeration-attribution/evidence/2026-11-15/provenance.json](../research/enumeration-attribution/evidence/2026-11-15/provenance.json) | 20860 |
 | [research/enumeration-attribution/evidence/2026-11-15/requests.json](../research/enumeration-attribution/evidence/2026-11-15/requests.json) | 15207 |
 | [research/enumeration-attribution/evidence/2026-11-15/summary.json](../research/enumeration-attribution/evidence/2026-11-15/summary.json) | 4043 |
-| [research/enumeration-reduction/README.md](../research/enumeration-reduction/README.md) | 8382 |
+| [research/enumeration-reduction/README.md](../research/enumeration-reduction/README.md) | 10208 |
 | [research/enumeration-reduction/evidence/2026-11-15/enumeration-compare.py](../research/enumeration-reduction/evidence/2026-11-15/enumeration-compare.py) | 3565 |
 | [research/enumeration-reduction/evidence/2026-11-15/enumeration-reduction-cold300/bookkeeping.json.gz](../research/enumeration-reduction/evidence/2026-11-15/enumeration-reduction-cold300/bookkeeping.json.gz) | 12188 |
 | [research/enumeration-reduction/evidence/2026-11-15/enumeration-reduction-cold300/enumeration.json.gz](../research/enumeration-reduction/evidence/2026-11-15/enumeration-reduction-cold300/enumeration.json.gz) | 100192 |
@@ -1334,7 +1345,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [src/parkour_solver/search/entry.py](../src/parkour_solver/search/entry.py) | 10609 |
 | [src/parkour_solver/search/events/__init__.py](../src/parkour_solver/search/events/__init__.py) | 0 |
 | [src/parkour_solver/search/events/adapter.py](../src/parkour_solver/search/events/adapter.py) | 11632 |
-| [src/parkour_solver/search/events/engine.py](../src/parkour_solver/search/events/engine.py) | 13327 |
+| [src/parkour_solver/search/events/engine.py](../src/parkour_solver/search/events/engine.py) | 13800 |
 | [src/parkour_solver/search/feasibility.py](../src/parkour_solver/search/feasibility.py) | 3779 |
 | [src/parkour_solver/search/frontier.py](../src/parkour_solver/search/frontier.py) | 14104 |
 | [src/parkour_solver/search/goals.py](../src/parkour_solver/search/goals.py) | 10181 |
@@ -1343,7 +1354,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [src/parkour_solver/search/movement.py](../src/parkour_solver/search/movement.py) | 18381 |
 | [src/parkour_solver/search/ordered_route.py](../src/parkour_solver/search/ordered_route.py) | 17733 |
 | [src/parkour_solver/search/ranking.py](../src/parkour_solver/search/ranking.py) | 3371 |
-| [src/parkour_solver/search/repair.py](../src/parkour_solver/search/repair.py) | 25559 |
+| [src/parkour_solver/search/repair.py](../src/parkour_solver/search/repair.py) | 26059 |
 | [src/parkour_solver/search/repair_state.py](../src/parkour_solver/search/repair_state.py) | 3036 |
 | [src/parkour_solver/search/support_profiles.py](../src/parkour_solver/search/support_profiles.py) | 33647 |
 | [src/parkour_solver/search/virtual_goals.py](../src/parkour_solver/search/virtual_goals.py) | 3132 |
@@ -1444,7 +1455,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [tests/integration/test_orchestrator_continuation.py](../tests/integration/test_orchestrator_continuation.py) | 19182 |
 | [tests/integration/test_package_layout.py](../tests/integration/test_package_layout.py) | 4032 |
 | [tests/integration/test_profiling.py](../tests/integration/test_profiling.py) | 13545 |
-| [tests/integration/test_repair_resume.py](../tests/integration/test_repair_resume.py) | 10153 |
+| [tests/integration/test_repair_resume.py](../tests/integration/test_repair_resume.py) | 12662 |
 | [tests/integration/test_shared_contacts.py](../tests/integration/test_shared_contacts.py) | 4275 |
 | [tests/research/__init__.py](../tests/research/__init__.py) | 0 |
 | [tests/research/test_candidate_audit.py](../tests/research/test_candidate_audit.py) | 2167 |
@@ -1517,7 +1528,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [tests/unit/reachability/test_proposal_analysis.py](../tests/unit/reachability/test_proposal_analysis.py) | 6678 |
 | [tests/unit/reachability/test_screen.py](../tests/unit/reachability/test_screen.py) | 3941 |
 | [tests/unit/search/__init__.py](../tests/unit/search/__init__.py) | 0 |
-| [tests/unit/search/test_anchor_dfs.py](../tests/unit/search/test_anchor_dfs.py) | 16603 |
+| [tests/unit/search/test_anchor_dfs.py](../tests/unit/search/test_anchor_dfs.py) | 18393 |
 | [tests/unit/search/test_anchor_policy.py](../tests/unit/search/test_anchor_policy.py) | 14712 |
 | [tests/unit/search/test_anchor_search.py](../tests/unit/search/test_anchor_search.py) | 11212 |
 | [tests/unit/search/test_anchor_time_bound.py](../tests/unit/search/test_anchor_time_bound.py) | 1919 |

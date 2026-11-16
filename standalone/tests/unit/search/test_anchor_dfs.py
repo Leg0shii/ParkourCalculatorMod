@@ -1,10 +1,11 @@
 import copy
 import json
 import threading
+import time
 import unittest
 from unittest.mock import patch
 
-from parkour_solver.search.engine import find_checkpoint_route
+from parkour_solver.search.engine import find_checkpoint_route, ScopedWork
 from parkour_solver.search.feasibility import solve_due
 from tests.support.anchor_policy import scene, history
 
@@ -27,7 +28,7 @@ def extend(s,parent,target,n,extra=False):
 
 class AnchorDFSTests(unittest.TestCase):
     def run_tree(self, *, logging=True, resume=None, calls=20, interval=1, setup=False, seconds=3,
-                 on_progress=None,cancel_event=None):
+                 on_progress=None,cancel_event=None,requests_per_evaluation=1,advance=None,**settings):
         s=scene();s['maxTotalRunTicks']=60;s['maxRunTicksPerJump']=60;dispatched=[]
         def generate(target_scene,*,report,initial_programs,continuation=None,node_evaluator,**kwargs):
             saved=copy.deepcopy(continuation) if continuation else dict(expanded=1,cursor=0,exhausted=False)
@@ -51,21 +52,50 @@ class AnchorDFSTests(unittest.TestCase):
                 yield p
             saved['exhausted']=True
         def evaluate(target_scene,p,compiler,adapter,work,motion,**kwargs):
-            work.before_solve({})
+            scoped=ScopedWork(work,kwargs['solver_calls'],min(work.deadline,time.monotonic()+kwargs['seconds']))
+            for _ in range(requests_per_evaluation):
+                scoped.before_solve({})
+                if advance is not None:advance()
             dispatched.append((p['terminalSupport'],p['profile']['airtime'],kwargs.get('solve_policy')))
             n=p['profile']['airtime']
             candidate=dict(yaw=[0.]*n,positions=[[.5,.5]]*(n+1),velocity=[[0.,0.]]*(n+1),objective=0.)
             best=dict(candidate=candidate,plan=dict(ticks=n,walls=[]),allocation=[0],cost=0)
-            return dict(status='feasible',termination='done',best=best,work=dict(solverCalls=1),
+            return dict(status='feasible',termination='done',best=best,work=dict(solverCalls=requests_per_evaluation),
                         fullSceneValidated=True,nodeFeasibility=dict(status='feasible',model=str(n)))
         with patch('parkour_solver.search.engine._motion_bound',return_value={}), \
              patch('parkour_solver.search.dfs.iter_movement_programs',side_effect=generate), \
              patch('parkour_solver.search.engine.evaluate_program',side_effect=evaluate), \
              patch('parkour_solver.validation.witness.replay_witness',return_value=dict(passed=True)):
+            options=dict(seconds=seconds,score_seconds=2,max_solver_calls=calls)
+            options.update(settings)
             result=find_checkpoint_route(s,object(),anchor_search=dict(anchors=['mid'],observability=logging,
-                solveEveryDecisionLevels=interval),minimum_run_pruning=False,seconds=seconds,score_seconds=2,
-                max_solver_calls=calls,resume_state=resume,on_progress=on_progress,cancel_event=cancel_event)
+                solveEveryDecisionLevels=interval),minimum_run_pruning=False,
+                resume_state=resume,on_progress=on_progress,cancel_event=cancel_event,**options)
         return result,dispatched
+
+    def test_anchor_search_uses_run_budget_across_routes_and_constraint_requests(self):
+        clock=[100.]
+        def advance():clock[0]+=.05
+        with patch('time.monotonic',side_effect=lambda:clock[0]):
+            result,calls=self.run_tree(calls=100,seconds=100,requests_per_evaluation=30,advance=advance,
+                score_seconds=.01,score_call_limit=1,final_call_limit=1)
+        self.assertEqual([(b,t) for b,t,_ in calls],[('mid',10),('goal',20),('mid',11)])
+        self.assertEqual(result['work']['solverCalls'],90)
+        allocations=result['searchState']['allocations']
+        self.assertEqual(len(allocations),1)
+        self.assertEqual(allocations[0]['calls'],90)
+        self.assertEqual(result['best']['plan']['ticks'],20)
+
+    def test_global_deadline_still_stops_anchor_search_and_keeps_continuation(self):
+        clock=[100.]
+        def advance():clock[0]+=2.
+        with patch('time.monotonic',side_effect=lambda:clock[0]):
+            first,calls1=self.run_tree(seconds=1,advance=advance)
+        self.assertEqual(first['termination'],'deadline')
+        self.assertEqual([(b,t) for b,t,_ in calls1],[('mid',10)])
+        second,calls2=self.run_tree(resume=json.loads(json.dumps(first['searchState'])))
+        self.assertEqual([(b,t) for b,t,_ in calls1+calls2],[('mid',10),('goal',20),('mid',11)])
+        self.assertEqual(second['best']['plan']['ticks'],20)
 
     def test_global_latch_survives_abandoned_certifier_and_changed_incoming_prefix(self):
         result,calls=self.run_tree()
