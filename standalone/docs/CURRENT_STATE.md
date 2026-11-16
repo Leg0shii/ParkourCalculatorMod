@@ -69,7 +69,10 @@ records the removed limits and continuation checks.
 ## Current Real11 task and evidence
 
 The [maintained case](../cases/real11/physical-anchors.json) supplies
-B2/B3/B4/B5 anchors, normal+stepping, horizon200 and declared caps, with no first-jump whitelist.
+B2/B3/B4/B5 anchors, normal+stepping+ceiling, horizon200 and declared caps, with no first-jump whitelist.
+Ceiling choices were enabled in the maintained case on 2026-11-16; the historical
+controls below retain their recorded movement domains. The [case notes](../cases/real11/README.md)
+describe the domain change and exact-resume boundary.
 The [unrestricted control](../research/initial-domain-selection/README.md) naturally queries first jumps0/8 and recoverably defers9–12 before numerical work; it finds T64 with55/55 retained-witness replays. Archived controls below keep their original `[0,8]` domain. B7 is the
 physical extended box `[729,0,-1095,730,7,-1093]`; actual landing minimizes T then
 maximizes Z. Guide `(729.5,7,-1093)` is not a center-coordinate cap. The old
