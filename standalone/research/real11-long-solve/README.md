@@ -66,7 +66,50 @@ in-flight or unfinished generation remains suspended. It does not call an
 untested ancestor infeasible or change the movement/continuous model.
 
 The [prefix validation](prefix-validation.json) records its full-new-scene check.
-A continuation of the saved longer search under the correction is being run.
+The corrected continuations are complete; their [summary](corrected-runs-summary.json)
+records exact resumes, source stability, prefix audits and retained-witness replay.
+
+| Pass | Budget | New numerical calls / workers | Newly expanded prefixes | Validated required-anchor progress |
+| --- | ---: | ---: | ---: | --- |
+| Initial, before correction |300s |1 /1 |2 |B7@64 |
+| Corrected exact continuation |300s |1 /1 |3 |B7@64 |
+| Further exact continuation,30s service slices |120s |0 /0 |0 |B7@64 |
+
+No B20/B22 arrival or full finish was found. The correction backtracks eight
+exhausted nodes instead of repeatedly servicing the original empty node. The
+latest pending candidate is an optional B11 landing at68 inputs inside the
+B7→B20 span. Its constraint generator is unfinished: during the last120s its
+emitted descriptors increased7→48 and duplicate-variant count2,552→55,256, with
+zero new numerical calls. The remaining bottleneck is constraint-alternative
+enumeration/dedup, not a claim that the coupled route is infeasible. The300s
+corrected run overlapped the native gate, so these are not controlled speed
+comparisons. Numerical/scene models and decision domains are unchanged by the
+longer service slice.
+
+The validated B7 solution changed **all55** prefix facings from their seed
+(largest change≈5.923°), demonstrating that the earlier continuous variables
+remained free. Audits of102 retained program objects in each final checkpoint
+confirm the fixed first55 input/contact decisions and selected physical rows,
+with no facing equality rows. This object count includes retained state copies;
+it is not a count of distinct solves or expanded prefixes. The retained B7
+witness independently replays against the full new scene in both continuations.
+
+The [native gate](native-gate-summary.json) passes611 tests with no failures,
+errors or skips; source hashes stayed unchanged and all902 protected evidence/
+fixture files pass layout validation. The narrower regression/control scope
+also passes57 tests. The completed gate keeps its recorded ladder exclusions.
+
+Latest local exact-resume manifest (retain its paired SQLite file):
+
+```text
+runs/real11-long-fixed-b5-resume120-2026-11-15/report.json.gz
+runs/real11-long-fixed-b5-resume120-2026-11-15/report.json.gz.store.sqlite3
+```
+
+Use the ordinary CLI's `--resume` with that manifest and a fresh output path.
+The run used only a timing override (`seconds=120`, `score_seconds=30`); those
+are not physical-domain changes. Root/model/pending-work ownership is preserved.
+
 A fixed prefix restricts which complete routes are discoverable;
 failure of this experiment is not a statement about other earlier decisions.
 The all-six-face catalog is a separate geometry API and is not yet consumed by

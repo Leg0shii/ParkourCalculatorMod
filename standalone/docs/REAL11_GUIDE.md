@@ -1,9 +1,20 @@
 # Linkcraft Real11 opening: agent guide
 
+2026-11-15 longer-course trial: [extended anchor task](../cases/real11/extended-anchors.json)
+uses B7/B20 as additional intermediate anchors and B22 as the finish. The
+[fixed initial-0 prefix experiment](../research/real11-long-solve/README.md)
+starts generation at B5@55 while keeping all earlier facings free. The first
+300s run validated unit B7@64, then exposed an empty constraint-domain retry
+loop. The exact-node correction passes611 native tests; corrected300s+120s
+continuations backtrack the empty nodes and leave an optional B11@68 candidate's
+constraint work pending. No B20/B22 arrival was found. The saved state and prefix/
+replay audits are linked from the experiment. Old extended-B7 results below remain
+separate.
+
 2026-11-15 continuation geometry: [new bounds report](REAL11_EXTENDED_GEOMETRY.md)
 and [input](../cases/real11/extended-geometry.json) add B8–B22, restore unit B7
-and keep B6 unit-sized as finally corrected by the user. This is geometry-only;
-no new terminal task or cold-solve result is inferred. The extended-B7 benchmark
+and keep B6 unit-sized as finally corrected by the user. That file is geometry-only;
+the later task above supplies its explicit goal. The extended-B7 benchmark
 and older wider/missing-B6 caveats below describe their recorded source era.
 
 2026-11-15 initial-domain follow-up: the [maintained case](../cases/real11/physical-anchors.json) now omits the old `[0,8]` filter. The [unrestricted control](../research/initial-domain-selection/README.md) naturally queried0/8 and deferred9–12 before numerical work, reaching T64 with55/55 independent replays. [Configuration audit](INITIAL_DOMAIN_AND_CONFIG_AUDIT.md) distinguishes task inputs, inferred choices and policy constants; older results below retain their recorded domains.

@@ -35,7 +35,12 @@ with `parkour_solver.io.checkpoint_store.read_report`.
 
 [Real11 extension](real11-extension/README.md) is new geometry evidence, separate
 from the frozen relocated bundles: unit B6/B7, supplied continuation and exact
-player-bounds output. It has not undergone a longer-course solve.
+player-bounds output. The later solver trials are recorded separately below.
+
+[Longer Real11 fixed-prefix trials](real11-long-solve/README.md) supply B7/B20
+additional anchors and terminal B22, retain initial-0 decisions through B5@55,
+and keep original-state facings free. They validate B7@64, fix an exhausted-empty
+node retry loop and persist the unfinished B11@68 constraint search for resumption.
 
 For a new experiment use a named topic, a README describing the question,
 `driver.py`, `configs/`, and new `runs/<run-id>/` directories. Local bulky outputs

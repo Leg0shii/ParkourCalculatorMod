@@ -9,10 +9,12 @@ remain separate in [physical-anchors.json](../cases/real11/physical-anchors.json
 ## Input and coordinate conventions
 
 [Extended geometry](../cases/real11/extended-geometry.json) contains the original
-B1–B7 plus the supplied additions. It is a collision-geometry input, **not a
-complete longer solve task**: no new ordered anchors, terminal block/objective
-or longer-run budgets have been selected. Do not silently assume B22 is the goal
-or promote every named box to a mandatory anchor.
+B1–B7 plus the supplied additions. That file remains geometry-only. The later
+user-selected [extended task](../cases/real11/extended-anchors.json) declares
+B2/B3/B4/B5/B7/B20 and terminal B22, minimizing T then maximizing Z. The
+[fixed-B5 experiment](../research/real11-long-solve/README.md) reuses initial-0
+decisions through55 while re-solving earlier facings. Other named boxes remain
+optional supports/obstacles, not automatically mandatory anchors.
 
 - An integer X/Z is a unit block coordinate: X731 occupies physical [731,732].
   An inclusive range of block coordinates 731 through732 contains two cells and

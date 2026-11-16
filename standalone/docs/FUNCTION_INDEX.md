@@ -849,10 +849,10 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 | `policy_spec` | [9](../src/parkour_solver/search/feasibility.py#L9) | function |
 | `node_identity` | [26](../src/parkour_solver/search/feasibility.py#L26) | function |
 | `outcome` | [33](../src/parkour_solver/search/feasibility.py#L33) | function |
-| `meaningful_choice` | [57](../src/parkour_solver/search/feasibility.py#L57) | function |
-| `solve_due` | [64](../src/parkour_solver/search/feasibility.py#L64) | function |
-| `unresolved_only` | [68](../src/parkour_solver/search/feasibility.py#L68) | function |
-| `restore_unknown_nodes` | [74](../src/parkour_solver/search/feasibility.py#L74) | function |
+| `meaningful_choice` | [60](../src/parkour_solver/search/feasibility.py#L60) | function |
+| `solve_due` | [67](../src/parkour_solver/search/feasibility.py#L67) | function |
+| `unresolved_only` | [71](../src/parkour_solver/search/feasibility.py#L71) | function |
+| `restore_unknown_nodes` | [77](../src/parkour_solver/search/feasibility.py#L77) | function |
 
 ## search/frontier.py
 

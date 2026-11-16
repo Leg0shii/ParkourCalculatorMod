@@ -5,14 +5,18 @@ add required B7/B20 and terminal B22. Existing initial-program support fixes
 initial-0 decisions through B5@55 while all earlier facings remain free. The first
 300s trial reached unit B7@64, then exposed an empty-exhausted-constraint outcome
 bug; that exact node now backtracks without a numerical infeasibility claim.
-Pending/interrupted alternatives remain suspended. The corrected continuation
-and broader native validation are in progress.
+Pending/interrupted alternatives remain suspended. The611-test native gate passes
+without skips. Corrected300s+120s exact continuations backtrack eight exhausted
+nodes but have not reached B20/B22; latest work is constraint enumeration for
+an optional B11@68 candidate. Prefix audits preserve all55 decisions, while the
+B7 witness changes all55 earlier facings. Full evidence and latest saved resume
+path are in the experiment README.
 
 2026-11-15 geometry follow-up: [longer Real11 input and bounds](REAL11_EXTENDED_GEOMETRY.md)
 record B8–B22, original unit B6 (latest user correction), unit B7 and the B13 stair.
-This is separate geometry-only preparation; new task anchors, finish and budgets
-are not inferred, and no longer-course numerical solve has run. The existing
-extended-B7 benchmark and its measurements below retain their original input.
+The geometry-only input stays separate from the explicit longer task above.
+The existing extended-B7 benchmark and its measurements below retain their
+original input.
 The [implemented face-merging contract](design/FACE_MERGING_IMPLEMENTATION_PLAN.md) has exactly
 two parts: detect adjacent coplanar faces across all six orientations, and
 represent their exact unions with original block/solid membership for later

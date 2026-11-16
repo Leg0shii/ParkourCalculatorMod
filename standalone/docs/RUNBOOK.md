@@ -63,8 +63,9 @@ From `standalone/` with the environment above:
 "$PKC_IPOPT_PYTHON" -B -m unittest discover -s tests -t .
 ```
 
-The explicit gate preserves the earlier600-test scope and adds10 package/profiler
-checks. Full discovery additionally includes dedicated ladder/climbable/vine
+The explicit gate preserves the earlier600-test module scope and package/profiler
+checks; added regressions increase the total (611 in the latest longer-Real11
+gate). Full discovery additionally includes dedicated ladder/climbable/vine
 capabilities and their recorded baseline; it is a different scope. Native
 variables absent means skips, not native acceptance. See [testing](TESTING.md).
 Use a new gate directory; its report records source hashes, source stability,

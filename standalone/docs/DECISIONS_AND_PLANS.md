@@ -22,8 +22,8 @@ component-specific provenance and the physical/player-coordinate distinction.
 for the newly supplied B8–B22. The final user correction withdraws the proposed
 B6 extension: B6 remains physical X[730,731]. B7 returns to unit size. B9's two
 entries are temporarily named B9a/B9b without renumbering other blocks; B13 is
-a two-box stair. This geometry does not yet select a longer solve's mandatory
-anchors, terminal objective/block or budgets. The existing extended-B7 task and
+a two-box stair. The later explicit longer task above now supplies its mandatory
+anchors and finish; the original geometry-only file remains separate. The existing extended-B7 task and
 all its evidence remain separate; prior missing/wider-B6 notes are historical.
 
 2026-11-15 user deferral: interleaving implementation is paused. The [single preserved solver plan](BRANCH_SCHEDULING_INVESTIGATION.md) retains the confirmed existing tick priority, ordinary versus recovery-only distinction, normalized oracle-outcome proposal, ownership/overhead analysis and open details. It is a scheduling change intended to cover the same ordinary work, except existing exclusions/deferrals may act earlier; it does not add solves merely for switching. Current runtime remains DFS. Work-category/outcome clarifications are recorded but unimplemented, not an instruction to start them automatically.

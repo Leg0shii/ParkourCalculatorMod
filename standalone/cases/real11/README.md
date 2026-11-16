@@ -4,7 +4,8 @@ The new [extended anchor task](extended-anchors.json) uses the supplied longer
 course, original unit B6/B7, B7/B20 additional intermediate anchors and terminal
 B22. The [fixed-B5 experiment](../../research/real11-long-solve/README.md) retains
 the initial-0 movement decisions through B5@55 while re-solving all facings from
-the original B1 state. Its first longer-course run is in progress.
+the original B1 state. The trials validate B7@64; corrected continuations are
+saved with B11@68 constraint work pending, without a B20/B22 finish.
 
 The longer-course [extended geometry](extended-geometry.json) and
 [bounds report](../../docs/REAL11_EXTENDED_GEOMETRY.md) are now recorded separately.

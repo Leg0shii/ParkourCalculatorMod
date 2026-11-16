@@ -172,6 +172,7 @@ control work; inclusion here is not authorization to implement a historical plan
 | [research/orchestrator-fixes/audit/PRUNING_FOLLOWUP.md](../research/orchestrator-fixes/audit/PRUNING_FOLLOWUP.md) | Frozen source-era evidence; use research guide for reproduction: Follow-up: what can actually be pruned |
 | [research/orchestrator-fixes/audit/WORKER_CALLS.md](../research/orchestrator-fixes/audit/WORKER_CALLS.md) | Frozen source-era evidence; use research guide for reproduction: Every cold Real11 worker-call slot |
 | [research/real11-extension/README.md](../research/real11-extension/README.md) | Frozen source-era evidence; use research guide for reproduction: Real11 extension: geometry evidence |
+| [research/real11-long-solve/README.md](../research/real11-long-solve/README.md) | Frozen source-era evidence; use research guide for reproduction: Longer Real11 with fixed initial-0 decisions through B5 |
 | [research/route-guidance/README.md](../research/route-guidance/README.md) | Frozen source-era evidence; use research guide for reproduction: Route-guidance model comparison |
 | [research/route_guidance/README.md](../research/route_guidance/README.md) | Research evidence / prototype; see research guide: Experimental route guidance |
 | [research/runoff-profiles/README.md](../research/runoff-profiles/README.md) | Frozen source-era evidence; use research guide for reproduction: Automatically selected run-off profiles |

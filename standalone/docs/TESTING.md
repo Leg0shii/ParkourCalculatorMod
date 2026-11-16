@@ -1,5 +1,11 @@
 # Tests and fixtures
 
+Latest longer-Real11 correction at `4ace2b8a`: [611 selected native tests](../research/real11-long-solve/native-gate-summary.json)
+pass with no failures/errors/skips and unchanged sources. The added regression
+covers empty exhausted constraint generation, pending-work counterexamples and
+JSON-restored outcomes. The [trial record](../research/real11-long-solve/README.md)
+separates fixed-prefix/replay checks from the unfinished full-course search.
+
 Layout acceptance at `9c79e741`: [610 native-enabled tests](validation/layout-final/report.json), no failures/errors/skips, unchanged source during the run and902 preserved evidence/fixture hashes. This is the exact earlier600-test module scope plus10 package/profiler regressions. The current gate is `python tools/native_gate.py --output /new/path` from `standalone/`; [runbook](RUNBOOK.md) supplies install/environment steps. Shared builders/harnesses are in `tests/support`, with no test→test imports. The [layout guide](LAYOUT.md) explains archive regression data and preserved capabilities.
 
 Current `dd738c98` acceptance: [600 native-enabled tests](../research/hard-jump-comparisons/2026-11-11/native-gate/report.json), no failures/errors/skips and unchanged runtime hashes. [Evidence](../research/hard-jump-comparisons/README.md) also records131 archived-witness prefix-bound checks and80 updated retained-witness scene replays. The [execution reference](ANCHOR_SEARCH_EXECUTION_REFERENCE.md) maps each combination/pruning/query policy to its current module. The frozen feature gate describes its recorded source era; use `tools/native_gate.py` for the maintained equivalent scope plus packaging checks.

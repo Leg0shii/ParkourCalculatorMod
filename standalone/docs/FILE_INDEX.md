@@ -43,7 +43,8 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 
 | File | Bytes |
 | --- | ---: |
-| [cases/real11/README.md](../cases/real11/README.md) | 1913 |
+| [cases/real11/README.md](../cases/real11/README.md) | 2465 |
+| [cases/real11/extended-anchors.json](../cases/real11/extended-anchors.json) | 7004 |
 | [cases/real11/extended-geometry.json](../cases/real11/extended-geometry.json) | 4110 |
 | [cases/real11/physical-anchors.json](../cases/real11/physical-anchors.json) | 3757 |
 
@@ -52,7 +53,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | File | Bytes |
 | --- | ---: |
 | [docs/ANCHOR_IMPLEMENTATION_RESUME.md](ANCHOR_IMPLEMENTATION_RESUME.md) | 4767 |
-| [docs/ANCHOR_SEARCH_EXECUTION_REFERENCE.md](ANCHOR_SEARCH_EXECUTION_REFERENCE.md) | 26719 |
+| [docs/ANCHOR_SEARCH_EXECUTION_REFERENCE.md](ANCHOR_SEARCH_EXECUTION_REFERENCE.md) | 26942 |
 | [docs/ANCHOR_SEARCH_INTEGRATION.md](ANCHOR_SEARCH_INTEGRATION.md) | 10453 |
 | [docs/ARCHITECTURE.md](ARCHITECTURE.md) | 15586 |
 | [docs/BOOKKEEPING_PERFORMANCE_AGENT_HANDOFF.md](BOOKKEEPING_PERFORMANCE_AGENT_HANDOFF.md) | 17258 |
@@ -61,12 +62,12 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/CODE_MAP.md](CODE_MAP.md) | 23926 |
 | [docs/CORRIDOR_AGENT_HANDOFF.md](CORRIDOR_AGENT_HANDOFF.md) | 17543 |
 | [docs/CORRIDOR_IMPLEMENTATION_RESUME.md](CORRIDOR_IMPLEMENTATION_RESUME.md) | 15728 |
-| [docs/CURRENT_STATE.md](CURRENT_STATE.md) | 11162 |
-| [docs/DECISIONS_AND_PLANS.md](DECISIONS_AND_PLANS.md) | 27722 |
-| [docs/DEFERRED_WORK.md](DEFERRED_WORK.md) | 19040 |
+| [docs/CURRENT_STATE.md](CURRENT_STATE.md) | 11956 |
+| [docs/DECISIONS_AND_PLANS.md](DECISIONS_AND_PLANS.md) | 28335 |
+| [docs/DEFERRED_WORK.md](DEFERRED_WORK.md) | 19029 |
 | [docs/DEVELOPMENT.md](DEVELOPMENT.md) | 11551 |
-| [docs/DOC_INDEX.md](DOC_INDEX.md) | 33691 |
-| [docs/FILE_INDEX.md](FILE_INDEX.md) | 170171 |
+| [docs/DOC_INDEX.md](DOC_INDEX.md) | 33898 |
+| [docs/FILE_INDEX.md](FILE_INDEX.md) | 170947 |
 | [docs/FUNCTION_INDEX.md](FUNCTION_INDEX.md) | 66459 |
 | [docs/HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md](HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md) | 66291 |
 | [docs/INITIAL_DOMAIN_AND_CONFIG_AUDIT.md](INITIAL_DOMAIN_AND_CONFIG_AUDIT.md) | 5889 |
@@ -75,14 +76,14 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/LAYOUT.md](LAYOUT.md) | 5275 |
 | [docs/MOD_REFERENCES.md](MOD_REFERENCES.md) | 5109 |
 | [docs/README.md](README.md) | 3106 |
-| [docs/REAL11_EXTENDED_GEOMETRY.md](REAL11_EXTENDED_GEOMETRY.md) | 12081 |
-| [docs/REAL11_GUIDE.md](REAL11_GUIDE.md) | 21982 |
+| [docs/REAL11_EXTENDED_GEOMETRY.md](REAL11_EXTENDED_GEOMETRY.md) | 12248 |
+| [docs/REAL11_GUIDE.md](REAL11_GUIDE.md) | 22713 |
 | [docs/RESULTS_AND_DEBUGGING.md](RESULTS_AND_DEBUGGING.md) | 11248 |
-| [docs/RUNBOOK.md](RUNBOOK.md) | 9328 |
+| [docs/RUNBOOK.md](RUNBOOK.md) | 10438 |
 | [docs/SOLVER_BRANCH_INTEGRATION_REVIEW.md](SOLVER_BRANCH_INTEGRATION_REVIEW.md) | 11279 |
 | [docs/STANDALONE_REFACTOR_IMPLEMENTATION.md](STANDALONE_REFACTOR_IMPLEMENTATION.md) | 4239 |
 | [docs/STANDALONE_STRUCTURE_REVIEW.md](STANDALONE_STRUCTURE_REVIEW.md) | 23061 |
-| [docs/TESTING.md](TESTING.md) | 16519 |
+| [docs/TESTING.md](TESTING.md) | 16970 |
 | [docs/design/ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md](design/ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md) | 47589 |
 | [docs/design/ANCHOR_POLICY_DECISIONS.md](design/ANCHOR_POLICY_DECISIONS.md) | 27139 |
 | [docs/design/BLOCK_ROUTE_SEARCH.md](design/BLOCK_ROUTE_SEARCH.md) | 14357 |
@@ -202,7 +203,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 
 | File | Bytes |
 | --- | ---: |
-| [research/README.md](../research/README.md) | 2911 |
+| [research/README.md](../research/README.md) | 3247 |
 | [research/__init__.py](../research/__init__.py) | 65 |
 | [research/anchor-candidate-audit/.gitignore](../research/anchor-candidate-audit/.gitignore) | 109 |
 | [research/anchor-candidate-audit/README.md](../research/anchor-candidate-audit/README.md) | 10897 |
@@ -997,6 +998,12 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [research/real11-extension/face-detection-plan-probe.json](../research/real11-extension/face-detection-plan-probe.json) | 3968 |
 | [research/real11-extension/player-bounds.json](../research/real11-extension/player-bounds.json) | 32629 |
 | [research/real11-extension/profile-dedup-audit.json](../research/real11-extension/profile-dedup-audit.json) | 1894 |
+| [research/real11-long-solve/README.md](../research/real11-long-solve/README.md) | 6571 |
+| [research/real11-long-solve/corrected-runs-summary.json](../research/real11-long-solve/corrected-runs-summary.json) | 4279 |
+| [research/real11-long-solve/first300-summary.json](../research/real11-long-solve/first300-summary.json) | 1398 |
+| [research/real11-long-solve/initial0-fixed-b5.json](../research/real11-long-solve/initial0-fixed-b5.json) | 51145 |
+| [research/real11-long-solve/native-gate-summary.json](../research/real11-long-solve/native-gate-summary.json) | 3957 |
+| [research/real11-long-solve/prefix-validation.json](../research/real11-long-solve/prefix-validation.json) | 577 |
 | [research/route-guidance/README.md](../research/route-guidance/README.md) | 14776 |
 | [research/route-guidance/evidence/aggregate.json](../research/route-guidance/evidence/aggregate.json) | 19135 |
 | [research/route-guidance/evidence/conditional-rankings.svg](../research/route-guidance/evidence/conditional-rankings.svg) | 76070 |
@@ -1196,7 +1203,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [src/parkour_solver/search/events/__init__.py](../src/parkour_solver/search/events/__init__.py) | 0 |
 | [src/parkour_solver/search/events/adapter.py](../src/parkour_solver/search/events/adapter.py) | 11632 |
 | [src/parkour_solver/search/events/engine.py](../src/parkour_solver/search/events/engine.py) | 13327 |
-| [src/parkour_solver/search/feasibility.py](../src/parkour_solver/search/feasibility.py) | 3779 |
+| [src/parkour_solver/search/feasibility.py](../src/parkour_solver/search/feasibility.py) | 3937 |
 | [src/parkour_solver/search/frontier.py](../src/parkour_solver/search/frontier.py) | 14104 |
 | [src/parkour_solver/search/goals.py](../src/parkour_solver/search/goals.py) | 10181 |
 | [src/parkour_solver/search/identity.py](../src/parkour_solver/search/identity.py) | 4473 |
@@ -1378,7 +1385,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [tests/unit/reachability/test_screen.py](../tests/unit/reachability/test_screen.py) | 3941 |
 | [tests/unit/search/__init__.py](../tests/unit/search/__init__.py) | 0 |
 | [tests/unit/search/test_anchor_dfs.py](../tests/unit/search/test_anchor_dfs.py) | 16603 |
-| [tests/unit/search/test_anchor_policy.py](../tests/unit/search/test_anchor_policy.py) | 14712 |
+| [tests/unit/search/test_anchor_policy.py](../tests/unit/search/test_anchor_policy.py) | 16094 |
 | [tests/unit/search/test_anchor_search.py](../tests/unit/search/test_anchor_search.py) | 11212 |
 | [tests/unit/search/test_anchor_time_bound.py](../tests/unit/search/test_anchor_time_bound.py) | 1919 |
 | [tests/unit/search/test_block_search.py](../tests/unit/search/test_block_search.py) | 16987 |
