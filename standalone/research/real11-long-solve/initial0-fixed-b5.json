@@ -1,0 +1,2263 @@
+{
+  "request": {
+    "version": 1,
+    "sceneModel": "collision_boxes",
+    "geometryBounds": [
+      726,
+      -200,
+      -1108,
+      749,
+      24,
+      -1085
+    ],
+    "initial": {
+      "position": [
+        746.5,
+        5,
+        -1104.5
+      ],
+      "velocity": [
+        0,
+        -0.0784000015258789,
+        0
+      ],
+      "yaw": 0
+    },
+    "startBlock": "b1",
+    "goalBlock": "b22",
+    "blocks": [
+      {
+        "id": "b1",
+        "boxes": [
+          [
+            742,
+            0,
+            -1105,
+            747,
+            5,
+            -1103
+          ]
+        ]
+      },
+      {
+        "id": "b2",
+        "boxes": [
+          [
+            741,
+            0,
+            -1104,
+            742,
+            6,
+            -1103
+          ]
+        ]
+      },
+      {
+        "id": "b3",
+        "boxes": [
+          [
+            738,
+            0,
+            -1101,
+            739,
+            7,
+            -1100
+          ]
+        ]
+      },
+      {
+        "id": "b4",
+        "boxes": [
+          [
+            734,
+            0,
+            -1100,
+            735,
+            7.5,
+            -1099
+          ]
+        ]
+      },
+      {
+        "id": "b5",
+        "boxes": [
+          [
+            730,
+            0,
+            -1096,
+            731,
+            6,
+            -1095
+          ]
+        ]
+      },
+      {
+        "id": "b6",
+        "boxes": [
+          [
+            730,
+            0,
+            -1095,
+            731,
+            20,
+            -1094
+          ]
+        ]
+      },
+      {
+        "id": "b7",
+        "boxes": [
+          [
+            729,
+            0,
+            -1095,
+            730,
+            7,
+            -1094
+          ]
+        ]
+      },
+      {
+        "id": "b8",
+        "boxes": [
+          [
+            730,
+            8.5,
+            -1094,
+            731,
+            11,
+            -1093
+          ]
+        ]
+      },
+      {
+        "id": "b9a",
+        "boxes": [
+          [
+            730,
+            9,
+            -1093,
+            731,
+            10.5,
+            -1092
+          ]
+        ]
+      },
+      {
+        "id": "b9b",
+        "boxes": [
+          [
+            730,
+            9,
+            -1092,
+            731,
+            9.5,
+            -1091
+          ]
+        ]
+      },
+      {
+        "id": "b10",
+        "boxes": [
+          [
+            730,
+            9,
+            -1091,
+            731,
+            10,
+            -1090
+          ]
+        ]
+      },
+      {
+        "id": "b11",
+        "boxes": [
+          [
+            730,
+            6,
+            -1094,
+            731,
+            6.5,
+            -1092
+          ]
+        ]
+      },
+      {
+        "id": "b12",
+        "boxes": [
+          [
+            730,
+            5,
+            -1092,
+            731,
+            6,
+            -1091
+          ]
+        ]
+      },
+      {
+        "id": "b13",
+        "boxes": [
+          [
+            730,
+            6,
+            -1091,
+            731,
+            6.5,
+            -1090.5
+          ],
+          [
+            730,
+            6,
+            -1090.5,
+            731,
+            7,
+            -1090
+          ]
+        ]
+      },
+      {
+        "id": "b14",
+        "boxes": [
+          [
+            730,
+            1,
+            -1090,
+            731,
+            21,
+            -1089
+          ]
+        ]
+      },
+      {
+        "id": "b15",
+        "boxes": [
+          [
+            731,
+            10,
+            -1090,
+            733,
+            11,
+            -1089
+          ]
+        ]
+      },
+      {
+        "id": "b16",
+        "boxes": [
+          [
+            733,
+            10.8125,
+            -1089,
+            734,
+            11,
+            -1088
+          ]
+        ]
+      },
+      {
+        "id": "b17",
+        "boxes": [
+          [
+            733,
+            10.5,
+            -1090,
+            734,
+            14,
+            -1089
+          ]
+        ]
+      },
+      {
+        "id": "b18",
+        "boxes": [
+          [
+            731,
+            6.5,
+            -1090,
+            732,
+            7,
+            -1089
+          ]
+        ]
+      },
+      {
+        "id": "b19",
+        "boxes": [
+          [
+            732,
+            6.5,
+            -1090,
+            733,
+            7.5,
+            -1089
+          ]
+        ]
+      },
+      {
+        "id": "b20",
+        "boxes": [
+          [
+            733,
+            7.5,
+            -1090,
+            734,
+            8,
+            -1088
+          ]
+        ]
+      },
+      {
+        "id": "b21",
+        "boxes": [
+          [
+            732.875,
+            11,
+            -1093,
+            734,
+            12,
+            -1092
+          ]
+        ]
+      },
+      {
+        "id": "b22",
+        "boxes": [
+          [
+            731,
+            8.5,
+            -1095,
+            734,
+            9,
+            -1094
+          ]
+        ]
+      }
+    ],
+    "inputs": {
+      "force45": true,
+      "sprint": true,
+      "incomingSprint": false
+    },
+    "objective": {
+      "axis": "Z",
+      "sense": "MAX"
+    },
+    "maxWallHits": 0,
+    "maxContactCombinations": 0,
+    "maxContactBranches": 32,
+    "maxPassageCandidates": 128,
+    "maxRunTicksPerJump": 64,
+    "maxTotalRunTicks": 64,
+    "movementSearch": {
+      "types": [
+        "normal",
+        "ceiling",
+        "stepping"
+      ],
+      "maxInputs": 200,
+      "maxPrefixes": 2048,
+      "maxQueuedPrefixes": 384,
+      "maxChoicesPerType": 16
+    }
+  },
+  "settings": {
+    "seconds": 300,
+    "candidate_seconds": 2,
+    "score_seconds": 8,
+    "max_solver_calls": 1024,
+    "max_candidates": 20,
+    "beam_width": 8,
+    "unknown_slots": 1,
+    "score_call_limit": 6,
+    "final_call_limit": 24,
+    "fair_parents": true,
+    "spatial_seconds": 5,
+    "spatial_calls": 6,
+    "spatial_candidates": 4,
+    "spatial_prefixes": 128,
+    "objective_gap": 0.25,
+    "initial_programs": [
+      {
+        "initial": {
+          "position": 5,
+          "velocity": -0.0784000015258789,
+          "onGround": true,
+          "previousHorizontalCollision": false
+        },
+        "profile": {
+          "airtime": 55,
+          "position": [
+            5,
+            5.419999986886978,
+            5.7531999805212015,
+            6.001335979112147,
+            6.166109260938214,
+            6.249187078744681,
+            6.252203340253724,
+            6.176759275064237,
+            6.02442408821368,
+            5.796735600668692,
+            5.495200877005911,
+            5.121296840539189,
+            5,
+            5.419999986886978,
+            5.7531999805212015,
+            6.001335979112147,
+            6.166109260938214,
+            6.249187078744681,
+            6.252203340253724,
+            6.176759275064237,
+            6.02442408821368,
+            6,
+            6.419999986886978,
+            6.7531999805212015,
+            7.001335979112147,
+            7.166109260938214,
+            7.249187078744681,
+            7.252203340253724,
+            7.176759275064237,
+            7.02442408821368,
+            7,
+            7.419999986886978,
+            7.7531999805212015,
+            8.001335979112147,
+            8.166109260938214,
+            8.249187078744681,
+            8.252203340253724,
+            8.176759275064237,
+            8.02442408821368,
+            7.796735600668692,
+            7.5,
+            7.919999986886978,
+            8.253199980521202,
+            8.501335979112149,
+            8.666109260938216,
+            8.749187078744683,
+            8.752203340253725,
+            8.676759275064239,
+            8.524424088213681,
+            8.296735600668693,
+            7.995200877005913,
+            7.621296840539191,
+            7.176470876144271,
+            6.6621414210269885,
+            6.079698543676117,
+            6
+          ],
+          "velocity": [
+            -0.0784000015258789,
+            0.33319999363422365,
+            0.24813599859094576,
+            0.16477328182606651,
+            0.08307781780646721,
+            0.0030162615090425808,
+            -0.07544406518948656,
+            -0.15233518685055708,
+            -0.22768848754498797,
+            -0.30153472366278034,
+            -0.3739040364667221,
+            -0.4448259643949201,
+            -0.0784000015258789,
+            0.33319999363422365,
+            0.24813599859094576,
+            0.16477328182606651,
+            0.08307781780646721,
+            0.0030162615090425808,
+            -0.07544406518948656,
+            -0.15233518685055708,
+            -0.22768848754498797,
+            -0.0784000015258789,
+            0.33319999363422365,
+            0.24813599859094576,
+            0.16477328182606651,
+            0.08307781780646721,
+            0.0030162615090425808,
+            -0.07544406518948656,
+            -0.15233518685055708,
+            -0.22768848754498797,
+            -0.0784000015258789,
+            0.33319999363422365,
+            0.24813599859094576,
+            0.16477328182606651,
+            0.08307781780646721,
+            0.0030162615090425808,
+            -0.07544406518948656,
+            -0.15233518685055708,
+            -0.22768848754498797,
+            -0.30153472366278034,
+            -0.0784000015258789,
+            0.33319999363422365,
+            0.24813599859094576,
+            0.16477328182606651,
+            0.08307781780646721,
+            0.0030162615090425808,
+            -0.07544406518948656,
+            -0.15233518685055708,
+            -0.22768848754498797,
+            -0.30153472366278034,
+            -0.3739040364667221,
+            -0.4448259643949201,
+            -0.5143294551172826,
+            -0.5824428773508716,
+            -0.6491940324389494,
+            -0.0784000015258789
+          ],
+          "grounded": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true
+          ],
+          "jump": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "sneak": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "ladderTicks": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "contacts": [
+            {
+              "state": 12,
+              "direction": -1,
+              "plane": 5
+            },
+            {
+              "state": 21,
+              "direction": -1,
+              "plane": 6
+            },
+            {
+              "state": 30,
+              "direction": -1,
+              "plane": 7
+            },
+            {
+              "state": 40,
+              "direction": -1,
+              "plane": 7.5
+            },
+            {
+              "state": 55,
+              "direction": -1,
+              "plane": 6
+            }
+          ],
+          "contactEvents": [
+            {
+              "leg": 0,
+              "offset": 11,
+              "axis": "Y",
+              "direction": -1,
+              "plane": 5,
+              "box": [
+                742,
+                0,
+                -1105,
+                747,
+                5,
+                -1103
+              ],
+              "role": "landing"
+            },
+            {
+              "leg": 0,
+              "offset": 20,
+              "axis": "Y",
+              "direction": -1,
+              "plane": 6,
+              "box": [
+                741,
+                0,
+                -1104,
+                742,
+                6,
+                -1103
+              ],
+              "role": "landing"
+            },
+            {
+              "leg": 0,
+              "offset": 29,
+              "axis": "Y",
+              "direction": -1,
+              "plane": 7,
+              "box": [
+                738,
+                0,
+                -1101,
+                739,
+                7,
+                -1100
+              ],
+              "role": "landing"
+            },
+            {
+              "leg": 0,
+              "offset": 39,
+              "axis": "Y",
+              "direction": -1,
+              "plane": 7.5,
+              "box": [
+                734,
+                0,
+                -1100,
+                735,
+                7.5,
+                -1099
+              ],
+              "role": "landing"
+            },
+            {
+              "leg": 0,
+              "offset": 54,
+              "axis": "Y",
+              "direction": -1,
+              "plane": 6,
+              "box": [
+                730,
+                0,
+                -1096,
+                731,
+                6,
+                -1095
+              ],
+              "role": "landing"
+            }
+          ],
+          "caseEvents": [],
+          "positionConstraints": [
+            {
+              "mode": "X",
+              "t1": 11,
+              "cmp": "GE",
+              "rhs": 741.7000009880791,
+              "name": "normal:landing"
+            },
+            {
+              "mode": "X",
+              "t1": 11,
+              "cmp": "LE",
+              "rhs": 747.2999990119209,
+              "name": "normal:landing"
+            },
+            {
+              "mode": "Z",
+              "t1": 11,
+              "cmp": "GE",
+              "rhs": -1105.2999990119208,
+              "name": "normal:landing"
+            },
+            {
+              "mode": "Z",
+              "t1": 11,
+              "cmp": "LE",
+              "rhs": -1102.7000009880792,
+              "name": "normal:landing"
+            },
+            {
+              "mode": "X",
+              "t1": 0,
+              "cmp": "GE",
+              "rhs": 741.7000009880793,
+              "name": "initial:0:X:lo"
+            },
+            {
+              "mode": "X",
+              "t1": 0,
+              "cmp": "LE",
+              "rhs": 747.2999990119207,
+              "name": "initial:0:X:hi"
+            },
+            {
+              "mode": "Z",
+              "t1": 0,
+              "cmp": "GE",
+              "rhs": -1105.2999990119204,
+              "name": "initial:0:Z:lo"
+            },
+            {
+              "mode": "Z",
+              "t1": 0,
+              "cmp": "LE",
+              "rhs": -1102.7000009880796,
+              "name": "initial:0:Z:hi"
+            },
+            {
+              "mode": "X",
+              "t1": 11,
+              "cmp": "GE",
+              "rhs": 741.7000009880791,
+              "name": "contact:finite_lo"
+            },
+            {
+              "mode": "X",
+              "t1": 11,
+              "cmp": "LE",
+              "rhs": 747.2999990119209,
+              "name": "contact:finite_hi"
+            },
+            {
+              "mode": "Z",
+              "t1": 11,
+              "cmp": "GE",
+              "rhs": -1105.2999990119208,
+              "name": "contact:finite_lo"
+            },
+            {
+              "mode": "Z",
+              "t1": 11,
+              "cmp": "LE",
+              "rhs": -1102.7000009880792,
+              "name": "contact:finite_hi"
+            },
+            {
+              "mode": "X",
+              "t1": 20,
+              "cmp": "GE",
+              "rhs": 740.7000009880791,
+              "name": "normal:landing"
+            },
+            {
+              "mode": "X",
+              "t1": 20,
+              "cmp": "LE",
+              "rhs": 742.2999990119209,
+              "name": "normal:landing"
+            },
+            {
+              "mode": "Z",
+              "t1": 20,
+              "cmp": "GE",
+              "rhs": -1104.2999990119208,
+              "name": "normal:landing"
+            },
+            {
+              "mode": "Z",
+              "t1": 20,
+              "cmp": "LE",
+              "rhs": -1102.7000009880792,
+              "name": "normal:landing"
+            },
+            {
+              "mode": "X",
+              "t1": 20,
+              "cmp": "GE",
+              "rhs": 740.7000009880793,
+              "name": "landing:1:X:lo"
+            },
+            {
+              "mode": "X",
+              "t1": 20,
+              "cmp": "LE",
+              "rhs": 742.2999990119207,
+              "name": "landing:1:X:hi"
+            },
+            {
+              "mode": "Z",
+              "t1": 20,
+              "cmp": "GE",
+              "rhs": -1104.2999990119204,
+              "name": "landing:1:Z:lo"
+            },
+            {
+              "mode": "Z",
+              "t1": 20,
+              "cmp": "LE",
+              "rhs": -1102.7000009880796,
+              "name": "landing:1:Z:hi"
+            },
+            {
+              "mode": "X",
+              "t1": 20,
+              "cmp": "GE",
+              "rhs": 740.7000009880791,
+              "name": "contact:finite_lo"
+            },
+            {
+              "mode": "X",
+              "t1": 20,
+              "cmp": "LE",
+              "rhs": 742.2999990119209,
+              "name": "contact:finite_hi"
+            },
+            {
+              "mode": "Z",
+              "t1": 20,
+              "cmp": "GE",
+              "rhs": -1104.2999990119208,
+              "name": "contact:finite_lo"
+            },
+            {
+              "mode": "Z",
+              "t1": 20,
+              "cmp": "LE",
+              "rhs": -1102.7000009880792,
+              "name": "contact:finite_hi"
+            },
+            {
+              "mode": "X",
+              "t1": 29,
+              "cmp": "GE",
+              "rhs": 737.7000009880791,
+              "name": "normal:landing"
+            },
+            {
+              "mode": "X",
+              "t1": 29,
+              "cmp": "LE",
+              "rhs": 739.2999990119209,
+              "name": "normal:landing"
+            },
+            {
+              "mode": "Z",
+              "t1": 29,
+              "cmp": "GE",
+              "rhs": -1101.2999990119208,
+              "name": "normal:landing"
+            },
+            {
+              "mode": "Z",
+              "t1": 29,
+              "cmp": "LE",
+              "rhs": -1099.7000009880792,
+              "name": "normal:landing"
+            },
+            {
+              "mode": "X",
+              "t1": 29,
+              "cmp": "GE",
+              "rhs": 737.7000009880793,
+              "name": "landing:1:X:lo"
+            },
+            {
+              "mode": "X",
+              "t1": 29,
+              "cmp": "LE",
+              "rhs": 739.2999990119207,
+              "name": "landing:1:X:hi"
+            },
+            {
+              "mode": "Z",
+              "t1": 29,
+              "cmp": "GE",
+              "rhs": -1101.2999990119204,
+              "name": "landing:1:Z:lo"
+            },
+            {
+              "mode": "Z",
+              "t1": 29,
+              "cmp": "LE",
+              "rhs": -1099.7000009880796,
+              "name": "landing:1:Z:hi"
+            },
+            {
+              "mode": "X",
+              "t1": 29,
+              "cmp": "GE",
+              "rhs": 737.7000009880791,
+              "name": "contact:finite_lo"
+            },
+            {
+              "mode": "X",
+              "t1": 29,
+              "cmp": "LE",
+              "rhs": 739.2999990119209,
+              "name": "contact:finite_hi"
+            },
+            {
+              "mode": "Z",
+              "t1": 29,
+              "cmp": "GE",
+              "rhs": -1101.2999990119208,
+              "name": "contact:finite_lo"
+            },
+            {
+              "mode": "Z",
+              "t1": 29,
+              "cmp": "LE",
+              "rhs": -1099.7000009880792,
+              "name": "contact:finite_hi"
+            },
+            {
+              "mode": "X",
+              "t1": 39,
+              "cmp": "GE",
+              "rhs": 733.7000009880791,
+              "name": "normal:landing"
+            },
+            {
+              "mode": "X",
+              "t1": 39,
+              "cmp": "LE",
+              "rhs": 735.2999990119209,
+              "name": "normal:landing"
+            },
+            {
+              "mode": "Z",
+              "t1": 39,
+              "cmp": "GE",
+              "rhs": -1100.2999990119208,
+              "name": "normal:landing"
+            },
+            {
+              "mode": "Z",
+              "t1": 39,
+              "cmp": "LE",
+              "rhs": -1098.7000009880792,
+              "name": "normal:landing"
+            },
+            {
+              "mode": "X",
+              "t1": 39,
+              "cmp": "GE",
+              "rhs": 733.7000009880793,
+              "name": "landing:1:X:lo"
+            },
+            {
+              "mode": "X",
+              "t1": 39,
+              "cmp": "LE",
+              "rhs": 735.2999990119207,
+              "name": "landing:1:X:hi"
+            },
+            {
+              "mode": "Z",
+              "t1": 39,
+              "cmp": "GE",
+              "rhs": -1100.2999990119204,
+              "name": "landing:1:Z:lo"
+            },
+            {
+              "mode": "Z",
+              "t1": 39,
+              "cmp": "LE",
+              "rhs": -1098.7000009880796,
+              "name": "landing:1:Z:hi"
+            },
+            {
+              "mode": "X",
+              "t1": 39,
+              "cmp": "GE",
+              "rhs": 733.7000009880791,
+              "name": "contact:finite_lo"
+            },
+            {
+              "mode": "X",
+              "t1": 39,
+              "cmp": "LE",
+              "rhs": 735.2999990119209,
+              "name": "contact:finite_hi"
+            },
+            {
+              "mode": "Z",
+              "t1": 39,
+              "cmp": "GE",
+              "rhs": -1100.2999990119208,
+              "name": "contact:finite_lo"
+            },
+            {
+              "mode": "Z",
+              "t1": 39,
+              "cmp": "LE",
+              "rhs": -1098.7000009880792,
+              "name": "contact:finite_hi"
+            },
+            {
+              "mode": "X",
+              "t1": 54,
+              "cmp": "GE",
+              "rhs": 729.7000009880791,
+              "name": "normal:landing"
+            },
+            {
+              "mode": "X",
+              "t1": 54,
+              "cmp": "LE",
+              "rhs": 731.2999990119209,
+              "name": "normal:landing"
+            },
+            {
+              "mode": "Z",
+              "t1": 54,
+              "cmp": "GE",
+              "rhs": -1096.2999990119208,
+              "name": "normal:landing"
+            },
+            {
+              "mode": "Z",
+              "t1": 54,
+              "cmp": "LE",
+              "rhs": -1094.7000009880792,
+              "name": "normal:landing"
+            },
+            {
+              "mode": "X",
+              "t1": 54,
+              "cmp": "GE",
+              "rhs": 729.7000009880793,
+              "name": "landing:1:X:lo"
+            },
+            {
+              "mode": "X",
+              "t1": 54,
+              "cmp": "LE",
+              "rhs": 731.2999990119207,
+              "name": "landing:1:X:hi"
+            },
+            {
+              "mode": "Z",
+              "t1": 54,
+              "cmp": "GE",
+              "rhs": -1096.2999990119204,
+              "name": "landing:1:Z:lo"
+            },
+            {
+              "mode": "Z",
+              "t1": 54,
+              "cmp": "LE",
+              "rhs": -1094.7000009880796,
+              "name": "landing:1:Z:hi"
+            },
+            {
+              "mode": "X",
+              "t1": 54,
+              "cmp": "GE",
+              "rhs": 729.6999999880791,
+              "name": "event:required_contact_region"
+            },
+            {
+              "mode": "X",
+              "t1": 54,
+              "cmp": "LE",
+              "rhs": 731.3000000119209,
+              "name": "event:required_contact_region"
+            },
+            {
+              "mode": "Z",
+              "t1": 54,
+              "cmp": "GE",
+              "rhs": -1096.300000011921,
+              "name": "event:required_contact_region"
+            },
+            {
+              "mode": "Z",
+              "t1": 54,
+              "cmp": "LE",
+              "rhs": -1095.300000011921,
+              "name": "event:required_contact_region"
+            },
+            {
+              "mode": "Z",
+              "t1": 53,
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "blockage:5"
+            },
+            {
+              "mode": "Z",
+              "t1": 54,
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "blockage:5"
+            },
+            {
+              "mode": "Z",
+              "t1": 55,
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "blockage:5"
+            },
+            {
+              "mode": "X",
+              "t1": 54,
+              "cmp": "GE",
+              "rhs": 729.7000009880791,
+              "name": "contact:finite_lo"
+            },
+            {
+              "mode": "X",
+              "t1": 54,
+              "cmp": "LE",
+              "rhs": 731.2999990119209,
+              "name": "contact:finite_hi"
+            },
+            {
+              "mode": "Z",
+              "t1": 54,
+              "cmp": "GE",
+              "rhs": -1096.2999990119208,
+              "name": "contact:finite_lo"
+            },
+            {
+              "mode": "Z",
+              "t1": 54,
+              "cmp": "LE",
+              "rhs": -1094.7000009880792,
+              "name": "contact:finite_hi"
+            }
+          ],
+          "landingPhase": "pre",
+          "composition": "movement_program",
+          "generatedUnits": [
+            {
+              "type": "normal",
+              "start": 0,
+              "end": 12,
+              "jumpInputs": [
+                0
+              ],
+              "groundedInputs": [
+                0
+              ],
+              "sneakInputs": []
+            },
+            {
+              "type": "normal",
+              "start": 12,
+              "end": 21,
+              "jumpInputs": [
+                12
+              ],
+              "groundedInputs": [
+                12
+              ],
+              "sneakInputs": []
+            },
+            {
+              "type": "normal",
+              "start": 21,
+              "end": 30,
+              "jumpInputs": [
+                21
+              ],
+              "groundedInputs": [
+                21
+              ],
+              "sneakInputs": []
+            },
+            {
+              "type": "normal",
+              "start": 30,
+              "end": 40,
+              "jumpInputs": [
+                30
+              ],
+              "groundedInputs": [
+                30
+              ],
+              "sneakInputs": []
+            },
+            {
+              "type": "normal",
+              "start": 40,
+              "end": 55,
+              "jumpInputs": [
+                40
+              ],
+              "groundedInputs": [
+                40
+              ],
+              "sneakInputs": []
+            }
+          ],
+          "threshold": 0.0,
+          "constraintOwners": [
+            12,
+            12,
+            12,
+            12,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            21,
+            21,
+            21,
+            21,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            30,
+            30,
+            30,
+            30,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            40,
+            40,
+            40,
+            40,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            55,
+            55,
+            55,
+            55,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "ladderEvents": [],
+        "movementUnits": [
+          {
+            "type": "normal",
+            "start": 0,
+            "end": 12,
+            "jumpInputs": [
+              0
+            ],
+            "groundedInputs": [
+              0
+            ],
+            "sneakInputs": []
+          },
+          {
+            "type": "normal",
+            "start": 12,
+            "end": 21,
+            "jumpInputs": [
+              12
+            ],
+            "groundedInputs": [
+              12
+            ],
+            "sneakInputs": []
+          },
+          {
+            "type": "normal",
+            "start": 21,
+            "end": 30,
+            "jumpInputs": [
+              21
+            ],
+            "groundedInputs": [
+              21
+            ],
+            "sneakInputs": []
+          },
+          {
+            "type": "normal",
+            "start": 30,
+            "end": 40,
+            "jumpInputs": [
+              30
+            ],
+            "groundedInputs": [
+              30
+            ],
+            "sneakInputs": []
+          },
+          {
+            "type": "normal",
+            "start": 40,
+            "end": 55,
+            "jumpInputs": [
+              40
+            ],
+            "groundedInputs": [
+              40
+            ],
+            "sneakInputs": []
+          }
+        ],
+        "terminal": "landed",
+        "terminalSupport": "b5",
+        "interactions": 0,
+        "trace": {
+          "status": "landed",
+          "ticks": 55,
+          "position": [
+            5,
+            5.419999986886978,
+            5.7531999805212015,
+            6.001335979112147,
+            6.166109260938214,
+            6.249187078744681,
+            6.252203340253724,
+            6.176759275064237,
+            6.02442408821368,
+            5.796735600668692,
+            5.495200877005911,
+            5.121296840539189,
+            5,
+            5.419999986886978,
+            5.7531999805212015,
+            6.001335979112147,
+            6.166109260938214,
+            6.249187078744681,
+            6.252203340253724,
+            6.176759275064237,
+            6.02442408821368,
+            6,
+            6.419999986886978,
+            6.7531999805212015,
+            7.001335979112147,
+            7.166109260938214,
+            7.249187078744681,
+            7.252203340253724,
+            7.176759275064237,
+            7.02442408821368,
+            7,
+            7.419999986886978,
+            7.7531999805212015,
+            8.001335979112147,
+            8.166109260938214,
+            8.249187078744681,
+            8.252203340253724,
+            8.176759275064237,
+            8.02442408821368,
+            7.796735600668692,
+            7.5,
+            7.919999986886978,
+            8.253199980521202,
+            8.501335979112149,
+            8.666109260938216,
+            8.749187078744683,
+            8.752203340253725,
+            8.676759275064239,
+            8.524424088213681,
+            8.296735600668693,
+            7.995200877005913,
+            7.621296840539191,
+            7.176470876144271,
+            6.6621414210269885,
+            6.079698543676117,
+            6
+          ],
+          "velocity": [
+            -0.0784000015258789,
+            0.33319999363422365,
+            0.24813599859094576,
+            0.16477328182606651,
+            0.08307781780646721,
+            0.0030162615090425808,
+            -0.07544406518948656,
+            -0.15233518685055708,
+            -0.22768848754498797,
+            -0.30153472366278034,
+            -0.3739040364667221,
+            -0.4448259643949201,
+            -0.0784000015258789,
+            0.33319999363422365,
+            0.24813599859094576,
+            0.16477328182606651,
+            0.08307781780646721,
+            0.0030162615090425808,
+            -0.07544406518948656,
+            -0.15233518685055708,
+            -0.22768848754498797,
+            -0.0784000015258789,
+            0.33319999363422365,
+            0.24813599859094576,
+            0.16477328182606651,
+            0.08307781780646721,
+            0.0030162615090425808,
+            -0.07544406518948656,
+            -0.15233518685055708,
+            -0.22768848754498797,
+            -0.0784000015258789,
+            0.33319999363422365,
+            0.24813599859094576,
+            0.16477328182606651,
+            0.08307781780646721,
+            0.0030162615090425808,
+            -0.07544406518948656,
+            -0.15233518685055708,
+            -0.22768848754498797,
+            -0.30153472366278034,
+            -0.0784000015258789,
+            0.33319999363422365,
+            0.24813599859094576,
+            0.16477328182606651,
+            0.08307781780646721,
+            0.0030162615090425808,
+            -0.07544406518948656,
+            -0.15233518685055708,
+            -0.22768848754498797,
+            -0.30153472366278034,
+            -0.3739040364667221,
+            -0.4448259643949201,
+            -0.5143294551172826,
+            -0.5824428773508716,
+            -0.6491940324389494,
+            -0.0784000015258789
+          ],
+          "onGround": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true
+          ],
+          "movement": [
+            0.41999998688697815,
+            0.33319999363422365,
+            0.24813599859094576,
+            0.16477328182606651,
+            0.08307781780646721,
+            0.0030162615090425808,
+            -0.07544406518948656,
+            -0.15233518685055708,
+            -0.22768848754498797,
+            -0.30153472366278034,
+            -0.3739040364667221,
+            0.0,
+            0.41999998688697815,
+            0.33319999363422365,
+            0.24813599859094576,
+            0.16477328182606651,
+            0.08307781780646721,
+            0.0030162615090425808,
+            -0.07544406518948656,
+            -0.15233518685055708,
+            0.0,
+            0.41999998688697815,
+            0.33319999363422365,
+            0.24813599859094576,
+            0.16477328182606651,
+            0.08307781780646721,
+            0.0030162615090425808,
+            -0.07544406518948656,
+            -0.15233518685055708,
+            0.0,
+            0.41999998688697815,
+            0.33319999363422365,
+            0.24813599859094576,
+            0.16477328182606651,
+            0.08307781780646721,
+            0.0030162615090425808,
+            -0.07544406518948656,
+            -0.15233518685055708,
+            -0.22768848754498797,
+            0.0,
+            0.41999998688697815,
+            0.33319999363422365,
+            0.24813599859094576,
+            0.16477328182606651,
+            0.08307781780646721,
+            0.0030162615090425808,
+            -0.07544406518948656,
+            -0.15233518685055708,
+            -0.22768848754498797,
+            -0.30153472366278034,
+            -0.3739040364667221,
+            -0.4448259643949201,
+            -0.5143294551172826,
+            -0.5824428773508716,
+            0.0
+          ],
+          "climbRefreshed": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "failures": [],
+          "vertical": {
+            "profile": "minecraft-1.8.9",
+            "position": 5,
+            "velocity": -0.0784000015258789,
+            "onGround": true,
+            "previousHorizontalCollision": false,
+            "threshold": 0.0,
+            "jumpVelocity": [
+              0.41999998688697815,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              0.41999998688697815,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              0.41999998688697815,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              0.41999998688697815,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              0.41999998688697815,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            "sneak": [
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            "contacts": [
+              {
+                "state": 12,
+                "direction": -1,
+                "plane": 5
+              },
+              {
+                "state": 21,
+                "direction": -1,
+                "plane": 6
+              },
+              {
+                "state": 30,
+                "direction": -1,
+                "plane": 7
+              },
+              {
+                "state": 40,
+                "direction": -1,
+                "plane": 7.5
+              },
+              {
+                "state": 55,
+                "direction": -1,
+                "plane": 6
+              }
+            ]
+          },
+          "ladderTicks": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "sneak": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "hit": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "resume": {
+            "position": 6,
+            "velocity": -0.0784000015258789,
+            "onGround": true,
+            "previousHorizontalCollision": false,
+            "onLadder": false
+          }
+        },
+        "threshold": 0.0,
+        "guideSeedYaw": [
+          74.99478903103943,
+          119.68714509153985,
+          119.46161817486792,
+          119.20309562005892,
+          118.90520841277532,
+          118.55990852480113,
+          118.15687869883038,
+          117.68267555507089,
+          117.11945510373995,
+          116.44302453532502,
+          115.6197696066007,
+          114.60163140384127,
+          68.31754540890498,
+          111.65812713456752,
+          110.43880613904317,
+          109.03966695837224,
+          107.4276084352296,
+          105.56224288165255,
+          103.39429305571154,
+          100.86387542034647,
+          97.89897902217542,
+          52.88005420549351,
+          97.85509763750589,
+          97.83636699306344,
+          97.81442563565454,
+          97.78849685383008,
+          97.75753662714706,
+          97.7201075795949,
+          97.67417413323028,
+          97.61675470711808,
+          52.543298751222025,
+          97.4464996297014,
+          97.37390069255837,
+          97.28891382746967,
+          97.18856133210197,
+          97.06884845405705,
+          96.92428792110371,
+          96.7471301448025,
+          96.52606221306056,
+          96.24389276199786,
+          51.24389269567326,
+          96.24389260682878,
+          96.24389253909322,
+          96.24389245856848,
+          96.24389236173073,
+          96.2438922436489,
+          96.24389209720312,
+          96.24389191171682,
+          96.2438916704165,
+          96.24389134535151,
+          96.24389088621685,
+          96.24389019241094,
+          96.24388902920793,
+          96.24388669244806,
+          96.24388250773609
+        ]
+      }
+    ]
+  },
+  "provenance": {
+    "purpose": "Longer Real11: unit B6/B7 and supplied B8-B22; earliest B22 landing then MAXZ",
+    "geometry": "cases/real11/extended-geometry.json",
+    "anchorOrder": [
+      "b2",
+      "b3",
+      "b4",
+      "b5",
+      "b7",
+      "b20",
+      "b22"
+    ],
+    "initialState": "Original B1 initial state; no frozen intermediate horizontal position or velocity",
+    "ceilingPolicy": "Enable existing ordinary ceiling generator alongside normal and stepping for the new overhangs",
+    "fixedPrefix": {
+      "sourceReport": "runs/initial-domain-selection-unrestricted-2026-11-15/report.json.gz",
+      "sourceFrame": 9,
+      "sourceFamily": "initial jump 0",
+      "ticks": 55,
+      "terminalSupport": "b5",
+      "jumpInputs": [
+        0,
+        12,
+        21,
+        30,
+        40
+      ],
+      "arrivalTicks": {
+        "b2": 21,
+        "b3": 30,
+        "b4": 40,
+        "b5": 55
+      },
+      "policy": "Retain movement/contact/physical rows; remove old search/node/repair/comparison metadata; facings are warm guesses only"
+    }
+  },
+  "terminalGoal": {
+    "kind": "landing",
+    "block": "b22"
+  },
+  "discoverySettings": {
+    "version": 1,
+    "maxGraphExpansions": 5000,
+    "maxGuideMaterializations": 50
+  },
+  "anchorSearch": {
+    "version": 1,
+    "anchors": [
+      "b2",
+      "b3",
+      "b4",
+      "b5",
+      "b7",
+      "b20"
+    ],
+    "turnaround": {
+      "degrees": 110,
+      "spatialMargin": 0.3
+    },
+    "solveEveryDecisionLevels": 1,
+    "feasibilityPolicy": "ipopt_oracle",
+    "observability": true
+  }
+}

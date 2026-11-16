@@ -1,0 +1,30 @@
+{
+  "passed": true,
+  "scalarFeasible": true,
+  "supports": true,
+  "geometry": {
+    "feasible": true,
+    "ticks": 55
+  },
+  "exactHorizontalReplay": true,
+  "ticks": 55,
+  "threshold": 0.0,
+  "objective": -1154.49823631551,
+  "objectiveHasY": false,
+  "rootTicks": 55,
+  "jumpInputs": [
+    0,
+    12,
+    21,
+    30,
+    40
+  ],
+  "anchorArrivalTicks": [
+    21,
+    30,
+    40,
+    55
+  ],
+  "geometrySha256": "a7f7222770dae9e909ec7052f9fadc385bda0c0ff890eb7200d05a4fdaf408d5",
+  "seededFixtureSha256": "626e90ab5f381b7de8f8509d81ac87227b0be687dba7a0a2d97a533b571d4469"
+}

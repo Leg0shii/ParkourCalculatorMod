@@ -1,5 +1,13 @@
 # Current standalone state
 
+2026-11-15 longer Real11 trial: [new task and fixed-B5 experiment](../research/real11-long-solve/README.md)
+add required B7/B20 and terminal B22. Existing initial-program support fixes
+initial-0 decisions through B5@55 while all earlier facings remain free. The first
+300s trial reached unit B7@64, then exposed an empty-exhausted-constraint outcome
+bug; that exact node now backtracks without a numerical infeasibility claim.
+Pending/interrupted alternatives remain suspended. The corrected continuation
+and broader native validation are in progress.
+
 2026-11-15 geometry follow-up: [longer Real11 input and bounds](REAL11_EXTENDED_GEOMETRY.md)
 record B8–B22, original unit B6 (latest user correction), unit B7 and the B13 stair.
 This is separate geometry-only preparation; new task anchors, finish and budgets

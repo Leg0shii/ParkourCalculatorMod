@@ -142,6 +142,22 @@ report = read_report('/tmp/real11-new.json.gz')
 Do not treat raw gzip JSON as a fully expanded shared-store report. Write new
 experiments to fresh output paths; preserve dated evidence and source hashes.
 
+## Fixed movement prefix with free continuous facings
+
+The existing `find_checkpoint_route(initial_programs=[program])` starts movement
+generation after a supplied original-state program. Fixtures may pass that
+argument as `settings.initial_programs`. The [longer Real11 experiment](../research/real11-long-solve/README.md)
+uses a validated initial-0 root through B5@55. The next unmet anchors are B7/B20,
+then terminal B22. Its first55 input/contact decisions are fixed; all facings
+remain variables in each original-state continuous solve. Warm yaw values are
+initial guesses, not equalities. Preserve actual physical rows and phase/clock
+metadata, strip stale node/repair/comparison state, and validate the root against
+the new full scene. This is a seeded new task, not an exact old-task resume.
+
+The profiler or ordinary CLI commands above can consume that experiment fixture.
+The ordinary CLI saves durable progress and supports its usual matching-context
+resume. A different geometry/task/root requires a new search context.
+
 ## Fixed numerical problem and replay/export
 
 This optimizes facings for a captured fixed-input problem:

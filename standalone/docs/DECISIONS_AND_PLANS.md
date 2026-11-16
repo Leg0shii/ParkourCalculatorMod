@@ -1,5 +1,13 @@
 # Decisions and plan authority
 
+2026-11-15 longer-task decision: [extended Real11](../cases/real11/extended-anchors.json)
+uses B2/B3/B4/B5/B7/B20 and terminal B22. The [seeded experiment](../research/real11-long-solve/README.md)
+retains the run-0 movement/contact schedule through B5@55 and free original-state
+facings. A narrow correction classifies an empty, exhausted constraint generator
+with no remaining repair work as exhausted rather than suspended. This fixes a
+measured exact-node retry loop; it does not implement the broader deferred
+scheduler/outcome restructuring or change physical feasibility policy.
+
 2026-11-15 user-directed scope: the [single face-merging plan](design/FACE_MERGING_IMPLEMENTATION_PLAN.md)
 implements exactly two parts: detecting adjacent coplanar faces in any of the six
 orientations, and representing exact merged covers with source membership for

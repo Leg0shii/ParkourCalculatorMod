@@ -1,10 +1,17 @@
 # Real11 finite physical-anchor case
 
+The new [extended anchor task](extended-anchors.json) uses the supplied longer
+course, original unit B6/B7, B7/B20 additional intermediate anchors and terminal
+B22. The [fixed-B5 experiment](../../research/real11-long-solve/README.md) retains
+the initial-0 movement decisions through B5@55 while re-solving all facings from
+the original B1 state. Its first longer-course run is in progress.
+
 The longer-course [extended geometry](extended-geometry.json) and
 [bounds report](../../docs/REAL11_EXTENDED_GEOMETRY.md) are now recorded separately.
 They keep B6 at its original unit footprint, restore unit B7 and add B8–B22
 (including B9a/B9b and the compound B13 stair). This file is geometry-only;
-the longer task's ordered anchors, finish and budgets have not been specified.
+the geometry file itself does not supply a task. The extended anchor task above
+now records the selected milestones and finish with the existing horizon/caps.
 It can be inspected with `python -m tools.geometry_bounds`.
 Add `--faces` to include the merged physical-face catalog; the existing bounds
 remain available in the same report.

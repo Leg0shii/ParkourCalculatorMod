@@ -33,6 +33,7 @@ def node_identity(program, context):
 def outcome(result, model, policy):
     repair = result.get('repairState', {})
     complete = repair.get('completed', [])
+    generation = repair.get('constraintGeneration')
     if result.get('best') is not None:
         status = 'feasible'
     elif result.get('status') == 'error':
@@ -42,10 +43,12 @@ def outcome(result, model, policy):
           (repair.get('constraintGeneration') is None or repair['constraintGeneration'].get('exhausted')) and
           all(c.get('oracleRejected') or c.get('status') == 'blocked' for c in complete)):
         status = 'oracle_rejected'
-    elif (complete and not repair.get('pending') and not repair.get('inFlight') and not repair.get('unresolved') and
-          (repair.get('constraintGeneration') is None or repair['constraintGeneration'].get('exhausted'))):
+    elif ((complete or generation is not None and generation.get('exhausted'))
+          and not repair.get('pending') and not repair.get('inFlight') and not repair.get('unresolved')
+          and (generation is None or generation.get('exhausted'))):
         # Exhausting repair/physical alternatives is a backtrack, not a
         # numerical infeasibility label for this node or its ancestors.
+        # A fully screened-out generator can exhaust before emitting any solve.
         status = 'exhausted'
     else:
         status = 'suspended'
