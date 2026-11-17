@@ -151,6 +151,7 @@ control work; inclusion here is not authorization to implement a historical plan
 | [research/failure-fixes/README.md](../research/failure-fixes/README.md) | Frozen source-era evidence; use research guide for reproduction: Generic scheduling, incumbent and initialization fixes |
 | [research/failure-rootcause/README.md](../research/failure-rootcause/README.md) | Frozen source-era evidence; use research guide for reproduction: Search failure root-cause probes |
 | [research/failure-rootcause/RESULTS.md](../research/failure-rootcause/RESULTS.md) | Frozen source-era evidence; use research guide for reproduction: Generic causes of the bounded-search failures |
+| [research/geometry-passages/README.md](../research/geometry-passages/README.md) | Frozen source-era evidence; use research guide for reproduction: Geometry-driven avoidance passages |
 | [research/hard-jump-comparisons/README.md](../research/hard-jump-comparisons/README.md) | Frozen source-era evidence; use research guide for reproduction: Shared hard-jump comparisons and proposal reachability |
 | [research/height-and-stairs/README.md](../research/height-and-stairs/README.md) | Frozen source-era evidence; use research guide for reproduction: Different heights and short stair profiles |
 | [research/initial-domain-selection/README.md](../research/initial-domain-selection/README.md) | Frozen source-era evidence; use research guide for reproduction: Initial-delay selection without a fixture whitelist |

@@ -1,7 +1,7 @@
 # Current standalone state
 
 2026-11-16: the [geometry-driven avoidance replacement](design/AVOIDANCE_PASSAGES.md)
-is implemented and undergoing final acceptance. `constraints.encounters` builds
+is implemented. `constraints.encounters` builds
 meaningful phase covers within landing segments; `ConstraintVariants` conditions
 later domains on actual earlier rows. Upfront generation and collision repair use
 one builder. Ghost face histories, switch-count budgets and local avoidance/repair
@@ -14,6 +14,9 @@ phase traces. Current movement cadence, comparisons and inter-movement commitmen
 remain; [automatic grouping/commitment consolidation](design/PRUNING_IMPROVEMENTS_BACKLOG.md#automatic-close-decision-grouping-and-commitment-2026-11-16)
 is deferred. New identities are constraint policy8/state3 and repair assembly10;
 old generator/DFS cursors require their original source checkout.
+The native gate passes640 tests. The cold300s Real11 control finds T64 at14.1s
+versus the parent's T67, then ends at25.1s with five IPOPT-unknown nodes suspended,
+so it claims no exhaustive coverage. All47 retained witnesses replay.
 See [implementation and measurement evidence](../research/geometry-passages/README.md).
 The earlier records below describe their source revisions.
 

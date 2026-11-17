@@ -1,7 +1,7 @@
 # Decisions and plan authority
 
 2026-11-16 avoidance replacement: [audited implementation plan](design/AVOIDANCE_PASSAGES.md)
-is implemented; final acceptance/profiling is in progress. Geometry-derived phase
+is implemented and accepted. Geometry-derived phase
 covers, concrete timing before conditional propagation, shared upfront/repair
 generation and global-budget persistence replace the old full-horizon permutations,
 switch-count caps and local repair/retention limits. See the
