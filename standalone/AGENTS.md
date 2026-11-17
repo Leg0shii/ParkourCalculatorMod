@@ -34,7 +34,7 @@ Use [current state](docs/CURRENT_STATE.md) for ongoing work and [decisions and p
 - Finish features with a cleanup review: remove superseded paths and temporary instrumentation, check dependency boundaries, run appropriate tests, and update affected documentation. Commit coherent working features with their related tests/docs/fixtures; documentation-only work does not require a commit.
 - Run focused standalone checks and widen according to the affected scope. See the runbook and testing guide for commands and native dependencies. Rebuild helpers only when needed; launch Minecraft or run mod checks only when the task calls for them.
 - Distinguish numerical feasibility, scene validation and executable replay. A timeout, cap or local solver failure is not an infeasibility or optimality certificate.
-- Answer any question about a solve with a detailed, human-readable Markdown report. Run the solve, or regenerate the report for an existing one, with the [solve report commands](docs/RUNBOOK.md#run-a-solve-and-report-it); build the answer from its `report.md` ([what it contains](docs/RESULTS_AND_DEBUGGING.md#solve-reports)) and name the file.
+- Answer any question about a solve with a detailed, human-readable Markdown report file. Run the solve, or regenerate the report for an existing one, with the [solve report commands](docs/RUNBOOK.md#run-a-solve-and-report-it) ([what it contains](docs/RESULTS_AND_DEBUGGING.md#solve-reports)), then reply with the report's absolute path only; do not restate its contents in the reply.
 - Preserve historical evidence and write new experiment runs to new output paths. Record source revision, settings and validation scope when reporting measurements.
 
 ## Keeping docs current

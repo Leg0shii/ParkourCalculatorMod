@@ -20,13 +20,13 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 
 | File | Bytes |
 | --- | ---: |
-| [AGENTS.md](../AGENTS.md) | 6530 |
+| [AGENTS.md](../AGENTS.md) | 6569 |
 
 ## CLAUDE.md
 
 | File | Bytes |
 | --- | ---: |
-| [CLAUDE.md](../CLAUDE.md) | 6530 |
+| [CLAUDE.md](../CLAUDE.md) | 6569 |
 
 ## README.md
 
