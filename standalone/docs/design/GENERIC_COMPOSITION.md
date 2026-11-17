@@ -37,10 +37,10 @@ Normal air leading to an event can be included in a choice. The same existing Y 
 The collision-box CLI now selects generic movement composition by default:
 
 ```sh
-python3 -m parkour_solver.cli.blocks \
-  --input standalone/autonomy/fixtures/generic-grind-blip.json \
-  --output standalone/autonomy/build/generic-result.json \
-  --python "$PWD/.venv-ipopt/bin/python" \
+"$PKC_IPOPT_PYTHON" -m parkour_solver.cli.blocks \
+  --input tests/fixtures/movement/generic-grind-blip.json \
+  --output /new/path/generic-result.json \
+  --python "$PKC_IPOPT_PYTHON" \
   --seconds 15 --candidate-seconds 1 --retries 0
 ```
 

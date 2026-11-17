@@ -1,8 +1,8 @@
 # Generic route discovery: geometry, relevant interactions, and compact route languages
 
-Concrete follow-up: GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md turns these recommendations into proposed interfaces, milestones and tests. Runtime behavior remains unchanged.
+Its recommendations were implemented as the event route discovery and later anchor DFS; see [current state](../CURRENT_STATE.md). Module names below are source-era; `tools/layout-migration.json` maps them to current modules.
 
-Research date: 2026-11-03. Runtime examined: `a28e5b71` on the isolated `research/real11-initial-run-ticks` worktree. This is a research recommendation, not an implemented change or an instruction to begin implementation. Literature statements cite primary sources; repository statements cite source functions or saved evidence. **Proposal** and **derivation** identify project-specific conclusions whose premises are cited, rather than results proved by the referenced authors. Existing experiment outputs and runtime files were not modified. The task's repository and evidence context is recorded in the corridor handoff and [current routing audit](../../research/automatic-corridors/routing-review-2026-11-03/README.md).
+Research date: 2026-11-03. Runtime examined: `a28e5b71`. Literature statements cite primary sources; repository statements cite source functions or saved evidence. **Proposal** and **derivation** identify project-specific conclusions whose premises are cited, rather than results proved by the referenced authors. Existing experiment outputs and runtime files were not modified. The task's repository and evidence context is recorded in the corridor handoff and [current routing audit](../../research/automatic-corridors/routing-review-2026-11-03/README.md).
 
 ## 1. Recommendation
 

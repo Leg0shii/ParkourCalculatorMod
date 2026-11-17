@@ -1,44 +1,21 @@
 # Linkcraft Real11 opening: agent guide
 
-2026-11-15 longer-course trial: [extended anchor task](../cases/real11/extended-anchors.json)
-uses B7/B20 as additional intermediate anchors and B22 as the finish. The
-[fixed initial-0 prefix experiment](../research/real11-long-solve/README.md)
-starts generation at B5@55 while keeping all earlier facings free. The first
-300s run validated unit B7@64, then exposed an empty constraint-domain retry
-loop. The exact-node correction passes611 native tests; corrected300s+120s
-continuations backtrack the empty nodes and leave an optional B11@68 candidate's
-constraint work pending. No B20/B22 arrival was found. The saved state and prefix/
-replay audits are linked from the experiment. Old extended-B7 results below remain
-separate.
+Maps Real11 questions to their evidence. The current task, status and decisions
+are in [current state](CURRENT_STATE.md) and [decisions](DECISIONS_AND_PLANS.md);
+start below at "Which evidence answers which question?". Every section records its
+own source revision, task and policy.
 
-2026-11-15 continuation geometry: [new bounds report](REAL11_EXTENDED_GEOMETRY.md)
-and [input](../cases/real11/extended-geometry.json) add B8–B22, restore unit B7
-and keep B6 unit-sized as finally corrected by the user. That file is geometry-only;
-the later task above supplies its explicit goal. The extended-B7 benchmark
-and older wider/missing-B6 caveats below describe their recorded source era.
+| Date | Change | Evidence |
+| --- | --- | --- |
+| 2026-11-16 | Geometry-driven avoidance passages: T64 at 14.1 s | [geometry passages](../research/geometry-passages/README.md) |
+| 2026-11-15 | Longer course: anchors B7/B20, finish B22, fixed initial-0 prefix through B5@55; no B20/B22 arrival yet | [long solve](../research/real11-long-solve/README.md), [task](../cases/real11/extended-anchors.json) |
+| 2026-11-15 | Extended geometry B8 to B22, unit B6 and B7 | [geometry report](REAL11_EXTENDED_GEOMETRY.md), [input](../cases/real11/extended-geometry.json) |
+| 2026-11-15 | `[0,8]` first-jump filter removed from the maintained case | [unrestricted control](../research/initial-domain-selection/README.md) |
+| 2026-11-11 | Shared comparisons and reachability; ceiling-aware flight minima 9/9/10/15/9 for B1 to B7; combined cold search reaches T64 | [hard-jump comparisons](../research/hard-jump-comparisons/README.md) |
+| 2026-11-10 | Inventory of all 1,158 admitted programs; B3 to B4 is the main generator and solver hotspot | [candidate audit](../research/anchor-candidate-audit/README.md) |
 
-2026-11-15 initial-domain follow-up: the [maintained case](../cases/real11/physical-anchors.json) now omits the old `[0,8]` filter. The [unrestricted control](../research/initial-domain-selection/README.md) naturally queried0/8 and deferred9–12 before numerical work, reaching T64 with55/55 independent replays. [Configuration audit](DECISIONS_AND_PLANS.md) distinguishes task inputs, inferred choices and policy constants; older results below retain their recorded domains.
-
-Current combination/pruning/IPOPT tables and decisions: [execution reference](ANCHOR_SEARCH_EXECUTION_REFERENCE.md). Source-era sections below preserve their own task/policy/results.
-
-2026-11-11: [implemented shared comparisons/reachability](design/HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md)
-protect more J OR fewer R ordinarily / fewer A in turnaround, defer slower
-unprotected hard arrivals for explicit recovery, and prune against a strict
-optimistic finish bound without queue scans. Hard transfers assume no stepping;
-source setup hops remain allowed. Ceiling-aware scalar minima derive9/9/10/15/9
-for B1→B2→B3→B4→B5→B7. Early joint stepping checks avoid the former12-variant
-B3@28 fan-out; owned-arrival counting excludes unused tails. The600-test native
-gate and131-prefix known-witness bound controls pass. New combined cold search
-reaches T64; [evidence](../research/hard-jump-comparisons/README.md)
-records final counts/settings/replays and source-specific limitations.
-
-2026-11-10: [candidate inventory and generation audit](../research/anchor-candidate-audit/README.md)
-reconstructs all 1,158 admitted programs from the last integrated 300s run. It
-identifies B3→B4 as the main generator/solver hotspot, with late rejection of
-jointly impossible stepping cases and extensive source-hop preparation work.
-This is source-era investigation evidence motivating the implemented follow-up above.
-
-**Current hard-jump correction:** source-local setup hops remain legal even after a global one-transfer latch. Initial-0 jump0→B1@12 then jump12→B2@21 is one setup plus one hard transfer. The old implementation incorrectly excluded it. [Corrected policy/validation](../research/anchor-transfer-preparation/README.md).
+Setup hops at the source anchor stay legal after the one-transfer latch: initial-0
+jump0 to B1@12, then jump12 to B2@21, is one setup plus one hard transfer.
 
 ## Physical B7 and anchor implementation (2026-11-04)
 

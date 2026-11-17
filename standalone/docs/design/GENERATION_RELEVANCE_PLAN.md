@@ -2,7 +2,7 @@
 
 > Implementation boundary: `498c054c`. [DFS/interaction results](../../research/dfs-interactions/README.md) and [current state](../CURRENT_STATE.md) supersede pending-status language below; the original requirements remain as design provenance.
 
-Current consolidated scope: DFS_INTERACTION_IMPLEMENTATION_PLAN.md. This document supplies the interaction half; the user now also selects depth-first decision traversal and backtracking.
+The eligibility invariant here is current. The face-grammar gate enumeration it criticizes was later replaced by [geometry-driven avoidance passages](AVOIDANCE_PASSAGES.md), which build phase covers per encounter instead of placing gates.
 
 2026-11-03. User requests moving relevance filtering to the correct place and making it robust. This is a preliminary implementation plan, not a claim that runtime changes have been made. It closes a gap in workstreams3/4 of the consolidated plan, rather than introducing another continuous solver or larger budgets.
 

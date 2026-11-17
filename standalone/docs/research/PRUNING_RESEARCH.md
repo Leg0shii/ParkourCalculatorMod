@@ -1,10 +1,10 @@
 # Pruning research and search framework
 
-> Historical research chronology. For current scope/status use [current state](../CURRENT_STATE.md), [decisions](../DECISIONS_AND_PLANS.md) and approved implementation plan. Later user decisions supersede older proposals below.
+> Historical research chronology. The framework sections (through "Sources and source-code anchors") are reusable reference; the discussion log after them records source-era decisions that later rulings supersede. Current scope is in [current state](../CURRENT_STATE.md) and [decisions](../DECISIONS_AND_PLANS.md).
 
-2026-10-30. Living research record for the consolidated standalone solver. Update this document after each research discussion with relevant findings, user decisions, recommendations and open questions. Canonical branch: `feature/ipopt-consolidated`. Initial research checkpoint: `65db8c5`; latest checkout confirmed during planning: `99ecfe9`. No runtime behavior changes or new performance measurements accompany this record.
+2026-10-30. Research record for the standalone solver, started at checkpoint `65db8c5`. Module names are source-era; `tools/layout-migration.json` maps them to current modules.
 
-Read [PRUNING_RESEARCH.md](PRUNING_RESEARCH.md), [GENERIC_COMPOSITION.md](../design/GENERIC_COMPOSITION.md) and [SEARCH_OBJECTIVE.md](../design/SEARCH_OBJECTIVE.md) for implementation context and movement requirements.
+Read [GENERIC_COMPOSITION.md](../design/GENERIC_COMPOSITION.md) and [SEARCH_OBJECTIVE.md](../design/SEARCH_OBJECTIVE.md) for implementation context and movement requirements.
 
 ## User direction and decision status
 

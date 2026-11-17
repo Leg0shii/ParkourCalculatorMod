@@ -15,7 +15,7 @@ control work; inclusion here is not authorization to implement a historical plan
 | [docs/CHECKPOINT_STORAGE.md](CHECKPOINT_STORAGE.md) | Current navigation / implementation or evidence record: Search checkpoint storage |
 | [docs/CODE_MAP.md](CODE_MAP.md) | Current navigation / implementation or evidence record: Production code map |
 | [docs/CURRENT_STATE.md](CURRENT_STATE.md) | Current navigation / implementation or evidence record: Current standalone state |
-| [docs/DECISIONS_AND_PLANS.md](DECISIONS_AND_PLANS.md) | Current navigation / implementation or evidence record: Decisions and plan authority |
+| [docs/DECISIONS_AND_PLANS.md](DECISIONS_AND_PLANS.md) | Current navigation / implementation or evidence record: Decisions |
 | [docs/DEFERRED_WORK.md](DEFERRED_WORK.md) | Current navigation / implementation or evidence record: Deferred work and unimplemented follow-ups |
 | [docs/DEVELOPMENT.md](DEVELOPMENT.md) | Current navigation / implementation or evidence record: Writing code and fixes |
 | [docs/DOC_INDEX.md](DOC_INDEX.md) | Current navigation / implementation or evidence record: Documentation index |

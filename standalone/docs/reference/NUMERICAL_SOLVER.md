@@ -1,6 +1,6 @@
 # Standalone continuous IPOPT solver
 
-Current integrated branch: `research/ipopt-cell-routes`. This package, anchor orchestration and local replay share the integrated implementation. See [current integration](../ARCHITECTURE.md); the earlier consolidation details remain historical.
+This package, anchor orchestration and local replay share one implementation; see [architecture](../ARCHITECTURE.md).
 
 The installed `parkour_solver.numerics` package provides a Python API and command-line solver for fixed-input horizontal trajectories. It runs independently of Minecraft. An optional headless Java exporter reads ordinary captured TAS files using the repository's existing physics compiler. The mod's engine, UI and save format are unchanged.
 
@@ -11,10 +11,10 @@ Implementation findings, validation results and archived research provenance are
 The worker dependencies are pinned and tested with Python 3.12:
 
 ```sh
-python3.12 -m venv .venv-ipopt
-.venv-ipopt/bin/python -m pip install --editable 'standalone[numerics]'
-.venv-ipopt/bin/python -m parkour_solver.cli.numerical \
-  --input standalone/tests/fixtures/numerics/real11-400.json.gz \
+python3.12 -m venv ../.venv-guidance
+../.venv-guidance/bin/python -m pip install --editable '.[numerics]'
+../.venv-guidance/bin/python -m parkour_solver.cli.numerical \
+  --input tests/fixtures/numerics/real11-400.json.gz \
   --seconds 10 --output /tmp/real11-result.json
 ```
 
@@ -31,7 +31,7 @@ From the repository root, with the usual JDK 21 Gradle configuration:
   -PipoptCapture=/absolute/path/to/captured-tas.json \
   -PipoptTicks=200 -PipoptOutput=/tmp/problem.json
 
-.venv-ipopt/bin/python -m parkour_solver.cli.numerical \
+../.venv-guidance/bin/python -m parkour_solver.cli.numerical \
   --input /tmp/problem.json --seconds 5 --output /tmp/result.json
 ```
 
@@ -52,8 +52,8 @@ The parent validates the initial facings before launching the worker and retains
 `--ladder-capture /path/to/captured-tas.json` attaches prescribed ladder ticks and vertical references from a Minecraft 1.8.x debug capture. It identifies climb states by stored upward velocity and horizontal collision, then includes other recorded states in those climb-proven cells and authored LADDER overrides. `--capture-start` overrides the zero-based capture start; otherwise `source.startTick` is used. Initial horizontal position and velocity must match the capture. Jump inputs are treated as taps; held-jump cooldown is outside this interface.
 
 ```sh
-.venv-ipopt/bin/python -m parkour_solver.cli.numerical \
-  --input standalone/tests/fixtures/numerics/real11-400.json.gz \
+../.venv-guidance/bin/python -m parkour_solver.cli.numerical \
+  --input tests/fixtures/numerics/real11-400.json.gz \
   --ladder-capture /path/to/real/11.json \
   --seconds 10 --output /tmp/real11-ladders-result.json
 ```
@@ -82,7 +82,7 @@ import gzip
 import json
 from parkour_solver.numerics import prepare, solve, validate
 
-with gzip.open("standalone/tests/fixtures/numerics/real11-200.json.gz", "rt") as stream:
+with gzip.open("tests/fixtures/numerics/real11-200.json.gz", "rt") as stream:
     problem = json.load(stream)
 
 result = solve(problem, seconds=5, python_executable="/absolute/path/to/python")
@@ -178,7 +178,7 @@ python3 -m unittest discover -s standalone/tests/unit/numerics -t standalone -v
 Enable the actual worker tests explicitly:
 
 ```sh
-PKC_IPOPT_PYTHON="$PWD/.venv-ipopt/bin/python" \
+PKC_IPOPT_PYTHON="$PWD/../.venv-guidance/bin/python" \
   python3 -m unittest discover -s standalone/tests/unit/numerics -t standalone -v
 ```
 

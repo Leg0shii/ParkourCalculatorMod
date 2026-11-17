@@ -1,14 +1,25 @@
 # Time and progress comparisons: two distinct goals
 
-Authoritative user clarification, 2026-11-01. The new path is to generate the supported candidates and evaluate them in two complementary ways. We are not trying to generate candidates specifically at different completion times. See [the implementation plan](TIME_PROGRESS_FRONTIER.md) and [implemented behavior and measurements](../../research/two-goal-comparisons/README.md). The separate comparisons are now the default checkpoint-search policy.
+Design record for common-clock time and progress labels, from user rulings on
+2026-11-01 and 2026-11-02. The labels and protection guards are implemented for the
+legacy common-clock search in `search/compat/time_progress.py`, which delegates to
+`search.comparison.compare_candidates`. The active anchor DFS orders by
+`(T,-J,tickCost,id)` (`search/comparison.py`) and does not run a global
+position/velocity exclusion pass ([decisions](../DECISIONS_AND_PLANS.md)).
+[Measurements](../../research/two-goal-comparisons/README.md).
 
-Latest user refinement, 2026-11-02: retain the separate time/progress comparisons, and include both horizontal position and velocity in the fixed-clock progress assessment. This is a selected design direction; current runtime retention still uses position-only clock results. Both Real11 initial0/8 setup families remain explicitly protected by the user's preceding decision. The policy/solver has not been changed by this discussion.
-
-Latest consolidated plan: [velocity and schedule protection](TIME_PROGRESS_FRONTIER.md). User keeps current margins: progress0.25 blocks and spatial time1tick; the floated0.05 is not selected. For compatible same-clock states, greater forward velocity OR greater horizontal speed OR position within the existing progress margin of the peer is a veto on heuristic exclusion. Matching schedule/context is required, and different-schedule run/jump protections remain. Eligible overflow must be saved and actually resumed in `(n,-J,R)` order rather than lost at the active cap. Implementation remains pending; the linked plan specifies modules, audit fields, persistence and regression gates.
+Protection guards, with the user's margins (progress 0.25 blocks, spatial time 1
+tick, no velocity margin): a candidate is protected from intermediate heuristic
+exclusion when it has greater forward velocity, greater horizontal speed, or a
+position within the progress margin of the peer or farther forward. Absolute-clock
+comparisons require matching ground, air and jump schedules and compatible context;
+across schedules, fewer runs OR more jumps protects. A missing measurement never
+counts as zero or as inferiority. Completed solutions are still judged by the real
+terminal objective.
 
 ## Selected schedule comparison and processing rules
 
-Latest explicit user rules, 2026-11-02. These supersede using absolute-clock progress to eliminate candidates with different ground/air schedules. This section records selected policy, pending implementation; no runtime behavior changes in this discussion turn.
+User rules, 2026-11-02. These supersede using absolute-clock progress to eliminate candidates with different ground/air schedules.
 
 1. Use absolute-tick position/velocity comparisons only for decisions whose ground/air/jump schedule is the same, with compatible incoming and contact context. Equality of elapsed tick or equality of aggregate counts does not establish the same jump phase. A per-input run/jump/air sequence distinguishes the schedules.
 2. When schedules differ, protect a candidate against a peer-based heuristic exclusion if it has **fewer run inputs OR more actual jump takeoffs** than that peer. Either advantage is sufficient. This preserves a structural reason for later benefit even when the short horizontal score and nearby arrival time favor the peer. The guard provides retention protection, not a proof that the protected candidate is faster or farther.

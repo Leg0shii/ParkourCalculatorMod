@@ -97,7 +97,7 @@ objective_E = maximize(d.x * X[T_E] + d.z * Z[T_E])
 
 Reuse [`Checkpoint.objective`](../../src/parkour_solver/spatial/checkpoints.py) and existing POSITION/customYaw. Physical landing constraints remain independent. No waypoint equality, progress-based pruning, slack work or constant FEASIBILITY objective is introduced.
 
-**Settled design evidence:** the user reports another agent measured approximately equal speed for this objective with early stop. Adopt that as the design input; this session did not reproduce or inspect the other agent's measurement. No further approval or constant-objective comparison is required to proceed with this direction. Implementation/regression/cold acceptance is recorded in the current evidence linked above.
+**Settled design evidence:** the user reports a measurement of approximately equal speed for this objective with early stop. Adopt that as the design input; this session did not reproduce or inspect the other agent's measurement. No further approval or constant-objective comparison is required to proceed with this direction. Implementation/regression/cold acceptance is recorded in the current evidence linked above.
 
 Use stop-on-feasible and no intermediate polishing/equal-cost variant drain. Keep native scene/anchor acceptance, repair, feasible-yaw seeds and original-state re-solves. A warm seed may already be feasible and return without improvement; it remains a valid early-stop result. Final actual landing uses real MAXZ optimization.
 

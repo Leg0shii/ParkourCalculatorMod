@@ -28,7 +28,7 @@ User-confirmed direction:
 
 Recommended implementation details and remaining decisions are identified below;
 no scheduler, solver-result classifier or checkpoint schema has changed yet.
-Bookkeeping optimization has a [separate agent handoff](../PERFORMANCE.md).
+Bookkeeping costs and their invariants are in [performance](../PERFORMANCE.md).
 That agent must preserve the current runtime contract; integrate these later
 behavior changes deliberately, rather than hiding them in a performance patch.
 

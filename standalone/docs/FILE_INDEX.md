@@ -20,19 +20,19 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 
 | File | Bytes |
 | --- | ---: |
-| [AGENTS.md](../AGENTS.md) | 4122 |
+| [AGENTS.md](../AGENTS.md) | 4158 |
 
 ## CLAUDE.md
 
 | File | Bytes |
 | --- | ---: |
-| [CLAUDE.md](../CLAUDE.md) | 4122 |
+| [CLAUDE.md](../CLAUDE.md) | 4158 |
 
 ## README.md
 
 | File | Bytes |
 | --- | ---: |
-| [README.md](../README.md) | 1940 |
+| [README.md](../README.md) | 1793 |
 
 ## autonomy
 
@@ -58,60 +58,60 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 
 | File | Bytes |
 | --- | ---: |
-| [docs/AGENT_SETUP.md](AGENT_SETUP.md) | 3322 |
-| [docs/ANCHOR_SEARCH_EXECUTION_REFERENCE.md](ANCHOR_SEARCH_EXECUTION_REFERENCE.md) | 27519 |
-| [docs/ARCHITECTURE.md](ARCHITECTURE.md) | 16805 |
-| [docs/CHECKPOINT_STORAGE.md](CHECKPOINT_STORAGE.md) | 6917 |
+| [docs/AGENT_SETUP.md](AGENT_SETUP.md) | 3731 |
+| [docs/ANCHOR_SEARCH_EXECUTION_REFERENCE.md](ANCHOR_SEARCH_EXECUTION_REFERENCE.md) | 27834 |
+| [docs/ARCHITECTURE.md](ARCHITECTURE.md) | 16878 |
+| [docs/CHECKPOINT_STORAGE.md](CHECKPOINT_STORAGE.md) | 6832 |
 | [docs/CODE_MAP.md](CODE_MAP.md) | 24922 |
-| [docs/CURRENT_STATE.md](CURRENT_STATE.md) | 16450 |
-| [docs/DECISIONS_AND_PLANS.md](DECISIONS_AND_PLANS.md) | 29646 |
-| [docs/DEFERRED_WORK.md](DEFERRED_WORK.md) | 18734 |
-| [docs/DEVELOPMENT.md](DEVELOPMENT.md) | 11551 |
-| [docs/DOC_INDEX.md](DOC_INDEX.md) | 25683 |
-| [docs/FILE_INDEX.md](FILE_INDEX.md) | 208657 |
+| [docs/CURRENT_STATE.md](CURRENT_STATE.md) | 10623 |
+| [docs/DECISIONS_AND_PLANS.md](DECISIONS_AND_PLANS.md) | 8449 |
+| [docs/DEFERRED_WORK.md](DEFERRED_WORK.md) | 17790 |
+| [docs/DEVELOPMENT.md](DEVELOPMENT.md) | 11359 |
+| [docs/DOC_INDEX.md](DOC_INDEX.md) | 25664 |
+| [docs/FILE_INDEX.md](FILE_INDEX.md) | 203675 |
 | [docs/FUNCTION_INDEX.md](FUNCTION_INDEX.md) | 67693 |
 | [docs/IPOPT_CONSTRAINT_REDUCTION.md](IPOPT_CONSTRAINT_REDUCTION.md) | 5578 |
-| [docs/IPOPT_FEASIBILITY_MODE.md](IPOPT_FEASIBILITY_MODE.md) | 4778 |
-| [docs/LAYOUT.md](LAYOUT.md) | 5240 |
-| [docs/MOD_REFERENCES.md](MOD_REFERENCES.md) | 5072 |
+| [docs/IPOPT_FEASIBILITY_MODE.md](IPOPT_FEASIBILITY_MODE.md) | 4781 |
+| [docs/LAYOUT.md](LAYOUT.md) | 6162 |
+| [docs/MOD_REFERENCES.md](MOD_REFERENCES.md) | 4996 |
 | [docs/PERFORMANCE.md](PERFORMANCE.md) | 8164 |
 | [docs/REAL11_EXTENDED_GEOMETRY.md](REAL11_EXTENDED_GEOMETRY.md) | 12248 |
-| [docs/REAL11_GUIDE.md](REAL11_GUIDE.md) | 22177 |
-| [docs/RESULTS_AND_DEBUGGING.md](RESULTS_AND_DEBUGGING.md) | 11248 |
+| [docs/REAL11_GUIDE.md](REAL11_GUIDE.md) | 20362 |
+| [docs/RESULTS_AND_DEBUGGING.md](RESULTS_AND_DEBUGGING.md) | 11286 |
 | [docs/RUNBOOK.md](RUNBOOK.md) | 11318 |
-| [docs/TESTING.md](TESTING.md) | 17352 |
-| [docs/design/ANCHOR_POLICY_DECISIONS.md](design/ANCHOR_POLICY_DECISIONS.md) | 27550 |
+| [docs/TESTING.md](TESTING.md) | 15517 |
+| [docs/design/ANCHOR_POLICY_DECISIONS.md](design/ANCHOR_POLICY_DECISIONS.md) | 27544 |
 | [docs/design/AVOIDANCE_PASSAGES.md](design/AVOIDANCE_PASSAGES.md) | 9538 |
-| [docs/design/BRANCH_SCHEDULING_INVESTIGATION.md](design/BRANCH_SCHEDULING_INVESTIGATION.md) | 34068 |
-| [docs/design/CONTACT_COMBINATIONS.md](design/CONTACT_COMBINATIONS.md) | 9174 |
+| [docs/design/BRANCH_SCHEDULING_INVESTIGATION.md](design/BRANCH_SCHEDULING_INVESTIGATION.md) | 34072 |
+| [docs/design/CONTACT_COMBINATIONS.md](design/CONTACT_COMBINATIONS.md) | 9112 |
 | [docs/design/FACE_MERGING_IMPLEMENTATION_PLAN.md](design/FACE_MERGING_IMPLEMENTATION_PLAN.md) | 22013 |
-| [docs/design/GENERATION_RELEVANCE_PLAN.md](design/GENERATION_RELEVANCE_PLAN.md) | 11494 |
-| [docs/design/GENERIC_COMPOSITION.md](design/GENERIC_COMPOSITION.md) | 7224 |
+| [docs/design/GENERATION_RELEVANCE_PLAN.md](design/GENERATION_RELEVANCE_PLAN.md) | 11545 |
+| [docs/design/GENERIC_COMPOSITION.md](design/GENERIC_COMPOSITION.md) | 7205 |
 | [docs/design/HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md](design/HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md) | 66368 |
 | [docs/design/LADDER_STRATEGY_PLAN.md](design/LADDER_STRATEGY_PLAN.md) | 38889 |
 | [docs/design/MIXED_MOVEMENT_CONTACTS.md](design/MIXED_MOVEMENT_CONTACTS.md) | 5966 |
-| [docs/design/MOVEMENT_UNITS.md](design/MOVEMENT_UNITS.md) | 13776 |
-| [docs/design/OBSTACLES_AND_BLOCKAGES.md](design/OBSTACLES_AND_BLOCKAGES.md) | 25170 |
+| [docs/design/MOVEMENT_UNITS.md](design/MOVEMENT_UNITS.md) | 13672 |
+| [docs/design/OBSTACLES_AND_BLOCKAGES.md](design/OBSTACLES_AND_BLOCKAGES.md) | 25624 |
 | [docs/design/OBSTACLE_RELEVANCE.md](design/OBSTACLE_RELEVANCE.md) | 10757 |
-| [docs/design/OBSTACLE_SEARCH.md](design/OBSTACLE_SEARCH.md) | 12608 |
+| [docs/design/OBSTACLE_SEARCH.md](design/OBSTACLE_SEARCH.md) | 11808 |
 | [docs/design/ORCHESTRATOR_CONTRACT.md](design/ORCHESTRATOR_CONTRACT.md) | 2449 |
-| [docs/design/PRUNING_IMPROVEMENTS_BACKLOG.md](design/PRUNING_IMPROVEMENTS_BACKLOG.md) | 27239 |
+| [docs/design/PRUNING_IMPROVEMENTS_BACKLOG.md](design/PRUNING_IMPROVEMENTS_BACKLOG.md) | 2706 |
 | [docs/design/REVISIT_DISCOVERY_DEFERRED_PLAN.md](design/REVISIT_DISCOVERY_DEFERRED_PLAN.md) | 10265 |
 | [docs/design/SEARCH_OBJECTIVE.md](design/SEARCH_OBJECTIVE.md) | 6702 |
-| [docs/design/STEPPING_CASES.md](design/STEPPING_CASES.md) | 8845 |
-| [docs/design/TIME_PROGRESS_FRONTIER.md](design/TIME_PROGRESS_FRONTIER.md) | 19269 |
+| [docs/design/STEPPING_CASES.md](design/STEPPING_CASES.md) | 10618 |
+| [docs/design/TIME_PROGRESS_FRONTIER.md](design/TIME_PROGRESS_FRONTIER.md) | 18682 |
 | [docs/history/dependencies/autonomy-route_guidance-requirements-plot.txt](history/dependencies/autonomy-route_guidance-requirements-plot.txt) | 39 |
 | [docs/history/dependencies/autonomy-route_guidance-requirements.txt](history/dependencies/autonomy-route_guidance-requirements.txt) | 63 |
 | [docs/history/dependencies/ipopt-requirements.txt](history/dependencies/ipopt-requirements.txt) | 27 |
-| [docs/reference/MOVEMENT_PORT.md](reference/MOVEMENT_PORT.md) | 11077 |
-| [docs/reference/NUMERICAL_SOLVER.md](reference/NUMERICAL_SOLVER.md) | 19656 |
+| [docs/reference/MOVEMENT_PORT.md](reference/MOVEMENT_PORT.md) | 12343 |
+| [docs/reference/NUMERICAL_SOLVER.md](reference/NUMERICAL_SOLVER.md) | 19522 |
 | [docs/reference/REPLAY.md](reference/REPLAY.md) | 8680 |
-| [docs/research/GENERIC_ROUTE_DISCOVERY_RESEARCH.md](research/GENERIC_ROUTE_DISCOVERY_RESEARCH.md) | 68001 |
-| [docs/research/HEURISTIC_SOURCE_REVIEW.md](research/HEURISTIC_SOURCE_REVIEW.md) | 19457 |
-| [docs/research/MIXED_INTEGER_RESEARCH.md](research/MIXED_INTEGER_RESEARCH.md) | 15552 |
-| [docs/research/PRUNING_RESEARCH.md](research/PRUNING_RESEARCH.md) | 285850 |
-| [docs/research/SPATIAL_ROUTE_RESEARCH.md](research/SPATIAL_ROUTE_RESEARCH.md) | 45388 |
-| [docs/research/STRATFINDER_INVESTIGATION.md](research/STRATFINDER_INVESTIGATION.md) | 16321 |
+| [docs/research/GENERIC_ROUTE_DISCOVERY_RESEARCH.md](research/GENERIC_ROUTE_DISCOVERY_RESEARCH.md) | 67882 |
+| [docs/research/HEURISTIC_SOURCE_REVIEW.md](research/HEURISTIC_SOURCE_REVIEW.md) | 17131 |
+| [docs/research/MIXED_INTEGER_RESEARCH.md](research/MIXED_INTEGER_RESEARCH.md) | 15424 |
+| [docs/research/PRUNING_RESEARCH.md](research/PRUNING_RESEARCH.md) | 285642 |
+| [docs/research/SPATIAL_ROUTE_RESEARCH.md](research/SPATIAL_ROUTE_RESEARCH.md) | 44598 |
+| [docs/research/STRATFINDER_INVESTIGATION.md](research/STRATFINDER_INVESTIGATION.md) | 16283 |
 | [docs/validation/layout-final/README.md](validation/layout-final/README.md) | 3381 |
 | [docs/validation/layout-final/cold-witness-bounds.json](validation/layout-final/cold-witness-bounds.json) | 9978 |
 | [docs/validation/layout-final/fresh-bridge-replay.json](validation/layout-final/fresh-bridge-replay.json) | 256 |
