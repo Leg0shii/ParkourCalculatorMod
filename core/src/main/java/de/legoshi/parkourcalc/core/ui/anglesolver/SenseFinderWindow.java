@@ -285,7 +285,7 @@ public final class SenseFinderWindow implements RenderInterface {
         ImGui.tableSetupColumn(COL_OFFSET, fixed, ThemeManager.tableNumericColumnWidth(COL_OFFSET, offW) + mark);
         ImGui.tableSetupColumn(COL_MARGIN, fixed, ThemeManager.tableNumericColumnWidth(COL_MARGIN, marginW) + mark);
         if (start) {
-            float startW = ImGui.calcTextSize(shiftText(-9.99999, -9.99999)).x;
+            float startW = ImGui.calcTextSize(shiftText(-9.999999, -9.999999)).x;
             ImGui.tableSetupColumn(COL_START, fixed, ThemeManager.tableNumericColumnWidth(COL_START, startW));
         }
         int startTick = host.startTick();
@@ -442,7 +442,7 @@ public final class SenseFinderWindow implements RenderInterface {
     }
 
     private static String shiftText(double dx, double dz) {
-        return String.format(Locale.ROOT, "%+.5f %+.5f", dx, dz);
+        return String.format(Locale.ROOT, "%+.6f %+.6f", dx, dz);
     }
 
     private static String marginText(double target) {
