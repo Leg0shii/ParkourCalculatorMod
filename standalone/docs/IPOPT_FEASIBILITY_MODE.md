@@ -16,7 +16,7 @@ solver-branch constant-zero default was replaced.
 | Final physical landing | `configured` | `false` | Optimize real configured terminal objective for candidate T. Outer ranking minimizes actual T then maximizes objective at equal T. |
 | Explicit optional constant-zero control | `constant_zero` | `true` | Retained API mode: minimize0 under the same fixed movement/contact constraints. It is not the current anchor default. |
 
-`ipopt.solver.solve(request, stop_on_feasible=True)` overrides the stopping flag;
+`numerics.solver.solve(request, stop_on_feasible=True)` overrides the stopping flag;
 it does **not** implicitly change `objectiveMode` to constant zero. To request the
 optional zero objective, set `objectiveMode: constant_zero` explicitly. The model
 accepts only `configured` or `constant_zero`; constant zero requires early stopping.

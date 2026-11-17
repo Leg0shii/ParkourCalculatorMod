@@ -13,7 +13,7 @@ Start with [architecture](ARCHITECTURE.md) for call flow, [runbook](RUNBOOK.md) 
 | Cell / portal / corridor | Spatial decomposition region / opening / selected broad route through regions. No intrinsic tick cost or fixed dynamic state. |
 | Prefix inputs | Number and identities of already modeled **input ticks**, not estimated arrival at a common spatial goal. Old priority incorrectly favored shorter prefixes. |
 | Program | Concrete discrete movement/input/contact history, scalar vertical trace, constraints and provenance; horizontal facings are still variables. |
-| Passage description | Signed face chain and switch/gate ticks used to build obstacle clearance rows. Many descriptions can yield one effective row set. |
+| Passage description | The phase cover chosen for one box encounter within a landing segment (`constraints/encounters.py`) and the clearance rows it implies. Many descriptions can yield one effective row set. |
 | Constraint variant | One concrete hard row/contact alternative for a fixed program. A schedule can require many such trials. |
 | Branch | One handled constraint alternative. It may be screened or stopped before worker dispatch. |
 | Solver wrapper / worker launch | The Python solve API may return a validated feasible seed without IPOPT in early-stop mode. A worker launch starts a subprocess numerical solve. One worker can have multiple internal phases/iterations/callbacks. |
@@ -74,7 +74,7 @@ Use existing `generation_diagnostic`, `audit_generation`, `CountingCompiler` and
 Preserve plain/gzip JSON, exact constraints, source hashes, command/settings, wall and worker time, and any replay checks. Gzip evidence should use deterministic `mtime=0`; JSON must reject NaN/Infinity. Never round coordinates before re-evaluating a tight constraint. New outputs belong in new paths, with a manifest when archived. Historical source hashes are not updated just because explanatory documentation changes.
 
 
-## Current DFS reports (schema5)
+## DFS reports
 
 `result.searchState` contains `stack`, archived `frames`, `suspended`, deferred `refinements`, ordered `transitions`, `initialRoots`, cumulative calls and the incumbent. Frames name their shared spatial goal and retain parents, a symbolic generator/cursor, unscored `ready` programs, scored `records` and `inFlight`. A frame may be archived as history, but has only one execution owner among active/suspended/refinement queues. Reports' old `windows` fields are selected-goal diagnostics, not breadth barriers.
 

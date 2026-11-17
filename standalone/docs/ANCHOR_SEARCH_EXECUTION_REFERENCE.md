@@ -6,7 +6,7 @@ bounds into downstream generation. Constraint policy8/state3 and repair assembly
 are current. The measured source-era tables below retain their original settings;
 [replacement evidence](../research/geometry-passages/README.md) records the new run.
 
-Current runtime: `dd738c98` (2026-11-11). This is the current execution reference
+Runtime described: `perf/early-passage-screen` at `7e4d85d4`; measured tables keep their source revisions. This is the current execution reference
 for physical required-anchor search. The [detailed implementation record](design/HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md)
 contains the design/caller migration; [measured evidence](../research/hard-jump-comparisons/README.md)
 contains source hashes, fixtures and validation. Historical supplied-corridor,
@@ -41,8 +41,8 @@ service before wall/call/catalogue caps. IPOPT never chooses these discrete meth
 | `S → air → E` or run-off/continuation | Normal free movement from the actual scalar boundary; ordinary grounded approaches consider jump and nonjump outcomes, airborne ones do not invent grounded impulses. | Scalar landing clock, supports and reachability. A completed hard transfer must have exactly one transfer jump, so pure run-off cannot satisfy it. | Eligible selected meaningful landing/contact or anchor query; no per-air-input NLP. |
 | Named stepping: normal step, slab boost, corner cancel, blip/up/corner variants | Existing case builders fix the contact outcome and corresponding physical rows; enabled cases depend on scene/generator settings. | Cheap height/owner checks, shared approach reachability, then the common joint outcome before side/corner fan-out where applicable. Unknown named probe heights retain coverage. | Surviving selected cases can reach numerical evaluation in generic/unlatched movement or permitted source preparation. Completed stepped transfers cannot establish/satisfy a hard latch. |
 | Lower/higher blip pair with 8 wall choices or 4 corner choices | First build one shared scalar outcome per case and test its jointly required contacts/rows. | If the conjunction is ruled out, build no side variants for that case. B3@28 rejects both common outcomes before the old8+4 fan-out. | No worker for a rejected common outcome. Surviving variants still require fixed-model screening/selection. |
-| Ceiling clip or launch grind | Existing ceiling family when enabled; fixed contact/case history. | Shared eligibility and scene checks. A possible/unknown shortening ceiling disables the ordinary-flight contribution for that transfer. | Eligible selected choices can reach a worker. Real11's current fixture enables normal/stepping, not the ceiling generator. |
-| Go left/right around an obstacle; different switch/contact times | `ConstraintVariants` and repair enumerate physical avoidance/contact alternatives, not only landing blocks. | Scoped relevance removes absent unwanted contacts; canonicalization merges identical effective models; new rows get new reachability checks. | A surviving concrete variant may produce a numerical call. No discrete side/corner variable is left for IPOPT to select. |
+| Ceiling clip or launch grind | Existing ceiling family when enabled; fixed contact/case history. | Shared eligibility and scene checks. A possible/unknown shortening ceiling disables the ordinary-flight contribution for that transfer. | Eligible selected choices can reach a worker. The maintained Real11 case enables normal, stepping and ceiling movement. |
+| Go left/right around an obstacle; different phase timings | `constraints/encounters.py` prepares one phase cover per box encounter and landing segment; `ConstraintVariants` conditions later domains on earlier rows. Upfront generation and collision repair share this builder. | Scoped relevance removes absent unwanted contacts; canonicalization merges identical effective models; new rows get new reachability checks. | A surviving concrete variant may produce a numerical call. No discrete side/corner variable is left for IPOPT to select. |
 | Compound choice arriving at E before an unused tail ends | Derive the actual owned E prefix, with only its committed rows/events and its own T/J/R/A. | Check owned prefix separately. Rejection of an unused extension is scoped to the extension. | Valid owned arrival remains eligible; an impossible tail does not force its rejection. Legacy fixed-checkpoint controls retain their full-first checks. |
 | `S → C → S`, or revisiting a departed owner | Not generated in the current physical-anchor domain. Same-owner patches are tracked by physical owner. | Departed-owner filter plus emitted-program audit. Repeated required anchors are also unsupported. | No. Current-owner `S→S` hops are different and remain legal. |
 | Arbitrary intentional wall-hit combinations | Deferred feature; named cases can still carry their required finite contact. | No new intentional-hit generator in this feature. | Not an additional search family. |
@@ -193,13 +193,13 @@ an older checkpoint compatible. Old wrong-policy exact continuations reject;
 checkpoint storage format stays version1. Never redirect work to an old checkout
 because a source-era handoff contains its absolute path.
 
-## Current Real11 domain and measured work
+## Real11 domain and work measured at `dd738c98`
 
 The [fixture](../research/anchor-feasibility/real11-anchors.json) declares
 B2/B3/B4/B5 anchors, normal+stepping generators, horizon200,
 64 total/per-jump run cap, 2,048 prefix cap, 32 contact branches, 128 passage
 candidates, cadence1, 2s candidate and8s score slices, 1,024 wrapper-call guard.
-These caps/domain choices are not proofs that excluded alternatives cannot help.
+These caps/domain choices are not proofs that excluded alternatives cannot help. The contact-branch and passage caps and the score slices no longer exist; see [avoidance passages](design/AVOIDANCE_PASSAGES.md).
 Normal momentum remains; inertia thresholds are zero. No B6 replacement bounds
 have been supplied, so validation uses the stored B6 geometry.
 
@@ -235,7 +235,7 @@ cost milliseconds in the profile. Remaining wall cost is mostly numerical
 preparation/refinement, digesting and retained-state copying. The simultaneous
 feature changes do not isolate each change's individual causal contribution.
 
-600 native-enabled tests pass without skips; all131 archived T67/T64 prefix
+At `dd738c98`, 600 native-enabled tests passed without skips; all131 archived T67/T64 prefix
 bounds and80 post-change retained-witness scene replays pass. Timings include
 instrumentation; the early combined arm overlapped a read-only audit. See the
 [evidence README](../research/hard-jump-comparisons/README.md) for

@@ -1,6 +1,6 @@
 # Obstacles, contacts and directed blockages
 
-2026-10-26. Investigated against the mod, its cached Minecraft 1.8.9 movement code, the earlier block solver and the integration agent's current helpers. The geometry/height/avoidance slices are now implemented in [OBSTACLE_SEARCH.md](OBSTACLE_SEARCH.md). One-input wall reversals and ceiling profiles are implemented as recorded in [OBSTACLES_AND_BLOCKAGES.md](OBSTACLES_AND_BLOCKAGES.md); one ladder/vine interaction is implemented separately in [LADDER_STRATEGY_PLAN.md](LADDER_STRATEGY_PLAN.md). General contact-selected steps and multiple climbing interactions remain later work. The existing run-ticks and route-search interfaces remain the inner search.
+Physics reference for finite obstacles, contacts and blockage timing, investigated 2026-10-26 against the mod's 1.8.9 movement code. Sections 1 to 3 and 6 describe the physics and remain current. Sections 4 and 5 record the original generation plan; its per-block caps and lazy repair branching were replaced by [geometry-driven avoidance passages](AVOIDANCE_PASSAGES.md), so read them only as rationale.
 
 ## Findings grounded in code
 
@@ -27,13 +27,13 @@ The current standalone numerical API can prescribe X/Z contacts and scalar floor
 
 The old `SweptCollision` is recoverable from `538c92b^`. It gets the ordinary Y-X-Z sweep and first blocking box, but excludes step-assist and prioritizes a horizontal failure in its result. Its old acceptance allowed Y hits under recorded Y. It is a reference, not the new acceptance oracle. [The post-mortem](../../../docs/research/block-solver.md) records that limitation; [PR #379](https://github.com/Leg0shii/ParkourCalculatorMod/pull/379) confirms the unused implementation's removal.
 
-The integration branch already supplies better shared machinery:
+The repository's mod sources supply the shared machinery:
 
 - `core/.../replay/StaticScene.java`: finite inert sub-boxes, sequential clipping, both step alternatives, collision flags, normal velocity reset and coverage checks. This class and its seven regression tests were imported unchanged from `f057c0c`; it now also exposes clipping and step-trigger diagnostics for orchestration.
 - `forge-core/.../replay/ReplayInputState.java`: the existing `PlayerSprintMachine`, processed inputs and previous air-factor state.
 - `forge-core/.../replay/FixedMovementCompiler.java`: movement arrays compiled from fixed keys, ground and contact assumptions, using the existing exact kernel. Its Python movement contract rejects changed contact/ground schedules.
 
-The latter two are available on `feature/ipopt-mod-integration`, with the wall-aware fix in `af12801`. They require that branch's newer effects/input APIs and movement callback. Adopt the shared compiler and its dependency set before enabling intentional wall-hit profiles, rather than rewriting or partially porting its mechanics. Our current `CompileRunTicksPhysics` assumes a constant effective sprint policy and must not compile the new wall-hit family. This plan does not turn replay or TAS export into an orchestration acceptance requirement.
+The standalone Java bridge uses these classes; see [mod references](../MOD_REFERENCES.md).
 
 ## 1. Scene geometry and temporary roles
 
@@ -122,7 +122,7 @@ Y-facing predicates are evaluated against the selected scalar Y profile. Enumera
 
 Blockages guide passage choices. Full stage-by-stage collision validation still checks all boxes, including neighboring parts of a multipart shape. Internal or occluded sub-box edges cannot justify passage through another part. Use exterior/visibility screening to prioritize sensible edges, while full geometry is the acceptance guard.
 
-Search the common cross neo/wide neo chains first, with at most two horizontal, two vertical and three combined transitions per physical block. Mixed three-transition chains are allowed; four-transition chains are outside the current family. Collision sub-boxes and selected route legs share their physical block's budget. A chain carries a small ordered list of face transitions and compatible pass windows; it does not generate the Cartesian product of arbitrary edges and every tick. Propagate the windows through the same/consecutive-state timing rules, then apply reach screens between gates before solving.
+Search the common cross neo/wide neo chains first. A chain carries a small ordered list of face transitions and compatible pass windows; it does not generate the Cartesian product of arbitrary edges and every tick. Propagate the windows through the same/consecutive-state timing rules, then apply reach screens between gates before solving.
 
 Left/right is relative to the current approach and onward route, while the collision constraints retain world X/Y/Z axes. Rank the sides using an optimistic passage distance/time and the incoming momentum/required turn as ordering hints. One side will often be clearly preferable, so try it first. Remove the other side when its valid time/reach bound excludes it; a longer geometric detour or a worse local turning score alone is not a proof that it cannot help the rest of the route. Neighbors can make the initially less direct side the only useful one.
 
@@ -184,7 +184,7 @@ The current graph's ordinary-flight duration is not an admissible time bound onc
 
 Once T inputs is best, prune only a valid completion lower bound greater than T. Retain equal-T branches for objective improvement. Do not prune them by an unproved objective estimate. Queue/contact/profile/event caps and local numerical timeouts remain explicit heuristic limits, so results are best found unless a valid bound is reached. Neither local IPOPT failures nor a bounded blockage search establish global infeasibility or objective optimality.
 
-The current caps are two horizontal, two vertical and three combined per physical block. Preserve different blocks' chains on one shared timeline: A -> B -> A is legal, and intervening B events do not reset A's counters. Count all selected chains and sub-boxes of A together, and consider every allowed chain whose valid time bound can match or beat the incumbent even if a simpler route already exists. Complexity and left/right preference order candidates within the relevant time search; they do not replace total elapsed ticks as the primary objective.
+The original caps (two horizontal, two vertical, three combined per physical block) are removed. Different blocks' chains still share one timeline: A -> B -> A is legal, and intervening B events do not reset A.
 
 ## 5. Implementation slices and acceptance
 
@@ -199,3 +199,44 @@ Regression gates include all six signed blockage families; clear endpoints with 
 Pruning regressions cover tops just below/above the derived jump-height limit, a tall obstruction with horizontal options only, a ceiling retaining both under/hit and side options, a reachable top retaining both land/over and side options, short Y windows excluding unreachable gates, one-blockage crossing versus two-blockage wraparound, both left/right approaches, and a locally longer side retained because it improves or enables continuation. Per-block horizontal/vertical/combined caps must be visible in the reported candidate family, including shared accounting across multipart geometry and interleaved events.
 
 Current evidence is 24 signed Minecraft-method corner cases plus their outside-both controls. The imported scene tests cover wall normal reset, strict tangential overlap, Y-before-horizontal landing, step/ceiling competition, sneak carry, ladder-triggered carry and scene coverage. These verify building blocks, not a completed autonomous obstacle solver.
+
+## 6. Run-off sources and one-input contacts
+
+**Run-off departure.** With positions as pre-input states, the player overlaps the
+actual source support at state d-1 (giving the grounded flag) and is outside its
+footprint at state d, on an input without Jump. All four departure faces are
+alternatives; no facing constraint is added. Afterwards the source stays an
+ordinary obstacle: whenever the player's full height overlaps it vertically
+(`y < top AND y + h > bottom`) the horizontal box must stay outside it, as a
+disjunction over faces, never a permanent half-plane. Collision-box mode reports
+`checked_during_y_overlap`; the legacy support-plane mode only checks the
+departure exit.
+
+**Side-wall hit.** For axis a, expanded face plane c and direction d into the wall,
+with u the intended displacement after inertia and acceleration:
+
+```text
+d * (p[t,a] - c) <= 0
+d * (p[t,a] + u[t,a] - c) >= hitMargin
+p[t+1,a] = c
+v[t+1,a] = 0
+```
+
+Tangential overlap follows the Y-X-Z sweep:
+
+| Selected contact | Body coordinates used for tangential overlap |
+| --- | --- |
+| X wall | New Y, old Z |
+| Z wall | New Y, resolved new X |
+| Ceiling | Old X, old Z |
+
+The contact mask is exact: selected hits are true on their result states and every
+other horizontal hit is false. `maxWallHits` defaults to 2 and
+`maxWallHitCandidates` to 24 (`scene/normalize.py`). A successful step can replace
+provisional side clipping, so the shared scene helper confirms the final outcome.
+
+**Ceiling hit.** For underside b and player height h the feet plane is c = b - h.
+Require upward intended movement from below, strict reach beyond c and old-X/old-Z
+overlap; anchor the feet at c, cancel the upward component and continue with the
+normal Y carry recurrence. Rebuild the whole remaining Y trace to the landing.
+

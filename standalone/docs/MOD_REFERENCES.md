@@ -1,6 +1,6 @@
 # Reusing the broader Parkour Calculator
 
-All relative links below resolve inside the **physical research worktree**. From the main checkout's symlinked standalone directory, do not navigate via its logical `..` to read a different code revision.
+Relative links below resolve inside the same worktree, so they show the mod source at the same revision as this standalone code.
 
 ## Orientation and rules
 

@@ -51,6 +51,21 @@ on the import path. Old private module paths and direct execution of moved
 implementation files are not supported. Maintained tests/tools use current names.
 Use module or console entrypoints, rather than executing `src/.../*.py` by filename.
 
+## Boundary rules
+
+1. Schema, physics and scene primitives do not depend on search or research. Search
+   composes movement, spatial, constraint, reachability and numerical services; the
+   numerical worker does not import the DFS.
+2. Ordinary import stays light: CasADi belongs to the numerical worker, plotting and
+   Clarabel are optional. SciPy backs the optional runtime LP screen.
+3. The generic CLI takes task and config paths; the solver never locates Real11 or a
+   benchmark through `Path(__file__).parents[...]`. Install the package for both the
+   parent and the worker interpreter.
+4. Compatibility code is a supported older strategy or format, kept tested and using
+   the shared physical, model and policy helpers.
+5. Historical evidence stays immutable: keep manifest and SQLite pairs together and
+   never rewrite recorded paths, hashes or results to look current.
+
 ## Evidence, relocation and reproduction
 
 [tools/layout-migration.json](../tools/layout-migration.json) maps original paths
@@ -71,6 +86,6 @@ Do not rewrite old provenance to resemble the current checkout.
 
 Regenerate navigation with `python -m tools.docs_index` from `standalone/`.
 `python -m tools.validate_layout` checks production import boundaries and protected
-file hashes. The native gate preserves all600 baseline tests and adds10 package/
-profiler regressions; it does not silently include or retire excluded capability
-suites. No physical/decision policy version was bumped for directory moves.
+file hashes. The native gate keeps its declared module scope plus package and profiler
+regressions; it does not silently include or retire excluded capability suites
+([current gate](TESTING.md#current-gate)). No physical/decision policy version was bumped for directory moves.

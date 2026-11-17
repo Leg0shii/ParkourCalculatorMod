@@ -81,3 +81,30 @@ Inside a ladder, `ladder_ceiling` is local handling within ladder climbing, with
 See MOVEMENT_TYPE_REFACTOR_PLAN.md for the concrete module extraction, common-program contract, migration commits and validation gates.
 
 Repeated steps, axis directions, multiple boxes and compatible contact combinations are variations/compositions. Exact resolver branches and equality bookkeeping are not extra named movement types. Reuse the common continuous model, event constraints and existing acceptance helpers rather than reproduce the Minecraft step algorithm in orchestration.
+
+## Implementation
+
+The `collision_boxes` support graph calls the registered `stepping` and `ceiling`
+generators alongside normal movement; ordinary jumps are kept beside them.
+
+| Type | Named case | Input producing the named state | Result |
+| --- | --- | --- | --- |
+| stepping | normal_step | Ground/run | One-input rise through 0.6, grounded |
+| stepping | slab_boost | Ground/jump | Rise above jump impulse through 0.6, not grounded; one air input follows |
+| stepping | blip | Air into H | H at higher top, grounded |
+| stepping | blip_up | Air into H | H retains yL, grounded without a fabricated support |
+| stepping | corner_jump_cancel | Ground/jump into J | X-facing approach, next-state Z escape, zero rise, airborne |
+| stepping | corner_blip_up | Air into H | X-facing L/H corner escape, retained yL, grounded |
+| ceiling | ceiling_hit | Normal upward air, or initial jump | Actual underside plane and zero vertical carry before gravity/drag |
+| ceiling | grind | Ground/jump into J | Outside before J, under low ceiling on J, zero rise; ordinary air follows |
+
+Owners: `movement/cases.py` builds named case constraints on `movement/vertical_profiles.py`;
+`movement/stepping.py` proposes support and corner cases; `movement/ceiling_generation.py`
+proposes ceiling and grind cases; `movement/ceiling_profiles.py` holds shared underside,
+profile and sequence helpers. `maxSteppingProfiles` defaults to 128 (`scene/normalize.py`).
+
+On L a blip's higher block is an ordinary finite obstacle: four outside-face and four
+real face-hit alternatives, a hit being a standard `role=contact` event. Blip-up also
+requires being outside the higher block on L, otherwise the Y-first resolver lands on it.
+Corner cases share X-approach and next-state Z-escape constraints.
+
