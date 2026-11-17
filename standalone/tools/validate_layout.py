@@ -21,6 +21,9 @@ def verify():
     manifest=json.loads((STANDALONE_ROOT/'tools/layout-migration.json').read_text())
     preserved=0
     for row in manifest['files']:
+        if row.get('retired'):
+            assert not row['immutable'], row
+            continue
         assert (STANDALONE_ROOT/row['new']).is_file(), row
         if row['immutable']:
             p=STANDALONE_ROOT/row['new']
