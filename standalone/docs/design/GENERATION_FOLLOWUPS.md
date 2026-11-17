@@ -63,7 +63,7 @@ sub-0.012 strata.
 - Update the tests that pin the old strata behaviour to the new rule.
 - Estimated effort: a width filter plus one test; runtime cost negligible.
 
-## 3. Sides covered by an adjacent block
+## 3. Use the exposed-face catalog everywhere
 
 B7's +X side (X = 730) is offered as an avoidance side although B6 sits flush
 against it: the gap between them is the same zero-width stratum as section 2. The
@@ -84,11 +84,27 @@ distinct results and frame 8 solved 21 with 9.
   neighbours from each face. On Real11 it reports B7's +X face (X = 730) exposed only
   for Z [-1094, -1093] and B6's -X face only above Y 7. Only `tools/geometry_bounds`
   and tests use it.
-- Proposed: take avoidance sides from the catalog's exposed faces, expanded by the
-  player half-width and piecewise along the face, instead of `faces(item['box'])`;
-  after section 2 removes zero-width strata.
-- Estimated effort: build the catalog once per scene, map each solid's sides to its
-  exposed pieces in `prepare_encounter`, plus one test with two flush blocks; saves the duplicate
-  IPOPT solves (13 of 18 in frame 4).
+- Decision (user, 2026-11-17): precompute the catalog once per scene and use it
+  everywhere geometry is turned into sides, contacts or landing regions. Collision
+  checks stay per box: the union of boxes is already exact for collision.
+
+### Consumers to move onto the catalog
+
+| Area | Today builds from raw boxes in |
+| --- | --- |
+| Avoidance sides | `faces()` in [`constraints/avoidance.py`](../../src/parkour_solver/constraints/avoidance.py); `prepare_encounter`, `support_faces` in [`constraints/encounters.py`](../../src/parkour_solver/constraints/encounters.py) |
+| Wall, ceiling and named-case contacts | `contact_opportunities` in [`movement/contact_profiles.py`](../../src/parkour_solver/movement/contact_profiles.py), [`movement/ceiling_generation.py`](../../src/parkour_solver/movement/ceiling_generation.py), `outside_row` / `landing_wall_options` in [`movement/cases.py`](../../src/parkour_solver/movement/cases.py), [`constraints/contacts.py`](../../src/parkour_solver/constraints/contacts.py), [`constraints/hit_events.py`](../../src/parkour_solver/constraints/hit_events.py) |
+| Landing covers and support | `canonical_cover`, `support_components`, `free_transit_cover` in [`spatial/regions.py`](../../src/parkour_solver/spatial/regions.py); face features in [`spatial/event_routes.py`](../../src/parkour_solver/spatial/event_routes.py); [`spatial/cells.py`](../../src/parkour_solver/spatial/cells.py); [`spatial/anchor_guides.py`](../../src/parkour_solver/spatial/anchor_guides.py); [`spatial/guides.py`](../../src/parkour_solver/spatial/guides.py) |
+| Stays per box (collision) | `block_interaction` regions in [`reachability/service.py`](../../src/parkour_solver/reachability/service.py), [`validation/scoped_scene.py`](../../src/parkour_solver/validation/scoped_scene.py) |
+
+- Build the catalog in scene preparation (`prepare_scene`) next to the collision
+  scene, with section 2's minimum width applied, and pass it to every consumer above
+  instead of each recomputing from boxes. The legacy corridor path
+  (`spatial/compat/corridors.py`) moves only if it stays in use.
+- Changes generated sides, contacts and covers, so bump the constraint policy and the
+  movement context identities.
+- Estimated effort: one preparation step plus one consumer change per row above,
+  each with a flush-block test; the avoidance row removes the duplicate IPOPT solves
+  (13 of 18 in Real11 frame 4).
 
 Related: [obstacle relevance](OBSTACLE_RELEVANCE.md), [avoidance passages](AVOIDANCE_PASSAGES.md).
