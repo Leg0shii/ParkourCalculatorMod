@@ -196,6 +196,38 @@ class BookkeepingProfileTests(unittest.TestCase):
                          [(1, ['a']), (2, ['b'])])
         self.assertEqual(requests[2]['owners'], [])
 
+    def test_route_trace_links_alternatives_solves_and_inherited_rows(self):
+        import json
+        from tools.profiling.run import route_trace
+        landing = dict(mode='X', t1=3, cmp='GE', rhs=1., name='normal:landing')
+        avoid = dict(mode='Z', t1=2, cmp='LE', rhs=-2., name='avoidance')
+        def record(name, key, rows, repair=None, witness=None):
+            return dict(id=name, candidateKey=key, status='feasible', ticks=4, nodeFeasibility=dict(status='feasible'),
+                        witness=witness, program=dict(profile=dict(positionConstraints=rows), guideSeedYaw=[1.],
+                                                      repairState=repair or {}))
+        branch = json.dumps([[[0, 2, 'Z', 'LE', -2.]], [], []])
+        repair = dict(completed=[dict(branch=branch, status='feasible', validationStatus='passed', problemHashes=['h1'])],
+                      attemptLog=[dict(status='feasible', problemHash='h1')],
+                      constraintGeneration=dict(items=[dict(owner='b6', box=[0]*6, begin=0, end=2), dict(contactCheck={})],
+                          metrics=dict(excludedFaces=2), screenExclusions=[dict(rowsHash='r', proof=dict(
+                              ruledOut=True, state=2, axis=1, reason='interval_reach_contradiction'))]))
+        parent = record('p', 'k0', [landing], repair, dict(problemHash='h1', plan=dict(walls=[
+            dict(avoid, t2=2), dict(mode='F', t1=0, cmp='GE', rhs=0.), dict(landing, name='checkpoint_probe:x')])))
+        sibling = record('s', 'k0', [landing], witness=dict(problemHash='h1'))
+        child = record('c', 'k1', [landing, dict(avoid, t2=2)])
+        state = dict(dfs=dict(frames=[dict(id=0, goal=dict(block='b2'), parent=None, records=[parent, sibling]),
+                                      dict(id=1, goal=dict(block='b3'), parent=dict(frame=0, candidate='p'), records=[child])]))
+        routes = {r['record']: r for r in route_trace(state)}
+        trace = routes['p']['repair']
+        self.assertEqual([e['owner'] for e in trace['encounters']], ['b6'])
+        self.assertEqual(trace['contactChecks'], 1)
+        self.assertEqual(trace['screenRejections'][0]['reason'], 'interval_reach_contradiction')
+        self.assertEqual(trace['alternatives'][0]['solves'], [dict(problemHash='h1', status='feasible', reason=None)])
+        self.assertEqual((routes['s']['repairOwner'], routes['s']['repair']), ('p', None))
+        self.assertEqual(routes['s']['acceptedAlternative'], [[0, 2, 'Z', 'LE', -2.]])
+        self.assertEqual((routes['c']['parent'], routes['c']['inheritedRows'], routes['c']['seededFacings']),
+                         ('p', [dict(avoid, t2=2)], True))
+
 
 class EnumerationProfileTests(unittest.TestCase):
     def test_repeated_contexts_share_report_rows_without_losing_counts(self):

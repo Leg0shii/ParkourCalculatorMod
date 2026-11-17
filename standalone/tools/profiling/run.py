@@ -82,6 +82,52 @@ def stop_report(state, requests):
     return dict(suspendedFrames=suspended,oracleRejectedRoutes=rejected,unknownRequests=unknown)
 
 
+def repair_trace(repair):
+    generation = repair.get('constraintGeneration') or {}
+    attempts = {a['problemHash']:dict(status=a['status'],reason=(a.get('certificate') or {}).get('reason'))
+                for a in repair.get('attemptLog',[])}
+    return dict(
+        encounters=[dict(owner=i['owner'],box=i['box'],begin=i['begin'],end=i['end'])
+                    for i in generation.get('items',[]) if 'box' in i],
+        contactChecks=sum('contactCheck' in i for i in generation.get('items',[])),
+        generatorMetrics=generation.get('metrics',{}),
+        screenRejections=[dict(rowsHash=e['rowsHash'],**e['proof']) for e in generation.get('screenExclusions',[])],
+        alternatives=[dict(rows=json.loads(c['branch'])[0],status=c['status'],validation=c.get('validationStatus'),
+                           solves=[dict(problemHash=h,**attempts.get(h,{})) for h in c.get('problemHashes',[])])
+                      for c in repair.get('completed',[])],
+        unresolved=[b['rows'] for b in repair.get('unresolved') or []],
+        pending=[b['rows'] for b in repair.get('pending') or []])
+
+
+def route_trace(state):
+    records = {record['id']:record for frame in frames(state) for record in frame['records']}
+    routes = []
+    for frame in sorted(frames(state),key=lambda f:f['id']):
+        owners, accepted = {}, {}
+        for record in frame['records']:
+            repair = record['program'].get('repairState',{})
+            if repair.get('completed') and record['candidateKey'] not in owners:
+                owners[record['candidateKey']] = record
+                for c in repair['completed']:
+                    for h in c.get('problemHashes',[]):
+                        accepted[h] = json.loads(c['branch'])[0]
+        parent = records.get((frame.get('parent') or {}).get('candidate'))
+        walls = (parent.get('witness') or {}).get('plan',{}).get('walls',[]) if parent else []
+        retained = [{k:v for k,v in w.items() if k in ('mode','t1','t2','op','cmp','rhs','name')} for w in walls
+                    if w['mode'] != 'F' and not w.get('name','').startswith('checkpoint_probe:')]
+        for record in frame['records']:
+            rows = record['program']['profile']['positionConstraints']
+            witness = record.get('witness')
+            owner = owners.get(record['candidateKey'])
+            routes.append(dict(route(frame,record),parent=parent['id'] if parent else None,
+                ticks=record.get('ticks'),repairOwner=owner['id'] if owner else None,
+                acceptedAlternative=accepted.get(witness['problemHash']) if witness else None,
+                inheritedRows=[r for r in retained if r in rows],
+                seededFacings='guideSeedYaw' in record['program'],
+                repair=repair_trace(record['program']['repairState']) if record is owner else None))
+    return routes
+
+
 class DurableProgress:
     """Keep the production callback protocol while timing each boundary."""
     def __init__(self, checkpoint, profile):
@@ -220,6 +266,7 @@ def main():
             sourceUnchanged=source==source_hashes(),sessions=profile.sessions,
             resume=result.get('resume'),profileMode=args.profile_mode,durable=args.durable)
         save(args.output/'summary.json',summary)
+        save(args.output/'routes.json',route_trace(result['searchState']))
         if not args.durable:
             with CheckpointStore(args.output/'report.json.gz') as store:
                 profile.call('postrun.shared_report_write',store.save,

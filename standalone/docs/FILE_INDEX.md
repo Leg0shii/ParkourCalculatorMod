@@ -68,13 +68,13 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/DEFERRED_WORK.md](DEFERRED_WORK.md) | 18113 |
 | [docs/DEVELOPMENT.md](DEVELOPMENT.md) | 11359 |
 | [docs/DOC_INDEX.md](DOC_INDEX.md) | 25664 |
-| [docs/FILE_INDEX.md](FILE_INDEX.md) | 203674 |
+| [docs/FILE_INDEX.md](FILE_INDEX.md) | 203797 |
 | [docs/FUNCTION_INDEX.md](FUNCTION_INDEX.md) | 67693 |
 | [docs/IPOPT_CONSTRAINT_REDUCTION.md](IPOPT_CONSTRAINT_REDUCTION.md) | 5578 |
 | [docs/IPOPT_FEASIBILITY_MODE.md](IPOPT_FEASIBILITY_MODE.md) | 4781 |
 | [docs/LAYOUT.md](LAYOUT.md) | 6162 |
 | [docs/MOD_REFERENCES.md](MOD_REFERENCES.md) | 4996 |
-| [docs/PERFORMANCE.md](PERFORMANCE.md) | 8550 |
+| [docs/PERFORMANCE.md](PERFORMANCE.md) | 8900 |
 | [docs/REAL11_EXTENDED_GEOMETRY.md](REAL11_EXTENDED_GEOMETRY.md) | 12248 |
 | [docs/REAL11_GUIDE.md](REAL11_GUIDE.md) | 20362 |
 | [docs/RESULTS_AND_DEBUGGING.md](RESULTS_AND_DEBUGGING.md) | 11375 |
@@ -1473,7 +1473,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [tests/integration/test_movement_contacts.py](../tests/integration/test_movement_contacts.py) | 11400 |
 | [tests/integration/test_orchestrator_continuation.py](../tests/integration/test_orchestrator_continuation.py) | 19182 |
 | [tests/integration/test_package_layout.py](../tests/integration/test_package_layout.py) | 4032 |
-| [tests/integration/test_profiling.py](../tests/integration/test_profiling.py) | 15531 |
+| [tests/integration/test_profiling.py](../tests/integration/test_profiling.py) | 18200 |
 | [tests/integration/test_repair_resume.py](../tests/integration/test_repair_resume.py) | 14925 |
 | [tests/integration/test_shared_contacts.py](../tests/integration/test_shared_contacts.py) | 4275 |
 | [tests/research/__init__.py](../tests/research/__init__.py) | 0 |
@@ -1606,7 +1606,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [tools/profiling/enumeration.py](../tools/profiling/enumeration.py) | 5419 |
 | [tools/profiling/enumeration_calibrate.py](../tools/profiling/enumeration_calibrate.py) | 4476 |
 | [tools/profiling/enumeration_compare.py](../tools/profiling/enumeration_compare.py) | 3565 |
-| [tools/profiling/run.py](../tools/profiling/run.py) | 13416 |
+| [tools/profiling/run.py](../tools/profiling/run.py) | 16349 |
 | [tools/profiling/runtime.py](../tools/profiling/runtime.py) | 9235 |
 | [tools/validate_layout.py](../tools/validate_layout.py) | 1433 |
 | [tools/witness_bound_audit.py](../tools/witness_bound_audit.py) | 2779 |
