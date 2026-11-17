@@ -1,0 +1,54 @@
+#!/bin/sh
+set -e
+root="$(cd "$(dirname "$0")/.." && pwd)"
+main=de.legoshi.parkourcalc.preview.UiPreview
+
+if [ -z "$PKC_PREVIEW_NO_GRADLE" ]; then
+  jdk="${JAVA_HOME:-$(dirname "$(dirname "$(readlink -f "$(command -v java)")")")}"
+  if (cd "$root" && ./gradlew -q -PcoreOnly -Dorg.gradle.java.home="$jdk" :ui-preview:installDist); then
+    exec "$root/ui-preview/build/install/ui-preview/bin/ui-preview" "$@"
+  fi
+  echo "Gradle build failed, building with javac instead" >&2
+fi
+
+out="$root/ui-preview/build/nogradle"
+libs="${PKC_PREVIEW_LIBS:-$HOME/.cache/pkc-ui-preview/libs}"
+mkdir -p "$libs" "$out"
+case "$(uname -s)" in
+  Darwin) natives=natives-macos; imgui=imgui-java-natives-macos ;;
+  *) natives=natives-linux; imgui=imgui-java-natives-linux ;;
+esac
+fetch() {
+  file="$libs/$(basename "$1")"
+  [ -s "$file" ] && return 0
+  for wait in 0 5 15 30 60; do
+    sleep $wait
+    for host in https://repo1.maven.org/maven2 https://repo.maven.apache.org/maven2; do
+      if curl -fsSL -o "$file.part" "$host/$1" 2>/dev/null; then mv "$file.part" "$file"; return 0; fi
+    done
+  done
+  echo "Could not download $1" >&2
+  exit 1
+}
+fetch com/google/code/gson/gson/2.8.0/gson-2.8.0.jar
+fetch io/github/spair/imgui-java-binding/1.86.12/imgui-java-binding-1.86.12.jar
+fetch io/github/spair/imgui-java-lwjgl3/1.86.12/imgui-java-lwjgl3-1.86.12.jar
+fetch io/github/spair/$imgui/1.86.12/$imgui-1.86.12.jar
+for m in lwjgl lwjgl-glfw lwjgl-opengl; do
+  fetch org/lwjgl/$m/3.3.4/$m-3.3.4.jar
+  fetch org/lwjgl/$m/3.3.4/$m-3.3.4-$natives.jar
+done
+cp="$out/classes:$out/resources"
+for j in "$libs"/*.jar; do cp="$cp:$j"; done
+
+stamp="$out/.built"
+if [ ! -f "$stamp" ] || [ -n "$(find "$root/core/src/main" "$root/ui-preview/src/main" -newer "$stamp" -type f -print -quit)" ]; then
+  rm -rf "$out/classes" "$out/resources"
+  mkdir -p "$out/classes" "$out/resources/assets/parkourcalculatormod/fonts"
+  find "$root/core/src/main/java" "$root/ui-preview/src/main/java" -name '*.java' > "$out/sources.txt"
+  javac -nowarn --release 8 -Xlint:-options -encoding UTF-8 -cp "$cp" -d "$out/classes" @"$out/sources.txt"
+  cp -r "$root/core/src/main/resources/." "$out/resources/"
+  cp "$root/loader-fabric/src/client/resources/assets/parkourcalculatormod/fonts/"*.ttf "$out/resources/assets/parkourcalculatormod/fonts/"
+  touch "$stamp"
+fi
+exec java -cp "$cp" $main "$@"

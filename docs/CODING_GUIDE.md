@@ -10,12 +10,13 @@ core/                  Java 8. ImGui-only UI, input data, the angle solver, valu
                        No Minecraft, Fabric, Forge, or LWJGL imports.
 forge-core/            Java 8. Shared by both Forge loaders. No Minecraft or Forge imports.
 gpu/                   Java 8. OpenCL implementation of core's SchedulePoolScreen port (JOCL). No Minecraft, Forge, Fabric or LWJGL imports.
+ui-preview/            Java 8. Dev tool, never shipped: the core UI on a GLFW window with stub ports. LWJGL 3, no Minecraft imports.
 loader-fabric/         Stonecutter tree for every Fabric target (26.3 on Java 25, 1.21.3 on Java 21, 1.20.4 on Java 17).
                        Loom, LWJGL 3. MC-touching code. Shared source under src/client/java, variants under src/<variant>/java.
 loader-forge/          Stonecutter tree for both Forge targets (1.12.2, 1.8.9). Java 8, Unimined, LWJGL 2. MC-touching code.
 ```
 
-One root Gradle build covers `core`, `forge-core`, `gpu`, and one Gradle subproject per loader target (`:loader-fabric:26.3`, `:loader-fabric:1.21.3`, `:loader-fabric:1.20.4`, `:loader-forge:1.12.2`, `:loader-forge:1.8.9`); each target pins its own toolchain in `loader-<x>/versions/<mc>/gradle.properties`. Build tasks and JDK requirements are in `AGENTS.md` § Build & Run.
+One root Gradle build covers `core`, `forge-core`, `gpu`, `ui-preview`, and one Gradle subproject per loader target (`:loader-fabric:26.3`, `:loader-fabric:1.21.3`, `:loader-fabric:1.20.4`, `:loader-forge:1.12.2`, `:loader-forge:1.8.9`); each target pins its own toolchain in `loader-<x>/versions/<mc>/gradle.properties`. Build tasks and JDK requirements are in `AGENTS.md` § Build & Run.
 
 
 ## Where does X go?
@@ -82,6 +83,15 @@ The graphics-card implementation of core's `SchedulePoolScreen` port (the stratf
 - The GPU is a ranker, never the certificate. The kernels are float32 and the screen is the pure linear model without the byte-exact linearisation, so `StructurePoolDriver` re-screens the kept pool with the CPU `UnitScreen` at the end of every level and the certify stays byte-exact on the CPU.
 - The kernel source `pool_screen.cl` reads the problem shape at runtime; `OpenClPoolScreen` compiles one program per size bucket (walls 12/24/36, facing groups 6/12, `MAX_W` / `MAX_G`), warms them up on a background thread when the setting is turned on and sends a problem wider than the largest bucket back to the CPU. `global` is a reserved word in OpenCL C. The tuning constants at the top of the kernel can be overridden per run with `-Dpkc.gpu.def.<NAME>=<value>` for experiments.
 - No tests need a GPU: the fast suite never loads this module, the pool-as-set comparison against the CPU driver is a bench run (`NoTurnColdBench` with `-Dpkc.pool.gpu=true` and `-Dpkc.bench.dumpPool=true`).
+
+
+### `ui-preview/`
+
+A dev tool that runs the real `core` UI outside Minecraft (README in the module). It implements the ports with stubs, never the other way round: nothing in `core` or a loader may depend on it, and no UI code is written for it. A UI change goes into `core` as usual and the preview shows it on the next run. Rules:
+
+- The ImGui setup mirrors the Fabric loader's `ImGuiImpl` (fonts, glyph ranges, preset scales, `ThemeManager.apply`, ImPlot). When that setup changes, change `PreviewWindow` with it, or the preview stops matching the game.
+- The stub simulator only has to give the table plausible numbers; it is not Minecraft's movement and must never be used for anything but the preview.
+- `chiseledBuild` compiles it, so a core API change that breaks it fails CI.
 
 
 ## Ports (port-and-adapter pattern)
