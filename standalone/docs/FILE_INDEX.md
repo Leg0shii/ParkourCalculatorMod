@@ -20,13 +20,13 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 
 | File | Bytes |
 | --- | ---: |
-| [AGENTS.md](../AGENTS.md) | 4158 |
+| [AGENTS.md](../AGENTS.md) | 6184 |
 
 ## CLAUDE.md
 
 | File | Bytes |
 | --- | ---: |
-| [CLAUDE.md](../CLAUDE.md) | 4158 |
+| [CLAUDE.md](../CLAUDE.md) | 6184 |
 
 ## README.md
 
@@ -65,10 +65,10 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/CODE_MAP.md](CODE_MAP.md) | 24922 |
 | [docs/CURRENT_STATE.md](CURRENT_STATE.md) | 10623 |
 | [docs/DECISIONS_AND_PLANS.md](DECISIONS_AND_PLANS.md) | 8449 |
-| [docs/DEFERRED_WORK.md](DEFERRED_WORK.md) | 17790 |
+| [docs/DEFERRED_WORK.md](DEFERRED_WORK.md) | 18113 |
 | [docs/DEVELOPMENT.md](DEVELOPMENT.md) | 11359 |
 | [docs/DOC_INDEX.md](DOC_INDEX.md) | 25664 |
-| [docs/FILE_INDEX.md](FILE_INDEX.md) | 203675 |
+| [docs/FILE_INDEX.md](FILE_INDEX.md) | 203674 |
 | [docs/FUNCTION_INDEX.md](FUNCTION_INDEX.md) | 67693 |
 | [docs/IPOPT_CONSTRAINT_REDUCTION.md](IPOPT_CONSTRAINT_REDUCTION.md) | 5578 |
 | [docs/IPOPT_FEASIBILITY_MODE.md](IPOPT_FEASIBILITY_MODE.md) | 4781 |
@@ -1590,7 +1590,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [tools/docs_index.py](../tools/docs_index.py) | 6567 |
 | [tools/geometry_bounds.py](../tools/geometry_bounds.py) | 6291 |
 | [tools/layout-extractions.json](../tools/layout-extractions.json) | 6510 |
-| [tools/layout-migration.json](../tools/layout-migration.json) | 361754 |
+| [tools/layout-migration.json](../tools/layout-migration.json) | 363149 |
 | [tools/layout-test-support.json](../tools/layout-test-support.json) | 3356 |
 | [tools/native-suite.json](../tools/native-suite.json) | 3704 |
 | [tools/native_gate.py](../tools/native_gate.py) | 1698 |
@@ -1607,5 +1607,5 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [tools/profiling/enumeration_compare.py](../tools/profiling/enumeration_compare.py) | 3565 |
 | [tools/profiling/run.py](../tools/profiling/run.py) | 11266 |
 | [tools/profiling/runtime.py](../tools/profiling/runtime.py) | 9235 |
-| [tools/validate_layout.py](../tools/validate_layout.py) | 1336 |
+| [tools/validate_layout.py](../tools/validate_layout.py) | 1433 |
 | [tools/witness_bound_audit.py](../tools/witness_bound_audit.py) | 2779 |

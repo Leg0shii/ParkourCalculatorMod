@@ -35,4 +35,39 @@ Use [current state](docs/CURRENT_STATE.md) for ongoing work and [decisions and p
 - Run focused standalone checks and widen according to the affected scope. See the runbook and testing guide for commands and native dependencies. Rebuild helpers only when needed; launch Minecraft or run mod checks only when the task calls for them.
 - Distinguish numerical feasibility, scene validation and executable replay. A timeout, cap or local solver failure is not an infeasibility or optimality certificate.
 - Preserve historical evidence and write new experiment runs to new output paths. Record source revision, settings and validation scope when reporting measurements.
-- Update relevant current documentation when behavior, commands or measured facts change. Keep task history and detailed design records out of this entry point.
+
+## Keeping docs current
+
+Update docs continually while you work, not at the end. Whenever you read code and
+find a doc that is wrong, stale or duplicated, fix or delete it in the same change;
+whenever you change behavior, commands, defaults, names or measured facts, update the
+owning doc in the same commit as the code.
+
+Each fact has one owner; other docs link to it instead of restating it:
+
+| Fact | Owner |
+| --- | --- |
+| Current status, branches, focus areas | [current state](docs/CURRENT_STATE.md) |
+| Standing user decisions | [decisions](docs/DECISIONS_AND_PLANS.md) |
+| Deferred and unapproved work | [deferred-work register](docs/DEFERRED_WORK.md) |
+| Native gate result and test selection | [testing](docs/TESTING.md) |
+| Timings, hotspots, speedup invariants | [performance](docs/PERFORMANCE.md) |
+| Commands and environment | [runbook](docs/RUNBOOK.md) |
+
+| Code | Owning doc |
+| --- | --- |
+| `constraints/` (encounters, variants, avoidance) | [avoidance passages](docs/design/AVOIDANCE_PASSAGES.md) |
+| `reachability/` | [obstacle relevance](docs/design/OBSTACLE_RELEVANCE.md) |
+| `search/dfs.py`, `search/repair.py`, dispatch and pruning boundaries | [execution reference](docs/ANCHOR_SEARCH_EXECUTION_REFERENCE.md) |
+| `search/comparison.py`, `search/anchors/`, `search/bounds/` | [anchor policy](docs/design/ANCHOR_POLICY_DECISIONS.md) |
+| `movement/` stepping and ceiling cases | [stepping cases](docs/design/STEPPING_CASES.md) |
+| `movement/ladder/`, movement units | [movement units](docs/design/MOVEMENT_UNITS.md) |
+| `numerics/` | [numerical solver](docs/reference/NUMERICAL_SOLVER.md) |
+| `io/` checkpoints | [checkpoint storage](docs/CHECKPOINT_STORAGE.md) |
+| `scene/`, `spatial/faces.py`, package layout | [layout](docs/LAYOUT.md), [architecture](docs/ARCHITECTURE.md) |
+| `cases/real11/` | [Real11 guide](docs/REAL11_GUIDE.md) |
+
+Write docs as current statements, not dated status paragraphs; dated results belong
+in `research/` evidence. Delete text that no longer holds instead of annotating it.
+Plan, handoff and resume notes stay outside the repository. Regenerate the indexes
+with `python -m tools.docs_index` after adding, moving or renaming files.
