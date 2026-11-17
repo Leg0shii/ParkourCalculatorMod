@@ -196,7 +196,7 @@ class MovementCompositionIntegrationTests(unittest.TestCase):
                               ladderEvents=p['ladderEvents'],entryFace=None,exitFace=None)
                     c=compile_block_path(scene,['start','goal'],[edge])
                     r=solve_contact_branches(c['route'],c['profiles'],floor_checks(scene,['start','goal'],c['profiles']),
-                        compiler,seconds=30,candidate_seconds=5,retries=1,max_branches=8,geometry=scene['collisionScene'],
+                        compiler,seconds=30,candidate_seconds=5,retries=1,geometry=scene['collisionScene'],
                         motion_bound={'storedSpeedNorm':2,'movementAfterSupportCheck':2},
                         python_executable=os.environ['PKC_IPOPT_PYTHON'])
                     self.assertEqual(r['status'],'feasible',r)

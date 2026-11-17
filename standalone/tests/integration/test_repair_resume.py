@@ -77,6 +77,42 @@ class RepairResumeTests(RepairHarness, unittest.TestCase):
         self.assertEqual(second['status'],'feasible')
         self.assertEqual(second['attempts'],[])
 
+    def test_collision_repair_source_survives_global_stop_without_repeating_completed_root(self):
+        from parkour_solver.constraints.variants import ConstraintVariants
+        row = dict(leg=0, offset=1, mode='X', cmp='GE', rhs=-1.)
+        response = outcome()
+        response['best']['plan'].update(events=[dict(jump=0, landed=0, landing=2, runTicks=0)], walls=[], contacts=[])
+        geometry = dict(solids=[[0., 0., 0., 1., 3., 1.]])
+        requests = []
+        def solve(request, *args, **kwargs):
+            requests.append(copy.deepcopy(request['constraints']))
+            return copy.deepcopy(response)
+        def clipped(*args, **kwargs):
+            return dict(feasible=bool(requests[-1]), solidIndex=0, tick=0, reason='unselected_collision')
+        class Source:
+            def __init__(self):
+                self.state = dict(cursor=0, metrics={}, uncertainInteractions=[])
+            def __iter__(self): return self
+            def __next__(self):
+                if self.state['cursor']:
+                    raise StopIteration
+                self.state['cursor'] = 1
+                return dict(rows=[row], selectedPassages=[], score=1)
+        with patch('parkour_solver.search.repair.check_geometry', side_effect=clipped):
+            first = self.invoke(route(), solve, lambda *a: dict(accepted=True), geometry=geometry)
+            saved = json.loads(json.dumps(first['repairState'], allow_nan=False))
+            self.assertEqual(len(saved['repairSources']), 1)
+            self.assertEqual(len(saved['completed']), 1)
+            from parkour_solver.search.feasibility import outcome as classify
+            self.assertEqual(classify(first, 'model', dict(oracleRejection=True))['status'], 'suspended')
+            with patch.object(ConstraintVariants, 'for_plan', return_value=Source()):
+                second = self.invoke(route(), solve, lambda *a: dict(accepted=True),
+                                     geometry=geometry, resume_state=saved, retry_unresolved=False)
+        self.assertEqual(requests, [[], [row]])
+        self.assertEqual(second['status'], 'feasible')
+        self.assertTrue(second['repairResume']['exact'])
+        self.assertEqual(second['repairState']['repairSources'][0]['state']['cursor'], 1)
+
     def test_worker_interruption_restores_the_inflight_branch(self):
         checkpoints=[]
         def interrupted(*args,**kwargs):raise RuntimeError('synthetic interruption')

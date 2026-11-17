@@ -39,7 +39,7 @@ class InteractionNormalizationTests(unittest.TestCase):
         owner=self.staged([bad,good],suffix)
         downstream=[];actual=owner.option
         def option(item,cursor):
-            if item is owner.items[1]:downstream.append(True)
+            if item.get('rows') == owner.items[1]['rows']:downstream.append(True)
             return actual(item,cursor)
         with patch.object(owner,'option',side_effect=option):result=list(owner)
         self.assertEqual(len(result),1)
@@ -108,7 +108,7 @@ class InteractionNormalizationTests(unittest.TestCase):
         self.assertNotEqual(a['context'], b['context'])
         self.assertEqual(b['status'], 'not_ruled_out')
 
-    def test_interrupted_phase_mask_and_table_preparation_resumes_exactly(self):
+    def test_interrupted_phase_cover_preparation_resumes_exactly(self):
         expected = list(itertools.islice(source(), 12))
         self.assertTrue(expected)
         for allowance in (2, 12, 40, 80):

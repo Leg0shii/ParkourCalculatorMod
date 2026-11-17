@@ -243,7 +243,7 @@ class StepCombinationIntegrationTests(unittest.TestCase):
             'profileKind':'step','profile':p,'entryFace':None,'exitFace':None}])
         with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:
             result = solve_contact_branches(compiled['route'],compiled['profiles'],floor_checks(scene,['floor','stair'],compiled['profiles']),
-                compiler,seconds=10,candidate_seconds=2,retries=0,max_branches=2,geometry=scene['collisionScene'],
+                compiler,seconds=10,candidate_seconds=2,retries=0,geometry=scene['collisionScene'],
                 motion_bound={'storedSpeedNorm':2,'movementAfterSupportCheck':2},python_executable=os.environ['PKC_IPOPT_PYTHON'])
         self.assertEqual(result['status'],'feasible',result)
         self.assertEqual(result['best']['plan']['ticks'],1)
@@ -270,7 +270,7 @@ class StepCombinationIntegrationTests(unittest.TestCase):
             'profile':profile,'entryFace':None,'exitFace':None}])
         with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:
             result = solve_contact_branches(compiled['route'],compiled['profiles'],floor_checks(scene,['floor','goal'],compiled['profiles']),
-                compiler,seconds=12,candidate_seconds=2,retries=1,max_branches=8,geometry=scene['collisionScene'],
+                compiler,seconds=12,candidate_seconds=2,retries=1,geometry=scene['collisionScene'],
                 motion_bound={'storedSpeedNorm':2,'movementAfterSupportCheck':2},python_executable=os.environ['PKC_IPOPT_PYTHON'])
         self.assertEqual(result['status'],'feasible',result)
         b = result['best']

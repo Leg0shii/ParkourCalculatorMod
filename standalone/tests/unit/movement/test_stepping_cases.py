@@ -181,8 +181,7 @@ class SteppingNumericalTests(unittest.TestCase):
                     compiled = compile_block_path(scene, ['start', 'goal'], [edge])
                     result = solve_contact_branches(compiled['route'], compiled['profiles'],
                         floor_checks(scene, ['start', 'goal'], compiled['profiles']), compiler,
-                        seconds=10, candidate_seconds=1, retries=0, max_branches=16,
-                        geometry=scene['collisionScene'], motion_bound=dict(movementAfterSupportCheck=.8, storedSpeedNorm=.6),
+                        seconds=10, candidate_seconds=1, retries=0, geometry=scene['collisionScene'], motion_bound=dict(movementAfterSupportCheck=.8, storedSpeedNorm=.6),
                         python_executable=os.environ['PKC_IPOPT_PYTHON'])
                     self.assertEqual(result['status'], 'feasible', result)
                     best = result['best']
@@ -215,8 +214,7 @@ class SteppingNumericalTests(unittest.TestCase):
                 compiled = compile_block_path(scene, ['start', 'goal'], [edge])
                 result = solve_contact_branches(compiled['route'], compiled['profiles'],
                     floor_checks(scene, ['start', 'goal'], compiled['profiles']), compiler,
-                    seconds=8, candidate_seconds=1, retries=0, max_branches=16,
-                    geometry=scene['collisionScene'], motion_bound=dict(movementAfterSupportCheck=.8, storedSpeedNorm=.6),
+                    seconds=8, candidate_seconds=1, retries=0, geometry=scene['collisionScene'], motion_bound=dict(movementAfterSupportCheck=.8, storedSpeedNorm=.6),
                     python_executable=os.environ['PKC_IPOPT_PYTHON'])
                 self.assertEqual(result['status'], 'feasible', result)
                 best = result['best']
@@ -258,7 +256,7 @@ class SteppingNumericalTests(unittest.TestCase):
         with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:
             result = solve_contact_branches(compiled['route'], compiled['profiles'],
                 floor_checks(scene, ['start', 'goal'], compiled['profiles']), compiler,
-                seconds=8, candidate_seconds=1, retries=0, max_branches=8, geometry=scene['collisionScene'],
+                seconds=8, candidate_seconds=1, retries=0, geometry=scene['collisionScene'],
                 motion_bound=dict(movementAfterSupportCheck=.8, storedSpeedNorm=.6),
                 python_executable=os.environ['PKC_IPOPT_PYTHON'])
         self.assertEqual(result['status'], 'feasible', result)

@@ -364,7 +364,7 @@ def find_climbable_blocks(scene, compiler, normal_solver, *, seconds=60, route_s
                                         try:
                                             solved = solve_contact_branches(route, compiled['profiles'], floor_checks(scene, full_path, compiled['profiles']),
                                                 compiler, seconds=max(.001, context_deadline - time.monotonic()), candidate_seconds=candidate_seconds,
-                                                retries=retries, max_branches=scene['maxContactBranches'], rank_equal_cost=True, optimize_goal=True,
+                                                retries=retries, rank_equal_cost=True, optimize_goal=True,
                                                 python_executable=python_executable, cancel_event=cancel_event, geometry=scene['collisionScene'],
                                                 motion_bound=graph['bound'], solid_blocks=[b['sourceBlock'] for b in sorted(scene['blocks'], key=lambda b: b['solidIndex'])])
                                         except (ValueError, TimeoutError) as error:

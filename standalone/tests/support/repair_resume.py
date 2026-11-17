@@ -18,7 +18,12 @@ from parkour_solver.search.repair import solve_contact_branches
 
 class RepairHarness:
     def invoke(self, request, find, filter_candidate, **kwargs):
-        with patch('parkour_solver.search.repair.find_route',side_effect=find), \
+        from parkour_solver.search.work import SearchWork
+        budget = kwargs.setdefault('work', SearchWork(1))
+        def dispatch(*args, **options):
+            budget.before_solve({})
+            return find(*args, **options)
+        with patch('parkour_solver.search.repair.find_route',side_effect=dispatch), \
              patch('parkour_solver.search.repair.validate_vertical_schedule',return_value=VERTICAL):
             return solve_contact_branches(request,[],[],object(),seconds=1,candidate_seconds=.1,retries=0,
-                max_branches=1,rank_equal_cost=True,optimize_goal=True,candidate_filter=filter_candidate,**kwargs)
+                rank_equal_cost=True,optimize_goal=True,candidate_filter=filter_candidate,**kwargs)

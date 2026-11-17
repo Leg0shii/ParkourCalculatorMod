@@ -10,7 +10,7 @@ and the [original inventory/review](STANDALONE_STRUCTURE_REVIEW.md) record its s
 | `src/parkour_solver/` | Installed production code. Cannot import research, tools, tests or old checkout namespaces. |
 | `tests/unit/`, `tests/integration/`, `tests/research/` | Domain checks, native/package boundaries and deliberate research/archive regressions. |
 | `tests/support/`, `tests/fixtures/` | Shared builders/harnesses and small reusable test data. No test imports another test case. |
-| `cases/` | Curated runnable user tasks. Real11 physical anchors are a byte-identical promoted input with provenance in its README. |
+| `cases/` | Curated runnable user tasks. Real11 physical anchors are a maintained derived input; its README records domain/configuration changes. |
 | `tools/` | Current native gate, scoped profiling, saved-report audits and optional plotting. Tools may import production APIs. |
 | `native/java/`, `native/gradle/` | Four Java bridge sources and their standalone build/export/replay adapters. They reuse existing mod physics. |
 | `research/` | Scientific prototype, maintained older experiment drivers and immutable dated evidence bundles. Excluded from the installed package. |

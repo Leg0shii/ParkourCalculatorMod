@@ -14,12 +14,14 @@ from tools.profiling.enumeration import EnumerationProfile, instrumented_option
 
 
 def measure(case, checks, observed):
+    if case.get('version') != 2:
+        raise ValueError('Incompatible prepared option capture; reproduce historical captures in their source checkout')
     owner = ConstraintVariants.__new__(ConstraintVariants)
     owner.__dict__.update(copy.deepcopy(case['attributes']))
     owner.envelopes = copy.deepcopy(case['envelopes'])
     owner.state = dict(context=case['metadata']['context'],duplicateVariants=0,
-        timings=dict(preparationSeconds=0.,variantGenerationSeconds=0.))
-    owner.deadline, owner.route_guards = None, None
+        metrics={},uncertainInteractions=[],timings=dict(preparationSeconds=0.,variantGenerationSeconds=0.))
+    owner.deadline, owner.route_guards, owner._active_envelopes = None, None, None
     item, cursor, outputs = copy.deepcopy(case['item']), {}, []
     calls = 0
     class FixedWorkEnd(Exception):

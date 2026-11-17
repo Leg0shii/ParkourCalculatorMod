@@ -351,10 +351,7 @@ def search_block_paths(scene, graph, evaluate, *, seconds=60, improve=False, can
             record['unresolvedAllocations'] = len(result.get('unresolved', [])) + len(result.get('unresolvedEqualCost', []))
             if scene['sceneModel'] == 'collision_boxes':
                 contacts = result.get('contactAttempts', [])
-                generations = [a['passageGeneration'] for a in contacts if 'passageGeneration' in a]
-                record['obstacleSearch'] = {key: sum(a.get(key, 0) for a in generations)
-                                           for key in ('generated', 'candidateDrops', 'timingPoolDrops', 'reachPruned', 'verticalFacesPruned', 'budgetPruned')}
-                record['obstacleSearch']['generationIncomplete'] = any(a.get('generationIncomplete') for a in generations)
+                record['obstacleSearch'] = dict(result.get('avoidanceMetrics', {}))
                 record['obstacleSearch']['acceptedKinds'] = sorted({kind for a in contacts if a.get('geometryCheck', {}).get('feasible')
                                                                     for kind in a['passageKinds']})
                 record['wallHitSearch'] = {'generated': max((a.get('wallHitGeneration', {}).get('generated', 0) for a in contacts), default=0),
@@ -433,9 +430,6 @@ def _find_blocks_normal(request, compiler, *, seconds=60, route_seconds=8, candi
             return {'status': 'unknown', 'termination': 'profile_limit'}
         if scene['sceneModel'] == 'collision_boxes':
             compiled['route']['sharedMovement'] = True
-            compiled['route']['passageCaps'] = {'horizontal': scene['maxHorizontalBlockagesPerObstacle'],
-                                                'vertical': scene['maxVerticalBlockagesPerObstacle'],
-                                                'total': scene['maxBlockagesPerObstacle']}
             selected_hits = sum(e['axis'] != 'Y' for e in compiled['route'].get('contactEvents', []))
             if selected_hits > scene['maxWallHits']:
                 return {'status': 'unknown', 'termination': 'wall_hit_limit'}
@@ -450,17 +444,13 @@ def _find_blocks_normal(request, compiler, *, seconds=60, route_seconds=8, candi
         goal = block_ids[-1] == scene['goalBlock']
         return solve_contact_branches(compiled['route'], compiled['profiles'], checks, compiler,
                                       seconds=min(route_seconds, available), candidate_seconds=candidate_seconds,
-                                      retries=retries, max_branches=scene['maxContactBranches'], improve=goal,
+                                      retries=retries, improve=goal,
                                       rank_equal_cost=goal, optimize_goal=goal,
                                       python_executable=python_executable, cancel_event=cancel_event,
                                       geometry=scene.get('collisionScene'),
                                       motion_bound=dict(graph['bound'], flightBounds=graph['flightBounds']),
-                                      max_blockages=scene.get('maxBlockagesPerObstacle', 3),
-                                      max_horizontal=scene.get('maxHorizontalBlockagesPerObstacle', 2),
-                                      max_vertical=scene.get('maxVerticalBlockagesPerObstacle', 2),
                                       solid_blocks=[b['sourceBlock'] for b in sorted(scene['blocks'], key=lambda b: b['solidIndex'])]
                                       if scene['sceneModel'] == 'collision_boxes' else None,
-                                      max_passage_candidates=scene.get('maxPassageCandidates', 128),
                                       max_wall_hits=max(0, scene.get('maxWallHits', 0) - selected_hits),
                                       max_wall_candidates=scene.get('maxWallHitCandidates', 24))
 
@@ -478,10 +468,9 @@ def _find_blocks_normal(request, compiler, *, seconds=60, route_seconds=8, candi
         result['validationLevel'] = 'continuous_profile_with_shared_scene_collision_checks'
         result['assumptions'].update(solidSideFaces=True, runOffSourceObstacle='checked_during_y_overlap',
                                      ceilings=True, ceilingContactProfiles=scene['ceilingHits'],
-                                     intentionalWallHits=True, maxBlockagesPerObstacle=scene['maxBlockagesPerObstacle'])
-        result['assumptions'].update(maxHorizontalBlockagesPerObstacle=scene['maxHorizontalBlockagesPerObstacle'],
-                                     maxVerticalBlockagesPerObstacle=scene['maxVerticalBlockagesPerObstacle'],
-                                     blockageCapScope='physical_block_across_selected_route')
+                                     intentionalWallHits=True,
+                                     avoidanceDomain='one_encounter_per_box_per_landing_segment',
+                                     avoidanceSwitchCaps=False, localRepairCaps=False)
     return result
 
 

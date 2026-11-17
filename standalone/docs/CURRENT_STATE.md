@@ -1,5 +1,22 @@
 # Current standalone state
 
+2026-11-16: the [geometry-driven avoidance replacement](design/AVOIDANCE_PASSAGES.md)
+is implemented and undergoing final acceptance. `constraints.encounters` builds
+meaningful phase covers within landing segments; `ConstraintVariants` conditions
+later domains on actual earlier rows. Upfront generation and collision repair use
+one builder. Ghost face histories, switch-count budgets and local avoidance/repair
+attempt and retention limits are removed. Global run/call budgets preserve lazy
+unfinished work; per-request numerical timeouts remain.
+
+The audit covers finite-contact entry geometry, proved-clear intermediate sides,
+unknown named probes, joint obstacle requirements, exact continuation and descriptive
+phase traces. Current movement cadence, comparisons and inter-movement commitment
+remain; [automatic grouping/commitment consolidation](design/PRUNING_IMPROVEMENTS_BACKLOG.md#automatic-close-decision-grouping-and-commitment-2026-11-16)
+is deferred. New identities are constraint policy8/state3 and repair assembly10;
+old generator/DFS cursors require their original source checkout.
+See [implementation and measurement evidence](../research/geometry-passages/README.md).
+The earlier records below describe their source revisions.
+
 On `perf/early-passage-screen`, obstacle assignments receive the existing full
 pre-solver reachability/linear checks before downstream alternatives are generated.
 Adding B7 rechecks accumulated B6+B7 constraints; the angle solver stays coupled.
@@ -57,7 +74,7 @@ Terminal actualT/objective ranking stays separate. Cells, portals and soft guide
 points are not discrete input clocks or fixed dynamic seams.
 
 Physical automatic continuation is outer schema2 / DFS8 / movement context4 /
-repair assembly9. Hard3/search5/comparison1/guide2/proposal1 semantic identities
+repair assembly10 / constraint policy8/state3. Hard3/search5/comparison1/guide2/proposal1 semantic identities
 also matter; schema equality does not make old policy checkpoints compatible.
 Storage remains manifest/SQLite version1. Physical anchor DFS now uses the session's
 global deadline/call allowance continuously, without service-turn or per-program

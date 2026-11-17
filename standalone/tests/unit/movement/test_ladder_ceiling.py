@@ -246,7 +246,7 @@ class LadderCeilingNumericalTests(unittest.TestCase):
                     compiled = compile_program(scene, program)
                     result = solve_contact_branches(compiled['route'], compiled['profiles'],
                         floor_checks(scene, ['start', 'goal'], compiled['profiles']), self.compiler,
-                        seconds=15, candidate_seconds=2, retries=1, max_branches=16, geometry=scene['collisionScene'],
+                        seconds=15, candidate_seconds=2, retries=1, geometry=scene['collisionScene'],
                         motion_bound=dict(storedSpeedNorm=2, movementAfterSupportCheck=2),
                         python_executable=os.environ['PKC_IPOPT_PYTHON'])
                     self.assertEqual(result['status'], 'feasible', result.get('termination'))

@@ -199,7 +199,11 @@ def instrument(profile):
             original = getattr(identity, name)
             aliases(original, name, profile.runtime.function('identity.'+name, original))
         replace(engine, 'evaluate_program', profile.runtime.function('numerical.evaluate', engine.evaluate_program))
-        for name in ('prepare_item', 'effective_key'):
+        from parkour_solver.reachability import screen, linear
+        for module, name in ((screen, 'condition_envelopes'), (linear, 'linear_exclusion')):
+            original = getattr(module, name)
+            aliases(original, name, profile.runtime.function('reachability.'+name, original))
+        for name in ('prepare_item', 'effective_key', 'analyze', 'choose_item'):
             replace(ConstraintVariants, name, profile.sampled_function('variants.'+name, getattr(ConstraintVariants, name)))
         for module_name, module in list(sys.modules.items()):
             if module_name.startswith('parkour_solver.') and getattr(module, 'copy', None) is copy:

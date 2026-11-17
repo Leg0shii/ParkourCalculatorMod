@@ -41,6 +41,7 @@ control work; inclusion here is not authorization to implement a historical plan
 | [docs/TESTING.md](TESTING.md) | Current navigation / implementation or evidence record: Tests and fixtures |
 | [docs/design/ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md](design/ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Plan: anchor DFS, global hard latches and observable binary turn heuristics |
 | [docs/design/ANCHOR_POLICY_DECISIONS.md](design/ANCHOR_POLICY_DECISIONS.md) | Design contract; check decisions index for implemented/deferred scope: Anchor search decisions: DFS, binary turns and observability |
+| [docs/design/AVOIDANCE_PASSAGE_GENERATION_PLAN.md](design/AVOIDANCE_PASSAGE_GENERATION_PLAN.md) | Implementation-ready plan, not implemented: geometry-driven passages, conditional generation, profiling and staged acceptance |
 | [docs/design/BLOCK_ROUTE_SEARCH.md](design/BLOCK_ROUTE_SEARCH.md) | Design contract; check decisions index for implemented/deferred scope: Block-route selection prototype |
 | [docs/design/BLOCK_SOLVER_PLAN.md](design/BLOCK_SOLVER_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Block solver: continuous-model orchestration |
 | [docs/design/CELL_ROUTE_EXPERIMENT_PLAN.md](design/CELL_ROUTE_EXPERIMENT_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Cell-route experiment plan |

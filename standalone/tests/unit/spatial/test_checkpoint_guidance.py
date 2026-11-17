@@ -174,8 +174,7 @@ class CheckpointNumericalTests(unittest.TestCase):
         work = SearchWork(4, deadline=time.monotonic()+3)
         result = solve_contact_branches(compiled['route'], compiled['profiles'],
             floor_checks(scene, [scene['startBlock'],scene['goalBlock']], compiled['profiles']), self.compiler,
-            seconds=3, candidate_seconds=.7, retries=0, max_branches=scene['maxContactBranches'],
-            improve=True, rank_equal_cost=True, optimize_goal=True, python_executable=os.environ['PKC_IPOPT_PYTHON'],
+            seconds=3, candidate_seconds=.7, retries=0, improve=True, rank_equal_cost=True, optimize_goal=True, python_executable=os.environ['PKC_IPOPT_PYTHON'],
             geometry=scene['collisionScene'], motion_bound=_motion_bound(scene,self.compiler,2),
             solid_blocks=[b['sourceBlock'] for b in scene['blocks']], work=work,
             candidate_filter=lambda p,c,v:adapter.candidate(p,c,v,partial=True))

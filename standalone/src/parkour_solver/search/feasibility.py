@@ -38,11 +38,11 @@ def outcome(result, model, policy):
     elif result.get('status') == 'error':
         status = 'error'
     elif (policy['oracleRejection'] and complete and
-          not repair.get('pending') and not repair.get('inFlight') and not repair.get('unresolved') and
+          not repair.get('pending') and not repair.get('repairSources') and not repair.get('inFlight') and not repair.get('unresolved') and
           (repair.get('constraintGeneration') is None or repair['constraintGeneration'].get('exhausted')) and
           all(c.get('oracleRejected') or c.get('status') == 'blocked' for c in complete)):
         status = 'oracle_rejected'
-    elif (complete and not repair.get('pending') and not repair.get('inFlight') and not repair.get('unresolved') and
+    elif (complete and not repair.get('pending') and not repair.get('repairSources') and not repair.get('inFlight') and not repair.get('unresolved') and
           (repair.get('constraintGeneration') is None or repair['constraintGeneration'].get('exhausted'))):
         # Exhausting repair/physical alternatives is a backtrack, not a
         # numerical infeasibility label for this node or its ancestors.
@@ -67,7 +67,7 @@ def solve_due(program, interval, *, forced=False):
 
 def unresolved_only(repair):
     """No runnable repair remains unless the caller explicitly retries unknowns."""
-    return bool(repair.get('unresolved') and not repair.get('pending') and not repair.get('inFlight') and
+    return bool(repair.get('unresolved') and not repair.get('pending') and not repair.get('repairSources') and not repair.get('inFlight') and
                 (repair.get('constraintGeneration') is None or repair['constraintGeneration'].get('exhausted')))
 
 

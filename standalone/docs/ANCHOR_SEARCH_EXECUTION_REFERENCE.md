@@ -1,5 +1,11 @@
 # Anchor search: combinations, pruning and IPOPT dispatch
 
+Avoidance follow-up: [geometry-driven phase covers](design/AVOIDANCE_PASSAGES.md)
+replace full-horizon permutations and local repair/passage caps, carrying tightened
+bounds into downstream generation. Constraint policy8/state3 and repair assembly10
+are current. The measured source-era tables below retain their original settings;
+[replacement evidence](../research/geometry-passages/README.md) records the new run.
+
 Current runtime: `dd738c98` (2026-11-11). This is the current execution reference
 for physical required-anchor search. The [detailed implementation record](HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md)
 contains the design/caller migration; [measured evidence](../research/hard-jump-comparisons/README.md)
@@ -181,7 +187,7 @@ keys or adding a pose constraint. No mixed or uncertainty mode exists.
 | [`numerics.solver`](../src/parkour_solver/numerics/solver.py), [`search.ranking`](../src/parkour_solver/search/ranking.py) | Seed check/worker lifecycle/scalar validation; terminal actualT/objective ranking stays distinct from intermediate J/R/A policy. |
 
 Physical automatic continuation is outer schema2 / DFS8 / movement context4 /
-repair assembly9. Hard3/search5/comparison1/guide2/proposal1 semantics participate
+repair assembly10. Hard3/search5/comparison1/guide2/proposal1 semantics participate
 in the relevant context fingerprints. Matching schema numbers alone do not make
 an older checkpoint compatible. Old wrong-policy exact continuations reject;
 checkpoint storage format stays version1. Never redirect work to an old checkout

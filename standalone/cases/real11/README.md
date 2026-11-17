@@ -22,6 +22,12 @@ bounds and package layout. Direct ceiling-generation checks at the original
 state and captured History B states17/28/40/58/67 returned zero choices. These
 are configuration/generation checks, not a new cold Real11 performance run.
 
+The geometry-driven avoidance replacement removes local repair/passage caps;
+the maintained case omits their obsolete fields. Source-era inputs remain readable,
+but normalization removes those values. Global time/call budgets and per-request
+numerical timeouts apply. See the [implementation and measurements](../../research/geometry-passages/README.md).
+Old face-generator continuations require their original source checkout.
+
 The [unrestricted initial-delay control](../../research/initial-domain-selection/README.md)
 found T64 with only0/8 receiving first-anchor feasibility work;9–12 were saved
 as recoverable alternatives without numerical calls. This is observed behavior

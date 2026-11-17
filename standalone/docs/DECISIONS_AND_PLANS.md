@@ -1,5 +1,19 @@
 # Decisions and plan authority
 
+2026-11-16 avoidance replacement: [audited implementation plan](design/AVOIDANCE_PASSAGES.md)
+is implemented; final acceptance/profiling is in progress. Geometry-derived phase
+covers, concrete timing before conditional propagation, shared upfront/repair
+generation and global-budget persistence replace the old full-horizon permutations,
+switch-count caps and local repair/retention limits. See the
+[measurement record](../research/geometry-passages/README.md). Constraint policy8/state3
+and repair assembly10 reject incompatible old continuations. Source-era cap fields
+are read-compatible and removed from normalized policy.
+
+Movement cadence, anchor comparison and current inter-movement retained constraints
+remain unchanged. [Automatic grouping/commitment consolidation](design/PRUNING_IMPROVEMENTS_BACKLOG.md#automatic-close-decision-grouping-and-commitment-2026-11-16)
+remains deferred: infer groups automatically and remove superseded runtime paths.
+The supplied-window planner remains live compatibility code until that replacement.
+
 2026-11-15 parallel work: [bookkeeping performance handoff](BOOKKEEPING_PERFORMANCE_AGENT_HANDOFF.md) assigns behavior-preserving hashing/preparation/snapshot optimization to a separate branch/worktree. This session investigates [branch scheduling](BRANCH_SCHEDULING_INVESTIGATION.md): earlier service for promising protected alternatives, with switching distinct from proof-based exclusion. That scheduler is proposed, not implemented; current DFS/comparison semantics remain the runtime baseline.
 
 2026-11-15 initial-domain decision: remove the explicit `[0,8]` whitelist from the maintained Real11 case; let existing producers/screens, hard-arrival comparisons and finish bounds select work. [Unrestricted evidence](../research/initial-domain-selection/README.md) confirms first0/8 numerical preparation and recoverable9–12 deferral. [Configuration/CI audit](INITIAL_DOMAIN_AND_CONFIG_AUDIT.md) records remaining supplied inputs and policies. Archived fixtures and generic explicit-domain controls remain unchanged; no new route/pruning policy is introduced.
@@ -38,7 +52,7 @@ Implemented default cadence is1 completed meaningful jump/contact decision, not 
 
 Approach-facing E edge is settled. Physical returns after another support are deferred/not generated; repeated current-block setup jumps remain supported even after a hard-transfer latch; optional acyclic supports remain available in open spans. Full future design is in [the deferred revisit plan](design/REVISIT_DISCOVERY_DEFERRED_PLAN.md), not current milestones.
 
-The prior settled contract remains: global solve-wide single-jump latch, requested impulses, backward/onward guides and early stop,110° spatial turn regions, extended finite B7/minT→MAXZ. Implementation now uses physical-task outer schema2/DFS8/movement context4/repair assembly9; archived old geometry/task/evidence remains unchanged. See [new implementation evidence](../research/anchor-feasibility/README.md). Turnaround selection is now a preliminary binary decision-point test against one approach edge (imaginary diagonal if needed) plus spatial margin. Select exactly T,−J,A or T,−J,R. Record point/edge/margin/distances/label/key, pruning behavior and later replay label flips; include two-label diagrams/counters. Blended scores and uncertain membership are removed.
+The prior settled contract remains: global solve-wide single-jump latch, requested impulses, backward/onward guides and early stop,110° spatial turn regions, extended finite B7/minT→MAXZ. Implementation now uses physical-task outer schema2/DFS8/movement context4/repair assembly10 / constraint policy8/state3; archived old geometry/task/evidence remains unchanged. See [new implementation evidence](../research/anchor-feasibility/README.md). Turnaround selection is now a preliminary binary decision-point test against one approach edge (imaginary diagonal if needed) plus spatial margin. Select exactly T,−J,A or T,−J,R. Record point/edge/margin/distances/label/key, pruning behavior and later replay label flips; include two-label diagrams/counters. Blended scores and uncertain membership are removed.
 
 ## Completed generic event-discovery baseline
 

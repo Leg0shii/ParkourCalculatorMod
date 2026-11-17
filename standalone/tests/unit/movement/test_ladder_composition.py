@@ -116,7 +116,7 @@ class LadderCompositionIntegrationTests(unittest.TestCase):
         compiled = compile_block_path(scene, ['start','b'], [edge])
         with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:
             result = solve_contact_branches(compiled['route'], compiled['profiles'], floor_checks(scene, ['start','b'], compiled['profiles']),
-                compiler, seconds=18, candidate_seconds=3, retries=1, max_branches=8, geometry=scene['collisionScene'],
+                compiler, seconds=18, candidate_seconds=3, retries=1, geometry=scene['collisionScene'],
                 motion_bound={'storedSpeedNorm':2,'movementAfterSupportCheck':2}, python_executable=os.environ['PKC_IPOPT_PYTHON'])
         self.assertEqual(result['status'], 'feasible', result)
         b = result['best']

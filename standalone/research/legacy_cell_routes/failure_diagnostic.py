@@ -214,7 +214,7 @@ def run_warm(compiler, mode='baseline'):
             work = SearchWork(4,deadline=time.monotonic()+3)
             with patch('parkour_solver.search.ordered_route.solve',traced):
                 result = solve_contact_branches(route,compiled['profiles'],audit.checks,compiler,seconds=3,
-                    candidate_seconds=.7,retries=0,max_branches=scene['maxContactBranches'],improve=True,
+                    candidate_seconds=.7,retries=0,improve=True,
                     rank_equal_cost=True,optimize_goal=mode!='feasibility_first',python_executable=sys.executable,
                     geometry=scene['collisionScene'],motion_bound=motion,solid_blocks=[b['sourceBlock'] for b in scene['blocks']],
                     max_wall_hits=0,candidate_filter=lambda p,c,v:adapter.candidate(p,c,v,partial=True),work=work)

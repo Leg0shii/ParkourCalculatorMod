@@ -1,5 +1,28 @@
 # Deferred pruning and orchestration improvements
 
+## Automatic close-decision grouping and commitment (2026-11-16)
+
+Deferred by the user while the [avoidance-generation plan](AVOIDANCE_PASSAGES.md)
+is developed. Future consolidation must:
+
+- Infer nearby/dependent movement-decision groups automatically; require no
+  authored opportunity ranges or dependency lists. Define when a group is ready
+  for selection and what internal feasibility checks may run before then.
+- Unify checking, retaining alternatives and committing choices. Earlier continuous
+  values remain free; an early feasible side must not silently erase a sibling
+  needed by a later coupled decision. Audit the internal-success cache/repair-state
+  boundary and preserve original-state solves and resumable alternatives.
+- Replace the old supplied-window/commit paths with one maintained policy.
+  Migrate callers and useful tests; remove unused/superseded runtime code instead
+  of leaving parallel implementations or an unused compatibility mode. Preserve
+  frozen research evidence. The old planner began at `9556c38e`; provenance is
+  summarized in the avoidance plan.
+
+The required end state is settled; the grouping/commit details are deferred.
+Current solve cadence and anchor policy remain unchanged by this note.
+
+## Earlier backlog and source-era status
+
 Selected current implementation scope: [ORCHESTRATOR_IMPLEMENTATION_PLAN.md](ORCHESTRATOR_IMPLEMENTATION_PLAN.md). It groups the approved fixes into seven workstreams; remaining rows are research/backlog items unless included there. Corridor logging is already complete.
 
 Current implementation status: G2/P2 outer and terminal continuation, Q1 compatible active assembly/latest valid guesses, M1 scoped upfront constraints, S1/R1 state/schedule guards and conservative E3 first-floor exclusion are wired into the standalone checkpoint orchestrator. Initial0/8 selection is explicit fixture input. See [results and remaining acceptance items](../../research/orchestrator-fixes/README.md). G3 efficient cold coverage, broader E3 future-chain proof, D1 later-decision domain reduction and measured false-pruning on harder maps remain open. The historical proposals in the table below are retained; their old pending wording does not override this status.

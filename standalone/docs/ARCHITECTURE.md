@@ -16,7 +16,7 @@ The current physical automatic backend uses [anchor DFS](design/ANCHOR_FEASIBILI
 
 The outer automatic state is schema2 for physical tasks. Each frame owns one required-anchor/final goal; optional contacts are internal movement choices. Movement context4 keeps node/parent IDs, completed/last-solved decision depth, queued programs and an exact selected `nodeInFlight`. Constructing a sibling does not dispatch a query. Selected meaningful nodes use guided early-stop feasibility; raw run-holds prepare the next completed decision. Anchor/final queries are mandatory. An internal node omits the pending anchor's acceptance/region predicates while retaining its actual physical history and prior anchors.
 
-`node_feasibility` distinguishes exact oracle rejection, repair exhaustion, suspension/error and feasible evidence. A failed child never assigns a status to an unqueried ancestor. Every descendant starts at the original state with all earlier facings free. Feasible rows/selected contacts and yaw seeds survive; endpoint/velocity/facing equalities are not introduced. Objective/stop/rank/oracle intent and exact validation scope are repair compatibility data (assembly9).
+`node_feasibility` distinguishes exact oracle rejection, repair exhaustion, suspension/error and feasible evidence. A failed child never assigns a status to an unqueried ancestor. Every descendant starts at the original state with all earlier facings free. Feasible rows/selected contacts and yaw seeds survive; endpoint/velocity/facing equalities are not introduced. Objective/stop/rank/oracle intent and exact validation scope are repair compatibility data (assembly10).
 
 Global hard-jump latches live outside frames and survive backtracking. Policy3 excludes stepping in the actual hard transfer and counts one transfer jump after the last source contact; preceding same-source setup hops remain eligible and remain included in J. This policy version is fingerprinted across exact continuations. Slower comparable hard-anchor alternatives defer only without more J or fewer R (ordinary) / fewer A (turnaround). They keep their actual programs/ownership and restore one at a time on explicit failed-continuation recovery. `search.comparison` owns the predicates; terminal ranking remains minT then objective. Conditional flight minima consider ceilings under the declared no-stepping hard-transfer assumption, and combine with phase-correct horizontal time using max. Checks apply only to new/selected work against one incumbent. The binary turn label selects local-span T/−J/R or T/−J/A consistently. `observability.turns` stores compact referenced geometry/decision/query/replay records, independently of solver allocation. A later moved witness can log a label flip without changing queued keys or adding a pose constraint.
 
@@ -34,9 +34,9 @@ Global hard-jump latches live outside frames and survive backtracking. Policy3 e
 | `screen_program` in `search.movement` | Necessary-condition checks for a discrete proposal; numerical unknown is not proof of death. The open-family eligibility gate and full-proposal screen share the reachability query. |
 | `solve_scope`, `solve_identity`, `validation_prefix` in `search.identity` | Scope geometry/checks, identify exact physical/context problem and align validation. Identity changes when actual model/scope changes. |
 | `reachable_envelopes`, `interaction_reachability` in `reachability.intervals` | Conservative p/v and collision-phase bounds; answer ruled out or not ruled out. The latter does not prove an interaction feasible. |
-| `ConstraintVariants` in `constraints.variants` | Enumerate fixed effective constraints before solving; restartable raw cursor and dedup state. Memoizes equivalent per-obstacle nodes/options and partial products before expensive leaf refinement. |
+| `ConstraintVariants` in `constraints.variants` | Choose concrete phase covers and propagate accumulated rows before preparing downstream domains; one shared builder serves upfront generation and collision repair, with a durable lazy frontier. |
 | `evaluate_program` in `search.engine` | Compile program; validate scalar vertical schedule; scope adapter; obtain coefficients/reach bounds; select fixed alternatives; call contact solver; record physical acceptance. Partial/checkpoint success is not a terminal route. |
-| `solve_contact_branches` in `search.repair` | Inner search for concrete geometry/contact/constraint alternatives of one program. Saves repair state, logs, guesses and accepted candidate. “Repair” does not mean IPOPT chooses discrete decisions. |
+| `solve_contact_branches` in `search.repair` | Inner search for concrete geometry/contact/constraint alternatives of one program. Saves repair state, lazy collision-repair sources, logs, guesses and accepted candidate. “Repair” does not mean IPOPT chooses discrete decisions. |
 | `probe_spatial` in `search.goals` | Seek validated arrival at a common landing/region goal, possibly via local choices. Observed arrival is a feasible time measurement, not proof of earliest arrival. |
 | `retain_two_goals`, `protections` in `search.compat.time_progress` | Existing time/progress/state helpers; the current DFS does not run their former global peer-retention pass. |
 | `find_checkpoint_route` in `search.engine` | Validates/setup scene, corridor and scope, then delegates outer traversal to `depth_first.search_goals`. |
@@ -47,12 +47,13 @@ Global hard-jump latches live outside frames and survive backtracking. Policy3 e
 
 ## One numerical request
 
-`ConstraintVariants` screens each accumulated obstacle prefix before extending
-it, recomputing reachable bounds with its rows and applying optional linear
-exclusion. Later choices are checked with all prior rows, preserving coupling.
-Passing does not establish feasibility. Compatible old pending nodes are checked
-before continuation. The full assignment still uses the coupled numerical solver
-and physical validation. See [early passage screening](../research/early-passage-screen/README.md).
+`ConstraintVariants` builds meaningful collision-phase covers within selected landing
+segments. It conditions conservative envelopes on each concrete choice before
+preparing downstream domains; all applicable obstacles still share the full
+numerical model. Known support-entry geometry, already-owned clear-side bridges
+and named-probe uncertainty remain distinct. Upfront and collision repair use the
+same builder. Switch counts are descriptive; local repair/retention caps are
+removed. See [the avoidance contract](design/AVOIDANCE_PASSAGES.md).
 
 Physical anchor search gives its DFS the remaining session deadline and global
 solver-call allowance. It does not impose service-turn or per-program time/call
@@ -73,7 +74,7 @@ The **outer search** selects discrete programs; `searchState` contains generated
 
 Resume requires matching model/context identity, including horizon, goal/objective, scope, geometry, inputs, contacts and coefficients. A longer child is a new numerical problem, not an exact continuation of its shorter parent's raw queue. Existing code retains compatible facing guesses and preserves old work under its own identity. IPOPT internal iterations/Hessians are not serialized.
 
-The DFS uses schema5 for legacy supplied comparison frames and schema6 for typed route stages, without a global window barrier. The generic event/virtual outer state uses schema1; physical anchor mode uses schema2/DFS8/movement context4/repair assembly9; route-stage/commit/proposal/allocation policies participate in continuation identity. `acceptedVariants` in inner repair state preserves accepted fixed-constraint alternatives separately from the local best objective. A frame has one execution owner among active, suspended and deferred-refinement queues. Do not call an old checkpoint queue an exact DFS continuation without explicit schema conversion.
+The DFS uses schema5 for legacy supplied comparison frames and schema6 for typed route stages, without a global window barrier. The generic event/virtual outer state uses schema1; physical anchor mode uses schema2/DFS8/movement context4/repair assembly10; route-stage/commit/proposal/allocation policies participate in continuation identity. `acceptedVariants` in inner repair state preserves accepted fixed-constraint alternatives separately from the local best objective. A frame has one execution owner among active, suspended and deferred-refinement queues. Do not call an old checkpoint queue an exact DFS continuation without explicit schema conversion.
 
 ## Automatic event guidance
 
@@ -85,6 +86,6 @@ For virtual-task controls, `EventGuideAdapter` supplies dynamic next-contact/tas
 
 `ConstraintVariants` persists phase scans, masks, chain-cost preparation and products (state2/context7). Shared role/window queries distinguish unwanted interior absence from required contact/prerequisite rejection and preserve named-probe uncertainty. Numeric row aliases retain resource/provenance alternatives. Exact context keys prevent borrowing scoped proofs or repair cursors under a changed objective/model.
 
-Physical automatic state is `event_route_search` schema2 / DFS8, event-stage policy4 and movement context4, with one domain/graph/guide table and declared-anchor/open-span policy. Virtual-task controls use schema1 / DFS7 and event-stage policy3. `discoverySettings` version1 has per-session expansion/materialization quotas and residual cursors. Old automatic `spatialSettings`/cell-walk states require their source-era runner. Supplied typed schema2 corridors/schema6 DFS and legacy schema5 controls remain available. All modes fingerprint shared constraint policy7 and retain allocation normalization; physical meaningful-node service adds versioned movement context4.
+Physical automatic state is `event_route_search` schema2 / DFS8, event-stage policy4 and movement context4, with one domain/graph/guide table and declared-anchor/open-span policy. Virtual-task controls use schema1 / DFS7 and event-stage policy3. `discoverySettings` version1 has per-session expansion/materialization quotas and residual cursors. Old automatic `spatialSettings`/cell-walk states require their source-era runner. Supplied typed schema2 corridors/schema6 DFS and legacy schema5 controls remain available. All modes fingerprint shared constraint policy8/state3 and retain allocation normalization; physical meaningful-node service adds versioned movement context4.
 
 The earlier `route_queue`, `SemanticCorridorAdapter`, `RouteGuards` and ordered-cell `route_progress` remain explicit legacy/control code and historical evidence tools. Their raw-walk contract is not used by the new automatic path. Neither backend proves global dynamic reachability or optimal time.

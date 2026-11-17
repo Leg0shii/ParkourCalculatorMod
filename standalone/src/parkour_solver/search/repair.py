@@ -1,6 +1,7 @@
 from parkour_solver.validation.vertical import validate_vertical_schedule
 from parkour_solver.constraints.contacts import floor_checks, contact_conflicts, avoid_contact_rows
 import copy
+from collections import Counter
 import heapq
 import time
 
@@ -9,17 +10,16 @@ from parkour_solver.physics.vertical import f32, vertical_move, vertical_step
 from parkour_solver.scene.route import center_bounds, supports
 from parkour_solver.search.ranking import candidate_rank
 from parkour_solver.search.ordered_route import find_route
-from parkour_solver.constraints.avoidance import blockage_usage, gate_timeline, passage_options, passage_y_valid, within_caps
+from parkour_solver.constraints.avoidance import blockage_usage, gate_timeline, passage_y_valid
 from parkour_solver.validation.scene import check_geometry
 from parkour_solver.constraints.hit_events import wall_hit_options
 from parkour_solver.search.repair_state import branch_key, compatible, context as repair_context
 
 
 def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candidate_seconds, retries,
-                           max_branches, improve=False, rank_equal_cost=False, optimize_goal=False,
+                           improve=False, rank_equal_cost=False, optimize_goal=False,
                            python_executable=None, cancel_event=None, geometry=None, motion_bound=None,
-                           max_blockages=3, max_horizontal=2, max_vertical=2,
-                           max_passage_candidates=128, solid_blocks=None, max_wall_hits=0,
+                           solid_blocks=None, max_wall_hits=0,
                            max_wall_candidates=24, candidate_filter=None, work=None, resume_state=None, repair_scope=None,
                            on_progress=None, validation_scope=None, initial_variants=None, retry_unresolved=True,
                            stop_on_feasible=None, oracle_rejection=False):
@@ -31,15 +31,20 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
     queue, seen, serial, unresolved = [], set(), 0, []
     variant_source = iter(initial_variants) if initial_variants is not None else None
     source_exhausted = variant_source is None or getattr(variant_source, 'state', {}).get('exhausted', False)
+    repair_sources = []
+    source_instances = {}
+    completed_source_metrics = Counter()
     choices = {}
     choice_alternatives = {}
     policy = dict(stopOnFeasible=stop_on_feasible, optimizeGoal=optimize_goal,
                   rankEqualCost=rank_equal_cost, oracleRejection=oracle_rejection)
-    current_context = repair_context(route, profiles, geometry, dict(scope=repair_scope, solvePolicy=policy))
+    current_context = repair_context(route, profiles, geometry, dict(scope=repair_scope, solvePolicy=policy, avoidancePolicy=8))
     resuming = (isinstance(resume_state, dict) and resume_state.get('version') in (1, 2)
                 and compatible(resume_state.get('context'), current_context))
     exact_resume = resuming and resume_state['context'] == current_context
     if exact_resume:
+        completed_source_metrics.update(resume_state.get('sourcesCompletedMetrics', {}))
+        repair_sources.extend(copy.deepcopy(resume_state.get('repairSources', [])))
         seen.update(resume_state.get('seen', []))
     resumed_branches = 0
     reference_yaw = copy.deepcopy(resume_state.get('referenceWarmYaw')) if resuming else None
@@ -91,7 +96,8 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
         saved_best = ({k: copy.deepcopy(v) for k, v in best_result.items()
                       if k not in ('repairState', 'repairResume', 'attempts', 'contactAttempts')}
                       if best_result is not None else None)
-        return dict(version=2, context=current_context,
+        return dict(version=2, context=current_context, repairSources=copy.deepcopy(repair_sources),
+            sourcesCompletedMetrics=dict(completed_source_metrics),
             pending=[save_branch(score, rows, passages, hits, yaw) for score, _, rows, passages, hits, yaw in sorted(queue)],
             unresolved=copy.deepcopy(unresolved), seen=sorted(seen), incumbent=copy.deepcopy(best_branch),
             acceptedVariants=copy.deepcopy(accepted_variants),
@@ -110,6 +116,11 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
         nonlocal in_flight
         in_flight = None
         result['repairState'] = snapshot()
+        metrics = completed_source_metrics.copy()
+        metrics.update(getattr(variant_source, 'state', {}).get('metrics', {}))
+        for record in repair_sources:
+            metrics.update(record.get('state', {}).get('metrics', {}))
+        result['avoidanceMetrics'] = dict(metrics, generationIncomplete=bool(repair_sources or not source_exhausted))
         result['repairResume'] = dict(requested=resume_state is not None, compatible=resuming,
                                      exact=exact_resume, resumedBranches=resumed_branches)
         publish()
@@ -139,7 +150,7 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
             seen.discard(key)
             offer(-1, [], route.get('passages', []), route.get('hitEvents', []), route.get('warmYaw'))
     termination = 'contact_search_exhausted'
-    while (queue or not source_exhausted) and len(attempts) < max_branches:
+    while queue or not source_exhausted or repair_sources:
         in_flight = None
         publish()
         if cancel_event is not None and cancel_event.is_set():
@@ -158,13 +169,57 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
         if remaining <= 0:
             termination = 'deadline'
             break
-        if variant_source is not None and not source_exhausted and (not queue or len(attempts) % 2 == 0):
+        if repair_sources and not queue:
+            record = repair_sources[-1]
+            from parkour_solver.constraints.variants import ConstraintVariants
+            try:
+                token = id(record)
+                if token not in source_instances:
+                    source_instances[token] = ConstraintVariants.for_plan(record['route'], profiles, record['plan'],
+                        geometry, compiler, record['vertical'], record['candidate'], seconds=remaining,
+                        state=record.get('state'), deadline=deadline, owners=solid_blocks,
+                        budget=work.check if work is not None else None, scope=validation_scope, cancel_event=cancel_event)
+                source = source_instances[token]
+                try:
+                    variant = next(source)
+                finally:
+                    record['state'] = source.state
+            except StopIteration:
+                completed_source_metrics.update(record.get('state', {}).get('metrics', {}))
+                if record.get('state', {}).get('uncertainInteractions'):
+                    unknown = save_branch(record['score'], record['rows'], record['passages'],
+                                          record['hits'], record['candidate']['yaw'])
+                    key = branch_key(unknown['rows'], unknown['passages'], unknown['hits'])
+                    if not any(branch_key(b['rows'], b['passages'], b['hits']) == key for b in unresolved):
+                        unresolved.append(unknown)
+                repair_sources.pop()
+                source_instances.pop(token, None)
+                continue
+            except TimeoutError as error:
+                termination = str(error)
+                break
+            else:
+                converted = []
+                for row in variant['rows']:
+                    tick = row['offset']
+                    leg = max(i for i, e in enumerate(record['plan']['events']) if e['landed'] <= tick)
+                    converted.append(dict(row, leg=leg, offset=tick-record['plan']['events'][leg]['jump']))
+                selected = copy.deepcopy(variant.get('selectedPassages', []))
+                for passage in selected:
+                    passage['phaseReferences'] = []
+                    for at in passage['switchPhases']:
+                        leg = max(i for i, e in enumerate(record['plan']['events']) if e['landed'] <= at//3)
+                        passage['phaseReferences'].append(dict(leg=leg, offset=at//3-record['plan']['events'][leg]['jump'], phase=at%3))
+                offer(record['score']+variant['score']*1e-9, record['rows']+converted, record['passages'],
+                      record['hits'], record['candidate']['yaw'], selected)
+            continue
+        if variant_source is not None and not source_exhausted and not queue:
             try:
                 variant = next(variant_source)
             except StopIteration:
                 source_exhausted = True
-            except TimeoutError:
-                termination = 'constraint_generation_deadline'
+            except TimeoutError as error:
+                termination = str(error)
                 break
             else:
                 offer(min([b[0] for b in queue]+[0.])-1, variant['rows'], variant.get('passages', []),
@@ -245,11 +300,13 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
 
         def enrich(best, checked):
             best = copy.deepcopy(best)
+            selected = copy.deepcopy(choices.get(branch_key(rows, passages, hits), []))
+            described = passages+[p for p in selected if p not in passages]
             best.update(route=best.get('route', branch), profiles=profiles, contactChecks=checks,
-                passages=passages, hitEvents=hits, ceilingEvents=branch.get('ceilingEvents', []),
-                blockageTimeline=gate_timeline(passages, best['plan']['events']),
+                passages=described, hitEvents=hits, ceilingEvents=branch.get('ceilingEvents', []),
+                blockageTimeline=gate_timeline(described, best['plan']['events']),
                 blockageUsage=[{'blockId': value if kind == 'block' else 'solid:' + str(value), **counts}
-                    for (kind, value), counts in blockage_usage(passages).items()], vertical=checked['vertical']['vertical'])
+                    for (kind, value), counts in blockage_usage(described).items()], vertical=checked['vertical']['vertical'])
             best['selectedInteractions'] = copy.deepcopy(choices.get(branch_key(rows, passages, hits), passages))
             best['selectedInteractionAlternatives'] = copy.deepcopy(choice_alternatives.get(
                 branch_key(rows, passages, hits), [best['selectedInteractions']]))
@@ -312,7 +369,7 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
         attempts.append({'branch': branch_key(rows, passages, hits), 'status': result['status'], 'constraintCount': len(rows),
                          'passageCount': len(passages),
                          'wallHitCount': len(hits), 'wallHitGeneration': {k: v for k, v in hit_pool.items() if k != 'options'},
-                         'passageKinds': [p['kind'] for p in passages],
+                         'passageKinds': [p['kind'] for p in choices.get(branch_key(rows, passages, hits), passages)],
                          'incumbentAuditErrors': audit_errors,
                          'conflicts': [{'block': c['block']['id'], 'state': c['state'], 'reason': c['reason']}
                                        for c in conflicts], 'termination': result['termination']})
@@ -361,21 +418,10 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
                         attempts[-1]['termination'] = checked['reason']
                         continue
                     plan = result['best']['plan']
-                    leg = next(i for i, event in enumerate(plan['events'])
-                               if event['landed'] <= checked['tick'] < event['landing'])
-                    index = checked['solidIndex']
-                    alternatives = passage_options(geometry['solids'][index], index, leg, profiles[leg], branch,
-                                                   plan, result['best']['candidate'], motion_bound,
-                                                   max_blockages=max_blockages, max_horizontal=max_horizontal,
-                                                   max_vertical=max_vertical, max_candidates=max_passage_candidates,
-                                                   block_id=solid_blocks[index] if solid_blocks is not None else None,
-                                                   deadline=deadline)
-                    attempts[-1]['passageGeneration'] = {k: v for k, v in alternatives.items() if k != 'options'}
-                    for option in alternatives['options']:
-                        new_passages = [p for p in passages if (p['leg'], p['solidIndex']) != (leg, index)] + [option['passage']]
-                        if not within_caps(new_passages, branch['passageCaps']):
-                            continue
-                        offer(score + option['score'], rows, new_passages, hits, proposal_yaw)
+                    # Save construction inputs before any interruptible preparation.
+                    # The shared builder assigns all applicable boxes jointly.
+                    repair_sources.append(dict(route=branch, plan=plan, vertical=audit_result['vertical'],
+                        candidate=result['best']['candidate'], score=score, rows=rows, passages=passages, hits=hits))
                     continue
                 result['best']['geometryCheck'] = checked
             result['best'] = enrich(result['best'], audit_result)
@@ -402,10 +448,8 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
             new_rows = rows + [row]
             delta = abs(conflict['position'][0 if row['mode'] == 'X' else 1] - row['rhs'])
             offer(score + delta, new_rows, passages, hits, proposal_yaw)
-    if (queue or not source_exhausted) and len(attempts) >= max_branches:
-        termination = 'contact_branch_limit'
     if best_result is not None:
         best_result.update(termination=termination, attempts=inner_attempts, contactAttempts=attempts)
         return finish(best_result)
-    return finish({'status': 'unknown', 'termination': termination, 'best': None,
+    return finish({'status': 'cancelled' if termination == 'cancelled' else 'unknown', 'termination': termination, 'best': None,
             'attempts': inner_attempts, 'contactAttempts': attempts})

@@ -1,5 +1,11 @@
 # Tests and fixtures
 
+The geometry-driven avoidance gate passes640 tests with zero failures/errors/skips
+and unchanged runtime hashes. See the [full evidence and declared module scope](../research/geometry-passages/README.md).
+New controls cover finite entry geometry, conditional clear-side bridges, stronger
+joint propagation, exact timing siblings and cursor/source persistence beyond the
+removed32/128 limits. Archived evidence/fixture hashes remain unchanged.
+
 Layout acceptance at `9c79e741`: [610 native-enabled tests](validation/layout-final/report.json), no failures/errors/skips, unchanged source during the run and902 preserved evidence/fixture hashes. This is the exact earlier600-test module scope plus10 package/profiler regressions. The current gate is `python tools/native_gate.py --output /new/path` from `standalone/`; [runbook](RUNBOOK.md) supplies install/environment steps. Shared builders/harnesses are in `tests/support`, with no test→test imports. The [layout guide](LAYOUT.md) explains archive regression data and preserved capabilities.
 
 Current `dd738c98` acceptance: [600 native-enabled tests](../research/hard-jump-comparisons/2026-11-11/native-gate/report.json), no failures/errors/skips and unchanged runtime hashes. [Evidence](../research/hard-jump-comparisons/README.md) also records131 archived-witness prefix-bound checks and80 updated retained-witness scene replays. The [execution reference](ANCHOR_SEARCH_EXECUTION_REFERENCE.md) maps each combination/pruning/query policy to its current module. The frozen feature gate describes its recorded source era; use `tools/native_gate.py` for the maintained equivalent scope plus packaging checks.

@@ -130,7 +130,7 @@ class AnchorSearchTests(unittest.TestCase):
             with patch('parkour_solver.search.repair.find_route',side_effect=solve), \
                  patch('parkour_solver.search.repair.validate_vertical_schedule',return_value=VERTICAL):
                 return solve_contact_branches(route(),[],[],object(),seconds=1,candidate_seconds=.1,retries=0,
-                    max_branches=1,optimize_goal=True,rank_equal_cost=False,
+                    optimize_goal=True,rank_equal_cost=False,
                     candidate_filter=lambda *a:dict(accepted=True),**options)
         first=invoke(stop_on_feasible=True)
         second=invoke(stop_on_feasible=False,resume_state=first['repairState'])
@@ -143,7 +143,7 @@ class AnchorSearchTests(unittest.TestCase):
                 dict(status='unknown',termination='worker_finished',workerStatus=worker_status)])])
             with patch('parkour_solver.search.repair.find_route',return_value=response):
                 return solve_contact_branches(route(),[],[],object(),seconds=1,candidate_seconds=.1,retries=0,
-                    max_branches=1,oracle_rejection=True)
+                    oracle_rejection=True)
         rejected=invoke('Infeasible_Problem_Detected')['repairState']
         limited=invoke('Maximum_CpuTime_Exceeded')['repairState']
         self.assertTrue(rejected['completed'][0]['oracleRejected'])

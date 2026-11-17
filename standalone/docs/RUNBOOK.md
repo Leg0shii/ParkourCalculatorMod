@@ -63,8 +63,8 @@ From `standalone/` with the environment above:
 "$PKC_IPOPT_PYTHON" -B -m unittest discover -s tests -t .
 ```
 
-The explicit gate preserves the earlier600-test scope and adds10 package/profiler
-checks. Full discovery additionally includes dedicated ladder/climbable/vine
+The explicit gate maintains the selected native module scope plus package,
+profiling and avoidance-generation/continuation controls. Full discovery additionally includes dedicated ladder/climbable/vine
 capabilities and their recorded baseline; it is a different scope. Native
 variables absent means skips, not native acceptance. See [testing](TESTING.md).
 Use a new gate directory; its report records source hashes, source stability,
@@ -104,6 +104,12 @@ and `candidate_seconds` for each numerical request. Legacy `score_seconds`,
 files but do not limit anchor search. Non-anchor modes retain their existing
 service budgets. Changing these budgets does not change physical model identities
 or invalidate compatible checkpoints; it can change work reached before timeout.
+
+Avoidance uses global budgets as well: obsolete local repair/passage fields are
+removed during normalization. Constraint policy8/state3 and repair assembly10
+change the continuation context; old face-generator queues require their original
+source checkout. Current generated descriptions use phase spans and actual rows,
+as described in the [avoidance contract](design/AVOIDANCE_PASSAGES.md).
 
 `--resume` restores saved search state only when its exact context matches.
 Compatible JSON/shared-store identities are preserved by this folder move; solver

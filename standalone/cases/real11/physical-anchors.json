@@ -130,8 +130,6 @@
     "maxWallHits": 0,
     "ceilingHits": true,
     "maxContactCombinations": 0,
-    "maxContactBranches": 32,
-    "maxPassageCandidates": 128,
     "maxRunTicksPerJump": 64,
     "maxTotalRunTicks": 64,
     "movementSearch": {

@@ -156,8 +156,9 @@ class InteractionGate:
         """Add X/Z prerequisites and repropagate, retaining the compiled physics."""
         model=dict(analysis['model'],walls=list(analysis['model']['walls'])+list(rows))
         key=interaction_context_key(dict(model=model,y=analysis['y']))
+        from parkour_solver.reachability.screen import condition_envelopes
         return self._cached(('conditioned',key),lambda:dict(analysis,key=key,model=model,
-            envelopes=reachable_envelopes(model,analysis['y'])),'conditioned')
+            **condition_envelopes(analysis['envelopes'],rows,refine=False)),'conditioned')
 
     def envelopes(self, program):
         analysis=self.analyze(program)
