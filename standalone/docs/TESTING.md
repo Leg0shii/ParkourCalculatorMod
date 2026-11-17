@@ -26,7 +26,7 @@ Current integration acceptance (2026-11-10): [571 native-enabled selected tests]
 pass with zero failures/errors/skips and105 runtime hashes matching the cold
 profile. Five additional profiler tests pass. The selected non-ladder src/parkour_solver
 scope and full IPOPT module list are explicit in the report; this is not an
-all-mod/game test claim. [Integration contract](ANCHOR_SEARCH_INTEGRATION.md)
+all-mod/game test claim. [Integration contract](ARCHITECTURE.md)
 and [cold results](../research/anchor-runtime-profile/README.md)
 record nested persistence, unknown retention, recovery and time-bound checks.
 
@@ -75,7 +75,7 @@ The [experiments](../research) directories contain fixture-specific runbooks/res
 
 ## DFS/interaction acceptance coverage
 
-Follow the detailed acceptance section in [the current plan](design/DFS_INTERACTION_IMPLEMENTATION_PLAN.md). At minimum:
+Follow the detailed acceptance section in the current plan. At minimum:
 
 1. Two siblings with different partial lengths, measured at one spatial goal; earlier actual arrival completes before the root sibling is continued; tie rules and fallback preserved.
 2. Suspend during scoring, generation, numerical dispatch and backtracking; resume without repeating completed exact work, losing unknown siblings or replacing an incumbent with a partial.

@@ -7,20 +7,13 @@ control work; inclusion here is not authorization to implement a historical plan
 | --- | --- |
 | [AGENTS.md](../AGENTS.md) | Current navigation / implementation or evidence record: Standalone agent entry point |
 | [CLAUDE.md](../CLAUDE.md) | Current navigation / implementation or evidence record: Standalone agent entry point |
-| [CONSOLIDATION.md](../CONSOLIDATION.md) | Current navigation / implementation or evidence record: Standalone branch consolidation |
 | [README.md](../README.md) | Current navigation / implementation or evidence record: Standalone parkour solver |
 | [cases/real11/README.md](../cases/real11/README.md) | Current navigation / implementation or evidence record: Real11 finite physical-anchor case |
 | [docs/AGENT_SETUP.md](AGENT_SETUP.md) | Current navigation / implementation or evidence record: Shared Codex and Claude Code setup |
-| [docs/ANCHOR_IMPLEMENTATION_RESUME.md](ANCHOR_IMPLEMENTATION_RESUME.md) | Current navigation / implementation or evidence record: Anchor search: current resume state |
 | [docs/ANCHOR_SEARCH_EXECUTION_REFERENCE.md](ANCHOR_SEARCH_EXECUTION_REFERENCE.md) | Current navigation / implementation or evidence record: Anchor search: combinations, pruning and IPOPT dispatch |
-| [docs/ANCHOR_SEARCH_INTEGRATION.md](ANCHOR_SEARCH_INTEGRATION.md) | Current navigation / implementation or evidence record: Anchor search and solver integration |
 | [docs/ARCHITECTURE.md](ARCHITECTURE.md) | Current navigation / implementation or evidence record: Architecture and execution flow |
-| [docs/BOOKKEEPING_PERFORMANCE_AGENT_HANDOFF.md](BOOKKEEPING_PERFORMANCE_AGENT_HANDOFF.md) | Current navigation / implementation or evidence record: Agent handoff: measured bookkeeping costs |
-| [docs/BRANCH_SCHEDULING_INVESTIGATION.md](BRANCH_SCHEDULING_INVESTIGATION.md) | Current navigation / implementation or evidence record: Concrete solver-orchestration improvements |
 | [docs/CHECKPOINT_STORAGE.md](CHECKPOINT_STORAGE.md) | Current navigation / implementation or evidence record: Search checkpoint storage |
 | [docs/CODE_MAP.md](CODE_MAP.md) | Current navigation / implementation or evidence record: Production code map |
-| [docs/CORRIDOR_AGENT_HANDOFF.md](CORRIDOR_AGENT_HANDOFF.md) | Current navigation / implementation or evidence record: Handoff: changes since the standalone AGENTS consolidation |
-| [docs/CORRIDOR_IMPLEMENTATION_RESUME.md](CORRIDOR_IMPLEMENTATION_RESUME.md) | Current navigation / implementation or evidence record: Resume authorized anchor implementation and completed event baseline |
 | [docs/CURRENT_STATE.md](CURRENT_STATE.md) | Current navigation / implementation or evidence record: Current standalone state |
 | [docs/DECISIONS_AND_PLANS.md](DECISIONS_AND_PLANS.md) | Current navigation / implementation or evidence record: Decisions and plan authority |
 | [docs/DEFERRED_WORK.md](DEFERRED_WORK.md) | Current navigation / implementation or evidence record: Deferred work and unimplemented follow-ups |
@@ -28,91 +21,43 @@ control work; inclusion here is not authorization to implement a historical plan
 | [docs/DOC_INDEX.md](DOC_INDEX.md) | Current navigation / implementation or evidence record: Documentation index |
 | [docs/FILE_INDEX.md](FILE_INDEX.md) | Current navigation / implementation or evidence record: Tracked standalone file index |
 | [docs/FUNCTION_INDEX.md](FUNCTION_INDEX.md) | Current navigation / implementation or evidence record: Production function index |
-| [docs/HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md](HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md) | Current navigation / implementation or evidence record: Hard-jump comparisons, proposal reachability and transfer-time bounds |
-| [docs/INITIAL_DOMAIN_AND_CONFIG_AUDIT.md](INITIAL_DOMAIN_AND_CONFIG_AUDIT.md) | Current navigation / implementation or evidence record: Initial-delay selection and remaining supplied policies |
 | [docs/IPOPT_CONSTRAINT_REDUCTION.md](IPOPT_CONSTRAINT_REDUCTION.md) | Current navigation / implementation or evidence record: IPOPT constraint cleanup |
 | [docs/IPOPT_FEASIBILITY_MODE.md](IPOPT_FEASIBILITY_MODE.md) | Current navigation / implementation or evidence record: Intermediate feasibility: objective, stopping and worker dispatch |
 | [docs/LAYOUT.md](LAYOUT.md) | Current navigation / implementation or evidence record: Standalone ownership and package layout |
 | [docs/MOD_REFERENCES.md](MOD_REFERENCES.md) | Current navigation / implementation or evidence record: Reusing the broader Parkour Calculator |
-| [docs/README.md](README.md) | Current navigation / implementation or evidence record: Standalone documentation guide |
+| [docs/PERFORMANCE.md](PERFORMANCE.md) | Current navigation / implementation or evidence record: Performance: measurements, hotspots and invariants |
 | [docs/REAL11_EXTENDED_GEOMETRY.md](REAL11_EXTENDED_GEOMETRY.md) | Current navigation / implementation or evidence record: Real11 extended geometry and player bounds |
 | [docs/REAL11_GUIDE.md](REAL11_GUIDE.md) | Current navigation / implementation or evidence record: Linkcraft Real11 opening: agent guide |
 | [docs/RESULTS_AND_DEBUGGING.md](RESULTS_AND_DEBUGGING.md) | Current navigation / implementation or evidence record: Results, terminology and debugging |
 | [docs/RUNBOOK.md](RUNBOOK.md) | Current navigation / implementation or evidence record: Standalone runbook |
-| [docs/SOLVER_BRANCH_INTEGRATION_REVIEW.md](SOLVER_BRANCH_INTEGRATION_REVIEW.md) | Current navigation / implementation or evidence record: Review of the nine unintegrated solver-branch commits |
-| [docs/STANDALONE_REFACTOR_IMPLEMENTATION.md](STANDALONE_REFACTOR_IMPLEMENTATION.md) | Current navigation / implementation or evidence record: Standalone structure refactor: implementation ledger |
-| [docs/STANDALONE_STRUCTURE_REVIEW.md](STANDALONE_STRUCTURE_REVIEW.md) | Current navigation / implementation or evidence record: Standalone layout inventory and proposed structure |
 | [docs/TESTING.md](TESTING.md) | Current navigation / implementation or evidence record: Tests and fixtures |
-| [docs/design/ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md](design/ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Plan: anchor DFS, global hard latches and observable binary turn heuristics |
 | [docs/design/ANCHOR_POLICY_DECISIONS.md](design/ANCHOR_POLICY_DECISIONS.md) | Design contract; check decisions index for implemented/deferred scope: Anchor search decisions: DFS, binary turns and observability |
 | [docs/design/AVOIDANCE_PASSAGES.md](design/AVOIDANCE_PASSAGES.md) | Design contract; check decisions index for implemented/deferred scope: Geometry-driven avoidance passages |
-| [docs/design/BLOCK_ROUTE_SEARCH.md](design/BLOCK_ROUTE_SEARCH.md) | Design contract; check decisions index for implemented/deferred scope: Block-route selection prototype |
-| [docs/design/BLOCK_SOLVER_PLAN.md](design/BLOCK_SOLVER_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Block solver: continuous-model orchestration |
-| [docs/design/CELL_ROUTE_EXPERIMENT_PLAN.md](design/CELL_ROUTE_EXPERIMENT_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Cell-route experiment plan |
-| [docs/design/CONSTRAINT_GENERATION_RUNBOOK.md](design/CONSTRAINT_GENERATION_RUNBOOK.md) | Design contract; check decisions index for implemented/deferred scope: Reusing the mod's block constraints in route discovery |
+| [docs/design/BRANCH_SCHEDULING_INVESTIGATION.md](design/BRANCH_SCHEDULING_INVESTIGATION.md) | Design contract; check decisions index for implemented/deferred scope: Concrete solver-orchestration improvements |
 | [docs/design/CONTACT_COMBINATIONS.md](design/CONTACT_COMBINATIONS.md) | Design contract; check decisions index for implemented/deferred scope: Contact combination implementation |
-| [docs/design/CONTINUOUS_DECISION_RELAXATION.md](design/CONTINUOUS_DECISION_RELAXATION.md) | Design contract; check decisions index for implemented/deferred scope: Continuous decision relaxation with full-strength controls |
-| [docs/design/CONVEX_ROUTE_GUIDANCE_PLAN.md](design/CONVEX_ROUTE_GUIDANCE_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Convex route guidance: scope and first experiment |
-| [docs/design/CORRIDOR_CONSTRAINT_FIX_PLAN.md](design/CORRIDOR_CONSTRAINT_FIX_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Corridor and constraint scope fix |
-| [docs/design/DFS_INTERACTION_IMPLEMENTATION_PLAN.md](design/DFS_INTERACTION_IMPLEMENTATION_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Consolidated plan: depth-first decisions and shared interaction eligibility |
-| [docs/design/DYNAMIC_CONTACT_DECISIONS.md](design/DYNAMIC_CONTACT_DECISIONS.md) | Design contract; check decisions index for implemented/deferred scope: Ceiling and stepping decisions change the transition law |
 | [docs/design/FACE_MERGING_IMPLEMENTATION_PLAN.md](design/FACE_MERGING_IMPLEMENTATION_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Adjacent-face merging: implementation plan |
-| [docs/design/GENERATION_PERFORMANCE_PLAN.md](design/GENERATION_PERFORMANCE_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Schedule-generation performance follow-ups |
 | [docs/design/GENERATION_RELEVANCE_PLAN.md](design/GENERATION_RELEVANCE_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Preliminary plan: generate only relevant, distinct interaction models |
 | [docs/design/GENERIC_COMPOSITION.md](design/GENERIC_COMPOSITION.md) | Design contract; check decisions index for implemented/deferred scope: Generic movement programs |
-| [docs/design/GENERIC_COMPOSITION_PLAN.md](design/GENERIC_COMPOSITION_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Generic movement composition |
-| [docs/design/GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md](design/GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Implementation plan: potential routes, relevant interactions, and shared progress guides |
-| [docs/design/GEOMETRIC_DECISION_GUIDANCE.md](design/GEOMETRIC_DECISION_GUIDANCE.md) | Design contract; check decisions index for implemented/deferred scope: Use the existing cell route as the first decision guide |
-| [docs/design/LADDER_CEILING_PLAN.md](design/LADDER_CEILING_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Ladder-ceiling ownership and generation |
-| [docs/design/LADDER_COMPLETION.md](design/LADDER_COMPLETION.md) | Design contract; check decisions index for implemented/deferred scope: Ladder and vine completion checkpoint |
-| [docs/design/LADDER_COMPOSITION_PLAN.md](design/LADDER_COMPOSITION_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Multiple ladders and mixed contact schedules |
+| [docs/design/HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md](design/HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Hard-jump comparisons, proposal reachability and transfer-time bounds |
 | [docs/design/LADDER_STRATEGY_PLAN.md](design/LADDER_STRATEGY_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Ladder and vine strategy search |
-| [docs/design/LONG_LADDER_VALIDATION.md](design/LONG_LADDER_VALIDATION.md) | Design contract; check decisions index for implemented/deferred scope: Longer climbing-chain validation |
 | [docs/design/MIXED_MOVEMENT_CONTACTS.md](design/MIXED_MOVEMENT_CONTACTS.md) | Design contract; check decisions index for implemented/deferred scope: Generated contacts across movement units |
-| [docs/design/MOVEMENT_REFACTOR_STATUS.md](design/MOVEMENT_REFACTOR_STATUS.md) | Design contract; check decisions index for implemented/deferred scope: Ladder and movement-refactor status |
-| [docs/design/MOVEMENT_TYPE_REFACTOR_PLAN.md](design/MOVEMENT_TYPE_REFACTOR_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Normal ceiling, ladder ceiling and stepping refactor |
 | [docs/design/MOVEMENT_UNITS.md](design/MOVEMENT_UNITS.md) | Design contract; check decisions index for implemented/deferred scope: Movement units and airborne composition |
-| [docs/design/NO_THRESHOLD_DECISION_MODEL.md](design/NO_THRESHOLD_DECISION_MODEL.md) | Design contract; check decisions index for implemented/deferred scope: Convex decision model with normal momentum carry |
 | [docs/design/OBSTACLES_AND_BLOCKAGES.md](design/OBSTACLES_AND_BLOCKAGES.md) | Design contract; check decisions index for implemented/deferred scope: Obstacles, contacts and directed blockages |
 | [docs/design/OBSTACLE_RELEVANCE.md](design/OBSTACLE_RELEVANCE.md) | Design contract; check decisions index for implemented/deferred scope: Shared block-interaction reachability |
 | [docs/design/OBSTACLE_SEARCH.md](design/OBSTACLE_SEARCH.md) | Design contract; check decisions index for implemented/deferred scope: Collision-box obstacle avoidance |
-| [docs/design/ONE_TICK_CONTACT_PLAN.md](design/ONE_TICK_CONTACT_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: One-input wall and ceiling contacts |
 | [docs/design/ORCHESTRATOR_CONTRACT.md](design/ORCHESTRATOR_CONTRACT.md) | Design contract; check decisions index for implemented/deferred scope: Fixed-decision continuous-solve contract |
-| [docs/design/ORCHESTRATOR_IMPLEMENTATION_PLAN.md](design/ORCHESTRATOR_IMPLEMENTATION_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Consolidated orchestrator implementation plan |
-| [docs/design/PROVISIONAL_ROUTE_GUIDANCE.md](design/PROVISIONAL_ROUTE_GUIDANCE.md) | Design contract; check decisions index for implemented/deferred scope: Informative initial solves with provisional route choices |
 | [docs/design/PRUNING_IMPROVEMENTS_BACKLOG.md](design/PRUNING_IMPROVEMENTS_BACKLOG.md) | Design contract; check decisions index for implemented/deferred scope: Deferred pruning and orchestration improvements |
-| [docs/design/REFERENCE_STRATEGY_EVALUATION.md](design/REFERENCE_STRATEGY_EVALUATION.md) | Design contract; check decisions index for implemented/deferred scope: Choosing a whole-route reference strategy |
 | [docs/design/REVISIT_DISCOVERY_DEFERRED_PLAN.md](design/REVISIT_DISCOVERY_DEFERRED_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Deferred plan: physical block revisits and momentum preparation |
-| [docs/design/ROUTE_BASELINE_GUIDANCE.md](design/ROUTE_BASELINE_GUIDANCE.md) | Design contract; check decisions index for implemented/deferred scope: Route-specific optimistic continuation guidance |
-| [docs/design/ROUTE_MIP_RELAXATION.md](design/ROUTE_MIP_RELAXATION.md) | Design contract; check decisions index for implemented/deferred scope: A mixed-integer outer model for route guidance |
-| [docs/design/RUN_OFF_OBSTACLES.md](design/RUN_OFF_OBSTACLES.md) | Design contract; check decisions index for implemented/deferred scope: Run-off source support and obstacle behavior |
-| [docs/design/RUN_TICKS_PLAN.md](design/RUN_TICKS_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Run-ticks prototype: status and remaining work |
-| [docs/design/SEARCH_CONTINUATION_FIX_PLAN.md](design/SEARCH_CONTINUATION_FIX_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Resume unfinished solves and reject provably dead prefixes |
 | [docs/design/SEARCH_OBJECTIVE.md](design/SEARCH_OBJECTIVE.md) | Design contract; check decisions index for implemented/deferred scope: Search order: total ticks, then objective |
-| [docs/design/SPATIAL_CORRIDOR_REFACTOR_PLAN.md](design/SPATIAL_CORRIDOR_REFACTOR_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Spatial corridor refactor: preserve support visits and 3D passage choices |
-| [docs/design/STATE_PROTECTION_IMPLEMENTATION_PLAN.md](design/STATE_PROTECTION_IMPLEMENTATION_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Implementation plan: velocity and schedule protection |
 | [docs/design/STEPPING_CASES.md](design/STEPPING_CASES.md) | Design contract; check decisions index for implemented/deferred scope: Stepping terminology and cases |
-| [docs/design/STEPPING_IMPLEMENTATION.md](design/STEPPING_IMPLEMENTATION.md) | Design contract; check decisions index for implemented/deferred scope: Stepping and normal-air ceiling implementation |
-| [docs/design/STEPPING_PLAN.md](design/STEPPING_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Case-based stepping plan |
 | [docs/design/TIME_PROGRESS_FRONTIER.md](design/TIME_PROGRESS_FRONTIER.md) | Design contract; check decisions index for implemented/deferred scope: Time and progress comparisons: two distinct goals |
-| [docs/design/TIME_PROGRESS_IMPLEMENTATION_PLAN.md](design/TIME_PROGRESS_IMPLEMENTATION_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Implementation plan: spatial-goal time and fixed-time progress comparisons |
-| [docs/design/UPFRONT_BRANCH_COMPILATION_PLAN.md](design/UPFRONT_BRANCH_COMPILATION_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Select and compose existing constraints before IPOPT |
-| [docs/history/AUTONOMY_README.md](history/AUTONOMY_README.md) | Historical; verify current authority: Run ticks over a block route |
-| [docs/history/COMPACTION_HANDOFF.md](history/COMPACTION_HANDOFF.md) | Historical; verify current authority: Orchestration compaction handoff |
-| [docs/reference/AUTONOMOUS_AGENT_HANDOFF.md](reference/AUTONOMOUS_AGENT_HANDOFF.md) | Detailed reusable contract / implementation reference: Standalone IPOPT handoff for the autonomous-solve agent |
-| [docs/reference/FINDINGS.md](reference/FINDINGS.md) | Detailed reusable contract / implementation reference: Standalone IPOPT findings |
-| [docs/reference/MOD_INTEGRATION_PLAN.md](reference/MOD_INTEGRATION_PLAN.md) | Detailed reusable contract / implementation reference: Minecraft and mod integration plan |
 | [docs/reference/MOVEMENT_PORT.md](reference/MOVEMENT_PORT.md) | Detailed reusable contract / implementation reference: Movement port status and limitations |
 | [docs/reference/NUMERICAL_SOLVER.md](reference/NUMERICAL_SOLVER.md) | Detailed reusable contract / implementation reference: Standalone continuous IPOPT solver |
-| [docs/reference/RECENT_REPLAY_HANDOFF.md](reference/RECENT_REPLAY_HANDOFF.md) | Detailed reusable contract / implementation reference: Replay and movement handoff, updated 2026-10-28 |
 | [docs/reference/REPLAY.md](reference/REPLAY.md) | Detailed reusable contract / implementation reference: Local Minecraft movement replay |
-| [docs/reference/RUN_TICKS_PHYSICS_HANDOFF.md](reference/RUN_TICKS_PHYSICS_HANDOFF.md) | Detailed reusable contract / implementation reference: Block-sequence and minimum-run-ticks physics handoff |
 | [docs/research/GENERIC_ROUTE_DISCOVERY_RESEARCH.md](research/GENERIC_ROUTE_DISCOVERY_RESEARCH.md) | Literature / research findings: Generic route discovery: geometry, relevant interactions, and compact route languages |
 | [docs/research/HEURISTIC_SOURCE_REVIEW.md](research/HEURISTIC_SOURCE_REVIEW.md) | Literature / research findings: Heuristic source review: Baritone and Stratfinder |
 | [docs/research/MIXED_INTEGER_RESEARCH.md](research/MIXED_INTEGER_RESEARCH.md) | Literature / research findings: Generic mixed-integer methods for the standalone solver |
 | [docs/research/PRUNING_RESEARCH.md](research/PRUNING_RESEARCH.md) | Literature / research findings: Pruning research and search framework |
-| [docs/research/PRUNING_RESEARCH_HANDOFF.md](research/PRUNING_RESEARCH_HANDOFF.md) | Literature / research findings: Current pruning and orchestration handoff |
-| [docs/research/PRUNING_RESEARCH_HISTORY.md](research/PRUNING_RESEARCH_HISTORY.md) | Literature / research findings: Historical pruning research handoff (preserved) |
 | [docs/research/SPATIAL_ROUTE_RESEARCH.md](research/SPATIAL_ROUTE_RESEARCH.md) | Literature / research findings: From collision geometry to spatial route families |
 | [docs/research/STRATFINDER_INVESTIGATION.md](research/STRATFINDER_INVESTIGATION.md) | Literature / research findings: Stratfinder investigation: route selection and pruning |
 | [docs/validation/layout-final/README.md](validation/layout-final/README.md) | Current navigation / implementation or evidence record: Standalone layout refactor acceptance |

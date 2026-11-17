@@ -1,6 +1,6 @@
 # Hard-jump comparisons, proposal reachability and transfer-time bounds
 
-Current user-facing combination/pruning/IPOPT tables, decisions/rationale and module ownership are consolidated in the [execution reference](ANCHOR_SEARCH_EXECUTION_REFERENCE.md). This document remains the detailed implementation/caller-migration and acceptance record for `dd738c98`.
+Current user-facing combination/pruning/IPOPT tables, decisions/rationale and module ownership are consolidated in the [execution reference](../ANCHOR_SEARCH_EXECUTION_REFERENCE.md). This document remains the detailed implementation/caller-migration and acceptance record for `dd738c98`.
 
 2026-11-11. **Implemented; final measured acceptance below.** Pre-edit runtime:
 `5d54f02b`. Work in the session's physical checkout and preserve unrelated edits
@@ -10,11 +10,11 @@ count protections below. Matched pre-edit combined/initial0 baselines were captu
 before production edits. Implementation and validation status are tracked
 in this document and the new hard-jump-comparisons experiment directory.
 
-Evidence: the [candidate audit](../research/anchor-candidate-audit/README.md)
+Evidence: the [candidate audit](../../research/anchor-candidate-audit/README.md)
 reconstructs the last full integrated 300-second run; the
-[read-only controls](../research/anchor-candidate-audit/hard-jump-plan-2026-11-11.json)
+[read-only controls](../../research/anchor-candidate-audit/hard-jump-plan-2026-11-11.json)
 check current generators, hard-transfer structure, ordinary clocks and geometry.
-The source-era [integration contract](ANCHOR_SEARCH_INTEGRATION.md) describes the
+The source-era [integration contract](../ARCHITECTURE.md) describes the
 shipped baseline, including lazy incumbent checks and explicit recovery.
 
 ## 1. Required behavior
@@ -92,21 +92,21 @@ now use the common module directly.
 
 | Current location | Actual responsibility today | Planned ownership |
 | --- | --- | --- |
-| [`search.identity.py`](../src/parkour_solver/search/identity.py): `motion_record`, `processing_key` | Classifies whole histories as J/R/A; builds normal T/J/R key and schedule/phase metadata. | Delegate counts and key to the shared comparison module. Keep solve identity/scope and existing record formatting here. |
-| [`anchor_policy.py`](../src/parkour_solver/search/anchors/policy.py): `local_counts`, `priority`, `within_caps` | Independently classifies a span and constructs normal/turn keys. | Thin compatibility adapters using the same shared label/key. Keep anchor/owner/cap and hard-transfer structural rules here. |
-| [`depth_first.py`](../src/parkour_solver/search/dfs.py): `arrival_key`, nested `priority`, `record_priority` | Another T/J/R tuple; chooses anchor versus non-anchor processing; score-loop key comparison. | Resolve context and delegate. Remove literal duplicate tuples; score-loop ordering must not become pruning. |
+| [`search.identity.py`](../../src/parkour_solver/search/identity.py): `motion_record`, `processing_key` | Classifies whole histories as J/R/A; builds normal T/J/R key and schedule/phase metadata. | Delegate counts and key to the shared comparison module. Keep solve identity/scope and existing record formatting here. |
+| [`anchor_policy.py`](../../src/parkour_solver/search/anchors/policy.py): `local_counts`, `priority`, `within_caps` | Independently classifies a span and constructs normal/turn keys. | Thin compatibility adapters using the same shared label/key. Keep anchor/owner/cap and hard-transfer structural rules here. |
+| [`depth_first.py`](../../src/parkour_solver/search/dfs.py): `arrival_key`, nested `priority`, `record_priority` | Another T/J/R tuple; chooses anchor versus non-anchor processing; score-loop key comparison. | Resolve context and delegate. Remove literal duplicate tuples; score-loop ordering must not become pruning. |
 | `depth_first.py`: `time_bound`, `run_bound`, `eligible`, `reachability.screen` | Applies finish bounds, run-family exclusion and saving at several boundaries. Queue filters also call the run rule. | Build one comparison request for new/selected work; persist/execute its returned action. No count or peer-dominance logic here. |
-| [`minimum_runs.py`](../src/parkour_solver/search/compat/minimum_runs.py): `latest_jump`, `remember`, `exclusion` | Normalizes a matching latest-jump family, remembers least runs, decides extra-run exclusion itself. | Retain family normalization and peer references. Replace the decision arithmetic with the shared helper; no independent legacy exclusion algorithm. |
-| [`time_progress.py`](../src/parkour_solver/search/compat/time_progress.py): `protections`, `clearly_worse`, `retain_two_goals` | Separate OR guards, common-clock compatibility/state checks and complete time/progress peer test. Production references to the first two are internal to this module; tests also call the retention API. | Adapt old records to the shared helper and format its result. Move all comparison predicates into that helper, including common-clock safeguards. Retain storage/selection orchestration here. |
-| [`search.frontier.py`](../src/parkour_solver/search/frontier.py) | Uses `processing_key` or an injected anchor key, then filters/solves a selected prefix. | Uses the common key and invokes the owning frame's common assessment at selection. No copied count guards. |
-| [`search.movement.py`](../src/parkour_solver/search/movement.py) | Persistent dispatch or older balanced/legacy queue; independent elapsed-versus-accepted-finish checks. | Use the common bound predicate wherever that bound applies; keep declared balanced service allocation separate from candidate inferiority. |
-| [`turn_observability.py`](../src/parkour_solver/observability/turns.py) | Recomputes counts/key via anchor wrappers for diagnostics. | Record the actual shared label/key/verdict used at selection; no parallel interpretation. |
-| [`anchor_time_bound.py`](../src/parkour_solver/search/bounds/remaining.py) | Divides remaining raw landing-cover distances by a speed bound, without recording contact-to-boundary phase offsets. | Establish a phase-correct bound, then supply bounds/provenance to the comparison helper. Add duration certificates as section 6 specifies; no peer pruning here. |
-| [`two_goal_experiment.py`](../research/legacy_cell_routes/two_goal_experiment.py): `competitive_followup` | Independently filters unfinished audit entries by elapsed T versus the accepted finish. | Request the shared incumbent verdict for this test. Keep its explicitly declared reference-domain construction separate. |
-| [`event_search.py`](../src/parkour_solver/search/events/engine.py), [`route_queue.py`](../src/parkour_solver/search/compat/corridor_queue.py) | Carry minimum-run policy identity and aggregate deferral/restoration counters. | Include the shared comparison version in resume identity and summarize the new decision records consistently. |
+| [`minimum_runs.py`](../../src/parkour_solver/search/compat/minimum_runs.py): `latest_jump`, `remember`, `exclusion` | Normalizes a matching latest-jump family, remembers least runs, decides extra-run exclusion itself. | Retain family normalization and peer references. Replace the decision arithmetic with the shared helper; no independent legacy exclusion algorithm. |
+| [`time_progress.py`](../../src/parkour_solver/search/compat/time_progress.py): `protections`, `clearly_worse`, `retain_two_goals` | Separate OR guards, common-clock compatibility/state checks and complete time/progress peer test. Production references to the first two are internal to this module; tests also call the retention API. | Adapt old records to the shared helper and format its result. Move all comparison predicates into that helper, including common-clock safeguards. Retain storage/selection orchestration here. |
+| [`search.frontier.py`](../../src/parkour_solver/search/frontier.py) | Uses `processing_key` or an injected anchor key, then filters/solves a selected prefix. | Uses the common key and invokes the owning frame's common assessment at selection. No copied count guards. |
+| [`search.movement.py`](../../src/parkour_solver/search/movement.py) | Persistent dispatch or older balanced/legacy queue; independent elapsed-versus-accepted-finish checks. | Use the common bound predicate wherever that bound applies; keep declared balanced service allocation separate from candidate inferiority. |
+| [`turn_observability.py`](../../src/parkour_solver/observability/turns.py) | Recomputes counts/key via anchor wrappers for diagnostics. | Record the actual shared label/key/verdict used at selection; no parallel interpretation. |
+| [`anchor_time_bound.py`](../../src/parkour_solver/search/bounds/remaining.py) | Divides remaining raw landing-cover distances by a speed bound, without recording contact-to-boundary phase offsets. | Establish a phase-correct bound, then supply bounds/provenance to the comparison helper. Add duration certificates as section 6 specifies; no peer pruning here. |
+| [`two_goal_experiment.py`](../../research/legacy_cell_routes/two_goal_experiment.py): `competitive_followup` | Independently filters unfinished audit entries by elapsed T versus the accepted finish. | Request the shared incumbent verdict for this test. Keep its explicitly declared reference-domain construction separate. |
+| [`event_search.py`](../../src/parkour_solver/search/events/engine.py), [`route_queue.py`](../../src/parkour_solver/search/compat/corridor_queue.py) | Carry minimum-run policy identity and aggregate deferral/restoration counters. | Include the shared comparison version in resume identity and summarize the new decision records consistently. |
 
 The shared-helper scope is intermediate tick/count comparison and pruning.
-[`search.ranking.candidate_rank`](../src/parkour_solver/search/ranking.py) remains the terminal
+[`search.ranking.candidate_rank`](../../src/parkour_solver/search/ranking.py) remains the terminal
 `(actualT, actualObjective)` ranking; it must not acquire intermediate jump or
 run/air preferences. `decision_windows.retain_candidates` is an explicit older
 objective-band/resource policy, not a duplicate tick comparator. Geometric route
@@ -356,7 +356,7 @@ unchanged J/A merely adds time and is not protected. Likewise, extra A with
 unchanged J/R does not protect an ordinary candidate. Protected alternatives
 stay in normal search after a peer succeeds; they do not wait for recovery.
 
-The [separate cold experiments](../research/anchor-transfer-preparation/README.md)
+The [separate cold experiments](../../research/anchor-transfer-preparation/README.md)
 found finish67 from the earlier B2 arrival and finish64 from the later one.
 The policy keeps that latter possibility. It does not guarantee that strict DFS
 services every protected root before a finite wall limit or prove final optimality.
@@ -409,17 +409,17 @@ reopen a globally latched multi-transfer topology.
 
 | Layer / file | Work currently performed | Refactor |
 | --- | --- | --- |
-| [`reachability.intervals.py`](../src/parkour_solver/reachability/intervals.py) | Interval state/velocity bounds; Y/X/Z movement phases; norm-distance checks; required rows/regions; optional LP refinement. | Keep as the low-level math, with model-conditioning support if needed. |
-| [`reachability.linear.py`](../src/parkour_solver/reachability/linear.py) | Cached optimistic control LP; supports zero threshold/non-ladder contexts; returns no proof when unsupported. | Reuse; do not recreate a second LP. |
-| [`reachability.service.py`](../src/parkour_solver/reachability/service.py) | Role/window query/cache, absence normalization, broad free-approach gate, fixed-program envelope compilation and required-event checks. | Make this the shared analysis/query service and sequence-prerequisite API. |
-| [`movement.normal.py`](../src/parkour_solver/movement/normal.py) | Early single landing check before ordinary profile construction. | Use the same prerequisite API and preserve normal landing phase. |
-| [`movement.stepping.py`](../src/parkour_solver/movement/stepping.py) | Early separate lower/higher checks, then 8 wall or 4 corner branches; duplicated profile/open case construction. | Condition the approach on the lower prerequisite before testing the higher; share prerequisite descriptors/builders across supported modes. |
-| [`movement.ceiling_generation.py`](../src/parkour_solver/movement/ceiling_generation.py) | Early ceiling/launch-grind checks for open generation; separate profile construction. | Use the same service and event prerequisite descriptions. |
-| [`search.movement.py`](../src/parkour_solver/search/movement.py) | `screen_program` repeats route compilation, vertical validation, coefficient compilation and interval/LP preparation done by `InteractionGate.envelopes`. | Delegate to shared fixed-program analysis and cache. |
-| [`search.frontier.py`](../src/parkour_solver/search/frontier.py) and legacy iterator | Full proposal is screened, optionally projected, then screened again even when unchanged. | Compose/check once through a shared proposal wrapper; recheck only a genuinely different resulting program. |
-| [`depth_first.py`](../src/parkour_solver/search/dfs.py) | Time/hard/run policies, scalar first-floor viability, `gate.required`, `screen_program` orchestration. | Obtain tick decisions from the shared comparison helper and reachability from the shared analysis service; no local reimplementation of either. |
-| [`checkpoint_search.py`](../src/parkour_solver/search/engine.py) | Rebuilds fixed-program envelopes before constraint generation. | Reuse the shared prepared analysis only for an identical effective model/scope. |
-| [`constraints.variants.py`](../src/parkour_solver/constraints/variants.py), [`search.repair.py`](../src/parkour_solver/search/repair.py), supplied corridor adapters | Reachability omits irrelevant unwanted contacts/solids, rejects impossible row combinations, filters gates and floor checks. | Keep these consumers, using the shared service/proof semantics. Their later added rows are new queries, not redundant copies of the producer query. |
+| [`reachability.intervals.py`](../../src/parkour_solver/reachability/intervals.py) | Interval state/velocity bounds; Y/X/Z movement phases; norm-distance checks; required rows/regions; optional LP refinement. | Keep as the low-level math, with model-conditioning support if needed. |
+| [`reachability.linear.py`](../../src/parkour_solver/reachability/linear.py) | Cached optimistic control LP; supports zero threshold/non-ladder contexts; returns no proof when unsupported. | Reuse; do not recreate a second LP. |
+| [`reachability.service.py`](../../src/parkour_solver/reachability/service.py) | Role/window query/cache, absence normalization, broad free-approach gate, fixed-program envelope compilation and required-event checks. | Make this the shared analysis/query service and sequence-prerequisite API. |
+| [`movement.normal.py`](../../src/parkour_solver/movement/normal.py) | Early single landing check before ordinary profile construction. | Use the same prerequisite API and preserve normal landing phase. |
+| [`movement.stepping.py`](../../src/parkour_solver/movement/stepping.py) | Early separate lower/higher checks, then 8 wall or 4 corner branches; duplicated profile/open case construction. | Condition the approach on the lower prerequisite before testing the higher; share prerequisite descriptors/builders across supported modes. |
+| [`movement.ceiling_generation.py`](../../src/parkour_solver/movement/ceiling_generation.py) | Early ceiling/launch-grind checks for open generation; separate profile construction. | Use the same service and event prerequisite descriptions. |
+| [`search.movement.py`](../../src/parkour_solver/search/movement.py) | `screen_program` repeats route compilation, vertical validation, coefficient compilation and interval/LP preparation done by `InteractionGate.envelopes`. | Delegate to shared fixed-program analysis and cache. |
+| [`search.frontier.py`](../../src/parkour_solver/search/frontier.py) and legacy iterator | Full proposal is screened, optionally projected, then screened again even when unchanged. | Compose/check once through a shared proposal wrapper; recheck only a genuinely different resulting program. |
+| [`depth_first.py`](../../src/parkour_solver/search/dfs.py) | Time/hard/run policies, scalar first-floor viability, `gate.required`, `screen_program` orchestration. | Obtain tick decisions from the shared comparison helper and reachability from the shared analysis service; no local reimplementation of either. |
+| [`checkpoint_search.py`](../../src/parkour_solver/search/engine.py) | Rebuilds fixed-program envelopes before constraint generation. | Reuse the shared prepared analysis only for an identical effective model/scope. |
+| [`constraints.variants.py`](../../src/parkour_solver/constraints/variants.py), [`search.repair.py`](../../src/parkour_solver/search/repair.py), supplied corridor adapters | Reachability omits irrelevant unwanted contacts/solids, rejects impossible row combinations, filters gates and floor checks. | Keep these consumers, using the shared service/proof semantics. Their later added rows are new queries, not redundant copies of the producer query. |
 
 There is already substantial shared mathematics. The missing pieces are shared
 **model preparation**, conditioned **sequences**, early placement and explicit

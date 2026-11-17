@@ -1347,7 +1347,7 @@ integrity checks; no runtime change or new numerical benchmark is claimed.
 **Sources:**
 [original experiment](../decision-windows/README.md),
 [original measured results](../decision-windows/RESULTS.md),
-[original clustering rationale](../../docs/design/GEOMETRIC_DECISION_GUIDANCE.md),
+original clustering rationale,
 [current cadence contract](../../docs/design/ANCHOR_POLICY_DECISIONS.md),
 [planner](../../src/parkour_solver/search/compat/decision_windows.py),
 [dispatch and optional supplied planner](../../src/parkour_solver/search/engine.py),

@@ -2,8 +2,8 @@
 
 The reviewed folder refactor is implemented. This changes ownership and packaging,
 while preserving solver policy, physical equations and saved request/checkpoint
-schemas. [Implementation and validation](STANDALONE_REFACTOR_IMPLEMENTATION.md)
-and the [original inventory/review](STANDALONE_STRUCTURE_REVIEW.md) record its scope.
+schemas. [Implementation and validation](LAYOUT.md)
+and the [original inventory/review](LAYOUT.md) record its scope.
 
 | Root | Contents and dependency direction |
 | --- | --- |

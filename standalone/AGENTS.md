@@ -19,7 +19,7 @@ Use [current state](docs/CURRENT_STATE.md) for ongoing work and [decisions and p
 | Deferred work and resumption pointers | [Deferred-work register](docs/DEFERRED_WORK.md) |
 | Immediate Real11 questions | [Real11 guide](docs/REAL11_GUIDE.md), then linked candidate/question/call ledgers |
 | Code structure and function flow | [Architecture](docs/ARCHITECTURE.md), [code map](docs/CODE_MAP.md), [function index](docs/FUNCTION_INDEX.md) |
-| Run, resume, build helpers, replay/export | [Runbook](docs/RUNBOOK.md); detailed [constraint runbook](docs/design/CONSTRAINT_GENERATION_RUNBOOK.md) |
+| Run, resume, build helpers, replay/export | [Runbook](docs/RUNBOOK.md); detailed [constraint runbook](docs/MOD_REFERENCES.md) |
 | Tests and fixtures beyond Real11 | [Testing](docs/TESTING.md) |
 | Interpret output or debug failure | [Results and debugging](docs/RESULTS_AND_DEBUGGING.md) |
 | Write a fix or add a case | [Development](docs/DEVELOPMENT.md) |

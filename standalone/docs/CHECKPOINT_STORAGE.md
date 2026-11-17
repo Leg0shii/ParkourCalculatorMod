@@ -5,7 +5,7 @@ The adapter accepts the nested outer event state and explicit `begin_repair`
 ownership, including mutable internal-node cache entries. Incremental writes
 cover the active program aliases, those declared extra targets and cumulative
 calls. Unknown mutation sets require a full checkpoint. See the
-[current integration contract](ANCHOR_SEARCH_INTEGRATION.md); the schema5-only
+[current integration contract](ARCHITECTURE.md); the schema5-only
 and fixed-clock-only descriptions below record the earlier implementation.
 Keep both manifest and database companion when moving any new report.
 

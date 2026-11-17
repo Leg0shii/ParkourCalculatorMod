@@ -2,7 +2,7 @@
 
 Source-era details below were recorded2026-10-27. The current [geometry-driven avoidance contract](AVOIDANCE_PASSAGES.md) supersedes their face-permutation, cap-accounting and collision-repair descriptions. Switch counts and local32/128/derived queues no longer limit generation. Generated phase covers and authored fixed passages have separate diagnostic/compilation contracts. [Current evidence](../../research/geometry-passages/README.md) records coverage and acceptance.
 
-Historical implementation: Implemented the geometry, height pruning and avoidance slices of [OBSTACLES_AND_BLOCKAGES.md](OBSTACLES_AND_BLOCKAGES.md). The route search now accepts actual collision volumes, tries directed blockage chains and validates accepted continuous trajectories through the shared scene collision helper. [One-input wall reversals and ceiling profiles](ONE_TICK_CONTACT_PLAN.md) are now implemented through the corrected shared movement compiler.
+Historical implementation: Implemented the geometry, height pruning and avoidance slices of [OBSTACLES_AND_BLOCKAGES.md](OBSTACLES_AND_BLOCKAGES.md). The route search now accepts actual collision volumes, tries directed blockage chains and validates accepted continuous trajectories through the shared scene collision helper. [One-input wall reversals and ceiling profiles](OBSTACLES_AND_BLOCKAGES.md) are now implemented through the corrected shared movement compiler.
 
 ## Input
 
@@ -84,7 +84,7 @@ Total elapsed inputs remain the primary rank; the numerical objective ranks equa
 
 ## Run and measured cases
 
-Prepare the Java coefficient compiler as in [README.md](../history/AUTONOMY_README.md), including rebuilding it after this change, then:
+Prepare the Java coefficient compiler as in README.md, including rebuilding it after this change, then:
 
 ```sh
 PKC_IPOPT_PYTHON="$PWD/.venv-ipopt/bin/python" \

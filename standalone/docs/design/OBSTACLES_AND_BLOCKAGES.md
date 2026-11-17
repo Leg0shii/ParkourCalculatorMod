@@ -1,6 +1,6 @@
 # Obstacles, contacts and directed blockages
 
-2026-10-26. Investigated against the mod, its cached Minecraft 1.8.9 movement code, the earlier block solver and the integration agent's current helpers. The geometry/height/avoidance slices are now implemented in [OBSTACLE_SEARCH.md](OBSTACLE_SEARCH.md). One-input wall reversals and ceiling profiles are implemented as recorded in [ONE_TICK_CONTACT_PLAN.md](ONE_TICK_CONTACT_PLAN.md); one ladder/vine interaction is implemented separately in [LADDER_STRATEGY_PLAN.md](LADDER_STRATEGY_PLAN.md). General contact-selected steps and multiple climbing interactions remain later work. The existing run-ticks and route-search interfaces remain the inner search.
+2026-10-26. Investigated against the mod, its cached Minecraft 1.8.9 movement code, the earlier block solver and the integration agent's current helpers. The geometry/height/avoidance slices are now implemented in [OBSTACLE_SEARCH.md](OBSTACLE_SEARCH.md). One-input wall reversals and ceiling profiles are implemented as recorded in [OBSTACLES_AND_BLOCKAGES.md](OBSTACLES_AND_BLOCKAGES.md); one ladder/vine interaction is implemented separately in [LADDER_STRATEGY_PLAN.md](LADDER_STRATEGY_PLAN.md). General contact-selected steps and multiple climbing interactions remain later work. The existing run-ticks and route-search interfaces remain the inner search.
 
 ## Findings grounded in code
 
@@ -128,7 +128,7 @@ Left/right is relative to the current approach and onward route, while the colli
 
 ## 3. Hit versus avoid is another branch
 
-The implemented contact slice is narrowed to [one-input side-wall reversals and ceiling hits](ONE_TICK_CONTACT_PLAN.md). Each selected hit needs finite reach/overlap guards and avoidance before and after it so actual clipping matches the compiled tick. Sustained ladder/vine contact is implemented as a separate family in [LADDER_STRATEGY_PLAN.md](LADDER_STRATEGY_PLAN.md). One input is per hit episode, not per route; contact budgets remain separate from blockage caps.
+The implemented contact slice is narrowed to [one-input side-wall reversals and ceiling hits](OBSTACLES_AND_BLOCKAGES.md). Each selected hit needs finite reach/overlap guards and avoidance before and after it so actual clipping matches the compiled tick. Sustained ladder/vine contact is implemented as a separate family in [LADDER_STRATEGY_PLAN.md](LADDER_STRATEGY_PLAN.md). One input is per hit episode, not per route; contact budgets remain separate from blockage caps.
 
 For a relevant block, retain avoidance and legal contact alternatives. Do not declare every collision a failure or force every apparently useful contact.
 
@@ -156,7 +156,7 @@ Horizontal clipping also changes sprint. With a single wall hit during input t a
 
 Repeated hits and other input conditions alter that timeline. The shared input/compiler implementation is the authority, not this explanatory table. Recompile after changing any hit, key, ground, Y-contact or run schedule. An avoidance branch must not inherit the sprint loss of a different hit branch.
 
-After a run-off, include its departure source as an ordinary obstacle throughout relevant Y-overlap intervals. Being clear at departure does not permit later side penetration. Once the player's full vertical box clears above or below a sub-box, its horizontal footprint does not require avoidance. Reactivate checks if vertical overlap returns. The source uses the same blockage/contact machinery as other boxes; see [RUN_OFF_OBSTACLES.md](RUN_OFF_OBSTACLES.md).
+After a run-off, include its departure source as an ordinary obstacle throughout relevant Y-overlap intervals. Being clear at departure does not permit later side penetration. Once the player's full vertical box clears above or below a sub-box, its horizontal footprint does not require avoidance. Reactivate checks if vertical overlap returns. The source uses the same blockage/contact machinery as other boxes; see [OBSTACLES_AND_BLOCKAGES.md](OBSTACLES_AND_BLOCKAGES.md).
 
 ## 4. Search and optimality
 

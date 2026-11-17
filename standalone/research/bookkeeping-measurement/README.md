@@ -1,7 +1,7 @@
 # Bookkeeping setup and measurement
 
 2026-11-15. This implements only setup and measurement from the
-[controlling handoff](../../docs/BOOKKEEPING_PERFORMANCE_AGENT_HANDOFF.md).
+[controlling handoff](../../docs/PERFORMANCE.md).
 Production Python, search policies, physics, canonical identities and checkpoint
 schemas remain unchanged. Fixed-work continuation benchmarks and production
 optimizations are still subsequent work.

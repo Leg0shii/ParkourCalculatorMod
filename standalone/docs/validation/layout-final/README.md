@@ -3,7 +3,7 @@
 Runtime source is commit `9c79e741` (folder/refactoring feature), preserving solver
 behavior from `dd738c98`. Subsequent documentation/tooling changes do not change
 that runtime. Source hashes in these records identify all131 installed Python
-modules. See [implementation ledger](../../STANDALONE_REFACTOR_IMPLEMENTATION.md)
+modules. See [implementation ledger](../../LAYOUT.md)
 and [runbook](../../RUNBOOK.md) for recovery commits and reproduction.
 
 | Check | Evidence / result |

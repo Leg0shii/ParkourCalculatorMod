@@ -1,6 +1,6 @@
 # Deferred plan: physical block revisits and momentum preparation
 
-2026-11-04. **Deferred by explicit user instruction. Do not implement or generate inter-block revisits in the current anchor-search feature.** Multiple jumps on the current block remain in scope; they are not inter-block revisits. This document preserves the previously discussed revisit analysis and future implementation path so it can be resumed later. The active [decision doc](ANCHOR_POLICY_DECISIONS.md) and [implementation plan](ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md) control current work.
+2026-11-04. **Deferred by explicit user instruction. Do not implement or generate inter-block revisits in the current anchor-search feature.** Multiple jumps on the current block remain in scope; they are not inter-block revisits. This document preserves the previously discussed revisit analysis and future implementation path so it can be resumed later. The active [decision doc](ANCHOR_POLICY_DECISIONS.md) and [implementation plan](ANCHOR_POLICY_DECISIONS.md) control current work.
 
 ## Current boundary
 

@@ -7,7 +7,7 @@ are current. The measured source-era tables below retain their original settings
 [replacement evidence](../research/geometry-passages/README.md) records the new run.
 
 Current runtime: `dd738c98` (2026-11-11). This is the current execution reference
-for physical required-anchor search. The [detailed implementation record](HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md)
+for physical required-anchor search. The [detailed implementation record](design/HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md)
 contains the design/caller migration; [measured evidence](../research/hard-jump-comparisons/README.md)
 contains source hashes, fixtures and validation. Historical supplied-corridor,
 virtual-finish and common-clock experiments retain their own policies.
@@ -46,7 +46,7 @@ service before wall/call/catalogue caps. IPOPT never chooses these discrete meth
 | Compound choice arriving at E before an unused tail ends | Derive the actual owned E prefix, with only its committed rows/events and its own T/J/R/A. | Check owned prefix separately. Rejection of an unused extension is scoped to the extension. | Valid owned arrival remains eligible; an impossible tail does not force its rejection. Legacy fixed-checkpoint controls retain their full-first checks. |
 | `S → C → S`, or revisiting a departed owner | Not generated in the current physical-anchor domain. Same-owner patches are tracked by physical owner. | Departed-owner filter plus emitted-program audit. Repeated required anchors are also unsupported. | No. Current-owner `S→S` hops are different and remain legal. |
 | Arbitrary intentional wall-hit combinations | Deferred feature; named cases can still carry their required finite contact. | No new intentional-hit generator in this feature. | Not an additional search family. |
-| First jump at9/10/11 rather than0/8 | The maintained Real11 case has no whitelist; archived controls retain `[0,8]`. | Shared physical screening, hard-anchor peer deferral and strict finish bounds choose work. Explicit `initialJumpInputs` remains available for controlled experiments. | In the unrestricted control, first0/8 were queried;9–12 arrivals were recoverably deferred before numerical work. See [audit](INITIAL_DOMAIN_AND_CONFIG_AUDIT.md). |
+| First jump at9/10/11 rather than0/8 | The maintained Real11 case has no whitelist; archived controls retain `[0,8]`. | Shared physical screening, hard-anchor peer deferral and strict finish bounds choose work. Explicit `initialJumpInputs` remains available for controlled experiments. | In the unrestricted control, first0/8 were queried;9–12 arrivals were recoverably deferred before numerical work. See [audit](DECISIONS_AND_PLANS.md). |
 
 Ordinary landing durations are not independent air-tick permutations. The model
 finds the descending support-height crossing, then choices compose that history.

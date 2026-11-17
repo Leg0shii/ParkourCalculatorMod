@@ -39,7 +39,7 @@ Native631 passes. The new 300-second control is worse at T67 versus T64: 42 of
 49 requests refine 67-tick journeys and no 64-tick request is reached. All 41
 retained witnesses replay; compatible durable continuation also passes.
 
-Active follow-up investigations: [bookkeeping performance](BOOKKEEPING_PERFORMANCE_AGENT_HANDOFF.md) is handed to another agent/worktree; [branch scheduling](BRANCH_SCHEDULING_INVESTIGATION.md) remains in this session. Both start from `a11b9b18`; this handoff adds no runtime or pruning change. The current code still descends by DFS, while the proposal makes retained continuations compete earlier by optimistic finish.
+Active follow-up investigations: [bookkeeping performance](PERFORMANCE.md) is handed to another agent/worktree; [branch scheduling](design/BRANCH_SCHEDULING_INVESTIGATION.md) remains in this session. Both start from `a11b9b18`; this handoff adds no runtime or pruning change. The current code still descends by DFS, while the proposal makes retained continuations compete earlier by optimistic finish.
 
 2026-11-16 user deferral: **pause further longer Real11 trials until the other
 agent finishes the solver improvements**. Preserve the fixed-B5 fixture and
@@ -77,7 +77,7 @@ validation is in the [record](../research/real11-extension/face-catalog-validati
 The catalog is available for later decision integration; current generators still
 use their existing geometry contracts.
 
-Follow-up status2026-11-15: the user has **deferred interleaving/scheduler implementation**. The [preserved plan](BRANCH_SCHEDULING_INVESTIGATION.md) retains the existing tick priority, work-category/outcome clarifications, ownership/cost analysis and resumption checks; none is implemented by this documentation. Current code remains DFS. The separate [bookkeeping performance handoff](BOOKKEEPING_PERFORMANCE_AGENT_HANDOFF.md) is not paused by this request. Use the [deferred-work register](DEFERRED_WORK.md) for other preserved follow-ups and their actual status.
+Follow-up status2026-11-15: the user has **deferred interleaving/scheduler implementation**. The [preserved plan](design/BRANCH_SCHEDULING_INVESTIGATION.md) retains the existing tick priority, work-category/outcome clarifications, ownership/cost analysis and resumption checks; none is implemented by this documentation. Current code remains DFS. The separate [bookkeeping performance handoff](PERFORMANCE.md) is not paused by this request. Use the [deferred-work register](DEFERRED_WORK.md) for other preserved follow-ups and their actual status.
 
 On `research/bookkeeping-performance`, [already-visited child suppression](../research/enumeration-reduction/README.md)
 now removes duplicate constraint queue visits while preserving ordered unique
@@ -85,10 +85,10 @@ options and legacy cursor compatibility. Its fixed-work enumeration improves
 2.9–3.6x; native627 passes. The timed cold control preserves T64/replay but has a
 worse Z endpoint, so improved whole-search quality is not established.
 
-2026-11-15: package/layout refactor through `9c79e741`; solver behavior remains feature `dd738c98`. Production is installed from `src/parkour_solver`, with separate tests/tools/research/native roots. See [layout](LAYOUT.md) and the [refactor ledger](STANDALONE_REFACTOR_IMPLEMENTATION.md). Start with the [execution reference](ANCHOR_SEARCH_EXECUTION_REFERENCE.md)
+2026-11-15: package/layout refactor through `9c79e741`; solver behavior remains feature `dd738c98`. Production is installed from `src/parkour_solver`, with separate tests/tools/research/native roots. See [layout](LAYOUT.md) and the [refactor ledger](LAYOUT.md). Start with the [execution reference](ANCHOR_SEARCH_EXECUTION_REFERENCE.md)
 for the combination catalogue, pruning/deferral table, IPOPT dispatch boundaries,
 settled decisions/rationale and module ownership. The [decisions index](DECISIONS_AND_PLANS.md)
-records authority; the [implementation record](HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md)
+records authority; the [implementation record](design/HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md)
 and [evidence](../research/hard-jump-comparisons/README.md) record how
 this version was implemented and validated. This feature is complete.
 
@@ -173,13 +173,13 @@ status paragraphs and policies do not direct current work.
 
 | Stage | Evidence / design record |
 | --- | --- |
-| Selective numerical solver integration, nested persistence, explicit recovery and lazy selected-only bounds | [Integration contract](ANCHOR_SEARCH_INTEGRATION.md), [review](SOLVER_BRANCH_INTEGRATION_REVIEW.md), [profiling](../research/anchor-runtime-profile/README.md) |
+| Selective numerical solver integration, nested persistence, explicit recovery and lazy selected-only bounds | [Integration contract](ARCHITECTURE.md), [review](PERFORMANCE.md), [profiling](../research/anchor-runtime-profile/README.md) |
 | Anchor feasibility / finite B7, then correction preserving source hops | [Initial anchor implementation](../research/anchor-feasibility/README.md), [transfer/preparation correction](../research/anchor-transfer-preparation/README.md) |
-| Generic potential route/contact discovery and event backend | [Cited research](research/GENERIC_ROUTE_DISCOVERY_RESEARCH.md), [implemented plan](design/GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md), [cold evidence](../research/event-route-discovery/README.md) |
-| Typed cells/portals/corridors, guide geometry and old automatic-versus-supplied shortlists | [Spatial plan](design/SPATIAL_CORRIDOR_REFACTOR_PLAN.md), [automatic corridor evidence](../research/automatic-corridors/README.md), [handoff](CORRIDOR_AGENT_HANDOFF.md) |
+| Generic potential route/contact discovery and event backend | [Cited research](research/GENERIC_ROUTE_DISCOVERY_RESEARCH.md), implemented plan, [cold evidence](../research/event-route-discovery/README.md) |
+| Typed cells/portals/corridors, guide geometry and old automatic-versus-supplied shortlists | Spatial plan, [automatic corridor evidence](../research/automatic-corridors/README.md), handoff |
 | Virtual B7 height crossing and latest-jump run-family comparisons | [Virtual-finish evidence](../research/virtual-finish/README.md), [local-run evidence](../research/last-jump-runs/README.md) |
 | Imported goal-aware DFS/early interactions and original fixed64 pilot | [DFS evidence](../research/dfs-interactions/README.md), [Real11 source-era ledgers](REAL11_GUIDE.md) |
 
 Use [architecture](ARCHITECTURE.md), [runbook](RUNBOOK.md), [debugging](RESULTS_AND_DEBUGGING.md)
-and [resume](ANCHOR_IMPLEMENTATION_RESUME.md) for current work. No implementation
+and [resume](design/ANCHOR_POLICY_DECISIONS.md) for current work. No implementation
 or numerical run from the completed feature remains pending after compaction.

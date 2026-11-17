@@ -4,7 +4,7 @@ Current physical-anchor policy through `dd738c98` (2026-11-11): retain the confi
 onward objective and stop at an independently valid feasible witness. Objective
 selection and early stopping are separate settings. The [execution reference](ANCHOR_SEARCH_EXECUTION_REFERENCE.md)
 shows which generated decisions reach numerical preparation and why. The
-[integration contract](ANCHOR_SEARCH_INTEGRATION.md) records how the earlier
+[integration contract](ARCHITECTURE.md) records how the earlier
 solver-branch constant-zero default was replaced.
 
 ## Current numerical contract

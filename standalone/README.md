@@ -3,7 +3,7 @@
 The installable Python solver lives in [`src/parkour_solver`](src/parkour_solver).
 Tests, research, native bridge sources and developer tools have separate roots.
 The [layout guide](docs/LAYOUT.md) explains ownership, public entrypoints and
-compatibility; the [implementation ledger](docs/STANDALONE_REFACTOR_IMPLEMENTATION.md)
+compatibility; the [implementation ledger](docs/LAYOUT.md)
 records the tested recovery commits.
 
 From `standalone/`, install into the existing numerical environment:
@@ -30,5 +30,5 @@ separate Python environment.
 The folder refactor preserves numerical equations, comparison/reachability policy,
 checkpoint schemas and historical evidence. Its detailed contracts remain in the
 [numerical reference](docs/reference/NUMERICAL_SOLVER.md),
-[constraint runbook](docs/design/CONSTRAINT_GENERATION_RUNBOOK.md) and
+[constraint runbook](docs/MOD_REFERENCES.md) and
 [replay reference](docs/reference/REPLAY.md). Start agent work at [AGENTS.md](AGENTS.md).

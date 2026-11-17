@@ -2,9 +2,9 @@
 
 Latest extension, 2026-10-30: [GENERIC_COMPOSITION.md](GENERIC_COMPOSITION.md) documents the open choice contract and shared queue for normal, stepping, ceiling and ladder phases. Units can hand off at their actual event state, including airborne and unsupported grounded states. The new path removes the one-case support-leg limit; the older support-profile adapter remains for compatibility.
 
-2026-10-30 extension: registered `stepping` and normal-air `ceiling` units now survive profile compilation, air-gap overlays and run retiming. Named case anchors, jump inputs and grounded-input masks are retained and checked against the scalar profile. Ladder-owned intervals keep their existing units and ceiling behavior; the ladder-ceiling refactor is deferred. See [STEPPING_IMPLEMENTATION.md](STEPPING_IMPLEMENTATION.md). Earlier checkpoint statements below saying stepping is absent describe the preceding ladder milestone.
+2026-10-30 extension: registered `stepping` and normal-air `ceiling` units now survive profile compilation, air-gap overlays and run retiming. Named case anchors, jump inputs and grounded-input masks are retained and checked against the scalar profile. Ladder-owned intervals keep their existing units and ceiling behavior; the ladder-ceiling refactor is deferred. See [STEPPING_CASES.md](STEPPING_CASES.md). Earlier checkpoint statements below saying stepping is absent describe the preceding ladder milestone.
 
-2026-10-29. This implements the latest ladder decisions in [LADDER_COMPOSITION_PLAN.md](LADDER_COMPOSITION_PLAN.md). Continuous numerical acceptance remains this layer's responsibility; replay/export belongs to the other integration worktree.
+2026-10-29. This implements the latest ladder decisions in [MOVEMENT_UNITS.md](MOVEMENT_UNITS.md). Continuous numerical acceptance remains this layer's responsibility; replay/export belongs to the other integration worktree.
 
 ## Implemented interface
 

@@ -1,6 +1,6 @@
 # Concrete solver-orchestration improvements
 
-**Status: deferred by the user (2026-11-15).** Preserve this plan for a later explicit resumption; do not begin scheduler implementation now. Current runtime remains unchanged. This pause does not cancel the separately assigned bookkeeping performance work. See the [deferred-work register](DEFERRED_WORK.md).
+**Status: deferred by the user (2026-11-15).** Preserve this plan for a later explicit resumption; do not begin scheduler implementation now. Current runtime remains unchanged. This pause does not cancel the separately assigned bookkeeping performance work. See the [deferred-work register](../DEFERRED_WORK.md).
 
 2026-11-15. This is the single current planning document for the solver work in
 this session. It consolidates branch scheduling, work eligibility and numerical
@@ -28,7 +28,7 @@ User-confirmed direction:
 
 Recommended implementation details and remaining decisions are identified below;
 no scheduler, solver-result classifier or checkpoint schema has changed yet.
-Bookkeeping optimization has a [separate agent handoff](BOOKKEEPING_PERFORMANCE_AGENT_HANDOFF.md).
+Bookkeeping optimization has a [separate agent handoff](../PERFORMANCE.md).
 That agent must preserve the current runtime contract; integrate these later
 behavior changes deliberately, rather than hiding them in a performance patch.
 
@@ -187,7 +187,7 @@ suspends. Other protected incoming histories remain saved at ancestors. There ar
 service slices, pending/refinement queues and exact resumes, but a slice does not
 mean all protected root histories compete for the next globally best continuation.
 
-The [unrestricted current-policy run](../research/initial-domain-selection/README.md)
+The [unrestricted current-policy run](../../research/initial-domain-selection/README.md)
 records the following first chosen paths. These are feasible sampled histories,
 not proofs of the best possible arrival for either family:
 

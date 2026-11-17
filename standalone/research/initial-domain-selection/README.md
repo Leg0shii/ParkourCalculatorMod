@@ -64,7 +64,7 @@ Evidence:
 - [Unrestricted first-anchor audit](evidence/2026-11-15/unrestricted-first-anchor-audit.json)
 - [Earlier restricted first-anchor audit](evidence/2026-11-15/restricted-first-anchor-audit.json)
 - [Summary](evidence/2026-11-15/summary.json), [source/configuration provenance](evidence/2026-11-15/provenance.json), [invocation fingerprints](evidence/2026-11-15/requests.json)
-- [Configuration and CI audit](../../docs/INITIAL_DOMAIN_AND_CONFIG_AUDIT.md)
+- [Configuration and CI audit](../../docs/DECISIONS_AND_PLANS.md)
 
 The full local report remains under ignored
 `standalone/runs/initial-domain-selection-unrestricted-2026-11-15`, paired with

@@ -2,7 +2,7 @@
 
 Raw scoped profiles preserved from two completed runs, before bookkeeping or
 branch-scheduling changes. These support the
-[separate-agent handoff](../../docs/BOOKKEEPING_PERFORMANCE_AGENT_HANDOFF.md).
+[separate-agent handoff](../../docs/PERFORMANCE.md).
 
 - [Unrestricted300s profile](evidence/2026-11-15/unrestricted300-profile.json),
   [source/configuration provenance](../initial-domain-selection/evidence/2026-11-15/provenance.json),
@@ -26,7 +26,7 @@ tracked full [combined report](../hard-jump-comparisons/2026-11-11/updated-combi
 and its companion are also available for read-only controls at their recorded
 source/domain. The compact refactor witness is not a complete resumable checkpoint.
 
-[Branch scheduling investigation](../../docs/BRANCH_SCHEDULING_INVESTIGATION.md)
+[Branch scheduling investigation](../../docs/design/BRANCH_SCHEDULING_INVESTIGATION.md)
 is separate: this agent must preserve current traversal/policies while measuring
 and improving bookkeeping. No new run or timing claim is introduced by copying
 these profiles into a durable handoff bundle.

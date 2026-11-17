@@ -2,7 +2,7 @@
 
 Read [current state](CURRENT_STATE.md) before assuming a planned component already exists. The [execution reference](ANCHOR_SEARCH_EXECUTION_REFERENCE.md) supplies current combination/pruning/IPOPT tables and the reasons behind each policy. [Code map](CODE_MAP.md) identifies modules; [function index](FUNCTION_INDEX.md) points to definitions. The production package is installed from `src/parkour_solver`; imports and worker launch are independent of the working directory. See [layout](LAYOUT.md) for domain ownership and [runbook](RUNBOOK.md) for entrypoints.
 
-The current physical automatic backend uses [anchor DFS](design/ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md): caller-declared required anchors, or one open span when absent. Geometry retains physical contact/passage alternatives; backward soft guide objectives and the existing movement/constraint/native pipeline decide feasibility. Inter-block returns are excluded while repeated current-owner jumps remain generated. Virtual tasks and explicit supplied corridors retain their source-specific event/typed/raw-walk semantics as controls.
+The current physical automatic backend uses [anchor DFS](design/ANCHOR_POLICY_DECISIONS.md): caller-declared required anchors, or one open span when absent. Geometry retains physical contact/passage alternatives; backward soft guide objectives and the existing movement/constraint/native pipeline decide feasibility. Inter-block returns are excluded while repeated current-owner jumps remain generated. Virtual tasks and explicit supplied corridors retain their source-specific event/typed/raw-walk semantics as controls.
 
 ## The three layers
 

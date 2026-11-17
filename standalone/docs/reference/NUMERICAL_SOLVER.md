@@ -1,10 +1,10 @@
 # Standalone continuous IPOPT solver
 
-Current integrated branch: `research/ipopt-cell-routes`. This package, anchor orchestration and local replay share the integrated implementation. See [current integration](../ANCHOR_SEARCH_INTEGRATION.md); the earlier [consolidation details](../../CONSOLIDATION.md) remain historical.
+Current integrated branch: `research/ipopt-cell-routes`. This package, anchor orchestration and local replay share the integrated implementation. See [current integration](../ARCHITECTURE.md); the earlier consolidation details remain historical.
 
 The installed `parkour_solver.numerics` package provides a Python API and command-line solver for fixed-input horizontal trajectories. It runs independently of Minecraft. An optional headless Java exporter reads ordinary captured TAS files using the repository's existing physics compiler. The mod's engine, UI and save format are unchanged.
 
-Implementation findings, validation results and archived research provenance are summarized in [FINDINGS.md](FINDINGS.md).
+Implementation findings, validation results and archived research provenance are summarized in [MOVEMENT_PORT.md](MOVEMENT_PORT.md).
 
 ## Setup and first solve
 
@@ -196,4 +196,4 @@ Phase diagnostics include `wallReduction` (original/retained counts and original
 
 ## Pure feasibility (2026-11-04)
 
-Early stopping and objective choice are independent after the 2026-11-10 integration. `--feasibility-only`, `stop_on_feasible=True` and request `stopOnFeasible: true` retain the configured directional objective by default. Explicit request `objectiveMode: constant_zero` selects pure feasibility and requires feasible stopping. Default `objectiveMode: configured` does not imply optimization continued past the first feasible point. Every original constraint/contact is still checked; `candidate.objective` remains its measured value. An already valid seed can return before worker startup. [Integration and compatibility](../ANCHOR_SEARCH_INTEGRATION.md), [earlier mode benchmarks](../IPOPT_FEASIBILITY_MODE.md).
+Early stopping and objective choice are independent after the 2026-11-10 integration. `--feasibility-only`, `stop_on_feasible=True` and request `stopOnFeasible: true` retain the configured directional objective by default. Explicit request `objectiveMode: constant_zero` selects pure feasibility and requires feasible stopping. Default `objectiveMode: configured` does not imply optimization continued past the first feasible point. Every original constraint/contact is still checked; `candidate.objective` remains its measured value. An already valid seed can return before worker startup. [Integration and compatibility](../ARCHITECTURE.md), [earlier mode benchmarks](../IPOPT_FEASIBILITY_MODE.md).
