@@ -35,6 +35,7 @@ control work; inclusion here is not authorization to implement a historical plan
 | [docs/design/AVOIDANCE_PASSAGES.md](design/AVOIDANCE_PASSAGES.md) | Design contract; check decisions index for implemented/deferred scope: Geometry-driven avoidance passages |
 | [docs/design/BRANCH_SCHEDULING_INVESTIGATION.md](design/BRANCH_SCHEDULING_INVESTIGATION.md) | Design contract; check decisions index for implemented/deferred scope: Concrete solver-orchestration improvements |
 | [docs/design/CONTACT_COMBINATIONS.md](design/CONTACT_COMBINATIONS.md) | Design contract; check decisions index for implemented/deferred scope: Contact combination implementation |
+| [docs/design/ENCOUNTER_PRESCREEN.md](design/ENCOUNTER_PRESCREEN.md) | Design contract; check decisions index for implemented/deferred scope: Encounter prescreen (proposed) |
 | [docs/design/FACE_MERGING_IMPLEMENTATION_PLAN.md](design/FACE_MERGING_IMPLEMENTATION_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Adjacent-face merging: implementation plan |
 | [docs/design/GENERATION_RELEVANCE_PLAN.md](design/GENERATION_RELEVANCE_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Preliminary plan: generate only relevant, distinct interaction models |
 | [docs/design/GENERIC_COMPOSITION.md](design/GENERIC_COMPOSITION.md) | Design contract; check decisions index for implemented/deferred scope: Generic movement programs |
