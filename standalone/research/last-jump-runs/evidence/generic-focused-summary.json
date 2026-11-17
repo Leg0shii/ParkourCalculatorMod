@@ -1,0 +1,21 @@
+{
+  "runtimeSource": "db211b2b",
+  "runtimeChanged": false,
+  "tests": 52,
+  "skipped": 0,
+  "passed": true,
+  "elapsedSeconds": 17.118,
+  "minimumRunCountsTested": [
+    0,
+    1,
+    2,
+    5,
+    9
+  ],
+  "checks": [
+    "equal/fewer run counts remain eligible",
+    "larger local run count excluded",
+    "smaller feasible result tightens the learned threshold"
+  ],
+  "real11Solve": false
+}

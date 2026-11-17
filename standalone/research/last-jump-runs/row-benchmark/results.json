@@ -1,0 +1,642 @@
+{
+  "casadiVersion": "3.8.1",
+  "problemHash": "f05d5e3a788472261d5511a15cdbb452089e3d7775a576073ce84e19fc24331b",
+  "maxIterations": 200,
+  "fixedPhaseTimeLimit": 5.0,
+  "repeats": 5,
+  "fullRouteSearch": false,
+  "runs": [
+    {
+      "graphSeconds": 0.026011377573013306,
+      "variables": 335,
+      "constraints": 546,
+      "solverSetupSeconds": 0.010953705757856369,
+      "solveSeconds": 0.017207123339176178,
+      "elapsedSeconds": 0.05561445653438568,
+      "status": "Solve_Succeeded",
+      "iterations": 17,
+      "rows": 278,
+      "originalRowsFeasible": true,
+      "objective": -1093.823129064622,
+      "variant": "raw",
+      "repetition": 0
+    },
+    {
+      "graphSeconds": 0.01902596279978752,
+      "variables": 335,
+      "constraints": 382,
+      "solverSetupSeconds": 0.007712792605161667,
+      "solveSeconds": 0.007155913859605789,
+      "elapsedSeconds": 0.034429922699928284,
+      "status": "Solve_Succeeded",
+      "iterations": 12,
+      "rows": 114,
+      "originalRowsFeasible": true,
+      "objective": -1093.8231290638967,
+      "variant": "exact",
+      "repetition": 0
+    },
+    {
+      "graphSeconds": 0.019757334142923355,
+      "variables": 335,
+      "constraints": 359,
+      "solverSetupSeconds": 0.007748212665319443,
+      "solveSeconds": 0.00591958686709404,
+      "elapsedSeconds": 0.03402983397245407,
+      "status": "Solve_Succeeded",
+      "iterations": 11,
+      "rows": 91,
+      "originalRowsFeasible": true,
+      "objective": -1093.8231290635345,
+      "variant": "tight",
+      "repetition": 0
+    },
+    {
+      "graphSeconds": 0.018829919397830963,
+      "variables": 335,
+      "constraints": 382,
+      "solverSetupSeconds": 0.007934961467981339,
+      "solveSeconds": 0.010363001376390457,
+      "elapsedSeconds": 0.03765542060136795,
+      "status": "Solve_Succeeded",
+      "iterations": 12,
+      "rows": 114,
+      "originalRowsFeasible": true,
+      "objective": -1093.8231290638967,
+      "variant": "exact",
+      "repetition": 1
+    },
+    {
+      "graphSeconds": 0.019866250455379486,
+      "variables": 335,
+      "constraints": 359,
+      "solverSetupSeconds": 0.008054167032241821,
+      "solveSeconds": 0.006375584751367569,
+      "elapsedSeconds": 0.03480112552642822,
+      "status": "Solve_Succeeded",
+      "iterations": 11,
+      "rows": 91,
+      "originalRowsFeasible": true,
+      "objective": -1093.8231290635345,
+      "variant": "tight",
+      "repetition": 1
+    },
+    {
+      "graphSeconds": 0.02283921092748642,
+      "variables": 335,
+      "constraints": 546,
+      "solverSetupSeconds": 0.009616542607545853,
+      "solveSeconds": 0.012392167001962662,
+      "elapsedSeconds": 0.04544254392385483,
+      "status": "Solve_Succeeded",
+      "iterations": 17,
+      "rows": 278,
+      "originalRowsFeasible": true,
+      "objective": -1093.823129064622,
+      "variant": "raw",
+      "repetition": 1
+    },
+    {
+      "graphSeconds": 0.01721029356122017,
+      "variables": 335,
+      "constraints": 359,
+      "solverSetupSeconds": 0.007740627974271774,
+      "solveSeconds": 0.006034497171640396,
+      "elapsedSeconds": 0.03143870830535889,
+      "status": "Solve_Succeeded",
+      "iterations": 11,
+      "rows": 91,
+      "originalRowsFeasible": true,
+      "objective": -1093.8231290635345,
+      "variant": "tight",
+      "repetition": 2
+    },
+    {
+      "graphSeconds": 0.02293870598077774,
+      "variables": 335,
+      "constraints": 546,
+      "solverSetupSeconds": 0.01036345586180687,
+      "solveSeconds": 0.013318374752998352,
+      "elapsedSeconds": 0.047270916402339935,
+      "status": "Solve_Succeeded",
+      "iterations": 17,
+      "rows": 278,
+      "originalRowsFeasible": true,
+      "objective": -1093.823129064622,
+      "variant": "raw",
+      "repetition": 2
+    },
+    {
+      "graphSeconds": 0.01874479278922081,
+      "variables": 335,
+      "constraints": 382,
+      "solverSetupSeconds": 0.007900916039943695,
+      "solveSeconds": 0.006596792489290237,
+      "elapsedSeconds": 0.03389579430222511,
+      "status": "Solve_Succeeded",
+      "iterations": 12,
+      "rows": 114,
+      "originalRowsFeasible": true,
+      "objective": -1093.8231290638967,
+      "variant": "exact",
+      "repetition": 2
+    },
+    {
+      "graphSeconds": 0.022744249552488327,
+      "variables": 335,
+      "constraints": 546,
+      "solverSetupSeconds": 0.009672500193119049,
+      "solveSeconds": 0.013310585170984268,
+      "elapsedSeconds": 0.046324748545885086,
+      "status": "Solve_Succeeded",
+      "iterations": 17,
+      "rows": 278,
+      "originalRowsFeasible": true,
+      "objective": -1093.823129064622,
+      "variant": "raw",
+      "repetition": 3
+    },
+    {
+      "graphSeconds": 0.018135376274585724,
+      "variables": 335,
+      "constraints": 382,
+      "solverSetupSeconds": 0.007514204829931259,
+      "solveSeconds": 0.007464505732059479,
+      "elapsedSeconds": 0.03367850184440613,
+      "status": "Solve_Succeeded",
+      "iterations": 12,
+      "rows": 114,
+      "originalRowsFeasible": true,
+      "objective": -1093.8231290638967,
+      "variant": "exact",
+      "repetition": 3
+    },
+    {
+      "graphSeconds": 0.01868562400341034,
+      "variables": 335,
+      "constraints": 359,
+      "solverSetupSeconds": 0.007447872310876846,
+      "solveSeconds": 0.006010834127664566,
+      "elapsedSeconds": 0.03260583430528641,
+      "status": "Solve_Succeeded",
+      "iterations": 11,
+      "rows": 91,
+      "originalRowsFeasible": true,
+      "objective": -1093.8231290635345,
+      "variant": "tight",
+      "repetition": 3
+    },
+    {
+      "graphSeconds": 0.018776457756757736,
+      "variables": 335,
+      "constraints": 382,
+      "solverSetupSeconds": 0.007714714854955673,
+      "solveSeconds": 0.006964623928070068,
+      "elapsedSeconds": 0.03411100059747696,
+      "status": "Solve_Succeeded",
+      "iterations": 12,
+      "rows": 114,
+      "originalRowsFeasible": true,
+      "objective": -1093.8231290638967,
+      "variant": "exact",
+      "repetition": 4
+    },
+    {
+      "graphSeconds": 0.018108751624822617,
+      "variables": 335,
+      "constraints": 359,
+      "solverSetupSeconds": 0.007601581513881683,
+      "solveSeconds": 0.005622334778308868,
+      "elapsedSeconds": 0.03181537613272667,
+      "status": "Solve_Succeeded",
+      "iterations": 11,
+      "rows": 91,
+      "originalRowsFeasible": true,
+      "objective": -1093.8231290635345,
+      "variant": "tight",
+      "repetition": 4
+    },
+    {
+      "graphSeconds": 0.02323799952864647,
+      "variables": 335,
+      "constraints": 546,
+      "solverSetupSeconds": 0.009799793362617493,
+      "solveSeconds": 0.010975334793329239,
+      "elapsedSeconds": 0.044592875987291336,
+      "status": "Solve_Succeeded",
+      "iterations": 17,
+      "rows": 278,
+      "originalRowsFeasible": true,
+      "objective": -1093.823129064622,
+      "variant": "raw",
+      "repetition": 4
+    }
+  ],
+  "microbench": {
+    "raw": {
+      "rows": 278,
+      "jsonBytes": 43772,
+      "prepareSeconds": 0.001393802911043167,
+      "fingerprintSeconds": 0.0004596845805644989,
+      "jsonSeconds": 0.0003992991894483566,
+      "validateSeconds": 0.00025844626128673553,
+      "envelopeSeconds": 0.0025909879431128503,
+      "cachedLinearScreenSeconds": 0.0002654758468270302
+    },
+    "exact": {
+      "rows": 114,
+      "jsonBytes": 26168,
+      "prepareSeconds": 0.000864940844476223,
+      "fingerprintSeconds": 0.00026944749057292936,
+      "jsonSeconds": 0.00026958417147397994,
+      "validateSeconds": 0.0002056645601987839,
+      "envelopeSeconds": 0.002463339976966381,
+      "cachedLinearScreenSeconds": 0.00022372294217348098
+    },
+    "tight": {
+      "rows": 91,
+      "jsonBytes": 23763,
+      "prepareSeconds": 0.0007782924547791481,
+      "fingerprintSeconds": 0.00024958495050668715,
+      "jsonSeconds": 0.0002543700113892555,
+      "validateSeconds": 0.00019618626683950424,
+      "envelopeSeconds": 0.00199774082750082,
+      "cachedLinearScreenSeconds": 0.00018565788865089418
+    }
+  },
+  "externalRuns": [
+    {
+      "variant": "raw",
+      "repetition": 0,
+      "elapsedSeconds": 0.1985502541065216,
+      "status": "feasible",
+      "termination": "worker_finished",
+      "firstFeasibleSeconds": 0.1189824603497982,
+      "objective": -1093.823129064622,
+      "originalRowsFeasible": true,
+      "phases": [
+        {
+          "type": "phase",
+          "status": "Solve_Succeeded",
+          "iterations": 17,
+          "seconds": 0.04335683211684227,
+          "zeros": 0,
+          "survivors": 0,
+          "kind": "carry",
+          "seed": "initial",
+          "ladderSaturated": 0,
+          "capAttempt": 0
+        },
+        {
+          "type": "phase",
+          "status": "Solve_Succeeded",
+          "iterations": 25,
+          "seconds": 0.04885095730423927,
+          "zeros": 0,
+          "survivors": 0,
+          "kind": "carry",
+          "seed": "fallback",
+          "ladderSaturated": 0,
+          "capAttempt": 0
+        }
+      ]
+    },
+    {
+      "variant": "exact",
+      "repetition": 0,
+      "elapsedSeconds": 0.18928029015660286,
+      "status": "feasible",
+      "termination": "worker_finished",
+      "firstFeasibleSeconds": 0.10535696148872375,
+      "objective": -1093.8231290638957,
+      "originalRowsFeasible": true,
+      "phases": [
+        {
+          "type": "phase",
+          "status": "Solve_Succeeded",
+          "iterations": 12,
+          "seconds": 0.03368154168128967,
+          "zeros": 0,
+          "survivors": 0,
+          "kind": "carry",
+          "seed": "initial",
+          "ladderSaturated": 0,
+          "capAttempt": 0
+        },
+        {
+          "type": "phase",
+          "status": "Solve_Succeeded",
+          "iterations": 18,
+          "seconds": 0.03753133490681648,
+          "zeros": 0,
+          "survivors": 0,
+          "kind": "carry",
+          "seed": "fallback",
+          "ladderSaturated": 0,
+          "capAttempt": 0
+        }
+      ]
+    },
+    {
+      "variant": "tight",
+      "repetition": 0,
+      "elapsedSeconds": 0.19574108347296715,
+      "status": "feasible",
+      "termination": "worker_finished",
+      "firstFeasibleSeconds": 0.12726116925477982,
+      "objective": -1093.8231290635335,
+      "originalRowsFeasible": true,
+      "phases": [
+        {
+          "type": "phase",
+          "status": "Solve_Succeeded",
+          "iterations": 11,
+          "seconds": 0.03161574900150299,
+          "zeros": 0,
+          "survivors": 0,
+          "kind": "carry",
+          "seed": "initial",
+          "ladderSaturated": 0,
+          "capAttempt": 0
+        },
+        {
+          "type": "phase",
+          "status": "Solve_Succeeded",
+          "iterations": 20,
+          "seconds": 0.03660924732685089,
+          "zeros": 0,
+          "survivors": 0,
+          "kind": "carry",
+          "seed": "fallback",
+          "ladderSaturated": 0,
+          "capAttempt": 0
+        }
+      ]
+    },
+    {
+      "variant": "exact",
+      "repetition": 1,
+      "elapsedSeconds": 0.17344604432582855,
+      "status": "feasible",
+      "termination": "worker_finished",
+      "firstFeasibleSeconds": 0.10811525210738182,
+      "objective": -1093.8231290638957,
+      "originalRowsFeasible": true,
+      "phases": [
+        {
+          "type": "phase",
+          "status": "Solve_Succeeded",
+          "iterations": 12,
+          "seconds": 0.033650122582912445,
+          "zeros": 0,
+          "survivors": 0,
+          "kind": "carry",
+          "seed": "initial",
+          "ladderSaturated": 0,
+          "capAttempt": 0
+        },
+        {
+          "type": "phase",
+          "status": "Solve_Succeeded",
+          "iterations": 18,
+          "seconds": 0.03577454388141632,
+          "zeros": 0,
+          "survivors": 0,
+          "kind": "carry",
+          "seed": "fallback",
+          "ladderSaturated": 0,
+          "capAttempt": 0
+        }
+      ]
+    },
+    {
+      "variant": "tight",
+      "repetition": 1,
+      "elapsedSeconds": 0.17274075001478195,
+      "status": "feasible",
+      "termination": "worker_finished",
+      "firstFeasibleSeconds": 0.10573291778564453,
+      "objective": -1093.8231290635335,
+      "originalRowsFeasible": true,
+      "phases": [
+        {
+          "type": "phase",
+          "status": "Solve_Succeeded",
+          "iterations": 11,
+          "seconds": 0.031554918736219406,
+          "zeros": 0,
+          "survivors": 0,
+          "kind": "carry",
+          "seed": "initial",
+          "ladderSaturated": 0,
+          "capAttempt": 0
+        },
+        {
+          "type": "phase",
+          "status": "Solve_Succeeded",
+          "iterations": 20,
+          "seconds": 0.03578141704201698,
+          "zeros": 0,
+          "survivors": 0,
+          "kind": "carry",
+          "seed": "fallback",
+          "ladderSaturated": 0,
+          "capAttempt": 0
+        }
+      ]
+    },
+    {
+      "variant": "raw",
+      "repetition": 1,
+      "elapsedSeconds": 0.207353875041008,
+      "status": "feasible",
+      "termination": "worker_finished",
+      "firstFeasibleSeconds": 0.11751841753721237,
+      "objective": -1093.823129064622,
+      "originalRowsFeasible": true,
+      "phases": [
+        {
+          "type": "phase",
+          "status": "Solve_Succeeded",
+          "iterations": 17,
+          "seconds": 0.04408400133252144,
+          "zeros": 0,
+          "survivors": 0,
+          "kind": "carry",
+          "seed": "initial",
+          "ladderSaturated": 0,
+          "capAttempt": 0
+        },
+        {
+          "type": "phase",
+          "status": "Solve_Succeeded",
+          "iterations": 25,
+          "seconds": 0.05655187368392944,
+          "zeros": 0,
+          "survivors": 0,
+          "kind": "carry",
+          "seed": "fallback",
+          "ladderSaturated": 0,
+          "capAttempt": 0
+        }
+      ]
+    },
+    {
+      "variant": "tight",
+      "repetition": 2,
+      "elapsedSeconds": 0.1827850416302681,
+      "status": "feasible",
+      "termination": "worker_finished",
+      "firstFeasibleSeconds": 0.11406070739030838,
+      "objective": -1093.8231290635335,
+      "originalRowsFeasible": true,
+      "phases": [
+        {
+          "type": "phase",
+          "status": "Solve_Succeeded",
+          "iterations": 11,
+          "seconds": 0.031413909047842026,
+          "zeros": 0,
+          "survivors": 0,
+          "kind": "carry",
+          "seed": "initial",
+          "ladderSaturated": 0,
+          "capAttempt": 0
+        },
+        {
+          "type": "phase",
+          "status": "Solve_Succeeded",
+          "iterations": 20,
+          "seconds": 0.03821933642029762,
+          "zeros": 0,
+          "survivors": 0,
+          "kind": "carry",
+          "seed": "fallback",
+          "ladderSaturated": 0,
+          "capAttempt": 0
+        }
+      ]
+    },
+    {
+      "variant": "raw",
+      "repetition": 2,
+      "elapsedSeconds": 0.1980770006775856,
+      "status": "feasible",
+      "termination": "worker_finished",
+      "firstFeasibleSeconds": 0.11486083269119263,
+      "objective": -1093.823129064622,
+      "originalRowsFeasible": true,
+      "phases": [
+        {
+          "type": "phase",
+          "status": "Solve_Succeeded",
+          "iterations": 17,
+          "seconds": 0.04282316938042641,
+          "zeros": 0,
+          "survivors": 0,
+          "kind": "carry",
+          "seed": "initial",
+          "ladderSaturated": 0,
+          "capAttempt": 0
+        },
+        {
+          "type": "phase",
+          "status": "Solve_Succeeded",
+          "iterations": 25,
+          "seconds": 0.04875108599662781,
+          "zeros": 0,
+          "survivors": 0,
+          "kind": "carry",
+          "seed": "fallback",
+          "ladderSaturated": 0,
+          "capAttempt": 0
+        }
+      ]
+    },
+    {
+      "variant": "exact",
+      "repetition": 2,
+      "elapsedSeconds": 0.17708683386445045,
+      "status": "feasible",
+      "termination": "worker_finished",
+      "firstFeasibleSeconds": 0.10642166808247566,
+      "objective": -1093.8231290638957,
+      "originalRowsFeasible": true,
+      "phases": [
+        {
+          "type": "phase",
+          "status": "Solve_Succeeded",
+          "iterations": 12,
+          "seconds": 0.03291795775294304,
+          "zeros": 0,
+          "survivors": 0,
+          "kind": "carry",
+          "seed": "initial",
+          "ladderSaturated": 0,
+          "capAttempt": 0
+        },
+        {
+          "type": "phase",
+          "status": "Solve_Succeeded",
+          "iterations": 18,
+          "seconds": 0.0365503765642643,
+          "zeros": 0,
+          "survivors": 0,
+          "kind": "carry",
+          "seed": "fallback",
+          "ladderSaturated": 0,
+          "capAttempt": 0
+        }
+      ]
+    }
+  ],
+  "medians": {
+    "raw": {
+      "graphSeconds": 0.02293870598077774,
+      "solverSetupSeconds": 0.009799793362617493,
+      "solveSeconds": 0.013310585170984268,
+      "elapsedSeconds": 0.046324748545885086,
+      "iterations": 17
+    },
+    "exact": {
+      "graphSeconds": 0.018776457756757736,
+      "solverSetupSeconds": 0.007714714854955673,
+      "solveSeconds": 0.007155913859605789,
+      "elapsedSeconds": 0.03411100059747696,
+      "iterations": 12
+    },
+    "tight": {
+      "graphSeconds": 0.01868562400341034,
+      "solverSetupSeconds": 0.007740627974271774,
+      "solveSeconds": 0.006010834127664566,
+      "elapsedSeconds": 0.03260583430528641,
+      "iterations": 11
+    }
+  },
+  "externalMedians": {
+    "raw": 0.1985502541065216,
+    "exact": 0.17708683386445045,
+    "tight": 0.1827850416302681
+  },
+  "allRecheckedAgainstOriginal": true,
+  "lateSnapshot": {
+    "pretty": {
+      "jsonBytes": 109296014,
+      "gzipBytes": 4315413,
+      "encodeSeconds": 1.749399334192276,
+      "gzipSeconds": 2.290049582719803,
+      "totalSeconds": 4.039448916912079
+    },
+    "compact": {
+      "jsonBytes": 44730693,
+      "gzipBytes": 2300046,
+      "encodeSeconds": 0.35147570818662643,
+      "gzipSeconds": 0.394376415759325,
+      "totalSeconds": 0.7458521239459515
+    }
+  },
+  "snapshotTransitionCount": 71,
+  "inputSource": "61355976f98f2091ee26bae53ddf81ebf6820004",
+  "benchmarkRevision": "568065810f254aaa5e7f3cd8a1218921bdd00bab",
+  "productionCodeChanged": false
+}

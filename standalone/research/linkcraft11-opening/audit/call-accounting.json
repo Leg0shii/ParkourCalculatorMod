@@ -1,0 +1,1094 @@
+[
+  {
+    "run": "real11-clock64-first",
+    "solverCalls": 430,
+    "unevaluated": [
+      {
+        "id": "9ebe74a5a91dd4472ba619136ed3b1f0c1433b86e49a17583318726ed8e32931",
+        "window": 1,
+        "selection": "candidate_resource_limit",
+        "decisions": {
+          "jumps": [
+            8,
+            17
+          ],
+          "groundNoJump": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ],
+          "contacts": [
+            {
+              "state": 1,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 2,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 3,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 4,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 5,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 6,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 7,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 8,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 17,
+              "block": "b2",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            }
+          ],
+          "cases": [],
+          "terminalSupport": null,
+          "inputTicks": 28
+        }
+      },
+      {
+        "id": "17e048da9bfb020fc52e6e52c1b8634f92299bd542a2746b2a8d9d1c8f9ae82e",
+        "window": 2,
+        "selection": "candidate_resource_limit",
+        "decisions": {
+          "jumps": [
+            7,
+            19
+          ],
+          "groundNoJump": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            28,
+            29,
+            30,
+            31,
+            32,
+            33,
+            34,
+            35
+          ],
+          "contacts": [
+            {
+              "state": 1,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 2,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 3,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 4,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 5,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 6,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 7,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 19,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 28,
+              "block": "b2",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 29,
+              "block": "b2",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 30,
+              "block": "b2",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 31,
+              "block": "b2",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 32,
+              "block": "b2",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 33,
+              "block": "b2",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 34,
+              "block": "b2",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 35,
+              "block": "b2",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            }
+          ],
+          "cases": [],
+          "terminalSupport": null,
+          "inputTicks": 44
+        }
+      },
+      {
+        "id": "6d0226cb849dd8f97d07424bd46d702d8aa1509f05f7ac0af58ff535c7d63b10",
+        "window": 3,
+        "selection": "candidate_resource_limit",
+        "decisions": {
+          "jumps": [
+            7,
+            19,
+            33,
+            47
+          ],
+          "groundNoJump": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            28,
+            29,
+            30,
+            31,
+            32,
+            45,
+            46
+          ],
+          "contacts": [
+            {
+              "state": 1,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 2,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 3,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 4,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 5,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 6,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 7,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 19,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 28,
+              "block": "b2",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 29,
+              "block": "b2",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 30,
+              "block": "b2",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 31,
+              "block": "b2",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 32,
+              "block": "b2",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 33,
+              "block": "b2",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 45,
+              "block": "b2",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 46,
+              "block": "b2",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 47,
+              "block": "b2",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            }
+          ],
+          "cases": [],
+          "terminalSupport": null,
+          "inputTicks": 55
+        }
+      }
+    ],
+    "termination": "exhausted"
+  },
+  {
+    "run": "real11-clock64-near-goals",
+    "solverCalls": 471,
+    "unevaluated": [
+      {
+        "id": "2f86b2f213ec45f7e359482ad99f014dc45476e57b0d165e601a1d85038b6899",
+        "window": 1,
+        "selection": "candidate_resource_limit",
+        "decisions": {
+          "jumps": [
+            8
+          ],
+          "groundNoJump": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            17
+          ],
+          "contacts": [
+            {
+              "state": 1,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 2,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 3,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 4,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 5,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 6,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 7,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 8,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 17,
+              "block": "b2",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            }
+          ],
+          "cases": [],
+          "terminalSupport": null,
+          "inputTicks": 28
+        }
+      },
+      {
+        "id": "a4e8ea12014a7e3bf13729c6af66e4642129aec0a917a309ddd1f334fc41c7ff",
+        "window": 2,
+        "selection": "candidate_resource_limit",
+        "decisions": {
+          "jumps": [
+            7,
+            19,
+            30
+          ],
+          "groundNoJump": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            28,
+            29
+          ],
+          "contacts": [
+            {
+              "state": 1,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 2,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 3,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 4,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 5,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 6,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 7,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 19,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 28,
+              "block": "b2",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 29,
+              "block": "b2",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 30,
+              "block": "b2",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            }
+          ],
+          "cases": [],
+          "terminalSupport": null,
+          "inputTicks": 44
+        }
+      }
+    ],
+    "termination": "exhausted"
+  },
+  {
+    "run": "real11-clock64-event-priority",
+    "solverCalls": 773,
+    "unevaluated": [
+      {
+        "id": "f8eae6f9c0b578e2133683458d60f47775e88dc92323dca1efee17e6f8919213",
+        "window": 1,
+        "selection": "candidate_resource_limit",
+        "decisions": {
+          "jumps": [
+            8,
+            17
+          ],
+          "groundNoJump": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            26,
+            27
+          ],
+          "contacts": [
+            {
+              "state": 1,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 2,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 3,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 4,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 5,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 6,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 7,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 8,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 17,
+              "block": "b2",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 26,
+              "block": "b3",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 27,
+              "block": "b3",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            }
+          ],
+          "cases": [],
+          "terminalSupport": null,
+          "inputTicks": 28
+        }
+      },
+      {
+        "id": "d59b830f7c33a282fd11d6b3742710b93e647ff2fde0c0c6d13f60444e835669",
+        "window": 2,
+        "selection": "candidate_resource_limit",
+        "decisions": {
+          "jumps": [
+            8,
+            17,
+            26
+          ],
+          "groundNoJump": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            36,
+            37
+          ],
+          "contacts": [
+            {
+              "state": 1,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 2,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 3,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 4,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 5,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 6,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 7,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 8,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 17,
+              "block": "b2",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 26,
+              "block": "b3",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 36,
+              "block": "b4",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 37,
+              "block": "b4",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            }
+          ],
+          "cases": [],
+          "terminalSupport": null,
+          "inputTicks": 44
+        }
+      },
+      {
+        "id": "11e140b436d949d7f5b9ca4d2e49734ed98eed7114cab8c7aaf2a1863343af92",
+        "window": 3,
+        "selection": "candidate_resource_limit",
+        "decisions": {
+          "jumps": [
+            9,
+            18,
+            27,
+            37
+          ],
+          "groundNoJump": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            52,
+            53,
+            54
+          ],
+          "contacts": [
+            {
+              "state": 1,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 2,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 3,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 4,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 5,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 6,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 7,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 8,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 9,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 18,
+              "block": "b2",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 27,
+              "block": "b3",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 37,
+              "block": "b4",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 52,
+              "block": "b5",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 53,
+              "block": "b5",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 54,
+              "block": "b5",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 55,
+              "block": "b5",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            }
+          ],
+          "cases": [],
+          "terminalSupport": "b5",
+          "inputTicks": 55
+        }
+      }
+    ],
+    "termination": "deadline"
+  },
+  {
+    "run": "real11-clock64-resumed",
+    "solverCalls": 383,
+    "unevaluated": [
+      {
+        "id": "335d968f3f57d97a2241116463d313555dfe99b288bb04e61355b2c85ffe1d92",
+        "window": 0,
+        "selection": "candidate_resource_limit",
+        "decisions": {
+          "jumps": [
+            5,
+            17,
+            26,
+            35,
+            48
+          ],
+          "groundNoJump": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            45,
+            46,
+            47,
+            63
+          ],
+          "contacts": [
+            {
+              "state": 1,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 2,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 3,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 4,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 5,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 17,
+              "block": "b1",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 26,
+              "block": "b2",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 35,
+              "block": "b3",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 45,
+              "block": "b4",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 46,
+              "block": "b4",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 47,
+              "block": "b4",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 48,
+              "block": "b4",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            },
+            {
+              "state": 63,
+              "block": "b5",
+              "axis": "Y",
+              "direction": -1,
+              "role": "landing"
+            }
+          ],
+          "cases": [],
+          "terminalSupport": null,
+          "inputTicks": 64
+        }
+      }
+    ],
+    "termination": "candidate_limit"
+  }
+]

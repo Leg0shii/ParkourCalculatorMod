@@ -1,0 +1,5 @@
+{"label": "retained_slow_exact_final", "status": "unknown", "termination": "numerical_call_limit", "calls": 24, "elapsed": 6.898361876606941, "objective": null, "replay": null}
+{"label": "true_inner_resume_1", "status": "unknown", "termination": "numerical_call_limit", "calls": 24, "elapsed": 6.503152955323458, "objective": null, "replay": null}
+{"label": "true_inner_resume_2", "status": "unknown", "termination": "numerical_call_limit", "calls": 24, "elapsed": 6.24663246050477, "objective": null, "replay": null}
+{"label": "same_final_scene_only", "status": "feasible", "termination": "numerical_call_limit", "calls": 24, "elapsed": 7.732219539582729, "objective": -1095.920359545253, "replay": true}
+{"label": "missing_B3_wait3_from_actual_retained_parent", "status": "feasible", "termination": "contact_search_exhausted", "calls": 2, "elapsed": 0.7354010455310345, "objective": -1178.0443591258072, "replay": true}

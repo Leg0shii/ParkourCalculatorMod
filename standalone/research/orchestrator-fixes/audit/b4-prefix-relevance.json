@@ -1,0 +1,696 @@
+{
+  "program": "P03, broader than P04/P05",
+  "b4": {
+    "solidIndex": 3,
+    "reason": "all_contact_phases_unreachable",
+    "phaseExclusions": [
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 0,
+        "phase": "Y",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 0.0
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 0,
+        "phase": "X",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 0.32739999400211334
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 0,
+        "phase": "Z",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 0.32739999400211334
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 1,
+        "phase": "Y",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 0.32739999400211334
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 1,
+        "phase": "X",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 0.5321604198446032
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 1,
+        "phase": "Z",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 0.5321604198446032
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 2,
+        "phase": "Y",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 0.5321604198446032
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 2,
+        "phase": "X",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 0.7444924210851686
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 2,
+        "phase": "Z",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 0.7444924210851686
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 3,
+        "phase": "Y",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 0.7444924210851686
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 3,
+        "phase": "X",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 0.9637145561365552
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 3,
+        "phase": "Z",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 0.9637145561365552
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 4,
+        "phase": "Y",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 0.9637145561365552
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 4,
+        "phase": "X",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 1.18920671313649
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 4,
+        "phase": "Z",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 1.18920671313649
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 5,
+        "phase": "Y",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 1.18920671313649
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 5,
+        "phase": "X",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 1.4204045902740416
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 5,
+        "phase": "Z",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 1.4204045902740416
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 6,
+        "phase": "Y",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 1.4204045902740416
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 6,
+        "phase": "X",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 1.656794672886463
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 6,
+        "phase": "Z",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 1.656794672886463
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 7,
+        "phase": "Y",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 1.656794672886463
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 7,
+        "phase": "X",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 1.897909662617187
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 7,
+        "phase": "Z",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 1.897909662617187
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 8,
+        "phase": "Y",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 1.897909662617187
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 8,
+        "phase": "X",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 2.1433243179494816
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 8,
+        "phase": "Z",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 2.1433243179494816
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 9,
+        "phase": "Y",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 2.1433243179494816
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 9,
+        "phase": "X",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 2.3926516690919692
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 9,
+        "phase": "Z",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 2.3926516690919692
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 10,
+        "phase": "Y",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 2.3926516690919692
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 10,
+        "phase": "X",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 2.6455395735243465
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 10,
+        "phase": "Z",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 2.6455395735243465
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 11,
+        "phase": "Y",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 2.6455395735243465
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 11,
+        "phase": "X",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 2.901667581543903
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 11,
+        "phase": "Z",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 2.901667581543903
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 12,
+        "phase": "Y",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 2.901667581543903
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 12,
+        "phase": "X",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 3.4621440695610373
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 12,
+        "phase": "Z",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 3.4621440695610373
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 13,
+        "phase": "Y",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 3.4621440695610373
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 13,
+        "phase": "X",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 3.794164275917286
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 13,
+        "phase": "Z",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 3.794164275917286
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 14,
+        "phase": "Y",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 3.794164275917286
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 14,
+        "phase": "X",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 4.122302680762893
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 14,
+        "phase": "Z",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 4.122302680762893
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 15,
+        "phase": "Y",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 4.122302680762893
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 15,
+        "phase": "X",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 4.446908646132011
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 15,
+        "phase": "Z",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 4.446908646132011
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 16,
+        "phase": "Y",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 4.446908646132011
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 16,
+        "phase": "X",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 4.768300091484882
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 16,
+        "phase": "Z",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 4.768300091484882
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 17,
+        "phase": "Y",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 4.768300091484882
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 17,
+        "phase": "X",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 5.086766323538665
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 17,
+        "phase": "Z",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 5.086766323538665
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 18,
+        "phase": "Y",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 5.086766323538665
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 18,
+        "phase": "X",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 5.4025706114135605
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 18,
+        "phase": "Z",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 5.4025706114135605
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 19,
+        "phase": "Y",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 5.4025706114135605
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 19,
+        "phase": "X",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 5.715952530015856
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 19,
+        "phase": "Z",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 5.715952530015856
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 20,
+        "phase": "Y",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 5.715952530015856
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 20,
+        "phase": "X",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 6.027130092516557
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 20,
+        "phase": "Z",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 6.027130092516557
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 21,
+        "phase": "Y",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 6.027130092516557
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 21,
+        "phase": "X",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 6.637701676555264
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 21,
+        "phase": "Z",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 6.637701676555264
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 22,
+        "phase": "Y",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 6.637701676555264
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 22,
+        "phase": "X",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 6.997073808516291
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 22,
+        "phase": "Z",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 6.997073808516291
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 23,
+        "phase": "Y",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 6.997073808516291
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 23,
+        "phase": "X",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 7.350102466379577
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 23,
+        "phase": "Z",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 7.350102466379577
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 24,
+        "phase": "Y",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 7.350102466379577
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 24,
+        "phase": "X",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 7.697358562647557
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 24,
+        "phase": "Z",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 7.697358562647557
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 25,
+        "phase": "Y",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 7.697358562647557
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 25,
+        "phase": "X",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 8.039361627712417
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 25,
+        "phase": "Z",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 8.039361627712417
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 26,
+        "phase": "Y",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 8.039361627712417
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 26,
+        "phase": "X",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 8.37658443424467
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 26,
+        "phase": "Z",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 8.37658443424467
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 27,
+        "phase": "Y",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 8.37658443424467
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 27,
+        "phase": "X",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 8.709457205386883
+      },
+      {
+        "ruledOut": true,
+        "reason": "interaction_distance_unreachable",
+        "tick": 27,
+        "phase": "Z",
+        "gap": 11.961605228096913,
+        "travelUpperBound": 8.709457205386883
+      }
+    ]
+  },
+  "state28": {
+    "X": [
+      737.7905441639986,
+      745.293503318997
+    ],
+    "Z": [
+      -1107.2935033651854,
+      -1099.7064966348146
+    ],
+    "Y": [
+      7.176759275064237,
+      7.176759275064237
+    ]
+  },
+  "possibleB4Item": false
+}

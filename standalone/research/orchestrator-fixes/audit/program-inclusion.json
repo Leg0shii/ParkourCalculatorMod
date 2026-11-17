@@ -1,0 +1,34 @@
+{
+  "programs": [
+    "P03",
+    "P04",
+    "P05"
+  ],
+  "sameScalarHistory": true,
+  "sameCompiledCoefficients": true,
+  "sameFiniteContacts": true,
+  "extraRows": {
+    "P04": {
+      "containsP03": true,
+      "extra": [
+        [
+          "Z",
+          28,
+          "LE",
+          -1100.300001011921
+        ]
+      ]
+    },
+    "P05": {
+      "containsP03": true,
+      "extra": [
+        [
+          "X",
+          28,
+          "GE",
+          735.3000010119209
+        ]
+      ]
+    }
+  }
+}

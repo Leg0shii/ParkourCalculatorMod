@@ -1,0 +1,34 @@
+{
+  "source": "5e36f490b8a5c17c9ce20240fcb48ff73cdddb5d",
+  "branch": "research/ipopt-cell-routes",
+  "python": "3.12.2 (v3.12.2:6abddd9f6a, Feb  6 2024, 17:02:06) [Clang 13.0.0 (clang-1300.0.29.30)]",
+  "platform": "macOS-15.7.1-arm64-arm-64bit",
+  "packages": {
+    "casadi": "3.8.1",
+    "numpy": "2.5.4",
+    "scipy": "1.18.1",
+    "clarabel": "0.11.1",
+    "matplotlib": "3.11.2"
+  },
+  "environment": {
+    "OPENBLAS_NUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1"
+  },
+  "fixtures": {
+    "ceiling.json": "61a066fb7c2aa90a660ddcd6fd09dca4631394dfdf861fd5246a35e4099f4024",
+    "grind-or-run.json": "08b9f297d348a698c5a99db83289f8c831b2ba3e94d3bc0af1568bdef02fa65b",
+    "multi-support.json": "8f66cd11ed2c2b61bb4fc08c2c2d6f0ff8aee05afd85e4f548ac45d6d07b7a5f",
+    "open.json": "91b6f39817e48d14c198f37155b2febc7c94e7e4ee847557ffe0daf6c7e8d24f",
+    "step-or-jump.json": "aea3b618e1f854272995ca1791bba1b589ff9373229ba9109d1548356ec402c3",
+    "turn-blockage.json": "323a6fc78ebdc5afe099b5e89ef1ff304a29683b90a10c10992b386f3074eac9"
+  },
+  "compilerConfig": {
+    "command": [
+      "/Library/Java/JavaVirtualMachines/jdk-21.jdk/Contents/Home/bin/java",
+      "-cp",
+      "/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/standalone/autonomy/build/classes:/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/core/build/classes/java/main:/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/core/build/resources/main:/Users/arvindmurty/.gradle/caches/modules-2/files-2.1/org.apache.commons/commons-math3/3.6.1/e4ba98f1d4b3c80ec46392f25e094a6a2e58fcbf/commons-math3-3.6.1.jar:/Users/arvindmurty/.gradle/caches/modules-2/files-2.1/com.google.code.gson/gson/2.8.0/c4ba5371a29ac9b2ad6129b1d39ea38750043eff/gson-2.8.0.jar:/Users/arvindmurty/.gradle/caches/modules-2/files-2.1/junit/junit/4.13.2/8ac9e16d933b6fb43bc7f576336b8f4d7eb5ba12/junit-4.13.2.jar:/Users/arvindmurty/.gradle/caches/modules-2/files-2.1/io.github.spair/imgui-java-binding/1.86.12/a13fa049c952f68753b7f7a3a38facea59f390be/imgui-java-binding-1.86.12.jar:/Users/arvindmurty/.gradle/caches/modules-2/files-2.1/org.hamcrest/hamcrest-core/1.3/42a25dc3219429f0e5d060061f71acb49bf010a0/hamcrest-core-1.3.jar:/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/forge-core/build/classes/java/main:/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/forge-core/build/resources/main",
+      "de.legoshi.parkourcalc.autonomy.CompileRunTicksPhysics"
+    ]
+  },
+  "scope": "standalone continuous facing model; shared scene replay; zero velocity thresholds; supplied spatial routes and checkpoint times"
+}

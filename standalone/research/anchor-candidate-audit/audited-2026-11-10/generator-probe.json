@@ -1,0 +1,2769 @@
+{
+  "scope": "Diagnostic enumeration from saved prefixes, current helpers; no IPOPT calls or new cold route search.",
+  "ordinaryJumpClocks": {
+    "b1->b2": 9,
+    "b2->b3": 9,
+    "b3->b4": 10,
+    "b4->b5": 15,
+    "b5->b7": 9
+  },
+  "clockScope": "Conditional ordinary jumps only; not a bound for arbitrary stepping/cancelled alternatives.",
+  "summary": {
+    "b1->b2": {
+      "parentT": 0,
+      "rawChoices": {
+        "jump": 1,
+        "hold_or_runoff": 1
+      },
+      "screenReasons": {
+        "not_ruled_out": 2
+      },
+      "seconds": 0.7013304159045219
+    },
+    "b2->b3": {
+      "parentT": 17,
+      "rawChoices": {
+        "jump": 1,
+        "hold_or_runoff": 1
+      },
+      "screenReasons": {
+        "not_ruled_out": 2
+      },
+      "seconds": 0.07742275297641754
+    },
+    "b3->b4": {
+      "parentT": 28,
+      "rawChoices": {
+        "jump": 1,
+        "hold_or_runoff": 1,
+        "blip": 8,
+        "corner_blip_up": 4
+      },
+      "screenReasons": {
+        "not_ruled_out": 2,
+        "required_interaction_unreachable": 12
+      },
+      "seconds": 0.16911350563168526
+    },
+    "b4->b5": {
+      "parentT": 40,
+      "rawChoices": {
+        "jump": 2,
+        "hold_or_runoff": 1
+      },
+      "screenReasons": {
+        "not_ruled_out": 2,
+        "linear_control_relaxation_infeasible": 1
+      },
+      "seconds": 0.10729266703128815
+    },
+    "b5->b7": {
+      "parentT": 58,
+      "rawChoices": {
+        "jump": 2,
+        "hold_or_runoff": 1,
+        "corner_blip_up": 4
+      },
+      "screenReasons": {
+        "not_ruled_out": 3,
+        "required_interaction_unreachable": 4
+      },
+      "seconds": 0.17713312804698944
+    }
+  },
+  "choices": [
+    {
+      "span": "b1->b2",
+      "parentT": 0,
+      "generator": "normal",
+      "case": "jump",
+      "duration": 12,
+      "support": "b1",
+      "events": [],
+      "constraints": [
+        {
+          "mode": "X",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": 741.7000009880791,
+          "name": "normal:landing"
+        },
+        {
+          "mode": "X",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": 747.2999990119209,
+          "name": "normal:landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": -1105.2999990119208,
+          "name": "normal:landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": -1102.7000009880792,
+          "name": "normal:landing"
+        }
+      ],
+      "screen": null
+    },
+    {
+      "span": "b1->b2",
+      "parentT": 0,
+      "generator": "normal",
+      "case": "hold_or_runoff",
+      "duration": 1,
+      "support": "b1",
+      "events": [],
+      "constraints": [
+        {
+          "mode": "X",
+          "t1": 0,
+          "cmp": "GE",
+          "rhs": 741.7000009880791,
+          "name": "normal:landing"
+        },
+        {
+          "mode": "X",
+          "t1": 0,
+          "cmp": "LE",
+          "rhs": 747.2999990119209,
+          "name": "normal:landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 0,
+          "cmp": "GE",
+          "rhs": -1105.2999990119208,
+          "name": "normal:landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 0,
+          "cmp": "LE",
+          "rhs": -1102.7000009880792,
+          "name": "normal:landing"
+        }
+      ],
+      "screen": null
+    },
+    {
+      "span": "b2->b3",
+      "parentT": 17,
+      "generator": "normal",
+      "case": "jump",
+      "duration": 12,
+      "support": "b2",
+      "events": [],
+      "constraints": [
+        {
+          "mode": "X",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": 740.7000009880791,
+          "name": "normal:landing"
+        },
+        {
+          "mode": "X",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": 742.2999990119209,
+          "name": "normal:landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": -1104.2999990119208,
+          "name": "normal:landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": -1102.7000009880792,
+          "name": "normal:landing"
+        }
+      ],
+      "screen": null
+    },
+    {
+      "span": "b2->b3",
+      "parentT": 17,
+      "generator": "normal",
+      "case": "hold_or_runoff",
+      "duration": 1,
+      "support": "b2",
+      "events": [],
+      "constraints": [
+        {
+          "mode": "X",
+          "t1": 0,
+          "cmp": "GE",
+          "rhs": 740.7000009880791,
+          "name": "normal:landing"
+        },
+        {
+          "mode": "X",
+          "t1": 0,
+          "cmp": "LE",
+          "rhs": 742.2999990119209,
+          "name": "normal:landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 0,
+          "cmp": "GE",
+          "rhs": -1104.2999990119208,
+          "name": "normal:landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 0,
+          "cmp": "LE",
+          "rhs": -1102.7000009880792,
+          "name": "normal:landing"
+        }
+      ],
+      "screen": null
+    },
+    {
+      "span": "b3->b4",
+      "parentT": 28,
+      "generator": "normal",
+      "case": "jump",
+      "duration": 12,
+      "support": "b3",
+      "events": [],
+      "constraints": [
+        {
+          "mode": "X",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": 737.7000009880791,
+          "name": "normal:landing"
+        },
+        {
+          "mode": "X",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": 739.2999990119209,
+          "name": "normal:landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": -1101.2999990119208,
+          "name": "normal:landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": -1099.7000009880792,
+          "name": "normal:landing"
+        }
+      ],
+      "screen": null
+    },
+    {
+      "span": "b3->b4",
+      "parentT": 28,
+      "generator": "normal",
+      "case": "hold_or_runoff",
+      "duration": 1,
+      "support": "b3",
+      "events": [],
+      "constraints": [
+        {
+          "mode": "X",
+          "t1": 0,
+          "cmp": "GE",
+          "rhs": 737.7000009880791,
+          "name": "normal:landing"
+        },
+        {
+          "mode": "X",
+          "t1": 0,
+          "cmp": "LE",
+          "rhs": 739.2999990119209,
+          "name": "normal:landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 0,
+          "cmp": "GE",
+          "rhs": -1101.2999990119208,
+          "name": "normal:landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 0,
+          "cmp": "LE",
+          "rhs": -1099.7000009880792,
+          "name": "normal:landing"
+        }
+      ],
+      "screen": null
+    },
+    {
+      "span": "b3->b4",
+      "parentT": 28,
+      "generator": "stepping",
+      "case": "blip",
+      "duration": 12,
+      "support": "b4",
+      "events": [
+        {
+          "case": "blip",
+          "input": 11,
+          "block": "b4",
+          "lower": "b3"
+        }
+      ],
+      "constraints": [
+        {
+          "mode": "X",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": 737.7000009880791,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "X",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": 739.2999990119209,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": -1101.2999990119208,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": -1099.7000009880792,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "X",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": 733.6999989880791,
+          "name": "blip:wall_avoid"
+        },
+        {
+          "mode": "X",
+          "t1": 12,
+          "cmp": "GE",
+          "rhs": 733.7000009880791,
+          "name": "case:region"
+        },
+        {
+          "mode": "X",
+          "t1": 12,
+          "cmp": "LE",
+          "rhs": 735.2999990119209,
+          "name": "case:region"
+        },
+        {
+          "mode": "Z",
+          "t1": 12,
+          "cmp": "GE",
+          "rhs": -1100.2999990119208,
+          "name": "case:region"
+        },
+        {
+          "mode": "Z",
+          "t1": 12,
+          "cmp": "LE",
+          "rhs": -1098.7000009880792,
+          "name": "case:region"
+        }
+      ],
+      "screen": {
+        "reason": "required_interaction_unreachable",
+        "input": 0,
+        "box": [
+          742,
+          0,
+          -1105,
+          747,
+          5,
+          -1103
+        ],
+        "proof": {
+          "policy": 1,
+          "id": "0cc95eb810471a25ffb131f341ebe0559db21672602f7edf9a466e9dc63b5952",
+          "context": "45fe550c1d8b12e47e883ca87bbfeded767983316fa8f64f88f78acf718acd1b",
+          "role": "required_contact",
+          "ruledOut": true,
+          "status": "absent",
+          "reason": "all_scoped_phases_excluded",
+          "phases": [
+            {
+              "ruledOut": true,
+              "state": 39,
+              "axis": 0,
+              "reason": "interval_reach_contradiction",
+              "tick": 0,
+              "phase": "Y"
+            },
+            {
+              "ruledOut": true,
+              "state": 39,
+              "axis": 0,
+              "reason": "interval_reach_contradiction",
+              "tick": 0,
+              "phase": "X"
+            },
+            {
+              "ruledOut": true,
+              "state": 39,
+              "axis": 0,
+              "reason": "interval_reach_contradiction",
+              "tick": 0,
+              "phase": "Z"
+            }
+          ],
+          "owner": null,
+          "interior": false,
+          "invalidation": "exact_context_only"
+        }
+      }
+    },
+    {
+      "span": "b3->b4",
+      "parentT": 28,
+      "generator": "stepping",
+      "case": "blip",
+      "duration": 12,
+      "support": "b4",
+      "events": [
+        {
+          "case": "blip",
+          "input": 11,
+          "block": "b4",
+          "lower": "b3"
+        }
+      ],
+      "constraints": [
+        {
+          "mode": "X",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": 737.7000009880791,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "X",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": 739.2999990119209,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": -1101.2999990119208,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": -1099.7000009880792,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "X",
+          "t1": 10,
+          "cmp": "GE",
+          "rhs": 735.3000010119209,
+          "name": "blip:wall_approach"
+        },
+        {
+          "mode": "X",
+          "t1": 12,
+          "cmp": "GE",
+          "rhs": 733.7000009880791,
+          "name": "case:region"
+        },
+        {
+          "mode": "X",
+          "t1": 12,
+          "cmp": "LE",
+          "rhs": 735.2999990119209,
+          "name": "case:region"
+        },
+        {
+          "mode": "Z",
+          "t1": 12,
+          "cmp": "GE",
+          "rhs": -1100.2999990119208,
+          "name": "case:region"
+        },
+        {
+          "mode": "Z",
+          "t1": 12,
+          "cmp": "LE",
+          "rhs": -1098.7000009880792,
+          "name": "case:region"
+        }
+      ],
+      "screen": {
+        "reason": "required_interaction_unreachable",
+        "input": 0,
+        "box": [
+          742,
+          0,
+          -1105,
+          747,
+          5,
+          -1103
+        ],
+        "proof": {
+          "policy": 1,
+          "id": "1ed205db7069aafc78fbe0c751a9113c043b36450bc6ecfd7d136b6558edff27",
+          "context": "5a24949d2a6fb4150f794e107458a4d5322390cf86d4769b9009f55399008bd4",
+          "role": "required_contact",
+          "ruledOut": true,
+          "status": "absent",
+          "reason": "all_scoped_phases_excluded",
+          "phases": [
+            {
+              "ruledOut": true,
+              "state": 39,
+              "axis": 0,
+              "reason": "interval_reach_contradiction",
+              "tick": 0,
+              "phase": "Y"
+            },
+            {
+              "ruledOut": true,
+              "state": 39,
+              "axis": 0,
+              "reason": "interval_reach_contradiction",
+              "tick": 0,
+              "phase": "X"
+            },
+            {
+              "ruledOut": true,
+              "state": 39,
+              "axis": 0,
+              "reason": "interval_reach_contradiction",
+              "tick": 0,
+              "phase": "Z"
+            }
+          ],
+          "owner": null,
+          "interior": false,
+          "invalidation": "exact_context_only"
+        }
+      }
+    },
+    {
+      "span": "b3->b4",
+      "parentT": 28,
+      "generator": "stepping",
+      "case": "blip",
+      "duration": 12,
+      "support": "b4",
+      "events": [
+        {
+          "case": "blip",
+          "input": 11,
+          "block": "b4",
+          "lower": "b3"
+        }
+      ],
+      "constraints": [
+        {
+          "mode": "X",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": 737.7000009880791,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "X",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": 739.2999990119209,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": -1101.2999990119208,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": -1099.7000009880792,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "X",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": 735.3000010119209,
+          "name": "blip:wall_avoid"
+        },
+        {
+          "mode": "X",
+          "t1": 12,
+          "cmp": "GE",
+          "rhs": 733.7000009880791,
+          "name": "case:region"
+        },
+        {
+          "mode": "X",
+          "t1": 12,
+          "cmp": "LE",
+          "rhs": 735.2999990119209,
+          "name": "case:region"
+        },
+        {
+          "mode": "Z",
+          "t1": 12,
+          "cmp": "GE",
+          "rhs": -1100.2999990119208,
+          "name": "case:region"
+        },
+        {
+          "mode": "Z",
+          "t1": 12,
+          "cmp": "LE",
+          "rhs": -1098.7000009880792,
+          "name": "case:region"
+        }
+      ],
+      "screen": {
+        "reason": "required_interaction_unreachable",
+        "input": 0,
+        "box": [
+          742,
+          0,
+          -1105,
+          747,
+          5,
+          -1103
+        ],
+        "proof": {
+          "policy": 1,
+          "id": "d5f5aeb9ae87229fd21d6cbff57ee7c997202a5e97dce659f671ed23b0029e63",
+          "context": "9b202ca23dc523072675113ff43c906327de61825ee234b5803bf16af21dbb6f",
+          "role": "required_contact",
+          "ruledOut": true,
+          "status": "absent",
+          "reason": "all_scoped_phases_excluded",
+          "phases": [
+            {
+              "ruledOut": true,
+              "state": 40,
+              "axis": 0,
+              "reason": "interval_reach_contradiction",
+              "tick": 0,
+              "phase": "Y"
+            },
+            {
+              "ruledOut": true,
+              "state": 40,
+              "axis": 0,
+              "reason": "interval_reach_contradiction",
+              "tick": 0,
+              "phase": "X"
+            },
+            {
+              "ruledOut": true,
+              "state": 40,
+              "axis": 0,
+              "reason": "interval_reach_contradiction",
+              "tick": 0,
+              "phase": "Z"
+            }
+          ],
+          "owner": null,
+          "interior": false,
+          "invalidation": "exact_context_only"
+        }
+      }
+    },
+    {
+      "span": "b3->b4",
+      "parentT": 28,
+      "generator": "stepping",
+      "case": "blip",
+      "duration": 12,
+      "support": "b4",
+      "events": [
+        {
+          "case": "blip",
+          "input": 11,
+          "block": "b4",
+          "lower": "b3"
+        }
+      ],
+      "constraints": [
+        {
+          "mode": "X",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": 737.7000009880791,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "X",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": 739.2999990119209,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": -1101.2999990119208,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": -1099.7000009880792,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "X",
+          "t1": 10,
+          "cmp": "LE",
+          "rhs": 733.6999989880791,
+          "name": "blip:wall_approach"
+        },
+        {
+          "mode": "X",
+          "t1": 12,
+          "cmp": "GE",
+          "rhs": 733.7000009880791,
+          "name": "case:region"
+        },
+        {
+          "mode": "X",
+          "t1": 12,
+          "cmp": "LE",
+          "rhs": 735.2999990119209,
+          "name": "case:region"
+        },
+        {
+          "mode": "Z",
+          "t1": 12,
+          "cmp": "GE",
+          "rhs": -1100.2999990119208,
+          "name": "case:region"
+        },
+        {
+          "mode": "Z",
+          "t1": 12,
+          "cmp": "LE",
+          "rhs": -1098.7000009880792,
+          "name": "case:region"
+        }
+      ],
+      "screen": {
+        "reason": "required_interaction_unreachable",
+        "input": 0,
+        "box": [
+          742,
+          0,
+          -1105,
+          747,
+          5,
+          -1103
+        ],
+        "proof": {
+          "policy": 1,
+          "id": "d325032fc288847b2dba4d4a624cc3e9d517d8d00d7efda7456289792b1daccf",
+          "context": "5e641ccff2e8006186b785cb18f22e188c8166ade755883867fb77af11e3ff54",
+          "role": "required_contact",
+          "ruledOut": true,
+          "status": "absent",
+          "reason": "all_scoped_phases_excluded",
+          "phases": [
+            {
+              "ruledOut": true,
+              "state": 38,
+              "axis": 0,
+              "reason": "interval_reach_contradiction",
+              "tick": 0,
+              "phase": "Y"
+            },
+            {
+              "ruledOut": true,
+              "state": 38,
+              "axis": 0,
+              "reason": "interval_reach_contradiction",
+              "tick": 0,
+              "phase": "X"
+            },
+            {
+              "ruledOut": true,
+              "state": 38,
+              "axis": 0,
+              "reason": "interval_reach_contradiction",
+              "tick": 0,
+              "phase": "Z"
+            }
+          ],
+          "owner": null,
+          "interior": false,
+          "invalidation": "exact_context_only"
+        }
+      }
+    },
+    {
+      "span": "b3->b4",
+      "parentT": 28,
+      "generator": "stepping",
+      "case": "blip",
+      "duration": 12,
+      "support": "b4",
+      "events": [
+        {
+          "case": "blip",
+          "input": 11,
+          "block": "b4",
+          "lower": "b3"
+        }
+      ],
+      "constraints": [
+        {
+          "mode": "X",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": 737.7000009880791,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "X",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": 739.2999990119209,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": -1101.2999990119208,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": -1099.7000009880792,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": -1100.300001011921,
+          "name": "blip:wall_avoid"
+        },
+        {
+          "mode": "X",
+          "t1": 12,
+          "cmp": "GE",
+          "rhs": 733.7000009880791,
+          "name": "case:region"
+        },
+        {
+          "mode": "X",
+          "t1": 12,
+          "cmp": "LE",
+          "rhs": 735.2999990119209,
+          "name": "case:region"
+        },
+        {
+          "mode": "Z",
+          "t1": 12,
+          "cmp": "GE",
+          "rhs": -1100.2999990119208,
+          "name": "case:region"
+        },
+        {
+          "mode": "Z",
+          "t1": 12,
+          "cmp": "LE",
+          "rhs": -1098.7000009880792,
+          "name": "case:region"
+        }
+      ],
+      "screen": {
+        "reason": "required_interaction_unreachable",
+        "input": 0,
+        "box": [
+          742,
+          0,
+          -1105,
+          747,
+          5,
+          -1103
+        ],
+        "proof": {
+          "policy": 1,
+          "id": "6808f2750baa1a92acc172bacd1f1c8c03ea10ffe538af9f716f8e299955797b",
+          "context": "3d85af1abbdef8fea472474499def34f5d4fc76bd59e90e301bdcbc1d125cc0c",
+          "role": "required_contact",
+          "ruledOut": true,
+          "status": "absent",
+          "reason": "all_scoped_phases_excluded",
+          "phases": [
+            {
+              "ruledOut": true,
+              "state": 40,
+              "axis": 0,
+              "reason": "interval_reach_contradiction",
+              "tick": 0,
+              "phase": "Y"
+            },
+            {
+              "ruledOut": true,
+              "state": 40,
+              "axis": 0,
+              "reason": "interval_reach_contradiction",
+              "tick": 0,
+              "phase": "X"
+            },
+            {
+              "ruledOut": true,
+              "state": 40,
+              "axis": 0,
+              "reason": "interval_reach_contradiction",
+              "tick": 0,
+              "phase": "Z"
+            }
+          ],
+          "owner": null,
+          "interior": false,
+          "invalidation": "exact_context_only"
+        }
+      }
+    },
+    {
+      "span": "b3->b4",
+      "parentT": 28,
+      "generator": "stepping",
+      "case": "blip",
+      "duration": 12,
+      "support": "b4",
+      "events": [
+        {
+          "case": "blip",
+          "input": 11,
+          "block": "b4",
+          "lower": "b3"
+        }
+      ],
+      "constraints": [
+        {
+          "mode": "X",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": 737.7000009880791,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "X",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": 739.2999990119209,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": -1101.2999990119208,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": -1099.7000009880792,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 10,
+          "cmp": "GE",
+          "rhs": -1098.699998988079,
+          "name": "blip:wall_approach"
+        },
+        {
+          "mode": "X",
+          "t1": 12,
+          "cmp": "GE",
+          "rhs": 733.7000009880791,
+          "name": "case:region"
+        },
+        {
+          "mode": "X",
+          "t1": 12,
+          "cmp": "LE",
+          "rhs": 735.2999990119209,
+          "name": "case:region"
+        },
+        {
+          "mode": "Z",
+          "t1": 12,
+          "cmp": "GE",
+          "rhs": -1100.2999990119208,
+          "name": "case:region"
+        },
+        {
+          "mode": "Z",
+          "t1": 12,
+          "cmp": "LE",
+          "rhs": -1098.7000009880792,
+          "name": "case:region"
+        }
+      ],
+      "screen": {
+        "reason": "required_interaction_unreachable",
+        "input": 0,
+        "box": [
+          742,
+          0,
+          -1105,
+          747,
+          5,
+          -1103
+        ],
+        "proof": {
+          "policy": 1,
+          "id": "ad9c95e1ecbec32b721931b2351f1d83cd86744fcc580bb947a6c2f84b2d99a1",
+          "context": "10b682f586004b489d29148e4bd0ce694a10b9030a185743d6b3ab66412697ce",
+          "role": "required_contact",
+          "ruledOut": true,
+          "status": "absent",
+          "reason": "all_scoped_phases_excluded",
+          "phases": [
+            {
+              "ruledOut": true,
+              "state": 39,
+              "axis": 1,
+              "reason": "interval_reach_contradiction",
+              "tick": 0,
+              "phase": "Y"
+            },
+            {
+              "ruledOut": true,
+              "state": 39,
+              "axis": 1,
+              "reason": "interval_reach_contradiction",
+              "tick": 0,
+              "phase": "X"
+            },
+            {
+              "ruledOut": true,
+              "state": 39,
+              "axis": 1,
+              "reason": "interval_reach_contradiction",
+              "tick": 0,
+              "phase": "Z"
+            }
+          ],
+          "owner": null,
+          "interior": false,
+          "invalidation": "exact_context_only"
+        }
+      }
+    },
+    {
+      "span": "b3->b4",
+      "parentT": 28,
+      "generator": "stepping",
+      "case": "blip",
+      "duration": 12,
+      "support": "b4",
+      "events": [
+        {
+          "case": "blip",
+          "input": 11,
+          "block": "b4",
+          "lower": "b3"
+        }
+      ],
+      "constraints": [
+        {
+          "mode": "X",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": 737.7000009880791,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "X",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": 739.2999990119209,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": -1101.2999990119208,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": -1099.7000009880792,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": -1098.699998988079,
+          "name": "blip:wall_avoid"
+        },
+        {
+          "mode": "X",
+          "t1": 12,
+          "cmp": "GE",
+          "rhs": 733.7000009880791,
+          "name": "case:region"
+        },
+        {
+          "mode": "X",
+          "t1": 12,
+          "cmp": "LE",
+          "rhs": 735.2999990119209,
+          "name": "case:region"
+        },
+        {
+          "mode": "Z",
+          "t1": 12,
+          "cmp": "GE",
+          "rhs": -1100.2999990119208,
+          "name": "case:region"
+        },
+        {
+          "mode": "Z",
+          "t1": 12,
+          "cmp": "LE",
+          "rhs": -1098.7000009880792,
+          "name": "case:region"
+        }
+      ],
+      "screen": {
+        "reason": "required_interaction_unreachable",
+        "input": 0,
+        "box": [
+          742,
+          0,
+          -1105,
+          747,
+          5,
+          -1103
+        ],
+        "proof": {
+          "policy": 1,
+          "id": "1a5fa55876fc9eeaa0e8e67ad9e7ff54b17b7b881e28124c3845fcc3009a0d1a",
+          "context": "771de5806235ee7bf1306dded7ddb21e1eef18ba66c13d1b7fc5cbb1e7054570",
+          "role": "required_contact",
+          "ruledOut": true,
+          "status": "absent",
+          "reason": "all_scoped_phases_excluded",
+          "phases": [
+            {
+              "ruledOut": true,
+              "state": 39,
+              "axis": 1,
+              "reason": "interval_reach_contradiction",
+              "tick": 0,
+              "phase": "Y"
+            },
+            {
+              "ruledOut": true,
+              "state": 39,
+              "axis": 1,
+              "reason": "interval_reach_contradiction",
+              "tick": 0,
+              "phase": "X"
+            },
+            {
+              "ruledOut": true,
+              "state": 39,
+              "axis": 1,
+              "reason": "interval_reach_contradiction",
+              "tick": 0,
+              "phase": "Z"
+            }
+          ],
+          "owner": null,
+          "interior": false,
+          "invalidation": "exact_context_only"
+        }
+      }
+    },
+    {
+      "span": "b3->b4",
+      "parentT": 28,
+      "generator": "stepping",
+      "case": "blip",
+      "duration": 12,
+      "support": "b4",
+      "events": [
+        {
+          "case": "blip",
+          "input": 11,
+          "block": "b4",
+          "lower": "b3"
+        }
+      ],
+      "constraints": [
+        {
+          "mode": "X",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": 737.7000009880791,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "X",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": 739.2999990119209,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": -1101.2999990119208,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": -1099.7000009880792,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 10,
+          "cmp": "LE",
+          "rhs": -1100.300001011921,
+          "name": "blip:wall_approach"
+        },
+        {
+          "mode": "X",
+          "t1": 12,
+          "cmp": "GE",
+          "rhs": 733.7000009880791,
+          "name": "case:region"
+        },
+        {
+          "mode": "X",
+          "t1": 12,
+          "cmp": "LE",
+          "rhs": 735.2999990119209,
+          "name": "case:region"
+        },
+        {
+          "mode": "Z",
+          "t1": 12,
+          "cmp": "GE",
+          "rhs": -1100.2999990119208,
+          "name": "case:region"
+        },
+        {
+          "mode": "Z",
+          "t1": 12,
+          "cmp": "LE",
+          "rhs": -1098.7000009880792,
+          "name": "case:region"
+        }
+      ],
+      "screen": {
+        "reason": "required_interaction_unreachable",
+        "input": 0,
+        "box": [
+          742,
+          0,
+          -1105,
+          747,
+          5,
+          -1103
+        ],
+        "proof": {
+          "policy": 1,
+          "id": "a79ff4c0a12796ffe3367ebb494b21ca8a1718257907d9c54c8e0e8ef58ff9b6",
+          "context": "85e897f181dc82e3e7928cc7d170925a35cd3a95e8e1d7ed9bb935acc3d37fad",
+          "role": "required_contact",
+          "ruledOut": true,
+          "status": "absent",
+          "reason": "all_scoped_phases_excluded",
+          "phases": [
+            {
+              "ruledOut": true,
+              "state": 39,
+              "axis": 0,
+              "reason": "interval_reach_contradiction",
+              "tick": 0,
+              "phase": "Y"
+            },
+            {
+              "ruledOut": true,
+              "state": 39,
+              "axis": 0,
+              "reason": "interval_reach_contradiction",
+              "tick": 0,
+              "phase": "X"
+            },
+            {
+              "ruledOut": true,
+              "state": 39,
+              "axis": 0,
+              "reason": "interval_reach_contradiction",
+              "tick": 0,
+              "phase": "Z"
+            }
+          ],
+          "owner": null,
+          "interior": false,
+          "invalidation": "exact_context_only"
+        }
+      }
+    },
+    {
+      "span": "b3->b4",
+      "parentT": 28,
+      "generator": "stepping",
+      "case": "corner_blip_up",
+      "duration": 12,
+      "support": null,
+      "events": [
+        {
+          "case": "corner_blip_up",
+          "input": 11,
+          "block": "b4",
+          "lower": "b3"
+        }
+      ],
+      "constraints": [
+        {
+          "mode": "X",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": 737.7000009880791,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "X",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": 739.2999990119209,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": -1101.2999990119208,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": -1099.7000009880792,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "X",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": 735.3000010119209,
+          "name": "case:outside"
+        },
+        {
+          "mode": "Z",
+          "t1": 12,
+          "cmp": "LE",
+          "rhs": -1100.300001011921,
+          "name": "case:outside"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": -1100.2999990119208,
+          "name": "case:finite"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": -1098.7000009880792,
+          "name": "case:finite"
+        },
+        {
+          "mode": "X",
+          "t1": 12,
+          "cmp": "LE",
+          "rhs": 735.2999990119209,
+          "name": "case:cross_x"
+        },
+        {
+          "mode": "X",
+          "t1": 12,
+          "cmp": "GE",
+          "rhs": 733.7000009880791,
+          "name": "case:finite"
+        },
+        {
+          "mode": "X",
+          "t1": 12,
+          "cmp": "LE",
+          "rhs": 735.2999990119209,
+          "name": "case:finite"
+        }
+      ],
+      "screen": {
+        "reason": "required_interaction_unreachable",
+        "input": 0,
+        "box": [
+          742,
+          0,
+          -1105,
+          747,
+          5,
+          -1103
+        ],
+        "proof": {
+          "policy": 1,
+          "id": "ba21a1dc4b24964fcc208d006a70cad930d0f914c7df878ebb87d4f9514c2432",
+          "context": "55fb2a5e9ee8bc31069e28c54c98b46f282d4715f79a408aac9a5abd2974e118",
+          "role": "required_contact",
+          "ruledOut": true,
+          "status": "absent",
+          "reason": "all_scoped_phases_excluded",
+          "phases": [
+            {
+              "ruledOut": true,
+              "state": 40,
+              "axis": 0,
+              "reason": "interval_reach_contradiction",
+              "tick": 0,
+              "phase": "Y"
+            },
+            {
+              "ruledOut": true,
+              "state": 40,
+              "axis": 0,
+              "reason": "interval_reach_contradiction",
+              "tick": 0,
+              "phase": "X"
+            },
+            {
+              "ruledOut": true,
+              "state": 40,
+              "axis": 0,
+              "reason": "interval_reach_contradiction",
+              "tick": 0,
+              "phase": "Z"
+            }
+          ],
+          "owner": null,
+          "interior": false,
+          "invalidation": "exact_context_only"
+        }
+      }
+    },
+    {
+      "span": "b3->b4",
+      "parentT": 28,
+      "generator": "stepping",
+      "case": "corner_blip_up",
+      "duration": 12,
+      "support": null,
+      "events": [
+        {
+          "case": "corner_blip_up",
+          "input": 11,
+          "block": "b4",
+          "lower": "b3"
+        }
+      ],
+      "constraints": [
+        {
+          "mode": "X",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": 737.7000009880791,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "X",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": 739.2999990119209,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": -1101.2999990119208,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": -1099.7000009880792,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "X",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": 735.3000010119209,
+          "name": "case:outside"
+        },
+        {
+          "mode": "Z",
+          "t1": 12,
+          "cmp": "GE",
+          "rhs": -1098.699998988079,
+          "name": "case:outside"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": -1100.2999990119208,
+          "name": "case:finite"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": -1098.7000009880792,
+          "name": "case:finite"
+        },
+        {
+          "mode": "X",
+          "t1": 12,
+          "cmp": "LE",
+          "rhs": 735.2999990119209,
+          "name": "case:cross_x"
+        },
+        {
+          "mode": "X",
+          "t1": 12,
+          "cmp": "GE",
+          "rhs": 733.7000009880791,
+          "name": "case:finite"
+        },
+        {
+          "mode": "X",
+          "t1": 12,
+          "cmp": "LE",
+          "rhs": 735.2999990119209,
+          "name": "case:finite"
+        }
+      ],
+      "screen": {
+        "reason": "required_interaction_unreachable",
+        "input": 0,
+        "box": [
+          742,
+          0,
+          -1105,
+          747,
+          5,
+          -1103
+        ],
+        "proof": {
+          "policy": 1,
+          "id": "ee023d218e5677d32674ed2b3975bd99226184d7911d34c57b585c6c24207a2e",
+          "context": "1aee5f7af12d03aae0b2a470697b383959b14f27ff91a721a3cb9372fb99ff1d",
+          "role": "required_contact",
+          "ruledOut": true,
+          "status": "absent",
+          "reason": "all_scoped_phases_excluded",
+          "phases": [
+            {
+              "ruledOut": true,
+              "state": 40,
+              "axis": 1,
+              "reason": "interval_reach_contradiction",
+              "tick": 0,
+              "phase": "Y"
+            },
+            {
+              "ruledOut": true,
+              "state": 40,
+              "axis": 1,
+              "reason": "interval_reach_contradiction",
+              "tick": 0,
+              "phase": "X"
+            },
+            {
+              "ruledOut": true,
+              "state": 40,
+              "axis": 1,
+              "reason": "interval_reach_contradiction",
+              "tick": 0,
+              "phase": "Z"
+            }
+          ],
+          "owner": null,
+          "interior": false,
+          "invalidation": "exact_context_only"
+        }
+      }
+    },
+    {
+      "span": "b3->b4",
+      "parentT": 28,
+      "generator": "stepping",
+      "case": "corner_blip_up",
+      "duration": 12,
+      "support": null,
+      "events": [
+        {
+          "case": "corner_blip_up",
+          "input": 11,
+          "block": "b4",
+          "lower": "b3"
+        }
+      ],
+      "constraints": [
+        {
+          "mode": "X",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": 737.7000009880791,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "X",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": 739.2999990119209,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": -1101.2999990119208,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": -1099.7000009880792,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "X",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": 733.6999989880791,
+          "name": "case:outside"
+        },
+        {
+          "mode": "Z",
+          "t1": 12,
+          "cmp": "LE",
+          "rhs": -1100.300001011921,
+          "name": "case:outside"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": -1100.2999990119208,
+          "name": "case:finite"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": -1098.7000009880792,
+          "name": "case:finite"
+        },
+        {
+          "mode": "X",
+          "t1": 12,
+          "cmp": "GE",
+          "rhs": 733.7000009880791,
+          "name": "case:cross_x"
+        },
+        {
+          "mode": "X",
+          "t1": 12,
+          "cmp": "GE",
+          "rhs": 733.7000009880791,
+          "name": "case:finite"
+        },
+        {
+          "mode": "X",
+          "t1": 12,
+          "cmp": "LE",
+          "rhs": 735.2999990119209,
+          "name": "case:finite"
+        }
+      ],
+      "screen": {
+        "reason": "required_interaction_unreachable",
+        "input": 0,
+        "box": [
+          742,
+          0,
+          -1105,
+          747,
+          5,
+          -1103
+        ],
+        "proof": {
+          "policy": 1,
+          "id": "9104a1bc1295858736ac2dd53820cb71e7c98a0695ac4d2b02c6777b510dc85a",
+          "context": "412caf3fb61e8d5161a3a0e074f9b6e532418f0e910f58abd6be4744acd80bc7",
+          "role": "required_contact",
+          "ruledOut": true,
+          "status": "absent",
+          "reason": "all_scoped_phases_excluded",
+          "phases": [
+            {
+              "ruledOut": true,
+              "state": 39,
+              "axis": 0,
+              "reason": "interval_reach_contradiction",
+              "tick": 0,
+              "phase": "Y"
+            },
+            {
+              "ruledOut": true,
+              "state": 39,
+              "axis": 0,
+              "reason": "interval_reach_contradiction",
+              "tick": 0,
+              "phase": "X"
+            },
+            {
+              "ruledOut": true,
+              "state": 39,
+              "axis": 0,
+              "reason": "interval_reach_contradiction",
+              "tick": 0,
+              "phase": "Z"
+            }
+          ],
+          "owner": null,
+          "interior": false,
+          "invalidation": "exact_context_only"
+        }
+      }
+    },
+    {
+      "span": "b3->b4",
+      "parentT": 28,
+      "generator": "stepping",
+      "case": "corner_blip_up",
+      "duration": 12,
+      "support": null,
+      "events": [
+        {
+          "case": "corner_blip_up",
+          "input": 11,
+          "block": "b4",
+          "lower": "b3"
+        }
+      ],
+      "constraints": [
+        {
+          "mode": "X",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": 737.7000009880791,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "X",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": 739.2999990119209,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": -1101.2999990119208,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": -1099.7000009880792,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "X",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": 733.6999989880791,
+          "name": "case:outside"
+        },
+        {
+          "mode": "Z",
+          "t1": 12,
+          "cmp": "GE",
+          "rhs": -1098.699998988079,
+          "name": "case:outside"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": -1100.2999990119208,
+          "name": "case:finite"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": -1098.7000009880792,
+          "name": "case:finite"
+        },
+        {
+          "mode": "X",
+          "t1": 12,
+          "cmp": "GE",
+          "rhs": 733.7000009880791,
+          "name": "case:cross_x"
+        },
+        {
+          "mode": "X",
+          "t1": 12,
+          "cmp": "GE",
+          "rhs": 733.7000009880791,
+          "name": "case:finite"
+        },
+        {
+          "mode": "X",
+          "t1": 12,
+          "cmp": "LE",
+          "rhs": 735.2999990119209,
+          "name": "case:finite"
+        }
+      ],
+      "screen": {
+        "reason": "required_interaction_unreachable",
+        "input": 0,
+        "box": [
+          742,
+          0,
+          -1105,
+          747,
+          5,
+          -1103
+        ],
+        "proof": {
+          "policy": 1,
+          "id": "94be78dc53e7e935d1a133a60c0176b8fa44bb0ef2d5cd16328176dfe084402b",
+          "context": "ca13aa9794188ebf330e1d03df7260f77bcba99df2d2a4bb3604fc27170e50a8",
+          "role": "required_contact",
+          "ruledOut": true,
+          "status": "absent",
+          "reason": "all_scoped_phases_excluded",
+          "phases": [
+            {
+              "ruledOut": true,
+              "state": 39,
+              "axis": 0,
+              "reason": "interval_reach_contradiction",
+              "tick": 0,
+              "phase": "Y"
+            },
+            {
+              "ruledOut": true,
+              "state": 39,
+              "axis": 0,
+              "reason": "interval_reach_contradiction",
+              "tick": 0,
+              "phase": "X"
+            },
+            {
+              "ruledOut": true,
+              "state": 39,
+              "axis": 0,
+              "reason": "interval_reach_contradiction",
+              "tick": 0,
+              "phase": "Z"
+            }
+          ],
+          "owner": null,
+          "interior": false,
+          "invalidation": "exact_context_only"
+        }
+      }
+    },
+    {
+      "span": "b4->b5",
+      "parentT": 40,
+      "generator": "normal",
+      "case": "jump",
+      "duration": 12,
+      "support": "b4",
+      "events": [],
+      "constraints": [
+        {
+          "mode": "X",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": 733.7000009880791,
+          "name": "normal:landing"
+        },
+        {
+          "mode": "X",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": 735.2999990119209,
+          "name": "normal:landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": -1100.2999990119208,
+          "name": "normal:landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": -1098.7000009880792,
+          "name": "normal:landing"
+        }
+      ],
+      "screen": null
+    },
+    {
+      "span": "b4->b5",
+      "parentT": 40,
+      "generator": "normal",
+      "case": "jump",
+      "duration": 15,
+      "support": "b5",
+      "events": [],
+      "constraints": [
+        {
+          "mode": "X",
+          "t1": 14,
+          "cmp": "GE",
+          "rhs": 729.7000009880791,
+          "name": "normal:landing"
+        },
+        {
+          "mode": "X",
+          "t1": 14,
+          "cmp": "LE",
+          "rhs": 731.2999990119209,
+          "name": "normal:landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 14,
+          "cmp": "GE",
+          "rhs": -1096.2999990119208,
+          "name": "normal:landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 14,
+          "cmp": "LE",
+          "rhs": -1094.7000009880792,
+          "name": "normal:landing"
+        }
+      ],
+      "screen": {
+        "reason": "linear_control_relaxation_infeasible",
+        "relaxation": "circumscribed_16_face_acceleration_polygon",
+        "dynamicsMargin": 2e-08,
+        "constraintMargin": 2e-07
+      }
+    },
+    {
+      "span": "b4->b5",
+      "parentT": 40,
+      "generator": "normal",
+      "case": "hold_or_runoff",
+      "duration": 1,
+      "support": "b4",
+      "events": [],
+      "constraints": [
+        {
+          "mode": "X",
+          "t1": 0,
+          "cmp": "GE",
+          "rhs": 733.7000009880791,
+          "name": "normal:landing"
+        },
+        {
+          "mode": "X",
+          "t1": 0,
+          "cmp": "LE",
+          "rhs": 735.2999990119209,
+          "name": "normal:landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 0,
+          "cmp": "GE",
+          "rhs": -1100.2999990119208,
+          "name": "normal:landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 0,
+          "cmp": "LE",
+          "rhs": -1098.7000009880792,
+          "name": "normal:landing"
+        }
+      ],
+      "screen": null
+    },
+    {
+      "span": "b5->b7",
+      "parentT": 58,
+      "generator": "normal",
+      "case": "jump",
+      "duration": 12,
+      "support": "b5",
+      "events": [],
+      "constraints": [
+        {
+          "mode": "X",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": 729.7000009880791,
+          "name": "normal:landing"
+        },
+        {
+          "mode": "X",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": 731.2999990119209,
+          "name": "normal:landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": -1096.2999990119208,
+          "name": "normal:landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": -1094.7000009880792,
+          "name": "normal:landing"
+        }
+      ],
+      "screen": null
+    },
+    {
+      "span": "b5->b7",
+      "parentT": 58,
+      "generator": "normal",
+      "case": "jump",
+      "duration": 9,
+      "support": "b7",
+      "events": [],
+      "constraints": [
+        {
+          "mode": "X",
+          "t1": 8,
+          "cmp": "GE",
+          "rhs": 728.7000009880791,
+          "name": "normal:landing"
+        },
+        {
+          "mode": "X",
+          "t1": 8,
+          "cmp": "LE",
+          "rhs": 730.2999990119209,
+          "name": "normal:landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 8,
+          "cmp": "GE",
+          "rhs": -1095.2999990119208,
+          "name": "normal:landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 8,
+          "cmp": "LE",
+          "rhs": -1092.7000009880792,
+          "name": "normal:landing"
+        }
+      ],
+      "screen": null
+    },
+    {
+      "span": "b5->b7",
+      "parentT": 58,
+      "generator": "normal",
+      "case": "hold_or_runoff",
+      "duration": 1,
+      "support": "b5",
+      "events": [],
+      "constraints": [
+        {
+          "mode": "X",
+          "t1": 0,
+          "cmp": "GE",
+          "rhs": 729.7000009880791,
+          "name": "normal:landing"
+        },
+        {
+          "mode": "X",
+          "t1": 0,
+          "cmp": "LE",
+          "rhs": 731.2999990119209,
+          "name": "normal:landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 0,
+          "cmp": "GE",
+          "rhs": -1096.2999990119208,
+          "name": "normal:landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 0,
+          "cmp": "LE",
+          "rhs": -1094.7000009880792,
+          "name": "normal:landing"
+        }
+      ],
+      "screen": null
+    },
+    {
+      "span": "b5->b7",
+      "parentT": 58,
+      "generator": "stepping",
+      "case": "corner_blip_up",
+      "duration": 9,
+      "support": null,
+      "events": [
+        {
+          "case": "corner_blip_up",
+          "input": 8,
+          "block": "b4",
+          "lower": "b7"
+        }
+      ],
+      "constraints": [
+        {
+          "mode": "X",
+          "t1": 8,
+          "cmp": "GE",
+          "rhs": 728.7000009880791,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "X",
+          "t1": 8,
+          "cmp": "LE",
+          "rhs": 730.2999990119209,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 8,
+          "cmp": "GE",
+          "rhs": -1095.2999990119208,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 8,
+          "cmp": "LE",
+          "rhs": -1092.7000009880792,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "X",
+          "t1": 8,
+          "cmp": "GE",
+          "rhs": 735.3000010119209,
+          "name": "case:outside"
+        },
+        {
+          "mode": "Z",
+          "t1": 9,
+          "cmp": "LE",
+          "rhs": -1100.300001011921,
+          "name": "case:outside"
+        },
+        {
+          "mode": "Z",
+          "t1": 8,
+          "cmp": "GE",
+          "rhs": -1100.2999990119208,
+          "name": "case:finite"
+        },
+        {
+          "mode": "Z",
+          "t1": 8,
+          "cmp": "LE",
+          "rhs": -1098.7000009880792,
+          "name": "case:finite"
+        },
+        {
+          "mode": "X",
+          "t1": 9,
+          "cmp": "LE",
+          "rhs": 735.2999990119209,
+          "name": "case:cross_x"
+        },
+        {
+          "mode": "X",
+          "t1": 9,
+          "cmp": "GE",
+          "rhs": 733.7000009880791,
+          "name": "case:finite"
+        },
+        {
+          "mode": "X",
+          "t1": 9,
+          "cmp": "LE",
+          "rhs": 735.2999990119209,
+          "name": "case:finite"
+        }
+      ],
+      "screen": {
+        "reason": "required_interaction_unreachable",
+        "input": 0,
+        "box": [
+          742,
+          0,
+          -1105,
+          747,
+          5,
+          -1103
+        ],
+        "proof": {
+          "policy": 1,
+          "id": "6735999503e64e8618111119d3a44f4ca7ace622e289118cb6cd8c3747eed17f",
+          "context": "706859e4a2f33154d21c025d791249c708b2d554ee69756f0d2d51532d3067ed",
+          "role": "required_contact",
+          "ruledOut": true,
+          "status": "absent",
+          "reason": "all_scoped_phases_excluded",
+          "phases": [
+            {
+              "ruledOut": true,
+              "state": 66,
+              "axis": 1,
+              "reason": "interval_reach_contradiction",
+              "tick": 0,
+              "phase": "Y"
+            },
+            {
+              "ruledOut": true,
+              "state": 66,
+              "axis": 1,
+              "reason": "interval_reach_contradiction",
+              "tick": 0,
+              "phase": "X"
+            },
+            {
+              "ruledOut": true,
+              "state": 66,
+              "axis": 1,
+              "reason": "interval_reach_contradiction",
+              "tick": 0,
+              "phase": "Z"
+            }
+          ],
+          "owner": null,
+          "interior": false,
+          "invalidation": "exact_context_only"
+        }
+      }
+    },
+    {
+      "span": "b5->b7",
+      "parentT": 58,
+      "generator": "stepping",
+      "case": "corner_blip_up",
+      "duration": 9,
+      "support": null,
+      "events": [
+        {
+          "case": "corner_blip_up",
+          "input": 8,
+          "block": "b4",
+          "lower": "b7"
+        }
+      ],
+      "constraints": [
+        {
+          "mode": "X",
+          "t1": 8,
+          "cmp": "GE",
+          "rhs": 728.7000009880791,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "X",
+          "t1": 8,
+          "cmp": "LE",
+          "rhs": 730.2999990119209,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 8,
+          "cmp": "GE",
+          "rhs": -1095.2999990119208,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 8,
+          "cmp": "LE",
+          "rhs": -1092.7000009880792,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "X",
+          "t1": 8,
+          "cmp": "GE",
+          "rhs": 735.3000010119209,
+          "name": "case:outside"
+        },
+        {
+          "mode": "Z",
+          "t1": 9,
+          "cmp": "GE",
+          "rhs": -1098.699998988079,
+          "name": "case:outside"
+        },
+        {
+          "mode": "Z",
+          "t1": 8,
+          "cmp": "GE",
+          "rhs": -1100.2999990119208,
+          "name": "case:finite"
+        },
+        {
+          "mode": "Z",
+          "t1": 8,
+          "cmp": "LE",
+          "rhs": -1098.7000009880792,
+          "name": "case:finite"
+        },
+        {
+          "mode": "X",
+          "t1": 9,
+          "cmp": "LE",
+          "rhs": 735.2999990119209,
+          "name": "case:cross_x"
+        },
+        {
+          "mode": "X",
+          "t1": 9,
+          "cmp": "GE",
+          "rhs": 733.7000009880791,
+          "name": "case:finite"
+        },
+        {
+          "mode": "X",
+          "t1": 9,
+          "cmp": "LE",
+          "rhs": 735.2999990119209,
+          "name": "case:finite"
+        }
+      ],
+      "screen": {
+        "reason": "required_interaction_unreachable",
+        "input": 0,
+        "box": [
+          742,
+          0,
+          -1105,
+          747,
+          5,
+          -1103
+        ],
+        "proof": {
+          "policy": 1,
+          "id": "169fa74595a428e1e6d69685bdeb4c0235736e4ef43e0912f656550ccd294069",
+          "context": "f87c586900f41d0d400cabc75b2e472fdede0b42fae2b686d2f16e8a5bafbd34",
+          "role": "required_contact",
+          "ruledOut": true,
+          "status": "absent",
+          "reason": "all_scoped_phases_excluded",
+          "phases": [
+            {
+              "ruledOut": true,
+              "state": 66,
+              "axis": 1,
+              "reason": "interval_reach_contradiction",
+              "tick": 0,
+              "phase": "Y"
+            },
+            {
+              "ruledOut": true,
+              "state": 66,
+              "axis": 1,
+              "reason": "interval_reach_contradiction",
+              "tick": 0,
+              "phase": "X"
+            },
+            {
+              "ruledOut": true,
+              "state": 66,
+              "axis": 1,
+              "reason": "interval_reach_contradiction",
+              "tick": 0,
+              "phase": "Z"
+            }
+          ],
+          "owner": null,
+          "interior": false,
+          "invalidation": "exact_context_only"
+        }
+      }
+    },
+    {
+      "span": "b5->b7",
+      "parentT": 58,
+      "generator": "stepping",
+      "case": "corner_blip_up",
+      "duration": 9,
+      "support": null,
+      "events": [
+        {
+          "case": "corner_blip_up",
+          "input": 8,
+          "block": "b4",
+          "lower": "b7"
+        }
+      ],
+      "constraints": [
+        {
+          "mode": "X",
+          "t1": 8,
+          "cmp": "GE",
+          "rhs": 728.7000009880791,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "X",
+          "t1": 8,
+          "cmp": "LE",
+          "rhs": 730.2999990119209,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 8,
+          "cmp": "GE",
+          "rhs": -1095.2999990119208,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 8,
+          "cmp": "LE",
+          "rhs": -1092.7000009880792,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "X",
+          "t1": 8,
+          "cmp": "LE",
+          "rhs": 733.6999989880791,
+          "name": "case:outside"
+        },
+        {
+          "mode": "Z",
+          "t1": 9,
+          "cmp": "LE",
+          "rhs": -1100.300001011921,
+          "name": "case:outside"
+        },
+        {
+          "mode": "Z",
+          "t1": 8,
+          "cmp": "GE",
+          "rhs": -1100.2999990119208,
+          "name": "case:finite"
+        },
+        {
+          "mode": "Z",
+          "t1": 8,
+          "cmp": "LE",
+          "rhs": -1098.7000009880792,
+          "name": "case:finite"
+        },
+        {
+          "mode": "X",
+          "t1": 9,
+          "cmp": "GE",
+          "rhs": 733.7000009880791,
+          "name": "case:cross_x"
+        },
+        {
+          "mode": "X",
+          "t1": 9,
+          "cmp": "GE",
+          "rhs": 733.7000009880791,
+          "name": "case:finite"
+        },
+        {
+          "mode": "X",
+          "t1": 9,
+          "cmp": "LE",
+          "rhs": 735.2999990119209,
+          "name": "case:finite"
+        }
+      ],
+      "screen": {
+        "reason": "required_interaction_unreachable",
+        "input": 0,
+        "box": [
+          742,
+          0,
+          -1105,
+          747,
+          5,
+          -1103
+        ],
+        "proof": {
+          "policy": 1,
+          "id": "66b8b1337f29a22822bd21466d758359852deee43497dd476638e2b25ac2a993",
+          "context": "c312d7d3406bd8b83b86ac6f8f7e2c94d76f1c52342ce01a911c2c0868968638",
+          "role": "required_contact",
+          "ruledOut": true,
+          "status": "absent",
+          "reason": "all_scoped_phases_excluded",
+          "phases": [
+            {
+              "ruledOut": true,
+              "state": 66,
+              "axis": 1,
+              "reason": "interval_reach_contradiction",
+              "tick": 0,
+              "phase": "Y"
+            },
+            {
+              "ruledOut": true,
+              "state": 66,
+              "axis": 1,
+              "reason": "interval_reach_contradiction",
+              "tick": 0,
+              "phase": "X"
+            },
+            {
+              "ruledOut": true,
+              "state": 66,
+              "axis": 1,
+              "reason": "interval_reach_contradiction",
+              "tick": 0,
+              "phase": "Z"
+            }
+          ],
+          "owner": null,
+          "interior": false,
+          "invalidation": "exact_context_only"
+        }
+      }
+    },
+    {
+      "span": "b5->b7",
+      "parentT": 58,
+      "generator": "stepping",
+      "case": "corner_blip_up",
+      "duration": 9,
+      "support": null,
+      "events": [
+        {
+          "case": "corner_blip_up",
+          "input": 8,
+          "block": "b4",
+          "lower": "b7"
+        }
+      ],
+      "constraints": [
+        {
+          "mode": "X",
+          "t1": 8,
+          "cmp": "GE",
+          "rhs": 728.7000009880791,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "X",
+          "t1": 8,
+          "cmp": "LE",
+          "rhs": 730.2999990119209,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 8,
+          "cmp": "GE",
+          "rhs": -1095.2999990119208,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 8,
+          "cmp": "LE",
+          "rhs": -1092.7000009880792,
+          "name": "case:lower_landing"
+        },
+        {
+          "mode": "X",
+          "t1": 8,
+          "cmp": "LE",
+          "rhs": 733.6999989880791,
+          "name": "case:outside"
+        },
+        {
+          "mode": "Z",
+          "t1": 9,
+          "cmp": "GE",
+          "rhs": -1098.699998988079,
+          "name": "case:outside"
+        },
+        {
+          "mode": "Z",
+          "t1": 8,
+          "cmp": "GE",
+          "rhs": -1100.2999990119208,
+          "name": "case:finite"
+        },
+        {
+          "mode": "Z",
+          "t1": 8,
+          "cmp": "LE",
+          "rhs": -1098.7000009880792,
+          "name": "case:finite"
+        },
+        {
+          "mode": "X",
+          "t1": 9,
+          "cmp": "GE",
+          "rhs": 733.7000009880791,
+          "name": "case:cross_x"
+        },
+        {
+          "mode": "X",
+          "t1": 9,
+          "cmp": "GE",
+          "rhs": 733.7000009880791,
+          "name": "case:finite"
+        },
+        {
+          "mode": "X",
+          "t1": 9,
+          "cmp": "LE",
+          "rhs": 735.2999990119209,
+          "name": "case:finite"
+        }
+      ],
+      "screen": {
+        "reason": "required_interaction_unreachable",
+        "input": 0,
+        "box": [
+          742,
+          0,
+          -1105,
+          747,
+          5,
+          -1103
+        ],
+        "proof": {
+          "policy": 1,
+          "id": "7a6ac48d6497d540e47d0b0a3f15bfac00ca073ca3976001a45cd17e014aac9a",
+          "context": "c6792173ec2d2b940495ec284da1fe9b8eca397bf9208bcee4705b28c43a65d4",
+          "role": "required_contact",
+          "ruledOut": true,
+          "status": "absent",
+          "reason": "all_scoped_phases_excluded",
+          "phases": [
+            {
+              "ruledOut": true,
+              "state": 66,
+              "axis": 1,
+              "reason": "interval_reach_contradiction",
+              "tick": 0,
+              "phase": "Y"
+            },
+            {
+              "ruledOut": true,
+              "state": 66,
+              "axis": 1,
+              "reason": "interval_reach_contradiction",
+              "tick": 0,
+              "phase": "X"
+            },
+            {
+              "ruledOut": true,
+              "state": 66,
+              "axis": 1,
+              "reason": "interval_reach_contradiction",
+              "tick": 0,
+              "phase": "Z"
+            }
+          ],
+          "owner": null,
+          "interior": false,
+          "invalidation": "exact_context_only"
+        }
+      }
+    }
+  ]
+}

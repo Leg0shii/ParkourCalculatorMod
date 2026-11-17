@@ -1,0 +1,81 @@
+{
+  "inputSource": "61355976f98f2091ee26bae53ddf81ebf6820004",
+  "benchmarkRevision": "8fbdb8037edda49471542e2b98140ffe72e47323",
+  "casadiVersion": "3.8.1",
+  "productionCodeChanged": false,
+  "fullRouteSearch": false,
+  "records": [
+    {
+      "enabled": false,
+      "recomputedOriginalConstraints": false,
+      "result": {
+        "graphSeconds": 0.03182095289230347,
+        "variables": 335,
+        "constraints": 546,
+        "solverSetupSeconds": 0.022927459329366684,
+        "solveSeconds": 0.017051413655281067,
+        "elapsedSeconds": 0.07299616187810898,
+        "status": "Solve_Succeeded",
+        "iterations": 17,
+        "rows": 278,
+        "originalRowsFeasible": true,
+        "objective": -1093.823129064622
+      },
+      "finalSolverOutput": {
+        "decodedFinalFeasible": true,
+        "decodedObjective": -1093.823129064622,
+        "returnedVectorVsOriginalBoundsMax": 3.552713678800501e-15,
+        "returnedVectorMismatchIndex": 252,
+        "monitorHadFeasible": true
+      }
+    },
+    {
+      "enabled": true,
+      "recomputedOriginalConstraints": false,
+      "result": {
+        "graphSeconds": 0.022435583174228668,
+        "variables": 335,
+        "constraints": 546,
+        "solverSetupSeconds": 0.008259918540716171,
+        "solveSeconds": 0.006496712565422058,
+        "elapsedSeconds": 0.03748320788145065,
+        "status": "Solve_Succeeded",
+        "iterations": 11,
+        "rows": 278,
+        "originalRowsFeasible": false,
+        "objective": -1093.8473927241469
+      },
+      "finalSolverOutput": {
+        "decodedFinalFeasible": true,
+        "decodedObjective": -1093.8231290635338,
+        "returnedVectorVsOriginalBoundsMax": 35.30993724789721,
+        "returnedVectorMismatchIndex": 460,
+        "monitorHadFeasible": false
+      }
+    },
+    {
+      "enabled": true,
+      "recomputedOriginalConstraints": true,
+      "result": {
+        "graphSeconds": 0.024280667304992676,
+        "variables": 335,
+        "constraints": 546,
+        "solverSetupSeconds": 0.008157875388860703,
+        "solveSeconds": 0.007084663957357407,
+        "elapsedSeconds": 0.040191084146499634,
+        "status": "Solve_Succeeded",
+        "iterations": 11,
+        "rows": 278,
+        "originalRowsFeasible": true,
+        "objective": -1093.8231290635338
+      },
+      "finalSolverOutput": {
+        "decodedFinalFeasible": true,
+        "decodedObjective": -1093.8231290635338,
+        "returnedVectorVsOriginalBoundsMax": 35.30993724789721,
+        "returnedVectorMismatchIndex": 460,
+        "monitorHadFeasible": true
+      }
+    }
+  ]
+}

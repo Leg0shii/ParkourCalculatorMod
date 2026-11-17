@@ -1,0 +1,10 @@
+{"name": "ceiling", "policy": "balanced", "canonical": false, "firstCompleteExpanded": 1, "metadataDuplicates": 0, "instrumentedSeconds": 1.1220765821635723}
+{"name": "grind-or-run", "policy": "balanced", "canonical": false, "firstCompleteExpanded": 4, "metadataDuplicates": 0, "instrumentedSeconds": 0.7461502104997635}
+{"name": "multi-support", "policy": "balanced", "canonical": false, "firstCompleteExpanded": 4, "metadataDuplicates": 0, "instrumentedSeconds": 1.1674923337996006}
+{"name": "open", "policy": "balanced", "canonical": false, "firstCompleteExpanded": 1, "metadataDuplicates": 0, "instrumentedSeconds": 0.48364854231476784}
+{"name": "step-or-jump", "policy": "balanced", "canonical": false, "firstCompleteExpanded": 2, "metadataDuplicates": 0, "instrumentedSeconds": 1.1289350017905235}
+{"name": "turn-blockage", "policy": "balanced", "canonical": false, "firstCompleteExpanded": 1, "metadataDuplicates": 0, "instrumentedSeconds": 0.4498954154551029}
+{"name": "extra-run-up", "policy": "balanced", "canonical": false, "firstCompleteExpanded": 6, "metadataDuplicates": 0, "instrumentedSeconds": 0.7384411245584488}
+{"name": "extra-remote-supports", "policy": "balanced", "canonical": false, "firstCompleteExpanded": 1, "metadataDuplicates": 0, "instrumentedSeconds": 0.45468058437108994}
+{"name": "extra-grind", "policy": "balanced", "canonical": false, "firstCompleteExpanded": 1, "metadataDuplicates": 0, "instrumentedSeconds": 2.218988500535488}
+{"name": "extra-repeat-ceiling", "policy": "balanced", "canonical": false, "firstCompleteExpanded": 1, "metadataDuplicates": 0, "instrumentedSeconds": 6.023287419229746}

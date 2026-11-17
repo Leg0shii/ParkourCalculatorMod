@@ -1,0 +1,1527 @@
+[
+  {
+    "run": "unrestricted300",
+    "profile": "unrestricted300-profile.json",
+    "profileSHA256": "1bc1475009bd908f06ce277d7ff6cf33f88a6f1b61b8861af12f1dd7f689d4d5",
+    "provenance": "research/initial-domain-selection/evidence/2026-11-15/provenance.json",
+    "wallSeconds": 304.8316801637411,
+    "cpuSeconds": 290.233232,
+    "buckets": [
+      {
+        "name": "numerical.evaluate",
+        "calls": 53,
+        "inclusiveSeconds": 261.44357120618224,
+        "selfSeconds": 145.69827130436897,
+        "maxSeconds": 8.240817043930292
+      },
+      {
+        "name": "identity.digest",
+        "calls": 30804036,
+        "inclusiveSeconds": 67.1995674520731,
+        "selfSeconds": 67.1995674520731,
+        "maxSeconds": 0.03842662274837494
+      },
+      {
+        "name": "copy:parkour_solver.spatial.checkpoints:retain_prefix:92",
+        "calls": 449,
+        "inclusiveSeconds": 29.80968749895692,
+        "selfSeconds": 29.80968749895692,
+        "maxSeconds": 0.2427828349173069
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:snapshot:101",
+        "calls": 699,
+        "inclusiveSeconds": 17.27351763099432,
+        "selfSeconds": 17.27351763099432,
+        "maxSeconds": 0.1333090402185917
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:snapshot:97",
+        "calls": 699,
+        "inclusiveSeconds": 12.132511865347624,
+        "selfSeconds": 12.132511865347624,
+        "maxSeconds": 0.1357061266899109
+      },
+      {
+        "name": "solver.invoke",
+        "calls": 61,
+        "inclusiveSeconds": 10.568215005099773,
+        "selfSeconds": 9.901249010115862,
+        "maxSeconds": 0.2827250398695469
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:snapshot:102",
+        "calls": 699,
+        "inclusiveSeconds": 4.234714958816767,
+        "selfSeconds": 4.234714958816767,
+        "maxSeconds": 0.11869758367538452
+      },
+      {
+        "name": "postrun.shared_report_write",
+        "calls": 1,
+        "inclusiveSeconds": 3.157658874988556,
+        "selfSeconds": 3.157658874988556,
+        "maxSeconds": 3.157658874988556
+      },
+      {
+        "name": "copy:parkour_solver.search.dfs:score:635",
+        "calls": 52,
+        "inclusiveSeconds": 2.389122039079666,
+        "selfSeconds": 2.389122039079666,
+        "maxSeconds": 0.17237970978021622
+      },
+      {
+        "name": "dfs.session",
+        "calls": 33,
+        "inclusiveSeconds": 300.3185538612306,
+        "selfSeconds": 1.5268635265529156,
+        "maxSeconds": 10.152595583349466
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:snapshot:100",
+        "calls": 699,
+        "inclusiveSeconds": 1.1855548098683357,
+        "selfSeconds": 1.1855548098683357,
+        "maxSeconds": 0.102788046002388
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:snapshot:91",
+        "calls": 8729,
+        "inclusiveSeconds": 1.1271172277629375,
+        "selfSeconds": 1.1271172277629375,
+        "maxSeconds": 0.1040177084505558
+      },
+      {
+        "name": "reachability.check_program",
+        "calls": 70,
+        "inclusiveSeconds": 1.3449233546853065,
+        "selfSeconds": 0.7869920879602432,
+        "maxSeconds": 0.4017418771982193
+      },
+      {
+        "name": "copy:parkour_solver.constraints.variants:__init__:42",
+        "calls": 38,
+        "inclusiveSeconds": 0.7552361264824867,
+        "selfSeconds": 0.7552361264824867,
+        "maxSeconds": 0.027575872838497162
+      },
+      {
+        "name": "copy:parkour_solver.search.dfs:commit_arrival:40",
+        "calls": 449,
+        "inclusiveSeconds": 0.7239017896354198,
+        "selfSeconds": 0.7239017896354198,
+        "maxSeconds": 0.10263612866401672
+      },
+      {
+        "name": "reachability.analyze_model",
+        "calls": 462,
+        "inclusiveSeconds": 0.7835280075669289,
+        "selfSeconds": 0.6451148204505444,
+        "maxSeconds": 0.019829832017421722
+      },
+      {
+        "name": "copy:parkour_solver.search.dfs:score:692",
+        "calls": 398,
+        "inclusiveSeconds": 0.6104421280324459,
+        "selfSeconds": 0.6104421280324459,
+        "maxSeconds": 0.05732858180999756
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:solve_contact_branches:121",
+        "calls": 38,
+        "inclusiveSeconds": 0.6103767454624176,
+        "selfSeconds": 0.6103767454624176,
+        "maxSeconds": 0.1278252899646759
+      },
+      {
+        "name": "copy:parkour_solver.search.dfs:search_goals:912",
+        "calls": 16,
+        "inclusiveSeconds": 0.49664604291319847,
+        "selfSeconds": 0.49664604291319847,
+        "maxSeconds": 0.09035412967205048
+      },
+      {
+        "name": "postrun.shared_report_compact",
+        "calls": 1,
+        "inclusiveSeconds": 0.39549192041158676,
+        "selfSeconds": 0.39549192041158676,
+        "maxSeconds": 0.39549192041158676
+      },
+      {
+        "name": "reachability.prepare",
+        "calls": 462,
+        "inclusiveSeconds": 0.5565789118409157,
+        "selfSeconds": 0.37568020820617676,
+        "maxSeconds": 0.036631837487220764
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:snapshot:103",
+        "calls": 699,
+        "inclusiveSeconds": 0.37566468492150307,
+        "selfSeconds": 0.37566468492150307,
+        "maxSeconds": 0.12669700011610985
+      },
+      {
+        "name": "movement.choices.next",
+        "calls": 184,
+        "inclusiveSeconds": 1.3132699579000473,
+        "selfSeconds": 0.31023507192730904,
+        "maxSeconds": 0.0418827123939991
+      },
+      {
+        "name": "movement.source.next",
+        "calls": 25,
+        "inclusiveSeconds": 3.1541223488748074,
+        "selfSeconds": 0.26189641281962395,
+        "maxSeconds": 0.7146886214613914
+      },
+      {
+        "name": "postrun.accepted_replays",
+        "calls": 1,
+        "inclusiveSeconds": 0.2338619977235794,
+        "selfSeconds": 0.2338619977235794,
+        "maxSeconds": 0.2338619977235794
+      },
+      {
+        "name": "run.search_and_final_replay",
+        "calls": 1,
+        "inclusiveSeconds": 300.4975846633315,
+        "selfSeconds": 0.17309576272964478,
+        "maxSeconds": 300.4975846633315
+      },
+      {
+        "name": "callback.profile_write",
+        "calls": 28,
+        "inclusiveSeconds": 0.16123394668102264,
+        "selfSeconds": 0.16123394668102264,
+        "maxSeconds": 0.009462833404541016
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:solve_contact_branches:118",
+        "calls": 38,
+        "inclusiveSeconds": 0.1514076627790928,
+        "selfSeconds": 0.1514076627790928,
+        "maxSeconds": 0.09909633174538612
+      },
+      {
+        "name": "copy:parkour_solver.scene.route:prepare_route:13",
+        "calls": 591,
+        "inclusiveSeconds": 0.13852886855602264,
+        "selfSeconds": 0.13852886855602264,
+        "maxSeconds": 0.0008941255509853363
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:snapshot:99",
+        "calls": 1398,
+        "inclusiveSeconds": 0.13079189136624336,
+        "selfSeconds": 0.13079189136624336,
+        "maxSeconds": 0.0007037930190563202
+      },
+      {
+        "name": "reachability.required",
+        "calls": 88,
+        "inclusiveSeconds": 0.3333606943488121,
+        "selfSeconds": 0.12653854116797447,
+        "maxSeconds": 0.07551612332463264
+      },
+      {
+        "name": "copy:parkour_solver.numerics.model:prepare:16",
+        "calls": 571,
+        "inclusiveSeconds": 0.10046354308724403,
+        "selfSeconds": 0.10046354308724403,
+        "maxSeconds": 0.0059020034968853
+      },
+      {
+        "name": "copy:parkour_solver.search.ordered_route:publish:255",
+        "calls": 230,
+        "inclusiveSeconds": 0.09711700305342674,
+        "selfSeconds": 0.09711700305342674,
+        "maxSeconds": 0.0020719096064567566
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:solve_contact_branches:370",
+        "calls": 54,
+        "inclusiveSeconds": 0.08308062702417374,
+        "selfSeconds": 0.08308062702417374,
+        "maxSeconds": 0.0027857087552547455
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:enrich:233",
+        "calls": 75,
+        "inclusiveSeconds": 0.07900053635239601,
+        "selfSeconds": 0.07900053635239601,
+        "maxSeconds": 0.0020366236567497253
+      },
+      {
+        "name": "copy:parkour_solver.movement.contact_combinations:merge_contacts:25",
+        "calls": 25955,
+        "inclusiveSeconds": 0.07846012711524963,
+        "selfSeconds": 0.07846012711524963,
+        "maxSeconds": 8.379295468330383e-05
+      },
+      {
+        "name": "copy:parkour_solver.search.ordered_route:probe:41",
+        "calls": 61,
+        "inclusiveSeconds": 0.06630074232816696,
+        "selfSeconds": 0.06630074232816696,
+        "maxSeconds": 0.0019535385072231293
+      },
+      {
+        "name": "copy:parkour_solver.search.dfs:search_goals:897",
+        "calls": 41,
+        "inclusiveSeconds": 0.05793708562850952,
+        "selfSeconds": 0.05793708562850952,
+        "maxSeconds": 0.0024862922728061676
+      },
+      {
+        "name": "copy:parkour_solver.movement.program:profile_from_trace:53",
+        "calls": 750,
+        "inclusiveSeconds": 0.0578322671353817,
+        "selfSeconds": 0.0578322671353817,
+        "maxSeconds": 0.00038050487637519836
+      },
+      {
+        "name": "copy:parkour_solver.search.dfs:search_goals:915",
+        "calls": 16,
+        "inclusiveSeconds": 0.055938541889190674,
+        "selfSeconds": 0.055938541889190674,
+        "maxSeconds": 0.026073332875967026
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:solve_contact_branches:66",
+        "calls": 38,
+        "inclusiveSeconds": 0.05033504217863083,
+        "selfSeconds": 0.05033504217863083,
+        "maxSeconds": 0.004491791129112244
+      },
+      {
+        "name": "copy:parkour_solver.search.dfs:score:741",
+        "calls": 32,
+        "inclusiveSeconds": 0.04683917015790939,
+        "selfSeconds": 0.04683917015790939,
+        "maxSeconds": 0.002561122179031372
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:snapshot:96",
+        "calls": 1398,
+        "inclusiveSeconds": 0.045658890157938004,
+        "selfSeconds": 0.045658890157938004,
+        "maxSeconds": 0.0001569986343383789
+      },
+      {
+        "name": "copy:parkour_solver.search.ordered_route:evaluate:274",
+        "calls": 61,
+        "inclusiveSeconds": 0.028219912201166153,
+        "selfSeconds": 0.028219912201166153,
+        "maxSeconds": 0.0010007508099079132
+      },
+      {
+        "name": "copy:parkour_solver.search.ordered_route:probe:42",
+        "calls": 183,
+        "inclusiveSeconds": 0.0278044231235981,
+        "selfSeconds": 0.0278044231235981,
+        "maxSeconds": 0.000822458416223526
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:snapshot:98",
+        "calls": 1398,
+        "inclusiveSeconds": 0.02534680813550949,
+        "selfSeconds": 0.02534680813550949,
+        "maxSeconds": 0.0006425008177757263
+      },
+      {
+        "name": "copy:parkour_solver.search.frontier:persistent_programs:33",
+        "calls": 14,
+        "inclusiveSeconds": 0.022636502981185913,
+        "selfSeconds": 0.022636502981185913,
+        "maxSeconds": 0.0037224628031253815
+      },
+      {
+        "name": "copy:parkour_solver.search.ordered_route:find_route:304",
+        "calls": 56,
+        "inclusiveSeconds": 0.021900687366724014,
+        "selfSeconds": 0.021900687366724014,
+        "maxSeconds": 0.0008097104728221893
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:solve_contact_branches:183",
+        "calls": 61,
+        "inclusiveSeconds": 0.021875515580177307,
+        "selfSeconds": 0.021875515580177307,
+        "maxSeconds": 0.0008168332278728485
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:solve_contact_branches:26",
+        "calls": 53,
+        "inclusiveSeconds": 0.018766842782497406,
+        "selfSeconds": 0.018766842782497406,
+        "maxSeconds": 0.001027379184961319
+      },
+      {
+        "name": "proposal.assess",
+        "calls": 106,
+        "inclusiveSeconds": 1.3742434196174145,
+        "selfSeconds": 0.018599852919578552,
+        "maxSeconds": 0.40176716819405556
+      },
+      {
+        "name": "copy:parkour_solver.search.dfs:score:709",
+        "calls": 43,
+        "inclusiveSeconds": 0.01831238344311714,
+        "selfSeconds": 0.01831238344311714,
+        "maxSeconds": 0.0007523782551288605
+      },
+      {
+        "name": "copy:parkour_solver.movement.program:profile_from_trace:52",
+        "calls": 1500,
+        "inclusiveSeconds": 0.01741211861371994,
+        "selfSeconds": 0.01741211861371994,
+        "maxSeconds": 7.833167910575867e-05
+      },
+      {
+        "name": "copy:parkour_solver.movement.units:shifted_unit:133",
+        "calls": 3894,
+        "inclusiveSeconds": 0.015241120010614395,
+        "selfSeconds": 0.015241120010614395,
+        "maxSeconds": 0.00023945793509483337
+      },
+      {
+        "name": "copy:parkour_solver.movement.program:profile_from_trace:55",
+        "calls": 375,
+        "inclusiveSeconds": 0.014817774295806885,
+        "selfSeconds": 0.014817774295806885,
+        "maxSeconds": 0.00046941637992858887
+      },
+      {
+        "name": "copy:parkour_solver.movement.program:append_choice:161",
+        "calls": 375,
+        "inclusiveSeconds": 0.014020565897226334,
+        "selfSeconds": 0.014020565897226334,
+        "maxSeconds": 0.00013666972517967224
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:offer:53",
+        "calls": 471,
+        "inclusiveSeconds": 0.010712798684835434,
+        "selfSeconds": 0.010712798684835434,
+        "maxSeconds": 6.349757313728333e-05
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:offer:56",
+        "calls": 471,
+        "inclusiveSeconds": 0.007860716432332993,
+        "selfSeconds": 0.007860716432332993,
+        "maxSeconds": 0.00012750178575515747
+      },
+      {
+        "name": "reachability.sequence",
+        "calls": 18,
+        "inclusiveSeconds": 0.13327691704034805,
+        "selfSeconds": 0.007588636130094528,
+        "maxSeconds": 0.01169745996594429
+      },
+      {
+        "name": "copy:parkour_solver.movement.vertical_profiles:trace_ladder_schedule:45",
+        "calls": 906,
+        "inclusiveSeconds": 0.007546216249465942,
+        "selfSeconds": 0.007546216249465942,
+        "maxSeconds": 8.533522486686707e-05
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:solve_contact_branches:65",
+        "calls": 38,
+        "inclusiveSeconds": 0.007154505699872971,
+        "selfSeconds": 0.007154505699872971,
+        "maxSeconds": 0.0009340792894363403
+      },
+      {
+        "name": "copy:parkour_solver.search.dfs:run_bound:323",
+        "calls": 212,
+        "inclusiveSeconds": 0.005791228264570236,
+        "selfSeconds": 0.005791228264570236,
+        "maxSeconds": 0.0004513747990131378
+      },
+      {
+        "name": "callback.progress",
+        "calls": 967,
+        "inclusiveSeconds": 0.16687919571995735,
+        "selfSeconds": 0.005645249038934708,
+        "maxSeconds": 0.009568039327859879
+      },
+      {
+        "name": "validation.replay",
+        "calls": 1,
+        "inclusiveSeconds": 0.005394790321588516,
+        "selfSeconds": 0.004436001181602478,
+        "maxSeconds": 0.005394790321588516
+      },
+      {
+        "name": "copy:parkour_solver.search.dfs:frame:164",
+        "calls": 11,
+        "inclusiveSeconds": 0.0041868798434734344,
+        "selfSeconds": 0.0041868798434734344,
+        "maxSeconds": 0.0008203722536563873
+      },
+      {
+        "name": "bound.remaining_bound",
+        "calls": 225,
+        "inclusiveSeconds": 0.004090849310159683,
+        "selfSeconds": 0.004090849310159683,
+        "maxSeconds": 4.046037793159485e-05
+      },
+      {
+        "name": "copy:parkour_solver.search.dfs:make_frame:188",
+        "calls": 11,
+        "inclusiveSeconds": 0.004019211977720261,
+        "selfSeconds": 0.004019211977720261,
+        "maxSeconds": 0.0007203333079814911
+      },
+      {
+        "name": "copy:parkour_solver.search.frontier:persistent_programs:34",
+        "calls": 11,
+        "inclusiveSeconds": 0.0039057061076164246,
+        "selfSeconds": 0.0039057061076164246,
+        "maxSeconds": 0.0006799548864364624
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:save_branch:88",
+        "calls": 102,
+        "inclusiveSeconds": 0.003564339131116867,
+        "selfSeconds": 0.003564339131116867,
+        "maxSeconds": 0.00011646002531051636
+      },
+      {
+        "name": "comparison.compare_candidates",
+        "calls": 633,
+        "inclusiveSeconds": 0.0033477358520030975,
+        "selfSeconds": 0.0030356384813785553,
+        "maxSeconds": 2.5544315576553345e-05
+      },
+      {
+        "name": "comparison.comparison_label",
+        "calls": 973,
+        "inclusiveSeconds": 0.002911478281021118,
+        "selfSeconds": 0.002911478281021118,
+        "maxSeconds": 1.65402889251709e-05
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:enrich:240",
+        "calls": 75,
+        "inclusiveSeconds": 0.0016858316957950592,
+        "selfSeconds": 0.0016858316957950592,
+        "maxSeconds": 0.0004592910408973694
+      },
+      {
+        "name": "copy:parkour_solver.movement.program:append_choice:204",
+        "calls": 641,
+        "inclusiveSeconds": 0.001676958054304123,
+        "selfSeconds": 0.001676958054304123,
+        "maxSeconds": 1.54152512550354e-05
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:offer:61",
+        "calls": 183,
+        "inclusiveSeconds": 0.0016481131315231323,
+        "selfSeconds": 0.0016481131315231323,
+        "maxSeconds": 3.520771861076355e-05
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:solve_contact_branches:71",
+        "calls": 38,
+        "inclusiveSeconds": 0.0014628954231739044,
+        "selfSeconds": 0.0014628954231739044,
+        "maxSeconds": 0.0005926676094532013
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:solve_contact_branches:119",
+        "calls": 38,
+        "inclusiveSeconds": 0.0014300979673862457,
+        "selfSeconds": 0.0014300979673862457,
+        "maxSeconds": 6.254389882087708e-05
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:enrich:239",
+        "calls": 75,
+        "inclusiveSeconds": 0.0012691393494606018,
+        "selfSeconds": 0.0012691393494606018,
+        "maxSeconds": 4.8704445362091064e-05
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:solve_contact_branches:120",
+        "calls": 38,
+        "inclusiveSeconds": 0.0009851716458797455,
+        "selfSeconds": 0.0009851716458797455,
+        "maxSeconds": 6.204098463058472e-05
+      },
+      {
+        "name": "copy:parkour_solver.movement.program:append_choice:195",
+        "calls": 375,
+        "inclusiveSeconds": 0.0008707381784915924,
+        "selfSeconds": 0.0008707381784915924,
+        "maxSeconds": 1.7084181308746338e-05
+      },
+      {
+        "name": "copy:parkour_solver.movement.units:movement_unit:15",
+        "calls": 649,
+        "inclusiveSeconds": 0.0008644275367259979,
+        "selfSeconds": 0.0008644275367259979,
+        "maxSeconds": 5.383789539337158e-05
+      },
+      {
+        "name": "peer.remember_peer",
+        "calls": 50,
+        "inclusiveSeconds": 0.0007961466908454895,
+        "selfSeconds": 0.000734768807888031,
+        "maxSeconds": 3.1501054763793945e-05
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:offer:62",
+        "calls": 61,
+        "inclusiveSeconds": 0.0006827786564826965,
+        "selfSeconds": 0.0006827786564826965,
+        "maxSeconds": 1.7002224922180176e-05
+      },
+      {
+        "name": "copy:parkour_solver.search.dfs:search_goals:82",
+        "calls": 33,
+        "inclusiveSeconds": 0.0006267018616199493,
+        "selfSeconds": 0.0006267018616199493,
+        "maxSeconds": 2.429261803627014e-05
+      },
+      {
+        "name": "comparison.priority_key",
+        "calls": 1157,
+        "inclusiveSeconds": 0.0006058625876903534,
+        "selfSeconds": 0.0006058625876903534,
+        "maxSeconds": 5.453824996948242e-06
+      },
+      {
+        "name": "peer.assess",
+        "calls": 90,
+        "inclusiveSeconds": 0.0017963908612728119,
+        "selfSeconds": 0.00057205930352211,
+        "maxSeconds": 6.062537431716919e-05
+      },
+      {
+        "name": "copy:parkour_solver.constraints.variants:__init__:45",
+        "calls": 15,
+        "inclusiveSeconds": 0.0005395002663135529,
+        "selfSeconds": 0.0005395002663135529,
+        "maxSeconds": 5.512312054634094e-05
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:solve_contact_branches:45",
+        "calls": 38,
+        "inclusiveSeconds": 0.00047801434993743896,
+        "selfSeconds": 0.00047801434993743896,
+        "maxSeconds": 1.7873942852020264e-05
+      },
+      {
+        "name": "copy:parkour_solver.movement.program:movement_choice:74",
+        "calls": 375,
+        "inclusiveSeconds": 0.0004138275980949402,
+        "selfSeconds": 0.0004138275980949402,
+        "maxSeconds": 6.441399455070496e-05
+      },
+      {
+        "name": "copy:parkour_solver.movement.program:append_choice:154",
+        "calls": 375,
+        "inclusiveSeconds": 0.00038896873593330383,
+        "selfSeconds": 0.00038896873593330383,
+        "maxSeconds": 3.8780272006988525e-06
+      },
+      {
+        "name": "copy:parkour_solver.movement.program:_events:102",
+        "calls": 375,
+        "inclusiveSeconds": 0.0003720968961715698,
+        "selfSeconds": 0.0003720968961715698,
+        "maxSeconds": 2.5913119316101074e-05
+      },
+      {
+        "name": "copy:parkour_solver.search.dfs:expand_discovery:210",
+        "calls": 11,
+        "inclusiveSeconds": 0.00034653767943382263,
+        "selfSeconds": 0.00034653767943382263,
+        "maxSeconds": 5.296245217323303e-05
+      },
+      {
+        "name": "copy:parkour_solver.movement.generation:propose_choices:49",
+        "calls": 424,
+        "inclusiveSeconds": 0.0002805851399898529,
+        "selfSeconds": 0.0002805851399898529,
+        "maxSeconds": 7.0445239543914795e-06
+      },
+      {
+        "name": "movement.source.close",
+        "calls": 25,
+        "inclusiveSeconds": 0.0002493038773536682,
+        "selfSeconds": 0.0002493038773536682,
+        "maxSeconds": 2.6416033506393433e-05
+      },
+      {
+        "name": "copy:parkour_solver.movement.normal:named_choice:46",
+        "calls": 18,
+        "inclusiveSeconds": 0.00018884986639022827,
+        "selfSeconds": 0.00018884986639022827,
+        "maxSeconds": 2.4709850549697876e-05
+      },
+      {
+        "name": "copy:parkour_solver.scene.normalize:prepare_scene:10",
+        "calls": 4,
+        "inclusiveSeconds": 0.00016249343752861023,
+        "selfSeconds": 0.00016249343752861023,
+        "maxSeconds": 4.73707914352417e-05
+      },
+      {
+        "name": "copy:parkour_solver.movement.program:append_choice:156",
+        "calls": 18,
+        "inclusiveSeconds": 0.00013829395174980164,
+        "selfSeconds": 0.00013829395174980164,
+        "maxSeconds": 1.1835247278213501e-05
+      },
+      {
+        "name": "bound.transfer_bound",
+        "calls": 5,
+        "inclusiveSeconds": 9.887292981147766e-05,
+        "selfSeconds": 9.887292981147766e-05,
+        "maxSeconds": 3.8664788007736206e-05
+      },
+      {
+        "name": "copy:parkour_solver.search.dfs:evaluate_node:445",
+        "calls": 1,
+        "inclusiveSeconds": 8.858367800712585e-05,
+        "selfSeconds": 8.858367800712585e-05,
+        "maxSeconds": 8.858367800712585e-05
+      },
+      {
+        "name": "movement.source.create",
+        "calls": 25,
+        "inclusiveSeconds": 8.104369044303894e-05,
+        "selfSeconds": 8.104369044303894e-05,
+        "maxSeconds": 7.748603820800781e-06
+      },
+      {
+        "name": "copy:parkour_solver.search.identity:solve_scope:27",
+        "calls": 53,
+        "inclusiveSeconds": 7.272511720657349e-05,
+        "selfSeconds": 7.272511720657349e-05,
+        "maxSeconds": 3.039836883544922e-06
+      },
+      {
+        "name": "copy:parkour_solver.search.engine:evaluate_program:91",
+        "calls": 21,
+        "inclusiveSeconds": 6.121397018432617e-05,
+        "selfSeconds": 6.121397018432617e-05,
+        "maxSeconds": 4.459172487258911e-06
+      },
+      {
+        "name": "movement.choices.create",
+        "calls": 78,
+        "inclusiveSeconds": 5.2656978368759155e-05,
+        "selfSeconds": 5.2656978368759155e-05,
+        "maxSeconds": 2.212822437286377e-05
+      },
+      {
+        "name": "copy:parkour_solver.scene.geometry:normalize_geometry:60",
+        "calls": 28,
+        "inclusiveSeconds": 5.250424146652222e-05,
+        "selfSeconds": 5.250424146652222e-05,
+        "maxSeconds": 2.9169023036956787e-06
+      },
+      {
+        "name": "copy:parkour_solver.search.ordered_route:search_allocations:121",
+        "calls": 61,
+        "inclusiveSeconds": 3.412365913391113e-05,
+        "selfSeconds": 3.412365913391113e-05,
+        "maxSeconds": 9.5367431640625e-07
+      },
+      {
+        "name": "movement.choices.close",
+        "calls": 78,
+        "inclusiveSeconds": 2.9988586902618408e-05,
+        "selfSeconds": 2.9988586902618408e-05,
+        "maxSeconds": 1.6242265701293945e-06
+      },
+      {
+        "name": "copy:parkour_solver.search.anchors.policy:settings:17",
+        "calls": 1,
+        "inclusiveSeconds": 5.289912223815918e-06,
+        "selfSeconds": 5.289912223815918e-06,
+        "maxSeconds": 5.289912223815918e-06
+      },
+      {
+        "name": "copy:parkour_solver.search.goals:goal_spec:16",
+        "calls": 2,
+        "inclusiveSeconds": 3.7848949432373047e-06,
+        "selfSeconds": 3.7848949432373047e-06,
+        "maxSeconds": 1.955777406692505e-06
+      },
+      {
+        "name": "copy:parkour_solver.search.events.engine:search_event_routes:79",
+        "calls": 1,
+        "inclusiveSeconds": 2.205371856689453e-06,
+        "selfSeconds": 2.205371856689453e-06,
+        "maxSeconds": 2.205371856689453e-06
+      }
+    ]
+  },
+  {
+    "run": "initial0-90",
+    "profile": "initial0-90-profile.json",
+    "profileSHA256": "bef45fa931aa963e73293439b845c3d1ed52c1fa4a9f18d61f1a706631ec70ba",
+    "provenance": "docs/validation/layout-final/real11-provenance.json",
+    "wallSeconds": 92.59818391874433,
+    "cpuSeconds": 86.88973899999999,
+    "buckets": [
+      {
+        "name": "numerical.evaluate",
+        "calls": 21,
+        "inclusiveSeconds": 85.80443795025349,
+        "selfSeconds": 50.56781878322363,
+        "maxSeconds": 8.24035046249628
+      },
+      {
+        "name": "identity.digest",
+        "calls": 10514980,
+        "inclusiveSeconds": 23.22079062089324,
+        "selfSeconds": 23.22079062089324,
+        "maxSeconds": 0.024204961955547333
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:snapshot:101",
+        "calls": 230,
+        "inclusiveSeconds": 5.10915158316493,
+        "selfSeconds": 5.10915158316493,
+        "maxSeconds": 0.06495891511440277
+      },
+      {
+        "name": "solver.invoke",
+        "calls": 26,
+        "inclusiveSeconds": 4.274751607328653,
+        "selfSeconds": 3.999245684593916,
+        "maxSeconds": 0.2770661227405071
+      },
+      {
+        "name": "copy:parkour_solver.spatial.checkpoints:retain_prefix:92",
+        "calls": 78,
+        "inclusiveSeconds": 2.6887475214898586,
+        "selfSeconds": 2.6887475214898586,
+        "maxSeconds": 0.08851179108023643
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:snapshot:97",
+        "calls": 230,
+        "inclusiveSeconds": 1.2929915860295296,
+        "selfSeconds": 1.2929915860295296,
+        "maxSeconds": 0.052350834012031555
+      },
+      {
+        "name": "postrun.shared_report_write",
+        "calls": 1,
+        "inclusiveSeconds": 1.1433004140853882,
+        "selfSeconds": 1.1433004140853882,
+        "maxSeconds": 1.1433004140853882
+      },
+      {
+        "name": "copy:parkour_solver.search.dfs:score:635",
+        "calls": 20,
+        "inclusiveSeconds": 0.537768617272377,
+        "selfSeconds": 0.537768617272377,
+        "maxSeconds": 0.07933416962623596
+      },
+      {
+        "name": "reachability.check_program",
+        "calls": 18,
+        "inclusiveSeconds": 0.5928854122757912,
+        "selfSeconds": 0.46469753235578537,
+        "maxSeconds": 0.3597683347761631
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:snapshot:102",
+        "calls": 230,
+        "inclusiveSeconds": 0.40509895980358124,
+        "selfSeconds": 0.40509895980358124,
+        "maxSeconds": 0.005053170025348663
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:snapshot:91",
+        "calls": 2613,
+        "inclusiveSeconds": 0.37407439574599266,
+        "selfSeconds": 0.37407439574599266,
+        "maxSeconds": 0.038199376314878464
+      },
+      {
+        "name": "copy:parkour_solver.constraints.variants:__init__:42",
+        "calls": 14,
+        "inclusiveSeconds": 0.29828885942697525,
+        "selfSeconds": 0.29828885942697525,
+        "maxSeconds": 0.054387375712394714
+      },
+      {
+        "name": "run.search_and_final_replay",
+        "calls": 1,
+        "inclusiveSeconds": 90.75001441687346,
+        "selfSeconds": 0.21985116973519325,
+        "maxSeconds": 90.75001441687346
+      },
+      {
+        "name": "dfs.session",
+        "calls": 11,
+        "inclusiveSeconds": 90.52473604306579,
+        "selfSeconds": 0.20699221268296242,
+        "maxSeconds": 8.579020623117685
+      },
+      {
+        "name": "reachability.analyze_model",
+        "calls": 106,
+        "inclusiveSeconds": 0.21962832659482956,
+        "selfSeconds": 0.1932029388844967,
+        "maxSeconds": 0.008823662996292114
+      },
+      {
+        "name": "copy:parkour_solver.search.dfs:search_goals:912",
+        "calls": 8,
+        "inclusiveSeconds": 0.16767721250653267,
+        "selfSeconds": 0.16767721250653267,
+        "maxSeconds": 0.056388501077890396
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:snapshot:100",
+        "calls": 230,
+        "inclusiveSeconds": 0.1584835760295391,
+        "selfSeconds": 0.1584835760295391,
+        "maxSeconds": 0.03986312076449394
+      },
+      {
+        "name": "postrun.shared_report_compact",
+        "calls": 1,
+        "inclusiveSeconds": 0.15769733116030693,
+        "selfSeconds": 0.15769733116030693,
+        "maxSeconds": 0.15769733116030693
+      },
+      {
+        "name": "copy:parkour_solver.search.dfs:commit_arrival:40",
+        "calls": 78,
+        "inclusiveSeconds": 0.12846268340945244,
+        "selfSeconds": 0.12846268340945244,
+        "maxSeconds": 0.03814275562763214
+      },
+      {
+        "name": "postrun.accepted_replays",
+        "calls": 1,
+        "inclusiveSeconds": 0.08854662254452705,
+        "selfSeconds": 0.08854662254452705,
+        "maxSeconds": 0.08854662254452705
+      },
+      {
+        "name": "copy:parkour_solver.search.dfs:score:692",
+        "calls": 57,
+        "inclusiveSeconds": 0.07107429206371307,
+        "selfSeconds": 0.07107429206371307,
+        "maxSeconds": 0.0015426650643348694
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:snapshot:103",
+        "calls": 230,
+        "inclusiveSeconds": 0.06389395892620087,
+        "selfSeconds": 0.06389395892620087,
+        "maxSeconds": 0.03169707953929901
+      },
+      {
+        "name": "reachability.prepare",
+        "calls": 106,
+        "inclusiveSeconds": 0.08389004319906235,
+        "selfSeconds": 0.060282252728939056,
+        "maxSeconds": 0.012233041226863861
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:solve_contact_branches:121",
+        "calls": 14,
+        "inclusiveSeconds": 0.047280989587306976,
+        "selfSeconds": 0.047280989587306976,
+        "maxSeconds": 0.00734754279255867
+      },
+      {
+        "name": "copy:parkour_solver.search.ordered_route:publish:255",
+        "calls": 102,
+        "inclusiveSeconds": 0.037719737738370895,
+        "selfSeconds": 0.037719737738370895,
+        "maxSeconds": 0.0007148310542106628
+      },
+      {
+        "name": "movement.choices.next",
+        "calls": 34,
+        "inclusiveSeconds": 0.2190437912940979,
+        "selfSeconds": 0.035955797880887985,
+        "maxSeconds": 0.019276753067970276
+      },
+      {
+        "name": "movement.source.next",
+        "calls": 12,
+        "inclusiveSeconds": 0.9164181761443615,
+        "selfSeconds": 0.03475460782647133,
+        "maxSeconds": 0.49574466794729233
+      },
+      {
+        "name": "copy:parkour_solver.numerics.model:prepare:16",
+        "calls": 193,
+        "inclusiveSeconds": 0.0323176272213459,
+        "selfSeconds": 0.0323176272213459,
+        "maxSeconds": 0.000460207462310791
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:solve_contact_branches:370",
+        "calls": 22,
+        "inclusiveSeconds": 0.029640279710292816,
+        "selfSeconds": 0.029640279710292816,
+        "maxSeconds": 0.0020296238362789154
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:enrich:233",
+        "calls": 34,
+        "inclusiveSeconds": 0.02870803326368332,
+        "selfSeconds": 0.02870803326368332,
+        "maxSeconds": 0.0011536218225955963
+      },
+      {
+        "name": "copy:parkour_solver.scene.route:prepare_route:13",
+        "calls": 159,
+        "inclusiveSeconds": 0.028226837515830994,
+        "selfSeconds": 0.028226837515830994,
+        "maxSeconds": 0.0004429146647453308
+      },
+      {
+        "name": "copy:parkour_solver.search.ordered_route:probe:41",
+        "calls": 26,
+        "inclusiveSeconds": 0.023805592209100723,
+        "selfSeconds": 0.023805592209100723,
+        "maxSeconds": 0.0012314580380916595
+      },
+      {
+        "name": "callback.profile_write",
+        "calls": 8,
+        "inclusiveSeconds": 0.01873025670647621,
+        "selfSeconds": 0.01873025670647621,
+        "maxSeconds": 0.003591913729906082
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:snapshot:99",
+        "calls": 460,
+        "inclusiveSeconds": 0.017544955015182495,
+        "selfSeconds": 0.017544955015182495,
+        "maxSeconds": 0.0004722960293292999
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:solve_contact_branches:118",
+        "calls": 14,
+        "inclusiveSeconds": 0.017289485782384872,
+        "selfSeconds": 0.017289485782384872,
+        "maxSeconds": 0.0018323324620723724
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:snapshot:96",
+        "calls": 460,
+        "inclusiveSeconds": 0.01542447879910469,
+        "selfSeconds": 0.01542447879910469,
+        "maxSeconds": 0.005342621356248856
+      },
+      {
+        "name": "copy:parkour_solver.search.dfs:score:741",
+        "calls": 11,
+        "inclusiveSeconds": 0.014858610928058624,
+        "selfSeconds": 0.014858610928058624,
+        "maxSeconds": 0.0014609545469284058
+      },
+      {
+        "name": "copy:parkour_solver.search.dfs:search_goals:897",
+        "calls": 10,
+        "inclusiveSeconds": 0.013824626803398132,
+        "selfSeconds": 0.013824626803398132,
+        "maxSeconds": 0.001702040433883667
+      },
+      {
+        "name": "reachability.required",
+        "calls": 22,
+        "inclusiveSeconds": 0.054457079619169235,
+        "selfSeconds": 0.011980533599853516,
+        "maxSeconds": 0.008185211569070816
+      },
+      {
+        "name": "copy:parkour_solver.search.ordered_route:evaluate:274",
+        "calls": 26,
+        "inclusiveSeconds": 0.010046664625406265,
+        "selfSeconds": 0.010046664625406265,
+        "maxSeconds": 0.00046029314398765564
+      },
+      {
+        "name": "copy:parkour_solver.search.ordered_route:probe:42",
+        "calls": 78,
+        "inclusiveSeconds": 0.00991528108716011,
+        "selfSeconds": 0.00991528108716011,
+        "maxSeconds": 0.00046300143003463745
+      },
+      {
+        "name": "copy:parkour_solver.movement.contact_combinations:merge_contacts:25",
+        "calls": 2562,
+        "inclusiveSeconds": 0.008975990116596222,
+        "selfSeconds": 0.008975990116596222,
+        "maxSeconds": 0.0003163367509841919
+      },
+      {
+        "name": "copy:parkour_solver.search.ordered_route:find_route:304",
+        "calls": 23,
+        "inclusiveSeconds": 0.007493704557418823,
+        "selfSeconds": 0.007493704557418823,
+        "maxSeconds": 0.0005002468824386597
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:solve_contact_branches:183",
+        "calls": 26,
+        "inclusiveSeconds": 0.00739993155002594,
+        "selfSeconds": 0.00739993155002594,
+        "maxSeconds": 0.0003704577684402466
+      },
+      {
+        "name": "copy:parkour_solver.search.dfs:score:709",
+        "calls": 16,
+        "inclusiveSeconds": 0.006292711943387985,
+        "selfSeconds": 0.006292711943387985,
+        "maxSeconds": 0.00044729188084602356
+      },
+      {
+        "name": "copy:parkour_solver.search.dfs:search_goals:915",
+        "calls": 8,
+        "inclusiveSeconds": 0.006087128072977066,
+        "selfSeconds": 0.006087128072977066,
+        "maxSeconds": 0.0009067542850971222
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:solve_contact_branches:26",
+        "calls": 21,
+        "inclusiveSeconds": 0.005494989454746246,
+        "selfSeconds": 0.005494989454746246,
+        "maxSeconds": 0.00035529211163520813
+      },
+      {
+        "name": "copy:parkour_solver.movement.program:profile_from_trace:53",
+        "calls": 138,
+        "inclusiveSeconds": 0.005354039371013641,
+        "selfSeconds": 0.005354039371013641,
+        "maxSeconds": 0.00013774633407592773
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:snapshot:98",
+        "calls": 460,
+        "inclusiveSeconds": 0.004267528653144836,
+        "selfSeconds": 0.004267528653144836,
+        "maxSeconds": 5.1584094762802124e-05
+      },
+      {
+        "name": "validation.replay",
+        "calls": 1,
+        "inclusiveSeconds": 0.004884418100118637,
+        "selfSeconds": 0.003991197794675827,
+        "maxSeconds": 0.004884418100118637
+      },
+      {
+        "name": "copy:parkour_solver.search.frontier:persistent_programs:33",
+        "calls": 6,
+        "inclusiveSeconds": 0.003939546644687653,
+        "selfSeconds": 0.003939546644687653,
+        "maxSeconds": 0.001049332320690155
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:solve_contact_branches:66",
+        "calls": 14,
+        "inclusiveSeconds": 0.003815680742263794,
+        "selfSeconds": 0.003815680742263794,
+        "maxSeconds": 0.0007079131901264191
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:offer:53",
+        "calls": 136,
+        "inclusiveSeconds": 0.002958931028842926,
+        "selfSeconds": 0.002958931028842926,
+        "maxSeconds": 3.0916184186935425e-05
+      },
+      {
+        "name": "callback.progress",
+        "calls": 333,
+        "inclusiveSeconds": 0.021380875259637833,
+        "selfSeconds": 0.002650618553161621,
+        "maxSeconds": 0.003705039620399475
+      },
+      {
+        "name": "copy:parkour_solver.movement.units:shifted_unit:133",
+        "calls": 525,
+        "inclusiveSeconds": 0.0024494417011737823,
+        "selfSeconds": 0.0024494417011737823,
+        "maxSeconds": 0.000321459025144577
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:offer:56",
+        "calls": 136,
+        "inclusiveSeconds": 0.0021270327270030975,
+        "selfSeconds": 0.0021270327270030975,
+        "maxSeconds": 2.8874725103378296e-05
+      },
+      {
+        "name": "copy:parkour_solver.search.dfs:frame:164",
+        "calls": 6,
+        "inclusiveSeconds": 0.0016259588301181793,
+        "selfSeconds": 0.0016259588301181793,
+        "maxSeconds": 0.0006879605352878571
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:save_branch:88",
+        "calls": 48,
+        "inclusiveSeconds": 0.0015289559960365295,
+        "selfSeconds": 0.0015289559960365295,
+        "maxSeconds": 5.679205060005188e-05
+      },
+      {
+        "name": "copy:parkour_solver.movement.program:profile_from_trace:52",
+        "calls": 276,
+        "inclusiveSeconds": 0.001307617872953415,
+        "selfSeconds": 0.001307617872953415,
+        "maxSeconds": 2.4624168872833252e-05
+      },
+      {
+        "name": "copy:parkour_solver.search.frontier:persistent_programs:34",
+        "calls": 6,
+        "inclusiveSeconds": 0.001279253512620926,
+        "selfSeconds": 0.001279253512620926,
+        "maxSeconds": 0.0003309585154056549
+      },
+      {
+        "name": "copy:parkour_solver.search.dfs:make_frame:188",
+        "calls": 6,
+        "inclusiveSeconds": 0.0012465491890907288,
+        "selfSeconds": 0.0012465491890907288,
+        "maxSeconds": 0.00033083558082580566
+      },
+      {
+        "name": "copy:parkour_solver.movement.program:profile_from_trace:55",
+        "calls": 69,
+        "inclusiveSeconds": 0.0010847076773643494,
+        "selfSeconds": 0.0010847076773643494,
+        "maxSeconds": 5.620718002319336e-05
+      },
+      {
+        "name": "proposal.assess",
+        "calls": 20,
+        "inclusiveSeconds": 0.5940932370722294,
+        "selfSeconds": 0.0010615773499011993,
+        "maxSeconds": 0.3597960025072098
+      },
+      {
+        "name": "reachability.sequence",
+        "calls": 4,
+        "inclusiveSeconds": 0.02519175037741661,
+        "selfSeconds": 0.0009172521531581879,
+        "maxSeconds": 0.008728377521038055
+      },
+      {
+        "name": "copy:parkour_solver.movement.program:append_choice:161",
+        "calls": 69,
+        "inclusiveSeconds": 0.0008337981998920441,
+        "selfSeconds": 0.0008337981998920441,
+        "maxSeconds": 2.0291656255722046e-05
+      },
+      {
+        "name": "comparison.comparison_label",
+        "calls": 241,
+        "inclusiveSeconds": 0.0008048415184020996,
+        "selfSeconds": 0.0008048415184020996,
+        "maxSeconds": 1.0792165994644165e-05
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:offer:61",
+        "calls": 78,
+        "inclusiveSeconds": 0.0007123909890651703,
+        "selfSeconds": 0.0007123909890651703,
+        "maxSeconds": 6.533414125442505e-05
+      },
+      {
+        "name": "comparison.compare_candidates",
+        "calls": 140,
+        "inclusiveSeconds": 0.0007485374808311462,
+        "selfSeconds": 0.0006858594715595245,
+        "maxSeconds": 1.1999160051345825e-05
+      },
+      {
+        "name": "copy:parkour_solver.movement.vertical_profiles:trace_ladder_schedule:45",
+        "calls": 166,
+        "inclusiveSeconds": 0.0006755180656909943,
+        "selfSeconds": 0.0006755180656909943,
+        "maxSeconds": 1.0039657354354858e-05
+      },
+      {
+        "name": "bound.remaining_bound",
+        "calls": 43,
+        "inclusiveSeconds": 0.0006665363907814026,
+        "selfSeconds": 0.0006665363907814026,
+        "maxSeconds": 5.175173282623291e-05
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:solve_contact_branches:65",
+        "calls": 14,
+        "inclusiveSeconds": 0.000589124858379364,
+        "selfSeconds": 0.000589124858379364,
+        "maxSeconds": 9.137392044067383e-05
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:enrich:239",
+        "calls": 34,
+        "inclusiveSeconds": 0.0005235187709331512,
+        "selfSeconds": 0.0005235187709331512,
+        "maxSeconds": 4.37907874584198e-05
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:solve_contact_branches:119",
+        "calls": 14,
+        "inclusiveSeconds": 0.0004807189106941223,
+        "selfSeconds": 0.0004807189106941223,
+        "maxSeconds": 4.883110523223877e-05
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:enrich:240",
+        "calls": 34,
+        "inclusiveSeconds": 0.00045852363109588623,
+        "selfSeconds": 0.00045852363109588623,
+        "maxSeconds": 2.1748244762420654e-05
+      },
+      {
+        "name": "copy:parkour_solver.movement.program:append_choice:204",
+        "calls": 130,
+        "inclusiveSeconds": 0.0003990456461906433,
+        "selfSeconds": 0.0003990456461906433,
+        "maxSeconds": 1.0162591934204102e-05
+      },
+      {
+        "name": "peer.remember_peer",
+        "calls": 20,
+        "inclusiveSeconds": 0.00035195425152778625,
+        "selfSeconds": 0.00031637027859687805,
+        "maxSeconds": 3.929436206817627e-05
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:offer:62",
+        "calls": 26,
+        "inclusiveSeconds": 0.00029011070728302,
+        "selfSeconds": 0.00029011070728302,
+        "maxSeconds": 1.6164034605026245e-05
+      },
+      {
+        "name": "copy:parkour_solver.constraints.variants:__init__:45",
+        "calls": 7,
+        "inclusiveSeconds": 0.00024545565247535706,
+        "selfSeconds": 0.00024545565247535706,
+        "maxSeconds": 5.766749382019043e-05
+      },
+      {
+        "name": "copy:parkour_solver.search.dfs:search_goals:82",
+        "calls": 11,
+        "inclusiveSeconds": 0.00021337717771530151,
+        "selfSeconds": 0.00021337717771530151,
+        "maxSeconds": 2.2541731595993042e-05
+      },
+      {
+        "name": "copy:parkour_solver.movement.units:movement_unit:15",
+        "calls": 148,
+        "inclusiveSeconds": 0.00018337368965148926,
+        "selfSeconds": 0.00018337368965148926,
+        "maxSeconds": 5.461275577545166e-06
+      },
+      {
+        "name": "copy:parkour_solver.search.dfs:expand_discovery:210",
+        "calls": 6,
+        "inclusiveSeconds": 0.0001750849187374115,
+        "selfSeconds": 0.0001750849187374115,
+        "maxSeconds": 4.712492227554321e-05
+      },
+      {
+        "name": "peer.assess",
+        "calls": 26,
+        "inclusiveSeconds": 0.0005255378782749176,
+        "selfSeconds": 0.00016810745000839233,
+        "maxSeconds": 2.9124319553375244e-05
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:solve_contact_branches:45",
+        "calls": 14,
+        "inclusiveSeconds": 0.000161096453666687,
+        "selfSeconds": 0.000161096453666687,
+        "maxSeconds": 1.6462057828903198e-05
+      },
+      {
+        "name": "copy:parkour_solver.scene.normalize:prepare_scene:10",
+        "calls": 4,
+        "inclusiveSeconds": 0.00015613064169883728,
+        "selfSeconds": 0.00015613064169883728,
+        "maxSeconds": 4.296004772186279e-05
+      },
+      {
+        "name": "copy:parkour_solver.movement.program:append_choice:195",
+        "calls": 69,
+        "inclusiveSeconds": 0.0001559220254421234,
+        "selfSeconds": 0.0001559220254421234,
+        "maxSeconds": 2.6263296604156494e-06
+      },
+      {
+        "name": "comparison.priority_key",
+        "calls": 256,
+        "inclusiveSeconds": 0.00015578046441078186,
+        "selfSeconds": 0.00015578046441078186,
+        "maxSeconds": 1.625344157218933e-05
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:solve_contact_branches:120",
+        "calls": 14,
+        "inclusiveSeconds": 0.00012617558240890503,
+        "selfSeconds": 0.00012617558240890503,
+        "maxSeconds": 1.625344157218933e-05
+      },
+      {
+        "name": "copy:parkour_solver.search.dfs:evaluate_node:445",
+        "calls": 1,
+        "inclusiveSeconds": 0.00012174993753433228,
+        "selfSeconds": 0.00012174993753433228,
+        "maxSeconds": 0.00012174993753433228
+      },
+      {
+        "name": "bound.transfer_bound",
+        "calls": 5,
+        "inclusiveSeconds": 9.112805128097534e-05,
+        "selfSeconds": 9.112805128097534e-05,
+        "maxSeconds": 3.2417476177215576e-05
+      },
+      {
+        "name": "movement.source.close",
+        "calls": 12,
+        "inclusiveSeconds": 9.045377373695374e-05,
+        "selfSeconds": 9.045377373695374e-05,
+        "maxSeconds": 2.0917505025863647e-05
+      },
+      {
+        "name": "copy:parkour_solver.movement.program:append_choice:154",
+        "calls": 69,
+        "inclusiveSeconds": 6.897002458572388e-05,
+        "selfSeconds": 6.897002458572388e-05,
+        "maxSeconds": 1.2479722499847412e-06
+      },
+      {
+        "name": "copy:parkour_solver.movement.program:movement_choice:74",
+        "calls": 69,
+        "inclusiveSeconds": 6.458908319473267e-05,
+        "selfSeconds": 6.458908319473267e-05,
+        "maxSeconds": 1.2069940567016602e-06
+      },
+      {
+        "name": "copy:parkour_solver.movement.program:_events:102",
+        "calls": 69,
+        "inclusiveSeconds": 6.138905882835388e-05,
+        "selfSeconds": 6.138905882835388e-05,
+        "maxSeconds": 1.084059476852417e-06
+      },
+      {
+        "name": "copy:parkour_solver.search.repair:solve_contact_branches:71",
+        "calls": 14,
+        "inclusiveSeconds": 5.696341395378113e-05,
+        "selfSeconds": 5.696341395378113e-05,
+        "maxSeconds": 4.337728023529053e-05
+      },
+      {
+        "name": "copy:parkour_solver.scene.geometry:normalize_geometry:60",
+        "calls": 28,
+        "inclusiveSeconds": 5.4210424423217773e-05,
+        "selfSeconds": 5.4210424423217773e-05,
+        "maxSeconds": 3.7103891372680664e-06
+      },
+      {
+        "name": "copy:parkour_solver.movement.generation:propose_choices:49",
+        "calls": 80,
+        "inclusiveSeconds": 4.9483031034469604e-05,
+        "selfSeconds": 4.9483031034469604e-05,
+        "maxSeconds": 1.5012919902801514e-06
+      },
+      {
+        "name": "movement.source.create",
+        "calls": 12,
+        "inclusiveSeconds": 4.09446656703949e-05,
+        "selfSeconds": 4.09446656703949e-05,
+        "maxSeconds": 6.0014426708221436e-06
+      },
+      {
+        "name": "copy:parkour_solver.movement.normal:named_choice:46",
+        "calls": 4,
+        "inclusiveSeconds": 3.520399332046509e-05,
+        "selfSeconds": 3.520399332046509e-05,
+        "maxSeconds": 1.0583549737930298e-05
+      },
+      {
+        "name": "copy:parkour_solver.search.engine:evaluate_program:91",
+        "calls": 10,
+        "inclusiveSeconds": 3.2745301723480225e-05,
+        "selfSeconds": 3.2745301723480225e-05,
+        "maxSeconds": 8.042901754379272e-06
+      },
+      {
+        "name": "copy:parkour_solver.search.identity:solve_scope:27",
+        "calls": 21,
+        "inclusiveSeconds": 3.1132251024246216e-05,
+        "selfSeconds": 3.1132251024246216e-05,
+        "maxSeconds": 5.584210157394409e-06
+      },
+      {
+        "name": "copy:parkour_solver.movement.program:append_choice:156",
+        "calls": 4,
+        "inclusiveSeconds": 3.0077993869781494e-05,
+        "selfSeconds": 3.0077993869781494e-05,
+        "maxSeconds": 7.793307304382324e-06
+      },
+      {
+        "name": "copy:parkour_solver.search.ordered_route:search_allocations:121",
+        "calls": 26,
+        "inclusiveSeconds": 1.4107674360275269e-05,
+        "selfSeconds": 1.4107674360275269e-05,
+        "maxSeconds": 9.57399606704712e-07
+      },
+      {
+        "name": "movement.choices.create",
+        "calls": 14,
+        "inclusiveSeconds": 5.837529897689819e-06,
+        "selfSeconds": 5.837529897689819e-06,
+        "maxSeconds": 7.525086402893066e-07
+      },
+      {
+        "name": "movement.choices.close",
+        "calls": 14,
+        "inclusiveSeconds": 5.465000867843628e-06,
+        "selfSeconds": 5.465000867843628e-06,
+        "maxSeconds": 4.991888999938965e-07
+      },
+      {
+        "name": "copy:parkour_solver.search.anchors.policy:settings:17",
+        "calls": 1,
+        "inclusiveSeconds": 5.207955837249756e-06,
+        "selfSeconds": 5.207955837249756e-06,
+        "maxSeconds": 5.207955837249756e-06
+      },
+      {
+        "name": "copy:parkour_solver.search.events.engine:search_event_routes:79",
+        "calls": 1,
+        "inclusiveSeconds": 4.8764050006866455e-06,
+        "selfSeconds": 4.8764050006866455e-06,
+        "maxSeconds": 4.8764050006866455e-06
+      },
+      {
+        "name": "copy:parkour_solver.search.goals:goal_spec:16",
+        "calls": 2,
+        "inclusiveSeconds": 3.8370490074157715e-06,
+        "selfSeconds": 3.8370490074157715e-06,
+        "maxSeconds": 1.959502696990967e-06
+      }
+    ]
+  }
+]

@@ -1,0 +1,14 @@
+{
+  "passed": true,
+  "scalarFeasible": true,
+  "supports": true,
+  "geometry": {
+    "feasible": true,
+    "ticks": 64
+  },
+  "exactHorizontalReplay": true,
+  "ticks": 64,
+  "threshold": 0.0,
+  "objective": -1093.2675533415547,
+  "objectiveHasY": false
+}

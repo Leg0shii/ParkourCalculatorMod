@@ -1,0 +1,196 @@
+{
+  "summary": {
+    "ticks": 67,
+    "objective": -1093.823129063534,
+    "firstFullSolutionSeconds": 15.174375876784325,
+    "searchSeconds": 300.05522245913744,
+    "work": {
+      "solverCalls": 187,
+      "workerLaunches": 149,
+      "feasibleSeedReturns": 38,
+      "maxSolverCalls": 1024
+    },
+    "expandedPrefixes": 1057,
+    "termination": "deadline",
+    "runDeferrals": 296,
+    "runRestorations": 0,
+    "deferredNodes": 5,
+    "validatedWitnesses": 71,
+    "allReplaysPassed": true,
+    "sourceUnchanged": true
+  },
+  "sessions": 40,
+  "zeroWorkSessions": 0,
+  "wholeDfsResumeCopyCalls": 0,
+  "topSelfTimes": [
+    {
+      "site": "movement.source.next",
+      "seconds": 77.7613530792296,
+      "calls": 147
+    },
+    {
+      "site": "movement.choices.next",
+      "seconds": 40.90191314741969,
+      "calls": 12751
+    },
+    {
+      "site": "postrun.shared_report_write",
+      "seconds": 36.83964662626386,
+      "calls": 1
+    },
+    {
+      "site": "numerical.evaluate",
+      "seconds": 22.584696788340807,
+      "calls": 240
+    },
+    {
+      "site": "solver.invoke",
+      "seconds": 21.229232903569937,
+      "calls": 187
+    },
+    {
+      "site": "copy:standalone.autonomy.movement_composition:truncate_program:215",
+      "seconds": 20.590901289135218,
+      "calls": 7543
+    },
+    {
+      "site": "identity.digest",
+      "seconds": 16.734123166650534,
+      "calls": 3198440
+    },
+    {
+      "site": "copy:standalone.autonomy.block_contacts:snapshot:203",
+      "seconds": 15.417941123247147,
+      "calls": 1130
+    },
+    {
+      "site": "copy:standalone.autonomy.route:prepare_route:13",
+      "seconds": 11.11202071979642,
+      "calls": 19809
+    },
+    {
+      "site": "copy:standalone.autonomy.cell_routes.checkpoints:retain_prefix:92",
+      "seconds": 10.063084501773119,
+      "calls": 353
+    },
+    {
+      "site": "copy:standalone.autonomy.movement_composition:profile_from_trace:53",
+      "seconds": 8.387570630759,
+      "calls": 36338
+    },
+    {
+      "site": "copy:standalone.autonomy.contact_combinations:merge_contacts:25",
+      "seconds": 7.362939938902855,
+      "calls": 2057123
+    },
+    {
+      "site": "copy:standalone.autonomy.cell_routes.depth_first:search_goals:844",
+      "seconds": 6.53405025601387,
+      "calls": 80
+    },
+    {
+      "site": "copy:standalone.autonomy.block_search:compile_block_path:320",
+      "seconds": 5.898812595754862,
+      "calls": 9835
+    },
+    {
+      "site": "copy:standalone.autonomy.movement_composition:truncate_program:212",
+      "seconds": 4.727010305970907,
+      "calls": 5980
+    },
+    {
+      "site": "copy:standalone.autonomy.movement_frontier:persistent_programs:32",
+      "seconds": 4.1649820022284985,
+      "calls": 80
+    },
+    {
+      "site": "copy:standalone.autonomy.cell_routes.depth_first:score:584",
+      "seconds": 4.075021702796221,
+      "calls": 120
+    },
+    {
+      "site": "dfs.session",
+      "seconds": 2.6428790651261806,
+      "calls": 40
+    },
+    {
+      "site": "copy:standalone.autonomy.cell_routes.depth_first:search_goals:847",
+      "seconds": 2.3865285888314247,
+      "calls": 80
+    },
+    {
+      "site": "copy:standalone.autonomy.block_contacts:snapshot:193",
+      "seconds": 2.1393427699804306,
+      "calls": 3204
+    }
+  ],
+  "gcOverlappingSeconds": 36.22838716953993,
+  "scope": "Cold combined initial0/8; full supplied-scene replays. No executable replay or optimality proof.",
+  "finalLanding": {
+    "Y": 7,
+    "onGround": true,
+    "support": "b7"
+  },
+  "activeStack": [
+    {
+      "frame": 0,
+      "span": 0,
+      "phase": "select",
+      "target": "b2"
+    },
+    {
+      "frame": 1,
+      "span": 1,
+      "phase": "generate",
+      "target": "b3"
+    }
+  ],
+  "rootArrivals": [
+    17
+  ],
+  "rootPending": [
+    {
+      "T": 12,
+      "structure": {
+        "version": 2,
+        "valid": true,
+        "reason": null,
+        "source": "b1",
+        "target": "b2",
+        "spanStart": 0,
+        "preparationThrough": 12,
+        "preparationJumps": [
+          0
+        ],
+        "transferJumps": [],
+        "arrival": null
+      }
+    },
+    {
+      "T": 20,
+      "structure": {
+        "version": 2,
+        "valid": true,
+        "reason": null,
+        "source": "b1",
+        "target": "b2",
+        "spanStart": 0,
+        "preparationThrough": 20,
+        "preparationJumps": [
+          8
+        ],
+        "transferJumps": [],
+        "arrival": null
+      }
+    }
+  ],
+  "generationExclusionReasons": {
+    "elapsed_inputs_exceed_incumbent_finish": 3975,
+    "linear_control_relaxation_infeasible": 2,
+    "extra_runs_before_latest_jump": 296,
+    "optimistic_remaining_time_exceeds_incumbent": 3101,
+    "required_interaction_unreachable": 2028
+  },
+  "directTimeExclusions": 0,
+  "conclusion": "Initial0 setup is retained and structurally eligible, but the 300s combined run remains inside the initial8 subtree. No T64 discovery or optimality claim."
+}

@@ -1,0 +1,133 @@
+{
+  "kind": "offline_row_accounting",
+  "numericalSolves": 0,
+  "currentProblemHash": "f05d5e3a788472261d5511a15cdbb452089e3d7775a576073ce84e19fc24331b",
+  "priorCombinedProblemHash": "f05d5e3a788472261d5511a15cdbb452089e3d7775a576073ce84e19fc24331b",
+  "semanticRowKey": [
+    "mode",
+    "t1",
+    "t2",
+    "op_default_PLUS",
+    "cmp",
+    "rhs"
+  ],
+  "provenanceNamesExcludedFromSemanticKey": true,
+  "strongestBoundMethod": "Only simple X/Z bounds occur in these requests: keep max GE and min LE for each axis/tick.",
+  "requests": {
+    "current8": {
+      "ticks": 67,
+      "groundRunInputs": 15,
+      "effectiveJumps": 5,
+      "rawRows": 278,
+      "categories": {
+        "Initial bounds": 8,
+        "Obstacle avoidance": 16,
+        "Normal support/landing": 80,
+        "Spatial landing-goal bounds": 16,
+        "Finite-contact footprint": 156,
+        "Virtual finish": 2
+      },
+      "exactUniqueRows": 114,
+      "exactDuplicateEntries": 164,
+      "directBoundsAfterTightestPerForm": 91,
+      "categoriesUnique": {
+        "Initial bounds": 4,
+        "Obstacle avoidance": 12,
+        "Normal support/landing": 80,
+        "Spatial landing-goal bounds": 16,
+        "Finite-contact footprint": 80,
+        "Virtual finish": 2
+      },
+      "contactEvents": 20,
+      "normalSupportInputOffsets": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        17,
+        18,
+        28,
+        29,
+        40,
+        41,
+        42
+      ]
+    },
+    "previous8": {
+      "ticks": 67,
+      "groundRunInputs": 15,
+      "effectiveJumps": 5,
+      "rawRows": 278,
+      "categories": {
+        "Initial bounds": 8,
+        "Obstacle avoidance": 16,
+        "Normal support/landing": 80,
+        "Spatial landing-goal bounds": 16,
+        "Finite-contact footprint": 156,
+        "Virtual finish": 2
+      },
+      "exactUniqueRows": 114,
+      "exactDuplicateEntries": 164,
+      "directBoundsAfterTightestPerForm": 91,
+      "categoriesUnique": {
+        "Initial bounds": 4,
+        "Obstacle avoidance": 12,
+        "Normal support/landing": 80,
+        "Spatial landing-goal bounds": 16,
+        "Finite-contact footprint": 80,
+        "Virtual finish": 2
+      },
+      "contactEvents": 20,
+      "normalSupportInputOffsets": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        17,
+        18,
+        28,
+        29,
+        40,
+        41,
+        42
+      ]
+    },
+    "previous0": {
+      "ticks": 64,
+      "groundRunInputs": 0,
+      "effectiveJumps": 6,
+      "rawRows": 112,
+      "categories": {
+        "Initial bounds": 8,
+        "Obstacle avoidance": 16,
+        "Corridor repair": 2,
+        "Normal support/landing": 24,
+        "Spatial landing-goal bounds": 16,
+        "Finite-contact footprint": 44,
+        "Virtual finish": 2
+      },
+      "exactUniqueRows": 60,
+      "exactDuplicateEntries": 52,
+      "directBoundsAfterTightestPerForm": 41,
+      "categoriesUnique": {
+        "Initial bounds": 4,
+        "Obstacle avoidance": 12,
+        "Corridor repair": 2,
+        "Normal support/landing": 24,
+        "Spatial landing-goal bounds": 16,
+        "Finite-contact footprint": 24,
+        "Virtual finish": 2
+      },
+      "contactEvents": 6,
+      "normalSupportInputOffsets": []
+    }
+  }
+}

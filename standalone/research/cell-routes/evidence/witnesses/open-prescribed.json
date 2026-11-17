@@ -1,0 +1,1617 @@
+{
+  "best": {
+    "allocation": [
+      0
+    ],
+    "cost": 0,
+    "candidate": {
+      "feasible": true,
+      "violation": 0.0,
+      "worstConstraint": null,
+      "objective": 4.385033235229957,
+      "missedContacts": [],
+      "wrongSideContacts": [],
+      "patternMismatches": [],
+      "yaw": [
+        -90.0,
+        -45.0,
+        -45.0,
+        -45.0,
+        -45.0,
+        -45.0,
+        -45.0,
+        -45.0,
+        -45.0,
+        -45.0,
+        -45.0,
+        -45.0
+      ],
+      "positions": [
+        [
+          0.5,
+          0.5
+        ],
+        [
+          1.0273999840021133,
+          0.5
+        ],
+        [
+          1.3413604070684708,
+          0.5
+        ],
+        [
+          1.6530643986466398,
+          0.5
+        ],
+        [
+          1.9627150375113798,
+          0.5
+        ],
+        [
+          2.270497125353048,
+          0.5
+        ],
+        [
+          2.5765788317147167,
+          0.5
+        ],
+        [
+          2.881113190884991,
+          0.5
+        ],
+        [
+          3.1842394640705156,
+          0.5
+        ],
+        [
+          3.48608437897299,
+          0.5
+        ],
+        [
+          3.786763257804283,
+          0.5
+        ],
+        [
+          4.086381043780221,
+          0.5
+        ],
+        [
+          4.385033235229957,
+          0.5
+        ]
+      ],
+      "velocity": [
+        [
+          0.2,
+          0
+        ],
+        [
+          0.2879604247125138,
+          0.0
+        ],
+        [
+          0.28570399322432516,
+          0.0
+        ],
+        [
+          0.2836506405108962,
+          0.0
+        ],
+        [
+          0.28178208948782457,
+          0.0
+        ],
+        [
+          0.28008170800782467,
+          0.0
+        ],
+        [
+          0.27853436081643046,
+          0.0
+        ],
+        [
+          0.27712627483168095,
+          0.0
+        ],
+        [
+          0.27584491654863036,
+          0.0
+        ],
+        [
+          0.27467888047744937,
+          0.0
+        ],
+        [
+          0.27361778762209416,
+          0.0
+        ],
+        [
+          0.27265219309589267,
+          0.0
+        ],
+        [
+          0.27177350205172557,
+          0.0
+        ]
+      ],
+      "movementMismatches": [],
+      "horizontalCollision": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "y": [
+        1,
+        1.4199999868869781,
+        1.7531999805212017,
+        2.0013359791121474,
+        2.1661092609382138,
+        2.249187078744681,
+        2.249187078744681,
+        2.1707870772188023,
+        2.0155550727022007,
+        1.7850277037892366,
+        1.4807108763316923,
+        1.104080378093037,
+        1
+      ],
+      "vy": [
+        -0.0784000015258789,
+        0.33319999363422365,
+        0.24813599859094576,
+        0.16477328182606651,
+        0.08307781780646721,
+        0.0030162615090425808,
+        -0.0784000015258789,
+        -0.1552320045166016,
+        -0.230527368912964,
+        -0.30431682745754424,
+        -0.37663049823865513,
+        -0.44749789698341763,
+        -0.0784000015258789
+      ],
+      "onGround": [
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true
+      ],
+      "verticalFailures": [],
+      "resume": {
+        "y": 1,
+        "vy": -0.0784000015258789,
+        "onGround": true,
+        "previousHorizontalCollision": false
+      },
+      "rawMovement": [
+        [
+          0.5273999840021133,
+          0.0
+        ],
+        [
+          0.3139604230663576,
+          0.0
+        ],
+        [
+          0.3117039915781689,
+          0.0
+        ],
+        [
+          0.30965063886474,
+          0.0
+        ],
+        [
+          0.30778208784166833,
+          0.0
+        ],
+        [
+          0.3060817063616684,
+          0.0
+        ],
+        [
+          0.3045343591702742,
+          0.0
+        ],
+        [
+          0.3031262731855247,
+          0.0
+        ],
+        [
+          0.3018449149024741,
+          0.0
+        ],
+        [
+          0.30067887883129313,
+          0.0
+        ],
+        [
+          0.2996177859759379,
+          0.0
+        ],
+        [
+          0.2986521914497364,
+          0.0
+        ]
+      ],
+      "movement": {
+        "profile": "minecraft-1.8.9",
+        "compiler": "mod-input-state-v1",
+        "horizontalCollision": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "ground": [
+          true,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "sprinting": [
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true
+        ],
+        "airSprinting": [
+          false,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true
+        ],
+        "moveForward": [
+          0.98,
+          0.98,
+          0.98,
+          0.98,
+          0.98,
+          0.98,
+          0.98,
+          0.98,
+          0.98,
+          0.98,
+          0.98,
+          0.98
+        ],
+        "moveStrafe": [
+          0.0,
+          0.98,
+          0.98,
+          0.98,
+          0.98,
+          0.98,
+          0.98,
+          0.98,
+          0.98,
+          0.98,
+          0.98,
+          0.98
+        ]
+      },
+      "friction": [
+        0.546000063419342,
+        0.9100000262260437,
+        0.9100000262260437,
+        0.9100000262260437,
+        0.9100000262260437,
+        0.9100000262260437,
+        0.9100000262260437,
+        0.9100000262260437,
+        0.9100000262260437,
+        0.9100000262260437,
+        0.9100000262260437,
+        0.9100000262260437
+      ]
+    },
+    "problemHash": "438caaa06fe3f54b26fc7cef08241618f71110d3b2dee9c7c10b09c0dc1f120f",
+    "plan": {
+      "ticks": 12,
+      "grounded": [
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "jump": [
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "events": [
+        {
+          "leg": 0,
+          "landed": 0,
+          "jump": 0,
+          "landing": 12,
+          "runTicks": 0,
+          "kind": "movement"
+        }
+      ],
+      "supportChecks": [
+        [
+          0,
+          0,
+          "initial"
+        ],
+        [
+          11,
+          1,
+          "landing"
+        ]
+      ],
+      "exitChecks": [],
+      "walls": [
+        {
+          "mode": "X",
+          "t1": 0,
+          "cmp": "GE",
+          "rhs": -0.29999901192092887,
+          "name": "initial:0:X:lo"
+        },
+        {
+          "mode": "X",
+          "t1": 0,
+          "cmp": "LE",
+          "rhs": 1.2999990119209286,
+          "name": "initial:0:X:hi"
+        },
+        {
+          "mode": "Z",
+          "t1": 0,
+          "cmp": "GE",
+          "rhs": -0.29999901192092887,
+          "name": "initial:0:Z:lo"
+        },
+        {
+          "mode": "Z",
+          "t1": 0,
+          "cmp": "LE",
+          "rhs": 1.2999990119209286,
+          "name": "initial:0:Z:hi"
+        },
+        {
+          "mode": "X",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": 2.700000988079072,
+          "name": "landing:1:X:lo"
+        },
+        {
+          "mode": "X",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": 4.299999011920927,
+          "name": "landing:1:X:hi"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": -0.29999901192092887,
+          "name": "landing:1:Z:lo"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": 1.2999990119209286,
+          "name": "landing:1:Z:hi"
+        },
+        {
+          "mode": "X",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": 2.700000988079071,
+          "name": "normal:landing"
+        },
+        {
+          "mode": "X",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": 4.299999011920929,
+          "name": "normal:landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": -0.299999011920929,
+          "name": "normal:landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": 1.299999011920929,
+          "name": "normal:landing"
+        },
+        {
+          "mode": "X",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": 2.700000988079071,
+          "name": "contact:finite_lo"
+        },
+        {
+          "mode": "X",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": 4.299999011920929,
+          "name": "contact:finite_hi"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": -0.299999011920929,
+          "name": "contact:finite_lo"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": 1.299999011920929,
+          "name": "contact:finite_hi"
+        }
+      ],
+      "allocation": [
+        0
+      ],
+      "stage": "jump",
+      "passageFailures": [],
+      "contacts": [],
+      "sceneContacts": [
+        {
+          "state": 12,
+          "axis": 1,
+          "plane": 1,
+          "direction": -1,
+          "box": [
+            3,
+            0,
+            0,
+            4,
+            1,
+            1
+          ]
+        }
+      ],
+      "verticalContacts": [
+        {
+          "state": 12,
+          "plane": 1,
+          "direction": -1,
+          "axis": 1
+        }
+      ],
+      "movementUnits": [
+        {
+          "type": "normal",
+          "start": 0,
+          "end": 12,
+          "jumpInputs": [
+            0
+          ],
+          "groundedInputs": [
+            0
+          ],
+          "sneakInputs": []
+        }
+      ],
+      "movementComposition": true,
+      "vertical": {
+        "profile": "minecraft-1.8.9",
+        "position": 1,
+        "velocity": -0.0784000015258789,
+        "onGround": true,
+        "previousHorizontalCollision": false,
+        "threshold": 0.005,
+        "jumpVelocity": [
+          0.41999998688697815,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "sneak": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "contacts": [
+          {
+            "state": 12,
+            "direction": -1,
+            "plane": 1
+          }
+        ],
+        "referencePosition": [
+          1,
+          1.4199999868869781,
+          1.7531999805212017,
+          2.0013359791121474,
+          2.1661092609382138,
+          2.249187078744681,
+          2.249187078744681,
+          2.1707870772188023,
+          2.0155550727022007,
+          1.7850277037892366,
+          1.4807108763316923,
+          1.104080378093037,
+          1
+        ],
+        "referenceVelocity": [
+          -0.0784000015258789,
+          0.33319999363422365,
+          0.24813599859094576,
+          0.16477328182606651,
+          0.08307781780646721,
+          0.0030162615090425808,
+          -0.0784000015258789,
+          -0.1552320045166016,
+          -0.230527368912964,
+          -0.30431682745754424,
+          -0.37663049823865513,
+          -0.44749789698341763,
+          -0.0784000015258789
+        ]
+      }
+    },
+    "groundRunTicks": 0,
+    "route": {
+      "version": 1,
+      "initial": {
+        "position": [
+          0.5,
+          1,
+          0.5
+        ],
+        "velocity": [
+          0.2,
+          -0.0784000015258789,
+          0
+        ],
+        "yaw": -90
+      },
+      "blocks": [
+        {
+          "id": "start@0",
+          "bounds": [
+            0,
+            1,
+            0,
+            1
+          ],
+          "top": 1,
+          "_derivedFootprint": [
+            -0.3000000119209289,
+            1.3000000119209287,
+            -0.3000000119209289,
+            1.3000000119209287
+          ]
+        },
+        {
+          "id": "goal@1",
+          "bounds": [
+            3,
+            4,
+            0,
+            1
+          ],
+          "top": 1,
+          "_derivedFootprint": [
+            2.6999999880790715,
+            4.300000011920928,
+            -0.3000000119209289,
+            1.3000000119209287
+          ]
+        }
+      ],
+      "inputs": {
+        "sprint": true,
+        "force45": true,
+        "forward": 0.9800000190734863,
+        "strafe": 0.0,
+        "incomingSprint": false
+      },
+      "objective": {
+        "axis": "X",
+        "sense": "MAX"
+      },
+      "airtimes": [
+        12
+      ],
+      "kinds": [
+        "movement"
+      ],
+      "landingPhases": [
+        "pre"
+      ],
+      "contactEntries": [
+        null
+      ],
+      "walkOffExits": [
+        null
+      ],
+      "maxTotalRunTicks": 0,
+      "runBounds": [
+        [
+          0,
+          0
+        ]
+      ],
+      "supportClearance": 1e-06,
+      "constraints": [],
+      "passageCaps": {
+        "horizontal": 2,
+        "vertical": 2,
+        "total": 3
+      },
+      "passages": [],
+      "hitEvents": [],
+      "ceilingEvents": [],
+      "ladderEvents": [],
+      "movementUnits": [
+        [
+          {
+            "type": "normal",
+            "start": 0,
+            "end": 12,
+            "jumpInputs": [
+              0
+            ],
+            "groundedInputs": [
+              0
+            ],
+            "sneakInputs": []
+          }
+        ]
+      ],
+      "contactEvents": [
+        {
+          "leg": 0,
+          "offset": 11,
+          "axis": "Y",
+          "direction": -1,
+          "plane": 1,
+          "box": [
+            3,
+            0,
+            0,
+            4,
+            1,
+            1
+          ],
+          "role": "landing"
+        }
+      ],
+      "profileDerivation": {
+        "kind": "selected_height_profiles",
+        "suppliedAirtimes": false,
+        "verticalModel": "standalone.ipopt.ladder",
+        "solidSideFaces": false
+      },
+      "sharedMovement": true,
+      "verticalProfiles": [
+        {
+          "airtime": 12,
+          "position": [
+            1,
+            1.4199999868869781,
+            1.7531999805212017,
+            2.0013359791121474,
+            2.1661092609382138,
+            2.249187078744681,
+            2.249187078744681,
+            2.1707870772188023,
+            2.0155550727022007,
+            1.7850277037892366,
+            1.4807108763316923,
+            1.104080378093037,
+            1
+          ],
+          "velocity": [
+            -0.0784000015258789,
+            0.33319999363422365,
+            0.24813599859094576,
+            0.16477328182606651,
+            0.08307781780646721,
+            0.0030162615090425808,
+            -0.0784000015258789,
+            -0.1552320045166016,
+            -0.230527368912964,
+            -0.30431682745754424,
+            -0.37663049823865513,
+            -0.44749789698341763,
+            -0.0784000015258789
+          ],
+          "grounded": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true
+          ],
+          "jump": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "sneak": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "ladderTicks": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "contacts": [
+            {
+              "state": 12,
+              "direction": -1,
+              "plane": 1
+            }
+          ],
+          "contactEvents": [
+            {
+              "leg": 0,
+              "offset": 11,
+              "axis": "Y",
+              "direction": -1,
+              "plane": 1,
+              "box": [
+                3,
+                0,
+                0,
+                4,
+                1,
+                1
+              ],
+              "role": "landing"
+            }
+          ],
+          "caseEvents": [],
+          "positionConstraints": [
+            {
+              "mode": "X",
+              "t1": 11,
+              "cmp": "GE",
+              "rhs": 2.700000988079071,
+              "name": "normal:landing"
+            },
+            {
+              "mode": "X",
+              "t1": 11,
+              "cmp": "LE",
+              "rhs": 4.299999011920929,
+              "name": "normal:landing"
+            },
+            {
+              "mode": "Z",
+              "t1": 11,
+              "cmp": "GE",
+              "rhs": -0.299999011920929,
+              "name": "normal:landing"
+            },
+            {
+              "mode": "Z",
+              "t1": 11,
+              "cmp": "LE",
+              "rhs": 1.299999011920929,
+              "name": "normal:landing"
+            }
+          ],
+          "landingPhase": "pre",
+          "composition": "movement_program",
+          "generatedUnits": [
+            {
+              "type": "normal",
+              "start": 0,
+              "end": 12,
+              "jumpInputs": [
+                0
+              ],
+              "groundedInputs": [
+                0
+              ],
+              "sneakInputs": []
+            }
+          ],
+          "sourceBlock": "start@0",
+          "targetBlock": "goal@1",
+          "profileKind": "movement"
+        }
+      ]
+    },
+    "corridorCheck": {
+      "accepted": true,
+      "signature": [],
+      "validation": "horizontal_corridor_and_ordered_gate_crossings"
+    },
+    "geometryCheck": {
+      "feasible": true,
+      "ticks": 12
+    },
+    "profiles": [
+      {
+        "airtime": 12,
+        "position": [
+          1,
+          1.4199999868869781,
+          1.7531999805212017,
+          2.0013359791121474,
+          2.1661092609382138,
+          2.249187078744681,
+          2.249187078744681,
+          2.1707870772188023,
+          2.0155550727022007,
+          1.7850277037892366,
+          1.4807108763316923,
+          1.104080378093037,
+          1
+        ],
+        "velocity": [
+          -0.0784000015258789,
+          0.33319999363422365,
+          0.24813599859094576,
+          0.16477328182606651,
+          0.08307781780646721,
+          0.0030162615090425808,
+          -0.0784000015258789,
+          -0.1552320045166016,
+          -0.230527368912964,
+          -0.30431682745754424,
+          -0.37663049823865513,
+          -0.44749789698341763,
+          -0.0784000015258789
+        ],
+        "grounded": [
+          true,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          true
+        ],
+        "jump": [
+          true,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "sneak": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "ladderTicks": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "contacts": [
+          {
+            "state": 12,
+            "direction": -1,
+            "plane": 1
+          }
+        ],
+        "contactEvents": [
+          {
+            "leg": 0,
+            "offset": 11,
+            "axis": "Y",
+            "direction": -1,
+            "plane": 1,
+            "box": [
+              3,
+              0,
+              0,
+              4,
+              1,
+              1
+            ],
+            "role": "landing"
+          }
+        ],
+        "caseEvents": [],
+        "positionConstraints": [
+          {
+            "mode": "X",
+            "t1": 11,
+            "cmp": "GE",
+            "rhs": 2.700000988079071,
+            "name": "normal:landing"
+          },
+          {
+            "mode": "X",
+            "t1": 11,
+            "cmp": "LE",
+            "rhs": 4.299999011920929,
+            "name": "normal:landing"
+          },
+          {
+            "mode": "Z",
+            "t1": 11,
+            "cmp": "GE",
+            "rhs": -0.299999011920929,
+            "name": "normal:landing"
+          },
+          {
+            "mode": "Z",
+            "t1": 11,
+            "cmp": "LE",
+            "rhs": 1.299999011920929,
+            "name": "normal:landing"
+          }
+        ],
+        "landingPhase": "pre",
+        "composition": "movement_program",
+        "generatedUnits": [
+          {
+            "type": "normal",
+            "start": 0,
+            "end": 12,
+            "jumpInputs": [
+              0
+            ],
+            "groundedInputs": [
+              0
+            ],
+            "sneakInputs": []
+          }
+        ],
+        "sourceBlock": "start@0",
+        "targetBlock": "goal@1",
+        "profileKind": "movement"
+      }
+    ],
+    "contactChecks": [],
+    "passages": [],
+    "hitEvents": [],
+    "ceilingEvents": [],
+    "blockageTimeline": [],
+    "blockageUsage": [],
+    "vertical": {
+      "profile": "minecraft-1.8.9",
+      "position": 1,
+      "velocity": -0.0784000015258789,
+      "onGround": true,
+      "previousHorizontalCollision": false,
+      "threshold": 0.005,
+      "jumpVelocity": [
+        0.41999998688697815,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "sneak": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "contacts": [
+        {
+          "state": 12,
+          "direction": -1,
+          "plane": 1
+        }
+      ]
+    },
+    "movementProgram": {
+      "initial": {
+        "position": 1,
+        "velocity": -0.0784000015258789,
+        "onGround": true,
+        "previousHorizontalCollision": false
+      },
+      "profile": {
+        "airtime": 12,
+        "position": [
+          1,
+          1.4199999868869781,
+          1.7531999805212017,
+          2.0013359791121474,
+          2.1661092609382138,
+          2.249187078744681,
+          2.249187078744681,
+          2.1707870772188023,
+          2.0155550727022007,
+          1.7850277037892366,
+          1.4807108763316923,
+          1.104080378093037,
+          1
+        ],
+        "velocity": [
+          -0.0784000015258789,
+          0.33319999363422365,
+          0.24813599859094576,
+          0.16477328182606651,
+          0.08307781780646721,
+          0.0030162615090425808,
+          -0.0784000015258789,
+          -0.1552320045166016,
+          -0.230527368912964,
+          -0.30431682745754424,
+          -0.37663049823865513,
+          -0.44749789698341763,
+          -0.0784000015258789
+        ],
+        "grounded": [
+          true,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          true
+        ],
+        "jump": [
+          true,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "sneak": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "ladderTicks": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "contacts": [
+          {
+            "state": 12,
+            "direction": -1,
+            "plane": 1
+          }
+        ],
+        "contactEvents": [
+          {
+            "leg": 0,
+            "offset": 11,
+            "axis": "Y",
+            "direction": -1,
+            "plane": 1,
+            "box": [
+              3,
+              0,
+              0,
+              4,
+              1,
+              1
+            ],
+            "role": "landing"
+          }
+        ],
+        "caseEvents": [],
+        "positionConstraints": [
+          {
+            "mode": "X",
+            "t1": 11,
+            "cmp": "GE",
+            "rhs": 2.700000988079071,
+            "name": "normal:landing"
+          },
+          {
+            "mode": "X",
+            "t1": 11,
+            "cmp": "LE",
+            "rhs": 4.299999011920929,
+            "name": "normal:landing"
+          },
+          {
+            "mode": "Z",
+            "t1": 11,
+            "cmp": "GE",
+            "rhs": -0.299999011920929,
+            "name": "normal:landing"
+          },
+          {
+            "mode": "Z",
+            "t1": 11,
+            "cmp": "LE",
+            "rhs": 1.299999011920929,
+            "name": "normal:landing"
+          }
+        ],
+        "landingPhase": "pre",
+        "composition": "movement_program",
+        "generatedUnits": [
+          {
+            "type": "normal",
+            "start": 0,
+            "end": 12,
+            "jumpInputs": [
+              0
+            ],
+            "groundedInputs": [
+              0
+            ],
+            "sneakInputs": []
+          }
+        ]
+      },
+      "ladderEvents": [],
+      "movementUnits": [
+        {
+          "type": "normal",
+          "start": 0,
+          "end": 12,
+          "jumpInputs": [
+            0
+          ],
+          "groundedInputs": [
+            0
+          ],
+          "sneakInputs": []
+        }
+      ],
+      "terminal": "landed",
+      "terminalSupport": "goal",
+      "interactions": 0,
+      "trace": {
+        "status": "landed",
+        "ticks": 12,
+        "position": [
+          1,
+          1.4199999868869781,
+          1.7531999805212017,
+          2.0013359791121474,
+          2.1661092609382138,
+          2.249187078744681,
+          2.249187078744681,
+          2.1707870772188023,
+          2.0155550727022007,
+          1.7850277037892366,
+          1.4807108763316923,
+          1.104080378093037,
+          1
+        ],
+        "velocity": [
+          -0.0784000015258789,
+          0.33319999363422365,
+          0.24813599859094576,
+          0.16477328182606651,
+          0.08307781780646721,
+          0.0030162615090425808,
+          -0.0784000015258789,
+          -0.1552320045166016,
+          -0.230527368912964,
+          -0.30431682745754424,
+          -0.37663049823865513,
+          -0.44749789698341763,
+          -0.0784000015258789
+        ],
+        "onGround": [
+          true,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          true
+        ],
+        "movement": [
+          0.41999998688697815,
+          0.33319999363422365,
+          0.24813599859094576,
+          0.16477328182606651,
+          0.08307781780646721,
+          0.0,
+          -0.0784000015258789,
+          -0.1552320045166016,
+          -0.230527368912964,
+          -0.30431682745754424,
+          -0.37663049823865513,
+          0.0
+        ],
+        "climbRefreshed": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "failures": [],
+        "vertical": {
+          "profile": "minecraft-1.8.9",
+          "position": 1,
+          "velocity": -0.0784000015258789,
+          "onGround": true,
+          "previousHorizontalCollision": false,
+          "threshold": 0.005,
+          "jumpVelocity": [
+            0.41999998688697815,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "sneak": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "contacts": [
+            {
+              "state": 12,
+              "direction": -1,
+              "plane": 1
+            }
+          ]
+        },
+        "ladderTicks": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "sneak": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "hit": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "resume": {
+          "position": 1,
+          "velocity": -0.0784000015258789,
+          "onGround": true,
+          "previousHorizontalCollision": false,
+          "onLadder": false
+        }
+      }
+    },
+    "blockIds": [
+      "start",
+      "goal"
+    ]
+  },
+  "request": {
+    "version": 1,
+    "sceneModel": "collision_boxes",
+    "geometryBounds": [
+      -5,
+      -5,
+      -5,
+      15,
+      12,
+      10
+    ],
+    "initial": {
+      "position": [
+        0.5,
+        1,
+        0.5
+      ],
+      "velocity": [
+        0.2,
+        -0.0784000015258789,
+        0
+      ],
+      "yaw": -90
+    },
+    "startBlock": "start",
+    "goalBlock": "goal",
+    "blocks": [
+      {
+        "id": "start",
+        "boxes": [
+          [
+            0,
+            0,
+            0,
+            1,
+            1,
+            1
+          ]
+        ]
+      },
+      {
+        "id": "goal",
+        "boxes": [
+          [
+            3,
+            0,
+            0,
+            4,
+            1,
+            1
+          ]
+        ]
+      }
+    ],
+    "maxTotalRunTicks": 0,
+    "maxRunTicksPerJump": 0,
+    "maxWallHits": 0,
+    "maxContactCombinations": 0,
+    "movementSearch": {
+      "types": [
+        "normal"
+      ],
+      "maxInputs": 25,
+      "maxPrefixes": 64,
+      "maxQueuedPrefixes": 128,
+      "maxChoicesPerType": 16
+    }
+  },
+  "provenance": {
+    "case": "open",
+    "arm": "prescribed",
+    "rawFile": "prescribed-10-0.json",
+    "originalColdDiscovery": true,
+    "independentlyReplayed": true,
+    "validation": "scalar_support_vertical_and_shared_scene"
+  }
+}

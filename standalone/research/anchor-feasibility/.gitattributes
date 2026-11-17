@@ -1,0 +1,4 @@
+# Preserve generated vectors and literal captured patches/logs byte-for-byte.
+*.svg -whitespace
+*.patch -whitespace
+*.log -whitespace

@@ -1,0 +1,192 @@
+{
+  "version": 1,
+  "initial": {
+    "position": [
+      730.2991941150847,
+      6.0,
+      -1096.1217528009352
+    ],
+    "velocity": [
+      -0.2316088879874257,
+      -0.0784000015258789,
+      0.16217273785933922
+    ],
+    "yaw": 0
+  },
+  "blocks": [
+    {
+      "id": "source:55",
+      "centerBounds": [
+        729.6999999880792,
+        731.3000000119208,
+        -1096.3000000119207,
+        -1095.300000011921
+      ],
+      "top": 6.0
+    },
+    {
+      "id": "source:64",
+      "centerBounds": [
+        728.6999999880792,
+        729.6999999880791,
+        -1095.3000000119207,
+        -1093.6999999880793
+      ],
+      "top": 7.0
+    },
+    {
+      "id": "source:68",
+      "centerBounds": [
+        729.6999999880792,
+        731.3000000119208,
+        -1093.3000000119207,
+        -1091.6999999880793
+      ],
+      "top": 6.5
+    },
+    {
+      "id": "source:71",
+      "centerBounds": [
+        729.6999999880792,
+        731.3000000119208,
+        -1093.3000000119207,
+        -1091.6999999880793
+      ],
+      "top": 6.5
+    },
+    {
+      "id": "source:75",
+      "centerBounds": [
+        729.6999999880792,
+        731.3000000119208,
+        -1090.8000000119207,
+        -1090.300000011921
+      ],
+      "top": 7.0
+    },
+    {
+      "id": "source:77",
+      "centerBounds": [
+        731.6999999880792,
+        732.6999999880791,
+        -1090.3000000119207,
+        -1088.6999999880793
+      ],
+      "top": 7.5
+    },
+    {
+      "id": "source:80",
+      "centerBounds": [
+        732.6999999880792,
+        734.3000000119208,
+        -1090.3000000119207,
+        -1088.6999999880793
+      ],
+      "top": 8.0
+    }
+  ],
+  "airtimes": [
+    9,
+    4,
+    3,
+    4,
+    2,
+    2
+  ],
+  "kinds": [
+    "jump",
+    "walk_off",
+    "jump",
+    "jump",
+    "jump",
+    "jump"
+  ],
+  "walkOffExits": [
+    null,
+    {
+      "axis": "Z",
+      "direction": 1
+    },
+    null,
+    null,
+    null,
+    null
+  ],
+  "inputs": {
+    "force45": true,
+    "sprint": true,
+    "incomingSprint": true,
+    "forward": 0.9800000190734863,
+    "strafe": 0.0
+  },
+  "maxTotalRunTicks": 12,
+  "runBounds": [
+    [
+      0,
+      6
+    ],
+    [
+      0,
+      6
+    ],
+    [
+      0,
+      6
+    ],
+    [
+      0,
+      6
+    ],
+    [
+      0,
+      6
+    ],
+    [
+      0,
+      6
+    ]
+  ],
+  "source": {
+    "name": "Linkcraft 11",
+    "sha256": "af5d2d1bc6e0ab466f1b6cf309f3a26e76e4a63765ac8b15ff02fb4ad55d28bf",
+    "startState": 55,
+    "endState": 80,
+    "departures": [
+      55,
+      64,
+      68,
+      71,
+      75,
+      78
+    ],
+    "landings": [
+      64,
+      68,
+      71,
+      75,
+      77,
+      80
+    ],
+    "jumpIndices": [
+      5,
+      null,
+      6,
+      7,
+      8,
+      9
+    ],
+    "recordedAllocation": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      1
+    ],
+    "recordedFacingsUsed": false,
+    "authoredScalarRulesUsed": false,
+    "geometry": "authored landing center regions, no picked world geometry"
+  },
+  "supportClearance": 1e-06,
+  "constraints": []
+}

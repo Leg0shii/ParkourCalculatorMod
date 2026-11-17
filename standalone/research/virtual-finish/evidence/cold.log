@@ -1,0 +1,7 @@
+{"tick": 17, "scored": 2, "unknown": 0, "retained": 2, "generation": "consumer_closed", "progress": [-1102.8898339180987, -1102.4488628293168]}
+{"tick": 28, "scored": 1, "unknown": 1, "retained": 1, "generation": "consumer_closed", "progress": [-1100.7672073639212]}
+{"tick": 40, "scored": 1, "unknown": 0, "retained": 1, "generation": "consumer_closed", "progress": [-1099.9261022281637]}
+{"tick": 58, "scored": 1, "unknown": 1, "retained": 1, "generation": "consumer_closed", "progress": [-1095.8865473492967]}
+{"tick": 59, "scored": 1, "unknown": 1, "retained": 1, "generation": "consumer_closed", "progress": [-1095.5316503371057]}
+{"tick": 64, "scored": 1, "unknown": 5, "retained": 1, "generation": "consumer_closed", "progress": [-1095.3000010168403]}
+{"status": "feasible", "termination": "deadline", "elapsed": 312.71386620774865, "work": {"spatialGoalEvaluations": 13, "numericalProposals": 15, "solverCalls": 12, "acceptedBranches": 11, "terminalEvaluations": 2, "uniqueCompletePrograms": 0, "unitsByType": {}, "firstProposalSeconds": 2.4977901242673397, "firstAcceptedSeconds": 3.1291969157755375, "maxSolverCalls": 1024, "termination": "deadline"}, "position": [728.8506329602875, 7, -1093.8231291279697], "replays": 13}

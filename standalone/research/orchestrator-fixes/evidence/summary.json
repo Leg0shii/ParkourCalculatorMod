@@ -1,0 +1,200 @@
+{
+  "source": "e3d1087b2ab2e5f1d8ed2bf3d974b6548f624353",
+  "warm": {
+    "feasible": 35,
+    "total": 36,
+    "knownFeasible": 28,
+    "knownTotal": 28,
+    "objectiveRegressions": [],
+    "replays": 35
+  },
+  "windows": [
+    {
+      "name": "ceiling",
+      "repeat": 0,
+      "gap": 0.25,
+      "status": "feasible",
+      "termination": "exhausted",
+      "elapsedSeconds": 4.788199000060558,
+      "ticks": 13,
+      "objective": 4.075185600539984,
+      "calls": 27,
+      "firstAcceptedSeconds": 4.783982206135988,
+      "expandedPrefixes": 16,
+      "scoreComparisons": 12,
+      "checkpointUnknowns": 8,
+      "heuristicDrops": 17,
+      "checkpoints": [
+        11
+      ],
+      "retained": [
+        3
+      ],
+      "outsideBand": 10,
+      "scoredCapDrops": 0
+    },
+    {
+      "name": "grind-or-run",
+      "repeat": 0,
+      "gap": 0.25,
+      "status": "feasible",
+      "termination": "prefix_limit",
+      "elapsedSeconds": 5.394382499158382,
+      "ticks": 11,
+      "objective": 5.670999716917564,
+      "calls": 3,
+      "firstAcceptedSeconds": 0.6483485847711563,
+      "expandedPrefixes": 512,
+      "scoreComparisons": 0,
+      "checkpointUnknowns": 0,
+      "heuristicDrops": 0,
+      "checkpoints": [],
+      "retained": [],
+      "outsideBand": 0,
+      "scoredCapDrops": 0
+    },
+    {
+      "name": "multi-support",
+      "repeat": 0,
+      "gap": 0.25,
+      "status": "feasible",
+      "termination": "exhausted",
+      "elapsedSeconds": 5.474617999047041,
+      "ticks": 14,
+      "objective": 5.136175026980244,
+      "calls": 34,
+      "firstAcceptedSeconds": 4.977353293448687,
+      "expandedPrefixes": 57,
+      "scoreComparisons": 6,
+      "checkpointUnknowns": 17,
+      "heuristicDrops": 17,
+      "checkpoints": [
+        10,
+        16
+      ],
+      "retained": [
+        5,
+        1
+      ],
+      "outsideBand": 2,
+      "scoredCapDrops": 0
+    },
+    {
+      "name": "open",
+      "repeat": 0,
+      "gap": 0.25,
+      "status": "feasible",
+      "termination": "exhausted",
+      "elapsedSeconds": 3.832340497523546,
+      "ticks": 12,
+      "objective": 4.385033235229957,
+      "calls": 22,
+      "firstAcceptedSeconds": 3.69400879368186,
+      "expandedPrefixes": 18,
+      "scoreComparisons": 14,
+      "checkpointUnknowns": 5,
+      "heuristicDrops": 13,
+      "checkpoints": [
+        11
+      ],
+      "retained": [
+        6
+      ],
+      "outsideBand": 9,
+      "scoredCapDrops": 0
+    },
+    {
+      "name": "step-or-jump",
+      "repeat": 0,
+      "gap": 0.25,
+      "status": "feasible",
+      "termination": "exhausted",
+      "elapsedSeconds": 7.125989001244307,
+      "ticks": 14,
+      "objective": 5.8472345462747946,
+      "calls": 41,
+      "firstAcceptedSeconds": 6.886643290519714,
+      "expandedPrefixes": 64,
+      "scoreComparisons": 8,
+      "checkpointUnknowns": 12,
+      "heuristicDrops": 18,
+      "checkpoints": [
+        10
+      ],
+      "retained": [
+        2
+      ],
+      "outsideBand": 7,
+      "scoredCapDrops": 0
+    },
+    {
+      "name": "turn-blockage",
+      "repeat": 0,
+      "gap": 0.25,
+      "status": "feasible",
+      "termination": "exhausted",
+      "elapsedSeconds": 10.400828376412392,
+      "ticks": 13,
+      "objective": 3.397884131961054,
+      "calls": 75,
+      "firstAcceptedSeconds": 8.320306330919266,
+      "expandedPrefixes": 15,
+      "scoreComparisons": 4,
+      "checkpointUnknowns": 12,
+      "heuristicDrops": 12,
+      "checkpoints": [
+        10
+      ],
+      "retained": [
+        4
+      ],
+      "outsideBand": 1,
+      "scoredCapDrops": 0
+    }
+  ],
+  "windowReplays": 52,
+  "resume": [
+    {
+      "ticks": 12,
+      "mode": "restart",
+      "status": "unknown",
+      "calls": 12,
+      "replays": 0
+    },
+    {
+      "ticks": 12,
+      "mode": "resume",
+      "status": "feasible",
+      "calls": 7,
+      "replays": 1
+    },
+    {
+      "ticks": 12,
+      "mode": "single",
+      "status": "feasible",
+      "calls": 6,
+      "replays": 1
+    },
+    {
+      "ticks": 16,
+      "mode": "restart",
+      "status": "feasible",
+      "calls": 4,
+      "replays": 1
+    },
+    {
+      "ticks": 16,
+      "mode": "resume",
+      "status": "feasible",
+      "calls": 4,
+      "replays": 1
+    },
+    {
+      "ticks": 16,
+      "mode": "single",
+      "status": "feasible",
+      "calls": 12,
+      "replays": 1
+    }
+  ]
+}

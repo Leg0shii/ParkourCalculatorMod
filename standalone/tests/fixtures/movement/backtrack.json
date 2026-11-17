@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "initial": {"position": [0.5, 1, 0.5], "velocity": [0, -0.0784000015258789, 0], "yaw": -90},
+  "blocks": [
+    {"id": "start", "bounds": [0, 1, 0, 1], "top": 1},
+    {"id": "middle", "bounds": [3, 4, 0, 1], "top": 1},
+    {"id": "goal", "bounds": [8, 9, 0, 1], "top": 1}
+  ],
+  "airtimes": [12, 12],
+  "runBounds": [[0, 4], [0, 0]],
+  "maxTotalRunTicks": 4
+}

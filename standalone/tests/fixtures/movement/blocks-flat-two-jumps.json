@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "sceneModel": "open_air_supports",
+  "initial": {
+    "position": [0.5, 1, 0.5],
+    "velocity": [0, -0.0784000015258789, 0],
+    "yaw": 0
+  },
+  "blocks": [
+    {"id": "start", "bounds": [0, 1, 0, 1], "top": 1},
+    {"id": "middle", "bounds": [3, 4, 0, 1], "top": 1},
+    {"id": "goal", "bounds": [7, 8, 0, 1], "top": 1}
+  ],
+  "runBounds": [[0, 6], [0, 6]],
+  "maxTotalRunTicks": 8
+}

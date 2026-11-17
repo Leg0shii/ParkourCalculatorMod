@@ -1,0 +1,2993 @@
+{
+  "name": "both-stops",
+  "fixture": "fixtures/ladder-climbing-ceiling.json",
+  "fixtureSha256": "71b6a9ca26cd374e864f562f7e7e275ba133206a206bb6ad6aa2347b87ffac8e",
+  "beginningStop": true,
+  "endStop": true,
+  "problem": {
+    "magnitude": [
+      0.32739998400211334,
+      0.02599999835384377,
+      0.02599999835384377,
+      0.019999999341613214,
+      0.02599999835384377,
+      0.02599999835384377,
+      0.02599999835384377,
+      0.02599999835384377,
+      0.02599999835384377,
+      0.02599999835384377
+    ],
+    "friction": [
+      0.546000063419342,
+      0.9100000262260437,
+      0.9100000262260437,
+      0.9100000262260437,
+      0.9100000262260437,
+      0.9100000262260437,
+      0.9100000262260437,
+      0.9100000262260437,
+      0.9100000262260437,
+      0.9100000262260437
+    ],
+    "base": [
+      1.5707963267948966,
+      0.7853981633974483,
+      0.7853981633974483,
+      0.7853981633974483,
+      0.7853981633974483,
+      0.7853981633974483,
+      0.7853981633974483,
+      0.7853981633974483,
+      0.7853981633974483,
+      0.7853981633974483
+    ],
+    "movement": {
+      "profile": "minecraft-1.8.9",
+      "compiler": "mod-input-state-v1",
+      "horizontalCollision": [
+        false,
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "ground": [
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "sprinting": [
+        true,
+        true,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "airSprinting": [
+        false,
+        true,
+        true,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "moveForward": [
+        0.98,
+        0.98,
+        0.98,
+        0.98,
+        0.98,
+        0.98,
+        0.98,
+        0.98,
+        0.98,
+        0.98
+      ],
+      "moveStrafe": [
+        0.0,
+        0.98,
+        0.98,
+        0.98,
+        0.98,
+        0.98,
+        0.98,
+        0.98,
+        0.98,
+        0.98
+      ]
+    },
+    "vertical": {
+      "profile": "minecraft-1.8.9",
+      "position": 2,
+      "velocity": -0.0784000015258789,
+      "onGround": true,
+      "previousHorizontalCollision": false,
+      "threshold": 0.005,
+      "jumpVelocity": [
+        0.41999998688697815,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "sneak": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "contacts": [
+        {
+          "state": 1,
+          "plane": 2.200000047683716,
+          "direction": 1
+        },
+        {
+          "state": 10,
+          "direction": -1,
+          "plane": 1
+        }
+      ],
+      "referencePosition": [
+        2,
+        2.200000047683716,
+        2.121600046157837,
+        2.2392000484466554,
+        2.2760480514068604,
+        2.233759093484802,
+        2.1139159123887086,
+        1.9180695911028307,
+        1.6477401909813194,
+        1.3044173721802352,
+        1
+      ],
+      "referenceVelocity": [
+        -0.0784000015258789,
+        -0.0784000015258789,
+        0.11760000228881837,
+        0.03684800296020513,
+        -0.042288957922058,
+        -0.11984318109609361,
+        -0.19584632128587792,
+        -0.2703294001215114,
+        -0.34332281880108423,
+        -0.41485637049930457,
+        -0.0784000015258789
+      ]
+    },
+    "model": "FixedMovementCompiler:mod-input-state-v1:f057c0c",
+    "version": 1,
+    "ticks": 10,
+    "position": [
+      0.699999988079071,
+      0.55
+    ],
+    "velocity": [
+      0,
+      0.1
+    ],
+    "yaw": [
+      0.9976256342849829,
+      14.49661874705165,
+      97.85834567393242,
+      85.45637170816615,
+      79.58610196107908,
+      71.23447292773176,
+      56.82169080514354,
+      32.547311993400996,
+      0.5517252892569574,
+      -27.243530868535288
+    ],
+    "threshold": 0.005,
+    "walls": [
+      {
+        "mode": "X",
+        "t1": 0,
+        "cmp": "GE",
+        "rhs": -1.2999990119209286,
+        "name": "initial:0:X:lo",
+        "op": "PLUS"
+      },
+      {
+        "mode": "X",
+        "t1": 0,
+        "cmp": "LE",
+        "rhs": 1.2999990119209286,
+        "name": "initial:0:X:hi",
+        "op": "PLUS"
+      },
+      {
+        "mode": "Z",
+        "t1": 0,
+        "cmp": "GE",
+        "rhs": -0.7999990119209287,
+        "name": "initial:0:Z:lo",
+        "op": "PLUS"
+      },
+      {
+        "mode": "Z",
+        "t1": 0,
+        "cmp": "LE",
+        "rhs": 0.8499990119209287,
+        "name": "initial:0:Z:hi",
+        "op": "PLUS"
+      },
+      {
+        "mode": "X",
+        "t1": 9,
+        "cmp": "GE",
+        "rhs": -0.7999990119209287,
+        "name": "landing:1:X:lo",
+        "op": "PLUS"
+      },
+      {
+        "mode": "X",
+        "t1": 9,
+        "cmp": "LE",
+        "rhs": 1.2999990119209286,
+        "name": "landing:1:X:hi",
+        "op": "PLUS"
+      },
+      {
+        "mode": "Z",
+        "t1": 9,
+        "cmp": "GE",
+        "rhs": 0.7000009880790714,
+        "name": "landing:1:Z:lo",
+        "op": "PLUS"
+      },
+      {
+        "mode": "Z",
+        "t1": 9,
+        "cmp": "LE",
+        "rhs": 3.299999011920928,
+        "name": "landing:1:Z:hi",
+        "op": "PLUS"
+      },
+      {
+        "mode": "Z",
+        "t1": 2,
+        "cmp": "GE",
+        "rhs": 0.800001011920929,
+        "name": "blockage:2",
+        "op": "PLUS"
+      },
+      {
+        "mode": "Z",
+        "t1": 3,
+        "cmp": "GE",
+        "rhs": 0.800001011920929,
+        "name": "blockage:2",
+        "op": "PLUS"
+      },
+      {
+        "mode": "Z",
+        "t1": 4,
+        "cmp": "GE",
+        "rhs": 0.800001011920929,
+        "name": "blockage:2",
+        "op": "PLUS"
+      },
+      {
+        "mode": "Z",
+        "t1": 5,
+        "cmp": "GE",
+        "rhs": 0.800001011920929,
+        "name": "blockage:2",
+        "op": "PLUS"
+      },
+      {
+        "mode": "Z",
+        "t1": 6,
+        "cmp": "GE",
+        "rhs": 0.800001011920929,
+        "name": "blockage:2",
+        "op": "PLUS"
+      },
+      {
+        "mode": "Z",
+        "t1": 7,
+        "cmp": "GE",
+        "rhs": 0.800001011920929,
+        "name": "blockage:2",
+        "op": "PLUS"
+      },
+      {
+        "mode": "Z",
+        "t1": 8,
+        "cmp": "GE",
+        "rhs": 0.800001011920929,
+        "name": "blockage:2",
+        "op": "PLUS"
+      },
+      {
+        "mode": "Z",
+        "t1": 9,
+        "cmp": "GE",
+        "rhs": 0.800001011920929,
+        "name": "blockage:2",
+        "op": "PLUS"
+      },
+      {
+        "mode": "Z",
+        "t1": 10,
+        "cmp": "GE",
+        "rhs": 0.800001011920929,
+        "name": "blockage:2",
+        "op": "PLUS"
+      },
+      {
+        "mode": "X",
+        "t1": 0,
+        "cmp": "GE",
+        "rhs": 1e-06,
+        "name": "ladder:inside",
+        "op": "PLUS"
+      },
+      {
+        "mode": "X",
+        "t1": 0,
+        "cmp": "LE",
+        "rhs": 0.999999,
+        "name": "ladder:inside",
+        "op": "PLUS"
+      },
+      {
+        "mode": "Z",
+        "t1": 0,
+        "cmp": "GE",
+        "rhs": 1e-06,
+        "name": "ladder:inside",
+        "op": "PLUS"
+      },
+      {
+        "mode": "Z",
+        "t1": 0,
+        "cmp": "LE",
+        "rhs": 0.999999,
+        "name": "ladder:inside",
+        "op": "PLUS"
+      },
+      {
+        "mode": "X",
+        "t1": 0,
+        "cmp": "LE",
+        "rhs": 0.699999988079071,
+        "name": "ladder:wall_avoid",
+        "op": "PLUS"
+      },
+      {
+        "mode": "X",
+        "t1": 1,
+        "cmp": "GE",
+        "rhs": 1e-06,
+        "name": "ladder:inside",
+        "op": "PLUS"
+      },
+      {
+        "mode": "X",
+        "t1": 1,
+        "cmp": "LE",
+        "rhs": 0.999999,
+        "name": "ladder:inside",
+        "op": "PLUS"
+      },
+      {
+        "mode": "Z",
+        "t1": 1,
+        "cmp": "GE",
+        "rhs": 1e-06,
+        "name": "ladder:inside",
+        "op": "PLUS"
+      },
+      {
+        "mode": "Z",
+        "t1": 1,
+        "cmp": "LE",
+        "rhs": 0.999999,
+        "name": "ladder:inside",
+        "op": "PLUS"
+      },
+      {
+        "mode": "X",
+        "t1": 1,
+        "cmp": "LE",
+        "rhs": 0.699999988079071,
+        "name": "ladder:wall_avoid",
+        "op": "PLUS"
+      },
+      {
+        "mode": "X",
+        "t1": 2,
+        "cmp": "GE",
+        "rhs": 1e-06,
+        "name": "ladder:inside",
+        "op": "PLUS"
+      },
+      {
+        "mode": "X",
+        "t1": 2,
+        "cmp": "LE",
+        "rhs": 0.999999,
+        "name": "ladder:inside",
+        "op": "PLUS"
+      },
+      {
+        "mode": "Z",
+        "t1": 2,
+        "cmp": "GE",
+        "rhs": 1e-06,
+        "name": "ladder:inside",
+        "op": "PLUS"
+      },
+      {
+        "mode": "Z",
+        "t1": 2,
+        "cmp": "LE",
+        "rhs": 0.999999,
+        "name": "ladder:inside",
+        "op": "PLUS"
+      },
+      {
+        "mode": "X",
+        "t1": 2,
+        "cmp": "LE",
+        "rhs": 0.699999988079071,
+        "name": "ladder:wall_avoid",
+        "op": "PLUS"
+      },
+      {
+        "mode": "X",
+        "t1": 3,
+        "cmp": "GE",
+        "rhs": 1e-06,
+        "name": "ladder:inside",
+        "op": "PLUS"
+      },
+      {
+        "mode": "X",
+        "t1": 3,
+        "cmp": "LE",
+        "rhs": 0.999999,
+        "name": "ladder:inside",
+        "op": "PLUS"
+      },
+      {
+        "mode": "Z",
+        "t1": 3,
+        "cmp": "GE",
+        "rhs": 1e-06,
+        "name": "ladder:inside",
+        "op": "PLUS"
+      },
+      {
+        "mode": "Z",
+        "t1": 3,
+        "cmp": "LE",
+        "rhs": 0.999999,
+        "name": "ladder:inside",
+        "op": "PLUS"
+      },
+      {
+        "mode": "X",
+        "t1": 3,
+        "cmp": "LE",
+        "rhs": 0.699999988079071,
+        "name": "ladder:wall_avoid",
+        "op": "PLUS"
+      },
+      {
+        "mode": "Z",
+        "t1": 4,
+        "cmp": "GE",
+        "rhs": 1.000001,
+        "name": "ladder:after_exit",
+        "op": "PLUS"
+      },
+      {
+        "mode": "X",
+        "t1": 4,
+        "cmp": "LE",
+        "rhs": 0.699999988079071,
+        "name": "ladder:wall_avoid",
+        "op": "PLUS"
+      },
+      {
+        "mode": "Z",
+        "t1": 5,
+        "cmp": "GE",
+        "rhs": 1.000001,
+        "name": "ladder:after_exit",
+        "op": "PLUS"
+      },
+      {
+        "mode": "X",
+        "t1": 5,
+        "cmp": "LE",
+        "rhs": 0.699999988079071,
+        "name": "ladder:wall_avoid",
+        "op": "PLUS"
+      },
+      {
+        "mode": "Z",
+        "t1": 6,
+        "cmp": "GE",
+        "rhs": 1.000001,
+        "name": "ladder:after_exit",
+        "op": "PLUS"
+      },
+      {
+        "mode": "X",
+        "t1": 6,
+        "cmp": "LE",
+        "rhs": 0.699999988079071,
+        "name": "ladder:wall_avoid",
+        "op": "PLUS"
+      },
+      {
+        "mode": "Z",
+        "t1": 7,
+        "cmp": "GE",
+        "rhs": 1.000001,
+        "name": "ladder:after_exit",
+        "op": "PLUS"
+      },
+      {
+        "mode": "X",
+        "t1": 7,
+        "cmp": "LE",
+        "rhs": 0.699999988079071,
+        "name": "ladder:wall_avoid",
+        "op": "PLUS"
+      },
+      {
+        "mode": "Z",
+        "t1": 8,
+        "cmp": "GE",
+        "rhs": 1.000001,
+        "name": "ladder:after_exit",
+        "op": "PLUS"
+      },
+      {
+        "mode": "X",
+        "t1": 8,
+        "cmp": "LE",
+        "rhs": 0.699999988079071,
+        "name": "ladder:wall_avoid",
+        "op": "PLUS"
+      },
+      {
+        "mode": "Z",
+        "t1": 9,
+        "cmp": "GE",
+        "rhs": 1.000001,
+        "name": "ladder:after_exit",
+        "op": "PLUS"
+      },
+      {
+        "mode": "X",
+        "t1": 9,
+        "cmp": "LE",
+        "rhs": 0.699999988079071,
+        "name": "ladder:wall_avoid",
+        "op": "PLUS"
+      },
+      {
+        "mode": "Z",
+        "t1": 10,
+        "cmp": "GE",
+        "rhs": 1.000001,
+        "name": "ladder:after_exit",
+        "op": "PLUS"
+      },
+      {
+        "mode": "X",
+        "t1": 10,
+        "cmp": "LE",
+        "rhs": 0.699999988079071,
+        "name": "ladder:wall_avoid",
+        "op": "PLUS"
+      },
+      {
+        "mode": "Z",
+        "t1": 1,
+        "cmp": "GE",
+        "rhs": -1.299999011920929,
+        "name": "ladder:finite_face",
+        "op": "PLUS"
+      },
+      {
+        "mode": "Z",
+        "t1": 1,
+        "cmp": "LE",
+        "rhs": 2.299999011920929,
+        "name": "ladder:finite_face",
+        "op": "PLUS"
+      },
+      {
+        "mode": "X",
+        "t1": 9,
+        "cmp": "GE",
+        "rhs": -0.7999990119209289,
+        "name": "normal:landing",
+        "op": "PLUS"
+      },
+      {
+        "mode": "X",
+        "t1": 9,
+        "cmp": "LE",
+        "rhs": 1.299999011920929,
+        "name": "normal:landing",
+        "op": "PLUS"
+      },
+      {
+        "mode": "Z",
+        "t1": 9,
+        "cmp": "GE",
+        "rhs": 0.7000009880790711,
+        "name": "normal:landing",
+        "op": "PLUS"
+      },
+      {
+        "mode": "Z",
+        "t1": 9,
+        "cmp": "LE",
+        "rhs": 3.299999011920929,
+        "name": "normal:landing",
+        "op": "PLUS"
+      },
+      {
+        "mode": "X",
+        "t1": 0,
+        "cmp": "GE",
+        "rhs": -0.7999990119209289,
+        "name": "contact:finite_lo",
+        "op": "PLUS"
+      },
+      {
+        "mode": "X",
+        "t1": 0,
+        "cmp": "LE",
+        "rhs": 1.299999011920929,
+        "name": "contact:finite_hi",
+        "op": "PLUS"
+      },
+      {
+        "mode": "Z",
+        "t1": 0,
+        "cmp": "GE",
+        "rhs": -0.299999011920929,
+        "name": "contact:finite_lo",
+        "op": "PLUS"
+      },
+      {
+        "mode": "Z",
+        "t1": 0,
+        "cmp": "LE",
+        "rhs": 0.7999990119209289,
+        "name": "contact:finite_hi",
+        "op": "PLUS"
+      },
+      {
+        "mode": "Z",
+        "t1": 1,
+        "cmp": "GE",
+        "rhs": -1.299999011920929,
+        "name": "contact:finite_lo",
+        "op": "PLUS"
+      },
+      {
+        "mode": "Z",
+        "t1": 1,
+        "cmp": "LE",
+        "rhs": 2.299999011920929,
+        "name": "contact:finite_hi",
+        "op": "PLUS"
+      },
+      {
+        "mode": "X",
+        "t1": 9,
+        "cmp": "GE",
+        "rhs": -0.7999990119209289,
+        "name": "contact:finite_lo",
+        "op": "PLUS"
+      },
+      {
+        "mode": "X",
+        "t1": 9,
+        "cmp": "LE",
+        "rhs": 1.299999011920929,
+        "name": "contact:finite_hi",
+        "op": "PLUS"
+      },
+      {
+        "mode": "Z",
+        "t1": 9,
+        "cmp": "GE",
+        "rhs": 0.7000009880790711,
+        "name": "contact:finite_lo",
+        "op": "PLUS"
+      },
+      {
+        "mode": "Z",
+        "t1": 9,
+        "cmp": "LE",
+        "rhs": 3.299999011920929,
+        "name": "contact:finite_hi",
+        "op": "PLUS"
+      }
+    ],
+    "contacts": [
+      {
+        "state": 2,
+        "axis": 0,
+        "plane": 0.699999988079071,
+        "direction": 1
+      }
+    ],
+    "objective": {
+      "axis": "X",
+      "sense": "MAX",
+      "tick": 10,
+      "type": "POSITION",
+      "smoothLambda": 0.0
+    },
+    "ladderTicks": [
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "startYaw": 0.0,
+    "seconds": 10.0,
+    "stopOnFeasible": false,
+    "maxIterations": 10000
+  },
+  "route": {
+    "version": 1,
+    "initial": {
+      "position": [
+        0.699999988079071,
+        2,
+        0.55
+      ],
+      "velocity": [
+        0,
+        -0.0784000015258789,
+        0.1
+      ],
+      "yaw": 0
+    },
+    "blocks": [
+      {
+        "id": "start@0",
+        "bounds": [
+          -1,
+          1,
+          -0.5,
+          0.55
+        ],
+        "top": 2,
+        "_derivedFootprint": [
+          -1.3000000119209287,
+          1.3000000119209287,
+          -0.8000000119209288,
+          0.8500000119209289
+        ]
+      },
+      {
+        "id": "goal@1",
+        "bounds": [
+          -0.5,
+          1,
+          1,
+          3
+        ],
+        "top": 1,
+        "_derivedFootprint": [
+          -0.8000000119209288,
+          1.3000000119209287,
+          0.6999999880790713,
+          3.3000000119209285
+        ]
+      }
+    ],
+    "inputs": {
+      "sprint": true,
+      "force45": true,
+      "forward": 0.9800000190734863,
+      "strafe": 0.0,
+      "incomingSprint": false
+    },
+    "objective": {
+      "axis": "X",
+      "sense": "MAX"
+    },
+    "airtimes": [
+      10
+    ],
+    "kinds": [
+      "movement"
+    ],
+    "landingPhases": [
+      "pre"
+    ],
+    "contactEntries": [
+      null
+    ],
+    "walkOffExits": [
+      null
+    ],
+    "maxTotalRunTicks": 0,
+    "runBounds": [
+      [
+        0,
+        0
+      ]
+    ],
+    "supportClearance": 1e-06,
+    "constraints": [],
+    "passageCaps": {
+      "horizontal": 2,
+      "vertical": 2,
+      "total": 3
+    },
+    "passages": [
+      {
+        "leg": 0,
+        "solidIndex": 2,
+        "faces": [
+          {
+            "axis": "Y",
+            "direction": -1,
+            "plane": 2.200000047683716
+          },
+          {
+            "axis": "Z",
+            "direction": 1,
+            "plane": 0.800000011920929
+          }
+        ],
+        "gates": [
+          2
+        ],
+        "blockageCounts": {
+          "horizontal": 0,
+          "vertical": 1,
+          "total": 1
+        },
+        "kind": "vertical_passage",
+        "blockageCount": 1,
+        "blockageTypes": [
+          "Y->Z"
+        ]
+      }
+    ],
+    "hitEvents": [],
+    "ceilingEvents": [],
+    "ladderEvents": [
+      {
+        "schedule": {
+          "ticks": 10,
+          "entryState": 0,
+          "exitState": 4,
+          "exitKind": "side",
+          "hit": [
+            false,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "sneak": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "ladderTicks": [
+            true,
+            true,
+            true,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "climbWindow": [
+            0,
+            3
+          ],
+          "beginningStop": true,
+          "endStop": true,
+          "stopInputs": [
+            0,
+            2
+          ],
+          "trace": {
+            "status": "landed",
+            "ticks": 10,
+            "position": [
+              2,
+              2.200000047683716,
+              2.121600046157837,
+              2.2392000484466554,
+              2.2760480514068604,
+              2.233759093484802,
+              2.1139159123887086,
+              1.9180695911028307,
+              1.6477401909813194,
+              1.3044173721802352,
+              1
+            ],
+            "velocity": [
+              -0.0784000015258789,
+              -0.0784000015258789,
+              0.11760000228881837,
+              0.03684800296020513,
+              -0.042288957922058,
+              -0.11984318109609361,
+              -0.19584632128587792,
+              -0.2703294001215114,
+              -0.34332281880108423,
+              -0.41485637049930457,
+              -0.0784000015258789
+            ],
+            "onGround": [
+              true,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              true
+            ],
+            "movement": [
+              0.0,
+              -0.0784000015258789,
+              0.11760000228881837,
+              0.03684800296020513,
+              -0.042288957922058,
+              -0.11984318109609361,
+              -0.19584632128587792,
+              -0.2703294001215114,
+              -0.34332281880108423,
+              0.0
+            ],
+            "climbRefreshed": [
+              false,
+              true,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            "failures": [],
+            "vertical": {
+              "profile": "minecraft-1.8.9",
+              "position": 2,
+              "velocity": -0.0784000015258789,
+              "onGround": true,
+              "previousHorizontalCollision": false,
+              "threshold": 0.005,
+              "jumpVelocity": [
+                0.41999998688697815,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "sneak": [
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false
+              ],
+              "contacts": [
+                {
+                  "state": 1,
+                  "plane": 2.200000047683716,
+                  "direction": 1
+                },
+                {
+                  "state": 10,
+                  "direction": -1,
+                  "plane": 1
+                }
+              ]
+            },
+            "ladderTicks": [
+              true,
+              true,
+              true,
+              true,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            "sneak": [
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            "hit": [
+              false,
+              true,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            "resume": {
+              "position": 1,
+              "velocity": -0.0784000015258789,
+              "onGround": true,
+              "previousHorizontalCollision": false,
+              "onLadder": false
+            }
+          },
+          "contactEvents": [
+            {
+              "leg": 0,
+              "offset": 0,
+              "axis": "Y",
+              "plane": 2.200000047683716,
+              "direction": 1,
+              "box": [
+                -0.5,
+                4,
+                0,
+                1,
+                5,
+                0.5
+              ],
+              "role": "ceiling",
+              "effect": "ladder_ceiling",
+              "ownerType": "ladder_climb",
+              "successorType": "ladder_climb",
+              "ownerRegion": "(0, 0, 0)"
+            }
+          ],
+          "postExitTicks": 6,
+          "ladderCeilingEvents": [
+            {
+              "leg": 0,
+              "offset": 0,
+              "axis": "Y",
+              "plane": 2.200000047683716,
+              "direction": 1,
+              "box": [
+                -0.5,
+                4,
+                0,
+                1,
+                5,
+                0.5
+              ],
+              "role": "ceiling",
+              "effect": "ladder_ceiling",
+              "ownerType": "ladder_climb",
+              "successorType": "ladder_climb",
+              "ownerRegion": "(0, 0, 0)"
+            }
+          ],
+          "constraintStart": 0,
+          "constraintEnd": 11
+        },
+        "column": {
+          "id": "(0, 0, 0)",
+          "x": 0,
+          "z": 0,
+          "minY": 0,
+          "maxY": 4,
+          "maxX": 1,
+          "maxZ": 1
+        },
+        "wall": {
+          "axis": "X",
+          "direction": 1,
+          "plane": 0.699999988079071,
+          "parts": [
+            {
+              "solidIndex": 1,
+              "box": [
+                1,
+                0,
+                -1,
+                2,
+                4,
+                2
+              ]
+            }
+          ]
+        },
+        "entryFace": {
+          "family": "front",
+          "channel": "front:X:-1",
+          "axis": "X",
+          "direction": -1,
+          "plane": 0
+        },
+        "exitFace": {
+          "axis": "Z",
+          "direction": 1,
+          "plane": 1
+        },
+        "leg": 0
+      }
+    ],
+    "movementUnits": [
+      [
+        {
+          "type": "ladder_climb",
+          "start": 0,
+          "end": 4,
+          "region": "(0, 0, 0)",
+          "hitWindow": [
+            0,
+            3
+          ],
+          "stopInputs": [
+            0,
+            2
+          ],
+          "hitInputs": [
+            1
+          ],
+          "occupiedStates": [
+            0,
+            4
+          ],
+          "sneakInputs": [],
+          "jumpInputs": [
+            0
+          ],
+          "groundedInputs": [
+            0
+          ],
+          "effects": [
+            {
+              "type": "ladder_ceiling",
+              "case": "ceiling_hit",
+              "start": 0,
+              "end": 1,
+              "successorType": "ladder_climb",
+              "anchors": {
+                "hit": 1,
+                "nextClimb": 1
+              },
+              "plane": 2.200000047683716,
+              "box": [
+                -0.5,
+                4,
+                0,
+                1,
+                5,
+                0.5
+              ],
+              "region": "(0, 0, 0)"
+            }
+          ]
+        },
+        {
+          "type": "normal",
+          "start": 4,
+          "end": 10,
+          "jumpInputs": [],
+          "groundedInputs": [],
+          "sneakInputs": []
+        }
+      ]
+    ],
+    "contactEvents": [
+      {
+        "leg": 0,
+        "offset": 0,
+        "axis": "Y",
+        "plane": 2.200000047683716,
+        "direction": 1,
+        "box": [
+          -0.5,
+          4,
+          0,
+          1,
+          5,
+          0.5
+        ],
+        "role": "ceiling",
+        "effect": "ladder_ceiling",
+        "ownerType": "ladder_climb",
+        "successorType": "ladder_climb",
+        "ownerRegion": "(0, 0, 0)"
+      },
+      {
+        "leg": 0,
+        "offset": 1,
+        "axis": "X",
+        "plane": 0.699999988079071,
+        "direction": 1,
+        "box": [
+          1,
+          0,
+          -1,
+          2,
+          4,
+          2
+        ],
+        "role": "climb"
+      },
+      {
+        "leg": 0,
+        "offset": 9,
+        "axis": "Y",
+        "direction": -1,
+        "plane": 1,
+        "box": [
+          -0.5,
+          0,
+          1,
+          1,
+          1,
+          3
+        ],
+        "role": "landing"
+      }
+    ],
+    "profileDerivation": {
+      "kind": "selected_height_profiles",
+      "suppliedAirtimes": false,
+      "verticalModel": "standalone.ipopt.ladder",
+      "solidSideFaces": false
+    },
+    "sharedMovement": true,
+    "verticalProfiles": [
+      {
+        "airtime": 10,
+        "position": [
+          2,
+          2.200000047683716,
+          2.121600046157837,
+          2.2392000484466554,
+          2.2760480514068604,
+          2.233759093484802,
+          2.1139159123887086,
+          1.9180695911028307,
+          1.6477401909813194,
+          1.3044173721802352,
+          1
+        ],
+        "velocity": [
+          -0.0784000015258789,
+          -0.0784000015258789,
+          0.11760000228881837,
+          0.03684800296020513,
+          -0.042288957922058,
+          -0.11984318109609361,
+          -0.19584632128587792,
+          -0.2703294001215114,
+          -0.34332281880108423,
+          -0.41485637049930457,
+          -0.0784000015258789
+        ],
+        "grounded": [
+          true,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          true
+        ],
+        "jump": [
+          true,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "sneak": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "ladderTicks": [
+          true,
+          true,
+          true,
+          true,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "contacts": [
+          {
+            "state": 1,
+            "plane": 2.200000047683716,
+            "direction": 1
+          },
+          {
+            "state": 10,
+            "direction": -1,
+            "plane": 1
+          }
+        ],
+        "contactEvents": [
+          {
+            "leg": 0,
+            "offset": 0,
+            "axis": "Y",
+            "plane": 2.200000047683716,
+            "direction": 1,
+            "box": [
+              -0.5,
+              4,
+              0,
+              1,
+              5,
+              0.5
+            ],
+            "role": "ceiling",
+            "effect": "ladder_ceiling",
+            "ownerType": "ladder_climb",
+            "successorType": "ladder_climb",
+            "ownerRegion": "(0, 0, 0)"
+          },
+          {
+            "leg": 0,
+            "offset": 1,
+            "axis": "X",
+            "plane": 0.699999988079071,
+            "direction": 1,
+            "box": [
+              1,
+              0,
+              -1,
+              2,
+              4,
+              2
+            ],
+            "role": "climb"
+          },
+          {
+            "leg": 0,
+            "offset": 9,
+            "axis": "Y",
+            "direction": -1,
+            "plane": 1,
+            "box": [
+              -0.5,
+              0,
+              1,
+              1,
+              1,
+              3
+            ],
+            "role": "landing"
+          }
+        ],
+        "caseEvents": [],
+        "positionConstraints": [
+          {
+            "mode": "X",
+            "t1": 9,
+            "cmp": "GE",
+            "rhs": -0.7999990119209289,
+            "name": "normal:landing"
+          },
+          {
+            "mode": "X",
+            "t1": 9,
+            "cmp": "LE",
+            "rhs": 1.299999011920929,
+            "name": "normal:landing"
+          },
+          {
+            "mode": "Z",
+            "t1": 9,
+            "cmp": "GE",
+            "rhs": 0.7000009880790711,
+            "name": "normal:landing"
+          },
+          {
+            "mode": "Z",
+            "t1": 9,
+            "cmp": "LE",
+            "rhs": 3.299999011920929,
+            "name": "normal:landing"
+          }
+        ],
+        "landingPhase": "pre",
+        "composition": "movement_program",
+        "generatedUnits": [
+          {
+            "type": "ladder_climb",
+            "start": 0,
+            "end": 4,
+            "region": "(0, 0, 0)",
+            "hitWindow": [
+              0,
+              3
+            ],
+            "stopInputs": [
+              0,
+              2
+            ],
+            "hitInputs": [
+              1
+            ],
+            "occupiedStates": [
+              0,
+              4
+            ],
+            "sneakInputs": [],
+            "jumpInputs": [
+              0
+            ],
+            "groundedInputs": [
+              0
+            ],
+            "effects": [
+              {
+                "type": "ladder_ceiling",
+                "case": "ceiling_hit",
+                "start": 0,
+                "end": 1,
+                "successorType": "ladder_climb",
+                "anchors": {
+                  "hit": 1,
+                  "nextClimb": 1
+                },
+                "plane": 2.200000047683716,
+                "box": [
+                  -0.5,
+                  4,
+                  0,
+                  1,
+                  5,
+                  0.5
+                ],
+                "region": "(0, 0, 0)"
+              }
+            ]
+          },
+          {
+            "type": "normal",
+            "start": 4,
+            "end": 10,
+            "jumpInputs": [],
+            "groundedInputs": [],
+            "sneakInputs": []
+          }
+        ],
+        "sourceBlock": "start@0",
+        "targetBlock": "goal@1",
+        "profileKind": "movement"
+      }
+    ]
+  },
+  "profiles": [
+    {
+      "airtime": 10,
+      "position": [
+        2,
+        2.200000047683716,
+        2.121600046157837,
+        2.2392000484466554,
+        2.2760480514068604,
+        2.233759093484802,
+        2.1139159123887086,
+        1.9180695911028307,
+        1.6477401909813194,
+        1.3044173721802352,
+        1
+      ],
+      "velocity": [
+        -0.0784000015258789,
+        -0.0784000015258789,
+        0.11760000228881837,
+        0.03684800296020513,
+        -0.042288957922058,
+        -0.11984318109609361,
+        -0.19584632128587792,
+        -0.2703294001215114,
+        -0.34332281880108423,
+        -0.41485637049930457,
+        -0.0784000015258789
+      ],
+      "grounded": [
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true
+      ],
+      "jump": [
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "sneak": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "ladderTicks": [
+        true,
+        true,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "contacts": [
+        {
+          "state": 1,
+          "plane": 2.200000047683716,
+          "direction": 1
+        },
+        {
+          "state": 10,
+          "direction": -1,
+          "plane": 1
+        }
+      ],
+      "contactEvents": [
+        {
+          "leg": 0,
+          "offset": 0,
+          "axis": "Y",
+          "plane": 2.200000047683716,
+          "direction": 1,
+          "box": [
+            -0.5,
+            4,
+            0,
+            1,
+            5,
+            0.5
+          ],
+          "role": "ceiling",
+          "effect": "ladder_ceiling",
+          "ownerType": "ladder_climb",
+          "successorType": "ladder_climb",
+          "ownerRegion": "(0, 0, 0)"
+        },
+        {
+          "leg": 0,
+          "offset": 1,
+          "axis": "X",
+          "plane": 0.699999988079071,
+          "direction": 1,
+          "box": [
+            1,
+            0,
+            -1,
+            2,
+            4,
+            2
+          ],
+          "role": "climb"
+        },
+        {
+          "leg": 0,
+          "offset": 9,
+          "axis": "Y",
+          "direction": -1,
+          "plane": 1,
+          "box": [
+            -0.5,
+            0,
+            1,
+            1,
+            1,
+            3
+          ],
+          "role": "landing"
+        }
+      ],
+      "caseEvents": [],
+      "positionConstraints": [
+        {
+          "mode": "X",
+          "t1": 9,
+          "cmp": "GE",
+          "rhs": -0.7999990119209289,
+          "name": "normal:landing"
+        },
+        {
+          "mode": "X",
+          "t1": 9,
+          "cmp": "LE",
+          "rhs": 1.299999011920929,
+          "name": "normal:landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 9,
+          "cmp": "GE",
+          "rhs": 0.7000009880790711,
+          "name": "normal:landing"
+        },
+        {
+          "mode": "Z",
+          "t1": 9,
+          "cmp": "LE",
+          "rhs": 3.299999011920929,
+          "name": "normal:landing"
+        }
+      ],
+      "landingPhase": "pre",
+      "composition": "movement_program",
+      "generatedUnits": [
+        {
+          "type": "ladder_climb",
+          "start": 0,
+          "end": 4,
+          "region": "(0, 0, 0)",
+          "hitWindow": [
+            0,
+            3
+          ],
+          "stopInputs": [
+            0,
+            2
+          ],
+          "hitInputs": [
+            1
+          ],
+          "occupiedStates": [
+            0,
+            4
+          ],
+          "sneakInputs": [],
+          "jumpInputs": [
+            0
+          ],
+          "groundedInputs": [
+            0
+          ],
+          "effects": [
+            {
+              "type": "ladder_ceiling",
+              "case": "ceiling_hit",
+              "start": 0,
+              "end": 1,
+              "successorType": "ladder_climb",
+              "anchors": {
+                "hit": 1,
+                "nextClimb": 1
+              },
+              "plane": 2.200000047683716,
+              "box": [
+                -0.5,
+                4,
+                0,
+                1,
+                5,
+                0.5
+              ],
+              "region": "(0, 0, 0)"
+            }
+          ]
+        },
+        {
+          "type": "normal",
+          "start": 4,
+          "end": 10,
+          "jumpInputs": [],
+          "groundedInputs": [],
+          "sneakInputs": []
+        }
+      ],
+      "sourceBlock": "start@0",
+      "targetBlock": "goal@1",
+      "profileKind": "movement"
+    }
+  ],
+  "plan": {
+    "ticks": 10,
+    "grounded": [
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "jump": [
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "events": [
+      {
+        "leg": 0,
+        "landed": 0,
+        "jump": 0,
+        "landing": 10,
+        "runTicks": 0,
+        "kind": "movement"
+      }
+    ],
+    "supportChecks": [
+      [
+        0,
+        0,
+        "initial"
+      ],
+      [
+        9,
+        1,
+        "landing"
+      ]
+    ],
+    "exitChecks": [],
+    "walls": [
+      {
+        "mode": "X",
+        "t1": 0,
+        "cmp": "GE",
+        "rhs": -1.2999990119209286,
+        "name": "initial:0:X:lo"
+      },
+      {
+        "mode": "X",
+        "t1": 0,
+        "cmp": "LE",
+        "rhs": 1.2999990119209286,
+        "name": "initial:0:X:hi"
+      },
+      {
+        "mode": "Z",
+        "t1": 0,
+        "cmp": "GE",
+        "rhs": -0.7999990119209287,
+        "name": "initial:0:Z:lo"
+      },
+      {
+        "mode": "Z",
+        "t1": 0,
+        "cmp": "LE",
+        "rhs": 0.8499990119209287,
+        "name": "initial:0:Z:hi"
+      },
+      {
+        "mode": "X",
+        "t1": 9,
+        "cmp": "GE",
+        "rhs": -0.7999990119209287,
+        "name": "landing:1:X:lo"
+      },
+      {
+        "mode": "X",
+        "t1": 9,
+        "cmp": "LE",
+        "rhs": 1.2999990119209286,
+        "name": "landing:1:X:hi"
+      },
+      {
+        "mode": "Z",
+        "t1": 9,
+        "cmp": "GE",
+        "rhs": 0.7000009880790714,
+        "name": "landing:1:Z:lo"
+      },
+      {
+        "mode": "Z",
+        "t1": 9,
+        "cmp": "LE",
+        "rhs": 3.299999011920928,
+        "name": "landing:1:Z:hi"
+      },
+      {
+        "mode": "Z",
+        "t1": 2,
+        "cmp": "GE",
+        "rhs": 0.800001011920929,
+        "name": "blockage:2"
+      },
+      {
+        "mode": "Z",
+        "t1": 3,
+        "cmp": "GE",
+        "rhs": 0.800001011920929,
+        "name": "blockage:2"
+      },
+      {
+        "mode": "Z",
+        "t1": 4,
+        "cmp": "GE",
+        "rhs": 0.800001011920929,
+        "name": "blockage:2"
+      },
+      {
+        "mode": "Z",
+        "t1": 5,
+        "cmp": "GE",
+        "rhs": 0.800001011920929,
+        "name": "blockage:2"
+      },
+      {
+        "mode": "Z",
+        "t1": 6,
+        "cmp": "GE",
+        "rhs": 0.800001011920929,
+        "name": "blockage:2"
+      },
+      {
+        "mode": "Z",
+        "t1": 7,
+        "cmp": "GE",
+        "rhs": 0.800001011920929,
+        "name": "blockage:2"
+      },
+      {
+        "mode": "Z",
+        "t1": 8,
+        "cmp": "GE",
+        "rhs": 0.800001011920929,
+        "name": "blockage:2"
+      },
+      {
+        "mode": "Z",
+        "t1": 9,
+        "cmp": "GE",
+        "rhs": 0.800001011920929,
+        "name": "blockage:2"
+      },
+      {
+        "mode": "Z",
+        "t1": 10,
+        "cmp": "GE",
+        "rhs": 0.800001011920929,
+        "name": "blockage:2"
+      },
+      {
+        "mode": "X",
+        "t1": 0,
+        "cmp": "GE",
+        "rhs": 1e-06,
+        "name": "ladder:inside"
+      },
+      {
+        "mode": "X",
+        "t1": 0,
+        "cmp": "LE",
+        "rhs": 0.999999,
+        "name": "ladder:inside"
+      },
+      {
+        "mode": "Z",
+        "t1": 0,
+        "cmp": "GE",
+        "rhs": 1e-06,
+        "name": "ladder:inside"
+      },
+      {
+        "mode": "Z",
+        "t1": 0,
+        "cmp": "LE",
+        "rhs": 0.999999,
+        "name": "ladder:inside"
+      },
+      {
+        "mode": "X",
+        "t1": 0,
+        "cmp": "LE",
+        "rhs": 0.699999988079071,
+        "name": "ladder:wall_avoid"
+      },
+      {
+        "mode": "X",
+        "t1": 1,
+        "cmp": "GE",
+        "rhs": 1e-06,
+        "name": "ladder:inside"
+      },
+      {
+        "mode": "X",
+        "t1": 1,
+        "cmp": "LE",
+        "rhs": 0.999999,
+        "name": "ladder:inside"
+      },
+      {
+        "mode": "Z",
+        "t1": 1,
+        "cmp": "GE",
+        "rhs": 1e-06,
+        "name": "ladder:inside"
+      },
+      {
+        "mode": "Z",
+        "t1": 1,
+        "cmp": "LE",
+        "rhs": 0.999999,
+        "name": "ladder:inside"
+      },
+      {
+        "mode": "X",
+        "t1": 1,
+        "cmp": "LE",
+        "rhs": 0.699999988079071,
+        "name": "ladder:wall_avoid"
+      },
+      {
+        "mode": "X",
+        "t1": 2,
+        "cmp": "GE",
+        "rhs": 1e-06,
+        "name": "ladder:inside"
+      },
+      {
+        "mode": "X",
+        "t1": 2,
+        "cmp": "LE",
+        "rhs": 0.999999,
+        "name": "ladder:inside"
+      },
+      {
+        "mode": "Z",
+        "t1": 2,
+        "cmp": "GE",
+        "rhs": 1e-06,
+        "name": "ladder:inside"
+      },
+      {
+        "mode": "Z",
+        "t1": 2,
+        "cmp": "LE",
+        "rhs": 0.999999,
+        "name": "ladder:inside"
+      },
+      {
+        "mode": "X",
+        "t1": 2,
+        "cmp": "LE",
+        "rhs": 0.699999988079071,
+        "name": "ladder:wall_avoid"
+      },
+      {
+        "mode": "X",
+        "t1": 3,
+        "cmp": "GE",
+        "rhs": 1e-06,
+        "name": "ladder:inside"
+      },
+      {
+        "mode": "X",
+        "t1": 3,
+        "cmp": "LE",
+        "rhs": 0.999999,
+        "name": "ladder:inside"
+      },
+      {
+        "mode": "Z",
+        "t1": 3,
+        "cmp": "GE",
+        "rhs": 1e-06,
+        "name": "ladder:inside"
+      },
+      {
+        "mode": "Z",
+        "t1": 3,
+        "cmp": "LE",
+        "rhs": 0.999999,
+        "name": "ladder:inside"
+      },
+      {
+        "mode": "X",
+        "t1": 3,
+        "cmp": "LE",
+        "rhs": 0.699999988079071,
+        "name": "ladder:wall_avoid"
+      },
+      {
+        "mode": "Z",
+        "t1": 4,
+        "cmp": "GE",
+        "rhs": 1.000001,
+        "name": "ladder:after_exit"
+      },
+      {
+        "mode": "X",
+        "t1": 4,
+        "cmp": "LE",
+        "rhs": 0.699999988079071,
+        "name": "ladder:wall_avoid"
+      },
+      {
+        "mode": "Z",
+        "t1": 5,
+        "cmp": "GE",
+        "rhs": 1.000001,
+        "name": "ladder:after_exit"
+      },
+      {
+        "mode": "X",
+        "t1": 5,
+        "cmp": "LE",
+        "rhs": 0.699999988079071,
+        "name": "ladder:wall_avoid"
+      },
+      {
+        "mode": "Z",
+        "t1": 6,
+        "cmp": "GE",
+        "rhs": 1.000001,
+        "name": "ladder:after_exit"
+      },
+      {
+        "mode": "X",
+        "t1": 6,
+        "cmp": "LE",
+        "rhs": 0.699999988079071,
+        "name": "ladder:wall_avoid"
+      },
+      {
+        "mode": "Z",
+        "t1": 7,
+        "cmp": "GE",
+        "rhs": 1.000001,
+        "name": "ladder:after_exit"
+      },
+      {
+        "mode": "X",
+        "t1": 7,
+        "cmp": "LE",
+        "rhs": 0.699999988079071,
+        "name": "ladder:wall_avoid"
+      },
+      {
+        "mode": "Z",
+        "t1": 8,
+        "cmp": "GE",
+        "rhs": 1.000001,
+        "name": "ladder:after_exit"
+      },
+      {
+        "mode": "X",
+        "t1": 8,
+        "cmp": "LE",
+        "rhs": 0.699999988079071,
+        "name": "ladder:wall_avoid"
+      },
+      {
+        "mode": "Z",
+        "t1": 9,
+        "cmp": "GE",
+        "rhs": 1.000001,
+        "name": "ladder:after_exit"
+      },
+      {
+        "mode": "X",
+        "t1": 9,
+        "cmp": "LE",
+        "rhs": 0.699999988079071,
+        "name": "ladder:wall_avoid"
+      },
+      {
+        "mode": "Z",
+        "t1": 10,
+        "cmp": "GE",
+        "rhs": 1.000001,
+        "name": "ladder:after_exit"
+      },
+      {
+        "mode": "X",
+        "t1": 10,
+        "cmp": "LE",
+        "rhs": 0.699999988079071,
+        "name": "ladder:wall_avoid"
+      },
+      {
+        "mode": "Z",
+        "t1": 1,
+        "cmp": "GE",
+        "rhs": -1.299999011920929,
+        "name": "ladder:finite_face"
+      },
+      {
+        "mode": "Z",
+        "t1": 1,
+        "cmp": "LE",
+        "rhs": 2.299999011920929,
+        "name": "ladder:finite_face"
+      },
+      {
+        "mode": "X",
+        "t1": 9,
+        "cmp": "GE",
+        "rhs": -0.7999990119209289,
+        "name": "normal:landing"
+      },
+      {
+        "mode": "X",
+        "t1": 9,
+        "cmp": "LE",
+        "rhs": 1.299999011920929,
+        "name": "normal:landing"
+      },
+      {
+        "mode": "Z",
+        "t1": 9,
+        "cmp": "GE",
+        "rhs": 0.7000009880790711,
+        "name": "normal:landing"
+      },
+      {
+        "mode": "Z",
+        "t1": 9,
+        "cmp": "LE",
+        "rhs": 3.299999011920929,
+        "name": "normal:landing"
+      },
+      {
+        "mode": "X",
+        "t1": 0,
+        "cmp": "GE",
+        "rhs": -0.7999990119209289,
+        "name": "contact:finite_lo"
+      },
+      {
+        "mode": "X",
+        "t1": 0,
+        "cmp": "LE",
+        "rhs": 1.299999011920929,
+        "name": "contact:finite_hi"
+      },
+      {
+        "mode": "Z",
+        "t1": 0,
+        "cmp": "GE",
+        "rhs": -0.299999011920929,
+        "name": "contact:finite_lo"
+      },
+      {
+        "mode": "Z",
+        "t1": 0,
+        "cmp": "LE",
+        "rhs": 0.7999990119209289,
+        "name": "contact:finite_hi"
+      },
+      {
+        "mode": "Z",
+        "t1": 1,
+        "cmp": "GE",
+        "rhs": -1.299999011920929,
+        "name": "contact:finite_lo"
+      },
+      {
+        "mode": "Z",
+        "t1": 1,
+        "cmp": "LE",
+        "rhs": 2.299999011920929,
+        "name": "contact:finite_hi"
+      },
+      {
+        "mode": "X",
+        "t1": 9,
+        "cmp": "GE",
+        "rhs": -0.7999990119209289,
+        "name": "contact:finite_lo"
+      },
+      {
+        "mode": "X",
+        "t1": 9,
+        "cmp": "LE",
+        "rhs": 1.299999011920929,
+        "name": "contact:finite_hi"
+      },
+      {
+        "mode": "Z",
+        "t1": 9,
+        "cmp": "GE",
+        "rhs": 0.7000009880790711,
+        "name": "contact:finite_lo"
+      },
+      {
+        "mode": "Z",
+        "t1": 9,
+        "cmp": "LE",
+        "rhs": 3.299999011920929,
+        "name": "contact:finite_hi"
+      }
+    ],
+    "allocation": [
+      0
+    ],
+    "stage": "jump",
+    "passageFailures": [],
+    "contacts": [
+      {
+        "state": 2,
+        "axis": 0,
+        "plane": 0.699999988079071,
+        "direction": 1
+      }
+    ],
+    "sceneContacts": [
+      {
+        "state": 1,
+        "axis": 1,
+        "plane": 2.200000047683716,
+        "direction": 1,
+        "box": [
+          -0.5,
+          4,
+          0,
+          1,
+          5,
+          0.5
+        ]
+      },
+      {
+        "state": 2,
+        "axis": 0,
+        "plane": 0.699999988079071,
+        "direction": 1,
+        "box": [
+          1,
+          0,
+          -1,
+          2,
+          4,
+          2
+        ]
+      },
+      {
+        "state": 10,
+        "axis": 1,
+        "plane": 1,
+        "direction": -1,
+        "box": [
+          -0.5,
+          0,
+          1,
+          1,
+          1,
+          3
+        ]
+      }
+    ],
+    "ladderTicks": [
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "sneak": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "verticalContacts": [
+      {
+        "state": 1,
+        "plane": 2.200000047683716,
+        "direction": 1,
+        "axis": 1
+      },
+      {
+        "state": 10,
+        "plane": 1,
+        "direction": -1,
+        "axis": 1
+      }
+    ],
+    "movementUnits": [
+      {
+        "type": "ladder_climb",
+        "start": 0,
+        "end": 4,
+        "region": "(0, 0, 0)",
+        "hitWindow": [
+          0,
+          3
+        ],
+        "stopInputs": [
+          0,
+          2
+        ],
+        "hitInputs": [
+          1
+        ],
+        "occupiedStates": [
+          0,
+          4
+        ],
+        "sneakInputs": [],
+        "jumpInputs": [
+          0
+        ],
+        "groundedInputs": [
+          0
+        ],
+        "effects": [
+          {
+            "type": "ladder_ceiling",
+            "case": "ceiling_hit",
+            "start": 0,
+            "end": 1,
+            "successorType": "ladder_climb",
+            "anchors": {
+              "hit": 1,
+              "nextClimb": 1
+            },
+            "plane": 2.200000047683716,
+            "box": [
+              -0.5,
+              4,
+              0,
+              1,
+              5,
+              0.5
+            ],
+            "region": "(0, 0, 0)"
+          }
+        ]
+      },
+      {
+        "type": "normal",
+        "start": 4,
+        "end": 10,
+        "jumpInputs": [],
+        "groundedInputs": [],
+        "sneakInputs": []
+      }
+    ],
+    "movementComposition": true,
+    "vertical": {
+      "profile": "minecraft-1.8.9",
+      "position": 2,
+      "velocity": -0.0784000015258789,
+      "onGround": true,
+      "previousHorizontalCollision": false,
+      "threshold": 0.005,
+      "jumpVelocity": [
+        0.41999998688697815,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "sneak": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "contacts": [
+        {
+          "state": 1,
+          "plane": 2.200000047683716,
+          "direction": 1
+        },
+        {
+          "state": 10,
+          "direction": -1,
+          "plane": 1
+        }
+      ],
+      "referencePosition": [
+        2,
+        2.200000047683716,
+        2.121600046157837,
+        2.2392000484466554,
+        2.2760480514068604,
+        2.233759093484802,
+        2.1139159123887086,
+        1.9180695911028307,
+        1.6477401909813194,
+        1.3044173721802352,
+        1
+      ],
+      "referenceVelocity": [
+        -0.0784000015258789,
+        -0.0784000015258789,
+        0.11760000228881837,
+        0.03684800296020513,
+        -0.042288957922058,
+        -0.11984318109609361,
+        -0.19584632128587792,
+        -0.2703294001215114,
+        -0.34332281880108423,
+        -0.41485637049930457,
+        -0.0784000015258789
+      ]
+    }
+  },
+  "geometry": {
+    "version": 1,
+    "profile": "minecraft-1.8.9",
+    "bounds": [
+      -5,
+      -5,
+      -5,
+      8,
+      10,
+      8
+    ],
+    "solids": [
+      [
+        -1,
+        0,
+        -0.5,
+        1,
+        2,
+        0.55
+      ],
+      [
+        1,
+        0,
+        -1,
+        2,
+        4,
+        2
+      ],
+      [
+        -0.5,
+        4,
+        0,
+        1,
+        5,
+        0.5
+      ],
+      [
+        -0.5,
+        0,
+        1,
+        1,
+        1,
+        3
+      ]
+    ],
+    "stepHeight": 0.6,
+    "ladders": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        1,
+        0
+      ],
+      [
+        0,
+        2,
+        0
+      ],
+      [
+        0,
+        3,
+        0
+      ]
+    ]
+  },
+  "candidate": {
+    "feasible": true,
+    "violation": 0.0,
+    "worstConstraint": null,
+    "objective": 0.44574047098520864,
+    "missedContacts": [],
+    "wrongSideContacts": [],
+    "patternMismatches": [],
+    "yaw": [
+      0.9976256342849829,
+      14.49661874705165,
+      97.85834567393242,
+      85.45637170816615,
+      79.58610196107908,
+      71.23447292773176,
+      56.82169080514354,
+      32.547311993400996,
+      0.5517252892569574,
+      -27.243530868535288
+    ],
+    "positions": [
+      [
+        0.699999988079071,
+        0.55
+      ],
+      [
+        0.6942996360480264,
+        0.7000000059604645
+      ],
+      [
+        0.699999988079071,
+        0.8043015966933729
+      ],
+      [
+        0.6792742146389736,
+        0.9149145255751933
+      ],
+      [
+        0.6474363838240962,
+        1.0307902986993633
+      ],
+      [
+        0.6037052122437562,
+        1.1576423801155125
+      ],
+      [
+        0.552416659494077,
+        1.2963995828272497
+      ],
+      [
+        0.5004175435499885,
+        1.4481171767572545
+      ],
+      [
+        0.4587048137797135,
+        1.6115685239862008
+      ],
+      [
+        0.43895311933866676,
+        1.7788702090715156
+      ],
+      [
+        0.44574047098520864,
+        1.9390440139608889
+      ]
+    ],
+    "velocity": [
+      [
+        0,
+        0.1
+      ],
+      [
+        -0.003112392570462971,
+        0.08190001276731529
+      ],
+      [
+        0.0,
+        0.09491445030236462
+      ],
+      [
+        -0.018860454374043704,
+        0.10065776818339603
+      ],
+      [
+        -0.028972426876518877,
+        0.10544695658195778
+      ],
+      [
+        -0.03979536728500498,
+        0.11543539741552387
+      ],
+      [
+        -0.0466725843473038,
+        0.12626905810673328
+      ],
+      [
+        -0.04731919687285169,
+        0.1380630144552566
+      ],
+      [
+        -0.037958585184910104,
+        0.14874073026502327
+      ],
+      [
+        -0.017974042459361357,
+        0.15224453781529773
+      ],
+      [
+        0.0061764901763585005,
+        0.1457581666500549
+      ]
+    ],
+    "movementMismatches": [],
+    "horizontalCollision": [
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "ladderPattern": [
+      [
+        0,
+        1
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ]
+    ],
+    "ladderPatternMismatches": [],
+    "y": [
+      2,
+      2.200000047683716,
+      2.121600046157837,
+      2.2392000484466554,
+      2.2760480514068604,
+      2.233759093484802,
+      2.1139159123887086,
+      1.9180695911028307,
+      1.6477401909813194,
+      1.3044173721802352,
+      1
+    ],
+    "vy": [
+      -0.0784000015258789,
+      -0.0784000015258789,
+      0.11760000228881837,
+      0.03684800296020513,
+      -0.042288957922058,
+      -0.11984318109609361,
+      -0.19584632128587792,
+      -0.2703294001215114,
+      -0.34332281880108423,
+      -0.41485637049930457,
+      -0.0784000015258789
+    ],
+    "onGround": [
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true
+    ],
+    "verticalFailures": [],
+    "resume": {
+      "y": 1,
+      "vy": -0.0784000015258789,
+      "onGround": true,
+      "previousHorizontalCollision": false
+    },
+    "rawMovement": [
+      [
+        -0.005700352031044681,
+        0.42735035590526893
+      ],
+      [
+        0.013197318631121124,
+        0.10430159073290829
+      ],
+      [
+        -0.020725773440097434,
+        0.11061292888182035
+      ],
+      [
+        -0.03183783081487751,
+        0.11587577312417
+      ],
+      [
+        -0.04373117158033996,
+        0.12685208141614907
+      ],
+      [
+        -0.05128855274967909,
+        0.13875720271173717
+      ],
+      [
+        -0.05199911594408857,
+        0.15171759393000478
+      ],
+      [
+        -0.04171272977027498,
+        0.16345134722894625
+      ],
+      [
+        -0.019751694441046765,
+        0.16730168508531476
+      ],
+      [
+        0.00678735164654189,
+        0.16017380488937327
+      ]
+    ],
+    "movement": {
+      "profile": "minecraft-1.8.9",
+      "compiler": "mod-input-state-v1",
+      "horizontalCollision": [
+        false,
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "ground": [
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "sprinting": [
+        true,
+        true,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "airSprinting": [
+        false,
+        true,
+        true,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "moveForward": [
+        0.98,
+        0.98,
+        0.98,
+        0.98,
+        0.98,
+        0.98,
+        0.98,
+        0.98,
+        0.98,
+        0.98
+      ],
+      "moveStrafe": [
+        0.0,
+        0.98,
+        0.98,
+        0.98,
+        0.98,
+        0.98,
+        0.98,
+        0.98,
+        0.98,
+        0.98
+      ]
+    },
+    "friction": [
+      0.546000063419342,
+      0.9100000262260437,
+      0.9100000262260437,
+      0.9100000262260437,
+      0.9100000262260437,
+      0.9100000262260437,
+      0.9100000262260437,
+      0.9100000262260437,
+      0.9100000262260437,
+      0.9100000262260437
+    ]
+  },
+  "geometryCheck": {
+    "feasible": true,
+    "ticks": 10
+  },
+  "minimumTicksProven": false,
+  "objectiveOptimalityProven": false,
+  "discovery": "Prescribed climbing schedule, generated normal continuation, full original-state IPOPT and shared-scene acceptance"
+}

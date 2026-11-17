@@ -1,0 +1,329 @@
+{
+  "sourceRoot": "/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes",
+  "sourceRevision": "5d54f02b590355f5548b7b089b27349c7f79c800",
+  "sourceHashes": {
+    "standalone/autonomy/cell_routes/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "standalone/autonomy/cell_routes/anchor_adapter.py": "4380a36f5e7a49a18da14d4d285a82bcfb0ba6fc2249f3fd1192097204080218",
+    "standalone/autonomy/cell_routes/anchor_guides.py": "e9c2b4e0959c528e874b0958b3209710fdf606b4013e0e9f80d2890380e6b618",
+    "standalone/autonomy/cell_routes/anchor_policy.py": "ae1be78df7cc410dba94824a744055f0b26b798776efa430b4bc4f129a5b63de",
+    "standalone/autonomy/cell_routes/anchor_time_bound.py": "590923e530a2f3a39e3f5b15615dfc4ed28143c1700063f2bacc5dbce26d9741",
+    "standalone/autonomy/cell_routes/automatic_experiment.py": "abd2590da80941270b4f7a7e41c53a97c3419b49ee71558fca4733e110625555",
+    "standalone/autonomy/cell_routes/checkpoint_experiment.py": "2dee0d907220701e7ef2d8e70e727400fea3c73df5b67c0d7fa5eeb106fbe76c",
+    "standalone/autonomy/cell_routes/checkpoint_persistence.py": "f4d809f616b11c6d53a3ae83d994dfbbabab83857e9e6e9064eb41147eaabff1",
+    "standalone/autonomy/cell_routes/checkpoint_search.py": "9a3a7f87d9a80197751138ff7f1b209102ffbc1707d0bdfa16f7947735760781",
+    "standalone/autonomy/cell_routes/checkpoints.py": "09dbb20802f35a70fda012bfcc600dbb643db7ed6c77d544f40fe982f5603179",
+    "standalone/autonomy/cell_routes/comparison_audit.py": "5d0a13c87a22e0224b6dd3d59a3ee940581cf573f177ea0b6742fb2a6053fc4e",
+    "standalone/autonomy/cell_routes/comparison_goals.py": "e1e30781b0dd9ed53d4047059089f8d928e97e5eba546942fa605701a94e2563",
+    "standalone/autonomy/cell_routes/corridor_guards.py": "051cd8d75b457cc5407013d56f01345fec33eaebd5ec20156bced3068b1db479",
+    "standalone/autonomy/cell_routes/coverage_audit.py": "ab4f796a6d5aa9153bb142df431fe76bf368a9599c6afd7cee93c6efcfbc2f51",
+    "standalone/autonomy/cell_routes/decision_windows.py": "a48b15a241cc25b94abffed80dd1adea5c13ba68305c0c22a9ba3ecfbd65ee5b",
+    "standalone/autonomy/cell_routes/depth_first.py": "343d4e9b873e75196cb5790e85dc7077f8439bc2b0b8492d4350159d2685ed74",
+    "standalone/autonomy/cell_routes/event_adapter.py": "ff16bdea84e696cf97e9b43312818a336b6541fe4fd36b3afb6a1e0b6982a0a6",
+    "standalone/autonomy/cell_routes/event_coverage_audit.py": "aefe8f47dc3d472748bfcaa8a5458b5e675aae6098b426fe52adc94270235ab5",
+    "standalone/autonomy/cell_routes/event_routes.py": "d950981606fe78b41649607912b6c7cbc5a334cf4ca6d41d5ccb77b2bf54009a",
+    "standalone/autonomy/cell_routes/event_search.py": "33045ea21dd7c50c06b799ff2ae6b2a66aeb91f3d959c0af544b88ba25ad6331",
+    "standalone/autonomy/cell_routes/experiment.py": "77ea642f386fd13da3e512d57754d9add567c96d19895e47fbdcfacc08fc44f1",
+    "standalone/autonomy/cell_routes/failure_diagnostic.py": "3b4fd1524d71a923c3b573e78e55ed36de0af71b22e534369088c5ee48a4c3a1",
+    "standalone/autonomy/cell_routes/fix_validation.py": "27fd57a8cb24e117a1287561c8b6a52157e394c23f1381935bd0f617a1200fc8",
+    "standalone/autonomy/cell_routes/fixed_clock_experiment.py": "9336e8921668a7627afd3a8f9b981cef7cbb114cf48fedcb6066541e87f600b1",
+    "standalone/autonomy/cell_routes/generation_diagnostic.py": "f3374b3d9bb1871ecf89e0a0bdc5ef0d0c87ef7aae4f5b1752e2cd4f821d6e54",
+    "standalone/autonomy/cell_routes/geometry.py": "b9a9f9f6e16c426f8bb1d6f0140a25192d4d5cd880e01c4746fa8b3eb3a3ff4d",
+    "standalone/autonomy/cell_routes/guides.py": "4fdc899cbeb163f1f85e9780c5c5eb53b6bfa64508d28a550b907692f7bebb8d",
+    "standalone/autonomy/cell_routes/local.py": "9e5cc2fa6b797562c0760758a5be69fc2aaa7cba871295e7d2ee8c822bf95938",
+    "standalone/autonomy/cell_routes/minimum_runs.py": "04d87eb807be6cb1584fe059e1847afaa2e381ffcccb35b4f67c5308e65b439f",
+    "standalone/autonomy/cell_routes/node_feasibility.py": "75f584ac3c2622951cf91423fe6ca1c58feb95372560afa20e3daff28cb9f6d1",
+    "standalone/autonomy/cell_routes/preparation_deferrals.py": "adcfeb7f822eadbcc93eb999fc16816ad792699ba5000c8d703aecad3a569d4f",
+    "standalone/autonomy/cell_routes/regions.py": "5d5f564ffd9180be67c7e58c6b669239dbbb091e5c8a0ab5064505a7c0c57069",
+    "standalone/autonomy/cell_routes/repair_diagnostic.py": "58b803c3b3d8c11ce98f354194abe8de41aa4f862edff25f2fb29f4f1810e8ae",
+    "standalone/autonomy/cell_routes/repair_resume_experiment.py": "0132d046f37a06fa46aee93fe1d8f36fe21c5a2776299e4ba3edea95202e25b1",
+    "standalone/autonomy/cell_routes/route_guards.py": "546a5ebdf27044ecb430f846adec35e96f60a3c7cda49555ddf8aad2d0b2ee4c",
+    "standalone/autonomy/cell_routes/route_progress.py": "d6e1edc8998a546d39cd97398048370ee70b85c294cb2f92766ee3bc84275dc1",
+    "standalone/autonomy/cell_routes/route_queue.py": "a093e5125ab5b214cc62279220f550d4aecf2d3bb4d618e257d60a095143f9ec",
+    "standalone/autonomy/cell_routes/routes.py": "8324e4581a1388a4bce28f6f096c6a3c71fcd80985df4fb6c4a6b4b393bbe3b4",
+    "standalone/autonomy/cell_routes/scalar_seed_diagnostic.py": "37c6385cc56ed7cfc26aea44865284fafa41fe5bcde8abf001aa433f827bc8ba",
+    "standalone/autonomy/cell_routes/semantic_adapter.py": "9e061910a306dcc215ad1bf088ee94a9b087c80753549602c2664e30b30a42e4",
+    "standalone/autonomy/cell_routes/support_order.py": "a675caf679dc3f7578f18abe6cd80d15935a6f8c1bba342f8884a3281de57dad",
+    "standalone/autonomy/cell_routes/time_progress.py": "8e2cb9db03e287c99c19243b15393c5475053f69936394f7b24acf8852112501",
+    "standalone/autonomy/cell_routes/transfer_time_bounds.py": "b97782981126807576e7cdeae531cf20367ba0bb28ab9e28859edab50bfc3faa",
+    "standalone/autonomy/cell_routes/turn_observability.py": "2cdc446eec683a340455c00e59e89ab1fe57f5a428bd9f5aac6c1a9f81b9b078",
+    "standalone/autonomy/cell_routes/two_goal_experiment.py": "ddad7709a3be17d78de277f04c95169e71c4bfc9d6d9c08fcef882a5f1d60bf7",
+    "standalone/autonomy/cell_routes/window_diagnostic.py": "8ed7bc87477ab8b9b20009c4b0d35f1abbac13a297cac4caf47f0c3454325f6c",
+    "standalone/autonomy/cell_routes/window_experiment.py": "6bdc9d4d4c9725d967514f2bfdab23f707778ee90fd05014d2a69ebde655acff",
+    "standalone/autonomy/__init__.py": "9675a573a5d2e0617653bc4de99f58c1c7cd72de101cbffd7c3f82ebc7086e37",
+    "standalone/autonomy/block_contacts.py": "028979008f8dcd3fc57053635d0f6e1f6890d9282f4e22198d0ccf5c484d5424",
+    "standalone/autonomy/block_profiles.py": "f4294a144d1dcd9f99e28bb71234c9ecb054531da617434e2ac743d84ae49d06",
+    "standalone/autonomy/block_search.py": "1b57fdaa023f3c0057ae8d4e4c65692160c569f2976a82e57557bf4a9d76fecf",
+    "standalone/autonomy/blockages.py": "19b40ff11f0a7555543e09fba2f13161b7924ef2e898bd497636d3a6cc386c04",
+    "standalone/autonomy/candidate_comparison.py": "7e6799481533b2e2e489fdd77ff099f04d8317194a7556bf43577203aece1cee",
+    "standalone/autonomy/case_profiles.py": "d024822d2f6aef2439acb9bccfa540d82c979773209d5b51c8f0d808c267c0ac",
+    "standalone/autonomy/ceiling_contacts.py": "754b887c88ac423a8f4bbd486f2246acd7820c4ebe9b9ba1778eb0ac6d557040",
+    "standalone/autonomy/ceiling_generation.py": "7004d648f412c4b643165568738094c9db3e97e082ce10c1b398ab759f8d568b",
+    "standalone/autonomy/ceiling_primitives.py": "15d43e1f0e6564880c8d73e1b16c0013fbb75b0068d99d1beb3c579a3b3a0f6c",
+    "standalone/autonomy/checkpoint_store.py": "82bb51c2e8e0096525e2635fcad5b0c3203e0c12f6e414d84714eae9c264ab1c",
+    "standalone/autonomy/climbable_search.py": "bfc21052a0aa02d2ef3484f090377ba1885700e8f631c11e30442b864db48cc3",
+    "standalone/autonomy/compiler.py": "d591cf42360aad740687c14eb194b122fc62e62a41d7f66587e697f48dd3a190",
+    "standalone/autonomy/constraint_variants.py": "8ad23fe78e5ea5ef314d3f9ed25022e94f601d7c7fe22b699f58e4ed0a2525ce",
+    "standalone/autonomy/contact_combinations.py": "7e000c25f11559357dee586bc210400b3acd3bc48e9a3f4cd452c34b56ce3e8c",
+    "standalone/autonomy/contact_profiles.py": "32f3de58736d02770ef34374d8eb9c8a577dc1c3cf0384bd77072cb574b9717b",
+    "standalone/autonomy/hit_events.py": "24caae4625b7a023ad9cd3b147081eba6111a1a3cc90f6826c4c53f61ba7c6f9",
+    "standalone/autonomy/interactions.py": "d2651e5fc4fcecd2779535b98ab4e7103d9f5726b3ab1f3eff9fd2509b313f31",
+    "standalone/autonomy/ladder_ceiling.py": "e80ec9eb9f9f72006c4b490a62a2c15ddd79a58ec839f44490c6315360090cbd",
+    "standalone/autonomy/ladder_episodes.py": "3c462d4c4e3eb1f856fffa0a95bb9d88917a593a76e8187692851baf26c75fec",
+    "standalone/autonomy/ladder_events.py": "4fd5c476aa623e9debdcdd485a39f0c2df7e79ca1efc27c89dd2bed7e9f17d5a",
+    "standalone/autonomy/ladder_geometry.py": "5295e1823b39d6f6db5fc4511ca7c69fcda5931ed6a01ddec89ea14578c936e0",
+    "standalone/autonomy/ladder_ranking.py": "790bfe1c60c31d4a95809693b0a9a265be7ed465f867816ec3a4f396a6d0fdc1",
+    "standalone/autonomy/ladder_schedules.py": "7a7c16c05784e8e39415088581612cab04f259b692c6ff3b7aa451a647f51232",
+    "standalone/autonomy/ladder_transfers.py": "c68285f9c3b4605af44112bb6cae41e382ca53f1a7e7d97cc737f909f20a7cf4",
+    "standalone/autonomy/linear_reachability.py": "42ed9786ba3883a8a69369c26a9cc393ad7b68801e0251007b823eb693befa55",
+    "standalone/autonomy/linkcraft.py": "12d90184af1c46ea5f4f7feccae9b298df06a7d480a76205563cd4a359c554a3",
+    "standalone/autonomy/mixed_ladder.py": "aac1b04e7793689b3a89e1ccd74ebcb4d3125c415f64a241b30d7bf048d82efa",
+    "standalone/autonomy/movement_composition.py": "e655a5521abd16294e4a6dec9f13e83699a610a23bd3cdb40ee5367435478493",
+    "standalone/autonomy/movement_contacts.py": "603921982b55b14de23404dc405fe8cf0b94b7bc33a1cc8eb33834246ef4ef5a",
+    "standalone/autonomy/movement_entry.py": "3d138978c86629171ce4b96a32f66693c7bca48c34473d7020708d5940aa25f1",
+    "standalone/autonomy/movement_frontier.py": "f08621372170c86065172431a9657b28b222c9be4f941dc25ab06c73d388a527",
+    "standalone/autonomy/movement_generation.py": "a4bcd29ec7cf76c0b0e13bb890d7fa4e18cd164c5e8b86590f78df3454fc7941",
+    "standalone/autonomy/movement_problem.py": "907e615dc719a00463c9e586561f83fb59542f41dde7191a60b4ba6923aec40d",
+    "standalone/autonomy/movement_search.py": "ea94e20067ef7cbe101d75e630213c84d6c45cf1ace23023638a3216314e9321",
+    "standalone/autonomy/movement_units.py": "1d84e257b7ed2f9e6fc5f5201754376757c9b0770bd19764a348611717303a90",
+    "standalone/autonomy/obstacle_geometry.py": "9c665a862063693a00155f0a0754c2c57b10a344e144e7b55ed5297e16b69581",
+    "standalone/autonomy/open_ladder.py": "f8fa3a482baea420dafac9a9f8ae1ad59ac70dff19df0c6335e4cb1a3a0e7210",
+    "standalone/autonomy/open_movement.py": "99d81802c21d1e12f7d6b6cbfa16508475c7092379992c01930f2f6d973cc31b",
+    "standalone/autonomy/prefix_viability.py": "11b3db80154bdbdb0332a288fef7bf91fa217cf4b146e87481b628a783f7843c",
+    "standalone/autonomy/ranking.py": "116cb2c23a61fdc2d52b551555f931bd9e369425a302127f50f379965b359ab9",
+    "standalone/autonomy/reachability.py": "f5597b2406664fd3ee6ee5850f1a9cd3c47f50ec7fd6e9e0a9b09a3036d08259",
+    "standalone/autonomy/repair_state.py": "30fcd4bc32753219b4f9b8b6737f3ce058332993e1e32c52a9b21487f7302165",
+    "standalone/autonomy/route.py": "a6cd41c11a3daa2cc5c0112e06f243d708e0d19993e05676d0cec77608318ef0",
+    "standalone/autonomy/screen.py": "bd4edc177e8ed590a61d1757fe5066eb590fd7e55ca5268de400c93892897f6a",
+    "standalone/autonomy/search.py": "6925897b6db3d5c229295d27fe75e8a166b972f216ff615b91a5f56023e22aee",
+    "standalone/autonomy/solve.py": "674e2653aedf730164b6210721d088ca33a7fc1370f83a519206bd217b66b37a",
+    "standalone/autonomy/solve_blocks.py": "faf9cbaf5fdd8432e98aa580e5ea1dff9b5a0e3f63f860898460227a87aa531c",
+    "standalone/autonomy/solve_spec.py": "326be359f54e973c4247b3b310a2cb9838ac4d5f0a2206ceefa664dc5337e776",
+    "standalone/autonomy/stepping_generation.py": "fe04b92d6e5503258895c5c50c0763de8b3d608de02c7e90fd8c1a42be1fc429",
+    "standalone/autonomy/terminal_goals.py": "afadafef3a464a22aa150826c2bb77828dd0417e4bdac330d5438d55537c5264",
+    "standalone/autonomy/vertical_profiles.py": "de20bf3a0314ea39e8dd38d649ac84b05e23a6857c0a7267eb745f3bb12cc167",
+    "standalone/ipopt/__init__.py": "01cd6ea7f4981e14d15dc3887b63827d2f70ca394c028d877e71da68fca2f8b1",
+    "standalone/ipopt/capture.py": "b3af9eae22e282cef8a9c1a045ca88c5a5c392b6eabc2e50919a0133514e75e6",
+    "standalone/ipopt/constraints.py": "0f445f37945a794f131fc2ff9149d6b5ae4589cc1af2a4d968dd8d87ffcc06b5",
+    "standalone/ipopt/continuation.py": "a740bb6fd9cbf1ef3de8bedd7208a709dca931d050010c512a1fc2002b4f548a",
+    "standalone/ipopt/ladder.py": "72f46adf6a4f81a2cc123362daf9f4a847c2326fbd6a14b101124a695a80b3b8",
+    "standalone/ipopt/model.py": "1f1c37ce080a82f1412d78e42c8977737324c7b98adc21dadfe70a4b78fd8e22",
+    "standalone/ipopt/solve.py": "2c7ff0c666c91d73dcf1b96e1db9566ac492d9d44a6caac101d49c37636e4528",
+    "standalone/ipopt/solver.py": "2eac6c93850cea9fe0730ab425773429222bd218cd4ba25d22013f8bb7fe3f00",
+    "standalone/ipopt/worker.py": "8dc77742f0b6dc535a4af2fefc26003a8c6e6da88a3e723d097a51cb5c3506eb"
+  },
+  "fixture": {
+    "request": {
+      "version": 1,
+      "sceneModel": "collision_boxes",
+      "geometryBounds": [
+        726,
+        -200,
+        -1108,
+        749,
+        24,
+        -1085
+      ],
+      "initial": {
+        "position": [
+          746.5,
+          5,
+          -1104.5
+        ],
+        "velocity": [
+          0,
+          -0.0784000015258789,
+          0
+        ],
+        "yaw": 0
+      },
+      "startBlock": "b1",
+      "goalBlock": "b7",
+      "blocks": [
+        {
+          "id": "b1",
+          "boxes": [
+            [
+              742,
+              0,
+              -1105,
+              747,
+              5,
+              -1103
+            ]
+          ]
+        },
+        {
+          "id": "b2",
+          "boxes": [
+            [
+              741,
+              0,
+              -1104,
+              742,
+              6,
+              -1103
+            ]
+          ]
+        },
+        {
+          "id": "b3",
+          "boxes": [
+            [
+              738,
+              0,
+              -1101,
+              739,
+              7,
+              -1100
+            ]
+          ]
+        },
+        {
+          "id": "b4",
+          "boxes": [
+            [
+              734,
+              0,
+              -1100,
+              735,
+              7.5,
+              -1099
+            ]
+          ]
+        },
+        {
+          "id": "b5",
+          "boxes": [
+            [
+              730,
+              0,
+              -1096,
+              731,
+              6,
+              -1095
+            ]
+          ]
+        },
+        {
+          "id": "b6",
+          "boxes": [
+            [
+              730,
+              0,
+              -1095,
+              731,
+              20,
+              -1094
+            ]
+          ]
+        },
+        {
+          "id": "b7",
+          "boxes": [
+            [
+              729,
+              0,
+              -1095,
+              730,
+              7,
+              -1093
+            ]
+          ]
+        }
+      ],
+      "inputs": {
+        "force45": true,
+        "sprint": true,
+        "incomingSprint": false
+      },
+      "objective": {
+        "axis": "Z",
+        "sense": "MAX"
+      },
+      "maxWallHits": 0,
+      "maxContactCombinations": 0,
+      "maxContactBranches": 32,
+      "maxPassageCandidates": 128,
+      "maxRunTicksPerJump": 64,
+      "maxTotalRunTicks": 64,
+      "movementSearch": {
+        "types": [
+          "normal",
+          "stepping"
+        ],
+        "maxInputs": 200,
+        "maxPrefixes": 2048,
+        "maxQueuedPrefixes": 384,
+        "maxChoicesPerType": 16
+      }
+    },
+    "settings": {
+      "seconds": 300.0,
+      "candidate_seconds": 2,
+      "score_seconds": 8,
+      "max_solver_calls": 1024,
+      "max_candidates": 20,
+      "beam_width": 8,
+      "unknown_slots": 1,
+      "score_call_limit": 6,
+      "final_call_limit": 24,
+      "fair_parents": true,
+      "spatial_seconds": 5,
+      "spatial_calls": 6,
+      "spatial_candidates": 4,
+      "spatial_prefixes": 128,
+      "objective_gap": 0.25
+    },
+    "provenance": {
+      "control": "autonomy/experiments/event-route-discovery/real11-auto.json",
+      "purpose": "Declared anchors, physical extended B7 landing, minimize T then maximize Z",
+      "geometryCaveat": "B7 extended +Z by one block; B6 unchanged because replacement bounds unspecified",
+      "routingPolicy": "anchorSearch version1; no inter-block returns; local same-block hops permitted"
+    },
+    "initialJumpInputs": [
+      0,
+      8
+    ],
+    "terminalGoal": {
+      "kind": "landing",
+      "block": "b7"
+    },
+    "discoverySettings": {
+      "version": 1,
+      "maxGraphExpansions": 5000,
+      "maxGuideMaterializations": 50
+    },
+    "anchorSearch": {
+      "version": 1,
+      "anchors": [
+        "b2",
+        "b3",
+        "b4",
+        "b5"
+      ],
+      "turnaround": {
+        "degrees": 110,
+        "spatialMargin": 0.3
+      },
+      "solveEveryDecisionLevels": 1,
+      "feasibilityPolicy": "ipopt_oracle",
+      "observability": true
+    }
+  },
+  "command": [
+    "autonomy/experiments/anchor-runtime-profile/profile_run.py",
+    "--input",
+    "autonomy/experiments/anchor-feasibility/real11-anchors.json",
+    "--output",
+    "autonomy/experiments/hard-jump-comparisons/2026-11-11/updated-combined",
+    "--seconds",
+    "300"
+  ],
+  "instrumentationHashes": {
+    "test_runtime_profile.py": "6e8c3c86e13c636c7855abc40f6e2dbd68b8c41d391a689abf5b0bd9c01e2505",
+    "profile_run.py": "d8981b2b24d75bd30c7b26c1fcef41f946426769015e56e8833d0c7517513b3e",
+    "runtime_profile.py": "96d2bdd97159cd57c69fcc253cffa7df1d17982bd2b807e5af3f5463f7876c7f"
+  },
+  "compilerConfigHash": "6ba1237fd3424d3c054585d7a78c971f96ae73e795ac037c5111fa66b2b575bd",
+  "accounting": "Python selfSeconds exclude instrumented children; inclusive categories overlap. GC is an overlapping diagnostic. Profiler overhead is included; no speedup or optimality claim."
+}

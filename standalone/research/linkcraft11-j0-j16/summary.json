@@ -1,0 +1,266 @@
+{
+  "source": {
+    "name": "Linkcraft 11",
+    "sha256": "af5d2d1bc6e0ab466f1b6cf309f3a26e76e4a63765ac8b15ff02fb4ad55d28bf",
+    "startState": 0,
+    "endState": 130,
+    "departures": [
+      0,
+      12,
+      21,
+      30,
+      40,
+      55,
+      64,
+      68,
+      71,
+      75,
+      78,
+      83,
+      88,
+      90,
+      103,
+      115,
+      118,
+      119,
+      128
+    ],
+    "landings": [
+      12,
+      21,
+      30,
+      40,
+      55,
+      64,
+      68,
+      71,
+      75,
+      77,
+      80,
+      88,
+      90,
+      99,
+      113,
+      117,
+      119,
+      128,
+      130
+    ],
+    "jumpIndices": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      null,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      null,
+      15,
+      16
+    ],
+    "recordedAllocation": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      3,
+      0,
+      0,
+      4,
+      2,
+      1,
+      0,
+      0
+    ],
+    "recordedFacingsUsed": false,
+    "authoredScalarRulesUsed": false,
+    "inferredFullBlockRegions": [
+      {
+        "regionTick": -1,
+        "witnessState": 0,
+        "kind": "full-grid-block"
+      },
+      {
+        "regionTick": 11,
+        "witnessState": 11,
+        "kind": "full-grid-block"
+      }
+    ],
+    "standingSupportExtensions": [
+      {
+        "block": "source:80",
+        "states": [
+          80,
+          82
+        ],
+        "standingBounds": [
+          733.0,
+          734.0,
+          -1090.0,
+          -1088.0
+        ],
+        "kind": "grid-aligned coplanar strip from ground samples"
+      }
+    ],
+    "mandatoryGroundSteps": 1,
+    "geometry": "authored landing center regions, no picked world geometry"
+  },
+  "searchSeconds": 80.62557537481189,
+  "optionalRunTicks": 11,
+  "mandatoryStepInputs": 1,
+  "groundRunTicks": 12,
+  "recordedGroundRunTicks": 12,
+  "allocation": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    4,
+    0,
+    0,
+    3,
+    2,
+    2,
+    0,
+    0
+  ],
+  "ticks": 130,
+  "violation": 0.0,
+  "problemHash": "21287bc633fe79f70d9091201113f807f100b005935c108290139930193b3885",
+  "backtracks": 24,
+  "attempts": 333,
+  "statuses": {
+    "feasible": 188,
+    "unknown": 13,
+    "blocked": 132
+  },
+  "minimumProven": false,
+  "unresolvedCheaperAttempts": 13,
+  "jumpRuns": [
+    {
+      "jump": 0,
+      "runInputsSincePreviousJumpLanding": 0,
+      "departure": 0,
+      "landing": 12
+    },
+    {
+      "jump": 1,
+      "runInputsSincePreviousJumpLanding": 0,
+      "departure": 12,
+      "landing": 21
+    },
+    {
+      "jump": 2,
+      "runInputsSincePreviousJumpLanding": 0,
+      "departure": 21,
+      "landing": 30
+    },
+    {
+      "jump": 3,
+      "runInputsSincePreviousJumpLanding": 0,
+      "departure": 30,
+      "landing": 40
+    },
+    {
+      "jump": 4,
+      "runInputsSincePreviousJumpLanding": 0,
+      "departure": 40,
+      "landing": 55
+    },
+    {
+      "jump": 5,
+      "runInputsSincePreviousJumpLanding": 0,
+      "departure": 55,
+      "landing": 64
+    },
+    {
+      "jump": 6,
+      "runInputsSincePreviousJumpLanding": 0,
+      "departure": 68,
+      "landing": 71
+    },
+    {
+      "jump": 7,
+      "runInputsSincePreviousJumpLanding": 0,
+      "departure": 71,
+      "landing": 75
+    },
+    {
+      "jump": 8,
+      "runInputsSincePreviousJumpLanding": 0,
+      "departure": 75,
+      "landing": 77
+    },
+    {
+      "jump": 9,
+      "runInputsSincePreviousJumpLanding": 0,
+      "departure": 77,
+      "landing": 79
+    },
+    {
+      "jump": 10,
+      "runInputsSincePreviousJumpLanding": 4,
+      "departure": 83,
+      "landing": 88
+    },
+    {
+      "jump": 11,
+      "runInputsSincePreviousJumpLanding": 0,
+      "departure": 88,
+      "landing": 90
+    },
+    {
+      "jump": 12,
+      "runInputsSincePreviousJumpLanding": 0,
+      "departure": 90,
+      "landing": 99
+    },
+    {
+      "jump": 13,
+      "runInputsSincePreviousJumpLanding": 3,
+      "departure": 102,
+      "landing": 112
+    },
+    {
+      "jump": 14,
+      "runInputsSincePreviousJumpLanding": 2,
+      "departure": 114,
+      "landing": 116
+    },
+    {
+      "jump": 15,
+      "runInputsSincePreviousJumpLanding": 3,
+      "departure": 119,
+      "landing": 128
+    },
+    {
+      "jump": 16,
+      "runInputsSincePreviousJumpLanding": 0,
+      "departure": 128,
+      "landing": 130
+    }
+  ]
+}

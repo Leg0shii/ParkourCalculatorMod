@@ -1,0 +1,41 @@
+         1635717 function calls (1406090 primitive calls) in 0.383 seconds
+
+   Ordered by: cumulative time
+   List reduced from 187 to 35 due to restriction <35>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.001    0.001    0.384    0.384 /Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/standalone/autonomy/cell_routes/experiment.py:103(run_arm)
+       10    0.003    0.000    0.365    0.037 /Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/standalone/autonomy/movement_search.py:30(iter_movement_programs)
+      268    0.005    0.000    0.255    0.001 /Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/standalone/autonomy/movement_composition.py:114(append_choice)
+216444/8344    0.112    0.000    0.246    0.000 /Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/copy.py:118(deepcopy)
+16268/16252    0.028    0.000    0.211    0.000 /Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/copy.py:217(_deepcopy_dict)
+17137/5951    0.012    0.000    0.193    0.000 /Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/copy.py:191(_deepcopy_list)
+      536    0.002    0.000    0.115    0.000 /Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/standalone/autonomy/movement_composition.py:40(profile_from_trace)
+      582    0.015    0.000    0.062    0.000 /Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/standalone/autonomy/vertical_profiles.py:16(trace_ladder_schedule)
+      301    0.000    0.000    0.056    0.000 /Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/standalone/autonomy/movement_generation.py:17(generate_choices)
+      301    0.000    0.000    0.056    0.000 /Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/standalone/autonomy/movement_generation.py:40(generate)
+      291    0.001    0.000    0.056    0.000 /Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/standalone/autonomy/open_movement.py:54(normal_choices)
+      268    0.001    0.000    0.054    0.000 /Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/standalone/autonomy/ladder_ceiling.py:11(own_ceiling_contacts)
+     1119    0.002    0.000    0.048    0.000 /Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/standalone/autonomy/contact_combinations.py:9(merge_contacts)
+      268    0.000    0.000    0.047    0.000 /Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/standalone/autonomy/open_movement.py:34(event_choice)
+   463435    0.042    0.000    0.042    0.000 {method 'get' of 'dict' objects}
+      265    0.014    0.000    0.038    0.000 /Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/standalone/autonomy/cell_routes/local.py:124(prefix)
+      314    0.001    0.000    0.028    0.000 /Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/standalone/autonomy/open_movement.py:8(replay)
+    33405    0.021    0.000    0.026    0.000 /Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/copy.py:231(_keep_alive)
+      268    0.001    0.000    0.026    0.000 /Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/standalone/autonomy/movement_composition.py:66(_contacts)
+      268    0.001    0.000    0.026    0.000 /Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/standalone/autonomy/movement_composition.py:52(movement_choice)
+      466    0.001    0.000    0.018    0.000 /Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/json/__init__.py:183(dumps)
+   291598    0.018    0.000    0.018    0.000 {built-in method builtins.id}
+      466    0.001    0.000    0.017    0.000 /Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/json/encoder.py:183(encode)
+      466    0.017    0.000    0.017    0.000 /Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/json/encoder.py:205(iterencode)
+        1    0.001    0.001    0.013    0.013 /Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/standalone/autonomy/cell_routes/geometry.py:131(decompose)
+12251/12247    0.005    0.000    0.012    0.000 {built-in method builtins.any}
+    32477    0.010    0.000    0.010    0.000 {built-in method builtins.min}
+     2474    0.004    0.000    0.009    0.000 /Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/standalone/autonomy/cell_routes/geometry.py:17(intersection)
+   183039    0.009    0.000    0.009    0.000 /Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/copy.py:172(_deepcopy_atomic)
+    95370    0.008    0.000    0.008    0.000 {method 'append' of 'list' objects}
+     6414    0.004    0.000    0.007    0.000 /Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/standalone/ipopt/ladder.py:42(vertical_step)
+       69    0.000    0.000    0.007    0.000 /Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/standalone/autonomy/open_movement.py:18(approaches)
+      268    0.000    0.000    0.005    0.000 /Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/standalone/autonomy/movement_units.py:132(shifted_unit)
+     1746    0.001    0.000    0.005    0.000 /Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/standalone/autonomy/vertical_profiles.py:8(_flags)
+      273    0.003    0.000    0.005    0.000 /Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/standalone/autonomy/movement_units.py:103(compile_units)

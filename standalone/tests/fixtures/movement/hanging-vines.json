@@ -1,0 +1,129 @@
+{
+  "version": 1,
+  "sceneModel": "collision_boxes",
+  "geometryBounds": [
+    -5,
+    -4,
+    -5,
+    5,
+    12,
+    8
+  ],
+  "initial": {
+    "position": [
+      0.4,
+      4,
+      -0.2
+    ],
+    "velocity": [
+      0,
+      -0.0784000015258789,
+      0.3
+    ]
+  },
+  "blocks": [
+    {
+      "id": "start",
+      "boxes": [
+        [
+          -1,
+          3,
+          -1,
+          1,
+          4,
+          0
+        ]
+      ]
+    },
+    {
+      "id": "goal",
+      "boxes": [
+        [
+          -1,
+          0,
+          2,
+          1,
+          1,
+          4
+        ]
+      ]
+    },
+    {
+      "id": "roof",
+      "boxes": [
+        [
+          0,
+          8,
+          0,
+          1,
+          9,
+          1
+        ]
+      ]
+    }
+  ],
+  "startBlock": "start",
+  "goalBlock": "goal",
+  "climbableCells": [
+    [
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      1,
+      0
+    ],
+    [
+      0,
+      2,
+      0
+    ],
+    [
+      0,
+      3,
+      0
+    ],
+    [
+      0,
+      4,
+      0
+    ],
+    [
+      0,
+      5,
+      0
+    ],
+    [
+      0,
+      6,
+      0
+    ],
+    [
+      0,
+      7,
+      0
+    ]
+  ],
+  "maxJumps": 1,
+  "maxRunTicksPerJump": 0,
+  "maxTotalRunTicks": 0,
+  "maxContactCombinations": 0,
+  "stairBoost": false,
+  "ladderSearch": {
+    "requireLadder": true,
+    "maxEntryInputs": 3,
+    "entryDelay": 0,
+    "maxInputs": 24,
+    "maxSkeletons": 1000,
+    "maxSchedules": 512,
+    "maxMaskWork": 10000,
+    "maxRanked": 64,
+    "maxNumericalSchedules": 8,
+    "maxRouteContexts": 4,
+    "maxInteractions": 1,
+    "maxContactVariants": 0,
+    "maxTransferPrograms": 0
+  }
+}

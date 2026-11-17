@@ -1,0 +1,446 @@
+{
+  "profile": "minecraft-1.8.9",
+  "halfWidth": 0.30000001192092896,
+  "height": 1.7999999523162842,
+  "cases": [
+    {
+      "type": "X->Z",
+      "firstSign": -1,
+      "secondSign": -1,
+      "timing": "same_state",
+      "start": [
+        -0.5000000119209289,
+        0.5,
+        0.5
+      ],
+      "end": [
+        0.5,
+        0.5,
+        -0.5000000119209289
+      ],
+      "directClippedAxis": "X",
+      "outsideBothControlClips": false
+    },
+    {
+      "type": "X->Z",
+      "firstSign": -1,
+      "secondSign": 1,
+      "timing": "same_state",
+      "start": [
+        -0.5000000119209289,
+        0.5,
+        0.5
+      ],
+      "end": [
+        0.5,
+        0.5,
+        1.500000011920929
+      ],
+      "directClippedAxis": "X",
+      "outsideBothControlClips": false
+    },
+    {
+      "type": "X->Z",
+      "firstSign": 1,
+      "secondSign": -1,
+      "timing": "same_state",
+      "start": [
+        1.500000011920929,
+        0.5,
+        0.5
+      ],
+      "end": [
+        0.5,
+        0.5,
+        -0.5000000119209289
+      ],
+      "directClippedAxis": "X",
+      "outsideBothControlClips": false
+    },
+    {
+      "type": "X->Z",
+      "firstSign": 1,
+      "secondSign": 1,
+      "timing": "same_state",
+      "start": [
+        1.500000011920929,
+        0.5,
+        0.5
+      ],
+      "end": [
+        0.5,
+        0.5,
+        1.500000011920929
+      ],
+      "directClippedAxis": "X",
+      "outsideBothControlClips": false
+    },
+    {
+      "type": "Y->X",
+      "firstSign": -1,
+      "secondSign": -1,
+      "timing": "same_state",
+      "start": [
+        0.5,
+        -1.9999999523162841,
+        0.5
+      ],
+      "end": [
+        -0.5000000119209289,
+        0.5,
+        0.5
+      ],
+      "directClippedAxis": "Y",
+      "outsideBothControlClips": false
+    },
+    {
+      "type": "Y->X",
+      "firstSign": -1,
+      "secondSign": 1,
+      "timing": "same_state",
+      "start": [
+        0.5,
+        -1.9999999523162841,
+        0.5
+      ],
+      "end": [
+        1.500000011920929,
+        0.5,
+        0.5
+      ],
+      "directClippedAxis": "Y",
+      "outsideBothControlClips": false
+    },
+    {
+      "type": "Y->X",
+      "firstSign": 1,
+      "secondSign": -1,
+      "timing": "same_state",
+      "start": [
+        0.5,
+        1.2,
+        0.5
+      ],
+      "end": [
+        -0.5000000119209289,
+        0.5,
+        0.5
+      ],
+      "directClippedAxis": "Y",
+      "outsideBothControlClips": false
+    },
+    {
+      "type": "Y->X",
+      "firstSign": 1,
+      "secondSign": 1,
+      "timing": "same_state",
+      "start": [
+        0.5,
+        1.2,
+        0.5
+      ],
+      "end": [
+        1.500000011920929,
+        0.5,
+        0.5
+      ],
+      "directClippedAxis": "Y",
+      "outsideBothControlClips": false
+    },
+    {
+      "type": "Y->Z",
+      "firstSign": -1,
+      "secondSign": -1,
+      "timing": "same_state",
+      "start": [
+        0.5,
+        -1.9999999523162841,
+        0.5
+      ],
+      "end": [
+        0.5,
+        0.5,
+        -0.5000000119209289
+      ],
+      "directClippedAxis": "Y",
+      "outsideBothControlClips": false
+    },
+    {
+      "type": "Y->Z",
+      "firstSign": -1,
+      "secondSign": 1,
+      "timing": "same_state",
+      "start": [
+        0.5,
+        -1.9999999523162841,
+        0.5
+      ],
+      "end": [
+        0.5,
+        0.5,
+        1.500000011920929
+      ],
+      "directClippedAxis": "Y",
+      "outsideBothControlClips": false
+    },
+    {
+      "type": "Y->Z",
+      "firstSign": 1,
+      "secondSign": -1,
+      "timing": "same_state",
+      "start": [
+        0.5,
+        1.2,
+        0.5
+      ],
+      "end": [
+        0.5,
+        0.5,
+        -0.5000000119209289
+      ],
+      "directClippedAxis": "Y",
+      "outsideBothControlClips": false
+    },
+    {
+      "type": "Y->Z",
+      "firstSign": 1,
+      "secondSign": 1,
+      "timing": "same_state",
+      "start": [
+        0.5,
+        1.2,
+        0.5
+      ],
+      "end": [
+        0.5,
+        0.5,
+        1.500000011920929
+      ],
+      "directClippedAxis": "Y",
+      "outsideBothControlClips": false
+    },
+    {
+      "type": "Z->X",
+      "firstSign": -1,
+      "secondSign": -1,
+      "timing": "consecutive_states",
+      "start": [
+        0.5,
+        0.5,
+        -0.5000000119209289
+      ],
+      "end": [
+        -0.5000000119209289,
+        0.5,
+        0.5
+      ],
+      "directClippedAxis": "none",
+      "outsideBothControlClips": false
+    },
+    {
+      "type": "Z->X",
+      "firstSign": -1,
+      "secondSign": 1,
+      "timing": "consecutive_states",
+      "start": [
+        0.5,
+        0.5,
+        -0.5000000119209289
+      ],
+      "end": [
+        1.500000011920929,
+        0.5,
+        0.5
+      ],
+      "directClippedAxis": "none",
+      "outsideBothControlClips": false
+    },
+    {
+      "type": "Z->X",
+      "firstSign": 1,
+      "secondSign": -1,
+      "timing": "consecutive_states",
+      "start": [
+        0.5,
+        0.5,
+        1.500000011920929
+      ],
+      "end": [
+        -0.5000000119209289,
+        0.5,
+        0.5
+      ],
+      "directClippedAxis": "none",
+      "outsideBothControlClips": false
+    },
+    {
+      "type": "Z->X",
+      "firstSign": 1,
+      "secondSign": 1,
+      "timing": "consecutive_states",
+      "start": [
+        0.5,
+        0.5,
+        1.500000011920929
+      ],
+      "end": [
+        1.500000011920929,
+        0.5,
+        0.5
+      ],
+      "directClippedAxis": "none",
+      "outsideBothControlClips": false
+    },
+    {
+      "type": "X->Y",
+      "firstSign": -1,
+      "secondSign": -1,
+      "timing": "consecutive_states",
+      "start": [
+        -0.5000000119209289,
+        0.5,
+        0.5
+      ],
+      "end": [
+        0.5,
+        -1.9999999523162841,
+        0.5
+      ],
+      "directClippedAxis": "none",
+      "outsideBothControlClips": false
+    },
+    {
+      "type": "X->Y",
+      "firstSign": -1,
+      "secondSign": 1,
+      "timing": "consecutive_states",
+      "start": [
+        -0.5000000119209289,
+        0.5,
+        0.5
+      ],
+      "end": [
+        0.5,
+        1.2,
+        0.5
+      ],
+      "directClippedAxis": "none",
+      "outsideBothControlClips": false
+    },
+    {
+      "type": "X->Y",
+      "firstSign": 1,
+      "secondSign": -1,
+      "timing": "consecutive_states",
+      "start": [
+        1.500000011920929,
+        0.5,
+        0.5
+      ],
+      "end": [
+        0.5,
+        -1.9999999523162841,
+        0.5
+      ],
+      "directClippedAxis": "none",
+      "outsideBothControlClips": false
+    },
+    {
+      "type": "X->Y",
+      "firstSign": 1,
+      "secondSign": 1,
+      "timing": "consecutive_states",
+      "start": [
+        1.500000011920929,
+        0.5,
+        0.5
+      ],
+      "end": [
+        0.5,
+        1.2,
+        0.5
+      ],
+      "directClippedAxis": "none",
+      "outsideBothControlClips": false
+    },
+    {
+      "type": "Z->Y",
+      "firstSign": -1,
+      "secondSign": -1,
+      "timing": "consecutive_states",
+      "start": [
+        0.5,
+        0.5,
+        -0.5000000119209289
+      ],
+      "end": [
+        0.5,
+        -1.9999999523162841,
+        0.5
+      ],
+      "directClippedAxis": "none",
+      "outsideBothControlClips": false
+    },
+    {
+      "type": "Z->Y",
+      "firstSign": -1,
+      "secondSign": 1,
+      "timing": "consecutive_states",
+      "start": [
+        0.5,
+        0.5,
+        -0.5000000119209289
+      ],
+      "end": [
+        0.5,
+        1.2,
+        0.5
+      ],
+      "directClippedAxis": "none",
+      "outsideBothControlClips": false
+    },
+    {
+      "type": "Z->Y",
+      "firstSign": 1,
+      "secondSign": -1,
+      "timing": "consecutive_states",
+      "start": [
+        0.5,
+        0.5,
+        1.500000011920929
+      ],
+      "end": [
+        0.5,
+        -1.9999999523162841,
+        0.5
+      ],
+      "directClippedAxis": "none",
+      "outsideBothControlClips": false
+    },
+    {
+      "type": "Z->Y",
+      "firstSign": 1,
+      "secondSign": 1,
+      "timing": "consecutive_states",
+      "start": [
+        0.5,
+        0.5,
+        1.500000011920929
+      ],
+      "end": [
+        0.5,
+        1.2,
+        0.5
+      ],
+      "directClippedAxis": "none",
+      "outsideBothControlClips": false
+    }
+  ],
+  "passed": 24,
+  "classSha256": {
+    "net/minecraft/entity/Entity.class": "0d750f1332a47569c702bddc303808a41a8d2502c3dcd17a84a200488f136363",
+    "net/minecraft/util/AxisAlignedBB.class": "4dd0b40263bfe457f3098ad4bd08778664b8e2d3437d9ce0b871adad726afe3f"
+  },
+  "sourceJar": "forge-1.8.9-MinecraftForge-FG2-merged+MinecraftForge-FG2+forge-1.8.9-11.15.1.2318-1.8.9-mcp.jar",
+  "stepping": "not exercised; direct legacy axis clipping only"
+}

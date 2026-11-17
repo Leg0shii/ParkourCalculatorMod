@@ -1,0 +1,5 @@
+{"name": "grind-or-run", "policy": "balanced", "ticks": 11, "calls": 24}
+{"name": "multi-support", "policy": "balanced", "ticks": 14, "calls": 12}
+{"name": "turn-blockage", "policy": "balanced", "ticks": null, "calls": 24}
+{"name": "extra-grind", "policy": "balanced", "ticks": 5, "calls": 12}
+{"name": "extra-repeat-ceiling", "policy": "balanced", "ticks": null, "calls": 12}

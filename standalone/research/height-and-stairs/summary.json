@@ -1,0 +1,82 @@
+{
+  "height-route": {
+    "fixture": "blocks-height-route.json",
+    "fixtureSha256": "d2d2ac99e13ac7f878985b313e11654417e77a4c0f769aab63b78bc3d7562f45",
+    "blockIds": [
+      "start",
+      "raised",
+      "goal"
+    ],
+    "profileKinds": [
+      "ordinary",
+      "ordinary"
+    ],
+    "airtimes": [
+      9,
+      9
+    ],
+    "allocation": [
+      0,
+      0
+    ],
+    "ticks": 18,
+    "searchSeconds": 0.22746166959404945,
+    "violation": 0.0,
+    "horizontalProblemHash": "2e08b27b383a23e3a04c94f1b32b5f7999bab56703ba9773dfafb54537a3f6b1",
+    "fullProblemHash": "087e26deb8d2d46ff4432a647bf031ebc0a44b80ef2e61d11c4e3364b012e0d2",
+    "contactChecks": 0,
+    "evaluatedPrefixes": 2
+  },
+  "lower-target": {
+    "fixture": "blocks-lower-target.json",
+    "fixtureSha256": "7d6e6117fd8c96aa846d7b1bc5063191c3613959cba8e684cfc54fa7acd29fbb",
+    "blockIds": [
+      "start",
+      "goal"
+    ],
+    "profileKinds": [
+      "ordinary"
+    ],
+    "airtimes": [
+      14
+    ],
+    "allocation": [
+      0
+    ],
+    "ticks": 14,
+    "searchSeconds": 0.19870200008153915,
+    "violation": 0.0,
+    "horizontalProblemHash": "90069d197c472260e20bd1d3b5c15dc4590e85812e3ef13a8fcf3d342320ea03",
+    "fullProblemHash": "dd47e1d4f908b2e3f328b986c698821eb7be700c76f7c589da4b75c39f864095",
+    "contactChecks": 1,
+    "evaluatedPrefixes": 1
+  },
+  "staircase": {
+    "fixture": "blocks-staircase.json",
+    "fixtureSha256": "13574086817fb885012b9062c58e8c958bf9c706aa76aa6ddadc1f62f6a4179f",
+    "blockIds": [
+      "start",
+      "step",
+      "goal"
+    ],
+    "profileKinds": [
+      "stair",
+      "stair"
+    ],
+    "airtimes": [
+      2,
+      2
+    ],
+    "allocation": [
+      0,
+      1
+    ],
+    "ticks": 5,
+    "searchSeconds": 0.019133999943733215,
+    "violation": 0.0,
+    "horizontalProblemHash": "622fe2b931c3f15e915a13848712aa84589733f514535e89283cd1a1d1ee192e",
+    "fullProblemHash": "771d3ac808edc67395bad68aa0c6657ee025d601da18c8cf7c7023c783b451f4",
+    "contactChecks": 0,
+    "evaluatedPrefixes": 5
+  }
+}

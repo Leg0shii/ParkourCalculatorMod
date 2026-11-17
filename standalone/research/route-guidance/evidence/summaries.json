@@ -1,0 +1,5942 @@
+[
+  {
+    "name": "consecutive-passage",
+    "ticks": 12,
+    "assignments": 4,
+    "acceptedAssignments": 2,
+    "numericalUnknowns": 2,
+    "unknownsWithImprovementPotential": 2,
+    "bestFeasible": 3.9310191166481414,
+    "worstLiftViolation": 6.661338147750939e-16,
+    "arms": {
+      "compact_circle": {
+        "status": "solved",
+        "value": 3.9564591977896684,
+        "upperBound": null,
+        "variables": 226,
+        "rows": 222,
+        "buildSeconds": 0.0329415425658226,
+        "solveSeconds": 0.01784587651491165,
+        "objectiveGap": 0.02544008114152696,
+        "similarity": {
+          "positionRmse": 0.021480836881470546,
+          "velocityRmse": 0.004509773944521034,
+          "routeRmse": 0.02288560361888702
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 3.469446951953614e-18,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 3.5638159090467525e-14
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 1,
+        "comparablePairs": 1,
+        "guidedSeconds": 0.7011628746986389,
+        "rankings": [
+          {
+            "decision": "passage:corner",
+            "parentFixed": {
+              "departure:0": 0
+            },
+            "choices": [
+              {
+                "choice": 6,
+                "relaxedValue": 3.9564591977896435,
+                "feasibleValue": 3.9310191166481414,
+                "status": "solved"
+              },
+              {
+                "choice": 7,
+                "relaxedValue": 3.9549094766331967,
+                "feasibleValue": 3.9186316222433044,
+                "status": "solved"
+              },
+              {
+                "choice": 4,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              },
+              {
+                "choice": 5,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 6,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      },
+      "compact_disk": {
+        "status": "solved",
+        "value": 3.9564591966960845,
+        "upperBound": null,
+        "variables": 226,
+        "rows": 222,
+        "buildSeconds": 0.029806338250637054,
+        "solveSeconds": 0.00876954197883606,
+        "objectiveGap": 0.02544008004794307,
+        "similarity": {
+          "positionRmse": 0.021480878499844987,
+          "velocityRmse": 0.00450993932500519,
+          "routeRmse": 0.022885728070490625
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 4.2937092423200873e-10,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 5.4511950509095186e-14
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 1,
+        "comparablePairs": 1,
+        "guidedSeconds": 0.6427190825343132,
+        "rankings": [
+          {
+            "decision": "passage:corner",
+            "parentFixed": {
+              "departure:0": 0
+            },
+            "choices": [
+              {
+                "choice": 6,
+                "relaxedValue": 3.95645919669611,
+                "feasibleValue": 3.9310191166481414,
+                "status": "solved"
+              },
+              {
+                "choice": 7,
+                "relaxedValue": 3.954909475540108,
+                "feasibleValue": 3.9186316222433044,
+                "status": "solved"
+              },
+              {
+                "choice": 4,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              },
+              {
+                "choice": 5,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 6,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      },
+      "convex_disk": {
+        "status": "solved",
+        "value": 3.9564592055057743,
+        "upperBound": 3.9564592121197757,
+        "variables": 346,
+        "rows": 1254,
+        "buildSeconds": 0.00087704136967659,
+        "solveSeconds": 0.005788668,
+        "objectiveGap": 0.025440088857632936,
+        "similarity": {
+          "positionRmse": 0.021480647153662775,
+          "velocityRmse": 0.004509514121433951,
+          "routeRmse": 0.02288530621564189
+        },
+        "rootRefined": "unknown",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 1.050583231521074e-12,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 3.885780586188048e-15
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 1,
+        "comparablePairs": 1,
+        "guidedSeconds": 0.4273156225681305,
+        "rankings": [
+          {
+            "decision": "passage:corner",
+            "parentFixed": {
+              "departure:0": 0
+            },
+            "choices": [
+              {
+                "choice": 6,
+                "relaxedValue": 3.9564592054785725,
+                "feasibleValue": 3.9310191166481414,
+                "status": "solved"
+              },
+              {
+                "choice": 7,
+                "relaxedValue": 3.954909484500303,
+                "feasibleValue": 3.9186316222433044,
+                "status": "solved"
+              },
+              {
+                "choice": 4,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              },
+              {
+                "choice": 5,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 6,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      }
+    },
+    "repeat": 0
+  },
+  {
+    "name": "cross-passage",
+    "ticks": 12,
+    "assignments": 4,
+    "acceptedAssignments": 2,
+    "numericalUnknowns": 2,
+    "unknownsWithImprovementPotential": 2,
+    "bestFeasible": 3.0589875426002866,
+    "worstLiftViolation": 8.881784197001252e-16,
+    "arms": {
+      "compact_circle": {
+        "status": "solved",
+        "value": 3.979016447759506,
+        "upperBound": null,
+        "variables": 226,
+        "rows": 230,
+        "buildSeconds": 0.031365711241960526,
+        "solveSeconds": 0.012943502515554428,
+        "objectiveGap": 0.9200289051592194,
+        "similarity": {
+          "positionRmse": 0.7516522314353149,
+          "velocityRmse": 0.07782684769450389,
+          "routeRmse": 0.7230549852328196
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 0.0,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 3.885780586188048e-14
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 1,
+        "comparablePairs": 1,
+        "guidedSeconds": 0.7406742908060551,
+        "rankings": [
+          {
+            "decision": "passage:corner",
+            "parentFixed": {
+              "departure:0": 0
+            },
+            "choices": [
+              {
+                "choice": 4,
+                "relaxedValue": 3.1185954119548494,
+                "feasibleValue": 3.0589875426002866,
+                "status": "solved"
+              },
+              {
+                "choice": 3,
+                "relaxedValue": 3.0871680026537334,
+                "feasibleValue": 2.995516967148266,
+                "status": "solved"
+              },
+              {
+                "choice": 5,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              },
+              {
+                "choice": 6,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 4,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      },
+      "compact_disk": {
+        "status": "solved",
+        "value": 3.979016446759187,
+        "upperBound": null,
+        "variables": 226,
+        "rows": 230,
+        "buildSeconds": 0.029455583542585373,
+        "solveSeconds": 0.007981829345226288,
+        "objectiveGap": 0.9200289041589005,
+        "similarity": {
+          "positionRmse": 0.9086364076833175,
+          "velocityRmse": 0.09400806145374806,
+          "routeRmse": 0.8825963999800848
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 1,
+          "totalMagnitudeSlack": 0.03614336943454108,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 5.3512749786932545e-14
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 1,
+        "comparablePairs": 1,
+        "guidedSeconds": 0.6480190008878708,
+        "rankings": [
+          {
+            "decision": "passage:corner",
+            "parentFixed": {
+              "departure:0": 0
+            },
+            "choices": [
+              {
+                "choice": 4,
+                "relaxedValue": 3.1185954109548124,
+                "feasibleValue": 3.0589875426002866,
+                "status": "solved"
+              },
+              {
+                "choice": 3,
+                "relaxedValue": 3.0871680015629193,
+                "feasibleValue": 2.995516967148266,
+                "status": "solved"
+              },
+              {
+                "choice": 5,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              },
+              {
+                "choice": 6,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 4,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      },
+      "convex_disk": {
+        "status": "solved",
+        "value": 3.979016453454702,
+        "upperBound": 3.9790164592941935,
+        "variables": 346,
+        "rows": 1262,
+        "buildSeconds": 0.00681966170668602,
+        "solveSeconds": 0.003798667,
+        "objectiveGap": 0.9200289108544153,
+        "similarity": {
+          "positionRmse": 1.11165665581003,
+          "velocityRmse": 0.11493323053455506,
+          "routeRmse": 1.0829342566902405
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 1,
+          "totalMagnitudeSlack": 0.05837957899059765,
+          "fractionalCancellation": 6.938893903907228e-18,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 5.551115123125783e-16
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 1,
+        "comparablePairs": 1,
+        "guidedSeconds": 0.4266677089035511,
+        "rankings": [
+          {
+            "decision": "passage:corner",
+            "parentFixed": {
+              "departure:0": 0
+            },
+            "choices": [
+              {
+                "choice": 4,
+                "relaxedValue": 3.118595417102637,
+                "feasibleValue": 3.0589875426002866,
+                "status": "solved"
+              },
+              {
+                "choice": 3,
+                "relaxedValue": 3.0871680083599724,
+                "feasibleValue": 2.995516967148266,
+                "status": "solved"
+              },
+              {
+                "choice": 5,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              },
+              {
+                "choice": 6,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 4,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      }
+    },
+    "repeat": 0
+  },
+  {
+    "name": "five-jump-control",
+    "ticks": 62,
+    "assignments": 10,
+    "acceptedAssignments": 10,
+    "numericalUnknowns": 0,
+    "unknownsWithImprovementPotential": 0,
+    "bestFeasible": 17.611579015153737,
+    "worstLiftViolation": 9.295530632483835e-10,
+    "arms": {
+      "compact_circle": {
+        "status": "solved",
+        "value": 17.627504891762026,
+        "upperBound": null,
+        "variables": 1256,
+        "rows": 775,
+        "buildSeconds": 0.1202879548072815,
+        "solveSeconds": 1.2080381624400616,
+        "objectiveGap": 0.015925876608289258,
+        "similarity": {
+          "positionRmse": 1.8462462950740606,
+          "velocityRmse": 0.13216434597713014,
+          "routeRmse": 1.1427605966706744
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.00013664659357814912,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 1.4224732503009818e-16,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 39,
+          "maxFlowFractionality": 0.34894787971547836
+        },
+        "beam": "feasible",
+        "beamRegret": 0.00013664659357814912,
+        "correctPairs": 2,
+        "comparablePairs": 3,
+        "guidedSeconds": 5.944183170795441,
+        "rankings": [
+          {
+            "decision": "departure:0",
+            "parentFixed": {},
+            "choices": [
+              {
+                "choice": 1,
+                "relaxedValue": 17.627183700111857,
+                "feasibleValue": 17.611579015153737,
+                "status": "solved"
+              },
+              {
+                "choice": 0,
+                "relaxedValue": 17.626787686843876,
+                "feasibleValue": 17.61144238416857,
+                "status": "solved"
+              }
+            ],
+            "chosen": 1,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          },
+          {
+            "decision": "departure:1",
+            "parentFixed": {
+              "departure:0": 1
+            },
+            "choices": [
+              {
+                "choice": 13,
+                "relaxedValue": 17.626033633681825,
+                "feasibleValue": 17.61144236856016,
+                "status": "solved"
+              },
+              {
+                "choice": 14,
+                "relaxedValue": 17.62549292960722,
+                "feasibleValue": 17.611579015153737,
+                "status": "solved"
+              },
+              {
+                "choice": 12,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 13,
+            "comparablePairs": 1,
+            "correctPairs": 0,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.00013664659357814912
+          },
+          {
+            "decision": "departure:2",
+            "parentFixed": {
+              "departure:0": 1,
+              "departure:1": 13
+            },
+            "choices": [
+              {
+                "choice": 26,
+                "relaxedValue": 17.625493224210917,
+                "feasibleValue": 17.61144236856016,
+                "status": "solved"
+              },
+              {
+                "choice": 25,
+                "relaxedValue": 17.623661982707578,
+                "feasibleValue": 17.60966737335355,
+                "status": "solved"
+              },
+              {
+                "choice": 24,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 26,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          },
+          {
+            "decision": "departure:3",
+            "parentFixed": {
+              "departure:0": 1,
+              "departure:1": 13,
+              "departure:2": 26
+            },
+            "choices": [
+              {
+                "choice": 38,
+                "relaxedValue": 17.625493224210928,
+                "feasibleValue": 17.61144236856016,
+                "status": "solved"
+              },
+              {
+                "choice": 37,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 38,
+            "comparablePairs": 0,
+            "correctPairs": 0,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      },
+      "compact_disk": {
+        "status": "solved",
+        "value": 17.627508123197074,
+        "upperBound": null,
+        "variables": 1256,
+        "rows": 775,
+        "buildSeconds": 0.12043695524334908,
+        "solveSeconds": 0.0738895833492279,
+        "objectiveGap": 0.015929108043337692,
+        "similarity": {
+          "positionRmse": 1.7236242895919884,
+          "velocityRmse": 0.13138592456736742,
+          "routeRmse": 0.8423382092755916
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.00013664659357814912,
+        "controlStats": {
+          "reducedAccelerationTicks": 3,
+          "totalMagnitudeSlack": 0.044540103004735015,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 39,
+          "maxFlowFractionality": 0.3564944856492478
+        },
+        "beam": "feasible",
+        "beamRegret": 0.00013664659357814912,
+        "correctPairs": 2,
+        "comparablePairs": 3,
+        "guidedSeconds": 3.9139064997434616,
+        "rankings": [
+          {
+            "decision": "departure:0",
+            "parentFixed": {},
+            "choices": [
+              {
+                "choice": 1,
+                "relaxedValue": 17.62724053871281,
+                "feasibleValue": 17.611579015153737,
+                "status": "solved"
+              },
+              {
+                "choice": 0,
+                "relaxedValue": 17.626918398048776,
+                "feasibleValue": 17.61144238416857,
+                "status": "solved"
+              }
+            ],
+            "chosen": 1,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          },
+          {
+            "decision": "departure:1",
+            "parentFixed": {
+              "departure:0": 1
+            },
+            "choices": [
+              {
+                "choice": 13,
+                "relaxedValue": 17.626099487474537,
+                "feasibleValue": 17.61144236856016,
+                "status": "solved"
+              },
+              {
+                "choice": 14,
+                "relaxedValue": 17.62549322199036,
+                "feasibleValue": 17.611579015153737,
+                "status": "solved"
+              },
+              {
+                "choice": 12,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 13,
+            "comparablePairs": 1,
+            "correctPairs": 0,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.00013664659357814912
+          },
+          {
+            "decision": "departure:2",
+            "parentFixed": {
+              "departure:0": 1,
+              "departure:1": 13
+            },
+            "choices": [
+              {
+                "choice": 26,
+                "relaxedValue": 17.625493221978964,
+                "feasibleValue": 17.61144236856016,
+                "status": "solved"
+              },
+              {
+                "choice": 25,
+                "relaxedValue": 17.623661980434466,
+                "feasibleValue": 17.60966737335355,
+                "status": "solved"
+              },
+              {
+                "choice": 24,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 26,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          },
+          {
+            "decision": "departure:3",
+            "parentFixed": {
+              "departure:0": 1,
+              "departure:1": 13,
+              "departure:2": 26
+            },
+            "choices": [
+              {
+                "choice": 38,
+                "relaxedValue": 17.625493221978733,
+                "feasibleValue": 17.61144236856016,
+                "status": "solved"
+              },
+              {
+                "choice": 37,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 38,
+            "comparablePairs": 0,
+            "correctPairs": 0,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      },
+      "convex_disk": {
+        "status": "solved",
+        "value": 17.625538137740026,
+        "upperBound": 17.625538508135993,
+        "variables": 3882,
+        "rows": 13027,
+        "buildSeconds": 0.007484667003154755,
+        "solveSeconds": 0.148574332,
+        "objectiveGap": 0.013959122586289396,
+        "similarity": {
+          "positionRmse": 0.288582197061654,
+          "velocityRmse": 0.04444846640686536,
+          "routeRmse": 0.1355387030831266
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.00013664659357814912,
+        "controlStats": {
+          "reducedAccelerationTicks": 1,
+          "totalMagnitudeSlack": 0.03879435255480118,
+          "fractionalCancellation": 0.29775457819655904,
+          "fractionalTicks": 51,
+          "maxFlowFractionality": 0.610538496592172
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0001366309851675851,
+        "correctPairs": 1,
+        "comparablePairs": 2,
+        "guidedSeconds": 1.6426747925579548,
+        "rankings": [
+          {
+            "decision": "departure:0",
+            "parentFixed": {},
+            "choices": [
+              {
+                "choice": 1,
+                "relaxedValue": 17.625538170685083,
+                "feasibleValue": 17.611579015153737,
+                "status": "solved"
+              },
+              {
+                "choice": 0,
+                "relaxedValue": 17.625534188458705,
+                "feasibleValue": 17.61144238416857,
+                "status": "solved"
+              }
+            ],
+            "chosen": 1,
+            "comparablePairs": 0,
+            "correctPairs": 0,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          },
+          {
+            "decision": "departure:1",
+            "parentFixed": {
+              "departure:0": 1
+            },
+            "choices": [
+              {
+                "choice": 13,
+                "relaxedValue": 17.62553418909008,
+                "feasibleValue": 17.61144236856016,
+                "status": "solved"
+              },
+              {
+                "choice": 14,
+                "relaxedValue": 17.625493235193908,
+                "feasibleValue": 17.611579015153737,
+                "status": "solved"
+              },
+              {
+                "choice": 12,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 13,
+            "comparablePairs": 1,
+            "correctPairs": 0,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.00013664659357814912
+          },
+          {
+            "decision": "departure:2",
+            "parentFixed": {
+              "departure:0": 1,
+              "departure:1": 13
+            },
+            "choices": [
+              {
+                "choice": 26,
+                "relaxedValue": 17.625493235188845,
+                "feasibleValue": 17.61144236856016,
+                "status": "solved"
+              },
+              {
+                "choice": 25,
+                "relaxedValue": 17.623661996784993,
+                "feasibleValue": 17.60966737335355,
+                "status": "solved"
+              },
+              {
+                "choice": 24,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 26,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          },
+          {
+            "decision": "departure:3",
+            "parentFixed": {
+              "departure:0": 1,
+              "departure:1": 13,
+              "departure:2": 26
+            },
+            "choices": [
+              {
+                "choice": 38,
+                "relaxedValue": 17.62549323502869,
+                "feasibleValue": 17.61144236856016,
+                "status": "solved"
+              },
+              {
+                "choice": 37,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 38,
+            "comparablePairs": 0,
+            "correctPairs": 0,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      }
+    },
+    "repeat": 0
+  },
+  {
+    "name": "narrow-fast-entry",
+    "ticks": 26,
+    "assignments": 3,
+    "acceptedAssignments": 2,
+    "numericalUnknowns": 1,
+    "unknownsWithImprovementPotential": 1,
+    "bestFeasible": 10.588749797150562,
+    "worstLiftViolation": 1.3222410616637778e-14,
+    "arms": {
+      "compact_circle": {
+        "status": "solved",
+        "value": 10.618137487746042,
+        "upperBound": null,
+        "variables": 517,
+        "rows": 324,
+        "buildSeconds": 0.047291915863752365,
+        "solveSeconds": 0.031746167689561844,
+        "objectiveGap": 0.0293876905954793,
+        "similarity": {
+          "positionRmse": 0.7032721037659743,
+          "velocityRmse": 0.05132871670753991,
+          "routeRmse": 0.6497403485600735
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.2543873263975591,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 0.0,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 15,
+          "maxFlowFractionality": 0.5165266700561393
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 0,
+        "comparablePairs": 1,
+        "guidedSeconds": 0.752125833183527,
+        "rankings": [
+          {
+            "decision": "departure:0",
+            "parentFixed": {},
+            "choices": [
+              {
+                "choice": 1,
+                "relaxedValue": 10.617129593283801,
+                "feasibleValue": 10.334362470753003,
+                "status": "solved"
+              },
+              {
+                "choice": 0,
+                "relaxedValue": 10.61031249184957,
+                "feasibleValue": 10.588749797150562,
+                "status": "solved"
+              },
+              {
+                "choice": 2,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 1,
+            "comparablePairs": 1,
+            "correctPairs": 0,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.2543873263975591
+          }
+        ]
+      },
+      "compact_disk": {
+        "status": "solved",
+        "value": 10.618137485384837,
+        "upperBound": null,
+        "variables": 517,
+        "rows": 324,
+        "buildSeconds": 0.046682875603437424,
+        "solveSeconds": 0.012317538261413574,
+        "objectiveGap": 0.029387688234274734,
+        "similarity": {
+          "positionRmse": 0.7035436274819773,
+          "velocityRmse": 0.05133511711190413,
+          "routeRmse": 0.6499979310517608
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.2543873263975591,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 2.1104449389464097e-08,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 15,
+          "maxFlowFractionality": 0.5165267394168789
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 0,
+        "comparablePairs": 1,
+        "guidedSeconds": 0.6664884611964226,
+        "rankings": [
+          {
+            "decision": "departure:0",
+            "parentFixed": {},
+            "choices": [
+              {
+                "choice": 1,
+                "relaxedValue": 10.617129590994862,
+                "feasibleValue": 10.334362470753003,
+                "status": "solved"
+              },
+              {
+                "choice": 0,
+                "relaxedValue": 10.61033641029934,
+                "feasibleValue": 10.588749797150562,
+                "status": "solved"
+              },
+              {
+                "choice": 2,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 1,
+            "comparablePairs": 1,
+            "correctPairs": 0,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.2543873263975591
+          }
+        ]
+      },
+      "convex_disk": {
+        "status": "solved",
+        "value": 10.62008351961034,
+        "upperBound": 10.620083531496768,
+        "variables": 1463,
+        "rows": 4931,
+        "buildSeconds": 0.0029095858335494995,
+        "solveSeconds": 0.01814171,
+        "objectiveGap": 0.03133372245977739,
+        "similarity": {
+          "positionRmse": 0.7096660106628677,
+          "velocityRmse": 0.05598322223176222,
+          "routeRmse": 0.6498436023919641
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.2543873263975591,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 1.9722542349276395e-10,
+          "fractionalCancellation": 8.881784197001252e-15,
+          "fractionalTicks": 14,
+          "maxFlowFractionality": 0.27498327432785696
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 0,
+        "comparablePairs": 1,
+        "guidedSeconds": 0.4349549598991871,
+        "rankings": [
+          {
+            "decision": "departure:0",
+            "parentFixed": {},
+            "choices": [
+              {
+                "choice": 1,
+                "relaxedValue": 10.61712960455224,
+                "feasibleValue": 10.334362470753003,
+                "status": "solved"
+              },
+              {
+                "choice": 0,
+                "relaxedValue": 10.610336424031548,
+                "feasibleValue": 10.588749797150562,
+                "status": "solved"
+              },
+              {
+                "choice": 2,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 1,
+            "comparablePairs": 1,
+            "correctPairs": 0,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.2543873263975591
+          }
+        ]
+      }
+    },
+    "repeat": 0
+  },
+  {
+    "name": "open",
+    "ticks": 12,
+    "assignments": 1,
+    "acceptedAssignments": 1,
+    "numericalUnknowns": 0,
+    "unknownsWithImprovementPotential": 0,
+    "bestFeasible": 3.375829105211352,
+    "worstLiftViolation": 5.3602987500067645e-11,
+    "arms": {
+      "compact_circle": {
+        "status": "solved",
+        "value": 3.3758290959386192,
+        "upperBound": null,
+        "variables": 222,
+        "rows": 125,
+        "buildSeconds": 0.018040001392364502,
+        "solveSeconds": 0.023968499153852463,
+        "objectiveGap": -9.272732803822237e-09,
+        "similarity": {
+          "positionRmse": 3.2873186073302195e-05,
+          "velocityRmse": 5.2100962216125734e-06,
+          "routeRmse": 3.27847524876681e-05
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 0.0,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 1.1102230246251565e-14
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 0,
+        "comparablePairs": 0,
+        "guidedSeconds": 0.21326762810349464,
+        "rankings": []
+      },
+      "compact_disk": {
+        "status": "solved",
+        "value": 3.375829094847585,
+        "upperBound": null,
+        "variables": 222,
+        "rows": 125,
+        "buildSeconds": 0.017566919326782227,
+        "solveSeconds": 0.005506210029125214,
+        "objectiveGap": -1.0363767177778982e-08,
+        "similarity": {
+          "positionRmse": 5.7328748678908105e-09,
+          "velocityRmse": 7.508492899827205e-10,
+          "routeRmse": 6.016889559513959e-09
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 2.252916540823602e-09,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 8.593126210598712e-14
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 0,
+        "comparablePairs": 0,
+        "guidedSeconds": 0.22401262447237968,
+        "rankings": []
+      },
+      "convex_disk": {
+        "status": "solved",
+        "value": 3.375829105139066,
+        "upperBound": 3.3758291098853577,
+        "variables": 342,
+        "rows": 1149,
+        "buildSeconds": 0.0006651692092418671,
+        "solveSeconds": 0.003011919,
+        "objectiveGap": -7.228617704413409e-11,
+        "similarity": {
+          "positionRmse": 0.0006993786892917688,
+          "velocityRmse": 9.946641293874376e-05,
+          "routeRmse": 0.0006916783079187936
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 1.5292211941186906e-11,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 7.771561172376096e-15
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 0,
+        "comparablePairs": 0,
+        "guidedSeconds": 0.22140004113316536,
+        "rankings": []
+      }
+    },
+    "repeat": 0
+  },
+  {
+    "name": "reverse-objective",
+    "ticks": 12,
+    "assignments": 1,
+    "acceptedAssignments": 1,
+    "numericalUnknowns": 0,
+    "unknownsWithImprovementPotential": 0,
+    "bestFeasible": 2.6708389651326683,
+    "worstLiftViolation": 3.9201177894077066e-11,
+    "arms": {
+      "compact_circle": {
+        "status": "solved",
+        "value": 2.6708389558599364,
+        "upperBound": null,
+        "variables": 222,
+        "rows": 125,
+        "buildSeconds": 0.018089577555656433,
+        "solveSeconds": 0.022408124059438705,
+        "objectiveGap": -9.272731915643817e-09,
+        "similarity": {
+          "positionRmse": 3.412360489404198e-05,
+          "velocityRmse": 5.0365403121680646e-06,
+          "routeRmse": 3.404162926968246e-05
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 0.0,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 9.547918011776346e-15
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 0,
+        "comparablePairs": 0,
+        "guidedSeconds": 0.2159758321940899,
+        "rankings": []
+      },
+      "compact_disk": {
+        "status": "solved",
+        "value": 2.6708389547689113,
+        "upperBound": null,
+        "variables": 222,
+        "rows": 125,
+        "buildSeconds": 0.01804516837000847,
+        "solveSeconds": 0.005917917937040329,
+        "objectiveGap": -1.0363756963727155e-08,
+        "similarity": {
+          "positionRmse": 5.7312777288511955e-09,
+          "velocityRmse": 7.505842683255748e-10,
+          "routeRmse": 6.015520048705471e-09
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 2.2526316922899525e-09,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 7.049916206369744e-14
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 0,
+        "comparablePairs": 0,
+        "guidedSeconds": 0.2132740393280983,
+        "rankings": []
+      },
+      "convex_disk": {
+        "status": "solved",
+        "value": 2.6708389650720044,
+        "upperBound": 2.670838969073752,
+        "variables": 342,
+        "rows": 1149,
+        "buildSeconds": 0.0007245838642120361,
+        "solveSeconds": 0.003028914,
+        "objectiveGap": -6.06639183331481e-11,
+        "similarity": {
+          "positionRmse": 0.000659664400849335,
+          "velocityRmse": 9.40591957145154e-05,
+          "routeRmse": 0.0006411210026223548
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 1.2224006529226727e-11,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 8.548717289613705e-15
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 0,
+        "comparablePairs": 0,
+        "guidedSeconds": 0.21862762421369553,
+        "rankings": []
+      }
+    },
+    "repeat": 0
+  },
+  {
+    "name": "run-allocation",
+    "ticks": 26,
+    "assignments": 3,
+    "acceptedAssignments": 3,
+    "numericalUnknowns": 0,
+    "unknownsWithImprovementPotential": 0,
+    "bestFeasible": 8.336390150803393,
+    "worstLiftViolation": 7.93960843251118e-10,
+    "arms": {
+      "compact_circle": {
+        "status": "solved",
+        "value": 8.675361779067392,
+        "upperBound": null,
+        "variables": 517,
+        "rows": 324,
+        "buildSeconds": 0.04717608541250229,
+        "solveSeconds": 0.030038878321647644,
+        "objectiveGap": 0.33897162826399985,
+        "similarity": {
+          "positionRmse": 0.1894105748269764,
+          "velocityRmse": 0.012047033594095197,
+          "routeRmse": 0.19670132701719772
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 0.0,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 5.208116604649149e-09
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 3,
+        "comparablePairs": 3,
+        "guidedSeconds": 0.6827969178557396,
+        "rankings": [
+          {
+            "decision": "departure:0",
+            "parentFixed": {},
+            "choices": [
+              {
+                "choice": 2,
+                "relaxedValue": 8.675361783067626,
+                "feasibleValue": 8.336390150803393,
+                "status": "solved"
+              },
+              {
+                "choice": 1,
+                "relaxedValue": 8.416789411940057,
+                "feasibleValue": 8.086365635833214,
+                "status": "solved"
+              },
+              {
+                "choice": 0,
+                "relaxedValue": 8.106461550621425,
+                "feasibleValue": 7.796529083677962,
+                "status": "solved"
+              }
+            ],
+            "chosen": 2,
+            "comparablePairs": 3,
+            "correctPairs": 3,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      },
+      "compact_disk": {
+        "status": "solved",
+        "value": 8.675361776703404,
+        "upperBound": null,
+        "variables": 517,
+        "rows": 324,
+        "buildSeconds": 0.0466499999165535,
+        "solveSeconds": 0.012097332626581192,
+        "objectiveGap": 0.33897162590001173,
+        "similarity": {
+          "positionRmse": 0.1894105701053764,
+          "velocityRmse": 0.012047033256051994,
+          "routeRmse": 0.19670132192097062
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 1.0967506000603144e-09,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 5.208102060727526e-09
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 3,
+        "comparablePairs": 3,
+        "guidedSeconds": 0.626603789627552,
+        "rankings": [
+          {
+            "decision": "departure:0",
+            "parentFixed": {},
+            "choices": [
+              {
+                "choice": 2,
+                "relaxedValue": 8.675361780703694,
+                "feasibleValue": 8.336390150803393,
+                "status": "solved"
+              },
+              {
+                "choice": 1,
+                "relaxedValue": 8.416789409575616,
+                "feasibleValue": 8.086365635833214,
+                "status": "solved"
+              },
+              {
+                "choice": 0,
+                "relaxedValue": 8.106461548256807,
+                "feasibleValue": 7.796529083677962,
+                "status": "solved"
+              }
+            ],
+            "chosen": 2,
+            "comparablePairs": 3,
+            "correctPairs": 3,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      },
+      "convex_disk": {
+        "status": "solved",
+        "value": 8.675361794139832,
+        "upperBound": 8.675361805969764,
+        "variables": 1463,
+        "rows": 4931,
+        "buildSeconds": 0.003061167895793915,
+        "solveSeconds": 0.016964915,
+        "objectiveGap": 0.33897164333643914,
+        "similarity": {
+          "positionRmse": 0.18941101995361406,
+          "velocityRmse": 0.012047057680597434,
+          "routeRmse": 0.19670178165368515
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 8.251697936056956e-13,
+          "fractionalCancellation": 2.949029909160572e-16,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 1.6402932345727095e-09
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 3,
+        "comparablePairs": 3,
+        "guidedSeconds": 0.43465475365519524,
+        "rankings": [
+          {
+            "decision": "departure:0",
+            "parentFixed": {},
+            "choices": [
+              {
+                "choice": 2,
+                "relaxedValue": 8.675361794515112,
+                "feasibleValue": 8.336390150803393,
+                "status": "solved"
+              },
+              {
+                "choice": 1,
+                "relaxedValue": 8.416789423308675,
+                "feasibleValue": 8.086365635833214,
+                "status": "solved"
+              },
+              {
+                "choice": 0,
+                "relaxedValue": 8.106461562359362,
+                "feasibleValue": 7.796529083677962,
+                "status": "solved"
+              }
+            ],
+            "chosen": 2,
+            "comparablePairs": 3,
+            "correctPairs": 3,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      }
+    },
+    "repeat": 0
+  },
+  {
+    "name": "timing-and-passage",
+    "ticks": 26,
+    "assignments": 9,
+    "acceptedAssignments": 4,
+    "numericalUnknowns": 5,
+    "unknownsWithImprovementPotential": 4,
+    "bestFeasible": 7.379577000914482,
+    "worstLiftViolation": 1.1102230246251565e-15,
+    "arms": {
+      "compact_circle": {
+        "status": "solved",
+        "value": 9.020327660888844,
+        "upperBound": null,
+        "variables": 520,
+        "rows": 571,
+        "buildSeconds": 0.07435141876339912,
+        "solveSeconds": 0.054699916392564774,
+        "objectiveGap": 1.640750659974362,
+        "similarity": {
+          "positionRmse": 1.3381242522846901,
+          "velocityRmse": 0.07705084525006477,
+          "routeRmse": 1.2578716131336565
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 3.8163916471489756e-17,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 4.597023661734312e-08
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 2,
+        "comparablePairs": 2,
+        "guidedSeconds": 1.3402387909591198,
+        "rankings": [
+          {
+            "decision": "departure:0",
+            "parentFixed": {},
+            "choices": [
+              {
+                "choice": 2,
+                "relaxedValue": 9.020327664888956,
+                "feasibleValue": 7.379577000914482,
+                "status": "solved"
+              },
+              {
+                "choice": 1,
+                "relaxedValue": 8.81480098917414,
+                "feasibleValue": 7.2859403397419005,
+                "status": "solved"
+              },
+              {
+                "choice": 0,
+                "relaxedValue": 8.607600612269426,
+                "feasibleValue": null,
+                "status": "solved"
+              }
+            ],
+            "chosen": 2,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          },
+          {
+            "decision": "passage:corner",
+            "parentFixed": {
+              "departure:0": 2,
+              "departure:1": 14
+            },
+            "choices": [
+              {
+                "choice": 3,
+                "relaxedValue": 7.80889007665618,
+                "feasibleValue": 7.379577000914482,
+                "status": "solved"
+              },
+              {
+                "choice": 4,
+                "relaxedValue": 7.463445614833016,
+                "feasibleValue": 7.072087832596187,
+                "status": "solved"
+              },
+              {
+                "choice": 5,
+                "relaxedValue": 7.1198379213053675,
+                "feasibleValue": null,
+                "status": "solved"
+              }
+            ],
+            "chosen": 3,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      },
+      "compact_disk": {
+        "status": "solved",
+        "value": 9.02032765851287,
+        "upperBound": null,
+        "variables": 520,
+        "rows": 571,
+        "buildSeconds": 0.07446491718292236,
+        "solveSeconds": 0.022075124084949493,
+        "objectiveGap": 1.6407506575983888,
+        "similarity": {
+          "positionRmse": 1.3381274570750379,
+          "velocityRmse": 0.07705003222540517,
+          "routeRmse": 1.2578749284801025
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 8.972928511319367e-10,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 4.6651916218998224e-08
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 2,
+        "comparablePairs": 2,
+        "guidedSeconds": 1.2560000009834766,
+        "rankings": [
+          {
+            "decision": "departure:0",
+            "parentFixed": {},
+            "choices": [
+              {
+                "choice": 2,
+                "relaxedValue": 9.020327662532377,
+                "feasibleValue": 7.379577000914482,
+                "status": "solved"
+              },
+              {
+                "choice": 1,
+                "relaxedValue": 8.814800986814811,
+                "feasibleValue": 7.2859403397419005,
+                "status": "solved"
+              },
+              {
+                "choice": 0,
+                "relaxedValue": 8.607600609907815,
+                "feasibleValue": null,
+                "status": "solved"
+              }
+            ],
+            "chosen": 2,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          },
+          {
+            "decision": "passage:corner",
+            "parentFixed": {
+              "departure:0": 2,
+              "departure:1": 14
+            },
+            "choices": [
+              {
+                "choice": 3,
+                "relaxedValue": 7.80889007459653,
+                "feasibleValue": 7.379577000914482,
+                "status": "solved"
+              },
+              {
+                "choice": 4,
+                "relaxedValue": 7.463445612479232,
+                "feasibleValue": 7.072087832596187,
+                "status": "solved"
+              },
+              {
+                "choice": 5,
+                "relaxedValue": 7.119837918941801,
+                "feasibleValue": null,
+                "status": "solved"
+              }
+            ],
+            "chosen": 3,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      },
+      "convex_disk": {
+        "status": "solved",
+        "value": 9.020327679142483,
+        "upperBound": 9.020327692238919,
+        "variables": 1466,
+        "rows": 5184,
+        "buildSeconds": 0.0032200850546360016,
+        "solveSeconds": 0.022351704,
+        "objectiveGap": 1.6407506782280006,
+        "similarity": {
+          "positionRmse": 1.338137105087075,
+          "velocityRmse": 0.07704555585300618,
+          "routeRmse": 1.2578836569676142
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 1.5973715405959155e-12,
+          "fractionalCancellation": 1.2573275753879898e-12,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 2.783884012202975e-09
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 2,
+        "comparablePairs": 2,
+        "guidedSeconds": 0.6532131247222424,
+        "rankings": [
+          {
+            "decision": "departure:0",
+            "parentFixed": {},
+            "choices": [
+              {
+                "choice": 2,
+                "relaxedValue": 9.020327679389515,
+                "feasibleValue": 7.379577000914482,
+                "status": "solved"
+              },
+              {
+                "choice": 1,
+                "relaxedValue": 8.8148010035861,
+                "feasibleValue": 7.2859403397419005,
+                "status": "solved"
+              },
+              {
+                "choice": 0,
+                "relaxedValue": 8.607600626361972,
+                "feasibleValue": null,
+                "status": "solved"
+              }
+            ],
+            "chosen": 2,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          },
+          {
+            "decision": "passage:corner",
+            "parentFixed": {
+              "departure:0": 2,
+              "departure:1": 14
+            },
+            "choices": [
+              {
+                "choice": 3,
+                "relaxedValue": 7.808890094923661,
+                "feasibleValue": 7.379577000914482,
+                "status": "solved"
+              },
+              {
+                "choice": 4,
+                "relaxedValue": 7.463445633136368,
+                "feasibleValue": 7.072087832596187,
+                "status": "solved"
+              },
+              {
+                "choice": 5,
+                "relaxedValue": 7.119837939648038,
+                "feasibleValue": null,
+                "status": "solved"
+              }
+            ],
+            "chosen": 3,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      }
+    },
+    "repeat": 0
+  },
+  {
+    "name": "turning-support",
+    "ticks": 26,
+    "assignments": 3,
+    "acceptedAssignments": 3,
+    "numericalUnknowns": 0,
+    "unknownsWithImprovementPotential": 0,
+    "bestFeasible": 7.607156402681025,
+    "worstLiftViolation": 1.5091469220129827e-10,
+    "arms": {
+      "compact_circle": {
+        "status": "solved",
+        "value": 7.61926540147963,
+        "upperBound": null,
+        "variables": 517,
+        "rows": 324,
+        "buildSeconds": 0.04703212529420853,
+        "solveSeconds": 0.031109537929296494,
+        "objectiveGap": 0.012108998798605164,
+        "similarity": {
+          "positionRmse": 0.24122045773096412,
+          "velocityRmse": 0.019616268466487372,
+          "routeRmse": 0.2361240016993076
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 0.0,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 3.3197478699342753e-07
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 3,
+        "comparablePairs": 3,
+        "guidedSeconds": 0.722800001502037,
+        "rankings": [
+          {
+            "decision": "departure:0",
+            "parentFixed": {},
+            "choices": [
+              {
+                "choice": 2,
+                "relaxedValue": 7.619265405479638,
+                "feasibleValue": 7.607156402681025,
+                "status": "solved"
+              },
+              {
+                "choice": 1,
+                "relaxedValue": 7.6107636634797,
+                "feasibleValue": 7.598147560916406,
+                "status": "solved"
+              },
+              {
+                "choice": 0,
+                "relaxedValue": 7.606344102726159,
+                "feasibleValue": 7.593596661474295,
+                "status": "solved"
+              }
+            ],
+            "chosen": 2,
+            "comparablePairs": 3,
+            "correctPairs": 3,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      },
+      "compact_disk": {
+        "status": "solved",
+        "value": 7.619265399271817,
+        "upperBound": null,
+        "variables": 517,
+        "rows": 324,
+        "buildSeconds": 0.04655041918158531,
+        "solveSeconds": 0.028561249375343323,
+        "objectiveGap": 0.012108996590791676,
+        "similarity": {
+          "positionRmse": 0.1430983597889856,
+          "velocityRmse": 0.015802160605514027,
+          "routeRmse": 0.10234782587323171
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 1,
+          "totalMagnitudeSlack": 0.03543237017288266,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 3.3194036164196916e-07
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 3,
+        "comparablePairs": 3,
+        "guidedSeconds": 0.6906060017645359,
+        "rankings": [
+          {
+            "decision": "departure:0",
+            "parentFixed": {},
+            "choices": [
+              {
+                "choice": 2,
+                "relaxedValue": 7.619265403271678,
+                "feasibleValue": 7.607156402681025,
+                "status": "solved"
+              },
+              {
+                "choice": 1,
+                "relaxedValue": 7.610763661220751,
+                "feasibleValue": 7.598147560916406,
+                "status": "solved"
+              },
+              {
+                "choice": 0,
+                "relaxedValue": 7.606344187687816,
+                "feasibleValue": 7.593596661474295,
+                "status": "solved"
+              }
+            ],
+            "chosen": 2,
+            "comparablePairs": 3,
+            "correctPairs": 3,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      },
+      "convex_disk": {
+        "status": "solved",
+        "value": 7.619265415692125,
+        "upperBound": 7.619265428183791,
+        "variables": 1463,
+        "rows": 4931,
+        "buildSeconds": 0.002904709428548813,
+        "solveSeconds": 0.023746206,
+        "objectiveGap": 0.012109013011099456,
+        "similarity": {
+          "positionRmse": 0.1247666912433732,
+          "velocityRmse": 0.01502127937225237,
+          "routeRmse": 0.06383924673952844
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 1,
+          "totalMagnitudeSlack": 0.04590375273237049,
+          "fractionalCancellation": 1.0332590453382418e-08,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 8.270659990206042e-08
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 3,
+        "comparablePairs": 3,
+        "guidedSeconds": 0.4880402944982052,
+        "rankings": [
+          {
+            "decision": "departure:0",
+            "parentFixed": {},
+            "choices": [
+              {
+                "choice": 2,
+                "relaxedValue": 7.61926541653872,
+                "feasibleValue": 7.607156402681025,
+                "status": "solved"
+              },
+              {
+                "choice": 1,
+                "relaxedValue": 7.610763674795195,
+                "feasibleValue": 7.598147560916406,
+                "status": "solved"
+              },
+              {
+                "choice": 0,
+                "relaxedValue": 7.606344201408295,
+                "feasibleValue": 7.593596661474295,
+                "status": "solved"
+              }
+            ],
+            "chosen": 2,
+            "comparablePairs": 3,
+            "correctPairs": 3,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      }
+    },
+    "repeat": 0
+  },
+  {
+    "name": "consecutive-passage",
+    "ticks": 12,
+    "assignments": 4,
+    "acceptedAssignments": 2,
+    "numericalUnknowns": 2,
+    "unknownsWithImprovementPotential": 2,
+    "bestFeasible": 3.9310191166481414,
+    "worstLiftViolation": 6.661338147750939e-16,
+    "arms": {
+      "compact_circle": {
+        "status": "solved",
+        "value": 3.9564591977896684,
+        "upperBound": null,
+        "variables": 226,
+        "rows": 222,
+        "buildSeconds": 0.028595417737960815,
+        "solveSeconds": 0.021690793335437775,
+        "objectiveGap": 0.02544008114152696,
+        "similarity": {
+          "positionRmse": 0.021480836881470546,
+          "velocityRmse": 0.004509773944521034,
+          "routeRmse": 0.02288560361888702
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 3.469446951953614e-18,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 3.5638159090467525e-14
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 1,
+        "comparablePairs": 1,
+        "guidedSeconds": 0.6880726292729378,
+        "rankings": [
+          {
+            "decision": "passage:corner",
+            "parentFixed": {
+              "departure:0": 0
+            },
+            "choices": [
+              {
+                "choice": 6,
+                "relaxedValue": 3.9564591977896435,
+                "feasibleValue": 3.9310191166481414,
+                "status": "solved"
+              },
+              {
+                "choice": 7,
+                "relaxedValue": 3.9549094766331967,
+                "feasibleValue": 3.9186316222433044,
+                "status": "solved"
+              },
+              {
+                "choice": 4,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              },
+              {
+                "choice": 5,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 6,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      },
+      "compact_disk": {
+        "status": "solved",
+        "value": 3.9564591966960845,
+        "upperBound": null,
+        "variables": 226,
+        "rows": 222,
+        "buildSeconds": 0.02805563062429428,
+        "solveSeconds": 0.01052258163690567,
+        "objectiveGap": 0.02544008004794307,
+        "similarity": {
+          "positionRmse": 0.021480878499844987,
+          "velocityRmse": 0.00450993932500519,
+          "routeRmse": 0.022885728070490625
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 4.2937092423200873e-10,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 5.4511950509095186e-14
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 1,
+        "comparablePairs": 1,
+        "guidedSeconds": 0.6318462900817394,
+        "rankings": [
+          {
+            "decision": "passage:corner",
+            "parentFixed": {
+              "departure:0": 0
+            },
+            "choices": [
+              {
+                "choice": 6,
+                "relaxedValue": 3.95645919669611,
+                "feasibleValue": 3.9310191166481414,
+                "status": "solved"
+              },
+              {
+                "choice": 7,
+                "relaxedValue": 3.954909475540108,
+                "feasibleValue": 3.9186316222433044,
+                "status": "solved"
+              },
+              {
+                "choice": 4,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              },
+              {
+                "choice": 5,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 6,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      },
+      "convex_disk": {
+        "status": "solved",
+        "value": 3.9564592055057743,
+        "upperBound": 3.9564592121197757,
+        "variables": 346,
+        "rows": 1254,
+        "buildSeconds": 0.0009264200925827026,
+        "solveSeconds": 0.005728461,
+        "objectiveGap": 0.025440088857632936,
+        "similarity": {
+          "positionRmse": 0.021480647153662775,
+          "velocityRmse": 0.004509514121433951,
+          "routeRmse": 0.02288530621564189
+        },
+        "rootRefined": "unknown",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 1.050583231521074e-12,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 3.885780586188048e-15
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 1,
+        "comparablePairs": 1,
+        "guidedSeconds": 0.41112566366791725,
+        "rankings": [
+          {
+            "decision": "passage:corner",
+            "parentFixed": {
+              "departure:0": 0
+            },
+            "choices": [
+              {
+                "choice": 6,
+                "relaxedValue": 3.9564592054785725,
+                "feasibleValue": 3.9310191166481414,
+                "status": "solved"
+              },
+              {
+                "choice": 7,
+                "relaxedValue": 3.954909484500303,
+                "feasibleValue": 3.9186316222433044,
+                "status": "solved"
+              },
+              {
+                "choice": 4,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              },
+              {
+                "choice": 5,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 6,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      }
+    },
+    "repeat": 1
+  },
+  {
+    "name": "cross-passage",
+    "ticks": 12,
+    "assignments": 4,
+    "acceptedAssignments": 2,
+    "numericalUnknowns": 2,
+    "unknownsWithImprovementPotential": 2,
+    "bestFeasible": 3.0589875426002866,
+    "worstLiftViolation": 8.881784197001252e-16,
+    "arms": {
+      "compact_circle": {
+        "status": "solved",
+        "value": 3.979016447759506,
+        "upperBound": null,
+        "variables": 226,
+        "rows": 230,
+        "buildSeconds": 0.031082872301340103,
+        "solveSeconds": 0.017340540885925293,
+        "objectiveGap": 0.9200289051592194,
+        "similarity": {
+          "positionRmse": 0.7516522314353149,
+          "velocityRmse": 0.07782684769450389,
+          "routeRmse": 0.7230549852328196
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 0.0,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 3.885780586188048e-14
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 1,
+        "comparablePairs": 1,
+        "guidedSeconds": 0.7386514991521835,
+        "rankings": [
+          {
+            "decision": "passage:corner",
+            "parentFixed": {
+              "departure:0": 0
+            },
+            "choices": [
+              {
+                "choice": 4,
+                "relaxedValue": 3.1185954119548494,
+                "feasibleValue": 3.0589875426002866,
+                "status": "solved"
+              },
+              {
+                "choice": 3,
+                "relaxedValue": 3.0871680026537334,
+                "feasibleValue": 2.995516967148266,
+                "status": "solved"
+              },
+              {
+                "choice": 5,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              },
+              {
+                "choice": 6,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 4,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      },
+      "compact_disk": {
+        "status": "solved",
+        "value": 3.979016446759187,
+        "upperBound": null,
+        "variables": 226,
+        "rows": 230,
+        "buildSeconds": 0.030446495860815048,
+        "solveSeconds": 0.010488830506801605,
+        "objectiveGap": 0.9200289041589005,
+        "similarity": {
+          "positionRmse": 0.9086364076833175,
+          "velocityRmse": 0.09400806145374806,
+          "routeRmse": 0.8825963999800848
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 1,
+          "totalMagnitudeSlack": 0.03614336943454108,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 5.3512749786932545e-14
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 1,
+        "comparablePairs": 1,
+        "guidedSeconds": 0.6532539613544941,
+        "rankings": [
+          {
+            "decision": "passage:corner",
+            "parentFixed": {
+              "departure:0": 0
+            },
+            "choices": [
+              {
+                "choice": 4,
+                "relaxedValue": 3.1185954109548124,
+                "feasibleValue": 3.0589875426002866,
+                "status": "solved"
+              },
+              {
+                "choice": 3,
+                "relaxedValue": 3.0871680015629193,
+                "feasibleValue": 2.995516967148266,
+                "status": "solved"
+              },
+              {
+                "choice": 5,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              },
+              {
+                "choice": 6,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 4,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      },
+      "convex_disk": {
+        "status": "solved",
+        "value": 3.979016453454702,
+        "upperBound": 3.9790164592941935,
+        "variables": 346,
+        "rows": 1262,
+        "buildSeconds": 0.0010471269488334656,
+        "solveSeconds": 0.003857371,
+        "objectiveGap": 0.9200289108544153,
+        "similarity": {
+          "positionRmse": 1.11165665581003,
+          "velocityRmse": 0.11493323053455506,
+          "routeRmse": 1.0829342566902405
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 1,
+          "totalMagnitudeSlack": 0.05837957899059765,
+          "fractionalCancellation": 6.938893903907228e-18,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 5.551115123125783e-16
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 1,
+        "comparablePairs": 1,
+        "guidedSeconds": 0.41985395550727844,
+        "rankings": [
+          {
+            "decision": "passage:corner",
+            "parentFixed": {
+              "departure:0": 0
+            },
+            "choices": [
+              {
+                "choice": 4,
+                "relaxedValue": 3.118595417102637,
+                "feasibleValue": 3.0589875426002866,
+                "status": "solved"
+              },
+              {
+                "choice": 3,
+                "relaxedValue": 3.0871680083599724,
+                "feasibleValue": 2.995516967148266,
+                "status": "solved"
+              },
+              {
+                "choice": 5,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              },
+              {
+                "choice": 6,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 4,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      }
+    },
+    "repeat": 1
+  },
+  {
+    "name": "five-jump-control",
+    "ticks": 62,
+    "assignments": 10,
+    "acceptedAssignments": 10,
+    "numericalUnknowns": 0,
+    "unknownsWithImprovementPotential": 0,
+    "bestFeasible": 17.611579015153737,
+    "worstLiftViolation": 9.295530632483835e-10,
+    "arms": {
+      "compact_circle": {
+        "status": "solved",
+        "value": 17.627504891762026,
+        "upperBound": null,
+        "variables": 1256,
+        "rows": 775,
+        "buildSeconds": 0.11851975321769714,
+        "solveSeconds": 1.2634119540452957,
+        "objectiveGap": 0.015925876608289258,
+        "similarity": {
+          "positionRmse": 1.8462462950740606,
+          "velocityRmse": 0.13216434597713014,
+          "routeRmse": 1.1427605966706744
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.00013664659357814912,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 1.4224732503009818e-16,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 39,
+          "maxFlowFractionality": 0.34894787971547836
+        },
+        "beam": "feasible",
+        "beamRegret": 0.00013664659357814912,
+        "correctPairs": 2,
+        "comparablePairs": 3,
+        "guidedSeconds": 6.109420709311962,
+        "rankings": [
+          {
+            "decision": "departure:0",
+            "parentFixed": {},
+            "choices": [
+              {
+                "choice": 1,
+                "relaxedValue": 17.627183700111857,
+                "feasibleValue": 17.611579015153737,
+                "status": "solved"
+              },
+              {
+                "choice": 0,
+                "relaxedValue": 17.626787686843876,
+                "feasibleValue": 17.61144238416857,
+                "status": "solved"
+              }
+            ],
+            "chosen": 1,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          },
+          {
+            "decision": "departure:1",
+            "parentFixed": {
+              "departure:0": 1
+            },
+            "choices": [
+              {
+                "choice": 13,
+                "relaxedValue": 17.626033633681825,
+                "feasibleValue": 17.61144236856016,
+                "status": "solved"
+              },
+              {
+                "choice": 14,
+                "relaxedValue": 17.62549292960722,
+                "feasibleValue": 17.611579015153737,
+                "status": "solved"
+              },
+              {
+                "choice": 12,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 13,
+            "comparablePairs": 1,
+            "correctPairs": 0,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.00013664659357814912
+          },
+          {
+            "decision": "departure:2",
+            "parentFixed": {
+              "departure:0": 1,
+              "departure:1": 13
+            },
+            "choices": [
+              {
+                "choice": 26,
+                "relaxedValue": 17.625493224210917,
+                "feasibleValue": 17.61144236856016,
+                "status": "solved"
+              },
+              {
+                "choice": 25,
+                "relaxedValue": 17.623661982707578,
+                "feasibleValue": 17.60966737335355,
+                "status": "solved"
+              },
+              {
+                "choice": 24,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 26,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          },
+          {
+            "decision": "departure:3",
+            "parentFixed": {
+              "departure:0": 1,
+              "departure:1": 13,
+              "departure:2": 26
+            },
+            "choices": [
+              {
+                "choice": 38,
+                "relaxedValue": 17.625493224210928,
+                "feasibleValue": 17.61144236856016,
+                "status": "solved"
+              },
+              {
+                "choice": 37,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 38,
+            "comparablePairs": 0,
+            "correctPairs": 0,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      },
+      "compact_disk": {
+        "status": "solved",
+        "value": 17.627508123197074,
+        "upperBound": null,
+        "variables": 1256,
+        "rows": 775,
+        "buildSeconds": 0.11817296221852303,
+        "solveSeconds": 0.07796420529484749,
+        "objectiveGap": 0.015929108043337692,
+        "similarity": {
+          "positionRmse": 1.7236242895919884,
+          "velocityRmse": 0.13138592456736742,
+          "routeRmse": 0.8423382092755916
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.00013664659357814912,
+        "controlStats": {
+          "reducedAccelerationTicks": 3,
+          "totalMagnitudeSlack": 0.044540103004735015,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 39,
+          "maxFlowFractionality": 0.3564944856492478
+        },
+        "beam": "feasible",
+        "beamRegret": 0.00013664659357814912,
+        "correctPairs": 2,
+        "comparablePairs": 3,
+        "guidedSeconds": 3.9745214581489563,
+        "rankings": [
+          {
+            "decision": "departure:0",
+            "parentFixed": {},
+            "choices": [
+              {
+                "choice": 1,
+                "relaxedValue": 17.62724053871281,
+                "feasibleValue": 17.611579015153737,
+                "status": "solved"
+              },
+              {
+                "choice": 0,
+                "relaxedValue": 17.626918398048776,
+                "feasibleValue": 17.61144238416857,
+                "status": "solved"
+              }
+            ],
+            "chosen": 1,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          },
+          {
+            "decision": "departure:1",
+            "parentFixed": {
+              "departure:0": 1
+            },
+            "choices": [
+              {
+                "choice": 13,
+                "relaxedValue": 17.626099487474537,
+                "feasibleValue": 17.61144236856016,
+                "status": "solved"
+              },
+              {
+                "choice": 14,
+                "relaxedValue": 17.62549322199036,
+                "feasibleValue": 17.611579015153737,
+                "status": "solved"
+              },
+              {
+                "choice": 12,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 13,
+            "comparablePairs": 1,
+            "correctPairs": 0,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.00013664659357814912
+          },
+          {
+            "decision": "departure:2",
+            "parentFixed": {
+              "departure:0": 1,
+              "departure:1": 13
+            },
+            "choices": [
+              {
+                "choice": 26,
+                "relaxedValue": 17.625493221978964,
+                "feasibleValue": 17.61144236856016,
+                "status": "solved"
+              },
+              {
+                "choice": 25,
+                "relaxedValue": 17.623661980434466,
+                "feasibleValue": 17.60966737335355,
+                "status": "solved"
+              },
+              {
+                "choice": 24,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 26,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          },
+          {
+            "decision": "departure:3",
+            "parentFixed": {
+              "departure:0": 1,
+              "departure:1": 13,
+              "departure:2": 26
+            },
+            "choices": [
+              {
+                "choice": 38,
+                "relaxedValue": 17.625493221978733,
+                "feasibleValue": 17.61144236856016,
+                "status": "solved"
+              },
+              {
+                "choice": 37,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 38,
+            "comparablePairs": 0,
+            "correctPairs": 0,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      },
+      "convex_disk": {
+        "status": "solved",
+        "value": 17.625538137740026,
+        "upperBound": 17.625538508135993,
+        "variables": 3882,
+        "rows": 13027,
+        "buildSeconds": 0.007641874253749847,
+        "solveSeconds": 0.148304287,
+        "objectiveGap": 0.013959122586289396,
+        "similarity": {
+          "positionRmse": 0.288582197061654,
+          "velocityRmse": 0.04444846640686536,
+          "routeRmse": 0.1355387030831266
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.00013664659357814912,
+        "controlStats": {
+          "reducedAccelerationTicks": 1,
+          "totalMagnitudeSlack": 0.03879435255480118,
+          "fractionalCancellation": 0.29775457819655904,
+          "fractionalTicks": 51,
+          "maxFlowFractionality": 0.610538496592172
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0001366309851675851,
+        "correctPairs": 1,
+        "comparablePairs": 2,
+        "guidedSeconds": 1.6746679544448853,
+        "rankings": [
+          {
+            "decision": "departure:0",
+            "parentFixed": {},
+            "choices": [
+              {
+                "choice": 1,
+                "relaxedValue": 17.625538170685083,
+                "feasibleValue": 17.611579015153737,
+                "status": "solved"
+              },
+              {
+                "choice": 0,
+                "relaxedValue": 17.625534188458705,
+                "feasibleValue": 17.61144238416857,
+                "status": "solved"
+              }
+            ],
+            "chosen": 1,
+            "comparablePairs": 0,
+            "correctPairs": 0,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          },
+          {
+            "decision": "departure:1",
+            "parentFixed": {
+              "departure:0": 1
+            },
+            "choices": [
+              {
+                "choice": 13,
+                "relaxedValue": 17.62553418909008,
+                "feasibleValue": 17.61144236856016,
+                "status": "solved"
+              },
+              {
+                "choice": 14,
+                "relaxedValue": 17.625493235193908,
+                "feasibleValue": 17.611579015153737,
+                "status": "solved"
+              },
+              {
+                "choice": 12,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 13,
+            "comparablePairs": 1,
+            "correctPairs": 0,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.00013664659357814912
+          },
+          {
+            "decision": "departure:2",
+            "parentFixed": {
+              "departure:0": 1,
+              "departure:1": 13
+            },
+            "choices": [
+              {
+                "choice": 26,
+                "relaxedValue": 17.625493235188845,
+                "feasibleValue": 17.61144236856016,
+                "status": "solved"
+              },
+              {
+                "choice": 25,
+                "relaxedValue": 17.623661996784993,
+                "feasibleValue": 17.60966737335355,
+                "status": "solved"
+              },
+              {
+                "choice": 24,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 26,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          },
+          {
+            "decision": "departure:3",
+            "parentFixed": {
+              "departure:0": 1,
+              "departure:1": 13,
+              "departure:2": 26
+            },
+            "choices": [
+              {
+                "choice": 38,
+                "relaxedValue": 17.62549323502869,
+                "feasibleValue": 17.61144236856016,
+                "status": "solved"
+              },
+              {
+                "choice": 37,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 38,
+            "comparablePairs": 0,
+            "correctPairs": 0,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      }
+    },
+    "repeat": 1
+  },
+  {
+    "name": "narrow-fast-entry",
+    "ticks": 26,
+    "assignments": 3,
+    "acceptedAssignments": 2,
+    "numericalUnknowns": 1,
+    "unknownsWithImprovementPotential": 1,
+    "bestFeasible": 10.588749797150562,
+    "worstLiftViolation": 1.3222410616637778e-14,
+    "arms": {
+      "compact_circle": {
+        "status": "solved",
+        "value": 10.618137487746042,
+        "upperBound": null,
+        "variables": 517,
+        "rows": 324,
+        "buildSeconds": 0.047594621777534485,
+        "solveSeconds": 0.03411387652158737,
+        "objectiveGap": 0.0293876905954793,
+        "similarity": {
+          "positionRmse": 0.7032721037659743,
+          "velocityRmse": 0.05132871670753991,
+          "routeRmse": 0.6497403485600735
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.2543873263975591,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 0.0,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 15,
+          "maxFlowFractionality": 0.5165266700561393
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 0,
+        "comparablePairs": 1,
+        "guidedSeconds": 0.7653911672532558,
+        "rankings": [
+          {
+            "decision": "departure:0",
+            "parentFixed": {},
+            "choices": [
+              {
+                "choice": 1,
+                "relaxedValue": 10.617129593283801,
+                "feasibleValue": 10.334362470753003,
+                "status": "solved"
+              },
+              {
+                "choice": 0,
+                "relaxedValue": 10.61031249184957,
+                "feasibleValue": 10.588749797150562,
+                "status": "solved"
+              },
+              {
+                "choice": 2,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 1,
+            "comparablePairs": 1,
+            "correctPairs": 0,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.2543873263975591
+          }
+        ]
+      },
+      "compact_disk": {
+        "status": "solved",
+        "value": 10.618137485384837,
+        "upperBound": null,
+        "variables": 517,
+        "rows": 324,
+        "buildSeconds": 0.04689916595816612,
+        "solveSeconds": 0.013143040239810944,
+        "objectiveGap": 0.029387688234274734,
+        "similarity": {
+          "positionRmse": 0.7035436274819773,
+          "velocityRmse": 0.05133511711190413,
+          "routeRmse": 0.6499979310517608
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.2543873263975591,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 2.1104449389464097e-08,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 15,
+          "maxFlowFractionality": 0.5165267394168789
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 0,
+        "comparablePairs": 1,
+        "guidedSeconds": 0.6719167903065681,
+        "rankings": [
+          {
+            "decision": "departure:0",
+            "parentFixed": {},
+            "choices": [
+              {
+                "choice": 1,
+                "relaxedValue": 10.617129590994862,
+                "feasibleValue": 10.334362470753003,
+                "status": "solved"
+              },
+              {
+                "choice": 0,
+                "relaxedValue": 10.61033641029934,
+                "feasibleValue": 10.588749797150562,
+                "status": "solved"
+              },
+              {
+                "choice": 2,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 1,
+            "comparablePairs": 1,
+            "correctPairs": 0,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.2543873263975591
+          }
+        ]
+      },
+      "convex_disk": {
+        "status": "solved",
+        "value": 10.62008351961034,
+        "upperBound": 10.620083531496768,
+        "variables": 1463,
+        "rows": 4931,
+        "buildSeconds": 0.0029840394854545593,
+        "solveSeconds": 0.018219873,
+        "objectiveGap": 0.03133372245977739,
+        "similarity": {
+          "positionRmse": 0.7096660106628677,
+          "velocityRmse": 0.05598322223176222,
+          "routeRmse": 0.6498436023919641
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.2543873263975591,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 1.9722542349276395e-10,
+          "fractionalCancellation": 8.881784197001252e-15,
+          "fractionalTicks": 14,
+          "maxFlowFractionality": 0.27498327432785696
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 0,
+        "comparablePairs": 1,
+        "guidedSeconds": 0.43746529147028923,
+        "rankings": [
+          {
+            "decision": "departure:0",
+            "parentFixed": {},
+            "choices": [
+              {
+                "choice": 1,
+                "relaxedValue": 10.61712960455224,
+                "feasibleValue": 10.334362470753003,
+                "status": "solved"
+              },
+              {
+                "choice": 0,
+                "relaxedValue": 10.610336424031548,
+                "feasibleValue": 10.588749797150562,
+                "status": "solved"
+              },
+              {
+                "choice": 2,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 1,
+            "comparablePairs": 1,
+            "correctPairs": 0,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.2543873263975591
+          }
+        ]
+      }
+    },
+    "repeat": 1
+  },
+  {
+    "name": "open",
+    "ticks": 12,
+    "assignments": 1,
+    "acceptedAssignments": 1,
+    "numericalUnknowns": 0,
+    "unknownsWithImprovementPotential": 0,
+    "bestFeasible": 3.375829105211352,
+    "worstLiftViolation": 5.3602987500067645e-11,
+    "arms": {
+      "compact_circle": {
+        "status": "solved",
+        "value": 3.3758290959386192,
+        "upperBound": null,
+        "variables": 222,
+        "rows": 125,
+        "buildSeconds": 0.017954375594854355,
+        "solveSeconds": 0.025924835354089737,
+        "objectiveGap": -9.272732803822237e-09,
+        "similarity": {
+          "positionRmse": 3.2873186073302195e-05,
+          "velocityRmse": 5.2100962216125734e-06,
+          "routeRmse": 3.27847524876681e-05
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 0.0,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 1.1102230246251565e-14
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 0,
+        "comparablePairs": 0,
+        "guidedSeconds": 0.21596070751547813,
+        "rankings": []
+      },
+      "compact_disk": {
+        "status": "solved",
+        "value": 3.375829094847585,
+        "upperBound": null,
+        "variables": 222,
+        "rows": 125,
+        "buildSeconds": 0.017441250383853912,
+        "solveSeconds": 0.005810584872961044,
+        "objectiveGap": -1.0363767177778982e-08,
+        "similarity": {
+          "positionRmse": 5.7328748678908105e-09,
+          "velocityRmse": 7.508492899827205e-10,
+          "routeRmse": 6.016889559513959e-09
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 2.252916540823602e-09,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 8.593126210598712e-14
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 0,
+        "comparablePairs": 0,
+        "guidedSeconds": 0.22126929089426994,
+        "rankings": []
+      },
+      "convex_disk": {
+        "status": "solved",
+        "value": 3.375829105139066,
+        "upperBound": 3.3758291098853577,
+        "variables": 342,
+        "rows": 1149,
+        "buildSeconds": 0.0007199607789516449,
+        "solveSeconds": 0.003165708,
+        "objectiveGap": -7.228617704413409e-11,
+        "similarity": {
+          "positionRmse": 0.0006993786892917688,
+          "velocityRmse": 9.946641293874376e-05,
+          "routeRmse": 0.0006916783079187936
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 1.5292211941186906e-11,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 7.771561172376096e-15
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 0,
+        "comparablePairs": 0,
+        "guidedSeconds": 0.2159893773496151,
+        "rankings": []
+      }
+    },
+    "repeat": 1
+  },
+  {
+    "name": "reverse-objective",
+    "ticks": 12,
+    "assignments": 1,
+    "acceptedAssignments": 1,
+    "numericalUnknowns": 0,
+    "unknownsWithImprovementPotential": 0,
+    "bestFeasible": 2.6708389651326683,
+    "worstLiftViolation": 3.9201177894077066e-11,
+    "arms": {
+      "compact_circle": {
+        "status": "solved",
+        "value": 2.6708389558599364,
+        "upperBound": null,
+        "variables": 222,
+        "rows": 125,
+        "buildSeconds": 0.01824628934264183,
+        "solveSeconds": 0.020289000123739243,
+        "objectiveGap": -9.272731915643817e-09,
+        "similarity": {
+          "positionRmse": 3.412360489404198e-05,
+          "velocityRmse": 5.0365403121680646e-06,
+          "routeRmse": 3.404162926968246e-05
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 0.0,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 9.547918011776346e-15
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 0,
+        "comparablePairs": 0,
+        "guidedSeconds": 0.22398262470960617,
+        "rankings": []
+      },
+      "compact_disk": {
+        "status": "solved",
+        "value": 2.6708389547689113,
+        "upperBound": null,
+        "variables": 222,
+        "rows": 125,
+        "buildSeconds": 0.018788497895002365,
+        "solveSeconds": 0.007386207580566406,
+        "objectiveGap": -1.0363756963727155e-08,
+        "similarity": {
+          "positionRmse": 5.7312777288511955e-09,
+          "velocityRmse": 7.505842683255748e-10,
+          "routeRmse": 6.015520048705471e-09
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 2.2526316922899525e-09,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 7.049916206369744e-14
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 0,
+        "comparablePairs": 0,
+        "guidedSeconds": 0.21326129138469696,
+        "rankings": []
+      },
+      "convex_disk": {
+        "status": "solved",
+        "value": 2.6708389650720044,
+        "upperBound": 2.670838969073752,
+        "variables": 342,
+        "rows": 1149,
+        "buildSeconds": 0.0007336698472499847,
+        "solveSeconds": 0.002965334,
+        "objectiveGap": -6.06639183331481e-11,
+        "similarity": {
+          "positionRmse": 0.000659664400849335,
+          "velocityRmse": 9.40591957145154e-05,
+          "routeRmse": 0.0006411210026223548
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 1.2224006529226727e-11,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 8.548717289613705e-15
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 0,
+        "comparablePairs": 0,
+        "guidedSeconds": 0.2187274545431137,
+        "rankings": []
+      }
+    },
+    "repeat": 1
+  },
+  {
+    "name": "run-allocation",
+    "ticks": 26,
+    "assignments": 3,
+    "acceptedAssignments": 3,
+    "numericalUnknowns": 0,
+    "unknownsWithImprovementPotential": 0,
+    "bestFeasible": 8.336390150803393,
+    "worstLiftViolation": 7.93960843251118e-10,
+    "arms": {
+      "compact_circle": {
+        "status": "solved",
+        "value": 8.675361779067392,
+        "upperBound": null,
+        "variables": 517,
+        "rows": 324,
+        "buildSeconds": 0.049764085561037064,
+        "solveSeconds": 0.03383104130625725,
+        "objectiveGap": 0.33897162826399985,
+        "similarity": {
+          "positionRmse": 0.1894105748269764,
+          "velocityRmse": 0.012047033594095197,
+          "routeRmse": 0.19670132701719772
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 0.0,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 5.208116604649149e-09
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 3,
+        "comparablePairs": 3,
+        "guidedSeconds": 0.6880939155817032,
+        "rankings": [
+          {
+            "decision": "departure:0",
+            "parentFixed": {},
+            "choices": [
+              {
+                "choice": 2,
+                "relaxedValue": 8.675361783067626,
+                "feasibleValue": 8.336390150803393,
+                "status": "solved"
+              },
+              {
+                "choice": 1,
+                "relaxedValue": 8.416789411940057,
+                "feasibleValue": 8.086365635833214,
+                "status": "solved"
+              },
+              {
+                "choice": 0,
+                "relaxedValue": 8.106461550621425,
+                "feasibleValue": 7.796529083677962,
+                "status": "solved"
+              }
+            ],
+            "chosen": 2,
+            "comparablePairs": 3,
+            "correctPairs": 3,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      },
+      "compact_disk": {
+        "status": "solved",
+        "value": 8.675361776703404,
+        "upperBound": null,
+        "variables": 517,
+        "rows": 324,
+        "buildSeconds": 0.050143539905548096,
+        "solveSeconds": 0.013255078345537186,
+        "objectiveGap": 0.33897162590001173,
+        "similarity": {
+          "positionRmse": 0.1894105701053764,
+          "velocityRmse": 0.012047033256051994,
+          "routeRmse": 0.19670132192097062
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 1.0967506000603144e-09,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 5.208102060727526e-09
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 3,
+        "comparablePairs": 3,
+        "guidedSeconds": 0.6134977079927921,
+        "rankings": [
+          {
+            "decision": "departure:0",
+            "parentFixed": {},
+            "choices": [
+              {
+                "choice": 2,
+                "relaxedValue": 8.675361780703694,
+                "feasibleValue": 8.336390150803393,
+                "status": "solved"
+              },
+              {
+                "choice": 1,
+                "relaxedValue": 8.416789409575616,
+                "feasibleValue": 8.086365635833214,
+                "status": "solved"
+              },
+              {
+                "choice": 0,
+                "relaxedValue": 8.106461548256807,
+                "feasibleValue": 7.796529083677962,
+                "status": "solved"
+              }
+            ],
+            "chosen": 2,
+            "comparablePairs": 3,
+            "correctPairs": 3,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      },
+      "convex_disk": {
+        "status": "solved",
+        "value": 8.675361794139832,
+        "upperBound": 8.675361805969764,
+        "variables": 1463,
+        "rows": 4931,
+        "buildSeconds": 0.00333549827337265,
+        "solveSeconds": 0.0173575,
+        "objectiveGap": 0.33897164333643914,
+        "similarity": {
+          "positionRmse": 0.18941101995361406,
+          "velocityRmse": 0.012047057680597434,
+          "routeRmse": 0.19670178165368515
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 8.251697936056956e-13,
+          "fractionalCancellation": 2.949029909160572e-16,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 1.6402932345727095e-09
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 3,
+        "comparablePairs": 3,
+        "guidedSeconds": 0.4294837489724159,
+        "rankings": [
+          {
+            "decision": "departure:0",
+            "parentFixed": {},
+            "choices": [
+              {
+                "choice": 2,
+                "relaxedValue": 8.675361794515112,
+                "feasibleValue": 8.336390150803393,
+                "status": "solved"
+              },
+              {
+                "choice": 1,
+                "relaxedValue": 8.416789423308675,
+                "feasibleValue": 8.086365635833214,
+                "status": "solved"
+              },
+              {
+                "choice": 0,
+                "relaxedValue": 8.106461562359362,
+                "feasibleValue": 7.796529083677962,
+                "status": "solved"
+              }
+            ],
+            "chosen": 2,
+            "comparablePairs": 3,
+            "correctPairs": 3,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      }
+    },
+    "repeat": 1
+  },
+  {
+    "name": "timing-and-passage",
+    "ticks": 26,
+    "assignments": 9,
+    "acceptedAssignments": 4,
+    "numericalUnknowns": 5,
+    "unknownsWithImprovementPotential": 4,
+    "bestFeasible": 7.379577000914482,
+    "worstLiftViolation": 1.1102230246251565e-15,
+    "arms": {
+      "compact_circle": {
+        "status": "solved",
+        "value": 9.020327660888844,
+        "upperBound": null,
+        "variables": 520,
+        "rows": 571,
+        "buildSeconds": 0.078189667314291,
+        "solveSeconds": 0.05852792039513588,
+        "objectiveGap": 1.640750659974362,
+        "similarity": {
+          "positionRmse": 1.3381242522846901,
+          "velocityRmse": 0.07705084525006477,
+          "routeRmse": 1.2578716131336565
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 3.8163916471489756e-17,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 4.597023661734312e-08
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 2,
+        "comparablePairs": 2,
+        "guidedSeconds": 1.3278969153761864,
+        "rankings": [
+          {
+            "decision": "departure:0",
+            "parentFixed": {},
+            "choices": [
+              {
+                "choice": 2,
+                "relaxedValue": 9.020327664888956,
+                "feasibleValue": 7.379577000914482,
+                "status": "solved"
+              },
+              {
+                "choice": 1,
+                "relaxedValue": 8.81480098917414,
+                "feasibleValue": 7.2859403397419005,
+                "status": "solved"
+              },
+              {
+                "choice": 0,
+                "relaxedValue": 8.607600612269426,
+                "feasibleValue": null,
+                "status": "solved"
+              }
+            ],
+            "chosen": 2,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          },
+          {
+            "decision": "passage:corner",
+            "parentFixed": {
+              "departure:0": 2,
+              "departure:1": 14
+            },
+            "choices": [
+              {
+                "choice": 3,
+                "relaxedValue": 7.80889007665618,
+                "feasibleValue": 7.379577000914482,
+                "status": "solved"
+              },
+              {
+                "choice": 4,
+                "relaxedValue": 7.463445614833016,
+                "feasibleValue": 7.072087832596187,
+                "status": "solved"
+              },
+              {
+                "choice": 5,
+                "relaxedValue": 7.1198379213053675,
+                "feasibleValue": null,
+                "status": "solved"
+              }
+            ],
+            "chosen": 3,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      },
+      "compact_disk": {
+        "status": "solved",
+        "value": 9.02032765851287,
+        "upperBound": null,
+        "variables": 520,
+        "rows": 571,
+        "buildSeconds": 0.07429370656609535,
+        "solveSeconds": 0.02398749813437462,
+        "objectiveGap": 1.6407506575983888,
+        "similarity": {
+          "positionRmse": 1.3381274570750379,
+          "velocityRmse": 0.07705003222540517,
+          "routeRmse": 1.2578749284801025
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 8.972928511319367e-10,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 4.6651916218998224e-08
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 2,
+        "comparablePairs": 2,
+        "guidedSeconds": 1.26939158141613,
+        "rankings": [
+          {
+            "decision": "departure:0",
+            "parentFixed": {},
+            "choices": [
+              {
+                "choice": 2,
+                "relaxedValue": 9.020327662532377,
+                "feasibleValue": 7.379577000914482,
+                "status": "solved"
+              },
+              {
+                "choice": 1,
+                "relaxedValue": 8.814800986814811,
+                "feasibleValue": 7.2859403397419005,
+                "status": "solved"
+              },
+              {
+                "choice": 0,
+                "relaxedValue": 8.607600609907815,
+                "feasibleValue": null,
+                "status": "solved"
+              }
+            ],
+            "chosen": 2,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          },
+          {
+            "decision": "passage:corner",
+            "parentFixed": {
+              "departure:0": 2,
+              "departure:1": 14
+            },
+            "choices": [
+              {
+                "choice": 3,
+                "relaxedValue": 7.80889007459653,
+                "feasibleValue": 7.379577000914482,
+                "status": "solved"
+              },
+              {
+                "choice": 4,
+                "relaxedValue": 7.463445612479232,
+                "feasibleValue": 7.072087832596187,
+                "status": "solved"
+              },
+              {
+                "choice": 5,
+                "relaxedValue": 7.119837918941801,
+                "feasibleValue": null,
+                "status": "solved"
+              }
+            ],
+            "chosen": 3,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      },
+      "convex_disk": {
+        "status": "solved",
+        "value": 9.020327679142483,
+        "upperBound": 9.020327692238919,
+        "variables": 1466,
+        "rows": 5184,
+        "buildSeconds": 0.003307875245809555,
+        "solveSeconds": 0.022366334,
+        "objectiveGap": 1.6407506782280006,
+        "similarity": {
+          "positionRmse": 1.338137105087075,
+          "velocityRmse": 0.07704555585300618,
+          "routeRmse": 1.2578836569676142
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 1.5973715405959155e-12,
+          "fractionalCancellation": 1.2573275753879898e-12,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 2.783884012202975e-09
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 2,
+        "comparablePairs": 2,
+        "guidedSeconds": 0.6613344587385654,
+        "rankings": [
+          {
+            "decision": "departure:0",
+            "parentFixed": {},
+            "choices": [
+              {
+                "choice": 2,
+                "relaxedValue": 9.020327679389515,
+                "feasibleValue": 7.379577000914482,
+                "status": "solved"
+              },
+              {
+                "choice": 1,
+                "relaxedValue": 8.8148010035861,
+                "feasibleValue": 7.2859403397419005,
+                "status": "solved"
+              },
+              {
+                "choice": 0,
+                "relaxedValue": 8.607600626361972,
+                "feasibleValue": null,
+                "status": "solved"
+              }
+            ],
+            "chosen": 2,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          },
+          {
+            "decision": "passage:corner",
+            "parentFixed": {
+              "departure:0": 2,
+              "departure:1": 14
+            },
+            "choices": [
+              {
+                "choice": 3,
+                "relaxedValue": 7.808890094923661,
+                "feasibleValue": 7.379577000914482,
+                "status": "solved"
+              },
+              {
+                "choice": 4,
+                "relaxedValue": 7.463445633136368,
+                "feasibleValue": 7.072087832596187,
+                "status": "solved"
+              },
+              {
+                "choice": 5,
+                "relaxedValue": 7.119837939648038,
+                "feasibleValue": null,
+                "status": "solved"
+              }
+            ],
+            "chosen": 3,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      }
+    },
+    "repeat": 1
+  },
+  {
+    "name": "turning-support",
+    "ticks": 26,
+    "assignments": 3,
+    "acceptedAssignments": 3,
+    "numericalUnknowns": 0,
+    "unknownsWithImprovementPotential": 0,
+    "bestFeasible": 7.607156402681025,
+    "worstLiftViolation": 1.5091469220129827e-10,
+    "arms": {
+      "compact_circle": {
+        "status": "solved",
+        "value": 7.61926540147963,
+        "upperBound": null,
+        "variables": 517,
+        "rows": 324,
+        "buildSeconds": 0.04745175316929817,
+        "solveSeconds": 0.03115958720445633,
+        "objectiveGap": 0.012108998798605164,
+        "similarity": {
+          "positionRmse": 0.24122045773096412,
+          "velocityRmse": 0.019616268466487372,
+          "routeRmse": 0.2361240016993076
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 0.0,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 3.3197478699342753e-07
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 3,
+        "comparablePairs": 3,
+        "guidedSeconds": 0.7734163738787174,
+        "rankings": [
+          {
+            "decision": "departure:0",
+            "parentFixed": {},
+            "choices": [
+              {
+                "choice": 2,
+                "relaxedValue": 7.619265405479638,
+                "feasibleValue": 7.607156402681025,
+                "status": "solved"
+              },
+              {
+                "choice": 1,
+                "relaxedValue": 7.6107636634797,
+                "feasibleValue": 7.598147560916406,
+                "status": "solved"
+              },
+              {
+                "choice": 0,
+                "relaxedValue": 7.606344102726159,
+                "feasibleValue": 7.593596661474295,
+                "status": "solved"
+              }
+            ],
+            "chosen": 2,
+            "comparablePairs": 3,
+            "correctPairs": 3,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      },
+      "compact_disk": {
+        "status": "solved",
+        "value": 7.619265399271817,
+        "upperBound": null,
+        "variables": 517,
+        "rows": 324,
+        "buildSeconds": 0.04727458581328392,
+        "solveSeconds": 0.02909845858812332,
+        "objectiveGap": 0.012108996590791676,
+        "similarity": {
+          "positionRmse": 0.1430983597889856,
+          "velocityRmse": 0.015802160605514027,
+          "routeRmse": 0.10234782587323171
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 1,
+          "totalMagnitudeSlack": 0.03543237017288266,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 3.3194036164196916e-07
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 3,
+        "comparablePairs": 3,
+        "guidedSeconds": 0.722762580960989,
+        "rankings": [
+          {
+            "decision": "departure:0",
+            "parentFixed": {},
+            "choices": [
+              {
+                "choice": 2,
+                "relaxedValue": 7.619265403271678,
+                "feasibleValue": 7.607156402681025,
+                "status": "solved"
+              },
+              {
+                "choice": 1,
+                "relaxedValue": 7.610763661220751,
+                "feasibleValue": 7.598147560916406,
+                "status": "solved"
+              },
+              {
+                "choice": 0,
+                "relaxedValue": 7.606344187687816,
+                "feasibleValue": 7.593596661474295,
+                "status": "solved"
+              }
+            ],
+            "chosen": 2,
+            "comparablePairs": 3,
+            "correctPairs": 3,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      },
+      "convex_disk": {
+        "status": "solved",
+        "value": 7.619265415692125,
+        "upperBound": 7.619265428183791,
+        "variables": 1463,
+        "rows": 4931,
+        "buildSeconds": 0.002864707261323929,
+        "solveSeconds": 0.023783664,
+        "objectiveGap": 0.012109013011099456,
+        "similarity": {
+          "positionRmse": 0.1247666912433732,
+          "velocityRmse": 0.01502127937225237,
+          "routeRmse": 0.06383924673952844
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 1,
+          "totalMagnitudeSlack": 0.04590375273237049,
+          "fractionalCancellation": 1.0332590453382418e-08,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 8.270659990206042e-08
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 3,
+        "comparablePairs": 3,
+        "guidedSeconds": 0.5324977450072765,
+        "rankings": [
+          {
+            "decision": "departure:0",
+            "parentFixed": {},
+            "choices": [
+              {
+                "choice": 2,
+                "relaxedValue": 7.61926541653872,
+                "feasibleValue": 7.607156402681025,
+                "status": "solved"
+              },
+              {
+                "choice": 1,
+                "relaxedValue": 7.610763674795195,
+                "feasibleValue": 7.598147560916406,
+                "status": "solved"
+              },
+              {
+                "choice": 0,
+                "relaxedValue": 7.606344201408295,
+                "feasibleValue": 7.593596661474295,
+                "status": "solved"
+              }
+            ],
+            "chosen": 2,
+            "comparablePairs": 3,
+            "correctPairs": 3,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      }
+    },
+    "repeat": 1
+  },
+  {
+    "name": "consecutive-passage",
+    "ticks": 12,
+    "assignments": 4,
+    "acceptedAssignments": 2,
+    "numericalUnknowns": 2,
+    "unknownsWithImprovementPotential": 2,
+    "bestFeasible": 3.9310191166481414,
+    "worstLiftViolation": 6.661338147750939e-16,
+    "arms": {
+      "compact_circle": {
+        "status": "solved",
+        "value": 3.9564591977896684,
+        "upperBound": null,
+        "variables": 226,
+        "rows": 222,
+        "buildSeconds": 0.03039337322115898,
+        "solveSeconds": 0.01872062310576439,
+        "objectiveGap": 0.02544008114152696,
+        "similarity": {
+          "positionRmse": 0.021480836881470546,
+          "velocityRmse": 0.004509773944521034,
+          "routeRmse": 0.02288560361888702
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 3.469446951953614e-18,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 3.5638159090467525e-14
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 1,
+        "comparablePairs": 1,
+        "guidedSeconds": 0.6931827142834663,
+        "rankings": [
+          {
+            "decision": "passage:corner",
+            "parentFixed": {
+              "departure:0": 0
+            },
+            "choices": [
+              {
+                "choice": 6,
+                "relaxedValue": 3.9564591977896435,
+                "feasibleValue": 3.9310191166481414,
+                "status": "solved"
+              },
+              {
+                "choice": 7,
+                "relaxedValue": 3.9549094766331967,
+                "feasibleValue": 3.9186316222433044,
+                "status": "solved"
+              },
+              {
+                "choice": 4,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              },
+              {
+                "choice": 5,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 6,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      },
+      "compact_disk": {
+        "status": "solved",
+        "value": 3.9564591966960845,
+        "upperBound": null,
+        "variables": 226,
+        "rows": 222,
+        "buildSeconds": 0.029685374349355698,
+        "solveSeconds": 0.009060375392436981,
+        "objectiveGap": 0.02544008004794307,
+        "similarity": {
+          "positionRmse": 0.021480878499844987,
+          "velocityRmse": 0.00450993932500519,
+          "routeRmse": 0.022885728070490625
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 4.2937092423200873e-10,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 5.4511950509095186e-14
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 1,
+        "comparablePairs": 1,
+        "guidedSeconds": 0.6610024161636829,
+        "rankings": [
+          {
+            "decision": "passage:corner",
+            "parentFixed": {
+              "departure:0": 0
+            },
+            "choices": [
+              {
+                "choice": 6,
+                "relaxedValue": 3.95645919669611,
+                "feasibleValue": 3.9310191166481414,
+                "status": "solved"
+              },
+              {
+                "choice": 7,
+                "relaxedValue": 3.954909475540108,
+                "feasibleValue": 3.9186316222433044,
+                "status": "solved"
+              },
+              {
+                "choice": 4,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              },
+              {
+                "choice": 5,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 6,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      },
+      "convex_disk": {
+        "status": "solved",
+        "value": 3.9564592055057743,
+        "upperBound": 3.9564592121197757,
+        "variables": 346,
+        "rows": 1254,
+        "buildSeconds": 0.0009674616158008575,
+        "solveSeconds": 0.00577325,
+        "objectiveGap": 0.025440088857632936,
+        "similarity": {
+          "positionRmse": 0.021480647153662775,
+          "velocityRmse": 0.004509514121433951,
+          "routeRmse": 0.02288530621564189
+        },
+        "rootRefined": "unknown",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 1.050583231521074e-12,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 3.885780586188048e-15
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 1,
+        "comparablePairs": 1,
+        "guidedSeconds": 0.43341637775301933,
+        "rankings": [
+          {
+            "decision": "passage:corner",
+            "parentFixed": {
+              "departure:0": 0
+            },
+            "choices": [
+              {
+                "choice": 6,
+                "relaxedValue": 3.9564592054785725,
+                "feasibleValue": 3.9310191166481414,
+                "status": "solved"
+              },
+              {
+                "choice": 7,
+                "relaxedValue": 3.954909484500303,
+                "feasibleValue": 3.9186316222433044,
+                "status": "solved"
+              },
+              {
+                "choice": 4,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              },
+              {
+                "choice": 5,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 6,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      }
+    },
+    "repeat": 2
+  },
+  {
+    "name": "cross-passage",
+    "ticks": 12,
+    "assignments": 4,
+    "acceptedAssignments": 2,
+    "numericalUnknowns": 2,
+    "unknownsWithImprovementPotential": 2,
+    "bestFeasible": 3.0589875426002866,
+    "worstLiftViolation": 8.881784197001252e-16,
+    "arms": {
+      "compact_circle": {
+        "status": "solved",
+        "value": 3.979016447759506,
+        "upperBound": null,
+        "variables": 226,
+        "rows": 230,
+        "buildSeconds": 0.030051998794078827,
+        "solveSeconds": 0.013620670884847641,
+        "objectiveGap": 0.9200289051592194,
+        "similarity": {
+          "positionRmse": 0.7516522314353149,
+          "velocityRmse": 0.07782684769450389,
+          "routeRmse": 0.7230549852328196
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 0.0,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 3.885780586188048e-14
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 1,
+        "comparablePairs": 1,
+        "guidedSeconds": 0.7306169159710407,
+        "rankings": [
+          {
+            "decision": "passage:corner",
+            "parentFixed": {
+              "departure:0": 0
+            },
+            "choices": [
+              {
+                "choice": 4,
+                "relaxedValue": 3.1185954119548494,
+                "feasibleValue": 3.0589875426002866,
+                "status": "solved"
+              },
+              {
+                "choice": 3,
+                "relaxedValue": 3.0871680026537334,
+                "feasibleValue": 2.995516967148266,
+                "status": "solved"
+              },
+              {
+                "choice": 5,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              },
+              {
+                "choice": 6,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 4,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      },
+      "compact_disk": {
+        "status": "solved",
+        "value": 3.979016446759187,
+        "upperBound": null,
+        "variables": 226,
+        "rows": 230,
+        "buildSeconds": 0.031194664537906647,
+        "solveSeconds": 0.009313207119703293,
+        "objectiveGap": 0.9200289041589005,
+        "similarity": {
+          "positionRmse": 0.9086364076833175,
+          "velocityRmse": 0.09400806145374806,
+          "routeRmse": 0.8825963999800848
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 1,
+          "totalMagnitudeSlack": 0.03614336943454108,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 5.3512749786932545e-14
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 1,
+        "comparablePairs": 1,
+        "guidedSeconds": 0.6347931697964668,
+        "rankings": [
+          {
+            "decision": "passage:corner",
+            "parentFixed": {
+              "departure:0": 0
+            },
+            "choices": [
+              {
+                "choice": 4,
+                "relaxedValue": 3.1185954109548124,
+                "feasibleValue": 3.0589875426002866,
+                "status": "solved"
+              },
+              {
+                "choice": 3,
+                "relaxedValue": 3.0871680015629193,
+                "feasibleValue": 2.995516967148266,
+                "status": "solved"
+              },
+              {
+                "choice": 5,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              },
+              {
+                "choice": 6,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 4,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      },
+      "convex_disk": {
+        "status": "solved",
+        "value": 3.979016453454702,
+        "upperBound": 3.9790164592941935,
+        "variables": 346,
+        "rows": 1262,
+        "buildSeconds": 0.000990837812423706,
+        "solveSeconds": 0.003795792,
+        "objectiveGap": 0.9200289108544153,
+        "similarity": {
+          "positionRmse": 1.11165665581003,
+          "velocityRmse": 0.11493323053455506,
+          "routeRmse": 1.0829342566902405
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 1,
+          "totalMagnitudeSlack": 0.05837957899059765,
+          "fractionalCancellation": 6.938893903907228e-18,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 5.551115123125783e-16
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 1,
+        "comparablePairs": 1,
+        "guidedSeconds": 0.4246400408446789,
+        "rankings": [
+          {
+            "decision": "passage:corner",
+            "parentFixed": {
+              "departure:0": 0
+            },
+            "choices": [
+              {
+                "choice": 4,
+                "relaxedValue": 3.118595417102637,
+                "feasibleValue": 3.0589875426002866,
+                "status": "solved"
+              },
+              {
+                "choice": 3,
+                "relaxedValue": 3.0871680083599724,
+                "feasibleValue": 2.995516967148266,
+                "status": "solved"
+              },
+              {
+                "choice": 5,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              },
+              {
+                "choice": 6,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 4,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      }
+    },
+    "repeat": 2
+  },
+  {
+    "name": "five-jump-control",
+    "ticks": 62,
+    "assignments": 10,
+    "acceptedAssignments": 10,
+    "numericalUnknowns": 0,
+    "unknownsWithImprovementPotential": 0,
+    "bestFeasible": 17.611579015153737,
+    "worstLiftViolation": 9.295530632483835e-10,
+    "arms": {
+      "compact_circle": {
+        "status": "solved",
+        "value": 17.627504891762026,
+        "upperBound": null,
+        "variables": 1256,
+        "rows": 775,
+        "buildSeconds": 0.11978612467646599,
+        "solveSeconds": 1.2306318767368793,
+        "objectiveGap": 0.015925876608289258,
+        "similarity": {
+          "positionRmse": 1.8462462950740606,
+          "velocityRmse": 0.13216434597713014,
+          "routeRmse": 1.1427605966706744
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.00013664659357814912,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 1.4224732503009818e-16,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 39,
+          "maxFlowFractionality": 0.34894787971547836
+        },
+        "beam": "feasible",
+        "beamRegret": 0.00013664659357814912,
+        "correctPairs": 2,
+        "comparablePairs": 3,
+        "guidedSeconds": 5.957491494715214,
+        "rankings": [
+          {
+            "decision": "departure:0",
+            "parentFixed": {},
+            "choices": [
+              {
+                "choice": 1,
+                "relaxedValue": 17.627183700111857,
+                "feasibleValue": 17.611579015153737,
+                "status": "solved"
+              },
+              {
+                "choice": 0,
+                "relaxedValue": 17.626787686843876,
+                "feasibleValue": 17.61144238416857,
+                "status": "solved"
+              }
+            ],
+            "chosen": 1,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          },
+          {
+            "decision": "departure:1",
+            "parentFixed": {
+              "departure:0": 1
+            },
+            "choices": [
+              {
+                "choice": 13,
+                "relaxedValue": 17.626033633681825,
+                "feasibleValue": 17.61144236856016,
+                "status": "solved"
+              },
+              {
+                "choice": 14,
+                "relaxedValue": 17.62549292960722,
+                "feasibleValue": 17.611579015153737,
+                "status": "solved"
+              },
+              {
+                "choice": 12,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 13,
+            "comparablePairs": 1,
+            "correctPairs": 0,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.00013664659357814912
+          },
+          {
+            "decision": "departure:2",
+            "parentFixed": {
+              "departure:0": 1,
+              "departure:1": 13
+            },
+            "choices": [
+              {
+                "choice": 26,
+                "relaxedValue": 17.625493224210917,
+                "feasibleValue": 17.61144236856016,
+                "status": "solved"
+              },
+              {
+                "choice": 25,
+                "relaxedValue": 17.623661982707578,
+                "feasibleValue": 17.60966737335355,
+                "status": "solved"
+              },
+              {
+                "choice": 24,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 26,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          },
+          {
+            "decision": "departure:3",
+            "parentFixed": {
+              "departure:0": 1,
+              "departure:1": 13,
+              "departure:2": 26
+            },
+            "choices": [
+              {
+                "choice": 38,
+                "relaxedValue": 17.625493224210928,
+                "feasibleValue": 17.61144236856016,
+                "status": "solved"
+              },
+              {
+                "choice": 37,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 38,
+            "comparablePairs": 0,
+            "correctPairs": 0,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      },
+      "compact_disk": {
+        "status": "solved",
+        "value": 17.627508123197074,
+        "upperBound": null,
+        "variables": 1256,
+        "rows": 775,
+        "buildSeconds": 0.1181323379278183,
+        "solveSeconds": 0.07409349828958511,
+        "objectiveGap": 0.015929108043337692,
+        "similarity": {
+          "positionRmse": 1.7236242895919884,
+          "velocityRmse": 0.13138592456736742,
+          "routeRmse": 0.8423382092755916
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.00013664659357814912,
+        "controlStats": {
+          "reducedAccelerationTicks": 3,
+          "totalMagnitudeSlack": 0.044540103004735015,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 39,
+          "maxFlowFractionality": 0.3564944856492478
+        },
+        "beam": "feasible",
+        "beamRegret": 0.00013664659357814912,
+        "correctPairs": 2,
+        "comparablePairs": 3,
+        "guidedSeconds": 3.9014435820281506,
+        "rankings": [
+          {
+            "decision": "departure:0",
+            "parentFixed": {},
+            "choices": [
+              {
+                "choice": 1,
+                "relaxedValue": 17.62724053871281,
+                "feasibleValue": 17.611579015153737,
+                "status": "solved"
+              },
+              {
+                "choice": 0,
+                "relaxedValue": 17.626918398048776,
+                "feasibleValue": 17.61144238416857,
+                "status": "solved"
+              }
+            ],
+            "chosen": 1,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          },
+          {
+            "decision": "departure:1",
+            "parentFixed": {
+              "departure:0": 1
+            },
+            "choices": [
+              {
+                "choice": 13,
+                "relaxedValue": 17.626099487474537,
+                "feasibleValue": 17.61144236856016,
+                "status": "solved"
+              },
+              {
+                "choice": 14,
+                "relaxedValue": 17.62549322199036,
+                "feasibleValue": 17.611579015153737,
+                "status": "solved"
+              },
+              {
+                "choice": 12,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 13,
+            "comparablePairs": 1,
+            "correctPairs": 0,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.00013664659357814912
+          },
+          {
+            "decision": "departure:2",
+            "parentFixed": {
+              "departure:0": 1,
+              "departure:1": 13
+            },
+            "choices": [
+              {
+                "choice": 26,
+                "relaxedValue": 17.625493221978964,
+                "feasibleValue": 17.61144236856016,
+                "status": "solved"
+              },
+              {
+                "choice": 25,
+                "relaxedValue": 17.623661980434466,
+                "feasibleValue": 17.60966737335355,
+                "status": "solved"
+              },
+              {
+                "choice": 24,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 26,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          },
+          {
+            "decision": "departure:3",
+            "parentFixed": {
+              "departure:0": 1,
+              "departure:1": 13,
+              "departure:2": 26
+            },
+            "choices": [
+              {
+                "choice": 38,
+                "relaxedValue": 17.625493221978733,
+                "feasibleValue": 17.61144236856016,
+                "status": "solved"
+              },
+              {
+                "choice": 37,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 38,
+            "comparablePairs": 0,
+            "correctPairs": 0,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      },
+      "convex_disk": {
+        "status": "solved",
+        "value": 17.625538137740026,
+        "upperBound": 17.625538508135993,
+        "variables": 3882,
+        "rows": 13027,
+        "buildSeconds": 0.0212705060839653,
+        "solveSeconds": 0.149136045,
+        "objectiveGap": 0.013959122586289396,
+        "similarity": {
+          "positionRmse": 0.288582197061654,
+          "velocityRmse": 0.04444846640686536,
+          "routeRmse": 0.1355387030831266
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.00013664659357814912,
+        "controlStats": {
+          "reducedAccelerationTicks": 1,
+          "totalMagnitudeSlack": 0.03879435255480118,
+          "fractionalCancellation": 0.29775457819655904,
+          "fractionalTicks": 51,
+          "maxFlowFractionality": 0.610538496592172
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0001366309851675851,
+        "correctPairs": 1,
+        "comparablePairs": 2,
+        "guidedSeconds": 1.6664187461137772,
+        "rankings": [
+          {
+            "decision": "departure:0",
+            "parentFixed": {},
+            "choices": [
+              {
+                "choice": 1,
+                "relaxedValue": 17.625538170685083,
+                "feasibleValue": 17.611579015153737,
+                "status": "solved"
+              },
+              {
+                "choice": 0,
+                "relaxedValue": 17.625534188458705,
+                "feasibleValue": 17.61144238416857,
+                "status": "solved"
+              }
+            ],
+            "chosen": 1,
+            "comparablePairs": 0,
+            "correctPairs": 0,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          },
+          {
+            "decision": "departure:1",
+            "parentFixed": {
+              "departure:0": 1
+            },
+            "choices": [
+              {
+                "choice": 13,
+                "relaxedValue": 17.62553418909008,
+                "feasibleValue": 17.61144236856016,
+                "status": "solved"
+              },
+              {
+                "choice": 14,
+                "relaxedValue": 17.625493235193908,
+                "feasibleValue": 17.611579015153737,
+                "status": "solved"
+              },
+              {
+                "choice": 12,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 13,
+            "comparablePairs": 1,
+            "correctPairs": 0,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.00013664659357814912
+          },
+          {
+            "decision": "departure:2",
+            "parentFixed": {
+              "departure:0": 1,
+              "departure:1": 13
+            },
+            "choices": [
+              {
+                "choice": 26,
+                "relaxedValue": 17.625493235188845,
+                "feasibleValue": 17.61144236856016,
+                "status": "solved"
+              },
+              {
+                "choice": 25,
+                "relaxedValue": 17.623661996784993,
+                "feasibleValue": 17.60966737335355,
+                "status": "solved"
+              },
+              {
+                "choice": 24,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 26,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          },
+          {
+            "decision": "departure:3",
+            "parentFixed": {
+              "departure:0": 1,
+              "departure:1": 13,
+              "departure:2": 26
+            },
+            "choices": [
+              {
+                "choice": 38,
+                "relaxedValue": 17.62549323502869,
+                "feasibleValue": 17.61144236856016,
+                "status": "solved"
+              },
+              {
+                "choice": 37,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 38,
+            "comparablePairs": 0,
+            "correctPairs": 0,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      }
+    },
+    "repeat": 2
+  },
+  {
+    "name": "narrow-fast-entry",
+    "ticks": 26,
+    "assignments": 3,
+    "acceptedAssignments": 2,
+    "numericalUnknowns": 1,
+    "unknownsWithImprovementPotential": 1,
+    "bestFeasible": 10.588749797150562,
+    "worstLiftViolation": 1.3222410616637778e-14,
+    "arms": {
+      "compact_circle": {
+        "status": "solved",
+        "value": 10.618137487746042,
+        "upperBound": null,
+        "variables": 517,
+        "rows": 324,
+        "buildSeconds": 0.047637831419706345,
+        "solveSeconds": 0.03168266639113426,
+        "objectiveGap": 0.0293876905954793,
+        "similarity": {
+          "positionRmse": 0.7032721037659743,
+          "velocityRmse": 0.05132871670753991,
+          "routeRmse": 0.6497403485600735
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.2543873263975591,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 0.0,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 15,
+          "maxFlowFractionality": 0.5165266700561393
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 0,
+        "comparablePairs": 1,
+        "guidedSeconds": 0.7784119546413422,
+        "rankings": [
+          {
+            "decision": "departure:0",
+            "parentFixed": {},
+            "choices": [
+              {
+                "choice": 1,
+                "relaxedValue": 10.617129593283801,
+                "feasibleValue": 10.334362470753003,
+                "status": "solved"
+              },
+              {
+                "choice": 0,
+                "relaxedValue": 10.61031249184957,
+                "feasibleValue": 10.588749797150562,
+                "status": "solved"
+              },
+              {
+                "choice": 2,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 1,
+            "comparablePairs": 1,
+            "correctPairs": 0,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.2543873263975591
+          }
+        ]
+      },
+      "compact_disk": {
+        "status": "solved",
+        "value": 10.618137485384837,
+        "upperBound": null,
+        "variables": 517,
+        "rows": 324,
+        "buildSeconds": 0.04701916500926018,
+        "solveSeconds": 0.012372080236673355,
+        "objectiveGap": 0.029387688234274734,
+        "similarity": {
+          "positionRmse": 0.7035436274819773,
+          "velocityRmse": 0.05133511711190413,
+          "routeRmse": 0.6499979310517608
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.2543873263975591,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 2.1104449389464097e-08,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 15,
+          "maxFlowFractionality": 0.5165267394168789
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 0,
+        "comparablePairs": 1,
+        "guidedSeconds": 0.6641002930700779,
+        "rankings": [
+          {
+            "decision": "departure:0",
+            "parentFixed": {},
+            "choices": [
+              {
+                "choice": 1,
+                "relaxedValue": 10.617129590994862,
+                "feasibleValue": 10.334362470753003,
+                "status": "solved"
+              },
+              {
+                "choice": 0,
+                "relaxedValue": 10.61033641029934,
+                "feasibleValue": 10.588749797150562,
+                "status": "solved"
+              },
+              {
+                "choice": 2,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 1,
+            "comparablePairs": 1,
+            "correctPairs": 0,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.2543873263975591
+          }
+        ]
+      },
+      "convex_disk": {
+        "status": "solved",
+        "value": 10.62008351961034,
+        "upperBound": 10.620083531496768,
+        "variables": 1463,
+        "rows": 4931,
+        "buildSeconds": 0.0029814988374710083,
+        "solveSeconds": 0.018693294,
+        "objectiveGap": 0.03133372245977739,
+        "similarity": {
+          "positionRmse": 0.7096660106628677,
+          "velocityRmse": 0.05598322223176222,
+          "routeRmse": 0.6498436023919641
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.2543873263975591,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 1.9722542349276395e-10,
+          "fractionalCancellation": 8.881784197001252e-15,
+          "fractionalTicks": 14,
+          "maxFlowFractionality": 0.27498327432785696
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 0,
+        "comparablePairs": 1,
+        "guidedSeconds": 0.44540179148316383,
+        "rankings": [
+          {
+            "decision": "departure:0",
+            "parentFixed": {},
+            "choices": [
+              {
+                "choice": 1,
+                "relaxedValue": 10.61712960455224,
+                "feasibleValue": 10.334362470753003,
+                "status": "solved"
+              },
+              {
+                "choice": 0,
+                "relaxedValue": 10.610336424031548,
+                "feasibleValue": 10.588749797150562,
+                "status": "solved"
+              },
+              {
+                "choice": 2,
+                "relaxedValue": null,
+                "feasibleValue": null,
+                "status": "unknown"
+              }
+            ],
+            "chosen": 1,
+            "comparablePairs": 1,
+            "correctPairs": 0,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.2543873263975591
+          }
+        ]
+      }
+    },
+    "repeat": 2
+  },
+  {
+    "name": "open",
+    "ticks": 12,
+    "assignments": 1,
+    "acceptedAssignments": 1,
+    "numericalUnknowns": 0,
+    "unknownsWithImprovementPotential": 0,
+    "bestFeasible": 3.375829105211352,
+    "worstLiftViolation": 5.3602987500067645e-11,
+    "arms": {
+      "compact_circle": {
+        "status": "solved",
+        "value": 3.3758290959386192,
+        "upperBound": null,
+        "variables": 222,
+        "rows": 125,
+        "buildSeconds": 0.01812446117401123,
+        "solveSeconds": 0.024553917348384857,
+        "objectiveGap": -9.272732803822237e-09,
+        "similarity": {
+          "positionRmse": 3.2873186073302195e-05,
+          "velocityRmse": 5.2100962216125734e-06,
+          "routeRmse": 3.27847524876681e-05
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 0.0,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 1.1102230246251565e-14
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 0,
+        "comparablePairs": 0,
+        "guidedSeconds": 0.21320991590619087,
+        "rankings": []
+      },
+      "compact_disk": {
+        "status": "solved",
+        "value": 3.375829094847585,
+        "upperBound": null,
+        "variables": 222,
+        "rows": 125,
+        "buildSeconds": 0.017489586025476456,
+        "solveSeconds": 0.005612753331661224,
+        "objectiveGap": -1.0363767177778982e-08,
+        "similarity": {
+          "positionRmse": 5.7328748678908105e-09,
+          "velocityRmse": 7.508492899827205e-10,
+          "routeRmse": 6.016889559513959e-09
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 2.252916540823602e-09,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 8.593126210598712e-14
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 0,
+        "comparablePairs": 0,
+        "guidedSeconds": 0.21330637484788895,
+        "rankings": []
+      },
+      "convex_disk": {
+        "status": "solved",
+        "value": 3.375829105139066,
+        "upperBound": 3.3758291098853577,
+        "variables": 342,
+        "rows": 1149,
+        "buildSeconds": 0.000709831714630127,
+        "solveSeconds": 0.002923001,
+        "objectiveGap": -7.228617704413409e-11,
+        "similarity": {
+          "positionRmse": 0.0006993786892917688,
+          "velocityRmse": 9.946641293874376e-05,
+          "routeRmse": 0.0006916783079187936
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 1.5292211941186906e-11,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 7.771561172376096e-15
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 0,
+        "comparablePairs": 0,
+        "guidedSeconds": 0.21602383255958557,
+        "rankings": []
+      }
+    },
+    "repeat": 2
+  },
+  {
+    "name": "reverse-objective",
+    "ticks": 12,
+    "assignments": 1,
+    "acceptedAssignments": 1,
+    "numericalUnknowns": 0,
+    "unknownsWithImprovementPotential": 0,
+    "bestFeasible": 2.6708389651326683,
+    "worstLiftViolation": 3.9201177894077066e-11,
+    "arms": {
+      "compact_circle": {
+        "status": "solved",
+        "value": 2.6708389558599364,
+        "upperBound": null,
+        "variables": 222,
+        "rows": 125,
+        "buildSeconds": 0.018100041896104813,
+        "solveSeconds": 0.022619623690843582,
+        "objectiveGap": -9.272731915643817e-09,
+        "similarity": {
+          "positionRmse": 3.412360489404198e-05,
+          "velocityRmse": 5.0365403121680646e-06,
+          "routeRmse": 3.404162926968246e-05
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 0.0,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 9.547918011776346e-15
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 0,
+        "comparablePairs": 0,
+        "guidedSeconds": 0.2132699154317379,
+        "rankings": []
+      },
+      "compact_disk": {
+        "status": "solved",
+        "value": 2.6708389547689113,
+        "upperBound": null,
+        "variables": 222,
+        "rows": 125,
+        "buildSeconds": 0.017478790134191513,
+        "solveSeconds": 0.005969207733869553,
+        "objectiveGap": -1.0363756963727155e-08,
+        "similarity": {
+          "positionRmse": 5.7312777288511955e-09,
+          "velocityRmse": 7.505842683255748e-10,
+          "routeRmse": 6.015520048705471e-09
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 2.2526316922899525e-09,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 7.049916206369744e-14
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 0,
+        "comparablePairs": 0,
+        "guidedSeconds": 0.21868633478879929,
+        "rankings": []
+      },
+      "convex_disk": {
+        "status": "solved",
+        "value": 2.6708389650720044,
+        "upperBound": 2.670838969073752,
+        "variables": 342,
+        "rows": 1149,
+        "buildSeconds": 0.0007427521049976349,
+        "solveSeconds": 0.003121708,
+        "objectiveGap": -6.06639183331481e-11,
+        "similarity": {
+          "positionRmse": 0.000659664400849335,
+          "velocityRmse": 9.40591957145154e-05,
+          "routeRmse": 0.0006411210026223548
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 1.2224006529226727e-11,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 8.548717289613705e-15
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 0,
+        "comparablePairs": 0,
+        "guidedSeconds": 0.2133537493646145,
+        "rankings": []
+      }
+    },
+    "repeat": 2
+  },
+  {
+    "name": "run-allocation",
+    "ticks": 26,
+    "assignments": 3,
+    "acceptedAssignments": 3,
+    "numericalUnknowns": 0,
+    "unknownsWithImprovementPotential": 0,
+    "bestFeasible": 8.336390150803393,
+    "worstLiftViolation": 7.93960843251118e-10,
+    "arms": {
+      "compact_circle": {
+        "status": "solved",
+        "value": 8.675361779067392,
+        "upperBound": null,
+        "variables": 517,
+        "rows": 324,
+        "buildSeconds": 0.04736466705799103,
+        "solveSeconds": 0.030365832149982452,
+        "objectiveGap": 0.33897162826399985,
+        "similarity": {
+          "positionRmse": 0.1894105748269764,
+          "velocityRmse": 0.012047033594095197,
+          "routeRmse": 0.19670132701719772
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 0.0,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 5.208116604649149e-09
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 3,
+        "comparablePairs": 3,
+        "guidedSeconds": 0.6720997542142868,
+        "rankings": [
+          {
+            "decision": "departure:0",
+            "parentFixed": {},
+            "choices": [
+              {
+                "choice": 2,
+                "relaxedValue": 8.675361783067626,
+                "feasibleValue": 8.336390150803393,
+                "status": "solved"
+              },
+              {
+                "choice": 1,
+                "relaxedValue": 8.416789411940057,
+                "feasibleValue": 8.086365635833214,
+                "status": "solved"
+              },
+              {
+                "choice": 0,
+                "relaxedValue": 8.106461550621425,
+                "feasibleValue": 7.796529083677962,
+                "status": "solved"
+              }
+            ],
+            "chosen": 2,
+            "comparablePairs": 3,
+            "correctPairs": 3,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      },
+      "compact_disk": {
+        "status": "solved",
+        "value": 8.675361776703404,
+        "upperBound": null,
+        "variables": 517,
+        "rows": 324,
+        "buildSeconds": 0.046531084924936295,
+        "solveSeconds": 0.012250959873199463,
+        "objectiveGap": 0.33897162590001173,
+        "similarity": {
+          "positionRmse": 0.1894105701053764,
+          "velocityRmse": 0.012047033256051994,
+          "routeRmse": 0.19670132192097062
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 1.0967506000603144e-09,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 5.208102060727526e-09
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 3,
+        "comparablePairs": 3,
+        "guidedSeconds": 0.6372900009155273,
+        "rankings": [
+          {
+            "decision": "departure:0",
+            "parentFixed": {},
+            "choices": [
+              {
+                "choice": 2,
+                "relaxedValue": 8.675361780703694,
+                "feasibleValue": 8.336390150803393,
+                "status": "solved"
+              },
+              {
+                "choice": 1,
+                "relaxedValue": 8.416789409575616,
+                "feasibleValue": 8.086365635833214,
+                "status": "solved"
+              },
+              {
+                "choice": 0,
+                "relaxedValue": 8.106461548256807,
+                "feasibleValue": 7.796529083677962,
+                "status": "solved"
+              }
+            ],
+            "chosen": 2,
+            "comparablePairs": 3,
+            "correctPairs": 3,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      },
+      "convex_disk": {
+        "status": "solved",
+        "value": 8.675361794139832,
+        "upperBound": 8.675361805969764,
+        "variables": 1463,
+        "rows": 4931,
+        "buildSeconds": 0.002985164523124695,
+        "solveSeconds": 0.016890711,
+        "objectiveGap": 0.33897164333643914,
+        "similarity": {
+          "positionRmse": 0.18941101995361406,
+          "velocityRmse": 0.012047057680597434,
+          "routeRmse": 0.19670178165368515
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 8.251697936056956e-13,
+          "fractionalCancellation": 2.949029909160572e-16,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 1.6402932345727095e-09
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 3,
+        "comparablePairs": 3,
+        "guidedSeconds": 0.44083020836114883,
+        "rankings": [
+          {
+            "decision": "departure:0",
+            "parentFixed": {},
+            "choices": [
+              {
+                "choice": 2,
+                "relaxedValue": 8.675361794515112,
+                "feasibleValue": 8.336390150803393,
+                "status": "solved"
+              },
+              {
+                "choice": 1,
+                "relaxedValue": 8.416789423308675,
+                "feasibleValue": 8.086365635833214,
+                "status": "solved"
+              },
+              {
+                "choice": 0,
+                "relaxedValue": 8.106461562359362,
+                "feasibleValue": 7.796529083677962,
+                "status": "solved"
+              }
+            ],
+            "chosen": 2,
+            "comparablePairs": 3,
+            "correctPairs": 3,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      }
+    },
+    "repeat": 2
+  },
+  {
+    "name": "timing-and-passage",
+    "ticks": 26,
+    "assignments": 9,
+    "acceptedAssignments": 4,
+    "numericalUnknowns": 5,
+    "unknownsWithImprovementPotential": 4,
+    "bestFeasible": 7.379577000914482,
+    "worstLiftViolation": 1.1102230246251565e-15,
+    "arms": {
+      "compact_circle": {
+        "status": "solved",
+        "value": 9.020327660888844,
+        "upperBound": null,
+        "variables": 520,
+        "rows": 571,
+        "buildSeconds": 0.08146928995847702,
+        "solveSeconds": 0.06020525097846985,
+        "objectiveGap": 1.640750659974362,
+        "similarity": {
+          "positionRmse": 1.3381242522846901,
+          "velocityRmse": 0.07705084525006477,
+          "routeRmse": 1.2578716131336565
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 3.8163916471489756e-17,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 4.597023661734312e-08
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 2,
+        "comparablePairs": 2,
+        "guidedSeconds": 1.3919670805335045,
+        "rankings": [
+          {
+            "decision": "departure:0",
+            "parentFixed": {},
+            "choices": [
+              {
+                "choice": 2,
+                "relaxedValue": 9.020327664888956,
+                "feasibleValue": 7.379577000914482,
+                "status": "solved"
+              },
+              {
+                "choice": 1,
+                "relaxedValue": 8.81480098917414,
+                "feasibleValue": 7.2859403397419005,
+                "status": "solved"
+              },
+              {
+                "choice": 0,
+                "relaxedValue": 8.607600612269426,
+                "feasibleValue": null,
+                "status": "solved"
+              }
+            ],
+            "chosen": 2,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          },
+          {
+            "decision": "passage:corner",
+            "parentFixed": {
+              "departure:0": 2,
+              "departure:1": 14
+            },
+            "choices": [
+              {
+                "choice": 3,
+                "relaxedValue": 7.80889007665618,
+                "feasibleValue": 7.379577000914482,
+                "status": "solved"
+              },
+              {
+                "choice": 4,
+                "relaxedValue": 7.463445614833016,
+                "feasibleValue": 7.072087832596187,
+                "status": "solved"
+              },
+              {
+                "choice": 5,
+                "relaxedValue": 7.1198379213053675,
+                "feasibleValue": null,
+                "status": "solved"
+              }
+            ],
+            "chosen": 3,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      },
+      "compact_disk": {
+        "status": "solved",
+        "value": 9.02032765851287,
+        "upperBound": null,
+        "variables": 520,
+        "rows": 571,
+        "buildSeconds": 0.08028370887041092,
+        "solveSeconds": 0.02355058491230011,
+        "objectiveGap": 1.6407506575983888,
+        "similarity": {
+          "positionRmse": 1.3381274570750379,
+          "velocityRmse": 0.07705003222540517,
+          "routeRmse": 1.2578749284801025
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 8.972928511319367e-10,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 4.6651916218998224e-08
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 2,
+        "comparablePairs": 2,
+        "guidedSeconds": 1.250609416514635,
+        "rankings": [
+          {
+            "decision": "departure:0",
+            "parentFixed": {},
+            "choices": [
+              {
+                "choice": 2,
+                "relaxedValue": 9.020327662532377,
+                "feasibleValue": 7.379577000914482,
+                "status": "solved"
+              },
+              {
+                "choice": 1,
+                "relaxedValue": 8.814800986814811,
+                "feasibleValue": 7.2859403397419005,
+                "status": "solved"
+              },
+              {
+                "choice": 0,
+                "relaxedValue": 8.607600609907815,
+                "feasibleValue": null,
+                "status": "solved"
+              }
+            ],
+            "chosen": 2,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          },
+          {
+            "decision": "passage:corner",
+            "parentFixed": {
+              "departure:0": 2,
+              "departure:1": 14
+            },
+            "choices": [
+              {
+                "choice": 3,
+                "relaxedValue": 7.80889007459653,
+                "feasibleValue": 7.379577000914482,
+                "status": "solved"
+              },
+              {
+                "choice": 4,
+                "relaxedValue": 7.463445612479232,
+                "feasibleValue": 7.072087832596187,
+                "status": "solved"
+              },
+              {
+                "choice": 5,
+                "relaxedValue": 7.119837918941801,
+                "feasibleValue": null,
+                "status": "solved"
+              }
+            ],
+            "chosen": 3,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      },
+      "convex_disk": {
+        "status": "solved",
+        "value": 9.020327679142483,
+        "upperBound": 9.020327692238919,
+        "variables": 1466,
+        "rows": 5184,
+        "buildSeconds": 0.003482166677713394,
+        "solveSeconds": 0.024122377,
+        "objectiveGap": 1.6407506782280006,
+        "similarity": {
+          "positionRmse": 1.338137105087075,
+          "velocityRmse": 0.07704555585300618,
+          "routeRmse": 1.2578836569676142
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 1.5973715405959155e-12,
+          "fractionalCancellation": 1.2573275753879898e-12,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 2.783884012202975e-09
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 2,
+        "comparablePairs": 2,
+        "guidedSeconds": 0.6825715452432632,
+        "rankings": [
+          {
+            "decision": "departure:0",
+            "parentFixed": {},
+            "choices": [
+              {
+                "choice": 2,
+                "relaxedValue": 9.020327679389515,
+                "feasibleValue": 7.379577000914482,
+                "status": "solved"
+              },
+              {
+                "choice": 1,
+                "relaxedValue": 8.8148010035861,
+                "feasibleValue": 7.2859403397419005,
+                "status": "solved"
+              },
+              {
+                "choice": 0,
+                "relaxedValue": 8.607600626361972,
+                "feasibleValue": null,
+                "status": "solved"
+              }
+            ],
+            "chosen": 2,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          },
+          {
+            "decision": "passage:corner",
+            "parentFixed": {
+              "departure:0": 2,
+              "departure:1": 14
+            },
+            "choices": [
+              {
+                "choice": 3,
+                "relaxedValue": 7.808890094923661,
+                "feasibleValue": 7.379577000914482,
+                "status": "solved"
+              },
+              {
+                "choice": 4,
+                "relaxedValue": 7.463445633136368,
+                "feasibleValue": 7.072087832596187,
+                "status": "solved"
+              },
+              {
+                "choice": 5,
+                "relaxedValue": 7.119837939648038,
+                "feasibleValue": null,
+                "status": "solved"
+              }
+            ],
+            "chosen": 3,
+            "comparablePairs": 1,
+            "correctPairs": 1,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      }
+    },
+    "repeat": 2
+  },
+  {
+    "name": "turning-support",
+    "ticks": 26,
+    "assignments": 3,
+    "acceptedAssignments": 3,
+    "numericalUnknowns": 0,
+    "unknownsWithImprovementPotential": 0,
+    "bestFeasible": 7.607156402681025,
+    "worstLiftViolation": 1.5091469220129827e-10,
+    "arms": {
+      "compact_circle": {
+        "status": "solved",
+        "value": 7.61926540147963,
+        "upperBound": null,
+        "variables": 517,
+        "rows": 324,
+        "buildSeconds": 0.04784400016069412,
+        "solveSeconds": 0.028954125940799713,
+        "objectiveGap": 0.012108998798605164,
+        "similarity": {
+          "positionRmse": 0.24122045773096412,
+          "velocityRmse": 0.019616268466487372,
+          "routeRmse": 0.2361240016993076
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 0,
+          "totalMagnitudeSlack": 0.0,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 3.3197478699342753e-07
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 3,
+        "comparablePairs": 3,
+        "guidedSeconds": 0.7120012491941452,
+        "rankings": [
+          {
+            "decision": "departure:0",
+            "parentFixed": {},
+            "choices": [
+              {
+                "choice": 2,
+                "relaxedValue": 7.619265405479638,
+                "feasibleValue": 7.607156402681025,
+                "status": "solved"
+              },
+              {
+                "choice": 1,
+                "relaxedValue": 7.6107636634797,
+                "feasibleValue": 7.598147560916406,
+                "status": "solved"
+              },
+              {
+                "choice": 0,
+                "relaxedValue": 7.606344102726159,
+                "feasibleValue": 7.593596661474295,
+                "status": "solved"
+              }
+            ],
+            "chosen": 2,
+            "comparablePairs": 3,
+            "correctPairs": 3,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      },
+      "compact_disk": {
+        "status": "solved",
+        "value": 7.619265399271817,
+        "upperBound": null,
+        "variables": 517,
+        "rows": 324,
+        "buildSeconds": 0.04677095636725426,
+        "solveSeconds": 0.027953583747148514,
+        "objectiveGap": 0.012108996590791676,
+        "similarity": {
+          "positionRmse": 0.1430983597889856,
+          "velocityRmse": 0.015802160605514027,
+          "routeRmse": 0.10234782587323171
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 1,
+          "totalMagnitudeSlack": 0.03543237017288266,
+          "fractionalCancellation": 0.0,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 3.3194036164196916e-07
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 3,
+        "comparablePairs": 3,
+        "guidedSeconds": 0.6853160448372364,
+        "rankings": [
+          {
+            "decision": "departure:0",
+            "parentFixed": {},
+            "choices": [
+              {
+                "choice": 2,
+                "relaxedValue": 7.619265403271678,
+                "feasibleValue": 7.607156402681025,
+                "status": "solved"
+              },
+              {
+                "choice": 1,
+                "relaxedValue": 7.610763661220751,
+                "feasibleValue": 7.598147560916406,
+                "status": "solved"
+              },
+              {
+                "choice": 0,
+                "relaxedValue": 7.606344187687816,
+                "feasibleValue": 7.593596661474295,
+                "status": "solved"
+              }
+            ],
+            "chosen": 2,
+            "comparablePairs": 3,
+            "correctPairs": 3,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      },
+      "convex_disk": {
+        "status": "solved",
+        "value": 7.619265415692125,
+        "upperBound": 7.619265428183791,
+        "variables": 1463,
+        "rows": 4931,
+        "buildSeconds": 0.003154125064611435,
+        "solveSeconds": 0.023685876,
+        "objectiveGap": 0.012109013011099456,
+        "similarity": {
+          "positionRmse": 0.1247666912433732,
+          "velocityRmse": 0.01502127937225237,
+          "routeRmse": 0.06383924673952844
+        },
+        "rootRefined": "feasible",
+        "guided": "feasible",
+        "guidedRegret": 0.0,
+        "controlStats": {
+          "reducedAccelerationTicks": 1,
+          "totalMagnitudeSlack": 0.04590375273237049,
+          "fractionalCancellation": 1.0332590453382418e-08,
+          "fractionalTicks": 0,
+          "maxFlowFractionality": 8.270659990206042e-08
+        },
+        "beam": "feasible",
+        "beamRegret": 0.0,
+        "correctPairs": 3,
+        "comparablePairs": 3,
+        "guidedSeconds": 0.4887183755636215,
+        "rankings": [
+          {
+            "decision": "departure:0",
+            "parentFixed": {},
+            "choices": [
+              {
+                "choice": 2,
+                "relaxedValue": 7.61926541653872,
+                "feasibleValue": 7.607156402681025,
+                "status": "solved"
+              },
+              {
+                "choice": 1,
+                "relaxedValue": 7.610763674795195,
+                "feasibleValue": 7.598147560916406,
+                "status": "solved"
+              },
+              {
+                "choice": 0,
+                "relaxedValue": 7.606344201408295,
+                "feasibleValue": 7.593596661474295,
+                "status": "solved"
+              }
+            ],
+            "chosen": 2,
+            "comparablePairs": 3,
+            "correctPairs": 3,
+            "chosenHasWitness": true,
+            "objectiveRegret": 0.0
+          }
+        ]
+      }
+    },
+    "repeat": 2
+  }
+]

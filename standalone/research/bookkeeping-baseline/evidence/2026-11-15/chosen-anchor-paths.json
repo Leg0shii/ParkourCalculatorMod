@@ -1,0 +1,151 @@
+{
+  "scope": "First chosen feasible arrival per initial-jump family and anchor; witness histories, not arrival optima. Transition elapsed times are local to DFS service sessions.",
+  "source": "runs/initial-domain-selection-unrestricted-2026-11-15/report.json.gz",
+  "records": [
+    {
+      "firstJump": 8,
+      "goal": "b2",
+      "arrival": 17,
+      "jumps": [
+        8
+      ],
+      "frame": 0,
+      "candidate": "e64ce8074540031447aa4ec3be92447d0b4e119da2aacf7bbbf59e2328bf96d6",
+      "session": 1,
+      "sessionElapsedSeconds": 0.9423398338258266
+    },
+    {
+      "firstJump": 8,
+      "goal": "b3",
+      "arrival": 28,
+      "jumps": [
+        8,
+        19
+      ],
+      "frame": 1,
+      "candidate": "b2fc7f32bfc4e852ca06b061e021bfe504cb0541ac448b1f32e5bd5e32a6f9dc",
+      "session": 1,
+      "sessionElapsedSeconds": 1.6444355845451355
+    },
+    {
+      "firstJump": 8,
+      "goal": "b4",
+      "arrival": 40,
+      "jumps": [
+        8,
+        19,
+        30
+      ],
+      "frame": 2,
+      "candidate": "08385b4eb1a2e6d67ed3498c9a3c828bf52f32d3d820b7b758088e0af1fc9051",
+      "session": 1,
+      "sessionElapsedSeconds": 2.180511124432087
+    },
+    {
+      "firstJump": 8,
+      "goal": "b5",
+      "arrival": 58,
+      "jumps": [
+        8,
+        19,
+        30,
+        43
+      ],
+      "frame": 3,
+      "candidate": "cab92e7255e56353059228c0cbde5104117299ed3ae7d546248f077d12b34656",
+      "session": 1,
+      "sessionElapsedSeconds": 5.98921874910593
+    },
+    {
+      "firstJump": 8,
+      "goal": "b7",
+      "arrival": 67,
+      "jumps": [
+        8,
+        19,
+        30,
+        43,
+        58
+      ],
+      "frame": 4,
+      "candidate": "818bfe8045e8a3899390b293df0d0ece759ef61126ec88a6b1178f46d702f29a",
+      "session": 3,
+      "sessionElapsedSeconds": 14.362274792045355
+    },
+    {
+      "firstJump": 0,
+      "goal": "b2",
+      "arrival": 21,
+      "jumps": [
+        0,
+        12
+      ],
+      "frame": 0,
+      "candidate": "b44b9200f51a40bfbd708c07a25a63299444466ad833a8ab500f40590ac8ca7b",
+      "session": 4,
+      "sessionElapsedSeconds": 27.16777104139328
+    },
+    {
+      "firstJump": 0,
+      "goal": "b3",
+      "arrival": 30,
+      "jumps": [
+        0,
+        12,
+        21
+      ],
+      "frame": 6,
+      "candidate": "25a1dd3d0489cac244aba8fd7ab0b0d68d951ac91696a5402263a7e8d9a5e4a2",
+      "session": 4,
+      "sessionElapsedSeconds": 27.305450040847063
+    },
+    {
+      "firstJump": 0,
+      "goal": "b4",
+      "arrival": 40,
+      "jumps": [
+        0,
+        12,
+        21,
+        30
+      ],
+      "frame": 7,
+      "candidate": "4bc5d5aa70a68e176c3a5cd0ac11e836de048127983bf710e0983262c1a18bff",
+      "session": 4,
+      "sessionElapsedSeconds": 27.47218833491206
+    },
+    {
+      "firstJump": 0,
+      "goal": "b5",
+      "arrival": 55,
+      "jumps": [
+        0,
+        12,
+        21,
+        30,
+        40
+      ],
+      "frame": 8,
+      "candidate": "c47160ab9ae81c4acd903a2ce49dd5904d43d200449eb72b2c5d62e643e2949b",
+      "session": 4,
+      "sessionElapsedSeconds": 27.901071541011333
+    },
+    {
+      "firstJump": 0,
+      "goal": "b7",
+      "arrival": 64,
+      "jumps": [
+        0,
+        12,
+        21,
+        30,
+        40,
+        55
+      ],
+      "frame": 9,
+      "candidate": "7d7105aab2da4492cfc85928c23726d1c2455f9afa782d30409ab2710ceb04a6",
+      "session": 4,
+      "sessionElapsedSeconds": 30.853034626692533
+    }
+  ]
+}

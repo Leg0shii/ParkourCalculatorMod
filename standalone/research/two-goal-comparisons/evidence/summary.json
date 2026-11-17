@@ -1,0 +1,673 @@
+{
+  "scenes": [
+    {
+      "name": "ceiling",
+      "previous": {
+        "name": "ceiling",
+        "repeat": 0,
+        "gap": 0.25,
+        "status": "feasible",
+        "termination": "exhausted",
+        "elapsedSeconds": 4.788199000060558,
+        "ticks": 13,
+        "objective": 4.075185600539984,
+        "calls": 27,
+        "firstAcceptedSeconds": 4.783982206135988,
+        "expandedPrefixes": 16,
+        "scoreComparisons": 12,
+        "checkpointUnknowns": 8,
+        "heuristicDrops": 17,
+        "checkpoints": [
+          11
+        ],
+        "retained": [
+          3
+        ],
+        "outsideBand": 10,
+        "scoredCapDrops": 0
+      },
+      "search": {
+        "status": "feasible",
+        "termination": "exhausted",
+        "elapsedSeconds": 11.101634960621595,
+        "ticks": 12,
+        "objective": 3.4016670354922365,
+        "calls": 52,
+        "firstAcceptedSeconds": 0.86387600004673,
+        "expandedPrefixes": 71,
+        "scoreComparisons": 12,
+        "checkpointUnknowns": 8,
+        "heuristicDrops": 12
+      },
+      "mainExpandedPrefixes": 71,
+      "spatialExpandedPrefixes": 157,
+      "totalExpandedPrefixes": 228,
+      "retained": [
+        8
+      ],
+      "candidateSelection": {
+        "markedly_worse": 2,
+        "resource_cap": 6,
+        "retained": 8,
+        "unknown_resource_cap": 4
+      },
+      "spatialKnown": 9,
+      "clockKnown": 12,
+      "comparedCandidates": 20,
+      "audit": {
+        "candidates": 27,
+        "completeCandidates": 27,
+        "allCandidatesProcessed": true,
+        "continuationAuditComplete": true,
+        "sourceGenerationComplete": false,
+        "fullProgramsTested": 15,
+        "acceptedWitnessReplays": 15,
+        "calls": 92,
+        "elapsedSeconds": 16.8059762082994,
+        "unknownPrograms": 0,
+        "discardedTiesBest": [],
+        "discardedTiesFastestTime": [],
+        "discardedBeatsHeuristic": [],
+        "heuristicQualityLoss": false
+      },
+      "competitiveFollowup": {
+        "candidates": 0,
+        "complete": true,
+        "qualityLoss": false,
+        "elapsedSeconds": 0.16312241554260254,
+        "referenceSettings": {
+          "secondsPerCandidate": 8.0,
+          "candidateSeconds": 0.7,
+          "solverCallsPerCandidate": 96,
+          "programLimit": null,
+          "movementSettings": {
+            "types": [
+              "normal",
+              "ceiling"
+            ],
+            "maxInputs": 12,
+            "maxPrefixes": 4096,
+            "maxQueuedPrefixes": 4096,
+            "maxChoicesPerType": 200000,
+            "maxInteractions": 200,
+            "maxEntryInputs": 14,
+            "expansionsPerProposal": 8
+          }
+        }
+      }
+    },
+    {
+      "name": "grind-or-run",
+      "previous": {
+        "name": "grind-or-run",
+        "repeat": 0,
+        "gap": 0.25,
+        "status": "feasible",
+        "termination": "prefix_limit",
+        "elapsedSeconds": 5.394382499158382,
+        "ticks": 11,
+        "objective": 5.670999716917564,
+        "calls": 3,
+        "firstAcceptedSeconds": 0.6483485847711563,
+        "expandedPrefixes": 512,
+        "scoreComparisons": 0,
+        "checkpointUnknowns": 0,
+        "heuristicDrops": 0,
+        "checkpoints": [],
+        "retained": [],
+        "outsideBand": 0,
+        "scoredCapDrops": 0
+      },
+      "search": {
+        "status": "feasible",
+        "termination": "prefix_limit",
+        "elapsedSeconds": 5.295413833111525,
+        "ticks": 11,
+        "objective": 5.670999716917564,
+        "calls": 3,
+        "firstAcceptedSeconds": 0.6329074613749981,
+        "expandedPrefixes": 512,
+        "scoreComparisons": 0,
+        "checkpointUnknowns": 0,
+        "heuristicDrops": 0
+      },
+      "mainExpandedPrefixes": 512,
+      "spatialExpandedPrefixes": 0,
+      "totalExpandedPrefixes": 512,
+      "retained": [],
+      "candidateSelection": {},
+      "spatialKnown": 0,
+      "clockKnown": 0,
+      "comparedCandidates": 0,
+      "audit": {
+        "candidates": 3,
+        "completeCandidates": 1,
+        "allCandidatesProcessed": true,
+        "continuationAuditComplete": false,
+        "sourceGenerationComplete": false,
+        "fullProgramsTested": 3,
+        "acceptedWitnessReplays": 1,
+        "calls": 3,
+        "elapsedSeconds": 0.4995340406894684,
+        "unknownPrograms": 2,
+        "discardedTiesBest": [],
+        "discardedTiesFastestTime": [],
+        "discardedBeatsHeuristic": [],
+        "heuristicQualityLoss": false
+      },
+      "competitiveFollowup": {
+        "candidates": 0,
+        "complete": true,
+        "qualityLoss": false,
+        "elapsedSeconds": 0.006173081696033478,
+        "referenceSettings": {
+          "secondsPerCandidate": 8.0,
+          "candidateSeconds": 0.7,
+          "solverCallsPerCandidate": 96,
+          "programLimit": null,
+          "movementSettings": {
+            "types": [
+              "ceiling",
+              "normal",
+              "stepping"
+            ],
+            "maxInputs": 11,
+            "maxPrefixes": 4096,
+            "maxQueuedPrefixes": 4096,
+            "maxChoicesPerType": 200000,
+            "maxInteractions": 200,
+            "maxEntryInputs": 14,
+            "expansionsPerProposal": 8
+          }
+        }
+      }
+    },
+    {
+      "name": "multi-support",
+      "previous": {
+        "name": "multi-support",
+        "repeat": 0,
+        "gap": 0.25,
+        "status": "feasible",
+        "termination": "exhausted",
+        "elapsedSeconds": 5.474617999047041,
+        "ticks": 14,
+        "objective": 5.136175026980244,
+        "calls": 34,
+        "firstAcceptedSeconds": 4.977353293448687,
+        "expandedPrefixes": 57,
+        "scoreComparisons": 6,
+        "checkpointUnknowns": 17,
+        "heuristicDrops": 17,
+        "checkpoints": [
+          10,
+          16
+        ],
+        "retained": [
+          5,
+          1
+        ],
+        "outsideBand": 2,
+        "scoredCapDrops": 0
+      },
+      "search": {
+        "status": "feasible",
+        "termination": "goal_found",
+        "elapsedSeconds": 11.848358247429132,
+        "ticks": 14,
+        "objective": 5.136175026980244,
+        "calls": 52,
+        "firstAcceptedSeconds": 1.0034494139254093,
+        "expandedPrefixes": 66,
+        "scoreComparisons": 6,
+        "checkpointUnknowns": 14,
+        "heuristicDrops": 15
+      },
+      "mainExpandedPrefixes": 66,
+      "spatialExpandedPrefixes": 307,
+      "totalExpandedPrefixes": 373,
+      "retained": [
+        5,
+        0
+      ],
+      "candidateSelection": {
+        "markedly_worse": 2,
+        "retained": 5,
+        "unknown_resource_cap": 13
+      },
+      "spatialKnown": 6,
+      "clockKnown": 6,
+      "comparedCandidates": 20,
+      "audit": {
+        "candidates": 116,
+        "completeCandidates": 79,
+        "allCandidatesProcessed": true,
+        "continuationAuditComplete": false,
+        "sourceGenerationComplete": false,
+        "fullProgramsTested": 299,
+        "acceptedWitnessReplays": 229,
+        "calls": 517,
+        "elapsedSeconds": 166.50056379288435,
+        "unknownPrograms": 70,
+        "discardedTiesBest": [],
+        "discardedTiesFastestTime": [],
+        "discardedBeatsHeuristic": [],
+        "heuristicQualityLoss": false
+      },
+      "competitiveFollowup": {
+        "candidates": 7,
+        "complete": true,
+        "qualityLoss": false,
+        "elapsedSeconds": 0.011618711054325104,
+        "referenceSettings": {
+          "secondsPerCandidate": 8.0,
+          "candidateSeconds": 0.7,
+          "solverCallsPerCandidate": 96,
+          "programLimit": null,
+          "movementSettings": {
+            "types": [
+              "normal"
+            ],
+            "maxInputs": 14,
+            "maxPrefixes": 4096,
+            "maxQueuedPrefixes": 4096,
+            "maxChoicesPerType": 200000,
+            "maxInteractions": 200,
+            "maxEntryInputs": 14,
+            "expansionsPerProposal": 8
+          }
+        }
+      }
+    },
+    {
+      "name": "open",
+      "previous": {
+        "name": "open",
+        "repeat": 0,
+        "gap": 0.25,
+        "status": "feasible",
+        "termination": "exhausted",
+        "elapsedSeconds": 3.832340497523546,
+        "ticks": 12,
+        "objective": 4.385033235229957,
+        "calls": 22,
+        "firstAcceptedSeconds": 3.69400879368186,
+        "expandedPrefixes": 18,
+        "scoreComparisons": 14,
+        "checkpointUnknowns": 5,
+        "heuristicDrops": 13,
+        "checkpoints": [
+          11
+        ],
+        "retained": [
+          6
+        ],
+        "outsideBand": 9,
+        "scoredCapDrops": 0
+      },
+      "search": {
+        "status": "feasible",
+        "termination": "exhausted",
+        "elapsedSeconds": 5.462335586547852,
+        "ticks": 12,
+        "objective": 4.385033235229957,
+        "calls": 29,
+        "firstAcceptedSeconds": 0.6364258714020252,
+        "expandedPrefixes": 60,
+        "scoreComparisons": 14,
+        "checkpointUnknowns": 5,
+        "heuristicDrops": 11
+      },
+      "mainExpandedPrefixes": 60,
+      "spatialExpandedPrefixes": 116,
+      "totalExpandedPrefixes": 176,
+      "retained": [
+        8
+      ],
+      "candidateSelection": {
+        "markedly_worse": 4,
+        "retained": 8,
+        "unknown_resource_cap": 4,
+        "resource_cap": 3
+      },
+      "spatialKnown": 7,
+      "clockKnown": 14,
+      "comparedCandidates": 19,
+      "audit": {
+        "candidates": 22,
+        "completeCandidates": 22,
+        "allCandidatesProcessed": true,
+        "continuationAuditComplete": true,
+        "sourceGenerationComplete": true,
+        "fullProgramsTested": 10,
+        "acceptedWitnessReplays": 10,
+        "calls": 10,
+        "elapsedSeconds": 1.9219594150781631,
+        "unknownPrograms": 0,
+        "discardedTiesBest": [],
+        "discardedTiesFastestTime": [],
+        "discardedBeatsHeuristic": [],
+        "heuristicQualityLoss": false
+      },
+      "competitiveFollowup": {
+        "candidates": 0,
+        "complete": true,
+        "qualityLoss": false,
+        "elapsedSeconds": 0.004477165639400482,
+        "referenceSettings": {
+          "secondsPerCandidate": 8.0,
+          "candidateSeconds": 0.7,
+          "solverCallsPerCandidate": 96,
+          "programLimit": null,
+          "movementSettings": {
+            "types": [
+              "normal"
+            ],
+            "maxInputs": 12,
+            "maxPrefixes": 4096,
+            "maxQueuedPrefixes": 4096,
+            "maxChoicesPerType": 200000,
+            "maxInteractions": 200,
+            "maxEntryInputs": 14,
+            "expansionsPerProposal": 8
+          }
+        }
+      }
+    },
+    {
+      "name": "step-or-jump",
+      "previous": {
+        "name": "step-or-jump",
+        "repeat": 0,
+        "gap": 0.25,
+        "status": "feasible",
+        "termination": "exhausted",
+        "elapsedSeconds": 7.125989001244307,
+        "ticks": 14,
+        "objective": 5.8472345462747946,
+        "calls": 41,
+        "firstAcceptedSeconds": 6.886643290519714,
+        "expandedPrefixes": 64,
+        "scoreComparisons": 8,
+        "checkpointUnknowns": 12,
+        "heuristicDrops": 18,
+        "checkpoints": [
+          10
+        ],
+        "retained": [
+          2
+        ],
+        "outsideBand": 7,
+        "scoredCapDrops": 0
+      },
+      "search": {
+        "status": "feasible",
+        "termination": "deadline",
+        "elapsedSeconds": 20.00097816437483,
+        "ticks": 13,
+        "objective": 4.801811151324462,
+        "calls": 47,
+        "firstAcceptedSeconds": 1.7577080428600311,
+        "expandedPrefixes": 161,
+        "scoreComparisons": 8,
+        "checkpointUnknowns": 12,
+        "heuristicDrops": 14
+      },
+      "mainExpandedPrefixes": 161,
+      "spatialExpandedPrefixes": 543,
+      "totalExpandedPrefixes": 704,
+      "retained": [
+        6
+      ],
+      "candidateSelection": {
+        "markedly_worse": 3,
+        "retained": 6,
+        "unknown_resource_cap": 11
+      },
+      "spatialKnown": 5,
+      "clockKnown": 8,
+      "comparedCandidates": 20,
+      "audit": {
+        "candidates": 23,
+        "completeCandidates": 13,
+        "allCandidatesProcessed": true,
+        "continuationAuditComplete": false,
+        "sourceGenerationComplete": false,
+        "fullProgramsTested": 8,
+        "acceptedWitnessReplays": 7,
+        "calls": 8,
+        "elapsedSeconds": 13.433748163282871,
+        "unknownPrograms": 1,
+        "discardedTiesBest": [],
+        "discardedTiesFastestTime": [],
+        "discardedBeatsHeuristic": [],
+        "heuristicQualityLoss": false
+      },
+      "competitiveFollowup": {
+        "candidates": 4,
+        "complete": true,
+        "qualityLoss": false,
+        "elapsedSeconds": 0.031185582280158997,
+        "referenceSettings": {
+          "secondsPerCandidate": 8.0,
+          "candidateSeconds": 0.7,
+          "solverCallsPerCandidate": 96,
+          "programLimit": null,
+          "movementSettings": {
+            "types": [
+              "stepping",
+              "normal"
+            ],
+            "maxInputs": 13,
+            "maxPrefixes": 4096,
+            "maxQueuedPrefixes": 4096,
+            "maxChoicesPerType": 200000,
+            "maxInteractions": 200,
+            "maxEntryInputs": 14,
+            "expansionsPerProposal": 8
+          }
+        }
+      }
+    },
+    {
+      "name": "turn-blockage",
+      "previous": {
+        "name": "turn-blockage",
+        "repeat": 0,
+        "gap": 0.25,
+        "status": "feasible",
+        "termination": "exhausted",
+        "elapsedSeconds": 10.400828376412392,
+        "ticks": 13,
+        "objective": 3.397884131961054,
+        "calls": 75,
+        "firstAcceptedSeconds": 8.320306330919266,
+        "expandedPrefixes": 15,
+        "scoreComparisons": 4,
+        "checkpointUnknowns": 12,
+        "heuristicDrops": 12,
+        "checkpoints": [
+          10
+        ],
+        "retained": [
+          4
+        ],
+        "outsideBand": 1,
+        "scoredCapDrops": 0
+      },
+      "search": {
+        "status": "feasible",
+        "termination": "exhausted",
+        "elapsedSeconds": 14.037974122911692,
+        "ticks": 12,
+        "objective": 2.9549022495133563,
+        "calls": 99,
+        "firstAcceptedSeconds": 4.859811794012785,
+        "expandedPrefixes": 18,
+        "scoreComparisons": 4,
+        "checkpointUnknowns": 12,
+        "heuristicDrops": 9
+      },
+      "mainExpandedPrefixes": 18,
+      "spatialExpandedPrefixes": 100,
+      "totalExpandedPrefixes": 118,
+      "retained": [
+        7
+      ],
+      "candidateSelection": {
+        "retained": 7,
+        "unknown_resource_cap": 9
+      },
+      "spatialKnown": 3,
+      "clockKnown": 4,
+      "comparedCandidates": 16,
+      "audit": {
+        "candidates": 18,
+        "completeCandidates": 17,
+        "allCandidatesProcessed": true,
+        "continuationAuditComplete": false,
+        "sourceGenerationComplete": true,
+        "fullProgramsTested": 8,
+        "acceptedWitnessReplays": 7,
+        "calls": 84,
+        "elapsedSeconds": 12.721408538520336,
+        "unknownPrograms": 1,
+        "discardedTiesBest": [],
+        "discardedTiesFastestTime": [],
+        "discardedBeatsHeuristic": [],
+        "heuristicQualityLoss": false
+      },
+      "competitiveFollowup": {
+        "candidates": 0,
+        "complete": true,
+        "qualityLoss": false,
+        "elapsedSeconds": 0.004236668348312378,
+        "referenceSettings": {
+          "secondsPerCandidate": 8.0,
+          "candidateSeconds": 0.7,
+          "solverCallsPerCandidate": 96,
+          "programLimit": null,
+          "movementSettings": {
+            "types": [
+              "normal"
+            ],
+            "maxInputs": 12,
+            "maxPrefixes": 4096,
+            "maxQueuedPrefixes": 4096,
+            "maxChoicesPerType": 200000,
+            "maxInteractions": 200,
+            "maxEntryInputs": 14,
+            "expansionsPerProposal": 8
+          }
+        }
+      }
+    },
+    {
+      "name": "separated-two-jumps-reverse",
+      "previous": null,
+      "search": {
+        "status": "feasible",
+        "termination": "exhausted",
+        "elapsedSeconds": 16.61954279243946,
+        "ticks": 24,
+        "objective": -7.622964650232281,
+        "calls": 86,
+        "firstAcceptedSeconds": 1.3785816244781017,
+        "expandedPrefixes": 144,
+        "scoreComparisons": 22,
+        "checkpointUnknowns": 22,
+        "heuristicDrops": 20
+      },
+      "mainExpandedPrefixes": 144,
+      "spatialExpandedPrefixes": 269,
+      "totalExpandedPrefixes": 413,
+      "retained": [
+        12,
+        12
+      ],
+      "candidateSelection": {
+        "retained": 24,
+        "markedly_worse": 1,
+        "unknown_resource_cap": 18,
+        "resource_cap": 1
+      },
+      "spatialKnown": 6,
+      "clockKnown": 22,
+      "comparedCandidates": 44,
+      "audit": {
+        "candidates": 48,
+        "completeCandidates": 48,
+        "allCandidatesProcessed": true,
+        "continuationAuditComplete": true,
+        "sourceGenerationComplete": false,
+        "fullProgramsTested": 14,
+        "acceptedWitnessReplays": 14,
+        "calls": 14,
+        "elapsedSeconds": 4.1196939162909985,
+        "unknownPrograms": 0,
+        "discardedTiesBest": [],
+        "discardedTiesFastestTime": [],
+        "discardedBeatsHeuristic": [],
+        "heuristicQualityLoss": false
+      }
+    },
+    {
+      "name": "separated-two-jumps",
+      "previous": null,
+      "search": {
+        "status": "feasible",
+        "termination": "exhausted",
+        "elapsedSeconds": 16.17025912553072,
+        "ticks": 24,
+        "objective": 8.622964650232278,
+        "calls": 86,
+        "firstAcceptedSeconds": 0.8754797093570232,
+        "expandedPrefixes": 138,
+        "scoreComparisons": 21,
+        "checkpointUnknowns": 23,
+        "heuristicDrops": 20
+      },
+      "mainExpandedPrefixes": 138,
+      "spatialExpandedPrefixes": 269,
+      "totalExpandedPrefixes": 407,
+      "retained": [
+        12,
+        12
+      ],
+      "candidateSelection": {
+        "retained": 24,
+        "markedly_worse": 1,
+        "unknown_resource_cap": 19
+      },
+      "spatialKnown": 6,
+      "clockKnown": 21,
+      "comparedCandidates": 44,
+      "audit": {
+        "candidates": 48,
+        "completeCandidates": 48,
+        "allCandidatesProcessed": true,
+        "continuationAuditComplete": true,
+        "sourceGenerationComplete": false,
+        "fullProgramsTested": 14,
+        "acceptedWitnessReplays": 14,
+        "calls": 14,
+        "elapsedSeconds": 3.7871946655213833,
+        "unknownPrograms": 0,
+        "discardedTiesBest": [],
+        "discardedTiesFastestTime": [],
+        "discardedBeatsHeuristic": [],
+        "heuristicQualityLoss": false
+      }
+    }
+  ],
+  "totals": {
+    "searchWitnessReplays": 138,
+    "candidateHistories": 305,
+    "fullProgramsTested": 371,
+    "referenceWitnessReplays": 297,
+    "referenceSolverCalls": 742,
+    "completeCandidateReferences": 255,
+    "heuristicQualityLosses": 0,
+    "totalWitnessReplays": 435
+  }
+}

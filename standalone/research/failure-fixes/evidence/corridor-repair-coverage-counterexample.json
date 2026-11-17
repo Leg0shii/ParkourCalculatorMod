@@ -1,0 +1,196 @@
+{
+  "source": "ede40368",
+  "scope": "geometric repair coverage only; no dynamic infeasibility or attribution to every cold-turn failure",
+  "projection": [
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0,
+      0.0,
+      1.0
+    ],
+    [
+      1.0,
+      0.0,
+      0.0,
+      2.0,
+      0.0,
+      2.0
+    ]
+  ],
+  "invalidProposal": {
+    "positions": [
+      [
+        0.5,
+        0.5
+      ],
+      [
+        2.5,
+        0.5
+      ]
+    ],
+    "y": [
+      0.0,
+      0.0
+    ]
+  },
+  "validAlternative": {
+    "positions": [
+      [
+        0.5,
+        0.5
+      ],
+      [
+        1.5,
+        0.5
+      ]
+    ],
+    "y": [
+      0.0,
+      0.0
+    ]
+  },
+  "validAudit": {
+    "accepted": true,
+    "signature": [],
+    "partial": false,
+    "validation": "horizontal_corridor_and_ordered_gate_crossings"
+  },
+  "repair": {
+    "accepted": false,
+    "reason": "corridor_projection",
+    "alternatives": [
+      [
+        {
+          "leg": 0,
+          "offset": 0,
+          "mode": "X",
+          "cmp": "GE",
+          "rhs": 0.0,
+          "name": "cell_corridor:0"
+        },
+        {
+          "leg": 0,
+          "offset": 0,
+          "mode": "X",
+          "cmp": "LE",
+          "rhs": 1.0,
+          "name": "cell_corridor:0"
+        },
+        {
+          "leg": 0,
+          "offset": 1,
+          "mode": "X",
+          "cmp": "GE",
+          "rhs": 0.0,
+          "name": "cell_corridor:0"
+        },
+        {
+          "leg": 0,
+          "offset": 1,
+          "mode": "X",
+          "cmp": "LE",
+          "rhs": 1.0,
+          "name": "cell_corridor:0"
+        },
+        {
+          "leg": 0,
+          "offset": 0,
+          "mode": "Z",
+          "cmp": "GE",
+          "rhs": 0.0,
+          "name": "cell_corridor:0"
+        },
+        {
+          "leg": 0,
+          "offset": 0,
+          "mode": "Z",
+          "cmp": "LE",
+          "rhs": 1.0,
+          "name": "cell_corridor:0"
+        }
+      ],
+      [
+        {
+          "leg": 0,
+          "offset": 0,
+          "mode": "X",
+          "cmp": "GE",
+          "rhs": 1.0,
+          "name": "cell_corridor:0"
+        },
+        {
+          "leg": 0,
+          "offset": 0,
+          "mode": "X",
+          "cmp": "LE",
+          "rhs": 2.0,
+          "name": "cell_corridor:0"
+        },
+        {
+          "leg": 0,
+          "offset": 1,
+          "mode": "X",
+          "cmp": "GE",
+          "rhs": 1.0,
+          "name": "cell_corridor:0"
+        },
+        {
+          "leg": 0,
+          "offset": 1,
+          "mode": "X",
+          "cmp": "LE",
+          "rhs": 2.0,
+          "name": "cell_corridor:0"
+        },
+        {
+          "leg": 0,
+          "offset": 0,
+          "mode": "Z",
+          "cmp": "GE",
+          "rhs": 0.0,
+          "name": "cell_corridor:0"
+        },
+        {
+          "leg": 0,
+          "offset": 0,
+          "mode": "Z",
+          "cmp": "LE",
+          "rhs": 2.0,
+          "name": "cell_corridor:0"
+        }
+      ]
+    ],
+    "repairComplete": false,
+    "actual": null
+  },
+  "repairViolationsForValidAlternative": [
+    [
+      {
+        "row": {
+          "leg": 0,
+          "offset": 1,
+          "mode": "X",
+          "cmp": "LE",
+          "rhs": 1.0,
+          "name": "cell_corridor:0"
+        },
+        "value": 1.5
+      }
+    ],
+    [
+      {
+        "row": {
+          "leg": 0,
+          "offset": 0,
+          "mode": "X",
+          "cmp": "GE",
+          "rhs": 1.0,
+          "name": "cell_corridor:0"
+        },
+        "value": 0.5
+      }
+    ]
+  ]
+}

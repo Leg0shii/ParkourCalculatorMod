@@ -1,0 +1,235 @@
+[
+  {
+    "label": "staircase",
+    "scene": {
+      "version": 1,
+      "sceneModel": "support_planes",
+      "initial": {
+        "position": [
+          0.5,
+          1,
+          0.5
+        ],
+        "velocity": [
+          0,
+          -0.0784000015258789,
+          0
+        ],
+        "yaw": 0
+      },
+      "startBlock": "start",
+      "goalBlock": "goal",
+      "blocks": [
+        {
+          "id": "goal",
+          "bounds": [
+            2,
+            3,
+            0,
+            1
+          ],
+          "top": 2
+        },
+        {
+          "id": "start",
+          "bounds": [
+            0,
+            1,
+            0,
+            1
+          ],
+          "top": 1
+        },
+        {
+          "id": "step",
+          "bounds": [
+            1,
+            2,
+            0,
+            1
+          ],
+          "top": 1.5
+        }
+      ],
+      "maxJumps": 3,
+      "maxRunTicksPerJump": 3,
+      "maxTotalRunTicks": 3
+    },
+    "route": [
+      "start",
+      "step",
+      "goal"
+    ],
+    "airtimes": [
+      2,
+      2
+    ],
+    "allocation": [
+      0,
+      1
+    ],
+    "ticks": 5,
+    "objective": {
+      "axis": "X",
+      "sense": "MAX"
+    },
+    "objectiveValue": 2.147673677079269,
+    "ticksLowerBound": 4,
+    "minimumTicksProven": false,
+    "objectiveOptimalityProven": false,
+    "attempts": 20,
+    "tickBoundPrunes": 15,
+    "termination": "tick_bound_exhausted",
+    "seconds": 1.060891542583704
+  },
+  {
+    "label": "max-z",
+    "scene": {
+      "version": 1,
+      "sceneModel": "coplanar_support_planes",
+      "initial": {
+        "position": [
+          0.7,
+          1,
+          0.5
+        ],
+        "velocity": [
+          0,
+          -0.0784000015258789,
+          0
+        ],
+        "yaw": 0
+      },
+      "startBlock": "start",
+      "goalBlock": "goal",
+      "blocks": [
+        {
+          "id": "goal",
+          "bounds": [
+            2.5,
+            3.5,
+            0,
+            1
+          ],
+          "top": 1
+        },
+        {
+          "id": "start",
+          "bounds": [
+            0,
+            1,
+            0,
+            1
+          ],
+          "top": 1
+        }
+      ],
+      "maxJumps": 1,
+      "maxRunTicksPerJump": 2,
+      "maxTotalRunTicks": 2,
+      "maxPrefixes": 10,
+      "objective": {
+        "axis": "Z",
+        "sense": "MAX"
+      }
+    },
+    "route": [
+      "start",
+      "goal"
+    ],
+    "airtimes": [
+      12
+    ],
+    "allocation": [
+      0
+    ],
+    "ticks": 12,
+    "objective": {
+      "axis": "Z",
+      "sense": "MAX"
+    },
+    "objectiveValue": 1.4727120634842583,
+    "ticksLowerBound": 12,
+    "minimumTicksProven": true,
+    "objectiveOptimalityProven": false,
+    "attempts": 1,
+    "tickBoundPrunes": 0,
+    "termination": "search_exhausted",
+    "seconds": 0.14587387442588806
+  },
+  {
+    "label": "min-z",
+    "scene": {
+      "version": 1,
+      "sceneModel": "coplanar_support_planes",
+      "initial": {
+        "position": [
+          0.7,
+          1,
+          0.5
+        ],
+        "velocity": [
+          0,
+          -0.0784000015258789,
+          0
+        ],
+        "yaw": 0
+      },
+      "startBlock": "start",
+      "goalBlock": "goal",
+      "blocks": [
+        {
+          "id": "goal",
+          "bounds": [
+            2.5,
+            3.5,
+            0,
+            1
+          ],
+          "top": 1
+        },
+        {
+          "id": "start",
+          "bounds": [
+            0,
+            1,
+            0,
+            1
+          ],
+          "top": 1
+        }
+      ],
+      "maxJumps": 1,
+      "maxRunTicksPerJump": 2,
+      "maxTotalRunTicks": 2,
+      "maxPrefixes": 10,
+      "objective": {
+        "axis": "Z",
+        "sense": "MIN"
+      }
+    },
+    "route": [
+      "start",
+      "goal"
+    ],
+    "airtimes": [
+      12
+    ],
+    "allocation": [
+      0
+    ],
+    "ticks": 12,
+    "objective": {
+      "axis": "Z",
+      "sense": "MIN"
+    },
+    "objectiveValue": -0.47271206348425854,
+    "ticksLowerBound": 12,
+    "minimumTicksProven": true,
+    "objectiveOptimalityProven": false,
+    "attempts": 1,
+    "tickBoundPrunes": 0,
+    "termination": "search_exhausted",
+    "seconds": 0.14454225078225136
+  }
+]

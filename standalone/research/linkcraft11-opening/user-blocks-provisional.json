@@ -1,0 +1,120 @@
+{
+  "interpretation": {
+    "horizontal": "single X/Z coordinates mean unit block cells; B1 horizontal ranges include both endpoint block coordinates",
+    "vertical": "explicit [0,h] is a continuous Y extent; B7 shorthand7 is provisionally interpreted as topY7 and bottomY0",
+    "b1Alternative": "If [742,746] and [-1104,-1105] were intended as geometric endpoints instead of inclusive cell coordinates, B1 bounds differ and the saved initial point is unsupported.",
+    "b7Alternative": "If7 is a Minecraft block Y coordinate, B7 has Y=[7,8] and landing top8 instead."
+  },
+  "footprintMode": "Minecraft1.8.9 legacy ConstraintDeriver with all seven boxes as obstacles, support-top-center reference, both axis facing choices",
+  "blocks": [
+    {
+      "id": "b1",
+      "box": [
+        742,
+        0,
+        -1105,
+        747,
+        5,
+        -1103
+      ],
+      "reference": [
+        744.5,
+        -1104.0
+      ]
+    },
+    {
+      "id": "b2",
+      "box": [
+        741,
+        0,
+        -1104,
+        742,
+        6,
+        -1103
+      ],
+      "reference": [
+        741.5,
+        -1103.5
+      ]
+    },
+    {
+      "id": "b3",
+      "box": [
+        738,
+        0,
+        -1101,
+        739,
+        7,
+        -1100
+      ],
+      "reference": [
+        738.5,
+        -1100.5
+      ]
+    },
+    {
+      "id": "b4",
+      "box": [
+        734,
+        0,
+        -1100,
+        735,
+        7.5,
+        -1099
+      ],
+      "reference": [
+        734.5,
+        -1099.5
+      ]
+    },
+    {
+      "id": "b5",
+      "box": [
+        730,
+        0,
+        -1096,
+        731,
+        6,
+        -1095
+      ],
+      "reference": [
+        730.5,
+        -1095.5
+      ]
+    },
+    {
+      "id": "b6",
+      "box": [
+        730,
+        0,
+        -1095,
+        731,
+        20,
+        -1094
+      ],
+      "reference": [
+        730.5,
+        -1094.5
+      ]
+    },
+    {
+      "id": "b7",
+      "box": [
+        729,
+        0,
+        -1095,
+        730,
+        7,
+        -1094
+      ],
+      "reference": [
+        729.5,
+        -1094.5
+      ]
+    }
+  ],
+  "facings": [
+    0,
+    -90
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "source": "evidence/real11-clock64-event-priority.json.gz",
+  "rows": [
+    {
+      "firstJumpInput": 0,
+      "absoluteState": 10,
+      "direction": [
+        -0.8715755371245493,
+        0.49026123963255896
+      ],
+      "positionXZ": [
+        744.414623686741,
+        -1103.3269758237916
+      ],
+      "velocityXZ": [
+        -0.19774988744102057,
+        0.1112343116855834
+      ],
+      "forwardPosition": 2.3926512670823836,
+      "forwardVelocity": 0.22688783589937522,
+      "lateralVelocity": -8.132383655379272e-15,
+      "y": 5.495200877005911,
+      "vy": -0.3739040364667221,
+      "onGround": false
+    },
+    {
+      "firstJumpInput": 8,
+      "absoluteState": 10,
+      "direction": [
+        -0.8715755371245493,
+        0.49026123963255896
+      ],
+      "positionXZ": [
+        744.1283924048065,
+        -1103.1659707359174
+      ],
+      "velocityXZ": [
+        -0.22957240645105176,
+        0.12913447852322693
+      ],
+      "forwardPosition": 2.7210580043446644,
+      "forwardVelocity": 0.2633993229816521,
+      "lateralVelocity": 9.194223160591264e-11,
+      "y": 5.7531999805212015,
+      "vy": 0.24813599859094576,
+      "onGround": false
+    }
+  ],
+  "interpretation": "Adding velocity alone still favors8 at10. Preserve the different jump/contact phase and both required setup families."
+}

@@ -1,0 +1,18 @@
+test_closed_inertia_hull_contains_both_threshold_branches (standalone.autonomy.tests.test_route_guidance.GuidanceGraphTests.test_closed_inertia_hull_contains_both_threshold_branches) ... ok
+test_consecutive_passage_uses_correct_same_or_successive_states (standalone.autonomy.tests.test_route_guidance.GuidanceGraphTests.test_consecutive_passage_uses_correct_same_or_successive_states) ... ok
+test_decision_fixes_keep_parent_domains_and_reject_unknowns (standalone.autonomy.tests.test_route_guidance.GuidanceGraphTests.test_decision_fixes_keep_parent_domains_and_reject_unknowns) ... ok
+test_phase_flow_preserves_every_small_allocation_and_horizon (standalone.autonomy.tests.test_route_guidance.GuidanceGraphTests.test_phase_flow_preserves_every_small_allocation_and_horizon) ... ok
+test_scope_and_horizon_errors_are_explicit (standalone.autonomy.tests.test_route_guidance.GuidanceGraphTests.test_scope_and_horizon_errors_are_explicit) ... ok
+test_supports_use_pre_landing_and_run_inputs_without_pinning_jump (standalone.autonomy.tests.test_route_guidance.GuidanceGraphTests.test_supports_use_pre_landing_and_run_inputs_without_pinning_jump) ... ok
+test_conditional_bounds_nest_and_compact_circle_is_in_disk (standalone.autonomy.tests.test_route_guidance.GuidanceNumericalTests.test_conditional_bounds_nest_and_compact_circle_is_in_disk) ... ok
+test_dual_projection_and_box_residual_correction_cover_known_optimum (standalone.autonomy.tests.test_route_guidance.GuidanceNumericalTests.test_dual_projection_and_box_residual_correction_cover_known_optimum) ... ok
+test_fixed_history_disk_matches_analytic_affine_oracle (standalone.autonomy.tests.test_route_guidance.GuidanceNumericalTests.test_fixed_history_disk_matches_analytic_affine_oracle) ... ok
+test_real_witness_lifts_cover_thresholds_and_random_free_facings (standalone.autonomy.tests.test_route_guidance.GuidanceNumericalTests.test_real_witness_lifts_cover_thresholds_and_random_free_facings) ... ok
+test_edge_coefficients_match_complete_authoritative_schedules (standalone.autonomy.tests.test_route_guidance.GuidancePhysicalTests.test_edge_coefficients_match_complete_authoritative_schedules) ... ok
+test_guidance_produces_independently_checked_whole_initial_state_path (standalone.autonomy.tests.test_route_guidance.GuidancePhysicalTests.test_guidance_produces_independently_checked_whole_initial_state_path) ... ok
+test_retaining_two_timings_recovers_the_narrow_support_ranking_counterexample (standalone.autonomy.tests.test_route_guidance.GuidancePhysicalTests.test_retaining_two_timings_recovers_the_narrow_support_ranking_counterexample) ... ok
+
+----------------------------------------------------------------------
+Ran 13 tests in 4.671s
+
+OK

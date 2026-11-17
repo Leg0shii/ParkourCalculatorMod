@@ -1,0 +1,91 @@
+{
+  "version": 1,
+  "sceneModel": "collision_boxes",
+  "geometryBounds": [
+    -8,
+    -5,
+    -8,
+    12,
+    12,
+    8
+  ],
+  "initial": {
+    "position": [
+      0.5,
+      1,
+      0.5
+    ],
+    "velocity": [
+      0.25,
+      -0.0784000015258789,
+      0
+    ],
+    "yaw": -90
+  },
+  "startBlock": "start",
+  "goalBlock": "goal",
+  "blocks": [
+    {
+      "id": "start",
+      "boxes": [
+        [
+          -1,
+          0,
+          -1,
+          0.55,
+          1,
+          1
+        ]
+      ]
+    },
+    {
+      "id": "ceiling",
+      "boxes": [
+        [
+          0.85,
+          2.9,
+          -2,
+          2,
+          4,
+          2
+        ]
+      ]
+    },
+    {
+      "id": "lower",
+      "boxes": [
+        [
+          0.85,
+          0,
+          -2,
+          4,
+          0.5,
+          2
+        ]
+      ]
+    },
+    {
+      "id": "goal",
+      "boxes": [
+        [
+          2.5,
+          0,
+          -2,
+          4,
+          0.75,
+          2
+        ]
+      ]
+    }
+  ],
+  "maxTotalRunTicks": 0,
+  "maxRunTicksPerJump": 0,
+  "maxWallHits": 0,
+  "maxContactCombinations": 0,
+  "movementSearch": {
+    "maxInputs": 40,
+    "maxPrefixes": 128,
+    "maxQueuedPrefixes": 256,
+    "maxChoicesPerType": 24
+  }
+}

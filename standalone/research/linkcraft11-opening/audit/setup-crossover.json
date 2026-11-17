@@ -1,0 +1,189 @@
+{
+  "source": "evidence/real11-terminal-variants.json.gz",
+  "measurement": "Observed state samples of the two accepted complete trajectories optimized for Z at64. No numerical re-solves at earlier horizons; later discrete decisions differ.",
+  "initialSetupInputs": {
+    "immediateFirstJump": 0,
+    "delayedFirstJump": 8,
+    "delayedGroundRun": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ]
+  },
+  "comparedDirection": [
+    -0.8715755371245493,
+    0.49026123963255896
+  ],
+  "anchor": [
+    746.5,
+    5,
+    -1104.5
+  ],
+  "firstRegainedDirectionalLeadAfterState10": 23,
+  "ticksBeyondFirstComparison": 13,
+  "firstRegainedPureZLeadAfterState10": 28,
+  "keepsDirectionalLeadThrough64": true,
+  "supportArrivalStates": {
+    "0": {
+      "b2": 21,
+      "b3": 30,
+      "b4": 40,
+      "b5": 55
+    },
+    "8": {
+      "b2": 17,
+      "b3": 28,
+      "b4": 40,
+      "b5": 58
+    }
+  },
+  "tick64ZAdvantage": 1.3120303524015071,
+  "selectedSamples": [
+    {
+      "state": 10,
+      "immediateProgress": 2.3177135539313904,
+      "delayedProgress": 2.675126431080506,
+      "progressAdvantage0": -0.3574128771491156,
+      "immediateZ": -1103.8804840828261,
+      "delayedZ": -1103.6214314753945,
+      "zAdvantage0": -0.25905260743161307
+    },
+    {
+      "state": 12,
+      "immediateProgress": 2.8137424502413957,
+      "delayedProgress": 3.2460828000231023,
+      "progressAdvantage0": -0.43234034978170666,
+      "immediateZ": -1103.7356867599542,
+      "delayedZ": -1103.4238063372823,
+      "zAdvantage0": -0.3118804226719476
+    },
+    {
+      "state": 13,
+      "immediateProgress": 3.365934519608423,
+      "delayedProgress": 3.531704404927347,
+      "progressAdvantage0": -0.165769885318924,
+      "immediateZ": -1103.5445373638415,
+      "delayedZ": -1103.3236928156873,
+      "zAdvantage0": -0.2208445481542185
+    },
+    {
+      "state": 17,
+      "immediateProgress": 4.655730593348535,
+      "delayedProgress": 4.676119227787296,
+      "progressAdvantage0": -0.02038863443876071,
+      "immediateZ": -1103.0769721151098,
+      "delayedZ": -1102.9023009558073,
+      "zAdvantage0": -0.17467115930253385
+    },
+    {
+      "state": 20,
+      "immediateProgress": 5.594173439838517,
+      "delayedProgress": 5.924415884483094,
+      "progressAdvantage0": -0.3302424446445764,
+      "immediateZ": -1102.70000098848,
+      "delayedZ": -1102.3185952953838,
+      "zAdvantage0": -0.3814056930962124
+    },
+    {
+      "state": 21,
+      "immediateProgress": 5.902266138767925,
+      "delayedProgress": 6.231438480123753,
+      "progressAdvantage0": -0.32917234135582785,
+      "immediateZ": -1102.5655922132028,
+      "delayedZ": -1102.1675925405532,
+      "zAdvantage0": -0.3979996726495756
+    },
+    {
+      "state": 22,
+      "immediateProgress": 6.505980723752924,
+      "delayedProgress": 6.536826975593925,
+      "progressAdvantage0": -0.03084625184100087,
+      "immediateZ": -1102.240010948339,
+      "delayedZ": -1102.0177204050012,
+      "zAdvantage0": -0.2222905433377491
+    },
+    {
+      "state": 23,
+      "immediateProgress": 6.861389369968936,
+      "delayedProgress": 6.840719068413332,
+      "progressAdvantage0": 0.020670301555604453,
+      "immediateZ": -1102.0466656829656,
+      "delayedZ": -1101.8692678657576,
+      "zAdvantage0": -0.1773978172079751
+    },
+    {
+      "state": 27,
+      "immediateProgress": 8.227456777411145,
+      "delayedProgress": 8.042809876105359,
+      "progressAdvantage0": 0.18464690130578632,
+      "immediateZ": -1101.299999811611,
+      "delayedZ": -1101.2999990116098,
+      "zAdvantage0": -8.000013167475117e-07
+    },
+    {
+      "state": 28,
+      "immediateProgress": 8.557634691043665,
+      "delayedProgress": 8.339477041337751,
+      "progressAdvantage0": 0.21815764970591367,
+      "immediateZ": -1101.1227346169317,
+      "delayedZ": -1101.1691160996425,
+      "zAdvantage0": 0.04638148271078535
+    },
+    {
+      "state": 30,
+      "immediateProgress": 9.207131416315356,
+      "delayedProgress": 9.076336317081228,
+      "progressAdvantage0": 0.13079509923412758,
+      "immediateZ": -1100.7798450927673,
+      "delayedZ": -1100.9036872438612,
+      "zAdvantage0": 0.12384215109386787
+    },
+    {
+      "state": 40,
+      "immediateProgress": 12.91321856526126,
+      "delayedProgress": 12.238459052245604,
+      "progressAdvantage0": 0.6747595130156565,
+      "immediateZ": -1098.9662286354978,
+      "delayedZ": -1099.9342687175322,
+      "zAdvantage0": 0.9680400820343493
+    },
+    {
+      "state": 55,
+      "immediateProgress": 18.173291064162175,
+      "delayedProgress": 16.865207794294747,
+      "progressAdvantage0": 1.3080832698674278,
+      "immediateZ": -1096.0778534945828,
+      "delayedZ": -1096.6824123619663,
+      "zAdvantage0": 0.6045588673835027
+    },
+    {
+      "state": 58,
+      "immediateProgress": 19.295437020202662,
+      "delayedProgress": 17.71652008622031,
+      "progressAdvantage0": 1.5789169339823523,
+      "immediateZ": -1095.0092069088048,
+      "delayedZ": -1096.1246493374708,
+      "zAdvantage0": 1.1154424286660287
+    },
+    {
+      "state": 64,
+      "immediateProgress": 20.802519822436455,
+      "delayedProgress": 19.844538086872717,
+      "progressAdvantage0": 0.9579817355637381,
+      "immediateZ": -1093.2675533415547,
+      "delayedZ": -1094.5795836939562,
+      "zAdvantage0": 1.3120303524015071
+    }
+  ],
+  "decision": "Retain both initial setup families, per user instruction. No dominance proof follows from a local score.",
+  "limitations": [
+    "not per-horizon optimized progress",
+    "not a certified crossover between optimal continuation value functions",
+    "does not isolate initial timing from all later decisions"
+  ]
+}

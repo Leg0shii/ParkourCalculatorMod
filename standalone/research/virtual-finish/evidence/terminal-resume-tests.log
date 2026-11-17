@@ -1,0 +1,9 @@
+test_generic_height_goal_can_finish_airborne_beyond_the_physical_block (standalone.autonomy.tests.test_terminal_goals.TerminalGoalNumericalTests.test_generic_height_goal_can_finish_airborne_beyond_the_physical_block) ... ok
+test_downward_height_clock_is_not_a_fixed_tick_or_apex (standalone.autonomy.tests.test_terminal_goals.TerminalGoalTests.test_downward_height_clock_is_not_a_fixed_tick_or_apex) ... ok
+test_goal_rows_are_one_sided_center_bounds_with_no_fake_landing (standalone.autonomy.tests.test_terminal_goals.TerminalGoalTests.test_goal_rows_are_one_sided_center_bounds_with_no_fake_landing) ... ok
+test_unknown_or_vertical_terminal_rows_are_rejected (standalone.autonomy.tests.test_terminal_goals.TerminalGoalTests.test_unknown_or_vertical_terminal_rows_are_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 1.424s
+
+OK

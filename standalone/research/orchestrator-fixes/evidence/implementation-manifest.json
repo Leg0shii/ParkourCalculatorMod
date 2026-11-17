@@ -1,0 +1,233 @@
+{
+  "baseCommit": "3082f8fc8cf69b629983261e6606143569e9c064",
+  "runtimeSource": "working tree changes pinned by runtimeHashes; historical manifest.json is unchanged",
+  "assumptions": {
+    "initialState": "full original",
+    "facings": "free",
+    "momentum": "normal carry",
+    "inertiaThreshold": 0.0,
+    "movementTypes": [
+      "normal",
+      "stepping",
+      "ceiling"
+    ],
+    "intentionalWallHits": false
+  },
+  "tests": {
+    "finalFocused": {
+      "total": 94,
+      "passed": 94
+    },
+    "contracts": {
+      "total": 50,
+      "passed": 49,
+      "skipped": 1
+    },
+    "autonomyNumerical": {
+      "total": 450,
+      "passed": 449,
+      "failures": 1,
+      "seconds": 742.305,
+      "startedBeforeFinalCopyingRegression": true
+    },
+    "autonomyFinalFast": {
+      "total": 451,
+      "passed": 361,
+      "failures": 1,
+      "skipped": 89
+    },
+    "ipopt": {
+      "total": 54,
+      "passed": 45,
+      "skipped": 9
+    },
+    "baselineFailure": "test_ladder_composition.LadderRegionTests.test_repeated_ladder_ceiling_events_regenerate_the_complete_schedule",
+    "cleanBaselineReproduction": "implementation-baseline-ladder.log"
+  },
+  "numericalThreads": {
+    "OPENBLAS_NUM_THREADS": 1,
+    "OMP_NUM_THREADS": 1
+  },
+  "runtimeHashes": {
+    "standalone/autonomy/block_contacts.py": {
+      "bytes": 29056,
+      "sha256": "cce6222d6a35e4b261ceb8a74158ad6acfa52b8445485f24e4189e83b3065110"
+    },
+    "standalone/autonomy/cell_routes/checkpoint_search.py": {
+      "bytes": 39218,
+      "sha256": "97b7426decb30f08131041beee0753d9132983129f5ca61e8d41eb6112969995"
+    },
+    "standalone/autonomy/cell_routes/comparison_audit.py": {
+      "bytes": 9233,
+      "sha256": "5d0a13c87a22e0224b6dd3d59a3ee940581cf573f177ea0b6742fb2a6053fc4e"
+    },
+    "standalone/autonomy/cell_routes/decision_windows.py": {
+      "bytes": 9528,
+      "sha256": "a48b15a241cc25b94abffed80dd1adea5c13ba68305c0c22a9ba3ecfbd65ee5b"
+    },
+    "standalone/autonomy/cell_routes/fixed_clock_experiment.py": {
+      "bytes": 5581,
+      "sha256": "a62209b0cf0400cdc3f72bdf7d3151c6c9376252821b4d04f68199b1fccc7a20"
+    },
+    "standalone/autonomy/cell_routes/local.py": {
+      "bytes": 14539,
+      "sha256": "3d9829ac1376f6d8827389b92b82416084f1487cfc87acd7a4ce4b7758716b17"
+    },
+    "standalone/autonomy/cell_routes/routes.py": {
+      "bytes": 12724,
+      "sha256": "f4f14822455ebfd772c44f968620258d00c06454a3fbcf4c6e83da328cd3281a"
+    },
+    "standalone/autonomy/cell_routes/support_order.py": {
+      "bytes": 3049,
+      "sha256": "682e45099844a509f735e1323930b34820065bbdcc6815eeb3c1abff1a7a7592"
+    },
+    "standalone/autonomy/cell_routes/time_progress.py": {
+      "bytes": 7362,
+      "sha256": "f905c8b3e2e5195b8fc59a44284327b62e2f44b4c783001a3320af16099dc305"
+    },
+    "standalone/autonomy/cell_routes/two_goal_experiment.py": {
+      "bytes": 5486,
+      "sha256": "b550b1dc37ad04fd5bc4551eeb28cc2852d42a0acaf7b7c03c57526561778a1c"
+    },
+    "standalone/autonomy/constraint_variants.py": {
+      "bytes": 15215,
+      "sha256": "2bf476a890002e9c7c86f0956ed41e132737794526632dab74d124615f40c774"
+    },
+    "standalone/autonomy/experiments/linkcraft11-opening/probe_b2_reachability.py": {
+      "bytes": 4214,
+      "sha256": "482214a617ee1b597d50b10d1c324d41aeadbc3f8e0a14477abf299098d6a760"
+    },
+    "standalone/autonomy/experiments/orchestrator-fixes/regressions.py": {
+      "bytes": 5454,
+      "sha256": "9691aefacbcfa951eadb390bcea2e50e0f7ec52fbd089ed7d2855956dd863b4e"
+    },
+    "standalone/autonomy/linear_reachability.py": {
+      "bytes": 4180,
+      "sha256": "42ed9786ba3883a8a69369c26a9cc393ad7b68801e0251007b823eb693befa55"
+    },
+    "standalone/autonomy/movement_composition.py": {
+      "bytes": 15411,
+      "sha256": "5352d7a864687d09b6f9ed43da5c7494c4e3ad2d81daf100188b20c4bb473ffb"
+    },
+    "standalone/autonomy/movement_frontier.py": {
+      "bytes": 7996,
+      "sha256": "7e58e896cc1f9ea4973a76e51d9c5c634cf45dc05072a4172d27dbb92a064ac9"
+    },
+    "standalone/autonomy/movement_search.py": {
+      "bytes": 18674,
+      "sha256": "d8228937ccb8bc1d7709d29939b2e6e380676d0853cf2eb1c21d318ac01e7c27"
+    },
+    "standalone/autonomy/prefix_viability.py": {
+      "bytes": 2460,
+      "sha256": "11b3db80154bdbdb0332a288fef7bf91fa217cf4b146e87481b628a783f7843c"
+    },
+    "standalone/autonomy/reachability.py": {
+      "bytes": 8999,
+      "sha256": "977416941377f3cdc91e4fd3c5122dfe31ea971b8c0c242695c48d66986af48d"
+    },
+    "standalone/autonomy/repair_state.py": {
+      "bytes": 3036,
+      "sha256": "30fcd4bc32753219b4f9b8b6737f3ce058332993e1e32c52a9b21487f7302165"
+    },
+    "standalone/autonomy/screen.py": {
+      "bytes": 278,
+      "sha256": "bd4edc177e8ed590a61d1757fe5066eb590fd7e55ca5268de400c93892897f6a"
+    },
+    "standalone/autonomy/solve_spec.py": {
+      "bytes": 4708,
+      "sha256": "e0170fb0b48dc517d23bedbb6d3cc3914a25735ae3253ad32d0ea6bad12c6495"
+    }
+  },
+  "artifacts": {
+    "cold-summary.json": {
+      "bytes": 1315,
+      "sha256": "f99078a0010d7fc120d44b25aa187887ed86691f20af344a3002f941eda9c7af"
+    },
+    "fixed-reference-resume.json.gz": {
+      "bytes": 624432,
+      "sha256": "f76a5f76a99ff898fc574251ae5dcd14a47760e6f8d4eeae1fa8c17d4295df55"
+    },
+    "implementation-autonomy-numerical-tests.log": {
+      "bytes": 1389,
+      "sha256": "fe02359eb82d7de0fa5069ee16f11f9339581ec4b6215da26270f6169e8ae428"
+    },
+    "implementation-autonomy-tests.log": {
+      "bytes": 1218,
+      "sha256": "cf8c56362afeded2192f0dfd05ac958a75692d1f78000bf8687c686e3356415b"
+    },
+    "implementation-baseline-ladder.log": {
+      "bytes": 759,
+      "sha256": "ca70b7cc3f22b677e9dd91d23bef3384da848429ba7eb6b5fb47c077c3d82b16"
+    },
+    "implementation-contract-tests.log": {
+      "bytes": 161,
+      "sha256": "0e1e47a59dd61f6d94c1a57699dbe92944f8c6299820a2c726759285395309d0"
+    },
+    "implementation-final-fast-tests.log": {
+      "bytes": 1221,
+      "sha256": "ac8cf01ae6cc18e19334010107f50ec6aa8a12741e44e8ec8c37904d621610c4"
+    },
+    "implementation-final-focused-tests.log": {
+      "bytes": 194,
+      "sha256": "3d017d919d3090b2fdc49d073154280f6d5c0b3a7e993d526842dd5eb49a2486"
+    },
+    "implementation-ipopt-tests.log": {
+      "bytes": 165,
+      "sha256": "026f27b5510e49bd7807cff8a708b41b5b0491cc80d83c4899492588532475a3"
+    },
+    "orchestrator-fixed-resume.log": {
+      "bytes": 238,
+      "sha256": "db32d5b7f46b182c8fe36b35187b3edf6db4a9c467fc268b4ab766a32cc5779b"
+    },
+    "orchestrator-real11-stable-resume.json.gz": {
+      "bytes": 1526259,
+      "sha256": "4d430b7238ff4f04418550b2bacea938216f7f9d60dc492a85e7a08988854426"
+    },
+    "orchestrator-real11-stable-resume.log": {
+      "bytes": 338,
+      "sha256": "ed530e08f129628f94a33831294a05742fcdbebb7ed0624914e64a4e051ec808"
+    },
+    "orchestrator-real11-stable-resume2.json.gz": {
+      "bytes": 1716838,
+      "sha256": "f40c83f5513b48fbc822d833e7f91b6e86d450229e235c64793ecdaa2b8c63a2"
+    },
+    "orchestrator-real11-stable-resume2.log": {
+      "bytes": 340,
+      "sha256": "42ffa4558ec94006625834105b6192f014781aa9014aca036c0ce6e69b05ff83"
+    },
+    "orchestrator-real11-stable.json.gz": {
+      "bytes": 1236896,
+      "sha256": "e7ffd47944a50906c348bc14f830e14e5bfba3716f953d2db977f745a3111a34"
+    },
+    "orchestrator-real11-stable.log": {
+      "bytes": 478,
+      "sha256": "26ab4ce3ab664a47c04ac3c12a9f3eacffe18fab8148b9c8d85276e05bcfb098"
+    },
+    "orchestrator-two-jump-audit.log": {
+      "bytes": 2336,
+      "sha256": "56c0cef3bf6932159e876f8cc7ada324ed7bc95baa655008bdbd7a7232c0d2f4"
+    },
+    "orchestrator-two-jump-search.log": {
+      "bytes": 313,
+      "sha256": "e271422d0ffdbb26ccaeeedff8520b07d5bb608eb5b5cbf873b364da9287e603"
+    },
+    "two-jump-audit.json.gz": {
+      "bytes": 277240,
+      "sha256": "7ba84c2fc7c82550a14214cc99f81b20580a518929baf1cab78262caa2f26827"
+    },
+    "two-jump-search.json.gz": {
+      "bytes": 508388,
+      "sha256": "ab06282956295068c92363aef6634fd91cce6424b962a3337ce812c2116c6c86"
+    }
+  },
+  "limitations": [
+    "Cold Real11 remains unknown at comparison tick28 after150+36+22 calls in three300s sessions.",
+    "Zero repeated completed branches across the two cold resume boundaries; unresolved outcomes are retained.",
+    "Fixed reference uses recorded schedule and yaws as diagnostic seed; cold search does not.",
+    "Conservative first-floor viability does not reject every impossible grounded/rising future chain.",
+    "Acceleration-polygon LP infeasibility is numerical, not an independently verified rational certificate.",
+    "Bounded exploratory spatial probes are guidance; they do not prove exhaustive remaining continuation.",
+    "Small two-jump audit has no actual heuristic drops; broader false-pruning rate remains unmeasured.",
+    "No global objective/optimality claim, mod Gradle build or game-client replay."
+  ]
+}

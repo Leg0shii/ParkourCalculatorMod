@@ -1,0 +1,1159 @@
+frame,span,start,T,J,R,A,terminalSupport,kind,cases,jumpInputs,preparationJumps,transferJumps,constraints,grounded,hardStructureValid,searchId
+0,b1->b2,0,12,1,0,11,b1,source_setup,ordinary,[0],[0],[],4,True,True,04cd138e7650fe93410edfe6dc152cef3731e5f34716f7154c0605fdedfe199f
+0,b1->b2,0,1,0,1,0,b1,source_run_hold,ordinary,[],[],[],4,True,True,1aaba88a50b78a6dbdbce075dcb26dc15b503f54b5af7cc124dbcb4f9a25bee5
+0,b1->b2,0,2,0,2,0,b1,source_run_hold,ordinary,[],[],[],8,True,True,e62598facad5bf629bf0d301d2549cf8538927e49ee876b4133185d374f0d265
+0,b1->b2,0,3,0,3,0,b1,source_run_hold,ordinary,[],[],[],12,True,True,68083f86a42665eac6d5a8837774bbea30b19ad377fbe981af5c2f1391c58c58
+0,b1->b2,0,4,0,4,0,b1,source_run_hold,ordinary,[],[],[],16,True,True,fba1b445df7a701c93396f3fb8cb85e0d6e9dce3facb1006c1e3af56ed6d562f
+0,b1->b2,0,5,0,5,0,b1,source_run_hold,ordinary,[],[],[],20,True,True,95fa9c2ed8d050fa26a995d41b52b16efb2d2edf774e4d9dd9f9444c77717499
+0,b1->b2,0,6,0,6,0,b1,source_run_hold,ordinary,[],[],[],24,True,True,3737a50550b067ce78c990b3c8ffdf74a4f2efb45376fead81bfb9cace91d1dc
+0,b1->b2,0,7,0,7,0,b1,source_run_hold,ordinary,[],[],[],28,True,True,a8254fd66f6679cfccc8e45d4d043d5a6a4ec35ceefaadbfefb6b168ad09020a
+0,b1->b2,0,8,0,8,0,b1,source_run_hold,ordinary,[],[],[],32,True,True,7db0fdb353cf054cb94b7e62b1ec57b8b4a7ac85cc7c37f8b663370f79871027
+0,b1->b2,0,20,1,8,11,b1,source_setup,ordinary,[8],[8],[],36,True,True,3f9e1e7f5b46845839b6f90831a8132bfa907265c539d279e9a8981acca99f8a
+0,b1->b2,0,17,1,8,8,b2,direct_arrival,ordinary,[8],[],[8],36,True,True,c2db2a3eb4b8f7a2df73f76e1439a2408355078a7fecc0594d5504fe80b0f8de
+1,b2->b3,17,29,1,0,11,b2,source_setup,ordinary,[17],[17],[],84,True,True,badcb03c90bd6bbe1495ccd97a14022e52073a4d719c86855b7b37b5ec76c0f0
+1,b2->b3,17,18,0,1,0,b2,source_run_hold,ordinary,[],[],[],84,True,True,97d11d23196b204c0d3ac347a05b5fd4b6db25fc049986266fe4847c2100b55a
+1,b2->b3,17,30,1,1,11,b2,source_setup,ordinary,[18],[18],[],88,True,True,2934ae74d49bee069c3996f30e9bda8d054e601bf43238a0e7abd11f668c14d3
+1,b2->b3,17,27,1,1,8,b3,direct_arrival,ordinary,[18],[],[18],88,True,True,18f6e20b1fdc205e149b4465b13784d700608db049c61428e7a320aaac2fb332
+1,b2->b3,17,19,0,2,0,b2,source_run_hold,ordinary,[],[],[],88,True,True,9c63788dee65e5ccc97e3fff85ac295db9fa7d652dd20e102e2fbb96e4c4aff1
+1,b2->b3,17,31,1,2,11,b2,source_setup,ordinary,[19],[19],[],92,True,True,2819fd15ba7ed0d0c1825c4d10894f221d75455aa6504fe06012b656cf8e4491
+1,b2->b3,17,28,1,2,8,b3,direct_arrival,ordinary,[19],[],[19],92,True,True,702874f3264297c97006ca5ccfa9c360cb8885f8e5ab9d0c3b4367abeae9a689
+1,b2->b3,17,20,0,3,0,b2,source_run_hold,ordinary,[],[],[],92,True,True,7792cf8131df726752ec9a1920ed792cc4fd42d34f5c647d57099366d3b9d98f
+1,b2->b3,17,32,1,3,11,b2,source_setup,ordinary,[20],[20],[],96,True,True,ba6a42d907496e131f6428c57179bc9c3c61613728a6b34ed48d8aa88a5722f1
+1,b2->b3,17,21,0,4,0,b2,source_run_hold,ordinary,[],[],[],96,True,True,d13310700ba64d47e8038802b0c7a14dba39969e7db6d4187473e79eb54c5e22
+1,b2->b3,17,33,1,4,11,b2,source_setup,ordinary,[21],[21],[],100,True,True,368fc2c8a44992ad26ab2b73f5f37baa7e47232d87fc3b4c2d077e8ff20355fa
+1,b2->b3,17,22,0,5,0,b2,source_run_hold,ordinary,[],[],[],100,True,True,b61d23d6c58773999018c0838ff0a4c84f9aa09291eacca1d5592c0ac49979e1
+1,b2->b3,17,34,1,5,11,b2,source_setup,ordinary,[22],[22],[],104,True,True,9bf9f69b07d03e0ef4f688fb30760cfd83682b00089ef9fda46763334dd18ac6
+1,b2->b3,17,23,0,6,0,b2,source_run_hold,ordinary,[],[],[],104,True,True,f9b86fe75d2e58fa1cfc507af706a965019ebb7dad7712d02045f8fb106bbd56
+1,b2->b3,17,35,1,6,11,b2,source_setup,ordinary,[23],[23],[],108,True,True,6b5e5dda068fbed1cf2fbf0bf2febd8bcdde35865841da6cd80d91a2f3b277f8
+1,b2->b3,17,24,0,7,0,b2,source_run_hold,ordinary,[],[],[],108,True,True,9b4e20531416593d04d783f0aaaac36f840f22259c93be91211aae7e91c01ac6
+1,b2->b3,17,36,1,7,11,b2,source_setup,ordinary,[24],[24],[],112,True,True,0ef5aba9ea8ca993afde2f2a3e17ea187012fceba16e37f428b8a9d44270eb95
+1,b2->b3,17,25,0,8,0,b2,source_run_hold,ordinary,[],[],[],112,True,True,2fe918dcffc9fa77811fad76c77de99a4a446a8dbbfc4c7c98b41658411c02de
+1,b2->b3,17,37,1,8,11,b2,source_setup,ordinary,[25],[25],[],116,True,True,e672901169713437491ac99a9c3606d2eb21dd2c95af169b72a6e5ed2e04f9fb
+1,b2->b3,17,26,0,9,0,b2,source_run_hold,ordinary,[],[],[],116,True,True,58480db471bd74cc227ef49ca573c1768184b607f22bfdf47c348568e6607f68
+1,b2->b3,17,38,1,9,11,b2,source_setup,ordinary,[26],[26],[],120,True,True,43fbba8ce49ae0dd36e3666560b6aa0c191bd03687704bc0745d2f2c9ce9e5a5
+1,b2->b3,17,27,0,10,0,b2,source_run_hold,ordinary,[],[],[],120,True,True,3e3fcf3e196f238328687d8dc6ffb798d1cdd3ea8c78d45c96ad1b7f4ee7de68
+1,b2->b3,17,39,1,10,11,b2,source_setup,ordinary,[27],[27],[],124,True,True,61918026a9bf3651b488372ee30612b0e680e268fe6b2209703060ba85788667
+1,b2->b3,17,28,0,11,0,b2,source_run_hold,ordinary,[],[],[],124,True,True,264274f183a31defcb20fb5a4722c57dd0d684bcdc87574cedd33d89ad1295f0
+1,b2->b3,17,40,1,11,11,b2,source_setup,ordinary,[28],[28],[],128,True,True,59b6f9809540f918c7626ff522a8d4a7a293bb6beae6a444ff51b48b5fcea7dc
+1,b2->b3,17,29,0,12,0,b2,source_run_hold,ordinary,[],[],[],128,True,True,81c9969434d5daa3925b53db82c340d59790bb03507aed1a4ad45a72ab8d285c
+1,b2->b3,17,41,2,0,22,b2,source_setup,ordinary,"[17, 29]","[17, 29]",[],92,True,True,05060ff9dbc198f044b4a71c3fb6680019bde36033d6565b2a3978db4810fc49
+1,b2->b3,17,38,2,0,19,b3,arrival_with_setup,ordinary,"[17, 29]",[17],[29],92,True,True,a5cfe98c35836a6fecc5ee4b1060e9472aed303cae10a3e059a0bc3dcbb56e0b
+1,b2->b3,17,30,1,1,11,b2,source_setup,ordinary,[17],[17],[],92,True,True,634962b757e756dc415870c2e2159e3472b6b5e055c27def26daf2ba50187982
+1,b2->b3,17,41,1,12,11,b2,source_setup,ordinary,[29],[29],[],132,True,True,eb1319eda19e36d80b25b90633a04ca00fe9e1b860728f56bf89d8e9262b7c3b
+1,b2->b3,17,30,0,13,0,b2,source_run_hold,ordinary,[],[],[],132,True,True,2b8114d10533f443e924d29b84d2a1f2e59574924cd39656e7f76d6b70c13e50
+1,b2->b3,17,42,2,1,22,b2,source_setup,ordinary,"[18, 30]","[18, 30]",[],100,True,True,6582b9bfc511e17d7301cb332cf35dd4ba3622826eff2ea79d91932d792e9691
+1,b2->b3,17,39,2,1,19,b3,arrival_with_setup,ordinary,"[18, 30]",[18],[30],100,True,True,ba496b601be80354c2527e81297356fb88105c1b25bb66e623834058a1a4f5a0
+1,b2->b3,17,31,1,2,11,b2,source_setup,ordinary,[18],[18],[],100,True,True,b1586e14d35f80e808cfa6be7f9847814e255a45db4e404c303bdab2972658f2
+1,b2->b3,17,42,2,1,22,b2,source_setup,ordinary,"[17, 30]","[17, 30]",[],96,True,True,7d1b78bc958b4ebc3bb5d0109db821672b1b1b9ede15e09229a361c154221261
+1,b2->b3,17,31,1,2,11,b2,source_setup,ordinary,[17],[17],[],96,True,True,ab0feecb04821f22483859cb95b501446936fd62c3c9d74351bbc957e46cafe2
+1,b2->b3,17,42,1,13,11,b2,source_setup,ordinary,[30],[30],[],136,True,True,a57bdb04ac59bee51686bb017ea0789cbfa304981a67f7edc3ee40efdb248747
+1,b2->b3,17,31,0,14,0,b2,source_run_hold,ordinary,[],[],[],136,True,True,d6a1ff1ead03b50aa0fafa6051bf59e1764e9f8d1957f84ca8af68412fc0c54e
+1,b2->b3,17,43,2,2,22,b2,source_setup,ordinary,"[18, 31]","[18, 31]",[],104,True,True,06a72fd3bb242282cc9f672b571df859430cfa3695fc6cb61f029d6faa5b6dc0
+1,b2->b3,17,32,1,3,11,b2,source_setup,ordinary,[18],[18],[],104,True,True,46aa22a5f9da44e4dffd9f903343c95b03dc190ae3ac96f9b76959781dc4a0b7
+1,b2->b3,17,43,2,2,22,b2,source_setup,ordinary,"[19, 31]","[19, 31]",[],108,True,True,fc5d663729670b64921e8821fa8261d2e81b8adc071101b5790d5a176dcb1423
+1,b2->b3,17,40,2,2,19,b3,arrival_with_setup,ordinary,"[19, 31]",[19],[31],108,True,True,de538f016fd324fc744a43b11e3ddf5f42aa7e98821034080920dd4458098626
+1,b2->b3,17,32,1,3,11,b2,source_setup,ordinary,[19],[19],[],108,True,True,3ebfb04304846ddfa3781604ebd2249f44d3f2ef4188b02ac72522fb25b6274a
+1,b2->b3,17,43,2,2,22,b2,source_setup,ordinary,"[17, 31]","[17, 31]",[],100,True,True,080dfa49a23c0aceaf70e2770b1a7b98197e33e7e459996c3e7d6f41a87cf727
+1,b2->b3,17,32,1,3,11,b2,source_setup,ordinary,[17],[17],[],100,True,True,5a8706d4710cc7d5682d6dd3422d82eae17f16ae4d6670062cac5a07e92ebcd2
+1,b2->b3,17,43,1,14,11,b2,source_setup,ordinary,[31],[31],[],140,True,True,e2891d0b5d7a6b7a9203fcaa21e330ca4429efc0837a602fcc61194619811810
+1,b2->b3,17,32,0,15,0,b2,source_run_hold,ordinary,[],[],[],140,True,True,07a1bea314358810a3ca4461b6d209b31662e42f698737c00da3005966e6d401
+1,b2->b3,17,44,2,3,22,b2,source_setup,ordinary,"[20, 32]","[20, 32]",[],116,True,True,9a6f71d50d779e541d86b25bc3ca49992fb892e7299bdb3208d3eba16110b98f
+1,b2->b3,17,41,2,3,19,b3,arrival_with_setup,ordinary,"[20, 32]",[20],[32],116,True,True,d95c34ab8bca484d61613213e8ec431822ae2a55213f2299c8f5a5091dce219f
+1,b2->b3,17,33,1,4,11,b2,source_setup,ordinary,[20],[20],[],116,True,True,61a33d0c0e73620f4a988bddcc671bbf0cb426dc3a7825cf659e61f23567b471
+1,b2->b3,17,44,2,3,22,b2,source_setup,ordinary,"[19, 32]","[19, 32]",[],112,True,True,cda1c69d37661218676febb5d8a5ca7c298e624fd98587b4eadeacf2fd85b925
+1,b2->b3,17,33,1,4,11,b2,source_setup,ordinary,[19],[19],[],112,True,True,51f8116bf05308dfe6b5bfe639d3e3421f4b7066b3dbf910fb27dd9e54657ac9
+1,b2->b3,17,44,2,3,22,b2,source_setup,ordinary,"[18, 32]","[18, 32]",[],108,True,True,0a8ea7727ed32e0e7f70b77c29a37018e0812592193987108d19288a9e210421
+1,b2->b3,17,33,1,4,11,b2,source_setup,ordinary,[18],[18],[],108,True,True,93ffa1c3f077a24f0cc87ac97ddc9adea3317ffd39bf7e57d8ed7e326b3d713c
+1,b2->b3,17,44,2,3,22,b2,source_setup,ordinary,"[17, 32]","[17, 32]",[],104,True,True,d1d51a3f7cc661fba7032012801f50e2ccab6fc98ec896044b13e5cc03ec8b40
+1,b2->b3,17,33,1,4,11,b2,source_setup,ordinary,[17],[17],[],104,True,True,93aef1c3fa1839cb984771259549248bbd579c61f3297cfa86914f162ff8cebe
+1,b2->b3,17,44,1,15,11,b2,source_setup,ordinary,[32],[32],[],144,True,True,d880cfe8244695b51b790122d2f6271a50b6b3a542d5ae1eba91abadf90e0e66
+1,b2->b3,17,33,0,16,0,b2,source_run_hold,ordinary,[],[],[],144,True,True,d4b1e2b658b105b49ac24d1742a4ffcf482ba02202837a9e06209568f7916351
+1,b2->b3,17,45,2,4,22,b2,source_setup,ordinary,"[18, 33]","[18, 33]",[],112,True,True,c28771918e8fe6e4433b3017200827c00e07cf61367ce73abb0ea81e0033c5eb
+1,b2->b3,17,34,1,5,11,b2,source_setup,ordinary,[18],[18],[],112,True,True,54f6a20c52d7dae263faf3198954ba5129e5134d95a7361818a968293fc31880
+1,b2->b3,17,45,2,4,22,b2,source_setup,ordinary,"[19, 33]","[19, 33]",[],116,True,True,39f8cf34366050101e1140484ce9323482c9cddae90fe8f1a3ae2d5ecb2cf18a
+1,b2->b3,17,34,1,5,11,b2,source_setup,ordinary,[19],[19],[],116,True,True,b0a1f46b6d15427d77e69a8017ee6643697510cd6f58082771cffc0f351feca8
+1,b2->b3,17,45,2,4,22,b2,source_setup,ordinary,"[17, 33]","[17, 33]",[],108,True,True,1a9ed68fad66342c02d407b51445f4b7042c480f0b8abe2d95edc66dfdbed6e4
+1,b2->b3,17,34,1,5,11,b2,source_setup,ordinary,[17],[17],[],108,True,True,e1178aaacc11eddea46d04ed710e9115e85000cb31c9b0539e1213bb033f3f4f
+1,b2->b3,17,45,2,4,22,b2,source_setup,ordinary,"[20, 33]","[20, 33]",[],120,True,True,3ba481013461e8b7874760543c809f665e67d8c6275c2ae0c9cc6e1065e23995
+1,b2->b3,17,34,1,5,11,b2,source_setup,ordinary,[20],[20],[],120,True,True,46620d5e407bdf6866e9aeaccb42509e9aaa30c001271f95c00a859c2f24ebc6
+1,b2->b3,17,45,2,4,22,b2,source_setup,ordinary,"[21, 33]","[21, 33]",[],124,True,True,f33593c992ed23d88ac6d9ba068fd5952cf64e42a54f3b5313a3c86958f3ed66
+1,b2->b3,17,42,2,4,19,b3,arrival_with_setup,ordinary,"[21, 33]",[21],[33],124,True,True,22caaaf3166af49076767d5734e586d998d0163ada55bd19c63fbd9b412abe31
+1,b2->b3,17,34,1,5,11,b2,source_setup,ordinary,[21],[21],[],124,True,True,fc51ecf73c6455131bc55c8d2a39f7fe77bcd261319b15bcf6520be78d8fc291
+1,b2->b3,17,45,1,16,11,b2,source_setup,ordinary,[33],[33],[],148,True,True,5a17ee4b218b3dc2b3326e296a53fe5c01a0c38d160c0c0afc0dfc21410dc348
+1,b2->b3,17,34,0,17,0,b2,source_run_hold,ordinary,[],[],[],148,True,True,201c7fcaddeeb1154725225ede5c1abfcfbbf5e7fbbcd8657dafd5acaf46185b
+1,b2->b3,17,46,2,5,22,b2,source_setup,ordinary,"[18, 34]","[18, 34]",[],116,True,True,f1e22f38b69b1728c151c85a298425990ef0c685bbe0458aaaf3357182848d7f
+1,b2->b3,17,35,1,6,11,b2,source_setup,ordinary,[18],[18],[],116,True,True,8540ef607261b3a21057bbb9ce0cd8acaa0180e27993394638a5fa14986324cf
+1,b2->b3,17,46,2,5,22,b2,source_setup,ordinary,"[20, 34]","[20, 34]",[],124,True,True,39ff45bd68f6891c6ef059802668384faffd4bc294917cb350d0c644b3b1e13e
+1,b2->b3,17,35,1,6,11,b2,source_setup,ordinary,[20],[20],[],124,True,True,2e01870b3dbe142d75e78a10c03dc332fc428440c145b197522b25d32c7cfc6f
+1,b2->b3,17,46,2,5,22,b2,source_setup,ordinary,"[21, 34]","[21, 34]",[],128,True,True,52e8a90038857de5817fa3480514290d6f54534290d9abc40c14dfbb9f375ecc
+1,b2->b3,17,35,1,6,11,b2,source_setup,ordinary,[21],[21],[],128,True,True,8b56c1ebb04886a615e87877809c81daa483c395f1c53b42e63b1a8ca0bea5a3
+1,b2->b3,17,46,2,5,22,b2,source_setup,ordinary,"[19, 34]","[19, 34]",[],120,True,True,498a325d9bd16e556af2ff7e6bcfa05d46f3cbd1c1545bbde9657546a8af8635
+1,b2->b3,17,35,1,6,11,b2,source_setup,ordinary,[19],[19],[],120,True,True,8cbe453d10136ff90941fc3c3bc12ed40bcd4c0002b402e0102f69278f7a091a
+1,b2->b3,17,46,2,5,22,b2,source_setup,ordinary,"[17, 34]","[17, 34]",[],112,True,True,c017f1c13d35df1039721334e11fcd6f49e926ee01cf0c3f96dcfe1ddaa2c112
+1,b2->b3,17,35,1,6,11,b2,source_setup,ordinary,[17],[17],[],112,True,True,1ac2ea7e94c68aa4f678580ebf2825735e7b1b7edf6ad2afe8943ef88d09220b
+1,b2->b3,17,46,2,5,22,b2,source_setup,ordinary,"[22, 34]","[22, 34]",[],132,True,True,2503dc90bbbc84049b357f2a222344386b592747e3b7c63896631baa50802312
+1,b2->b3,17,43,2,5,19,b3,arrival_with_setup,ordinary,"[22, 34]",[22],[34],132,True,True,f4d63e89e79e80d6d1c1b4cda9d325d457a8c4f745927e85ff6133de92e7c082
+1,b2->b3,17,35,1,6,11,b2,source_setup,ordinary,[22],[22],[],132,True,True,88cd74151d3b4996848ce9ac3e169312c4b20d39261615fbbe284ca8a30f256f
+1,b2->b3,17,46,1,17,11,b2,source_setup,ordinary,[34],[34],[],152,True,True,6d3e8b3bf62af6e1e0a345a9d3efadee1d0125d273d27c38a0c63b63496739a4
+1,b2->b3,17,35,0,18,0,b2,source_run_hold,ordinary,[],[],[],152,True,True,424c2f3fee00aac0a80f2028e26173208b3801b16e9481416648c309baf0e247
+1,b2->b3,17,47,2,6,22,b2,source_setup,ordinary,"[20, 35]","[20, 35]",[],128,True,True,fd330e274bf353b2d3748ce274e059b3082606dc6522cea01123ca485fc0a2af
+1,b2->b3,17,36,1,7,11,b2,source_setup,ordinary,[20],[20],[],128,True,True,4f7b5aca994667c3cadd383e6fbc5a4c847029c717f0b1b804f3f3602c34f52d
+1,b2->b3,17,47,2,6,22,b2,source_setup,ordinary,"[23, 35]","[23, 35]",[],140,True,True,22c0d085e7a66697fa2eadf981e8821aa3e4942ce2f789919afc927d007de49a
+1,b2->b3,17,44,2,6,19,b3,arrival_with_setup,ordinary,"[23, 35]",[23],[35],140,True,True,0a0779f59527d2bdd49f43032032517909350331d5644769b21dc661887cfe95
+1,b2->b3,17,36,1,7,11,b2,source_setup,ordinary,[23],[23],[],140,True,True,7c496f2a66a90c7840942cd6e0fd2854e8d572bc9fdf7e647659ce3b90f30cf5
+1,b2->b3,17,47,2,6,22,b2,source_setup,ordinary,"[21, 35]","[21, 35]",[],132,True,True,e4c1b6e74a11dec0d6820b663820b011d98e9d9da89fb55e4098f6a10b89d5ff
+1,b2->b3,17,36,1,7,11,b2,source_setup,ordinary,[21],[21],[],132,True,True,564d2d6373aa6b807136209b31fd599c675c04c1c43a881334ada3b037f3db72
+1,b2->b3,17,47,2,6,22,b2,source_setup,ordinary,"[17, 35]","[17, 35]",[],116,True,True,607a5fd3806e0d26901832095655d954246722f7adb9cfc756984175cf438df0
+1,b2->b3,17,36,1,7,11,b2,source_setup,ordinary,[17],[17],[],116,True,True,1ee2ac7535a0fabb534169b504d4f927703192e5fd8c2a62ed81e9640f81abdf
+1,b2->b3,17,47,2,6,22,b2,source_setup,ordinary,"[22, 35]","[22, 35]",[],136,True,True,4c843ff858964e0b40175e981dfd8fe2b261fcffad33d489f6cb4df1039d2435
+1,b2->b3,17,36,1,7,11,b2,source_setup,ordinary,[22],[22],[],136,True,True,e0b6734e4f5fcaf123f1712e66aa90030c5ced4cea48557aa562fd0cc576d437
+1,b2->b3,17,47,2,6,22,b2,source_setup,ordinary,"[19, 35]","[19, 35]",[],124,True,True,c284d5a9eb1325344a2954e26be07180ae1f31ca5d999cd32d017ee0ecbc86bb
+1,b2->b3,17,36,1,7,11,b2,source_setup,ordinary,[19],[19],[],124,True,True,c2fd5d5d75acb2ff0423c7ec29d0d7a09d2f1f5af9c03446f07beaef77076a0e
+1,b2->b3,17,47,2,6,22,b2,source_setup,ordinary,"[18, 35]","[18, 35]",[],120,True,True,f3703d7479041fb0346760104575a3f717d56a09da046b453e0d2be0226cde4b
+1,b2->b3,17,36,1,7,11,b2,source_setup,ordinary,[18],[18],[],120,True,True,de1b14b1d73ceb0162a8239eb635851376fd141112f8eb7d9833e8a096821149
+1,b2->b3,17,47,1,18,11,b2,source_setup,ordinary,[35],[35],[],156,True,True,2071ac1c38fc242a86c1a421db67d76dff55ce1dee0ff47a41189bf7db388870
+1,b2->b3,17,36,0,19,0,b2,source_run_hold,ordinary,[],[],[],156,True,True,f32c6c554ee2d5bb899593332e5089a9eb01fd5bfc4ea92f19bc2d7881f6c5d2
+1,b2->b3,17,48,2,7,22,b2,source_setup,ordinary,"[17, 36]","[17, 36]",[],120,True,True,8b8485bdae494f0c6d7400073284483913336da7aeedaedc8e2deefaf4cbae09
+1,b2->b3,17,37,1,8,11,b2,source_setup,ordinary,[17],[17],[],120,True,True,0afb7751f8dfebb40fd2f1682faaa3f12974d5b167a00151a34ecc2b71ff28d4
+1,b2->b3,17,48,2,7,22,b2,source_setup,ordinary,"[24, 36]","[24, 36]",[],148,True,True,5f0beecc7be6f1845883c25156f2fd50bb9ed6c9a16306eb1a9820f30c72b38f
+1,b2->b3,17,45,2,7,19,b3,arrival_with_setup,ordinary,"[24, 36]",[24],[36],148,True,True,5b4e0feacff4d0de03947a6e5f3a36ed5332357b5d22ae1aba4e479aacab46fe
+1,b2->b3,17,37,1,8,11,b2,source_setup,ordinary,[24],[24],[],148,True,True,8c26d2abc2e65613d81b4e6f2fa73a8b9b9998c7e197b39634ba8883db2d40b3
+1,b2->b3,17,48,2,7,22,b2,source_setup,ordinary,"[18, 36]","[18, 36]",[],124,True,True,af5ae62d471593e58da2713507ad06258de5445a931b557b11be704fb5b1b6c7
+1,b2->b3,17,37,1,8,11,b2,source_setup,ordinary,[18],[18],[],124,True,True,a5886badae420c9006c486b4303c0a202c8e5d8ecdf60b09a392319bc765e231
+1,b2->b3,17,48,2,7,22,b2,source_setup,ordinary,"[19, 36]","[19, 36]",[],128,True,True,dede45fc79a0630346be63bf030e76bf2f88b1b661d3d3672e7353120e42c27e
+1,b2->b3,17,37,1,8,11,b2,source_setup,ordinary,[19],[19],[],128,True,True,0c5d9ed7e8fb3389bfa5d4b2c60bd5dd1b1ee70e29e59471f673cd972474a5d9
+1,b2->b3,17,48,2,7,22,b2,source_setup,ordinary,"[21, 36]","[21, 36]",[],136,True,True,e9ff2a3fc36b721125555a57011baeb737220f719bf7f48cbd4280af0eaacd37
+1,b2->b3,17,37,1,8,11,b2,source_setup,ordinary,[21],[21],[],136,True,True,971457279e2a586fe0a4855ab24a8523fe492ff18cb0a7a56282dccd8d5f27b0
+1,b2->b3,17,48,2,7,22,b2,source_setup,ordinary,"[23, 36]","[23, 36]",[],144,True,True,bc105a805cb150784d3e2dd612e61db524e3726e84d67eaefcd4d43b46a64c5f
+1,b2->b3,17,37,1,8,11,b2,source_setup,ordinary,[23],[23],[],144,True,True,27456f08f3ab4459ecba593bf49abae8acf502b0af6685c1308a86547883f8b3
+1,b2->b3,17,48,2,7,22,b2,source_setup,ordinary,"[20, 36]","[20, 36]",[],132,True,True,eb9a944d516225365f2d06e795f688d1f15344262441f5c0337edfb428fe9cea
+1,b2->b3,17,37,1,8,11,b2,source_setup,ordinary,[20],[20],[],132,True,True,ac62d2e336096e56eecd8a746d75a7c18dc3603b2f83aaa2941691a1d288fdc1
+1,b2->b3,17,48,2,7,22,b2,source_setup,ordinary,"[22, 36]","[22, 36]",[],140,True,True,aefc31273793d706d393dc337f6eb251ff36a79374dc03c9b23263929b1cce77
+1,b2->b3,17,37,1,8,11,b2,source_setup,ordinary,[22],[22],[],140,True,True,88f2e3b11bb4e897780f2094a1e30f9833e72b9ac92fa8b95e9ef6f08868112c
+1,b2->b3,17,48,1,19,11,b2,source_setup,ordinary,[36],[36],[],160,True,True,e5735c8a9c52fb4ec4579f8a541b03f6171e9cd62cd26739bceb6b502b21588e
+1,b2->b3,17,37,0,20,0,b2,source_run_hold,ordinary,[],[],[],160,True,True,8a3762dd2f0ab7ce2731177c22002f69b1f3c594a77035b888da84d168a2e346
+1,b2->b3,17,49,2,8,22,b2,source_setup,ordinary,"[19, 37]","[19, 37]",[],132,True,True,2741786d88e904829f83dee9379ed1c90a453ce23e11b2f93a58910ba8a987ef
+1,b2->b3,17,38,1,9,11,b2,source_setup,ordinary,[19],[19],[],132,True,True,21699e11ed3708289f16023e47190774cccea7312033a312f9b5cc124d547935
+1,b2->b3,17,49,2,8,22,b2,source_setup,ordinary,"[25, 37]","[25, 37]",[],156,True,True,9c0d556c72ebdb977cf373a11205c32150330437e49958f5b024e2697174267c
+1,b2->b3,17,46,2,8,19,b3,arrival_with_setup,ordinary,"[25, 37]",[25],[37],156,True,True,9d59bf1d747f7858422e06e9f3b64819b618c58edbf3aa8f6f9573ed26232b60
+1,b2->b3,17,38,1,9,11,b2,source_setup,ordinary,[25],[25],[],156,True,True,7344fcd2995e655e8cbc0ae5ea630792fc78f6ad29e59c23e7d8538f660ca1d4
+1,b2->b3,17,49,2,8,22,b2,source_setup,ordinary,"[20, 37]","[20, 37]",[],136,True,True,59858a0f5023c476723c9605e45ab84826f0f24e194a6c5aa3e6cd2d48e5d1c7
+1,b2->b3,17,38,1,9,11,b2,source_setup,ordinary,[20],[20],[],136,True,True,39e85274b738c3da76393016fd3da0171d4cca3dfd0523e296ccd59d3c9cc119
+1,b2->b3,17,49,2,8,22,b2,source_setup,ordinary,"[23, 37]","[23, 37]",[],148,True,True,a1d6b5f45b02cbb28bd5f57d663a89fb5a5874c9cf4ba836edfc5a5262c8efc1
+1,b2->b3,17,38,1,9,11,b2,source_setup,ordinary,[23],[23],[],148,True,True,48f7ca5296258f7328cbe6d2f866c85eacd04db3a47e5db3e3a24e9593c9aca9
+1,b2->b3,17,49,2,8,22,b2,source_setup,ordinary,"[24, 37]","[24, 37]",[],152,True,True,d50609f9f668590cd893c56043b4cdb7645e4d6a17c5e6725f8e301d943b4a44
+1,b2->b3,17,38,1,9,11,b2,source_setup,ordinary,[24],[24],[],152,True,True,4f1603a63492f414a98926cc41e400bcdc750a2ff34704e6f5928bbdaf19ffdf
+1,b2->b3,17,49,2,8,22,b2,source_setup,ordinary,"[17, 37]","[17, 37]",[],124,True,True,4eedcd349ed3ae654ae04819c3035815fc60b9dc9311efbfb6212be79516d9e6
+1,b2->b3,17,38,1,9,11,b2,source_setup,ordinary,[17],[17],[],124,True,True,13707b823c4a6d963e916d34c550e82527a218f64f67f4841d2f9e398943951b
+1,b2->b3,17,49,2,8,22,b2,source_setup,ordinary,"[18, 37]","[18, 37]",[],128,True,True,e2f5f5c2662e16b151cdec36b5ed2319337be137e8a29cfcd5625d887bdc0efc
+1,b2->b3,17,38,1,9,11,b2,source_setup,ordinary,[18],[18],[],128,True,True,5547de9011d07403d48080f11e2746b6daff159e8e2eefbc17a03b806ea8df20
+1,b2->b3,17,49,2,8,22,b2,source_setup,ordinary,"[22, 37]","[22, 37]",[],144,True,True,170aadb7de660f3012c57b22281fe07f07e4b88e030db2d540731a864e561259
+1,b2->b3,17,38,1,9,11,b2,source_setup,ordinary,[22],[22],[],144,True,True,bd2c86059e3fe438fc4e6c5b6ab31c8d7b1002d2971dfbc57293b44ddd805c98
+1,b2->b3,17,49,2,8,22,b2,source_setup,ordinary,"[21, 37]","[21, 37]",[],140,True,True,500a955abb807b71b0e7cc77c559603ae13baf2a64ea52b49d8185e0430db570
+1,b2->b3,17,38,1,9,11,b2,source_setup,ordinary,[21],[21],[],140,True,True,260c1afb9de29cda4538470c9a87de0783ab49994fa47406dc6f3b32da32276e
+1,b2->b3,17,49,1,20,11,b2,source_setup,ordinary,[37],[37],[],164,True,True,668981383255d601d9545f28dde69d98f28d7642138c96795051421baedbcdce
+1,b2->b3,17,38,0,21,0,b2,source_run_hold,ordinary,[],[],[],164,True,True,776a559fbc7e8a6b102150492db399d527d439efdbefc13e576acf12c5975447
+1,b2->b3,17,50,2,9,22,b2,source_setup,ordinary,"[20, 38]","[20, 38]",[],140,True,True,8a914a409e01b985b71595689b3a79d5d5c37c7118209a54b235278e56b2a1e5
+1,b2->b3,17,39,1,10,11,b2,source_setup,ordinary,[20],[20],[],140,True,True,659333f83a91be0958012990fe41c130e400289f9c23e906505597d39c488594
+1,b2->b3,17,50,2,9,22,b2,source_setup,ordinary,"[26, 38]","[26, 38]",[],164,True,True,dbfd2fa3458507ef31cfff549fba96e47646b7b95eefee75b6475f09cd6f1320
+1,b2->b3,17,47,2,9,19,b3,arrival_with_setup,ordinary,"[26, 38]",[26],[38],164,True,True,296803573e44982aa5ad7b33e4d39a7d1d9586460c1bcbd4d53398994bac06de
+1,b2->b3,17,39,1,10,11,b2,source_setup,ordinary,[26],[26],[],164,True,True,c3597723ce49a9eefe70397f19b3f5825cf6a7b6ce6ac33d849395a9a7b7e6e0
+1,b2->b3,17,50,2,9,22,b2,source_setup,ordinary,"[18, 38]","[18, 38]",[],132,True,True,4ad30c8f719e1f0a2df8e6f621bdbe9cf2e13efad36d4a5a4278f78fc7198cae
+1,b2->b3,17,39,1,10,11,b2,source_setup,ordinary,[18],[18],[],132,True,True,40db140c9a213fd24a66df7177a0b9d1dad5800beed6c61e4dc7e64325768be6
+1,b2->b3,17,50,2,9,22,b2,source_setup,ordinary,"[25, 38]","[25, 38]",[],160,True,True,26690f78985f939685bd6eb6f233f8625e6712f20c5672c782f0d7978dfe7549
+1,b2->b3,17,39,1,10,11,b2,source_setup,ordinary,[25],[25],[],160,True,True,d1b9ea093a6acb1e79ca9d17fbc7bd2a4706d66bdf3281864c693a74f3c23387
+1,b2->b3,17,50,2,9,22,b2,source_setup,ordinary,"[24, 38]","[24, 38]",[],156,True,True,2327e0530211ca9a2ba0b04d92a7a9fe679f2d91c426da7cb771db35a4dac810
+1,b2->b3,17,39,1,10,11,b2,source_setup,ordinary,[24],[24],[],156,True,True,ecf7de248c9275640d5dd2dbc36aadb46b19ba061d2c98e6e2441bce8e245523
+1,b2->b3,17,50,2,9,22,b2,source_setup,ordinary,"[22, 38]","[22, 38]",[],148,True,True,daa4ab4c4223e0c350f15efee92258ef54db27d9643bb566ac2ed3e88d48ce3d
+1,b2->b3,17,39,1,10,11,b2,source_setup,ordinary,[22],[22],[],148,True,True,ea323c0dd1db421892988436a42a2717050d2c05d36d82124eaf8dcaf2c9283d
+1,b2->b3,17,50,2,9,22,b2,source_setup,ordinary,"[21, 38]","[21, 38]",[],144,True,True,2a9afe46274235a1795cb39b05d0120016ad7e634939fe99eae792efbb7dfb51
+1,b2->b3,17,39,1,10,11,b2,source_setup,ordinary,[21],[21],[],144,True,True,e2b55cddf1c2eb721f7dfb8e6543dfc3c955f325a81e9efd577c860d9ac688b6
+1,b2->b3,17,50,2,9,22,b2,source_setup,ordinary,"[23, 38]","[23, 38]",[],152,True,True,2fd54d4686222114d9c8dacb1d4cc384ee153f616dbe48550da58e9225cdda0e
+1,b2->b3,17,39,1,10,11,b2,source_setup,ordinary,[23],[23],[],152,True,True,613aca71300db40fb5ef5dee1fe13ab68e5d8ecbbfb57c05fe3e666146ffc7e8
+1,b2->b3,17,50,2,9,22,b2,source_setup,ordinary,"[17, 38]","[17, 38]",[],128,True,True,9e2d5c14ac93c751b1fdda2c45fdcf460b6c68b14894262ab156692c89a8d45b
+1,b2->b3,17,39,1,10,11,b2,source_setup,ordinary,[17],[17],[],128,True,True,39619afb59700fbb4323585e9a073d411cea7077c4f090f765bf89f5d2ff059b
+1,b2->b3,17,50,2,9,22,b2,source_setup,ordinary,"[19, 38]","[19, 38]",[],136,True,True,660898d3d8030ffabd6745a7b799f85dd8acd52817073db5993c01a3918e1534
+1,b2->b3,17,39,1,10,11,b2,source_setup,ordinary,[19],[19],[],136,True,True,5a371490b203bdb3d656c036c727f4a4939c959b1822f7103f12ce8dd41d5d04
+1,b2->b3,17,50,1,21,11,b2,source_setup,ordinary,[38],[38],[],168,True,True,a133cb2faaf280eb8bddf1a9a8e611af2a910140655009e56035450b57cad30e
+1,b2->b3,17,39,0,22,0,b2,source_run_hold,ordinary,[],[],[],168,True,True,8819c93891aab5fee12402ab2df7d4e38a01cec0452ad0e809d1d28c9eabd2b2
+1,b2->b3,17,51,2,10,22,b2,source_setup,ordinary,"[18, 39]","[18, 39]",[],136,True,True,f884d496d515e3b93f4841672aa50b825e64cbc5257fd4f534deb999c948d96a
+1,b2->b3,17,40,1,11,11,b2,source_setup,ordinary,[18],[18],[],136,True,True,8dddf475acaa070e55c2527a749dce1f7778889dad5d4dd4b93bc4040d8a3cad
+1,b2->b3,17,51,2,10,22,b2,source_setup,ordinary,"[26, 39]","[26, 39]",[],168,True,True,4398cd7601eb25464dae140a84c27a35d04e219aad0c569b6665c41afcf03b17
+1,b2->b3,17,40,1,11,11,b2,source_setup,ordinary,[26],[26],[],168,True,True,b8dd8775febad7bd6e2acf2cdf4146c35124f96af08888dea96999f8c6bc3bd3
+1,b2->b3,17,51,2,10,22,b2,source_setup,ordinary,"[20, 39]","[20, 39]",[],144,True,True,7ad146048fd0555b6bcec5f4a56e0e5711e3656b94053e940375044bbcaeb6e6
+1,b2->b3,17,40,1,11,11,b2,source_setup,ordinary,[20],[20],[],144,True,True,72a7eff68fbfbd385e05a51fb0b7508f9afadb9a16bf262d019695d80616dc5a
+1,b2->b3,17,51,2,10,22,b2,source_setup,ordinary,"[27, 39]","[27, 39]",[],172,True,True,c949ca864245752394700d42581801985b2d90ec9f73c5816cb69924a39e93b5
+1,b2->b3,17,48,2,10,19,b3,arrival_with_setup,ordinary,"[27, 39]",[27],[39],172,True,True,992962ce0607ef9ccd7f1ade3a83525afc0d524494f493d5cf44bf302c603b71
+1,b2->b3,17,40,1,11,11,b2,source_setup,ordinary,[27],[27],[],172,True,True,dfee73c71d1f95a127ca047fa68de56d89bceb06e35f5947e7fcd2964171ada4
+1,b2->b3,17,51,2,10,22,b2,source_setup,ordinary,"[22, 39]","[22, 39]",[],152,True,True,c0be2941568f2368c62da7118ddfe3a1d4794eff4713a10b2d760fa1139f4950
+1,b2->b3,17,40,1,11,11,b2,source_setup,ordinary,[22],[22],[],152,True,True,92392fec296580568f7861cf2888d18202d99d6a0f079a11232f1f11b24b835a
+1,b2->b3,17,51,2,10,22,b2,source_setup,ordinary,"[24, 39]","[24, 39]",[],160,True,True,feb6b32fa99f5cde4b582397dad840f090ce64e44887d1bd8073e1646ef5637a
+1,b2->b3,17,40,1,11,11,b2,source_setup,ordinary,[24],[24],[],160,True,True,7f010f68948a1235292d656ab58987d42c32567180f07cb6554353010d48a547
+1,b2->b3,17,51,2,10,22,b2,source_setup,ordinary,"[25, 39]","[25, 39]",[],164,True,True,5aa17a0669f1c3753a82401c2f35d1b31fc7088e1fa9e50816223b3067ae7501
+1,b2->b3,17,40,1,11,11,b2,source_setup,ordinary,[25],[25],[],164,True,True,92a265b3f91970143288aa2bc9bafb18d8d76039d3dc5d179b9af452b2e02ab3
+1,b2->b3,17,51,2,10,22,b2,source_setup,ordinary,"[23, 39]","[23, 39]",[],156,True,True,b9173f77c2d5f2437b014f3f1eb3a39a936465111229643b7b750ac5f6450eef
+1,b2->b3,17,40,1,11,11,b2,source_setup,ordinary,[23],[23],[],156,True,True,44197e0187d99cb6b93ca25900ee4a18cb2c13e5f7d90df3fd9de0e9b8961473
+1,b2->b3,17,51,2,10,22,b2,source_setup,ordinary,"[17, 39]","[17, 39]",[],132,True,True,ad6ec0bd01aa94586381a08e278dd80e8898edd3c4bca4a7dc0e86458d97e7c0
+1,b2->b3,17,40,1,11,11,b2,source_setup,ordinary,[17],[17],[],132,True,True,cab620da6971095c59493c001ed26bdfd63e96a35d6bb5379314e8f03d05c79a
+1,b2->b3,17,51,2,10,22,b2,source_setup,ordinary,"[21, 39]","[21, 39]",[],148,True,True,7cebacc77aa97738a4b537855ca3fdbab7e57bb009417b3709ec55c8f411d308
+1,b2->b3,17,40,1,11,11,b2,source_setup,ordinary,[21],[21],[],148,True,True,1d3df488e72cfffafd0883ab5faa22ccc5bf78068b1786e40b7c84de6c58bbd3
+1,b2->b3,17,51,2,10,22,b2,source_setup,ordinary,"[19, 39]","[19, 39]",[],140,True,True,e98692fb68a49a5f0bfdfd125b804dee654faf47119be688608a4b562a1343b9
+1,b2->b3,17,40,1,11,11,b2,source_setup,ordinary,[19],[19],[],140,True,True,fc0c37150ae6677d9d67fc2de83cdddba3c856176fd22323365efc28bf1a5ce5
+1,b2->b3,17,51,1,22,11,b2,source_setup,ordinary,[39],[39],[],172,True,True,ab150c616b84a0c6b2596a6ff0d816608dccf01f1013dc5f70105ec866e86d3c
+1,b2->b3,17,40,0,23,0,b2,source_run_hold,ordinary,[],[],[],172,True,True,05876c8c973d6be33d2f1782b727dcf44d4ea6039b863df1fc719bf7ac33911f
+1,b2->b3,17,52,2,11,22,b2,source_setup,ordinary,"[20, 40]","[20, 40]",[],148,True,True,b284367009979e844026613ecbbe7d42abb87e3633cb9fe3742e6afb32082efa
+1,b2->b3,17,41,1,12,11,b2,source_setup,ordinary,[20],[20],[],148,True,True,c1bb947cd1c746737a95e8355c3393039d57639e4939573c7a2c7283b671587c
+1,b2->b3,17,52,2,11,22,b2,source_setup,ordinary,"[28, 40]","[28, 40]",[],180,True,True,9fcabae4b4073f93d8d4d24aac0532bdbea2060014f070e6c169fdbce1270058
+1,b2->b3,17,49,2,11,19,b3,arrival_with_setup,ordinary,"[28, 40]",[28],[40],180,True,True,2f592658bccdc6c4c4ac6e912cc5b7c87cdd2c85395bf52ca4894c20f359d625
+1,b2->b3,17,41,1,12,11,b2,source_setup,ordinary,[28],[28],[],180,True,True,646f50a4eb7563fcfb0f83e3561be8b76a6e7b3c1bf43265284e5e8fd0ab9253
+1,b2->b3,17,52,2,11,22,b2,source_setup,ordinary,"[21, 40]","[21, 40]",[],152,True,True,840ec4bb02d1fea649e9302e7a6d40f902684ae45311c5c615e6b75992dccfb7
+1,b2->b3,17,41,1,12,11,b2,source_setup,ordinary,[21],[21],[],152,True,True,98c9edb3458b3c5f44d33a829aa809755c9b1510b12ff44feb365da84e494603
+1,b2->b3,17,52,2,11,22,b2,source_setup,ordinary,"[23, 40]","[23, 40]",[],160,True,True,58bd66f7246213618bccc02fdd774fc68d52a67acd9ae7cdefe835d2343d271d
+1,b2->b3,17,41,1,12,11,b2,source_setup,ordinary,[23],[23],[],160,True,True,b4add5d78729f6070458ae8abc2346c644beb6d5493a93fa1063ea59dab56afa
+1,b2->b3,17,52,2,11,22,b2,source_setup,ordinary,"[22, 40]","[22, 40]",[],156,True,True,659a12e17f6f9f028c1eda6d6c599034f37657ce5cc6a00770a3d83ab6a271d7
+1,b2->b3,17,41,1,12,11,b2,source_setup,ordinary,[22],[22],[],156,True,True,fd1c6b8f941288c6dc115ba69038ef0f7d32cada2ad6af0fbb35ac489e3abf50
+1,b2->b3,17,52,2,11,22,b2,source_setup,ordinary,"[27, 40]","[27, 40]",[],176,True,True,2e3f81702e9da24918dfcd48707170ac876f1e84928dd3cbe1b4adde68887ccb
+1,b2->b3,17,41,1,12,11,b2,source_setup,ordinary,[27],[27],[],176,True,True,e1a304ec398846b60a72c52976fe328ac58f3e8c8e2c6a06176f57e5be798f85
+1,b2->b3,17,52,2,11,22,b2,source_setup,ordinary,"[17, 40]","[17, 40]",[],136,True,True,fb3e77c799f3fde5535c0cd8975cb8d3dc11ba0c8769aa18d59cf59a7b8906f0
+1,b2->b3,17,41,1,12,11,b2,source_setup,ordinary,[17],[17],[],136,True,True,dd0bd18b72b0b0aef10e48d9d810946d7ccec7bae7667ae532244553b5db507f
+1,b2->b3,17,52,2,11,22,b2,source_setup,ordinary,"[25, 40]","[25, 40]",[],168,True,True,8546fac9ff9dd5a068be59b36fc95c477d2d4ec9410fd86a25ace3108dd3f7e8
+1,b2->b3,17,41,1,12,11,b2,source_setup,ordinary,[25],[25],[],168,True,True,b595f38aba0b2699a0a2e7e8e5c1a21f21baef9f5591347bb3c67dd43a86c2c7
+1,b2->b3,17,52,2,11,22,b2,source_setup,ordinary,"[19, 40]","[19, 40]",[],144,True,True,8b7eb7c28ed660ea56b75c1d412e6ca88bdf39495c0db0894312bf1176775d43
+1,b2->b3,17,41,1,12,11,b2,source_setup,ordinary,[19],[19],[],144,True,True,6907c9e7abfa593fb630edb1f13f9e995ffd79955a535feb9bf6120c5b2826ae
+2,b3->b4,28,40,1,0,11,b3,source_setup,ordinary,[28],[28],[],112,True,True,ccce9602c6dc6ab1a7340e95827cfed4869b12f9309db1079ee60582e993a48e
+2,b3->b4,28,29,0,1,0,b3,source_run_hold,ordinary,[],[],[],112,True,True,2a220b7b093b1079606a2b2375682c1795d2e395bcc6ce2ff5b9b174cd315272
+2,b3->b4,28,41,1,1,11,b3,source_setup,ordinary,[29],[29],[],116,True,True,bfa5b4788b716ec3af7115163dd105962a413f49e30d294f276b4cd2ab0a66b6
+2,b3->b4,28,30,0,2,0,b3,source_run_hold,ordinary,[],[],[],116,True,True,a791c43b8638adabf4435dbf58e3bb53c5ea1e46dd4807efe89e18ce7fd98a54
+2,b3->b4,28,42,1,2,11,b3,source_setup,ordinary,[30],[30],[],120,True,True,6039108b2e30aab12394e9f4a4af43c0edc52f0ac4dbb5a396b977a18dee79ef
+2,b3->b4,28,40,1,2,9,b4,direct_arrival,ordinary,[30],[],[30],120,True,True,a2de752178cfea413f4295a76498e148dd72c1cc1d21d615e95f627e433e573b
+2,b3->b4,28,31,0,3,0,b3,source_run_hold,ordinary,[],[],[],120,True,True,2b38a9c2f05255b31b84e1f32c958f0afea71d34c9a43f6792992691c7dfbefa
+2,b3->b4,28,43,1,3,11,b3,source_setup,ordinary,[31],[31],[],124,True,True,cde03a9ed5e66d40c48881750231618e4e4587f05c122be4a8e522ae2dc7e6d2
+2,b3->b4,28,32,0,4,0,b3,source_run_hold,ordinary,[],[],[],124,True,True,ad2cf779f7cf53ca705a8920398fb76548f941c7a38e75cf89650fd6f000f7f4
+2,b3->b4,28,44,1,4,11,b3,source_setup,ordinary,[32],[32],[],128,True,True,0e9417ba241201f35e6af49f70cf9d5f921b262fe27e152db499aac8ba1b909b
+2,b3->b4,28,33,0,5,0,b3,source_run_hold,ordinary,[],[],[],128,True,True,c2273dd449fcfc010f68ba826b38592e3dcfc309f047a0c481093c46753f5e06
+2,b3->b4,28,45,1,5,11,b3,source_setup,ordinary,[33],[33],[],132,True,True,489364abcffa706bc7b27f8ac3cfe3029631790052391244bcdedc4c2944759e
+2,b3->b4,28,34,0,6,0,b3,source_run_hold,ordinary,[],[],[],132,True,True,51945c770bc3a40ba2eb5296578cd5d9fb3f5b36259472ef4f864755deb82db8
+2,b3->b4,28,46,1,6,11,b3,source_setup,ordinary,[34],[34],[],136,True,True,f3b8ea5d3db950d66b3b712f682b948a6956856fa798658ab99c8c9ea45314e9
+2,b3->b4,28,35,0,7,0,b3,source_run_hold,ordinary,[],[],[],136,True,True,3edb45eb853e2c3ad18930abf66ad98c0f19fb8a80464c43c5f7f1e5e96bf32f
+2,b3->b4,28,47,1,7,11,b3,source_setup,ordinary,[35],[35],[],140,True,True,8af0ece728deec92c3e5a13b9ae77bbf6269609779e35f68f1c7ad5ec3660e6f
+2,b3->b4,28,36,0,8,0,b3,source_run_hold,ordinary,[],[],[],140,True,True,bc3e8acc9073173842358214152ac25c2a282b64b6c38fb9f6162865e158e3b9
+2,b3->b4,28,48,1,8,11,b3,source_setup,ordinary,[36],[36],[],144,True,True,b311d1405b38570e6dd424c7322b4127039315d3fb73ae9b7db097be3609cc1a
+2,b3->b4,28,37,0,9,0,b3,source_run_hold,ordinary,[],[],[],144,True,True,b7254f5839bbe2c55c25e07fd6134c4cb104c01ac0c0fdcfe96068c0248a83f7
+2,b3->b4,28,49,1,9,11,b3,source_setup,ordinary,[37],[37],[],148,True,True,448c2ee8caddd23b4099529fde46e0d7a457f6aa50dc1301852c90a6cbeee367
+2,b3->b4,28,38,0,10,0,b3,source_run_hold,ordinary,[],[],[],148,True,True,7121c25fc7746dd38c75f91e9be7c924ad0fec8451faa679a4bc07e3667041a3
+2,b3->b4,28,50,1,10,11,b3,source_setup,ordinary,[38],[38],[],152,True,True,d5c7a80aecc2bae3a41960c0d02d3dfd332457600140b217ca5ed06fe570de6d
+2,b3->b4,28,39,0,11,0,b3,source_run_hold,ordinary,[],[],[],152,True,True,f62ae850b4681e75efc7bddae9d82fb0dd3572fddff25fb05839d6149361816b
+2,b3->b4,28,51,1,11,11,b3,source_setup,ordinary,[39],[39],[],156,True,True,1cfa6c2eff41f822a1f1b2c8211e1f50a13cbd5c9ad31429fa28d36cfa29e5b6
+2,b3->b4,28,40,0,12,0,b3,source_run_hold,ordinary,[],[],[],156,True,True,784a11218a38aa6fb80cbcf455cf96b69e4d85d9e87f9ec93a61223f752ae6fe
+2,b3->b4,28,52,1,12,11,b3,source_setup,ordinary,[40],[40],[],160,True,True,6da001aa6fbf9ff524ffd85dd2af83b0eec7149709a8b0395222f778b8c023a4
+2,b3->b4,28,41,0,13,0,b3,source_run_hold,ordinary,[],[],[],160,True,True,28fc491da9975bb8f67ad7b5b34a0055af134c5567500d9064547b21984d9c11
+2,b3->b4,28,53,2,1,22,b3,source_setup,ordinary,"[29, 41]","[29, 41]",[],128,True,True,1b6d5cfefdd265cc4f1e8fa3c2d8b7354f05ad598d44ff7af3c2363927da6836
+2,b3->b4,28,51,2,1,20,b4,arrival_with_setup,ordinary,"[29, 41]",[29],[41],128,True,True,33ad864a96c39ea04ccaeba6c475d03e5c25533aa2635ed46278fe7eba54a8f5
+2,b3->b4,28,42,1,2,11,b3,source_setup,ordinary,[29],[29],[],128,True,True,e21cd76ae161b722a5569168b79ed017bd7067055cdb05d29a7dfdc5699dee2e
+2,b3->b4,28,53,1,13,11,b3,source_setup,ordinary,[41],[41],[],164,True,True,5cc74216915270a24ed895830f987e8bb8ccf2eca45f08c25578806079bbd9ee
+2,b3->b4,28,42,0,14,0,b3,source_run_hold,ordinary,[],[],[],164,True,True,de964eb0e81fa3755dc995bc3a022b86adae6923de35eea348e1bc0d1f93439c
+2,b3->b4,28,54,2,2,22,b3,source_setup,ordinary,"[30, 42]","[30, 42]",[],136,True,True,ed7f5a215673cdc09e60466e244c66bb0790fdd0abaaf949a6b8e49a2c6010bc
+2,b3->b4,28,52,2,2,20,b4,arrival_with_setup,ordinary,"[30, 42]",[30],[42],136,True,True,4b3235dc722e2360328016ab8e52bc2fb9e803ec6b775d36ed90b54eba1501af
+2,b3->b4,28,43,1,3,11,b3,source_setup,ordinary,[30],[30],[],136,True,True,48fe39aa6f8f1003c14a235f87760dc57b8cfbbf413919ea2dd59a3dd0780793
+2,b3->b4,28,54,2,2,22,b3,source_setup,ordinary,"[29, 42]","[29, 42]",[],132,True,True,54491d4cb887351e72b3e3ce122f3006c56182bc6030d10968e38ac4ec91f0ae
+2,b3->b4,28,43,1,3,11,b3,source_setup,ordinary,[29],[29],[],132,True,True,a5700f0571a658dc5b3aeb4d33f9001723ec24c09446e5b9ed8ef68f2a3073b1
+2,b3->b4,28,54,1,14,11,b3,source_setup,ordinary,[42],[42],[],168,True,True,69d2646412f0271d71abe497b28c24e47eb08dda44c78f1a668545cc4c525458
+2,b3->b4,28,43,0,15,0,b3,source_run_hold,ordinary,[],[],[],168,True,True,399220d309e07084ec8bf31ad26fa5f699e67865252f5716b14aee170e20b0f5
+2,b3->b4,28,55,2,3,22,b3,source_setup,ordinary,"[31, 43]","[31, 43]",[],144,True,True,0160243f8eeb77e04fce7da2b40d72824d08027c5f72877ff04d8ec97c541a01
+2,b3->b4,28,53,2,3,20,b4,arrival_with_setup,ordinary,"[31, 43]",[31],[43],144,True,True,5c8a0d549bb02fbac005a2e54563303cf5ffd38f557f088e1669d09c0f1c1d82
+2,b3->b4,28,44,1,4,11,b3,source_setup,ordinary,[31],[31],[],144,True,True,7a45ff6d5f8f0395a51470b56e4847d889e56182c2ef0a8fa514bf3511058696
+2,b3->b4,28,55,2,3,22,b3,source_setup,ordinary,"[29, 43]","[29, 43]",[],136,True,True,8727e543db0f4586eae06ca1a333d62391bd9b0ae8417edf91c8aee3ccd9eb35
+2,b3->b4,28,44,1,4,11,b3,source_setup,ordinary,[29],[29],[],136,True,True,db0d48996737452dc0bc1f064e1caa8d974afc661997a628970bdae9e97093a1
+2,b3->b4,28,55,2,3,22,b3,source_setup,ordinary,"[30, 43]","[30, 43]",[],140,True,True,05e5ab5614aad0629a47b8f60d245123655d6545385701e74d6ddedf4a4e1a19
+2,b3->b4,28,44,1,4,11,b3,source_setup,ordinary,[30],[30],[],140,True,True,9ba9950ce128be1554028411312764e0c2a4abed19659e288a8fcbfad40812e7
+2,b3->b4,28,55,1,15,11,b3,source_setup,ordinary,[43],[43],[],172,True,True,ae51566e290b8f62ec28d75fe55feaf9c378e0ad7975a3c93cd4d42c99f4bdce
+2,b3->b4,28,44,0,16,0,b3,source_run_hold,ordinary,[],[],[],172,True,True,caceceb08bce99ec2b845ce189a8eb7bbdbfa7d08088a091a8140b9cb41dc256
+2,b3->b4,28,56,2,4,22,b3,source_setup,ordinary,"[32, 44]","[32, 44]",[],152,True,True,e88d1fdfcf2fa398095e57cb33496f14f42b60bb678c9a151414e9188aaa3db8
+2,b3->b4,28,54,2,4,20,b4,arrival_with_setup,ordinary,"[32, 44]",[32],[44],152,True,True,6ae0b1e475724d5238100604491258b4a9d3ebfdccbc5aad261c78c3128fa0ee
+2,b3->b4,28,45,1,5,11,b3,source_setup,ordinary,[32],[32],[],152,True,True,214d0e0703f1a6be18cdd49133c01ef6208ddda3ca0460ec912610d52f2924bb
+2,b3->b4,28,56,2,4,22,b3,source_setup,ordinary,"[31, 44]","[31, 44]",[],148,True,True,5d7486b98e3293e31b5396563742ee72c41fac0d3eadc5d58bdefc9549b1d374
+2,b3->b4,28,45,1,5,11,b3,source_setup,ordinary,[31],[31],[],148,True,True,d3a03ca1266ef8958daaccedb1ff8bc9f338bf52a79a209f3daef5da97ad5f15
+2,b3->b4,28,56,2,4,22,b3,source_setup,ordinary,"[30, 44]","[30, 44]",[],144,True,True,495d5bfed75ce5f682081a23b46fc0b5b7ee1be8195b310d9b711a8da50213aa
+2,b3->b4,28,45,1,5,11,b3,source_setup,ordinary,[30],[30],[],144,True,True,71222a73ecd82f93cdd311c31d7de8f88407e7c1944685bb576eaaf965c35add
+2,b3->b4,28,56,2,4,22,b3,source_setup,ordinary,"[29, 44]","[29, 44]",[],140,True,True,2f20a21518116a396c5656fad81864bf850e5b64a6be720670806b7e49c672fb
+2,b3->b4,28,45,1,5,11,b3,source_setup,ordinary,[29],[29],[],140,True,True,d23374d77cc98eda1cdc88bca0fd72cfa0cd41e4c0c19f8d609cbe7f9735f390
+2,b3->b4,28,56,1,16,11,b3,source_setup,ordinary,[44],[44],[],176,True,True,08772815b08e1e758287cea0394bfb9886d122ed1dd8dcc224f931649d4bf269
+2,b3->b4,28,45,0,17,0,b3,source_run_hold,ordinary,[],[],[],176,True,True,741e3ea966f080ef717b48f1b477aadcb00c3874ed91c3660870041aa07f2683
+2,b3->b4,28,57,2,5,22,b3,source_setup,ordinary,"[33, 45]","[33, 45]",[],160,True,True,88ba542cb6533b89c6f713cc24923e4c4d1df711568dc76877c624a406c599bb
+2,b3->b4,28,55,2,5,20,b4,arrival_with_setup,ordinary,"[33, 45]",[33],[45],160,True,True,632fc9815f692475186bd8b6b86db9e0d10c7dbf3bd70cebfedc082d2fa63355
+2,b3->b4,28,46,1,6,11,b3,source_setup,ordinary,[33],[33],[],160,True,True,9fe0331a4d9355b47a2683878c32daaf8f2cbeedae9d9997980db2dcd2bfe49e
+2,b3->b4,28,57,2,5,22,b3,source_setup,ordinary,"[30, 45]","[30, 45]",[],148,True,True,ac3b4570c39b4db2464a22e22ca7cc5b57d84b6fc1a93121041301ddc6fb5a36
+2,b3->b4,28,46,1,6,11,b3,source_setup,ordinary,[30],[30],[],148,True,True,55ac7ca0d1b524ffd65eadf111cd6b2d37c32bf27c1643a41d01ff33d0ec2afc
+2,b3->b4,28,57,2,5,22,b3,source_setup,ordinary,"[29, 45]","[29, 45]",[],144,True,True,8e326204ac452c191bdb3940ee03bcfa6e7b24939ca83e480d49ea7c6f28b0b9
+2,b3->b4,28,46,1,6,11,b3,source_setup,ordinary,[29],[29],[],144,True,True,d86f943fe220a78d3124127f470e0403c295b8f375021a5e7652df50bd19e1a7
+2,b3->b4,28,57,2,5,22,b3,source_setup,ordinary,"[32, 45]","[32, 45]",[],156,True,True,c6562c930d7c26bfad15b9b87faba3f6530d1dafc89972cf9b1c4a4cc5c507cd
+2,b3->b4,28,55,2,5,20,b4,arrival_with_setup,ordinary,"[32, 45]",[32],[45],156,True,True,22bc28328cd6634af8903c92b38500b2ecd9b96a9551e295e0720b73337585b9
+2,b3->b4,28,46,1,6,11,b3,source_setup,ordinary,[32],[32],[],156,True,True,6435f22064cf589eedc4d56f9e3b475026b1d3cacf78523d65a661a2e2c7fcdf
+2,b3->b4,28,57,2,5,22,b3,source_setup,ordinary,"[31, 45]","[31, 45]",[],152,True,True,567f46e5456a7d60ee9aaee4e2877ace056f2969b591a3fd90b0426bdcca4db6
+2,b3->b4,28,46,1,6,11,b3,source_setup,ordinary,[31],[31],[],152,True,True,5f61df0e1c8bdd1ea3a5bf9c50f524e656bc07083676d37efb7407aacecd8ff3
+2,b3->b4,28,57,1,17,11,b3,source_setup,ordinary,[45],[45],[],180,True,True,33d73e1aa327d6ed25f45bf1c8dea52ba95c705df611138b430b2dafeee86c20
+2,b3->b4,28,46,0,18,0,b3,source_run_hold,ordinary,[],[],[],180,True,True,80e4e01dcf8ae9d21e7e7919dd376eea066451e720b3d4143ee4dd40b014c009
+2,b3->b4,28,58,2,6,22,b3,source_setup,ordinary,"[31, 46]","[31, 46]",[],156,True,True,899a6658171b22f748fd8a009e08adda43397fe50de034f393394c8aada172ad
+2,b3->b4,28,47,1,7,11,b3,source_setup,ordinary,[31],[31],[],156,True,True,451b114b26338d4597c5fb944ad3555c892c85f402606217b3837b49cb29b074
+2,b3->b4,28,58,2,6,22,b3,source_setup,ordinary,"[30, 46]","[30, 46]",[],152,True,True,816c144d9a9f938231ce453bfa9d6894a22bf05e21004f9393666b37f0f9d257
+2,b3->b4,28,47,1,7,11,b3,source_setup,ordinary,[30],[30],[],152,True,True,937240a31a35c1035b3fbca70ef2f83df0e157a5695e486573425a6df38f151a
+2,b3->b4,28,58,2,6,22,b3,source_setup,ordinary,"[33, 46]","[33, 46]",[],164,True,True,153a1a6807c9b7f3d30ab83d601a1f3803aabbc2d4559b9db6a209bfe7ed714c
+2,b3->b4,28,47,1,7,11,b3,source_setup,ordinary,[33],[33],[],164,True,True,4429bef94ae5c36684aac049f5bb7899e7d9e7b39ff5659542deb80743acd796
+2,b3->b4,28,58,2,6,22,b3,source_setup,ordinary,"[34, 46]","[34, 46]",[],168,True,True,7d16fb53c463a5b4efdf8f343e5e9fb2439d2188eed815a3333b22963c4aef2c
+2,b3->b4,28,56,2,6,20,b4,arrival_with_setup,ordinary,"[34, 46]",[34],[46],168,True,True,6a135b609d46a79025dd216a777bd7ef05b9ffec1129aa111981efaf158c6278
+2,b3->b4,28,47,1,7,11,b3,source_setup,ordinary,[34],[34],[],168,True,True,84d63317a7d0f43e6420f85e4f8feff9d9985f170838f7a798b4b49ebbc507aa
+2,b3->b4,28,58,2,6,22,b3,source_setup,ordinary,"[32, 46]","[32, 46]",[],160,True,True,cb64b740ff04aef0ff933aadba658460f7ed26bfe2803b8de782f6d19744ef02
+2,b3->b4,28,47,1,7,11,b3,source_setup,ordinary,[32],[32],[],160,True,True,502273d2210edb867033eb091380705205bfb061daba31ab3c5b94a88b5cc72d
+2,b3->b4,28,58,2,6,22,b3,source_setup,ordinary,"[29, 46]","[29, 46]",[],148,True,True,36cd18c557ed8354e545cf9c6c0c5358576652dfca1b6c4584c39424ec45b941
+2,b3->b4,28,47,1,7,11,b3,source_setup,ordinary,[29],[29],[],148,True,True,9d48c84bc395e3746cb82245a5c9b1c7c04fee5f9ffec8d2a6868a9577d3d761
+2,b3->b4,28,58,1,18,11,b3,source_setup,ordinary,[46],[46],[],184,True,True,a55fbe84639fee227c491b0886c4b177d64fbd8c8f65bc805cbee196b17753e2
+2,b3->b4,28,47,0,19,0,b3,source_run_hold,ordinary,[],[],[],184,True,True,06f2600b8799eb70ce72fec34438475e70f7b58b9fe8871c9a1c6b70af607e1d
+2,b3->b4,28,57,2,7,20,b4,arrival_with_setup,ordinary,"[35, 47]",[35],[47],176,True,True,b1eb8573ca3e8690f80077450ba60598b08d0d504e3ca616a6222beba4fc7551
+2,b3->b4,28,48,1,8,11,b3,source_setup,ordinary,[35],[35],[],176,True,True,821d4ba30818f11675e1879049ddc665cf832043e7eb5b088ce253a0028d58fa
+2,b3->b4,28,48,1,8,11,b3,source_setup,ordinary,[30],[30],[],156,True,True,1e0727150c6941b28b35db98017c4fbe20a7dd43c4fab2138c0638440c1bd4f4
+2,b3->b4,28,48,1,8,11,b3,source_setup,ordinary,[33],[33],[],168,True,True,b551952a63ddc30a2495318dc1151efbace735ca2c026a1b2e68aaef555449de
+2,b3->b4,28,48,1,8,11,b3,source_setup,ordinary,[34],[34],[],172,True,True,e5bb1d0bb76395d8d5d6ef616959415dd37524399faf8a355989babcea0a644b
+2,b3->b4,28,48,1,8,11,b3,source_setup,ordinary,[31],[31],[],160,True,True,38ab9a15cf0ae1681899c6c717cc368b9d587d750f979e18b5d31e2406afb203
+2,b3->b4,28,48,1,8,11,b3,source_setup,ordinary,[29],[29],[],152,True,True,8e087080c2f4b53c6b444b4e8c1d772f597d793a1d724acc4d75b21e7f5b0fe8
+2,b3->b4,28,48,1,8,11,b3,source_setup,ordinary,[32],[32],[],164,True,True,60a0c0ada51cc9e0ec39a2573a0c870c12279e629cfd01b540214f6bcd893f4b
+2,b3->b4,28,48,0,20,0,b3,source_run_hold,ordinary,[],[],[],188,True,True,3b544010591c89d55adf434150de134740c145e018ac55be7d29b43fcc1147ba
+2,b3->b4,28,49,1,9,11,b3,source_setup,ordinary,[35],[35],[],180,True,True,99b89690459c3e844d6df8faff43d0d6a02734166ced3592d9554a9767c1729b
+2,b3->b4,28,49,1,9,11,b3,source_setup,ordinary,[31],[31],[],164,True,True,5217d4148a08a2b9037cadeba91bcd5a07cdc1a239e34054287bcc6d1e1b9eba
+2,b3->b4,28,49,1,9,11,b3,source_setup,ordinary,[33],[33],[],172,True,True,330f3302ad6bba7547a9673816192430fab7342bd6c27ac7c65a7af72e717a62
+2,b3->b4,28,49,1,9,11,b3,source_setup,ordinary,[29],[29],[],156,True,True,07fde038539944f12a53c6af0937dcc9047494e4df64fab7558e369ea7481ae6
+2,b3->b4,28,58,2,8,20,b4,arrival_with_setup,ordinary,"[36, 48]",[36],[48],184,True,True,0a1afb4d4c2d4496e9a8692fb8782a7b70a6487f1c2a5a51f73381fdd0e0519e
+2,b3->b4,28,49,1,9,11,b3,source_setup,ordinary,[36],[36],[],184,True,True,6323034114dc1024eff31c66b762f59ec6db2ce551336c0238eda6537016584a
+2,b3->b4,28,49,1,9,11,b3,source_setup,ordinary,[32],[32],[],168,True,True,d86c03fb706ad42962298a59a9016698c810f6080e8083338abc7d162daff848
+2,b3->b4,28,49,1,9,11,b3,source_setup,ordinary,[30],[30],[],160,True,True,0876d72070c72be1fdeceddaa113768743221616abebdd6c964fd0bd44434c80
+2,b3->b4,28,49,1,9,11,b3,source_setup,ordinary,[34],[34],[],176,True,True,89df08de671761a435d4419793e02d5e82224d6fddd82080e1a635ef699604ad
+2,b3->b4,28,49,0,21,0,b3,source_run_hold,ordinary,[],[],[],192,True,True,c86561f0c255b183e9a4a7eb6b70ed55f39c7ac6eb66aa0872221e2bbb4f1480
+2,b3->b4,28,59,2,9,20,b4,arrival_with_setup,ordinary,"[37, 49]",[37],[49],192,True,True,30f24e9aba007a94fcb8610fa5f03e0b2a8b048307ace2eed54381188857970a
+2,b3->b4,28,50,1,10,11,b3,source_setup,ordinary,[37],[37],[],192,True,True,9b5a5fd662bbab603e694d7814b77d7225d8929622ab0b40a9d76a1dc53d9c5c
+2,b3->b4,28,50,1,10,11,b3,source_setup,ordinary,[29],[29],[],160,True,True,7cd68ea27d53870322e83b891e50f1ea1103155e498350d5dc6e32ebb32ff422
+2,b3->b4,28,50,1,10,11,b3,source_setup,ordinary,[30],[30],[],164,True,True,5c26c19eee59a9ff556580f75c03a5b89c8e6de4be73e36a581df18fd3bf6e0c
+2,b3->b4,28,50,1,10,11,b3,source_setup,ordinary,[36],[36],[],188,True,True,543d230c67853f7381ab8c8cccf97c2a3af566e2277417f28ffb6c48f335389d
+2,b3->b4,28,50,1,10,11,b3,source_setup,ordinary,[33],[33],[],176,True,True,a84563efadb405cd589c54aad12b23af11ff9405e8ff1a78691fa9722ede2ec4
+2,b3->b4,28,50,1,10,11,b3,source_setup,ordinary,[34],[34],[],180,True,True,c24d187adc3d8e001052573d27af9cf8f44e3510131b8c7b1987c317a48930da
+2,b3->b4,28,50,1,10,11,b3,source_setup,ordinary,[32],[32],[],172,True,True,94f65e53c672c9bfc104d1c1a309ed4da4300978844b894c5be580a8cef98732
+2,b3->b4,28,50,1,10,11,b3,source_setup,ordinary,[35],[35],[],184,True,True,b419878c13eb12d8537e0b9d1ff9c95cd35775cb9113183e33d3533fd9b6a99a
+2,b3->b4,28,50,1,10,11,b3,source_setup,ordinary,[31],[31],[],168,True,True,041099eee0d6fb1b496a3b9a79e93931c8aced2301712609b69d3b15e6b12069
+2,b3->b4,28,50,0,22,0,b3,source_run_hold,ordinary,[],[],[],196,True,True,9e9756eb3a92d6618856d14e45c9c0cf6bd310ca4f57c7b973534141b5b275df
+2,b3->b4,28,51,1,11,11,b3,source_setup,ordinary,[31],[31],[],172,True,True,1c2726387a49d74dc4baf17cd47d2f05eb9c2c4c873dd540d4e824c883678a53
+2,b3->b4,28,51,1,11,11,b3,source_setup,ordinary,[32],[32],[],176,True,True,c6868c0c78a4358bbd6605903322c4f516181829121700bcd82ab39f6ec8ddb4
+2,b3->b4,28,51,1,11,11,b3,source_setup,ordinary,[36],[36],[],192,True,True,3f88567ff269f0e450e65c15c0c3a1846fd282d433374bb53fd95d2b01fa6c50
+2,b3->b4,28,51,1,11,11,b3,source_setup,ordinary,[34],[34],[],184,True,True,f6747e016df591f4f3572e351ede989cbfd3184ed5b979b5bef92c5549f70e5f
+2,b3->b4,28,51,1,11,11,b3,source_setup,ordinary,[29],[29],[],164,True,True,89af8083816fc0083116107fa4929b2a38bad5295f117066e62211e40b14a366
+2,b3->b4,28,51,1,11,11,b3,source_setup,ordinary,[30],[30],[],168,True,True,694562f1d579ca637b2feb71915f6ca14f505882770951bbc422ef7b129ed400
+2,b3->b4,28,51,1,11,11,b3,source_setup,ordinary,[37],[37],[],196,True,True,9361209a78f24373a9f9c8079a5a2f529faa181897ee0f0a0237899cb16ef74d
+2,b3->b4,28,51,1,11,11,b3,source_setup,ordinary,[35],[35],[],188,True,True,34b2616f54e0b4bbda27d008e69695f94653b5bbe0e8b8e9c61f213414b59f0a
+2,b3->b4,28,51,1,11,11,b3,source_setup,ordinary,[33],[33],[],180,True,True,c3d2c4e65e00d19c2848ee3747f771cb3219b10f98fdd62233a2705d4185f9a8
+2,b3->b4,28,60,2,10,20,b4,arrival_with_setup,ordinary,"[38, 50]",[38],[50],200,True,True,26d9cf1306693a626fca7ba8fb941d5716fe0deaf4300ea42702bf58bc2d710e
+2,b3->b4,28,51,1,11,11,b3,source_setup,ordinary,[38],[38],[],200,True,True,104aceee27052bcf539e62810fb1289f7a5769d3016aa852dbeac1be0902837e
+2,b3->b4,28,51,0,23,0,b3,source_run_hold,ordinary,[],[],[],200,True,True,f698dc6e032099e8fe0db5be42cc25aaa189cff4f148e15287dfe0bacb98834f
+2,b3->b4,28,52,1,12,11,b3,source_setup,ordinary,[32],[32],[],180,True,True,319ddc5f5613e5e0cc391a5ca856f679e97f22c527c20b1b3a76d037c73be0ce
+2,b3->b4,28,61,2,11,20,b4,arrival_with_setup,ordinary,"[39, 51]",[39],[51],208,True,True,92977f7b8f0056e9ac7b8134c56c1ce8516d998afdc35c708bae144d2cfb47b7
+2,b3->b4,28,52,1,12,11,b3,source_setup,ordinary,[39],[39],[],208,True,True,ce156ca06e10789c046532458f51d5e51b50e24f8c94420d2643ecf38e87b506
+2,b3->b4,28,52,1,12,11,b3,source_setup,ordinary,[37],[37],[],200,True,True,0ac46a68bbb5e2ea1a3a2353a4be530e651fa3bf995f49d3859d9808a1df055e
+2,b3->b4,28,52,1,12,11,b3,source_setup,ordinary,[33],[33],[],184,True,True,d83fb5ad9c0f1ff0789f6fc51210709df1d327fbc2d53da91e716e782d1f7f92
+2,b3->b4,28,52,1,12,11,b3,source_setup,ordinary,[30],[30],[],172,True,True,05870077f265fdee9d88a6932bbd1dad1cf5c959f92ad43bece8e4c7bff9c61d
+2,b3->b4,28,52,1,12,11,b3,source_setup,ordinary,[38],[38],[],204,True,True,ef475c1c67ae838537bc20aa9f5bb7e021eb58e710f6a307445ea7c3485b6a13
+2,b3->b4,28,52,1,12,11,b3,source_setup,ordinary,[36],[36],[],196,True,True,9fd307d5b792f5e1563b8413e09a3cd913936acf2f76fe2b68f2127fff30323e
+2,b3->b4,28,52,1,12,11,b3,source_setup,ordinary,[35],[35],[],192,True,True,5eb004d922961f2734d3d1397b292194d5c9a8af9a497e2b2d9fb63ad87af0e3
+2,b3->b4,28,52,1,12,11,b3,source_setup,ordinary,[29],[29],[],168,True,True,0fa2d2466fa2631994d586ae92fb3674a8071b140d1c89688de2e0418f1934a9
+2,b3->b4,28,52,1,12,11,b3,source_setup,ordinary,[31],[31],[],176,True,True,fd01d78b86d7127d8d121cd6e4f3a7102e04d281374eec7a5d80a9cb996ff1bf
+2,b3->b4,28,52,1,12,11,b3,source_setup,ordinary,[34],[34],[],188,True,True,2f85c84ea85533463cc696b22d5c50aa01246dee563915ba41a20504750e6561
+2,b3->b4,28,52,0,24,0,b3,source_run_hold,ordinary,[],[],[],204,True,True,efb6f120e5646c70b02d8f41d33aa5ace76ac2da306324ffa36c30b01099b325
+2,b3->b4,28,53,1,13,11,b3,source_setup,ordinary,[39],[39],[],212,True,True,d4d322307a0dafa6c0819843731b60d915fb26b61555e19ec3ba65867385567e
+2,b3->b4,28,53,1,13,11,b3,source_setup,ordinary,[38],[38],[],208,True,True,f5aad7e69560011fbc514787057e3302e7c4a26dc0575f7c478edf86e9f8a29d
+2,b3->b4,28,53,1,13,11,b3,source_setup,ordinary,[32],[32],[],184,True,True,014e4696769cdde736fdaa51e1688de243088dd7afd558942cb5810c34f199c6
+2,b3->b4,28,53,1,13,11,b3,source_setup,ordinary,[33],[33],[],188,True,True,a119c700e6c7a30dbae4265ec0f49db002f3a89fceecc8c6c980fb3fcdb56f77
+2,b3->b4,28,53,1,13,11,b3,source_setup,ordinary,[30],[30],[],176,True,True,9c3fa368664d50c2687cea8f07eed5e9f49e9c27bd40145fb2ce9dd739970999
+2,b3->b4,28,53,1,13,11,b3,source_setup,ordinary,[37],[37],[],204,True,True,b3dd58db9c2baa055d7c2ec218b818a0adad4e901d1f912b16bc165ef2e347d2
+2,b3->b4,28,53,1,13,11,b3,source_setup,ordinary,[34],[34],[],192,True,True,3e43b0f255c8e30075b3f74138e85dde7d15fb6bf5a9cd5a7c482d478d18d234
+2,b3->b4,28,53,1,13,11,b3,source_setup,ordinary,[29],[29],[],172,True,True,bb22f5eba52cd9111ea6abb397aa8df0892e93cf219c684139d8727d246b2e28
+2,b3->b4,28,53,1,13,11,b3,source_setup,ordinary,[35],[35],[],196,True,True,350500ada0910ba593b4eba67119302658f8ef61c05f0760338ec941588456f8
+2,b3->b4,28,53,1,13,11,b3,source_setup,ordinary,[36],[36],[],200,True,True,77a29a9d641ecca7170fc17d69b6462921f49009bab3d2c796187371c7865a67
+2,b3->b4,28,53,1,13,11,b3,source_setup,ordinary,[31],[31],[],180,True,True,5d62e39c381165a0077ef7f5a38899f98d209159eccd05c97189bce2c3c795f4
+2,b3->b4,28,62,2,12,20,b4,arrival_with_setup,ordinary,"[40, 52]",[40],[52],216,True,True,d1a5933f115abb319fbe029546265e14848e9ff0324311cfd11d57d846de3752
+2,b3->b4,28,53,1,13,11,b3,source_setup,ordinary,[40],[40],[],216,True,True,b0ed84de957af60eb477ef50a2805c15cdc7b7f170be95ecef7734e1e64bb577
+2,b3->b4,28,53,0,25,0,b3,source_run_hold,ordinary,[],[],[],208,True,True,ed63613a6a2c41d79548c3d349147557ec7c0e9a2953deaa3117089174a5e222
+2,b3->b4,28,54,2,2,22,b3,source_setup,ordinary,"[29, 41]","[29, 41]",[],136,True,True,99d85bb8cdf1082612bed8f2d6532a1dec4e163e20c4fc22ef0ebab84c1f95a6
+2,b3->b4,28,54,1,14,11,b3,source_setup,ordinary,[37],[37],[],208,True,True,f417aa6b69c8dbec03221c56972831822df57f7daffeba2734dd5b25d0571128
+2,b3->b4,28,54,1,14,11,b3,source_setup,ordinary,[36],[36],[],204,True,True,995486832d1f2d9ed8af0f43b29458221b3d20988af148cec243d720e73cdda2
+2,b3->b4,28,54,1,14,11,b3,source_setup,ordinary,[29],[29],[],176,True,True,a5c7687aa1be569a4b056a2fad765d51d7daad925899e71f7702cba4a3f2f660
+2,b3->b4,28,54,1,14,11,b3,source_setup,ordinary,[34],[34],[],196,True,True,5ffbb84adb6b4f6c41bcbdf0dbdd259b43f324202a5414095ffb7feb55f7be1b
+2,b3->b4,28,54,1,14,11,b3,source_setup,ordinary,[41],[41],[],224,True,True,d3799932567b6c7f08f1894db34ed7ac6e0ad89b44f1acf5f13603762c68f871
+2,b3->b4,28,54,1,14,11,b3,source_setup,ordinary,[31],[31],[],184,True,True,3c64ce10399dfda66a18d4134c080c3a26049168a31b3e547ed919025e3af1f2
+2,b3->b4,28,54,1,14,11,b3,source_setup,ordinary,[39],[39],[],216,True,True,3c9b3aedf8a42130d0c1cc699e2e0971c70c3512777ce41b504ccd01fa8cf673
+2,b3->b4,28,54,1,14,11,b3,source_setup,ordinary,[32],[32],[],188,True,True,e7478cca17d35a667d525b67ad4401d8420007b25c9f5aafdc311cdd6bdbe1c5
+2,b3->b4,28,54,1,14,11,b3,source_setup,ordinary,[35],[35],[],200,True,True,51f8f5bc0a81514ff42bcead5d54f972a6181279a80f24758b0a6efb280a7ec2
+2,b3->b4,28,54,1,14,11,b3,source_setup,ordinary,[33],[33],[],192,True,True,79677e9d0920e59cf100544bcefa2b94710107651f45681bc1b75509707ff7f1
+2,b3->b4,28,54,1,14,11,b3,source_setup,ordinary,[38],[38],[],212,True,True,062a5bd5a36ceb9be4badc79dcbe6936e953f70f25fc08cf30f1ae42ed4d1ef5
+2,b3->b4,28,54,1,14,11,b3,source_setup,ordinary,[40],[40],[],220,True,True,0b34afc4b7d757b89928bbe4e67a405c1c3b367b64df933816fa73844ff3665c
+2,b3->b4,28,54,1,14,11,b3,source_setup,ordinary,[30],[30],[],180,True,True,9d89fa9da004b3ee19df8a4b595c2f0f7b6e48e2fdc37de5b4d11ed5d71c17a5
+2,b3->b4,28,54,0,26,0,b3,source_run_hold,ordinary,[],[],[],212,True,True,806ee58673e6d0e305374e57d7f259397af6eeb4e525a6e81633eaed1b56a57c
+2,b3->b4,28,55,2,3,22,b3,source_setup,ordinary,"[30, 42]","[30, 42]",[],144,True,True,42a1d08e8a03fdfb0f57e202311cd7a97b9d404827cdfe7609b8d73f3e93733e
+2,b3->b4,28,55,2,3,22,b3,source_setup,ordinary,"[29, 41]","[29, 41]",[],140,True,True,2de6b74dc0013aa8fb8df3f88228de68b4ed1817cd3b8a5d8c4a1b66c5005a0b
+2,b3->b4,28,55,2,3,22,b3,source_setup,ordinary,"[29, 42]","[29, 42]",[],144,True,True,f63b83f36e0f3b639a2d81a1a81663e1c824b5b4684d221d677cefd3a0da8c43
+2,b3->b4,28,55,1,15,11,b3,source_setup,ordinary,[39],[39],[],220,True,True,772d29b27350cb819d81b88d98157f8b4e05e98ab6ea06fae07dcf7e7c9e5cbc
+2,b3->b4,28,55,1,15,11,b3,source_setup,ordinary,[36],[36],[],208,True,True,0b0b6e790e0d8864a5790f3f5fbca0001a0e654988ffc5271bea8848296be5a2
+2,b3->b4,28,55,1,15,11,b3,source_setup,ordinary,[35],[35],[],204,True,True,79b5347dd3be1db8fc068e5172aeac7defe2df5ea76350456027744d907c4ce7
+2,b3->b4,28,55,1,15,11,b3,source_setup,ordinary,[29],[29],[],180,True,True,a891d7f276c164bbc51b4accc71949ded7d53a9b04306d898b7736cacb45c256
+2,b3->b4,28,55,1,15,11,b3,source_setup,ordinary,[31],[31],[],188,True,True,76cc0872c8636b36eb0715d61b6c7f03a16951bb7fa70358b7aa782192f86bcb
+2,b3->b4,28,55,1,15,11,b3,source_setup,ordinary,[32],[32],[],192,True,True,bbf826225092c07b601ded1d209b62fec391399279bba787c5be59ad7186042b
+2,b3->b4,28,55,1,15,11,b3,source_setup,ordinary,[42],[42],[],232,True,True,18ef1e06ea658fdfad26443b9f45fea06a7a111ec08c098607ea4852d20f4961
+2,b3->b4,28,55,1,15,11,b3,source_setup,ordinary,[40],[40],[],224,True,True,6a6d50861e0956245f67bac897e602fbae421767952a7517f7f2025bf54c7cb0
+2,b3->b4,28,55,1,15,11,b3,source_setup,ordinary,[41],[41],[],228,True,True,4f6a84126fd230dd09e2c949b695fbacad1be2965fd7261bdcf4611778651143
+2,b3->b4,28,55,1,15,11,b3,source_setup,ordinary,[38],[38],[],216,True,True,39c8f1545a555458897ab4c9a0aa3fe315925edb866cd1d08946b3afd26315ba
+2,b3->b4,28,55,1,15,11,b3,source_setup,ordinary,[34],[34],[],200,True,True,15dbcf3354f4a8d9271133b8f8ad58df5b4c25f2afd3cbca6ac60a82dbac2da0
+2,b3->b4,28,55,1,15,11,b3,source_setup,ordinary,[37],[37],[],212,True,True,d5f1a5870fdce17aea776e1e3240cda514dc1abf5368d24d5fa10005a8d01486
+2,b3->b4,28,55,1,15,11,b3,source_setup,ordinary,[33],[33],[],196,True,True,45f9e3fc7d88159a360c9f52144f190334d31f1257ae739db85587ff03348b6e
+2,b3->b4,28,55,1,15,11,b3,source_setup,ordinary,[30],[30],[],184,True,True,78a5ea7e555b364a2805b28e3c877305379d376d7979785ee6a51bcf57d0c22d
+2,b3->b4,28,55,0,27,0,b3,source_run_hold,ordinary,[],[],[],216,True,True,f95a62783cebdb757734194fa19e92c9782f4438f5791f268bd5d05d8727dbc6
+2,b3->b4,28,56,2,4,22,b3,source_setup,ordinary,"[31, 43]","[31, 43]",[],152,True,True,6bef60b20f33259dcec6f70d52dc225d239748d35962b82115b830445747bea7
+2,b3->b4,28,56,2,4,22,b3,source_setup,ordinary,"[29, 42]","[29, 42]",[],148,True,True,850d97e074baf671b16edce057cf0e403483a8b2854150ef037a09904ed1c075
+2,b3->b4,28,56,2,4,22,b3,source_setup,ordinary,"[30, 42]","[30, 42]",[],148,True,True,0fa9e2aa94297d175dc8aa50be92cc205fb4a252bdf50702a0847c1088f31a16
+2,b3->b4,28,56,2,4,22,b3,source_setup,ordinary,"[29, 43]","[29, 43]",[],152,True,True,57909b8e0c9288a8d1964a39eb27385054c6ffd3660fa7d73d1770b262807be8
+2,b3->b4,28,56,2,4,22,b3,source_setup,ordinary,"[30, 43]","[30, 43]",[],152,True,True,afeace4de8e7cd5ac11a45a91a0b3ff95bf8d9ee55a7fb52bbbb9977c4a4af70
+2,b3->b4,28,56,2,4,22,b3,source_setup,ordinary,"[29, 41]","[29, 41]",[],144,True,True,5ba69c23ae746626d4ea7a8f64454d3868cc20535ee193588261895ac3d2c528
+2,b3->b4,28,56,1,16,11,b3,source_setup,ordinary,[42],[42],[],236,True,True,9cf296b088ad958b712357a779d9f85b53973a8a65d440180ecfd00077a2bcbd
+2,b3->b4,28,56,1,16,11,b3,source_setup,ordinary,[38],[38],[],220,True,True,5b5b0a7758e587ff583155b6f4c075cf53765a0c506931452946eb18f7782fd0
+2,b3->b4,28,56,1,16,11,b3,source_setup,ordinary,[34],[34],[],204,True,True,8a676d1fc2012ac858223c6d15390212a94e3532cdddc52b219f34c242c9ae2d
+2,b3->b4,28,56,1,16,11,b3,source_setup,ordinary,[32],[32],[],196,True,True,9464da6a7c6fec314bade90407cf1da1d6277af56c0233ae581108c828a48c3c
+2,b3->b4,28,56,1,16,11,b3,source_setup,ordinary,[36],[36],[],212,True,True,704229f9f8fe9b67dcaf5505b63f04b871474c4d24cc56dadddea77463d6616d
+2,b3->b4,28,56,1,16,11,b3,source_setup,ordinary,[39],[39],[],224,True,True,49efbaff1b313465052e012c6f143efad7deface7c7ea930b759b71884f848d9
+2,b3->b4,28,56,1,16,11,b3,source_setup,ordinary,[40],[40],[],228,True,True,2561b8e2eb32d700e841e1cb773f75518db46dd8419b150abf98ffb6ed3ebfc3
+2,b3->b4,28,56,1,16,11,b3,source_setup,ordinary,[33],[33],[],200,True,True,f0a4b6d95eb8970da769463c76368568d262315b413538fa85acafe7cb9da658
+2,b3->b4,28,56,1,16,11,b3,source_setup,ordinary,[35],[35],[],208,True,True,0bc9788bac27167dc9f47d7cb66ae0ef577e8fb4d706596069c20cdbdb9fe5cb
+2,b3->b4,28,56,1,16,11,b3,source_setup,ordinary,[43],[43],[],240,True,True,70210862a3eb206c362f9c2a17258f4eb3ca030b9672c50e21904c84deaeda64
+2,b3->b4,28,56,1,16,11,b3,source_setup,ordinary,[37],[37],[],216,True,True,6bf941059a869b2f60d283128c04ec9d6a559ae0974972e8e99bafda0916926e
+2,b3->b4,28,56,1,16,11,b3,source_setup,ordinary,[31],[31],[],192,True,True,11ebb20f63c09a78ede6d9f46397c0cfa86813e59349f68c362cfa7d7ec54619
+2,b3->b4,28,56,1,16,11,b3,source_setup,ordinary,[41],[41],[],232,True,True,3a377389f2cad7282ebff09e0e71dc50a8a917de488f0caa3083d8763bcbf74e
+2,b3->b4,28,56,1,16,11,b3,source_setup,ordinary,[29],[29],[],184,True,True,ed1744b96be1526bf7cf9cab396cdd84d8bf4ac9366074191ae8e61314fcc0d7
+2,b3->b4,28,56,1,16,11,b3,source_setup,ordinary,[30],[30],[],188,True,True,40eec74df9fa98a0fa643cebea31893a8025dbaec767b4ad16e81a7fac97a0c4
+2,b3->b4,28,56,0,28,0,b3,source_run_hold,ordinary,[],[],[],220,True,True,1c0c680fd88efdb89cf47a415a8f38d5b48be1cfc80cb5793fbfb375106d8076
+2,b3->b4,28,57,2,5,22,b3,source_setup,ordinary,"[29, 41]","[29, 41]",[],148,True,True,d2680f393115bcc5ff8d9b3ed7de2b4c585821d3d8d3fdcd4a8a0ec4df42df37
+2,b3->b4,28,57,2,5,22,b3,source_setup,ordinary,"[30, 43]","[30, 43]",[],156,True,True,5a6dc9d37846f2c3a5a7bd772d82118bd51e3fd0d75898e92ac52ddefb66e97d
+2,b3->b4,28,57,2,5,22,b3,source_setup,ordinary,"[29, 44]","[29, 44]",[],160,True,True,6b5d91514fa8e9a85b5ffcbb60787bbfe5cf3cf19517d7a5a1f0b192cc9937b5
+2,b3->b4,28,57,2,5,22,b3,source_setup,ordinary,"[31, 43]","[31, 43]",[],156,True,True,47571312b9399c1f112866667580cc8e275882d4578d534068e0f3a92e2f14bf
+2,b3->b4,28,57,2,5,22,b3,source_setup,ordinary,"[32, 44]","[32, 44]",[],160,True,True,704fb429c6f2acc41e9bf18b72fcf84c85510d7e72f5c67a78d1b136b4785a74
+2,b3->b4,28,57,2,5,22,b3,source_setup,ordinary,"[30, 42]","[30, 42]",[],152,True,True,9e197e857fd046a0693328d86dbbdb9a5689293b5077ad2d2be5d3d462bb0d54
+2,b3->b4,28,57,2,5,22,b3,source_setup,ordinary,"[29, 42]","[29, 42]",[],152,True,True,c5290272f579a0cbdc3eb2130114381aced3dae8db081ee4f8726a1ddf948756
+2,b3->b4,28,57,2,5,22,b3,source_setup,ordinary,"[31, 44]","[31, 44]",[],160,True,True,6a2293bb949fff08fc49677bc28022ed46c899fbfbc49738ce9f0847af2520ff
+2,b3->b4,28,57,2,5,22,b3,source_setup,ordinary,"[29, 43]","[29, 43]",[],156,True,True,e9457b11c8df585eb75913a36bf70004338a670dea50044f8df4d5185ae5f60f
+2,b3->b4,28,57,2,5,22,b3,source_setup,ordinary,"[30, 44]","[30, 44]",[],160,True,True,8d2eb91afe2afd0da863b3b26a01d848ab380fadedd804443fae34cd8e689019
+2,b3->b4,28,57,1,17,11,b3,source_setup,ordinary,[42],[42],[],240,True,True,fb3813cb64886732202d2d5cc1181fd26818d95f8a95154fe3b1b0b8d9b344ca
+2,b3->b4,28,57,1,17,11,b3,source_setup,ordinary,[40],[40],[],232,True,True,4f9cef40b25e388c14031c0d4e8abd757e029e985c0188a143b96d78da803aa0
+2,b3->b4,28,57,1,17,11,b3,source_setup,ordinary,[30],[30],[],192,True,True,658564998623ddd2672416a68ad11d1c1f9bb45ee981994f446b638e59026e22
+2,b3->b4,28,57,1,17,11,b3,source_setup,ordinary,[34],[34],[],208,True,True,613c263bb697eb344b4751e48c82528afdc1b52e5f9468581de5d7bbb34dcb97
+2,b3->b4,28,57,1,17,11,b3,source_setup,ordinary,[41],[41],[],236,True,True,d71e5c2fffdea23570834089893f558ea22582cb9c74bc15c1c08fbf618453fa
+2,b3->b4,28,57,1,17,11,b3,source_setup,ordinary,[39],[39],[],228,True,True,80c50c4e6f160263878e4a624a97b3f3cce2c57bdd754844438cda423f389927
+2,b3->b4,28,57,1,17,11,b3,source_setup,ordinary,[32],[32],[],200,True,True,46fba128e5f933d848da23525c3f7ab5bac55fda4d5afa44c55f479cce91689e
+2,b3->b4,28,57,1,17,11,b3,source_setup,ordinary,[33],[33],[],204,True,True,02310e033789eff9748720f3e5e4c823cb0c41a6fd25fd78de6f3000d39778cf
+2,b3->b4,28,57,1,17,11,b3,source_setup,ordinary,[35],[35],[],212,True,True,904f8216ffea0430c233149da8146531097c53c93cbe9cf06dbf386b207d39d2
+2,b3->b4,28,57,1,17,11,b3,source_setup,ordinary,[36],[36],[],216,True,True,07977d7ef5acb0138e1bb16717f7ec90200d6bd249323f25bb0dfc4e4fa33dca
+2,b3->b4,28,57,1,17,11,b3,source_setup,ordinary,[38],[38],[],224,True,True,42539e2f59a728a0e237dd997d6d7d07f67f3c5129a7a7a35bbb2b4b9f562faf
+2,b3->b4,28,57,1,17,11,b3,source_setup,ordinary,[29],[29],[],188,True,True,844b4a25bac16b44f181aaba7623f0f873dd8305f8f34ec1fe1ea29202a9ced5
+2,b3->b4,28,57,1,17,11,b3,source_setup,ordinary,[31],[31],[],196,True,True,cbf8eec9c0dccc2bb8b3893d0b2a71894ad84a9d947980bc854ee2cdec15c0fe
+2,b3->b4,28,57,1,17,11,b3,source_setup,ordinary,[43],[43],[],244,True,True,dbbd74dbf7bb2f33ce46653a2c293a7ada645f48361ae66a09a31981c1d4a57d
+2,b3->b4,28,57,1,17,11,b3,source_setup,ordinary,[37],[37],[],220,True,True,90df74d7db8aabe40ae8a34e0003df4738f65121e582195158fb8396c49d9a05
+2,b3->b4,28,57,0,29,0,b3,source_run_hold,ordinary,[],[],[],224,True,True,98e83c20fa16729ce3c59dcd9cb96b3f19e0c9f9805a8d1d12cf638d187086a5
+2,b3->b4,28,58,2,6,22,b3,source_setup,ordinary,"[29, 44]","[29, 44]",[],164,True,True,5a3d3b223c9856d7de015b8520d33d9c1e2807533a7b813d400c5b67f13af72f
+2,b3->b4,28,58,2,6,22,b3,source_setup,ordinary,"[30, 44]","[30, 44]",[],164,True,True,c27e19c5566089e5631bd5b214dce1b25e22781804bce13dc010944113e920f9
+2,b3->b4,28,58,2,6,22,b3,source_setup,ordinary,"[31, 44]","[31, 44]",[],164,True,True,1a3697d8a86058e5ed9c2aad7b960b60293ed0fdbb6df716f3afa124070e6d62
+2,b3->b4,28,58,2,6,22,b3,source_setup,ordinary,"[32, 44]","[32, 44]",[],164,True,True,f2243f2046394f99962a5fc8bbb9d8da5669ded3149e826087683f175f30d510
+2,b3->b4,28,58,2,6,22,b3,source_setup,ordinary,"[29, 43]","[29, 43]",[],160,True,True,266ee9a8cca0f515bc67ba7679c2d67aeb7c76e5a416db55d4479cf2ad67ade5
+2,b3->b4,28,58,2,6,22,b3,source_setup,ordinary,"[30, 42]","[30, 42]",[],156,True,True,ede5e35f09d61d3ecf6ca158ce571a0815e88385d484c7618b757846a300ec39
+2,b3->b4,28,58,2,6,22,b3,source_setup,ordinary,"[29, 45]","[29, 45]",[],168,True,True,ecd4ea5af06734c636b8da5027a28c5acce30c8976d2865def79a3cf7d945c34
+2,b3->b4,28,58,2,6,22,b3,source_setup,ordinary,"[31, 45]","[31, 45]",[],168,True,True,a8d4e6f2bb6ac26dc3e1fa4a24fc2e2295943346b67246d84cb9821f527bac71
+2,b3->b4,28,58,2,6,22,b3,source_setup,ordinary,"[31, 43]","[31, 43]",[],160,True,True,c26358ddd464336ee8c55204dd5ce67f8af27e650f43ef7d3039d34af29d429d
+2,b3->b4,28,58,2,6,22,b3,source_setup,ordinary,"[29, 42]","[29, 42]",[],156,True,True,447af7f9048f9f6ba4581900bf70e8fdb769dcd503ef7e7ebd8e5cb995a58b52
+2,b3->b4,28,58,2,6,22,b3,source_setup,ordinary,"[30, 43]","[30, 43]",[],160,True,True,807d60bf3e2cb0ef233f53d2a3ec98b088c834ece3b75edf16892db6ecb7a96e
+2,b3->b4,28,58,2,6,22,b3,source_setup,ordinary,"[33, 45]","[33, 45]",[],168,True,True,f06e1554424b41aae52a82e7a09a708b8c04486d55b3f4bceabae203ce3271ec
+2,b3->b4,28,58,2,6,22,b3,source_setup,ordinary,"[29, 41]","[29, 41]",[],152,True,True,9d190702cb38f125bdb4266b73525a83efde91a2fb66c2b501dd4bc055d3ccda
+2,b3->b4,28,58,2,6,22,b3,source_setup,ordinary,"[32, 45]","[32, 45]",[],168,True,True,95e607d8f4fc510c91936003b5758d0c13f5d1a7e60e92be63fb58e95c9d6371
+2,b3->b4,28,58,2,6,22,b3,source_setup,ordinary,"[30, 45]","[30, 45]",[],168,True,True,57062d00f41dd52ce8c471345f025419f79949c21fea8c0f7f52afe30165e39a
+2,b3->b4,28,58,1,18,11,b3,source_setup,ordinary,[38],[38],[],228,True,True,0a3b7127b8a4418a6191252abbc013206a2f4582ce4b43b955fcd0230ab62542
+2,b3->b4,28,58,1,18,11,b3,source_setup,ordinary,[30],[30],[],196,True,True,83c5847afa425e15bd99ba16e4e1d290cbea8ba0968ab8f4be841264dd1b1cdc
+2,b3->b4,28,58,1,18,11,b3,source_setup,ordinary,[39],[39],[],232,True,True,6bfb86131d7fb860a6101186c315125665cf70113e7c0ce4b570736bd3ab7ced
+2,b3->b4,28,58,1,18,11,b3,source_setup,ordinary,[45],[45],[],256,True,True,061358c2aad368c25045eb825c5a8676ee34a3eb66335bd37ec349d9ec05125a
+2,b3->b4,28,58,1,18,11,b3,source_setup,ordinary,[29],[29],[],192,True,True,f937f762e3fc39b950117d1cefe05fe423505a82d7286aa021a713b225b6d25c
+2,b3->b4,28,58,1,18,11,b3,source_setup,ordinary,[42],[42],[],244,True,True,ebd8b8fd2fa5fdac10bff19f297509e8a1d813a9b15df2adf34d451c35afdf6d
+2,b3->b4,28,58,1,18,11,b3,source_setup,ordinary,[37],[37],[],224,True,True,2917e3e7f3524339cf4dcac01774df5bf6ab1f0e7c7b7973be356c8ebe8e5b88
+2,b3->b4,28,58,1,18,11,b3,source_setup,ordinary,[34],[34],[],212,True,True,a398a2e3771507136a2c7a955cf8134241c6e8d5a3070371d837c29c32c722bb
+2,b3->b4,28,58,1,18,11,b3,source_setup,ordinary,[36],[36],[],220,True,True,1f8aaf490c277921f88f5f328d2d010851b77993c05947fe4fc2718a1ee7b4a4
+2,b3->b4,28,58,1,18,11,b3,source_setup,ordinary,[41],[41],[],240,True,True,6044339868a0a0afe07fa755b2bbc3d5fdd030d76c942e7fb991e2cb016a824b
+2,b3->b4,28,58,1,18,11,b3,source_setup,ordinary,[32],[32],[],204,True,True,0c1e53dd5c79142fa14ca1819dc28fcafc98b70e3a8df0eb8fbd0810f17d50b1
+2,b3->b4,28,58,1,18,11,b3,source_setup,ordinary,[35],[35],[],216,True,True,f9e99213e5c21ae1e3100aa2470a7844d4fc73639c95befed2e2e54ad0a024c4
+2,b3->b4,28,58,1,18,11,b3,source_setup,ordinary,[33],[33],[],208,True,True,cca99c249883a28539c39c47bf313ea9bf4f25781bcfc4c1cff99478422dd076
+2,b3->b4,28,58,1,18,11,b3,source_setup,ordinary,[31],[31],[],200,True,True,59d93bc310bb7b8496d14df948c49ddb6e0c2ecc5ce3ba0117fe04c7a2cba3b1
+2,b3->b4,28,58,1,18,11,b3,source_setup,ordinary,[40],[40],[],236,True,True,89b91b9563050f137ea933908448720e30ed17a751b451b27290d5cbdb4d996c
+2,b3->b4,28,58,1,18,11,b3,source_setup,ordinary,[43],[43],[],248,True,True,cc000cfc9f62175868c8fe3dcae8058d97a459fc4582acce2f0c9697314670fa
+2,b3->b4,28,58,0,30,0,b3,source_run_hold,ordinary,[],[],[],228,True,True,0bd2ec3198b2c2b6e741446064a82474fc48c34d5a1c46b48755551dceaac54b
+3,b4->b5,40,52,1,0,11,b4,source_setup,ordinary,[40],[40],[],140,True,True,147bfd205587ba14e91b818d9fdd56a0b2719949491f36c1041e09115c66049e
+3,b4->b5,40,41,0,1,0,b4,source_run_hold,ordinary,[],[],[],140,True,True,ed6c7a21539530d76e06dd8c782df5b497cd2235f56b37d1ee7ab0a90cda9b66
+3,b4->b5,40,53,1,1,11,b4,source_setup,ordinary,[41],[41],[],144,True,True,79b3c53f113fb243cc006c6852253712298926f18a90c451f3393271ddf36b49
+3,b4->b5,40,42,0,2,0,b4,source_run_hold,ordinary,[],[],[],144,True,True,78ff9a3f8cae1da9803827b5f495cf0dbd5ef7bf9aab73ca251f98170193f819
+3,b4->b5,40,54,1,2,11,b4,source_setup,ordinary,[42],[42],[],148,True,True,ffc5aa82c6be2ed24632c211d864873fd15f3a7c1b3f9fc34124f3024425d8e3
+3,b4->b5,40,57,1,2,14,b5,direct_arrival,ordinary,[42],[],[42],148,True,True,51e9164b5412e0e50b480b3ec335db38a5f3ebca0ed01b5116f6c849ff089e45
+3,b4->b5,40,43,0,3,0,b4,source_run_hold,ordinary,[],[],[],148,True,True,9b286fa95a1a48a2e6755d5dc9c84d70c3e2d147fa22b0f2a0e5e08f2fda60d0
+3,b4->b5,40,55,1,3,11,b4,source_setup,ordinary,[43],[43],[],152,True,True,66b9bb15af44f2e1650ce6ef69f46079f8bcd83aec28e4d161ff30a0b934f70c
+3,b4->b5,40,58,1,3,14,b5,direct_arrival,ordinary,[43],[],[43],152,True,True,bcc1dc2564dfccf1aaf378a5a9e3f4de58da26941acd87fd1eafe2393c8db142
+3,b4->b5,40,44,0,4,0,b4,source_run_hold,ordinary,[],[],[],152,True,True,2b2122384fce5560f3d3088a9d1ca4153683230cc45985d51249218bc7f578d7
+3,b4->b5,40,56,1,4,11,b4,source_setup,ordinary,[44],[44],[],156,True,True,9788615896743947c3db41742b7f0ff9c717fa31cf20a345169cc39688f5ecc2
+3,b4->b5,40,45,0,5,0,b4,source_run_hold,ordinary,[],[],[],156,True,True,b1494d16f85096b6bc3919d55c90734d8c46902f8cef3f779770d500d5d62154
+3,b4->b5,40,57,1,5,11,b4,source_setup,ordinary,[45],[45],[],160,True,True,c86142da6dc8adb561c7cebfc1ec99f99cf69f25c7d85c70da51dce3579b2c78
+3,b4->b5,40,46,0,6,0,b4,source_run_hold,ordinary,[],[],[],160,True,True,08acefe81dbb18b9931a1cbe704df66498dcd81e10d135a1012adb18bbd6063c
+3,b4->b5,40,58,1,6,11,b4,source_setup,ordinary,[46],[46],[],164,True,True,c1bad18ad9a0ba9e7f6a7a3267773f7301b5b3c57d30389c28aa319096938613
+3,b4->b5,40,47,0,7,0,b4,source_run_hold,ordinary,[],[],[],164,True,True,0bca0e4456524ad26b4cb09e6ca420010a1f89cc95024901cf555a59786f30cc
+3,b4->b5,40,59,1,7,11,b4,source_setup,ordinary,[47],[47],[],168,True,True,3fdfedd80c582355dd308293f0c330cfb299caa467699a60904dfe1b749e7ee3
+3,b4->b5,40,48,0,8,0,b4,source_run_hold,ordinary,[],[],[],168,True,True,690d7ec33987924e0ad085639db73f5c3c607d12536fffd3b6ac1c87a0252a8e
+3,b4->b5,40,60,1,8,11,b4,source_setup,ordinary,[48],[48],[],172,True,True,c7474868189f17fdabbcde2af974a583d711f9d3570bd1d8d929bcd922694b33
+3,b4->b5,40,49,0,9,0,b4,source_run_hold,ordinary,[],[],[],172,True,True,7f259d7c186946671df088be0fbd2e07addb2cf19b670bcb9374c4f00ad0e663
+3,b4->b5,40,61,1,9,11,b4,source_setup,ordinary,[49],[49],[],176,True,True,f087ebc3f478d0ff8d3101d347540dee109a955fa71971e15c12cb14a4794d34
+3,b4->b5,40,50,0,10,0,b4,source_run_hold,ordinary,[],[],[],176,True,True,3ee6463198dcb0c7abb413fe2b2744519eedd2cf418f16de7dbc72b847a7430e
+3,b4->b5,40,62,1,10,11,b4,source_setup,ordinary,[50],[50],[],180,True,True,c38cb7bae1d9babf3d4355bc1b534f019bc5f1d51d9d648cd08ca2216616fedd
+3,b4->b5,40,51,0,11,0,b4,source_run_hold,ordinary,[],[],[],180,True,True,1bb989d7be9750af8cca55e7a1a052c9ae1c2cc05bed5088b4b4a512024afaa5
+3,b4->b5,40,52,0,12,0,b4,source_run_hold,ordinary,[],[],[],184,True,True,b7a4676f30ff1f543b7deb90eac90db4416d5c374da0b89dc740eec379eceafb
+3,b4->b5,40,67,2,0,25,b5,arrival_with_setup,ordinary,"[40, 52]",[40],[52],148,True,True,3025cc5768011d583db4c1d7b26d7e9521a8a642f17a967577c49995fb6168d1
+3,b4->b5,40,53,1,1,11,b4,source_setup,ordinary,[40],[40],[],148,True,True,247b1f61eaa3d8e21697a911b56eb03c0a3a283f5eee8f2427d02cc55513b85f
+3,b4->b5,40,53,0,13,0,b4,source_run_hold,ordinary,[],[],[],188,True,True,7ab00861962ce2e2054ceace9407b5238c060bf7f7a5a44fd38a93b84495d384
+3,b4->b5,40,54,1,2,11,b4,source_setup,ordinary,[41],[41],[],156,True,True,4cece8ac5dece9b43c21ef6ae84feed9ca279a42d8b11cf8676fd8e97af0de5b
+3,b4->b5,40,54,1,2,11,b4,source_setup,ordinary,[40],[40],[],152,True,True,6e05475f3d698719e4960ae5edb397ddfc951cd22b1a066e08c57b3d0df327aa
+3,b4->b5,40,54,0,14,0,b4,source_run_hold,ordinary,[],[],[],192,True,True,246d78a5a1fcf812664495f01ceb7513a545fed47941efcb07322c1a57cca279
+3,b4->b5,40,55,1,3,11,b4,source_setup,ordinary,[40],[40],[],156,True,True,264d1f04d1657e8a6bceb2554efb10b8dc1816cd6f0bebbca21617ec648fa98a
+3,b4->b5,40,55,1,3,11,b4,source_setup,ordinary,[42],[42],[],164,True,True,fc6076ff1d4910e32993e97043cfc3611384d9b0a8a515c43a44d37602666d75
+3,b4->b5,40,55,1,3,11,b4,source_setup,ordinary,[41],[41],[],160,True,True,10adb0ce4b1016a22857224ccc1cc9bfef63fad45ffb1de6b2dc67d773bef93d
+3,b4->b5,40,55,0,15,0,b4,source_run_hold,ordinary,[],[],[],196,True,True,ea899454abf2121f8519e9cd702a9d3401f86986ab4ddb20f1664f41e5fd47d8
+3,b4->b5,40,56,1,4,11,b4,source_setup,ordinary,[43],[43],[],172,True,True,6cdb039103061a2cc57ce2421bdf32ba0efee4ac893bb0f3fb0bb5251980f87f
+3,b4->b5,40,56,1,4,11,b4,source_setup,ordinary,[42],[42],[],168,True,True,75d9f846c79c66fd0020a9a7d3172af1ed0395b7a5ddc5e3c27b4f1ef224272c
+3,b4->b5,40,56,1,4,11,b4,source_setup,ordinary,[40],[40],[],160,True,True,313563e2488d5fb3fa4ceb3bde345f0dc4e05f61ff4b470a3371459723c9f8aa
+3,b4->b5,40,56,1,4,11,b4,source_setup,ordinary,[41],[41],[],164,True,True,40f75786ca723c13e27a593641dabf846a4fe6663fb8e60f11048d15b27e273c
+3,b4->b5,40,56,0,16,0,b4,source_run_hold,ordinary,[],[],[],200,True,True,ebb481734220719d2099175c2aef41b7e33efd4d0994a130259188fdc4240478
+3,b4->b5,40,57,1,5,11,b4,source_setup,ordinary,[40],[40],[],164,True,True,aaf2178c29b499e3b1803744d355dca5e92b668bb1787067a010062c60adcec2
+3,b4->b5,40,57,1,5,11,b4,source_setup,ordinary,[41],[41],[],168,True,True,b8a4cfc8c482a1a0cac3a3bff32822e4b57a597fd2fdba685ef001feae0705a0
+3,b4->b5,40,57,1,5,11,b4,source_setup,ordinary,[44],[44],[],180,True,True,fb8741c131b477977ce214e2ede4162121335be73ebf38f8b942bb6759598122
+3,b4->b5,40,57,1,5,11,b4,source_setup,ordinary,[43],[43],[],176,True,True,ff225c0ab6fb09153b1d679733d7ca685c17eca598e13dda7c29e6b33a79fd7b
+3,b4->b5,40,57,1,5,11,b4,source_setup,ordinary,[42],[42],[],172,True,True,a6f07048cdf82522316eca811114f410db32f37369b47754df26a41997268258
+3,b4->b5,40,57,0,17,0,b4,source_run_hold,ordinary,[],[],[],204,True,True,83a8596383e63879f13361618b2e1e8d8f47f3fb5974e6084f7af275ddf9c291
+3,b4->b5,40,58,1,6,11,b4,source_setup,ordinary,[41],[41],[],172,True,True,878dc71726bb43eadee7d52e7f96fc05f18a149560077e4a1f74364278355938
+3,b4->b5,40,58,1,6,11,b4,source_setup,ordinary,[42],[42],[],176,True,True,8a58702b22c348cc12a7de4811a900c86e37ca5b8308677e8181c5050cd7731f
+3,b4->b5,40,58,1,6,11,b4,source_setup,ordinary,[43],[43],[],180,True,True,8c203f24cf36882388b09f1c0810baaf86293d9c30ff95dfbf1e7c73b3870846
+3,b4->b5,40,58,1,6,11,b4,source_setup,ordinary,[45],[45],[],188,True,True,2205dc76d2a2be37c3ce6230aaf842f67d60f65f3a7256656b281d3e2477cf8e
+3,b4->b5,40,58,1,6,11,b4,source_setup,ordinary,[40],[40],[],168,True,True,5ab4918f63b1299b8cb81abb008285fca271dabc55e54b856076753d4ef2f24a
+3,b4->b5,40,58,1,6,11,b4,source_setup,ordinary,[44],[44],[],184,True,True,3587cd52703865c1de07c5d52e86068c3262a34a14201d57ac0e13d4314be39d
+3,b4->b5,40,58,0,18,0,b4,source_run_hold,ordinary,[],[],[],208,True,True,eaf513ac6b98bd28ff50c18bb4c5b84b4422474ca469ae83042e432b390c45b7
+3,b4->b5,40,59,1,7,11,b4,source_setup,ordinary,[41],[41],[],176,True,True,f7322c73b01e7b0e344f513b1c3d8b7a46b69dd9902437a6ecf10fea5cf42489
+3,b4->b5,40,59,1,7,11,b4,source_setup,ordinary,[42],[42],[],180,True,True,e322998133d106ea84b6dc9034d881ba6415b2addda0176c91f47ce77882eb1b
+3,b4->b5,40,59,1,7,11,b4,source_setup,ordinary,[46],[46],[],196,True,True,2aca479d1c2ab3bdf97de980cc4398e6697e62c34d1abc548cba61a30142ab42
+3,b4->b5,40,59,1,7,11,b4,source_setup,ordinary,[40],[40],[],172,True,True,b32f49f6d7c26a05bdc47c4d26b7662667b842e7ab161bf928b89b06158a0409
+3,b4->b5,40,59,1,7,11,b4,source_setup,ordinary,[45],[45],[],192,True,True,379c67fcca0d873adf6557a1eb4905e37d23fd988a0bf5a97f3103058ec3193d
+3,b4->b5,40,59,1,7,11,b4,source_setup,ordinary,[44],[44],[],188,True,True,ff56d8981ca6a99a6eb237b35361c6b17206cccbbe33fc8cf365cac2567ab89c
+3,b4->b5,40,59,1,7,11,b4,source_setup,ordinary,[43],[43],[],184,True,True,2e04832fda51bccaeb896f6bb5bb5ebf98b4fbe9a4f5017fea8bcc8e11e522d0
+3,b4->b5,40,59,0,19,0,b4,source_run_hold,ordinary,[],[],[],212,True,True,af1ab36607c931bb7bc33fb48ecdbb10b5fa244e7e5ff8d402dd7c1718a29135
+3,b4->b5,40,60,1,8,11,b4,source_setup,ordinary,[40],[40],[],176,True,True,d6dbf9967c4b958ae6e286a69306892dcca4ee57ad4e2d6d60ab7add1f134ede
+3,b4->b5,40,60,1,8,11,b4,source_setup,ordinary,[42],[42],[],184,True,True,3988222ac00c6d0a35b64de70d00a13bbf40ece986e6992d829766d7d8ef952a
+3,b4->b5,40,60,1,8,11,b4,source_setup,ordinary,[41],[41],[],180,True,True,4ac4dfd672ddc1b46cb6529f795ec65a1960cd770a70e28e381655fdfb9b0be4
+3,b4->b5,40,60,1,8,11,b4,source_setup,ordinary,[46],[46],[],200,True,True,efe63d6b251410ebf4425529726bf85c4e024e8f1c7bf8aa39f766cf8f2392e0
+3,b4->b5,40,60,1,8,11,b4,source_setup,ordinary,[43],[43],[],188,True,True,93a4a0dc15e142a71159ea6b8a2c58f179b5588d8a8f1c96b7b18b497c99bf7d
+3,b4->b5,40,60,1,8,11,b4,source_setup,ordinary,[44],[44],[],192,True,True,cf24bc118d4ebcd44a37f8ce59c39e9a5d5454b8c8db74bf7674c4425d17c859
+3,b4->b5,40,60,1,8,11,b4,source_setup,ordinary,[47],[47],[],204,True,True,2331759963662996719d25550667f4dda41cc06273c9b21da5a3f3ddf5b3a9df
+3,b4->b5,40,60,1,8,11,b4,source_setup,ordinary,[45],[45],[],196,True,True,c01aa7c8cae9aef0b0ae9cd53cf88eb90ff29a171ca61bedd287962837e105d0
+3,b4->b5,40,60,0,20,0,b4,source_run_hold,ordinary,[],[],[],216,True,True,51919b4a78beb12d9762e5b17647719bfb442aff9c50b46c8673e2e36b507f0e
+3,b4->b5,40,61,1,9,11,b4,source_setup,ordinary,[42],[42],[],188,True,True,d1654c33f700ca38673458212566fce2f3e280f6c856cd6adb173006c89eded2
+3,b4->b5,40,61,1,9,11,b4,source_setup,ordinary,[41],[41],[],184,True,True,b4de6785b4af2e5f6495405f978384d4b27471ad39f2680a67c597e1edc92f28
+3,b4->b5,40,61,1,9,11,b4,source_setup,ordinary,[44],[44],[],196,True,True,5f9d42129adc9950c8c7ac145914b1d3c8015a640c9461030a3e1a37244bd5dd
+3,b4->b5,40,61,1,9,11,b4,source_setup,ordinary,[48],[48],[],212,True,True,edda8d0ed6a70623046366c8d1a201355d71d5d3d43b364ea666adf82c91e710
+3,b4->b5,40,61,1,9,11,b4,source_setup,ordinary,[45],[45],[],200,True,True,44641b37b58f6afd14c652bb0a8d85137938f4b130c941736d8369e7e58d6e5f
+3,b4->b5,40,61,1,9,11,b4,source_setup,ordinary,[40],[40],[],180,True,True,0349744bdffdc1790bf7f3b558b7bde9adeafcc34f6b30711568e6706c5d4c59
+3,b4->b5,40,61,1,9,11,b4,source_setup,ordinary,[46],[46],[],204,True,True,aefe4a6f18d3cc6db09e4951a91993a99b6a5b1db1b353f22f2e9f4797424283
+3,b4->b5,40,61,1,9,11,b4,source_setup,ordinary,[43],[43],[],192,True,True,a76174c55b6db3c2840ffd420eb5db997b6ac6453029fd038a43e21abb9102c0
+3,b4->b5,40,61,1,9,11,b4,source_setup,ordinary,[47],[47],[],208,True,True,e974ad11c33d5772b9b56a73126e9677fc09cc92bfd86f7c4b6542b4faf968b5
+3,b4->b5,40,61,0,21,0,b4,source_run_hold,ordinary,[],[],[],220,True,True,08bc5f9d76c9d23cfbb25a09d8dded9c52cab8dae5241b696fe613f10d57e099
+3,b4->b5,40,62,1,10,11,b4,source_setup,ordinary,[42],[42],[],192,True,True,d22b9b2914a4cac92496086252ea27a492a72ec4cdd3de113cdf9ae1c0b450b1
+3,b4->b5,40,62,1,10,11,b4,source_setup,ordinary,[41],[41],[],188,True,True,d80b23d9f4e5cffbdde5393f2ff3e9c1ec60c6600f52728c0357f03f41e4e7a6
+3,b4->b5,40,62,1,10,11,b4,source_setup,ordinary,[48],[48],[],216,True,True,be242dab0d9e33b80c99b7afd4f93f579c7c959e07b2251b6bc30365358a9e22
+3,b4->b5,40,62,1,10,11,b4,source_setup,ordinary,[44],[44],[],200,True,True,247e8bc54dc4de19cd850a1544fba28ee459e2ea0e83d173012716bdb208fedb
+3,b4->b5,40,62,1,10,11,b4,source_setup,ordinary,[43],[43],[],196,True,True,243f7d56384f6225b35ae4fac91d9ed9b688cee56e7d0fa9791b0a6716577783
+3,b4->b5,40,62,1,10,11,b4,source_setup,ordinary,[45],[45],[],204,True,True,ed4206620097724932270c226ae676cdb8a48e5638b249aaf4bc45778de66dfe
+3,b4->b5,40,62,1,10,11,b4,source_setup,ordinary,[46],[46],[],208,True,True,ff7d9633955b8ca29734d6722b47c9adb4b2a8da284b1dec4a1c8dd2abab8619
+3,b4->b5,40,62,1,10,11,b4,source_setup,ordinary,[47],[47],[],212,True,True,fc52924be0135854cd7baaa2b27dee15ac81801b9d8ab4a13b1c26d776886956
+3,b4->b5,40,62,1,10,11,b4,source_setup,ordinary,[49],[49],[],220,True,True,529b778da028844881a0ea4f0169c35db0056b059146c01a0f350e210ab06c43
+3,b4->b5,40,62,1,10,11,b4,source_setup,ordinary,[40],[40],[],184,True,True,91fa275593e1c45d8acd21b4cd25a81a9c00da305f30eb8fe6e188cc9808a3d5
+3,b4->b5,40,62,0,22,0,b4,source_run_hold,ordinary,[],[],[],224,True,True,361230da92079e494bedaf8f8953c7f445918e715a887a5968b5d3173c0a9445
+4,b5->b7,58,70,1,0,11,b5,source_setup,ordinary,[58],[58],[],183,True,True,2b097464540f8b1fa4ecbfad24a71eb8a1985a41d21700d22e5a29e56bea416a
+4,b5->b7,58,67,1,0,8,b7,direct_arrival,ordinary,[58],[],[58],183,True,True,9a0b1f7ac840c0120c23e9daee206a525fc8c8fb807f3307837255c9b5b28547
+4,b5->b7,58,59,0,1,0,b5,source_run_hold,ordinary,[],[],[],183,True,True,2eb503bb343e496e1f513dfde3846bb5a53bae5cbdfa9d207c93783ada728ac4
+5,b5->b7,58,67,1,0,8,b7,direct_arrival,ordinary,[58],[],[58],184,True,True,576df323b2efee7327bc0708f2660929bfb0bedf58dd1cd78af5ff57543eed7f
+5,b5->b7,58,59,0,1,0,b5,source_run_hold,ordinary,[],[],[],184,True,True,4e09c304a1b52732b9a8659e3df652ae56544290e409352fd16ebd215f0fa621
+9,b4->b5,51,66,1,0,14,b5,direct_arrival,ordinary,[51],[],[51],140,True,True,4739c802855971b946f593c4241b09bfa2d6f0bb36da9b31ef31044267029cd5
+9,b4->b5,51,52,0,1,0,b4,source_run_hold,ordinary,[],[],[],140,True,True,643281405796890534d92f05b301c771e30a2acb2380a5436da9c4578c5d6d4c
+9,b4->b5,51,53,0,2,0,b4,source_run_hold,ordinary,[],[],[],144,True,True,a7ee87b4baef34edbe128820b373759d3f1fe4cae8cf35dafab861c9490da1ab
+9,b4->b5,51,54,0,3,0,b4,source_run_hold,ordinary,[],[],[],148,True,True,7d9864b578f13f6a7ab1cf211c8f54cd87b81679c9be159651d495a7ee8636a4
+9,b4->b5,51,55,0,4,0,b4,source_run_hold,ordinary,[],[],[],152,True,True,cb6dae91cbbd5eac7bdf3dfdcd68507d3011c48b8a88c550941d22d464b776e2
+9,b4->b5,51,56,0,5,0,b4,source_run_hold,ordinary,[],[],[],156,True,True,2c71c4697abb8dcc98abf47ec4ab0dfecbf3a9b9b34c072876c9ba180ce2e1ab
+9,b4->b5,51,57,0,6,0,b4,source_run_hold,ordinary,[],[],[],160,True,True,a9c2d60a5c1c4cb29fa26a155c8ab5a4f766656a4a6ae56b70ddad8a1f5ac198
+9,b4->b5,51,58,0,7,0,b4,source_run_hold,ordinary,[],[],[],164,True,True,24501e336edac40f16d5c1d7b248eabf0c873274c681bc59be0c21913724f7cd
+9,b4->b5,51,59,0,8,0,b4,source_run_hold,ordinary,[],[],[],168,True,True,8968210c40d882c29b290996dacb320d0f3094207a0d78803fb10fa5ac0c488e
+9,b4->b5,51,60,0,9,0,b4,source_run_hold,ordinary,[],[],[],172,True,True,d5eee0cde1edf7b689926409d2cac5404fda59b0fc3cd091f40fb396510ec38c
+9,b4->b5,51,61,0,10,0,b4,source_run_hold,ordinary,[],[],[],176,True,True,163edd7c336da2fd539fefe550d56f8eb8b27afc9369197b5c31874708e9880d
+9,b4->b5,51,62,0,11,0,b4,source_run_hold,ordinary,[],[],[],180,True,True,6ee27dd2e06240f2b340e1282c58d28c24effcb33fbf77d2183c7afa045a17eb
+10,b5->b7,66,67,0,1,0,b5,source_run_hold,ordinary,[],[],[],168,True,True,9322676ffa50038988ba382bc6db4c6f9470561df8c567a9d8c1e652bb184ec7
+11,b5->b7,66,67,0,1,0,b5,source_run_hold,ordinary,[],[],[],169,True,True,30b0736abda34f1d3c20d669d045e83e2481072f69d42fa38809c1d214145a7b
+12,b4->b5,52,67,1,0,14,b5,direct_arrival,ordinary,[52],[],[52],148,True,True,2a17d3839204d5f508275dc06d0aff7958277e15e5f98d277af3b5cc99dce00b
+12,b4->b5,52,53,0,1,0,b4,source_run_hold,ordinary,[],[],[],148,True,True,41ad673b6e6549ee8cc4826c37bab3a7de07133dc87e432f95d54dbe6a2e4137
+12,b4->b5,52,54,0,2,0,b4,source_run_hold,ordinary,[],[],[],152,True,True,ea62d6c7f9ef9ec1c97f6c924f28935a92da22c578d61a66d221d0a812392583
+12,b4->b5,52,55,0,3,0,b4,source_run_hold,ordinary,[],[],[],156,True,True,7d67d8067865dcf40b0c751395ba83f24bd9945a0155ecaa64d773b46bc237ac
+12,b4->b5,52,56,0,4,0,b4,source_run_hold,ordinary,[],[],[],160,True,True,43cd2eb658c44ffb8987c5b032f032603ac46796d040bd7487383409eece5f3d
+12,b4->b5,52,57,0,5,0,b4,source_run_hold,ordinary,[],[],[],164,True,True,d24be95309e1796abc9fc09ffa16828c4e9acbb7dff879655f696605d3388c9f
+12,b4->b5,52,58,0,6,0,b4,source_run_hold,ordinary,[],[],[],168,True,True,a8c2b7ad657e4b3ed5497fcd1538211f59577cfa46c42ce20e26acd91edc4513
+12,b4->b5,52,59,0,7,0,b4,source_run_hold,ordinary,[],[],[],172,True,True,abd7eae89a2cdc505b0797bcd86f5642418e596480913a8e4e2844e3f1be478f
+12,b4->b5,52,60,0,8,0,b4,source_run_hold,ordinary,[],[],[],176,True,True,80b3adb42bd748d8ded738c30d96d333e8e70781afe5fb2a67f4ec307585ef3e
+12,b4->b5,52,61,0,9,0,b4,source_run_hold,ordinary,[],[],[],180,True,True,9b2b4c29db29854bd779a08a24d16323a19b2494d5cb3661168762da020130ea
+12,b4->b5,52,62,0,10,0,b4,source_run_hold,ordinary,[],[],[],184,True,True,73e29ede9ca89c794cc0d97cd9a0325896d420af25782abbc164656480bd9def
+15,b4->b5,53,54,0,1,0,b4,source_run_hold,ordinary,[],[],[],156,True,True,11c106fcc585c01a99a063a4223f08f74f1c5df01d7af769cf7d10e0c477115e
+15,b4->b5,53,55,0,2,0,b4,source_run_hold,ordinary,[],[],[],160,True,True,bfb3ebc86704a364def8a9f78c7fdaeb67b2fffda37a6671b67f3c1fd8a9fdf8
+15,b4->b5,53,56,0,3,0,b4,source_run_hold,ordinary,[],[],[],164,True,True,5ecb8091d879bcc27bff9d7e2cf4fa945edb9a4a8c8b628be8f765ad52d90bcd
+15,b4->b5,53,57,0,4,0,b4,source_run_hold,ordinary,[],[],[],168,True,True,2df91c6c1a0d4bbf181fa31635cae0276f6156718fa9ad497c9a2f1c79e1f106
+15,b4->b5,53,58,0,5,0,b4,source_run_hold,ordinary,[],[],[],172,True,True,2d07f6aef0603a53e776280b2885b39492e73513b6cd3c5793db5bb520134e28
+15,b4->b5,53,59,0,6,0,b4,source_run_hold,ordinary,[],[],[],176,True,True,6417cd2bf9e0a3f209cc7c940a2c18e7f7d8906c7541247f57ef08349186a812
+15,b4->b5,53,60,0,7,0,b4,source_run_hold,ordinary,[],[],[],180,True,True,3762a0bc8d1d751eceab792e57bdf3ac26a6cec8f3ee23691829dfeec86a852e
+15,b4->b5,53,61,0,8,0,b4,source_run_hold,ordinary,[],[],[],184,True,True,d956ebc6bda413e809e435342c465619488a4f13a44db8fa5186e0c6f14ed11b
+15,b4->b5,53,62,0,9,0,b4,source_run_hold,ordinary,[],[],[],188,True,True,665d4c6037a0ed6446339befd932638d77aa1f3c1147b73fad78dc2f307de790
+16,b4->b5,55,56,0,1,0,b4,source_run_hold,ordinary,[],[],[],172,True,True,74b73fde249a723d194b3bcd79df7717e6444d9e45b5dfc8318560bc983cc4b9
+16,b4->b5,55,57,0,2,0,b4,source_run_hold,ordinary,[],[],[],176,True,True,ffab7bae9d32282957dbc053a51bf5c881483fca6c54d3527be1053db0058e8c
+16,b4->b5,55,58,0,3,0,b4,source_run_hold,ordinary,[],[],[],180,True,True,7e85f5995d0d29f74bef66baff05360d8cef6847bf2c0ca1462fa02dc9237fe4
+16,b4->b5,55,59,0,4,0,b4,source_run_hold,ordinary,[],[],[],184,True,True,17fd00086f8fe1a56946b134cb847356e0d1a40405878695fe169c1addbf67d5
+16,b4->b5,55,60,0,5,0,b4,source_run_hold,ordinary,[],[],[],188,True,True,d932357a7fcf3737e1d5d838c4849590c185569b9de8e79fca443158bc564287
+16,b4->b5,55,61,0,6,0,b4,source_run_hold,ordinary,[],[],[],192,True,True,bf9f7895f8b7a473b24948ebe4b5848ac8844ef67bb726f545b0e669a14d9d04
+16,b4->b5,55,62,0,7,0,b4,source_run_hold,ordinary,[],[],[],196,True,True,786e32dc0c87e1e07f0771a4fd8dfdf3e0aba16dc29aa7b47a07ba80c55f6d41
+17,b4->b5,55,56,0,1,0,b4,source_run_hold,ordinary,[],[],[],172,True,True,36a42587bd1d43a7688685ed95d995aba6dc62cb64c9622a28f78293f933bc0f
+17,b4->b5,55,57,0,2,0,b4,source_run_hold,ordinary,[],[],[],176,True,True,25c4ed58ebf5729835d5b814b9b169f39986a4cb99bdbb0a5ea58fa1973b601f
+17,b4->b5,55,58,0,3,0,b4,source_run_hold,ordinary,[],[],[],180,True,True,ec27a8409d1decc24277e6982b0768878ae7cec234f3b88f2a88c191a73d32a9
+17,b4->b5,55,59,0,4,0,b4,source_run_hold,ordinary,[],[],[],184,True,True,75217d026b73e8350960cbb89657250c61e1299d02def3ea86f8bc80be26aec2
+17,b4->b5,55,60,0,5,0,b4,source_run_hold,ordinary,[],[],[],188,True,True,cba7363a3cd70e934fa62c2b89ae026c0c1328085f298047ec6056381b4f91bd
+17,b4->b5,55,61,0,6,0,b4,source_run_hold,ordinary,[],[],[],192,True,True,5f3696b8b7bdf1a80e0b0e1cd3100285b1a7d1d03fe0dda3addb7c3a50bd5c3f
+17,b4->b5,55,62,0,7,0,b4,source_run_hold,ordinary,[],[],[],196,True,True,7dcc40d5596d062cc0c9d3072d8a2141dd1fcf34f5134a5096bf93ab04af403a
+18,b4->b5,56,57,0,1,0,b4,source_run_hold,ordinary,[],[],[],180,True,True,9993d1e3ec7d7dc85b26fcd8647a3286b73e1c8a9369dc7ff518810ea947395c
+18,b4->b5,56,58,0,2,0,b4,source_run_hold,ordinary,[],[],[],184,True,True,d71ab5814a64a98bf9f36b9c0d40da636e9123a80c3e3dbef81a987b3f2a10e1
+18,b4->b5,56,59,0,3,0,b4,source_run_hold,ordinary,[],[],[],188,True,True,c188f9fc2c571603b806cc7b93cccd5d8e854ee1af9487b5fcdfb2d24096d0fd
+18,b4->b5,56,60,0,4,0,b4,source_run_hold,ordinary,[],[],[],192,True,True,867922ee21cce9a0030627792a785a12567ad4df684b3b00fb654494d29a3e4f
+18,b4->b5,56,61,0,5,0,b4,source_run_hold,ordinary,[],[],[],196,True,True,de8c324e97181eb0513f526228758ef202d0f4dfc36bc9c5168ee8a8d3a9257f
+18,b4->b5,56,62,0,6,0,b4,source_run_hold,ordinary,[],[],[],200,True,True,5d383f705101faa7aeefbae271091bec72bac69fc05b5b12ee50312b99a425de
+19,b4->b5,57,58,0,1,0,b4,source_run_hold,ordinary,[],[],[],188,True,True,5981499e2315977da7e6e61a7ca8537fca26f4ad61017aae0b9c9758d7a63dff
+19,b4->b5,57,59,0,2,0,b4,source_run_hold,ordinary,[],[],[],192,True,True,e45a4c0abf9defa64cdad069ea541a926acb64fe8ddfffd0258daaf692b9fdbe
+19,b4->b5,57,60,0,3,0,b4,source_run_hold,ordinary,[],[],[],196,True,True,23805d2ee8909f8da0579417b916837d60f2efeed3bb22476b65c9ab89333ebf
+19,b4->b5,57,61,0,4,0,b4,source_run_hold,ordinary,[],[],[],200,True,True,5f734d9c5d939aa5e84491351819870c5c6227fe9e1b99361b137d18a98dcb6d
+19,b4->b5,57,62,0,5,0,b4,source_run_hold,ordinary,[],[],[],204,True,True,24df9168de1fdf91bfa53fe74b9b64dfd8ef7a68fc830548020949a70d3a3f56
+20,b4->b5,58,59,0,1,0,b4,source_run_hold,ordinary,[],[],[],196,True,True,0428226997ad544f6bf132a5ec7c8a575f985c961ce671de18a6a321487b5548
+20,b4->b5,58,60,0,2,0,b4,source_run_hold,ordinary,[],[],[],200,True,True,6fd6fb6e7d4e2c9d3931bea6bcafe56f10f719d6ddfb85f76f4453e8e4d0be80
+20,b4->b5,58,61,0,3,0,b4,source_run_hold,ordinary,[],[],[],204,True,True,2043be1d916c8eeb3fdd72343bc24fad7340fcf1913873b0e70677d19b7815dd
+20,b4->b5,58,62,0,4,0,b4,source_run_hold,ordinary,[],[],[],208,True,True,5bee35f2f8496b81a0f3958dd0fe05ae471718811eeeee01085b3c4eb6079938
+21,b4->b5,59,60,0,1,0,b4,source_run_hold,ordinary,[],[],[],204,True,True,1a2807ba3de7ab50e2b3f4f471d3740e98cefd73c00dfbd5e89f46268773b8bb
+21,b4->b5,59,61,0,2,0,b4,source_run_hold,ordinary,[],[],[],208,True,True,9867d927a56afe13bc77bd0e9e367baac2bc6ce0caf00576d3a9015cf3497e14
+21,b4->b5,59,62,0,3,0,b4,source_run_hold,ordinary,[],[],[],212,True,True,6490b72fab3648b078d93263f818fec4f42aad6d8a19e9383848433c0b7f43f3
+22,b4->b5,60,61,0,1,0,b4,source_run_hold,ordinary,[],[],[],212,True,True,5b72187314bba4de8f1fb8200f08972078e9d43ccb979a3cff4e728ed7d596d5
+22,b4->b5,60,62,0,2,0,b4,source_run_hold,ordinary,[],[],[],216,True,True,a74864e0aa9bc90f54d17ce844e9bdd47c4aade882868dd3e68b6c278ebf4d05
+23,b4->b5,61,62,0,1,0,b4,source_run_hold,ordinary,[],[],[],220,True,True,e5ad970b8005c10dc4af1adb4a6554d5a981c8aac07679545611b51dd440b6ef
+25,b3->b4,38,50,1,0,11,b3,source_setup,ordinary,[38],[38],[],104,True,True,20e07ef3c3602ef19e39253a791681cd2fda9edc37654b03da666bbd666efe80
+25,b3->b4,38,48,1,0,9,b4,direct_arrival,ordinary,[38],[],[38],104,True,True,6878f11c2834d532c53106372c87734bd7bc28a7f7933d3285816f68f34ea30e
+25,b3->b4,38,39,0,1,0,b3,source_run_hold,ordinary,[],[],[],104,True,True,f9928f505ab59731cd32486697cc8762f4c557845bdbf5157af1f922dcc8aa2c
+25,b3->b4,38,51,1,1,11,b3,source_setup,ordinary,[39],[39],[],108,True,True,91b3b2ac7fa7392e42e767210dd17ab164e5c0b9e8cee90197a0cbb03ddce5fb
+25,b3->b4,38,40,0,2,0,b3,source_run_hold,ordinary,[],[],[],108,True,True,536287f4d7bf8c72c0c18f55156342418f40fb630a404a8e8d0ec43408310879
+25,b3->b4,38,52,1,2,11,b3,source_setup,ordinary,[40],[40],[],112,True,True,5a8d29ec88ab614244ece68665c96739bbb714c91706654811e2caf3cc51b169
+25,b3->b4,38,41,0,3,0,b3,source_run_hold,ordinary,[],[],[],112,True,True,feb79d6820ff10de668afc49c6197c3b07d22410f10e821eb4bab66b272c0075
+25,b3->b4,38,53,1,3,11,b3,source_setup,ordinary,[41],[41],[],116,True,True,234ca2900d122ca217d1f6611fb14eb2e8d42c7e18d9f847de90ff44bbeb7522
+25,b3->b4,38,42,0,4,0,b3,source_run_hold,ordinary,[],[],[],116,True,True,f68188a1c91fc97c9790a22d15e4f7b62c7e75138c7d59e14ed5d389249e8251
+25,b3->b4,38,54,1,4,11,b3,source_setup,ordinary,[42],[42],[],120,True,True,8e26ca9c3f52c67d24f0004159916de2b0cc85120d89634a68dece96fc45baeb
+25,b3->b4,38,43,0,5,0,b3,source_run_hold,ordinary,[],[],[],120,True,True,d4a80a3d19cd66494a35c054b66fbd33b86a7b1a343bf72d243cb9305cee0b05
+25,b3->b4,38,55,1,5,11,b3,source_setup,ordinary,[43],[43],[],124,True,True,45a0b3716a6797aa583dca061adb9de5a33fb6beb8f414c11099103a123a051e
+25,b3->b4,38,44,0,6,0,b3,source_run_hold,ordinary,[],[],[],124,True,True,7a54fb54ca98ea7e45d83f1e37a009d0c0a526f3f7e07cc5ab779c2cdd505d48
+25,b3->b4,38,56,1,6,11,b3,source_setup,ordinary,[44],[44],[],128,True,True,f83b0ae49b8153ee498c452908f1536b7554dd2bb4fc8b7e4a69c04dd286c910
+25,b3->b4,38,45,0,7,0,b3,source_run_hold,ordinary,[],[],[],128,True,True,9412f754782f3d3475593849463d1a5d9ad7ca8ef5b5826bfe27bd2ae34c7d4a
+25,b3->b4,38,57,1,7,11,b3,source_setup,ordinary,[45],[45],[],132,True,True,20dafffdcf39a37c74c2e7e5004f476eaa8552aaadb16073f8a60f1aec13e46e
+25,b3->b4,38,46,0,8,0,b3,source_run_hold,ordinary,[],[],[],132,True,True,eb1660909a37a417eefca3b1bada1818cec525bb9d88cefd1a21e097ee0f2b13
+25,b3->b4,38,58,1,8,11,b3,source_setup,ordinary,[46],[46],[],136,True,True,e2af1becf55e94a73e9cf29233d3e9397a7a3d827619345d1ecb671bc831debd
+25,b3->b4,38,47,0,9,0,b3,source_run_hold,ordinary,[],[],[],136,True,True,cbcbf5888ecd34a2461e91644bd7f99005f89408cd6e093b378391f6d04e6eb1
+25,b3->b4,38,48,0,10,0,b3,source_run_hold,ordinary,[],[],[],140,True,True,900e20a1958502ac60959b439334d3e7e46ba7870affa8179a2eecb14d2e4f0e
+25,b3->b4,38,49,0,11,0,b3,source_run_hold,ordinary,[],[],[],144,True,True,89858c311bd9248f8eb1d9544aa96d8870d479ed0a5ed1e5ecd58b35c94491de
+25,b3->b4,38,50,0,12,0,b3,source_run_hold,ordinary,[],[],[],148,True,True,bbe80325c9cb70f21f2234f633c721a21319a2fd6d34f8ec1ca9d46c048f7514
+25,b3->b4,38,60,2,0,20,b4,arrival_with_setup,ordinary,"[38, 50]",[38],[50],112,True,True,9b33ada8b6e79984566b5abfed70c7f6e3f6fb9fceaae26a7b3225bc60541070
+25,b3->b4,38,51,1,1,11,b3,source_setup,ordinary,[38],[38],[],112,True,True,8d59db52580e81d88a10410d583553e9449f3ab6403b631d765fbd658926ad03
+25,b3->b4,38,51,0,13,0,b3,source_run_hold,ordinary,[],[],[],152,True,True,2718124fd0bdf52d82f2de554659c6dbdeb0e594a51eeb4771a3cfe0ef9333a1
+25,b3->b4,38,61,2,1,20,b4,arrival_with_setup,ordinary,"[39, 51]",[39],[51],120,True,True,d3cf8a2b1606d5623e74e19c3ee9b7bed201e41f40da4ab7d822958d6f7dfde0
+25,b3->b4,38,52,1,2,11,b3,source_setup,ordinary,[39],[39],[],120,True,True,6c17a371934042e4f740b6ec8bed0790e430fa2b9b33708f35334c9995d67349
+25,b3->b4,38,52,1,2,11,b3,source_setup,ordinary,[38],[38],[],116,True,True,c375b37f125874aa0aa1fec5b3b956b8b882e2de1e40931827170565ca2477a3
+25,b3->b4,38,52,0,14,0,b3,source_run_hold,ordinary,[],[],[],156,True,True,c61c6761f59e560d8cd956651f30bccbc56f7dfca1463ba794269790d5633800
+25,b3->b4,38,53,1,3,11,b3,source_setup,ordinary,[39],[39],[],124,True,True,6e0c3503ef7018e2b11652b718272a1be1f3ac2a9c0e3b5135b75070ce2a064b
+25,b3->b4,38,62,2,2,20,b4,arrival_with_setup,ordinary,"[40, 52]",[40],[52],128,True,True,23239d9d128ff468ed2c577ca766fa0cb9872dcd251bbcbc8b7923dff6a4b972
+25,b3->b4,38,53,1,3,11,b3,source_setup,ordinary,[40],[40],[],128,True,True,8853905d1bc5eb87e061dd2093a26a724bf1fd4ed0bfae156625fffb1c5ae934
+25,b3->b4,38,53,1,3,11,b3,source_setup,ordinary,[38],[38],[],120,True,True,e7586408dedf75acf1f5bcd0a80156c4aa98249ce3cb38573f1872eb5606e696
+25,b3->b4,38,53,0,15,0,b3,source_run_hold,ordinary,[],[],[],160,True,True,32d5e14804754d868a3160dc8c6535ebd8e1d6a175dd2921367b8082258c9cd2
+25,b3->b4,38,54,1,4,11,b3,source_setup,ordinary,[40],[40],[],132,True,True,703d9771d92912c24fdb213a8e039a8861da6d807782894d2b50723235e2de66
+25,b3->b4,38,54,1,4,11,b3,source_setup,ordinary,[38],[38],[],124,True,True,d47d846ab311c96cdb616d8cca771f88aecc7cf6fd863170ea29129c89d076f9
+25,b3->b4,38,54,1,4,11,b3,source_setup,ordinary,[41],[41],[],136,True,True,d7b08312f021a919328328773982ede1007341bb9129a396a2008e2791b41285
+25,b3->b4,38,54,1,4,11,b3,source_setup,ordinary,[39],[39],[],128,True,True,82fb6453a4ea8310107b480394b7c9da77bc5a46a29479502b2282eb4c021465
+25,b3->b4,38,54,0,16,0,b3,source_run_hold,ordinary,[],[],[],164,True,True,3ef7a20820a161eee2ef0eb9b0fdeb279e177520a73f574a52f17179c215b43e
+25,b3->b4,38,55,1,5,11,b3,source_setup,ordinary,[38],[38],[],128,True,True,3ae5c6a756f6c6c0ba291bf9f115a9b73ef3e3bcc67b633c5ecb1a691664ab27
+25,b3->b4,38,55,1,5,11,b3,source_setup,ordinary,[42],[42],[],144,True,True,c7c97dc81bdaf9b2f6839ce66004faadef49b45cebf5deb4f6564172ff1b26a9
+25,b3->b4,38,55,1,5,11,b3,source_setup,ordinary,[41],[41],[],140,True,True,e76c60d6711bc039e25451ffdece286d3b2b2e58ebe2b744095b8f14f48245fd
+25,b3->b4,38,55,1,5,11,b3,source_setup,ordinary,[40],[40],[],136,True,True,8fa872f3914e45aaf0b51923cf294e394ec312e8585dffec12b375edfcb5cd55
+25,b3->b4,38,55,1,5,11,b3,source_setup,ordinary,[39],[39],[],132,True,True,bbf9c818c47b52064f7b2a9083aed8c9915454416af4cb0e0668f34056a30de4
+25,b3->b4,38,55,0,17,0,b3,source_run_hold,ordinary,[],[],[],168,True,True,bda4f3b9602651e463d68e5d7aa4cd3d970f6b3b833aabe720b03c849c07e0ea
+25,b3->b4,38,56,1,6,11,b3,source_setup,ordinary,[40],[40],[],140,True,True,926923c4d78587e44964d45be8b522a5ab38174634aac17456bf6f12c60a4f22
+25,b3->b4,38,56,1,6,11,b3,source_setup,ordinary,[43],[43],[],152,True,True,925844f0a6df48a63132d8e1997b22ee8b042192d686d0a4b02616fdcfd1e6f0
+25,b3->b4,38,56,1,6,11,b3,source_setup,ordinary,[39],[39],[],136,True,True,05b955fada6b845b1d27fb641175deca0f89d6633670c66e000e1d819c6347f1
+25,b3->b4,38,56,1,6,11,b3,source_setup,ordinary,[38],[38],[],132,True,True,b968d3bad4641c2631251ee5af999bb35ad8af8b3cf620641bc72de70caedf74
+25,b3->b4,38,56,1,6,11,b3,source_setup,ordinary,[42],[42],[],148,True,True,24742e2db83ff379f9d87c66a85f1b79fefb906f18749802f21316b4a397ecc6
+25,b3->b4,38,56,1,6,11,b3,source_setup,ordinary,[41],[41],[],144,True,True,eb539f1ba5bb6e5baf81b75122a5c6c57a0ccc66831956bfa9b6db87858ccc90
+25,b3->b4,38,56,0,18,0,b3,source_run_hold,ordinary,[],[],[],172,True,True,f7c9ae3b5c79e5f91ff9c1a8e87eb75659a971edfbbb2c9228f95e645b225621
+25,b3->b4,38,57,1,7,11,b3,source_setup,ordinary,[41],[41],[],148,True,True,cf125a977289b8cd6e9564cbea0d028d56edebe74677e4d24455d30986e4e752
+25,b3->b4,38,57,1,7,11,b3,source_setup,ordinary,[44],[44],[],160,True,True,07950721c7f04eeae752cf7186cf9887f99f2584e5c7e866e27cdee6dd813041
+25,b3->b4,38,57,1,7,11,b3,source_setup,ordinary,[39],[39],[],140,True,True,091098825f54f23c074c817f72f48abef3cdc7cda468fe47c04a044014c1b9ef
+25,b3->b4,38,57,1,7,11,b3,source_setup,ordinary,[40],[40],[],144,True,True,7c0d29ce0776aafa73c74038fd2043d22c9e0c1398dcb073c2c4d719d3561111
+25,b3->b4,38,57,1,7,11,b3,source_setup,ordinary,[38],[38],[],136,True,True,cc3560616ed3fcd50493bd64bf737aeda3d6184cb8e7300b47357dd64d6121da
+25,b3->b4,38,57,1,7,11,b3,source_setup,ordinary,[42],[42],[],152,True,True,68a51675b8f5b7f7b7be405fcfc76a31f448cc4e4140309ea126e305faf94d0e
+25,b3->b4,38,57,1,7,11,b3,source_setup,ordinary,[43],[43],[],156,True,True,b13e4cf345f0fc027d83b0487e9a0aeecb385f3f6bc679d67e482060dc34cbd7
+25,b3->b4,38,57,0,19,0,b3,source_run_hold,ordinary,[],[],[],176,True,True,83c7fdcb12a9c767eea38e061cae21a02b50f369420ec225b1e3d63e0acd4911
+25,b3->b4,38,58,1,8,11,b3,source_setup,ordinary,[43],[43],[],160,True,True,8a0406011e7e455d8cf84fdacdcf75702d3894c3b97af3daee02d8b30eb3f4f2
+25,b3->b4,38,58,1,8,11,b3,source_setup,ordinary,[41],[41],[],152,True,True,93b3a4556545c037ce55c1a625defaac3437cf644227fbde2b3f6a73ded79957
+25,b3->b4,38,58,1,8,11,b3,source_setup,ordinary,[44],[44],[],164,True,True,a14169c1729c02d3aa298ee9f9e36ca0e84d4a44b1aaacefd9ec9d790be1a1db
+25,b3->b4,38,58,1,8,11,b3,source_setup,ordinary,[38],[38],[],140,True,True,5b330e52f8b386e453e4df68c0fada40d3afcdcb06efba03bf61288d38eedb0d
+25,b3->b4,38,58,1,8,11,b3,source_setup,ordinary,[45],[45],[],168,True,True,8b05c1d6a2b01fdb275c1715b59ffa9bfa3a3b58e6b24a0ecafe1de10f2458dd
+25,b3->b4,38,58,1,8,11,b3,source_setup,ordinary,[40],[40],[],148,True,True,2b24b889a985b51a59ef57173e594d072326372a12008d7ce659c2acdf739dca
+25,b3->b4,38,58,1,8,11,b3,source_setup,ordinary,[42],[42],[],156,True,True,31cff04f5a9419cff86ec464442b5c209e5fe2a6a4670e0da77759b24619e7e0
+25,b3->b4,38,58,1,8,11,b3,source_setup,ordinary,[39],[39],[],144,True,True,f9b9d0c2abc355aa1555505c6e130a2f940a33d818cc328ed389d1a1fdcfb0dd
+25,b3->b4,38,58,0,20,0,b3,source_run_hold,ordinary,[],[],[],180,True,True,21b6b494921096b1a2d7d200ecfff15ff5ba01f7835d030615691f68ca6ac1d6
+26,b4->b5,48,60,1,0,11,b4,source_setup,ordinary,[48],[48],[],116,True,True,fa73ed84ea65d2aef1bc33221b5b220bf80d732c753ef62ab7161e08eab38e41
+26,b4->b5,48,63,1,0,14,b5,direct_arrival,ordinary,[48],[],[48],116,True,True,0e4a17b976f5b62fb7bda12e472cf70f409195a185a2f7fe965d2dc00ad75027
+26,b4->b5,48,49,0,1,0,b4,source_run_hold,ordinary,[],[],[],116,True,True,901cd88760a784f0b42e136136cad18b8606c5414fbebbf6b57fd04a7c3eb400
+26,b4->b5,48,61,1,1,11,b4,source_setup,ordinary,[49],[49],[],120,True,True,45b83cd6c1d53c688e51c81d4f867fd13851505002d6687114aadea4a535ad7f
+26,b4->b5,48,50,0,2,0,b4,source_run_hold,ordinary,[],[],[],120,True,True,30490dc7e1782951f25fb9b56d7753cde26ea1cfd886a192bd87dd75e8d6a0a6
+26,b4->b5,48,62,1,2,11,b4,source_setup,ordinary,[50],[50],[],124,True,True,c77d41327c9b6e34d96fd904a2bb226b7c45532c61695b6a9c4cc3cea8bf523f
+26,b4->b5,48,51,0,3,0,b4,source_run_hold,ordinary,[],[],[],124,True,True,0ba7f474bf09314cca7469e2e42cfc39e63d273f2417f7d9404b1682b5dbe060
+26,b4->b5,48,52,0,4,0,b4,source_run_hold,ordinary,[],[],[],128,True,True,92f4ddd272d70b1ada7a566826ae6a6ce608fa68a1c7d8a27a4e89a2264b5a9c
+26,b4->b5,48,53,0,5,0,b4,source_run_hold,ordinary,[],[],[],132,True,True,dab8a8bf5b1d1d204481d7c0a65658adc0f47b766faf29e97a315b024825070e
+26,b4->b5,48,54,0,6,0,b4,source_run_hold,ordinary,[],[],[],136,True,True,6f44a549f5f9433322bff12a3f3b6692b665daabfad1436813c440644f158e34
+26,b4->b5,48,55,0,7,0,b4,source_run_hold,ordinary,[],[],[],140,True,True,11fdebe3218ced908f7f904a71e9ddafac5b3ae3258b035aeaf7b245bb7da32a
+26,b4->b5,48,56,0,8,0,b4,source_run_hold,ordinary,[],[],[],144,True,True,d9f656a3f0cceb9e7fe0aafe21b9bcc241f85c80f6aa552143293203e26c73e8
+26,b4->b5,48,57,0,9,0,b4,source_run_hold,ordinary,[],[],[],148,True,True,5b3f22122be9fc72971a35ae0e7797f510c1b19db802a3e4f7bbb957c9b5aa72
+26,b4->b5,48,58,0,10,0,b4,source_run_hold,ordinary,[],[],[],152,True,True,b819e56b795d34d16b149a410fe61f1fc468bccd14838b43918f3c1dad309796
+26,b4->b5,48,59,0,11,0,b4,source_run_hold,ordinary,[],[],[],156,True,True,cf25d3707d09bf4159ca05a3e79433dbf90c07ebc4ec4ba569b33cf8593905e7
+26,b4->b5,48,60,0,12,0,b4,source_run_hold,ordinary,[],[],[],160,True,True,b98ca57155404760ed5e2d3f5f2ea81e5ecc936810a2507bd711ac05bfa410a2
+26,b4->b5,48,61,1,1,11,b4,source_setup,ordinary,[48],[48],[],124,True,True,dde757713aac43e9f5cc2fea846fff6deb8ae5a029569616d1e09d24528c5d99
+26,b4->b5,48,61,0,13,0,b4,source_run_hold,ordinary,[],[],[],164,True,True,e50a3580617c81441aab280a055fd75bfbc753a8b59b79178c30ff05a2bf6f14
+26,b4->b5,48,62,1,2,11,b4,source_setup,ordinary,[49],[49],[],132,True,True,78160ab4d058c5a1c4adec7ce6e374f3ffc52f60950add87809065aae2b71a66
+26,b4->b5,48,62,1,2,11,b4,source_setup,ordinary,[48],[48],[],128,True,True,00029e36db6e55d47ea195fdd1f0697153ff60d8806a6c633a3009129b67b03c
+26,b4->b5,48,62,0,14,0,b4,source_run_hold,ordinary,[],[],[],168,True,True,91e546dbb1770da6edf521afd4f0e2c956c04577a3c4f90d0d9017a32b9aeacb
+27,b5->b7,63,64,0,1,0,b5,source_run_hold,ordinary,[],[],[],144,True,True,ea3dc4828d613fb5a9ff122d2c06fe44b101a06fd74997a3a5ebb494ecfe6e47
+27,b5->b7,63,65,0,2,0,b5,source_run_hold,ordinary,[],[],[],148,True,True,b2c5ff7a0a529c44afedaaa2d27b829a4cc318cc06ab52961c24e2f8b12c914b
+27,b5->b7,63,66,0,3,0,b5,source_run_hold,ordinary,[],[],[],152,True,True,002a520d752dbe2484ab9d13c60e6042ecde09371e7ff500d7da7e6176f46559
+27,b5->b7,63,67,0,4,0,b5,source_run_hold,ordinary,[],[],[],156,True,True,ffaa39f9ec327c6dc18edfea172cbd73ec8ad5a5bf692365e496a2aed02d9c25
+28,b5->b7,63,64,0,1,0,b5,source_run_hold,ordinary,[],[],[],145,True,True,1249286f08dac28c927bd597a892efcf341c9bb0e8aa225a5c80e651f1c4c388
+28,b5->b7,63,65,0,2,0,b5,source_run_hold,ordinary,[],[],[],149,True,True,25ae0fc3fc77f0206f3bb0eee482e4d0a16aab9fafc57e3270c51f02738632ca
+28,b5->b7,63,66,0,3,0,b5,source_run_hold,ordinary,[],[],[],153,True,True,0988f7ee72bc5265aecc91ac86e8794ed8643770759a3ea7ed529265f56a0d1f
+28,b5->b7,63,67,0,4,0,b5,source_run_hold,ordinary,[],[],[],157,True,True,e7395f10187e50f891bcc3e6e617ef9d83ed036c8eb6f0402c33b4b8b005f04a
+29,b4->b5,60,61,0,1,0,b4,source_run_hold,ordinary,[],[],[],124,True,True,0bafed43a18a950e438b3e05433bf988f435c5f7d056e8acc02a02c16f4983a7
+29,b4->b5,60,62,0,2,0,b4,source_run_hold,ordinary,[],[],[],128,True,True,6d26300adb208488c9a0e5182a3393afc137a9b1a59973c2674d31775d026b08
+30,b4->b5,61,62,0,1,0,b4,source_run_hold,ordinary,[],[],[],132,True,True,a4fad3b1866b64ec3bd9daf65f6fa0c520aadc1e25bf5ade996879b5228d1638
+32,b3->b4,39,51,1,0,11,b3,source_setup,ordinary,[39],[39],[],112,True,True,738378abe9af1687ee1de018c31a499928e6b2ffb38dc6cf99db9ee6d26caecb
+32,b3->b4,39,49,1,0,9,b4,direct_arrival,ordinary,[39],[],[39],112,True,True,309023d5ee0a143767503e6b90474da6eca6ff6001b398bb439c9c6477fe87da
+32,b3->b4,39,40,0,1,0,b3,source_run_hold,ordinary,[],[],[],112,True,True,45549378386039ddccf5f284f4e75898fc1b0c6f737cb3db2ef009dc988ad4d7
+32,b3->b4,39,52,1,1,11,b3,source_setup,ordinary,[40],[40],[],116,True,True,4e848679fc9838c01cddca066ba081249541066f4e579f859a31ff4b79c54026
+32,b3->b4,39,41,0,2,0,b3,source_run_hold,ordinary,[],[],[],116,True,True,2c2ff79b2ec535e1557896e1c9bf6eb7502f96fcea0fbb78d6726f6e2af21977
+32,b3->b4,39,53,1,2,11,b3,source_setup,ordinary,[41],[41],[],120,True,True,aae866adf7217d044e33fd0766f56a445c7a5f44b33a1f08351c4ca9e55688d9
+32,b3->b4,39,42,0,3,0,b3,source_run_hold,ordinary,[],[],[],120,True,True,daf85b9d7291814fa98cb22c9ef4d7d1af0b4ccddf5ad56fecb62bdcb1fdcb0a
+32,b3->b4,39,54,1,3,11,b3,source_setup,ordinary,[42],[42],[],124,True,True,eebbc6fb3c2c7c71c65e186291cb8061921fa4358e65f7bf01a42265f9ce3887
+32,b3->b4,39,43,0,4,0,b3,source_run_hold,ordinary,[],[],[],124,True,True,5c518b77eacd977f440320829f7f59c5b0c30317aec2de6f9f2d45292166d23b
+32,b3->b4,39,55,1,4,11,b3,source_setup,ordinary,[43],[43],[],128,True,True,073fcba4ed8aadff78d397a499308586d80c39e67b00993cffd5551bdc703435
+32,b3->b4,39,44,0,5,0,b3,source_run_hold,ordinary,[],[],[],128,True,True,092bab71c1c3b201bf9ca268996475af4ba4e19b643056ce4275fdf31849bc0c
+32,b3->b4,39,56,1,5,11,b3,source_setup,ordinary,[44],[44],[],132,True,True,a432768955d3b94b26be09b834e29821d7e621490a934c99ae2fbf3a5c6c4b4e
+32,b3->b4,39,45,0,6,0,b3,source_run_hold,ordinary,[],[],[],132,True,True,cf9a836c3eb20c6b28c693e00715525f98500f60265562e7e144be1eac17a334
+32,b3->b4,39,57,1,6,11,b3,source_setup,ordinary,[45],[45],[],136,True,True,3b339a3c914118b24c9ef5ab093e1827c7a9e471ddf8917da87a754f8a874f90
+32,b3->b4,39,46,0,7,0,b3,source_run_hold,ordinary,[],[],[],136,True,True,68f2045963e505a182ce02213d7d96f611934975d0bce610fb28ac55dd6a3035
+32,b3->b4,39,58,1,7,11,b3,source_setup,ordinary,[46],[46],[],140,True,True,30c2c8a6c8cf86d4910850a1c6559a16da7870b2fdd46f6c2263bbdd8bb7cc01
+32,b3->b4,39,47,0,8,0,b3,source_run_hold,ordinary,[],[],[],140,True,True,d507d02cdd1c9e292255120dfdcabfde65cb0c2c28f51c610cd3176eaf5c5c6a
+32,b3->b4,39,48,0,9,0,b3,source_run_hold,ordinary,[],[],[],144,True,True,f727ef8a19fc27d7d57aad321a69a5538a163f2d49f086874e53828886829b5f
+32,b3->b4,39,49,0,10,0,b3,source_run_hold,ordinary,[],[],[],148,True,True,2e061fc198c209f6d53f33a28e05552dcb12ee08adfb792ebe771e094b6e98aa
+32,b3->b4,39,50,0,11,0,b3,source_run_hold,ordinary,[],[],[],152,True,True,7fbec4ced00f90b01ea77539f0dc63a34e0c500ca06c50d306eda4de19192914
+32,b3->b4,39,51,0,12,0,b3,source_run_hold,ordinary,[],[],[],156,True,True,d76b4ac05e5bdc2e41e17f5cff82f2c8c591d0f69baf834836937fc115ea53c7
+32,b3->b4,39,61,2,0,20,b4,arrival_with_setup,ordinary,"[39, 51]",[39],[51],120,True,True,800ccb1f6f49ebf8eda60b2a562b835dff57c0fa5c1481f1c99c375c7cfc891f
+32,b3->b4,39,52,1,1,11,b3,source_setup,ordinary,[39],[39],[],120,True,True,611dc72dd64e66bb3076b53dd1bde13d185562750acd5e36b846cf46e9d09f78
+32,b3->b4,39,52,0,13,0,b3,source_run_hold,ordinary,[],[],[],160,True,True,bf430c3afe71b0015bfc6a39d3cfe4b93b8a8dcc82fd293a1d266def6999b99f
+32,b3->b4,39,62,2,1,20,b4,arrival_with_setup,ordinary,"[40, 52]",[40],[52],128,True,True,9de58cc71c2795999f8672300e444827950cecd6cbcf1583d65a9f8689ae22ec
+32,b3->b4,39,53,1,2,11,b3,source_setup,ordinary,[40],[40],[],128,True,True,580d7b3a5b673fbdbe30f8cbbfe3687eed6476096e248702935943e8c29b4d0e
+32,b3->b4,39,53,1,2,11,b3,source_setup,ordinary,[39],[39],[],124,True,True,fe7e5e68da587e837f4928392eaddfc7e8502ea9efd54b123feb59e1498b71f3
+32,b3->b4,39,53,0,14,0,b3,source_run_hold,ordinary,[],[],[],164,True,True,1368bbfdaa360fc20586b45c47ad962ed4f339bc6e3a1d46511063f7ea78f510
+32,b3->b4,39,54,1,3,11,b3,source_setup,ordinary,[41],[41],[],136,True,True,90db5f73e138dc255043a35d36bc51e6a4ff9067b68b1b04048a040c7e2ae6e7
+32,b3->b4,39,54,1,3,11,b3,source_setup,ordinary,[39],[39],[],128,True,True,e31149ff39fc0c56b3f8746dde1ca1e1e859328fc03d9a51e517b6296a0392b6
+32,b3->b4,39,54,1,3,11,b3,source_setup,ordinary,[40],[40],[],132,True,True,3d1862b68032bcd69f860af4d291fd77bbb7c40f8ffdc34f5e34e86479674993
+32,b3->b4,39,54,0,15,0,b3,source_run_hold,ordinary,[],[],[],168,True,True,ef03b3df077b802687413d12e95b64f47f31d42c6668d9e180bec3a728f2a45c
+32,b3->b4,39,55,1,4,11,b3,source_setup,ordinary,[40],[40],[],136,True,True,2b195386beabd3e607915de7b6530be7770c3d879d5a4dab78181749e17b7c04
+32,b3->b4,39,55,1,4,11,b3,source_setup,ordinary,[41],[41],[],140,True,True,89b3614bbce8eb795b3e6c0b113dc8c8fab0f733d5d2b530cda27d9a537dc3e6
+32,b3->b4,39,55,1,4,11,b3,source_setup,ordinary,[39],[39],[],132,True,True,20447980f79a7447964c839651fbda850cb01e86907afb0f2a47f9171456b99b
+32,b3->b4,39,55,1,4,11,b3,source_setup,ordinary,[42],[42],[],144,True,True,85dd71fb58f5109aa0d6053cb7ec39db39bce12a45d6d0db7aadca06725b601c
+32,b3->b4,39,55,0,16,0,b3,source_run_hold,ordinary,[],[],[],172,True,True,d7ae69130bc72d28956076b079f35db8ea3bccbb110dbf551fbf4e58a1150e93
+32,b3->b4,39,56,1,5,11,b3,source_setup,ordinary,[39],[39],[],136,True,True,975336124e5c7855e5de39e1d849b8bc8fed64850a4aefd8520e94f766ffca1d
+32,b3->b4,39,56,1,5,11,b3,source_setup,ordinary,[40],[40],[],140,True,True,242e823f5c467a27185b57b776120fce8b774716cbfc7ba0ce9b033bc2d97396
+32,b3->b4,39,56,1,5,11,b3,source_setup,ordinary,[43],[43],[],152,True,True,f130c5917fcb1d5698be7dc8d1ca75c5fa9597dbb2aebbaf08f7bb8f5eea8ea7
+32,b3->b4,39,56,1,5,11,b3,source_setup,ordinary,[41],[41],[],144,True,True,d71fbaab59ce8e23012461dc53c2a24b1c7f89e4c24f188020fe262f472c665a
+32,b3->b4,39,56,1,5,11,b3,source_setup,ordinary,[42],[42],[],148,True,True,4803064bdd21b765dae7c5e6aaf32397e3bbf231961fc7eee936b5fda56b583f
+32,b3->b4,39,56,0,17,0,b3,source_run_hold,ordinary,[],[],[],176,True,True,2064c03cb3f780277aa6b4f08c627dabd298b545e8ccf2cb482abd4c70338b67
+32,b3->b4,39,57,1,6,11,b3,source_setup,ordinary,[40],[40],[],144,True,True,c5f2828ed407b31badeb98f682bec8c7d197494820da64a809556b946e67bb24
+32,b3->b4,39,57,1,6,11,b3,source_setup,ordinary,[41],[41],[],148,True,True,1a2515b41185c4d75511893ca0c3e085912931215c59feec6cecb03efa44732d
+32,b3->b4,39,57,1,6,11,b3,source_setup,ordinary,[44],[44],[],160,True,True,9dd7c2455991dbf34a845dd4a5db427d4335f47b266f07eb63cde2af83d29b3c
+32,b3->b4,39,57,1,6,11,b3,source_setup,ordinary,[43],[43],[],156,True,True,e57563b34d6a99a76e8e1a4949963a985184c51fb9c7aa4fe80fe3fb90c22b3c
+32,b3->b4,39,57,1,6,11,b3,source_setup,ordinary,[39],[39],[],140,True,True,186f0185dd1496b2c64fe8de139244b8ad15d0cc39e69872c6a84182a56e76cb
+32,b3->b4,39,57,1,6,11,b3,source_setup,ordinary,[42],[42],[],152,True,True,0df6d002bbc9be5fffde03f53a1439fe35a190f426775a82f63f1a711319f9e7
+32,b3->b4,39,57,0,18,0,b3,source_run_hold,ordinary,[],[],[],180,True,True,323cbb0d9ef501b55535fa0860e9ced51f2e8b9b1df7c5686f18aa636ed3a5ff
+32,b3->b4,39,58,1,7,11,b3,source_setup,ordinary,[42],[42],[],156,True,True,2925d1c1597d3d9b66bf251d709ff21de5aa4d4fc54d28c4109af9636ad83790
+32,b3->b4,39,58,1,7,11,b3,source_setup,ordinary,[39],[39],[],144,True,True,951bab32ebdce452a020b8367ea1356545982594bab7d03404c0a9de3a386496
+32,b3->b4,39,58,1,7,11,b3,source_setup,ordinary,[43],[43],[],160,True,True,9fed7970f145fb3b10826d3bb5d97c9a3cbeea337f0023735475d72cd0aa54d6
+32,b3->b4,39,58,1,7,11,b3,source_setup,ordinary,[44],[44],[],164,True,True,a5f84652ecd07eed9370e056454375f5785df572a73b649a08a18fb619fc72a5
+32,b3->b4,39,58,1,7,11,b3,source_setup,ordinary,[40],[40],[],148,True,True,3a9093a163c47cf744f9ce895cf5e09a296a2290a28a588e8a5077318d9d4189
+32,b3->b4,39,58,1,7,11,b3,source_setup,ordinary,[41],[41],[],152,True,True,1adcb77dcf3bf857f3919dac6b8ccb498bc905f0b0b0d9302c1c542d4ebe6ae0
+32,b3->b4,39,58,0,19,0,b3,source_run_hold,ordinary,[],[],[],184,True,True,7dc368f73f90bf86c42ca4d6f3eaa3f29cd81df9ecb6ee454b7c8ef88a3b62f9
+33,b4->b5,49,61,1,0,11,b4,source_setup,ordinary,[49],[49],[],124,True,True,05e6be2b2588de380e031fe3b1ca514d3083ff5b7821129968aead1f31c2b74c
+33,b4->b5,49,64,1,0,14,b5,direct_arrival,ordinary,[49],[],[49],124,True,True,f9a75eaad70c54e9726a4f4f8d5f29d902c25d17657c712b212818b8104ff795
+33,b4->b5,49,50,0,1,0,b4,source_run_hold,ordinary,[],[],[],124,True,True,79706476534c9972cbf069318c9fce2127f1360c8da5958040fb0af6864b71f4
+33,b4->b5,49,62,1,1,11,b4,source_setup,ordinary,[50],[50],[],128,True,True,c4ef3ddbc51c8ee9aa963c4d8ce0dec14a336bc9b1571bcd43b288ca7a9debdb
+33,b4->b5,49,51,0,2,0,b4,source_run_hold,ordinary,[],[],[],128,True,True,c5ce9321302d2145f277de4c6a894eecd41b265eb56a2972f6464afc5ce2f93e
+33,b4->b5,49,52,0,3,0,b4,source_run_hold,ordinary,[],[],[],132,True,True,64745d77ef4e5d834f36d5f061523cd561842903020179bf9ec1ec08e3cd8ce3
+33,b4->b5,49,53,0,4,0,b4,source_run_hold,ordinary,[],[],[],136,True,True,98734b8c901819601c57e86ea51e28a897fce814ae1242f92bc449bc201beb20
+33,b4->b5,49,54,0,5,0,b4,source_run_hold,ordinary,[],[],[],140,True,True,036f9ef378c837848620d9c44f64df3a6de323177bf680835ad1ff52f810ff20
+33,b4->b5,49,55,0,6,0,b4,source_run_hold,ordinary,[],[],[],144,True,True,ea74469fcbb00c3876c18ece48461682b460441f371c094601a4a5b263c75470
+33,b4->b5,49,56,0,7,0,b4,source_run_hold,ordinary,[],[],[],148,True,True,1cd5312608f5d333b5e3685290d8a6f6d192074e1978151f5eb6ca8d3dfd9bb4
+33,b4->b5,49,57,0,8,0,b4,source_run_hold,ordinary,[],[],[],152,True,True,7c84072ac66ef7f5076a51de66f67e4e89c0c762fcb27a83d536f1f43bc30ff9
+33,b4->b5,49,58,0,9,0,b4,source_run_hold,ordinary,[],[],[],156,True,True,c4ba156ca90beaf21068b764fe4898316a4558dee1f513059a0cce38c24fef62
+33,b4->b5,49,59,0,10,0,b4,source_run_hold,ordinary,[],[],[],160,True,True,c3bc7c4aa0efd2e9b5ae095a03c057ac4a0f78b0e7552dad2054a8221600e94c
+33,b4->b5,49,60,0,11,0,b4,source_run_hold,ordinary,[],[],[],164,True,True,e3e87cded8f57ef9e2d3eb04bfe594c4533b8c1f72c5c808c99a9c578bc1b046
+33,b4->b5,49,61,0,12,0,b4,source_run_hold,ordinary,[],[],[],168,True,True,5eb4fb987fa5cd822060772c24d93cfa81d3d50de97b49451c1eee2d5c11f2b3
+33,b4->b5,49,62,1,1,11,b4,source_setup,ordinary,[49],[49],[],132,True,True,35495a23ba58773d17fd251e4475cee289dd1cd014c77cec5b9328a296c8abd7
+33,b4->b5,49,62,0,13,0,b4,source_run_hold,ordinary,[],[],[],172,True,True,77fed4a72a92e91dc595015d5c8c535598d701d8d4699de1a99053f6c381201d
+34,b5->b7,64,65,0,1,0,b5,source_run_hold,ordinary,[],[],[],152,True,True,e654615d5a72fbab61079384cbc7b70c5d3e2378160ee1f76d37c28bb4d5622a
+34,b5->b7,64,66,0,2,0,b5,source_run_hold,ordinary,[],[],[],156,True,True,f7648835952320b9b8e8a2c8cc73de7bb114bf4f88ff0a875a6367ca6724b9f8
+34,b5->b7,64,67,0,3,0,b5,source_run_hold,ordinary,[],[],[],160,True,True,7a83d0dc440879b69b4d47d8681cf3c2699473f1782b5e790a1ff5f7fe521e76
+35,b5->b7,64,65,0,1,0,b5,source_run_hold,ordinary,[],[],[],153,True,True,6d42d362695f6d93a1c70935571863777190bec25096f274b935aa434fbb4249
+35,b5->b7,64,66,0,2,0,b5,source_run_hold,ordinary,[],[],[],157,True,True,ae3481bc4af5f0bb73e117c5cad24ea8d0d382cb74c68adcc3c80ba80ad3c1e5
+35,b5->b7,64,67,0,3,0,b5,source_run_hold,ordinary,[],[],[],161,True,True,7310fcd0537ded821034e325fd23c84a600abcff3ddd3e954737778e3917bb6e
+36,b5->b7,64,65,0,1,0,b5,source_run_hold,ordinary,[],[],[],153,True,True,7b04609b2d3d2ace1b97a248364702ec84393c7b4880d8ce8b5348bf0e3b38fe
+36,b5->b7,64,66,0,2,0,b5,source_run_hold,ordinary,[],[],[],157,True,True,babeb8910e852af3c4a3d4545b9e5cc9afb01a5cf79e2222aef168cb4567ea53
+36,b5->b7,64,67,0,3,0,b5,source_run_hold,ordinary,[],[],[],161,True,True,778ea69cd7a8935744aea29b789260dca165c6f7855eb50bc360ee88742950f2
+37,b4->b5,61,62,0,1,0,b4,source_run_hold,ordinary,[],[],[],132,True,True,6d14b9f79b8dd6a54bd79ea7bee106f1dd87bff8cff85503f80331a18217e243
+39,b3->b4,40,52,1,0,11,b3,source_setup,ordinary,[40],[40],[],120,True,True,57e2e3ecee843000057a32d0047bfbdebd57722848d93a44b8919137325aaf89
+39,b3->b4,40,50,1,0,9,b4,direct_arrival,ordinary,[40],[],[40],120,True,True,01d67f475a9a24cad16b9577ea43b095592dfaa0432c0295fa130f6cfeedce2a
+39,b3->b4,40,41,0,1,0,b3,source_run_hold,ordinary,[],[],[],120,True,True,4e21ea92df33480fcabbcf39fda44920c3becc3a6cedacea81f835fe4d9ec009
+39,b3->b4,40,53,1,1,11,b3,source_setup,ordinary,[41],[41],[],124,True,True,0142f50075017ddd2cc52433ecda17000c413380f3a2feadce5b6f942248f66f
+39,b3->b4,40,42,0,2,0,b3,source_run_hold,ordinary,[],[],[],124,True,True,126a116080ad7e76bcb95eef9b6c07fa929168d66e1dab3dba5e369e4ae5734b
+39,b3->b4,40,54,1,2,11,b3,source_setup,ordinary,[42],[42],[],128,True,True,5cb9805d5e794dc2b1ca9d6276ab3fe198d1efe61424619560d1ac7c848f6c29
+39,b3->b4,40,43,0,3,0,b3,source_run_hold,ordinary,[],[],[],128,True,True,0450a2b5f80a9e05906d3fd2ed13e9526ecf0c8e28a2717a2c6ac6ee87e8021d
+39,b3->b4,40,55,1,3,11,b3,source_setup,ordinary,[43],[43],[],132,True,True,680b2aa8ad77dbfe1701e376d76c3d901f99deec013aadf53e109c4ea720766c
+39,b3->b4,40,44,0,4,0,b3,source_run_hold,ordinary,[],[],[],132,True,True,68370e909f1b486271bc349331f21ee5fa3b350fcd7bdc15a38ea2b05f3766ca
+39,b3->b4,40,56,1,4,11,b3,source_setup,ordinary,[44],[44],[],136,True,True,c3eaff133a311a371e95d824752a22f75951708cf751e7c34ed0bd65b00a7992
+39,b3->b4,40,45,0,5,0,b3,source_run_hold,ordinary,[],[],[],136,True,True,518e56bb764aab8e7cbfbd5a3f94660571fb5b7b704d800db825acac0b4b46d8
+39,b3->b4,40,57,1,5,11,b3,source_setup,ordinary,[45],[45],[],140,True,True,2fca844c62dce22e99d8db529e9b805928563065f9f1f4cad3db9d07213c8de4
+39,b3->b4,40,46,0,6,0,b3,source_run_hold,ordinary,[],[],[],140,True,True,db882be6fd60cbbfdbda95ccf17a0058850a3f2e7239016812342f5f42b6a94f
+39,b3->b4,40,58,1,6,11,b3,source_setup,ordinary,[46],[46],[],144,True,True,b97ab628f707dfdb0a6009de10313f501a3d708642fdc14c9043da0eca92fdb8
+39,b3->b4,40,47,0,7,0,b3,source_run_hold,ordinary,[],[],[],144,True,True,84820cea60d6eee3048c490008d9df21fbf5196a1e0f725bb0d5a0184579df81
+39,b3->b4,40,48,0,8,0,b3,source_run_hold,ordinary,[],[],[],148,True,True,df9344c4d15f96424736d22cd5600bfdb9b7d22b0bf686146eda3b606fb3c55a
+39,b3->b4,40,49,0,9,0,b3,source_run_hold,ordinary,[],[],[],152,True,True,be762637b1ad4b6dfea9568955323844ccf1da6c27e167cb86dbe3f6346f4b5e
+39,b3->b4,40,50,0,10,0,b3,source_run_hold,ordinary,[],[],[],156,True,True,e1dd5d6e8d23810f990e537c50c4b69c1c33f09f138d12aa8fa7710556751912
+39,b3->b4,40,51,0,11,0,b3,source_run_hold,ordinary,[],[],[],160,True,True,70c2c9dc7310e2e106163d5290088d7383e9a1bbdcf6072f66add3893bef200f
+39,b3->b4,40,52,0,12,0,b3,source_run_hold,ordinary,[],[],[],164,True,True,90174d3835cf3255d7843cff9a60d2144c4fb992e666749f593fd3d273900a98
+39,b3->b4,40,62,2,0,20,b4,arrival_with_setup,ordinary,"[40, 52]",[40],[52],128,True,True,b29377816e0cd0ab0168a7467605bc592bc6239f98bda67f5cd80dc63eb61379
+39,b3->b4,40,53,1,1,11,b3,source_setup,ordinary,[40],[40],[],128,True,True,a8493cabb1196057dc65fa875b2820f38de1a87cf6ad53d07cb4523841533967
+39,b3->b4,40,53,0,13,0,b3,source_run_hold,ordinary,[],[],[],168,True,True,982a703f40e17a203363753daca32de4daf3fe1f5a7e409d2208eb738dd887e0
+39,b3->b4,40,54,1,2,11,b3,source_setup,ordinary,[41],[41],[],136,True,True,c2554c320fe4b4ac445baa5fc84733e072f82fb33865623f8cd09fbc8d9b6eb4
+39,b3->b4,40,54,1,2,11,b3,source_setup,ordinary,[40],[40],[],132,True,True,a0039309950d3c73d3a701e6b6b1dcf036f0ef33fe60d7ebf649d23a5b773a1e
+39,b3->b4,40,54,0,14,0,b3,source_run_hold,ordinary,[],[],[],172,True,True,762956035fe6b5845ab8f05b4076434e01ceb792c6cefbf837348a41af599291
+39,b3->b4,40,55,1,3,11,b3,source_setup,ordinary,[40],[40],[],136,True,True,ff94a41df4e3eb75728857ef66947f6bfec4f81b35e22455f61bd68934a67fcc
+39,b3->b4,40,55,1,3,11,b3,source_setup,ordinary,[42],[42],[],144,True,True,cb5664b6f517e6ce2ec9d8edd46ea2c3f6248fd4dd5f5d9fe9df396818bdd98c
+39,b3->b4,40,55,1,3,11,b3,source_setup,ordinary,[41],[41],[],140,True,True,f009bf3f78cb7454d3dc18636522753fc4db72a20605cb81ae88e0e36c23410c
+39,b3->b4,40,55,0,15,0,b3,source_run_hold,ordinary,[],[],[],176,True,True,24b911c46db5025c958cbb2b6ce083d41aebbeed17a0108e5ce7e5c167cb6fe1
+39,b3->b4,40,56,1,4,11,b3,source_setup,ordinary,[43],[43],[],152,True,True,150b0b87574b2af4e396d6af1635c01f401c419eeb3879b568ed89764672713a
+39,b3->b4,40,56,1,4,11,b3,source_setup,ordinary,[42],[42],[],148,True,True,e02e8dd08f6968a9efededb2a3b75ad86f956151fd384a625730edd4bb3da848
+39,b3->b4,40,56,1,4,11,b3,source_setup,ordinary,[40],[40],[],140,True,True,a6b1da9bc75686474bfab4ca455fbeb98c1412664c97748be21237a9ead56032
+39,b3->b4,40,56,1,4,11,b3,source_setup,ordinary,[41],[41],[],144,True,True,cf09b08a72a2d34aded5a17ab8e7570a29cde2bafd7a6260070119506f70b2c4
+39,b3->b4,40,56,0,16,0,b3,source_run_hold,ordinary,[],[],[],180,True,True,a9689fcc645ac5af1287825179f8c1756f5c86ef52da2163f5c2f44b697f85f7
+39,b3->b4,40,57,1,5,11,b3,source_setup,ordinary,[42],[42],[],152,True,True,82571251d9022c1c4f7edd887eb8a260df673f9960bd8c2c2c9d5b04b2d5d344
+39,b3->b4,40,57,1,5,11,b3,source_setup,ordinary,[41],[41],[],148,True,True,59bbef3ad25b85d232fe3f8ea380bfaed56ba96bff10ea737c723155525dfcfc
+39,b3->b4,40,57,1,5,11,b3,source_setup,ordinary,[40],[40],[],144,True,True,b5507f33def0f36dacc896dd216c33135e1e7deea8767cdb26a223217a36849a
+39,b3->b4,40,57,1,5,11,b3,source_setup,ordinary,[44],[44],[],160,True,True,626ea400fe186d9f276a01b6a40234331d3d7b75fb1074a80875ad72841bed91
+39,b3->b4,40,57,1,5,11,b3,source_setup,ordinary,[43],[43],[],156,True,True,1127651d455d35e9db2f74a8e338613053919c31364fa831753fc9b30560a743
+39,b3->b4,40,57,0,17,0,b3,source_run_hold,ordinary,[],[],[],184,True,True,dda91f90880ed13e1c0ac041bdd2695de130502d56e41c1dc17f358e9c5bcf3d
+39,b3->b4,40,58,1,6,11,b3,source_setup,ordinary,[40],[40],[],148,True,True,da860be2732062e031bbbae0bb4fae85d111eaf32a67d5b9b0b8e81fab70ced5
+39,b3->b4,40,58,1,6,11,b3,source_setup,ordinary,[44],[44],[],164,True,True,e225cd5a4ff65fa1f7925f82017b3df467661df36449ab8c328d95b70197c841
+39,b3->b4,40,58,1,6,11,b3,source_setup,ordinary,[43],[43],[],160,True,True,2b25a423fbe254510dd27f9eb9836154c431ebcd11af2785dc2b43ec46fc8264
+39,b3->b4,40,58,1,6,11,b3,source_setup,ordinary,[41],[41],[],152,True,True,65c3ebc7b98ad2554a1254b03504d7a18fcf286a4d8541b31aebb7cfe81a1647
+39,b3->b4,40,58,1,6,11,b3,source_setup,ordinary,[45],[45],[],168,True,True,8eb0000bed666a88b0c556db2701de24e076b85f97f08db08a412da1e2057bd8
+39,b3->b4,40,58,1,6,11,b3,source_setup,ordinary,[42],[42],[],156,True,True,f984727857c7377870a68d228ea9127bad49c50de0f91bbe235df319d201494c
+39,b3->b4,40,58,0,18,0,b3,source_run_hold,ordinary,[],[],[],188,True,True,2398481aecb9d788e6b0de91c89728c806c0b9876d357a042c85c6922d837722
+40,b4->b5,50,62,1,0,11,b4,source_setup,ordinary,[50],[50],[],132,True,True,f1f85cfe701bda001ffe529248c7c60f7b974651c555dbef343e46abaf36faad
+40,b4->b5,50,65,1,0,14,b5,direct_arrival,ordinary,[50],[],[50],132,True,True,40101f3423f7724b3e0f7f10b8c077a9a961efeab88d481795f356ae5d65e728
+40,b4->b5,50,51,0,1,0,b4,source_run_hold,ordinary,[],[],[],132,True,True,b6373afcdbb8aeb59ea73c9a7075918cf1e46231fddaebd63120c3ea13b01150
+40,b4->b5,50,52,0,2,0,b4,source_run_hold,ordinary,[],[],[],136,True,True,f4c690dfde3134eb44e144efafc26e66270c84a94d23bebd681a8cf5bc50ca79
+40,b4->b5,50,53,0,3,0,b4,source_run_hold,ordinary,[],[],[],140,True,True,18cfbef3366fc62e6e66c2109bc19378cd0bdb9b20df1e075548136acef98583
+40,b4->b5,50,54,0,4,0,b4,source_run_hold,ordinary,[],[],[],144,True,True,2d92294449f01a78aaf9994bc506e9375cd3b47bea048dfe4b6c9e85dee797ce
+40,b4->b5,50,55,0,5,0,b4,source_run_hold,ordinary,[],[],[],148,True,True,05b0c42e2926329791f40d84e36e4376772f9db35d46dd024d2e418983424eb8
+40,b4->b5,50,56,0,6,0,b4,source_run_hold,ordinary,[],[],[],152,True,True,5cccf45b51aa42077f57da824c621a99d7cd92f6c48cf025915972dd8d83315a
+40,b4->b5,50,57,0,7,0,b4,source_run_hold,ordinary,[],[],[],156,True,True,ab31f1e0b98c63ed1392db452c3845f010adaa8fad26434f66c3aa3a00539bbc
+40,b4->b5,50,58,0,8,0,b4,source_run_hold,ordinary,[],[],[],160,True,True,5297319702cfe55a8425f0566ee6de3732f2050563b12d233b72ba8d5890cda4
+40,b4->b5,50,59,0,9,0,b4,source_run_hold,ordinary,[],[],[],164,True,True,c19b43230f1b5f00e59405e8356042f4225116f96d8e5741a062bf14878f34eb
+40,b4->b5,50,60,0,10,0,b4,source_run_hold,ordinary,[],[],[],168,True,True,72de170099ad404701f729ea0cd3f33eccbac9e780a4bf6546fe352c1b2b709d
+40,b4->b5,50,61,0,11,0,b4,source_run_hold,ordinary,[],[],[],172,True,True,85e812db51f035a8d09fd6546b57badf7e04bb58d57935781144600bd2cb91c2
+40,b4->b5,50,62,0,12,0,b4,source_run_hold,ordinary,[],[],[],176,True,True,cad62ebab51d9f324d6f78af47c3dde3aff59c90affb61962875b51109d76522
+41,b5->b7,65,66,0,1,0,b5,source_run_hold,ordinary,[],[],[],160,True,True,58060bd88adac36964466a924eb0dd71572ff5596db3dc42c3e2ed68f264d684
+41,b5->b7,65,67,0,2,0,b5,source_run_hold,ordinary,[],[],[],164,True,True,9c211b5850838385d91329f75f369de60213a42ff9ea15074c6e30f03c96d11c
+42,b5->b7,65,66,0,1,0,b5,source_run_hold,ordinary,[],[],[],161,True,True,632127c7d099a0d60c6cb7fa37dfc9005bc50d78086446d07f3c591728880a9a
+42,b5->b7,65,67,0,2,0,b5,source_run_hold,ordinary,[],[],[],165,True,True,7ea04e6f9c2e89cfcf33133147c05a27bead46c31e8bd47e6a1eec7c3e512d65
+43,b5->b7,65,66,0,1,0,b5,source_run_hold,ordinary,[],[],[],161,True,True,3bef2ec338e4d8d139558c30a506337b1ec251881e6c8f5d872a1be2c81f6771
+43,b5->b7,65,67,0,2,0,b5,source_run_hold,ordinary,[],[],[],165,True,True,3b4ffc0f2ff5b36174701ed841322f0a3c2f0338ece48c388d35862d75168d18
+45,b3->b4,41,53,1,0,11,b3,source_setup,ordinary,[41],[41],[],128,True,True,1616f78dba686ebef2b748e86f945902419afafa0667a63b46c631fa990eddde
+45,b3->b4,41,51,1,0,9,b4,direct_arrival,ordinary,[41],[],[41],128,True,True,ac172a60fcf1fe05799a1a78052a6c8cc341e8acacf68584cd3e784f1eec452a
+45,b3->b4,41,42,0,1,0,b3,source_run_hold,ordinary,[],[],[],128,True,True,ca6c400f0440c1e8dece2d2d885a586c69aadee50ea9ee00fe12d09265427e0c
+45,b3->b4,41,54,1,1,11,b3,source_setup,ordinary,[42],[42],[],132,True,True,35aef242f72c3887caeeb1990182b4fd3d5e2a46b3b5f079b0604d43d3f43677
+45,b3->b4,41,43,0,2,0,b3,source_run_hold,ordinary,[],[],[],132,True,True,984bb71966f3bd6b95d12719cacdf132f30dd91a7479168bbf31ff181a8d1a54
+45,b3->b4,41,55,1,2,11,b3,source_setup,ordinary,[43],[43],[],136,True,True,ad2f4fce90afc986733ed7da45d301e11eb34c5a5594e34f9aba99b5e43f63d0
+45,b3->b4,41,44,0,3,0,b3,source_run_hold,ordinary,[],[],[],136,True,True,2e4b05ca8f85aec5583833ef6cdc755fa9cc5a462133a0aa75cba631638f81fe
+45,b3->b4,41,56,1,3,11,b3,source_setup,ordinary,[44],[44],[],140,True,True,a7e4eee2a0bf698bf9e1a59251d8676b2286e667daf1d7982432ccb15e26e063
+45,b3->b4,41,45,0,4,0,b3,source_run_hold,ordinary,[],[],[],140,True,True,339865922bb8dbc78463ce5dec498506898ee7639f16a3e1e5adc47293abc42a
+45,b3->b4,41,57,1,4,11,b3,source_setup,ordinary,[45],[45],[],144,True,True,4a891978b4dd70295759a866043403d91b08d94a96cc6a2a992243a7f07f560e
+45,b3->b4,41,46,0,5,0,b3,source_run_hold,ordinary,[],[],[],144,True,True,34fda5867824119cbb38b34b9e486268361b05a28252bb70c2d7de3a5d294e06
+45,b3->b4,41,58,1,5,11,b3,source_setup,ordinary,[46],[46],[],148,True,True,d48bb50b8107293bc25f4147b4a996e4f16ee50e5a272b0d64506bf04529b9c4
+45,b3->b4,41,47,0,6,0,b3,source_run_hold,ordinary,[],[],[],148,True,True,f65b1bb1a772b94793c34d52311979ffae1d040cabcc390a6d9f51eab2d3862a
+45,b3->b4,41,48,0,7,0,b3,source_run_hold,ordinary,[],[],[],152,True,True,c7247f9d506f1f5085395e779a368959bd20c19a9e1ab44c985ca00e86b00732
+45,b3->b4,41,49,0,8,0,b3,source_run_hold,ordinary,[],[],[],156,True,True,be361ec4dccc0cfb9dbb3d9e52d248471d819c7aaab7a74f3f1e53b1913cf670
+45,b3->b4,41,50,0,9,0,b3,source_run_hold,ordinary,[],[],[],160,True,True,5df87df455416d8025bebaa7e6c857a1dd2fbe70f872d5c66635a4d6966ec5e9
+45,b3->b4,41,51,0,10,0,b3,source_run_hold,ordinary,[],[],[],164,True,True,023036b67306511c3e3207aa9a6d1f4263517858c46bcdbf7d86d383fd69f49b
+45,b3->b4,41,52,0,11,0,b3,source_run_hold,ordinary,[],[],[],168,True,True,99a1aaa533bede534a326fe9d9a84897bb784fbf79454635dd91c5cb881a7a42
+45,b3->b4,41,53,0,12,0,b3,source_run_hold,ordinary,[],[],[],172,True,True,2fee7f4386de276afcd5c4874c39643e0e32acbf2a9d7619cd1dcc5b1a0a6215
+45,b3->b4,41,54,1,1,11,b3,source_setup,ordinary,[41],[41],[],136,True,True,feac3820908b1150630ece83f44b911b5f86a854a4c5b63c0d291ee138950b41
+45,b3->b4,41,54,0,13,0,b3,source_run_hold,ordinary,[],[],[],176,True,True,7bba5e8133cc0b5c9dcc62473887bd14a1fd6cab4b74550e7284e8771a697f88
+45,b3->b4,41,55,1,2,11,b3,source_setup,ordinary,[42],[42],[],144,True,True,721dc0b85530f3aa92add8d9f90d3f0a496cf8c0e512eb4e0196d2daea8e0347
+45,b3->b4,41,55,1,2,11,b3,source_setup,ordinary,[41],[41],[],140,True,True,bb6592a25cdb121f5aa4472c677cf1552a95d622312aee63a83e7b387cca6cca
+45,b3->b4,41,55,0,14,0,b3,source_run_hold,ordinary,[],[],[],180,True,True,d181174a677987451f99744dee5c1342fe9f9406237c34385fbdacf2d8784b31
+45,b3->b4,41,56,1,3,11,b3,source_setup,ordinary,[42],[42],[],148,True,True,b7def2d8f59e3b086e50849afea326a889b014da5668966a41ca45699ab9c6ff
+45,b3->b4,41,56,1,3,11,b3,source_setup,ordinary,[41],[41],[],144,True,True,0f9eddc0fb9c83cfcfa609cffc5537ccd38a4bdef106d53d7f210b01e8be9891
+45,b3->b4,41,56,1,3,11,b3,source_setup,ordinary,[43],[43],[],152,True,True,4ec9a4cf842f84565c8d6d6aeabf0debae97cbdeab5a6ad90c44a957a75fd26d
+45,b3->b4,41,56,0,15,0,b3,source_run_hold,ordinary,[],[],[],184,True,True,4101abf38027b7929939517f5b247d1b504e2b5fe544d8896fa830eb9e0807b0
+45,b3->b4,41,57,1,4,11,b3,source_setup,ordinary,[43],[43],[],156,True,True,b1357289b1666e9ea51f460a008247f3776a7d54241625b5af3fecf283e7f702
+45,b3->b4,41,57,1,4,11,b3,source_setup,ordinary,[44],[44],[],160,True,True,b9872e937408384463709066f050ee56e66a220dc1d6555104a9fbe4465eae84
+45,b3->b4,41,57,1,4,11,b3,source_setup,ordinary,[42],[42],[],152,True,True,98c55cff921108254acac6e62cadf91d2865625eb6cea9a99694bb8adfb4a42e
+45,b3->b4,41,57,1,4,11,b3,source_setup,ordinary,[41],[41],[],148,True,True,bdedee838d511846746a608df62addfabeb120cff894159ad05b3c937ca9a2a5
+45,b3->b4,41,57,0,16,0,b3,source_run_hold,ordinary,[],[],[],188,True,True,6fcc90e418dd03ed3616d04ddd000b71cbe1ec1837eb1054ac8cb032f6358d94
+45,b3->b4,41,58,1,5,11,b3,source_setup,ordinary,[45],[45],[],168,True,True,27a5bb5884daecb25f3edbdb5a1b2c6546990b4f6f5d177c8be2f44a503ed0c6
+45,b3->b4,41,58,1,5,11,b3,source_setup,ordinary,[42],[42],[],156,True,True,6f41368c10789e472cd2a27651367840289e425cfe10aad08b713cc8c189d3e1
+45,b3->b4,41,58,1,5,11,b3,source_setup,ordinary,[41],[41],[],152,True,True,f90d6fe06cfafc1cdf522e183b4468897ca596f0eef63787c2356f58d844d331
+45,b3->b4,41,58,1,5,11,b3,source_setup,ordinary,[44],[44],[],164,True,True,0fe329959f052e9ac22b768cbbdfd166dd9863521299f39c475771b1296d5c07
+45,b3->b4,41,58,1,5,11,b3,source_setup,ordinary,[43],[43],[],160,True,True,b9e1f303c7c6668998d7a45a0a797f75351cec725c1b5826b37ec7d31bf9c1d8
+45,b3->b4,41,58,0,17,0,b3,source_run_hold,ordinary,[],[],[],192,True,True,cb1e76a78e33f75e03979b9813247e70872ed7d71a72f17098cb8a9f5cec2eae
+46,b4->b5,51,66,1,0,14,b5,direct_arrival,ordinary,[51],[],[51],140,True,True,fe0b6928f2040351a378331b635fdcef1d42ea44347d8d4e2bdc1820afcc8d0b
+46,b4->b5,51,52,0,1,0,b4,source_run_hold,ordinary,[],[],[],140,True,True,34ac0ee680b93d6398c00a00b733f74bfc504706c120a728523b7a8b0f5ccdaa
+46,b4->b5,51,53,0,2,0,b4,source_run_hold,ordinary,[],[],[],144,True,True,cec9a6fff3f02b277683039c568f242d80189ae6466c842608fe62ca54f918c4
+46,b4->b5,51,54,0,3,0,b4,source_run_hold,ordinary,[],[],[],148,True,True,7169977bbb9e73391858453a56e230afb6f5efb243da3cf14de1e214d6ee6f99
+46,b4->b5,51,55,0,4,0,b4,source_run_hold,ordinary,[],[],[],152,True,True,f82fec7313f68e913622cdf565e4f8f75c344cdb30e5b55373442915165c79f3
+46,b4->b5,51,56,0,5,0,b4,source_run_hold,ordinary,[],[],[],156,True,True,137d0cd3b60890673d456e8e46ea4d0f7f14ccdaab85bb6c1b831821c1369409
+46,b4->b5,51,57,0,6,0,b4,source_run_hold,ordinary,[],[],[],160,True,True,72b0175c13257d8975b61c97f9365bb5456d618a8a1acf22314d957df1a77b03
+46,b4->b5,51,58,0,7,0,b4,source_run_hold,ordinary,[],[],[],164,True,True,9e871756cc341a3f41e722a1917bfa110e8cc6c49424a759e9260dae65a75071
+46,b4->b5,51,59,0,8,0,b4,source_run_hold,ordinary,[],[],[],168,True,True,5f3223f7248869283658c829a968a752405125e4c84162c89f61cf00127d6625
+46,b4->b5,51,60,0,9,0,b4,source_run_hold,ordinary,[],[],[],172,True,True,3d328e5eeb4b767c6920d2d3c8fc5b65b7b393e8a812e9d84f7b9276e17b7f9a
+46,b4->b5,51,61,0,10,0,b4,source_run_hold,ordinary,[],[],[],176,True,True,5372e29273a8e9d5d6e3a25fe73c5b35877a6f2e8d3ac0671a1b005f0b030730
+46,b4->b5,51,62,0,11,0,b4,source_run_hold,ordinary,[],[],[],180,True,True,26b522d822795ba20ef68bbfdd2ba9eb4d590492a3d55bf2c707c58506066d7b
+47,b5->b7,66,67,0,1,0,b5,source_run_hold,ordinary,[],[],[],168,True,True,8fdb399751a0a8c89636d4079bec1dfd3a9ae2172c893535d07a9feef856561c
+48,b5->b7,66,67,0,1,0,b5,source_run_hold,ordinary,[],[],[],169,True,True,d6d6d9ea5195c361434c420471ae88b7149f8820ca35b74bf2be41eb72806d4e
+49,b3->b4,42,54,1,0,11,b3,source_setup,ordinary,[42],[42],[],136,True,True,54804047076ebc0914fad189d69e30279f742c4662f6c496b5772175205c6980
+49,b3->b4,42,52,1,0,9,b4,direct_arrival,ordinary,[42],[],[42],136,True,True,ed884d0d4109bc1f4d943d68f543c5d9db171147c166cd0386b1d6ae8148c4f6
+49,b3->b4,42,43,0,1,0,b3,source_run_hold,ordinary,[],[],[],136,True,True,c1a079c642cad4559cc16e1370833bc7d11e9d3387e23aa3448da61ee8ee87c2
+49,b3->b4,42,55,1,1,11,b3,source_setup,ordinary,[43],[43],[],140,True,True,27351033fe3f1f1b95203b3e382b3095ddb13d29228f3207441dc595953395a1
+49,b3->b4,42,44,0,2,0,b3,source_run_hold,ordinary,[],[],[],140,True,True,4eca4b2d35b216bd7f14bb558414a231e73712c600ca20f297edfcacececef86
+49,b3->b4,42,56,1,2,11,b3,source_setup,ordinary,[44],[44],[],144,True,True,eb0eaf494ff46b1bc4c8025da4754d0b209635977e8c70ee578e7987d1349892
+49,b3->b4,42,45,0,3,0,b3,source_run_hold,ordinary,[],[],[],144,True,True,1c0842addbfde3ca0c42c97cf7834000371ede590730d44f2e8adf050f7751b2
+49,b3->b4,42,57,1,3,11,b3,source_setup,ordinary,[45],[45],[],148,True,True,45f74e2851a1af57d36a2c72194e14c5045ad8684df49a79994fb9de58ae8a89
+49,b3->b4,42,46,0,4,0,b3,source_run_hold,ordinary,[],[],[],148,True,True,4a376f06426cd154de563892568d4282233ea51c182345ca6d26000e914cb44f
+49,b3->b4,42,58,1,4,11,b3,source_setup,ordinary,[46],[46],[],152,True,True,498623a6bd4481f43b91f0c7485b4e33f2b105d20c8c22cad22eaa57df078334
+49,b3->b4,42,47,0,5,0,b3,source_run_hold,ordinary,[],[],[],152,True,True,71d36abb36ab6ed88c54bb4896092fc891e4a776bcf500b3e1bcdbbbc86b9300
+49,b3->b4,42,48,0,6,0,b3,source_run_hold,ordinary,[],[],[],156,True,True,f63535d30083d6dc51df7400611a6468616442269e02e73e6445101be37c030d
+49,b3->b4,42,49,0,7,0,b3,source_run_hold,ordinary,[],[],[],160,True,True,878128abe98481232c9e6d3e4368638b35a1d4b32a5874463d16ee099dacc875
+49,b3->b4,42,50,0,8,0,b3,source_run_hold,ordinary,[],[],[],164,True,True,bbd432569fe9261754629cb87d62f36a873fb38fb8ade04fbf64ed90e7afb94c
+49,b3->b4,42,51,0,9,0,b3,source_run_hold,ordinary,[],[],[],168,True,True,98b09a7b2a9ddbcb0bcc7753c217b099e109017295b9079e8348c9fa0e0f1f95
+49,b3->b4,42,52,0,10,0,b3,source_run_hold,ordinary,[],[],[],172,True,True,cd82db4200b4388b37542d324d6560b976a561375f97ea14c48e8440ec59d725
+49,b3->b4,42,53,0,11,0,b3,source_run_hold,ordinary,[],[],[],176,True,True,605c7987c8e3656848e68bbde1b385840895adcfd72160878bdb12b7613031e9
+49,b3->b4,42,54,0,12,0,b3,source_run_hold,ordinary,[],[],[],180,True,True,7c8450c007498fb844549b0dbab963a35485e8fd5f7bd38522b6621c8df1eb82
+49,b3->b4,42,55,1,1,11,b3,source_setup,ordinary,[42],[42],[],144,True,True,cc57fd4dd771f66b1bc688b3cbb874c4e88400bfd9a13027d07d49a4347cc0c9
+49,b3->b4,42,55,0,13,0,b3,source_run_hold,ordinary,[],[],[],184,True,True,ec35683b4f9e2d9265129a2598dfe16eae977481d3aff9726d59c61c485f4957
+49,b3->b4,42,56,1,2,11,b3,source_setup,ordinary,[43],[43],[],152,True,True,9b8f644e9f58078288a52d4fcc8f29b982366b5163a1b2c56246c840d5a8d1f6
+49,b3->b4,42,56,1,2,11,b3,source_setup,ordinary,[42],[42],[],148,True,True,f44911b9bb5ba3afa8badbd999324032b0c555e441522706a3c68bfda41ba23f
+49,b3->b4,42,56,0,14,0,b3,source_run_hold,ordinary,[],[],[],188,True,True,a6417d3c39f8177de68dadda98dbaee6ea3e3126d2c916cf7d6dd9eb0283b446
+49,b3->b4,42,57,1,3,11,b3,source_setup,ordinary,[44],[44],[],160,True,True,d7e4d807f43fe6347b4ceef2dd4bdef473ac005b6985d4f5d2aa3d2cbc130428
+49,b3->b4,42,57,1,3,11,b3,source_setup,ordinary,[43],[43],[],156,True,True,9c5f21753b9a4b1e2f195125adf6029b771d3b1242190b0442357a1384bf78da
+49,b3->b4,42,57,1,3,11,b3,source_setup,ordinary,[42],[42],[],152,True,True,4092cf70f981948cb2cfd3f2bda7c7a5f8aec44e5fd4619d53b12149bfa56a00
+49,b3->b4,42,57,0,15,0,b3,source_run_hold,ordinary,[],[],[],192,True,True,2ca744de52ba57a0f3f69de31f22d72a10600863a5b9d46bca5bb0a1371a5e71
+49,b3->b4,42,58,1,4,11,b3,source_setup,ordinary,[45],[45],[],168,True,True,0a37568114dbabcbf7c0edc3556fbcd100629b09919a02eb0c7fa5ed34862289
+49,b3->b4,42,58,1,4,11,b3,source_setup,ordinary,[43],[43],[],160,True,True,d3401c0232331e75eb9bf932ea86ea02e965361ab92aa6c6fdd71e023ea844a9
+49,b3->b4,42,58,1,4,11,b3,source_setup,ordinary,[44],[44],[],164,True,True,373c05b1f79ab6a090e9fe017f8495c42f63f85067d3f28e899e436e7c0f48d2
+49,b3->b4,42,58,1,4,11,b3,source_setup,ordinary,[42],[42],[],156,True,True,bad62df7c8be5d4acb987ed80cdfb6159a3fdd51b6d349e5eec9c6653466c303
+49,b3->b4,42,58,0,16,0,b3,source_run_hold,ordinary,[],[],[],196,True,True,5f5c124189730f074af856ea6619e2578d6e5c94de3e9841c20fd90f8f423c7a
+50,b4->b5,52,67,1,0,14,b5,direct_arrival,ordinary,[52],[],[52],148,True,True,3a3f85db1459cc7805835a3ef911e114bb3898eb5f935d455347e6b51eb56c10
+50,b4->b5,52,53,0,1,0,b4,source_run_hold,ordinary,[],[],[],148,True,True,02212c7a3fa32448aa65db01affd47cd6f91bf651d95b07ea7111953f3fb962b
+50,b4->b5,52,54,0,2,0,b4,source_run_hold,ordinary,[],[],[],152,True,True,fad2ed016cf9c48ae2df3dbc469bac4d6f7978d0684a0b012caa8e6ce2d94628
+50,b4->b5,52,55,0,3,0,b4,source_run_hold,ordinary,[],[],[],156,True,True,70e0327a11d9c928cc43116d424c7fcbe80e82c2d9978460b9043e1022f6a9d1
+50,b4->b5,52,56,0,4,0,b4,source_run_hold,ordinary,[],[],[],160,True,True,b448f91d2c29b98d88fd441629ead4857d8444cb0c304594ff833ecda96d083b
+50,b4->b5,52,57,0,5,0,b4,source_run_hold,ordinary,[],[],[],164,True,True,2f051d4e69e0c43ba13ad8c51d47f5a29e50adafc31632765c6c51974bcf634f
+50,b4->b5,52,58,0,6,0,b4,source_run_hold,ordinary,[],[],[],168,True,True,a264a9ebc35b9bc8b0da1d1246c7462fd59a7a15635726a2f2d341f49fa9379a
+50,b4->b5,52,59,0,7,0,b4,source_run_hold,ordinary,[],[],[],172,True,True,ac97df6e298ab194e832a5d6b9b2ac7ceb121c464a95ca7da7ce16db571e4f31
+50,b4->b5,52,60,0,8,0,b4,source_run_hold,ordinary,[],[],[],176,True,True,2a454a110a42ca00342a41e88744293674de87f9c6aa3ed58e749e2c0be76223
+50,b4->b5,52,61,0,9,0,b4,source_run_hold,ordinary,[],[],[],180,True,True,0ac410bf68ae1eb88912ec4b2866aaec6d11333910a274ee8b56be46def090b2
+50,b4->b5,52,62,0,10,0,b4,source_run_hold,ordinary,[],[],[],184,True,True,0aebb78a4e98f3e0330a2b3a15d3ef728f8e92e20defe7174ff746e92d1245f3
+53,b3->b4,43,55,1,0,11,b3,source_setup,ordinary,[43],[43],[],144,True,True,1c5cc2a9ac89542650c518681302fd81630e5ef812acdbfb459d1aa32dd296a4
+53,b3->b4,43,53,1,0,9,b4,direct_arrival,ordinary,[43],[],[43],144,True,True,08e7eea468bda7f2b49ae80d3316c5165b91b66373c343470744a2324cf4c5bb
+53,b3->b4,43,44,0,1,0,b3,source_run_hold,ordinary,[],[],[],144,True,True,b44bf170367a3efd1beca3688e6a65b55e5563cf97ab4e3833f2c6bfa99705ca
+53,b3->b4,43,56,1,1,11,b3,source_setup,ordinary,[44],[44],[],148,True,True,28c945309e1aecd93814cd60a2b34eb4d5076a5863c1b7906be7b78126868e6d
+53,b3->b4,43,45,0,2,0,b3,source_run_hold,ordinary,[],[],[],148,True,True,39dc2bd6f1720a9abb1d18a9fbe4a7d57afd413ac1530ba0ac7d1ae12b5954e5
+53,b3->b4,43,57,1,2,11,b3,source_setup,ordinary,[45],[45],[],152,True,True,e1e4ba5e45cd377b59922a8335456d506603b105c5ecd58caf93c8f3b6e41fdc
+53,b3->b4,43,46,0,3,0,b3,source_run_hold,ordinary,[],[],[],152,True,True,c03f9c114d6fbefae1af4b8eb25881bedb65e1b469e68063083b93271e29f245
+53,b3->b4,43,58,1,3,11,b3,source_setup,ordinary,[46],[46],[],156,True,True,403ab1bded62c9d2081c315c93c0b9f905916281b7a17ea54923c7ac6d36ee5c
+53,b3->b4,43,47,0,4,0,b3,source_run_hold,ordinary,[],[],[],156,True,True,48ef41f159962762c491f974432daa535618f1c2305a2deb016e74ad587bed19
+53,b3->b4,43,48,0,5,0,b3,source_run_hold,ordinary,[],[],[],160,True,True,985ff888d30692de771799b507d1e44cf12895213ee3e81a34171021026aa0e5
+53,b3->b4,43,49,0,6,0,b3,source_run_hold,ordinary,[],[],[],164,True,True,aa8b5fbd30aec4bfd2aa811d8e6712ca3bf12069e6c2fca75ed40ca698dab739
+53,b3->b4,43,50,0,7,0,b3,source_run_hold,ordinary,[],[],[],168,True,True,f5185d155f0668d7f908640dfd910e53ab6f514b86badf59cfd505152022a299
+53,b3->b4,43,51,0,8,0,b3,source_run_hold,ordinary,[],[],[],172,True,True,2d10585b9d807e21ca1f6909bea95d1906f87e5de1c9cef047ae327e80f649f5
+53,b3->b4,43,52,0,9,0,b3,source_run_hold,ordinary,[],[],[],176,True,True,837118610a209412f07c10dd91f3b83150d97adb162e21c80fb9cc7a8619197b
+53,b3->b4,43,53,0,10,0,b3,source_run_hold,ordinary,[],[],[],180,True,True,5a80a56e1e360d41685733f2c825f7c9751c99b69344b7075f3396069b9f9447
+53,b3->b4,43,54,0,11,0,b3,source_run_hold,ordinary,[],[],[],184,True,True,51a1ca62440b6de900744a06f4e2e84168586b07c29755281bd76b30e71f4147
+53,b3->b4,43,55,0,12,0,b3,source_run_hold,ordinary,[],[],[],188,True,True,4051115e2c2c6c3ed44e9beccfedf09387383c6e67891f827bf2087937e504e4
+53,b3->b4,43,56,1,1,11,b3,source_setup,ordinary,[43],[43],[],152,True,True,61f0d24bc7d85cb02546f4009dcabfc478c659c260eb894fa552d4ae55e5036c
+53,b3->b4,43,56,0,13,0,b3,source_run_hold,ordinary,[],[],[],192,True,True,3fe90eae12e85a86e34014a0ed4a08bbe955835f3ffd7e4e830dd1cf896e23d4
+53,b3->b4,43,57,1,2,11,b3,source_setup,ordinary,[43],[43],[],156,True,True,42dc73c5ca1351e8a2708f6d24e3a750f11b4f64862efc65e97ee99781f20d2d
+53,b3->b4,43,57,1,2,11,b3,source_setup,ordinary,[44],[44],[],160,True,True,872b9312b3882f5f6c5b4eeb098f1940d5a68081f36e1021af384ccde332f608
+53,b3->b4,43,57,0,14,0,b3,source_run_hold,ordinary,[],[],[],196,True,True,fa7ad38fba66cde1be73f488f4e8d2e3cade4a4cd8b8b884d3fb4e943ca26eb7
+53,b3->b4,43,58,1,3,11,b3,source_setup,ordinary,[44],[44],[],164,True,True,8deb254351ee2e39412f51a9d1f8b15ba68f966e6d82f9685e76a933c9494c7a
+53,b3->b4,43,58,1,3,11,b3,source_setup,ordinary,[43],[43],[],160,True,True,8ded84a3bcc2f70f7e06826485ca838a1531fefc5a4daffa9c5272d37571160d
+53,b3->b4,43,58,1,3,11,b3,source_setup,ordinary,[45],[45],[],168,True,True,ad027614c9963c50edc0620ea8afd9b1f3c047a25779bae753a9142772c5e63a
+53,b3->b4,43,58,0,15,0,b3,source_run_hold,ordinary,[],[],[],200,True,True,1b93d60ee8a3156d4e600c173a64603aee634c294cef8d49f8a322b162adadde
+54,b4->b5,53,54,0,1,0,b4,source_run_hold,ordinary,[],[],[],156,True,True,426c3d290a01775be057f0f361782f9809b3637ffe95300885d67958465fbf92
+54,b4->b5,53,55,0,2,0,b4,source_run_hold,ordinary,[],[],[],160,True,True,5f2a6fbfd10a79e29190d43ae4c2c0faafb61acb86b0ab163d323b13fcf44cdb
+54,b4->b5,53,56,0,3,0,b4,source_run_hold,ordinary,[],[],[],164,True,True,0fb015a300ada790a96384460639fd2a9e7117322af11da8e2f7ff2478669e1c
+54,b4->b5,53,57,0,4,0,b4,source_run_hold,ordinary,[],[],[],168,True,True,63fab99c92d7bc8c8cd2f92ede05df6bbfa7a58174388acd046c95e7b7ce8b20
+54,b4->b5,53,58,0,5,0,b4,source_run_hold,ordinary,[],[],[],172,True,True,d16fadb688057bbf6e8c487aed7e3f70083e18db6a36c4adb50e6ac33fbc281a
+54,b4->b5,53,59,0,6,0,b4,source_run_hold,ordinary,[],[],[],176,True,True,847b69761f5a83d6c8cb810edec65c95107d45ba4938b5ee19eafd2c4b63e43c
+54,b4->b5,53,60,0,7,0,b4,source_run_hold,ordinary,[],[],[],180,True,True,ef4abf83a790863cbb22e15691c05b39ff0d009a0518e5a710cea06d9d65afde
+54,b4->b5,53,61,0,8,0,b4,source_run_hold,ordinary,[],[],[],184,True,True,bd103841cbf81270f2ac993b69c90a8e1929e0b87e07d796e314d4070e2cdf0a
+54,b4->b5,53,62,0,9,0,b4,source_run_hold,ordinary,[],[],[],188,True,True,e327f2a71e2e9d099374e9ff16076216ce7a559a9bfa2ea36d10575d66ea7e0b
+55,b3->b4,44,56,1,0,11,b3,source_setup,ordinary,[44],[44],[],152,True,True,eecacff747108c95d22354e19691f3ceae80dcea527106b5b127968f6e985676
+55,b3->b4,44,54,1,0,9,b4,direct_arrival,ordinary,[44],[],[44],152,True,True,761cbaac608133cf772a5aadee2c826585fbd42bf93c62e844f9fef7188e558c
+55,b3->b4,44,45,0,1,0,b3,source_run_hold,ordinary,[],[],[],152,True,True,43671a1e47934f450512952142c8cb99dc81b491b953d501be3ff70f124007de
+55,b3->b4,44,57,1,1,11,b3,source_setup,ordinary,[45],[45],[],156,True,True,74693335e5ecc36d8fae52fdf02e0db1e50d820a1acaf56aaf9ffec400e8b961
+55,b3->b4,44,46,0,2,0,b3,source_run_hold,ordinary,[],[],[],156,True,True,55cc50b5884373b17a3a26fe3853eea9fd00fc33f2efee82841187b86381a10a
+55,b3->b4,44,58,1,2,11,b3,source_setup,ordinary,[46],[46],[],160,True,True,5522d6cddc51f38512b9f40e63a7b1b4033cb27f75b99fada8ba0d5bb2065d1d
+55,b3->b4,44,47,0,3,0,b3,source_run_hold,ordinary,[],[],[],160,True,True,e2162dcfc1c6b1ec38c5a244d8662e03009a97304f14f0b8c0863df6cc9a6afb
+55,b3->b4,44,48,0,4,0,b3,source_run_hold,ordinary,[],[],[],164,True,True,23170f89e3a0bf259d6689e594be0323899dcca3605536bf7b03bd02cb2a6e27
+55,b3->b4,44,49,0,5,0,b3,source_run_hold,ordinary,[],[],[],168,True,True,b2dd0379069ffdb6871bea19abe63dd598c4b9b6820a9f899268b82136ac1ca6
+55,b3->b4,44,50,0,6,0,b3,source_run_hold,ordinary,[],[],[],172,True,True,d489e95ddd6a41fd5e3863a10fa77c3632ef51235747d1623ce2dc1bfceb533b
+55,b3->b4,44,51,0,7,0,b3,source_run_hold,ordinary,[],[],[],176,True,True,bb0483534f510ef7be352df7a35ce97f12bb49b700e2102a68dd52ed3883e734
+55,b3->b4,44,52,0,8,0,b3,source_run_hold,ordinary,[],[],[],180,True,True,89a1c9ee3fadc3c3919206d3ffb9dd21df053776b36b562b96685c7616399300
+55,b3->b4,44,53,0,9,0,b3,source_run_hold,ordinary,[],[],[],184,True,True,17a5c26a532c5e0a7f56f024926ac3faec9390de1f8d96129b5a4be6c455ce4f
+55,b3->b4,44,54,0,10,0,b3,source_run_hold,ordinary,[],[],[],188,True,True,44d60eb745b4ac8ac1fc20d5dba7ba40cf98e386ce9996d12ecb41aea2bff02c
+55,b3->b4,44,55,0,11,0,b3,source_run_hold,ordinary,[],[],[],192,True,True,8fd40e2c515a3ceb3cf9542079e93784db0369873b281f63e0bc23bffe8ab377
+55,b3->b4,44,56,0,12,0,b3,source_run_hold,ordinary,[],[],[],196,True,True,8cffad408f511ee2df071f0ab6ae999fdfe09ede33e09861fec1a9d64f88e86c
+55,b3->b4,44,57,1,1,11,b3,source_setup,ordinary,[44],[44],[],160,True,True,a7d9a26e12c965243fae09ba5b12e58e30594aa2f6038e22007befd745b22d42
+55,b3->b4,44,57,0,13,0,b3,source_run_hold,ordinary,[],[],[],200,True,True,475e4c026dc87cec42426cd6b8c556b00312466d8725a715fbb9d658b68087db
+55,b3->b4,44,58,1,2,11,b3,source_setup,ordinary,[45],[45],[],168,True,True,56c8aa65a4ebd9168332ceaa458b4a6dbdbf74fcebb28e5bc1fc028511d730e9
+55,b3->b4,44,58,1,2,11,b3,source_setup,ordinary,[44],[44],[],164,True,True,ab27781703434fdaba2f66b89eff2fef56c076a6844d740be2041f3de976a882
+55,b3->b4,44,58,0,14,0,b3,source_run_hold,ordinary,[],[],[],204,True,True,fd3d19c4d722e317729b7c3b65a88a06d3abe0ef849ffe7afaffd2851e985830
+56,b4->b5,54,55,0,1,0,b4,source_run_hold,ordinary,[],[],[],164,True,True,b1b831865cd678cb80468e06b9dc1cd7694fbf7b23dd70ee0a205ea43cb22ee9
+56,b4->b5,54,56,0,2,0,b4,source_run_hold,ordinary,[],[],[],168,True,True,e31f770b3fd8a3144499853293976de9b0b894d50c085776d7237e928cb9c8de
+56,b4->b5,54,57,0,3,0,b4,source_run_hold,ordinary,[],[],[],172,True,True,9d8df0284e678523205477a21b37d705c61822fd50611d2bc23ce86924ccfd1a
+56,b4->b5,54,58,0,4,0,b4,source_run_hold,ordinary,[],[],[],176,True,True,2846854b940c04cc7be27d00b5b84121be70c98a51ad303e305a192276e054c1
+56,b4->b5,54,59,0,5,0,b4,source_run_hold,ordinary,[],[],[],180,True,True,2f0b23ff35572fd1741b1c0024e3ba4fa58f8f75c638e037bfa70da235069ca4
+56,b4->b5,54,60,0,6,0,b4,source_run_hold,ordinary,[],[],[],184,True,True,f8c1c25d150003cbddaed8f6f65fc8b1b1c38b3619eb10c0950b19cb07c89f81
+56,b4->b5,54,61,0,7,0,b4,source_run_hold,ordinary,[],[],[],188,True,True,00d7a0d8d9211c39943270d6f7f6c0ac73a305d3ec1b2eb4a9d7d281e779e4ac
+56,b4->b5,54,62,0,8,0,b4,source_run_hold,ordinary,[],[],[],192,True,True,923c85a052bca9c1aa2f489a7c5718d42159fc6efd824b995cca0602a1f73af9
+57,b3->b4,45,57,1,0,11,b3,source_setup,ordinary,[45],[45],[],160,True,True,26cae12cc8ef501c17e0d325ba99d2ff4a1369634357ba09a32a590ca06e0eb8
+57,b3->b4,45,55,1,0,9,b4,direct_arrival,ordinary,[45],[],[45],160,True,True,4b9079aed2a97d58f9d04ee71fb8fe8a5bafc71225c330b967c01f40dd9078f8
+57,b3->b4,45,46,0,1,0,b3,source_run_hold,ordinary,[],[],[],160,True,True,f7c5e440fceea25ffe6a75a0cb1039715f603e530e49d00e59930cf7b8b1ec93
+57,b3->b4,45,58,1,1,11,b3,source_setup,ordinary,[46],[46],[],164,True,True,9682fefd887edad64ce54279eb0a75db6d8611aa03cd64cff672d60aa42fc3b2
+57,b3->b4,45,47,0,2,0,b3,source_run_hold,ordinary,[],[],[],164,True,True,e3c0e1a1e604d7380eb894c71b5c246ddc62f573c6f7ece92795dc81cc632214
+57,b3->b4,45,48,0,3,0,b3,source_run_hold,ordinary,[],[],[],168,True,True,16f9fb960d525cbb1fc7c428f5d7cd132b4b38b070b4ee46378a53bb273a1919
+57,b3->b4,45,49,0,4,0,b3,source_run_hold,ordinary,[],[],[],172,True,True,eec96b70d6dbec6886677b8f446ff695daf18e935564132e073e52d26301c7e9
+57,b3->b4,45,50,0,5,0,b3,source_run_hold,ordinary,[],[],[],176,True,True,9dd3cbef6afe101ff9fd05d2dad5143daf9ee87068728bc723cc314f4c4bd416
+57,b3->b4,45,51,0,6,0,b3,source_run_hold,ordinary,[],[],[],180,True,True,3da1e3bbe1b1999c3af7cf317e691478380330607b38184e947de2e9bf47c255
+57,b3->b4,45,52,0,7,0,b3,source_run_hold,ordinary,[],[],[],184,True,True,c1dc60a1002a47cc730dfe1fef3861ce85d1928b39baffc71e380976be5ce5a0
+57,b3->b4,45,53,0,8,0,b3,source_run_hold,ordinary,[],[],[],188,True,True,be128d7fea34b07c7c953a1d4576a317e21d7bbb5ab5ab0ba532f813ae9bfddf
+57,b3->b4,45,54,0,9,0,b3,source_run_hold,ordinary,[],[],[],192,True,True,a5433b8a725b8c27297c2256fd35b519966df792e8538d5092e01a9d245107f9
+57,b3->b4,45,55,0,10,0,b3,source_run_hold,ordinary,[],[],[],196,True,True,a3726387de84abe289d5204bd52864fc6ab78a5c19f5f80b24c9fd288e310d95
+57,b3->b4,45,56,0,11,0,b3,source_run_hold,ordinary,[],[],[],200,True,True,3afe3c5ce63de80aa9d010e6f56bbff654e51de8126a28154f4392d6c06a3af4
+57,b3->b4,45,57,0,12,0,b3,source_run_hold,ordinary,[],[],[],204,True,True,e38c21c3ad551196c2b9ea90839a72e81bc1a0c94596545a956ae6abce19317a
+57,b3->b4,45,58,1,1,11,b3,source_setup,ordinary,[45],[45],[],168,True,True,c687eefb103f9bd5a59353b143dcf96635769f95672b51c8a12ebaebab8a89a1
+57,b3->b4,45,58,0,13,0,b3,source_run_hold,ordinary,[],[],[],208,True,True,8ec7ba32256860cbff1193524362214a99bb20069581b6a64302ae4b52af0c79
+58,b4->b5,55,56,0,1,0,b4,source_run_hold,ordinary,[],[],[],172,True,True,7c32e841a2fd0e47fcb1713be38a486f980ef58b3ac9b7c18153587a738301a3
+58,b4->b5,55,57,0,2,0,b4,source_run_hold,ordinary,[],[],[],176,True,True,2468ecb5464558f09d8632924773e7623a0eaba42de96dc3c6c6d42d68a72a52
+58,b4->b5,55,58,0,3,0,b4,source_run_hold,ordinary,[],[],[],180,True,True,027108686f98525086664a2175e9916f12128bd4038b3cb7b8441a4a1dee039c
+58,b4->b5,55,59,0,4,0,b4,source_run_hold,ordinary,[],[],[],184,True,True,f4250238383783bd993e21edf464cd7755ca6b7c7e8e231ecb17394983ee9224
+58,b4->b5,55,60,0,5,0,b4,source_run_hold,ordinary,[],[],[],188,True,True,2cde12aedda4fd9cf1dde1cb195232b1d3cb9bb8876b90b62fbc6757a168af91
+58,b4->b5,55,61,0,6,0,b4,source_run_hold,ordinary,[],[],[],192,True,True,73163e3be5335b18fc5ff07aa05f0eaecee4adf4585342d942eaf97fbdfb46c8
+58,b4->b5,55,62,0,7,0,b4,source_run_hold,ordinary,[],[],[],196,True,True,e0d5040cb0f9747c2f5b937f44638476727f9a2aa7ebe80c31adf2b6c13101cd
+59,b3->b4,46,58,1,0,11,b3,source_setup,ordinary,[46],[46],[],168,True,True,357b7fc74a022b7487aa50462b637f711a650fcc4f2699144471004870cd1804
+59,b3->b4,46,56,1,0,9,b4,direct_arrival,ordinary,[46],[],[46],168,True,True,ef5120755345d821d7abd6720e02b6453f9ad5ef15c6f5c4e461dd0879978270
+59,b3->b4,46,47,0,1,0,b3,source_run_hold,ordinary,[],[],[],168,True,True,f0c09b79b61dad79b4896e416d60515a204b1dbf2f0d970860f6f5e1a3cc2ce6
+59,b3->b4,46,48,0,2,0,b3,source_run_hold,ordinary,[],[],[],172,True,True,b6f6e2c19346db9a31a3325413de511b5b38c35535ca5bfef5d4ecbfcd8abf9f
+59,b3->b4,46,49,0,3,0,b3,source_run_hold,ordinary,[],[],[],176,True,True,5b960f561937fea0b585ccd2ca10428e2711d642e61c6dcca83bf14b1d9f8f9d
+59,b3->b4,46,50,0,4,0,b3,source_run_hold,ordinary,[],[],[],180,True,True,9b5617662b9afdea0b9a72df999e195b557086a7f8741babef1fb71b0de27db9
+59,b3->b4,46,51,0,5,0,b3,source_run_hold,ordinary,[],[],[],184,True,True,ea134a6a848649940c9d2ecbead9b08edbbe9e0f74723f34b27b9c8181570dc4
+59,b3->b4,46,52,0,6,0,b3,source_run_hold,ordinary,[],[],[],188,True,True,9727ec9ef26b0f0915c0075be85fbffc542157b0edb7a75e8922440753222d40
+59,b3->b4,46,53,0,7,0,b3,source_run_hold,ordinary,[],[],[],192,True,True,0829aba0b2214f2c62ff6a01633e5f9698c68c872919e1c60d48283844c86ed5
+59,b3->b4,46,54,0,8,0,b3,source_run_hold,ordinary,[],[],[],196,True,True,ad69b6f606c0cba41a68ceb26df09688ff6cf52603264cef0f12b37965ee0dc5
+59,b3->b4,46,55,0,9,0,b3,source_run_hold,ordinary,[],[],[],200,True,True,0d1e20a495c8cd856e18302e25daa6919dc6baed37d17d1ffa904e0450e10d5c
+59,b3->b4,46,56,0,10,0,b3,source_run_hold,ordinary,[],[],[],204,True,True,1ae9a24150de491d9343cb19797cc347c7a747d615b2808c9a8417e0bf559dc7
+59,b3->b4,46,57,0,11,0,b3,source_run_hold,ordinary,[],[],[],208,True,True,6b96e6eed616a6801ca44e8b020f1b39fd5284c9da603df8868eabf66c4261f4
+59,b3->b4,46,58,0,12,0,b3,source_run_hold,ordinary,[],[],[],212,True,True,b05187040f7a7d948aaa0dbfd41bb681b561f87a20e60b3056247d6999c9477f
+60,b4->b5,56,57,0,1,0,b4,source_run_hold,ordinary,[],[],[],180,True,True,d9febe54df2f51404df0c5aba3b1848b276704cccf50c77f7ec8c92c06471779
+60,b4->b5,56,58,0,2,0,b4,source_run_hold,ordinary,[],[],[],184,True,True,6b5808a26ca96b6d87bb83daef5282f8ee5a601999b0e50a84e300dbbaca31a7
+60,b4->b5,56,59,0,3,0,b4,source_run_hold,ordinary,[],[],[],188,True,True,bc75cc3cc184ed94b6791d338008c6981571055d76a11c415cd52a86c47bc049
+60,b4->b5,56,60,0,4,0,b4,source_run_hold,ordinary,[],[],[],192,True,True,b43bda0f315f4a4e31c4b06c6cb1790d71778709920d2d15fe29be1d78e038b7
+60,b4->b5,56,61,0,5,0,b4,source_run_hold,ordinary,[],[],[],196,True,True,798da2aa6174e0db1ffe46416b459f3b7163e647b40fd0a56ab662af65b4a415
+60,b4->b5,56,62,0,6,0,b4,source_run_hold,ordinary,[],[],[],200,True,True,06484312013c2b8ca7a962b0ce75e2367993ff1868c2ebda1c58aefb9f450a09
+61,b3->b4,47,57,1,0,9,b4,direct_arrival,ordinary,[47],[],[47],176,True,True,300363d8de099e8cb586dcf1c4fde4f09c293a25edd966aafc31967c8c4fe9a2
+61,b3->b4,47,48,0,1,0,b3,source_run_hold,ordinary,[],[],[],176,True,True,de59a6e876d18d247132d48013a5fc4f510896445554b89668df0fb319bd5f63
+61,b3->b4,47,49,0,2,0,b3,source_run_hold,ordinary,[],[],[],180,True,True,35f403e8c9164ed41233a2a9103b719c70e4b986a94ee2d374768034a28b3208
+61,b3->b4,47,50,0,3,0,b3,source_run_hold,ordinary,[],[],[],184,True,True,7269c10b271213a8afd45e6b14f20f92f0c29772e61bc5974539e7e460095243
+61,b3->b4,47,51,0,4,0,b3,source_run_hold,ordinary,[],[],[],188,True,True,1eb1fda5224b36e78423c042a815b6c633192d207bf981e5725fb9067610ddd1
+61,b3->b4,47,52,0,5,0,b3,source_run_hold,ordinary,[],[],[],192,True,True,a3244c04ec38b41c9ca283c37d77c8a2b905e53e1cef1aab61a12c768bf1f795
+61,b3->b4,47,53,0,6,0,b3,source_run_hold,ordinary,[],[],[],196,True,True,a652ed9164140b86d231bcdeaa2423a147f9d9830775dcc66303e068783e8cae
+61,b3->b4,47,54,0,7,0,b3,source_run_hold,ordinary,[],[],[],200,True,True,c0c9227bd30420503eb150e530a48b7419857e2006352e8f562dbf66a7ea725b
+61,b3->b4,47,55,0,8,0,b3,source_run_hold,ordinary,[],[],[],204,True,True,9d8ecbc4ad5f883150abade61b8d912adbe78a2ad4318ce7e839b131fa3bb5dc
+61,b3->b4,47,56,0,9,0,b3,source_run_hold,ordinary,[],[],[],208,True,True,9e1ad75f22527ce30ba9043063d4bc02b941106d0fec7aad2fdca155982196e7
+61,b3->b4,47,57,0,10,0,b3,source_run_hold,ordinary,[],[],[],212,True,True,17920340f195750376f3c055e932d87d3bb9602085c48e255f9a4a3b893f7c4f
+61,b3->b4,47,58,0,11,0,b3,source_run_hold,ordinary,[],[],[],216,True,True,94d8e11c1fd02919b8b6e0956933c1c0d0e485f7b260e461de3c8f64fc02405b
+62,b4->b5,57,58,0,1,0,b4,source_run_hold,ordinary,[],[],[],188,True,True,c6d85595b16e3934914634c4db2d137e22d96ac81fc795885f24fe2faeede0d1
+62,b4->b5,57,59,0,2,0,b4,source_run_hold,ordinary,[],[],[],192,True,True,237cd1df22b5d31f718c01fb18fe81a095e519f9481a828c6babc7c6ab5ba6fc
+62,b4->b5,57,60,0,3,0,b4,source_run_hold,ordinary,[],[],[],196,True,True,5f8a4d31d54a52fe15430f26f3b714016b870ffa69b56aba4dc9936a0e4675a1
+62,b4->b5,57,61,0,4,0,b4,source_run_hold,ordinary,[],[],[],200,True,True,e13e868d45c8f1b8401af9e86ea65086baf922ebcefd94d679ced8844efa05b9
+62,b4->b5,57,62,0,5,0,b4,source_run_hold,ordinary,[],[],[],204,True,True,c9070fec1b1560c379b9b586d7b7c16cb854cb3a66effb76414cd67d6838acaa
+63,b3->b4,48,58,1,0,9,b4,direct_arrival,ordinary,[48],[],[48],184,True,True,ab9b97ea6cbb0e76ff21ed2cb48419f82b832b35e358f6e105f8cbb3ce47b69f
+63,b3->b4,48,49,0,1,0,b3,source_run_hold,ordinary,[],[],[],184,True,True,8d9c7d78b04e5be61fd935a707f542374b751783d02b38941699c63853682bf2
+63,b3->b4,48,50,0,2,0,b3,source_run_hold,ordinary,[],[],[],188,True,True,b48965565305d71be847cf391ec4397f41a362cd0dec144d8dd562c001a70645
+63,b3->b4,48,51,0,3,0,b3,source_run_hold,ordinary,[],[],[],192,True,True,07185c36ddecc4443a47f7b8f0b36db65fdcc57095158e1ebebc97dda2ed19ae
+63,b3->b4,48,52,0,4,0,b3,source_run_hold,ordinary,[],[],[],196,True,True,b843d9a683c20e47c69bcb49be41396b0e0890a193ae822ee7344b1aab9a2ead
+63,b3->b4,48,53,0,5,0,b3,source_run_hold,ordinary,[],[],[],200,True,True,9a4f4241e8bd730eb595956352ebf9fee88dbcf7cf276ec37564c80cc5521329
+63,b3->b4,48,54,0,6,0,b3,source_run_hold,ordinary,[],[],[],204,True,True,c98b1589f74052460172a98d3b3557158b49eea0cc2a5df91a63040083af6530
+63,b3->b4,48,55,0,7,0,b3,source_run_hold,ordinary,[],[],[],208,True,True,f548a9b95cee4f49630154e4a806e2d3fee26e0e2afe259ed4fc92291efb90a5
+63,b3->b4,48,56,0,8,0,b3,source_run_hold,ordinary,[],[],[],212,True,True,e19f264d0c6ae26eef3b7c7ebc1ff4eb01a8069463370205082087ee1fe09167
+63,b3->b4,48,57,0,9,0,b3,source_run_hold,ordinary,[],[],[],216,True,True,4f9df4877396dd183ad99b560fb0fd58a3e6477cbadb252bf96d7fb521ffb8df
+63,b3->b4,48,58,0,10,0,b3,source_run_hold,ordinary,[],[],[],220,True,True,448eaa3376ddf28690d50a36804a5d58a5d6896b81c2013a1859386895c94793
+64,b4->b5,58,59,0,1,0,b4,source_run_hold,ordinary,[],[],[],196,True,True,bdc54c58ecccd2b5f23b51babee5e783f119c2bb1ba05998ef243b6f1d317415
+64,b4->b5,58,60,0,2,0,b4,source_run_hold,ordinary,[],[],[],200,True,True,dc5f6678336636a482e1d402e0fcf26f4d3e87aea5e6451e8de9b5182f6b0744
+64,b4->b5,58,61,0,3,0,b4,source_run_hold,ordinary,[],[],[],204,True,True,e1e77848e848de013540f90ca8a944ac03020a744c24cbdf8b6afdfc62ede094
+64,b4->b5,58,62,0,4,0,b4,source_run_hold,ordinary,[],[],[],208,True,True,6f517c59007ac2b20da0047f524627f66085277e8ebd552ca6ce227f76294e97
+65,b3->b4,49,59,1,0,9,b4,direct_arrival,ordinary,[49],[],[49],192,True,True,b6b46cf648b93124c9e6801621709729b6e8b62f9ed44d5e6fdf44cc6329c931
+65,b3->b4,49,50,0,1,0,b3,source_run_hold,ordinary,[],[],[],192,True,True,e55e55d890b06f2f5c8bf04cd24502dbad3785036c6492809f4430114e999aa8
+65,b3->b4,49,51,0,2,0,b3,source_run_hold,ordinary,[],[],[],196,True,True,c4ddd13432295c94c0a32253b5e93f8019c0a8138713e730a5fc39b08950c01b
+65,b3->b4,49,52,0,3,0,b3,source_run_hold,ordinary,[],[],[],200,True,True,1392aa9b8c5ebb42cad7cd209bf0b7bb64cdb1d763db0cfd2316f56c8362c16e
+65,b3->b4,49,53,0,4,0,b3,source_run_hold,ordinary,[],[],[],204,True,True,9bc6b86772ba1307fc39b10c48096fd40756574ec3cf7e5892231c76a310184e
+65,b3->b4,49,54,0,5,0,b3,source_run_hold,ordinary,[],[],[],208,True,True,a84f56164d2c84404b22b6cacf1a550fbf63de016a0d04fe5769dcbcbe8e4019
+65,b3->b4,49,55,0,6,0,b3,source_run_hold,ordinary,[],[],[],212,True,True,9dab9eea71cb17ba778896f2a60abbe2d2a0d86180aedba1c8ce9744f2e94a4b
+65,b3->b4,49,56,0,7,0,b3,source_run_hold,ordinary,[],[],[],216,True,True,67b6bc86373133fa7df6da3f97262da8dd4d5ec739047f8bf2b1cb50a6577008
+65,b3->b4,49,57,0,8,0,b3,source_run_hold,ordinary,[],[],[],220,True,True,402d588d24166a236905b9cc3e69d0a2c28f7a9904f3113829c03211270aef2e
+65,b3->b4,49,58,0,9,0,b3,source_run_hold,ordinary,[],[],[],224,True,True,2738fa5c77e72b8e5e378f4108a213917ba3abb4d97e87daf841e94debb0fa23
+66,b4->b5,59,60,0,1,0,b4,source_run_hold,ordinary,[],[],[],204,True,True,40b950816e5f5fa65a38834206163bded6e7ab3d5b2ff2f0b57849a2d9a781f5
+66,b4->b5,59,61,0,2,0,b4,source_run_hold,ordinary,[],[],[],208,True,True,a7899c3d3a6fa85df56e91256a3d900672e96ef8b25920d1eeee2b048b77552d
+66,b4->b5,59,62,0,3,0,b4,source_run_hold,ordinary,[],[],[],212,True,True,2a16cc27db014736355c758e68c60f7c2c235d19d0617a91c96fca56c78a758a

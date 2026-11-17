@@ -1,0 +1,42 @@
+[
+  {
+    "name": "real11-clock64-first",
+    "source": "78fe99dd12ab5cd52bb45255a614e8b6e922d652",
+    "status": "unknown",
+    "termination": "exhausted",
+    "elapsedSeconds": 302.5743900835514,
+    "calls": 430,
+    "acceptedWitnessReplays": 32,
+    "allReplaysPassed": true
+  },
+  {
+    "name": "real11-clock64-near-goals",
+    "source": "5c1924d377384f96b93fff1d4b19be0c8395f3f6",
+    "status": "unknown",
+    "termination": "exhausted",
+    "elapsedSeconds": 233.89041387662292,
+    "calls": 471,
+    "acceptedWitnessReplays": 27,
+    "allReplaysPassed": true
+  },
+  {
+    "name": "real11-clock64-event-priority",
+    "source": "7297edb9da6b34788bc3b84f9f4c203d7e967b80",
+    "status": "unknown",
+    "termination": "deadline",
+    "elapsedSeconds": 300.1242282092571,
+    "calls": 773,
+    "acceptedWitnessReplays": 53,
+    "allReplaysPassed": true
+  },
+  {
+    "name": "real11-clock64-resumed",
+    "source": "f21d58eaed448656b85ae43e98c307da31efbe50",
+    "status": "unknown",
+    "termination": "candidate_limit",
+    "elapsedSeconds": 126.54075033217669,
+    "calls": 383,
+    "acceptedWitnessReplays": 0,
+    "allReplaysPassed": true
+  }
+]

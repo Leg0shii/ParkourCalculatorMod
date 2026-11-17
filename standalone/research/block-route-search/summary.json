@@ -1,0 +1,58 @@
+{
+  "route-choice": {
+    "fixture": "blocks-route-choice.json",
+    "fixtureSha256": "9412cd1f7756186e56827754cc2bc43730d9e03623940af437488810bf81ac4c",
+    "blockIds": [
+      "start",
+      "middle",
+      "goal"
+    ],
+    "allocation": [
+      0,
+      0
+    ],
+    "runTicks": 0,
+    "ticks": 24,
+    "searchSeconds": 0.08885350078344345,
+    "evaluatedPrefixes": 2,
+    "pruning": {
+      "horizontalEdges": 10,
+      "horizonPrefixes": 1,
+      "disconnectedPrefixes": 0,
+      "heuristicPoolDrops": 0
+    },
+    "violation": 0.0,
+    "verticalViolation": 0.0,
+    "problemHash": "e9a8c44fe843714fd1dcf1fd80ec746460d14d90c115c5d43dc1c385f7b5ada4",
+    "withVerticalHash": "b61a5edf8a0a16bee3fb225eec22037dfbdfa88516dda8c3ce4404785f16e93a",
+    "minimumRunTicksProven": true
+  },
+  "momentum-choice": {
+    "fixture": "blocks-momentum-choice.json",
+    "fixtureSha256": "db97c316e6f3e6784afefa04a4788bef1401f6502306900e5bd466a09d6ec238",
+    "blockIds": [
+      "start",
+      "around",
+      "goal"
+    ],
+    "allocation": [
+      0,
+      0
+    ],
+    "runTicks": 0,
+    "ticks": 24,
+    "searchSeconds": 0.20999246090650558,
+    "evaluatedPrefixes": 3,
+    "pruning": {
+      "horizontalEdges": 0,
+      "horizonPrefixes": 3,
+      "disconnectedPrefixes": 0,
+      "heuristicPoolDrops": 0
+    },
+    "violation": 0.0,
+    "verticalViolation": 0.0,
+    "problemHash": "31a331a5794028cb25127fe64bccaddd31fb8fc0a7041a84bdb48ddd9e71963d",
+    "withVerticalHash": "76c023929d8ff7c901bc98a68e3642dcfa1cfae359d77e973447b77302577633",
+    "minimumRunTicksProven": true
+  }
+}

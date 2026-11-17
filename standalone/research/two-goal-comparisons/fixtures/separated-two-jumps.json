@@ -1,0 +1,161 @@
+{
+  "request": {
+    "version": 1,
+    "sceneModel": "collision_boxes",
+    "geometryBounds": [
+      -12,
+      -3,
+      -3,
+      12,
+      6,
+      3
+    ],
+    "initial": {
+      "position": [
+        0.5,
+        1,
+        0.5
+      ],
+      "velocity": [
+        0.2,
+        -0.0784000015258789,
+        0
+      ],
+      "yaw": -90
+    },
+    "startBlock": "start",
+    "goalBlock": "goal",
+    "blocks": [
+      {
+        "id": "start",
+        "boxes": [
+          [
+            0,
+            0,
+            0,
+            1,
+            1,
+            1
+          ]
+        ]
+      },
+      {
+        "id": "middle",
+        "boxes": [
+          [
+            4,
+            0,
+            0,
+            5,
+            1,
+            1
+          ]
+        ]
+      },
+      {
+        "id": "goal",
+        "boxes": [
+          [
+            8,
+            0,
+            0,
+            9,
+            1,
+            1
+          ]
+        ]
+      }
+    ],
+    "objective": {
+      "axis": "X",
+      "sense": "MAX"
+    },
+    "maxTotalRunTicks": 1,
+    "maxRunTicksPerJump": 1,
+    "maxWallHits": 0,
+    "maxContactCombinations": 0,
+    "movementSearch": {
+      "types": [
+        "normal"
+      ],
+      "maxInputs": 28,
+      "maxPrefixes": 256,
+      "maxQueuedPrefixes": 256,
+      "maxChoicesPerType": 24,
+      "maxInteractions": 2,
+      "maxEntryInputs": 1
+    }
+  },
+  "spatialPoints": [
+    [
+      0.5,
+      1,
+      0.5
+    ],
+    [
+      4.5,
+      1,
+      0.5
+    ],
+    [
+      8.5,
+      1,
+      0.5
+    ]
+  ],
+  "settings": {
+    "seconds": 30,
+    "max_candidates": 32,
+    "beam_width": 12,
+    "unknown_slots": 2,
+    "max_solver_calls": 128,
+    "score_call_limit": 4,
+    "score_seconds": 2,
+    "candidate_seconds": 0.7,
+    "final_call_limit": 24,
+    "cluster_gap": 1,
+    "fair_parents": true
+  },
+  "opportunities": [
+    {
+      "id": "launch",
+      "inputs": [
+        0,
+        1
+      ],
+      "kinds": [
+        "jump"
+      ]
+    },
+    {
+      "id": "middle-contact",
+      "inputs": [
+        10,
+        13
+      ],
+      "kinds": [
+        "landing"
+      ]
+    },
+    {
+      "id": "relaunch",
+      "inputs": [
+        11,
+        15
+      ],
+      "kinds": [
+        "jump"
+      ]
+    },
+    {
+      "id": "finish",
+      "inputs": [
+        22,
+        27
+      ],
+      "kinds": [
+        "landing"
+      ]
+    }
+  ]
+}

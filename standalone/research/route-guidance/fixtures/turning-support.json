@@ -1,0 +1,67 @@
+{
+  "route": {
+    "version": 1,
+    "sceneModel": "open_air_supports",
+    "initial": {
+      "position": [
+        0.5,
+        1,
+        0.5
+      ],
+      "velocity": [
+        0,
+        -0.0784000015258789,
+        0
+      ],
+      "yaw": -90
+    },
+    "blocks": [
+      {
+        "id": "0",
+        "bounds": [
+          0,
+          2,
+          0,
+          1
+        ],
+        "top": 1
+      },
+      {
+        "id": "1",
+        "bounds": [
+          2.5,
+          4,
+          1,
+          2.5
+        ],
+        "top": 1
+      },
+      {
+        "id": "2",
+        "bounds": [
+          5.5,
+          7,
+          0,
+          1
+        ],
+        "top": 1
+      }
+    ],
+    "runBounds": [
+      [
+        0,
+        2
+      ],
+      [
+        0,
+        2
+      ]
+    ],
+    "maxTotalRunTicks": 4,
+    "inputs": {
+      "force45": true
+    }
+  },
+  "ticks": 26,
+  "name": "turning-support"
+}

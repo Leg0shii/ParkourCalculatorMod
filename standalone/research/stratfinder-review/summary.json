@@ -1,0 +1,34 @@
+{
+  "date": "2026-10-26",
+  "externalRepository": "https://github.com/Curryocity/Stratfinder",
+  "externalCommit": "988695b9b23245ded9f8ffb07c7ffd984091225d",
+  "nativeBaseline": "54c0374",
+  "nativeSourceChanged": false,
+  "nativeBenchmarksRerun": false,
+  "externalProbe": {
+    "airtime": 12,
+    "maxDepth": 2,
+    "maxTicks": 50,
+    "slowness": 1,
+    "facingDegrees": 0.015,
+    "momentumZ": -1.5,
+    "targetVz": [-0.1276846279184921, -0.1276844242999637],
+    "riskyOff": {
+      "solutions": 4,
+      "dfsCalls": 346368,
+      "forwardChecks": 273877,
+      "boundPrunes": 43882,
+      "seconds": 0.164986
+    },
+    "riskyOn": {
+      "solutions": 4,
+      "dfsCalls": 100750,
+      "forwardChecks": 14977,
+      "boundPrunes": 4252,
+      "seconds": 0.009997417
+    },
+    "sameSolutionsInThisCase": true,
+    "pruningSoundnessProven": false,
+    "gameAgreementChecked": false
+  }
+}

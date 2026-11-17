@@ -1,0 +1,3 @@
+{"tick": 61, "scored": 1, "unknown": 2, "retained": 1, "generation": "exhausted", "progress": [-1095.3000010179371]}
+{"tick": 62, "scored": 1, "unknown": 2, "retained": 1, "generation": "exhausted", "progress": [-1095.3000040128911]}
+{"status": "feasible", "termination": "deadline", "elapsed": 155.28604437410831, "work": {"spatialGoalEvaluations": 2, "numericalProposals": 6, "solverCalls": 4, "acceptedBranches": 2, "terminalEvaluations": 5, "uniqueCompletePrograms": 0, "unitsByType": {}, "firstProposalSeconds": 6.7779967077076435, "firstAcceptedSeconds": 10.683852162212133, "maxSolverCalls": 1024, "termination": "deadline"}, "position": [729.3252032292562, 7.249187078744681, -1094.5755032869683], "replays": 18}

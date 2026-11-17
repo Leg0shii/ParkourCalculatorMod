@@ -1,0 +1,276 @@
+[
+  {
+    "case": "grind",
+    "forward": true,
+    "summary": {
+      "arm": "prescribed",
+      "mode": "generation",
+      "status": "generated",
+      "elapsedSeconds": 1.321334209293127,
+      "routeCap": 10,
+      "routes": 1,
+      "unattemptedRoutes": 0,
+      "expandedPrefixes": 32,
+      "generatedChoices": 865,
+      "completePrograms": 3,
+      "numericalCalls": 0,
+      "firstAcceptedSeconds": null,
+      "bestTicks": null,
+      "bestObjective": null,
+      "forwardChecks": 862,
+      "forwardRejections": 599,
+      "forwardPhaseUpdates": 23389,
+      "skeletons": 0,
+      "maskWork": 0
+    },
+    "counts": [
+      {
+        "file": "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/copy.py",
+        "line": 118,
+        "function": "deepcopy",
+        "primitiveCalls": 28057,
+        "totalCalls": 899108,
+        "selfSeconds": 0.444696961,
+        "cumulativeSeconds": 0.93847281
+      },
+      {
+        "file": "/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/standalone/autonomy/cell_routes/local.py",
+        "line": 124,
+        "function": "prefix",
+        "primitiveCalls": 862,
+        "totalCalls": 862,
+        "selfSeconds": 0.038470330000000004,
+        "cumulativeSeconds": 0.094326878
+      },
+      {
+        "file": "/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/standalone/ipopt/ladder.py",
+        "line": 42,
+        "function": "vertical_step",
+        "primitiveCalls": 22445,
+        "totalCalls": 22445,
+        "selfSeconds": 0.016637405,
+        "cumulativeSeconds": 0.027967848
+      },
+      {
+        "file": "/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/standalone/autonomy/vertical_profiles.py",
+        "line": 16,
+        "function": "trace_ladder_schedule",
+        "primitiveCalls": 1988,
+        "totalCalls": 1988,
+        "selfSeconds": 0.068220101,
+        "cumulativeSeconds": 0.251970762
+      },
+      {
+        "file": "/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/standalone/autonomy/movement_composition.py",
+        "line": 114,
+        "function": "append_choice",
+        "primitiveCalls": 865,
+        "totalCalls": 865,
+        "selfSeconds": 0.018823512,
+        "cumulativeSeconds": 0.85533148
+      }
+    ],
+    "note": "instrumented profile; timings excluded from benchmark medians"
+  },
+  {
+    "case": "grind",
+    "forward": false,
+    "summary": {
+      "arm": "prescribed",
+      "mode": "generation",
+      "status": "generated",
+      "elapsedSeconds": 1.2224397137761116,
+      "routeCap": 10,
+      "routes": 1,
+      "unattemptedRoutes": 0,
+      "expandedPrefixes": 32,
+      "generatedChoices": 873,
+      "completePrograms": 3,
+      "numericalCalls": 0,
+      "firstAcceptedSeconds": null,
+      "bestTicks": null,
+      "bestObjective": null,
+      "forwardChecks": 0,
+      "forwardRejections": 0,
+      "forwardPhaseUpdates": 0,
+      "skeletons": 0,
+      "maskWork": 0
+    },
+    "counts": [
+      {
+        "file": "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/copy.py",
+        "line": 118,
+        "function": "deepcopy",
+        "primitiveCalls": 27459,
+        "totalCalls": 846411,
+        "selfSeconds": 0.418682659,
+        "cumulativeSeconds": 0.873359846
+      },
+      {
+        "file": "/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/standalone/ipopt/ladder.py",
+        "line": 42,
+        "function": "vertical_step",
+        "primitiveCalls": 22937,
+        "totalCalls": 22937,
+        "selfSeconds": 0.01634307,
+        "cumulativeSeconds": 0.027720416
+      },
+      {
+        "file": "/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/standalone/autonomy/vertical_profiles.py",
+        "line": 16,
+        "function": "trace_ladder_schedule",
+        "primitiveCalls": 2009,
+        "totalCalls": 2009,
+        "selfSeconds": 0.048281714,
+        "cumulativeSeconds": 0.21394326600000002
+      },
+      {
+        "file": "/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/standalone/autonomy/movement_composition.py",
+        "line": 114,
+        "function": "append_choice",
+        "primitiveCalls": 873,
+        "totalCalls": 873,
+        "selfSeconds": 0.018401219,
+        "cumulativeSeconds": 0.797260115
+      }
+    ],
+    "note": "instrumented profile; timings excluded from benchmark medians"
+  },
+  {
+    "case": "same-corridor-supports",
+    "forward": true,
+    "summary": {
+      "arm": "prescribed",
+      "mode": "generation",
+      "status": "generated",
+      "elapsedSeconds": 0.38438374921679497,
+      "routeCap": 10,
+      "routes": 1,
+      "unattemptedRoutes": 0,
+      "expandedPrefixes": 32,
+      "generatedChoices": 268,
+      "completePrograms": 9,
+      "numericalCalls": 0,
+      "firstAcceptedSeconds": null,
+      "bestTicks": null,
+      "bestObjective": null,
+      "forwardChecks": 265,
+      "forwardRejections": 73,
+      "forwardPhaseUpdates": 8310,
+      "skeletons": 0,
+      "maskWork": 0
+    },
+    "counts": [
+      {
+        "file": "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/copy.py",
+        "line": 118,
+        "function": "deepcopy",
+        "primitiveCalls": 8344,
+        "totalCalls": 216444,
+        "selfSeconds": 0.11174394900000001,
+        "cumulativeSeconds": 0.24583641900000003
+      },
+      {
+        "file": "/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/standalone/autonomy/cell_routes/local.py",
+        "line": 124,
+        "function": "prefix",
+        "primitiveCalls": 265,
+        "totalCalls": 265,
+        "selfSeconds": 0.013604529,
+        "cumulativeSeconds": 0.038120539
+      },
+      {
+        "file": "/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/standalone/ipopt/ladder.py",
+        "line": 42,
+        "function": "vertical_step",
+        "primitiveCalls": 6414,
+        "totalCalls": 6414,
+        "selfSeconds": 0.004462589,
+        "cumulativeSeconds": 0.007429784
+      },
+      {
+        "file": "/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/standalone/autonomy/vertical_profiles.py",
+        "line": 16,
+        "function": "trace_ladder_schedule",
+        "primitiveCalls": 582,
+        "totalCalls": 582,
+        "selfSeconds": 0.014831527,
+        "cumulativeSeconds": 0.061959789
+      },
+      {
+        "file": "/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/standalone/autonomy/movement_composition.py",
+        "line": 114,
+        "function": "append_choice",
+        "primitiveCalls": 268,
+        "totalCalls": 268,
+        "selfSeconds": 0.00536573,
+        "cumulativeSeconds": 0.255351877
+      }
+    ],
+    "note": "instrumented profile; timings excluded from benchmark medians"
+  },
+  {
+    "case": "same-corridor-supports",
+    "forward": false,
+    "summary": {
+      "arm": "prescribed",
+      "mode": "generation",
+      "status": "generated",
+      "elapsedSeconds": 0.35778945684432983,
+      "routeCap": 10,
+      "routes": 1,
+      "unattemptedRoutes": 0,
+      "expandedPrefixes": 32,
+      "generatedChoices": 292,
+      "completePrograms": 7,
+      "numericalCalls": 0,
+      "firstAcceptedSeconds": null,
+      "bestTicks": null,
+      "bestObjective": null,
+      "forwardChecks": 0,
+      "forwardRejections": 0,
+      "forwardPhaseUpdates": 0,
+      "skeletons": 0,
+      "maskWork": 0
+    },
+    "counts": [
+      {
+        "file": "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/copy.py",
+        "line": 118,
+        "function": "deepcopy",
+        "primitiveCalls": 9056,
+        "totalCalls": 233812,
+        "selfSeconds": 0.118538613,
+        "cumulativeSeconds": 0.245593201
+      },
+      {
+        "file": "/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/standalone/ipopt/ladder.py",
+        "line": 42,
+        "function": "vertical_step",
+        "primitiveCalls": 6968,
+        "totalCalls": 6968,
+        "selfSeconds": 0.004806131,
+        "cumulativeSeconds": 0.0079811
+      },
+      {
+        "file": "/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/standalone/autonomy/vertical_profiles.py",
+        "line": 16,
+        "function": "trace_ladder_schedule",
+        "primitiveCalls": 634,
+        "totalCalls": 634,
+        "selfSeconds": 0.015620919,
+        "cumulativeSeconds": 0.06507054500000001
+      },
+      {
+        "file": "/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/standalone/autonomy/movement_composition.py",
+        "line": 114,
+        "function": "append_choice",
+        "primitiveCalls": 292,
+        "totalCalls": 292,
+        "selfSeconds": 0.005354370000000001,
+        "cumulativeSeconds": 0.255617676
+      }
+    ],
+    "note": "instrumented profile; timings excluded from benchmark medians"
+  }
+]

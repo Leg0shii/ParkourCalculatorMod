@@ -1,0 +1,10 @@
+risky=0 solutions=4 dfs=346368 forwards=273877 boundPrunes=43882 seconds=0.164986
+sa.wa(2) sta(3) wa.sd(3) w.sd(5) vz=-0.12768450897330003
+s.wa(1) sj.wa(3) sta(9) st(2) stj(5) wa.s(7) wj.s(10) sta(2) st(1) vz=-0.12768451561046526
+sa.wa(3) sj.wa(3) sta(9) st(2) stj(5) wa.s(7) wj.s(10) sta(2) st(1) vz=-0.12768462399963648
+sa.w(1) s.w(7) st(1) stj(4) wa.s(8) wj.s(10) sta(2) st(1) vz=-0.1276844736885106
+risky=1 solutions=4 dfs=100750 forwards=14977 boundPrunes=4252 seconds=0.0099974169999999998
+sa.wa(2) sta(3) wa.sd(3) w.sd(5) vz=-0.12768450897330003
+s.wa(1) sj.wa(3) sta(9) st(2) stj(5) wa.s(7) wj.s(10) sta(2) st(1) vz=-0.12768451561046526
+sa.wa(3) sj.wa(3) sta(9) st(2) stj(5) wa.s(7) wj.s(10) sta(2) st(1) vz=-0.12768462399963648
+sa.w(1) s.w(7) st(1) stj(4) wa.s(8) wj.s(10) sta(2) st(1) vz=-0.1276844736885106

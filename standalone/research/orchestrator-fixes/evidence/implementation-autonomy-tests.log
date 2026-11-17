@@ -1,0 +1,13 @@
+...................ss......................ss......sss.....................ssssss................ssssss....ssss...........ss.........s................s..........ssss.....ss........ssssssssssssssssssssssssssss..ss........sss....F.................................................sss.........s.........sssss....................................................s........................sss............................ssss.........ssssss.................
+======================================================================
+FAIL: test_repeated_ladder_ceiling_events_regenerate_the_complete_schedule (test_ladder_composition.LadderRegionTests.test_repeated_ladder_ceiling_events_regenerate_the_complete_schedule)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/standalone/autonomy/tests/test_ladder_composition.py", line 108, in test_repeated_ladder_ceiling_events_regenerate_the_complete_schedule
+    self.assertIsNotNone(changed)
+AssertionError: unexpectedly None
+
+----------------------------------------------------------------------
+Ran 448 tests in 21.628s
+
+FAILED (failures=1, skipped=89)

@@ -1,0 +1,23 @@
+{"seed": [0], "target": "b3", "delay": 0, "tick": 30, "status": "feasible", "calls": 2, "replay": true}
+{"seed": [0], "target": "b4", "delay": 0, "tick": 40, "status": "feasible", "calls": 1, "replay": true}
+{"seed": [0], "target": "b5", "delay": 0, "tick": 55, "status": "feasible", "calls": 9, "replay": true}
+{"seed": [0], "terminal": 64, "status": "feasible", "calls": 24, "z": -1093.4154657711474, "replay": true}
+{"seed": [8], "target": "b3", "delay": 0, "tick": 26, "status": "unknown", "calls": 1, "replay": null}
+{"seed": [8], "target": "b3", "delay": 1, "tick": 27, "status": "unknown", "calls": 1, "replay": null}
+{"seed": [8], "target": "b3", "delay": 2, "tick": 28, "status": "feasible", "calls": 1, "replay": true}
+{"seed": [8], "target": "b4", "delay": 0, "tick": 38, "status": "unknown", "calls": 1, "replay": null}
+{"seed": [8], "target": "b4", "delay": 1, "tick": 39, "status": "unknown", "calls": 1, "replay": null}
+{"seed": [8], "target": "b4", "delay": 2, "tick": 40, "status": "feasible", "calls": 1, "replay": true}
+{"seed": [8], "target": "b5", "delay": 0, "tick": 55, "status": "unknown", "calls": 1, "replay": null}
+{"seed": [8], "target": "b5", "delay": 1, "tick": 56, "status": "unknown", "calls": 1, "replay": null}
+{"seed": [8], "target": "b5", "delay": 2, "tick": 57, "status": "unknown", "calls": 1, "replay": null}
+{"seed": [8], "target": "b5", "delay": 3, "tick": 58, "status": "feasible", "calls": 1, "replay": true}
+{"seed": [8], "terminal": 64, "status": "feasible", "calls": 13, "z": -1094.5795836939562, "replay": true}
+{"seed": [9], "target": "b3", "delay": 0, "tick": 27, "status": "feasible", "calls": 2, "replay": true}
+{"seed": [9], "target": "b4", "delay": 0, "tick": 37, "status": "unknown", "calls": 1, "replay": null}
+{"seed": [9], "target": "b4", "delay": 1, "tick": 38, "status": "unknown", "calls": 1, "replay": null}
+{"seed": [9], "target": "b4", "delay": 2, "tick": 39, "status": "unknown", "calls": 2, "replay": null}
+{"seed": [9], "target": "b4", "delay": 3, "tick": 40, "status": "feasible", "calls": 2, "replay": true}
+{"seed": [9], "target": "b5", "delay": 0, "tick": 55, "status": "unknown", "calls": 1, "replay": null}
+{"seed": [9], "target": "b5", "delay": 1, "tick": 56, "status": "feasible", "calls": 2, "replay": true}
+{"seed": [9], "terminal": 64, "status": "feasible", "calls": 24, "z": -1094.113303740301, "replay": true}

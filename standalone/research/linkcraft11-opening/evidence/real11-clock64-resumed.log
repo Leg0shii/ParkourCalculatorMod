@@ -1,0 +1,1 @@
+{"status": "unknown", "termination": "candidate_limit", "elapsed": 126.54075033217669, "work": {"numericalProposals": 398, "solverCalls": 383, "uniqueCompletePrograms": 0, "unitsByType": {}, "firstProposalSeconds": 0.2811286263167858, "firstAcceptedSeconds": null, "maxSolverCalls": 1024, "termination": null}, "position": null, "replays": 0}

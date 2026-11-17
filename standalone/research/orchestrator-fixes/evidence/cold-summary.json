@@ -1,0 +1,56 @@
+[
+  {
+    "name": "orchestrator-real11-stable",
+    "status": "unknown",
+    "termination": "deadline",
+    "sessionCalls": 150,
+    "cumulativeCalls": 150,
+    "stage": 1,
+    "currentTick": 28,
+    "scoredRecords": 4,
+    "ready": 20,
+    "sessionNewCompletedBranches": 147,
+    "repeatedCompletedBranchesAcrossBoundary": 0,
+    "resume": {
+      "exact": false,
+      "session": 1
+    },
+    "elapsedSeconds": 302.7371707521379
+  },
+  {
+    "name": "orchestrator-real11-stable-resume",
+    "status": "unknown",
+    "termination": "deadline",
+    "sessionCalls": 36,
+    "cumulativeCalls": 186,
+    "stage": 1,
+    "currentTick": 28,
+    "scoredRecords": 5,
+    "ready": 20,
+    "sessionNewCompletedBranches": 48,
+    "repeatedCompletedBranchesAcrossBoundary": 0,
+    "resume": {
+      "exact": true,
+      "session": 2
+    },
+    "elapsedSeconds": 303.8906847909093
+  },
+  {
+    "name": "orchestrator-real11-stable-resume2",
+    "status": "unknown",
+    "termination": "deadline",
+    "sessionCalls": 22,
+    "cumulativeCalls": 208,
+    "stage": 1,
+    "currentTick": 28,
+    "scoredRecords": 5,
+    "ready": 20,
+    "sessionNewCompletedBranches": 30,
+    "repeatedCompletedBranchesAcrossBoundary": 0,
+    "resume": {
+      "exact": true,
+      "session": 3
+    },
+    "elapsedSeconds": 303.50222275033593
+  }
+]

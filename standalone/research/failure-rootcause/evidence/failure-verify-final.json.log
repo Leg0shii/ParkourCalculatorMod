@@ -1,0 +1,15 @@
+{"name": "grind-or-run", "policy": "shortest", "ticks": null, "calls": 0}
+{"name": "multi-support", "policy": "shortest", "ticks": 14, "calls": 12}
+{"name": "turn-blockage", "policy": "shortest", "ticks": null, "calls": 9}
+{"name": "extra-grind", "policy": "shortest", "ticks": 5, "calls": 12}
+{"name": "extra-repeat-ceiling", "policy": "shortest", "ticks": null, "calls": 0}
+{"name": "grind-or-run", "policy": "complete_first", "ticks": null, "calls": 12}
+{"name": "multi-support", "policy": "complete_first", "ticks": 15, "calls": 12}
+{"name": "turn-blockage", "policy": "complete_first", "ticks": null, "calls": 9}
+{"name": "extra-grind", "policy": "complete_first", "ticks": 5, "calls": 12}
+{"name": "extra-repeat-ceiling", "policy": "complete_first", "ticks": null, "calls": 12}
+{"name": "grind-or-run", "policy": "tick_fair", "ticks": 11, "calls": 39}
+{"name": "multi-support", "policy": "tick_fair", "ticks": 15, "calls": 12}
+{"name": "turn-blockage", "policy": "tick_fair", "ticks": null, "calls": 9}
+{"name": "extra-grind", "policy": "tick_fair", "ticks": 5, "calls": 15}
+{"name": "extra-repeat-ceiling", "policy": "tick_fair", "ticks": null, "calls": 14}

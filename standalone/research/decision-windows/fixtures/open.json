@@ -1,0 +1,132 @@
+{
+  "request": {
+    "version": 1,
+    "sceneModel": "collision_boxes",
+    "geometryBounds": [
+      -5,
+      -5,
+      -5,
+      15,
+      12,
+      10
+    ],
+    "initial": {
+      "position": [
+        0.5,
+        1,
+        0.5
+      ],
+      "velocity": [
+        0.2,
+        -0.0784000015258789,
+        0
+      ],
+      "yaw": -90
+    },
+    "startBlock": "start",
+    "goalBlock": "goal",
+    "blocks": [
+      {
+        "id": "start",
+        "boxes": [
+          [
+            0,
+            0,
+            0,
+            1,
+            1,
+            1
+          ]
+        ]
+      },
+      {
+        "id": "goal",
+        "boxes": [
+          [
+            3,
+            0,
+            0,
+            4,
+            1,
+            1
+          ]
+        ]
+      }
+    ],
+    "maxTotalRunTicks": 0,
+    "maxRunTicksPerJump": 0,
+    "maxWallHits": 0,
+    "maxContactCombinations": 0,
+    "movementSearch": {
+      "types": [
+        "normal"
+      ],
+      "maxInputs": 25,
+      "maxPrefixes": 512,
+      "maxQueuedPrefixes": 384,
+      "maxChoicesPerType": 16
+    }
+  },
+  "spatialPoints": [
+    [
+      0.5,
+      1,
+      0.5
+    ],
+    [
+      0.5,
+      2,
+      0.5
+    ],
+    [
+      3.5,
+      2,
+      0.5
+    ],
+    [
+      3.5,
+      1,
+      0.5
+    ]
+  ],
+  "settings": {
+    "seconds": 20,
+    "max_candidates": 20,
+    "beam_width": 8,
+    "unknown_slots": 1,
+    "max_solver_calls": 128,
+    "score_call_limit": 4,
+    "score_seconds": 2,
+    "candidate_seconds": 0.7,
+    "final_call_limit": 24,
+    "cluster_gap": 1,
+    "fair_parents": true
+  },
+  "opportunities": [
+    {
+      "id": "launch",
+      "inputs": [
+        0,
+        5
+      ],
+      "kinds": [
+        "jump"
+      ]
+    },
+    {
+      "id": "finish",
+      "inputs": [
+        11,
+        24
+      ],
+      "kinds": [
+        "landing"
+      ]
+    }
+  ],
+  "legacyCheckpoints": [
+    {
+      "tick": 4
+    }
+  ]
+}

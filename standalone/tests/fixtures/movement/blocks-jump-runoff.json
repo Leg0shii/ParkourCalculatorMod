@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "sceneModel": "support_planes",
+  "initial": {"position": [0.5, 2, 0.5], "velocity": [0, -0.0784000015258789, 0], "yaw": 0},
+  "startBlock": "start",
+  "goalBlock": "goal",
+  "blocks": [
+    {"id": "start", "bounds": [0, 1, 0, 1], "top": 2},
+    {"id": "middle", "bounds": [2.75, 2.8, 0, 1], "top": 2},
+    {"id": "goal", "bounds": [4.25, 5.25, 0, 1], "top": 1.5}
+  ],
+  "maxJumps": 2,
+  "maxRunTicksPerJump": 0,
+  "maxTotalRunTicks": 0
+}

@@ -1,0 +1,13 @@
+two-jumps.json [0, 0] 0.091 s
+one-required-run-tick.json [1] 0.11 s
+backtrack.json [2, 0] 0.103 s
+turning-two-jumps.json [0, 0] 0.222 s
+Linkcraft j5-j9 [0, 0, 0, 0, 0, 0] 0.557 s
+real11 200 seconds 0.419 objective 737.5142588031706 violation 0.0
+real11 400 seconds 1.279 objective 691.401494560523 violation 0.0
+real11 ladder 200 seconds 0.482 objective 737.5142588031706 violation 0.0
+real11 ladder 400 seconds 0.882 objective 691.5810209159018 violation 0.0
+real11 warm noInertia fallback False seconds 1.053 objective 691.4017522783827 violation 0.0
+real11 warm noInertia fallback True seconds 1.761 objective 691.4017522783827 violation 0.0
+real11 warm inertiaIncumbent fallback False seconds 0.471 objective 691.4017522627181 violation 0.0
+{"tests": 571, "failures": 0, "errors": 0, "skipped": 0, "elapsedSeconds": 248.26852779462934, "sourceUnchanged": true, "historicalArtifactsUnchanged": true}

@@ -1,0 +1,4002 @@
+{
+  "originalRuns": [
+    {
+      "name": "real11-clock64-first",
+      "status": "unknown",
+      "termination": "exhausted",
+      "calls": 430,
+      "elapsedSeconds": 302.5743900835514,
+      "windows": [
+        {
+          "tick": 10,
+          "candidates": 20,
+          "accepted": 13,
+          "unknown": 7,
+          "retained": [
+            {
+              "id": "457396e3721fd899b82e6ca3982dd27cace92c176a6c6c88ba3819bd4bb91e91",
+              "status": "unknown",
+              "jumps": [],
+              "y": 1.6537296175885952,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                }
+              ]
+            },
+            {
+              "id": "091cf98b62234f924207ce3aeff8b945b3d9c50ec4b92905d1983f2186e0461c",
+              "status": "feasible",
+              "jumps": [
+                3
+              ],
+              "y": 6.176759275064237,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                }
+              ]
+            },
+            {
+              "id": "0b461185e9b1ccbfcfd95f984af0e11422ee1152b96bf5d765fc5b560f8c1af0",
+              "status": "feasible",
+              "jumps": [
+                4
+              ],
+              "y": 6.252203340253724,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                }
+              ]
+            },
+            {
+              "id": "82c532b86c8b24d0d02fc76dcc120443af2a084ab7426fe5c79305adad027f25",
+              "status": "feasible",
+              "jumps": [
+                5
+              ],
+              "y": 6.249187078744681,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                }
+              ]
+            },
+            {
+              "id": "7e44a887fe1a12eb6feb84d9860fb4f3460f39172fa45e529982b047fb240fed",
+              "status": "feasible",
+              "jumps": [
+                6
+              ],
+              "y": 6.166109260938214,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 6,
+                  "block": "b1"
+                }
+              ]
+            },
+            {
+              "id": "d87f56237e8830c14565d277e0a581bb3e0311d0e9f098889fc95ca82308576a",
+              "status": "feasible",
+              "jumps": [
+                7
+              ],
+              "y": 6.001335979112147,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 6,
+                  "block": "b1"
+                },
+                {
+                  "state": 7,
+                  "block": "b1"
+                }
+              ]
+            },
+            {
+              "id": "7146760ea770c92a3e2fee5017dd248c6f14faabeee67d7a488821a5c6950971",
+              "status": "feasible",
+              "jumps": [
+                8
+              ],
+              "y": 5.7531999805212015,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 6,
+                  "block": "b1"
+                },
+                {
+                  "state": 7,
+                  "block": "b1"
+                },
+                {
+                  "state": 8,
+                  "block": "b1"
+                }
+              ]
+            },
+            {
+              "id": "cfea148bf3325d6be1e5a5287ff855983d9c344f04c3c84bc5e8574768100080",
+              "status": "feasible",
+              "jumps": [
+                9
+              ],
+              "y": 5.419999986886978,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 6,
+                  "block": "b1"
+                },
+                {
+                  "state": 7,
+                  "block": "b1"
+                },
+                {
+                  "state": 8,
+                  "block": "b1"
+                },
+                {
+                  "state": 9,
+                  "block": "b1"
+                }
+              ]
+            }
+          ],
+          "terminations": {
+            "contact_search_exhausted": 20
+          },
+          "generation": {
+            "expandedPrefixes": 10,
+            "generated": 60,
+            "screenedPrefixes": 5,
+            "queueDrops": 0,
+            "policyRejections": 2,
+            "termination": "exhausted"
+          }
+        },
+        {
+          "tick": 28,
+          "candidates": 20,
+          "accepted": 1,
+          "unknown": 19,
+          "retained": [
+            {
+              "id": "a1d0c690d1d12d4df95e063204584920f4ad28c5ac03e187e0c863326e872a85",
+              "status": "unknown",
+              "jumps": [],
+              "y": -20.083334808166324,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                }
+              ]
+            },
+            {
+              "id": "ef6ad8ae383429103295a4799745b42d1258acfe91f272bc09ffca7906e4347a",
+              "status": "feasible",
+              "jumps": [
+                7,
+                19
+              ],
+              "y": 6,
+              "onGround": true,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 6,
+                  "block": "b1"
+                },
+                {
+                  "state": 7,
+                  "block": "b1"
+                },
+                {
+                  "state": 19,
+                  "block": "b1"
+                },
+                {
+                  "state": 28,
+                  "block": "b2"
+                }
+              ]
+            }
+          ],
+          "terminations": {
+            "contact_search_exhausted": 2,
+            "numerical_call_limit": 14,
+            "deadline": 2,
+            "contact_branch_limit": 2
+          },
+          "generation": {
+            "expandedPrefixes": 98,
+            "generated": 1152,
+            "screenedPrefixes": 28,
+            "queueDrops": 0,
+            "policyRejections": 148,
+            "termination": "candidate_limit"
+          }
+        },
+        {
+          "tick": 44,
+          "candidates": 20,
+          "accepted": 3,
+          "unknown": 17,
+          "retained": [
+            {
+              "id": "4049d5e2263101388f4bc21c129dd22311bd3baac1e9fd6c3caa183fcaa91a19",
+              "status": "unknown",
+              "jumps": [],
+              "y": -52.05558730201522,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                }
+              ]
+            },
+            {
+              "id": "b59cb9d335011ef3a3eade7bb3d6888a7a724976a78ac25dc9edb8c021a24266",
+              "status": "feasible",
+              "jumps": [
+                7,
+                19,
+                32
+              ],
+              "y": 6,
+              "onGround": true,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 6,
+                  "block": "b1"
+                },
+                {
+                  "state": 7,
+                  "block": "b1"
+                },
+                {
+                  "state": 19,
+                  "block": "b1"
+                },
+                {
+                  "state": 28,
+                  "block": "b2"
+                },
+                {
+                  "state": 29,
+                  "block": "b2"
+                },
+                {
+                  "state": 30,
+                  "block": "b2"
+                },
+                {
+                  "state": 31,
+                  "block": "b2"
+                },
+                {
+                  "state": 32,
+                  "block": "b2"
+                },
+                {
+                  "state": 44,
+                  "block": "b2"
+                }
+              ]
+            },
+            {
+              "id": "4770feac27614fe764e780124bb601d11c12abb038bb8e6aed8e380bfede41cd",
+              "status": "feasible",
+              "jumps": [
+                7,
+                19,
+                33
+              ],
+              "y": 6.121296840539189,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 6,
+                  "block": "b1"
+                },
+                {
+                  "state": 7,
+                  "block": "b1"
+                },
+                {
+                  "state": 19,
+                  "block": "b1"
+                },
+                {
+                  "state": 28,
+                  "block": "b2"
+                },
+                {
+                  "state": 29,
+                  "block": "b2"
+                },
+                {
+                  "state": 30,
+                  "block": "b2"
+                },
+                {
+                  "state": 31,
+                  "block": "b2"
+                },
+                {
+                  "state": 32,
+                  "block": "b2"
+                },
+                {
+                  "state": 33,
+                  "block": "b2"
+                }
+              ]
+            },
+            {
+              "id": "6407bbb08505984fc46024f1723db3525e6a9469a53421a03acb735cc5928508",
+              "status": "feasible",
+              "jumps": [
+                7,
+                19,
+                35
+              ],
+              "y": 7,
+              "onGround": true,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 6,
+                  "block": "b1"
+                },
+                {
+                  "state": 7,
+                  "block": "b1"
+                },
+                {
+                  "state": 19,
+                  "block": "b1"
+                },
+                {
+                  "state": 28,
+                  "block": "b2"
+                },
+                {
+                  "state": 29,
+                  "block": "b2"
+                },
+                {
+                  "state": 30,
+                  "block": "b2"
+                },
+                {
+                  "state": 31,
+                  "block": "b2"
+                },
+                {
+                  "state": 32,
+                  "block": "b2"
+                },
+                {
+                  "state": 33,
+                  "block": "b2"
+                },
+                {
+                  "state": 34,
+                  "block": "b2"
+                },
+                {
+                  "state": 35,
+                  "block": "b2"
+                },
+                {
+                  "state": 44,
+                  "block": "b3"
+                }
+              ]
+            }
+          ],
+          "terminations": {
+            "contact_search_exhausted": 10,
+            "numerical_call_limit": 5,
+            "contact_branch_limit": 5
+          },
+          "generation": {
+            "expandedPrefixes": 55,
+            "generated": 1489,
+            "screenedPrefixes": 233,
+            "queueDrops": 0,
+            "policyRejections": 223,
+            "termination": "candidate_limit"
+          }
+        },
+        {
+          "tick": 55,
+          "candidates": 20,
+          "accepted": 13,
+          "unknown": 7,
+          "retained": [
+            {
+              "id": "dc4326af4cc1711887de35b2b85f2cab1d91281fa7762805c490c296f8742a5e",
+              "status": "unknown",
+              "jumps": [],
+              "y": -79.11941282421341,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                }
+              ]
+            },
+            {
+              "id": "adf88a428d775fdb8d6d881b0af8b3ba70d7b02dd3bd94ebba1de44f47ea8d0f",
+              "status": "feasible",
+              "jumps": [
+                7,
+                19,
+                32,
+                44
+              ],
+              "y": 6.121296840539189,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 6,
+                  "block": "b1"
+                },
+                {
+                  "state": 7,
+                  "block": "b1"
+                },
+                {
+                  "state": 19,
+                  "block": "b1"
+                },
+                {
+                  "state": 28,
+                  "block": "b2"
+                },
+                {
+                  "state": 29,
+                  "block": "b2"
+                },
+                {
+                  "state": 30,
+                  "block": "b2"
+                },
+                {
+                  "state": 31,
+                  "block": "b2"
+                },
+                {
+                  "state": 32,
+                  "block": "b2"
+                },
+                {
+                  "state": 44,
+                  "block": "b2"
+                }
+              ]
+            },
+            {
+              "id": "a3e52bfd3235ebd96b3490b176b3da47f375abbecaa2030857c12cb8dedf40ba",
+              "status": "feasible",
+              "jumps": [
+                7,
+                19,
+                33,
+                45
+              ],
+              "y": 6.495200877005911,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 6,
+                  "block": "b1"
+                },
+                {
+                  "state": 7,
+                  "block": "b1"
+                },
+                {
+                  "state": 19,
+                  "block": "b1"
+                },
+                {
+                  "state": 28,
+                  "block": "b2"
+                },
+                {
+                  "state": 29,
+                  "block": "b2"
+                },
+                {
+                  "state": 30,
+                  "block": "b2"
+                },
+                {
+                  "state": 31,
+                  "block": "b2"
+                },
+                {
+                  "state": 32,
+                  "block": "b2"
+                },
+                {
+                  "state": 33,
+                  "block": "b2"
+                },
+                {
+                  "state": 45,
+                  "block": "b2"
+                }
+              ]
+            },
+            {
+              "id": "372fc5a44f88d85cf42f84a8093a655b0865ed807b70a35179a88e238d86a445",
+              "status": "feasible",
+              "jumps": [
+                7,
+                19,
+                35,
+                44
+              ],
+              "y": 7.121296840539189,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 6,
+                  "block": "b1"
+                },
+                {
+                  "state": 7,
+                  "block": "b1"
+                },
+                {
+                  "state": 19,
+                  "block": "b1"
+                },
+                {
+                  "state": 28,
+                  "block": "b2"
+                },
+                {
+                  "state": 29,
+                  "block": "b2"
+                },
+                {
+                  "state": 30,
+                  "block": "b2"
+                },
+                {
+                  "state": 31,
+                  "block": "b2"
+                },
+                {
+                  "state": 32,
+                  "block": "b2"
+                },
+                {
+                  "state": 33,
+                  "block": "b2"
+                },
+                {
+                  "state": 34,
+                  "block": "b2"
+                },
+                {
+                  "state": 35,
+                  "block": "b2"
+                },
+                {
+                  "state": 44,
+                  "block": "b3"
+                }
+              ]
+            },
+            {
+              "id": "ec8588d95cd87f17253771045a3155edefe6ec2ca65dc386ab2371ba2825ce5d",
+              "status": "feasible",
+              "jumps": [
+                7,
+                19,
+                32,
+                45
+              ],
+              "y": 6.495200877005911,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 6,
+                  "block": "b1"
+                },
+                {
+                  "state": 7,
+                  "block": "b1"
+                },
+                {
+                  "state": 19,
+                  "block": "b1"
+                },
+                {
+                  "state": 28,
+                  "block": "b2"
+                },
+                {
+                  "state": 29,
+                  "block": "b2"
+                },
+                {
+                  "state": 30,
+                  "block": "b2"
+                },
+                {
+                  "state": 31,
+                  "block": "b2"
+                },
+                {
+                  "state": 32,
+                  "block": "b2"
+                },
+                {
+                  "state": 44,
+                  "block": "b2"
+                },
+                {
+                  "state": 45,
+                  "block": "b2"
+                }
+              ]
+            },
+            {
+              "id": "250e08aa1d745806db1b6275376fd732dc0fc0d062a356532f9f07bbb0c550d9",
+              "status": "feasible",
+              "jumps": [
+                7,
+                19,
+                33,
+                46
+              ],
+              "y": 6.796735600668692,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 6,
+                  "block": "b1"
+                },
+                {
+                  "state": 7,
+                  "block": "b1"
+                },
+                {
+                  "state": 19,
+                  "block": "b1"
+                },
+                {
+                  "state": 28,
+                  "block": "b2"
+                },
+                {
+                  "state": 29,
+                  "block": "b2"
+                },
+                {
+                  "state": 30,
+                  "block": "b2"
+                },
+                {
+                  "state": 31,
+                  "block": "b2"
+                },
+                {
+                  "state": 32,
+                  "block": "b2"
+                },
+                {
+                  "state": 33,
+                  "block": "b2"
+                },
+                {
+                  "state": 45,
+                  "block": "b2"
+                },
+                {
+                  "state": 46,
+                  "block": "b2"
+                }
+              ]
+            },
+            {
+              "id": "39dee5dd796f38f4ea8b4e2d1c72db77626870b86087232df6c4f3a087e8389d",
+              "status": "feasible",
+              "jumps": [
+                7,
+                19,
+                35,
+                45
+              ],
+              "y": 7.5,
+              "onGround": true,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 6,
+                  "block": "b1"
+                },
+                {
+                  "state": 7,
+                  "block": "b1"
+                },
+                {
+                  "state": 19,
+                  "block": "b1"
+                },
+                {
+                  "state": 28,
+                  "block": "b2"
+                },
+                {
+                  "state": 29,
+                  "block": "b2"
+                },
+                {
+                  "state": 30,
+                  "block": "b2"
+                },
+                {
+                  "state": 31,
+                  "block": "b2"
+                },
+                {
+                  "state": 32,
+                  "block": "b2"
+                },
+                {
+                  "state": 33,
+                  "block": "b2"
+                },
+                {
+                  "state": 34,
+                  "block": "b2"
+                },
+                {
+                  "state": 35,
+                  "block": "b2"
+                },
+                {
+                  "state": 44,
+                  "block": "b3"
+                },
+                {
+                  "state": 45,
+                  "block": "b3"
+                },
+                {
+                  "state": 55,
+                  "block": "b4"
+                }
+              ]
+            },
+            {
+              "id": "96d6bf3c494f0f23a3ca1e18700ec0bc8f546d8d894af4907b29b39cac3a0977",
+              "status": "feasible",
+              "jumps": [
+                7,
+                19,
+                32,
+                46
+              ],
+              "y": 6.796735600668692,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 6,
+                  "block": "b1"
+                },
+                {
+                  "state": 7,
+                  "block": "b1"
+                },
+                {
+                  "state": 19,
+                  "block": "b1"
+                },
+                {
+                  "state": 28,
+                  "block": "b2"
+                },
+                {
+                  "state": 29,
+                  "block": "b2"
+                },
+                {
+                  "state": 30,
+                  "block": "b2"
+                },
+                {
+                  "state": 31,
+                  "block": "b2"
+                },
+                {
+                  "state": 32,
+                  "block": "b2"
+                },
+                {
+                  "state": 44,
+                  "block": "b2"
+                },
+                {
+                  "state": 45,
+                  "block": "b2"
+                },
+                {
+                  "state": 46,
+                  "block": "b2"
+                }
+              ]
+            }
+          ],
+          "terminations": {
+            "contact_search_exhausted": 18,
+            "numerical_call_limit": 2
+          },
+          "generation": {
+            "expandedPrefixes": 39,
+            "generated": 957,
+            "screenedPrefixes": 131,
+            "queueDrops": 0,
+            "policyRejections": 155,
+            "termination": "candidate_limit"
+          }
+        }
+      ],
+      "finalAttempts": 0,
+      "finalTerminationCounts": {},
+      "finalGeneration": {
+        "expandedPrefixes": 58,
+        "generated": 484,
+        "screenedPrefixes": 60,
+        "queueDrops": 0,
+        "policyRejections": 266,
+        "termination": "exhausted"
+      },
+      "spatialLandingProbesAt64": [
+        {
+          "window": 10,
+          "candidate": "7146760ea770c92a3e2fee5017dd248c6f14faabeee67d7a488821a5c6950971",
+          "attempt": {
+            "ticks": 64,
+            "status": "unknown",
+            "termination": "contact_search_exhausted",
+            "work": {
+              "numericalProposals": 1,
+              "solverCalls": 1,
+              "uniqueCompletePrograms": 0,
+              "unitsByType": {},
+              "firstProposalSeconds": 0.005579587072134018,
+              "firstAcceptedSeconds": null,
+              "maxSolverCalls": 5,
+              "termination": null
+            }
+          }
+        },
+        {
+          "window": 10,
+          "candidate": "cfea148bf3325d6be1e5a5287ff855983d9c344f04c3c84bc5e8574768100080",
+          "attempt": {
+            "ticks": 64,
+            "status": "unknown",
+            "termination": "deadline",
+            "work": {
+              "numericalProposals": 4,
+              "solverCalls": 4,
+              "uniqueCompletePrograms": 0,
+              "unitsByType": {},
+              "firstProposalSeconds": 0.005661245435476303,
+              "firstAcceptedSeconds": null,
+              "maxSolverCalls": 6,
+              "termination": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "real11-clock64-near-goals",
+      "status": "unknown",
+      "termination": "exhausted",
+      "calls": 471,
+      "elapsedSeconds": 233.89041387662292,
+      "windows": [
+        {
+          "tick": 10,
+          "candidates": 20,
+          "accepted": 13,
+          "unknown": 7,
+          "retained": [
+            {
+              "id": "7146760ea770c92a3e2fee5017dd248c6f14faabeee67d7a488821a5c6950971",
+              "status": "feasible",
+              "jumps": [
+                8
+              ],
+              "y": 5.7531999805212015,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 6,
+                  "block": "b1"
+                },
+                {
+                  "state": 7,
+                  "block": "b1"
+                },
+                {
+                  "state": 8,
+                  "block": "b1"
+                }
+              ]
+            },
+            {
+              "id": "cfea148bf3325d6be1e5a5287ff855983d9c344f04c3c84bc5e8574768100080",
+              "status": "feasible",
+              "jumps": [
+                9
+              ],
+              "y": 5.419999986886978,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 6,
+                  "block": "b1"
+                },
+                {
+                  "state": 7,
+                  "block": "b1"
+                },
+                {
+                  "state": 8,
+                  "block": "b1"
+                },
+                {
+                  "state": 9,
+                  "block": "b1"
+                }
+              ]
+            },
+            {
+              "id": "457396e3721fd899b82e6ca3982dd27cace92c176a6c6c88ba3819bd4bb91e91",
+              "status": "unknown",
+              "jumps": [],
+              "y": 1.6537296175885952,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                }
+              ]
+            },
+            {
+              "id": "0b461185e9b1ccbfcfd95f984af0e11422ee1152b96bf5d765fc5b560f8c1af0",
+              "status": "feasible",
+              "jumps": [
+                4
+              ],
+              "y": 6.252203340253724,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                }
+              ]
+            },
+            {
+              "id": "82c532b86c8b24d0d02fc76dcc120443af2a084ab7426fe5c79305adad027f25",
+              "status": "feasible",
+              "jumps": [
+                5
+              ],
+              "y": 6.249187078744681,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                }
+              ]
+            },
+            {
+              "id": "7e44a887fe1a12eb6feb84d9860fb4f3460f39172fa45e529982b047fb240fed",
+              "status": "feasible",
+              "jumps": [
+                6
+              ],
+              "y": 6.166109260938214,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 6,
+                  "block": "b1"
+                }
+              ]
+            },
+            {
+              "id": "d87f56237e8830c14565d277e0a581bb3e0311d0e9f098889fc95ca82308576a",
+              "status": "feasible",
+              "jumps": [
+                7
+              ],
+              "y": 6.001335979112147,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 6,
+                  "block": "b1"
+                },
+                {
+                  "state": 7,
+                  "block": "b1"
+                }
+              ]
+            },
+            {
+              "id": "a23f32c77b240691aa298f59d995ffc6f33911fba67424c3141595ab11890574",
+              "status": "feasible",
+              "jumps": [],
+              "y": 4.766367993957519,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 6,
+                  "block": "b1"
+                },
+                {
+                  "state": 7,
+                  "block": "b1"
+                },
+                {
+                  "state": 8,
+                  "block": "b1"
+                }
+              ]
+            }
+          ],
+          "terminations": {
+            "contact_search_exhausted": 20
+          },
+          "generation": {
+            "expandedPrefixes": 10,
+            "generated": 60,
+            "screenedPrefixes": 5,
+            "queueDrops": 0,
+            "policyRejections": 2,
+            "termination": "exhausted"
+          }
+        },
+        {
+          "tick": 28,
+          "candidates": 20,
+          "accepted": 2,
+          "unknown": 18,
+          "retained": [
+            {
+              "id": "0938d3f5d55b8f670722339500c4a133c23b014dd2916b7d0d54515776adeca5",
+              "status": "unknown",
+              "jumps": [
+                8,
+                17
+              ],
+              "y": 6.121296840539189,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 6,
+                  "block": "b1"
+                },
+                {
+                  "state": 7,
+                  "block": "b1"
+                },
+                {
+                  "state": 8,
+                  "block": "b1"
+                },
+                {
+                  "state": 17,
+                  "block": "b2"
+                }
+              ]
+            },
+            {
+              "id": "9ebe74a5a91dd4472ba619136ed3b1f0c1433b86e49a17583318726ed8e32931",
+              "status": "feasible",
+              "jumps": [
+                8,
+                17
+              ],
+              "y": 6.121296840539189,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 6,
+                  "block": "b1"
+                },
+                {
+                  "state": 7,
+                  "block": "b1"
+                },
+                {
+                  "state": 8,
+                  "block": "b1"
+                },
+                {
+                  "state": 17,
+                  "block": "b2"
+                }
+              ]
+            },
+            {
+              "id": "b37db8e87f87695a716ae93490e6ffb45df9f5599b2648bfd99d70e0fd64ba6f",
+              "status": "unknown",
+              "jumps": [
+                9,
+                18
+              ],
+              "y": 6.495200877005911,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 6,
+                  "block": "b1"
+                },
+                {
+                  "state": 7,
+                  "block": "b1"
+                },
+                {
+                  "state": 8,
+                  "block": "b1"
+                },
+                {
+                  "state": 9,
+                  "block": "b1"
+                },
+                {
+                  "state": 18,
+                  "block": "b2"
+                }
+              ]
+            },
+            {
+              "id": "dd298638a12ebd9b5bcbb0e51e70450b003254a622a898f12036ba7e7642846d",
+              "status": "unknown",
+              "jumps": [
+                8
+              ],
+              "y": -1.270930588052516,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 6,
+                  "block": "b1"
+                },
+                {
+                  "state": 7,
+                  "block": "b1"
+                },
+                {
+                  "state": 8,
+                  "block": "b1"
+                }
+              ]
+            },
+            {
+              "id": "ef6ad8ae383429103295a4799745b42d1258acfe91f272bc09ffca7906e4347a",
+              "status": "feasible",
+              "jumps": [
+                7,
+                19
+              ],
+              "y": 6,
+              "onGround": true,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 6,
+                  "block": "b1"
+                },
+                {
+                  "state": 7,
+                  "block": "b1"
+                },
+                {
+                  "state": 19,
+                  "block": "b1"
+                },
+                {
+                  "state": 28,
+                  "block": "b2"
+                }
+              ]
+            }
+          ],
+          "terminations": {
+            "numerical_call_limit": 12,
+            "contact_search_exhausted": 4,
+            "contact_branch_limit": 2,
+            "deadline": 2
+          },
+          "generation": {
+            "expandedPrefixes": 96,
+            "generated": 1226,
+            "screenedPrefixes": 50,
+            "queueDrops": 0,
+            "policyRejections": 147,
+            "termination": "candidate_limit"
+          }
+        },
+        {
+          "tick": 44,
+          "candidates": 20,
+          "accepted": 0,
+          "unknown": 20,
+          "retained": [
+            {
+              "id": "707e4cb21785059edf453dedbc525920f09a6be519663673010b9c7c5b7301ed",
+              "status": "unknown",
+              "jumps": [
+                8,
+                17
+              ],
+              "y": -8.606155409421529,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 6,
+                  "block": "b1"
+                },
+                {
+                  "state": 7,
+                  "block": "b1"
+                },
+                {
+                  "state": 8,
+                  "block": "b1"
+                },
+                {
+                  "state": 17,
+                  "block": "b2"
+                }
+              ]
+            }
+          ],
+          "terminations": {
+            "contact_branch_limit": 13,
+            "contact_search_exhausted": 3,
+            "numerical_call_limit": 4
+          },
+          "generation": {
+            "expandedPrefixes": 133,
+            "generated": 3541,
+            "screenedPrefixes": 496,
+            "queueDrops": 0,
+            "policyRejections": 706,
+            "termination": "candidate_limit"
+          }
+        },
+        {
+          "tick": 55,
+          "candidates": 1,
+          "accepted": 0,
+          "unknown": 1,
+          "retained": [
+            {
+              "id": "2291dd7eb3d20e4cfe2da72addfd4b66baef53f04182a7089cfef72dac4bd32b",
+              "status": "unknown",
+              "jumps": [
+                8,
+                17
+              ],
+              "y": -26.66490843028966,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 6,
+                  "block": "b1"
+                },
+                {
+                  "state": 7,
+                  "block": "b1"
+                },
+                {
+                  "state": 8,
+                  "block": "b1"
+                },
+                {
+                  "state": 17,
+                  "block": "b2"
+                }
+              ]
+            }
+          ],
+          "terminations": {
+            "contact_branch_limit": 1
+          },
+          "generation": {
+            "expandedPrefixes": 1,
+            "generated": 1,
+            "screenedPrefixes": 0,
+            "queueDrops": 0,
+            "policyRejections": 0,
+            "termination": "exhausted"
+          }
+        }
+      ],
+      "finalAttempts": 0,
+      "finalTerminationCounts": {},
+      "finalGeneration": {
+        "expandedPrefixes": 1,
+        "generated": 1,
+        "screenedPrefixes": 0,
+        "queueDrops": 0,
+        "policyRejections": 1,
+        "termination": "exhausted"
+      },
+      "spatialLandingProbesAt64": []
+    },
+    {
+      "name": "real11-clock64-event-priority",
+      "status": "unknown",
+      "termination": "deadline",
+      "calls": 773,
+      "elapsedSeconds": 300.1242282092571,
+      "windows": [
+        {
+          "tick": 10,
+          "candidates": 20,
+          "accepted": 13,
+          "unknown": 7,
+          "retained": [
+            {
+              "id": "7146760ea770c92a3e2fee5017dd248c6f14faabeee67d7a488821a5c6950971",
+              "status": "feasible",
+              "jumps": [
+                8
+              ],
+              "y": 5.7531999805212015,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 6,
+                  "block": "b1"
+                },
+                {
+                  "state": 7,
+                  "block": "b1"
+                },
+                {
+                  "state": 8,
+                  "block": "b1"
+                }
+              ]
+            },
+            {
+              "id": "cfea148bf3325d6be1e5a5287ff855983d9c344f04c3c84bc5e8574768100080",
+              "status": "feasible",
+              "jumps": [
+                9
+              ],
+              "y": 5.419999986886978,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 6,
+                  "block": "b1"
+                },
+                {
+                  "state": 7,
+                  "block": "b1"
+                },
+                {
+                  "state": 8,
+                  "block": "b1"
+                },
+                {
+                  "state": 9,
+                  "block": "b1"
+                }
+              ]
+            },
+            {
+              "id": "457396e3721fd899b82e6ca3982dd27cace92c176a6c6c88ba3819bd4bb91e91",
+              "status": "unknown",
+              "jumps": [],
+              "y": 1.6537296175885952,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                }
+              ]
+            },
+            {
+              "id": "0b461185e9b1ccbfcfd95f984af0e11422ee1152b96bf5d765fc5b560f8c1af0",
+              "status": "feasible",
+              "jumps": [
+                4
+              ],
+              "y": 6.252203340253724,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                }
+              ]
+            },
+            {
+              "id": "82c532b86c8b24d0d02fc76dcc120443af2a084ab7426fe5c79305adad027f25",
+              "status": "feasible",
+              "jumps": [
+                5
+              ],
+              "y": 6.249187078744681,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                }
+              ]
+            },
+            {
+              "id": "7e44a887fe1a12eb6feb84d9860fb4f3460f39172fa45e529982b047fb240fed",
+              "status": "feasible",
+              "jumps": [
+                6
+              ],
+              "y": 6.166109260938214,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 6,
+                  "block": "b1"
+                }
+              ]
+            },
+            {
+              "id": "d87f56237e8830c14565d277e0a581bb3e0311d0e9f098889fc95ca82308576a",
+              "status": "feasible",
+              "jumps": [
+                7
+              ],
+              "y": 6.001335979112147,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 6,
+                  "block": "b1"
+                },
+                {
+                  "state": 7,
+                  "block": "b1"
+                }
+              ]
+            },
+            {
+              "id": "a23f32c77b240691aa298f59d995ffc6f33911fba67424c3141595ab11890574",
+              "status": "feasible",
+              "jumps": [],
+              "y": 4.766367993957519,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 6,
+                  "block": "b1"
+                },
+                {
+                  "state": 7,
+                  "block": "b1"
+                },
+                {
+                  "state": 8,
+                  "block": "b1"
+                }
+              ]
+            }
+          ],
+          "terminations": {
+            "contact_search_exhausted": 20
+          },
+          "generation": {
+            "expandedPrefixes": 10,
+            "generated": 60,
+            "screenedPrefixes": 5,
+            "queueDrops": 0,
+            "policyRejections": 2,
+            "termination": "exhausted"
+          }
+        },
+        {
+          "tick": 28,
+          "candidates": 20,
+          "accepted": 9,
+          "unknown": 11,
+          "retained": [
+            {
+              "id": "a035c589e73a2a2b63b8be7b4868a0d26d8d8c0fc6ac19450e0ff36137cf05c9",
+              "status": "feasible",
+              "jumps": [
+                9,
+                18,
+                27
+              ],
+              "y": 7.419999986886978,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 6,
+                  "block": "b1"
+                },
+                {
+                  "state": 7,
+                  "block": "b1"
+                },
+                {
+                  "state": 8,
+                  "block": "b1"
+                },
+                {
+                  "state": 9,
+                  "block": "b1"
+                },
+                {
+                  "state": 18,
+                  "block": "b2"
+                },
+                {
+                  "state": 27,
+                  "block": "b3"
+                }
+              ]
+            },
+            {
+              "id": "60648481f3fd76098529e53dc27e157a169901b6e5788b1b7f137dcab8a7cd22",
+              "status": "unknown",
+              "jumps": [
+                9,
+                18
+              ],
+              "y": 6.921599998474121,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 6,
+                  "block": "b1"
+                },
+                {
+                  "state": 7,
+                  "block": "b1"
+                },
+                {
+                  "state": 8,
+                  "block": "b1"
+                },
+                {
+                  "state": 9,
+                  "block": "b1"
+                },
+                {
+                  "state": 18,
+                  "block": "b2"
+                },
+                {
+                  "state": 27,
+                  "block": "b3"
+                }
+              ]
+            },
+            {
+              "id": "28223d4f73a1771ac8227009222ad1fbfb3ff421186ab13d9accb24369677f30",
+              "status": "feasible",
+              "jumps": [
+                9,
+                18
+              ],
+              "y": 7,
+              "onGround": true,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 6,
+                  "block": "b1"
+                },
+                {
+                  "state": 7,
+                  "block": "b1"
+                },
+                {
+                  "state": 8,
+                  "block": "b1"
+                },
+                {
+                  "state": 9,
+                  "block": "b1"
+                },
+                {
+                  "state": 18,
+                  "block": "b2"
+                },
+                {
+                  "state": 27,
+                  "block": "b3"
+                },
+                {
+                  "state": 28,
+                  "block": "b3"
+                }
+              ]
+            },
+            {
+              "id": "031d67f71119a110836a7f973622db6b3a5123045c9e459aaf165426f783a2ba",
+              "status": "unknown",
+              "jumps": [
+                8,
+                17,
+                26
+              ],
+              "y": 7.7531999805212015,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 6,
+                  "block": "b1"
+                },
+                {
+                  "state": 7,
+                  "block": "b1"
+                },
+                {
+                  "state": 8,
+                  "block": "b1"
+                },
+                {
+                  "state": 17,
+                  "block": "b2"
+                },
+                {
+                  "state": 26,
+                  "block": "b3"
+                }
+              ]
+            },
+            {
+              "id": "6724b4ab57d2d9a58a60ffa1f163cba227f65b32f7e0875207cc2bc3b65e25b4",
+              "status": "feasible",
+              "jumps": [
+                5,
+                17,
+                26
+              ],
+              "y": 6.7531999805212015,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 17,
+                  "block": "b1"
+                },
+                {
+                  "state": 26,
+                  "block": "b2"
+                }
+              ]
+            },
+            {
+              "id": "31edca21a7fa6fe5e05f7c473bb2bda5366b20c7e0aef0adbaf945d089e6249c",
+              "status": "feasible",
+              "jumps": [
+                6,
+                18,
+                27
+              ],
+              "y": 6.419999986886978,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 6,
+                  "block": "b1"
+                },
+                {
+                  "state": 18,
+                  "block": "b1"
+                },
+                {
+                  "state": 27,
+                  "block": "b2"
+                }
+              ]
+            },
+            {
+              "id": "2f31712618d2fef022946974f9c838581db07c3e31eb37f10d436c1c030e93c6",
+              "status": "feasible",
+              "jumps": [
+                4,
+                16
+              ],
+              "y": 5.535840625044555,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 16,
+                  "block": "b1"
+                },
+                {
+                  "state": 25,
+                  "block": "b2"
+                }
+              ]
+            },
+            {
+              "id": "64fbc83eac5e699b80eccff552613cca46c1ca8614e17ffb950505fccd42fcd3",
+              "status": "feasible",
+              "jumps": [
+                5,
+                17
+              ],
+              "y": 5.766367993957519,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 17,
+                  "block": "b1"
+                },
+                {
+                  "state": 26,
+                  "block": "b2"
+                }
+              ]
+            }
+          ],
+          "terminations": {
+            "contact_search_exhausted": 13,
+            "numerical_call_limit": 6,
+            "contact_branch_limit": 1
+          },
+          "generation": {
+            "expandedPrefixes": 98,
+            "generated": 1278,
+            "screenedPrefixes": 50,
+            "queueDrops": 0,
+            "policyRejections": 149,
+            "termination": "candidate_limit"
+          }
+        },
+        {
+          "tick": 44,
+          "candidates": 20,
+          "accepted": 4,
+          "unknown": 16,
+          "retained": [
+            {
+              "id": "7d16e5a30af09096037f4b58c2e3201fba06573cbaaf6a933768397f199fcbb5",
+              "status": "feasible",
+              "jumps": [
+                5,
+                17,
+                26,
+                35
+              ],
+              "y": 7.796735600668692,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 17,
+                  "block": "b1"
+                },
+                {
+                  "state": 26,
+                  "block": "b2"
+                },
+                {
+                  "state": 35,
+                  "block": "b3"
+                }
+              ]
+            },
+            {
+              "id": "de50f6666d4a123c16c333a560db31720aaffb4509e729738190a85483532f81",
+              "status": "feasible",
+              "jumps": [
+                5,
+                17,
+                26,
+                35
+              ],
+              "y": 7.796735600668692,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 17,
+                  "block": "b1"
+                },
+                {
+                  "state": 26,
+                  "block": "b2"
+                },
+                {
+                  "state": 35,
+                  "block": "b3"
+                }
+              ]
+            },
+            {
+              "id": "fe8dc8cbdce16acb5be22233e29092b6984126a7528e2885d291dda2e6b2870b",
+              "status": "unknown",
+              "jumps": [
+                9,
+                18,
+                27,
+                37
+              ],
+              "y": 8.676759275064239,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 6,
+                  "block": "b1"
+                },
+                {
+                  "state": 7,
+                  "block": "b1"
+                },
+                {
+                  "state": 8,
+                  "block": "b1"
+                },
+                {
+                  "state": 9,
+                  "block": "b1"
+                },
+                {
+                  "state": 18,
+                  "block": "b2"
+                },
+                {
+                  "state": 27,
+                  "block": "b3"
+                },
+                {
+                  "state": 37,
+                  "block": "b4"
+                }
+              ]
+            }
+          ],
+          "terminations": {
+            "contact_search_exhausted": 15,
+            "contact_branch_limit": 1,
+            "numerical_call_limit": 4
+          },
+          "generation": {
+            "expandedPrefixes": 87,
+            "generated": 2436,
+            "screenedPrefixes": 294,
+            "queueDrops": 0,
+            "policyRejections": 252,
+            "termination": "candidate_limit"
+          }
+        },
+        {
+          "tick": 55,
+          "candidates": 20,
+          "accepted": 12,
+          "unknown": 8,
+          "retained": [
+            {
+              "id": "12d7a3c75268700b269bba83a0cd1bf355645abbacd3eb545d17c98e3b59fca7",
+              "status": "unknown",
+              "jumps": [
+                9,
+                18,
+                27,
+                37,
+                52
+              ],
+              "y": 7.001335979112147,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 6,
+                  "block": "b1"
+                },
+                {
+                  "state": 7,
+                  "block": "b1"
+                },
+                {
+                  "state": 8,
+                  "block": "b1"
+                },
+                {
+                  "state": 9,
+                  "block": "b1"
+                },
+                {
+                  "state": 18,
+                  "block": "b2"
+                },
+                {
+                  "state": 27,
+                  "block": "b3"
+                },
+                {
+                  "state": 37,
+                  "block": "b4"
+                },
+                {
+                  "state": 52,
+                  "block": "b5"
+                }
+              ]
+            },
+            {
+              "id": "02174147d6be8ec808fc55cebf05c66cc956ae3f859e3e881bb0bdc863374007",
+              "status": "feasible",
+              "jumps": [
+                5,
+                17,
+                26,
+                35,
+                46
+              ],
+              "y": 8.296735600668693,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 17,
+                  "block": "b1"
+                },
+                {
+                  "state": 26,
+                  "block": "b2"
+                },
+                {
+                  "state": 35,
+                  "block": "b3"
+                },
+                {
+                  "state": 45,
+                  "block": "b4"
+                },
+                {
+                  "state": 46,
+                  "block": "b4"
+                }
+              ]
+            },
+            {
+              "id": "d869e1ccfc48358fe8be9b3e403d426387d66b728a2da0a5ade9bab61b683cad",
+              "status": "feasible",
+              "jumps": [
+                5,
+                17,
+                26,
+                35,
+                46
+              ],
+              "y": 8.296735600668693,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 17,
+                  "block": "b1"
+                },
+                {
+                  "state": 26,
+                  "block": "b2"
+                },
+                {
+                  "state": 35,
+                  "block": "b3"
+                },
+                {
+                  "state": 45,
+                  "block": "b4"
+                },
+                {
+                  "state": 46,
+                  "block": "b4"
+                }
+              ]
+            },
+            {
+              "id": "d686ec82f92d2bcbbd73d1d5850264686776680a300ef238ebe9677846027972",
+              "status": "feasible",
+              "jumps": [
+                5,
+                17,
+                26,
+                35
+              ],
+              "y": 4.153729617588595,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 17,
+                  "block": "b1"
+                },
+                {
+                  "state": 26,
+                  "block": "b2"
+                },
+                {
+                  "state": 35,
+                  "block": "b3"
+                },
+                {
+                  "state": 45,
+                  "block": "b4"
+                },
+                {
+                  "state": 46,
+                  "block": "b4"
+                }
+              ]
+            },
+            {
+              "id": "22386b0a8d7ff5bbbe5c5e54a4c5a89d6e3dd57961ceb54d5810ac94be75d531",
+              "status": "feasible",
+              "jumps": [
+                5,
+                17,
+                26,
+                35,
+                47
+              ],
+              "y": 8.524424088213681,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 17,
+                  "block": "b1"
+                },
+                {
+                  "state": 26,
+                  "block": "b2"
+                },
+                {
+                  "state": 35,
+                  "block": "b3"
+                },
+                {
+                  "state": 45,
+                  "block": "b4"
+                },
+                {
+                  "state": 46,
+                  "block": "b4"
+                },
+                {
+                  "state": 47,
+                  "block": "b4"
+                }
+              ]
+            },
+            {
+              "id": "be3bda0a38350b2e8480d87562bd15080ef4f27f743f4fd5723a816ca5d839d5",
+              "status": "feasible",
+              "jumps": [
+                5,
+                17,
+                26,
+                35,
+                47
+              ],
+              "y": 8.524424088213681,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 17,
+                  "block": "b1"
+                },
+                {
+                  "state": 26,
+                  "block": "b2"
+                },
+                {
+                  "state": 35,
+                  "block": "b3"
+                },
+                {
+                  "state": 45,
+                  "block": "b4"
+                },
+                {
+                  "state": 46,
+                  "block": "b4"
+                },
+                {
+                  "state": 47,
+                  "block": "b4"
+                }
+              ]
+            },
+            {
+              "id": "6fcc224c7a9509ef397d79f401f645e6503d3099578b0011342838e114735fa8",
+              "status": "feasible",
+              "jumps": [
+                5,
+                17,
+                26,
+                35,
+                48
+              ],
+              "y": 8.676759275064239,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 17,
+                  "block": "b1"
+                },
+                {
+                  "state": 26,
+                  "block": "b2"
+                },
+                {
+                  "state": 35,
+                  "block": "b3"
+                },
+                {
+                  "state": 45,
+                  "block": "b4"
+                },
+                {
+                  "state": 46,
+                  "block": "b4"
+                },
+                {
+                  "state": 47,
+                  "block": "b4"
+                },
+                {
+                  "state": 48,
+                  "block": "b4"
+                }
+              ]
+            },
+            {
+              "id": "8b808d3c7bd2faef9c6c764201e8c310ef06967a884dafbf3c91e5c8cdaaa4fe",
+              "status": "feasible",
+              "jumps": [
+                5,
+                17,
+                26,
+                35,
+                48
+              ],
+              "y": 8.676759275064239,
+              "onGround": false,
+              "contacts": [
+                {
+                  "state": 1,
+                  "block": "b1"
+                },
+                {
+                  "state": 2,
+                  "block": "b1"
+                },
+                {
+                  "state": 3,
+                  "block": "b1"
+                },
+                {
+                  "state": 4,
+                  "block": "b1"
+                },
+                {
+                  "state": 5,
+                  "block": "b1"
+                },
+                {
+                  "state": 17,
+                  "block": "b1"
+                },
+                {
+                  "state": 26,
+                  "block": "b2"
+                },
+                {
+                  "state": 35,
+                  "block": "b3"
+                },
+                {
+                  "state": 45,
+                  "block": "b4"
+                },
+                {
+                  "state": 46,
+                  "block": "b4"
+                },
+                {
+                  "state": 47,
+                  "block": "b4"
+                },
+                {
+                  "state": 48,
+                  "block": "b4"
+                }
+              ]
+            }
+          ],
+          "terminations": {
+            "numerical_call_limit": 14,
+            "contact_search_exhausted": 6
+          },
+          "generation": {
+            "expandedPrefixes": 40,
+            "generated": 1063,
+            "screenedPrefixes": 85,
+            "queueDrops": 0,
+            "policyRejections": 125,
+            "termination": "candidate_limit"
+          }
+        }
+      ],
+      "finalAttempts": 18,
+      "finalTerminationCounts": {
+        "contact_search_exhausted": 3,
+        "numerical_call_limit": 12,
+        "deadline": 3
+      },
+      "finalGeneration": {
+        "expandedPrefixes": 53,
+        "generated": 566,
+        "screenedPrefixes": 2,
+        "queueDrops": 0,
+        "policyRejections": 291,
+        "termination": "deadline"
+      },
+      "spatialLandingProbesAt64": []
+    },
+    {
+      "name": "real11-clock64-resumed",
+      "status": "unknown",
+      "termination": "candidate_limit",
+      "calls": 383,
+      "elapsedSeconds": 126.54075033217669,
+      "windows": [],
+      "finalAttempts": 20,
+      "finalTerminationCounts": {
+        "contact_search_exhausted": 3,
+        "numerical_call_limit": 15,
+        "deadline": 2
+      },
+      "finalGeneration": {
+        "expandedPrefixes": 53,
+        "generated": 566,
+        "screenedPrefixes": 2,
+        "queueDrops": 0,
+        "policyRejections": 291,
+        "termination": "candidate_limit"
+      },
+      "spatialLandingProbesAt64": []
+    }
+  ],
+  "followups": [
+    {
+      "label": "retained_slow_exact_final",
+      "status": "unknown",
+      "termination": "numerical_call_limit",
+      "calls": 24,
+      "firstAcceptedSeconds": null,
+      "repairResume": {
+        "requested": true,
+        "compatible": true,
+        "exact": false,
+        "resumedBranches": 127
+      },
+      "rawStatuses": {
+        "feasible": 24,
+        "unknown": 1
+      },
+      "outerTerminations": {
+        "corridor_projection": 24,
+        "search_exhausted": 1
+      },
+      "pending": 174,
+      "unresolved": 1,
+      "objective": null,
+      "replay": null
+    },
+    {
+      "label": "true_inner_resume_1",
+      "status": "unknown",
+      "termination": "numerical_call_limit",
+      "calls": 24,
+      "firstAcceptedSeconds": null,
+      "repairResume": {
+        "requested": true,
+        "compatible": true,
+        "exact": true,
+        "resumedBranches": 175
+      },
+      "rawStatuses": {
+        "feasible": 24,
+        "unknown": 1
+      },
+      "outerTerminations": {
+        "corridor_projection": 24,
+        "search_exhausted": 1
+      },
+      "pending": 222,
+      "unresolved": 1,
+      "objective": null,
+      "replay": null
+    },
+    {
+      "label": "true_inner_resume_2",
+      "status": "unknown",
+      "termination": "numerical_call_limit",
+      "calls": 24,
+      "firstAcceptedSeconds": null,
+      "repairResume": {
+        "requested": true,
+        "compatible": true,
+        "exact": true,
+        "resumedBranches": 223
+      },
+      "rawStatuses": {
+        "feasible": 24,
+        "unknown": 1
+      },
+      "outerTerminations": {
+        "corridor_projection": 24,
+        "search_exhausted": 1
+      },
+      "pending": 270,
+      "unresolved": 1,
+      "objective": null,
+      "replay": null
+    },
+    {
+      "label": "same_final_scene_only",
+      "status": "feasible",
+      "termination": "numerical_call_limit",
+      "calls": 24,
+      "firstAcceptedSeconds": 0.7200590819120407,
+      "repairResume": {
+        "requested": false,
+        "compatible": false,
+        "exact": false,
+        "resumedBranches": 0
+      },
+      "rawStatuses": {
+        "feasible": 24,
+        "blocked": 2,
+        "unknown": 1
+      },
+      "outerTerminations": {
+        "search_exhausted": 27
+      },
+      "pending": 102,
+      "unresolved": 3,
+      "objective": -1095.920359545253,
+      "replay": {
+        "passed": true,
+        "scalarFeasible": true,
+        "supports": true,
+        "geometry": {
+          "feasible": true,
+          "ticks": 64
+        },
+        "exactHorizontalReplay": true,
+        "ticks": 64,
+        "threshold": 0.0,
+        "objective": -1095.920359545253,
+        "objectiveHasY": false
+      }
+    },
+    {
+      "label": "missing_B3_wait3_from_actual_retained_parent",
+      "status": "feasible",
+      "termination": "contact_search_exhausted",
+      "calls": 2,
+      "firstAcceptedSeconds": 0.011121746152639389,
+      "repairResume": {
+        "requested": false,
+        "compatible": false,
+        "exact": false,
+        "resumedBranches": 0
+      },
+      "rawStatuses": {
+        "feasible": 2
+      },
+      "outerTerminations": {
+        "corridor_signature": 1,
+        "search_exhausted": 1
+      },
+      "pending": 0,
+      "unresolved": 0,
+      "objective": -1178.0443591258072,
+      "replay": {
+        "passed": true,
+        "scalarFeasible": true,
+        "supports": true,
+        "geometry": {
+          "feasible": true,
+          "ticks": 44
+        },
+        "exactHorizontalReplay": true,
+        "ticks": 44,
+        "threshold": 0.0,
+        "objective": -1178.0443591258072,
+        "objectiveHasY": false
+      }
+    },
+    {
+      "label": "same_final_fresh_original_corridor",
+      "status": "unknown",
+      "termination": "numerical_call_limit",
+      "calls": 24,
+      "firstAcceptedSeconds": null,
+      "repairResume": {
+        "requested": false,
+        "compatible": false,
+        "exact": false,
+        "resumedBranches": 0
+      },
+      "rawStatuses": {
+        "feasible": 19,
+        "unknown": 6,
+        "blocked": 4
+      },
+      "outerTerminations": {
+        "corridor_projection": 10,
+        "search_exhausted": 11,
+        "corridor_signature": 6,
+        "checkpoint_not_after_turn": 2
+      },
+      "pending": 136,
+      "unresolved": 10,
+      "objective": null,
+      "replay": null
+    },
+    {
+      "label": "same_final_valid_seed_original_corridor",
+      "status": "feasible",
+      "termination": "deadline",
+      "calls": 15,
+      "firstAcceptedSeconds": 0.011767584830522537,
+      "repairResume": {
+        "requested": false,
+        "compatible": false,
+        "exact": false,
+        "resumedBranches": 0
+      },
+      "rawStatuses": {
+        "feasible": 9,
+        "unknown": 6
+      },
+      "outerTerminations": {
+        "corridor_projection": 6,
+        "search_exhausted": 5,
+        "corridor_signature": 3,
+        "deadline": 1
+      },
+      "pending": 7,
+      "unresolved": 6,
+      "objective": -1095.920359545253,
+      "replay": {
+        "passed": true,
+        "scalarFeasible": true,
+        "supports": true,
+        "geometry": {
+          "feasible": true,
+          "ticks": 64
+        },
+        "exactHorizontalReplay": true,
+        "ticks": 64,
+        "threshold": 0.0,
+        "objective": -1095.920359545253,
+        "objectiveHasY": false
+      }
+    },
+    {
+      "label": "same_final_fresh_branch_before_inherited_queue",
+      "status": "feasible",
+      "termination": "numerical_call_limit",
+      "calls": 24,
+      "firstAcceptedSeconds": 5.121794290840626,
+      "repairResume": {
+        "requested": true,
+        "compatible": true,
+        "exact": true,
+        "resumedBranches": 175
+      },
+      "rawStatuses": {
+        "feasible": 19,
+        "unknown": 6,
+        "blocked": 4
+      },
+      "outerTerminations": {
+        "corridor_projection": 10,
+        "search_exhausted": 11,
+        "corridor_signature": 7,
+        "checkpoint_not_after_turn": 1
+      },
+      "pending": 311,
+      "unresolved": 10,
+      "objective": -1095.244174133628,
+      "replay": {
+        "passed": true,
+        "scalarFeasible": true,
+        "supports": true,
+        "geometry": {
+          "feasible": true,
+          "ticks": 64
+        },
+        "exactHorizontalReplay": true,
+        "ticks": 64,
+        "threshold": 0.0,
+        "objective": -1095.244174133628,
+        "objectiveHasY": false
+      }
+    },
+    {
+      "label": "cold_base_first_same_original_budget",
+      "status": "feasible",
+      "termination": "deadline",
+      "calls": 21,
+      "firstAcceptedSeconds": 5.178468503057957,
+      "repairResume": {
+        "requested": true,
+        "compatible": true,
+        "exact": true,
+        "resumedBranches": 127
+      },
+      "rawStatuses": {
+        "feasible": 16,
+        "unknown": 5,
+        "blocked": 4
+      },
+      "outerTerminations": {
+        "corridor_projection": 9,
+        "search_exhausted": 10,
+        "corridor_signature": 5,
+        "checkpoint_not_after_turn": 1
+      },
+      "pending": 262,
+      "unresolved": 9,
+      "objective": -1095.244174133628,
+      "replay": {
+        "passed": true,
+        "scalarFeasible": true,
+        "supports": true,
+        "geometry": {
+          "feasible": true,
+          "ticks": 64
+        },
+        "exactHorizontalReplay": true,
+        "ticks": 64,
+        "threshold": 0.0,
+        "objective": -1095.244174133628,
+        "objectiveHasY": false
+      }
+    }
+  ],
+  "resumeOverlap": {
+    "originalFinalCandidates": 18,
+    "resumedFinalCandidates": 20,
+    "repeatedCandidates": 18,
+    "repeatedCandidateCalls": 335,
+    "newCandidates": 2,
+    "resumedTotalCalls": 383,
+    "exactOriginalSequenceRepeated": true,
+    "originalUniquePhysicalPrograms": 18,
+    "resumedUniquePhysicalPrograms": 20
+  },
+  "deadEndCatalogueChecks": [
+    {
+      "label": "near_H44_only_retained",
+      "oldStatus": "unknown",
+      "id": "707e4cb21785059edf453dedbc525920f09a6be519663673010b9c7c5b7301ed",
+      "state": {
+        "jumps": [
+          8,
+          17
+        ],
+        "y": -8.606155409421529,
+        "onGround": false,
+        "contacts": [
+          {
+            "state": 1,
+            "block": "b1"
+          },
+          {
+            "state": 2,
+            "block": "b1"
+          },
+          {
+            "state": 3,
+            "block": "b1"
+          },
+          {
+            "state": 4,
+            "block": "b1"
+          },
+          {
+            "state": 5,
+            "block": "b1"
+          },
+          {
+            "state": 6,
+            "block": "b1"
+          },
+          {
+            "state": 7,
+            "block": "b1"
+          },
+          {
+            "state": 8,
+            "block": "b1"
+          },
+          {
+            "state": 17,
+            "block": "b2"
+          }
+        ]
+      },
+      "choiceCounts": {
+        "normal": {
+          "choices": 1,
+          "finiteEventChoices": 0
+        },
+        "stepping": {
+          "choices": 0,
+          "finiteEventChoices": 0
+        }
+      },
+      "scope": "existing normal/stepping catalogue, user geometry, no ladders/wall hits; only unlanded falling continuation remains"
+    },
+    {
+      "label": "distant_rescue_H28_physically_accepted_dead_end_3",
+      "oldStatus": "feasible",
+      "id": "25def7081a62717c9916d0ffcaa5c945f7608c37c421ff2462a2c6b2d60cad8d",
+      "state": {
+        "jumps": [
+          0,
+          13
+        ],
+        "y": 2.930504511237166,
+        "onGround": false,
+        "contacts": [
+          {
+            "state": 12,
+            "block": "b1"
+          },
+          {
+            "state": 13,
+            "block": "b1"
+          }
+        ]
+      },
+      "choiceCounts": {
+        "normal": {
+          "choices": 1,
+          "finiteEventChoices": 0
+        },
+        "stepping": {
+          "choices": 0,
+          "finiteEventChoices": 0
+        }
+      },
+      "scope": "existing normal/stepping catalogue, user geometry, no ladders/wall hits; only unlanded falling continuation remains"
+    },
+    {
+      "label": "distant_rescue_H28_physically_accepted_dead_end_5",
+      "oldStatus": "feasible",
+      "id": "87aac25ee5aaa6f7da6663cb611df92b1f3c28197530a7a7c64a73df2b2ec426",
+      "state": {
+        "jumps": [
+          0,
+          14
+        ],
+        "y": 3.5796985436761153,
+        "onGround": false,
+        "contacts": [
+          {
+            "state": 12,
+            "block": "b1"
+          },
+          {
+            "state": 13,
+            "block": "b1"
+          },
+          {
+            "state": 14,
+            "block": "b1"
+          }
+        ]
+      },
+      "choiceCounts": {
+        "normal": {
+          "choices": 1,
+          "finiteEventChoices": 0
+        },
+        "stepping": {
+          "choices": 0,
+          "finiteEventChoices": 0
+        }
+      },
+      "scope": "existing normal/stepping catalogue, user geometry, no ladders/wall hits; only unlanded falling continuation remains"
+    }
+  ],
+  "generationFollowup": {
+    "first20ExactlyReproduced": true,
+    "originalEvaluatedCap": 20,
+    "firstThreeRunB3Correction": 125,
+    "exactKnownSuccessfulContinuation": 135,
+    "expandedPrefixes": 108,
+    "noNumericalSolves": true
+  },
+  "sceneOnlyAlsoPassesOriginalCorridor": {
+    "accepted": true,
+    "signature": [
+      [
+        5,
+        -1,
+        0
+      ],
+      [
+        4,
+        -1,
+        0
+      ],
+      [
+        3,
+        -1,
+        0
+      ],
+      [
+        2,
+        -1,
+        0
+      ],
+      [
+        0,
+        -1,
+        0
+      ],
+      [
+        1,
+        -1,
+        -1
+      ]
+    ],
+    "partial": true,
+    "validation": "horizontal_corridor_and_ordered_gate_crossings"
+  },
+  "sceneOnlyAlsoPassesOriginalTerminal": {
+    "accepted": true,
+    "requiredSignature": [
+      [
+        5,
+        -1,
+        0
+      ],
+      [
+        4,
+        -1,
+        0
+      ],
+      [
+        3,
+        -1,
+        0
+      ],
+      [
+        2,
+        -1,
+        0
+      ],
+      [
+        0,
+        -1,
+        0
+      ],
+      [
+        1,
+        -1,
+        -1
+      ]
+    ],
+    "actualSignature": [
+      [
+        5,
+        -1,
+        0
+      ],
+      [
+        4,
+        -1,
+        0
+      ],
+      [
+        3,
+        -1,
+        0
+      ],
+      [
+        2,
+        -1,
+        0
+      ],
+      [
+        0,
+        -1,
+        0
+      ],
+      [
+        1,
+        -1,
+        -1
+      ]
+    ],
+    "outgoingProgress": 8.57964045474705,
+    "beforeNextTurn": true
+  },
+  "inheritedRepairPool": {
+    "pending": 125,
+    "unresolved": 1,
+    "hasIncumbent": true,
+    "referenceSeedLength": 10,
+    "latestCandidateSeedLength": 55,
+    "incumbentPassages": [
+      {
+        "leg": 0,
+        "solidIndex": 1,
+        "faces": [
+          {
+            "axis": "X",
+            "direction": 1,
+            "plane": 742.3000000119209
+          },
+          {
+            "axis": "Y",
+            "direction": 1,
+            "plane": 6
+          },
+          {
+            "axis": "X",
+            "direction": -1,
+            "plane": 740.6999999880791
+          }
+        ],
+        "gates": [
+          19,
+          29
+        ],
+        "blockageCounts": {
+          "horizontal": 0,
+          "vertical": 2,
+          "total": 2
+        },
+        "kind": "vertical_passage",
+        "blockageCount": 2,
+        "blockageTypes": [
+          "X->Y",
+          "Y->X"
+        ],
+        "blockId": "b2"
+      }
+    ],
+    "baseBranchScores": [
+      6.0
+    ],
+    "priorityControlPreservesUniqueBranchPool": true,
+    "priorityControlPreservesFixedMovement": true
+  }
+}

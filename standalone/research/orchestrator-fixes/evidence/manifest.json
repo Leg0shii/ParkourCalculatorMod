@@ -1,0 +1,64 @@
+{
+  "source": "e3d1087b2ab2e5f1d8ed2bf3d974b6548f624353",
+  "contract": "orchestrator selects fixed inputs and constraints; IPOPT unchanged",
+  "tests": {
+    "focused": {
+      "total": 63,
+      "skipped": 0
+    },
+    "autonomy": {
+      "total": 394,
+      "skipped": 84,
+      "excluded": [
+        "test_ladder_composition.LadderRegionTests.test_repeated_ladder_ceiling_events_regenerate_the_complete_schedule"
+      ]
+    }
+  },
+  "numericalThreads": {
+    "OPENBLAS_NUM_THREADS": 1,
+    "OMP_NUM_THREADS": 1
+  },
+  "limitations": [
+    "One current run per numerical condition; finite control corpus, no global optimality or completeness claim.",
+    "Closed-loop lazy geometric discovery remains in the pilot; fixed full-geometry branch compilation is still an orchestrator task.",
+    "No mod Gradle suite or actual Minecraft replay was run."
+  ],
+  "artifacts": {
+    "orchestrator-fixes-autonomy.log": {
+      "bytes": 508,
+      "sha256": "2b9f4cdeb8765279ac11fa86114eb9af64f26065b74ba4c4a56f4f556a77d4e8"
+    },
+    "orchestrator-fixes-focused.log": {
+      "bytes": 99,
+      "sha256": "fa405212a1eaf226c79ccb8c19c6cca9b6018d9c1a61b671074a08e2bb1d10e7"
+    },
+    "orchestrator-fixes-resume.json.gz": {
+      "bytes": 66917,
+      "sha256": "a866d89fe6b097e69b0e275dc701f921c4db6417ba4d36e537c0d0783734fa8c"
+    },
+    "orchestrator-fixes-resume.log": {
+      "bytes": 1203,
+      "sha256": "adc64136b7337963403067f3ee9a81ba9e56cb447f2d17c77baf69993d013fb0"
+    },
+    "orchestrator-fixes-warm.json.gz": {
+      "bytes": 265683,
+      "sha256": "0e8f1243a197c3280299e622bb376298de4ec5b387361a66fcd10e73a59d9e2c"
+    },
+    "orchestrator-fixes-warm.log": {
+      "bytes": 6263,
+      "sha256": "f06d70b3be6d5b5ba05b0ef97bc5437228b0702a9bb195b76e70063466de09f0"
+    },
+    "orchestrator-fixes-windows.json.gz": {
+      "bytes": 542238,
+      "sha256": "72f8b607500bbd0ebe3b557e4cbb4d928eee2c7a7ac1584006a8338f52d1603c"
+    },
+    "orchestrator-fixes-windows.log": {
+      "bytes": 2463,
+      "sha256": "bc083d52ae06950eeab98fd93c5bed1c49ce10abdecc12be0ce2ca42341a82e9"
+    },
+    "summary.json": {
+      "bytes": 4352,
+      "sha256": "6481b7d849a3310ac3a2e3dd4f65b853b3be6d27efa7f39eb93d92f4fae846b1"
+    }
+  }
+}

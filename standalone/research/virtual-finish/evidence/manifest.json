@@ -1,0 +1,30 @@
+{
+  "cold.json.gz": {
+    "bytes": 6207873,
+    "sha256": "79f5efac019c358c9828e05b2a2b046e8727ea1275fc2b911e0fce9f44cee318"
+  },
+  "cold.log": {
+    "bytes": 1234,
+    "sha256": "87b7e620cb01dd691a0222789ce7873f0e7097e9257660ad261f6f3aa2bd474b"
+  },
+  "initial0-cold.json.gz": {
+    "bytes": 7154280,
+    "sha256": "4fd379811afc212692ca4a432416d7d004a3122f300b8c6ee6fa0812b688a809"
+  },
+  "initial0-cold.log": {
+    "bytes": 1470,
+    "sha256": "5b4c2d87a29d02e1b35cd6c470867b2e760d7617e6fce37d6cbe423e2af0b548"
+  },
+  "nonladder-tests.log": {
+    "bytes": 65061,
+    "sha256": "6d004a4531a24b93607df7ac9f3a45eec209b9c9aae71ce3eac7f048a42d9f2a"
+  },
+  "summary.json": {
+    "bytes": 2505,
+    "sha256": "8b0f331788005dfa9eb1f91913a03a2b1506fe8e872aaeb9c6c6f1bc148b9a39"
+  },
+  "terminal-resume-tests.log": {
+    "bytes": 883,
+    "sha256": "10fc050e5470007154db5aaeab137b6c9b7816d873959c9f4d32e672d4551c90"
+  }
+}

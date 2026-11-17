@@ -1,0 +1,11 @@
+----------------------------------------------------------------------
+Ran 54 tests in 23.874s
+
+OK
+real11 200 seconds 0.616 objective 737.5142588006719 violation 0.0
+real11 400 seconds 4.051 objective 691.4017522466784 violation 0.0
+real11 ladder 200 seconds 0.654 objective 737.5142588029789 violation 0.0
+real11 ladder 400 seconds 3.602 objective 691.5810209171883 violation 0.0
+real11 warm noInertia fallback False seconds 4.315 objective 691.401752200883 violation 0.0
+real11 warm noInertia fallback True seconds 6.37 objective 691.4017522782971 violation 0.0
+real11 warm inertiaIncumbent fallback False seconds 1.133 objective 691.4017521824511 violation 0.0

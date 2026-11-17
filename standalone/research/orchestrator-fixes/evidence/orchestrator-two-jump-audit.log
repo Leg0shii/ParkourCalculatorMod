@@ -1,0 +1,12 @@
+{"name": "separated-two-jumps", "candidate": "0:1a4f4b1079953f2fe62cf8ef1138a65fb53f325ae7d12d8770f82db708fb04c5", "selection": "retained", "ticks": 24, "programs": 4, "calls": 4, "complete": true}
+{"name": "separated-two-jumps", "candidate": "0:3a1405fdc4d487a82b3df2780cb5d0cd0ad5de2da67d29ebdcdecbb4e533b586", "selection": "retained", "ticks": 25, "programs": 3, "calls": 3, "complete": true}
+{"name": "separated-two-jumps", "candidate": "1:2e7847d87ce3ebd45f733ee8353fc780aec098c0e687ad2a1d0035088f3476bc", "selection": "retained", "ticks": null, "programs": 0, "calls": 0, "complete": true}
+{"name": "separated-two-jumps", "candidate": "1:5b1676bdb0dcdae95249620ff7615413935d271a091bfa7e12a9273f495eaab0", "selection": "retained", "ticks": 24, "programs": 1, "calls": 1, "complete": true}
+{"name": "separated-two-jumps", "candidate": "1:12f09e2f47dbbf36c441d48615ce442fbfcb6a12781ad21555da473b2ee26f63", "selection": "retained", "ticks": 25, "programs": 1, "calls": 1, "complete": true}
+{"name": "separated-two-jumps", "candidate": "1:5cf936fac7237fa2df9d0299d58287029227ae7c69bcfc13b563f405f0ef7db5", "selection": "retained", "ticks": 25, "programs": 1, "calls": 1, "complete": true}
+{"name": "separated-two-jumps", "candidate": "1:827bee078494287469041aa8a5af6ea5e1a9a5b762a37cef677104adf8142058", "selection": "retained", "ticks": null, "programs": 0, "calls": 0, "complete": true}
+{"name": "separated-two-jumps", "candidate": "1:8c310605cbceb76b5d4048aa48edc8f14aa93463a17e1f22c7884deefc67ea08", "selection": "retained", "ticks": null, "programs": 0, "calls": 0, "complete": true}
+{"name": "separated-two-jumps", "candidate": "final:f5e92e7581537084babd38fdb35724dc49cd8e476245b3ff4361c434a504b1be", "selection": "final_evaluated", "ticks": 24, "programs": 1, "calls": 1, "complete": true}
+{"name": "separated-two-jumps", "candidate": "final:d51cc6e2807d48fef1e3a302e54db7357f12e1f4ac7e031e70eef1ed4dec6a9a", "selection": "final_evaluated", "ticks": 25, "programs": 1, "calls": 1, "complete": true}
+{"name": "separated-two-jumps", "candidate": "final:fdc42c66e12cf86cafa860e1b6b66baa8f6b12f7f246853161543fb28a549e6b", "selection": "final_evaluated", "ticks": 25, "programs": 1, "calls": 1, "complete": true}
+{"name": "separated-two-jumps", "auditCandidates": 11, "complete": true, "qualityLoss": false, "discardedWinners": []}

@@ -1,0 +1,380 @@
+{
+  "cross-neo": {
+    "fixture": "obstacle-cross-neo.json",
+    "fixtureSha256": "5c614a13a2797615a87523465c19a50453bb0a0db8d9172317d1f69216a03dd3",
+    "status": "feasible",
+    "searchSeconds": 1.713835746049881,
+    "assumptions": {
+      "solidSideFaces": true,
+      "ceilings": true,
+      "stairBoost": true,
+      "runOff": true,
+      "runOffSourceObstacle": "checked_during_y_overlap",
+      "inputPolicy": "sprint_jump_sprint_45",
+      "facings": "free",
+      "routeOrderSupplied": false,
+      "airtimesSupplied": false,
+      "otherFloorContacts": "checked_at_generated_crossings",
+      "ceilingContactProfiles": false,
+      "intentionalWallHits": false,
+      "maxBlockagesPerObstacle": 1
+    },
+    "pruning": {
+      "horizontalEdges": 0,
+      "heightEdges": 2,
+      "profileEdges": 0,
+      "horizonPrefixes": 1,
+      "tickBoundPrefixes": 0,
+      "disconnectedPrefixes": 0,
+      "heuristicPoolDrops": 0
+    },
+    "minimumTicksProven": true,
+    "obstacleSearch": [
+      {
+        "generated": 5,
+        "candidateDrops": 0,
+        "timingPoolDrops": 0,
+        "reachPruned": 0,
+        "verticalFacesPruned": 2,
+        "generationIncomplete": false,
+        "acceptedKinds": [
+          "cross_neo"
+        ]
+      }
+    ],
+    "ticks": 12,
+    "allocation": [
+      0
+    ],
+    "blockIds": [
+      "start",
+      "goal"
+    ],
+    "profileKinds": [
+      "ordinary"
+    ],
+    "passages": [
+      {
+        "leg": 0,
+        "solidIndex": 1,
+        "faces": [
+          {
+            "axis": "X",
+            "direction": -1,
+            "plane": 1.599999988079071
+          },
+          {
+            "axis": "Z",
+            "direction": 1,
+            "plane": 1.400000011920929
+          }
+        ],
+        "gates": [
+          6
+        ],
+        "kind": "cross_neo",
+        "blockageCount": 1,
+        "blockageTypes": [
+          "X->Z"
+        ]
+      }
+    ],
+    "violation": 0.0,
+    "fullProblemHash": "302d3672c46d5cb2613055d677ec5a7eede861b8c9478926f831869a4dcc4f70",
+    "horizontalProblemHash": "2bf33c261e8a1c8367fcdc1705b5135d6ea0d8780da264dab7c33285fac4b535",
+    "geometryCheck": {
+      "feasible": true,
+      "ticks": 12
+    },
+    "objective": 2.876933335159487
+  },
+  "wide-neo": {
+    "fixture": "obstacle-wide-neo.json",
+    "fixtureSha256": "350b7f547176ada5e5b32916d9eaa351c5470c12017cf51b91fe41458d514bb3",
+    "status": "feasible",
+    "searchSeconds": 15.315545413643122,
+    "assumptions": {
+      "solidSideFaces": true,
+      "ceilings": true,
+      "stairBoost": true,
+      "runOff": true,
+      "runOffSourceObstacle": "checked_during_y_overlap",
+      "inputPolicy": "sprint_jump_sprint_45",
+      "facings": "free",
+      "routeOrderSupplied": false,
+      "airtimesSupplied": false,
+      "otherFloorContacts": "checked_at_generated_crossings",
+      "ceilingContactProfiles": false,
+      "intentionalWallHits": false,
+      "maxBlockagesPerObstacle": 2
+    },
+    "pruning": {
+      "horizontalEdges": 0,
+      "heightEdges": 2,
+      "profileEdges": 0,
+      "horizonPrefixes": 1,
+      "tickBoundPrefixes": 0,
+      "disconnectedPrefixes": 0,
+      "heuristicPoolDrops": 0
+    },
+    "minimumTicksProven": true,
+    "obstacleSearch": [
+      {
+        "generated": 34,
+        "candidateDrops": 0,
+        "timingPoolDrops": 0,
+        "reachPruned": 2,
+        "verticalFacesPruned": 2,
+        "generationIncomplete": false,
+        "acceptedKinds": [
+          "wide_neo"
+        ]
+      }
+    ],
+    "ticks": 12,
+    "allocation": [
+      0
+    ],
+    "blockIds": [
+      "start",
+      "goal"
+    ],
+    "profileKinds": [
+      "ordinary"
+    ],
+    "passages": [
+      {
+        "leg": 0,
+        "solidIndex": 1,
+        "faces": [
+          {
+            "axis": "X",
+            "direction": -1,
+            "plane": 1.399999988079071
+          },
+          {
+            "axis": "Z",
+            "direction": -1,
+            "plane": -0.050000011920928955
+          },
+          {
+            "axis": "X",
+            "direction": 1,
+            "plane": 2.300000011920929
+          }
+        ],
+        "gates": [
+          4,
+          9
+        ],
+        "kind": "wide_neo",
+        "blockageCount": 2,
+        "blockageTypes": [
+          "X->Z",
+          "Z->X"
+        ]
+      }
+    ],
+    "violation": 0.0,
+    "fullProblemHash": "fefe09484e40fcb5569089663acbe3875ae7ad702bafccac82b6b986da4bf69e",
+    "horizontalProblemHash": "c6ae8650d2e4cd106d746580cadab32dd3cf259a95164841017ddd264afe08da",
+    "geometryCheck": {
+      "feasible": true,
+      "ticks": 12
+    },
+    "objective": 2.9549264394817256
+  },
+  "runoff-side": {
+    "fixture": "obstacle-runoff-side.json",
+    "fixtureSha256": "23b58403d831b0c99c052080e807b854517fbcb15e71f80a7a5210904dfb1ca1",
+    "status": "feasible",
+    "searchSeconds": 0.21936646103858948,
+    "assumptions": {
+      "solidSideFaces": true,
+      "ceilings": true,
+      "stairBoost": true,
+      "runOff": true,
+      "runOffSourceObstacle": "checked_during_y_overlap",
+      "inputPolicy": "sprint_jump_sprint_45",
+      "facings": "free",
+      "routeOrderSupplied": false,
+      "airtimesSupplied": false,
+      "otherFloorContacts": "checked_at_generated_crossings",
+      "ceilingContactProfiles": false,
+      "intentionalWallHits": false,
+      "maxBlockagesPerObstacle": 2
+    },
+    "pruning": {
+      "horizontalEdges": 0,
+      "heightEdges": 0,
+      "profileEdges": 0,
+      "horizonPrefixes": 1,
+      "tickBoundPrefixes": 1,
+      "disconnectedPrefixes": 0,
+      "heuristicPoolDrops": 0
+    },
+    "minimumTicksProven": false,
+    "obstacleSearch": [
+      {
+        "generated": 0,
+        "candidateDrops": 0,
+        "timingPoolDrops": 0,
+        "reachPruned": 0,
+        "verticalFacesPruned": 0,
+        "generationIncomplete": false,
+        "acceptedKinds": []
+      },
+      {
+        "generated": 0,
+        "candidateDrops": 0,
+        "timingPoolDrops": 0,
+        "reachPruned": 0,
+        "verticalFacesPruned": 0,
+        "generationIncomplete": false,
+        "acceptedKinds": []
+      },
+      {
+        "generated": 0,
+        "candidateDrops": 0,
+        "timingPoolDrops": 0,
+        "reachPruned": 0,
+        "verticalFacesPruned": 0,
+        "generationIncomplete": false,
+        "acceptedKinds": []
+      },
+      {
+        "generated": 0,
+        "candidateDrops": 0,
+        "timingPoolDrops": 0,
+        "reachPruned": 0,
+        "verticalFacesPruned": 0,
+        "generationIncomplete": false,
+        "acceptedKinds": []
+      }
+    ],
+    "ticks": 5,
+    "allocation": [
+      1
+    ],
+    "blockIds": [
+      "start",
+      "goal"
+    ],
+    "profileKinds": [
+      "run_off"
+    ],
+    "passages": [],
+    "violation": 0.0,
+    "fullProblemHash": "139e21362d1f1f12b368ac12f9a5d2928dcc50aa1009ce83794c5f37de9ddcf4",
+    "horizontalProblemHash": "c4f4cde57d9bfa6f4b6a4caec30c7b93135ff6e9b4953371e7d1106ceae0eb13",
+    "geometryCheck": {
+      "feasible": true,
+      "ticks": 5
+    },
+    "objective": 2.1123316861790467
+  },
+  "under-ceiling": {
+    "fixture": "obstacle-under-ceiling.json",
+    "fixtureSha256": "a8a3e82f14624636744a2884b833d8e8e354657bd83fdf132c69715fd136b968",
+    "status": "feasible",
+    "searchSeconds": 0.16785050183534622,
+    "assumptions": {
+      "solidSideFaces": true,
+      "ceilings": true,
+      "stairBoost": true,
+      "runOff": true,
+      "runOffSourceObstacle": "checked_during_y_overlap",
+      "inputPolicy": "sprint_jump_sprint_45",
+      "facings": "free",
+      "routeOrderSupplied": false,
+      "airtimesSupplied": false,
+      "otherFloorContacts": "checked_at_generated_crossings",
+      "ceilingContactProfiles": false,
+      "intentionalWallHits": false,
+      "maxBlockagesPerObstacle": 2
+    },
+    "pruning": {
+      "horizontalEdges": 0,
+      "heightEdges": 2,
+      "profileEdges": 0,
+      "horizonPrefixes": 1,
+      "tickBoundPrefixes": 0,
+      "disconnectedPrefixes": 0,
+      "heuristicPoolDrops": 0
+    },
+    "minimumTicksProven": true,
+    "obstacleSearch": [
+      {
+        "generated": 0,
+        "candidateDrops": 0,
+        "timingPoolDrops": 0,
+        "reachPruned": 0,
+        "verticalFacesPruned": 0,
+        "generationIncomplete": false,
+        "acceptedKinds": []
+      }
+    ],
+    "ticks": 12,
+    "allocation": [
+      0
+    ],
+    "blockIds": [
+      "start",
+      "goal"
+    ],
+    "profileKinds": [
+      "ordinary"
+    ],
+    "passages": [],
+    "violation": 0.0,
+    "fullProblemHash": "25cf5cfd96100de0f302fd348a566729feac2502dc4e8141c09201df2376c448",
+    "horizontalProblemHash": "9c6fd5412b3ff9e72b4cb068e1762dd59c58c255388699355ddde0ed3287a7a1",
+    "geometryCheck": {
+      "feasible": true,
+      "ticks": 12
+    },
+    "objective": 3.4016670651507503
+  },
+  "blocked": {
+    "fixture": "obstacle-blocked.json",
+    "fixtureSha256": "4c2cf8cc6675d35ada506fa8510553ee5c620640c663df57c5042359d28d2ed7",
+    "status": "unknown",
+    "searchSeconds": 0.15398741513490677,
+    "assumptions": {
+      "solidSideFaces": true,
+      "ceilings": true,
+      "stairBoost": true,
+      "runOff": true,
+      "runOffSourceObstacle": "checked_during_y_overlap",
+      "inputPolicy": "sprint_jump_sprint_45",
+      "facings": "free",
+      "routeOrderSupplied": false,
+      "airtimesSupplied": false,
+      "otherFloorContacts": "checked_at_generated_crossings",
+      "ceilingContactProfiles": false,
+      "intentionalWallHits": false,
+      "maxBlockagesPerObstacle": 2
+    },
+    "pruning": {
+      "horizontalEdges": 0,
+      "heightEdges": 2,
+      "profileEdges": 0,
+      "horizonPrefixes": 1,
+      "tickBoundPrefixes": 0,
+      "disconnectedPrefixes": 0,
+      "heuristicPoolDrops": 0
+    },
+    "minimumTicksProven": false,
+    "obstacleSearch": [
+      {
+        "generated": 0,
+        "candidateDrops": 0,
+        "timingPoolDrops": 0,
+        "reachPruned": 0,
+        "verticalFacesPruned": 2,
+        "generationIncomplete": false,
+        "acceptedKinds": []
+      }
+    ]
+  }
+}

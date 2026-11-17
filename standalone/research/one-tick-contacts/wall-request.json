@@ -1,0 +1,415 @@
+{
+  "magnitude": [
+    0.32739998400211334,
+    0.02599999835384377,
+    0.019999999341613214,
+    0.02599999835384377,
+    0.02599999835384377,
+    0.02599999835384377,
+    0.02599999835384377,
+    0.02599999835384377,
+    0.02599999835384377,
+    0.02599999835384377,
+    0.02599999835384377,
+    0.02599999835384377
+  ],
+  "friction": [
+    0.546000063419342,
+    0.9100000262260437,
+    0.9100000262260437,
+    0.9100000262260437,
+    0.9100000262260437,
+    0.9100000262260437,
+    0.9100000262260437,
+    0.9100000262260437,
+    0.9100000262260437,
+    0.9100000262260437,
+    0.9100000262260437,
+    0.9100000262260437
+  ],
+  "base": [
+    1.5707963267948966,
+    0.7853981633974483,
+    0.7853981633974483,
+    0.7853981633974483,
+    0.7853981633974483,
+    0.7853981633974483,
+    0.7853981633974483,
+    0.7853981633974483,
+    0.7853981633974483,
+    0.7853981633974483,
+    0.7853981633974483,
+    0.7853981633974483
+  ],
+  "movement": {
+    "profile": "minecraft-1.8.9",
+    "compiler": "mod-input-state-v1",
+    "horizontalCollision": [
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "ground": [
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "sprinting": [
+      true,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "airSprinting": [
+      false,
+      true,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "moveForward": [
+      0.98,
+      0.98,
+      0.98,
+      0.98,
+      0.98,
+      0.98,
+      0.98,
+      0.98,
+      0.98,
+      0.98,
+      0.98,
+      0.98
+    ],
+    "moveStrafe": [
+      0.0,
+      0.98,
+      0.98,
+      0.98,
+      0.98,
+      0.98,
+      0.98,
+      0.98,
+      0.98,
+      0.98,
+      0.98,
+      0.98
+    ]
+  },
+  "model": "FixedMovementCompiler:mod-input-state-v1:f057c0c",
+  "version": 1,
+  "ticks": 12,
+  "position": [
+    0.8,
+    0.5
+  ],
+  "velocity": [
+    1.2,
+    0.25
+  ],
+  "threshold": 0.005,
+  "yaw": [
+    -83.01716074322208,
+    -260.24798980430165,
+    -277.03169534844443,
+    -288.54158825657413,
+    -296.3114664715546,
+    -301.7052635141802,
+    -305.58988949985496,
+    -308.48516944948693,
+    -310.7071183403409,
+    -312.45432489681787,
+    -313.85619651826687,
+    45.00000001199457
+  ],
+  "walls": [
+    {
+      "mode": "X",
+      "t1": 0,
+      "cmp": "GE",
+      "rhs": -0.29999901192092887,
+      "name": "initial:0:X:lo",
+      "op": "PLUS"
+    },
+    {
+      "mode": "X",
+      "t1": 0,
+      "cmp": "LE",
+      "rhs": 1.2999990119209286,
+      "name": "initial:0:X:hi",
+      "op": "PLUS"
+    },
+    {
+      "mode": "Z",
+      "t1": 0,
+      "cmp": "GE",
+      "rhs": -0.29999901192092887,
+      "name": "initial:0:Z:lo",
+      "op": "PLUS"
+    },
+    {
+      "mode": "Z",
+      "t1": 0,
+      "cmp": "LE",
+      "rhs": 1.2999990119209286,
+      "name": "initial:0:Z:hi",
+      "op": "PLUS"
+    },
+    {
+      "mode": "X",
+      "t1": 11,
+      "cmp": "GE",
+      "rhs": -0.29999901192092887,
+      "name": "landing:1:X:lo",
+      "op": "PLUS"
+    },
+    {
+      "mode": "X",
+      "t1": 11,
+      "cmp": "LE",
+      "rhs": 1.2999990119209286,
+      "name": "landing:1:X:hi",
+      "op": "PLUS"
+    },
+    {
+      "mode": "Z",
+      "t1": 11,
+      "cmp": "GE",
+      "rhs": 1.2000009880790714,
+      "name": "landing:1:Z:lo",
+      "op": "PLUS"
+    },
+    {
+      "mode": "Z",
+      "t1": 11,
+      "cmp": "LE",
+      "rhs": 2.799999011920928,
+      "name": "landing:1:Z:hi",
+      "op": "PLUS"
+    },
+    {
+      "mode": "X",
+      "t1": 0,
+      "cmp": "LE",
+      "rhs": 1.699999988079071,
+      "name": "wall_hit:0:X:avoid",
+      "op": "PLUS"
+    },
+    {
+      "mode": "X",
+      "t1": 1,
+      "cmp": "LE",
+      "rhs": 1.699999988079071,
+      "name": "wall_hit:0:X:avoid",
+      "op": "PLUS"
+    },
+    {
+      "mode": "X",
+      "t1": 2,
+      "cmp": "LE",
+      "rhs": 1.699999988079071,
+      "name": "wall_hit:0:X:avoid",
+      "op": "PLUS"
+    },
+    {
+      "mode": "X",
+      "t1": 3,
+      "cmp": "LE",
+      "rhs": 1.699999988079071,
+      "name": "wall_hit:0:X:avoid",
+      "op": "PLUS"
+    },
+    {
+      "mode": "X",
+      "t1": 4,
+      "cmp": "LE",
+      "rhs": 1.699999988079071,
+      "name": "wall_hit:0:X:avoid",
+      "op": "PLUS"
+    },
+    {
+      "mode": "X",
+      "t1": 5,
+      "cmp": "LE",
+      "rhs": 1.699999988079071,
+      "name": "wall_hit:0:X:avoid",
+      "op": "PLUS"
+    },
+    {
+      "mode": "X",
+      "t1": 6,
+      "cmp": "LE",
+      "rhs": 1.699999988079071,
+      "name": "wall_hit:0:X:avoid",
+      "op": "PLUS"
+    },
+    {
+      "mode": "X",
+      "t1": 7,
+      "cmp": "LE",
+      "rhs": 1.699999988079071,
+      "name": "wall_hit:0:X:avoid",
+      "op": "PLUS"
+    },
+    {
+      "mode": "X",
+      "t1": 8,
+      "cmp": "LE",
+      "rhs": 1.699999988079071,
+      "name": "wall_hit:0:X:avoid",
+      "op": "PLUS"
+    },
+    {
+      "mode": "X",
+      "t1": 9,
+      "cmp": "LE",
+      "rhs": 1.699999988079071,
+      "name": "wall_hit:0:X:avoid",
+      "op": "PLUS"
+    },
+    {
+      "mode": "X",
+      "t1": 10,
+      "cmp": "LE",
+      "rhs": 1.699999988079071,
+      "name": "wall_hit:0:X:avoid",
+      "op": "PLUS"
+    },
+    {
+      "mode": "X",
+      "t1": 11,
+      "cmp": "LE",
+      "rhs": 1.699999988079071,
+      "name": "wall_hit:0:X:avoid",
+      "op": "PLUS"
+    },
+    {
+      "mode": "X",
+      "t1": 12,
+      "cmp": "LE",
+      "rhs": 1.699999988079071,
+      "name": "wall_hit:0:X:avoid",
+      "op": "PLUS"
+    },
+    {
+      "mode": "Z",
+      "t1": 0,
+      "cmp": "GE",
+      "rhs": -3.299999011920929,
+      "name": "wall_hit:0:X:finite_lo",
+      "op": "PLUS"
+    },
+    {
+      "mode": "Z",
+      "t1": 0,
+      "cmp": "LE",
+      "rhs": 5.299999011920929,
+      "name": "wall_hit:0:X:finite_hi",
+      "op": "PLUS"
+    },
+    {
+      "mode": "X",
+      "t1": 2,
+      "cmp": "LE",
+      "rhs": 1.6999989880790711,
+      "name": "wall_hit:0:X:reverse",
+      "op": "PLUS"
+    }
+  ],
+  "contacts": [
+    {
+      "state": 1,
+      "axis": 0,
+      "direction": 1,
+      "plane": 1.699999988079071
+    }
+  ],
+  "objective": {
+    "axis": "Z",
+    "sense": "MAX",
+    "tick": 12,
+    "type": "POSITION",
+    "smoothLambda": 0.0
+  },
+  "vertical": {
+    "profile": "minecraft-1.8.9",
+    "position": 1,
+    "velocity": -0.0784000015258789,
+    "onGround": true,
+    "previousHorizontalCollision": false,
+    "threshold": 0.005,
+    "jumpVelocity": [
+      0.41999998688697815,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "sneak": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "contacts": [
+      {
+        "state": 12,
+        "plane": 1,
+        "direction": -1
+      }
+    ]
+  },
+  "startYaw": 0.0,
+  "seconds": 10.0,
+  "stopOnFeasible": false,
+  "maxIterations": 10000
+}

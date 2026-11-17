@@ -1,0 +1,2033 @@
+{
+  "kind": "offline exact-context generator audit; no IPOPT or Java calls",
+  "programs": [
+    {
+      "program": "P06",
+      "exactContext": true,
+      "items": [
+        {
+          "kind": "obstacle_passages",
+          "solidIndex": 1,
+          "block": "b2",
+          "rawOptions": 85945,
+          "distinctEffectiveRowSets": 162,
+          "duplicateOptions": 85783,
+          "exhausted": false,
+          "elapsedSeconds": 3.000032503157854,
+          "examples": [
+            {
+              "first": {
+                "passage": {
+                  "leg": 0,
+                  "solidIndex": 1,
+                  "faces": [
+                    {
+                      "axis": "Z",
+                      "direction": 1,
+                      "plane": -1102.699999988079
+                    },
+                    {
+                      "axis": "X",
+                      "direction": 1,
+                      "plane": 742.3000000119209
+                    }
+                  ],
+                  "gates": [
+                    18
+                  ],
+                  "kind": "cross_neo",
+                  "blockageCounts": {
+                    "horizontal": 1,
+                    "vertical": 0,
+                    "total": 1
+                  },
+                  "blockageCount": 1
+                },
+                "rows": [
+                  {
+                    "mode": "Z",
+                    "t1": 16,
+                    "cmp": "GE",
+                    "rhs": -1102.699998988079,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 16
+                  },
+                  {
+                    "mode": "Z",
+                    "t1": 17,
+                    "cmp": "GE",
+                    "rhs": -1102.699998988079,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 17
+                  },
+                  {
+                    "mode": "Z",
+                    "t1": 18,
+                    "cmp": "GE",
+                    "rhs": -1102.699998988079,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 18
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 24,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 24
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 25,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 25
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 26,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 26
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 27,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 27
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 28,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 28
+                  }
+                ]
+              },
+              "duplicate": {
+                "passage": {
+                  "leg": 0,
+                  "solidIndex": 1,
+                  "faces": [
+                    {
+                      "axis": "Z",
+                      "direction": 1,
+                      "plane": -1102.699999988079
+                    },
+                    {
+                      "axis": "X",
+                      "direction": 1,
+                      "plane": 742.3000000119209
+                    }
+                  ],
+                  "gates": [
+                    19
+                  ],
+                  "kind": "cross_neo",
+                  "blockageCounts": {
+                    "horizontal": 1,
+                    "vertical": 0,
+                    "total": 1
+                  },
+                  "blockageCount": 1
+                },
+                "rows": [
+                  {
+                    "mode": "Z",
+                    "t1": 16,
+                    "cmp": "GE",
+                    "rhs": -1102.699998988079,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 16
+                  },
+                  {
+                    "mode": "Z",
+                    "t1": 17,
+                    "cmp": "GE",
+                    "rhs": -1102.699998988079,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 17
+                  },
+                  {
+                    "mode": "Z",
+                    "t1": 18,
+                    "cmp": "GE",
+                    "rhs": -1102.699998988079,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 18
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 24,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 24
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 25,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 25
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 26,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 26
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 27,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 27
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 28,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 28
+                  }
+                ]
+              },
+              "effectiveRows": [
+                [
+                  "X",
+                  24,
+                  "GE",
+                  742.3000010119209
+                ],
+                [
+                  "X",
+                  25,
+                  "GE",
+                  742.3000010119209
+                ],
+                [
+                  "X",
+                  26,
+                  "GE",
+                  742.3000010119209
+                ],
+                [
+                  "X",
+                  27,
+                  "GE",
+                  742.3000010119209
+                ],
+                [
+                  "X",
+                  28,
+                  "GE",
+                  742.3000010119209
+                ],
+                [
+                  "Z",
+                  16,
+                  "GE",
+                  -1102.699998988079
+                ],
+                [
+                  "Z",
+                  17,
+                  "GE",
+                  -1102.699998988079
+                ],
+                [
+                  "Z",
+                  18,
+                  "GE",
+                  -1102.699998988079
+                ]
+              ]
+            },
+            {
+              "first": {
+                "passage": {
+                  "leg": 0,
+                  "solidIndex": 1,
+                  "faces": [
+                    {
+                      "axis": "Z",
+                      "direction": 1,
+                      "plane": -1102.699999988079
+                    },
+                    {
+                      "axis": "X",
+                      "direction": 1,
+                      "plane": 742.3000000119209
+                    }
+                  ],
+                  "gates": [
+                    18
+                  ],
+                  "kind": "cross_neo",
+                  "blockageCounts": {
+                    "horizontal": 1,
+                    "vertical": 0,
+                    "total": 1
+                  },
+                  "blockageCount": 1
+                },
+                "rows": [
+                  {
+                    "mode": "Z",
+                    "t1": 16,
+                    "cmp": "GE",
+                    "rhs": -1102.699998988079,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 16
+                  },
+                  {
+                    "mode": "Z",
+                    "t1": 17,
+                    "cmp": "GE",
+                    "rhs": -1102.699998988079,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 17
+                  },
+                  {
+                    "mode": "Z",
+                    "t1": 18,
+                    "cmp": "GE",
+                    "rhs": -1102.699998988079,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 18
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 24,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 24
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 25,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 25
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 26,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 26
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 27,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 27
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 28,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 28
+                  }
+                ]
+              },
+              "duplicate": {
+                "passage": {
+                  "leg": 0,
+                  "solidIndex": 1,
+                  "faces": [
+                    {
+                      "axis": "Z",
+                      "direction": 1,
+                      "plane": -1102.699999988079
+                    },
+                    {
+                      "axis": "X",
+                      "direction": 1,
+                      "plane": 742.3000000119209
+                    }
+                  ],
+                  "gates": [
+                    20
+                  ],
+                  "kind": "cross_neo",
+                  "blockageCounts": {
+                    "horizontal": 1,
+                    "vertical": 0,
+                    "total": 1
+                  },
+                  "blockageCount": 1
+                },
+                "rows": [
+                  {
+                    "mode": "Z",
+                    "t1": 16,
+                    "cmp": "GE",
+                    "rhs": -1102.699998988079,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 16
+                  },
+                  {
+                    "mode": "Z",
+                    "t1": 17,
+                    "cmp": "GE",
+                    "rhs": -1102.699998988079,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 17
+                  },
+                  {
+                    "mode": "Z",
+                    "t1": 18,
+                    "cmp": "GE",
+                    "rhs": -1102.699998988079,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 18
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 24,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 24
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 25,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 25
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 26,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 26
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 27,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 27
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 28,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 28
+                  }
+                ]
+              },
+              "effectiveRows": [
+                [
+                  "X",
+                  24,
+                  "GE",
+                  742.3000010119209
+                ],
+                [
+                  "X",
+                  25,
+                  "GE",
+                  742.3000010119209
+                ],
+                [
+                  "X",
+                  26,
+                  "GE",
+                  742.3000010119209
+                ],
+                [
+                  "X",
+                  27,
+                  "GE",
+                  742.3000010119209
+                ],
+                [
+                  "X",
+                  28,
+                  "GE",
+                  742.3000010119209
+                ],
+                [
+                  "Z",
+                  16,
+                  "GE",
+                  -1102.699998988079
+                ],
+                [
+                  "Z",
+                  17,
+                  "GE",
+                  -1102.699998988079
+                ],
+                [
+                  "Z",
+                  18,
+                  "GE",
+                  -1102.699998988079
+                ]
+              ]
+            },
+            {
+              "first": {
+                "passage": {
+                  "leg": 0,
+                  "solidIndex": 1,
+                  "faces": [
+                    {
+                      "axis": "Z",
+                      "direction": 1,
+                      "plane": -1102.699999988079
+                    },
+                    {
+                      "axis": "X",
+                      "direction": 1,
+                      "plane": 742.3000000119209
+                    }
+                  ],
+                  "gates": [
+                    18
+                  ],
+                  "kind": "cross_neo",
+                  "blockageCounts": {
+                    "horizontal": 1,
+                    "vertical": 0,
+                    "total": 1
+                  },
+                  "blockageCount": 1
+                },
+                "rows": [
+                  {
+                    "mode": "Z",
+                    "t1": 16,
+                    "cmp": "GE",
+                    "rhs": -1102.699998988079,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 16
+                  },
+                  {
+                    "mode": "Z",
+                    "t1": 17,
+                    "cmp": "GE",
+                    "rhs": -1102.699998988079,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 17
+                  },
+                  {
+                    "mode": "Z",
+                    "t1": 18,
+                    "cmp": "GE",
+                    "rhs": -1102.699998988079,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 18
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 24,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 24
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 25,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 25
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 26,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 26
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 27,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 27
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 28,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 28
+                  }
+                ]
+              },
+              "duplicate": {
+                "passage": {
+                  "leg": 0,
+                  "solidIndex": 1,
+                  "faces": [
+                    {
+                      "axis": "Z",
+                      "direction": 1,
+                      "plane": -1102.699999988079
+                    },
+                    {
+                      "axis": "X",
+                      "direction": 1,
+                      "plane": 742.3000000119209
+                    }
+                  ],
+                  "gates": [
+                    21
+                  ],
+                  "kind": "cross_neo",
+                  "blockageCounts": {
+                    "horizontal": 1,
+                    "vertical": 0,
+                    "total": 1
+                  },
+                  "blockageCount": 1
+                },
+                "rows": [
+                  {
+                    "mode": "Z",
+                    "t1": 16,
+                    "cmp": "GE",
+                    "rhs": -1102.699998988079,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 16
+                  },
+                  {
+                    "mode": "Z",
+                    "t1": 17,
+                    "cmp": "GE",
+                    "rhs": -1102.699998988079,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 17
+                  },
+                  {
+                    "mode": "Z",
+                    "t1": 18,
+                    "cmp": "GE",
+                    "rhs": -1102.699998988079,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 18
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 24,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 24
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 25,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 25
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 26,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 26
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 27,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 27
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 28,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 28
+                  }
+                ]
+              },
+              "effectiveRows": [
+                [
+                  "X",
+                  24,
+                  "GE",
+                  742.3000010119209
+                ],
+                [
+                  "X",
+                  25,
+                  "GE",
+                  742.3000010119209
+                ],
+                [
+                  "X",
+                  26,
+                  "GE",
+                  742.3000010119209
+                ],
+                [
+                  "X",
+                  27,
+                  "GE",
+                  742.3000010119209
+                ],
+                [
+                  "X",
+                  28,
+                  "GE",
+                  742.3000010119209
+                ],
+                [
+                  "Z",
+                  16,
+                  "GE",
+                  -1102.699998988079
+                ],
+                [
+                  "Z",
+                  17,
+                  "GE",
+                  -1102.699998988079
+                ],
+                [
+                  "Z",
+                  18,
+                  "GE",
+                  -1102.699998988079
+                ]
+              ]
+            }
+          ],
+          "requiredStates": {
+            "X": [
+              16,
+              17,
+              18,
+              24,
+              25,
+              26,
+              27,
+              28
+            ],
+            "Z": [
+              16,
+              17,
+              18,
+              24,
+              25,
+              26,
+              27,
+              28
+            ]
+          }
+        },
+        {
+          "kind": "floor_avoid_disjunction",
+          "options": 4
+        }
+      ],
+      "nextVariantProbe": {}
+    },
+    {
+      "program": "P07",
+      "exactContext": true,
+      "items": [
+        {
+          "kind": "obstacle_passages",
+          "solidIndex": 1,
+          "block": "b2",
+          "rawOptions": 85552,
+          "distinctEffectiveRowSets": 232,
+          "duplicateOptions": 85320,
+          "exhausted": false,
+          "elapsedSeconds": 3.0000267066061497,
+          "examples": [
+            {
+              "first": {
+                "passage": {
+                  "leg": 0,
+                  "solidIndex": 1,
+                  "faces": [
+                    {
+                      "axis": "X",
+                      "direction": 1,
+                      "plane": 742.3000000119209
+                    },
+                    {
+                      "axis": "Z",
+                      "direction": 1,
+                      "plane": -1102.699999988079
+                    }
+                  ],
+                  "gates": [
+                    20
+                  ],
+                  "kind": "cross_neo",
+                  "blockageCounts": {
+                    "horizontal": 1,
+                    "vertical": 0,
+                    "total": 1
+                  },
+                  "blockageCount": 1
+                },
+                "rows": [
+                  {
+                    "mode": "X",
+                    "t1": 16,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 16
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 17,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 17
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 18,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 18
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 19,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 19
+                  },
+                  {
+                    "mode": "Z",
+                    "t1": 25,
+                    "cmp": "GE",
+                    "rhs": -1102.699998988079,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 25
+                  },
+                  {
+                    "mode": "Z",
+                    "t1": 26,
+                    "cmp": "GE",
+                    "rhs": -1102.699998988079,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 26
+                  },
+                  {
+                    "mode": "Z",
+                    "t1": 27,
+                    "cmp": "GE",
+                    "rhs": -1102.699998988079,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 27
+                  },
+                  {
+                    "mode": "Z",
+                    "t1": 28,
+                    "cmp": "GE",
+                    "rhs": -1102.699998988079,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 28
+                  }
+                ]
+              },
+              "duplicate": {
+                "passage": {
+                  "leg": 0,
+                  "solidIndex": 1,
+                  "faces": [
+                    {
+                      "axis": "X",
+                      "direction": 1,
+                      "plane": 742.3000000119209
+                    },
+                    {
+                      "axis": "Z",
+                      "direction": 1,
+                      "plane": -1102.699999988079
+                    }
+                  ],
+                  "gates": [
+                    21
+                  ],
+                  "kind": "cross_neo",
+                  "blockageCounts": {
+                    "horizontal": 1,
+                    "vertical": 0,
+                    "total": 1
+                  },
+                  "blockageCount": 1
+                },
+                "rows": [
+                  {
+                    "mode": "X",
+                    "t1": 16,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 16
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 17,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 17
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 18,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 18
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 19,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 19
+                  },
+                  {
+                    "mode": "Z",
+                    "t1": 25,
+                    "cmp": "GE",
+                    "rhs": -1102.699998988079,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 25
+                  },
+                  {
+                    "mode": "Z",
+                    "t1": 26,
+                    "cmp": "GE",
+                    "rhs": -1102.699998988079,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 26
+                  },
+                  {
+                    "mode": "Z",
+                    "t1": 27,
+                    "cmp": "GE",
+                    "rhs": -1102.699998988079,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 27
+                  },
+                  {
+                    "mode": "Z",
+                    "t1": 28,
+                    "cmp": "GE",
+                    "rhs": -1102.699998988079,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 28
+                  }
+                ]
+              },
+              "effectiveRows": [
+                [
+                  "X",
+                  16,
+                  "GE",
+                  742.3000010119209
+                ],
+                [
+                  "X",
+                  17,
+                  "GE",
+                  742.3000010119209
+                ],
+                [
+                  "X",
+                  18,
+                  "GE",
+                  742.3000010119209
+                ],
+                [
+                  "X",
+                  19,
+                  "GE",
+                  742.3000010119209
+                ],
+                [
+                  "Z",
+                  25,
+                  "GE",
+                  -1102.699998988079
+                ],
+                [
+                  "Z",
+                  26,
+                  "GE",
+                  -1102.699998988079
+                ],
+                [
+                  "Z",
+                  27,
+                  "GE",
+                  -1102.699998988079
+                ],
+                [
+                  "Z",
+                  28,
+                  "GE",
+                  -1102.699998988079
+                ]
+              ]
+            },
+            {
+              "first": {
+                "passage": {
+                  "leg": 0,
+                  "solidIndex": 1,
+                  "faces": [
+                    {
+                      "axis": "X",
+                      "direction": 1,
+                      "plane": 742.3000000119209
+                    },
+                    {
+                      "axis": "Z",
+                      "direction": 1,
+                      "plane": -1102.699999988079
+                    }
+                  ],
+                  "gates": [
+                    20
+                  ],
+                  "kind": "cross_neo",
+                  "blockageCounts": {
+                    "horizontal": 1,
+                    "vertical": 0,
+                    "total": 1
+                  },
+                  "blockageCount": 1
+                },
+                "rows": [
+                  {
+                    "mode": "X",
+                    "t1": 16,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 16
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 17,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 17
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 18,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 18
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 19,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 19
+                  },
+                  {
+                    "mode": "Z",
+                    "t1": 25,
+                    "cmp": "GE",
+                    "rhs": -1102.699998988079,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 25
+                  },
+                  {
+                    "mode": "Z",
+                    "t1": 26,
+                    "cmp": "GE",
+                    "rhs": -1102.699998988079,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 26
+                  },
+                  {
+                    "mode": "Z",
+                    "t1": 27,
+                    "cmp": "GE",
+                    "rhs": -1102.699998988079,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 27
+                  },
+                  {
+                    "mode": "Z",
+                    "t1": 28,
+                    "cmp": "GE",
+                    "rhs": -1102.699998988079,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 28
+                  }
+                ]
+              },
+              "duplicate": {
+                "passage": {
+                  "leg": 0,
+                  "solidIndex": 1,
+                  "faces": [
+                    {
+                      "axis": "X",
+                      "direction": 1,
+                      "plane": 742.3000000119209
+                    },
+                    {
+                      "axis": "Z",
+                      "direction": 1,
+                      "plane": -1102.699999988079
+                    }
+                  ],
+                  "gates": [
+                    22
+                  ],
+                  "kind": "cross_neo",
+                  "blockageCounts": {
+                    "horizontal": 1,
+                    "vertical": 0,
+                    "total": 1
+                  },
+                  "blockageCount": 1
+                },
+                "rows": [
+                  {
+                    "mode": "X",
+                    "t1": 16,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 16
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 17,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 17
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 18,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 18
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 19,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 19
+                  },
+                  {
+                    "mode": "Z",
+                    "t1": 25,
+                    "cmp": "GE",
+                    "rhs": -1102.699998988079,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 25
+                  },
+                  {
+                    "mode": "Z",
+                    "t1": 26,
+                    "cmp": "GE",
+                    "rhs": -1102.699998988079,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 26
+                  },
+                  {
+                    "mode": "Z",
+                    "t1": 27,
+                    "cmp": "GE",
+                    "rhs": -1102.699998988079,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 27
+                  },
+                  {
+                    "mode": "Z",
+                    "t1": 28,
+                    "cmp": "GE",
+                    "rhs": -1102.699998988079,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 28
+                  }
+                ]
+              },
+              "effectiveRows": [
+                [
+                  "X",
+                  16,
+                  "GE",
+                  742.3000010119209
+                ],
+                [
+                  "X",
+                  17,
+                  "GE",
+                  742.3000010119209
+                ],
+                [
+                  "X",
+                  18,
+                  "GE",
+                  742.3000010119209
+                ],
+                [
+                  "X",
+                  19,
+                  "GE",
+                  742.3000010119209
+                ],
+                [
+                  "Z",
+                  25,
+                  "GE",
+                  -1102.699998988079
+                ],
+                [
+                  "Z",
+                  26,
+                  "GE",
+                  -1102.699998988079
+                ],
+                [
+                  "Z",
+                  27,
+                  "GE",
+                  -1102.699998988079
+                ],
+                [
+                  "Z",
+                  28,
+                  "GE",
+                  -1102.699998988079
+                ]
+              ]
+            },
+            {
+              "first": {
+                "passage": {
+                  "leg": 0,
+                  "solidIndex": 1,
+                  "faces": [
+                    {
+                      "axis": "X",
+                      "direction": 1,
+                      "plane": 742.3000000119209
+                    },
+                    {
+                      "axis": "Z",
+                      "direction": 1,
+                      "plane": -1102.699999988079
+                    }
+                  ],
+                  "gates": [
+                    20
+                  ],
+                  "kind": "cross_neo",
+                  "blockageCounts": {
+                    "horizontal": 1,
+                    "vertical": 0,
+                    "total": 1
+                  },
+                  "blockageCount": 1
+                },
+                "rows": [
+                  {
+                    "mode": "X",
+                    "t1": 16,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 16
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 17,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 17
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 18,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 18
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 19,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 19
+                  },
+                  {
+                    "mode": "Z",
+                    "t1": 25,
+                    "cmp": "GE",
+                    "rhs": -1102.699998988079,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 25
+                  },
+                  {
+                    "mode": "Z",
+                    "t1": 26,
+                    "cmp": "GE",
+                    "rhs": -1102.699998988079,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 26
+                  },
+                  {
+                    "mode": "Z",
+                    "t1": 27,
+                    "cmp": "GE",
+                    "rhs": -1102.699998988079,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 27
+                  },
+                  {
+                    "mode": "Z",
+                    "t1": 28,
+                    "cmp": "GE",
+                    "rhs": -1102.699998988079,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 28
+                  }
+                ]
+              },
+              "duplicate": {
+                "passage": {
+                  "leg": 0,
+                  "solidIndex": 1,
+                  "faces": [
+                    {
+                      "axis": "X",
+                      "direction": 1,
+                      "plane": 742.3000000119209
+                    },
+                    {
+                      "axis": "Z",
+                      "direction": 1,
+                      "plane": -1102.699999988079
+                    }
+                  ],
+                  "gates": [
+                    23
+                  ],
+                  "kind": "cross_neo",
+                  "blockageCounts": {
+                    "horizontal": 1,
+                    "vertical": 0,
+                    "total": 1
+                  },
+                  "blockageCount": 1
+                },
+                "rows": [
+                  {
+                    "mode": "X",
+                    "t1": 16,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 16
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 17,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 17
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 18,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 18
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 19,
+                    "cmp": "GE",
+                    "rhs": 742.3000010119209,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 19
+                  },
+                  {
+                    "mode": "Z",
+                    "t1": 25,
+                    "cmp": "GE",
+                    "rhs": -1102.699998988079,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 25
+                  },
+                  {
+                    "mode": "Z",
+                    "t1": 26,
+                    "cmp": "GE",
+                    "rhs": -1102.699998988079,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 26
+                  },
+                  {
+                    "mode": "Z",
+                    "t1": 27,
+                    "cmp": "GE",
+                    "rhs": -1102.699998988079,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 27
+                  },
+                  {
+                    "mode": "Z",
+                    "t1": 28,
+                    "cmp": "GE",
+                    "rhs": -1102.699998988079,
+                    "name": "blockage:1",
+                    "leg": 0,
+                    "offset": 28
+                  }
+                ]
+              },
+              "effectiveRows": [
+                [
+                  "X",
+                  16,
+                  "GE",
+                  742.3000010119209
+                ],
+                [
+                  "X",
+                  17,
+                  "GE",
+                  742.3000010119209
+                ],
+                [
+                  "X",
+                  18,
+                  "GE",
+                  742.3000010119209
+                ],
+                [
+                  "X",
+                  19,
+                  "GE",
+                  742.3000010119209
+                ],
+                [
+                  "Z",
+                  25,
+                  "GE",
+                  -1102.699998988079
+                ],
+                [
+                  "Z",
+                  26,
+                  "GE",
+                  -1102.699998988079
+                ],
+                [
+                  "Z",
+                  27,
+                  "GE",
+                  -1102.699998988079
+                ],
+                [
+                  "Z",
+                  28,
+                  "GE",
+                  -1102.699998988079
+                ]
+              ]
+            }
+          ],
+          "requiredStates": {
+            "X": [
+              16,
+              17,
+              18,
+              19,
+              25,
+              26,
+              27,
+              28
+            ],
+            "Z": [
+              16,
+              17,
+              18,
+              19,
+              25,
+              26,
+              27,
+              28
+            ]
+          }
+        },
+        {
+          "kind": "obstacle_passages",
+          "solidIndex": 2,
+          "block": "b3",
+          "rawOptions": 104810,
+          "distinctEffectiveRowSets": 8,
+          "duplicateOptions": 104802,
+          "exhausted": false,
+          "elapsedSeconds": 3.000035047531128,
+          "examples": [
+            {
+              "first": {
+                "passage": {
+                  "leg": 0,
+                  "solidIndex": 2,
+                  "faces": [
+                    {
+                      "axis": "X",
+                      "direction": 1,
+                      "plane": 739.3000000119209
+                    }
+                  ],
+                  "gates": [],
+                  "kind": "vertical_passage",
+                  "blockageCounts": {
+                    "horizontal": 0,
+                    "vertical": 0,
+                    "total": 0
+                  },
+                  "blockageCount": 0
+                },
+                "rows": [
+                  {
+                    "mode": "X",
+                    "t1": 27,
+                    "cmp": "GE",
+                    "rhs": 739.3000010119209,
+                    "name": "blockage:2",
+                    "leg": 0,
+                    "offset": 27
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 28,
+                    "cmp": "GE",
+                    "rhs": 739.3000010119209,
+                    "name": "blockage:2",
+                    "leg": 0,
+                    "offset": 28
+                  }
+                ]
+              },
+              "duplicate": {
+                "passage": {
+                  "leg": 0,
+                  "solidIndex": 2,
+                  "faces": [
+                    {
+                      "axis": "Y",
+                      "direction": -1,
+                      "plane": -1.7999999523162842
+                    },
+                    {
+                      "axis": "X",
+                      "direction": 1,
+                      "plane": 739.3000000119209
+                    }
+                  ],
+                  "gates": [
+                    0
+                  ],
+                  "kind": "vertical_passage",
+                  "blockageCounts": {
+                    "horizontal": 0,
+                    "vertical": 1,
+                    "total": 1
+                  },
+                  "blockageCount": 1
+                },
+                "rows": [
+                  {
+                    "mode": "X",
+                    "t1": 27,
+                    "cmp": "GE",
+                    "rhs": 739.3000010119209,
+                    "name": "blockage:2",
+                    "leg": 0,
+                    "offset": 27
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 28,
+                    "cmp": "GE",
+                    "rhs": 739.3000010119209,
+                    "name": "blockage:2",
+                    "leg": 0,
+                    "offset": 28
+                  }
+                ]
+              },
+              "effectiveRows": [
+                [
+                  "X",
+                  27,
+                  "GE",
+                  739.3000010119209
+                ],
+                [
+                  "X",
+                  28,
+                  "GE",
+                  739.3000010119209
+                ]
+              ]
+            },
+            {
+              "first": {
+                "passage": {
+                  "leg": 0,
+                  "solidIndex": 2,
+                  "faces": [
+                    {
+                      "axis": "X",
+                      "direction": 1,
+                      "plane": 739.3000000119209
+                    }
+                  ],
+                  "gates": [],
+                  "kind": "vertical_passage",
+                  "blockageCounts": {
+                    "horizontal": 0,
+                    "vertical": 0,
+                    "total": 0
+                  },
+                  "blockageCount": 0
+                },
+                "rows": [
+                  {
+                    "mode": "X",
+                    "t1": 27,
+                    "cmp": "GE",
+                    "rhs": 739.3000010119209,
+                    "name": "blockage:2",
+                    "leg": 0,
+                    "offset": 27
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 28,
+                    "cmp": "GE",
+                    "rhs": 739.3000010119209,
+                    "name": "blockage:2",
+                    "leg": 0,
+                    "offset": 28
+                  }
+                ]
+              },
+              "duplicate": {
+                "passage": {
+                  "leg": 0,
+                  "solidIndex": 2,
+                  "faces": [
+                    {
+                      "axis": "Y",
+                      "direction": -1,
+                      "plane": -1.7999999523162842
+                    },
+                    {
+                      "axis": "X",
+                      "direction": 1,
+                      "plane": 739.3000000119209
+                    }
+                  ],
+                  "gates": [
+                    1
+                  ],
+                  "kind": "vertical_passage",
+                  "blockageCounts": {
+                    "horizontal": 0,
+                    "vertical": 1,
+                    "total": 1
+                  },
+                  "blockageCount": 1
+                },
+                "rows": [
+                  {
+                    "mode": "X",
+                    "t1": 27,
+                    "cmp": "GE",
+                    "rhs": 739.3000010119209,
+                    "name": "blockage:2",
+                    "leg": 0,
+                    "offset": 27
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 28,
+                    "cmp": "GE",
+                    "rhs": 739.3000010119209,
+                    "name": "blockage:2",
+                    "leg": 0,
+                    "offset": 28
+                  }
+                ]
+              },
+              "effectiveRows": [
+                [
+                  "X",
+                  27,
+                  "GE",
+                  739.3000010119209
+                ],
+                [
+                  "X",
+                  28,
+                  "GE",
+                  739.3000010119209
+                ]
+              ]
+            },
+            {
+              "first": {
+                "passage": {
+                  "leg": 0,
+                  "solidIndex": 2,
+                  "faces": [
+                    {
+                      "axis": "X",
+                      "direction": 1,
+                      "plane": 739.3000000119209
+                    }
+                  ],
+                  "gates": [],
+                  "kind": "vertical_passage",
+                  "blockageCounts": {
+                    "horizontal": 0,
+                    "vertical": 0,
+                    "total": 0
+                  },
+                  "blockageCount": 0
+                },
+                "rows": [
+                  {
+                    "mode": "X",
+                    "t1": 27,
+                    "cmp": "GE",
+                    "rhs": 739.3000010119209,
+                    "name": "blockage:2",
+                    "leg": 0,
+                    "offset": 27
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 28,
+                    "cmp": "GE",
+                    "rhs": 739.3000010119209,
+                    "name": "blockage:2",
+                    "leg": 0,
+                    "offset": 28
+                  }
+                ]
+              },
+              "duplicate": {
+                "passage": {
+                  "leg": 0,
+                  "solidIndex": 2,
+                  "faces": [
+                    {
+                      "axis": "Y",
+                      "direction": -1,
+                      "plane": -1.7999999523162842
+                    },
+                    {
+                      "axis": "X",
+                      "direction": 1,
+                      "plane": 739.3000000119209
+                    }
+                  ],
+                  "gates": [
+                    2
+                  ],
+                  "kind": "vertical_passage",
+                  "blockageCounts": {
+                    "horizontal": 0,
+                    "vertical": 1,
+                    "total": 1
+                  },
+                  "blockageCount": 1
+                },
+                "rows": [
+                  {
+                    "mode": "X",
+                    "t1": 27,
+                    "cmp": "GE",
+                    "rhs": 739.3000010119209,
+                    "name": "blockage:2",
+                    "leg": 0,
+                    "offset": 27
+                  },
+                  {
+                    "mode": "X",
+                    "t1": 28,
+                    "cmp": "GE",
+                    "rhs": 739.3000010119209,
+                    "name": "blockage:2",
+                    "leg": 0,
+                    "offset": 28
+                  }
+                ]
+              },
+              "effectiveRows": [
+                [
+                  "X",
+                  27,
+                  "GE",
+                  739.3000010119209
+                ],
+                [
+                  "X",
+                  28,
+                  "GE",
+                  739.3000010119209
+                ]
+              ]
+            }
+          ],
+          "requiredStates": {
+            "X": [
+              27,
+              28
+            ],
+            "Z": [
+              27,
+              28
+            ]
+          }
+        },
+        {
+          "kind": "floor_avoid_disjunction",
+          "options": 4
+        }
+      ],
+      "nextVariantProbe": {
+        "newVariantEmitted": false,
+        "seconds": 2.000117875635624,
+        "additionalDuplicates": 3703,
+        "profile": "         4152943 function calls (4108771 primitive calls) in 2.692 seconds\n\n   Ordered by: cumulative time\n   List reduced from 2278 to 18 due to restriction <18>\n\n   ncalls  tottime  percall  cumtime  percall filename:lineno(function)\n       60    0.002    0.000    1.845    0.031 __init__.py:1(<module>)\n        2    0.755    0.378    1.501    0.750 _highs_wrapper.py:306(check_option)\n    588/3    0.002    0.000    0.743    0.248 <frozen importlib._bootstrap>:1349(_find_and_load)\n    578/3    0.001    0.000    0.743    0.248 <frozen importlib._bootstrap>:1304(_find_and_load_unlocked)\n    564/4    0.001    0.000    0.742    0.185 <frozen importlib._bootstrap>:911(_load_unlocked)\n    482/4    0.002    0.000    0.742    0.185 <frozen importlib._bootstrap_external>:989(exec_module)\n   1388/7    0.001    0.000    0.740    0.106 <frozen importlib._bootstrap>:480(_call_with_frames_removed)\n    518/4    0.004    0.000    0.739    0.185 {built-in method builtins.exec}\n   536/75    0.000    0.000    0.453    0.006 {built-in method builtins.__import__}\n  474/217    0.001    0.000    0.422    0.002 <frozen importlib._bootstrap>:1390(_handle_fromlist)\n        1    0.000    0.000    0.306    0.306 _optimize.py:1(<module>)\n     3703    0.040    0.000    0.269    0.000 constraint_variants.py:157(option)\n      564    0.001    0.000    0.262    0.000 <frozen importlib._bootstrap>:806(module_from_spec)\n       76    0.000    0.000    0.255    0.003 <frozen importlib._bootstrap_external>:1287(create_module)\n       76    0.254    0.003    0.254    0.003 {built-in method _imp.create_dynamic}\n    76/57    0.000    0.000    0.219    0.004 <frozen importlib._bootstrap_external>:1295(exec_module)\n    76/57    0.027    0.000    0.219    0.004 {built-in method _imp.exec_dynamic}\n     7406    0.007    0.000    0.216    0.000 __init__.py:183(dumps)\n\n\n"
+      }
+    }
+  ],
+  "programInclusion": [
+    {
+      "broader": "P03",
+      "narrower": "P04",
+      "sameCompiledCoefficients": true,
+      "sameFiniteContacts": true,
+      "additionalRows": [
+        [
+          "Z",
+          28,
+          "LE",
+          -1100.300001011921
+        ]
+      ]
+    },
+    {
+      "broader": "P03",
+      "narrower": "P05",
+      "sameCompiledCoefficients": true,
+      "sameFiniteContacts": true,
+      "additionalRows": [
+        [
+          "X",
+          28,
+          "GE",
+          735.3000010119209
+        ]
+      ]
+    }
+  ],
+  "handledModels": {
+    "P01": {
+      "handled": 1,
+      "distinctDirectBoundSets": 1
+    },
+    "P02": {
+      "handled": 1,
+      "distinctDirectBoundSets": 1
+    },
+    "P03": {
+      "handled": 2,
+      "distinctDirectBoundSets": 2
+    },
+    "P04": {
+      "handled": 2,
+      "distinctDirectBoundSets": 2
+    },
+    "P05": {
+      "handled": 2,
+      "distinctDirectBoundSets": 2
+    },
+    "P06": {
+      "handled": 151,
+      "distinctDirectBoundSets": 151
+    },
+    "P07": {
+      "handled": 68,
+      "distinctDirectBoundSets": 68
+    }
+  }
+}

@@ -1,0 +1,45 @@
+--- a/standalone/autonomy/movement_frontier.py
++++ b/standalone/autonomy/movement_frontier.py
+@@ -13,7 +13,9 @@
+     initial = empty_program(scene['initial'], threshold=threshold)
+     initial['terminalSupport'] = scene['startBlock']
+     seeds = [initial] if initial_programs is None else initial_programs
+-    context_value = dict(version=2, scene=scene, settings={k: v for k, v in settings.items() if k not in
++    # The scene also carries movementSearch. Hash its physical fields here;
++    # settings below already owns the domain and deliberately excludes slices.
++    context_value = dict(version=3, scene={k:v for k,v in scene.items() if k!='movementSearch'}, settings={k: v for k, v in settings.items() if k not in
+         ('maxPrefixes', 'maxQueuedPrefixes', 'maxChoicesPerType', 'expansionsPerProposal')},
+         roots=[program_search_key(p) for p in seeds], checkpoint=checkpoint_tick, threshold=threshold,
+         stopOnGoal=stop_on_goal)
+@@ -24,7 +26,7 @@
+     context=digest(context_value)
+     if continuation is not None and continuation.get('context') != context:
+         raise ValueError('Incompatible movement generation checkpoint')
+-    state = copy.deepcopy(continuation) if continuation is not None else dict(version=2, context=context,
++    state = copy.deepcopy(continuation) if continuation is not None else dict(version=3, context=context,
+         pending=copy.deepcopy(seeds), ready=[], expansion=None, seen=[], generated=0, expanded=0, emitted=0,
+         screened=0, policyRejections=0, exhausted=False)
+     state.setdefault('exclusions', [])
+--- a/standalone/autonomy/cell_routes/depth_first.py
++++ b/standalone/autonomy/cell_routes/depth_first.py
+@@ -83,7 +83,8 @@
+     if any(not accepted_program(p) for p in roots):
+         raise ValueError('DFS roots violate the decision domain')
+     schema = 6 if typed_route else 5
+-    context = digest(dict(version=schema, kind='ordered_goal_dfs', scene={k:v for k,v in scene.items() if k!='movementSearch'},
++    context = digest(dict(version=schema, kind='ordered_goal_dfs', movementGenerationPolicy=3,
++        scene={k:v for k,v in scene.items() if k!='movementSearch'},
+         domain={k:v for k,v in cfg.items() if k not in ('maxPrefixes','maxQueuedPrefixes','maxChoicesPerType','expansionsPerProposal')},
+         roots=[program_search_key(p) for p in roots], goals=goal_list,
+         terminal=terminal_plan.to_dict() if terminal_plan else None, corridor=adapter.corridor.to_dict(),
+--- a/standalone/autonomy/cell_routes/route_queue.py
++++ b/standalone/autonomy/cell_routes/route_queue.py
+@@ -59,7 +59,7 @@
+     saved=options.pop('resume_state',None)
+     if saved is not None and options.get('initial_programs') is None:
+         options['initial_programs']=saved.get('initialRoots')
+-    context=digest(dict(version=1,allocationPolicy=2,routeStagePolicy=2,routeCommitPolicy=1,routeProposalPolicy=1,
++    context=digest(dict(version=1,allocationPolicy=2,routeStagePolicy=2,routeCommitPolicy=1,routeProposalPolicy=1,movementGenerationPolicy=3,
+         graph=graph.context,task=task_goal,spatial=spatial,
+         scene={k:v for k,v in scene.items() if k!='movementSearch'},
+         domain={k:v for k,v in cfg.items() if k not in ('maxPrefixes','maxQueuedPrefixes','maxChoicesPerType','expansionsPerProposal')},

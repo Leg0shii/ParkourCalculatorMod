@@ -22,6 +22,20 @@ import de.legoshi.parkourcalc.core.ui.MovementEffect;
  *  via {@link #perAxisInertia}. */
 public final class ExactJumpModel implements ForwardModel {
 
+    public interface MovementResolver {
+        Movement resolve(int tick, Vec3dCore position, Vec3dCore velocity);
+    }
+
+    public static final class Movement {
+        public final Vec3dCore position;
+        public final Vec3dCore velocity;
+
+        public Movement(Vec3dCore position, Vec3dCore velocity) {
+            this.position = position;
+            this.velocity = velocity;
+        }
+    }
+
     /** MC's player combined-XZ momentum gate literal (LivingEntity.tickMovement), not 0.003*0.003. */
     private static final double COMBINED_INERTIA_SQ = 9.0E-6;
 
@@ -209,6 +223,10 @@ public final class ExactJumpModel implements ForwardModel {
 
     @Override
     public ForwardPath forward(JumpPhysicsInputs scenario, double[] yawAbsDeg) {
+        return forward(scenario, yawAbsDeg, null);
+    }
+
+    public ForwardPath forward(JumpPhysicsInputs scenario, double[] yawAbsDeg, MovementResolver movement) {
         int n = yawAbsDeg.length;
         double[] posX = new double[n + 1];
         double[] posY = new double[n + 1];
@@ -225,7 +243,7 @@ public final class ExactJumpModel implements ForwardModel {
         velZ[0] = scenario.initialVelocity.z;
 
         ForwardPath path = new ForwardPath(posX, posY, posZ, velX, velY, velZ);
-        stepRange(scenario, yawAbsDeg, 0, path);
+        stepRange(scenario, yawAbsDeg, 0, path, movement);
         return path;
     }
 
@@ -237,6 +255,10 @@ public final class ExactJumpModel implements ForwardModel {
      *  {@code path} must carry velocity arrays (built by {@link #forward}). Byte-identical to a full forward. */
     @Override
     public void stepRange(JumpPhysicsInputs scenario, double[] yawAbsDeg, int from, ForwardPath path) {
+        stepRange(scenario, yawAbsDeg, from, path, null);
+    }
+
+    private void stepRange(JumpPhysicsInputs scenario, double[] yawAbsDeg, int from, ForwardPath path, MovementResolver movement) {
         int n = yawAbsDeg.length;
         double[] posX = path.posX, posY = path.posY, posZ = path.posZ;
         double[] velX = path.velX, velY = path.velY, velZ = path.velZ;
@@ -394,6 +416,14 @@ public final class ExactJumpModel implements ForwardModel {
                 vx = 0.0;
                 vy = 0.0;
                 vz = 0.0;
+            } else if (movement != null) {
+                Movement moved = movement.resolve(t, new Vec3dCore(posX[t], posY[t], posZ[t]), new Vec3dCore(vx, vy, vz));
+                posX[t + 1] = moved.position.x;
+                posY[t + 1] = moved.position.y;
+                posZ[t + 1] = moved.position.z;
+                vx = moved.velocity.x;
+                vy = moved.velocity.y;
+                vz = moved.velocity.z;
             } else {
                 boolean shapesBelow = modern && contact && !fluid && !isJumpTick;
                 posX[t + 1] = posX[t] + (shapesBelow && Math.abs(vx) < COLLIDE_EPSILON ? 0.0 : vx);

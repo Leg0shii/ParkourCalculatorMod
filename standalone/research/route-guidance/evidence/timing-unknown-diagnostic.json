@@ -1,0 +1,204 @@
+[
+  {
+    "seed": "conditional",
+    "relaxed": 7.628687795395591,
+    "accepted": {
+      "status": "unknown"
+    },
+    "solver": {
+      "version": 1,
+      "status": "unknown",
+      "feasible": false,
+      "candidate": null,
+      "problemHash": "7c4efae3ab54e13b8351c2e4dd789e6ba18cb4c4c8cf7fc651b6358605864233",
+      "elapsedSeconds": 0.1937350407242775,
+      "firstFeasibleSeconds": null,
+      "problem": {
+        "ticks": 26,
+        "constraints": 34,
+        "contacts": 0,
+        "threshold": 0.005,
+        "objective": {
+          "axis": "X",
+          "sense": "MAX",
+          "tick": 26,
+          "type": "POSITION",
+          "smoothLambda": 0.0
+        },
+        "source": null
+      },
+      "termination": "worker_finished",
+      "workerStatus": "Infeasible_Problem_Detected",
+      "error": null,
+      "tolerance": 1e-07,
+      "phases": [
+        {
+          "type": "phase",
+          "status": "Infeasible_Problem_Detected",
+          "iterations": 19,
+          "seconds": 0.016798920929431915,
+          "zeros": 0,
+          "survivors": 0,
+          "kind": "carry",
+          "seed": "initial",
+          "ladderSaturated": 0,
+          "capAttempt": 0
+        },
+        {
+          "type": "phase",
+          "status": "Infeasible_Problem_Detected",
+          "iterations": 18,
+          "seconds": 0.0157623328268528,
+          "zeros": 2,
+          "survivors": 0,
+          "kind": "zero_events",
+          "seed": "initial",
+          "ladderSaturated": 0,
+          "capAttempt": 0
+        },
+        {
+          "type": "phase",
+          "status": "Infeasible_Problem_Detected",
+          "iterations": 25,
+          "seconds": 0.019560538232326508,
+          "zeros": 2,
+          "survivors": 50,
+          "kind": "fixed_pattern",
+          "seed": "initial",
+          "ladderSaturated": 0,
+          "capAttempt": 0
+        },
+        {
+          "type": "phase",
+          "status": "Infeasible_Problem_Detected",
+          "iterations": 25,
+          "seconds": 0.019520670175552368,
+          "zeros": 2,
+          "survivors": 50,
+          "kind": "fixed_pattern",
+          "seed": "initial",
+          "ladderSaturated": 0,
+          "capAttempt": 0
+        },
+        {
+          "type": "phase",
+          "status": "Infeasible_Problem_Detected",
+          "iterations": 25,
+          "seconds": 0.019526001065969467,
+          "zeros": 2,
+          "survivors": 50,
+          "kind": "fixed_pattern",
+          "seed": "initial",
+          "ladderSaturated": 0,
+          "capAttempt": 0
+        }
+      ],
+      "diagnostics": {
+        "rejectedCandidates": 0,
+        "lastRejection": null,
+        "stderr": []
+      }
+    }
+  },
+  {
+    "seed": "passage",
+    "relaxed": 7.628687795395591,
+    "accepted": {
+      "status": "unknown"
+    },
+    "solver": {
+      "version": 1,
+      "status": "unknown",
+      "feasible": false,
+      "candidate": null,
+      "problemHash": "7c4efae3ab54e13b8351c2e4dd789e6ba18cb4c4c8cf7fc651b6358605864233",
+      "elapsedSeconds": 0.23796413093805313,
+      "firstFeasibleSeconds": null,
+      "problem": {
+        "ticks": 26,
+        "constraints": 34,
+        "contacts": 0,
+        "threshold": 0.005,
+        "objective": {
+          "axis": "X",
+          "sense": "MAX",
+          "tick": 26,
+          "type": "POSITION",
+          "smoothLambda": 0.0
+        },
+        "source": null
+      },
+      "termination": "worker_finished",
+      "workerStatus": "Infeasible_Problem_Detected",
+      "error": null,
+      "tolerance": 1e-07,
+      "phases": [
+        {
+          "type": "phase",
+          "status": "Infeasible_Problem_Detected",
+          "iterations": 31,
+          "seconds": 0.020625252276659012,
+          "zeros": 0,
+          "survivors": 0,
+          "kind": "carry",
+          "seed": "initial",
+          "ladderSaturated": 0,
+          "capAttempt": 0
+        },
+        {
+          "type": "phase",
+          "status": "Infeasible_Problem_Detected",
+          "iterations": 31,
+          "seconds": 0.01970508322119713,
+          "zeros": 1,
+          "survivors": 0,
+          "kind": "zero_events",
+          "seed": "initial",
+          "ladderSaturated": 0,
+          "capAttempt": 0
+        },
+        {
+          "type": "phase",
+          "status": "Infeasible_Problem_Detected",
+          "iterations": 59,
+          "seconds": 0.031423456966876984,
+          "zeros": 1,
+          "survivors": 51,
+          "kind": "fixed_pattern",
+          "seed": "initial",
+          "ladderSaturated": 0,
+          "capAttempt": 0
+        },
+        {
+          "type": "phase",
+          "status": "Infeasible_Problem_Detected",
+          "iterations": 59,
+          "seconds": 0.03171304240822792,
+          "zeros": 1,
+          "survivors": 51,
+          "kind": "fixed_pattern",
+          "seed": "initial",
+          "ladderSaturated": 0,
+          "capAttempt": 0
+        },
+        {
+          "type": "phase",
+          "status": "Infeasible_Problem_Detected",
+          "iterations": 59,
+          "seconds": 0.03147196024656296,
+          "zeros": 1,
+          "survivors": 51,
+          "kind": "fixed_pattern",
+          "seed": "initial",
+          "ladderSaturated": 0,
+          "capAttempt": 0
+        }
+      ],
+      "diagnostics": {
+        "rejectedCandidates": 0,
+        "lastRejection": null,
+        "stderr": []
+      }
+    }
+  }
+]

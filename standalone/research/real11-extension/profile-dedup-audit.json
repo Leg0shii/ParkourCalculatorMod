@@ -1,0 +1,108 @@
+{
+  "sourceBase": "65ed610a",
+  "scope": "Isolated Python helper reproduction; not IPOPT or full-scene replay",
+  "purpose": "Bypass the first dedup to demonstrate the separate profile-collector coverage loss",
+  "sourceTop": 6,
+  "targetTop": 6,
+  "maxInputs": 30,
+  "ceilingOffset": 4,
+  "events": [
+    {
+      "leg": 0,
+      "offset": 4,
+      "axis": "Y",
+      "plane": 7.200000047683716,
+      "direction": 1,
+      "box": [
+        730,
+        9,
+        -1093,
+        731,
+        10.5,
+        -1092
+      ],
+      "role": "ceiling"
+    },
+    {
+      "leg": 0,
+      "offset": 4,
+      "axis": "Y",
+      "plane": 7.200000047683716,
+      "direction": 1,
+      "box": [
+        730,
+        9,
+        -1092,
+        731,
+        9.5,
+        -1091
+      ],
+      "role": "ceiling"
+    }
+  ],
+  "individuallyValidProfiles": 2,
+  "individualAirtimes": [
+    11,
+    11
+  ],
+  "injectedCombinationStream": [
+    [
+      {
+        "leg": 0,
+        "offset": 4,
+        "axis": "Y",
+        "plane": 7.200000047683716,
+        "direction": 1,
+        "box": [
+          730,
+          9,
+          -1093,
+          731,
+          10.5,
+          -1092
+        ],
+        "role": "ceiling"
+      }
+    ],
+    [
+      {
+        "leg": 0,
+        "offset": 4,
+        "axis": "Y",
+        "plane": 7.200000047683716,
+        "direction": 1,
+        "box": [
+          730,
+          9,
+          -1092,
+          731,
+          9.5,
+          -1091
+        ],
+        "role": "ceiling"
+      }
+    ]
+  ],
+  "collectorAttempts": 2,
+  "retainedProfiles": 1,
+  "retainedFiniteContacts": [
+    [
+      {
+        "leg": 0,
+        "offset": 4,
+        "axis": "Y",
+        "plane": 7.200000047683716,
+        "direction": 1,
+        "box": [
+          730,
+          9,
+          -1093,
+          731,
+          10.5,
+          -1092
+        ],
+        "role": "ceiling"
+      }
+    ]
+  ]
+}

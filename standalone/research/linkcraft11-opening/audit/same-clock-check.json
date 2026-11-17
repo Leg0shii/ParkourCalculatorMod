@@ -1,0 +1,158 @@
+{
+  "source": "evidence/real11-clock64-event-priority.json.gz",
+  "sameAbsoluteState": 10,
+  "verified": true,
+  "candidates": [
+    {
+      "firstJumpInput": 0,
+      "inputCount": 10,
+      "stateCount": 11,
+      "context": {
+        "tick": 10,
+        "direction": [
+          -0.8715755371245493,
+          0.49026123963255896
+        ],
+        "anchor": [
+          746.5,
+          5,
+          -1104.5
+        ],
+        "signature": [],
+        "region": [],
+        "segment": -1
+      },
+      "initial": {
+        "position": [
+          746.5,
+          5,
+          -1104.5
+        ],
+        "velocity": [
+          0,
+          -0.0784000015258789,
+          0
+        ],
+        "yaw": 0
+      },
+      "position10": [
+        744.414623686741,
+        5.495200877005911,
+        -1103.3269758237916
+      ],
+      "savedProgress": 2.3926512670823836,
+      "recomputedProgress": 2.3926512670823836,
+      "groundNoJumpInputs": [],
+      "samples": [
+        {
+          "state": 0,
+          "progress": 0.0
+        },
+        {
+          "state": 2,
+          "progress": 0.5321603943845512
+        },
+        {
+          "state": 4,
+          "progress": 0.963714474705499
+        },
+        {
+          "state": 6,
+          "progress": 1.4204044242934102
+        },
+        {
+          "state": 8,
+          "progress": 1.897909388420877
+        },
+        {
+          "state": 9,
+          "progress": 2.1433239820708287
+        },
+        {
+          "state": 10,
+          "progress": 2.3926512670823836
+        }
+      ]
+    },
+    {
+      "firstJumpInput": 8,
+      "inputCount": 10,
+      "stateCount": 11,
+      "context": {
+        "tick": 10,
+        "direction": [
+          -0.8715755371245493,
+          0.49026123963255896
+        ],
+        "anchor": [
+          746.5,
+          5,
+          -1104.5
+        ],
+        "signature": [],
+        "region": [],
+        "segment": -1
+      },
+      "initial": {
+        "position": [
+          746.5,
+          5,
+          -1104.5
+        ],
+        "velocity": [
+          0,
+          -0.0784000015258789,
+          0
+        ],
+        "yaw": 0
+      },
+      "position10": [
+        744.1283924048065,
+        5.7531999805212015,
+        -1103.1659707359174
+      ],
+      "savedProgress": 2.7210580043446644,
+      "recomputedProgress": 2.7210580043446644,
+      "groundNoJumpInputs": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "samples": [
+        {
+          "state": 0,
+          "progress": 0.0
+        },
+        {
+          "state": 2,
+          "progress": 0.33097994034256467
+        },
+        {
+          "state": 4,
+          "progress": 0.8316103131847314
+        },
+        {
+          "state": 6,
+          "progress": 1.3828162061109586
+        },
+        {
+          "state": 8,
+          "progress": 1.949099474285074
+        },
+        {
+          "state": 9,
+          "progress": 2.431608207212211
+        },
+        {
+          "state": 10,
+          "progress": 2.7210580043446644
+        }
+      ]
+    }
+  ]
+}

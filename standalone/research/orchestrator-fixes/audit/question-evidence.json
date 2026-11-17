@@ -1,0 +1,88 @@
+{
+  "lineage": [
+    {
+      "program": "P03",
+      "matchesP01Through10": true
+    },
+    {
+      "program": "P04",
+      "matchesP01Through10": true
+    },
+    {
+      "program": "P05",
+      "matchesP01Through10": true
+    }
+  ],
+  "priorities": [
+    {
+      "candidate": "P01",
+      "key": [
+        10,
+        -1,
+        0
+      ]
+    },
+    {
+      "candidate": "P02",
+      "key": [
+        10,
+        -1,
+        8
+      ]
+    },
+    {
+      "candidate": "P03",
+      "key": [
+        28,
+        -3,
+        0
+      ]
+    },
+    {
+      "candidate": "P06",
+      "key": [
+        28,
+        -2,
+        4
+      ]
+    },
+    {
+      "candidate": "P07",
+      "key": [
+        28,
+        -2,
+        5
+      ]
+    },
+    {
+      "candidate": "Q02",
+      "key": [
+        28,
+        -2,
+        8
+      ]
+    },
+    {
+      "candidate": "Q09",
+      "key": [
+        28,
+        -2,
+        10
+      ]
+    }
+  ],
+  "readyInitialFamilies": {
+    "0": 7,
+    "8": 13
+  },
+  "familyWorkerCalls": {
+    "P01 family (initial jump0)": {
+      "main": 171,
+      "spatial": 30
+    },
+    "P02 family (initial jump8)": {
+      "main": 1,
+      "spatial": 6
+    }
+  }
+}

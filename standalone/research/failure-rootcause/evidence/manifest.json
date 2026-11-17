@@ -1,0 +1,39 @@
+{
+  "researchSource": "abae5ece441d5ca9247e9192430894d102b6b726",
+  "datasetSources": {
+    "generation": "d953a5bed9ac2ba3e1d321df392aded400855fc1",
+    "warm": "d953a5bed9ac2ba3e1d321df392aded400855fc1",
+    "verification": "d953a5bed9ac2ba3e1d321df392aded400855fc1",
+    "repair": "5d8b811a368ad562e65320e6173097c78ee2325e",
+    "scalar": "abae5ece441d5ca9247e9192430894d102b6b726"
+  },
+  "python": "3.12.2 (v3.12.2:6abddd9f6a, Feb  6 2024, 17:02:06) [Clang 13.0.0 (clang-1300.0.29.30)]",
+  "platform": "macOS-15.7.1-arm64-arm-64bit",
+  "packages": {
+    "casadi": "3.8.1",
+    "numpy": "2.5.4",
+    "scipy": "1.18.1"
+  },
+  "environment": {
+    "OPENBLAS_NUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1"
+  },
+  "productionBehavior": "unchanged; research-only hooks and observational probes",
+  "parentSource": "420df005",
+  "inputs": "existing tracked fixture and witness libraries; forward and diagnostic reverse objectives; explicitly labeled perturbed seeds",
+  "artifacts": {
+    "failure-generation-final.json.gz": "e6ccd8c8ff516a0e177e03d75128b396b619e0ee342345da53b0fc736b576ecc",
+    "failure-warm-final.json.gz": "5f14a6c984843b285e395db76cfc735db510da1830704be0687bfd16bc3d0bfb",
+    "failure-verify-final.json.gz": "7c2ae66537322cbe3faa77ffa89678e6ee080872746c35f4ed5b401267f9d757",
+    "failure-repair-final.json.gz": "d120cb5f0ad9f9ec14cf4675c6b48baa25ecad330df11f9b90081844cf98265a",
+    "failure-scalar-final.json.gz": "cf5cacee62eb7c31d7068df915df25d7a18bf0ff221bc8dbf53513f4b3aa6a90",
+    "failure-scalar-capture.json.gz": "a3b9e1b929aa7055c48745221b4d17ce2623657d2ac6428d8106470a54223ea1",
+    "failure-rootcause-focused.log": "0d9d8aee947d4fabdb7be681510d4cbc27a1df01a404f8b4d9244fe23a051f16",
+    "failure-rootcause-autonomy.log": "aa767b447aab7810990bb1cda1f2f1d500c505f2b70153b178d06631ef80fb65",
+    "failure-generation-final.json.log": "6014782d4af93fd0a6f19c1c1488dc92e5f9c60d30d39fe427770dbb6d7dbc5e",
+    "failure-warm-final.json.log": "026f10c0b14d258297cc3882f7a0a9173b665f6be3af154b0ac1ff4e7247e6d8",
+    "failure-verify-final.json.log": "55759bb51348aebe3cf077b92049b37c7fa335fdcf858c9ee524a58c264dfda4",
+    "failure-repair-final.log": "939d068421361632c90e381043d269d009ca2acc727a4fdfb8842c21eed3f423",
+    "failure-scalar-final.log": "7339148833d1a51bd741525b22d4c9fe40e0d87af642dcbbaeb0c5a3415a2da3"
+  }
+}

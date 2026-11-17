@@ -1,0 +1,39 @@
+{
+  "nonLadder": {
+    "source": "498c054c",
+    "selected": 368,
+    "discovered": 468,
+    "passed": 368,
+    "seconds": 186.301
+  },
+  "ipopt": {
+    "source": "cdf46afc",
+    "tests": 54,
+    "passed": 54,
+    "seconds": 25.47
+  },
+  "requestLogging": {
+    "source": "072a1111",
+    "tests": 25,
+    "passed": 25,
+    "seconds": 11.366
+  },
+  "previousBroader": {
+    "source": "cdf46afc",
+    "tests": 466,
+    "seconds": 732.46,
+    "failures": [
+      "two grind/blip regressions corrected in the final non-ladder pass",
+      "known pre-existing ladder-composition baseline"
+    ]
+  },
+  "runtime": {
+    "python": "3.12.2 (v3.12.2:6abddd9f6a, Feb  6 2024, 17:02:06) [Clang 13.0.0 (clang-1300.0.29.30)]",
+    "platform": "macOS-15.7.1-arm64-arm-64bit",
+    "worker": ".venv-guidance/bin/python",
+    "OPENBLAS_NUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1"
+  },
+  "comparison": "Cold search and some tests overlap; timings are observations, not isolated benchmarks.",
+  "scope": "standalone continuous and supplied-scene validation; executable-angle/actual-world replay is a separate tier"
+}

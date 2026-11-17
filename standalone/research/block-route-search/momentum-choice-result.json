@@ -1,0 +1,900 @@
+{
+  "status": "feasible",
+  "best": {
+    "allocation": [
+      0,
+      0
+    ],
+    "cost": 0,
+    "candidate": {
+      "feasible": true,
+      "violation": 0.0,
+      "worstConstraint": null,
+      "objective": 3.9977159023065707,
+      "missedContacts": [],
+      "wrongSideContacts": [],
+      "patternMismatches": [],
+      "yaw": [
+        21.765622435607746,
+        50.82199430285011,
+        38.21423643935425,
+        24.420272866860742,
+        10.967121952536788,
+        -0.8165608147455234,
+        -8.735799482497706,
+        -16.698855276095586,
+        -22.886139375816924,
+        -27.708253990208533,
+        -31.506930341933195,
+        -34.53974690865382,
+        -81.99436003567443,
+        -39.00667162965892,
+        -40.02547625203255,
+        -40.907472442217255,
+        -41.6749377699053,
+        -42.345788613416346,
+        -42.934569950667786,
+        -43.45319454787638,
+        -43.9115002088529,
+        -44.31767388362613,
+        -44.67857749492294,
+        -45.00000055756645
+      ],
+      "positions": [
+        [
+          0.5,
+          0.5
+        ],
+        [
+          0.37859658967868925,
+          0.8040591444431634
+        ],
+        [
+          0.30967292668988566,
+          0.9959413431586664
+        ],
+        [
+          0.25002447938915295,
+          1.1963720150729933
+        ],
+        [
+          0.2048836610515552,
+          1.403104713804201
+        ],
+        [
+          0.1783568962206766,
+          1.6127781045261314
+        ],
+        [
+          0.17286245265884798,
+          1.8217017991304782
+        ],
+        [
+          0.19382620011315527,
+          2.0272016132257398
+        ],
+        [
+          0.2357953744759086,
+          2.2265331998407394
+        ],
+        [
+          0.29807470026339367,
+          2.41771260681363
+        ],
+        [
+          0.379573781381424,
+          2.599414042569407
+        ],
+        [
+          0.47902029789284395,
+          2.77082887522906
+        ],
+        [
+          0.5950845375259934,
+          2.931536765426148
+        ],
+        [
+          1.024912264439893,
+          3.123378135204601
+        ],
+        [
+          1.2854561148120034,
+          3.230838264505191
+        ],
+        [
+          1.5484530913167456,
+          3.330881517447569
+        ],
+        [
+          1.8137140480679388,
+          3.4237764317347437
+        ],
+        [
+          2.0810577544096525,
+          3.5098188249263518
+        ],
+        [
+          2.3503126400989247,
+          3.5893214173609023
+        ],
+        [
+          2.6213177001545636,
+          3.6626058382100615
+        ],
+        [
+          2.893922836368036,
+          3.729996496110567
+        ],
+        [
+          3.1679888243167404,
+          3.791815912620059
+        ],
+        [
+          3.4433870355651175,
+          3.8483812059534745
+        ],
+        [
+          3.719999004577274,
+          3.9000014807569956
+        ],
+        [
+          3.9977159023065707,
+          3.9469759321819953
+        ]
+      ],
+      "velocity": [
+        [
+          0,
+          0
+        ],
+        [
+          -0.06628626973476007,
+          0.1660163121491981
+        ],
+        [
+          -0.06272053512740625,
+          0.17461280586341868
+        ],
+        [
+          -0.05428008860800954,
+          0.1823919166985409
+        ],
+        [
+          -0.041078145871079046,
+          0.1881267612671798
+        ],
+        [
+          -0.024139356691791614,
+          0.19080279105586012
+        ],
+        [
+          -0.004999943785361565,
+          0.19012056756919765
+        ],
+        [
+          0.019077010733215778,
+          0.18700483621613526
+        ],
+        [
+          0.03819194977079094,
+          0.18139174904732866
+        ],
+        [
+          0.05667418809995175,
+          0.17397326535920993
+        ],
+        [
+          0.07416416595480609,
+          0.16534831130306715
+        ],
+        [
+          0.09049633263348084,
+          0.15598750221581728
+        ],
+        [
+          0.10561846111007184,
+          0.14624418429408212
+        ],
+        [
+          0.23468596615438073,
+          0.10474540006548867
+        ],
+        [
+          0.2370949106716549,
+          0.09778872048179084
+        ],
+        [
+          0.23932725551668554,
+          0.09103936280130277
+        ],
+        [
+          0.24138747760033133,
+          0.08453437443759496
+        ],
+        [
+          0.24328277978232732,
+          0.07829858006091504
+        ],
+        [
+          0.2450219530387281,
+          0.07234736120047927
+        ],
+        [
+          0.246614611758022,
+          0.06668882489469519
+        ],
+        [
+          0.24807068110361438,
+          0.061325500456850555
+        ],
+        [
+          0.24940005622098738,
+          0.056255670644916246
+        ],
+        [
+          0.2506123794586288,
+          0.05147441841689229
+        ],
+        [
+          0.2517168990555,
+          0.04697445142499963
+        ],
+        [
+          0.25272238421707544,
+          0.042746752028703684
+        ]
+      ]
+    },
+    "problemHash": "31a331a5794028cb25127fe64bccaddd31fb8fc0a7041a84bdb48ddd9e71963d",
+    "plan": {
+      "ticks": 24,
+      "grounded": [
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "jump": [
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "events": [
+        {
+          "leg": 0,
+          "landed": 0,
+          "jump": 0,
+          "landing": 12,
+          "runTicks": 0,
+          "kind": "jump"
+        },
+        {
+          "leg": 1,
+          "landed": 12,
+          "jump": 12,
+          "landing": 24,
+          "runTicks": 0,
+          "kind": "jump"
+        }
+      ],
+      "supportChecks": [
+        [
+          0,
+          0,
+          "initial"
+        ],
+        [
+          11,
+          1,
+          "landing"
+        ],
+        [
+          23,
+          2,
+          "landing"
+        ]
+      ],
+      "exitChecks": [],
+      "walls": [
+        {
+          "mode": "X",
+          "t1": 0,
+          "cmp": "GE",
+          "rhs": -0.29999901192092887,
+          "name": "initial:0:X:lo"
+        },
+        {
+          "mode": "X",
+          "t1": 0,
+          "cmp": "LE",
+          "rhs": 1.2999990119209286,
+          "name": "initial:0:X:hi"
+        },
+        {
+          "mode": "Z",
+          "t1": 0,
+          "cmp": "GE",
+          "rhs": -0.29999901192092887,
+          "name": "initial:0:Z:lo"
+        },
+        {
+          "mode": "Z",
+          "t1": 0,
+          "cmp": "LE",
+          "rhs": 1.2999990119209286,
+          "name": "initial:0:Z:hi"
+        },
+        {
+          "mode": "X",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": -0.29999901192092887,
+          "name": "landing:1:X:lo"
+        },
+        {
+          "mode": "X",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": 1.2999990119209286,
+          "name": "landing:1:X:hi"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "GE",
+          "rhs": 2.700000988079072,
+          "name": "landing:1:Z:lo"
+        },
+        {
+          "mode": "Z",
+          "t1": 11,
+          "cmp": "LE",
+          "rhs": 4.299999011920927,
+          "name": "landing:1:Z:hi"
+        },
+        {
+          "mode": "X",
+          "t1": 23,
+          "cmp": "GE",
+          "rhs": 3.100000988079072,
+          "name": "landing:2:X:lo"
+        },
+        {
+          "mode": "X",
+          "t1": 23,
+          "cmp": "LE",
+          "rhs": 3.719999011920928,
+          "name": "landing:2:X:hi"
+        },
+        {
+          "mode": "Z",
+          "t1": 23,
+          "cmp": "GE",
+          "rhs": 3.9000009880790723,
+          "name": "landing:2:Z:lo"
+        },
+        {
+          "mode": "Z",
+          "t1": 23,
+          "cmp": "LE",
+          "rhs": 4.519999011920927,
+          "name": "landing:2:Z:hi"
+        }
+      ],
+      "allocation": [
+        0,
+        0
+      ],
+      "stage": "jump"
+    },
+    "groundRunTicks": 0,
+    "route": {
+      "version": 1,
+      "initial": {
+        "position": [
+          0.5,
+          1,
+          0.5
+        ],
+        "velocity": [
+          0,
+          -0.0784000015258789,
+          0
+        ],
+        "yaw": 0
+      },
+      "blocks": [
+        {
+          "id": "start@0",
+          "bounds": [
+            0,
+            1,
+            0,
+            1
+          ],
+          "top": 1
+        },
+        {
+          "id": "around@1",
+          "bounds": [
+            0,
+            1,
+            3,
+            4
+          ],
+          "top": 1
+        },
+        {
+          "id": "goal@2",
+          "bounds": [
+            3.4,
+            3.42,
+            4.2,
+            4.22
+          ],
+          "top": 1
+        }
+      ],
+      "inputs": {
+        "sprint": true,
+        "force45": true,
+        "forward": 0.9800000190734863,
+        "strafe": 0.0,
+        "incomingSprint": false
+      },
+      "maxTotalRunTicks": 0,
+      "runBounds": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "supportClearance": 1e-06,
+      "airtimes": [
+        12,
+        12
+      ],
+      "kinds": [
+        "jump",
+        "jump"
+      ],
+      "landingPhases": [
+        "pre",
+        "pre"
+      ],
+      "contactEntries": [
+        null,
+        null
+      ],
+      "walkOffExits": [
+        null,
+        null
+      ],
+      "constraints": [],
+      "profileDerivation": {
+        "kind": "ordinary_open_air",
+        "sceneModel": "open_air_supports",
+        "verticalModel": "standalone.ipopt.ladder",
+        "suppliedAirtimes": false,
+        "solidSideFaces": false,
+        "otherSupportContacts": false
+      }
+    },
+    "profiles": [
+      {
+        "airtime": 12,
+        "landingPhase": "pre",
+        "position": [
+          1,
+          1.4199999868869781,
+          1.7531999805212017,
+          2.0013359791121474,
+          2.1661092609382138,
+          2.249187078744681,
+          2.249187078744681,
+          2.1707870772188023,
+          2.0155550727022007,
+          1.7850277037892366,
+          1.4807108763316923,
+          1.104080378093037,
+          1
+        ],
+        "velocity": [
+          -0.0784000015258789,
+          0.33319999363422365,
+          0.24813599859094576,
+          0.16477328182606651,
+          0.08307781780646721,
+          0.0030162615090425808,
+          -0.0784000015258789,
+          -0.1552320045166016,
+          -0.230527368912964,
+          -0.30431682745754424,
+          -0.37663049823865513,
+          -0.44749789698341763,
+          -0.0784000015258789
+        ],
+        "grounded": [
+          true,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          true
+        ],
+        "contacts": [
+          {
+            "state": 12,
+            "plane": 1,
+            "direction": -1
+          }
+        ],
+        "sourceBlock": "start@0",
+        "targetBlock": "around@1"
+      },
+      {
+        "airtime": 12,
+        "landingPhase": "pre",
+        "position": [
+          1,
+          1.4199999868869781,
+          1.7531999805212017,
+          2.0013359791121474,
+          2.1661092609382138,
+          2.249187078744681,
+          2.249187078744681,
+          2.1707870772188023,
+          2.0155550727022007,
+          1.7850277037892366,
+          1.4807108763316923,
+          1.104080378093037,
+          1
+        ],
+        "velocity": [
+          -0.0784000015258789,
+          0.33319999363422365,
+          0.24813599859094576,
+          0.16477328182606651,
+          0.08307781780646721,
+          0.0030162615090425808,
+          -0.0784000015258789,
+          -0.1552320045166016,
+          -0.230527368912964,
+          -0.30431682745754424,
+          -0.37663049823865513,
+          -0.44749789698341763,
+          -0.0784000015258789
+        ],
+        "grounded": [
+          true,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          true
+        ],
+        "contacts": [
+          {
+            "state": 12,
+            "plane": 1,
+            "direction": -1
+          }
+        ],
+        "sourceBlock": "around@1",
+        "targetBlock": "goal@2"
+      }
+    ],
+    "blockIds": [
+      "start",
+      "around",
+      "goal"
+    ]
+  },
+  "termination": "first_feasible",
+  "attempts": [
+    {
+      "blockIds": [
+        "start",
+        "goal"
+      ],
+      "status": "unknown",
+      "cost": null,
+      "termination": "search_exhausted",
+      "elapsedSeconds": 0.001086123287677765,
+      "innerProbes": 1,
+      "error": null
+    },
+    {
+      "blockIds": [
+        "start",
+        "around"
+      ],
+      "status": "feasible",
+      "cost": 0,
+      "termination": "first_feasible",
+      "elapsedSeconds": 0.0023427046835422516,
+      "innerProbes": 1,
+      "error": null
+    },
+    {
+      "blockIds": [
+        "start",
+        "around",
+        "goal"
+      ],
+      "status": "feasible",
+      "cost": 0,
+      "termination": "first_feasible",
+      "elapsedSeconds": 0.20851945877075195,
+      "innerProbes": 2,
+      "error": null
+    }
+  ],
+  "unresolvedPrefixes": [
+    {
+      "blockIds": [
+        "start",
+        "goal"
+      ],
+      "status": "unknown",
+      "cost": null,
+      "termination": "search_exhausted",
+      "elapsedSeconds": 0.001086123287677765,
+      "innerProbes": 1,
+      "error": null
+    }
+  ],
+  "elapsedSeconds": 0.20999246090650558,
+  "minimumRunTicksProven": true,
+  "pruning": {
+    "horizontalEdges": 0,
+    "horizonPrefixes": 3,
+    "disconnectedPrefixes": 0,
+    "heuristicPoolDrops": 0
+  },
+  "remainingPrefixes": 2,
+  "searchPolicy": "bounded_best_first_route_prefix_pool",
+  "graph": {
+    "adjacency": {
+      "start": [
+        "start",
+        "tempting",
+        "around",
+        "goal"
+      ],
+      "tempting": [
+        "start",
+        "tempting",
+        "around",
+        "goal"
+      ],
+      "around": [
+        "start",
+        "tempting",
+        "around",
+        "goal"
+      ],
+      "goal": [
+        "start",
+        "tempting",
+        "around",
+        "goal"
+      ]
+    },
+    "distanceToGoal": {
+      "goal": 0,
+      "start": 1,
+      "tempting": 1,
+      "around": 1
+    },
+    "profile": {
+      "airtime": 12,
+      "landingPhase": "pre",
+      "position": [
+        1,
+        1.4199999868869781,
+        1.7531999805212017,
+        2.0013359791121474,
+        2.1661092609382138,
+        2.249187078744681,
+        2.249187078744681,
+        2.1707870772188023,
+        2.0155550727022007,
+        1.7850277037892366,
+        1.4807108763316923,
+        1.104080378093037,
+        1
+      ],
+      "velocity": [
+        -0.0784000015258789,
+        0.33319999363422365,
+        0.24813599859094576,
+        0.16477328182606651,
+        0.08307781780646721,
+        0.0030162615090425808,
+        -0.0784000015258789,
+        -0.1552320045166016,
+        -0.230527368912964,
+        -0.30431682745754424,
+        -0.37663049823865513,
+        -0.44749789698341763,
+        -0.0784000015258789
+      ],
+      "grounded": [
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true
+      ],
+      "contacts": [
+        {
+          "state": 12,
+          "plane": 1,
+          "direction": -1
+        }
+      ]
+    },
+    "rejectedEdges": [],
+    "profileLimitReached": false,
+    "bound": {
+      "storedSpeedNorm": 0.39374546070607447,
+      "runoffAllowance": 0.7211454475068577,
+      "flightTravelToLandingCheck": 4.497800348500982,
+      "radius": 5.218945858269057
+    }
+  },
+  "scene": {
+    "version": 1,
+    "sceneModel": "coplanar_support_planes",
+    "initial": {
+      "position": [
+        0.5,
+        1,
+        0.5
+      ],
+      "velocity": [
+        0,
+        -0.0784000015258789,
+        0
+      ],
+      "yaw": 0
+    },
+    "startBlock": "start",
+    "goalBlock": "goal",
+    "blocks": [
+      {
+        "id": "start",
+        "bounds": [
+          0,
+          1,
+          0,
+          1
+        ],
+        "top": 1
+      },
+      {
+        "id": "tempting",
+        "bounds": [
+          3.35,
+          3.37,
+          0,
+          0.02
+        ],
+        "top": 1
+      },
+      {
+        "id": "around",
+        "bounds": [
+          0,
+          1,
+          3,
+          4
+        ],
+        "top": 1
+      },
+      {
+        "id": "goal",
+        "bounds": [
+          3.4,
+          3.42,
+          4.2,
+          4.22
+        ],
+        "top": 1
+      }
+    ],
+    "maxJumps": 2,
+    "maxRunTicksPerJump": 0,
+    "maxTotalRunTicks": 0,
+    "maxPrefixes": 20,
+    "inputs": {
+      "sprint": true,
+      "force45": true,
+      "forward": 0.9800000190734863,
+      "strafe": 0.0,
+      "incomingSprint": false
+    },
+    "maxQueuedPrefixes": 4000,
+    "maxFlightInputs": 200,
+    "supportClearance": 1e-06
+  },
+  "validationLevel": "continuous_coplanar_support_planes",
+  "assumptions": {
+    "solidSideFaces": false,
+    "ceilings": false,
+    "stairBoost": false,
+    "inputPolicy": "sprint_jump_sprint_45",
+    "facings": "free",
+    "routeOrderSupplied": false,
+    "airtimesSupplied": false,
+    "otherFloorContacts": "coplanar_equivalent"
+  }
+}

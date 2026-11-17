@@ -1,0 +1,3 @@
+{"label": "same_final_fresh_original_corridor", "status": "unknown", "termination": "numerical_call_limit", "calls": 24, "elapsed": 9.832007709890604, "objective": null, "replay": null}
+{"label": "same_final_valid_seed_original_corridor", "status": "feasible", "termination": "deadline", "calls": 15, "elapsed": 8.161619458347559, "objective": -1095.920359545253, "replay": true}
+{"label": "same_final_fresh_branch_before_inherited_queue", "status": "feasible", "termination": "numerical_call_limit", "calls": 24, "elapsed": 9.0817727483809, "objective": -1095.244174133628, "replay": true}

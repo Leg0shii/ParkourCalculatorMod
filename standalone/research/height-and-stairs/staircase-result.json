@@ -1,0 +1,2312 @@
+{
+  "status": "feasible",
+  "best": {
+    "allocation": [
+      0,
+      1
+    ],
+    "cost": 1,
+    "candidate": {
+      "feasible": true,
+      "violation": 0.0,
+      "worstConstraint": null,
+      "objective": 2.147673677079269,
+      "missedContacts": [],
+      "wrongSideContacts": [],
+      "patternMismatches": [],
+      "yaw": [
+        -90.0,
+        -45.0,
+        -45.0,
+        -90.0,
+        -45.0
+      ],
+      "positions": [
+        [
+          0.5,
+          0.5
+        ],
+        [
+          0.8273999868007833,
+          0.5
+        ],
+        [
+          1.0321603990312993,
+          0.5000000002530156
+        ],
+        [
+          1.34849236353238,
+          0.5000000015180937
+        ],
+        [
+          1.8486096230123183,
+          0.5000000015180937
+        ],
+        [
+          2.147673677079269,
+          0.5000000017711093
+        ]
+      ],
+      "velocity": [
+        [
+          0,
+          0
+        ],
+        [
+          0.1787604135567194,
+          0.0
+        ],
+        [
+          0.18633198049982513,
+          2.3024421799192668e-10
+        ],
+        [
+          0.17271727267915504,
+          6.907326724059481e-10
+        ],
+        [
+          0.27306405539315387,
+          0.0
+        ],
+        [
+          0.2721482970441919,
+          2.3024421799192668e-10
+        ]
+      ],
+      "y": [
+        1,
+        1.5,
+        1.5,
+        1.5,
+        2,
+        2
+      ],
+      "vy": [
+        -0.0784000015258789,
+        -0.0784000015258789,
+        -0.0784000015258789,
+        -0.0784000015258789,
+        -0.0784000015258789,
+        -0.0784000015258789
+      ],
+      "onGround": [
+        true,
+        false,
+        true,
+        true,
+        false,
+        true
+      ]
+    },
+    "problemHash": "622fe2b931c3f15e915a13848712aa84589733f514535e89283cd1a1d1ee192e",
+    "plan": {
+      "ticks": 5,
+      "grounded": [
+        true,
+        false,
+        true,
+        true,
+        false
+      ],
+      "jump": [
+        true,
+        false,
+        false,
+        true,
+        false
+      ],
+      "events": [
+        {
+          "leg": 0,
+          "landed": 0,
+          "jump": 0,
+          "landing": 2,
+          "runTicks": 0,
+          "kind": "jump"
+        },
+        {
+          "leg": 1,
+          "landed": 2,
+          "jump": 3,
+          "landing": 5,
+          "runTicks": 1,
+          "kind": "jump"
+        }
+      ],
+      "supportChecks": [
+        [
+          0,
+          0,
+          "initial"
+        ],
+        [
+          1,
+          1,
+          "landing"
+        ],
+        [
+          2,
+          1,
+          "run"
+        ],
+        [
+          4,
+          2,
+          "landing"
+        ],
+        [
+          1,
+          1,
+          "contact"
+        ],
+        [
+          4,
+          2,
+          "contact"
+        ]
+      ],
+      "exitChecks": [],
+      "walls": [
+        {
+          "mode": "X",
+          "t1": 0,
+          "cmp": "GE",
+          "rhs": -0.29999901192092887,
+          "name": "initial:0:X:lo"
+        },
+        {
+          "mode": "X",
+          "t1": 0,
+          "cmp": "LE",
+          "rhs": 1.2999990119209286,
+          "name": "initial:0:X:hi"
+        },
+        {
+          "mode": "Z",
+          "t1": 0,
+          "cmp": "GE",
+          "rhs": -0.29999901192092887,
+          "name": "initial:0:Z:lo"
+        },
+        {
+          "mode": "Z",
+          "t1": 0,
+          "cmp": "LE",
+          "rhs": 1.2999990119209286,
+          "name": "initial:0:Z:hi"
+        },
+        {
+          "mode": "X",
+          "t1": 1,
+          "cmp": "GE",
+          "rhs": 0.7000009880790714,
+          "name": "landing:1:X:lo"
+        },
+        {
+          "mode": "X",
+          "t1": 1,
+          "cmp": "LE",
+          "rhs": 2.299999011920928,
+          "name": "landing:1:X:hi"
+        },
+        {
+          "mode": "Z",
+          "t1": 1,
+          "cmp": "GE",
+          "rhs": -0.29999901192092887,
+          "name": "landing:1:Z:lo"
+        },
+        {
+          "mode": "Z",
+          "t1": 1,
+          "cmp": "LE",
+          "rhs": 1.2999990119209286,
+          "name": "landing:1:Z:hi"
+        },
+        {
+          "mode": "X",
+          "t1": 2,
+          "cmp": "GE",
+          "rhs": 0.7000009880790714,
+          "name": "run:1:X:lo"
+        },
+        {
+          "mode": "X",
+          "t1": 2,
+          "cmp": "LE",
+          "rhs": 2.299999011920928,
+          "name": "run:1:X:hi"
+        },
+        {
+          "mode": "Z",
+          "t1": 2,
+          "cmp": "GE",
+          "rhs": -0.29999901192092887,
+          "name": "run:1:Z:lo"
+        },
+        {
+          "mode": "Z",
+          "t1": 2,
+          "cmp": "LE",
+          "rhs": 1.2999990119209286,
+          "name": "run:1:Z:hi"
+        },
+        {
+          "mode": "X",
+          "t1": 4,
+          "cmp": "GE",
+          "rhs": 1.7000009880790716,
+          "name": "landing:2:X:lo"
+        },
+        {
+          "mode": "X",
+          "t1": 4,
+          "cmp": "LE",
+          "rhs": 3.299999011920928,
+          "name": "landing:2:X:hi"
+        },
+        {
+          "mode": "Z",
+          "t1": 4,
+          "cmp": "GE",
+          "rhs": -0.29999901192092887,
+          "name": "landing:2:Z:lo"
+        },
+        {
+          "mode": "Z",
+          "t1": 4,
+          "cmp": "LE",
+          "rhs": 1.2999990119209286,
+          "name": "landing:2:Z:hi"
+        },
+        {
+          "mode": "X",
+          "t1": 0,
+          "cmp": "LE",
+          "rhs": 0.6999989880790712,
+          "name": "contact_outside:0"
+        },
+        {
+          "mode": "X",
+          "t1": 1,
+          "cmp": "GE",
+          "rhs": 0.7000009880790713,
+          "name": "contact_enter:0"
+        },
+        {
+          "mode": "X",
+          "t1": 1,
+          "cmp": "LE",
+          "rhs": 2.2999990119209284,
+          "name": "contact_enter:0"
+        },
+        {
+          "mode": "Z",
+          "t1": 1,
+          "cmp": "GE",
+          "rhs": -0.2999990119209289,
+          "name": "contact_enter:0"
+        },
+        {
+          "mode": "Z",
+          "t1": 1,
+          "cmp": "LE",
+          "rhs": 1.2999990119209288,
+          "name": "contact_enter:0"
+        },
+        {
+          "mode": "X",
+          "t1": 3,
+          "cmp": "LE",
+          "rhs": 1.6999989880790716,
+          "name": "contact_outside:1"
+        },
+        {
+          "mode": "X",
+          "t1": 4,
+          "cmp": "GE",
+          "rhs": 1.7000009880790714,
+          "name": "contact_enter:1"
+        },
+        {
+          "mode": "X",
+          "t1": 4,
+          "cmp": "LE",
+          "rhs": 3.2999990119209284,
+          "name": "contact_enter:1"
+        },
+        {
+          "mode": "Z",
+          "t1": 4,
+          "cmp": "GE",
+          "rhs": -0.2999990119209289,
+          "name": "contact_enter:1"
+        },
+        {
+          "mode": "Z",
+          "t1": 4,
+          "cmp": "LE",
+          "rhs": 1.2999990119209288,
+          "name": "contact_enter:1"
+        }
+      ],
+      "allocation": [
+        0,
+        1
+      ],
+      "stage": "jump"
+    },
+    "groundRunTicks": 1,
+    "route": {
+      "version": 1,
+      "initial": {
+        "position": [
+          0.5,
+          1,
+          0.5
+        ],
+        "velocity": [
+          0,
+          -0.0784000015258789,
+          0
+        ],
+        "yaw": 0
+      },
+      "blocks": [
+        {
+          "id": "start@0",
+          "bounds": [
+            0,
+            1,
+            0,
+            1
+          ],
+          "top": 1
+        },
+        {
+          "id": "step@1",
+          "bounds": [
+            1,
+            2,
+            0,
+            1
+          ],
+          "top": 1.5
+        },
+        {
+          "id": "goal@2",
+          "bounds": [
+            2,
+            3,
+            0,
+            1
+          ],
+          "top": 2
+        }
+      ],
+      "inputs": {
+        "sprint": true,
+        "force45": true,
+        "forward": 0.9800000190734863,
+        "strafe": 0.0,
+        "incomingSprint": false
+      },
+      "airtimes": [
+        2,
+        2
+      ],
+      "contactEntries": [
+        {
+          "axis": "X",
+          "direction": -1,
+          "outsideFrom": 0,
+          "outsideThrough": 0,
+          "enter": 1
+        },
+        {
+          "axis": "X",
+          "direction": -1,
+          "outsideFrom": 0,
+          "outsideThrough": 0,
+          "enter": 1
+        }
+      ],
+      "maxTotalRunTicks": 3,
+      "runBounds": [
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          3
+        ]
+      ],
+      "supportClearance": 1e-06,
+      "kinds": [
+        "jump",
+        "jump"
+      ],
+      "landingPhases": [
+        "pre",
+        "pre"
+      ],
+      "walkOffExits": [
+        null,
+        null
+      ],
+      "constraints": [],
+      "profileDerivation": {
+        "kind": "selected_height_profiles",
+        "suppliedAirtimes": false,
+        "verticalModel": "standalone.ipopt.ladder",
+        "solidSideFaces": false
+      }
+    },
+    "profiles": [
+      {
+        "airtime": 2,
+        "landingPhase": "pre",
+        "position": [
+          1,
+          1.5,
+          1.5
+        ],
+        "velocity": [
+          -0.0784000015258789,
+          -0.0784000015258789,
+          -0.0784000015258789
+        ],
+        "grounded": [
+          true,
+          false,
+          true
+        ],
+        "contacts": [
+          {
+            "state": 1,
+            "plane": 1.5,
+            "direction": -1,
+            "step": true
+          },
+          {
+            "state": 2,
+            "plane": 1.5,
+            "direction": -1
+          }
+        ],
+        "sourceBlock": "start@0",
+        "targetBlock": "step@1",
+        "profileKind": "stair"
+      },
+      {
+        "airtime": 2,
+        "landingPhase": "pre",
+        "position": [
+          1.5,
+          2,
+          2
+        ],
+        "velocity": [
+          -0.0784000015258789,
+          -0.0784000015258789,
+          -0.0784000015258789
+        ],
+        "grounded": [
+          true,
+          false,
+          true
+        ],
+        "contacts": [
+          {
+            "state": 1,
+            "plane": 2,
+            "direction": -1,
+            "step": true
+          },
+          {
+            "state": 2,
+            "plane": 2,
+            "direction": -1
+          }
+        ],
+        "sourceBlock": "step@1",
+        "targetBlock": "goal@2",
+        "profileKind": "stair"
+      }
+    ],
+    "contactChecks": [],
+    "vertical": {
+      "profile": "minecraft-1.8.9",
+      "position": 1,
+      "velocity": -0.0784000015258789,
+      "onGround": true,
+      "previousHorizontalCollision": false,
+      "threshold": 0.005,
+      "jumpVelocity": [
+        0.41999998688697815,
+        null,
+        null,
+        0.41999998688697815,
+        null
+      ],
+      "sneak": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "contacts": [
+        {
+          "state": 1,
+          "plane": 1.5,
+          "direction": -1,
+          "step": true
+        },
+        {
+          "state": 2,
+          "plane": 1.5,
+          "direction": -1
+        },
+        {
+          "state": 3,
+          "plane": 1.5,
+          "direction": -1
+        },
+        {
+          "state": 4,
+          "plane": 2,
+          "direction": -1,
+          "step": true
+        },
+        {
+          "state": 5,
+          "plane": 2,
+          "direction": -1
+        }
+      ]
+    },
+    "blockIds": [
+      "start",
+      "step",
+      "goal"
+    ],
+    "transitionIds": [
+      "e6",
+      "e11"
+    ]
+  },
+  "termination": "first_feasible",
+  "attempts": [
+    {
+      "blockIds": [
+        "start",
+        "step"
+      ],
+      "status": "feasible",
+      "cost": 0,
+      "transitionIds": [
+        "e6"
+      ],
+      "termination": "first_feasible",
+      "elapsedSeconds": 0.0012272484600543976,
+      "innerProbes": 1,
+      "contactBranches": 1,
+      "error": null
+    },
+    {
+      "blockIds": [
+        "start",
+        "step"
+      ],
+      "status": "unknown",
+      "cost": null,
+      "transitionIds": [
+        "e7"
+      ],
+      "termination": "contact_search_exhausted",
+      "elapsedSeconds": 0.005322374403476715,
+      "innerProbes": 7,
+      "contactBranches": 1,
+      "error": null
+    },
+    {
+      "blockIds": [
+        "start",
+        "step"
+      ],
+      "status": "unknown",
+      "cost": null,
+      "transitionIds": [
+        "e8"
+      ],
+      "termination": "contact_search_exhausted",
+      "elapsedSeconds": 0.009511001408100128,
+      "innerProbes": 7,
+      "contactBranches": 1,
+      "error": null
+    },
+    {
+      "blockIds": [
+        "start",
+        "step"
+      ],
+      "status": "unknown",
+      "cost": null,
+      "transitionIds": [
+        "e9"
+      ],
+      "termination": "contact_search_exhausted",
+      "elapsedSeconds": 0.013267748057842255,
+      "innerProbes": 7,
+      "contactBranches": 1,
+      "error": null
+    },
+    {
+      "blockIds": [
+        "start",
+        "step",
+        "goal"
+      ],
+      "status": "feasible",
+      "cost": 1,
+      "transitionIds": [
+        "e6",
+        "e11"
+      ],
+      "termination": "first_feasible",
+      "elapsedSeconds": 0.01612316444516182,
+      "innerProbes": 4,
+      "contactBranches": 1,
+      "error": null
+    }
+  ],
+  "unresolvedPrefixes": [
+    {
+      "blockIds": [
+        "start",
+        "step"
+      ],
+      "status": "unknown",
+      "cost": null,
+      "transitionIds": [
+        "e7"
+      ],
+      "termination": "contact_search_exhausted",
+      "elapsedSeconds": 0.005322374403476715,
+      "innerProbes": 7,
+      "contactBranches": 1,
+      "error": null
+    },
+    {
+      "blockIds": [
+        "start",
+        "step"
+      ],
+      "status": "unknown",
+      "cost": null,
+      "transitionIds": [
+        "e8"
+      ],
+      "termination": "contact_search_exhausted",
+      "elapsedSeconds": 0.009511001408100128,
+      "innerProbes": 7,
+      "contactBranches": 1,
+      "error": null
+    },
+    {
+      "blockIds": [
+        "start",
+        "step"
+      ],
+      "status": "unknown",
+      "cost": null,
+      "transitionIds": [
+        "e9"
+      ],
+      "termination": "contact_search_exhausted",
+      "elapsedSeconds": 0.013267748057842255,
+      "innerProbes": 7,
+      "contactBranches": 1,
+      "error": null
+    }
+  ],
+  "elapsedSeconds": 0.019133999943733215,
+  "minimumRunTicksProven": false,
+  "pruning": {
+    "horizontalEdges": 0,
+    "profileEdges": 0,
+    "horizonPrefixes": 0,
+    "disconnectedPrefixes": 0,
+    "heuristicPoolDrops": 0
+  },
+  "remainingPrefixes": 30,
+  "searchPolicy": "bounded_best_first_route_prefix_pool",
+  "graph": {
+    "adjacency": {
+      "goal": [
+        "goal",
+        "start",
+        "step"
+      ],
+      "start": [
+        "goal",
+        "start",
+        "step"
+      ],
+      "step": [
+        "goal",
+        "start",
+        "step"
+      ]
+    },
+    "distanceToGoal": {
+      "goal": 0,
+      "start": 1,
+      "step": 1
+    },
+    "profiles": {
+      "goal": {
+        "goal": {
+          "airtime": 12,
+          "landingPhase": "pre",
+          "position": [
+            2,
+            2.419999986886978,
+            2.753199980521202,
+            3.001335979112148,
+            3.166109260938214,
+            3.2491870787446815,
+            3.2491870787446815,
+            3.1707870772188027,
+            3.015555072702201,
+            2.785027703789237,
+            2.4807108763316927,
+            2.1040803780930375,
+            2
+          ],
+          "velocity": [
+            -0.0784000015258789,
+            0.33319999363422365,
+            0.24813599859094576,
+            0.16477328182606651,
+            0.08307781780646721,
+            0.0030162615090425808,
+            -0.0784000015258789,
+            -0.1552320045166016,
+            -0.230527368912964,
+            -0.30431682745754424,
+            -0.37663049823865513,
+            -0.44749789698341763,
+            -0.0784000015258789
+          ],
+          "grounded": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true
+          ],
+          "contacts": [
+            {
+              "state": 12,
+              "plane": 2,
+              "direction": -1
+            }
+          ]
+        },
+        "start": {
+          "airtime": 14,
+          "landingPhase": "pre",
+          "position": [
+            2,
+            2.419999986886978,
+            2.753199980521202,
+            3.001335979112148,
+            3.166109260938214,
+            3.2491870787446815,
+            3.2491870787446815,
+            3.1707870772188027,
+            3.015555072702201,
+            2.785027703789237,
+            2.4807108763316927,
+            2.1040803780930375,
+            1.65658248110962,
+            1.1396345320046466,
+            1
+          ],
+          "velocity": [
+            -0.0784000015258789,
+            0.33319999363422365,
+            0.24813599859094576,
+            0.16477328182606651,
+            0.08307781780646721,
+            0.0030162615090425808,
+            -0.0784000015258789,
+            -0.1552320045166016,
+            -0.230527368912964,
+            -0.30431682745754424,
+            -0.37663049823865513,
+            -0.44749789698341763,
+            -0.5169479491049732,
+            -0.5850090015087522,
+            -0.0784000015258789
+          ],
+          "grounded": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true
+          ],
+          "contacts": [
+            {
+              "state": 14,
+              "plane": 1,
+              "direction": -1
+            }
+          ]
+        },
+        "step": {
+          "airtime": 13,
+          "landingPhase": "pre",
+          "position": [
+            2,
+            2.419999986886978,
+            2.753199980521202,
+            3.001335979112148,
+            3.166109260938214,
+            3.2491870787446815,
+            3.2491870787446815,
+            3.1707870772188027,
+            3.015555072702201,
+            2.785027703789237,
+            2.4807108763316927,
+            2.1040803780930375,
+            1.65658248110962,
+            1.5
+          ],
+          "velocity": [
+            -0.0784000015258789,
+            0.33319999363422365,
+            0.24813599859094576,
+            0.16477328182606651,
+            0.08307781780646721,
+            0.0030162615090425808,
+            -0.0784000015258789,
+            -0.1552320045166016,
+            -0.230527368912964,
+            -0.30431682745754424,
+            -0.37663049823865513,
+            -0.44749789698341763,
+            -0.5169479491049732,
+            -0.0784000015258789
+          ],
+          "grounded": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true
+          ],
+          "contacts": [
+            {
+              "state": 13,
+              "plane": 1.5,
+              "direction": -1
+            }
+          ]
+        }
+      },
+      "start": {
+        "goal": {
+          "airtime": 9,
+          "landingPhase": "pre",
+          "position": [
+            1,
+            1.4199999868869781,
+            1.7531999805212017,
+            2.0013359791121474,
+            2.1661092609382138,
+            2.249187078744681,
+            2.249187078744681,
+            2.1707870772188023,
+            2.0155550727022007,
+            2
+          ],
+          "velocity": [
+            -0.0784000015258789,
+            0.33319999363422365,
+            0.24813599859094576,
+            0.16477328182606651,
+            0.08307781780646721,
+            0.0030162615090425808,
+            -0.0784000015258789,
+            -0.1552320045166016,
+            -0.230527368912964,
+            -0.0784000015258789
+          ],
+          "grounded": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true
+          ],
+          "contacts": [
+            {
+              "state": 9,
+              "plane": 2,
+              "direction": -1
+            }
+          ]
+        },
+        "start": {
+          "airtime": 12,
+          "landingPhase": "pre",
+          "position": [
+            1,
+            1.4199999868869781,
+            1.7531999805212017,
+            2.0013359791121474,
+            2.1661092609382138,
+            2.249187078744681,
+            2.249187078744681,
+            2.1707870772188023,
+            2.0155550727022007,
+            1.7850277037892366,
+            1.4807108763316923,
+            1.104080378093037,
+            1
+          ],
+          "velocity": [
+            -0.0784000015258789,
+            0.33319999363422365,
+            0.24813599859094576,
+            0.16477328182606651,
+            0.08307781780646721,
+            0.0030162615090425808,
+            -0.0784000015258789,
+            -0.1552320045166016,
+            -0.230527368912964,
+            -0.30431682745754424,
+            -0.37663049823865513,
+            -0.44749789698341763,
+            -0.0784000015258789
+          ],
+          "grounded": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true
+          ],
+          "contacts": [
+            {
+              "state": 12,
+              "plane": 1,
+              "direction": -1
+            }
+          ]
+        },
+        "step": {
+          "airtime": 10,
+          "landingPhase": "pre",
+          "position": [
+            1,
+            1.4199999868869781,
+            1.7531999805212017,
+            2.0013359791121474,
+            2.1661092609382138,
+            2.249187078744681,
+            2.249187078744681,
+            2.1707870772188023,
+            2.0155550727022007,
+            1.7850277037892366,
+            1.5
+          ],
+          "velocity": [
+            -0.0784000015258789,
+            0.33319999363422365,
+            0.24813599859094576,
+            0.16477328182606651,
+            0.08307781780646721,
+            0.0030162615090425808,
+            -0.0784000015258789,
+            -0.1552320045166016,
+            -0.230527368912964,
+            -0.30431682745754424,
+            -0.0784000015258789
+          ],
+          "grounded": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true
+          ],
+          "contacts": [
+            {
+              "state": 10,
+              "plane": 1.5,
+              "direction": -1
+            }
+          ]
+        }
+      },
+      "step": {
+        "goal": {
+          "airtime": 10,
+          "landingPhase": "pre",
+          "position": [
+            1.5,
+            1.9199999868869781,
+            2.253199980521202,
+            2.501335979112148,
+            2.666109260938214,
+            2.7491870787446815,
+            2.7491870787446815,
+            2.6707870772188027,
+            2.515555072702201,
+            2.285027703789237,
+            2
+          ],
+          "velocity": [
+            -0.0784000015258789,
+            0.33319999363422365,
+            0.24813599859094576,
+            0.16477328182606651,
+            0.08307781780646721,
+            0.0030162615090425808,
+            -0.0784000015258789,
+            -0.1552320045166016,
+            -0.230527368912964,
+            -0.30431682745754424,
+            -0.0784000015258789
+          ],
+          "grounded": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true
+          ],
+          "contacts": [
+            {
+              "state": 10,
+              "plane": 2,
+              "direction": -1
+            }
+          ]
+        },
+        "start": {
+          "airtime": 13,
+          "landingPhase": "pre",
+          "position": [
+            1.5,
+            1.9199999868869781,
+            2.253199980521202,
+            2.501335979112148,
+            2.666109260938214,
+            2.7491870787446815,
+            2.7491870787446815,
+            2.6707870772188027,
+            2.515555072702201,
+            2.285027703789237,
+            1.9807108763316927,
+            1.6040803780930375,
+            1.15658248110962,
+            1
+          ],
+          "velocity": [
+            -0.0784000015258789,
+            0.33319999363422365,
+            0.24813599859094576,
+            0.16477328182606651,
+            0.08307781780646721,
+            0.0030162615090425808,
+            -0.0784000015258789,
+            -0.1552320045166016,
+            -0.230527368912964,
+            -0.30431682745754424,
+            -0.37663049823865513,
+            -0.44749789698341763,
+            -0.5169479491049732,
+            -0.0784000015258789
+          ],
+          "grounded": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true
+          ],
+          "contacts": [
+            {
+              "state": 13,
+              "plane": 1,
+              "direction": -1
+            }
+          ]
+        },
+        "step": {
+          "airtime": 12,
+          "landingPhase": "pre",
+          "position": [
+            1.5,
+            1.9199999868869781,
+            2.253199980521202,
+            2.501335979112148,
+            2.666109260938214,
+            2.7491870787446815,
+            2.7491870787446815,
+            2.6707870772188027,
+            2.515555072702201,
+            2.285027703789237,
+            1.9807108763316927,
+            1.6040803780930375,
+            1.5
+          ],
+          "velocity": [
+            -0.0784000015258789,
+            0.33319999363422365,
+            0.24813599859094576,
+            0.16477328182606651,
+            0.08307781780646721,
+            0.0030162615090425808,
+            -0.0784000015258789,
+            -0.1552320045166016,
+            -0.230527368912964,
+            -0.30431682745754424,
+            -0.37663049823865513,
+            -0.44749789698341763,
+            -0.0784000015258789
+          ],
+          "grounded": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true
+          ],
+          "contacts": [
+            {
+              "state": 12,
+              "plane": 1.5,
+              "direction": -1
+            }
+          ]
+        }
+      }
+    },
+    "transitions": {
+      "e0": {
+        "source": "goal",
+        "target": "goal",
+        "profileKind": "ordinary",
+        "profile": {
+          "airtime": 12,
+          "landingPhase": "pre",
+          "position": [
+            2,
+            2.419999986886978,
+            2.753199980521202,
+            3.001335979112148,
+            3.166109260938214,
+            3.2491870787446815,
+            3.2491870787446815,
+            3.1707870772188027,
+            3.015555072702201,
+            2.785027703789237,
+            2.4807108763316927,
+            2.1040803780930375,
+            2
+          ],
+          "velocity": [
+            -0.0784000015258789,
+            0.33319999363422365,
+            0.24813599859094576,
+            0.16477328182606651,
+            0.08307781780646721,
+            0.0030162615090425808,
+            -0.0784000015258789,
+            -0.1552320045166016,
+            -0.230527368912964,
+            -0.30431682745754424,
+            -0.37663049823865513,
+            -0.44749789698341763,
+            -0.0784000015258789
+          ],
+          "grounded": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true
+          ],
+          "contacts": [
+            {
+              "state": 12,
+              "plane": 2,
+              "direction": -1
+            }
+          ]
+        },
+        "entryFace": null
+      },
+      "e1": {
+        "source": "goal",
+        "target": "start",
+        "profileKind": "ordinary",
+        "profile": {
+          "airtime": 14,
+          "landingPhase": "pre",
+          "position": [
+            2,
+            2.419999986886978,
+            2.753199980521202,
+            3.001335979112148,
+            3.166109260938214,
+            3.2491870787446815,
+            3.2491870787446815,
+            3.1707870772188027,
+            3.015555072702201,
+            2.785027703789237,
+            2.4807108763316927,
+            2.1040803780930375,
+            1.65658248110962,
+            1.1396345320046466,
+            1
+          ],
+          "velocity": [
+            -0.0784000015258789,
+            0.33319999363422365,
+            0.24813599859094576,
+            0.16477328182606651,
+            0.08307781780646721,
+            0.0030162615090425808,
+            -0.0784000015258789,
+            -0.1552320045166016,
+            -0.230527368912964,
+            -0.30431682745754424,
+            -0.37663049823865513,
+            -0.44749789698341763,
+            -0.5169479491049732,
+            -0.5850090015087522,
+            -0.0784000015258789
+          ],
+          "grounded": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true
+          ],
+          "contacts": [
+            {
+              "state": 14,
+              "plane": 1,
+              "direction": -1
+            }
+          ]
+        },
+        "entryFace": null
+      },
+      "e2": {
+        "source": "goal",
+        "target": "step",
+        "profileKind": "ordinary",
+        "profile": {
+          "airtime": 13,
+          "landingPhase": "pre",
+          "position": [
+            2,
+            2.419999986886978,
+            2.753199980521202,
+            3.001335979112148,
+            3.166109260938214,
+            3.2491870787446815,
+            3.2491870787446815,
+            3.1707870772188027,
+            3.015555072702201,
+            2.785027703789237,
+            2.4807108763316927,
+            2.1040803780930375,
+            1.65658248110962,
+            1.5
+          ],
+          "velocity": [
+            -0.0784000015258789,
+            0.33319999363422365,
+            0.24813599859094576,
+            0.16477328182606651,
+            0.08307781780646721,
+            0.0030162615090425808,
+            -0.0784000015258789,
+            -0.1552320045166016,
+            -0.230527368912964,
+            -0.30431682745754424,
+            -0.37663049823865513,
+            -0.44749789698341763,
+            -0.5169479491049732,
+            -0.0784000015258789
+          ],
+          "grounded": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true
+          ],
+          "contacts": [
+            {
+              "state": 13,
+              "plane": 1.5,
+              "direction": -1
+            }
+          ]
+        },
+        "entryFace": null
+      },
+      "e3": {
+        "source": "start",
+        "target": "goal",
+        "profileKind": "ordinary",
+        "profile": {
+          "airtime": 9,
+          "landingPhase": "pre",
+          "position": [
+            1,
+            1.4199999868869781,
+            1.7531999805212017,
+            2.0013359791121474,
+            2.1661092609382138,
+            2.249187078744681,
+            2.249187078744681,
+            2.1707870772188023,
+            2.0155550727022007,
+            2
+          ],
+          "velocity": [
+            -0.0784000015258789,
+            0.33319999363422365,
+            0.24813599859094576,
+            0.16477328182606651,
+            0.08307781780646721,
+            0.0030162615090425808,
+            -0.0784000015258789,
+            -0.1552320045166016,
+            -0.230527368912964,
+            -0.0784000015258789
+          ],
+          "grounded": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true
+          ],
+          "contacts": [
+            {
+              "state": 9,
+              "plane": 2,
+              "direction": -1
+            }
+          ]
+        },
+        "entryFace": null
+      },
+      "e4": {
+        "source": "start",
+        "target": "start",
+        "profileKind": "ordinary",
+        "profile": {
+          "airtime": 12,
+          "landingPhase": "pre",
+          "position": [
+            1,
+            1.4199999868869781,
+            1.7531999805212017,
+            2.0013359791121474,
+            2.1661092609382138,
+            2.249187078744681,
+            2.249187078744681,
+            2.1707870772188023,
+            2.0155550727022007,
+            1.7850277037892366,
+            1.4807108763316923,
+            1.104080378093037,
+            1
+          ],
+          "velocity": [
+            -0.0784000015258789,
+            0.33319999363422365,
+            0.24813599859094576,
+            0.16477328182606651,
+            0.08307781780646721,
+            0.0030162615090425808,
+            -0.0784000015258789,
+            -0.1552320045166016,
+            -0.230527368912964,
+            -0.30431682745754424,
+            -0.37663049823865513,
+            -0.44749789698341763,
+            -0.0784000015258789
+          ],
+          "grounded": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true
+          ],
+          "contacts": [
+            {
+              "state": 12,
+              "plane": 1,
+              "direction": -1
+            }
+          ]
+        },
+        "entryFace": null
+      },
+      "e5": {
+        "source": "start",
+        "target": "step",
+        "profileKind": "ordinary",
+        "profile": {
+          "airtime": 10,
+          "landingPhase": "pre",
+          "position": [
+            1,
+            1.4199999868869781,
+            1.7531999805212017,
+            2.0013359791121474,
+            2.1661092609382138,
+            2.249187078744681,
+            2.249187078744681,
+            2.1707870772188023,
+            2.0155550727022007,
+            1.7850277037892366,
+            1.5
+          ],
+          "velocity": [
+            -0.0784000015258789,
+            0.33319999363422365,
+            0.24813599859094576,
+            0.16477328182606651,
+            0.08307781780646721,
+            0.0030162615090425808,
+            -0.0784000015258789,
+            -0.1552320045166016,
+            -0.230527368912964,
+            -0.30431682745754424,
+            -0.0784000015258789
+          ],
+          "grounded": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true
+          ],
+          "contacts": [
+            {
+              "state": 10,
+              "plane": 1.5,
+              "direction": -1
+            }
+          ]
+        },
+        "entryFace": null
+      },
+      "e6": {
+        "source": "start",
+        "target": "step",
+        "profileKind": "stair",
+        "profile": {
+          "airtime": 2,
+          "landingPhase": "pre",
+          "position": [
+            1,
+            1.5,
+            1.5
+          ],
+          "velocity": [
+            -0.0784000015258789,
+            -0.0784000015258789,
+            -0.0784000015258789
+          ],
+          "grounded": [
+            true,
+            false,
+            true
+          ],
+          "contacts": [
+            {
+              "state": 1,
+              "plane": 1.5,
+              "direction": -1,
+              "step": true
+            },
+            {
+              "state": 2,
+              "plane": 1.5,
+              "direction": -1
+            }
+          ]
+        },
+        "entryFace": {
+          "axis": "X",
+          "direction": -1
+        }
+      },
+      "e7": {
+        "source": "start",
+        "target": "step",
+        "profileKind": "stair",
+        "profile": {
+          "airtime": 2,
+          "landingPhase": "pre",
+          "position": [
+            1,
+            1.5,
+            1.5
+          ],
+          "velocity": [
+            -0.0784000015258789,
+            -0.0784000015258789,
+            -0.0784000015258789
+          ],
+          "grounded": [
+            true,
+            false,
+            true
+          ],
+          "contacts": [
+            {
+              "state": 1,
+              "plane": 1.5,
+              "direction": -1,
+              "step": true
+            },
+            {
+              "state": 2,
+              "plane": 1.5,
+              "direction": -1
+            }
+          ]
+        },
+        "entryFace": {
+          "axis": "X",
+          "direction": 1
+        }
+      },
+      "e8": {
+        "source": "start",
+        "target": "step",
+        "profileKind": "stair",
+        "profile": {
+          "airtime": 2,
+          "landingPhase": "pre",
+          "position": [
+            1,
+            1.5,
+            1.5
+          ],
+          "velocity": [
+            -0.0784000015258789,
+            -0.0784000015258789,
+            -0.0784000015258789
+          ],
+          "grounded": [
+            true,
+            false,
+            true
+          ],
+          "contacts": [
+            {
+              "state": 1,
+              "plane": 1.5,
+              "direction": -1,
+              "step": true
+            },
+            {
+              "state": 2,
+              "plane": 1.5,
+              "direction": -1
+            }
+          ]
+        },
+        "entryFace": {
+          "axis": "Z",
+          "direction": -1
+        }
+      },
+      "e9": {
+        "source": "start",
+        "target": "step",
+        "profileKind": "stair",
+        "profile": {
+          "airtime": 2,
+          "landingPhase": "pre",
+          "position": [
+            1,
+            1.5,
+            1.5
+          ],
+          "velocity": [
+            -0.0784000015258789,
+            -0.0784000015258789,
+            -0.0784000015258789
+          ],
+          "grounded": [
+            true,
+            false,
+            true
+          ],
+          "contacts": [
+            {
+              "state": 1,
+              "plane": 1.5,
+              "direction": -1,
+              "step": true
+            },
+            {
+              "state": 2,
+              "plane": 1.5,
+              "direction": -1
+            }
+          ]
+        },
+        "entryFace": {
+          "axis": "Z",
+          "direction": 1
+        }
+      },
+      "e10": {
+        "source": "step",
+        "target": "goal",
+        "profileKind": "ordinary",
+        "profile": {
+          "airtime": 10,
+          "landingPhase": "pre",
+          "position": [
+            1.5,
+            1.9199999868869781,
+            2.253199980521202,
+            2.501335979112148,
+            2.666109260938214,
+            2.7491870787446815,
+            2.7491870787446815,
+            2.6707870772188027,
+            2.515555072702201,
+            2.285027703789237,
+            2
+          ],
+          "velocity": [
+            -0.0784000015258789,
+            0.33319999363422365,
+            0.24813599859094576,
+            0.16477328182606651,
+            0.08307781780646721,
+            0.0030162615090425808,
+            -0.0784000015258789,
+            -0.1552320045166016,
+            -0.230527368912964,
+            -0.30431682745754424,
+            -0.0784000015258789
+          ],
+          "grounded": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true
+          ],
+          "contacts": [
+            {
+              "state": 10,
+              "plane": 2,
+              "direction": -1
+            }
+          ]
+        },
+        "entryFace": null
+      },
+      "e11": {
+        "source": "step",
+        "target": "goal",
+        "profileKind": "stair",
+        "profile": {
+          "airtime": 2,
+          "landingPhase": "pre",
+          "position": [
+            1.5,
+            2,
+            2
+          ],
+          "velocity": [
+            -0.0784000015258789,
+            -0.0784000015258789,
+            -0.0784000015258789
+          ],
+          "grounded": [
+            true,
+            false,
+            true
+          ],
+          "contacts": [
+            {
+              "state": 1,
+              "plane": 2,
+              "direction": -1,
+              "step": true
+            },
+            {
+              "state": 2,
+              "plane": 2,
+              "direction": -1
+            }
+          ]
+        },
+        "entryFace": {
+          "axis": "X",
+          "direction": -1
+        }
+      },
+      "e12": {
+        "source": "step",
+        "target": "goal",
+        "profileKind": "stair",
+        "profile": {
+          "airtime": 2,
+          "landingPhase": "pre",
+          "position": [
+            1.5,
+            2,
+            2
+          ],
+          "velocity": [
+            -0.0784000015258789,
+            -0.0784000015258789,
+            -0.0784000015258789
+          ],
+          "grounded": [
+            true,
+            false,
+            true
+          ],
+          "contacts": [
+            {
+              "state": 1,
+              "plane": 2,
+              "direction": -1,
+              "step": true
+            },
+            {
+              "state": 2,
+              "plane": 2,
+              "direction": -1
+            }
+          ]
+        },
+        "entryFace": {
+          "axis": "X",
+          "direction": 1
+        }
+      },
+      "e13": {
+        "source": "step",
+        "target": "goal",
+        "profileKind": "stair",
+        "profile": {
+          "airtime": 2,
+          "landingPhase": "pre",
+          "position": [
+            1.5,
+            2,
+            2
+          ],
+          "velocity": [
+            -0.0784000015258789,
+            -0.0784000015258789,
+            -0.0784000015258789
+          ],
+          "grounded": [
+            true,
+            false,
+            true
+          ],
+          "contacts": [
+            {
+              "state": 1,
+              "plane": 2,
+              "direction": -1,
+              "step": true
+            },
+            {
+              "state": 2,
+              "plane": 2,
+              "direction": -1
+            }
+          ]
+        },
+        "entryFace": {
+          "axis": "Z",
+          "direction": -1
+        }
+      },
+      "e14": {
+        "source": "step",
+        "target": "goal",
+        "profileKind": "stair",
+        "profile": {
+          "airtime": 2,
+          "landingPhase": "pre",
+          "position": [
+            1.5,
+            2,
+            2
+          ],
+          "velocity": [
+            -0.0784000015258789,
+            -0.0784000015258789,
+            -0.0784000015258789
+          ],
+          "grounded": [
+            true,
+            false,
+            true
+          ],
+          "contacts": [
+            {
+              "state": 1,
+              "plane": 2,
+              "direction": -1,
+              "step": true
+            },
+            {
+              "state": 2,
+              "plane": 2,
+              "direction": -1
+            }
+          ]
+        },
+        "entryFace": {
+          "axis": "Z",
+          "direction": 1
+        }
+      },
+      "e15": {
+        "source": "step",
+        "target": "start",
+        "profileKind": "ordinary",
+        "profile": {
+          "airtime": 13,
+          "landingPhase": "pre",
+          "position": [
+            1.5,
+            1.9199999868869781,
+            2.253199980521202,
+            2.501335979112148,
+            2.666109260938214,
+            2.7491870787446815,
+            2.7491870787446815,
+            2.6707870772188027,
+            2.515555072702201,
+            2.285027703789237,
+            1.9807108763316927,
+            1.6040803780930375,
+            1.15658248110962,
+            1
+          ],
+          "velocity": [
+            -0.0784000015258789,
+            0.33319999363422365,
+            0.24813599859094576,
+            0.16477328182606651,
+            0.08307781780646721,
+            0.0030162615090425808,
+            -0.0784000015258789,
+            -0.1552320045166016,
+            -0.230527368912964,
+            -0.30431682745754424,
+            -0.37663049823865513,
+            -0.44749789698341763,
+            -0.5169479491049732,
+            -0.0784000015258789
+          ],
+          "grounded": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true
+          ],
+          "contacts": [
+            {
+              "state": 13,
+              "plane": 1,
+              "direction": -1
+            }
+          ]
+        },
+        "entryFace": null
+      },
+      "e16": {
+        "source": "step",
+        "target": "step",
+        "profileKind": "ordinary",
+        "profile": {
+          "airtime": 12,
+          "landingPhase": "pre",
+          "position": [
+            1.5,
+            1.9199999868869781,
+            2.253199980521202,
+            2.501335979112148,
+            2.666109260938214,
+            2.7491870787446815,
+            2.7491870787446815,
+            2.6707870772188027,
+            2.515555072702201,
+            2.285027703789237,
+            1.9807108763316927,
+            1.6040803780930375,
+            1.5
+          ],
+          "velocity": [
+            -0.0784000015258789,
+            0.33319999363422365,
+            0.24813599859094576,
+            0.16477328182606651,
+            0.08307781780646721,
+            0.0030162615090425808,
+            -0.0784000015258789,
+            -0.1552320045166016,
+            -0.230527368912964,
+            -0.30431682745754424,
+            -0.37663049823865513,
+            -0.44749789698341763,
+            -0.0784000015258789
+          ],
+          "grounded": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true
+          ],
+          "contacts": [
+            {
+              "state": 12,
+              "plane": 1.5,
+              "direction": -1
+            }
+          ]
+        },
+        "entryFace": null
+      }
+    },
+    "edgeOptions": {
+      "goal": {
+        "goal": [
+          "e0"
+        ],
+        "start": [
+          "e1"
+        ],
+        "step": [
+          "e2"
+        ]
+      },
+      "start": {
+        "goal": [
+          "e3"
+        ],
+        "start": [
+          "e4"
+        ],
+        "step": [
+          "e5",
+          "e6",
+          "e7",
+          "e8",
+          "e9"
+        ]
+      },
+      "step": {
+        "goal": [
+          "e10",
+          "e11",
+          "e12",
+          "e13",
+          "e14"
+        ],
+        "start": [
+          "e15"
+        ],
+        "step": [
+          "e16"
+        ]
+      }
+    },
+    "flightInputsToGoal": {
+      "goal": 0,
+      "start": 4,
+      "step": 2
+    },
+    "flightBounds": {
+      "12": {
+        "travel": 4.497800348500982,
+        "radius": 5.218945858253197
+      },
+      "14": {
+        "travel": 5.172907368662446,
+        "radius": 5.8940528851743315
+      },
+      "13": {
+        "travel": 4.837646951943304,
+        "radius": 5.5587924650982865
+      },
+      "9": {
+        "travel": 3.4459788964577323,
+        "radius": 4.167124395678833
+      },
+      "10": {
+        "travel": 3.802489406977442,
+        "radius": 4.5236349097679485
+      },
+      "2": {
+        "travel": 0.7211454475068577,
+        "radius": 1.4422909194495244
+      }
+    },
+    "rejectedEdges": [],
+    "profileLimitReached": false,
+    "bound": {
+      "storedSpeedNorm": 0.39374546070607447,
+      "runoffAllowance": 0.7211454475068577,
+      "flightTravelToLandingCheck": 5.172907368662446,
+      "radius": 5.8940528851743315
+    }
+  },
+  "scene": {
+    "version": 1,
+    "sceneModel": "support_planes",
+    "initial": {
+      "position": [
+        0.5,
+        1,
+        0.5
+      ],
+      "velocity": [
+        0,
+        -0.0784000015258789,
+        0
+      ],
+      "yaw": 0
+    },
+    "startBlock": "start",
+    "goalBlock": "goal",
+    "blocks": [
+      {
+        "id": "goal",
+        "bounds": [
+          2,
+          3,
+          0,
+          1
+        ],
+        "top": 2
+      },
+      {
+        "id": "start",
+        "bounds": [
+          0,
+          1,
+          0,
+          1
+        ],
+        "top": 1
+      },
+      {
+        "id": "step",
+        "bounds": [
+          1,
+          2,
+          0,
+          1
+        ],
+        "top": 1.5
+      }
+    ],
+    "maxJumps": 3,
+    "maxRunTicksPerJump": 3,
+    "maxTotalRunTicks": 3,
+    "stairBoost": true,
+    "inputs": {
+      "sprint": true,
+      "force45": true,
+      "forward": 0.9800000190734863,
+      "strafe": 0.0,
+      "incomingSprint": false
+    },
+    "maxPrefixes": 200,
+    "maxQueuedPrefixes": 4000,
+    "maxFlightInputs": 200,
+    "maxContactBranches": 16,
+    "supportClearance": 1e-06
+  },
+  "validationLevel": "continuous_support_planes_with_floor_checks",
+  "assumptions": {
+    "solidSideFaces": false,
+    "ceilings": false,
+    "stairBoost": true,
+    "inputPolicy": "sprint_jump_sprint_45",
+    "facings": "free",
+    "routeOrderSupplied": false,
+    "airtimesSupplied": false,
+    "otherFloorContacts": "checked_at_generated_crossings"
+  }
+}

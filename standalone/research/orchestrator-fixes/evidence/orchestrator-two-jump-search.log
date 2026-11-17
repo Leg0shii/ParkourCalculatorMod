@@ -1,0 +1,1 @@
+{"name": "separated-two-jumps", "status": "feasible", "termination": "exhausted", "elapsedSeconds": 4.629765000194311, "ticks": 24, "objective": 8.622964650232278, "calls": 18, "firstAcceptedSeconds": 4.305146586149931, "expandedPrefixes": 29, "scoreComparisons": 8, "checkpointUnknowns": 0, "heuristicDrops": 0}

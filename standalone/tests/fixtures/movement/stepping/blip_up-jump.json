@@ -1,0 +1,78 @@
+{
+  "request": {
+    "version": 1,
+    "sceneModel": "collision_boxes",
+    "geometryBounds": [
+      -10,
+      -5,
+      -10,
+      12,
+      12,
+      10
+    ],
+    "initial": {
+      "position": [
+        0.5,
+        2,
+        0.5
+      ],
+      "velocity": [
+        0.25,
+        -0.0784000015258789,
+        0
+      ],
+      "yaw": -90
+    },
+    "startBlock": "start",
+    "goalBlock": "goal",
+    "maxRunTicksPerJump": 0,
+    "maxTotalRunTicks": 0,
+    "maxFlightInputs": 40,
+    "maxContactCombinations": 0,
+    "maxWallHits": 0,
+    "blocks": [
+      {
+        "id": "start",
+        "boxes": [
+          [
+            -2,
+            1,
+            -1,
+            1,
+            2,
+            1
+          ]
+        ]
+      },
+      {
+        "id": "goal",
+        "boxes": [
+          [
+            -4,
+            0,
+            -3,
+            7,
+            0.25,
+            3
+          ]
+        ]
+      },
+      {
+        "id": "higher",
+        "boxes": [
+          [
+            3,
+            0.25,
+            -2,
+            3.125,
+            0.375,
+            2
+          ]
+        ]
+      }
+    ]
+  },
+  "case": "blip_up",
+  "choice": 1,
+  "expectedTicks": 27
+}

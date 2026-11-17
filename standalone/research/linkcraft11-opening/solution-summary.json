@@ -1,0 +1,79 @@
+{
+  "status": "feasible",
+  "objectiveOptimalityProven": false,
+  "tick": 64,
+  "objective": {
+    "axis": "Z",
+    "sense": "MAX",
+    "value": -1093.2675533415547
+  },
+  "position": [
+    728.9505324575503,
+    6.796735600668692,
+    -1093.2675533415547
+  ],
+  "velocity": [
+    -0.08863975840146603,
+    -0.30153472366278034,
+    0.2638729463270076
+  ],
+  "onGround": false,
+  "scalarViolation": 0.0,
+  "terminalSupportRequired": false,
+  "b7FarPlayerCenterEdge": -1093.699999988079,
+  "beyondB7FarPlayerCenterEdge": 0.4324466465243404,
+  "jumpInputTicks": [
+    0,
+    12,
+    21,
+    30,
+    40,
+    55
+  ],
+  "supportOrder": {
+    "accepted": true,
+    "progress": 4,
+    "observed": [
+      {
+        "tick": 21,
+        "block": "b2"
+      },
+      {
+        "tick": 30,
+        "block": "b3"
+      },
+      {
+        "tick": 40,
+        "block": "b4"
+      },
+      {
+        "tick": 55,
+        "block": "b5"
+      }
+    ],
+    "reason": null
+  },
+  "independentReplay": {
+    "passed": true,
+    "scalarFeasible": true,
+    "supports": true,
+    "geometry": {
+      "feasible": true,
+      "ticks": 64
+    },
+    "exactHorizontalReplay": true,
+    "ticks": 64,
+    "threshold": 0.0,
+    "objective": -1093.2675533415547,
+    "objectiveHasY": false
+  },
+  "source": "evidence/real11-terminal-variants.json.gz",
+  "sourceCommit": "f21d58eaed448656b85ae43e98c307da31efbe50",
+  "termination": "contact_branch_limit",
+  "limitations": [
+    "one prescribed support-order spatial route",
+    "finite nonexhaustive continuation probes",
+    "normal carried momentum with zero inertia thresholds",
+    "standalone shared-scene validation; no game replay"
+  ]
+}

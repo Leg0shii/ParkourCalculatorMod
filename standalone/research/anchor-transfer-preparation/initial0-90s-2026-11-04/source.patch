@@ -1,0 +1,545 @@
+diff --git a/standalone/autonomy/ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md b/standalone/autonomy/ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md
+index fdbc9ddc..1f02b37b 100644
+--- a/standalone/autonomy/ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md
++++ b/standalone/autonomy/ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md
+@@ -1,5 +1,7 @@
+ # Plan: anchor DFS, global hard latches and observable binary turn heuristics
+ 
++**Hard-jump correction (2026-11-04):** “single jump” means a single S→E transfer; S→S momentum/setup hops remain eligible before that transfer, even after a global latch. This applies to every anchor span and the opening. The initial implementation/document wording that forbade local setup after a latch was wrong. The [corrected decisions](ANCHOR_POLICY_DECISIONS.md#o1--hard-jump-status-is-a-solve-wide-latch) and [transfer-preparation implementation](experiments/anchor-transfer-preparation/README.md) supersede that wording. Policy2 is fingerprinted for exact continuation.
++
+ **Implementation status (2026-11-04):** M1–M6 is implemented;527 final-source native tests pass without failures/errors/skips, with101 runtime hashes stable. M7 matched finite-task cold arms both find T67/Y7/grounded, with43/43 independent accepted-witness replays and stable source. First14.02s early stop versus13.56s polish shows similar timing; no global optimality claim. See [implementation evidence](experiments/anchor-feasibility/README.md). The following authorization history is preserved. **Implementation authorization / compaction checkpoint:** the user explicitly said "go ahead and implement", then requested a handoff before compaction. Resume from [ANCHOR_IMPLEMENTATION_RESUME.md](../docs/ANCHOR_IMPLEMENTATION_RESUME.md) and start M1. No runtime tool call/source change occurred before interruption; implementation is authorized and still to do. Older planning-only wording below records document history, not revoked authorization.
+ 
+ 2026-11-04, revised after the binary-decision turnaround/observability clarification. **Planning only; runtime/fixtures unchanged.** Worktree `/private/tmp/parkour-real11-initial-run-ticks`, branch `research/real11-initial-run-ticks`, baseline `4cf39caa`, measured algorithm `08b00185`. Preserve the other checkout/shared native dependencies. Commit only implemented features with their related docs/tests/fixtures, not this planning-only turn.
+@@ -13,13 +15,13 @@ Read [ANCHOR_POLICY_DECISIONS.md](ANCHOR_POLICY_DECISIONS.md) for the current ex
+ | Anchors/coupling | Ordered required anchors; Real11 B2/B3/B4/B5. All movement choices between anchors are coupled. Comparisons/promotions only at required anchors/final task. |
+ | Counts | Absolute T; requested grounded J and grounded nonjump R/air A local to the current anchor span. Named jump cancels still have their horizontal impulse and count J. |
+ | Default/turn preference | At each decision choose ordinary T,−J,R or turnaround T,−J,A from current point versus edge+margin. One boolean, no blended counts or uncertain label; progress never ranks decisions. |
+-| Hard jump | A fully validated direct jump anywhere latches that anchor transition to single-jump structure for the rest of the solve, across backtracking/changed incoming histories. This is intentional domain restriction. |
+-| Recovery | Restore/reconstruct deferred run alternatives and earlier preparation, walking actual tree edges. Additional same-block setup jumps are allowed where they do not violate a global hard latch; inter-block returns are deferred. |
++| Hard jump | A fully validated direct jump anywhere latches that anchor transition to single-transfer structure for the rest of the solve, preserving starting-anchor setup hops, across backtracking/changed incoming histories. This is intentional domain restriction. |
++| Recovery | Restore/reconstruct deferred run alternatives and earlier preparation, walking actual tree edges. Additional same-block setup jumps remain allowed even with a global hard-transfer latch; inter-block returns are deferred. |
+ | Guides/solver | Backward guide inference; optimize onward toward the next point with existing POSITION objective and stop-on-feasible. User reports another agent measured similar speed. No slack/new constant objective. |
+ | Finish | Extend physical B7 one block in +Z and require actual B7 landing. Minimize achieved landing T then maximize Z. Terminal guide is +Z physical edge, X midpoint. |
+ | Exact-node feasibility | Adopt IPOPT accuracy operationally: only a solve of the exact current node, with no later decisions, can mark that node/model infeasible. Child failure does not mark ancestors infeasible. No separate ancestor-testing subsystem. |
+ | Turn inference | Preprocess >110° guide turns and approach-facing axis/imaginary diagonal edge; initial spatial margin≈0.3 toward S/N. Each decision selects one heuristic from that boundary; preliminary/tunable and observable. |
+-| Visits | Inter-block returns are not generated now. Same-block setup jumps/chains remain supported where global hard structure permits them. Future revisit plan persisted separately. |
++| Visits | Inter-block returns are not generated now. Same-block setup jumps/chains remain supported after global hard-transfer latching. Future revisit plan persisted separately. |
+ | Preserved invariants | Original-state continuous re-solves/all earlier facings free, normal momentum/zero thresholds, finite physical contacts, owned prerequisites, caps, physical validation, exact siblings/repair/source ownership. |
+ 
+ Required anchor occurrences remain ordered. Same-block hops and permitted acyclic optional support visits do not advance/reset the cursor except on the next required milestone. Supporting repeated mandatory IDs and physical returns after another support are deferred features. Intentional wall hits and new water/ladder/actual-world mechanics are not added by this change.
+@@ -90,7 +92,7 @@ SolvePolicy purpose is distinct from existing preliminary/complete solve_scope v
+ 
+ Current scope does not generate inter-block returns. Track initial/current physical owner and departed owners. A→A→A→B and A→air→A→B are valid local setup; A→C→B can be a valid acyclic optional route; A→C→A is deferred and excluded before expensive generation. Current-owner repeated jumps remain eligible. Compress consecutive same-owner contacts only for this check; preserve every actual input, contact event, component and physical branch in the program.
+ 
+-Apply departed-owner eligibility via supportAllowed and audit emitted programs. Reconstruct from actual history on resume, including original support. Use sourceBlock/physical owner provenance across fragments/coplanar groups; do not reject a same-block hop merely because its decomposed patch changed. Required order remains; do not use later required anchors early if completion would demand an unsupported return. Global hard latches still restrict latched spans to one jump; unlatched setup/recovery must generate multiple same-block jumps.
++Apply departed-owner eligibility via supportAllowed and audit emitted programs. Reconstruct from actual history on resume, including original support. Use sourceBlock/physical owner provenance across fragments/coplanar groups; do not reject a same-block hop merely because its decomposed patch changed. Required order remains; do not use later required anchors early if completion would demand an unsupported return. Global hard latches restrict the actual transfer to one jump; setup/recovery must generate multiple same-source jumps even in a latched span.
+ 
+ The complete future revisit mechanism, lazy repetition families, complexity analysis and tests are persisted in [the deferred plan](REVISIT_DISCOVERY_DEFERRED_PLAN.md). Do not implement those families/cursors/benchmarks now. This is explicit feature scope, not a claim that return trajectories are physically impossible.
+ 
+@@ -171,9 +173,9 @@ The rule is preliminary: log position/edge/margin/distances, label, selected key
+ 
+ Bind actual achieved event before comparing unused proposal suffix length. Changing an earlier decision creates another prefix and is not excluded by its old child's time/oracle rejection.
+ 
+-Global latch learning is a solve transaction, survives frame removal, and revises eligibility of all queued/deferred work. Retire now-ineligible local multijump structures with audit; preserve other sources and run variants. Do not scope the latch to the certifying parent or silently reopen it on downstream failure.
++Global latch learning is a solve transaction, survives frame removal, and revises eligibility of all queued/deferred work. Retire ineligible multi-transfer/intermediate-support structures with audit; preserve same-source setup hops, other sources and run variants. Do not scope the latch to the certifying parent or silently reopen it on downstream failure.
+ 
+-Recover earlier arrival/run decisions one actual edge at a time. Within unlatched spans, generate extra current-block setup jumps and earlier runs for chaining; do not generate inter-block return preparation now. Within latched spans only restore permitted single-jump/run choices; move extra jumping preparation into earlier admissible decisions. Never graft a sibling's selected constraints or yaw state. Stable request/action IDs prevent immediate redo/re-deferral loops.
++Recover earlier arrival/run decisions one actual edge at a time. Generate extra current-block setup jumps and earlier runs for chaining both before and after a latch; do not generate inter-block return preparation now. A latched transfer remains one jump, with its source-local setup preserved during recovery. Never graft a sibling's selected constraints or yaw state. Stable request/action IDs prevent immediate redo/re-deferral loops.
+ 
+ ## 10. Normal exact-node solves and decision cadence
+ 
+@@ -266,7 +268,7 @@ Required-anchor frames/actual prior-contact audit, acyclic optional supports and
+ 
+ Shared binary-selected ordinary/momentum comparator across generation/selection. Learn/latch one-jump anchor transition globally, preserve across changed parents/backtracking, recheck queued structures. Ordinary-decision-only recoverable run deferral, disabled for turnaround decisions. Full-finish T bound prunes/backtracks unchanged prefix; equal actual finishes still MAXZ.
+ 
+-**Exit:** latch learned in discarded subtree remains; new incoming history never reopens local multijump; permitted run choices/recovery remain; turn changes ordering but not global structure.
++**Exit:** latch learned in discarded subtree remains; new incoming histories retain source-local setup while never reopening multi-transfer/intermediate-support routes; permitted run choices/recovery remain; turn changes ordering but not global structure.
+ 
+ ### M4 — DFS solve cadence, outcomes and recovery
+ 
+diff --git a/standalone/autonomy/ANCHOR_POLICY_DECISIONS.md b/standalone/autonomy/ANCHOR_POLICY_DECISIONS.md
+index 1c8062b8..64ad3ed3 100644
+--- a/standalone/autonomy/ANCHOR_POLICY_DECISIONS.md
++++ b/standalone/autonomy/ANCHOR_POLICY_DECISIONS.md
+@@ -8,33 +8,26 @@ Feasibility scheduling advice is in [O4: exact DFS node feasibility and cadence]
+ 
+ ## O1 — Hard-jump status is a solve-wide latch
+ 
+-**Settled:** once a direct hard jump between consecutive anchors has succeeded anywhere in the solve, keep that anchor transition restricted to a single jump for the rest of the solve. This is intentional even when backtracking changes its incoming discrete history.
++**Corrected hard-jump contract (user clarification,2026-11-04):** a hard jump has one transfer jump between S and E. It can have any allowed number of setup jumps that land back on S before that transfer. This applies to every starting anchor, including the implicit opening support. The earlier implementation counted all span impulses and rejected same-source returns; that was an implementation/design-record error, not the user's intended restriction.
+ 
+-Use a monotone table keyed by the ordered anchor occurrence pair in this scene/task/anchor-plan context:
++A validated one-transfer S→E witness latches the ordered pair globally for the solve, across changed incoming histories/backtracking. Preparatory S→S hops remain legal after the latch. Ordinary runs and setup jumps remain subject to the original domain/caps, and all requested grounded impulses still count in J for ordering. No initial-span exception is needed.
+ 
+-```text
+-hardJump[S→E] = false initially
+-fully validated single-jump S→E witness anywhere → hardJump[S→E] = true
+-backtracking or failure on another incoming history does not reset it
+-```
+-
+-Store the certifying witness and its provenance, but **do not scope the active restriction to that witness's parent prefix**. A successful route with several setup jumps does not itself certify the single-jump latch. A failed or unattempted direct solve does not establish the latch.
++The transfer starts after the last completed source contact before the target arrival. Earlier impulses are preparation; the final transfer has exactly one requested grounded impulse. An unfinished prefix can be preparing or in flight without already committing to target versus source landing. A source contact in the target-arrival input belongs to that same physical transfer case rather than resetting preparation. Aliased patches use physical owners.
+ 
+-Once latched:
++Examples after a latch:
+ 
+-- Future attempts through S→E, including restored/backtracked attempts, keep the single-jump structure.
+-- Ordinary run preparation can vary within that structure. Minimum-run deferral remains recoverable under the selected regional policy.
+-- Do not reopen local multijump/bounce structures inside S→E when another parent cannot realize it. Recover earlier arrival/preparation decisions, including more favorable incoming momentum at S, while keeping S→E single-jump.
+-- A successful latch found inside a later-abandoned subtree survives the abandonment.
+-- Existing queued multijump S→E programs become outside the selected policy domain. Preserve an audit of the transition, but they do not remain a hidden recovery escape from the latch.
+-
+-Before a span is latched, harder-jump recovery may add setup jumps on the departure block, restore runs and move preparation farther back. Chained jumps with no intervening runs remain a preferred preparation pattern. The latch can be learned at any later iteration and then applies globally within this solve.
++```text
++S → S → S → E    allowed: setup hops on S, one transfer to E
++S → air → S → E allowed when the final S→E transfer jumps
++S → C → E        outside the hard transfer domain: intermediate support C
++S → S → E        excluded if the final transfer is only a run-off, without a jump
++```
+ 
+-This intentionally restricts the search domain. We optimize within that chosen domain; we need not keep proposing unrestricted multijump alternatives as a safeguard against the user's stated assumption.
++Initial-0 Real11 jumps at0 back onto B1@12 and at12 to B2@21. The first is preparation; the second is the hard transfer. A latch learned from jump8→B2@17 must preserve that initial-0 program. Preparatory hops on later anchors receive exactly the same treatment.
+ 
+-**Implementation:** persist `hardJumpLatches` outside individual DFS frames, include a monotone policy revision, and recheck source eligibility before expanding/scoring/promoting queued work. Learning a latch does not erase other spans' pending sources, unknowns or recoverable run alternatives. A changed scene/task/anchor plan starts a new context, not a continuation of the old latch table.
++Global latches still survive certifier abandonment. Run-family normalization keeps the complete earlier preparation history, so an extra-run representative from one setup history cannot suppress another. Deferred ordinary runs are restored with their actual parent/rows and scoped bypass. Optional inter-block revisits remain deferred; same-source setup does not consume the required-anchor cursor.
+ 
+-Current [`minimum_runs.py`](cell_routes/minimum_runs.py) already supplies matching-family normalization and feasible representatives; [`depth_first.py`](cell_routes/depth_first.py) saves excluded programs. Neither implements the requested global structural latch or targeted restoration yet. Recovery still needs actual programs/recipes, physical owners/rows and residual generators, with a scoped bypass so restored runs are not immediately deferred again.
++Hard-jump policy version2 is part of the outer/DFS/stage/movement semantic context. Old exact checkpoints are rejected because the wrong policy may already have discarded setup choices. Latch/arrival records expose preparation impulses, transfer impulses and the source-contact boundary. No movement physics or continuous objective equation changes.
+ 
+ ## O2 — Requested grounded impulses are the jump count
+ 
+@@ -238,7 +231,7 @@ No O7 follow-up remains. Global hard topology and regional momentum ordering are
+ 
+ ## Settled versus remaining implementation choices
+ 
+-Settled: DFS; solve-wide single-jump hard latch; requested grounded impulses; extended finite B7/onward guides/early stop;110° turn with approach-facing boundary and regional margin; no separate ancestor-testing subsystem; a failed descendant cannot invalidate an untested ancestor; inter-block revisit generation deferred; multiple jumps on the current block supported where no hard latch forbids them.
++Settled: DFS; solve-wide single-jump hard latch; requested grounded impulses; extended finite B7/onward guides/early stop;110° turn with approach-facing boundary and regional margin; no separate ancestor-testing subsystem; a failed descendant cannot invalidate an untested ancestor; inter-block revisit generation deferred; multiple setup jumps on the current block preserved even after a hard-transfer latch.
+ 
+ Starting implementation default: normal feasibility after each completed movement decision, with anchors/final mandatory; benchmark 2/4 later if solving dominates. Turn mode is a preliminary binary edge-plus-margin decision using its current point, with compact diagnostics, plots and outcome counters. The blended regional-score and uncertain-membership proposals are removed; no new turn-policy question needs reopening.
+ 
+diff --git a/standalone/autonomy/DFS_INTERACTION_IMPLEMENTATION_PLAN.md b/standalone/autonomy/DFS_INTERACTION_IMPLEMENTATION_PLAN.md
+index 0af7615d..5d9c1839 100644
+--- a/standalone/autonomy/DFS_INTERACTION_IMPLEMENTATION_PLAN.md
++++ b/standalone/autonomy/DFS_INTERACTION_IMPLEMENTATION_PLAN.md
+@@ -1,5 +1,7 @@
+ # Consolidated plan: depth-first decisions and shared interaction eligibility
+ 
++> **Hard-jump correction:** a latch constrains the S→E transfer to one jump. It must preserve multiple S→S setup hops before the transfer, including after learning/resuming/backtracking. Do not impose a total span-J=1 cap or exempt only the opening. All setup impulses remain in the ordinary/turnaround heuristic. See [policy2](experiments/anchor-transfer-preparation/README.md).
++
+ > **Current extension (2026-11-04):** [anchor plan](ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md) M1–M5 is implemented in the isolated worktree; [new evidence](experiments/anchor-feasibility/README.md) records validation. Physical tasks default to required-anchor/open-span DFS with schema8; virtual/supplied source controls remain separate. Binary turnaround/observability, exact-node solves, global hard latches, run recovery and same-block setup are active. Inter-block revisits remain [deferred](REVISIT_DISCOVERY_DEFERRED_PLAN.md). [Resume](../docs/ANCHOR_IMPLEMENTATION_RESUME.md).
+ 
+ > Current automatic implementation: [GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md](GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md) controls the implemented event-language/stage-provider refactor at `08b00185`. Its dynamic `GoalRequest` stages use the existing DFS with schema7, event-stage policy3, separate score contexts, pending-child owners and retained siblings/unknowns. Constraint generation is state2/policy7 and repair assembly8.447 selected native checks pass with stable source hashes; automatic stored-Real11 cold search finds T67 at16.09s and all24 independent post-run replays pass. See [current evidence](experiments/event-route-discovery/README.md) for the matched-control status. The remainder records the source-specific `a28e5b71` baseline and its original design history.
+diff --git a/standalone/autonomy/REVISIT_DISCOVERY_DEFERRED_PLAN.md b/standalone/autonomy/REVISIT_DISCOVERY_DEFERRED_PLAN.md
+index a69b01f6..4be6e959 100644
+--- a/standalone/autonomy/REVISIT_DISCOVERY_DEFERRED_PLAN.md
++++ b/standalone/autonomy/REVISIT_DISCOVERY_DEFERRED_PLAN.md
+@@ -12,7 +12,7 @@ This document is a future design record, not permission to enable revisit famili
+ 
+ 1. Confirm authorization to enable physical revisits. Remove the active departed-owner filter only for the newly declared supported domain; preserve current same-block setup behavior.
+ 2. Keep ordered support occurrences/physical provenance and required-anchor progress. Incidental returns must not reset the cursor or bypass a required milestone.
+-3. Use existing positive-duration choices, finite horizon, global hard latches and validated finish-time bound. A latch still forbids multijump/bounce structure inside that transition.
++3. Use existing positive-duration choices, finite horizon, global hard latches and validated finish-time bound. A latch forbids intermediate-support transfers, while source-local setup hops remain permitted.
+ 4. Reuse exact DFS node feasibility/results/ownership. A failed child never invalidates its untested parent; no independent ancestor-testing mechanism is added.
+ 5. Generate legal revisit choices lazily, then add compact local pair/same-block preparation-family repetition cursors only when measured useful. Validate the fully expanded actual program through existing builders.
+ 6. Service repetition counts incrementally, preserve residual work, and avoid blanket generic visit-count caps or witness-based speed/position dominance.
+@@ -38,7 +38,7 @@ The [event backing graph](cell_routes/event_routes.py) is already cyclic. Its ra
+ 
+ 1. **Keep revisits as ordinary lazy movement choices.** One coupled span generator creates the next contact/jump choice only when serviced. No eager enumeration of every block sequence. Required-anchor cursor advances only on its next required milestone; visiting an earlier support does not reset it. Required anchor references can remain ordered/unique while physical block visits repeat.
+ 2. **Use time/horizon pruning.** Positive-duration cycles consume maxInputs and, once a finish exists, the validated finish-time bound. Keep equal-time actual finishes for MAXZ. Do not add an arbitrary generic maxVisits=1/2 restriction.
+-3. **Use the global hard latch.** Once S→E is certified single-jump, local bounce loops inside that transition are outside the intentionally selected domain for the rest of the solve. Legal preparation can move to earlier unlatched spans. This is a strong requested reduction in revisit branching.
++3. **Use the global hard latch.** Once S→E is certified one-transfer, intermediate-support loops are outside the selected transfer domain. Local S→S momentum/setup hops remain allowed on S, including in a latched span. This is a strong requested reduction in revisit branching.
+ 4. **Reuse normal exact-node outcomes.** A designated solve of the exact current DFS node can reject that node and its descendants. Failed children never mark untested ancestors infeasible, and no separate ancestor-testing pass is added. Feasible revisit nodes retain their alternatives; exact shared ownership avoids duplicate solves.
+ 5. **Group loop families for lazy generation.** A same-block hop family or local A↔B preparation family can own a repetition-count cursor and timing/physical-option cursors. Expand an exact k-repeat program only when needed, then validate it with the existing builders. The compact family is enumeration bookkeeping, not a fabricated physical shortcut or cached endpoint transition.
+ 6. **Allocate work incrementally.** Service short repetitions first and keep residual longer-repeat counts for recovery/continued search. Use bounded service slices/iterative widening; report outstanding loop families instead of silently dropping them at a queue cap. This can prioritize the narrow local preparation patterns the user expects without banning other legal revisit paths.
+diff --git a/standalone/autonomy/cell_routes/anchor_policy.py b/standalone/autonomy/cell_routes/anchor_policy.py
+index e246a1e9..95a0d659 100644
+--- a/standalone/autonomy/cell_routes/anchor_policy.py
++++ b/standalone/autonomy/cell_routes/anchor_policy.py
+@@ -5,6 +5,9 @@ import copy
+ from ..solve_spec import digest
+ 
+ 
++HARD_JUMP_POLICY_VERSION = 2
++
++
+ def settings(value, scene):
+     result = dict(version=1, anchors=[], turnaround=dict(degrees=110., spatialMargin=.3),
+                   solveEveryDecisionLevels=1, feasibilityPolicy='ipopt_oracle', observability=True)
+@@ -38,7 +41,8 @@ def settings(value, scene):
+ 
+ 
+ def semantic_settings(policy):
+-    return {k:v for k,v in policy.items() if k!='observability'}
++    return dict({k:v for k,v in policy.items() if k!='observability'},
++                hardJumpPolicyVersion=HARD_JUMP_POLICY_VERSION)
+ 
+ 
+ def owner(scene, block):
+@@ -135,14 +139,37 @@ def within_caps(request, program):
+     return True
+ 
+ 
+-def single_jump_structure(scene, program, start, source, target, *, complete=False):
++def transfer_structure(scene, program, start, source, target, *, complete=False):
++    """Separate source-local momentum preparation from the transfer flight.
++
++    Each actual return to the source closes a setup hop. The pending/complete
++    flight after the last source contact has at most/exactly one requested
++    jump. A source contact during the target's arrival input belongs to that
++    transfer's physical case, not an earlier setup boundary.
++    """
+     p=program['profile'];n=p['airtime']
+-    jumps=[t for t in range(start,n) if p['grounded'][t] and p['jump'][t]]
+-    if len(jumps)>1 or complete and len(jumps)!=1:
+-        return False
++    launches=[t for t in range(start,n) if p['grounded'][t] and p['jump'][t]]
+     source,target=owner(scene,source),owner(scene,target)
+-    for tick,name in visits(scene,program):
+-        if tick<=start:continue
+-        if name not in (source,target):return False
+-        if jumps and tick>jumps[0] and name==source:return False
+-    return True
++    contacts=[(t,name) for t,name in visits(scene,program) if start<t<=n]
++    arrival=min((t for t,name in contacts if name==target),default=None)
++    boundary=max([start]+[t for t,name in contacts if name==source and (arrival is None or t<arrival)])
++    preparation=[t for t in launches if t<boundary]
++    transfer=[t for t in launches if t>=boundary and (arrival is None or t<arrival)]
++    reason=None
++    if any(name not in (source,target) for _,name in contacts):
++        reason='intermediate_support_between_anchors'
++    elif arrival is not None and any(t>arrival and name==source for t,name in contacts):
++        reason='return_after_target_arrival'
++    elif arrival is not None and any(t>=arrival for t in launches):
++        reason='jump_after_target_arrival'
++    elif len(transfer)>1:
++        reason='multiple_transfer_impulses'
++    elif complete and (arrival is None or len(transfer)!=1):
++        reason='missing_transfer_jump'
++    return dict(version=HARD_JUMP_POLICY_VERSION,valid=reason is None,reason=reason,
++                source=source,target=target,spanStart=start,preparationThrough=boundary,
++                preparationJumps=preparation,transferJumps=transfer,arrival=arrival)
++
++
++def single_jump_structure(scene, program, start, source, target, *, complete=False):
++    return transfer_structure(scene,program,start,source,target,complete=complete)['valid']
+diff --git a/standalone/autonomy/cell_routes/depth_first.py b/standalone/autonomy/cell_routes/depth_first.py
+index 5c32c64f..3ba0f878 100644
+--- a/standalone/autonomy/cell_routes/depth_first.py
++++ b/standalone/autonomy/cell_routes/depth_first.py
+@@ -227,12 +227,14 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
+ 
+     def hard_bound(program,f):
+         if not anchor_route or latch_key(f) not in state['hardLatches']:return None
+-        from .anchor_policy import single_jump_structure
++        from .anchor_policy import transfer_structure
+         _,start=span_info(f)
+         names=adapter.guide_plan['anchors'];i=span_info(f)[0]
+         completed=program.get('terminalSupport') in f['goal'].get('blocks',[f['goal']['block']])
+-        if not single_jump_structure(scene,program,start,names[i],names[i+1],complete=completed):
+-            return dict(reason='global_single_jump_latch',span=latch_key(f),revision=state['latchRevision'])
++        transfer=transfer_structure(scene,program,start,names[i],names[i+1],complete=completed)
++        if not transfer['valid']:
++            return dict(reason='global_single_jump_latch',span=latch_key(f),revision=state['latchRevision'],
++                        transfer=transfer)
+         return None
+ 
+     def score_key(program,f):
+@@ -634,14 +636,17 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
+             record.pop('child',None)
+             record.update(status='unknown',termination='preliminary_scope_not_a_terminal_witness')
+         if anchor_route and record.get('witness') and final_validated:
+-            from .anchor_policy import single_jump_structure
++            from .anchor_policy import transfer_structure
+             span,start=span_info(f);names=adapter.guide_plan['anchors']
+-            if single_jump_structure(scene,program,start,names[span],names[span+1],complete=True):
++            transfer=transfer_structure(scene,program,start,names[span],names[span+1],complete=True)
++            record['transferStructure']=transfer
++            if transfer['valid']:
+                 key=latch_key(f)
+                 if key not in state['hardLatches']:
+                     state['latchRevision']+=1
+-                    state['hardLatches'][key]=dict(version=1,revision=state['latchRevision'],candidate=identity,
+-                        frame=f['id'],model=result.get('solveIdentity'),inputs=program['profile']['airtime'])
++                    state['hardLatches'][key]=dict(version=transfer['version'],revision=state['latchRevision'],candidate=identity,
++                        frame=f['id'],model=result.get('solveIdentity'),inputs=program['profile']['airtime'],
++                        transferStructure=transfer)
+                     transition('hard_jump_latched',f,span=key,revision=state['latchRevision'])
+         if minimum_run_pruning and record.get('witness') and final_validated:
+             remember(f.setdefault('minimumRuns',{}),latest_jump(program,scene),identity,record['arrival'])
+diff --git a/standalone/autonomy/tests/test_anchor_dfs.py b/standalone/autonomy/tests/test_anchor_dfs.py
+index bce918a3..5bf230ad 100644
+--- a/standalone/autonomy/tests/test_anchor_dfs.py
++++ b/standalone/autonomy/tests/test_anchor_dfs.py
+@@ -25,7 +25,7 @@ def extend(s,parent,target,n,extra=False):
+ 
+ 
+ class AnchorDFSTests(unittest.TestCase):
+-    def run_tree(self, *, logging=True, resume=None, calls=20, interval=1):
++    def run_tree(self, *, logging=True, resume=None, calls=20, interval=1, setup=False):
+         s=scene();s['maxTotalRunTicks']=60;s['maxRunTicksPerJump']=60;dispatched=[]
+         def generate(target_scene,*,report,initial_programs,continuation=None,node_evaluator,**kwargs):
+             saved=copy.deepcopy(continuation) if continuation else dict(expanded=1,cursor=0,exhausted=False)
+@@ -33,6 +33,13 @@ class AnchorDFSTests(unittest.TestCase):
+             parent=initial_programs[0];target=target_scene['goalBlock']
+             if target=='mid':
+                 choices=[extend(s,parent,'mid',10),extend(s,parent,'mid',11)]
++                if setup:
++                    prepared=extend(s,parent,'mid',11)
++                    prepared['profile']['jump'][1]=True
++                    start=next(b for b in s['blocks'] if b['id']=='start')
++                    prepared['profile']['contactEvents'].insert(0,dict(offset=0,axis='Y',direction=-1,
++                        box=s['collisionScene']['solids'][start['solidIndex']]))
++                    choices.append(prepared)
+             else:
+                 # Certifying subtree learns the global hard latch. A later
+                 # incoming history must not reopen a two-jump local structure.
+@@ -86,6 +93,22 @@ class AnchorDFSTests(unittest.TestCase):
+         self.assertEqual([(b,t) for b,t,_ in calls1+calls2],[('mid',10),('goal',20),('mid',11)])
+         self.assertEqual(first['searchState']['dfs']['hardLatches'],second['searchState']['dfs']['hardLatches'])
+ 
++    def test_global_latch_accepts_setup_after_certifier_and_backtracking(self):
++        result,calls=self.run_tree(setup=True)
++        frames=result['searchState']['dfs']['frames']
++        prepared=[r for f in frames if f['index']==0 for r in f['records']
++                  if r.get('transferStructure',{}).get('preparationJumps')]
++        self.assertEqual(len(prepared),1)
++        self.assertEqual(prepared[0]['status'],'feasible')
++        self.assertEqual(prepared[0]['transferStructure']['transferJumps'],[1])
++        self.assertEqual(result['searchState']['dfs']['hardLatches']['start→mid']['version'],2)
++
++    def test_incompatible_old_latch_policy_is_rejected_on_resume(self):
++        first,_=self.run_tree(calls=2)
++        with patch('standalone.autonomy.cell_routes.anchor_policy.HARD_JUMP_POLICY_VERSION',1):
++            with self.assertRaisesRegex(ValueError,'Incompatible automatic event'):
++                self.run_tree(resume=first['searchState'])
++
+     def test_completed_decision_cadence_and_forced_anchor_or_terminal(self):
+         for interval,expected in ((1,[1,2,3,4]),(2,[2,4]),(4,[4])):
+             solved=[];last=0
+diff --git a/standalone/autonomy/tests/test_anchor_policy.py b/standalone/autonomy/tests/test_anchor_policy.py
+index 0d2b3e41..3a5a3a3f 100644
+--- a/standalone/autonomy/tests/test_anchor_policy.py
++++ b/standalone/autonomy/tests/test_anchor_policy.py
+@@ -4,7 +4,7 @@ import math
+ import unittest
+ 
+ from standalone.autonomy.block_search import prepare_scene
+-from standalone.autonomy.cell_routes.anchor_policy import audit, local_counts, priority, settings, visit_state, within_caps, single_jump_structure
++from standalone.autonomy.cell_routes.anchor_policy import audit, local_counts, priority, settings, visit_state, within_caps, single_jump_structure, transfer_structure
+ from standalone.autonomy.cell_routes.anchor_guides import build_guides, classify, nearest, onward_objective
+ from standalone.autonomy.cell_routes.anchor_adapter import AnchorAdapter
+ from standalone.autonomy.cell_routes.event_routes import build_route_domain, build_event_graph
+@@ -171,6 +171,66 @@ class AnchorPolicyTests(unittest.TestCase):
+         p=history(s,['start','mid']);p['profile']['jump']=[True,False]
+         self.assertFalse(single_jump_structure(s,p,0,'start','mid',complete=True))
+ 
++    def test_hard_transfer_keeps_arbitrary_source_setup_jumps_and_counts_them(self):
++        s=scene()
++        for hops in (1,2,4):
++            p=history(s,['start']*hops+['mid'])
++            result=transfer_structure(s,p,0,'start','mid',complete=True)
++            self.assertTrue(result['valid'],result)
++            self.assertEqual(result['preparationJumps'],list(range(hops)))
++            self.assertEqual(result['transferJumps'],[hops])
++            self.assertEqual(local_counts(p)['J'],hops+1)
++            self.assertTrue(single_jump_structure(s,history(s,['start']*hops),0,'start','mid'))
++            self.assertFalse(within_caps(dict(maxJumps=hops),p))
++
++    def test_setup_does_not_admit_an_intermediate_block_or_two_transfer_impulses(self):
++        s=scene()
++        self.assertFalse(single_jump_structure(s,history(s,['start','optional','mid']),0,'start','mid',complete=True))
++        p=history(s,['start','start','mid'])
++        p['profile']['contactEvents']=p['profile']['contactEvents'][:1]+p['profile']['contactEvents'][2:]
++        result=transfer_structure(s,p,0,'start','mid',complete=True)
++        self.assertFalse(result['valid'])
++        self.assertEqual(result['reason'],'multiple_transfer_impulses')
++        self.assertFalse(single_jump_structure(s,history(s,['mid','start']),0,'start','mid'))
++        self.assertFalse(single_jump_structure(s,history(s,['mid','mid']),0,'start','mid',complete=True))
++
++    def test_transfer_uses_current_anchor_boundary_and_physical_owner_aliases(self):
++        s=scene();p=history(s,['mid','mid','goal'])
++        result=transfer_structure(s,p,1,'mid','goal',complete=True)
++        self.assertTrue(result['valid'])
++        self.assertEqual(result['preparationJumps'],[1])
++        self.assertEqual(result['transferJumps'],[2])
++        next(b for b in s['blocks'] if b['id']=='optional')['sourceBlock']='start'
++        self.assertTrue(single_jump_structure(s,history(s,['optional','mid']),0,'start','mid',complete=True))
++
++    def test_source_contact_at_target_arrival_is_part_of_the_same_transfer(self):
++        s=scene();p=history(s,['start','mid'])
++        # A named landing case can report its lower source and higher target
++        # in one input; that is not a completed setup hop before this flight.
++        p['profile']['contactEvents'][0]['offset']=1
++        p['profile']['jump']=[True,False]
++        result=transfer_structure(s,p,0,'start','mid',complete=True)
++        self.assertTrue(result['valid'],result)
++        self.assertEqual(result['transferJumps'],[0])
++
++    def test_real11_initial0_setup_and_transfer_are_distinct(self):
++        import gzip
++        from pathlib import Path
++        from standalone.autonomy.movement_composition import truncate_program
++        base=Path(__file__).parents[1]/'experiments'
++        fixture=json.loads((base/'anchor-feasibility/real11-anchors.json').read_text())
++        s=prepare_scene(fixture['request'])
++        saved=json.loads(gzip.decompress((base/'virtual-finish/evidence/initial0-cold.json.gz').read_bytes()))
++        program=saved['result']['best']['movementProgram']
++        setup=truncate_program(program,12)
++        self.assertTrue(single_jump_structure(s,setup,0,'b1','b2'))
++        landing=truncate_program(program,21)
++        result=transfer_structure(s,landing,0,'b1','b2',complete=True)
++        self.assertTrue(result['valid'])
++        self.assertEqual(result['preparationJumps'],[0])
++        self.assertEqual(result['transferJumps'],[12])
++        self.assertEqual(local_counts(landing)['J'],2)
++
+     def test_declared_caps_are_not_widened_during_recovery(self):
+         p=history(scene(),['start']*11);p['profile']['jump']=[False]*11
+         self.assertTrue(within_caps({},p))
+diff --git a/standalone/autonomy/tests/test_anchor_search.py b/standalone/autonomy/tests/test_anchor_search.py
+index a64be38e..15e25fe9 100644
+--- a/standalone/autonomy/tests/test_anchor_search.py
++++ b/standalone/autonomy/tests/test_anchor_search.py
+@@ -9,7 +9,7 @@ from unittest.mock import patch
+ from standalone.autonomy.movement_composition import empty_program
+ from standalone.autonomy.movement_search import movement_settings
+ from standalone.autonomy.movement_frontier import persistent_programs
+-from standalone.autonomy.cell_routes.anchor_policy import local_counts
++from standalone.autonomy.cell_routes.anchor_policy import local_counts, single_jump_structure
+ from standalone.autonomy.cell_routes.node_feasibility import meaningful_choice
+ from standalone.autonomy.cell_routes.automatic_experiment import run
+ from standalone.autonomy.tests.test_checkpoint_guidance import flat_scene
+@@ -18,12 +18,13 @@ from standalone.autonomy.block_contacts import solve_contact_branches
+ 
+ 
+ class AnchorSearchTests(unittest.TestCase):
+-    def frontier(self, evaluator, *, continuation=None, report=None, limit=15):
++    def frontier(self, evaluator, *, continuation=None, report=None, limit=15, latched=None):
+         s=flat_scene()
+         cfg=dict(movement_settings(s),maxPrefixes=limit,maxInputs=60)
+         return persistent_programs(s,settings=cfg,report=report if report is not None else {},
+             continuation=continuation,threshold=0.,node_evaluator=evaluator,
+-            program_filter=lambda p:local_counts(p)['R']<=2,
++            program_filter=lambda p:local_counts(p)['R']<=2 and (not latched or not latched() or
++                single_jump_structure(s,p,0,'start','goal',complete=p['terminalSupport']=='goal')),
+             policy_context=dict(version=1,span=0),deadline=time.monotonic()+3)
+ 
+     def test_multiple_same_block_jumps_generated_and_no_solve_for_run_hold(self):
+@@ -53,6 +54,22 @@ class AnchorSearchTests(unittest.TestCase):
+         self.assertTrue(programs,'Rejected local-hop child swallowed the direct goal sibling')
+         self.assertNotIn('status',report['continuation']['pending'][0] if report['continuation']['pending'] else {})
+ 
++    def test_learned_latch_and_resume_keep_source_setup_hops_in_the_actual_source(self):
++        report={};latched=False;calls=[]
++        def evaluate(p,nodes,forced):
++            calls.append(copy.deepcopy(p))
++            return dict(status='feasible',program=p)
++        source=self.frontier(evaluate,report=report,latched=lambda:latched)
++        first=next(source);source.close()
++        self.assertEqual(local_counts(first)['J'],1)
++        latched=True
++        saved=json.loads(json.dumps(report['continuation']))
++        resumed=self.frontier(evaluate,report={},continuation=saved,limit=30,latched=lambda:latched)
++        try:programs=list(resumed)
++        finally:resumed.close()
++        self.assertTrue(any(local_counts(p)['J']>=2 for p in programs))
++        self.assertTrue(any(p['terminalSupport']=='start' and local_counts(p)['J']>=1 for p in calls))
++
+     def test_suspended_exact_child_resumes_same_choice_before_siblings(self):
+         calls=[];report={}
+         def suspend(p,nodes,forced):
+diff --git a/standalone/docs/ANCHOR_IMPLEMENTATION_RESUME.md b/standalone/docs/ANCHOR_IMPLEMENTATION_RESUME.md
+index e013c50d..cde7182a 100644
+--- a/standalone/docs/ANCHOR_IMPLEMENTATION_RESUME.md
++++ b/standalone/docs/ANCHOR_IMPLEMENTATION_RESUME.md
+@@ -1,5 +1,7 @@
+ # Anchor DFS implementation: completed feature resume
+ 
++**Current correction in progress:** the user clarified that hard means one transfer jump S→E, with repeated S→S setup hops still permitted even after a latch. Policy2 implements this for every anchor span; no initial-only exception. `anchor_policy.transfer_structure` separates preparation/transfer impulses, `single_jump_structure` delegates to it, and DFS latch/rejection records expose that distinction. `semantic_settings` fingerprints policy2 so wrong-policy exact checkpoints are rejected. Focused68 tests pass; the new535-test source-stable gate is running under `autonomy/experiments/anchor-transfer-preparation/native-2026-11-04/` (session49444). The prior uncommitted [audit](../autonomy/experiments/anchor-initial0-audit-2026-11-04/README.md) and doc edits belong with this fix; preserve them. Next: complete native/cold validation, update this checkpoint/evidence, then commit the correction with tests/docs.
++
+ 2026-11-04. The authorized implementation is complete in `/private/tmp/parkour-real11-initial-run-ticks`, branch `research/real11-initial-run-ticks`. Use this task's isolated checkout; the tool default may point at the other agent's checkout. The feature commit bundles runtime, tests, fixture, documentation and evidence. Consult `git log -1` for its identity. No push, helper rebuild or actual-world/game execution was requested.
+ 
+ ## Implemented behavior
+@@ -9,7 +11,7 @@
+ - Backward finite nearest-point guides and onward POSITION objectives remain soft. Intermediate queries stop on fully validated feasibility; terminal queries optimize the actual objective. No slack/new objective equation or guide-progress pruning was added.
+ - Meaningful-node feasibility runs when selected for descent, initially each completed jump/air landing/named case, not construction of unused siblings or raw ordinary run-holds. Anchors/final always force queries. Exact oracle rejection, physical repair exhaustion, suspension/error and feasibility are distinct; child failure never labels an unqueried ancestor.
+ - Absolute T, requested grounded J/grounded nonjump R/air A local to the anchor span. Valid jump cancellations count their horizontal impulse. A110° guide cue plus approach-facing physical edge/imaginary diagonal and0.3-block spatial margin gives one boolean per decision: ordinary `(T,-J,R,id)` or turnaround `(T,-J,A,id)`.
+-- Direct-jump success latches that anchor transition globally for the rest of the solve, including after changed incoming histories/certifier abandonment. No local multijump reopening. Matching ordinary extra runs remain recoverable; restoring them walks actual frame ownership and uses a scoped bypass. Restoration preserves explicit input/run/method limits.
++- Direct-jump success latches that anchor transition globally for the rest of the solve, including after changed incoming histories/certifier abandonment. Only one transfer; local setup hops remain eligible after the latch. Matching ordinary extra runs remain recoverable; restoring them walks actual frame ownership and uses a scoped bypass. Restoration preserves explicit input/run/method limits.
+ - Same-block setup hops/chains remain generated. Once a different physical owner is visited, the departed owner cannot return. Inter-block returns/repeated mandatory anchors remain deferred. Cancel/grind geometry touches do not invent support visits.
+ - Actual landing clocks bind before unused suffix lengths, with future-owned rows removed through the existing truncation path. Strict elapsed T>best validated finish rejects unchanged descendants; actual equal-time finishes still compete on objective.
+ - Persisted observations include decision/parent/span/depth/position source, edge distances, two labels/local counts/keys, query/selection/worker metrics, run deferrals/restorations and later witness label flips. Diagnostic drift never creates a seam or silently mutates queued work. Full-scene PDF/SVG/PNG figures show solids, covers, guides, decisions and trajectories.
+diff --git a/standalone/docs/ARCHITECTURE.md b/standalone/docs/ARCHITECTURE.md
+index db7a58e2..bf109067 100644
+--- a/standalone/docs/ARCHITECTURE.md
++++ b/standalone/docs/ARCHITECTURE.md
+@@ -18,7 +18,7 @@ The outer automatic state is schema2 for physical tasks. Each frame owns one req
+ 
+ `node_feasibility` distinguishes exact oracle rejection, repair exhaustion, suspension/error and feasible evidence. A failed child never assigns a status to an unqueried ancestor. Every descendant starts at the original state with all earlier facings free. Feasible rows/selected contacts and yaw seeds survive; endpoint/velocity/facing equalities are not introduced. Objective/stop/rank/oracle intent and exact validation scope are repair compatibility data (assembly9).
+ 
+-Global hard-jump latches live outside frames and survive backtracking. Extra matching ordinary run alternatives keep their actual programs/ownership and are restored at the original frame with a scoped bypass. The binary turn label selects local-span T/−J/R or T/−J/A consistently. `turn_observability` stores compact referenced geometry/decision/query/replay records, independently of solver allocation. A later moved witness can log a label flip without changing queued keys or adding a pose constraint.
++Global hard-jump latches live outside frames and survive backtracking. Policy2 counts one transfer jump after the last source contact; preceding same-source setup hops remain eligible and remain included in J. This policy version is fingerprinted across exact continuations. Extra matching ordinary run alternatives keep their actual programs/ownership and are restored at the original frame with a scoped bypass. The binary turn label selects local-span T/−J/R or T/−J/A consistently. `turn_observability` stores compact referenced geometry/decision/query/replay records, independently of solver allocation. A later moved witness can log a label flip without changing queued keys or adding a pose constraint.
+ 
+ ## Main functions and their contracts
+ 
+diff --git a/standalone/docs/CURRENT_STATE.md b/standalone/docs/CURRENT_STATE.md
+index 0b45d0a2..1dd95197 100644
+--- a/standalone/docs/CURRENT_STATE.md
++++ b/standalone/docs/CURRENT_STATE.md
+@@ -2,13 +2,15 @@
+ 
+ ## Anchor DFS implementation (2026-11-04)
+ 
++**Hard-jump correction:** [transfer/preparation policy2](../autonomy/experiments/anchor-transfer-preparation/README.md) enforces one jump from S to E while preserving any allowed setup hops returning to S, before or after the global latch. All setup impulses remain in local J and all caps remain active. The previous implementation wrongly rejected the initial-0 B1 setup; the [historical audit](../autonomy/experiments/anchor-initial0-audit-2026-11-04/README.md) established a physically valid T64 control. No initial-span exemption is used. Corrected-source regression/cold evidence is being completed.
++
+ Finite physical automatic tasks now use declared required anchors, or one open span when no anchors are supplied. [Anchor implementation and evidence](../autonomy/experiments/anchor-feasibility/README.md) records the source-specific acceptance status and commands; [resume](ANCHOR_IMPLEMENTATION_RESUME.md) identifies this isolated worktree. Supplied legacy corridors and virtual tasks remain separate controls.
+ 
+ Required-anchor arrivals are the comparison/promotion boundaries. All decisions within a span remain coupled through full original-state continuous re-solves with all earlier facings free. Internal feasibility queries run when a completed meaningful decision is selected for descent, initially every decision; raw run-hold construction does not dispatch a solve. Earlier feasible positions/velocities/yaws never become fixed seams. Only the exact queried model receives an oracle rejection; incomplete/error work suspends, physical repair exhaustion backtracks without inventing numerical infeasibility, and a failed child never labels an ancestor.
+ 
+ Backward nearest-point guides and onward POSITION objectives are implemented with intermediate stop-on-feasible; terminal optimization still minimizes actual achieved T then maximizes the requested objective. New Real11 fixture uses anchors B2/B3/B4/B5 and extended physical B7 `[729,0,-1095,730,7,-1093]`, guide `(729.5,7,-1093)`, with no old virtual/X<729.7 task rows. The original0/8 initial domain remains explicit, not a generic restriction on9/10/11. B6 remains unchanged because replacement bounds are unspecified.
+ 
+-Validated direct jumps latch their ordered anchor transition globally for the remainder of the solve. Extra ordinary matching run preparations are saved and restored on backtracking with a parent-scoped bypass; restoration does not widen declared caps or reopen multijump structure in a latched span. Same-block setup jumps remain generated; departed physical owners cannot be revisited. [Future revisit work](../autonomy/REVISIT_DISCOVERY_DEFERRED_PLAN.md) remains deferred.
++Validated direct jumps latch their ordered anchor transition globally for the remainder of the solve. Extra ordinary matching run preparations are saved and restored on backtracking with a parent-scoped bypass; restoration does not widen declared caps or introduce intermediate supports in a latched transfer. Same-block setup jumps remain generated even after a hard-transfer latch; departed physical owners cannot be revisited. [Future revisit work](../autonomy/REVISIT_DISCOVERY_DEFERRED_PLAN.md) remains deferred.
+ 
+ The preliminary110° turnaround classifier uses one approach-facing physical edge (imaginary diagonal when needed),0.3-block spatial margin, and one binary label per decision. Its whole key is `(T,−J,R,id)` outside and `(T,−J,A,id)` inside, with J/R/A local to the current anchor span. Guide progress does not rank or prune decisions. Persisted observations include source point, signed distances, immutable label/key, query/selection metrics and later replay flips; diagrams draw physical footprints, covers, guides, edge/margin and the two labels.
+ 
+diff --git a/standalone/docs/DECISIONS_AND_PLANS.md b/standalone/docs/DECISIONS_AND_PLANS.md
+index ee061c01..e4872881 100644
+--- a/standalone/docs/DECISIONS_AND_PLANS.md
++++ b/standalone/docs/DECISIONS_AND_PLANS.md
+@@ -6,11 +6,13 @@
+ 
+ ## Current anchor DFS policy
+ 
++**Corrected:** one hard transfer S→E can follow repeated S→S setup hops, even after latching. This applies to every source anchor, not only B1. Earlier wording that prohibited those hops was wrong. See [transfer/preparation evidence](../autonomy/experiments/anchor-transfer-preparation/README.md) and the corrected O1 decision. All setup impulses still count in J; original caps and the no-inter-block-return scope remain.
++
+ The [current decision doc](../autonomy/ANCHOR_POLICY_DECISIONS.md) and [implementation plan](../autonomy/ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md) control the implemented change. Latest clarification: DFS, normal exact-node solves at a cadence, no separate prefix/ancestor-testing subsystem, and no negative inference from a failed child to an untested parent. Under the user's numerical assumption, only the exact queried node/model can receive the infeasible result. Exhausted alternatives are a different search status.
+ 
+ Recommended starting cadence is1 completed meaningful jump/contact decision, not every simulation input/run-hold construction step; required anchors/final always solved. Compare2/4 later from measured wall cost, not solver-call count alone. Use this as the starting default; later batching is a measurement-driven adjustment.
+ 
+-Approach-facing E edge is settled. Physical returns after another support are deferred/not generated; repeated current-block setup jumps and acyclic optional supports remain supported where global hard latches permit. Full future design is in [the deferred revisit plan](../autonomy/REVISIT_DISCOVERY_DEFERRED_PLAN.md), not current milestones.
++Approach-facing E edge is settled. Physical returns after another support are deferred/not generated; repeated current-block setup jumps remain supported even after a hard-transfer latch; optional acyclic supports remain available in open spans. Full future design is in [the deferred revisit plan](../autonomy/REVISIT_DISCOVERY_DEFERRED_PLAN.md), not current milestones.
+ 
+ The prior settled contract remains: global solve-wide single-jump latch, requested impulses, backward/onward guides and early stop,110° spatial turn regions, extended finite B7/minT→MAXZ. Implementation now uses physical-task outer schema2/DFS8/movement context4/repair assembly9; archived old geometry/task/evidence remains unchanged. See [new implementation evidence](../autonomy/experiments/anchor-feasibility/README.md). Turnaround selection is now a preliminary binary decision-point test against one approach edge (imaginary diagonal if needed) plus spatial margin. Select exactly T,−J,A or T,−J,R. Record point/edge/margin/distances/label/key, pruning behavior and later replay label flips; include two-label diagrams/counters. Blended scores and uncertain membership are removed.
+ 
+@@ -38,7 +40,7 @@ The [corridor handoff](CORRIDOR_AGENT_HANDOFF.md) through `61355976` is imported
+ | Real11 route/support discovery | The current engine accepts caller-declared ordered required anchors B2/B3/B4/B5, while movement choices and permitted optional supports remain search decisions. The completed baseline discovers dynamic support/contact choices without that mandatory list. Reuse existing geometry/movement/contact helpers; do not make required anchors a fixture-specific generic algorithm rule. Preserve meaningful B1 setup hops. B6’s reported rightward extension still lacks exact replacement bounds. Intentional wall hits stay deferred. |
+ | Local guidance | Restore backward nearest-point guide inference and continuous progress objective with stop-on-feasible. Progress is not a discrete key/pruning rule; no slack. Re-solve all earlier facings from original state so later constraints may change the path. |
+ | Comparing alternatives | Compare only at required anchors/final task; optional movement inside a span is coupled. Slower intermediate arrivals are recoverably deferred, not global infeasibility proofs. Full terminal incumbents minimize achieved T then real objective at equal T; current elapsed-time bound remains distinct. |
+-| Retention | Eligible hard ordinary extra runs remain recoverable deferrals. Direct feasibility anywhere permanently latches that anchor transition to single-jump structure for the solve, even after changed incoming histories; recovery cannot reopen local multijump structure there. Keep actual run/source/repair ownership and earlier admissible preparation. |
++| Retention | Eligible hard ordinary extra runs remain recoverable deferrals. Direct feasibility anywhere permanently latches that anchor transition to single-jump structure for the solve, even after changed incoming histories; source-local setup hops remain eligible, while recovery cannot introduce intermediate supports into the hard transfer. Keep actual run/source/repair ownership and earlier admissible preparation. |
+ | State protection | Existing position/velocity protection helpers are historical/inactive for a global peer-exclusion pass. The current tick-only policy adds no such dominance claim. Preserve physical schedule/model/scope distinctions; a first feasible pose is not a bound on later re-solves. |
+ | Different schedules | Absolute-tick p/v is not apples-to-apples across different ground/air histories. Preserve fewer-run/more-effective-jump protections and incomparability. Equal counts do not establish equal schedule. |
+ | Ordering, clarified | Absolute T/local requested J/R/A. Ordinary T,−J,R; turnaround T,−J,A within preprocessed spatial region, no progress key.110° accepted; a0.3-block spatial margin. Each decision selects one whole key; no mixed aggregation or uncertainty label. Global hard structure independent of regional priority. |
+diff --git a/standalone/docs/REAL11_GUIDE.md b/standalone/docs/REAL11_GUIDE.md
+index 0fdc6c13..65d08b8d 100644
+--- a/standalone/docs/REAL11_GUIDE.md
++++ b/standalone/docs/REAL11_GUIDE.md
+@@ -1,5 +1,7 @@
+ # Linkcraft Real11 opening: agent guide
+ 
++**Current hard-jump correction:** source-local setup hops remain legal even after a global one-transfer latch. Initial-0 jump0→B1@12 then jump12→B2@21 is one setup plus one hard transfer. The old implementation incorrectly excluded it. [Corrected policy/validation](../autonomy/experiments/anchor-transfer-preparation/README.md).
++
+ ## Physical B7 and anchor implementation (2026-11-04)
+ 
+ The [fresh fixture](../autonomy/experiments/anchor-feasibility/real11-anchors.json) extends B7 one block +Z to `[729,0,-1095,730,7,-1093]` and requires actual B7 landing. It minimizes achieved T, then maximizes Z; terminal guide is `(729.5,7,-1093)`. Normal body-overlap support still applies. The old virtual target/extra X<729.7 row is absent from the new fixture.

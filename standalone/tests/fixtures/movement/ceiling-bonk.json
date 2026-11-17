@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "sceneModel": "collision_boxes",
+  "geometryBounds": [-10, -5, -10, 10, 10, 10],
+  "initial": {"position": [0.5, 1, 0.5], "velocity": [0.15, -0.0784000015258789, 0]},
+  "startBlock": "start",
+  "goalBlock": "goal",
+  "blocks": [
+    {"id": "start", "boxes": [[0, 0, 0, 1, 1, 1]]},
+    {"id": "goal", "boxes": [[1.3, 0, 0, 2.3, 1, 1]]},
+    {"id": "ceiling", "boxes": [[-2, 3, -2, 5, 4, 3]]}
+  ],
+  "maxJumps": 1,
+  "maxRunTicksPerJump": 0,
+  "maxTotalRunTicks": 0,
+  "maxContactBranches": 16,
+  "maxWallHits": 0
+}

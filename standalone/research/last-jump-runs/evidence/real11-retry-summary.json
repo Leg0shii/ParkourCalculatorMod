@@ -1,0 +1,384 @@
+{
+  "source": "61355976f98f2091ee26bae53ddf81ebf6820004",
+  "status": "feasible",
+  "termination": "deadline",
+  "schema": 5,
+  "session": 1,
+  "elapsedSeconds": 317.53495375066996,
+  "firstFullSolutionSeconds": 101.85300666466355,
+  "workerCallsToFirstFull": 8,
+  "workerCallsThisSession": 12,
+  "cumulativeWorkerCalls": 12,
+  "storedRequestCount": 12,
+  "objective": -1093.8231291279699,
+  "independentReplays": 13,
+  "allReplaysPassed": true,
+  "rootArrivals": [
+    17,
+    21
+  ],
+  "rootChosenArrivals": [
+    17
+  ],
+  "backtracks": 2,
+  "activeDepth": 5,
+  "deferredRefinements": 2,
+  "suspendedFrames": 0,
+  "optimumProven": false,
+  "context": "98f7dc7608c56c8291067347326d77955cd04dc317ec9c51c4fc7bada760d6ef",
+  "finish": {
+    "tick": 67,
+    "height": 7,
+    "position": [
+      728.850632960287,
+      -1093.8231291279699
+    ],
+    "actualY": 7,
+    "physicalOnGround": true,
+    "interpretation": "nominal landing-height clock with terminal horizontal bounds, not an artificial physical floor"
+  },
+  "minimumRunPruning": {
+    "enabled": true,
+    "version": 1,
+    "excluded": 9,
+    "scope": "ordinary_ground_hold_before_latest_jump",
+    "certifiedDominance": false
+  },
+  "minimumTicksProven": false,
+  "repeatedProblemHashes": {},
+  "localRunExclusions": [
+    {
+      "frame": 3,
+      "candidate": "5cbf667733aeee086e769a66d9db1b070a74b76c81d3a79b4cb4583fa900cf23",
+      "reason": "extra_runs_before_latest_jump",
+      "heuristic": true,
+      "pattern": "48710d5015a4a03f811d1ebbcfe99591bbef06a4244c512b39f746eb4e91dbee",
+      "runTicks": 4,
+      "minimumFeasibleRunTicks": 3,
+      "groundState": 40,
+      "jumpInput": 44,
+      "representative": "7e2099efcd52891ac46907c91b108921b3d6c72a6f46b4354519a517cafe1636"
+    },
+    {
+      "frame": 3,
+      "candidate": "ecc0437777b6006ceac6e8b46c6e27d4380c82879cd8831146c14805ffaeb47d",
+      "reason": "extra_runs_before_latest_jump",
+      "heuristic": true,
+      "pattern": "48710d5015a4a03f811d1ebbcfe99591bbef06a4244c512b39f746eb4e91dbee",
+      "runTicks": 5,
+      "minimumFeasibleRunTicks": 3,
+      "groundState": 40,
+      "jumpInput": 45,
+      "representative": "7e2099efcd52891ac46907c91b108921b3d6c72a6f46b4354519a517cafe1636"
+    },
+    {
+      "frame": 3,
+      "candidate": "c60b26386b17c2fa9d955c30d4063c3fc05bc63f29d74f01e116c85213c207ea",
+      "reason": "extra_runs_before_latest_jump",
+      "heuristic": true,
+      "pattern": "48710d5015a4a03f811d1ebbcfe99591bbef06a4244c512b39f746eb4e91dbee",
+      "runTicks": 6,
+      "minimumFeasibleRunTicks": 3,
+      "groundState": 40,
+      "jumpInput": 46,
+      "representative": "7e2099efcd52891ac46907c91b108921b3d6c72a6f46b4354519a517cafe1636"
+    },
+    {
+      "frame": 3,
+      "candidate": "03f576a5746f62b303a748571286471470e1e62fd324501d2d276bae7153422e",
+      "reason": "extra_runs_before_latest_jump",
+      "heuristic": true,
+      "pattern": "48710d5015a4a03f811d1ebbcfe99591bbef06a4244c512b39f746eb4e91dbee",
+      "runTicks": 7,
+      "minimumFeasibleRunTicks": 3,
+      "groundState": 40,
+      "jumpInput": 47,
+      "representative": "7e2099efcd52891ac46907c91b108921b3d6c72a6f46b4354519a517cafe1636"
+    },
+    {
+      "frame": 3,
+      "candidate": "ab5fe1e1fb60b7359e882502fd774d5e6215ef54b5d8795fbf9d66707f5bf048",
+      "reason": "extra_runs_before_latest_jump",
+      "heuristic": true,
+      "pattern": "48710d5015a4a03f811d1ebbcfe99591bbef06a4244c512b39f746eb4e91dbee",
+      "runTicks": 8,
+      "minimumFeasibleRunTicks": 3,
+      "groundState": 40,
+      "jumpInput": 48,
+      "representative": "7e2099efcd52891ac46907c91b108921b3d6c72a6f46b4354519a517cafe1636"
+    },
+    {
+      "frame": 3,
+      "candidate": "5f9a72bf05d4cec42e5be076b788cee3884dfb1a7a02137f1489c721d670dc34",
+      "reason": "extra_runs_before_latest_jump",
+      "heuristic": true,
+      "pattern": "48710d5015a4a03f811d1ebbcfe99591bbef06a4244c512b39f746eb4e91dbee",
+      "runTicks": 9,
+      "minimumFeasibleRunTicks": 3,
+      "groundState": 40,
+      "jumpInput": 49,
+      "representative": "7e2099efcd52891ac46907c91b108921b3d6c72a6f46b4354519a517cafe1636"
+    },
+    {
+      "frame": 3,
+      "candidate": "d5cbae5b930c5f39402b7f4487231645273103c4c56c18598e0234118ae2fbe9",
+      "reason": "extra_runs_before_latest_jump",
+      "heuristic": true,
+      "pattern": "48710d5015a4a03f811d1ebbcfe99591bbef06a4244c512b39f746eb4e91dbee",
+      "runTicks": 10,
+      "minimumFeasibleRunTicks": 3,
+      "groundState": 40,
+      "jumpInput": 50,
+      "representative": "7e2099efcd52891ac46907c91b108921b3d6c72a6f46b4354519a517cafe1636"
+    },
+    {
+      "frame": 3,
+      "candidate": "9124892f9a8358b206ea32cc2d5643b9d406789988547254bf85ca4649eab382",
+      "reason": "extra_runs_before_latest_jump",
+      "heuristic": true,
+      "pattern": "48710d5015a4a03f811d1ebbcfe99591bbef06a4244c512b39f746eb4e91dbee",
+      "runTicks": 11,
+      "minimumFeasibleRunTicks": 3,
+      "groundState": 40,
+      "jumpInput": 51,
+      "representative": "7e2099efcd52891ac46907c91b108921b3d6c72a6f46b4354519a517cafe1636"
+    },
+    {
+      "frame": 3,
+      "candidate": "3a12505271b027122c998d2c1f323682d79443a7c0d18aec78a510777819aca7",
+      "reason": "extra_runs_before_latest_jump",
+      "heuristic": true,
+      "pattern": "48710d5015a4a03f811d1ebbcfe99591bbef06a4244c512b39f746eb4e91dbee",
+      "runTicks": 12,
+      "minimumFeasibleRunTicks": 3,
+      "groundState": 40,
+      "jumpInput": 52,
+      "representative": "7e2099efcd52891ac46907c91b108921b3d6c72a6f46b4354519a517cafe1636"
+    }
+  ],
+  "calls": [
+    {
+      "call": 1,
+      "frame": 0,
+      "candidate": "e5117930a248df5e97bc1fa0c9f3785d9544a28817c3745cece334c0b075eca9",
+      "goal": "b2",
+      "ticks": 17,
+      "jumps": [
+        8
+      ],
+      "localRuns": 8,
+      "finalContact": "physical support",
+      "hardRows": 80,
+      "workerStatus": "feasible",
+      "finalProgramResult": "feasible: lower_bound_reached",
+      "problemHash": "c341eef87b4b285e501e33ddd76cbdb09d8f7116a5ae9712aa02f329a9b7ac88"
+    },
+    {
+      "call": 2,
+      "frame": 0,
+      "candidate": "876b13881e570bedd29eacd350d90623777869309fb7879fde995c14fbca3e1e",
+      "goal": "b2",
+      "ticks": 21,
+      "jumps": [
+        0,
+        12
+      ],
+      "localRuns": 0,
+      "finalContact": "physical support",
+      "hardRows": 24,
+      "workerStatus": "feasible",
+      "finalProgramResult": "feasible: lower_bound_reached",
+      "problemHash": "e838b866eae6d187e632862e26e0915d0a956a05dde603de2747fae7db74aaca"
+    },
+    {
+      "call": 3,
+      "frame": 1,
+      "candidate": "27135d4de3dededd1b1a5df4a2ca4a13c730fe60e98c506fa4f9211e813378ee",
+      "goal": "b3",
+      "ticks": 27,
+      "jumps": [
+        8,
+        18
+      ],
+      "localRuns": 1,
+      "finalContact": "physical support",
+      "hardRows": 140,
+      "workerStatus": "unknown",
+      "finalProgramResult": "unknown: contact_search_exhausted",
+      "problemHash": "b1a196f2215e42a202923a3e0984e1079116e78085d626729c7e5a1830f95052"
+    },
+    {
+      "call": 4,
+      "frame": 1,
+      "candidate": "7c6768df7ea72b1199c5936da27fde44401cb9b7ab964790c00a42acc340696c",
+      "goal": "b3",
+      "ticks": 28,
+      "jumps": [
+        8,
+        19
+      ],
+      "localRuns": 2,
+      "finalContact": "physical support",
+      "hardRows": 148,
+      "workerStatus": "feasible",
+      "finalProgramResult": "feasible: lower_bound_reached",
+      "problemHash": "3d90295dffac384fd1137d4055b37ce6d58e2ea327b770334df9d8feae01a6b8"
+    },
+    {
+      "call": 5,
+      "frame": 2,
+      "candidate": "b215554e6480397c5597a44d8862294038e5fcbb0865811eedacc446bfc36e58",
+      "goal": "b4",
+      "ticks": 40,
+      "jumps": [
+        8,
+        19,
+        30
+      ],
+      "localRuns": 2,
+      "finalContact": "physical support",
+      "hardRows": 188,
+      "workerStatus": "feasible",
+      "finalProgramResult": "feasible: lower_bound_reached",
+      "problemHash": "b6c9cb2b87a0411fd50f9e9ee70ae74f19acd03e7859164a91b68fe6d4dcc659"
+    },
+    {
+      "call": 6,
+      "frame": 3,
+      "candidate": "5d8140b3ee15b43faf92cf07e465837ed1180a5f3241ba685d8d2385b5e86623",
+      "goal": "b5",
+      "ticks": 57,
+      "jumps": [
+        8,
+        19,
+        30,
+        42
+      ],
+      "localRuns": 2,
+      "finalContact": "physical support",
+      "hardRows": 230,
+      "workerStatus": "unknown",
+      "finalProgramResult": "unknown: contact_search_exhausted",
+      "problemHash": "0ba4282df5842c8fec856d2f808da924a05a22b8e3d95a25ddf3b46e5d58849e"
+    },
+    {
+      "call": 7,
+      "frame": 3,
+      "candidate": "7e2099efcd52891ac46907c91b108921b3d6c72a6f46b4354519a517cafe1636",
+      "goal": "b5",
+      "ticks": 58,
+      "jumps": [
+        8,
+        19,
+        30,
+        43
+      ],
+      "localRuns": 3,
+      "finalContact": "physical support",
+      "hardRows": 239,
+      "workerStatus": "feasible",
+      "finalProgramResult": "feasible: lower_bound_reached",
+      "problemHash": "cb6d4aa9814663b6ee1450b7fb3d879949789151fda22a43a1cf680a79740986"
+    },
+    {
+      "call": 8,
+      "frame": 4,
+      "candidate": "9a323a64a56fad692b7f3c63cbe8f82d5dafa1c35ac93cdfe60d576e1dfb631c",
+      "goal": "landing_height_region",
+      "ticks": 67,
+      "jumps": [
+        8,
+        19,
+        30,
+        43,
+        58
+      ],
+      "localRuns": 0,
+      "finalContact": "airborne",
+      "hardRows": 272,
+      "workerStatus": "feasible",
+      "finalProgramResult": "feasible: deadline",
+      "problemHash": "c5170ff44f2c7cb31a38bffac3ed279ff4692d8ce46a65dca2ff7e2859fa82d1"
+    },
+    {
+      "call": 9,
+      "frame": 4,
+      "candidate": "9eede9a56db638c97992845fb7c3272af4f8425861f5ed8c4438cd3aca2bd8b3",
+      "goal": "landing_height_region",
+      "ticks": 67,
+      "jumps": [
+        8,
+        19,
+        30,
+        43,
+        58
+      ],
+      "localRuns": 0,
+      "finalContact": "physical support",
+      "hardRows": 278,
+      "workerStatus": "feasible",
+      "finalProgramResult": "feasible: deadline",
+      "problemHash": "f05d5e3a788472261d5511a15cdbb452089e3d7775a576073ce84e19fc24331b"
+    },
+    {
+      "call": 10,
+      "frame": 3,
+      "candidate": "675d9a11cc1c1e9daa49b32c6a2f773e04468ccfdda14a808903686d118e2a28",
+      "goal": "b5",
+      "ticks": 67,
+      "jumps": [
+        8,
+        19,
+        30,
+        40,
+        52
+      ],
+      "localRuns": 0,
+      "finalContact": "physical support",
+      "hardRows": 232,
+      "workerStatus": "feasible",
+      "finalProgramResult": "unknown: deadline",
+      "problemHash": "f402313dac1cfd494c85a8a22603e83c965f185b379bcf07c3a6161c01e3b8ec"
+    },
+    {
+      "call": 11,
+      "frame": 3,
+      "candidate": "7e2099efcd52891ac46907c91b108921b3d6c72a6f46b4354519a517cafe1636",
+      "goal": "b5",
+      "ticks": 58,
+      "jumps": [
+        8,
+        19,
+        30,
+        43
+      ],
+      "localRuns": 3,
+      "finalContact": "physical support",
+      "hardRows": 240,
+      "workerStatus": "feasible",
+      "finalProgramResult": "feasible: lower_bound_reached",
+      "problemHash": "19155811fbbf403724d5aeaaf9574ef41df5e8dd4bb35a313ad907a6cbfa9ebc"
+    },
+    {
+      "call": 12,
+      "frame": 5,
+      "candidate": "26c869844ba2430581b9fc955edcead736bdf137c7d0ac988191dde14d544558",
+      "goal": "landing_height_region",
+      "ticks": 67,
+      "jumps": [
+        8,
+        19,
+        30,
+        43,
+        58
+      ],
+      "localRuns": 0,
+      "finalContact": "airborne",
+      "hardRows": 273,
+      "workerStatus": "feasible",
+      "finalProgramResult": "feasible: deadline",
+      "problemHash": "f14436c2c25fc180df1748590c12967e3ded1534feb76408e584b6e32e59cf2a"
+    }
+  ],
+  "rawReportSha256": "a174d60206176fcf2bd5fd3255f120a1b466d3fefd3256d616fd26a53a7a5e6a"
+}

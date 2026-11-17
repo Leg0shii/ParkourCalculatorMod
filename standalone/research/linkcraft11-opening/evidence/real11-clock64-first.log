@@ -1,0 +1,7 @@
+{"tick": 10, "scored": 13, "unknown": 7, "retained": 8, "generation": "exhausted", "progress": [null, -1189.4231184165951, -1189.4053064059567, -1189.3990564762573, -1189.3984041101155, -1189.4003998404066, -1189.4036196332927, -1189.4074000766627]}
+{"tick": 28, "scored": 1, "unknown": 19, "retained": 2, "generation": "candidate_limit", "progress": [null, -1185.8700983366348]}
+{"tick": 44, "scored": 3, "unknown": 17, "retained": 4, "generation": "candidate_limit", "progress": [null, -1185.946122339239, -1186.1870706367608, -1183.1014728136133]}
+{"tick": 55, "scored": 13, "unknown": 7, "retained": 8, "generation": "candidate_limit", "progress": [null, -1098.8832197368843, -1099.1835258345384, -1099.7000009881706, -1099.195579041309, -1099.4903497118787, -1098.8260251167285, -1099.577856001775]}
+{"tick": 28, "scored": 2, "unknown": 18, "retained": 3, "generation": "candidate_limit", "progress": [null, -1184.212238840257, -1184.2756546935493]}
+{"tick": 44, "scored": 0, "unknown": 3, "retained": 1, "generation": "exhausted", "progress": [null]}
+{"status": "unknown", "termination": "exhausted", "elapsed": 302.5743900835514, "work": {"numericalProposals": 892, "solverCalls": 430, "acceptedBranches": 0, "uniqueCompletePrograms": 0, "unitsByType": {}, "firstProposalSeconds": 0.29489587619900703, "firstAcceptedSeconds": null, "maxSolverCalls": 1024, "termination": null}, "position": null, "replays": 32}

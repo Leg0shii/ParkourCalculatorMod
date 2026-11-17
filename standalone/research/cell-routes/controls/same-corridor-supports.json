@@ -1,0 +1,120 @@
+{
+  "version": 1,
+  "sceneModel": "collision_boxes",
+  "geometryBounds": [
+    -5,
+    -5,
+    -5,
+    15,
+    12,
+    10
+  ],
+  "initial": {
+    "position": [
+      0.5,
+      1,
+      0.5
+    ],
+    "velocity": [
+      0.2,
+      -0.0784000015258789,
+      0
+    ],
+    "yaw": -90
+  },
+  "startBlock": "start",
+  "goalBlock": "goal",
+  "blocks": [
+    {
+      "id": "start",
+      "boxes": [
+        [
+          0,
+          0,
+          0,
+          1,
+          1,
+          1
+        ]
+      ]
+    },
+    {
+      "id": "middle0",
+      "boxes": [
+        [
+          1.5,
+          0,
+          0,
+          1.85,
+          0.5,
+          1
+        ]
+      ]
+    },
+    {
+      "id": "middle1",
+      "boxes": [
+        [
+          2.3,
+          0,
+          0,
+          2.65,
+          1,
+          1
+        ]
+      ]
+    },
+    {
+      "id": "middle2",
+      "boxes": [
+        [
+          3.1,
+          0,
+          0,
+          3.45,
+          0.5,
+          1
+        ]
+      ]
+    },
+    {
+      "id": "middle3",
+      "boxes": [
+        [
+          3.9000000000000004,
+          0,
+          0,
+          4.25,
+          1,
+          1
+        ]
+      ]
+    },
+    {
+      "id": "goal",
+      "boxes": [
+        [
+          5,
+          0,
+          0,
+          6,
+          1,
+          1
+        ]
+      ]
+    }
+  ],
+  "maxTotalRunTicks": 0,
+  "maxRunTicksPerJump": 0,
+  "maxWallHits": 0,
+  "maxContactCombinations": 0,
+  "movementSearch": {
+    "types": [
+      "normal"
+    ],
+    "maxInputs": 40,
+    "maxPrefixes": 64,
+    "maxQueuedPrefixes": 128,
+    "maxChoicesPerType": 16
+  }
+}

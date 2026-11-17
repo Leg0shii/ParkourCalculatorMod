@@ -1,0 +1,13 @@
+F
+======================================================================
+FAIL: test_repeated_ladder_ceiling_events_regenerate_the_complete_schedule (standalone.autonomy.tests.test_ladder_composition.LadderRegionTests.test_repeated_ladder_ceiling_events_regenerate_the_complete_schedule)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/pkc-orchestrator-baseline/standalone/autonomy/tests/test_ladder_composition.py", line 108, in test_repeated_ladder_ceiling_events_regenerate_the_complete_schedule
+    self.assertIsNotNone(changed)
+AssertionError: unexpectedly None
+
+----------------------------------------------------------------------
+Ran 1 test in 0.032s
+
+FAILED (failures=1)

@@ -1,0 +1,75 @@
+{
+  "cold": {
+    "source": "498c054cb8dd806ef6284b712e6244315ae2d821",
+    "status": "feasible",
+    "termination": "deadline",
+    "schema": 5,
+    "session": 1,
+    "elapsedSeconds": 161.45802821218967,
+    "firstFullSolutionSeconds": 91.2168291285634,
+    "workerCallsToFirstFull": 8,
+    "workerCallsThisSession": 10,
+    "cumulativeWorkerCalls": 10,
+    "storedRequestCount": 0,
+    "objective": -1094.5755032869683,
+    "independentReplays": 10,
+    "allReplaysPassed": true,
+    "rootArrivals": [
+      17,
+      21
+    ],
+    "rootChosenArrivals": [
+      17
+    ],
+    "backtracks": 2,
+    "activeDepth": 4,
+    "deferredRefinements": 2,
+    "suspendedFrames": 0,
+    "optimumProven": false,
+    "context": "e3a33cdd5f48206ceec324e56c07a564c8f8fe5d8883028d6ae44ad05834ef54"
+  },
+  "resume": {
+    "source": "072a11116b485f2ca9f5c02e2a7cc6ae80b442a5",
+    "status": "feasible",
+    "termination": "deadline",
+    "schema": 5,
+    "session": 2,
+    "elapsedSeconds": 155.28604437410831,
+    "firstFullSolutionSeconds": 91.2168291285634,
+    "workerCallsToFirstFull": 8,
+    "workerCallsThisSession": 4,
+    "cumulativeWorkerCalls": 14,
+    "storedRequestCount": 4,
+    "objective": -1094.5755032869683,
+    "independentReplays": 18,
+    "allReplaysPassed": true,
+    "rootArrivals": [
+      17,
+      21
+    ],
+    "rootChosenArrivals": [
+      17
+    ],
+    "backtracks": 3,
+    "activeDepth": 5,
+    "deferredRefinements": 3,
+    "suspendedFrames": 0,
+    "optimumProven": false,
+    "context": "e3a33cdd5f48206ceec324e56c07a564c8f8fe5d8883028d6ae44ad05834ef54"
+  },
+  "exactResume": true,
+  "repeatedCompletedRequests": 0,
+  "additionalWorkerCalls": 4,
+  "newCallsWithExactRequest": 4,
+  "sourceTransition": "same semantic context; additive request/validation logging added after cold run",
+  "artifacts": {
+    "real11-cold.json.gz": {
+      "bytes": 3705865,
+      "sha256": "31de127cd6c29b06357c02c3606306b5772f87714f19593ce59476e8b6a2f200"
+    },
+    "real11-resume.json.gz": {
+      "bytes": 8056164,
+      "sha256": "26b05b29c7131331f7b05168a8c49ad959902f2b2b7103ba4a0008171d7036e1"
+    }
+  }
+}

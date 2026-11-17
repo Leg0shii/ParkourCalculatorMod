@@ -1,0 +1,41 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/private/tmp/parkour-real11-initial-run-ticks/standalone/autonomy/cell_routes/automatic_experiment.py", line 84, in <module>
+    if __name__=='__main__':raise SystemExit(main())
+                                             ^^^^^^
+  File "/private/tmp/parkour-real11-initial-run-ticks/standalone/autonomy/cell_routes/automatic_experiment.py", line 72, in main
+    result,validation=run(fixture,compiler,python_executable=args.python,resume_state=previous,
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/parkour-real11-initial-run-ticks/standalone/autonomy/cell_routes/automatic_experiment.py", line 33, in run
+    result=find_checkpoint_route(request,compiler,task_goal=fixture.get('terminalGoal'),
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/parkour-real11-initial-run-ticks/standalone/autonomy/cell_routes/checkpoint_search.py", line 238, in find_checkpoint_route
+    return search_routes(request,compiler,task_goal=task_goal,spatial_settings=spatial_settings,**entry_options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/parkour-real11-initial-run-ticks/standalone/autonomy/cell_routes/route_queue.py", line 140, in search_routes
+    result=find_checkpoint_route(local_request,compiler,corridor=corridor,**local)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/parkour-real11-initial-run-ticks/standalone/autonomy/cell_routes/checkpoint_search.py", line 291, in find_checkpoint_route
+    return search_goals(scene, counted, adapter, work, motion, cfg=cfg, plans=plans,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/parkour-real11-initial-run-ticks/standalone/autonomy/cell_routes/depth_first.py", line 502, in search_goals
+    score(f,program,previous)
+  File "/private/tmp/parkour-real11-initial-run-ticks/standalone/autonomy/cell_routes/depth_first.py", line 335, in score
+    result = evaluate_program(target_scene,program,compiler,active_adapter,work,motion,checkpoint=cp,
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/parkour-real11-initial-run-ticks/standalone/autonomy/cell_routes/checkpoint_search.py", line 71, in evaluate_program
+    compiled = compile_program(scene, program, require_complete=complete and virtual is None)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/parkour-real11-initial-run-ticks/standalone/autonomy/movement_composition.py", line 278, in compile_program
+    compiled = compile_block_path(scene, [scene['startBlock'], scene['goalBlock']], [edge])
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/parkour-real11-initial-run-ticks/standalone/autonomy/block_search.py", line 334, in compile_block_path
+    route = prepare_route({'version': 1, 'initial': scene['initial'], 'blocks': blocks,
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/parkour-real11-initial-run-ticks/standalone/autonomy/route.py", line 16, in prepare_route
+    route['objective'] = objective_spec(route.get('objective'))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/parkour-real11-initial-run-ticks/standalone/autonomy/ranking.py", line 10, in objective_spec
+    raise ValueError('Objective must contain only axis and sense')
+ValueError: Objective must contain only axis and sense

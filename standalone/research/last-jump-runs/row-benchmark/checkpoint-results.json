@@ -1,0 +1,104 @@
+{
+  "source": "61355976f98f2091ee26bae53ddf81ebf6820004",
+  "benchmarkBaseRevision": "7d2726c30d690c2de72285d43c3d36581c3c2b7a",
+  "fullRouteSearch": false,
+  "legacyPrettyBytes": 110518965,
+  "legacyGzipBytes": 4380750,
+  "legacyEncodeCompressSeconds": 4.283675666898489,
+  "originalReportGzipBytes": 6302813,
+  "originalReportCompactBytes": 68405810,
+  "codeHashes": {
+    "standalone/autonomy/checkpoint_store.py": "82bb51c2e8e0096525e2635fcad5b0c3203e0c12f6e414d84714eae9c264ab1c",
+    "standalone/autonomy/cell_routes/checkpoint_persistence.py": "7d284336bb0f5ca3c8f96981321b83b0507a9db7c1d4e8c0e77cd6dc935b2607"
+  },
+  "initialCheckpointSeconds": 1.1933370865881443,
+  "initialStoreBytes": 1917101,
+  "repairSaveSeconds": [
+    0.013411454856395721,
+    0.01245800033211708,
+    0.011935167014598846,
+    0.012665331363677979,
+    0.011926915496587753
+  ],
+  "repairSaveMedianSeconds": 0.01245800033211708,
+  "repairStateRoundTrip": true,
+  "fixedRequest": [
+    {
+      "format": "none",
+      "elapsedSeconds": 0.2838312089443207,
+      "status": "feasible",
+      "termination": "worker_finished",
+      "phases": [
+        {
+          "type": "phase",
+          "status": "Solve_Succeeded",
+          "iterations": 17,
+          "seconds": 0.04819028824567795,
+          "zeros": 0,
+          "survivors": 0,
+          "kind": "carry",
+          "seed": "initial",
+          "ladderSaturated": 0,
+          "capAttempt": 0
+        },
+        {
+          "type": "phase",
+          "status": "Solve_Succeeded",
+          "iterations": 25,
+          "seconds": 0.05288262292742729,
+          "zeros": 0,
+          "survivors": 0,
+          "kind": "carry",
+          "seed": "fallback",
+          "ladderSaturated": 0,
+          "capAttempt": 0
+        }
+      ],
+      "callbackSeconds": [],
+      "objective": -1093.823129064622
+    },
+    {
+      "format": "stored_repair",
+      "elapsedSeconds": 0.20975012332201004,
+      "status": "feasible",
+      "termination": "worker_finished",
+      "phases": [
+        {
+          "type": "phase",
+          "status": "Solve_Succeeded",
+          "iterations": 17,
+          "seconds": 0.04539162293076515,
+          "zeros": 0,
+          "survivors": 0,
+          "kind": "carry",
+          "seed": "initial",
+          "ladderSaturated": 0,
+          "capAttempt": 0
+        },
+        {
+          "type": "phase",
+          "status": "Solve_Succeeded",
+          "iterations": 25,
+          "seconds": 0.05139070749282837,
+          "zeros": 0,
+          "survivors": 0,
+          "kind": "carry",
+          "seed": "fallback",
+          "ladderSaturated": 0,
+          "capAttempt": 0
+        }
+      ],
+      "callbackSeconds": [
+        0.013624832034111023,
+        0.01206287369132042,
+        0.012692246586084366
+      ],
+      "objective": -1093.823129064622
+    }
+  ],
+  "callbackStateRoundTrip": true,
+  "finalSaveAndCompactSeconds": 0.8776907920837402,
+  "finalStoreBytes": 1974444,
+  "finalUniqueEncodedBytes": 10565118,
+  "finalReportRoundTrip": true
+}

@@ -1,0 +1,158 @@
+{
+  "version": 1,
+  "sceneModel": "collision_boxes",
+  "geometryBounds": [
+    -8,
+    -5,
+    -8,
+    8,
+    12,
+    8
+  ],
+  "initial": {
+    "position": [
+      0.6,
+      1,
+      -0.2
+    ],
+    "velocity": [
+      0.1,
+      -0.0784000015258789,
+      0.3
+    ],
+    "yaw": 0.0
+  },
+  "startBlock": "start",
+  "goalBlock": "b",
+  "climbableCells": [
+    [
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      1,
+      0
+    ],
+    [
+      0,
+      0,
+      2
+    ],
+    [
+      0,
+      1,
+      2
+    ],
+    [
+      0,
+      2,
+      2
+    ]
+  ],
+  "maxJumps": 1,
+  "maxRunTicksPerJump": 0,
+  "maxTotalRunTicks": 0,
+  "maxContactCombinations": 0,
+  "objective": {
+    "axis": "X",
+    "sense": "MAX"
+  },
+  "maxWallHits": 2,
+  "maxWallHitCandidates": 24,
+  "maxCombinedEvents": 3,
+  "ceilingHits": true,
+  "stairBoost": true,
+  "inputs": {
+    "sprint": true,
+    "force45": true,
+    "forward": 0.9800000190734863,
+    "strafe": 0.0,
+    "incomingSprint": false
+  },
+  "maxPrefixes": 200,
+  "maxQueuedPrefixes": 4000,
+  "maxFlightInputs": 200,
+  "maxContactBranches": 16,
+  "maxBlockagesPerObstacle": 3,
+  "maxHorizontalBlockagesPerObstacle": 2,
+  "maxVerticalBlockagesPerObstacle": 2,
+  "maxPassageCandidates": 128,
+  "supportClearance": 1e-06,
+  "ladderSearch": {
+    "maxEntryInputs": 12,
+    "maxInputs": 48,
+    "entryDelay": 5,
+    "maxSkeletons": 2048,
+    "maxSchedules": 2000,
+    "maxMaskWork": 30000,
+    "maxRanked": 64,
+    "representatives": 3,
+    "maxNumericalSchedules": 64,
+    "maxOrdinaryPaths": 1,
+    "maxSuffixPaths": 1,
+    "maxRouteContexts": 1,
+    "maxRunAllocations": 4,
+    "minClimbInputs": 2,
+    "maxInteractions": 2,
+    "requireLadder": true,
+    "maxContactVariants": 0,
+    "maxMixedContacts": 3,
+    "maxTransferPrograms": 64
+  },
+  "blocks": [
+    {
+      "id": "start",
+      "boxes": [
+        [
+          -1,
+          0,
+          -1,
+          1,
+          1,
+          0
+        ]
+      ]
+    },
+    {
+      "id": "a",
+      "boxes": [
+        [
+          1,
+          0,
+          0,
+          2,
+          2,
+          1
+        ]
+      ]
+    },
+    {
+      "id": "b",
+      "boxes": [
+        [
+          1,
+          0,
+          2,
+          2,
+          3,
+          3
+        ]
+      ]
+    },
+    {
+      "id": "ceiling",
+      "boxes": [
+        [
+          0.1,
+          3.829999952316284,
+          0.95,
+          1,
+          4.5,
+          1.2
+        ]
+      ]
+    }
+  ]
+}

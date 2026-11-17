@@ -54,6 +54,8 @@ replay_*.log
 bash.exe.stackdump
 # Python bytecode (COPT research harness)
 __pycache__/
+.venv-ipopt
+.venv-guidance/
 
 # COPT research scratch (struct/probe dumps, regenerated locally)
 research/copt/data/

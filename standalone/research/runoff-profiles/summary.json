@@ -1,0 +1,74 @@
+{
+  "runoff": {
+    "fixture": "blocks-runoff.json",
+    "fixtureSha256": "d021ac948d06f0da0e466981b76bf9af80bd38989e030dea498771de3b5bb3a2",
+    "blockIds": [
+      "start",
+      "goal"
+    ],
+    "profileKinds": [
+      "run_off"
+    ],
+    "airtimes": [
+      4
+    ],
+    "allocation": [
+      4
+    ],
+    "ticks": 8,
+    "jumpInputs": [],
+    "searchSeconds": 1.8546337522566319,
+    "violation": 0.0,
+    "horizontalProblemHash": "7ebc214d0d8b9417b31a699049c7618806b819e7cec2e3dfa1465568ee7d3860",
+    "fullProblemHash": "f6ff7134b7374e7ec27362347ccd6bf2cdf6c296ed15775e61e92c5c346b1516",
+    "reachBounds": {
+      "jump:12": 5.218945858253197,
+      "jump:13": 5.5587924650982865,
+      "run_off:4": 1.8667441631347519,
+      "jump:10": 4.5236349097679485,
+      "jump:2": 1.4422909194495244
+    },
+    "ticksLowerBound": 4,
+    "minimumTicksProven": false,
+    "evaluatedPrefixes": 4
+  },
+  "jump-runoff": {
+    "fixture": "blocks-jump-runoff.json",
+    "fixtureSha256": "48d5f64fd09dbbde5bd8e6a68dc5502f6146e3ba418959c8dfd640c36419bd0d",
+    "blockIds": [
+      "start",
+      "middle",
+      "goal"
+    ],
+    "profileKinds": [
+      "ordinary",
+      "run_off"
+    ],
+    "airtimes": [
+      12,
+      4
+    ],
+    "allocation": [
+      0,
+      0
+    ],
+    "ticks": 16,
+    "jumpInputs": [
+      0
+    ],
+    "searchSeconds": 0.9687180407345295,
+    "violation": 0.0,
+    "horizontalProblemHash": "7b803352909023f7a4f7153acd07252c8f083d58ed266f52041325825ccac9c8",
+    "fullProblemHash": "eda614a2b3a7fae9ac8a6567887a07ab570b3bda1d73dfefbc63024cf00a0430",
+    "reachBounds": {
+      "jump:12": 5.218945858282447,
+      "jump:13": 5.558792465129787,
+      "run_off:4": 1.8667441631460018,
+      "jump:10": 4.5236349097926984,
+      "jump:2": 1.4422909194562743
+    },
+    "ticksLowerBound": 13,
+    "minimumTicksProven": false,
+    "evaluatedPrefixes": 6
+  }
+}

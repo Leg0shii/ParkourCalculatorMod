@@ -1,0 +1,5398 @@
+{
+  "baseRevision": "e9345360b3214781c241758a586c3d1a93159de0",
+  "fullRouteSearch": false,
+  "casadiVersion": "3.8.1",
+  "runs": [
+    {
+      "problemHash": "b1a196f2215e",
+      "ticks": 27,
+      "mode": "directional_early_stop",
+      "repetition": 0,
+      "elapsedSeconds": 0.07810324802994728,
+      "status": "Infeasible_Problem_Detected",
+      "iterations": 118,
+      "feasible": false,
+      "measuredObjective": -1101.2228011377097
+    },
+    {
+      "problemHash": "b1a196f2215e",
+      "ticks": 27,
+      "mode": "constant_feasibility",
+      "repetition": 0,
+      "elapsedSeconds": 0.03160449489951134,
+      "status": "Infeasible_Problem_Detected",
+      "iterations": 33,
+      "feasible": false,
+      "measuredObjective": -1101.2228011377097
+    },
+    {
+      "problemHash": "b1a196f2215e",
+      "ticks": 27,
+      "mode": "optimization",
+      "repetition": 0,
+      "elapsedSeconds": 0.07301932945847511,
+      "status": "Infeasible_Problem_Detected",
+      "iterations": 118,
+      "feasible": false,
+      "measuredObjective": -1101.2228011377097
+    },
+    {
+      "problemHash": "b1a196f2215e",
+      "ticks": 27,
+      "mode": "constant_feasibility",
+      "repetition": 1,
+      "elapsedSeconds": 0.030160292983055115,
+      "status": "Infeasible_Problem_Detected",
+      "iterations": 33,
+      "feasible": false,
+      "measuredObjective": -1101.2228011377097
+    },
+    {
+      "problemHash": "b1a196f2215e",
+      "ticks": 27,
+      "mode": "optimization",
+      "repetition": 1,
+      "elapsedSeconds": 0.06748546287417412,
+      "status": "Infeasible_Problem_Detected",
+      "iterations": 118,
+      "feasible": false,
+      "measuredObjective": -1101.2228011377097
+    },
+    {
+      "problemHash": "b1a196f2215e",
+      "ticks": 27,
+      "mode": "directional_early_stop",
+      "repetition": 1,
+      "elapsedSeconds": 0.06237287074327469,
+      "status": "Infeasible_Problem_Detected",
+      "iterations": 118,
+      "feasible": false,
+      "measuredObjective": -1101.2228011377097
+    },
+    {
+      "problemHash": "b1a196f2215e",
+      "ticks": 27,
+      "mode": "optimization",
+      "repetition": 2,
+      "elapsedSeconds": 0.0615265853703022,
+      "status": "Infeasible_Problem_Detected",
+      "iterations": 118,
+      "feasible": false,
+      "measuredObjective": -1101.2228011377097
+    },
+    {
+      "problemHash": "b1a196f2215e",
+      "ticks": 27,
+      "mode": "directional_early_stop",
+      "repetition": 2,
+      "elapsedSeconds": 0.07051550596952438,
+      "status": "Infeasible_Problem_Detected",
+      "iterations": 118,
+      "feasible": false,
+      "measuredObjective": -1101.2228011377097
+    },
+    {
+      "problemHash": "b1a196f2215e",
+      "ticks": 27,
+      "mode": "constant_feasibility",
+      "repetition": 2,
+      "elapsedSeconds": 0.03245079144835472,
+      "status": "Infeasible_Problem_Detected",
+      "iterations": 33,
+      "feasible": false,
+      "measuredObjective": -1101.2228011377097
+    },
+    {
+      "problemHash": "b6c9cb2b87a0",
+      "ticks": 40,
+      "mode": "directional_early_stop",
+      "repetition": 0,
+      "elapsedSeconds": 0.026081044226884842,
+      "status": "User_Requested_Stop",
+      "iterations": 16,
+      "feasible": true,
+      "measuredObjective": -1099.9261075080976
+    },
+    {
+      "problemHash": "b6c9cb2b87a0",
+      "ticks": 40,
+      "mode": "constant_feasibility",
+      "repetition": 0,
+      "elapsedSeconds": 0.028376493602991104,
+      "status": "User_Requested_Stop",
+      "iterations": 16,
+      "feasible": true,
+      "measuredObjective": -1100.137501286943
+    },
+    {
+      "problemHash": "b6c9cb2b87a0",
+      "ticks": 40,
+      "mode": "optimization",
+      "repetition": 0,
+      "elapsedSeconds": 0.028718873858451843,
+      "status": "Solve_Succeeded",
+      "iterations": 18,
+      "feasible": true,
+      "measuredObjective": -1099.926102201057
+    },
+    {
+      "problemHash": "b6c9cb2b87a0",
+      "ticks": 40,
+      "mode": "constant_feasibility",
+      "repetition": 1,
+      "elapsedSeconds": 0.025663502514362335,
+      "status": "User_Requested_Stop",
+      "iterations": 16,
+      "feasible": true,
+      "measuredObjective": -1100.137501286943
+    },
+    {
+      "problemHash": "b6c9cb2b87a0",
+      "ticks": 40,
+      "mode": "optimization",
+      "repetition": 1,
+      "elapsedSeconds": 0.025703374296426773,
+      "status": "Solve_Succeeded",
+      "iterations": 18,
+      "feasible": true,
+      "measuredObjective": -1099.926102201057
+    },
+    {
+      "problemHash": "b6c9cb2b87a0",
+      "ticks": 40,
+      "mode": "directional_early_stop",
+      "repetition": 1,
+      "elapsedSeconds": 0.02357262372970581,
+      "status": "User_Requested_Stop",
+      "iterations": 16,
+      "feasible": true,
+      "measuredObjective": -1099.9261075080976
+    },
+    {
+      "problemHash": "b6c9cb2b87a0",
+      "ticks": 40,
+      "mode": "optimization",
+      "repetition": 2,
+      "elapsedSeconds": 0.025212790817022324,
+      "status": "Solve_Succeeded",
+      "iterations": 18,
+      "feasible": true,
+      "measuredObjective": -1099.926102201057
+    },
+    {
+      "problemHash": "b6c9cb2b87a0",
+      "ticks": 40,
+      "mode": "directional_early_stop",
+      "repetition": 2,
+      "elapsedSeconds": 0.026515502482652664,
+      "status": "User_Requested_Stop",
+      "iterations": 16,
+      "feasible": true,
+      "measuredObjective": -1099.9261075080976
+    },
+    {
+      "problemHash": "b6c9cb2b87a0",
+      "ticks": 40,
+      "mode": "constant_feasibility",
+      "repetition": 2,
+      "elapsedSeconds": 0.024858206510543823,
+      "status": "User_Requested_Stop",
+      "iterations": 16,
+      "feasible": true,
+      "measuredObjective": -1100.137501286943
+    },
+    {
+      "problemHash": "0ba4282df584",
+      "ticks": 57,
+      "mode": "directional_early_stop",
+      "repetition": 0,
+      "elapsedSeconds": 0.07801029458642006,
+      "status": "Infeasible_Problem_Detected",
+      "iterations": 55,
+      "feasible": false,
+      "measuredObjective": -1097.2135543562556
+    },
+    {
+      "problemHash": "0ba4282df584",
+      "ticks": 57,
+      "mode": "constant_feasibility",
+      "repetition": 0,
+      "elapsedSeconds": 0.0561295822262764,
+      "status": "Infeasible_Problem_Detected",
+      "iterations": 42,
+      "feasible": false,
+      "measuredObjective": -1097.2135543562556
+    },
+    {
+      "problemHash": "0ba4282df584",
+      "ticks": 57,
+      "mode": "optimization",
+      "repetition": 0,
+      "elapsedSeconds": 0.053482960909605026,
+      "status": "Infeasible_Problem_Detected",
+      "iterations": 55,
+      "feasible": false,
+      "measuredObjective": -1097.2135543562556
+    },
+    {
+      "problemHash": "0ba4282df584",
+      "ticks": 57,
+      "mode": "constant_feasibility",
+      "repetition": 1,
+      "elapsedSeconds": 0.05322037264704704,
+      "status": "Infeasible_Problem_Detected",
+      "iterations": 42,
+      "feasible": false,
+      "measuredObjective": -1097.2135543562556
+    },
+    {
+      "problemHash": "0ba4282df584",
+      "ticks": 57,
+      "mode": "optimization",
+      "repetition": 1,
+      "elapsedSeconds": 0.052337292581796646,
+      "status": "Infeasible_Problem_Detected",
+      "iterations": 55,
+      "feasible": false,
+      "measuredObjective": -1097.2135543562556
+    },
+    {
+      "problemHash": "0ba4282df584",
+      "ticks": 57,
+      "mode": "directional_early_stop",
+      "repetition": 1,
+      "elapsedSeconds": 0.05638333782553673,
+      "status": "Infeasible_Problem_Detected",
+      "iterations": 55,
+      "feasible": false,
+      "measuredObjective": -1097.2135543562556
+    },
+    {
+      "problemHash": "0ba4282df584",
+      "ticks": 57,
+      "mode": "optimization",
+      "repetition": 2,
+      "elapsedSeconds": 0.05365579202771187,
+      "status": "Infeasible_Problem_Detected",
+      "iterations": 55,
+      "feasible": false,
+      "measuredObjective": -1097.2135543562556
+    },
+    {
+      "problemHash": "0ba4282df584",
+      "ticks": 57,
+      "mode": "directional_early_stop",
+      "repetition": 2,
+      "elapsedSeconds": 0.05574283003807068,
+      "status": "Infeasible_Problem_Detected",
+      "iterations": 55,
+      "feasible": false,
+      "measuredObjective": -1097.2135543562556
+    },
+    {
+      "problemHash": "0ba4282df584",
+      "ticks": 57,
+      "mode": "constant_feasibility",
+      "repetition": 2,
+      "elapsedSeconds": 0.054664745926856995,
+      "status": "Infeasible_Problem_Detected",
+      "iterations": 42,
+      "feasible": false,
+      "measuredObjective": -1097.2135543562556
+    },
+    {
+      "problemHash": "cb6d4aa98146",
+      "ticks": 58,
+      "mode": "directional_early_stop",
+      "repetition": 0,
+      "elapsedSeconds": 0.03184916824102402,
+      "status": "User_Requested_Stop",
+      "iterations": 11,
+      "feasible": true,
+      "measuredObjective": -1095.8865272162707
+    },
+    {
+      "problemHash": "cb6d4aa98146",
+      "ticks": 58,
+      "mode": "constant_feasibility",
+      "repetition": 0,
+      "elapsedSeconds": 0.02807329222559929,
+      "status": "User_Requested_Stop",
+      "iterations": 8,
+      "feasible": true,
+      "measuredObjective": -1096.0971932945997
+    },
+    {
+      "problemHash": "cb6d4aa98146",
+      "ticks": 58,
+      "mode": "optimization",
+      "repetition": 0,
+      "elapsedSeconds": 0.033111002296209335,
+      "status": "Solve_Succeeded",
+      "iterations": 13,
+      "feasible": true,
+      "measuredObjective": -1095.886519677667
+    },
+    {
+      "problemHash": "cb6d4aa98146",
+      "ticks": 58,
+      "mode": "constant_feasibility",
+      "repetition": 1,
+      "elapsedSeconds": 0.029205456376075745,
+      "status": "User_Requested_Stop",
+      "iterations": 8,
+      "feasible": true,
+      "measuredObjective": -1096.0971932945997
+    },
+    {
+      "problemHash": "cb6d4aa98146",
+      "ticks": 58,
+      "mode": "optimization",
+      "repetition": 1,
+      "elapsedSeconds": 0.032574500888586044,
+      "status": "Solve_Succeeded",
+      "iterations": 13,
+      "feasible": true,
+      "measuredObjective": -1095.886519677667
+    },
+    {
+      "problemHash": "cb6d4aa98146",
+      "ticks": 58,
+      "mode": "directional_early_stop",
+      "repetition": 1,
+      "elapsedSeconds": 0.03186420723795891,
+      "status": "User_Requested_Stop",
+      "iterations": 11,
+      "feasible": true,
+      "measuredObjective": -1095.8865272162707
+    },
+    {
+      "problemHash": "cb6d4aa98146",
+      "ticks": 58,
+      "mode": "optimization",
+      "repetition": 2,
+      "elapsedSeconds": 0.03458278998732567,
+      "status": "Solve_Succeeded",
+      "iterations": 13,
+      "feasible": true,
+      "measuredObjective": -1095.886519677667
+    },
+    {
+      "problemHash": "cb6d4aa98146",
+      "ticks": 58,
+      "mode": "directional_early_stop",
+      "repetition": 2,
+      "elapsedSeconds": 0.03070812299847603,
+      "status": "User_Requested_Stop",
+      "iterations": 11,
+      "feasible": true,
+      "measuredObjective": -1095.8865272162707
+    },
+    {
+      "problemHash": "cb6d4aa98146",
+      "ticks": 58,
+      "mode": "constant_feasibility",
+      "repetition": 2,
+      "elapsedSeconds": 0.029512163251638412,
+      "status": "User_Requested_Stop",
+      "iterations": 8,
+      "feasible": true,
+      "measuredObjective": -1096.0971932945997
+    }
+  ],
+  "codeHashes": {
+    "standalone/ipopt/worker.py": "028ec61dae1fe240c1ad3a48df13fdc5e3a6e19cda19d16faae6acc7c18c658a",
+    "standalone/autonomy/cell_routes/checkpoint_search.py": "bda35a029dfdbfe7d501592c56b140a02aa41c71e1681f9412968a2b31463fec"
+  },
+  "inputSource": "61355976f98f2091ee26bae53ddf81ebf6820004",
+  "freshWorkers": [
+    {
+      "problemHash": "b1a196f2215e",
+      "ticks": 27,
+      "mode": "optimization",
+      "status": "unknown",
+      "termination": "worker_finished",
+      "elapsedSeconds": 0.25373708456754684,
+      "originalRowsFeasible": false,
+      "phases": [
+        {
+          "type": "phase",
+          "status": "Infeasible_Problem_Detected",
+          "iterations": 118,
+          "seconds": 0.0705665834248066,
+          "zeros": 0,
+          "survivors": 0,
+          "kind": "carry",
+          "seed": "initial",
+          "ladderSaturated": 0,
+          "capAttempt": 0,
+          "simpleBoundExtraction": true,
+          "constraintRowsBeforeExtraction": 152,
+          "wallReduction": {
+            "original": 140,
+            "retained": 44,
+            "representatives": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              48,
+              49,
+              50,
+              51,
+              88,
+              89,
+              90,
+              91
+            ],
+            "sourceIndices": [
+              [
+                0,
+                8,
+                44,
+                52,
+                96
+              ],
+              [
+                1,
+                9,
+                45,
+                53,
+                97
+              ],
+              [
+                2,
+                10,
+                46,
+                54,
+                98
+              ],
+              [
+                3,
+                11,
+                47,
+                55,
+                99
+              ],
+              [
+                4,
+                92,
+                136
+              ],
+              [
+                5,
+                93,
+                137
+              ],
+              [
+                6,
+                94,
+                138
+              ],
+              [
+                7,
+                95,
+                139
+              ],
+              [
+                12,
+                56,
+                100
+              ],
+              [
+                13,
+                57,
+                101
+              ],
+              [
+                14,
+                58,
+                102
+              ],
+              [
+                15,
+                59,
+                103
+              ],
+              [
+                16,
+                60,
+                104
+              ],
+              [
+                17,
+                61,
+                105
+              ],
+              [
+                18,
+                62,
+                106
+              ],
+              [
+                19,
+                63,
+                107
+              ],
+              [
+                20,
+                64,
+                108
+              ],
+              [
+                21,
+                65,
+                109
+              ],
+              [
+                22,
+                66,
+                110
+              ],
+              [
+                23,
+                67,
+                111
+              ],
+              [
+                24,
+                68,
+                112
+              ],
+              [
+                25,
+                69,
+                113
+              ],
+              [
+                26,
+                70,
+                114
+              ],
+              [
+                27,
+                71,
+                115
+              ],
+              [
+                28,
+                72,
+                116
+              ],
+              [
+                29,
+                73,
+                117
+              ],
+              [
+                30,
+                74,
+                118
+              ],
+              [
+                31,
+                75,
+                119
+              ],
+              [
+                32,
+                76,
+                120
+              ],
+              [
+                33,
+                77,
+                121
+              ],
+              [
+                34,
+                78,
+                122
+              ],
+              [
+                35,
+                79,
+                123
+              ],
+              [
+                36,
+                80,
+                124
+              ],
+              [
+                37,
+                81,
+                125
+              ],
+              [
+                38,
+                82,
+                126
+              ],
+              [
+                39,
+                83,
+                127
+              ],
+              [
+                40,
+                48,
+                84,
+                128
+              ],
+              [
+                41,
+                49,
+                85,
+                129
+              ],
+              [
+                42,
+                50,
+                86,
+                130
+              ],
+              [
+                43,
+                51,
+                87,
+                131
+              ],
+              [
+                88,
+                132
+              ],
+              [
+                89,
+                133
+              ],
+              [
+                90,
+                134
+              ],
+              [
+                91,
+                135
+              ]
+            ]
+          },
+          "objectiveMode": "optimization"
+        },
+        {
+          "type": "phase",
+          "status": "Infeasible_Problem_Detected",
+          "iterations": 95,
+          "seconds": 0.06378570571541786,
+          "zeros": 0,
+          "survivors": 0,
+          "kind": "carry",
+          "seed": "fallback",
+          "ladderSaturated": 0,
+          "capAttempt": 0,
+          "simpleBoundExtraction": true,
+          "constraintRowsBeforeExtraction": 152,
+          "wallReduction": {
+            "original": 140,
+            "retained": 44,
+            "representatives": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              48,
+              49,
+              50,
+              51,
+              88,
+              89,
+              90,
+              91
+            ],
+            "sourceIndices": [
+              [
+                0,
+                8,
+                44,
+                52,
+                96
+              ],
+              [
+                1,
+                9,
+                45,
+                53,
+                97
+              ],
+              [
+                2,
+                10,
+                46,
+                54,
+                98
+              ],
+              [
+                3,
+                11,
+                47,
+                55,
+                99
+              ],
+              [
+                4,
+                92,
+                136
+              ],
+              [
+                5,
+                93,
+                137
+              ],
+              [
+                6,
+                94,
+                138
+              ],
+              [
+                7,
+                95,
+                139
+              ],
+              [
+                12,
+                56,
+                100
+              ],
+              [
+                13,
+                57,
+                101
+              ],
+              [
+                14,
+                58,
+                102
+              ],
+              [
+                15,
+                59,
+                103
+              ],
+              [
+                16,
+                60,
+                104
+              ],
+              [
+                17,
+                61,
+                105
+              ],
+              [
+                18,
+                62,
+                106
+              ],
+              [
+                19,
+                63,
+                107
+              ],
+              [
+                20,
+                64,
+                108
+              ],
+              [
+                21,
+                65,
+                109
+              ],
+              [
+                22,
+                66,
+                110
+              ],
+              [
+                23,
+                67,
+                111
+              ],
+              [
+                24,
+                68,
+                112
+              ],
+              [
+                25,
+                69,
+                113
+              ],
+              [
+                26,
+                70,
+                114
+              ],
+              [
+                27,
+                71,
+                115
+              ],
+              [
+                28,
+                72,
+                116
+              ],
+              [
+                29,
+                73,
+                117
+              ],
+              [
+                30,
+                74,
+                118
+              ],
+              [
+                31,
+                75,
+                119
+              ],
+              [
+                32,
+                76,
+                120
+              ],
+              [
+                33,
+                77,
+                121
+              ],
+              [
+                34,
+                78,
+                122
+              ],
+              [
+                35,
+                79,
+                123
+              ],
+              [
+                36,
+                80,
+                124
+              ],
+              [
+                37,
+                81,
+                125
+              ],
+              [
+                38,
+                82,
+                126
+              ],
+              [
+                39,
+                83,
+                127
+              ],
+              [
+                40,
+                48,
+                84,
+                128
+              ],
+              [
+                41,
+                49,
+                85,
+                129
+              ],
+              [
+                42,
+                50,
+                86,
+                130
+              ],
+              [
+                43,
+                51,
+                87,
+                131
+              ],
+              [
+                88,
+                132
+              ],
+              [
+                89,
+                133
+              ],
+              [
+                90,
+                134
+              ],
+              [
+                91,
+                135
+              ]
+            ]
+          },
+          "objectiveMode": "optimization"
+        }
+      ]
+    },
+    {
+      "problemHash": "b1a196f2215e",
+      "ticks": 27,
+      "mode": "feasibility",
+      "status": "unknown",
+      "termination": "worker_finished",
+      "elapsedSeconds": 0.1670980416238308,
+      "originalRowsFeasible": false,
+      "phases": [
+        {
+          "type": "phase",
+          "status": "Infeasible_Problem_Detected",
+          "iterations": 33,
+          "seconds": 0.030073750764131546,
+          "zeros": 0,
+          "survivors": 0,
+          "kind": "carry",
+          "seed": "initial",
+          "ladderSaturated": 0,
+          "capAttempt": 0,
+          "simpleBoundExtraction": true,
+          "constraintRowsBeforeExtraction": 152,
+          "wallReduction": {
+            "original": 140,
+            "retained": 44,
+            "representatives": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              48,
+              49,
+              50,
+              51,
+              88,
+              89,
+              90,
+              91
+            ],
+            "sourceIndices": [
+              [
+                0,
+                8,
+                44,
+                52,
+                96
+              ],
+              [
+                1,
+                9,
+                45,
+                53,
+                97
+              ],
+              [
+                2,
+                10,
+                46,
+                54,
+                98
+              ],
+              [
+                3,
+                11,
+                47,
+                55,
+                99
+              ],
+              [
+                4,
+                92,
+                136
+              ],
+              [
+                5,
+                93,
+                137
+              ],
+              [
+                6,
+                94,
+                138
+              ],
+              [
+                7,
+                95,
+                139
+              ],
+              [
+                12,
+                56,
+                100
+              ],
+              [
+                13,
+                57,
+                101
+              ],
+              [
+                14,
+                58,
+                102
+              ],
+              [
+                15,
+                59,
+                103
+              ],
+              [
+                16,
+                60,
+                104
+              ],
+              [
+                17,
+                61,
+                105
+              ],
+              [
+                18,
+                62,
+                106
+              ],
+              [
+                19,
+                63,
+                107
+              ],
+              [
+                20,
+                64,
+                108
+              ],
+              [
+                21,
+                65,
+                109
+              ],
+              [
+                22,
+                66,
+                110
+              ],
+              [
+                23,
+                67,
+                111
+              ],
+              [
+                24,
+                68,
+                112
+              ],
+              [
+                25,
+                69,
+                113
+              ],
+              [
+                26,
+                70,
+                114
+              ],
+              [
+                27,
+                71,
+                115
+              ],
+              [
+                28,
+                72,
+                116
+              ],
+              [
+                29,
+                73,
+                117
+              ],
+              [
+                30,
+                74,
+                118
+              ],
+              [
+                31,
+                75,
+                119
+              ],
+              [
+                32,
+                76,
+                120
+              ],
+              [
+                33,
+                77,
+                121
+              ],
+              [
+                34,
+                78,
+                122
+              ],
+              [
+                35,
+                79,
+                123
+              ],
+              [
+                36,
+                80,
+                124
+              ],
+              [
+                37,
+                81,
+                125
+              ],
+              [
+                38,
+                82,
+                126
+              ],
+              [
+                39,
+                83,
+                127
+              ],
+              [
+                40,
+                48,
+                84,
+                128
+              ],
+              [
+                41,
+                49,
+                85,
+                129
+              ],
+              [
+                42,
+                50,
+                86,
+                130
+              ],
+              [
+                43,
+                51,
+                87,
+                131
+              ],
+              [
+                88,
+                132
+              ],
+              [
+                89,
+                133
+              ],
+              [
+                90,
+                134
+              ],
+              [
+                91,
+                135
+              ]
+            ]
+          },
+          "objectiveMode": "feasibility"
+        },
+        {
+          "type": "phase",
+          "status": "Infeasible_Problem_Detected",
+          "iterations": 20,
+          "seconds": 0.01981012523174286,
+          "zeros": 0,
+          "survivors": 0,
+          "kind": "carry",
+          "seed": "fallback",
+          "ladderSaturated": 0,
+          "capAttempt": 0,
+          "simpleBoundExtraction": true,
+          "constraintRowsBeforeExtraction": 152,
+          "wallReduction": {
+            "original": 140,
+            "retained": 44,
+            "representatives": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              48,
+              49,
+              50,
+              51,
+              88,
+              89,
+              90,
+              91
+            ],
+            "sourceIndices": [
+              [
+                0,
+                8,
+                44,
+                52,
+                96
+              ],
+              [
+                1,
+                9,
+                45,
+                53,
+                97
+              ],
+              [
+                2,
+                10,
+                46,
+                54,
+                98
+              ],
+              [
+                3,
+                11,
+                47,
+                55,
+                99
+              ],
+              [
+                4,
+                92,
+                136
+              ],
+              [
+                5,
+                93,
+                137
+              ],
+              [
+                6,
+                94,
+                138
+              ],
+              [
+                7,
+                95,
+                139
+              ],
+              [
+                12,
+                56,
+                100
+              ],
+              [
+                13,
+                57,
+                101
+              ],
+              [
+                14,
+                58,
+                102
+              ],
+              [
+                15,
+                59,
+                103
+              ],
+              [
+                16,
+                60,
+                104
+              ],
+              [
+                17,
+                61,
+                105
+              ],
+              [
+                18,
+                62,
+                106
+              ],
+              [
+                19,
+                63,
+                107
+              ],
+              [
+                20,
+                64,
+                108
+              ],
+              [
+                21,
+                65,
+                109
+              ],
+              [
+                22,
+                66,
+                110
+              ],
+              [
+                23,
+                67,
+                111
+              ],
+              [
+                24,
+                68,
+                112
+              ],
+              [
+                25,
+                69,
+                113
+              ],
+              [
+                26,
+                70,
+                114
+              ],
+              [
+                27,
+                71,
+                115
+              ],
+              [
+                28,
+                72,
+                116
+              ],
+              [
+                29,
+                73,
+                117
+              ],
+              [
+                30,
+                74,
+                118
+              ],
+              [
+                31,
+                75,
+                119
+              ],
+              [
+                32,
+                76,
+                120
+              ],
+              [
+                33,
+                77,
+                121
+              ],
+              [
+                34,
+                78,
+                122
+              ],
+              [
+                35,
+                79,
+                123
+              ],
+              [
+                36,
+                80,
+                124
+              ],
+              [
+                37,
+                81,
+                125
+              ],
+              [
+                38,
+                82,
+                126
+              ],
+              [
+                39,
+                83,
+                127
+              ],
+              [
+                40,
+                48,
+                84,
+                128
+              ],
+              [
+                41,
+                49,
+                85,
+                129
+              ],
+              [
+                42,
+                50,
+                86,
+                130
+              ],
+              [
+                43,
+                51,
+                87,
+                131
+              ],
+              [
+                88,
+                132
+              ],
+              [
+                89,
+                133
+              ],
+              [
+                90,
+                134
+              ],
+              [
+                91,
+                135
+              ]
+            ]
+          },
+          "objectiveMode": "feasibility"
+        }
+      ]
+    },
+    {
+      "problemHash": "b6c9cb2b87a0",
+      "ticks": 40,
+      "mode": "optimization",
+      "status": "feasible",
+      "termination": "worker_finished",
+      "elapsedSeconds": 0.1635974980890751,
+      "originalRowsFeasible": true,
+      "phases": [
+        {
+          "type": "phase",
+          "status": "Solve_Succeeded",
+          "iterations": 18,
+          "seconds": 0.025585461407899857,
+          "zeros": 0,
+          "survivors": 0,
+          "kind": "carry",
+          "seed": "initial",
+          "ladderSaturated": 0,
+          "capAttempt": 0,
+          "simpleBoundExtraction": true,
+          "constraintRowsBeforeExtraction": 220,
+          "wallReduction": {
+            "original": 188,
+            "retained": 60,
+            "representatives": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              48,
+              49,
+              50,
+              51,
+              88,
+              89,
+              90,
+              91,
+              92,
+              93,
+              94,
+              95,
+              100,
+              101,
+              102,
+              103,
+              116,
+              117,
+              118,
+              119,
+              120,
+              121,
+              122,
+              123
+            ],
+            "sourceIndices": [
+              [
+                0,
+                8,
+                44,
+                52,
+                128
+              ],
+              [
+                1,
+                9,
+                45,
+                53,
+                129
+              ],
+              [
+                2,
+                10,
+                46,
+                54,
+                130
+              ],
+              [
+                3,
+                11,
+                47,
+                55,
+                131
+              ],
+              [
+                4,
+                124,
+                184
+              ],
+              [
+                5,
+                125,
+                185
+              ],
+              [
+                6,
+                126,
+                186
+              ],
+              [
+                7,
+                127,
+                187
+              ],
+              [
+                12,
+                56,
+                132
+              ],
+              [
+                13,
+                57,
+                133
+              ],
+              [
+                14,
+                58,
+                134
+              ],
+              [
+                15,
+                59,
+                135
+              ],
+              [
+                16,
+                60,
+                136
+              ],
+              [
+                17,
+                61,
+                137
+              ],
+              [
+                18,
+                62,
+                138
+              ],
+              [
+                19,
+                63,
+                139
+              ],
+              [
+                20,
+                64,
+                140
+              ],
+              [
+                21,
+                65,
+                141
+              ],
+              [
+                22,
+                66,
+                142
+              ],
+              [
+                23,
+                67,
+                143
+              ],
+              [
+                24,
+                68,
+                144
+              ],
+              [
+                25,
+                69,
+                145
+              ],
+              [
+                26,
+                70,
+                146
+              ],
+              [
+                27,
+                71,
+                147
+              ],
+              [
+                28,
+                72,
+                148
+              ],
+              [
+                29,
+                73,
+                149
+              ],
+              [
+                30,
+                74,
+                150
+              ],
+              [
+                31,
+                75,
+                151
+              ],
+              [
+                32,
+                76,
+                152
+              ],
+              [
+                33,
+                77,
+                153
+              ],
+              [
+                34,
+                78,
+                154
+              ],
+              [
+                35,
+                79,
+                155
+              ],
+              [
+                36,
+                80,
+                156
+              ],
+              [
+                37,
+                81,
+                157
+              ],
+              [
+                38,
+                82,
+                158
+              ],
+              [
+                39,
+                83,
+                159
+              ],
+              [
+                40,
+                48,
+                84,
+                160
+              ],
+              [
+                41,
+                49,
+                85,
+                161
+              ],
+              [
+                42,
+                50,
+                86,
+                162
+              ],
+              [
+                43,
+                51,
+                87,
+                163
+              ],
+              [
+                88,
+                104,
+                164
+              ],
+              [
+                89,
+                105,
+                165
+              ],
+              [
+                90,
+                106,
+                166
+              ],
+              [
+                91,
+                107,
+                167
+              ],
+              [
+                92,
+                108,
+                168
+              ],
+              [
+                93,
+                109,
+                169
+              ],
+              [
+                94,
+                110,
+                170
+              ],
+              [
+                95,
+                111,
+                171
+              ],
+              [
+                96,
+                100,
+                112,
+                172
+              ],
+              [
+                97,
+                101,
+                113,
+                173
+              ],
+              [
+                98,
+                102,
+                114,
+                174
+              ],
+              [
+                99,
+                103,
+                115,
+                175
+              ],
+              [
+                116,
+                176
+              ],
+              [
+                117,
+                177
+              ],
+              [
+                118,
+                178
+              ],
+              [
+                119,
+                179
+              ],
+              [
+                120,
+                180
+              ],
+              [
+                121,
+                181
+              ],
+              [
+                122,
+                182
+              ],
+              [
+                123,
+                183
+              ]
+            ]
+          },
+          "objectiveMode": "optimization"
+        },
+        {
+          "type": "phase",
+          "status": "Solve_Succeeded",
+          "iterations": 12,
+          "seconds": 0.02218783274292946,
+          "zeros": 0,
+          "survivors": 0,
+          "kind": "carry",
+          "seed": "fallback",
+          "ladderSaturated": 0,
+          "capAttempt": 0,
+          "simpleBoundExtraction": true,
+          "constraintRowsBeforeExtraction": 220,
+          "wallReduction": {
+            "original": 188,
+            "retained": 60,
+            "representatives": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              48,
+              49,
+              50,
+              51,
+              88,
+              89,
+              90,
+              91,
+              92,
+              93,
+              94,
+              95,
+              100,
+              101,
+              102,
+              103,
+              116,
+              117,
+              118,
+              119,
+              120,
+              121,
+              122,
+              123
+            ],
+            "sourceIndices": [
+              [
+                0,
+                8,
+                44,
+                52,
+                128
+              ],
+              [
+                1,
+                9,
+                45,
+                53,
+                129
+              ],
+              [
+                2,
+                10,
+                46,
+                54,
+                130
+              ],
+              [
+                3,
+                11,
+                47,
+                55,
+                131
+              ],
+              [
+                4,
+                124,
+                184
+              ],
+              [
+                5,
+                125,
+                185
+              ],
+              [
+                6,
+                126,
+                186
+              ],
+              [
+                7,
+                127,
+                187
+              ],
+              [
+                12,
+                56,
+                132
+              ],
+              [
+                13,
+                57,
+                133
+              ],
+              [
+                14,
+                58,
+                134
+              ],
+              [
+                15,
+                59,
+                135
+              ],
+              [
+                16,
+                60,
+                136
+              ],
+              [
+                17,
+                61,
+                137
+              ],
+              [
+                18,
+                62,
+                138
+              ],
+              [
+                19,
+                63,
+                139
+              ],
+              [
+                20,
+                64,
+                140
+              ],
+              [
+                21,
+                65,
+                141
+              ],
+              [
+                22,
+                66,
+                142
+              ],
+              [
+                23,
+                67,
+                143
+              ],
+              [
+                24,
+                68,
+                144
+              ],
+              [
+                25,
+                69,
+                145
+              ],
+              [
+                26,
+                70,
+                146
+              ],
+              [
+                27,
+                71,
+                147
+              ],
+              [
+                28,
+                72,
+                148
+              ],
+              [
+                29,
+                73,
+                149
+              ],
+              [
+                30,
+                74,
+                150
+              ],
+              [
+                31,
+                75,
+                151
+              ],
+              [
+                32,
+                76,
+                152
+              ],
+              [
+                33,
+                77,
+                153
+              ],
+              [
+                34,
+                78,
+                154
+              ],
+              [
+                35,
+                79,
+                155
+              ],
+              [
+                36,
+                80,
+                156
+              ],
+              [
+                37,
+                81,
+                157
+              ],
+              [
+                38,
+                82,
+                158
+              ],
+              [
+                39,
+                83,
+                159
+              ],
+              [
+                40,
+                48,
+                84,
+                160
+              ],
+              [
+                41,
+                49,
+                85,
+                161
+              ],
+              [
+                42,
+                50,
+                86,
+                162
+              ],
+              [
+                43,
+                51,
+                87,
+                163
+              ],
+              [
+                88,
+                104,
+                164
+              ],
+              [
+                89,
+                105,
+                165
+              ],
+              [
+                90,
+                106,
+                166
+              ],
+              [
+                91,
+                107,
+                167
+              ],
+              [
+                92,
+                108,
+                168
+              ],
+              [
+                93,
+                109,
+                169
+              ],
+              [
+                94,
+                110,
+                170
+              ],
+              [
+                95,
+                111,
+                171
+              ],
+              [
+                96,
+                100,
+                112,
+                172
+              ],
+              [
+                97,
+                101,
+                113,
+                173
+              ],
+              [
+                98,
+                102,
+                114,
+                174
+              ],
+              [
+                99,
+                103,
+                115,
+                175
+              ],
+              [
+                116,
+                176
+              ],
+              [
+                117,
+                177
+              ],
+              [
+                118,
+                178
+              ],
+              [
+                119,
+                179
+              ],
+              [
+                120,
+                180
+              ],
+              [
+                121,
+                181
+              ],
+              [
+                122,
+                182
+              ],
+              [
+                123,
+                183
+              ]
+            ]
+          },
+          "objectiveMode": "optimization"
+        }
+      ]
+    },
+    {
+      "problemHash": "b6c9cb2b87a0",
+      "ticks": 40,
+      "mode": "feasibility",
+      "status": "feasible",
+      "termination": "first_feasible",
+      "elapsedSeconds": 0.11461504176259041,
+      "originalRowsFeasible": true,
+      "phases": []
+    },
+    {
+      "problemHash": "0ba4282df584",
+      "ticks": 57,
+      "mode": "optimization",
+      "status": "unknown",
+      "termination": "worker_finished",
+      "elapsedSeconds": 0.2676365412771702,
+      "originalRowsFeasible": false,
+      "phases": [
+        {
+          "type": "phase",
+          "status": "Infeasible_Problem_Detected",
+          "iterations": 55,
+          "seconds": 0.05380241572856903,
+          "zeros": 0,
+          "survivors": 0,
+          "kind": "carry",
+          "seed": "initial",
+          "ladderSaturated": 0,
+          "capAttempt": 0,
+          "simpleBoundExtraction": true,
+          "constraintRowsBeforeExtraction": 301,
+          "wallReduction": {
+            "original": 230,
+            "retained": 73,
+            "representatives": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              8,
+              9,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              50,
+              51,
+              52,
+              53,
+              90,
+              91,
+              92,
+              93,
+              94,
+              95,
+              96,
+              97,
+              102,
+              103,
+              104,
+              105,
+              118,
+              119,
+              120,
+              121,
+              122,
+              123,
+              124,
+              125,
+              130,
+              131,
+              132,
+              133,
+              146,
+              147,
+              148,
+              149,
+              150,
+              151,
+              152,
+              153
+            ],
+            "sourceIndices": [
+              [
+                0,
+                10,
+                46,
+                54,
+                158
+              ],
+              [
+                1,
+                11,
+                47,
+                55,
+                159
+              ],
+              [
+                2,
+                12,
+                48,
+                56,
+                160
+              ],
+              [
+                3,
+                13,
+                49,
+                57,
+                161
+              ],
+              [
+                4,
+                154,
+                226
+              ],
+              [
+                5,
+                155,
+                227
+              ],
+              [
+                6,
+                156,
+                228
+              ],
+              [
+                7,
+                8,
+                157,
+                229
+              ],
+              [
+                9
+              ],
+              [
+                14,
+                58,
+                162
+              ],
+              [
+                15,
+                59,
+                163
+              ],
+              [
+                16,
+                60,
+                164
+              ],
+              [
+                17,
+                61,
+                165
+              ],
+              [
+                18,
+                62,
+                166
+              ],
+              [
+                19,
+                63,
+                167
+              ],
+              [
+                20,
+                64,
+                168
+              ],
+              [
+                21,
+                65,
+                169
+              ],
+              [
+                22,
+                66,
+                170
+              ],
+              [
+                23,
+                67,
+                171
+              ],
+              [
+                24,
+                68,
+                172
+              ],
+              [
+                25,
+                69,
+                173
+              ],
+              [
+                26,
+                70,
+                174
+              ],
+              [
+                27,
+                71,
+                175
+              ],
+              [
+                28,
+                72,
+                176
+              ],
+              [
+                29,
+                73,
+                177
+              ],
+              [
+                30,
+                74,
+                178
+              ],
+              [
+                31,
+                75,
+                179
+              ],
+              [
+                32,
+                76,
+                180
+              ],
+              [
+                33,
+                77,
+                181
+              ],
+              [
+                34,
+                78,
+                182
+              ],
+              [
+                35,
+                79,
+                183
+              ],
+              [
+                36,
+                80,
+                184
+              ],
+              [
+                37,
+                81,
+                185
+              ],
+              [
+                38,
+                82,
+                186
+              ],
+              [
+                39,
+                83,
+                187
+              ],
+              [
+                40,
+                84,
+                188
+              ],
+              [
+                41,
+                85,
+                189
+              ],
+              [
+                42,
+                50,
+                86,
+                190
+              ],
+              [
+                43,
+                51,
+                87,
+                191
+              ],
+              [
+                44,
+                52,
+                88,
+                192
+              ],
+              [
+                45,
+                53,
+                89,
+                193
+              ],
+              [
+                90,
+                106,
+                194
+              ],
+              [
+                91,
+                107,
+                195
+              ],
+              [
+                92,
+                108,
+                196
+              ],
+              [
+                93,
+                109,
+                197
+              ],
+              [
+                94,
+                110,
+                198
+              ],
+              [
+                95,
+                111,
+                199
+              ],
+              [
+                96,
+                112,
+                200
+              ],
+              [
+                97,
+                113,
+                201
+              ],
+              [
+                98,
+                102,
+                114,
+                202
+              ],
+              [
+                99,
+                103,
+                115,
+                203
+              ],
+              [
+                100,
+                104,
+                116,
+                204
+              ],
+              [
+                101,
+                105,
+                117,
+                205
+              ],
+              [
+                118,
+                134,
+                206
+              ],
+              [
+                119,
+                135,
+                207
+              ],
+              [
+                120,
+                136,
+                208
+              ],
+              [
+                121,
+                137,
+                209
+              ],
+              [
+                122,
+                138,
+                210
+              ],
+              [
+                123,
+                139,
+                211
+              ],
+              [
+                124,
+                140,
+                212
+              ],
+              [
+                125,
+                141,
+                213
+              ],
+              [
+                126,
+                130,
+                142,
+                214
+              ],
+              [
+                127,
+                131,
+                143,
+                215
+              ],
+              [
+                128,
+                132,
+                144,
+                216
+              ],
+              [
+                129,
+                133,
+                145,
+                217
+              ],
+              [
+                146,
+                218
+              ],
+              [
+                147,
+                219
+              ],
+              [
+                148,
+                220
+              ],
+              [
+                149,
+                221
+              ],
+              [
+                150,
+                222
+              ],
+              [
+                151,
+                223
+              ],
+              [
+                152,
+                224
+              ],
+              [
+                153,
+                225
+              ]
+            ]
+          },
+          "objectiveMode": "optimization"
+        },
+        {
+          "type": "phase",
+          "status": "Infeasible_Problem_Detected",
+          "iterations": 126,
+          "seconds": 0.09535250067710876,
+          "zeros": 0,
+          "survivors": 0,
+          "kind": "carry",
+          "seed": "fallback",
+          "ladderSaturated": 0,
+          "capAttempt": 0,
+          "simpleBoundExtraction": true,
+          "constraintRowsBeforeExtraction": 301,
+          "wallReduction": {
+            "original": 230,
+            "retained": 73,
+            "representatives": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              8,
+              9,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              50,
+              51,
+              52,
+              53,
+              90,
+              91,
+              92,
+              93,
+              94,
+              95,
+              96,
+              97,
+              102,
+              103,
+              104,
+              105,
+              118,
+              119,
+              120,
+              121,
+              122,
+              123,
+              124,
+              125,
+              130,
+              131,
+              132,
+              133,
+              146,
+              147,
+              148,
+              149,
+              150,
+              151,
+              152,
+              153
+            ],
+            "sourceIndices": [
+              [
+                0,
+                10,
+                46,
+                54,
+                158
+              ],
+              [
+                1,
+                11,
+                47,
+                55,
+                159
+              ],
+              [
+                2,
+                12,
+                48,
+                56,
+                160
+              ],
+              [
+                3,
+                13,
+                49,
+                57,
+                161
+              ],
+              [
+                4,
+                154,
+                226
+              ],
+              [
+                5,
+                155,
+                227
+              ],
+              [
+                6,
+                156,
+                228
+              ],
+              [
+                7,
+                8,
+                157,
+                229
+              ],
+              [
+                9
+              ],
+              [
+                14,
+                58,
+                162
+              ],
+              [
+                15,
+                59,
+                163
+              ],
+              [
+                16,
+                60,
+                164
+              ],
+              [
+                17,
+                61,
+                165
+              ],
+              [
+                18,
+                62,
+                166
+              ],
+              [
+                19,
+                63,
+                167
+              ],
+              [
+                20,
+                64,
+                168
+              ],
+              [
+                21,
+                65,
+                169
+              ],
+              [
+                22,
+                66,
+                170
+              ],
+              [
+                23,
+                67,
+                171
+              ],
+              [
+                24,
+                68,
+                172
+              ],
+              [
+                25,
+                69,
+                173
+              ],
+              [
+                26,
+                70,
+                174
+              ],
+              [
+                27,
+                71,
+                175
+              ],
+              [
+                28,
+                72,
+                176
+              ],
+              [
+                29,
+                73,
+                177
+              ],
+              [
+                30,
+                74,
+                178
+              ],
+              [
+                31,
+                75,
+                179
+              ],
+              [
+                32,
+                76,
+                180
+              ],
+              [
+                33,
+                77,
+                181
+              ],
+              [
+                34,
+                78,
+                182
+              ],
+              [
+                35,
+                79,
+                183
+              ],
+              [
+                36,
+                80,
+                184
+              ],
+              [
+                37,
+                81,
+                185
+              ],
+              [
+                38,
+                82,
+                186
+              ],
+              [
+                39,
+                83,
+                187
+              ],
+              [
+                40,
+                84,
+                188
+              ],
+              [
+                41,
+                85,
+                189
+              ],
+              [
+                42,
+                50,
+                86,
+                190
+              ],
+              [
+                43,
+                51,
+                87,
+                191
+              ],
+              [
+                44,
+                52,
+                88,
+                192
+              ],
+              [
+                45,
+                53,
+                89,
+                193
+              ],
+              [
+                90,
+                106,
+                194
+              ],
+              [
+                91,
+                107,
+                195
+              ],
+              [
+                92,
+                108,
+                196
+              ],
+              [
+                93,
+                109,
+                197
+              ],
+              [
+                94,
+                110,
+                198
+              ],
+              [
+                95,
+                111,
+                199
+              ],
+              [
+                96,
+                112,
+                200
+              ],
+              [
+                97,
+                113,
+                201
+              ],
+              [
+                98,
+                102,
+                114,
+                202
+              ],
+              [
+                99,
+                103,
+                115,
+                203
+              ],
+              [
+                100,
+                104,
+                116,
+                204
+              ],
+              [
+                101,
+                105,
+                117,
+                205
+              ],
+              [
+                118,
+                134,
+                206
+              ],
+              [
+                119,
+                135,
+                207
+              ],
+              [
+                120,
+                136,
+                208
+              ],
+              [
+                121,
+                137,
+                209
+              ],
+              [
+                122,
+                138,
+                210
+              ],
+              [
+                123,
+                139,
+                211
+              ],
+              [
+                124,
+                140,
+                212
+              ],
+              [
+                125,
+                141,
+                213
+              ],
+              [
+                126,
+                130,
+                142,
+                214
+              ],
+              [
+                127,
+                131,
+                143,
+                215
+              ],
+              [
+                128,
+                132,
+                144,
+                216
+              ],
+              [
+                129,
+                133,
+                145,
+                217
+              ],
+              [
+                146,
+                218
+              ],
+              [
+                147,
+                219
+              ],
+              [
+                148,
+                220
+              ],
+              [
+                149,
+                221
+              ],
+              [
+                150,
+                222
+              ],
+              [
+                151,
+                223
+              ],
+              [
+                152,
+                224
+              ],
+              [
+                153,
+                225
+              ]
+            ]
+          },
+          "objectiveMode": "optimization"
+        }
+      ]
+    },
+    {
+      "problemHash": "0ba4282df584",
+      "ticks": 57,
+      "mode": "feasibility",
+      "status": "unknown",
+      "termination": "worker_finished",
+      "elapsedSeconds": 0.23641087487339973,
+      "originalRowsFeasible": false,
+      "phases": [
+        {
+          "type": "phase",
+          "status": "Infeasible_Problem_Detected",
+          "iterations": 42,
+          "seconds": 0.0499931238591671,
+          "zeros": 0,
+          "survivors": 0,
+          "kind": "carry",
+          "seed": "initial",
+          "ladderSaturated": 0,
+          "capAttempt": 0,
+          "simpleBoundExtraction": true,
+          "constraintRowsBeforeExtraction": 301,
+          "wallReduction": {
+            "original": 230,
+            "retained": 73,
+            "representatives": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              8,
+              9,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              50,
+              51,
+              52,
+              53,
+              90,
+              91,
+              92,
+              93,
+              94,
+              95,
+              96,
+              97,
+              102,
+              103,
+              104,
+              105,
+              118,
+              119,
+              120,
+              121,
+              122,
+              123,
+              124,
+              125,
+              130,
+              131,
+              132,
+              133,
+              146,
+              147,
+              148,
+              149,
+              150,
+              151,
+              152,
+              153
+            ],
+            "sourceIndices": [
+              [
+                0,
+                10,
+                46,
+                54,
+                158
+              ],
+              [
+                1,
+                11,
+                47,
+                55,
+                159
+              ],
+              [
+                2,
+                12,
+                48,
+                56,
+                160
+              ],
+              [
+                3,
+                13,
+                49,
+                57,
+                161
+              ],
+              [
+                4,
+                154,
+                226
+              ],
+              [
+                5,
+                155,
+                227
+              ],
+              [
+                6,
+                156,
+                228
+              ],
+              [
+                7,
+                8,
+                157,
+                229
+              ],
+              [
+                9
+              ],
+              [
+                14,
+                58,
+                162
+              ],
+              [
+                15,
+                59,
+                163
+              ],
+              [
+                16,
+                60,
+                164
+              ],
+              [
+                17,
+                61,
+                165
+              ],
+              [
+                18,
+                62,
+                166
+              ],
+              [
+                19,
+                63,
+                167
+              ],
+              [
+                20,
+                64,
+                168
+              ],
+              [
+                21,
+                65,
+                169
+              ],
+              [
+                22,
+                66,
+                170
+              ],
+              [
+                23,
+                67,
+                171
+              ],
+              [
+                24,
+                68,
+                172
+              ],
+              [
+                25,
+                69,
+                173
+              ],
+              [
+                26,
+                70,
+                174
+              ],
+              [
+                27,
+                71,
+                175
+              ],
+              [
+                28,
+                72,
+                176
+              ],
+              [
+                29,
+                73,
+                177
+              ],
+              [
+                30,
+                74,
+                178
+              ],
+              [
+                31,
+                75,
+                179
+              ],
+              [
+                32,
+                76,
+                180
+              ],
+              [
+                33,
+                77,
+                181
+              ],
+              [
+                34,
+                78,
+                182
+              ],
+              [
+                35,
+                79,
+                183
+              ],
+              [
+                36,
+                80,
+                184
+              ],
+              [
+                37,
+                81,
+                185
+              ],
+              [
+                38,
+                82,
+                186
+              ],
+              [
+                39,
+                83,
+                187
+              ],
+              [
+                40,
+                84,
+                188
+              ],
+              [
+                41,
+                85,
+                189
+              ],
+              [
+                42,
+                50,
+                86,
+                190
+              ],
+              [
+                43,
+                51,
+                87,
+                191
+              ],
+              [
+                44,
+                52,
+                88,
+                192
+              ],
+              [
+                45,
+                53,
+                89,
+                193
+              ],
+              [
+                90,
+                106,
+                194
+              ],
+              [
+                91,
+                107,
+                195
+              ],
+              [
+                92,
+                108,
+                196
+              ],
+              [
+                93,
+                109,
+                197
+              ],
+              [
+                94,
+                110,
+                198
+              ],
+              [
+                95,
+                111,
+                199
+              ],
+              [
+                96,
+                112,
+                200
+              ],
+              [
+                97,
+                113,
+                201
+              ],
+              [
+                98,
+                102,
+                114,
+                202
+              ],
+              [
+                99,
+                103,
+                115,
+                203
+              ],
+              [
+                100,
+                104,
+                116,
+                204
+              ],
+              [
+                101,
+                105,
+                117,
+                205
+              ],
+              [
+                118,
+                134,
+                206
+              ],
+              [
+                119,
+                135,
+                207
+              ],
+              [
+                120,
+                136,
+                208
+              ],
+              [
+                121,
+                137,
+                209
+              ],
+              [
+                122,
+                138,
+                210
+              ],
+              [
+                123,
+                139,
+                211
+              ],
+              [
+                124,
+                140,
+                212
+              ],
+              [
+                125,
+                141,
+                213
+              ],
+              [
+                126,
+                130,
+                142,
+                214
+              ],
+              [
+                127,
+                131,
+                143,
+                215
+              ],
+              [
+                128,
+                132,
+                144,
+                216
+              ],
+              [
+                129,
+                133,
+                145,
+                217
+              ],
+              [
+                146,
+                218
+              ],
+              [
+                147,
+                219
+              ],
+              [
+                148,
+                220
+              ],
+              [
+                149,
+                221
+              ],
+              [
+                150,
+                222
+              ],
+              [
+                151,
+                223
+              ],
+              [
+                152,
+                224
+              ],
+              [
+                153,
+                225
+              ]
+            ]
+          },
+          "objectiveMode": "feasibility"
+        },
+        {
+          "type": "phase",
+          "status": "Infeasible_Problem_Detected",
+          "iterations": 86,
+          "seconds": 0.073361124843359,
+          "zeros": 0,
+          "survivors": 0,
+          "kind": "carry",
+          "seed": "fallback",
+          "ladderSaturated": 0,
+          "capAttempt": 0,
+          "simpleBoundExtraction": true,
+          "constraintRowsBeforeExtraction": 301,
+          "wallReduction": {
+            "original": 230,
+            "retained": 73,
+            "representatives": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              8,
+              9,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              50,
+              51,
+              52,
+              53,
+              90,
+              91,
+              92,
+              93,
+              94,
+              95,
+              96,
+              97,
+              102,
+              103,
+              104,
+              105,
+              118,
+              119,
+              120,
+              121,
+              122,
+              123,
+              124,
+              125,
+              130,
+              131,
+              132,
+              133,
+              146,
+              147,
+              148,
+              149,
+              150,
+              151,
+              152,
+              153
+            ],
+            "sourceIndices": [
+              [
+                0,
+                10,
+                46,
+                54,
+                158
+              ],
+              [
+                1,
+                11,
+                47,
+                55,
+                159
+              ],
+              [
+                2,
+                12,
+                48,
+                56,
+                160
+              ],
+              [
+                3,
+                13,
+                49,
+                57,
+                161
+              ],
+              [
+                4,
+                154,
+                226
+              ],
+              [
+                5,
+                155,
+                227
+              ],
+              [
+                6,
+                156,
+                228
+              ],
+              [
+                7,
+                8,
+                157,
+                229
+              ],
+              [
+                9
+              ],
+              [
+                14,
+                58,
+                162
+              ],
+              [
+                15,
+                59,
+                163
+              ],
+              [
+                16,
+                60,
+                164
+              ],
+              [
+                17,
+                61,
+                165
+              ],
+              [
+                18,
+                62,
+                166
+              ],
+              [
+                19,
+                63,
+                167
+              ],
+              [
+                20,
+                64,
+                168
+              ],
+              [
+                21,
+                65,
+                169
+              ],
+              [
+                22,
+                66,
+                170
+              ],
+              [
+                23,
+                67,
+                171
+              ],
+              [
+                24,
+                68,
+                172
+              ],
+              [
+                25,
+                69,
+                173
+              ],
+              [
+                26,
+                70,
+                174
+              ],
+              [
+                27,
+                71,
+                175
+              ],
+              [
+                28,
+                72,
+                176
+              ],
+              [
+                29,
+                73,
+                177
+              ],
+              [
+                30,
+                74,
+                178
+              ],
+              [
+                31,
+                75,
+                179
+              ],
+              [
+                32,
+                76,
+                180
+              ],
+              [
+                33,
+                77,
+                181
+              ],
+              [
+                34,
+                78,
+                182
+              ],
+              [
+                35,
+                79,
+                183
+              ],
+              [
+                36,
+                80,
+                184
+              ],
+              [
+                37,
+                81,
+                185
+              ],
+              [
+                38,
+                82,
+                186
+              ],
+              [
+                39,
+                83,
+                187
+              ],
+              [
+                40,
+                84,
+                188
+              ],
+              [
+                41,
+                85,
+                189
+              ],
+              [
+                42,
+                50,
+                86,
+                190
+              ],
+              [
+                43,
+                51,
+                87,
+                191
+              ],
+              [
+                44,
+                52,
+                88,
+                192
+              ],
+              [
+                45,
+                53,
+                89,
+                193
+              ],
+              [
+                90,
+                106,
+                194
+              ],
+              [
+                91,
+                107,
+                195
+              ],
+              [
+                92,
+                108,
+                196
+              ],
+              [
+                93,
+                109,
+                197
+              ],
+              [
+                94,
+                110,
+                198
+              ],
+              [
+                95,
+                111,
+                199
+              ],
+              [
+                96,
+                112,
+                200
+              ],
+              [
+                97,
+                113,
+                201
+              ],
+              [
+                98,
+                102,
+                114,
+                202
+              ],
+              [
+                99,
+                103,
+                115,
+                203
+              ],
+              [
+                100,
+                104,
+                116,
+                204
+              ],
+              [
+                101,
+                105,
+                117,
+                205
+              ],
+              [
+                118,
+                134,
+                206
+              ],
+              [
+                119,
+                135,
+                207
+              ],
+              [
+                120,
+                136,
+                208
+              ],
+              [
+                121,
+                137,
+                209
+              ],
+              [
+                122,
+                138,
+                210
+              ],
+              [
+                123,
+                139,
+                211
+              ],
+              [
+                124,
+                140,
+                212
+              ],
+              [
+                125,
+                141,
+                213
+              ],
+              [
+                126,
+                130,
+                142,
+                214
+              ],
+              [
+                127,
+                131,
+                143,
+                215
+              ],
+              [
+                128,
+                132,
+                144,
+                216
+              ],
+              [
+                129,
+                133,
+                145,
+                217
+              ],
+              [
+                146,
+                218
+              ],
+              [
+                147,
+                219
+              ],
+              [
+                148,
+                220
+              ],
+              [
+                149,
+                221
+              ],
+              [
+                150,
+                222
+              ],
+              [
+                151,
+                223
+              ],
+              [
+                152,
+                224
+              ],
+              [
+                153,
+                225
+              ]
+            ]
+          },
+          "objectiveMode": "feasibility"
+        }
+      ]
+    },
+    {
+      "problemHash": "cb6d4aa98146",
+      "ticks": 58,
+      "mode": "optimization",
+      "status": "feasible",
+      "termination": "worker_finished",
+      "elapsedSeconds": 0.18596095591783524,
+      "originalRowsFeasible": true,
+      "phases": [
+        {
+          "type": "phase",
+          "status": "Solve_Succeeded",
+          "iterations": 13,
+          "seconds": 0.0329350009560585,
+          "zeros": 0,
+          "survivors": 0,
+          "kind": "carry",
+          "seed": "initial",
+          "ladderSaturated": 0,
+          "capAttempt": 0,
+          "simpleBoundExtraction": true,
+          "constraintRowsBeforeExtraction": 310,
+          "wallReduction": {
+            "original": 239,
+            "retained": 78,
+            "representatives": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              9,
+              8,
+              10,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              51,
+              52,
+              53,
+              54,
+              91,
+              92,
+              93,
+              94,
+              95,
+              96,
+              97,
+              98,
+              103,
+              104,
+              105,
+              106,
+              119,
+              120,
+              121,
+              122,
+              123,
+              124,
+              125,
+              126,
+              131,
+              132,
+              133,
+              134,
+              147,
+              148,
+              149,
+              150,
+              151,
+              152,
+              153,
+              154,
+              155,
+              156,
+              157,
+              158
+            ],
+            "sourceIndices": [
+              [
+                0,
+                11,
+                47,
+                55,
+                163
+              ],
+              [
+                1,
+                12,
+                48,
+                56,
+                164
+              ],
+              [
+                2,
+                13,
+                49,
+                57,
+                165
+              ],
+              [
+                3,
+                14,
+                50,
+                58,
+                166
+              ],
+              [
+                4,
+                159,
+                235
+              ],
+              [
+                5,
+                160,
+                236
+              ],
+              [
+                6,
+                161,
+                237
+              ],
+              [
+                7,
+                9,
+                162,
+                238
+              ],
+              [
+                8
+              ],
+              [
+                10
+              ],
+              [
+                15,
+                59,
+                167
+              ],
+              [
+                16,
+                60,
+                168
+              ],
+              [
+                17,
+                61,
+                169
+              ],
+              [
+                18,
+                62,
+                170
+              ],
+              [
+                19,
+                63,
+                171
+              ],
+              [
+                20,
+                64,
+                172
+              ],
+              [
+                21,
+                65,
+                173
+              ],
+              [
+                22,
+                66,
+                174
+              ],
+              [
+                23,
+                67,
+                175
+              ],
+              [
+                24,
+                68,
+                176
+              ],
+              [
+                25,
+                69,
+                177
+              ],
+              [
+                26,
+                70,
+                178
+              ],
+              [
+                27,
+                71,
+                179
+              ],
+              [
+                28,
+                72,
+                180
+              ],
+              [
+                29,
+                73,
+                181
+              ],
+              [
+                30,
+                74,
+                182
+              ],
+              [
+                31,
+                75,
+                183
+              ],
+              [
+                32,
+                76,
+                184
+              ],
+              [
+                33,
+                77,
+                185
+              ],
+              [
+                34,
+                78,
+                186
+              ],
+              [
+                35,
+                79,
+                187
+              ],
+              [
+                36,
+                80,
+                188
+              ],
+              [
+                37,
+                81,
+                189
+              ],
+              [
+                38,
+                82,
+                190
+              ],
+              [
+                39,
+                83,
+                191
+              ],
+              [
+                40,
+                84,
+                192
+              ],
+              [
+                41,
+                85,
+                193
+              ],
+              [
+                42,
+                86,
+                194
+              ],
+              [
+                43,
+                51,
+                87,
+                195
+              ],
+              [
+                44,
+                52,
+                88,
+                196
+              ],
+              [
+                45,
+                53,
+                89,
+                197
+              ],
+              [
+                46,
+                54,
+                90,
+                198
+              ],
+              [
+                91,
+                107,
+                199
+              ],
+              [
+                92,
+                108,
+                200
+              ],
+              [
+                93,
+                109,
+                201
+              ],
+              [
+                94,
+                110,
+                202
+              ],
+              [
+                95,
+                111,
+                203
+              ],
+              [
+                96,
+                112,
+                204
+              ],
+              [
+                97,
+                113,
+                205
+              ],
+              [
+                98,
+                114,
+                206
+              ],
+              [
+                99,
+                103,
+                115,
+                207
+              ],
+              [
+                100,
+                104,
+                116,
+                208
+              ],
+              [
+                101,
+                105,
+                117,
+                209
+              ],
+              [
+                102,
+                106,
+                118,
+                210
+              ],
+              [
+                119,
+                135,
+                211
+              ],
+              [
+                120,
+                136,
+                212
+              ],
+              [
+                121,
+                137,
+                213
+              ],
+              [
+                122,
+                138,
+                214
+              ],
+              [
+                123,
+                139,
+                215
+              ],
+              [
+                124,
+                140,
+                216
+              ],
+              [
+                125,
+                141,
+                217
+              ],
+              [
+                126,
+                142,
+                218
+              ],
+              [
+                127,
+                131,
+                143,
+                219
+              ],
+              [
+                128,
+                132,
+                144,
+                220
+              ],
+              [
+                129,
+                133,
+                145,
+                221
+              ],
+              [
+                130,
+                134,
+                146,
+                222
+              ],
+              [
+                147,
+                223
+              ],
+              [
+                148,
+                224
+              ],
+              [
+                149,
+                225
+              ],
+              [
+                150,
+                226
+              ],
+              [
+                151,
+                227
+              ],
+              [
+                152,
+                228
+              ],
+              [
+                153,
+                229
+              ],
+              [
+                154,
+                230
+              ],
+              [
+                155,
+                231
+              ],
+              [
+                156,
+                232
+              ],
+              [
+                157,
+                233
+              ],
+              [
+                158,
+                234
+              ]
+            ]
+          },
+          "objectiveMode": "optimization"
+        },
+        {
+          "type": "phase",
+          "status": "Solve_Succeeded",
+          "iterations": 18,
+          "seconds": 0.03400254622101784,
+          "zeros": 0,
+          "survivors": 0,
+          "kind": "carry",
+          "seed": "fallback",
+          "ladderSaturated": 0,
+          "capAttempt": 0,
+          "simpleBoundExtraction": true,
+          "constraintRowsBeforeExtraction": 310,
+          "wallReduction": {
+            "original": 239,
+            "retained": 78,
+            "representatives": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              9,
+              8,
+              10,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              51,
+              52,
+              53,
+              54,
+              91,
+              92,
+              93,
+              94,
+              95,
+              96,
+              97,
+              98,
+              103,
+              104,
+              105,
+              106,
+              119,
+              120,
+              121,
+              122,
+              123,
+              124,
+              125,
+              126,
+              131,
+              132,
+              133,
+              134,
+              147,
+              148,
+              149,
+              150,
+              151,
+              152,
+              153,
+              154,
+              155,
+              156,
+              157,
+              158
+            ],
+            "sourceIndices": [
+              [
+                0,
+                11,
+                47,
+                55,
+                163
+              ],
+              [
+                1,
+                12,
+                48,
+                56,
+                164
+              ],
+              [
+                2,
+                13,
+                49,
+                57,
+                165
+              ],
+              [
+                3,
+                14,
+                50,
+                58,
+                166
+              ],
+              [
+                4,
+                159,
+                235
+              ],
+              [
+                5,
+                160,
+                236
+              ],
+              [
+                6,
+                161,
+                237
+              ],
+              [
+                7,
+                9,
+                162,
+                238
+              ],
+              [
+                8
+              ],
+              [
+                10
+              ],
+              [
+                15,
+                59,
+                167
+              ],
+              [
+                16,
+                60,
+                168
+              ],
+              [
+                17,
+                61,
+                169
+              ],
+              [
+                18,
+                62,
+                170
+              ],
+              [
+                19,
+                63,
+                171
+              ],
+              [
+                20,
+                64,
+                172
+              ],
+              [
+                21,
+                65,
+                173
+              ],
+              [
+                22,
+                66,
+                174
+              ],
+              [
+                23,
+                67,
+                175
+              ],
+              [
+                24,
+                68,
+                176
+              ],
+              [
+                25,
+                69,
+                177
+              ],
+              [
+                26,
+                70,
+                178
+              ],
+              [
+                27,
+                71,
+                179
+              ],
+              [
+                28,
+                72,
+                180
+              ],
+              [
+                29,
+                73,
+                181
+              ],
+              [
+                30,
+                74,
+                182
+              ],
+              [
+                31,
+                75,
+                183
+              ],
+              [
+                32,
+                76,
+                184
+              ],
+              [
+                33,
+                77,
+                185
+              ],
+              [
+                34,
+                78,
+                186
+              ],
+              [
+                35,
+                79,
+                187
+              ],
+              [
+                36,
+                80,
+                188
+              ],
+              [
+                37,
+                81,
+                189
+              ],
+              [
+                38,
+                82,
+                190
+              ],
+              [
+                39,
+                83,
+                191
+              ],
+              [
+                40,
+                84,
+                192
+              ],
+              [
+                41,
+                85,
+                193
+              ],
+              [
+                42,
+                86,
+                194
+              ],
+              [
+                43,
+                51,
+                87,
+                195
+              ],
+              [
+                44,
+                52,
+                88,
+                196
+              ],
+              [
+                45,
+                53,
+                89,
+                197
+              ],
+              [
+                46,
+                54,
+                90,
+                198
+              ],
+              [
+                91,
+                107,
+                199
+              ],
+              [
+                92,
+                108,
+                200
+              ],
+              [
+                93,
+                109,
+                201
+              ],
+              [
+                94,
+                110,
+                202
+              ],
+              [
+                95,
+                111,
+                203
+              ],
+              [
+                96,
+                112,
+                204
+              ],
+              [
+                97,
+                113,
+                205
+              ],
+              [
+                98,
+                114,
+                206
+              ],
+              [
+                99,
+                103,
+                115,
+                207
+              ],
+              [
+                100,
+                104,
+                116,
+                208
+              ],
+              [
+                101,
+                105,
+                117,
+                209
+              ],
+              [
+                102,
+                106,
+                118,
+                210
+              ],
+              [
+                119,
+                135,
+                211
+              ],
+              [
+                120,
+                136,
+                212
+              ],
+              [
+                121,
+                137,
+                213
+              ],
+              [
+                122,
+                138,
+                214
+              ],
+              [
+                123,
+                139,
+                215
+              ],
+              [
+                124,
+                140,
+                216
+              ],
+              [
+                125,
+                141,
+                217
+              ],
+              [
+                126,
+                142,
+                218
+              ],
+              [
+                127,
+                131,
+                143,
+                219
+              ],
+              [
+                128,
+                132,
+                144,
+                220
+              ],
+              [
+                129,
+                133,
+                145,
+                221
+              ],
+              [
+                130,
+                134,
+                146,
+                222
+              ],
+              [
+                147,
+                223
+              ],
+              [
+                148,
+                224
+              ],
+              [
+                149,
+                225
+              ],
+              [
+                150,
+                226
+              ],
+              [
+                151,
+                227
+              ],
+              [
+                152,
+                228
+              ],
+              [
+                153,
+                229
+              ],
+              [
+                154,
+                230
+              ],
+              [
+                155,
+                231
+              ],
+              [
+                156,
+                232
+              ],
+              [
+                157,
+                233
+              ],
+              [
+                158,
+                234
+              ]
+            ]
+          },
+          "objectiveMode": "optimization"
+        }
+      ]
+    },
+    {
+      "problemHash": "cb6d4aa98146",
+      "ticks": 58,
+      "mode": "feasibility",
+      "status": "feasible",
+      "termination": "first_feasible",
+      "elapsedSeconds": 0.12180804461240768,
+      "originalRowsFeasible": true,
+      "phases": []
+    }
+  ],
+  "medians": {
+    "b1a196f2215e": {
+      "directional_early_stop": {
+        "elapsedSeconds": 0.07051550596952438,
+        "iterations": 118
+      },
+      "constant_feasibility": {
+        "elapsedSeconds": 0.03160449489951134,
+        "iterations": 33
+      },
+      "optimization": {
+        "elapsedSeconds": 0.06748546287417412,
+        "iterations": 118
+      }
+    },
+    "b6c9cb2b87a0": {
+      "directional_early_stop": {
+        "elapsedSeconds": 0.026081044226884842,
+        "iterations": 16
+      },
+      "constant_feasibility": {
+        "elapsedSeconds": 0.025663502514362335,
+        "iterations": 16
+      },
+      "optimization": {
+        "elapsedSeconds": 0.025703374296426773,
+        "iterations": 18
+      }
+    },
+    "0ba4282df584": {
+      "directional_early_stop": {
+        "elapsedSeconds": 0.05638333782553673,
+        "iterations": 55
+      },
+      "constant_feasibility": {
+        "elapsedSeconds": 0.054664745926856995,
+        "iterations": 42
+      },
+      "optimization": {
+        "elapsedSeconds": 0.053482960909605026,
+        "iterations": 55
+      }
+    },
+    "cb6d4aa98146": {
+      "directional_early_stop": {
+        "elapsedSeconds": 0.03184916824102402,
+        "iterations": 11
+      },
+      "constant_feasibility": {
+        "elapsedSeconds": 0.029205456376075745,
+        "iterations": 8
+      },
+      "optimization": {
+        "elapsedSeconds": 0.033111002296209335,
+        "iterations": 13
+      }
+    }
+  },
+  "allOriginalRowsFeasible": false,
+  "noInvalidAccepted": true
+}

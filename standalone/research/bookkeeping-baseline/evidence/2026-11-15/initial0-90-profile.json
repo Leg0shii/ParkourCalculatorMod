@@ -1,0 +1,4277 @@
+{
+  "version": 1,
+  "buckets": {
+    "copy:parkour_solver.scene.normalize:prepare_scene:10": {
+      "calls": 4,
+      "inclusiveSeconds": 0.00015613064169883728,
+      "selfSeconds": 0.00015613064169883728,
+      "maxSeconds": 4.296004772186279e-05
+    },
+    "copy:parkour_solver.scene.geometry:normalize_geometry:60": {
+      "calls": 28,
+      "inclusiveSeconds": 5.4210424423217773e-05,
+      "selfSeconds": 5.4210424423217773e-05,
+      "maxSeconds": 3.7103891372680664e-06
+    },
+    "copy:parkour_solver.scene.route:prepare_route:13": {
+      "calls": 159,
+      "inclusiveSeconds": 0.028226837515830994,
+      "selfSeconds": 0.028226837515830994,
+      "maxSeconds": 0.0004429146647453308
+    },
+    "copy:parkour_solver.movement.units:movement_unit:15": {
+      "calls": 148,
+      "inclusiveSeconds": 0.00018337368965148926,
+      "selfSeconds": 0.00018337368965148926,
+      "maxSeconds": 5.461275577545166e-06
+    },
+    "copy:parkour_solver.search.goals:goal_spec:16": {
+      "calls": 2,
+      "inclusiveSeconds": 3.8370490074157715e-06,
+      "selfSeconds": 3.8370490074157715e-06,
+      "maxSeconds": 1.959502696990967e-06
+    },
+    "copy:parkour_solver.search.anchors.policy:settings:17": {
+      "calls": 1,
+      "inclusiveSeconds": 5.207955837249756e-06,
+      "selfSeconds": 5.207955837249756e-06,
+      "maxSeconds": 5.207955837249756e-06
+    },
+    "identity.digest": {
+      "calls": 10514980,
+      "inclusiveSeconds": 23.22079062089324,
+      "selfSeconds": 23.22079062089324,
+      "maxSeconds": 0.024204961955547333
+    },
+    "copy:parkour_solver.search.events.engine:search_event_routes:79": {
+      "calls": 1,
+      "inclusiveSeconds": 4.8764050006866455e-06,
+      "selfSeconds": 4.8764050006866455e-06,
+      "maxSeconds": 4.8764050006866455e-06
+    },
+    "copy:parkour_solver.search.dfs:search_goals:82": {
+      "calls": 11,
+      "inclusiveSeconds": 0.00021337717771530151,
+      "selfSeconds": 0.00021337717771530151,
+      "maxSeconds": 2.2541731595993042e-05
+    },
+    "comparison.comparison_label": {
+      "calls": 241,
+      "inclusiveSeconds": 0.0008048415184020996,
+      "selfSeconds": 0.0008048415184020996,
+      "maxSeconds": 1.0792165994644165e-05
+    },
+    "copy:parkour_solver.search.dfs:frame:164": {
+      "calls": 6,
+      "inclusiveSeconds": 0.0016259588301181793,
+      "selfSeconds": 0.0016259588301181793,
+      "maxSeconds": 0.0006879605352878571
+    },
+    "copy:parkour_solver.search.dfs:expand_discovery:210": {
+      "calls": 6,
+      "inclusiveSeconds": 0.0001750849187374115,
+      "selfSeconds": 0.0001750849187374115,
+      "maxSeconds": 4.712492227554321e-05
+    },
+    "copy:parkour_solver.search.dfs:make_frame:188": {
+      "calls": 6,
+      "inclusiveSeconds": 0.0012465491890907288,
+      "selfSeconds": 0.0012465491890907288,
+      "maxSeconds": 0.00033083558082580566
+    },
+    "callback.profile_write": {
+      "calls": 8,
+      "inclusiveSeconds": 0.01873025670647621,
+      "selfSeconds": 0.01873025670647621,
+      "maxSeconds": 0.003591913729906082
+    },
+    "callback.progress": {
+      "calls": 333,
+      "inclusiveSeconds": 0.021380875259637833,
+      "selfSeconds": 0.002650618553161621,
+      "maxSeconds": 0.003705039620399475
+    },
+    "movement.source.create": {
+      "calls": 12,
+      "inclusiveSeconds": 4.09446656703949e-05,
+      "selfSeconds": 4.09446656703949e-05,
+      "maxSeconds": 6.0014426708221436e-06
+    },
+    "copy:parkour_solver.search.frontier:persistent_programs:34": {
+      "calls": 6,
+      "inclusiveSeconds": 0.001279253512620926,
+      "selfSeconds": 0.001279253512620926,
+      "maxSeconds": 0.0003309585154056549
+    },
+    "comparison.priority_key": {
+      "calls": 256,
+      "inclusiveSeconds": 0.00015578046441078186,
+      "selfSeconds": 0.00015578046441078186,
+      "maxSeconds": 1.625344157218933e-05
+    },
+    "movement.choices.create": {
+      "calls": 14,
+      "inclusiveSeconds": 5.837529897689819e-06,
+      "selfSeconds": 5.837529897689819e-06,
+      "maxSeconds": 7.525086402893066e-07
+    },
+    "copy:parkour_solver.movement.vertical_profiles:trace_ladder_schedule:45": {
+      "calls": 166,
+      "inclusiveSeconds": 0.0006755180656909943,
+      "selfSeconds": 0.0006755180656909943,
+      "maxSeconds": 1.0039657354354858e-05
+    },
+    "copy:parkour_solver.movement.program:profile_from_trace:52": {
+      "calls": 276,
+      "inclusiveSeconds": 0.001307617872953415,
+      "selfSeconds": 0.001307617872953415,
+      "maxSeconds": 2.4624168872833252e-05
+    },
+    "copy:parkour_solver.movement.program:profile_from_trace:53": {
+      "calls": 138,
+      "inclusiveSeconds": 0.005354039371013641,
+      "selfSeconds": 0.005354039371013641,
+      "maxSeconds": 0.00013774633407592773
+    },
+    "copy:parkour_solver.movement.program:movement_choice:74": {
+      "calls": 69,
+      "inclusiveSeconds": 6.458908319473267e-05,
+      "selfSeconds": 6.458908319473267e-05,
+      "maxSeconds": 1.2069940567016602e-06
+    },
+    "copy:parkour_solver.movement.program:append_choice:154": {
+      "calls": 69,
+      "inclusiveSeconds": 6.897002458572388e-05,
+      "selfSeconds": 6.897002458572388e-05,
+      "maxSeconds": 1.2479722499847412e-06
+    },
+    "copy:parkour_solver.movement.program:append_choice:161": {
+      "calls": 69,
+      "inclusiveSeconds": 0.0008337981998920441,
+      "selfSeconds": 0.0008337981998920441,
+      "maxSeconds": 2.0291656255722046e-05
+    },
+    "copy:parkour_solver.movement.units:shifted_unit:133": {
+      "calls": 525,
+      "inclusiveSeconds": 0.0024494417011737823,
+      "selfSeconds": 0.0024494417011737823,
+      "maxSeconds": 0.000321459025144577
+    },
+    "copy:parkour_solver.movement.program:_events:102": {
+      "calls": 69,
+      "inclusiveSeconds": 6.138905882835388e-05,
+      "selfSeconds": 6.138905882835388e-05,
+      "maxSeconds": 1.084059476852417e-06
+    },
+    "copy:parkour_solver.movement.program:profile_from_trace:55": {
+      "calls": 69,
+      "inclusiveSeconds": 0.0010847076773643494,
+      "selfSeconds": 0.0010847076773643494,
+      "maxSeconds": 5.620718002319336e-05
+    },
+    "copy:parkour_solver.movement.program:append_choice:195": {
+      "calls": 69,
+      "inclusiveSeconds": 0.0001559220254421234,
+      "selfSeconds": 0.0001559220254421234,
+      "maxSeconds": 2.6263296604156494e-06
+    },
+    "copy:parkour_solver.movement.program:append_choice:204": {
+      "calls": 130,
+      "inclusiveSeconds": 0.0003990456461906433,
+      "selfSeconds": 0.0003990456461906433,
+      "maxSeconds": 1.0162591934204102e-05
+    },
+    "copy:parkour_solver.numerics.model:prepare:16": {
+      "calls": 193,
+      "inclusiveSeconds": 0.0323176272213459,
+      "selfSeconds": 0.0323176272213459,
+      "maxSeconds": 0.000460207462310791
+    },
+    "reachability.prepare": {
+      "calls": 106,
+      "inclusiveSeconds": 0.08389004319906235,
+      "selfSeconds": 0.060282252728939056,
+      "maxSeconds": 0.012233041226863861
+    },
+    "reachability.analyze_model": {
+      "calls": 106,
+      "inclusiveSeconds": 0.21962832659482956,
+      "selfSeconds": 0.1932029388844967,
+      "maxSeconds": 0.008823662996292114
+    },
+    "copy:parkour_solver.movement.contact_combinations:merge_contacts:25": {
+      "calls": 2562,
+      "inclusiveSeconds": 0.008975990116596222,
+      "selfSeconds": 0.008975990116596222,
+      "maxSeconds": 0.0003163367509841919
+    },
+    "movement.choices.next": {
+      "calls": 34,
+      "inclusiveSeconds": 0.2190437912940979,
+      "selfSeconds": 0.035955797880887985,
+      "maxSeconds": 0.019276753067970276
+    },
+    "copy:parkour_solver.movement.generation:propose_choices:49": {
+      "calls": 80,
+      "inclusiveSeconds": 4.9483031034469604e-05,
+      "selfSeconds": 4.9483031034469604e-05,
+      "maxSeconds": 1.5012919902801514e-06
+    },
+    "reachability.required": {
+      "calls": 22,
+      "inclusiveSeconds": 0.054457079619169235,
+      "selfSeconds": 0.011980533599853516,
+      "maxSeconds": 0.008185211569070816
+    },
+    "reachability.check_program": {
+      "calls": 18,
+      "inclusiveSeconds": 0.5928854122757912,
+      "selfSeconds": 0.46469753235578537,
+      "maxSeconds": 0.3597683347761631
+    },
+    "proposal.assess": {
+      "calls": 20,
+      "inclusiveSeconds": 0.5940932370722294,
+      "selfSeconds": 0.0010615773499011993,
+      "maxSeconds": 0.3597960025072098
+    },
+    "movement.choices.close": {
+      "calls": 14,
+      "inclusiveSeconds": 5.465000867843628e-06,
+      "selfSeconds": 5.465000867843628e-06,
+      "maxSeconds": 4.991888999938965e-07
+    },
+    "copy:parkour_solver.search.engine:evaluate_program:91": {
+      "calls": 10,
+      "inclusiveSeconds": 3.2745301723480225e-05,
+      "selfSeconds": 3.2745301723480225e-05,
+      "maxSeconds": 8.042901754379272e-06
+    },
+    "copy:parkour_solver.search.identity:solve_scope:27": {
+      "calls": 21,
+      "inclusiveSeconds": 3.1132251024246216e-05,
+      "selfSeconds": 3.1132251024246216e-05,
+      "maxSeconds": 5.584210157394409e-06
+    },
+    "copy:parkour_solver.constraints.variants:__init__:45": {
+      "calls": 7,
+      "inclusiveSeconds": 0.00024545565247535706,
+      "selfSeconds": 0.00024545565247535706,
+      "maxSeconds": 5.766749382019043e-05
+    },
+    "copy:parkour_solver.search.repair:solve_contact_branches:26": {
+      "calls": 21,
+      "inclusiveSeconds": 0.005494989454746246,
+      "selfSeconds": 0.005494989454746246,
+      "maxSeconds": 0.00035529211163520813
+    },
+    "copy:parkour_solver.search.repair:snapshot:96": {
+      "calls": 460,
+      "inclusiveSeconds": 0.01542447879910469,
+      "selfSeconds": 0.01542447879910469,
+      "maxSeconds": 0.005342621356248856
+    },
+    "copy:parkour_solver.search.repair:snapshot:97": {
+      "calls": 230,
+      "inclusiveSeconds": 1.2929915860295296,
+      "selfSeconds": 1.2929915860295296,
+      "maxSeconds": 0.052350834012031555
+    },
+    "copy:parkour_solver.search.repair:snapshot:98": {
+      "calls": 460,
+      "inclusiveSeconds": 0.004267528653144836,
+      "selfSeconds": 0.004267528653144836,
+      "maxSeconds": 5.1584094762802124e-05
+    },
+    "copy:parkour_solver.search.repair:snapshot:99": {
+      "calls": 460,
+      "inclusiveSeconds": 0.017544955015182495,
+      "selfSeconds": 0.017544955015182495,
+      "maxSeconds": 0.0004722960293292999
+    },
+    "copy:parkour_solver.search.repair:snapshot:100": {
+      "calls": 230,
+      "inclusiveSeconds": 0.1584835760295391,
+      "selfSeconds": 0.1584835760295391,
+      "maxSeconds": 0.03986312076449394
+    },
+    "copy:parkour_solver.search.repair:snapshot:101": {
+      "calls": 230,
+      "inclusiveSeconds": 5.10915158316493,
+      "selfSeconds": 5.10915158316493,
+      "maxSeconds": 0.06495891511440277
+    },
+    "copy:parkour_solver.search.repair:snapshot:102": {
+      "calls": 230,
+      "inclusiveSeconds": 0.40509895980358124,
+      "selfSeconds": 0.40509895980358124,
+      "maxSeconds": 0.005053170025348663
+    },
+    "copy:parkour_solver.search.repair:snapshot:103": {
+      "calls": 230,
+      "inclusiveSeconds": 0.06389395892620087,
+      "selfSeconds": 0.06389395892620087,
+      "maxSeconds": 0.03169707953929901
+    },
+    "copy:parkour_solver.search.repair:offer:53": {
+      "calls": 136,
+      "inclusiveSeconds": 0.002958931028842926,
+      "selfSeconds": 0.002958931028842926,
+      "maxSeconds": 3.0916184186935425e-05
+    },
+    "copy:parkour_solver.search.repair:offer:56": {
+      "calls": 136,
+      "inclusiveSeconds": 0.0021270327270030975,
+      "selfSeconds": 0.0021270327270030975,
+      "maxSeconds": 2.8874725103378296e-05
+    },
+    "copy:parkour_solver.search.repair:offer:61": {
+      "calls": 78,
+      "inclusiveSeconds": 0.0007123909890651703,
+      "selfSeconds": 0.0007123909890651703,
+      "maxSeconds": 6.533414125442505e-05
+    },
+    "copy:parkour_solver.search.repair:offer:62": {
+      "calls": 26,
+      "inclusiveSeconds": 0.00029011070728302,
+      "selfSeconds": 0.00029011070728302,
+      "maxSeconds": 1.6164034605026245e-05
+    },
+    "copy:parkour_solver.search.repair:save_branch:88": {
+      "calls": 48,
+      "inclusiveSeconds": 0.0015289559960365295,
+      "selfSeconds": 0.0015289559960365295,
+      "maxSeconds": 5.679205060005188e-05
+    },
+    "copy:parkour_solver.search.repair:solve_contact_branches:183": {
+      "calls": 26,
+      "inclusiveSeconds": 0.00739993155002594,
+      "selfSeconds": 0.00739993155002594,
+      "maxSeconds": 0.0003704577684402466
+    },
+    "copy:parkour_solver.search.ordered_route:publish:255": {
+      "calls": 102,
+      "inclusiveSeconds": 0.037719737738370895,
+      "selfSeconds": 0.037719737738370895,
+      "maxSeconds": 0.0007148310542106628
+    },
+    "copy:parkour_solver.search.repair:enrich:233": {
+      "calls": 34,
+      "inclusiveSeconds": 0.02870803326368332,
+      "selfSeconds": 0.02870803326368332,
+      "maxSeconds": 0.0011536218225955963
+    },
+    "copy:parkour_solver.search.repair:enrich:239": {
+      "calls": 34,
+      "inclusiveSeconds": 0.0005235187709331512,
+      "selfSeconds": 0.0005235187709331512,
+      "maxSeconds": 4.37907874584198e-05
+    },
+    "copy:parkour_solver.search.repair:enrich:240": {
+      "calls": 34,
+      "inclusiveSeconds": 0.00045852363109588623,
+      "selfSeconds": 0.00045852363109588623,
+      "maxSeconds": 2.1748244762420654e-05
+    },
+    "copy:parkour_solver.search.repair:snapshot:91": {
+      "calls": 2613,
+      "inclusiveSeconds": 0.37407439574599266,
+      "selfSeconds": 0.37407439574599266,
+      "maxSeconds": 0.038199376314878464
+    },
+    "solver.invoke": {
+      "calls": 26,
+      "inclusiveSeconds": 4.274751607328653,
+      "selfSeconds": 3.999245684593916,
+      "maxSeconds": 0.2770661227405071
+    },
+    "copy:parkour_solver.search.ordered_route:evaluate:274": {
+      "calls": 26,
+      "inclusiveSeconds": 0.010046664625406265,
+      "selfSeconds": 0.010046664625406265,
+      "maxSeconds": 0.00046029314398765564
+    },
+    "copy:parkour_solver.search.ordered_route:probe:41": {
+      "calls": 26,
+      "inclusiveSeconds": 0.023805592209100723,
+      "selfSeconds": 0.023805592209100723,
+      "maxSeconds": 0.0012314580380916595
+    },
+    "copy:parkour_solver.search.ordered_route:probe:42": {
+      "calls": 78,
+      "inclusiveSeconds": 0.00991528108716011,
+      "selfSeconds": 0.00991528108716011,
+      "maxSeconds": 0.00046300143003463745
+    },
+    "copy:parkour_solver.search.ordered_route:search_allocations:121": {
+      "calls": 26,
+      "inclusiveSeconds": 1.4107674360275269e-05,
+      "selfSeconds": 1.4107674360275269e-05,
+      "maxSeconds": 9.57399606704712e-07
+    },
+    "copy:parkour_solver.search.ordered_route:find_route:304": {
+      "calls": 23,
+      "inclusiveSeconds": 0.007493704557418823,
+      "selfSeconds": 0.007493704557418823,
+      "maxSeconds": 0.0005002468824386597
+    },
+    "copy:parkour_solver.search.repair:solve_contact_branches:370": {
+      "calls": 22,
+      "inclusiveSeconds": 0.029640279710292816,
+      "selfSeconds": 0.029640279710292816,
+      "maxSeconds": 0.0020296238362789154
+    },
+    "numerical.evaluate": {
+      "calls": 21,
+      "inclusiveSeconds": 85.80443795025349,
+      "selfSeconds": 50.56781878322363,
+      "maxSeconds": 8.24035046249628
+    },
+    "copy:parkour_solver.search.dfs:commit_arrival:40": {
+      "calls": 78,
+      "inclusiveSeconds": 0.12846268340945244,
+      "selfSeconds": 0.12846268340945244,
+      "maxSeconds": 0.03814275562763214
+    },
+    "copy:parkour_solver.spatial.checkpoints:retain_prefix:92": {
+      "calls": 78,
+      "inclusiveSeconds": 2.6887475214898586,
+      "selfSeconds": 2.6887475214898586,
+      "maxSeconds": 0.08851179108023643
+    },
+    "copy:parkour_solver.search.dfs:evaluate_node:445": {
+      "calls": 1,
+      "inclusiveSeconds": 0.00012174993753433228,
+      "selfSeconds": 0.00012174993753433228,
+      "maxSeconds": 0.00012174993753433228
+    },
+    "movement.source.next": {
+      "calls": 12,
+      "inclusiveSeconds": 0.9164181761443615,
+      "selfSeconds": 0.03475460782647133,
+      "maxSeconds": 0.49574466794729233
+    },
+    "movement.source.close": {
+      "calls": 12,
+      "inclusiveSeconds": 9.045377373695374e-05,
+      "selfSeconds": 9.045377373695374e-05,
+      "maxSeconds": 2.0917505025863647e-05
+    },
+    "copy:parkour_solver.search.dfs:score:635": {
+      "calls": 20,
+      "inclusiveSeconds": 0.537768617272377,
+      "selfSeconds": 0.537768617272377,
+      "maxSeconds": 0.07933416962623596
+    },
+    "copy:parkour_solver.search.dfs:score:692": {
+      "calls": 57,
+      "inclusiveSeconds": 0.07107429206371307,
+      "selfSeconds": 0.07107429206371307,
+      "maxSeconds": 0.0015426650643348694
+    },
+    "peer.remember_peer": {
+      "calls": 20,
+      "inclusiveSeconds": 0.00035195425152778625,
+      "selfSeconds": 0.00031637027859687805,
+      "maxSeconds": 3.929436206817627e-05
+    },
+    "comparison.compare_candidates": {
+      "calls": 140,
+      "inclusiveSeconds": 0.0007485374808311462,
+      "selfSeconds": 0.0006858594715595245,
+      "maxSeconds": 1.1999160051345825e-05
+    },
+    "peer.assess": {
+      "calls": 26,
+      "inclusiveSeconds": 0.0005255378782749176,
+      "selfSeconds": 0.00016810745000839233,
+      "maxSeconds": 2.9124319553375244e-05
+    },
+    "copy:parkour_solver.search.dfs:search_goals:912": {
+      "calls": 8,
+      "inclusiveSeconds": 0.16767721250653267,
+      "selfSeconds": 0.16767721250653267,
+      "maxSeconds": 0.056388501077890396
+    },
+    "copy:parkour_solver.search.dfs:search_goals:915": {
+      "calls": 8,
+      "inclusiveSeconds": 0.006087128072977066,
+      "selfSeconds": 0.006087128072977066,
+      "maxSeconds": 0.0009067542850971222
+    },
+    "copy:parkour_solver.search.dfs:score:741": {
+      "calls": 11,
+      "inclusiveSeconds": 0.014858610928058624,
+      "selfSeconds": 0.014858610928058624,
+      "maxSeconds": 0.0014609545469284058
+    },
+    "dfs.session": {
+      "calls": 11,
+      "inclusiveSeconds": 90.52473604306579,
+      "selfSeconds": 0.20699221268296242,
+      "maxSeconds": 8.579020623117685
+    },
+    "bound.transfer_bound": {
+      "calls": 5,
+      "inclusiveSeconds": 9.112805128097534e-05,
+      "selfSeconds": 9.112805128097534e-05,
+      "maxSeconds": 3.2417476177215576e-05
+    },
+    "bound.remaining_bound": {
+      "calls": 43,
+      "inclusiveSeconds": 0.0006665363907814026,
+      "selfSeconds": 0.0006665363907814026,
+      "maxSeconds": 5.175173282623291e-05
+    },
+    "copy:parkour_solver.constraints.variants:__init__:42": {
+      "calls": 14,
+      "inclusiveSeconds": 0.29828885942697525,
+      "selfSeconds": 0.29828885942697525,
+      "maxSeconds": 0.054387375712394714
+    },
+    "copy:parkour_solver.search.repair:solve_contact_branches:45": {
+      "calls": 14,
+      "inclusiveSeconds": 0.000161096453666687,
+      "selfSeconds": 0.000161096453666687,
+      "maxSeconds": 1.6462057828903198e-05
+    },
+    "copy:parkour_solver.search.repair:solve_contact_branches:65": {
+      "calls": 14,
+      "inclusiveSeconds": 0.000589124858379364,
+      "selfSeconds": 0.000589124858379364,
+      "maxSeconds": 9.137392044067383e-05
+    },
+    "copy:parkour_solver.search.repair:solve_contact_branches:66": {
+      "calls": 14,
+      "inclusiveSeconds": 0.003815680742263794,
+      "selfSeconds": 0.003815680742263794,
+      "maxSeconds": 0.0007079131901264191
+    },
+    "copy:parkour_solver.search.repair:solve_contact_branches:71": {
+      "calls": 14,
+      "inclusiveSeconds": 5.696341395378113e-05,
+      "selfSeconds": 5.696341395378113e-05,
+      "maxSeconds": 4.337728023529053e-05
+    },
+    "copy:parkour_solver.search.repair:solve_contact_branches:118": {
+      "calls": 14,
+      "inclusiveSeconds": 0.017289485782384872,
+      "selfSeconds": 0.017289485782384872,
+      "maxSeconds": 0.0018323324620723724
+    },
+    "copy:parkour_solver.search.repair:solve_contact_branches:119": {
+      "calls": 14,
+      "inclusiveSeconds": 0.0004807189106941223,
+      "selfSeconds": 0.0004807189106941223,
+      "maxSeconds": 4.883110523223877e-05
+    },
+    "copy:parkour_solver.search.repair:solve_contact_branches:120": {
+      "calls": 14,
+      "inclusiveSeconds": 0.00012617558240890503,
+      "selfSeconds": 0.00012617558240890503,
+      "maxSeconds": 1.625344157218933e-05
+    },
+    "copy:parkour_solver.search.repair:solve_contact_branches:121": {
+      "calls": 14,
+      "inclusiveSeconds": 0.047280989587306976,
+      "selfSeconds": 0.047280989587306976,
+      "maxSeconds": 0.00734754279255867
+    },
+    "copy:parkour_solver.search.dfs:score:709": {
+      "calls": 16,
+      "inclusiveSeconds": 0.006292711943387985,
+      "selfSeconds": 0.006292711943387985,
+      "maxSeconds": 0.00044729188084602356
+    },
+    "copy:parkour_solver.search.dfs:search_goals:897": {
+      "calls": 10,
+      "inclusiveSeconds": 0.013824626803398132,
+      "selfSeconds": 0.013824626803398132,
+      "maxSeconds": 0.001702040433883667
+    },
+    "copy:parkour_solver.search.frontier:persistent_programs:33": {
+      "calls": 6,
+      "inclusiveSeconds": 0.003939546644687653,
+      "selfSeconds": 0.003939546644687653,
+      "maxSeconds": 0.001049332320690155
+    },
+    "copy:parkour_solver.movement.normal:named_choice:46": {
+      "calls": 4,
+      "inclusiveSeconds": 3.520399332046509e-05,
+      "selfSeconds": 3.520399332046509e-05,
+      "maxSeconds": 1.0583549737930298e-05
+    },
+    "copy:parkour_solver.movement.program:append_choice:156": {
+      "calls": 4,
+      "inclusiveSeconds": 3.0077993869781494e-05,
+      "selfSeconds": 3.0077993869781494e-05,
+      "maxSeconds": 7.793307304382324e-06
+    },
+    "reachability.sequence": {
+      "calls": 4,
+      "inclusiveSeconds": 0.02519175037741661,
+      "selfSeconds": 0.0009172521531581879,
+      "maxSeconds": 0.008728377521038055
+    },
+    "validation.replay": {
+      "calls": 1,
+      "inclusiveSeconds": 0.004884418100118637,
+      "selfSeconds": 0.003991197794675827,
+      "maxSeconds": 0.004884418100118637
+    },
+    "run.search_and_final_replay": {
+      "calls": 1,
+      "inclusiveSeconds": 90.75001441687346,
+      "selfSeconds": 0.21985116973519325,
+      "maxSeconds": 90.75001441687346
+    },
+    "postrun.accepted_replays": {
+      "calls": 1,
+      "inclusiveSeconds": 0.08854662254452705,
+      "selfSeconds": 0.08854662254452705,
+      "maxSeconds": 0.08854662254452705
+    },
+    "postrun.shared_report_write": {
+      "calls": 1,
+      "inclusiveSeconds": 1.1433004140853882,
+      "selfSeconds": 1.1433004140853882,
+      "maxSeconds": 1.1433004140853882
+    },
+    "postrun.shared_report_compact": {
+      "calls": 1,
+      "inclusiveSeconds": 0.15769733116030693,
+      "selfSeconds": 0.15769733116030693,
+      "maxSeconds": 0.15769733116030693
+    }
+  },
+  "sessions": [
+    {
+      "index": 1,
+      "calls": 6,
+      "expanded": 6,
+      "budgetRemainingSeconds": 7.999981664121151,
+      "frames": 0,
+      "windows": 0,
+      "termination": "numerical_call_limit",
+      "wallSeconds": 8.164729919284582,
+      "buckets": {
+        "copy:parkour_solver.scene.route:prepare_route:13": {
+          "calls": 94,
+          "inclusiveSeconds": 0.010989297181367874,
+          "selfSeconds": 0.010989297181367874
+        },
+        "copy:parkour_solver.movement.units:movement_unit:15": {
+          "calls": 80,
+          "inclusiveSeconds": 0.00010209158062934875,
+          "selfSeconds": 0.00010209158062934875
+        },
+        "identity.digest": {
+          "calls": 860253,
+          "inclusiveSeconds": 1.9326503537595272,
+          "selfSeconds": 1.9326503537595272
+        },
+        "copy:parkour_solver.search.dfs:search_goals:82": {
+          "calls": 1,
+          "inclusiveSeconds": 2.2541731595993042e-05,
+          "selfSeconds": 2.2541731595993042e-05
+        },
+        "comparison.comparison_label": {
+          "calls": 109,
+          "inclusiveSeconds": 0.00040492787957191467,
+          "selfSeconds": 0.00040492787957191467
+        },
+        "copy:parkour_solver.search.dfs:frame:164": {
+          "calls": 5,
+          "inclusiveSeconds": 0.0009379982948303223,
+          "selfSeconds": 0.0009379982948303223
+        },
+        "copy:parkour_solver.search.dfs:expand_discovery:210": {
+          "calls": 5,
+          "inclusiveSeconds": 0.00012795999646186829,
+          "selfSeconds": 0.00012795999646186829
+        },
+        "copy:parkour_solver.search.dfs:make_frame:188": {
+          "calls": 5,
+          "inclusiveSeconds": 0.0009285025298595428,
+          "selfSeconds": 0.0009285025298595428
+        },
+        "callback.profile_write": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0003749579191207886,
+          "selfSeconds": 0.0003749579191207886
+        },
+        "callback.progress": {
+          "calls": 66,
+          "inclusiveSeconds": 0.0005223341286182404,
+          "selfSeconds": 0.00014737620949745178
+        },
+        "movement.source.create": {
+          "calls": 5,
+          "inclusiveSeconds": 1.9960105419158936e-05,
+          "selfSeconds": 1.9960105419158936e-05
+        },
+        "copy:parkour_solver.search.frontier:persistent_programs:34": {
+          "calls": 5,
+          "inclusiveSeconds": 0.000948294997215271,
+          "selfSeconds": 0.000948294997215271
+        },
+        "comparison.priority_key": {
+          "calls": 42,
+          "inclusiveSeconds": 3.284960985183716e-05,
+          "selfSeconds": 3.284960985183716e-05
+        },
+        "movement.choices.create": {
+          "calls": 7,
+          "inclusiveSeconds": 3.293156623840332e-06,
+          "selfSeconds": 3.293156623840332e-06
+        },
+        "copy:parkour_solver.movement.vertical_profiles:trace_ladder_schedule:45": {
+          "calls": 92,
+          "inclusiveSeconds": 0.00038282573223114014,
+          "selfSeconds": 0.00038282573223114014
+        },
+        "copy:parkour_solver.movement.program:profile_from_trace:52": {
+          "calls": 156,
+          "inclusiveSeconds": 0.0006798058748245239,
+          "selfSeconds": 0.0006798058748245239
+        },
+        "copy:parkour_solver.movement.program:profile_from_trace:53": {
+          "calls": 78,
+          "inclusiveSeconds": 0.002523645758628845,
+          "selfSeconds": 0.002523645758628845
+        },
+        "copy:parkour_solver.movement.program:movement_choice:74": {
+          "calls": 39,
+          "inclusiveSeconds": 3.6932528018951416e-05,
+          "selfSeconds": 3.6932528018951416e-05
+        },
+        "copy:parkour_solver.movement.program:append_choice:154": {
+          "calls": 39,
+          "inclusiveSeconds": 3.940984606742859e-05,
+          "selfSeconds": 3.940984606742859e-05
+        },
+        "copy:parkour_solver.movement.program:append_choice:161": {
+          "calls": 39,
+          "inclusiveSeconds": 0.0003973357379436493,
+          "selfSeconds": 0.0003973357379436493
+        },
+        "copy:parkour_solver.movement.units:shifted_unit:133": {
+          "calls": 231,
+          "inclusiveSeconds": 0.0012459978461265564,
+          "selfSeconds": 0.0012459978461265564
+        },
+        "copy:parkour_solver.movement.program:_events:102": {
+          "calls": 39,
+          "inclusiveSeconds": 3.521144390106201e-05,
+          "selfSeconds": 3.521144390106201e-05
+        },
+        "copy:parkour_solver.movement.program:profile_from_trace:55": {
+          "calls": 39,
+          "inclusiveSeconds": 0.0005458071827888489,
+          "selfSeconds": 0.0005458071827888489
+        },
+        "copy:parkour_solver.movement.program:append_choice:195": {
+          "calls": 39,
+          "inclusiveSeconds": 8.904188871383667e-05,
+          "selfSeconds": 8.904188871383667e-05
+        },
+        "copy:parkour_solver.movement.program:append_choice:204": {
+          "calls": 70,
+          "inclusiveSeconds": 0.0001895315945148468,
+          "selfSeconds": 0.0001895315945148468
+        },
+        "copy:parkour_solver.numerics.model:prepare:16": {
+          "calls": 73,
+          "inclusiveSeconds": 0.006890136748552322,
+          "selfSeconds": 0.006890136748552322
+        },
+        "reachability.prepare": {
+          "calls": 62,
+          "inclusiveSeconds": 0.059843339025974274,
+          "selfSeconds": 0.04306687414646149
+        },
+        "reachability.analyze_model": {
+          "calls": 62,
+          "inclusiveSeconds": 0.1781037077307701,
+          "selfSeconds": 0.16347229480743408
+        },
+        "copy:parkour_solver.movement.contact_combinations:merge_contacts:25": {
+          "calls": 1054,
+          "inclusiveSeconds": 0.003951754420995712,
+          "selfSeconds": 0.003951754420995712
+        },
+        "movement.choices.next": {
+          "calls": 24,
+          "inclusiveSeconds": 0.13822882995009422,
+          "selfSeconds": 0.012901488691568375
+        },
+        "copy:parkour_solver.movement.generation:propose_choices:49": {
+          "calls": 68,
+          "inclusiveSeconds": 4.223361611366272e-05,
+          "selfSeconds": 4.223361611366272e-05
+        },
+        "reachability.required": {
+          "calls": 17,
+          "inclusiveSeconds": 0.028188534080982208,
+          "selfSeconds": 0.008466020226478577
+        },
+        "reachability.check_program": {
+          "calls": 17,
+          "inclusiveSeconds": 0.5752459950745106,
+          "selfSeconds": 0.454195823520422
+        },
+        "proposal.assess": {
+          "calls": 17,
+          "inclusiveSeconds": 0.5756222791969776,
+          "selfSeconds": 0.000376284122467041
+        },
+        "movement.choices.close": {
+          "calls": 7,
+          "inclusiveSeconds": 2.7567148208618164e-06,
+          "selfSeconds": 2.7567148208618164e-06
+        },
+        "copy:parkour_solver.search.engine:evaluate_program:91": {
+          "calls": 5,
+          "inclusiveSeconds": 1.9039958715438843e-05,
+          "selfSeconds": 1.9039958715438843e-05
+        },
+        "copy:parkour_solver.search.identity:solve_scope:27": {
+          "calls": 6,
+          "inclusiveSeconds": 6.537884473800659e-06,
+          "selfSeconds": 6.537884473800659e-06
+        },
+        "copy:parkour_solver.constraints.variants:__init__:45": {
+          "calls": 6,
+          "inclusiveSeconds": 0.00019737333059310913,
+          "selfSeconds": 0.00019737333059310913
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:26": {
+          "calls": 6,
+          "inclusiveSeconds": 0.0011409483850002289,
+          "selfSeconds": 0.0011409483850002289
+        },
+        "copy:parkour_solver.search.repair:snapshot:96": {
+          "calls": 76,
+          "inclusiveSeconds": 0.000767149031162262,
+          "selfSeconds": 0.000767149031162262
+        },
+        "copy:parkour_solver.search.repair:snapshot:97": {
+          "calls": 38,
+          "inclusiveSeconds": 0.01768379658460617,
+          "selfSeconds": 0.01768379658460617
+        },
+        "copy:parkour_solver.search.repair:snapshot:98": {
+          "calls": 76,
+          "inclusiveSeconds": 0.00036446377635002136,
+          "selfSeconds": 0.00036446377635002136
+        },
+        "copy:parkour_solver.search.repair:snapshot:99": {
+          "calls": 76,
+          "inclusiveSeconds": 0.00047212839126586914,
+          "selfSeconds": 0.00047212839126586914
+        },
+        "copy:parkour_solver.search.repair:snapshot:100": {
+          "calls": 38,
+          "inclusiveSeconds": 0.0007084347307682037,
+          "selfSeconds": 0.0007084347307682037
+        },
+        "copy:parkour_solver.search.repair:snapshot:101": {
+          "calls": 38,
+          "inclusiveSeconds": 0.4869057349860668,
+          "selfSeconds": 0.4869057349860668
+        },
+        "copy:parkour_solver.search.repair:snapshot:102": {
+          "calls": 38,
+          "inclusiveSeconds": 0.005923576653003693,
+          "selfSeconds": 0.005923576653003693
+        },
+        "copy:parkour_solver.search.repair:snapshot:103": {
+          "calls": 38,
+          "inclusiveSeconds": 0.0005791187286376953,
+          "selfSeconds": 0.0005791187286376953
+        },
+        "copy:parkour_solver.search.repair:offer:53": {
+          "calls": 11,
+          "inclusiveSeconds": 0.00017165765166282654,
+          "selfSeconds": 0.00017165765166282654
+        },
+        "copy:parkour_solver.search.repair:offer:56": {
+          "calls": 11,
+          "inclusiveSeconds": 0.00011702626943588257,
+          "selfSeconds": 0.00011702626943588257
+        },
+        "copy:parkour_solver.search.repair:offer:61": {
+          "calls": 18,
+          "inclusiveSeconds": 6.179884076118469e-05,
+          "selfSeconds": 6.179884076118469e-05
+        },
+        "copy:parkour_solver.search.repair:offer:62": {
+          "calls": 6,
+          "inclusiveSeconds": 3.541633486747742e-05,
+          "selfSeconds": 3.541633486747742e-05
+        },
+        "copy:parkour_solver.search.repair:save_branch:88": {
+          "calls": 20,
+          "inclusiveSeconds": 0.0003990381956100464,
+          "selfSeconds": 0.0003990381956100464
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:183": {
+          "calls": 6,
+          "inclusiveSeconds": 0.0012477897107601166,
+          "selfSeconds": 0.0012477897107601166
+        },
+        "copy:parkour_solver.search.ordered_route:publish:255": {
+          "calls": 16,
+          "inclusiveSeconds": 0.004118617624044418,
+          "selfSeconds": 0.004118617624044418
+        },
+        "copy:parkour_solver.search.repair:enrich:233": {
+          "calls": 14,
+          "inclusiveSeconds": 0.008654747158288956,
+          "selfSeconds": 0.008654747158288956
+        },
+        "copy:parkour_solver.search.repair:enrich:239": {
+          "calls": 14,
+          "inclusiveSeconds": 0.00010664016008377075,
+          "selfSeconds": 0.00010664016008377075
+        },
+        "copy:parkour_solver.search.repair:enrich:240": {
+          "calls": 14,
+          "inclusiveSeconds": 9.974837303161621e-05,
+          "selfSeconds": 9.974837303161621e-05
+        },
+        "copy:parkour_solver.search.repair:snapshot:91": {
+          "calls": 192,
+          "inclusiveSeconds": 0.026620887219905853,
+          "selfSeconds": 0.026620887219905853
+        },
+        "solver.invoke": {
+          "calls": 6,
+          "inclusiveSeconds": 0.48375870659947395,
+          "selfSeconds": 0.3538292795419693
+        },
+        "copy:parkour_solver.search.ordered_route:evaluate:274": {
+          "calls": 6,
+          "inclusiveSeconds": 0.0014592520892620087,
+          "selfSeconds": 0.0014592520892620087
+        },
+        "copy:parkour_solver.search.ordered_route:probe:41": {
+          "calls": 6,
+          "inclusiveSeconds": 0.003581251949071884,
+          "selfSeconds": 0.003581251949071884
+        },
+        "copy:parkour_solver.search.ordered_route:probe:42": {
+          "calls": 18,
+          "inclusiveSeconds": 0.001452956348657608,
+          "selfSeconds": 0.001452956348657608
+        },
+        "copy:parkour_solver.search.ordered_route:search_allocations:121": {
+          "calls": 6,
+          "inclusiveSeconds": 3.341585397720337e-06,
+          "selfSeconds": 3.341585397720337e-06
+        },
+        "copy:parkour_solver.search.ordered_route:find_route:304": {
+          "calls": 6,
+          "inclusiveSeconds": 0.0011689141392707825,
+          "selfSeconds": 0.0011689141392707825
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:370": {
+          "calls": 6,
+          "inclusiveSeconds": 0.00459512323141098,
+          "selfSeconds": 0.00459512323141098
+        },
+        "numerical.evaluate": {
+          "calls": 6,
+          "inclusiveSeconds": 7.119210373610258,
+          "selfSeconds": 4.27517457306385
+        },
+        "copy:parkour_solver.search.dfs:commit_arrival:40": {
+          "calls": 11,
+          "inclusiveSeconds": 0.008747003972530365,
+          "selfSeconds": 0.008747003972530365
+        },
+        "copy:parkour_solver.spatial.checkpoints:retain_prefix:92": {
+          "calls": 11,
+          "inclusiveSeconds": 0.14395541325211525,
+          "selfSeconds": 0.14395541325211525
+        },
+        "copy:parkour_solver.search.dfs:evaluate_node:445": {
+          "calls": 1,
+          "inclusiveSeconds": 0.00012174993753433228,
+          "selfSeconds": 0.00012174993753433228
+        },
+        "movement.source.next": {
+          "calls": 5,
+          "inclusiveSeconds": 0.7969518788158894,
+          "selfSeconds": 0.021941859275102615
+        },
+        "movement.source.close": {
+          "calls": 5,
+          "inclusiveSeconds": 6.766617298126221e-05,
+          "selfSeconds": 6.766617298126221e-05
+        },
+        "copy:parkour_solver.search.dfs:score:635": {
+          "calls": 5,
+          "inclusiveSeconds": 0.07125037536025047,
+          "selfSeconds": 0.07125037536025047
+        },
+        "copy:parkour_solver.search.dfs:score:692": {
+          "calls": 5,
+          "inclusiveSeconds": 0.004126708954572678,
+          "selfSeconds": 0.004126708954572678
+        },
+        "peer.remember_peer": {
+          "calls": 5,
+          "inclusiveSeconds": 3.821030259132385e-05,
+          "selfSeconds": 3.821030259132385e-05
+        },
+        "comparison.compare_candidates": {
+          "calls": 11,
+          "inclusiveSeconds": 8.659437298774719e-05,
+          "selfSeconds": 8.192285895347595e-05
+        },
+        "peer.assess": {
+          "calls": 5,
+          "inclusiveSeconds": 0.00011695921421051025,
+          "selfSeconds": 3.536418080329895e-05
+        },
+        "copy:parkour_solver.search.dfs:search_goals:912": {
+          "calls": 4,
+          "inclusiveSeconds": 0.044590212404727936,
+          "selfSeconds": 0.044590212404727936
+        },
+        "copy:parkour_solver.search.dfs:search_goals:915": {
+          "calls": 4,
+          "inclusiveSeconds": 0.0025879181921482086,
+          "selfSeconds": 0.0025879181921482086
+        },
+        "copy:parkour_solver.search.dfs:score:741": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0012915395200252533,
+          "selfSeconds": 0.0012915395200252533
+        },
+        "dfs.session": {
+          "calls": 1,
+          "inclusiveSeconds": 8.16471279039979,
+          "selfSeconds": 0.020988866686820984
+        }
+      }
+    },
+    {
+      "index": 2,
+      "calls": 2,
+      "expanded": 0,
+      "budgetRemainingSeconds": 7.9999827072024345,
+      "frames": 0,
+      "windows": 4,
+      "termination": "deadline",
+      "wallSeconds": 8.279112752526999,
+      "buckets": {
+        "copy:parkour_solver.scene.route:prepare_route:13": {
+          "calls": 4,
+          "inclusiveSeconds": 0.0014137141406536102,
+          "selfSeconds": 0.0014137141406536102
+        },
+        "identity.digest": {
+          "calls": 1002089,
+          "inclusiveSeconds": 2.208407551050186,
+          "selfSeconds": 2.208407551050186
+        },
+        "copy:parkour_solver.search.dfs:search_goals:82": {
+          "calls": 1,
+          "inclusiveSeconds": 2.0831823348999023e-05,
+          "selfSeconds": 2.0831823348999023e-05
+        },
+        "comparison.comparison_label": {
+          "calls": 4,
+          "inclusiveSeconds": 1.0795891284942627e-05,
+          "selfSeconds": 1.0795891284942627e-05
+        },
+        "callback.profile_write": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0013785846531391144,
+          "selfSeconds": 0.0013785846531391144
+        },
+        "callback.progress": {
+          "calls": 24,
+          "inclusiveSeconds": 0.0015812218189239502,
+          "selfSeconds": 0.00020263716578483582
+        },
+        "comparison.priority_key": {
+          "calls": 6,
+          "inclusiveSeconds": 3.7476420402526855e-06,
+          "selfSeconds": 3.7476420402526855e-06
+        },
+        "copy:parkour_solver.movement.units:shifted_unit:133": {
+          "calls": 18,
+          "inclusiveSeconds": 7.098540663719177e-05,
+          "selfSeconds": 7.098540663719177e-05
+        },
+        "copy:parkour_solver.numerics.model:prepare:16": {
+          "calls": 11,
+          "inclusiveSeconds": 0.0024402476847171783,
+          "selfSeconds": 0.0024402476847171783
+        },
+        "reachability.prepare": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0003610849380493164,
+          "selfSeconds": 0.00030858442187309265
+        },
+        "reachability.analyze_model": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0005472488701343536,
+          "selfSeconds": 0.0002444125711917877
+        },
+        "copy:parkour_solver.movement.contact_combinations:merge_contacts:25": {
+          "calls": 96,
+          "inclusiveSeconds": 0.00032113492488861084,
+          "selfSeconds": 0.00032113492488861084
+        },
+        "copy:parkour_solver.search.identity:solve_scope:27": {
+          "calls": 1,
+          "inclusiveSeconds": 1.5459954738616943e-06,
+          "selfSeconds": 1.5459954738616943e-06
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:26": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0003061629831790924,
+          "selfSeconds": 0.0003061629831790924
+        },
+        "copy:parkour_solver.search.repair:snapshot:96": {
+          "calls": 40,
+          "inclusiveSeconds": 0.0009255968034267426,
+          "selfSeconds": 0.0009255968034267426
+        },
+        "copy:parkour_solver.search.repair:snapshot:97": {
+          "calls": 20,
+          "inclusiveSeconds": 0.06348462402820587,
+          "selfSeconds": 0.06348462402820587
+        },
+        "copy:parkour_solver.search.repair:snapshot:98": {
+          "calls": 40,
+          "inclusiveSeconds": 0.00033073872327804565,
+          "selfSeconds": 0.00033073872327804565
+        },
+        "copy:parkour_solver.search.repair:snapshot:99": {
+          "calls": 40,
+          "inclusiveSeconds": 0.0011729709804058075,
+          "selfSeconds": 0.0011729709804058075
+        },
+        "copy:parkour_solver.search.repair:snapshot:100": {
+          "calls": 20,
+          "inclusiveSeconds": 0.004302218556404114,
+          "selfSeconds": 0.004302218556404114
+        },
+        "copy:parkour_solver.search.repair:snapshot:101": {
+          "calls": 20,
+          "inclusiveSeconds": 0.551360834389925,
+          "selfSeconds": 0.551360834389925
+        },
+        "copy:parkour_solver.search.repair:snapshot:102": {
+          "calls": 20,
+          "inclusiveSeconds": 0.021122809499502182,
+          "selfSeconds": 0.021122809499502182
+        },
+        "copy:parkour_solver.search.repair:snapshot:103": {
+          "calls": 20,
+          "inclusiveSeconds": 0.0017259865999221802,
+          "selfSeconds": 0.0017259865999221802
+        },
+        "copy:parkour_solver.search.repair:offer:53": {
+          "calls": 13,
+          "inclusiveSeconds": 0.00030634552240371704,
+          "selfSeconds": 0.00030634552240371704
+        },
+        "copy:parkour_solver.search.repair:offer:56": {
+          "calls": 13,
+          "inclusiveSeconds": 0.0002191290259361267,
+          "selfSeconds": 0.0002191290259361267
+        },
+        "copy:parkour_solver.search.repair:offer:61": {
+          "calls": 6,
+          "inclusiveSeconds": 6.408989429473877e-05,
+          "selfSeconds": 6.408989429473877e-05
+        },
+        "copy:parkour_solver.search.repair:offer:62": {
+          "calls": 2,
+          "inclusiveSeconds": 2.4128705263137817e-05,
+          "selfSeconds": 2.4128705263137817e-05
+        },
+        "copy:parkour_solver.search.repair:save_branch:88": {
+          "calls": 5,
+          "inclusiveSeconds": 0.0002108365297317505,
+          "selfSeconds": 0.0002108365297317505
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:183": {
+          "calls": 2,
+          "inclusiveSeconds": 0.0006392858922481537,
+          "selfSeconds": 0.0006392858922481537
+        },
+        "copy:parkour_solver.search.ordered_route:publish:255": {
+          "calls": 10,
+          "inclusiveSeconds": 0.00415429100394249,
+          "selfSeconds": 0.00415429100394249
+        },
+        "copy:parkour_solver.search.repair:enrich:233": {
+          "calls": 4,
+          "inclusiveSeconds": 0.0038236714899539948,
+          "selfSeconds": 0.0038236714899539948
+        },
+        "copy:parkour_solver.search.repair:enrich:239": {
+          "calls": 4,
+          "inclusiveSeconds": 8.09207558631897e-05,
+          "selfSeconds": 8.09207558631897e-05
+        },
+        "copy:parkour_solver.search.repair:enrich:240": {
+          "calls": 4,
+          "inclusiveSeconds": 7.437914609909058e-05,
+          "selfSeconds": 7.437914609909058e-05
+        },
+        "copy:parkour_solver.search.repair:snapshot:91": {
+          "calls": 278,
+          "inclusiveSeconds": 0.027967102825641632,
+          "selfSeconds": 0.027967102825641632
+        },
+        "solver.invoke": {
+          "calls": 2,
+          "inclusiveSeconds": 0.36596324667334557,
+          "selfSeconds": 0.304856039583683
+        },
+        "copy:parkour_solver.search.ordered_route:evaluate:274": {
+          "calls": 2,
+          "inclusiveSeconds": 0.0008697882294654846,
+          "selfSeconds": 0.0008697882294654846
+        },
+        "copy:parkour_solver.search.ordered_route:probe:41": {
+          "calls": 2,
+          "inclusiveSeconds": 0.0020858757197856903,
+          "selfSeconds": 0.0020858757197856903
+        },
+        "copy:parkour_solver.search.ordered_route:probe:42": {
+          "calls": 6,
+          "inclusiveSeconds": 0.000858500599861145,
+          "selfSeconds": 0.000858500599861145
+        },
+        "copy:parkour_solver.search.ordered_route:search_allocations:121": {
+          "calls": 2,
+          "inclusiveSeconds": 1.0021030902862549e-06,
+          "selfSeconds": 1.0021030902862549e-06
+        },
+        "copy:parkour_solver.search.ordered_route:find_route:304": {
+          "calls": 2,
+          "inclusiveSeconds": 0.0007137507200241089,
+          "selfSeconds": 0.0007137507200241089
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:370": {
+          "calls": 2,
+          "inclusiveSeconds": 0.0027955807745456696,
+          "selfSeconds": 0.0027955807745456696
+        },
+        "numerical.evaluate": {
+          "calls": 1,
+          "inclusiveSeconds": 8.06713991984725,
+          "selfSeconds": 4.829206809401512
+        },
+        "copy:parkour_solver.search.dfs:commit_arrival:40": {
+          "calls": 4,
+          "inclusiveSeconds": 0.0052956342697143555,
+          "selfSeconds": 0.0052956342697143555
+        },
+        "copy:parkour_solver.spatial.checkpoints:retain_prefix:92": {
+          "calls": 4,
+          "inclusiveSeconds": 0.15610504522919655,
+          "selfSeconds": 0.15610504522919655
+        },
+        "copy:parkour_solver.search.dfs:score:635": {
+          "calls": 1,
+          "inclusiveSeconds": 0.03358112648129463,
+          "selfSeconds": 0.03358112648129463
+        },
+        "copy:parkour_solver.search.dfs:score:692": {
+          "calls": 3,
+          "inclusiveSeconds": 0.004107337445020676,
+          "selfSeconds": 0.004107337445020676
+        },
+        "peer.remember_peer": {
+          "calls": 1,
+          "inclusiveSeconds": 2.42479145526886e-05,
+          "selfSeconds": 2.250075340270996e-05
+        },
+        "comparison.compare_candidates": {
+          "calls": 4,
+          "inclusiveSeconds": 2.0757317543029785e-05,
+          "selfSeconds": 1.8756836652755737e-05
+        },
+        "peer.assess": {
+          "calls": 1,
+          "inclusiveSeconds": 1.7501413822174072e-05,
+          "selfSeconds": 5.535781383514404e-06
+        },
+        "copy:parkour_solver.search.dfs:score:741": {
+          "calls": 1,
+          "inclusiveSeconds": 0.001338869333267212,
+          "selfSeconds": 0.001338869333267212
+        },
+        "dfs.session": {
+          "calls": 1,
+          "inclusiveSeconds": 8.27908854559064,
+          "selfSeconds": 0.010023575276136398
+        },
+        "bound.transfer_bound": {
+          "calls": 5,
+          "inclusiveSeconds": 9.112805128097534e-05,
+          "selfSeconds": 9.112805128097534e-05
+        },
+        "bound.remaining_bound": {
+          "calls": 1,
+          "inclusiveSeconds": 1.241639256477356e-05,
+          "selfSeconds": 1.241639256477356e-05
+        },
+        "copy:parkour_solver.constraints.variants:__init__:42": {
+          "calls": 1,
+          "inclusiveSeconds": 0.02623133733868599,
+          "selfSeconds": 0.02623133733868599
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:45": {
+          "calls": 1,
+          "inclusiveSeconds": 1.1086463928222656e-05,
+          "selfSeconds": 1.1086463928222656e-05
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:65": {
+          "calls": 1,
+          "inclusiveSeconds": 1.800060272216797e-05,
+          "selfSeconds": 1.800060272216797e-05
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:66": {
+          "calls": 1,
+          "inclusiveSeconds": 9.841471910476685e-05,
+          "selfSeconds": 9.841471910476685e-05
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:71": {
+          "calls": 1,
+          "inclusiveSeconds": 9.98377799987793e-07,
+          "selfSeconds": 9.98377799987793e-07
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:118": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0012979991734027863,
+          "selfSeconds": 0.0012979991734027863
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:119": {
+          "calls": 1,
+          "inclusiveSeconds": 4.09148633480072e-05,
+          "selfSeconds": 4.09148633480072e-05
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:120": {
+          "calls": 1,
+          "inclusiveSeconds": 3.460794687271118e-06,
+          "selfSeconds": 3.460794687271118e-06
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:121": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0014277920126914978,
+          "selfSeconds": 0.0014277920126914978
+        },
+        "copy:parkour_solver.search.dfs:score:709": {
+          "calls": 2,
+          "inclusiveSeconds": 0.0008483715355396271,
+          "selfSeconds": 0.0008483715355396271
+        }
+      }
+    },
+    {
+      "index": 3,
+      "calls": 3,
+      "expanded": 1,
+      "budgetRemainingSeconds": 7.999980583786964,
+      "frames": 0,
+      "windows": 4,
+      "termination": "deadline",
+      "wallSeconds": 8.231695506721735,
+      "buckets": {
+        "copy:parkour_solver.scene.route:prepare_route:13": {
+          "calls": 16,
+          "inclusiveSeconds": 0.003704749047756195,
+          "selfSeconds": 0.003704749047756195
+        },
+        "copy:parkour_solver.movement.units:movement_unit:15": {
+          "calls": 11,
+          "inclusiveSeconds": 1.4510005712509155e-05,
+          "selfSeconds": 1.4510005712509155e-05
+        },
+        "identity.digest": {
+          "calls": 975377,
+          "inclusiveSeconds": 2.134598024189472,
+          "selfSeconds": 2.134598024189472
+        },
+        "copy:parkour_solver.search.dfs:search_goals:82": {
+          "calls": 1,
+          "inclusiveSeconds": 1.8205493688583374e-05,
+          "selfSeconds": 1.8205493688583374e-05
+        },
+        "comparison.comparison_label": {
+          "calls": 34,
+          "inclusiveSeconds": 0.00011158362030982971,
+          "selfSeconds": 0.00011158362030982971
+        },
+        "copy:parkour_solver.search.dfs:frame:164": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0006879605352878571,
+          "selfSeconds": 0.0006879605352878571
+        },
+        "copy:parkour_solver.search.dfs:expand_discovery:210": {
+          "calls": 1,
+          "inclusiveSeconds": 4.712492227554321e-05,
+          "selfSeconds": 4.712492227554321e-05
+        },
+        "copy:parkour_solver.search.dfs:make_frame:188": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0003180466592311859,
+          "selfSeconds": 0.0003180466592311859
+        },
+        "callback.profile_write": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0015845000743865967,
+          "selfSeconds": 0.0015845000743865967
+        },
+        "callback.progress": {
+          "calls": 34,
+          "inclusiveSeconds": 0.0024285539984703064,
+          "selfSeconds": 0.0008440539240837097
+        },
+        "movement.source.create": {
+          "calls": 1,
+          "inclusiveSeconds": 5.539506673812866e-06,
+          "selfSeconds": 5.539506673812866e-06
+        },
+        "copy:parkour_solver.search.frontier:persistent_programs:34": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0003309585154056549,
+          "selfSeconds": 0.0003309585154056549
+        },
+        "comparison.priority_key": {
+          "calls": 46,
+          "inclusiveSeconds": 2.3093074560165405e-05,
+          "selfSeconds": 2.3093074560165405e-05
+        },
+        "movement.choices.create": {
+          "calls": 1,
+          "inclusiveSeconds": 3.390014171600342e-07,
+          "selfSeconds": 3.390014171600342e-07
+        },
+        "copy:parkour_solver.movement.vertical_profiles:trace_ladder_schedule:45": {
+          "calls": 14,
+          "inclusiveSeconds": 7.298961281776428e-05,
+          "selfSeconds": 7.298961281776428e-05
+        },
+        "copy:parkour_solver.movement.program:profile_from_trace:52": {
+          "calls": 24,
+          "inclusiveSeconds": 0.0001619495451450348,
+          "selfSeconds": 0.0001619495451450348
+        },
+        "copy:parkour_solver.movement.program:profile_from_trace:53": {
+          "calls": 12,
+          "inclusiveSeconds": 0.0007976368069648743,
+          "selfSeconds": 0.0007976368069648743
+        },
+        "copy:parkour_solver.movement.program:movement_choice:74": {
+          "calls": 6,
+          "inclusiveSeconds": 5.412846803665161e-06,
+          "selfSeconds": 5.412846803665161e-06
+        },
+        "copy:parkour_solver.movement.program:append_choice:154": {
+          "calls": 6,
+          "inclusiveSeconds": 5.792826414108276e-06,
+          "selfSeconds": 5.792826414108276e-06
+        },
+        "copy:parkour_solver.movement.program:append_choice:161": {
+          "calls": 6,
+          "inclusiveSeconds": 0.00011125579476356506,
+          "selfSeconds": 0.00011125579476356506
+        },
+        "copy:parkour_solver.movement.units:shifted_unit:133": {
+          "calls": 64,
+          "inclusiveSeconds": 0.00024587661027908325,
+          "selfSeconds": 0.00024587661027908325
+        },
+        "copy:parkour_solver.movement.program:_events:102": {
+          "calls": 6,
+          "inclusiveSeconds": 5.125999450683594e-06,
+          "selfSeconds": 5.125999450683594e-06
+        },
+        "copy:parkour_solver.movement.program:profile_from_trace:55": {
+          "calls": 6,
+          "inclusiveSeconds": 0.0001293681561946869,
+          "selfSeconds": 0.0001293681561946869
+        },
+        "copy:parkour_solver.movement.program:append_choice:195": {
+          "calls": 6,
+          "inclusiveSeconds": 1.4126300811767578e-05,
+          "selfSeconds": 1.4126300811767578e-05
+        },
+        "copy:parkour_solver.movement.program:append_choice:204": {
+          "calls": 12,
+          "inclusiveSeconds": 5.5830925703048706e-05,
+          "selfSeconds": 5.5830925703048706e-05
+        },
+        "copy:parkour_solver.numerics.model:prepare:16": {
+          "calls": 21,
+          "inclusiveSeconds": 0.0039779990911483765,
+          "selfSeconds": 0.0039779990911483765
+        },
+        "reachability.prepare": {
+          "calls": 7,
+          "inclusiveSeconds": 0.008827414363622665,
+          "selfSeconds": 0.005891561508178711
+        },
+        "reachability.analyze_model": {
+          "calls": 7,
+          "inclusiveSeconds": 0.013296414166688919,
+          "selfSeconds": 0.010601446032524109
+        },
+        "copy:parkour_solver.movement.contact_combinations:merge_contacts:25": {
+          "calls": 345,
+          "inclusiveSeconds": 0.0011291801929473877,
+          "selfSeconds": 0.0011291801929473877
+        },
+        "movement.choices.next": {
+          "calls": 4,
+          "inclusiveSeconds": 0.015146374702453613,
+          "selfSeconds": 0.00225955992937088
+        },
+        "copy:parkour_solver.movement.generation:propose_choices:49": {
+          "calls": 12,
+          "inclusiveSeconds": 7.249414920806885e-06,
+          "selfSeconds": 7.249414920806885e-06
+        },
+        "reachability.required": {
+          "calls": 1,
+          "inclusiveSeconds": 0.002973537892103195,
+          "selfSeconds": 0.0010698698461055756
+        },
+        "reachability.check_program": {
+          "calls": 1,
+          "inclusiveSeconds": 0.017639417201280594,
+          "selfSeconds": 0.010501708835363388
+        },
+        "proposal.assess": {
+          "calls": 3,
+          "inclusiveSeconds": 0.01847095787525177,
+          "selfSeconds": 0.0006852932274341583
+        },
+        "movement.choices.close": {
+          "calls": 1,
+          "inclusiveSeconds": 3.3155083656311035e-07,
+          "selfSeconds": 3.3155083656311035e-07
+        },
+        "copy:parkour_solver.search.engine:evaluate_program:91": {
+          "calls": 1,
+          "inclusiveSeconds": 2.7902424335479736e-06,
+          "selfSeconds": 2.7902424335479736e-06
+        },
+        "copy:parkour_solver.search.identity:solve_scope:27": {
+          "calls": 2,
+          "inclusiveSeconds": 2.7492642402648926e-06,
+          "selfSeconds": 2.7492642402648926e-06
+        },
+        "copy:parkour_solver.constraints.variants:__init__:45": {
+          "calls": 1,
+          "inclusiveSeconds": 4.8082321882247925e-05,
+          "selfSeconds": 4.8082321882247925e-05
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:26": {
+          "calls": 2,
+          "inclusiveSeconds": 0.0005847066640853882,
+          "selfSeconds": 0.0005847066640853882
+        },
+        "copy:parkour_solver.search.repair:snapshot:96": {
+          "calls": 50,
+          "inclusiveSeconds": 0.0009659416973590851,
+          "selfSeconds": 0.0009659416973590851
+        },
+        "copy:parkour_solver.search.repair:snapshot:97": {
+          "calls": 25,
+          "inclusiveSeconds": 0.049020443111658096,
+          "selfSeconds": 0.049020443111658096
+        },
+        "copy:parkour_solver.search.repair:snapshot:98": {
+          "calls": 50,
+          "inclusiveSeconds": 0.00034664198756217957,
+          "selfSeconds": 0.00034664198756217957
+        },
+        "copy:parkour_solver.search.repair:snapshot:99": {
+          "calls": 50,
+          "inclusiveSeconds": 0.0009296387434005737,
+          "selfSeconds": 0.0009296387434005737
+        },
+        "copy:parkour_solver.search.repair:snapshot:100": {
+          "calls": 25,
+          "inclusiveSeconds": 0.002257663756608963,
+          "selfSeconds": 0.002257663756608963
+        },
+        "copy:parkour_solver.search.repair:snapshot:101": {
+          "calls": 25,
+          "inclusiveSeconds": 0.5100095793604851,
+          "selfSeconds": 0.5100095793604851
+        },
+        "copy:parkour_solver.search.repair:snapshot:102": {
+          "calls": 25,
+          "inclusiveSeconds": 0.01674136519432068,
+          "selfSeconds": 0.01674136519432068
+        },
+        "copy:parkour_solver.search.repair:snapshot:103": {
+          "calls": 25,
+          "inclusiveSeconds": 0.0015118643641471863,
+          "selfSeconds": 0.0015118643641471863
+        },
+        "copy:parkour_solver.search.repair:offer:53": {
+          "calls": 15,
+          "inclusiveSeconds": 0.00033136457204818726,
+          "selfSeconds": 0.00033136457204818726
+        },
+        "copy:parkour_solver.search.repair:offer:56": {
+          "calls": 15,
+          "inclusiveSeconds": 0.00023475289344787598,
+          "selfSeconds": 0.00023475289344787598
+        },
+        "copy:parkour_solver.search.repair:offer:61": {
+          "calls": 9,
+          "inclusiveSeconds": 8.5391104221344e-05,
+          "selfSeconds": 8.5391104221344e-05
+        },
+        "copy:parkour_solver.search.repair:offer:62": {
+          "calls": 3,
+          "inclusiveSeconds": 3.524124622344971e-05,
+          "selfSeconds": 3.524124622344971e-05
+        },
+        "copy:parkour_solver.search.repair:save_branch:88": {
+          "calls": 7,
+          "inclusiveSeconds": 0.0002697072923183441,
+          "selfSeconds": 0.0002697072923183441
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:183": {
+          "calls": 3,
+          "inclusiveSeconds": 0.0008878298103809357,
+          "selfSeconds": 0.0008878298103809357
+        },
+        "copy:parkour_solver.search.ordered_route:publish:255": {
+          "calls": 8,
+          "inclusiveSeconds": 0.0030272454023361206,
+          "selfSeconds": 0.0030272454023361206
+        },
+        "copy:parkour_solver.search.repair:enrich:233": {
+          "calls": 5,
+          "inclusiveSeconds": 0.005027495324611664,
+          "selfSeconds": 0.005027495324611664
+        },
+        "copy:parkour_solver.search.repair:enrich:239": {
+          "calls": 5,
+          "inclusiveSeconds": 9.166449308395386e-05,
+          "selfSeconds": 9.166449308395386e-05
+        },
+        "copy:parkour_solver.search.repair:enrich:240": {
+          "calls": 5,
+          "inclusiveSeconds": 8.542463183403015e-05,
+          "selfSeconds": 8.542463183403015e-05
+        },
+        "copy:parkour_solver.search.repair:snapshot:91": {
+          "calls": 268,
+          "inclusiveSeconds": 0.03193856403231621,
+          "selfSeconds": 0.03193856403231621
+        },
+        "solver.invoke": {
+          "calls": 3,
+          "inclusiveSeconds": 0.3701653741300106,
+          "selfSeconds": 0.3184165433049202
+        },
+        "copy:parkour_solver.search.ordered_route:evaluate:274": {
+          "calls": 3,
+          "inclusiveSeconds": 0.0011967122554779053,
+          "selfSeconds": 0.0011967122554779053
+        },
+        "copy:parkour_solver.search.ordered_route:probe:41": {
+          "calls": 3,
+          "inclusiveSeconds": 0.003038167953491211,
+          "selfSeconds": 0.003038167953491211
+        },
+        "copy:parkour_solver.search.ordered_route:probe:42": {
+          "calls": 9,
+          "inclusiveSeconds": 0.0012166202068328857,
+          "selfSeconds": 0.0012166202068328857
+        },
+        "copy:parkour_solver.search.ordered_route:search_allocations:121": {
+          "calls": 3,
+          "inclusiveSeconds": 1.5422701835632324e-06,
+          "selfSeconds": 1.5422701835632324e-06
+        },
+        "copy:parkour_solver.search.ordered_route:find_route:304": {
+          "calls": 3,
+          "inclusiveSeconds": 0.0011419616639614105,
+          "selfSeconds": 0.0011419616639614105
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:370": {
+          "calls": 3,
+          "inclusiveSeconds": 0.00471891462802887,
+          "selfSeconds": 0.00471891462802887
+        },
+        "numerical.evaluate": {
+          "calls": 2,
+          "inclusiveSeconds": 7.8874138705432415,
+          "selfSeconds": 4.776184443384409
+        },
+        "copy:parkour_solver.search.dfs:commit_arrival:40": {
+          "calls": 6,
+          "inclusiveSeconds": 0.00716637447476387,
+          "selfSeconds": 0.00716637447476387
+        },
+        "copy:parkour_solver.spatial.checkpoints:retain_prefix:92": {
+          "calls": 6,
+          "inclusiveSeconds": 0.19608229398727417,
+          "selfSeconds": 0.19608229398727417
+        },
+        "movement.source.next": {
+          "calls": 1,
+          "inclusiveSeconds": 0.04116863012313843,
+          "selfSeconds": 0.005415827035903931
+        },
+        "movement.source.close": {
+          "calls": 1,
+          "inclusiveSeconds": 2.0917505025863647e-05,
+          "selfSeconds": 2.0917505025863647e-05
+        },
+        "copy:parkour_solver.search.dfs:score:635": {
+          "calls": 2,
+          "inclusiveSeconds": 0.0493149571120739,
+          "selfSeconds": 0.0493149571120739
+        },
+        "copy:parkour_solver.search.dfs:score:692": {
+          "calls": 4,
+          "inclusiveSeconds": 0.004740577191114426,
+          "selfSeconds": 0.004740577191114426
+        },
+        "peer.remember_peer": {
+          "calls": 2,
+          "inclusiveSeconds": 3.229081630706787e-05,
+          "selfSeconds": 3.0953437089920044e-05
+        },
+        "comparison.compare_candidates": {
+          "calls": 30,
+          "inclusiveSeconds": 0.00016448646783828735,
+          "selfSeconds": 0.00015006959438323975
+        },
+        "peer.assess": {
+          "calls": 5,
+          "inclusiveSeconds": 9.53376293182373e-05,
+          "selfSeconds": 3.314018249511719e-05
+        },
+        "copy:parkour_solver.search.dfs:search_goals:912": {
+          "calls": 1,
+          "inclusiveSeconds": 0.02108599990606308,
+          "selfSeconds": 0.02108599990606308
+        },
+        "copy:parkour_solver.search.dfs:search_goals:915": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0008402876555919647,
+          "selfSeconds": 0.0008402876555919647
+        },
+        "copy:parkour_solver.search.dfs:score:741": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0014609545469284058,
+          "selfSeconds": 0.0014609545469284058
+        },
+        "dfs.session": {
+          "calls": 1,
+          "inclusiveSeconds": 8.231672167778015,
+          "selfSeconds": 0.016521289944648743
+        },
+        "bound.remaining_bound": {
+          "calls": 10,
+          "inclusiveSeconds": 0.00017725303769111633,
+          "selfSeconds": 0.00017725303769111633
+        },
+        "copy:parkour_solver.constraints.variants:__init__:42": {
+          "calls": 1,
+          "inclusiveSeconds": 0.012537457048892975,
+          "selfSeconds": 0.012537457048892975
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:45": {
+          "calls": 1,
+          "inclusiveSeconds": 1.1999160051345825e-05,
+          "selfSeconds": 1.1999160051345825e-05
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:65": {
+          "calls": 1,
+          "inclusiveSeconds": 1.2122094631195068e-05,
+          "selfSeconds": 1.2122094631195068e-05
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:66": {
+          "calls": 1,
+          "inclusiveSeconds": 7.752329111099243e-06,
+          "selfSeconds": 7.752329111099243e-06
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:71": {
+          "calls": 1,
+          "inclusiveSeconds": 9.201467037200928e-07,
+          "selfSeconds": 9.201467037200928e-07
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:118": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0011638328433036804,
+          "selfSeconds": 0.0011638328433036804
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:119": {
+          "calls": 1,
+          "inclusiveSeconds": 3.18773090839386e-05,
+          "selfSeconds": 3.18773090839386e-05
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:120": {
+          "calls": 1,
+          "inclusiveSeconds": 3.375113010406494e-06,
+          "selfSeconds": 3.375113010406494e-06
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:121": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0011079981923103333,
+          "selfSeconds": 0.0011079981923103333
+        },
+        "copy:parkour_solver.search.dfs:score:709": {
+          "calls": 2,
+          "inclusiveSeconds": 0.0007312558591365814,
+          "selfSeconds": 0.0007312558591365814
+        },
+        "copy:parkour_solver.search.dfs:search_goals:897": {
+          "calls": 2,
+          "inclusiveSeconds": 0.002653375267982483,
+          "selfSeconds": 0.002653375267982483
+        }
+      }
+    },
+    {
+      "index": 4,
+      "calls": 4,
+      "expanded": 0,
+      "budgetRemainingSeconds": 7.999978750944138,
+      "frames": 2,
+      "windows": 5,
+      "termination": "deadline",
+      "wallSeconds": 8.355720460414886,
+      "buckets": {
+        "copy:parkour_solver.scene.route:prepare_route:13": {
+          "calls": 18,
+          "inclusiveSeconds": 0.003894459456205368,
+          "selfSeconds": 0.003894459456205368
+        },
+        "copy:parkour_solver.movement.units:movement_unit:15": {
+          "calls": 33,
+          "inclusiveSeconds": 4.271417856216431e-05,
+          "selfSeconds": 4.271417856216431e-05
+        },
+        "identity.digest": {
+          "calls": 812895,
+          "inclusiveSeconds": 1.780218843370676,
+          "selfSeconds": 1.780218843370676
+        },
+        "copy:parkour_solver.search.dfs:search_goals:82": {
+          "calls": 1,
+          "inclusiveSeconds": 2.183765172958374e-05,
+          "selfSeconds": 2.183765172958374e-05
+        },
+        "comparison.comparison_label": {
+          "calls": 47,
+          "inclusiveSeconds": 0.00014957040548324585,
+          "selfSeconds": 0.00014957040548324585
+        },
+        "callback.progress": {
+          "calls": 68,
+          "inclusiveSeconds": 9.303167462348938e-05,
+          "selfSeconds": 9.303167462348938e-05
+        },
+        "movement.source.create": {
+          "calls": 6,
+          "inclusiveSeconds": 1.5445053577423096e-05,
+          "selfSeconds": 1.5445053577423096e-05
+        },
+        "comparison.priority_key": {
+          "calls": 100,
+          "inclusiveSeconds": 6.376579403877258e-05,
+          "selfSeconds": 6.376579403877258e-05
+        },
+        "movement.choices.create": {
+          "calls": 6,
+          "inclusiveSeconds": 2.205371856689453e-06,
+          "selfSeconds": 2.205371856689453e-06
+        },
+        "copy:parkour_solver.movement.vertical_profiles:trace_ladder_schedule:45": {
+          "calls": 60,
+          "inclusiveSeconds": 0.00021970272064208984,
+          "selfSeconds": 0.00021970272064208984
+        },
+        "copy:parkour_solver.movement.program:profile_from_trace:52": {
+          "calls": 96,
+          "inclusiveSeconds": 0.0004658624529838562,
+          "selfSeconds": 0.0004658624529838562
+        },
+        "copy:parkour_solver.movement.program:profile_from_trace:53": {
+          "calls": 48,
+          "inclusiveSeconds": 0.002032756805419922,
+          "selfSeconds": 0.002032756805419922
+        },
+        "copy:parkour_solver.movement.program:movement_choice:74": {
+          "calls": 24,
+          "inclusiveSeconds": 2.224370837211609e-05,
+          "selfSeconds": 2.224370837211609e-05
+        },
+        "copy:parkour_solver.movement.program:append_choice:154": {
+          "calls": 24,
+          "inclusiveSeconds": 2.3767352104187012e-05,
+          "selfSeconds": 2.3767352104187012e-05
+        },
+        "copy:parkour_solver.movement.program:append_choice:161": {
+          "calls": 24,
+          "inclusiveSeconds": 0.0003252066671848297,
+          "selfSeconds": 0.0003252066671848297
+        },
+        "copy:parkour_solver.movement.units:shifted_unit:133": {
+          "calls": 98,
+          "inclusiveSeconds": 0.0004089251160621643,
+          "selfSeconds": 0.0004089251160621643
+        },
+        "copy:parkour_solver.movement.program:_events:102": {
+          "calls": 24,
+          "inclusiveSeconds": 2.1051615476608276e-05,
+          "selfSeconds": 2.1051615476608276e-05
+        },
+        "copy:parkour_solver.movement.program:profile_from_trace:55": {
+          "calls": 24,
+          "inclusiveSeconds": 0.0004095323383808136,
+          "selfSeconds": 0.0004095323383808136
+        },
+        "copy:parkour_solver.movement.program:append_choice:195": {
+          "calls": 24,
+          "inclusiveSeconds": 5.2753835916519165e-05,
+          "selfSeconds": 5.2753835916519165e-05
+        },
+        "copy:parkour_solver.movement.program:append_choice:204": {
+          "calls": 48,
+          "inclusiveSeconds": 0.0001536831259727478,
+          "selfSeconds": 0.0001536831259727478
+        },
+        "copy:parkour_solver.numerics.model:prepare:16": {
+          "calls": 29,
+          "inclusiveSeconds": 0.005130533128976822,
+          "selfSeconds": 0.005130533128976822
+        },
+        "reachability.prepare": {
+          "calls": 29,
+          "inclusiveSeconds": 0.012381013482809067,
+          "selfSeconds": 0.00891188159584999
+        },
+        "reachability.analyze_model": {
+          "calls": 29,
+          "inclusiveSeconds": 0.023701917380094528,
+          "selfSeconds": 0.01704917848110199
+        },
+        "copy:parkour_solver.movement.contact_combinations:merge_contacts:25": {
+          "calls": 527,
+          "inclusiveSeconds": 0.001702331006526947,
+          "selfSeconds": 0.001702331006526947
+        },
+        "movement.choices.next": {
+          "calls": 6,
+          "inclusiveSeconds": 0.06566858664155006,
+          "selfSeconds": 0.02079474925994873
+        },
+        "reachability.required": {
+          "calls": 4,
+          "inclusiveSeconds": 0.023295007646083832,
+          "selfSeconds": 0.0024446435272693634
+        },
+        "movement.choices.close": {
+          "calls": 6,
+          "inclusiveSeconds": 2.376735210418701e-06,
+          "selfSeconds": 2.376735210418701e-06
+        },
+        "copy:parkour_solver.search.engine:evaluate_program:91": {
+          "calls": 4,
+          "inclusiveSeconds": 1.0915100574493408e-05,
+          "selfSeconds": 1.0915100574493408e-05
+        },
+        "copy:parkour_solver.search.identity:solve_scope:27": {
+          "calls": 5,
+          "inclusiveSeconds": 5.751848220825195e-06,
+          "selfSeconds": 5.751848220825195e-06
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:26": {
+          "calls": 5,
+          "inclusiveSeconds": 0.0011579617857933044,
+          "selfSeconds": 0.0011579617857933044
+        },
+        "copy:parkour_solver.search.repair:snapshot:96": {
+          "calls": 88,
+          "inclusiveSeconds": 0.00686877965927124,
+          "selfSeconds": 0.00686877965927124
+        },
+        "copy:parkour_solver.search.repair:snapshot:97": {
+          "calls": 44,
+          "inclusiveSeconds": 0.11933091655373573,
+          "selfSeconds": 0.11933091655373573
+        },
+        "copy:parkour_solver.search.repair:snapshot:98": {
+          "calls": 88,
+          "inclusiveSeconds": 0.0005444027483463287,
+          "selfSeconds": 0.0005444027483463287
+        },
+        "copy:parkour_solver.search.repair:snapshot:99": {
+          "calls": 88,
+          "inclusiveSeconds": 0.0017717741429805756,
+          "selfSeconds": 0.0017717741429805756
+        },
+        "copy:parkour_solver.search.repair:snapshot:100": {
+          "calls": 44,
+          "inclusiveSeconds": 0.006519235670566559,
+          "selfSeconds": 0.006519235670566559
+        },
+        "copy:parkour_solver.search.repair:snapshot:101": {
+          "calls": 44,
+          "inclusiveSeconds": 0.7543191649019718,
+          "selfSeconds": 0.7543191649019718
+        },
+        "copy:parkour_solver.search.repair:snapshot:102": {
+          "calls": 44,
+          "inclusiveSeconds": 0.04604119062423706,
+          "selfSeconds": 0.04604119062423706
+        },
+        "copy:parkour_solver.search.repair:snapshot:103": {
+          "calls": 44,
+          "inclusiveSeconds": 0.0352449007332325,
+          "selfSeconds": 0.0352449007332325
+        },
+        "copy:parkour_solver.search.repair:offer:53": {
+          "calls": 25,
+          "inclusiveSeconds": 0.000457029789686203,
+          "selfSeconds": 0.000457029789686203
+        },
+        "copy:parkour_solver.search.repair:offer:56": {
+          "calls": 25,
+          "inclusiveSeconds": 0.0003196224570274353,
+          "selfSeconds": 0.0003196224570274353
+        },
+        "copy:parkour_solver.search.repair:offer:61": {
+          "calls": 12,
+          "inclusiveSeconds": 0.00010487809777259827,
+          "selfSeconds": 0.00010487809777259827
+        },
+        "copy:parkour_solver.search.repair:offer:62": {
+          "calls": 4,
+          "inclusiveSeconds": 5.408748984336853e-05,
+          "selfSeconds": 5.408748984336853e-05
+        },
+        "copy:parkour_solver.search.repair:save_branch:88": {
+          "calls": 4,
+          "inclusiveSeconds": 0.0001411251723766327,
+          "selfSeconds": 0.0001411251723766327
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:183": {
+          "calls": 4,
+          "inclusiveSeconds": 0.0011185035109519958,
+          "selfSeconds": 0.0011185035109519958
+        },
+        "copy:parkour_solver.search.ordered_route:publish:255": {
+          "calls": 12,
+          "inclusiveSeconds": 0.004560619592666626,
+          "selfSeconds": 0.004560619592666626
+        },
+        "copy:parkour_solver.search.repair:enrich:233": {
+          "calls": 2,
+          "inclusiveSeconds": 0.0020664148032665253,
+          "selfSeconds": 0.0020664148032665253
+        },
+        "copy:parkour_solver.search.repair:enrich:239": {
+          "calls": 2,
+          "inclusiveSeconds": 6.137415766716003e-05,
+          "selfSeconds": 6.137415766716003e-05
+        },
+        "copy:parkour_solver.search.repair:enrich:240": {
+          "calls": 2,
+          "inclusiveSeconds": 3.637373447418213e-05,
+          "selfSeconds": 3.637373447418213e-05
+        },
+        "copy:parkour_solver.search.repair:snapshot:91": {
+          "calls": 330,
+          "inclusiveSeconds": 0.0996098592877388,
+          "selfSeconds": 0.0996098592877388
+        },
+        "solver.invoke": {
+          "calls": 4,
+          "inclusiveSeconds": 0.8755796253681183,
+          "selfSeconds": 0.8694653771817684
+        },
+        "copy:parkour_solver.search.ordered_route:evaluate:274": {
+          "calls": 4,
+          "inclusiveSeconds": 0.001651618629693985,
+          "selfSeconds": 0.001651618629693985
+        },
+        "copy:parkour_solver.search.ordered_route:probe:41": {
+          "calls": 4,
+          "inclusiveSeconds": 0.0036094598472118378,
+          "selfSeconds": 0.0036094598472118378
+        },
+        "copy:parkour_solver.search.ordered_route:probe:42": {
+          "calls": 12,
+          "inclusiveSeconds": 0.0016318634152412415,
+          "selfSeconds": 0.0016318634152412415
+        },
+        "copy:parkour_solver.search.ordered_route:search_allocations:121": {
+          "calls": 4,
+          "inclusiveSeconds": 2.302229404449463e-06,
+          "selfSeconds": 2.302229404449463e-06
+        },
+        "copy:parkour_solver.search.ordered_route:find_route:304": {
+          "calls": 2,
+          "inclusiveSeconds": 0.0007876232266426086,
+          "selfSeconds": 0.0007876232266426086
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:370": {
+          "calls": 2,
+          "inclusiveSeconds": 0.003937378525733948,
+          "selfSeconds": 0.003937378525733948
+        },
+        "numerical.evaluate": {
+          "calls": 5,
+          "inclusiveSeconds": 7.7319448702037334,
+          "selfSeconds": 3.9226367101073265
+        },
+        "copy:parkour_solver.search.dfs:commit_arrival:40": {
+          "calls": 14,
+          "inclusiveSeconds": 0.01364487037062645,
+          "selfSeconds": 0.01364487037062645
+        },
+        "copy:parkour_solver.spatial.checkpoints:retain_prefix:92": {
+          "calls": 14,
+          "inclusiveSeconds": 0.2998115122318268,
+          "selfSeconds": 0.2998115122318268
+        },
+        "movement.source.next": {
+          "calls": 6,
+          "inclusiveSeconds": 0.07829766720533371,
+          "selfSeconds": 0.007396921515464783
+        },
+        "movement.source.close": {
+          "calls": 6,
+          "inclusiveSeconds": 1.8700957298278809e-06,
+          "selfSeconds": 1.8700957298278809e-06
+        },
+        "copy:parkour_solver.search.dfs:score:635": {
+          "calls": 5,
+          "inclusiveSeconds": 0.07597682625055313,
+          "selfSeconds": 0.07597682625055313
+        },
+        "copy:parkour_solver.search.dfs:score:692": {
+          "calls": 9,
+          "inclusiveSeconds": 0.009566619992256165,
+          "selfSeconds": 0.009566619992256165
+        },
+        "peer.remember_peer": {
+          "calls": 5,
+          "inclusiveSeconds": 0.00011103972792625427,
+          "selfSeconds": 8.840858936309814e-05
+        },
+        "comparison.compare_candidates": {
+          "calls": 61,
+          "inclusiveSeconds": 0.0002958923578262329,
+          "selfSeconds": 0.00027013570070266724
+        },
+        "peer.assess": {
+          "calls": 10,
+          "inclusiveSeconds": 0.00018474087119102478,
+          "selfSeconds": 5.939975380897522e-05
+        },
+        "copy:parkour_solver.search.dfs:search_goals:912": {
+          "calls": 3,
+          "inclusiveSeconds": 0.10200100019574165,
+          "selfSeconds": 0.10200100019574165
+        },
+        "copy:parkour_solver.search.dfs:search_goals:915": {
+          "calls": 3,
+          "inclusiveSeconds": 0.0026589222252368927,
+          "selfSeconds": 0.0026589222252368927
+        },
+        "copy:parkour_solver.search.dfs:score:741": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0013114996254444122,
+          "selfSeconds": 0.0013114996254444122
+        },
+        "dfs.session": {
+          "calls": 1,
+          "inclusiveSeconds": 8.355692252516747,
+          "selfSeconds": 0.032732438296079636
+        },
+        "bound.remaining_bound": {
+          "calls": 20,
+          "inclusiveSeconds": 0.000373203307390213,
+          "selfSeconds": 0.000373203307390213
+        },
+        "copy:parkour_solver.constraints.variants:__init__:42": {
+          "calls": 5,
+          "inclusiveSeconds": 0.05832724645733833,
+          "selfSeconds": 0.05832724645733833
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:45": {
+          "calls": 5,
+          "inclusiveSeconds": 4.2963773012161255e-05,
+          "selfSeconds": 4.2963773012161255e-05
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:65": {
+          "calls": 5,
+          "inclusiveSeconds": 5.4173171520233154e-05,
+          "selfSeconds": 5.4173171520233154e-05
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:66": {
+          "calls": 5,
+          "inclusiveSeconds": 0.00027055293321609497,
+          "selfSeconds": 0.00027055293321609497
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:71": {
+          "calls": 5,
+          "inclusiveSeconds": 4.7050416469573975e-06,
+          "selfSeconds": 4.7050416469573975e-06
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:118": {
+          "calls": 5,
+          "inclusiveSeconds": 0.004549667239189148,
+          "selfSeconds": 0.004549667239189148
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:119": {
+          "calls": 5,
+          "inclusiveSeconds": 0.00010367855429649353,
+          "selfSeconds": 0.00010367855429649353
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:120": {
+          "calls": 5,
+          "inclusiveSeconds": 2.9753893613815308e-05,
+          "selfSeconds": 2.9753893613815308e-05
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:121": {
+          "calls": 5,
+          "inclusiveSeconds": 0.007545825093984604,
+          "selfSeconds": 0.007545825093984604
+        },
+        "copy:parkour_solver.search.dfs:score:709": {
+          "calls": 3,
+          "inclusiveSeconds": 0.0011459551751613617,
+          "selfSeconds": 0.0011459551751613617
+        },
+        "copy:parkour_solver.search.dfs:search_goals:897": {
+          "calls": 3,
+          "inclusiveSeconds": 0.004061754792928696,
+          "selfSeconds": 0.004061754792928696
+        },
+        "copy:parkour_solver.search.frontier:persistent_programs:33": {
+          "calls": 6,
+          "inclusiveSeconds": 0.003939546644687653,
+          "selfSeconds": 0.003939546644687653
+        },
+        "copy:parkour_solver.movement.normal:named_choice:46": {
+          "calls": 4,
+          "inclusiveSeconds": 3.520399332046509e-05,
+          "selfSeconds": 3.520399332046509e-05
+        },
+        "copy:parkour_solver.movement.program:append_choice:156": {
+          "calls": 4,
+          "inclusiveSeconds": 3.0077993869781494e-05,
+          "selfSeconds": 3.0077993869781494e-05
+        },
+        "reachability.sequence": {
+          "calls": 4,
+          "inclusiveSeconds": 0.02519175037741661,
+          "selfSeconds": 0.0009172521531581879
+        }
+      }
+    },
+    {
+      "index": 5,
+      "calls": 1,
+      "expanded": 0,
+      "budgetRemainingSeconds": 7.999978579580784,
+      "frames": 6,
+      "windows": 8,
+      "termination": "deadline",
+      "wallSeconds": 8.292800959199667,
+      "buckets": {
+        "copy:parkour_solver.scene.route:prepare_route:13": {
+          "calls": 2,
+          "inclusiveSeconds": 0.0006838701665401459,
+          "selfSeconds": 0.0006838701665401459
+        },
+        "identity.digest": {
+          "calls": 1064813,
+          "inclusiveSeconds": 2.3439133502542973,
+          "selfSeconds": 2.3439133502542973
+        },
+        "copy:parkour_solver.search.dfs:search_goals:82": {
+          "calls": 1,
+          "inclusiveSeconds": 1.800060272216797e-05,
+          "selfSeconds": 1.800060272216797e-05
+        },
+        "comparison.comparison_label": {
+          "calls": 8,
+          "inclusiveSeconds": 2.2795051336288452e-05,
+          "selfSeconds": 2.2795051336288452e-05
+        },
+        "callback.profile_write": {
+          "calls": 1,
+          "inclusiveSeconds": 0.003591913729906082,
+          "selfSeconds": 0.003591913729906082
+        },
+        "callback.progress": {
+          "calls": 15,
+          "inclusiveSeconds": 0.0037287957966327667,
+          "selfSeconds": 0.00013688206672668457
+        },
+        "comparison.priority_key": {
+          "calls": 11,
+          "inclusiveSeconds": 6.124377250671387e-06,
+          "selfSeconds": 6.124377250671387e-06
+        },
+        "copy:parkour_solver.movement.units:shifted_unit:133": {
+          "calls": 12,
+          "inclusiveSeconds": 4.729628562927246e-05,
+          "selfSeconds": 4.729628562927246e-05
+        },
+        "copy:parkour_solver.numerics.model:prepare:16": {
+          "calls": 5,
+          "inclusiveSeconds": 0.0012818314135074615,
+          "selfSeconds": 0.0012818314135074615
+        },
+        "reachability.prepare": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0003589540719985962,
+          "selfSeconds": 0.00030070170760154724
+        },
+        "reachability.analyze_model": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0005875006318092346,
+          "selfSeconds": 0.0002867504954338074
+        },
+        "copy:parkour_solver.movement.contact_combinations:merge_contacts:25": {
+          "calls": 48,
+          "inclusiveSeconds": 0.00016599148511886597,
+          "selfSeconds": 0.00016599148511886597
+        },
+        "copy:parkour_solver.search.identity:solve_scope:27": {
+          "calls": 1,
+          "inclusiveSeconds": 5.584210157394409e-06,
+          "selfSeconds": 5.584210157394409e-06
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:26": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0003156624734401703,
+          "selfSeconds": 0.0003156624734401703
+        },
+        "copy:parkour_solver.search.repair:snapshot:96": {
+          "calls": 22,
+          "inclusiveSeconds": 0.000473853200674057,
+          "selfSeconds": 0.000473853200674057
+        },
+        "copy:parkour_solver.search.repair:snapshot:97": {
+          "calls": 11,
+          "inclusiveSeconds": 0.047714002430438995,
+          "selfSeconds": 0.047714002430438995
+        },
+        "copy:parkour_solver.search.repair:snapshot:98": {
+          "calls": 22,
+          "inclusiveSeconds": 0.00016691908240318298,
+          "selfSeconds": 0.00016691908240318298
+        },
+        "copy:parkour_solver.search.repair:snapshot:99": {
+          "calls": 22,
+          "inclusiveSeconds": 0.0008058436214923859,
+          "selfSeconds": 0.0008058436214923859
+        },
+        "copy:parkour_solver.search.repair:snapshot:100": {
+          "calls": 11,
+          "inclusiveSeconds": 0.004362165927886963,
+          "selfSeconds": 0.004362165927886963
+        },
+        "copy:parkour_solver.search.repair:snapshot:101": {
+          "calls": 11,
+          "inclusiveSeconds": 0.31160690262913704,
+          "selfSeconds": 0.31160690262913704
+        },
+        "copy:parkour_solver.search.repair:snapshot:102": {
+          "calls": 11,
+          "inclusiveSeconds": 0.017755728214979172,
+          "selfSeconds": 0.017755728214979172
+        },
+        "copy:parkour_solver.search.repair:snapshot:103": {
+          "calls": 11,
+          "inclusiveSeconds": 0.001231461763381958,
+          "selfSeconds": 0.001231461763381958
+        },
+        "copy:parkour_solver.search.repair:offer:53": {
+          "calls": 7,
+          "inclusiveSeconds": 0.00016133487224578857,
+          "selfSeconds": 0.00016133487224578857
+        },
+        "copy:parkour_solver.search.repair:offer:56": {
+          "calls": 7,
+          "inclusiveSeconds": 0.00011379271745681763,
+          "selfSeconds": 0.00011379271745681763
+        },
+        "copy:parkour_solver.search.repair:offer:61": {
+          "calls": 3,
+          "inclusiveSeconds": 3.341957926750183e-05,
+          "selfSeconds": 3.341957926750183e-05
+        },
+        "copy:parkour_solver.search.repair:offer:62": {
+          "calls": 1,
+          "inclusiveSeconds": 1.6164034605026245e-05,
+          "selfSeconds": 1.6164034605026245e-05
+        },
+        "copy:parkour_solver.search.repair:save_branch:88": {
+          "calls": 1,
+          "inclusiveSeconds": 4.233419895172119e-05,
+          "selfSeconds": 4.233419895172119e-05
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:183": {
+          "calls": 1,
+          "inclusiveSeconds": 0.00030687078833580017,
+          "selfSeconds": 0.00030687078833580017
+        },
+        "copy:parkour_solver.search.repair:snapshot:91": {
+          "calls": 165,
+          "inclusiveSeconds": 0.016162067651748657,
+          "selfSeconds": 0.016162067651748657
+        },
+        "solver.invoke": {
+          "calls": 1,
+          "inclusiveSeconds": 0.2770661227405071,
+          "selfSeconds": 0.27663629129529
+        },
+        "copy:parkour_solver.search.ordered_route:evaluate:274": {
+          "calls": 1,
+          "inclusiveSeconds": 0.000446125864982605,
+          "selfSeconds": 0.000446125864982605
+        },
+        "copy:parkour_solver.search.ordered_route:probe:41": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0008084625005722046,
+          "selfSeconds": 0.0008084625005722046
+        },
+        "copy:parkour_solver.search.ordered_route:probe:42": {
+          "calls": 3,
+          "inclusiveSeconds": 0.0004326663911342621,
+          "selfSeconds": 0.0004326663911342621
+        },
+        "copy:parkour_solver.search.ordered_route:search_allocations:121": {
+          "calls": 1,
+          "inclusiveSeconds": 4.991888999938965e-07,
+          "selfSeconds": 4.991888999938965e-07
+        },
+        "numerical.evaluate": {
+          "calls": 1,
+          "inclusiveSeconds": 8.066000539809465,
+          "selfSeconds": 5.004782702773809
+        },
+        "copy:parkour_solver.search.dfs:commit_arrival:40": {
+          "calls": 4,
+          "inclusiveSeconds": 0.005224335938692093,
+          "selfSeconds": 0.005224335938692093
+        },
+        "copy:parkour_solver.spatial.checkpoints:retain_prefix:92": {
+          "calls": 4,
+          "inclusiveSeconds": 0.1681024506688118,
+          "selfSeconds": 0.1681024506688118
+        },
+        "copy:parkour_solver.search.dfs:score:635": {
+          "calls": 1,
+          "inclusiveSeconds": 0.032878000289201736,
+          "selfSeconds": 0.032878000289201736
+        },
+        "copy:parkour_solver.search.dfs:score:692": {
+          "calls": 3,
+          "inclusiveSeconds": 0.0038662925362586975,
+          "selfSeconds": 0.0038662925362586975
+        },
+        "peer.remember_peer": {
+          "calls": 1,
+          "inclusiveSeconds": 2.5209039449691772e-05,
+          "selfSeconds": 2.3748725652694702e-05
+        },
+        "comparison.compare_candidates": {
+          "calls": 6,
+          "inclusiveSeconds": 3.954395651817322e-05,
+          "selfSeconds": 3.6541372537612915e-05
+        },
+        "peer.assess": {
+          "calls": 1,
+          "inclusiveSeconds": 2.9124319553375244e-05,
+          "selfSeconds": 7.834285497665405e-06
+        },
+        "copy:parkour_solver.search.dfs:score:741": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0014176666736602783,
+          "selfSeconds": 0.0014176666736602783
+        },
+        "dfs.session": {
+          "calls": 1,
+          "inclusiveSeconds": 8.29277278855443,
+          "selfSeconds": 0.012866482138633728
+        },
+        "bound.remaining_bound": {
+          "calls": 2,
+          "inclusiveSeconds": 2.358853816986084e-05,
+          "selfSeconds": 2.358853816986084e-05
+        },
+        "copy:parkour_solver.constraints.variants:__init__:42": {
+          "calls": 1,
+          "inclusiveSeconds": 0.026062455028295517,
+          "selfSeconds": 0.026062455028295517
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:45": {
+          "calls": 1,
+          "inclusiveSeconds": 1.274794340133667e-05,
+          "selfSeconds": 1.274794340133667e-05
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:65": {
+          "calls": 1,
+          "inclusiveSeconds": 4.770606756210327e-05,
+          "selfSeconds": 4.770606756210327e-05
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:66": {
+          "calls": 1,
+          "inclusiveSeconds": 0.000330999493598938,
+          "selfSeconds": 0.000330999493598938
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:71": {
+          "calls": 1,
+          "inclusiveSeconds": 1.084059476852417e-06,
+          "selfSeconds": 1.084059476852417e-06
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:118": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0013614147901535034,
+          "selfSeconds": 0.0013614147901535034
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:119": {
+          "calls": 1,
+          "inclusiveSeconds": 4.291906952857971e-05,
+          "selfSeconds": 4.291906952857971e-05
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:120": {
+          "calls": 1,
+          "inclusiveSeconds": 1.1038035154342651e-05,
+          "selfSeconds": 1.1038035154342651e-05
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:121": {
+          "calls": 1,
+          "inclusiveSeconds": 0.003917079418897629,
+          "selfSeconds": 0.003917079418897629
+        },
+        "copy:parkour_solver.search.dfs:search_goals:897": {
+          "calls": 1,
+          "inclusiveSeconds": 0.001702040433883667,
+          "selfSeconds": 0.001702040433883667
+        }
+      }
+    },
+    {
+      "index": 6,
+      "calls": 0,
+      "expanded": 0,
+      "budgetRemainingSeconds": 7.999981336295605,
+      "frames": 6,
+      "windows": 8,
+      "termination": "deadline",
+      "wallSeconds": 8.295532543212175,
+      "buckets": {
+        "identity.digest": {
+          "calls": 1135722,
+          "inclusiveSeconds": 2.4853960536420345,
+          "selfSeconds": 2.4853960536420345
+        },
+        "copy:parkour_solver.search.dfs:search_goals:82": {
+          "calls": 1,
+          "inclusiveSeconds": 2.2046267986297607e-05,
+          "selfSeconds": 2.2046267986297607e-05
+        },
+        "comparison.comparison_label": {
+          "calls": 4,
+          "inclusiveSeconds": 1.3872981071472168e-05,
+          "selfSeconds": 1.3872981071472168e-05
+        },
+        "callback.profile_write": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0024763382971286774,
+          "selfSeconds": 0.0024763382971286774
+        },
+        "callback.progress": {
+          "calls": 9,
+          "inclusiveSeconds": 0.0025843381881713867,
+          "selfSeconds": 0.00010799989104270935
+        },
+        "comparison.priority_key": {
+          "calls": 4,
+          "inclusiveSeconds": 2.682209014892578e-06,
+          "selfSeconds": 2.682209014892578e-06
+        },
+        "copy:parkour_solver.movement.units:shifted_unit:133": {
+          "calls": 6,
+          "inclusiveSeconds": 2.3923814296722412e-05,
+          "selfSeconds": 2.3923814296722412e-05
+        },
+        "copy:parkour_solver.numerics.model:prepare:16": {
+          "calls": 2,
+          "inclusiveSeconds": 0.0004010424017906189,
+          "selfSeconds": 0.0004010424017906189
+        },
+        "reachability.prepare": {
+          "calls": 1,
+          "inclusiveSeconds": 0.00034686923027038574,
+          "selfSeconds": 0.00029470399022102356
+        },
+        "reachability.analyze_model": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0005504153668880463,
+          "selfSeconds": 0.00025237351655960083
+        },
+        "copy:parkour_solver.movement.contact_combinations:merge_contacts:25": {
+          "calls": 18,
+          "inclusiveSeconds": 4.659593105316162e-05,
+          "selfSeconds": 4.659593105316162e-05
+        },
+        "copy:parkour_solver.search.identity:solve_scope:27": {
+          "calls": 1,
+          "inclusiveSeconds": 1.7099082469940186e-06,
+          "selfSeconds": 1.7099082469940186e-06
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:26": {
+          "calls": 1,
+          "inclusiveSeconds": 0.00035529211163520813,
+          "selfSeconds": 0.00035529211163520813
+        },
+        "copy:parkour_solver.search.repair:snapshot:96": {
+          "calls": 12,
+          "inclusiveSeconds": 0.0002688765525817871,
+          "selfSeconds": 0.0002688765525817871
+        },
+        "copy:parkour_solver.search.repair:snapshot:97": {
+          "calls": 6,
+          "inclusiveSeconds": 0.06146574392914772,
+          "selfSeconds": 0.06146574392914772
+        },
+        "copy:parkour_solver.search.repair:snapshot:98": {
+          "calls": 12,
+          "inclusiveSeconds": 8.023902773857117e-05,
+          "selfSeconds": 8.023902773857117e-05
+        },
+        "copy:parkour_solver.search.repair:snapshot:99": {
+          "calls": 12,
+          "inclusiveSeconds": 0.0004531778395175934,
+          "selfSeconds": 0.0004531778395175934
+        },
+        "copy:parkour_solver.search.repair:snapshot:100": {
+          "calls": 6,
+          "inclusiveSeconds": 0.002780914306640625,
+          "selfSeconds": 0.002780914306640625
+        },
+        "copy:parkour_solver.search.repair:snapshot:101": {
+          "calls": 6,
+          "inclusiveSeconds": 0.1519676260650158,
+          "selfSeconds": 0.1519676260650158
+        },
+        "copy:parkour_solver.search.repair:snapshot:102": {
+          "calls": 6,
+          "inclusiveSeconds": 0.010723549872636795,
+          "selfSeconds": 0.010723549872636795
+        },
+        "copy:parkour_solver.search.repair:snapshot:103": {
+          "calls": 6,
+          "inclusiveSeconds": 0.0006912462413311005,
+          "selfSeconds": 0.0006912462413311005
+        },
+        "copy:parkour_solver.search.repair:offer:53": {
+          "calls": 3,
+          "inclusiveSeconds": 6.50845468044281e-05,
+          "selfSeconds": 6.50845468044281e-05
+        },
+        "copy:parkour_solver.search.repair:offer:56": {
+          "calls": 3,
+          "inclusiveSeconds": 4.800036549568176e-05,
+          "selfSeconds": 4.800036549568176e-05
+        },
+        "copy:parkour_solver.search.repair:snapshot:91": {
+          "calls": 90,
+          "inclusiveSeconds": 0.00864902138710022,
+          "selfSeconds": 0.00864902138710022
+        },
+        "numerical.evaluate": {
+          "calls": 1,
+          "inclusiveSeconds": 8.068956084549427,
+          "selfSeconds": 5.312145810574293
+        },
+        "copy:parkour_solver.search.dfs:commit_arrival:40": {
+          "calls": 4,
+          "inclusiveSeconds": 0.0054734982550144196,
+          "selfSeconds": 0.0054734982550144196
+        },
+        "copy:parkour_solver.spatial.checkpoints:retain_prefix:92": {
+          "calls": 4,
+          "inclusiveSeconds": 0.1695079207420349,
+          "selfSeconds": 0.1695079207420349
+        },
+        "copy:parkour_solver.search.dfs:score:635": {
+          "calls": 1,
+          "inclusiveSeconds": 0.034038495272397995,
+          "selfSeconds": 0.034038495272397995
+        },
+        "copy:parkour_solver.search.dfs:score:692": {
+          "calls": 3,
+          "inclusiveSeconds": 0.003947507590055466,
+          "selfSeconds": 0.003947507590055466
+        },
+        "peer.remember_peer": {
+          "calls": 1,
+          "inclusiveSeconds": 1.1790543794631958e-05,
+          "selfSeconds": 1.019984483718872e-05
+        },
+        "comparison.compare_candidates": {
+          "calls": 2,
+          "inclusiveSeconds": 1.0792165994644165e-05,
+          "selfSeconds": 9.700655937194824e-06
+        },
+        "copy:parkour_solver.search.dfs:score:741": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0013351216912269592,
+          "selfSeconds": 0.0013351216912269592
+        },
+        "dfs.session": {
+          "calls": 1,
+          "inclusiveSeconds": 8.295507624745369,
+          "selfSeconds": 0.011692125350236893
+        },
+        "bound.remaining_bound": {
+          "calls": 1,
+          "inclusiveSeconds": 1.274794340133667e-05,
+          "selfSeconds": 1.274794340133667e-05
+        },
+        "copy:parkour_solver.constraints.variants:__init__:42": {
+          "calls": 1,
+          "inclusiveSeconds": 0.02478012442588806,
+          "selfSeconds": 0.02478012442588806
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:45": {
+          "calls": 1,
+          "inclusiveSeconds": 1.6462057828903198e-05,
+          "selfSeconds": 1.6462057828903198e-05
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:65": {
+          "calls": 1,
+          "inclusiveSeconds": 6.833299994468689e-05,
+          "selfSeconds": 6.833299994468689e-05
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:66": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0004538334906101227,
+          "selfSeconds": 0.0004538334906101227
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:71": {
+          "calls": 1,
+          "inclusiveSeconds": 1.2889504432678223e-06,
+          "selfSeconds": 1.2889504432678223e-06
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:118": {
+          "calls": 1,
+          "inclusiveSeconds": 0.001386750489473343,
+          "selfSeconds": 0.001386750489473343
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:119": {
+          "calls": 1,
+          "inclusiveSeconds": 4.487484693527222e-05,
+          "selfSeconds": 4.487484693527222e-05
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:120": {
+          "calls": 1,
+          "inclusiveSeconds": 1.3377517461776733e-05,
+          "selfSeconds": 1.3377517461776733e-05
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:121": {
+          "calls": 1,
+          "inclusiveSeconds": 0.003981336951255798,
+          "selfSeconds": 0.003981336951255798
+        }
+      }
+    },
+    {
+      "index": 7,
+      "calls": 2,
+      "expanded": 0,
+      "budgetRemainingSeconds": 7.999987121671438,
+      "frames": 6,
+      "windows": 8,
+      "termination": "deadline",
+      "wallSeconds": 8.399836666882038,
+      "buckets": {
+        "copy:parkour_solver.scene.route:prepare_route:13": {
+          "calls": 4,
+          "inclusiveSeconds": 0.0014104582369327545,
+          "selfSeconds": 0.0014104582369327545
+        },
+        "identity.digest": {
+          "calls": 1054159,
+          "inclusiveSeconds": 2.3194289840757847,
+          "selfSeconds": 2.3194289840757847
+        },
+        "copy:parkour_solver.search.dfs:search_goals:82": {
+          "calls": 1,
+          "inclusiveSeconds": 1.745671033859253e-05,
+          "selfSeconds": 1.745671033859253e-05
+        },
+        "comparison.comparison_label": {
+          "calls": 4,
+          "inclusiveSeconds": 1.2207776308059692e-05,
+          "selfSeconds": 1.2207776308059692e-05
+        },
+        "callback.progress": {
+          "calls": 12,
+          "inclusiveSeconds": 2.54213809967041e-05,
+          "selfSeconds": 2.54213809967041e-05
+        },
+        "comparison.priority_key": {
+          "calls": 4,
+          "inclusiveSeconds": 2.3283064365386963e-06,
+          "selfSeconds": 2.3283064365386963e-06
+        },
+        "copy:parkour_solver.movement.units:shifted_unit:133": {
+          "calls": 18,
+          "inclusiveSeconds": 9.408965706825256e-05,
+          "selfSeconds": 9.408965706825256e-05
+        },
+        "copy:parkour_solver.numerics.model:prepare:16": {
+          "calls": 10,
+          "inclusiveSeconds": 0.0023464225232601166,
+          "selfSeconds": 0.0023464225232601166
+        },
+        "reachability.prepare": {
+          "calls": 1,
+          "inclusiveSeconds": 0.00034770742058753967,
+          "selfSeconds": 0.0002947859466075897
+        },
+        "reachability.analyze_model": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0005535818636417389,
+          "selfSeconds": 0.00025174766778945923
+        },
+        "copy:parkour_solver.movement.contact_combinations:merge_contacts:25": {
+          "calls": 90,
+          "inclusiveSeconds": 0.0003058314323425293,
+          "selfSeconds": 0.0003058314323425293
+        },
+        "copy:parkour_solver.search.identity:solve_scope:27": {
+          "calls": 1,
+          "inclusiveSeconds": 1.3746321201324463e-06,
+          "selfSeconds": 1.3746321201324463e-06
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:26": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0003320425748825073,
+          "selfSeconds": 0.0003320425748825073
+        },
+        "copy:parkour_solver.search.repair:snapshot:96": {
+          "calls": 18,
+          "inclusiveSeconds": 0.0003916732966899872,
+          "selfSeconds": 0.0003916732966899872
+        },
+        "copy:parkour_solver.search.repair:snapshot:97": {
+          "calls": 9,
+          "inclusiveSeconds": 0.0549943707883358,
+          "selfSeconds": 0.0549943707883358
+        },
+        "copy:parkour_solver.search.repair:snapshot:98": {
+          "calls": 18,
+          "inclusiveSeconds": 0.0002550259232521057,
+          "selfSeconds": 0.0002550259232521057
+        },
+        "copy:parkour_solver.search.repair:snapshot:99": {
+          "calls": 18,
+          "inclusiveSeconds": 0.000941988080739975,
+          "selfSeconds": 0.000941988080739975
+        },
+        "copy:parkour_solver.search.repair:snapshot:100": {
+          "calls": 9,
+          "inclusiveSeconds": 0.004872828722000122,
+          "selfSeconds": 0.004872828722000122
+        },
+        "copy:parkour_solver.search.repair:snapshot:101": {
+          "calls": 9,
+          "inclusiveSeconds": 0.25383617356419563,
+          "selfSeconds": 0.25383617356419563
+        },
+        "copy:parkour_solver.search.repair:snapshot:102": {
+          "calls": 9,
+          "inclusiveSeconds": 0.022289514541625977,
+          "selfSeconds": 0.022289514541625977
+        },
+        "copy:parkour_solver.search.repair:snapshot:103": {
+          "calls": 9,
+          "inclusiveSeconds": 0.001481916755437851,
+          "selfSeconds": 0.001481916755437851
+        },
+        "copy:parkour_solver.search.repair:offer:53": {
+          "calls": 4,
+          "inclusiveSeconds": 9.253248572349548e-05,
+          "selfSeconds": 9.253248572349548e-05
+        },
+        "copy:parkour_solver.search.repair:offer:56": {
+          "calls": 4,
+          "inclusiveSeconds": 6.512552499771118e-05,
+          "selfSeconds": 6.512552499771118e-05
+        },
+        "copy:parkour_solver.search.repair:offer:61": {
+          "calls": 6,
+          "inclusiveSeconds": 6.612017750740051e-05,
+          "selfSeconds": 6.612017750740051e-05
+        },
+        "copy:parkour_solver.search.repair:offer:62": {
+          "calls": 2,
+          "inclusiveSeconds": 2.2333115339279175e-05,
+          "selfSeconds": 2.2333115339279175e-05
+        },
+        "copy:parkour_solver.search.repair:save_branch:88": {
+          "calls": 2,
+          "inclusiveSeconds": 8.474662899971008e-05,
+          "selfSeconds": 8.474662899971008e-05
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:183": {
+          "calls": 2,
+          "inclusiveSeconds": 0.0006472431123256683,
+          "selfSeconds": 0.0006472431123256683
+        },
+        "copy:parkour_solver.search.ordered_route:publish:255": {
+          "calls": 12,
+          "inclusiveSeconds": 0.004416216164827347,
+          "selfSeconds": 0.004416216164827347
+        },
+        "copy:parkour_solver.search.repair:enrich:233": {
+          "calls": 2,
+          "inclusiveSeconds": 0.0021330825984477997,
+          "selfSeconds": 0.0021330825984477997
+        },
+        "copy:parkour_solver.search.repair:enrich:239": {
+          "calls": 2,
+          "inclusiveSeconds": 4.9211084842681885e-05,
+          "selfSeconds": 4.9211084842681885e-05
+        },
+        "copy:parkour_solver.search.repair:enrich:240": {
+          "calls": 2,
+          "inclusiveSeconds": 3.987550735473633e-05,
+          "selfSeconds": 3.987550735473633e-05
+        },
+        "copy:parkour_solver.search.repair:snapshot:91": {
+          "calls": 135,
+          "inclusiveSeconds": 0.012802641838788986,
+          "selfSeconds": 0.012802641838788986
+        },
+        "solver.invoke": {
+          "calls": 2,
+          "inclusiveSeconds": 0.3714161664247513,
+          "selfSeconds": 0.3661278262734413
+        },
+        "copy:parkour_solver.search.ordered_route:evaluate:274": {
+          "calls": 2,
+          "inclusiveSeconds": 0.0008892081677913666,
+          "selfSeconds": 0.0008892081677913666
+        },
+        "copy:parkour_solver.search.ordered_route:probe:41": {
+          "calls": 2,
+          "inclusiveSeconds": 0.0021504610776901245,
+          "selfSeconds": 0.0021504610776901245
+        },
+        "copy:parkour_solver.search.ordered_route:probe:42": {
+          "calls": 6,
+          "inclusiveSeconds": 0.0008621253073215485,
+          "selfSeconds": 0.0008621253073215485
+        },
+        "copy:parkour_solver.search.ordered_route:search_allocations:121": {
+          "calls": 2,
+          "inclusiveSeconds": 1.087784767150879e-06,
+          "selfSeconds": 1.087784767150879e-06
+        },
+        "copy:parkour_solver.search.ordered_route:find_route:304": {
+          "calls": 2,
+          "inclusiveSeconds": 0.0007170401513576508,
+          "selfSeconds": 0.0007170401513576508
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:370": {
+          "calls": 2,
+          "inclusiveSeconds": 0.0029839128255844116,
+          "selfSeconds": 0.0029839128255844116
+        },
+        "numerical.evaluate": {
+          "calls": 1,
+          "inclusiveSeconds": 8.07257528603077,
+          "selfSeconds": 4.985091000795364
+        },
+        "copy:parkour_solver.search.dfs:commit_arrival:40": {
+          "calls": 6,
+          "inclusiveSeconds": 0.00773388147354126,
+          "selfSeconds": 0.00773388147354126
+        },
+        "copy:parkour_solver.spatial.checkpoints:retain_prefix:92": {
+          "calls": 6,
+          "inclusiveSeconds": 0.21455078944563866,
+          "selfSeconds": 0.21455078944563866
+        },
+        "copy:parkour_solver.search.dfs:score:635": {
+          "calls": 1,
+          "inclusiveSeconds": 0.07933416962623596,
+          "selfSeconds": 0.07933416962623596
+        },
+        "copy:parkour_solver.search.dfs:score:692": {
+          "calls": 5,
+          "inclusiveSeconds": 0.006717376410961151,
+          "selfSeconds": 0.006717376410961151
+        },
+        "peer.remember_peer": {
+          "calls": 1,
+          "inclusiveSeconds": 3.225356340408325e-05,
+          "selfSeconds": 3.096461296081543e-05
+        },
+        "comparison.compare_candidates": {
+          "calls": 2,
+          "inclusiveSeconds": 9.339302778244019e-06,
+          "selfSeconds": 8.299946784973145e-06
+        },
+        "copy:parkour_solver.search.dfs:score:741": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0013734176754951477,
+          "selfSeconds": 0.0013734176754951477
+        },
+        "dfs.session": {
+          "calls": 1,
+          "inclusiveSeconds": 8.399813335388899,
+          "selfSeconds": 0.016021963208913803
+        },
+        "bound.remaining_bound": {
+          "calls": 1,
+          "inclusiveSeconds": 7.748603820800781e-06,
+          "selfSeconds": 7.748603820800781e-06
+        },
+        "copy:parkour_solver.constraints.variants:__init__:42": {
+          "calls": 1,
+          "inclusiveSeconds": 0.024418793618679047,
+          "selfSeconds": 0.024418793618679047
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:45": {
+          "calls": 1,
+          "inclusiveSeconds": 1.2040138244628906e-05,
+          "selfSeconds": 1.2040138244628906e-05
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:65": {
+          "calls": 1,
+          "inclusiveSeconds": 6.412714719772339e-05,
+          "selfSeconds": 6.412714719772339e-05
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:66": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0005153752863407135,
+          "selfSeconds": 0.0005153752863407135
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:71": {
+          "calls": 1,
+          "inclusiveSeconds": 1.125037670135498e-06,
+          "selfSeconds": 1.125037670135498e-06
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:118": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0013597048819065094,
+          "selfSeconds": 0.0013597048819065094
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:119": {
+          "calls": 1,
+          "inclusiveSeconds": 4.291534423828125e-05,
+          "selfSeconds": 4.291534423828125e-05
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:120": {
+          "calls": 1,
+          "inclusiveSeconds": 1.1041760444641113e-05,
+          "selfSeconds": 1.1041760444641113e-05
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:121": {
+          "calls": 1,
+          "inclusiveSeconds": 0.003946665674448013,
+          "selfSeconds": 0.003946665674448013
+        },
+        "copy:parkour_solver.search.dfs:score:709": {
+          "calls": 2,
+          "inclusiveSeconds": 0.0008345022797584534,
+          "selfSeconds": 0.0008345022797584534
+        }
+      }
+    },
+    {
+      "index": 8,
+      "calls": 1,
+      "expanded": 0,
+      "budgetRemainingSeconds": 7.999982081353664,
+      "frames": 6,
+      "windows": 8,
+      "termination": "deadline",
+      "wallSeconds": 8.50183504447341,
+      "buckets": {
+        "copy:parkour_solver.scene.route:prepare_route:13": {
+          "calls": 2,
+          "inclusiveSeconds": 0.0007617957890033722,
+          "selfSeconds": 0.0007617957890033722
+        },
+        "identity.digest": {
+          "calls": 1081940,
+          "inclusiveSeconds": 2.448624886572361,
+          "selfSeconds": 2.448624886572361
+        },
+        "copy:parkour_solver.search.dfs:search_goals:82": {
+          "calls": 1,
+          "inclusiveSeconds": 1.8831342458724976e-05,
+          "selfSeconds": 1.8831342458724976e-05
+        },
+        "comparison.comparison_label": {
+          "calls": 14,
+          "inclusiveSeconds": 3.311038017272949e-05,
+          "selfSeconds": 3.311038017272949e-05
+        },
+        "callback.profile_write": {
+          "calls": 1,
+          "inclusiveSeconds": 0.002857878804206848,
+          "selfSeconds": 0.002857878804206848
+        },
+        "callback.progress": {
+          "calls": 14,
+          "inclusiveSeconds": 0.00358721986413002,
+          "selfSeconds": 0.000729341059923172
+        },
+        "comparison.priority_key": {
+          "calls": 23,
+          "inclusiveSeconds": 1.0367482900619507e-05,
+          "selfSeconds": 1.0367482900619507e-05
+        },
+        "copy:parkour_solver.movement.units:shifted_unit:133": {
+          "calls": 12,
+          "inclusiveSeconds": 4.6547502279281616e-05,
+          "selfSeconds": 4.6547502279281616e-05
+        },
+        "copy:parkour_solver.numerics.model:prepare:16": {
+          "calls": 6,
+          "inclusiveSeconds": 0.001379702240228653,
+          "selfSeconds": 0.001379702240228653
+        },
+        "reachability.prepare": {
+          "calls": 1,
+          "inclusiveSeconds": 0.00035532936453819275,
+          "selfSeconds": 0.00030274689197540283
+        },
+        "reachability.analyze_model": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0005679167807102203,
+          "selfSeconds": 0.0002604573965072632
+        },
+        "copy:parkour_solver.movement.contact_combinations:merge_contacts:25": {
+          "calls": 54,
+          "inclusiveSeconds": 0.00018338486552238464,
+          "selfSeconds": 0.00018338486552238464
+        },
+        "copy:parkour_solver.search.identity:solve_scope:27": {
+          "calls": 1,
+          "inclusiveSeconds": 1.4193356037139893e-06,
+          "selfSeconds": 1.4193356037139893e-06
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:26": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0003406219184398651,
+          "selfSeconds": 0.0003406219184398651
+        },
+        "copy:parkour_solver.search.repair:snapshot:96": {
+          "calls": 16,
+          "inclusiveSeconds": 0.0004619508981704712,
+          "selfSeconds": 0.0004619508981704712
+        },
+        "copy:parkour_solver.search.repair:snapshot:97": {
+          "calls": 8,
+          "inclusiveSeconds": 0.046649087220430374,
+          "selfSeconds": 0.046649087220430374
+        },
+        "copy:parkour_solver.search.repair:snapshot:98": {
+          "calls": 16,
+          "inclusiveSeconds": 0.00016763806343078613,
+          "selfSeconds": 0.00016763806343078613
+        },
+        "copy:parkour_solver.search.repair:snapshot:99": {
+          "calls": 16,
+          "inclusiveSeconds": 0.0007081106305122375,
+          "selfSeconds": 0.0007081106305122375
+        },
+        "copy:parkour_solver.search.repair:snapshot:100": {
+          "calls": 8,
+          "inclusiveSeconds": 0.003593459725379944,
+          "selfSeconds": 0.003593459725379944
+        },
+        "copy:parkour_solver.search.repair:snapshot:101": {
+          "calls": 8,
+          "inclusiveSeconds": 0.22539196908473969,
+          "selfSeconds": 0.22539196908473969
+        },
+        "copy:parkour_solver.search.repair:snapshot:102": {
+          "calls": 8,
+          "inclusiveSeconds": 0.015121951699256897,
+          "selfSeconds": 0.015121951699256897
+        },
+        "copy:parkour_solver.search.repair:snapshot:103": {
+          "calls": 8,
+          "inclusiveSeconds": 0.0012472867965698242,
+          "selfSeconds": 0.0012472867965698242
+        },
+        "copy:parkour_solver.search.repair:offer:53": {
+          "calls": 5,
+          "inclusiveSeconds": 0.00011632591485977173,
+          "selfSeconds": 0.00011632591485977173
+        },
+        "copy:parkour_solver.search.repair:offer:56": {
+          "calls": 5,
+          "inclusiveSeconds": 8.387491106987e-05,
+          "selfSeconds": 8.387491106987e-05
+        },
+        "copy:parkour_solver.search.repair:offer:61": {
+          "calls": 3,
+          "inclusiveSeconds": 6.954371929168701e-05,
+          "selfSeconds": 6.954371929168701e-05
+        },
+        "copy:parkour_solver.search.repair:offer:62": {
+          "calls": 1,
+          "inclusiveSeconds": 1.274794340133667e-05,
+          "selfSeconds": 1.274794340133667e-05
+        },
+        "copy:parkour_solver.search.repair:save_branch:88": {
+          "calls": 2,
+          "inclusiveSeconds": 8.779391646385193e-05,
+          "selfSeconds": 8.779391646385193e-05
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:183": {
+          "calls": 1,
+          "inclusiveSeconds": 0.00031183287501335144,
+          "selfSeconds": 0.00031183287501335144
+        },
+        "copy:parkour_solver.search.ordered_route:publish:255": {
+          "calls": 6,
+          "inclusiveSeconds": 0.0024110712110996246,
+          "selfSeconds": 0.0024110712110996246
+        },
+        "copy:parkour_solver.search.repair:snapshot:91": {
+          "calls": 120,
+          "inclusiveSeconds": 0.011781986802816391,
+          "selfSeconds": 0.011781986802816391
+        },
+        "solver.invoke": {
+          "calls": 1,
+          "inclusiveSeconds": 0.19573379307985306,
+          "selfSeconds": 0.1929093897342682
+        },
+        "copy:parkour_solver.search.ordered_route:evaluate:274": {
+          "calls": 1,
+          "inclusiveSeconds": 0.00043958425521850586,
+          "selfSeconds": 0.00043958425521850586
+        },
+        "copy:parkour_solver.search.ordered_route:probe:41": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0010582096874713898,
+          "selfSeconds": 0.0010582096874713898
+        },
+        "copy:parkour_solver.search.ordered_route:probe:42": {
+          "calls": 3,
+          "inclusiveSeconds": 0.00043158233165740967,
+          "selfSeconds": 0.00043158233165740967
+        },
+        "copy:parkour_solver.search.ordered_route:search_allocations:121": {
+          "calls": 1,
+          "inclusiveSeconds": 4.6193599700927734e-07,
+          "selfSeconds": 4.6193599700927734e-07
+        },
+        "copy:parkour_solver.search.ordered_route:find_route:304": {
+          "calls": 1,
+          "inclusiveSeconds": 0.00038803741335868835,
+          "selfSeconds": 0.00038803741335868835
+        },
+        "numerical.evaluate": {
+          "calls": 1,
+          "inclusiveSeconds": 8.24035046249628,
+          "selfSeconds": 5.220337096601725
+        },
+        "copy:parkour_solver.search.dfs:commit_arrival:40": {
+          "calls": 5,
+          "inclusiveSeconds": 0.006661254912614822,
+          "selfSeconds": 0.006661254912614822
+        },
+        "copy:parkour_solver.spatial.checkpoints:retain_prefix:92": {
+          "calls": 5,
+          "inclusiveSeconds": 0.195462416857481,
+          "selfSeconds": 0.195462416857481
+        },
+        "copy:parkour_solver.search.dfs:score:635": {
+          "calls": 1,
+          "inclusiveSeconds": 0.031921375542879105,
+          "selfSeconds": 0.031921375542879105
+        },
+        "copy:parkour_solver.search.dfs:score:692": {
+          "calls": 4,
+          "inclusiveSeconds": 0.00546950101852417,
+          "selfSeconds": 0.00546950101852417
+        },
+        "peer.remember_peer": {
+          "calls": 1,
+          "inclusiveSeconds": 1.483038067817688e-05,
+          "selfSeconds": 1.3414770364761353e-05
+        },
+        "comparison.compare_candidates": {
+          "calls": 14,
+          "inclusiveSeconds": 6.858259439468384e-05,
+          "selfSeconds": 6.283074617385864e-05
+        },
+        "peer.assess": {
+          "calls": 3,
+          "inclusiveSeconds": 5.712360143661499e-05,
+          "selfSeconds": 1.808255910873413e-05
+        },
+        "copy:parkour_solver.search.dfs:score:741": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0012892484664916992,
+          "selfSeconds": 0.0012892484664916992
+        },
+        "dfs.session": {
+          "calls": 1,
+          "inclusiveSeconds": 8.50181433185935,
+          "selfSeconds": 0.015703421086072922
+        },
+        "bound.remaining_bound": {
+          "calls": 4,
+          "inclusiveSeconds": 2.2038817405700684e-05,
+          "selfSeconds": 2.2038817405700684e-05
+        },
+        "copy:parkour_solver.constraints.variants:__init__:42": {
+          "calls": 1,
+          "inclusiveSeconds": 0.054387375712394714,
+          "selfSeconds": 0.054387375712394714
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:45": {
+          "calls": 1,
+          "inclusiveSeconds": 1.271069049835205e-05,
+          "selfSeconds": 1.271069049835205e-05
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:65": {
+          "calls": 1,
+          "inclusiveSeconds": 6.437301635742188e-05,
+          "selfSeconds": 6.437301635742188e-05
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:66": {
+          "calls": 1,
+          "inclusiveSeconds": 0.00041904300451278687,
+          "selfSeconds": 0.00041904300451278687
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:71": {
+          "calls": 1,
+          "inclusiveSeconds": 1.2516975402832031e-06,
+          "selfSeconds": 1.2516975402832031e-06
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:118": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0014469996094703674,
+          "selfSeconds": 0.0014469996094703674
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:119": {
+          "calls": 1,
+          "inclusiveSeconds": 4.179030656814575e-05,
+          "selfSeconds": 4.179030656814575e-05
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:120": {
+          "calls": 1,
+          "inclusiveSeconds": 9.831041097640991e-06,
+          "selfSeconds": 9.831041097640991e-06
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:121": {
+          "calls": 1,
+          "inclusiveSeconds": 0.00544729083776474,
+          "selfSeconds": 0.00544729083776474
+        },
+        "copy:parkour_solver.search.dfs:search_goals:897": {
+          "calls": 3,
+          "inclusiveSeconds": 0.004027996212244034,
+          "selfSeconds": 0.004027996212244034
+        }
+      }
+    },
+    {
+      "index": 9,
+      "calls": 3,
+      "expanded": 0,
+      "budgetRemainingSeconds": 7.999976333230734,
+      "frames": 6,
+      "windows": 8,
+      "termination": "deadline",
+      "wallSeconds": 8.579042792320251,
+      "buckets": {
+        "copy:parkour_solver.scene.route:prepare_route:13": {
+          "calls": 6,
+          "inclusiveSeconds": 0.002192199230194092,
+          "selfSeconds": 0.002192199230194092
+        },
+        "identity.digest": {
+          "calls": 876070,
+          "inclusiveSeconds": 1.9301042258739471,
+          "selfSeconds": 1.9301042258739471
+        },
+        "copy:parkour_solver.search.dfs:search_goals:82": {
+          "calls": 1,
+          "inclusiveSeconds": 1.7337501049041748e-05,
+          "selfSeconds": 1.7337501049041748e-05
+        },
+        "comparison.comparison_label": {
+          "calls": 4,
+          "inclusiveSeconds": 1.1663883924484253e-05,
+          "selfSeconds": 1.1663883924484253e-05
+        },
+        "callback.profile_write": {
+          "calls": 1,
+          "inclusiveSeconds": 0.003131125122308731,
+          "selfSeconds": 0.003131125122308731
+        },
+        "callback.progress": {
+          "calls": 32,
+          "inclusiveSeconds": 0.003311697393655777,
+          "selfSeconds": 0.0001805722713470459
+        },
+        "comparison.priority_key": {
+          "calls": 4,
+          "inclusiveSeconds": 2.3283064365386963e-06,
+          "selfSeconds": 2.3283064365386963e-06
+        },
+        "copy:parkour_solver.movement.units:shifted_unit:133": {
+          "calls": 24,
+          "inclusiveSeconds": 0.00010300055146217346,
+          "selfSeconds": 0.00010300055146217346
+        },
+        "copy:parkour_solver.numerics.model:prepare:16": {
+          "calls": 14,
+          "inclusiveSeconds": 0.0033404305577278137,
+          "selfSeconds": 0.0033404305577278137
+        },
+        "reachability.prepare": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0003529563546180725,
+          "selfSeconds": 0.0003013722598552704
+        },
+        "reachability.analyze_model": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0005641281604766846,
+          "selfSeconds": 0.00024495646357536316
+        },
+        "copy:parkour_solver.movement.contact_combinations:merge_contacts:25": {
+          "calls": 126,
+          "inclusiveSeconds": 0.000487450510263443,
+          "selfSeconds": 0.000487450510263443
+        },
+        "copy:parkour_solver.search.identity:solve_scope:27": {
+          "calls": 1,
+          "inclusiveSeconds": 1.5012919902801514e-06,
+          "selfSeconds": 1.5012919902801514e-06
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:26": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0003337934613227844,
+          "selfSeconds": 0.0003337934613227844
+        },
+        "copy:parkour_solver.search.repair:snapshot:96": {
+          "calls": 58,
+          "inclusiveSeconds": 0.0025219470262527466,
+          "selfSeconds": 0.0025219470262527466
+        },
+        "copy:parkour_solver.search.repair:snapshot:97": {
+          "calls": 29,
+          "inclusiveSeconds": 0.3101920075714588,
+          "selfSeconds": 0.3101920075714588
+        },
+        "copy:parkour_solver.search.repair:snapshot:98": {
+          "calls": 58,
+          "inclusiveSeconds": 0.0007746964693069458,
+          "selfSeconds": 0.0007746964693069458
+        },
+        "copy:parkour_solver.search.repair:snapshot:99": {
+          "calls": 58,
+          "inclusiveSeconds": 0.003924541175365448,
+          "selfSeconds": 0.003924541175365448
+        },
+        "copy:parkour_solver.search.repair:snapshot:100": {
+          "calls": 29,
+          "inclusiveSeconds": 0.05644502863287926,
+          "selfSeconds": 0.05644502863287926
+        },
+        "copy:parkour_solver.search.repair:snapshot:101": {
+          "calls": 29,
+          "inclusiveSeconds": 0.7603881433606148,
+          "selfSeconds": 0.7603881433606148
+        },
+        "copy:parkour_solver.search.repair:snapshot:102": {
+          "calls": 29,
+          "inclusiveSeconds": 0.0994040034711361,
+          "selfSeconds": 0.0994040034711361
+        },
+        "copy:parkour_solver.search.repair:snapshot:103": {
+          "calls": 29,
+          "inclusiveSeconds": 0.0077324360609054565,
+          "selfSeconds": 0.0077324360609054565
+        },
+        "copy:parkour_solver.search.repair:offer:53": {
+          "calls": 23,
+          "inclusiveSeconds": 0.0005456246435642242,
+          "selfSeconds": 0.0005456246435642242
+        },
+        "copy:parkour_solver.search.repair:offer:56": {
+          "calls": 23,
+          "inclusiveSeconds": 0.0004046820104122162,
+          "selfSeconds": 0.0004046820104122162
+        },
+        "copy:parkour_solver.search.repair:offer:61": {
+          "calls": 9,
+          "inclusiveSeconds": 9.749457240104675e-05,
+          "selfSeconds": 9.749457240104675e-05
+        },
+        "copy:parkour_solver.search.repair:offer:62": {
+          "calls": 3,
+          "inclusiveSeconds": 3.783032298088074e-05,
+          "selfSeconds": 3.783032298088074e-05
+        },
+        "copy:parkour_solver.search.repair:save_branch:88": {
+          "calls": 3,
+          "inclusiveSeconds": 0.000126667320728302,
+          "selfSeconds": 0.000126667320728302
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:183": {
+          "calls": 3,
+          "inclusiveSeconds": 0.0009382069110870361,
+          "selfSeconds": 0.0009382069110870361
+        },
+        "copy:parkour_solver.search.ordered_route:publish:255": {
+          "calls": 12,
+          "inclusiveSeconds": 0.004832178354263306,
+          "selfSeconds": 0.004832178354263306
+        },
+        "copy:parkour_solver.search.repair:enrich:233": {
+          "calls": 3,
+          "inclusiveSeconds": 0.0031156279146671295,
+          "selfSeconds": 0.0031156279146671295
+        },
+        "copy:parkour_solver.search.repair:enrich:239": {
+          "calls": 3,
+          "inclusiveSeconds": 6.124749779701233e-05,
+          "selfSeconds": 6.124749779701233e-05
+        },
+        "copy:parkour_solver.search.repair:enrich:240": {
+          "calls": 3,
+          "inclusiveSeconds": 5.467236042022705e-05,
+          "selfSeconds": 5.467236042022705e-05
+        },
+        "copy:parkour_solver.search.repair:snapshot:91": {
+          "calls": 435,
+          "inclusiveSeconds": 0.042610179632902145,
+          "selfSeconds": 0.042610179632902145
+        },
+        "solver.invoke": {
+          "calls": 3,
+          "inclusiveSeconds": 0.556075531989336,
+          "selfSeconds": 0.5499158538877964
+        },
+        "copy:parkour_solver.search.ordered_route:evaluate:274": {
+          "calls": 3,
+          "inclusiveSeconds": 0.0013523325324058533,
+          "selfSeconds": 0.0013523325324058533
+        },
+        "copy:parkour_solver.search.ordered_route:probe:41": {
+          "calls": 3,
+          "inclusiveSeconds": 0.0032819584012031555,
+          "selfSeconds": 0.0032819584012031555
+        },
+        "copy:parkour_solver.search.ordered_route:probe:42": {
+          "calls": 9,
+          "inclusiveSeconds": 0.0013247504830360413,
+          "selfSeconds": 0.0013247504830360413
+        },
+        "copy:parkour_solver.search.ordered_route:search_allocations:121": {
+          "calls": 3,
+          "inclusiveSeconds": 1.6652047634124756e-06,
+          "selfSeconds": 1.6652047634124756e-06
+        },
+        "copy:parkour_solver.search.ordered_route:find_route:304": {
+          "calls": 3,
+          "inclusiveSeconds": 0.0011119171977043152,
+          "selfSeconds": 0.0011119171977043152
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:370": {
+          "calls": 3,
+          "inclusiveSeconds": 0.004417456686496735,
+          "selfSeconds": 0.004417456686496735
+        },
+        "numerical.evaluate": {
+          "calls": 1,
+          "inclusiveSeconds": 8.126421455293894,
+          "selfSeconds": 4.302509039640427
+        },
+        "copy:parkour_solver.search.dfs:commit_arrival:40": {
+          "calls": 8,
+          "inclusiveSeconds": 0.010692659765481949,
+          "selfSeconds": 0.010692659765481949
+        },
+        "copy:parkour_solver.spatial.checkpoints:retain_prefix:92": {
+          "calls": 8,
+          "inclusiveSeconds": 0.3646080866456032,
+          "selfSeconds": 0.3646080866456032
+        },
+        "copy:parkour_solver.search.dfs:score:635": {
+          "calls": 1,
+          "inclusiveSeconds": 0.04183062165975571,
+          "selfSeconds": 0.04183062165975571
+        },
+        "copy:parkour_solver.search.dfs:score:692": {
+          "calls": 7,
+          "inclusiveSeconds": 0.009294543415307999,
+          "selfSeconds": 0.009294543415307999
+        },
+        "peer.remember_peer": {
+          "calls": 1,
+          "inclusiveSeconds": 2.6248395442962646e-05,
+          "selfSeconds": 2.48737633228302e-05
+        },
+        "comparison.compare_candidates": {
+          "calls": 2,
+          "inclusiveSeconds": 1.000240445137024e-05,
+          "selfSeconds": 9.04873013496399e-06
+        },
+        "copy:parkour_solver.search.dfs:score:741": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0013348720967769623,
+          "selfSeconds": 0.0013348720967769623
+        },
+        "dfs.session": {
+          "calls": 1,
+          "inclusiveSeconds": 8.579020623117685,
+          "selfSeconds": 0.02288026735186577
+        },
+        "bound.remaining_bound": {
+          "calls": 1,
+          "inclusiveSeconds": 1.0501593351364136e-05,
+          "selfSeconds": 1.0501593351364136e-05
+        },
+        "copy:parkour_solver.constraints.variants:__init__:42": {
+          "calls": 1,
+          "inclusiveSeconds": 0.020929910242557526,
+          "selfSeconds": 0.020929910242557526
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:45": {
+          "calls": 1,
+          "inclusiveSeconds": 1.562759280204773e-05,
+          "selfSeconds": 1.562759280204773e-05
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:65": {
+          "calls": 1,
+          "inclusiveSeconds": 7.962435483932495e-05,
+          "selfSeconds": 7.962435483932495e-05
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:66": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0004726685583591461,
+          "selfSeconds": 0.0004726685583591461
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:71": {
+          "calls": 1,
+          "inclusiveSeconds": 4.337728023529053e-05,
+          "selfSeconds": 4.337728023529053e-05
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:118": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0014397017657756805,
+          "selfSeconds": 0.0014397017657756805
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:119": {
+          "calls": 1,
+          "inclusiveSeconds": 4.1291117668151855e-05,
+          "selfSeconds": 4.1291117668151855e-05
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:120": {
+          "calls": 1,
+          "inclusiveSeconds": 1.2334436178207397e-05,
+          "selfSeconds": 1.2334436178207397e-05
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:121": {
+          "calls": 1,
+          "inclusiveSeconds": 0.005548626184463501,
+          "selfSeconds": 0.005548626184463501
+        },
+        "copy:parkour_solver.search.dfs:score:709": {
+          "calls": 3,
+          "inclusiveSeconds": 0.0011778399348258972,
+          "selfSeconds": 0.0011778399348258972
+        }
+      }
+    },
+    {
+      "index": 10,
+      "calls": 0,
+      "expanded": 0,
+      "budgetRemainingSeconds": 7.999976247549057,
+      "frames": 6,
+      "windows": 8,
+      "termination": "deadline",
+      "wallSeconds": 8.444844294339418,
+      "buckets": {
+        "identity.digest": {
+          "calls": 1092893,
+          "inclusiveSeconds": 2.4094970487058163,
+          "selfSeconds": 2.4094970487058163
+        },
+        "copy:parkour_solver.search.dfs:search_goals:82": {
+          "calls": 1,
+          "inclusiveSeconds": 1.8291175365447998e-05,
+          "selfSeconds": 1.8291175365447998e-05
+        },
+        "comparison.comparison_label": {
+          "calls": 9,
+          "inclusiveSeconds": 2.2098422050476074e-05,
+          "selfSeconds": 2.2098422050476074e-05
+        },
+        "callback.profile_write": {
+          "calls": 1,
+          "inclusiveSeconds": 0.003334958106279373,
+          "selfSeconds": 0.003334958106279373
+        },
+        "callback.progress": {
+          "calls": 16,
+          "inclusiveSeconds": 0.003448799252510071,
+          "selfSeconds": 0.00011384114623069763
+        },
+        "comparison.priority_key": {
+          "calls": 12,
+          "inclusiveSeconds": 5.912035703659058e-06,
+          "selfSeconds": 5.912035703659058e-06
+        },
+        "copy:parkour_solver.movement.units:shifted_unit:133": {
+          "calls": 6,
+          "inclusiveSeconds": 2.3502856492996216e-05,
+          "selfSeconds": 2.3502856492996216e-05
+        },
+        "copy:parkour_solver.numerics.model:prepare:16": {
+          "calls": 2,
+          "inclusiveSeconds": 0.0004082433879375458,
+          "selfSeconds": 0.0004082433879375458
+        },
+        "reachability.prepare": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0003583356738090515,
+          "selfSeconds": 0.0003054179251194
+        },
+        "reachability.analyze_model": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0005977451801300049,
+          "selfSeconds": 0.00028557702898979187
+        },
+        "copy:parkour_solver.movement.contact_combinations:merge_contacts:25": {
+          "calls": 18,
+          "inclusiveSeconds": 4.763156175613403e-05,
+          "selfSeconds": 4.763156175613403e-05
+        },
+        "copy:parkour_solver.search.identity:solve_scope:27": {
+          "calls": 1,
+          "inclusiveSeconds": 1.4565885066986084e-06,
+          "selfSeconds": 1.4565885066986084e-06
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:26": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0003147535026073456,
+          "selfSeconds": 0.0003147535026073456
+        },
+        "copy:parkour_solver.search.repair:snapshot:96": {
+          "calls": 24,
+          "inclusiveSeconds": 0.0005246549844741821,
+          "selfSeconds": 0.0005246549844741821
+        },
+        "copy:parkour_solver.search.repair:snapshot:97": {
+          "calls": 12,
+          "inclusiveSeconds": 0.12306055799126625,
+          "selfSeconds": 0.12306055799126625
+        },
+        "copy:parkour_solver.search.repair:snapshot:98": {
+          "calls": 24,
+          "inclusiveSeconds": 0.00023907795548439026,
+          "selfSeconds": 0.00023907795548439026
+        },
+        "copy:parkour_solver.search.repair:snapshot:99": {
+          "calls": 24,
+          "inclusiveSeconds": 0.0013580992817878723,
+          "selfSeconds": 0.0013580992817878723
+        },
+        "copy:parkour_solver.search.repair:snapshot:100": {
+          "calls": 12,
+          "inclusiveSeconds": 0.007744431495666504,
+          "selfSeconds": 0.007744431495666504
+        },
+        "copy:parkour_solver.search.repair:snapshot:101": {
+          "calls": 12,
+          "inclusiveSeconds": 0.3430737443268299,
+          "selfSeconds": 0.3430737443268299
+        },
+        "copy:parkour_solver.search.repair:snapshot:102": {
+          "calls": 12,
+          "inclusiveSeconds": 0.03220245614647865,
+          "selfSeconds": 0.03220245614647865
+        },
+        "copy:parkour_solver.search.repair:snapshot:103": {
+          "calls": 12,
+          "inclusiveSeconds": 0.002909250557422638,
+          "selfSeconds": 0.002909250557422638
+        },
+        "copy:parkour_solver.search.repair:offer:53": {
+          "calls": 9,
+          "inclusiveSeconds": 0.00020816922187805176,
+          "selfSeconds": 0.00020816922187805176
+        },
+        "copy:parkour_solver.search.repair:offer:56": {
+          "calls": 9,
+          "inclusiveSeconds": 0.0001584477722644806,
+          "selfSeconds": 0.0001584477722644806
+        },
+        "copy:parkour_solver.search.repair:snapshot:91": {
+          "calls": 180,
+          "inclusiveSeconds": 0.017979908734560013,
+          "selfSeconds": 0.017979908734560013
+        },
+        "numerical.evaluate": {
+          "calls": 1,
+          "inclusiveSeconds": 8.086618959903717,
+          "selfSeconds": 5.111131727695465
+        },
+        "copy:parkour_solver.search.dfs:commit_arrival:40": {
+          "calls": 6,
+          "inclusiveSeconds": 0.007852744311094284,
+          "selfSeconds": 0.007852744311094284
+        },
+        "copy:parkour_solver.spatial.checkpoints:retain_prefix:92": {
+          "calls": 6,
+          "inclusiveSeconds": 0.2799562066793442,
+          "selfSeconds": 0.2799562066793442
+        },
+        "copy:parkour_solver.search.dfs:score:635": {
+          "calls": 1,
+          "inclusiveSeconds": 0.040835168212652206,
+          "selfSeconds": 0.040835168212652206
+        },
+        "copy:parkour_solver.search.dfs:score:692": {
+          "calls": 5,
+          "inclusiveSeconds": 0.007214710116386414,
+          "selfSeconds": 0.007214710116386414
+        },
+        "peer.remember_peer": {
+          "calls": 1,
+          "inclusiveSeconds": 1.1667609214782715e-05,
+          "selfSeconds": 1.0300427675247192e-05
+        },
+        "comparison.compare_candidates": {
+          "calls": 6,
+          "inclusiveSeconds": 3.283098340034485e-05,
+          "selfSeconds": 3.00481915473938e-05
+        },
+        "peer.assess": {
+          "calls": 1,
+          "inclusiveSeconds": 2.4750828742980957e-05,
+          "selfSeconds": 8.750706911087036e-06
+        },
+        "copy:parkour_solver.search.dfs:score:741": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0013645440340042114,
+          "selfSeconds": 0.0013645440340042114
+        },
+        "dfs.session": {
+          "calls": 1,
+          "inclusiveSeconds": 8.444821249693632,
+          "selfSeconds": 0.01874934881925583
+        },
+        "bound.remaining_bound": {
+          "calls": 2,
+          "inclusiveSeconds": 1.8537044525146484e-05,
+          "selfSeconds": 1.8537044525146484e-05
+        },
+        "copy:parkour_solver.constraints.variants:__init__:42": {
+          "calls": 1,
+          "inclusiveSeconds": 0.02288999781012535,
+          "selfSeconds": 0.02288999781012535
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:45": {
+          "calls": 1,
+          "inclusiveSeconds": 1.1708587408065796e-05,
+          "selfSeconds": 1.1708587408065796e-05
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:65": {
+          "calls": 1,
+          "inclusiveSeconds": 8.929148316383362e-05,
+          "selfSeconds": 8.929148316383362e-05
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:66": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0005391277372837067,
+          "selfSeconds": 0.0005391277372837067
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:71": {
+          "calls": 1,
+          "inclusiveSeconds": 1.0021030902862549e-06,
+          "selfSeconds": 1.0021030902862549e-06
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:118": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0018323324620723724,
+          "selfSeconds": 0.0018323324620723724
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:119": {
+          "calls": 1,
+          "inclusiveSeconds": 4.162639379501343e-05,
+          "selfSeconds": 4.162639379501343e-05
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:120": {
+          "calls": 1,
+          "inclusiveSeconds": 1.625344157218933e-05,
+          "selfSeconds": 1.625344157218933e-05
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:121": {
+          "calls": 1,
+          "inclusiveSeconds": 0.00701083242893219,
+          "selfSeconds": 0.00701083242893219
+        },
+        "copy:parkour_solver.search.dfs:search_goals:897": {
+          "calls": 1,
+          "inclusiveSeconds": 0.001379460096359253,
+          "selfSeconds": 0.001379460096359253
+        }
+      }
+    },
+    {
+      "index": 11,
+      "calls": 4,
+      "expanded": 0,
+      "budgetRemainingSeconds": 6.240298714488745,
+      "frames": 6,
+      "windows": 8,
+      "termination": "deadline",
+      "wallSeconds": 6.97984753921628,
+      "buckets": {
+        "copy:parkour_solver.scene.route:prepare_route:13": {
+          "calls": 8,
+          "inclusiveSeconds": 0.002693507820367813,
+          "selfSeconds": 0.002693507820367813
+        },
+        "identity.digest": {
+          "calls": 558767,
+          "inclusiveSeconds": 1.2277944646775723,
+          "selfSeconds": 1.2277944646775723
+        },
+        "copy:parkour_solver.search.dfs:search_goals:82": {
+          "calls": 1,
+          "inclusiveSeconds": 1.7996877431869507e-05,
+          "selfSeconds": 1.7996877431869507e-05
+        },
+        "comparison.comparison_label": {
+          "calls": 4,
+          "inclusiveSeconds": 1.2215226888656616e-05,
+          "selfSeconds": 1.2215226888656616e-05
+        },
+        "callback.progress": {
+          "calls": 31,
+          "inclusiveSeconds": 5.9664249420166016e-05,
+          "selfSeconds": 5.9664249420166016e-05
+        },
+        "comparison.priority_key": {
+          "calls": 4,
+          "inclusiveSeconds": 2.5816261768341064e-06,
+          "selfSeconds": 2.5816261768341064e-06
+        },
+        "copy:parkour_solver.movement.units:shifted_unit:133": {
+          "calls": 30,
+          "inclusiveSeconds": 0.00011542066931724548,
+          "selfSeconds": 0.00011542066931724548
+        },
+        "copy:parkour_solver.numerics.model:prepare:16": {
+          "calls": 18,
+          "inclusiveSeconds": 0.004285503178834915,
+          "selfSeconds": 0.004285503178834915
+        },
+        "reachability.prepare": {
+          "calls": 1,
+          "inclusiveSeconds": 0.00035703927278518677,
+          "selfSeconds": 0.0003036223351955414
+        },
+        "reachability.analyze_model": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0005577504634857178,
+          "selfSeconds": 0.0002537444233894348
+        },
+        "copy:parkour_solver.movement.contact_combinations:merge_contacts:25": {
+          "calls": 162,
+          "inclusiveSeconds": 0.0005558468401432037,
+          "selfSeconds": 0.0005558468401432037
+        },
+        "copy:parkour_solver.search.identity:solve_scope:27": {
+          "calls": 1,
+          "inclusiveSeconds": 1.5012919902801514e-06,
+          "selfSeconds": 1.5012919902801514e-06
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:26": {
+          "calls": 1,
+          "inclusiveSeconds": 0.00031304359436035156,
+          "selfSeconds": 0.00031304359436035156
+        },
+        "copy:parkour_solver.search.repair:snapshot:96": {
+          "calls": 56,
+          "inclusiveSeconds": 0.0012540556490421295,
+          "selfSeconds": 0.0012540556490421295
+        },
+        "copy:parkour_solver.search.repair:snapshot:97": {
+          "calls": 28,
+          "inclusiveSeconds": 0.39939603582024574,
+          "selfSeconds": 0.39939603582024574
+        },
+        "copy:parkour_solver.search.repair:snapshot:98": {
+          "calls": 56,
+          "inclusiveSeconds": 0.000997684895992279,
+          "selfSeconds": 0.000997684895992279
+        },
+        "copy:parkour_solver.search.repair:snapshot:99": {
+          "calls": 56,
+          "inclusiveSeconds": 0.005006682127714157,
+          "selfSeconds": 0.005006682127714157
+        },
+        "copy:parkour_solver.search.repair:snapshot:100": {
+          "calls": 28,
+          "inclusiveSeconds": 0.06489719450473785,
+          "selfSeconds": 0.06489719450473785
+        },
+        "copy:parkour_solver.search.repair:snapshot:101": {
+          "calls": 28,
+          "inclusiveSeconds": 0.7602917104959488,
+          "selfSeconds": 0.7602917104959488
+        },
+        "copy:parkour_solver.search.repair:snapshot:102": {
+          "calls": 28,
+          "inclusiveSeconds": 0.11777281388640404,
+          "selfSeconds": 0.11777281388640404
+        },
+        "copy:parkour_solver.search.repair:snapshot:103": {
+          "calls": 28,
+          "inclusiveSeconds": 0.009538490325212479,
+          "selfSeconds": 0.009538490325212479
+        },
+        "copy:parkour_solver.search.repair:offer:53": {
+          "calls": 21,
+          "inclusiveSeconds": 0.0005034618079662323,
+          "selfSeconds": 0.0005034618079662323
+        },
+        "copy:parkour_solver.search.repair:offer:56": {
+          "calls": 21,
+          "inclusiveSeconds": 0.00036257877945899963,
+          "selfSeconds": 0.00036257877945899963
+        },
+        "copy:parkour_solver.search.repair:offer:61": {
+          "calls": 12,
+          "inclusiveSeconds": 0.00012965500354766846,
+          "selfSeconds": 0.00012965500354766846
+        },
+        "copy:parkour_solver.search.repair:offer:62": {
+          "calls": 4,
+          "inclusiveSeconds": 5.216151475906372e-05,
+          "selfSeconds": 5.216151475906372e-05
+        },
+        "copy:parkour_solver.search.repair:save_branch:88": {
+          "calls": 4,
+          "inclusiveSeconds": 0.00016670674085617065,
+          "selfSeconds": 0.00016670674085617065
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:183": {
+          "calls": 4,
+          "inclusiveSeconds": 0.001302368938922882,
+          "selfSeconds": 0.001302368938922882
+        },
+        "copy:parkour_solver.search.ordered_route:publish:255": {
+          "calls": 26,
+          "inclusiveSeconds": 0.010199498385190964,
+          "selfSeconds": 0.010199498385190964
+        },
+        "copy:parkour_solver.search.repair:enrich:233": {
+          "calls": 4,
+          "inclusiveSeconds": 0.0038869939744472504,
+          "selfSeconds": 0.0038869939744472504
+        },
+        "copy:parkour_solver.search.repair:enrich:239": {
+          "calls": 4,
+          "inclusiveSeconds": 7.246062159538269e-05,
+          "selfSeconds": 7.246062159538269e-05
+        },
+        "copy:parkour_solver.search.repair:enrich:240": {
+          "calls": 4,
+          "inclusiveSeconds": 6.804987788200378e-05,
+          "selfSeconds": 6.804987788200378e-05
+        },
+        "copy:parkour_solver.search.repair:snapshot:91": {
+          "calls": 420,
+          "inclusiveSeconds": 0.07795217633247375,
+          "selfSeconds": 0.07795217633247375
+        },
+        "solver.invoke": {
+          "calls": 4,
+          "inclusiveSeconds": 0.7789930403232574,
+          "selfSeconds": 0.7670890837907791
+        },
+        "copy:parkour_solver.search.ordered_route:evaluate:274": {
+          "calls": 4,
+          "inclusiveSeconds": 0.001742042601108551,
+          "selfSeconds": 0.001742042601108551
+        },
+        "copy:parkour_solver.search.ordered_route:probe:41": {
+          "calls": 4,
+          "inclusiveSeconds": 0.004191745072603226,
+          "selfSeconds": 0.004191745072603226
+        },
+        "copy:parkour_solver.search.ordered_route:probe:42": {
+          "calls": 12,
+          "inclusiveSeconds": 0.0017042160034179688,
+          "selfSeconds": 0.0017042160034179688
+        },
+        "copy:parkour_solver.search.ordered_route:search_allocations:121": {
+          "calls": 4,
+          "inclusiveSeconds": 2.205371856689453e-06,
+          "selfSeconds": 2.205371856689453e-06
+        },
+        "copy:parkour_solver.search.ordered_route:find_route:304": {
+          "calls": 4,
+          "inclusiveSeconds": 0.0014644600450992584,
+          "selfSeconds": 0.0014644600450992584
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:370": {
+          "calls": 4,
+          "inclusiveSeconds": 0.006191913038492203,
+          "selfSeconds": 0.006191913038492203
+        },
+        "numerical.evaluate": {
+          "calls": 1,
+          "inclusiveSeconds": 6.33780612796545,
+          "selfSeconds": 2.8286188691854477
+        },
+        "copy:parkour_solver.search.dfs:commit_arrival:40": {
+          "calls": 10,
+          "inclusiveSeconds": 0.04997042566537857,
+          "selfSeconds": 0.04997042566537857
+        },
+        "copy:parkour_solver.spatial.checkpoints:retain_prefix:92": {
+          "calls": 10,
+          "inclusiveSeconds": 0.5006053857505322,
+          "selfSeconds": 0.5006053857505322
+        },
+        "copy:parkour_solver.search.dfs:score:635": {
+          "calls": 1,
+          "inclusiveSeconds": 0.04680750146508217,
+          "selfSeconds": 0.04680750146508217
+        },
+        "copy:parkour_solver.search.dfs:score:692": {
+          "calls": 9,
+          "inclusiveSeconds": 0.012023117393255234,
+          "selfSeconds": 0.012023117393255234
+        },
+        "peer.remember_peer": {
+          "calls": 1,
+          "inclusiveSeconds": 2.4165958166122437e-05,
+          "selfSeconds": 2.2795051336288452e-05
+        },
+        "comparison.compare_candidates": {
+          "calls": 2,
+          "inclusiveSeconds": 9.715557098388672e-06,
+          "selfSeconds": 8.50483775138855e-06
+        },
+        "copy:parkour_solver.search.dfs:score:741": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0013408772647380829,
+          "selfSeconds": 0.0013408772647380829
+        },
+        "dfs.session": {
+          "calls": 1,
+          "inclusiveSeconds": 6.97982033342123,
+          "selfSeconds": 0.028812434524297714
+        },
+        "bound.remaining_bound": {
+          "calls": 1,
+          "inclusiveSeconds": 8.501112461090088e-06,
+          "selfSeconds": 8.501112461090088e-06
+        },
+        "copy:parkour_solver.constraints.variants:__init__:42": {
+          "calls": 1,
+          "inclusiveSeconds": 0.027724161744117737,
+          "selfSeconds": 0.027724161744117737
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:45": {
+          "calls": 1,
+          "inclusiveSeconds": 1.3750046491622925e-05,
+          "selfSeconds": 1.3750046491622925e-05
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:65": {
+          "calls": 1,
+          "inclusiveSeconds": 9.137392044067383e-05,
+          "selfSeconds": 9.137392044067383e-05
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:66": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0007079131901264191,
+          "selfSeconds": 0.0007079131901264191
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:71": {
+          "calls": 1,
+          "inclusiveSeconds": 1.210719347000122e-06,
+          "selfSeconds": 1.210719347000122e-06
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:118": {
+          "calls": 1,
+          "inclusiveSeconds": 0.0014510825276374817,
+          "selfSeconds": 0.0014510825276374817
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:119": {
+          "calls": 1,
+          "inclusiveSeconds": 4.883110523223877e-05,
+          "selfSeconds": 4.883110523223877e-05
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:120": {
+          "calls": 1,
+          "inclusiveSeconds": 1.570954918861389e-05,
+          "selfSeconds": 1.570954918861389e-05
+        },
+        "copy:parkour_solver.search.repair:solve_contact_branches:121": {
+          "calls": 1,
+          "inclusiveSeconds": 0.00734754279255867,
+          "selfSeconds": 0.00734754279255867
+        },
+        "copy:parkour_solver.search.dfs:score:709": {
+          "calls": 4,
+          "inclusiveSeconds": 0.0015547871589660645,
+          "selfSeconds": 0.0015547871589660645
+        }
+      }
+    }
+  ],
+  "active": [],
+  "accounting": "Inclusive buckets overlap; selfSeconds exclude instrumented children. Unwrapped work stays in its parent.",
+  "wallSeconds": 92.59818391874433,
+  "cpuSeconds": 86.88973899999999,
+  "maxRssBytes": 204996608,
+  "error": null,
+  "gc": {
+    "calls": 6484,
+    "seconds": 2.0318196788430214
+  },
+  "cancelled": false
+}

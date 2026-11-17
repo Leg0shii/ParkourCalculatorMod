@@ -1,0 +1,5 @@
+{
+  "claudeMdExcludes": [
+    "**/ParkourCalculatorMod*/CLAUDE.md"
+  ]
+}

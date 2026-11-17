@@ -1,0 +1,3 @@
+{"mode": "prescribed", "status": "unknown", "termination": "contact_search_exhausted", "calls": 1, "objective": null, "audits": [{"filter": null, "geometry": null, "conflicts": []}], "replay": null}
+{"mode": "no_signature", "status": "unknown", "termination": "contact_search_exhausted", "calls": 1, "objective": null, "audits": [{"filter": null, "geometry": null, "conflicts": []}], "replay": null}
+{"mode": "scene_only", "status": "unknown", "termination": "contact_search_exhausted", "calls": 1, "objective": null, "audits": [{"filter": null, "geometry": null, "conflicts": []}], "replay": null}

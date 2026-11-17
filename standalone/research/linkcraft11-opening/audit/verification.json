@@ -1,0 +1,18 @@
+{
+  "source": "archived reports; no numerical solves",
+  "candidateRows": 306,
+  "mainWorkerRequests": 2057,
+  "detailedBranchAttempts": 214,
+  "winningBranchAttempts": 32,
+  "winningWorkerRequests": 30,
+  "winningRawStatuses": {
+    "feasible": 25,
+    "unknown": 5,
+    "blocked": 2
+  },
+  "winningOuterAcceptedBranch": 25,
+  "winningFilterFailures": 21,
+  "winningSceneFailures": 3,
+  "cells": 33,
+  "programMasksVerified": true
+}

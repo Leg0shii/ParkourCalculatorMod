@@ -1,0 +1,2 @@
+{"tick": 10, "scored": 2, "unknown": 0, "retained": 2, "generation": "exhausted", "progress": [-1189.732026370555, -1189.4036196332927]}
+{"status": "unknown", "termination": "deadline", "elapsed": 302.7371707521379, "work": {"numericalProposals": 182, "solverCalls": 150, "uniqueCompletePrograms": 0, "unitsByType": {}, "firstProposalSeconds": 0.8011807911098003, "firstAcceptedSeconds": null, "maxSolverCalls": 1024, "termination": "deadline"}, "position": null, "replays": 4}

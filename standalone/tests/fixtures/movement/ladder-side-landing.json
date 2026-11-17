@@ -1,0 +1,104 @@
+{
+  "version": 1,
+  "sceneModel": "collision_boxes",
+  "geometryBounds": [
+    -10,
+    -5,
+    -10,
+    10,
+    10,
+    10
+  ],
+  "initial": {
+    "position": [
+      -0.5,
+      1,
+      0.5
+    ],
+    "velocity": [
+      0.1,
+      -0.0784000015258789,
+      0
+    ]
+  },
+  "startBlock": "start",
+  "goalBlock": "goal",
+  "blocks": [
+    {
+      "id": "start",
+      "boxes": [
+        [
+          -1,
+          0,
+          0,
+          0,
+          1,
+          1
+        ]
+      ]
+    },
+    {
+      "id": "wall",
+      "boxes": [
+        [
+          1,
+          0,
+          0,
+          2,
+          3,
+          1
+        ]
+      ]
+    },
+    {
+      "id": "goal",
+      "boxes": [
+        [
+          0,
+          0,
+          1.5,
+          1,
+          1,
+          2.5
+        ]
+      ]
+    }
+  ],
+  "climbableCells": [
+    [
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      1,
+      0
+    ],
+    [
+      0,
+      2,
+      0
+    ]
+  ],
+  "maxJumps": 1,
+  "maxRunTicksPerJump": 0,
+  "maxTotalRunTicks": 0,
+  "maxContactBranches": 8,
+  "ladderSearch": {
+    "requireLadder": true,
+    "maxEntryInputs": 6,
+    "maxInputs": 32,
+    "maxSkeletons": 2048,
+    "maxSchedules": 1500,
+    "maxRanked": 128,
+    "maxNumericalSchedules": 80,
+    "maxRouteContexts": 4,
+    "minClimbInputs": 2,
+    "maxMaskWork": 60000
+  },
+  "objective": {
+    "axis": "Z",
+    "sense": "MAX"
+  }
+}

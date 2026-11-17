@@ -1,0 +1,129 @@
+{
+  "request": {
+    "version": 1,
+    "sceneModel": "collision_boxes",
+    "geometryBounds": [
+      -10,
+      -5,
+      -10,
+      12,
+      12,
+      10
+    ],
+    "initial": {
+      "position": [
+        0.5,
+        1,
+        0.5
+      ],
+      "velocity": [
+        0.25,
+        -0.0784000015258789,
+        0
+      ],
+      "yaw": -90
+    },
+    "startBlock": "start",
+    "goalBlock": "goal",
+    "maxRunTicksPerJump": 0,
+    "maxTotalRunTicks": 0,
+    "maxFlightInputs": 40,
+    "maxContactCombinations": 0,
+    "maxWallHits": 0,
+    "blocks": [
+      {
+        "id": "start",
+        "boxes": [
+          [
+            -2,
+            0,
+            -2,
+            1,
+            1,
+            2
+          ]
+        ]
+      },
+      {
+        "id": "middle",
+        "boxes": [
+          [
+            1,
+            1,
+            -2,
+            3,
+            1.5,
+            2
+          ]
+        ]
+      },
+      {
+        "id": "goal",
+        "boxes": [
+          [
+            4.5,
+            0,
+            -1,
+            5.5,
+            1.5,
+            1
+          ]
+        ]
+      }
+    ],
+    "movementSearch": {
+      "types": [
+        "stepping",
+        "normal"
+      ],
+      "maxInputs": 30,
+      "maxPrefixes": 192,
+      "maxQueuedPrefixes": 256,
+      "maxChoicesPerType": 16
+    }
+  },
+  "spatialPoints": [
+    [
+      0.5,
+      1,
+      0.5
+    ],
+    [
+      0.69999,
+      1,
+      0.5
+    ],
+    [
+      0.69999,
+      1.5,
+      0.5
+    ],
+    [
+      5,
+      1.5,
+      0.5
+    ]
+  ],
+  "checkpoints": [
+    {
+      "tick": 4,
+      "region": [
+        0.7,
+        3.2,
+        -1,
+        1
+      ]
+    }
+  ],
+  "settings": {
+    "seconds": 15,
+    "max_candidates": 16,
+    "beam_width": 4,
+    "unknown_slots": 1,
+    "max_solver_calls": 96,
+    "score_call_limit": 4,
+    "score_seconds": 2,
+    "candidate_seconds": 0.7,
+    "final_call_limit": 24
+  }
+}

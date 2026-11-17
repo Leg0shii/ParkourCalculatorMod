@@ -4,6 +4,8 @@ Status: **shelved 2026-07-04.** This document is the full record of the attempts
 
 The shipped angle solver is not affected by anything here. It takes human-authored per-tick constraints and is documented in `angle-solver.md`. Block solving was an attempt to *remove* the human from that loop.
 
+2026-10-26: a separate continuous-model orchestration prototype has restarted this work. Run-ticks allocation is prototyped; the new block-solver work generates transition profiles and positional constraints for it. See [the current block-solver plan](../../standalone/autonomy/BLOCK_SOLVER_PLAN.md) and [run-ticks status](../../standalone/autonomy/RUN_TICKS_PLAN.md). The historical measurements and shelving decision below remain a record of the older implementation, not measurements of the new IPOPT path.
+
 
 ## 1. The goal and why it is hard
 

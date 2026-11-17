@@ -1,0 +1,430 @@
+{
+  "warm": {
+    "knownFeasible": 28,
+    "knownTotal": 28,
+    "perturbedFeasible": 6,
+    "perturbedTotal": 8,
+    "objectiveRegressions": [],
+    "recoveries": [
+      [
+        "turn-blockage-main",
+        "known",
+        "forward"
+      ],
+      [
+        "turn-blockage-main",
+        "known",
+        "reverse"
+      ],
+      [
+        "turn-blockage-alternate_turn",
+        "known",
+        "forward"
+      ]
+    ],
+    "replays": 34
+  },
+  "scalarFallback": [
+    {
+      "name": "synthetic-X-1",
+      "status": "feasible"
+    },
+    {
+      "name": "synthetic-X-4",
+      "status": "feasible"
+    },
+    {
+      "name": "synthetic-X-12",
+      "status": "feasible"
+    },
+    {
+      "name": "synthetic-Z-1",
+      "status": "feasible"
+    },
+    {
+      "name": "synthetic-Z-4",
+      "status": "feasible"
+    },
+    {
+      "name": "synthetic-Z-12",
+      "status": "feasible"
+    },
+    {
+      "name": "captured-turn-16",
+      "status": "feasible"
+    }
+  ],
+  "generation": [
+    {
+      "name": "ceiling",
+      "firstCompleteExpanded": 1,
+      "emittedTicks": [
+        12,
+        13,
+        13,
+        14,
+        14,
+        15,
+        16,
+        17
+      ],
+      "expanded": 132,
+      "queueDrops": 0,
+      "completeQueueDrops": 0
+    },
+    {
+      "name": "grind-or-run",
+      "firstCompleteExpanded": 4,
+      "emittedTicks": [
+        14,
+        16,
+        11,
+        12,
+        15,
+        15,
+        15,
+        16,
+        16,
+        12,
+        13,
+        16
+      ],
+      "expanded": 92,
+      "queueDrops": 0,
+      "completeQueueDrops": 0
+    },
+    {
+      "name": "multi-support",
+      "firstCompleteExpanded": 4,
+      "emittedTicks": [
+        15,
+        15,
+        16,
+        16,
+        17,
+        17,
+        17,
+        17,
+        18,
+        18,
+        14,
+        18
+      ],
+      "expanded": 92,
+      "queueDrops": 0,
+      "completeQueueDrops": 0
+    },
+    {
+      "name": "open",
+      "firstCompleteExpanded": 1,
+      "emittedTicks": [
+        12,
+        13,
+        14,
+        15,
+        16,
+        17
+      ],
+      "expanded": 95,
+      "queueDrops": 0,
+      "completeQueueDrops": 0
+    },
+    {
+      "name": "step-or-jump",
+      "firstCompleteExpanded": 2,
+      "emittedTicks": [
+        13,
+        14,
+        14,
+        13,
+        14,
+        14,
+        15,
+        15,
+        15,
+        15,
+        15,
+        16
+      ],
+      "expanded": 90,
+      "queueDrops": 0,
+      "completeQueueDrops": 0
+    },
+    {
+      "name": "turn-blockage",
+      "firstCompleteExpanded": 1,
+      "emittedTicks": [
+        12,
+        13,
+        14,
+        15,
+        16,
+        17
+      ],
+      "expanded": 95,
+      "queueDrops": 0,
+      "completeQueueDrops": 0
+    },
+    {
+      "name": "extra-run-up",
+      "firstCompleteExpanded": 6,
+      "emittedTicks": [
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        24,
+        25,
+        25,
+        25
+      ],
+      "expanded": 94,
+      "queueDrops": 0,
+      "completeQueueDrops": 0
+    },
+    {
+      "name": "extra-remote-supports",
+      "firstCompleteExpanded": 1,
+      "emittedTicks": [
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23
+      ],
+      "expanded": 89,
+      "queueDrops": 0,
+      "completeQueueDrops": 0
+    },
+    {
+      "name": "extra-grind",
+      "firstCompleteExpanded": 1,
+      "emittedTicks": [
+        12,
+        5,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        7,
+        7,
+        7
+      ],
+      "expanded": 89,
+      "queueDrops": 0,
+      "completeQueueDrops": 0
+    },
+    {
+      "name": "extra-repeat-ceiling",
+      "firstCompleteExpanded": 1,
+      "emittedTicks": [
+        12,
+        13,
+        14,
+        14,
+        15,
+        15,
+        15,
+        16,
+        16,
+        16,
+        16,
+        16
+      ],
+      "expanded": 89,
+      "queueDrops": 887,
+      "completeQueueDrops": 0
+    }
+  ],
+  "poolVerification": [
+    {
+      "name": "grind-or-run",
+      "ticks": 11,
+      "calls": 24,
+      "replays": 4
+    },
+    {
+      "name": "multi-support",
+      "ticks": 14,
+      "calls": 12,
+      "replays": 4
+    },
+    {
+      "name": "turn-blockage",
+      "ticks": null,
+      "calls": 24,
+      "replays": 0
+    },
+    {
+      "name": "extra-grind",
+      "ticks": 5,
+      "calls": 12,
+      "replays": 9
+    },
+    {
+      "name": "extra-repeat-ceiling",
+      "ticks": null,
+      "calls": 12,
+      "replays": 0
+    }
+  ],
+  "windows": [
+    {
+      "name": "ceiling",
+      "repeat": 0,
+      "gap": 0.25,
+      "status": "feasible",
+      "termination": "exhausted",
+      "elapsedSeconds": 4.638675168156624,
+      "ticks": 13,
+      "objective": 4.075185600539984,
+      "calls": 27,
+      "firstAcceptedSeconds": 4.634251084178686,
+      "expandedPrefixes": 16,
+      "scoreComparisons": 12,
+      "checkpointUnknowns": 8,
+      "heuristicDrops": 17,
+      "checkpoints": [
+        11
+      ],
+      "retained": [
+        3
+      ],
+      "outsideBand": 10,
+      "scoredCapDrops": 0
+    },
+    {
+      "name": "grind-or-run",
+      "repeat": 0,
+      "gap": 0.25,
+      "status": "feasible",
+      "termination": "prefix_limit",
+      "elapsedSeconds": 5.098016958683729,
+      "ticks": 11,
+      "objective": 5.670999716917564,
+      "calls": 3,
+      "firstAcceptedSeconds": 0.6350664533674717,
+      "expandedPrefixes": 512,
+      "scoreComparisons": 0,
+      "checkpointUnknowns": 0,
+      "heuristicDrops": 0,
+      "checkpoints": [],
+      "retained": [],
+      "outsideBand": 0,
+      "scoredCapDrops": 0
+    },
+    {
+      "name": "multi-support",
+      "repeat": 0,
+      "gap": 0.25,
+      "status": "feasible",
+      "termination": "exhausted",
+      "elapsedSeconds": 5.454119294881821,
+      "ticks": 14,
+      "objective": 5.136175026980244,
+      "calls": 34,
+      "firstAcceptedSeconds": 5.0013055838644505,
+      "expandedPrefixes": 57,
+      "scoreComparisons": 6,
+      "checkpointUnknowns": 17,
+      "heuristicDrops": 17,
+      "checkpoints": [
+        10,
+        16
+      ],
+      "retained": [
+        5,
+        1
+      ],
+      "outsideBand": 2,
+      "scoredCapDrops": 0
+    },
+    {
+      "name": "open",
+      "repeat": 0,
+      "gap": 0.25,
+      "status": "feasible",
+      "termination": "exhausted",
+      "elapsedSeconds": 3.7861900366842747,
+      "ticks": 12,
+      "objective": 4.385033235229957,
+      "calls": 22,
+      "firstAcceptedSeconds": 3.6407960429787636,
+      "expandedPrefixes": 18,
+      "scoreComparisons": 14,
+      "checkpointUnknowns": 5,
+      "heuristicDrops": 13,
+      "checkpoints": [
+        11
+      ],
+      "retained": [
+        6
+      ],
+      "outsideBand": 9,
+      "scoredCapDrops": 0
+    },
+    {
+      "name": "step-or-jump",
+      "repeat": 0,
+      "gap": 0.25,
+      "status": "feasible",
+      "termination": "exhausted",
+      "elapsedSeconds": 6.802228081971407,
+      "ticks": 14,
+      "objective": 5.8472345462747946,
+      "calls": 41,
+      "firstAcceptedSeconds": 6.765755668282509,
+      "expandedPrefixes": 64,
+      "scoreComparisons": 8,
+      "checkpointUnknowns": 12,
+      "heuristicDrops": 18,
+      "checkpoints": [
+        10
+      ],
+      "retained": [
+        2
+      ],
+      "outsideBand": 7,
+      "scoredCapDrops": 0
+    },
+    {
+      "name": "turn-blockage",
+      "repeat": 0,
+      "gap": 0.25,
+      "status": "unknown",
+      "termination": "exhausted",
+      "elapsedSeconds": 8.558455415070057,
+      "ticks": null,
+      "objective": null,
+      "calls": 59,
+      "firstAcceptedSeconds": null,
+      "expandedPrefixes": 25,
+      "scoreComparisons": 0,
+      "checkpointUnknowns": 16,
+      "heuristicDrops": 15,
+      "checkpoints": [
+        10
+      ],
+      "retained": [
+        1
+      ],
+      "outsideBand": 0,
+      "scoredCapDrops": 0
+    }
+  ],
+  "windowReplays": 47
+}

@@ -1,0 +1,89 @@
+{
+  "fixture": "obstacle-interleaved.json",
+  "fixtureSha256": "2cc7e6c88bcbc92abbb3f8b165f19b4d93905dd02276ef98965f65b4dbb63232",
+  "horizontalProblemHash": "f57f63119f54f653c9e5e9c2722afa09a61b661b45712a46244bdbe62ffb0343",
+  "fullProblemHash": "7f160d25b1a1c158b890bbfc289c7a88970b8f173a4baac2b3c04faab0892ce2",
+  "ticks": 12,
+  "allocation": [
+    0
+  ],
+  "searchSeconds": 30.72758112475276,
+  "blockageCaps": {
+    "horizontal": 2,
+    "vertical": 2,
+    "total": 3
+  },
+  "blockageUsage": [
+    {
+      "blockId": "wall",
+      "horizontal": 2,
+      "vertical": 0,
+      "total": 2
+    },
+    {
+      "blockId": "ceiling",
+      "horizontal": 0,
+      "vertical": 2,
+      "total": 2
+    }
+  ],
+  "blockageTimeline": [
+    {
+      "blockId": "ceiling",
+      "solidIndex": 2,
+      "leg": 0,
+      "firstState": 3,
+      "secondState": 3,
+      "type": "Y->X",
+      "kind": "vertical"
+    },
+    {
+      "blockId": "wall",
+      "solidIndex": 1,
+      "leg": 0,
+      "firstState": 4,
+      "secondState": 4,
+      "type": "X->Z",
+      "kind": "horizontal"
+    },
+    {
+      "blockId": "ceiling",
+      "solidIndex": 2,
+      "leg": 0,
+      "firstState": 7,
+      "secondState": 8,
+      "type": "X->Y",
+      "kind": "vertical"
+    },
+    {
+      "blockId": "wall",
+      "solidIndex": 1,
+      "leg": 0,
+      "firstState": 10,
+      "secondState": 11,
+      "type": "Z->X",
+      "kind": "horizontal"
+    }
+  ],
+  "geometryCheck": {
+    "feasible": true,
+    "ticks": 12
+  },
+  "violation": 0.0,
+  "objective": 2.939250219758199,
+  "minimumTicksProven": true,
+  "objectiveOptimalityProven": false,
+  "obstacleSearch": {
+    "generated": 74,
+    "candidateDrops": 0,
+    "timingPoolDrops": 0,
+    "reachPruned": 18,
+    "verticalFacesPruned": 10,
+    "budgetPruned": 504,
+    "generationIncomplete": false,
+    "acceptedKinds": [
+      "vertical_passage",
+      "wide_neo"
+    ]
+  }
+}

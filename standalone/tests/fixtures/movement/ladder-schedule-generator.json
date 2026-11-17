@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "initial": {
+    "position": 2.0,
+    "velocity": -0.0784000015258789
+  },
+  "region": {
+    "minY": 0,
+    "maxY": 5
+  },
+  "entries": [
+    {
+      "family": "front",
+      "firstValidatedState": 1,
+      "unresolvedStates": [
+        0
+      ]
+    }
+  ],
+  "targetTop": 0.0,
+  "maxInputs": 25,
+  "entryDelay": 0,
+  "exitStates": [
+    7
+  ],
+  "exitKinds": [
+    "side"
+  ],
+  "maxSchedules": 300,
+  "maxSkeletons": 100,
+  "maxMaskWork": 10000
+}

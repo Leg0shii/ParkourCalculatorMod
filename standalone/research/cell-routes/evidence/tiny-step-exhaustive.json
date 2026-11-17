@@ -1,0 +1,182 @@
+{
+  "request": {
+    "version": 1,
+    "sceneModel": "collision_boxes",
+    "geometryBounds": [
+      -10,
+      -5,
+      -10,
+      12,
+      12,
+      10
+    ],
+    "initial": {
+      "position": [
+        0.5,
+        1,
+        0.5
+      ],
+      "velocity": [
+        0.25,
+        -0.0784000015258789,
+        0
+      ],
+      "yaw": -90
+    },
+    "startBlock": "start",
+    "goalBlock": "goal",
+    "maxRunTicksPerJump": 0,
+    "maxTotalRunTicks": 0,
+    "maxFlightInputs": 40,
+    "maxContactCombinations": 0,
+    "maxWallHits": 0,
+    "blocks": [
+      {
+        "id": "start",
+        "boxes": [
+          [
+            -2,
+            0,
+            -2,
+            1,
+            1,
+            2
+          ]
+        ]
+      },
+      {
+        "id": "goal",
+        "boxes": [
+          [
+            1,
+            1,
+            -2,
+            3,
+            1.5,
+            2
+          ]
+        ]
+      }
+    ],
+    "movementSearch": {
+      "types": [
+        "stepping"
+      ],
+      "maxInputs": 1,
+      "maxPrefixes": 64,
+      "maxQueuedPrefixes": 64,
+      "maxChoicesPerType": 128
+    }
+  },
+  "spatialPoints": [
+    [
+      0.5,
+      1,
+      0.5
+    ],
+    [
+      0.5,
+      2,
+      0.5
+    ],
+    [
+      2,
+      2,
+      0.5
+    ],
+    [
+      2,
+      1.5,
+      0.5
+    ]
+  ],
+  "runs": [
+    {
+      "summary": {
+        "arm": "generic",
+        "mode": "generation",
+        "status": "generated",
+        "elapsedSeconds": 0.0034229159355163574,
+        "routeCap": 10,
+        "routes": 0,
+        "unattemptedRoutes": 0,
+        "expandedPrefixes": 5,
+        "generatedChoices": 12,
+        "completePrograms": 1,
+        "numericalCalls": 0,
+        "firstAcceptedSeconds": null,
+        "bestTicks": null,
+        "bestObjective": null,
+        "forwardChecks": 0,
+        "forwardRejections": 0,
+        "forwardPhaseUpdates": 0,
+        "skeletons": 0,
+        "maskWork": 0
+      },
+      "generation": {
+        "expandedPrefixes": 5,
+        "generated": 12,
+        "remainingPrefixes": 0,
+        "screenedPrefixes": 0,
+        "queueDrops": 0,
+        "generation": [
+          {
+            "type": "stepping",
+            "prefixTicks": 0,
+            "termination": "exhausted",
+            "emitted": 12
+          }
+        ],
+        "minimumTicksProven": false,
+        "termination": "exhausted",
+        "types": [
+          "stepping"
+        ]
+      }
+    },
+    {
+      "summary": {
+        "arm": "prescribed",
+        "mode": "generation",
+        "status": "generated",
+        "elapsedSeconds": 0.003970541059970856,
+        "routeCap": 10,
+        "routes": 1,
+        "unattemptedRoutes": 0,
+        "expandedPrefixes": 5,
+        "generatedChoices": 12,
+        "completePrograms": 1,
+        "numericalCalls": 0,
+        "firstAcceptedSeconds": null,
+        "bestTicks": null,
+        "bestObjective": null,
+        "forwardChecks": 4,
+        "forwardRejections": 0,
+        "forwardPhaseUpdates": 12,
+        "skeletons": 0,
+        "maskWork": 0
+      },
+      "generation": {
+        "expandedPrefixes": 5,
+        "generated": 12,
+        "remainingPrefixes": 0,
+        "screenedPrefixes": 0,
+        "queueDrops": 0,
+        "generation": [
+          {
+            "type": "stepping",
+            "prefixTicks": 0,
+            "termination": "exhausted",
+            "emitted": 12
+          }
+        ],
+        "minimumTicksProven": false,
+        "termination": "exhausted",
+        "types": [
+          "stepping"
+        ]
+      }
+    }
+  ],
+  "scope": "exhaustive within the declared one-input stepping grammar; not all Minecraft controls"
+}

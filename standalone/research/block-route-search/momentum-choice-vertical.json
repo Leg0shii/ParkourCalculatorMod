@@ -1,0 +1,72 @@
+{
+  "profile": "minecraft-1.8.9",
+  "position": 1,
+  "velocity": -0.0784000015258789,
+  "onGround": true,
+  "previousHorizontalCollision": false,
+  "threshold": 0.005,
+  "jumpVelocity": [
+    0.41999998688697815,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    0.41999998688697815,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  ],
+  "sneak": [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false
+  ],
+  "contacts": [
+    {
+      "state": 12,
+      "plane": 1,
+      "direction": -1
+    },
+    {
+      "state": 24,
+      "plane": 1,
+      "direction": -1
+    }
+  ]
+}

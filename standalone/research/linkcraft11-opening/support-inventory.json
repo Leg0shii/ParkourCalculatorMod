@@ -1,0 +1,152 @@
+{
+  "source": "/Users/arvindmurty/Downloads/LinkcraftII_Competition_01/real/11.json",
+  "sourceSha256": "af5d2d1bc6e0ab466f1b6cf309f3a26e76e4a63765ac8b15ff02fb4ad55d28bf",
+  "selectedBlocks": [],
+  "scope": "opening five recorded jumps j0 through j4, solely to inventory supports; timings are not proposed solver constraints",
+  "interpretation": "Unconfirmed support inventory, not a collision scene or assertion of world coverage",
+  "supports": [
+    {
+      "id": "B0",
+      "recordedArrivalState": 0,
+      "topY": 5.0,
+      "topSource": "saved start position",
+      "authoredConstraintState": null,
+      "authoredPlayerCenterBounds": {},
+      "collisionBox": null,
+      "verticalBottom": null,
+      "verified": false,
+      "previousFixtureFootprintHypothesis": [
+        746,
+        747,
+        -1105,
+        -1104
+      ],
+      "provenance": "grid-aligned full-block hypothesis from recorded position; absent from authored X/Z ranges"
+    },
+    {
+      "id": "B1",
+      "recordedArrivalState": 12,
+      "topY": 5.0,
+      "topSource": "recorded grounded state, not an explicit block shape",
+      "authoredConstraintState": null,
+      "authoredPlayerCenterBounds": {},
+      "collisionBox": null,
+      "verticalBottom": null,
+      "verified": false,
+      "previousFixtureFootprintHypothesis": [
+        743,
+        744,
+        -1104,
+        -1103
+      ],
+      "provenance": "grid-aligned full-block hypothesis from recorded position; absent from authored X/Z ranges"
+    },
+    {
+      "id": "B2",
+      "recordedArrivalState": 21,
+      "topY": 6.0,
+      "topSource": "recorded grounded state, not an explicit block shape",
+      "authoredConstraintState": 20,
+      "authoredPlayerCenterBounds": {
+        "X": [
+          740.6999999880792,
+          742.3000000119208
+        ],
+        "Z": [
+          -1104.3000000119207,
+          -1102.6999999880793
+        ]
+      },
+      "collisionBox": null,
+      "verticalBottom": null,
+      "verified": false,
+      "provenance": "authored X/Z player-center intervals plus recorded top; physical footprint not uniquely specified",
+      "possibleFootprintIfBoundsAreOnlySupportOverlap": [
+        741.0,
+        742.0,
+        -1104.0,
+        -1103.0
+      ]
+    },
+    {
+      "id": "B3",
+      "recordedArrivalState": 30,
+      "topY": 7.0,
+      "topSource": "recorded grounded state, not an explicit block shape",
+      "authoredConstraintState": 29,
+      "authoredPlayerCenterBounds": {
+        "X": [
+          737.6999999880792,
+          739.3000000119208
+        ],
+        "Z": [
+          -1101.3000000119207,
+          -1099.6999999880793
+        ]
+      },
+      "collisionBox": null,
+      "verticalBottom": null,
+      "verified": false,
+      "provenance": "authored X/Z player-center intervals plus recorded top; physical footprint not uniquely specified",
+      "possibleFootprintIfBoundsAreOnlySupportOverlap": [
+        738.0,
+        739.0,
+        -1101.0,
+        -1100.0
+      ]
+    },
+    {
+      "id": "B4",
+      "recordedArrivalState": 40,
+      "topY": 7.5,
+      "topSource": "recorded grounded state, not an explicit block shape",
+      "authoredConstraintState": 39,
+      "authoredPlayerCenterBounds": {
+        "X": [
+          733.6999999880792,
+          735.3000000119208
+        ],
+        "Z": [
+          -1100.3000000119207,
+          -1098.6999999880793
+        ]
+      },
+      "collisionBox": null,
+      "verticalBottom": null,
+      "verified": false,
+      "provenance": "authored X/Z player-center intervals plus recorded top; physical footprint not uniquely specified",
+      "possibleFootprintIfBoundsAreOnlySupportOverlap": [
+        734.0,
+        735.0,
+        -1100.0,
+        -1099.0
+      ]
+    },
+    {
+      "id": "B5",
+      "recordedArrivalState": 55,
+      "topY": 6.0,
+      "topSource": "recorded grounded state, not an explicit block shape",
+      "authoredConstraintState": 54,
+      "authoredPlayerCenterBounds": {
+        "X": [
+          729.6999999880792,
+          731.3000000119208
+        ],
+        "Z": [
+          -1096.3000000119207,
+          -1095.300000011921
+        ]
+      },
+      "collisionBox": null,
+      "verticalBottom": null,
+      "verified": false,
+      "provenance": "authored X/Z player-center intervals plus recorded top; physical footprint not uniquely specified",
+      "ambiguity": "Z center interval is only 1.0 block wide. Inverting ordinary player overlap gives width 0.4; this may instead be a tightened tactical constraint on a larger block.",
+      "possibleXFootprintIfBoundsAreOnlySupportOverlap": [
+        730,
+        731
+      ]
+    }
+  ]
+}

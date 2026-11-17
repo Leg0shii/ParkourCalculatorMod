@@ -1,0 +1,146 @@
+{
+  "version": 1,
+  "sceneModel": "collision_boxes",
+  "geometryBounds": [
+    -5,
+    -5,
+    -5,
+    15,
+    12,
+    10
+  ],
+  "initial": {
+    "position": [
+      0.5,
+      1,
+      0.5
+    ],
+    "velocity": [
+      0.2,
+      -0.0784000015258789,
+      0
+    ],
+    "yaw": -90
+  },
+  "startBlock": "start",
+  "goalBlock": "goal",
+  "blocks": [
+    {
+      "id": "start",
+      "boxes": [
+        [
+          0,
+          0,
+          0,
+          1,
+          1,
+          1
+        ]
+      ]
+    },
+    {
+      "id": "remote0",
+      "boxes": [
+        [
+          1.0,
+          0,
+          5,
+          1.3,
+          1,
+          6
+        ]
+      ]
+    },
+    {
+      "id": "remote1",
+      "boxes": [
+        [
+          1.5,
+          0,
+          5,
+          1.8,
+          1,
+          6
+        ]
+      ]
+    },
+    {
+      "id": "remote2",
+      "boxes": [
+        [
+          2.0,
+          0,
+          5,
+          2.3,
+          1,
+          6
+        ]
+      ]
+    },
+    {
+      "id": "remote3",
+      "boxes": [
+        [
+          2.5,
+          0,
+          5,
+          2.8,
+          1,
+          6
+        ]
+      ]
+    },
+    {
+      "id": "remote4",
+      "boxes": [
+        [
+          3.0,
+          0,
+          5,
+          3.3,
+          1,
+          6
+        ]
+      ]
+    },
+    {
+      "id": "remote5",
+      "boxes": [
+        [
+          3.5,
+          0,
+          5,
+          3.8,
+          1,
+          6
+        ]
+      ]
+    },
+    {
+      "id": "goal",
+      "boxes": [
+        [
+          3,
+          0,
+          0,
+          4,
+          1,
+          1
+        ]
+      ]
+    }
+  ],
+  "maxTotalRunTicks": 0,
+  "maxRunTicksPerJump": 0,
+  "maxWallHits": 0,
+  "maxContactCombinations": 0,
+  "movementSearch": {
+    "types": [
+      "normal"
+    ],
+    "maxInputs": 25,
+    "maxPrefixes": 64,
+    "maxQueuedPrefixes": 128,
+    "maxChoicesPerType": 16
+  }
+}

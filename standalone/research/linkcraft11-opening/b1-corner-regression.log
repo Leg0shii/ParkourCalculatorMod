@@ -1,0 +1,13 @@
+test_blocked_prescribed_trace_and_budget_expiry_are_explicit (test_cell_routes.CellRouteTests.test_blocked_prescribed_trace_and_budget_expiry_are_explicit) ... ok
+test_both_obstacle_sides_and_overflight_are_distinct_proposals (test_cell_routes.CellRouteTests.test_both_obstacle_sides_and_overflight_are_distinct_proposals) ... ok
+test_goal_is_a_landing_region_even_when_its_center_is_blocked (test_cell_routes.CellRouteTests.test_goal_is_a_landing_region_even_when_its_center_is_blocked) ... ok
+test_phase_trace_sees_multiple_crossings_in_one_tick (test_cell_routes.CellRouteTests.test_phase_trace_sees_multiple_crossings_in_one_tick) ... ok
+test_prescribed_spatial_points_hide_timing_and_preserve_crossing_side (test_cell_routes.CellRouteTests.test_prescribed_spatial_points_hide_timing_and_preserve_crossing_side) ... ok
+test_returns_are_kept_in_signature_and_explicitly_limited (test_cell_routes.CellRouteTests.test_returns_are_kept_in_signature_and_explicitly_limited) ... ok
+test_support_corner_keeps_both_free_regions_without_filling_the_obstacle (test_cell_routes.CellRouteTests.test_support_corner_keeps_both_free_regions_without_filling_the_obstacle) ... ok
+test_touching_a_gate_then_returning_does_not_create_crossings (test_cell_routes.CellRouteTests.test_touching_a_gate_then_returning_does_not_create_crossings) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.014s
+
+OK

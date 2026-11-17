@@ -1,0 +1,17 @@
+{"name": "ceiling", "auditCandidates": 0, "complete": true, "qualityLoss": false, "discardedWinners": []}
+{"name": "grind-or-run", "auditCandidates": 0, "complete": true, "qualityLoss": false, "discardedWinners": []}
+{"name": "multi-support", "candidate": "0:1b52745b842684ea0f6d0b3a81252bbc18f6ea95d56851be869ec5c8d8c5c991", "selection": "unknown_resource_cap", "ticks": null, "programs": 0, "calls": 0, "complete": true}
+{"name": "multi-support", "candidate": "0:37e8d2dab9641f97499a713804034e05e595b4ecd706ae5705da25d434111112", "selection": "markedly_worse", "ticks": null, "programs": 0, "calls": 0, "complete": true}
+{"name": "multi-support", "candidate": "0:21f8f1322e468612d0439548cee402f588300aca28cd252916debab6a34e734b", "selection": "unknown_resource_cap", "ticks": null, "programs": 0, "calls": 0, "complete": true}
+{"name": "multi-support", "candidate": "0:4415d30c43629319f896b057e51b90e1906721367447c30e59df3a3bfb8b7f32", "selection": "unknown_resource_cap", "ticks": null, "programs": 0, "calls": 0, "complete": true}
+{"name": "multi-support", "candidate": "0:1fcfed6ef1bba45e1f8cc894aba982eeaabacec843f624a0e1e602317a471d97", "selection": "unknown_resource_cap", "ticks": null, "programs": 0, "calls": 0, "complete": true}
+{"name": "multi-support", "candidate": "0:378931f504f108fbd8d318b5b2e5b5e4efb8a09bb849a09ac30b0aaa37fd6b32", "selection": "markedly_worse", "ticks": null, "programs": 0, "calls": 0, "complete": true}
+{"name": "multi-support", "candidate": "unevaluated:0:c4dd1571739d5855af6dff8d635c8409fd409493913bbf558b2ddc76f9a41f72", "selection": "candidate_resource_limit", "ticks": null, "programs": 0, "calls": 0, "complete": true}
+{"name": "multi-support", "auditCandidates": 7, "complete": true, "qualityLoss": false, "discardedWinners": []}
+{"name": "open", "auditCandidates": 0, "complete": true, "qualityLoss": false, "discardedWinners": []}
+{"name": "step-or-jump", "candidate": "0:b8aabe2de5e561f4eed1320d66c8ecfafa12bd23eaea84bbdaf225d2d11d7ba8", "selection": "markedly_worse", "ticks": null, "programs": 0, "calls": 0, "complete": true}
+{"name": "step-or-jump", "candidate": "0:2e7298f29d5b036c12de03ebdc62e81879e784fcc23408a490e13ec69ab3080d", "selection": "markedly_worse", "ticks": null, "programs": 0, "calls": 0, "complete": true}
+{"name": "step-or-jump", "candidate": "0:06296ed17f049ab3ed187cc167e99d5a9e461a766257303c3e7f9017b3f9b7a6", "selection": "markedly_worse", "ticks": null, "programs": 0, "calls": 0, "complete": true}
+{"name": "step-or-jump", "candidate": "unevaluated:0:7ab9891c581e848d08043f1aa14c7faac1d726d1d39d5e3dc2c17b889aceef31", "selection": "candidate_resource_limit", "ticks": null, "programs": 0, "calls": 0, "complete": true}
+{"name": "step-or-jump", "auditCandidates": 4, "complete": true, "qualityLoss": false, "discardedWinners": []}
+{"name": "turn-blockage", "auditCandidates": 0, "complete": true, "qualityLoss": false, "discardedWinners": []}

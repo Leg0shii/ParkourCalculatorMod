@@ -1,0 +1,100 @@
+{
+  "source": "evidence/real11-terminal-variants.json.gz",
+  "objectiveForTheseWitnesses": "maximize Z at absolute64",
+  "sameEvent": "first ordinary B2 landing",
+  "outgoingDirectionToB3": [
+    -0.7071067811865475,
+    0.7071067811865475
+  ],
+  "positionAnchorXZ": [
+    741.5,
+    -1103.5
+  ],
+  "records": [
+    {
+      "firstJumpInput": 0,
+      "event": "first landing on B2",
+      "arrivalState": 21,
+      "samples": [
+        {
+          "absoluteState": 20,
+          "phase": "pre_input_before_contact_input",
+          "positionXZ": [
+            741.094038620384,
+            -1102.70000098848
+          ],
+          "storedVelocityXZ": [
+            -0.2578303595560622,
+            0.11786086025568678
+          ],
+          "y": 6.02442408821368,
+          "vy": -0.22768848754498797,
+          "onGround": false,
+          "outgoingPosition": 0.8527427704145984,
+          "outgoingVelocity": 0.2656538091611335
+        },
+        {
+          "absoluteState": 21,
+          "phase": "resolved_landing_before_next_input",
+          "positionXZ": [
+            740.8161541733933,
+            -1102.5655922132028
+          ],
+          "storedVelocityXZ": [
+            -0.25287485404932647,
+            0.12231198902741217
+          ],
+          "y": 6,
+          "vy": -0.0784000015258789,
+          "onGround": true,
+          "outgoingPosition": 1.1442781037175371,
+          "outgoingVelocity": 0.26529716095153494
+        }
+      ]
+    },
+    {
+      "firstJumpInput": 8,
+      "event": "first landing on B2",
+      "arrivalState": 17,
+      "samples": [
+        {
+          "absoluteState": 16,
+          "phase": "pre_input_before_contact_input",
+          "positionXZ": [
+            742.2999990117909,
+            -1103.0128844394935
+          ],
+          "storedVelocityXZ": [
+            -0.24455370986533562,
+            0.09652780668583999
+          ],
+          "y": 6.02442408821368,
+          "vy": -0.22768848754498797,
+          "onGround": false,
+          "outgoingPosition": -0.22124201012424455,
+          "outgoingVelocity": 0.24118105329072792
+        },
+        {
+          "absoluteState": 17,
+          "phase": "resolved_landing_before_next_input",
+          "positionXZ": [
+            742.0335720795186,
+            -1102.9023009558073
+          ],
+          "storedVelocityXZ": [
+            -0.24244851535500878,
+            0.10063097305467796
+          ],
+          "y": 6,
+          "vy": -0.0784000015258789,
+          "onGround": true,
+          "outgoingPosition": 0.045344611577947835,
+          "outgoingVelocity": 0.242593832740501
+        }
+      ]
+    }
+  ],
+  "immediateExtraArrivalTicks": 4,
+  "immediateOutgoingPositionAdvantage": 1.0989334921395892,
+  "interpretation": "Time/arrival-state tradeoff; not a pair of independently optimized event-state frontiers. Do not freeze these numerical endpoints in later solves."
+}

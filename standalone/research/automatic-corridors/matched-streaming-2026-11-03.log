@@ -1,0 +1,37 @@
+{"arm": "automatic", "elapsed": 1.36, "calls": 0}
+{"arm": "automatic", "elapsed": 16.37, "calls": 2}
+{"arm": "automatic", "elapsed": 33.32, "calls": 5}
+{"arm": "automatic", "elapsed": 49.82, "calls": 6}
+{"arm": "automatic", "elapsed": 65.04, "calls": 9}
+{"arm": "automatic", "elapsed": 80.05, "calls": 11}
+{"arm": "automatic", "elapsed": 97.16, "calls": 11}
+{"arm": "automatic", "elapsed": 115.51, "calls": 11}
+{"arm": "automatic", "elapsed": 134.08, "calls": 11}
+{"arm": "automatic", "elapsed": 152.72, "calls": 11}
+{"arm": "automatic", "elapsed": 167.79, "calls": 11}
+{"arm": "automatic", "elapsed": 186.45, "calls": 11}
+{"arm": "automatic", "elapsed": 202.03, "calls": 11}
+{"arm": "automatic", "elapsed": 220.91, "calls": 11}
+{"arm": "automatic", "elapsed": 236.17, "calls": 11}
+{"arm": "automatic", "elapsed": 251.91, "calls": 11}
+{"arm": "automatic", "elapsed": 268.29, "calls": 11}
+{"arm": "automatic", "elapsed": 284.06, "calls": 11}
+{"arm": "automatic", "elapsed": 300.37, "calls": 11}
+{"arm": "automatic", "status": "unknown", "termination": "deadline", "secondsCap": 300, "searchWall": 306.10100641846657, "reportedSearchSeconds": 306.09215800091624, "calls": 11, "ticks": null, "objective": null, "independentReplays": 5, "allReplaysPassed": true, "expandedPrefixes": 133, "minimumTicksProven": false}
+{"arm": "supplied", "elapsed": 0.03, "calls": 0}
+{"arm": "supplied", "elapsed": 16.93, "calls": 4}
+{"arm": "supplied", "elapsed": 32.06, "calls": 6}
+{"arm": "supplied", "elapsed": 51.1, "calls": 13}
+{"arm": "supplied", "elapsed": 67.28, "calls": 20}
+{"arm": "supplied", "elapsed": 86.71, "calls": 25}
+{"arm": "supplied", "elapsed": 101.97, "calls": 28}
+{"arm": "supplied", "elapsed": 158.85, "calls": 30}
+{"arm": "supplied", "elapsed": 176.53, "calls": 31}
+{"arm": "supplied", "elapsed": 194.34, "calls": 33}
+{"arm": "supplied", "elapsed": 212.92, "calls": 35}
+{"arm": "supplied", "elapsed": 233.05, "calls": 37}
+{"arm": "supplied", "elapsed": 251.06, "calls": 39}
+{"arm": "supplied", "elapsed": 274.5, "calls": 40}
+{"arm": "supplied", "elapsed": 293.75, "calls": 41}
+{"arm": "supplied", "elapsed": 312.5, "calls": 41}
+{"arm": "supplied", "status": "feasible", "termination": "deadline", "secondsCap": 300, "searchWall": 313.19332825019956, "reportedSearchSeconds": 312.4869199991226, "calls": 41, "ticks": 67, "objective": -1093.8231290646224, "independentReplays": 51, "allReplaysPassed": true, "expandedPrefixes": 403, "minimumTicksProven": false}

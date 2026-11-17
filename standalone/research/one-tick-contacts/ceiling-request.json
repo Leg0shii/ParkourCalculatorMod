@@ -1,0 +1,209 @@
+{
+  "magnitude": [
+    0.32739998400211334,
+    0.02599999835384377,
+    0.02599999835384377
+  ],
+  "friction": [
+    0.546000063419342,
+    0.9100000262260437,
+    0.9100000262260437
+  ],
+  "base": [
+    1.5707963267948966,
+    0.7853981633974483,
+    0.7853981633974483
+  ],
+  "movement": {
+    "profile": "minecraft-1.8.9",
+    "compiler": "mod-input-state-v1",
+    "horizontalCollision": [
+      false,
+      false,
+      false,
+      false
+    ],
+    "ground": [
+      true,
+      false,
+      false
+    ],
+    "sprinting": [
+      true,
+      true,
+      true
+    ],
+    "airSprinting": [
+      false,
+      true,
+      true
+    ],
+    "moveForward": [
+      0.98,
+      0.98,
+      0.98
+    ],
+    "moveStrafe": [
+      0.0,
+      0.98,
+      0.98
+    ]
+  },
+  "model": "FixedMovementCompiler:mod-input-state-v1:f057c0c",
+  "version": 1,
+  "ticks": 3,
+  "position": [
+    0.5,
+    0.5
+  ],
+  "velocity": [
+    0.15,
+    0
+  ],
+  "threshold": 0.005,
+  "yaw": [
+    -90.0,
+    -45.0,
+    -45.0
+  ],
+  "walls": [
+    {
+      "mode": "X",
+      "t1": 0,
+      "cmp": "GE",
+      "rhs": -0.29999901192092887,
+      "name": "initial:0:X:lo",
+      "op": "PLUS"
+    },
+    {
+      "mode": "X",
+      "t1": 0,
+      "cmp": "LE",
+      "rhs": 1.2999990119209286,
+      "name": "initial:0:X:hi",
+      "op": "PLUS"
+    },
+    {
+      "mode": "Z",
+      "t1": 0,
+      "cmp": "GE",
+      "rhs": -0.29999901192092887,
+      "name": "initial:0:Z:lo",
+      "op": "PLUS"
+    },
+    {
+      "mode": "Z",
+      "t1": 0,
+      "cmp": "LE",
+      "rhs": 1.2999990119209286,
+      "name": "initial:0:Z:hi",
+      "op": "PLUS"
+    },
+    {
+      "mode": "X",
+      "t1": 2,
+      "cmp": "GE",
+      "rhs": 1.0000009880790712,
+      "name": "landing:1:X:lo",
+      "op": "PLUS"
+    },
+    {
+      "mode": "X",
+      "t1": 2,
+      "cmp": "LE",
+      "rhs": 2.5999990119209277,
+      "name": "landing:1:X:hi",
+      "op": "PLUS"
+    },
+    {
+      "mode": "Z",
+      "t1": 2,
+      "cmp": "GE",
+      "rhs": -0.29999901192092887,
+      "name": "landing:1:Z:lo",
+      "op": "PLUS"
+    },
+    {
+      "mode": "Z",
+      "t1": 2,
+      "cmp": "LE",
+      "rhs": 1.2999990119209286,
+      "name": "landing:1:Z:hi",
+      "op": "PLUS"
+    },
+    {
+      "mode": "X",
+      "t1": 0,
+      "cmp": "GE",
+      "rhs": -2.299999011920929,
+      "name": "ceiling_hit:finite_lo",
+      "op": "PLUS"
+    },
+    {
+      "mode": "X",
+      "t1": 0,
+      "cmp": "LE",
+      "rhs": 5.299999011920929,
+      "name": "ceiling_hit:finite_hi",
+      "op": "PLUS"
+    },
+    {
+      "mode": "Z",
+      "t1": 0,
+      "cmp": "GE",
+      "rhs": -2.299999011920929,
+      "name": "ceiling_hit:finite_lo",
+      "op": "PLUS"
+    },
+    {
+      "mode": "Z",
+      "t1": 0,
+      "cmp": "LE",
+      "rhs": 3.299999011920929,
+      "name": "ceiling_hit:finite_hi",
+      "op": "PLUS"
+    }
+  ],
+  "contacts": [],
+  "objective": {
+    "axis": "X",
+    "sense": "MAX",
+    "tick": 3,
+    "type": "POSITION",
+    "smoothLambda": 0.0
+  },
+  "vertical": {
+    "profile": "minecraft-1.8.9",
+    "position": 1,
+    "velocity": -0.0784000015258789,
+    "onGround": true,
+    "previousHorizontalCollision": false,
+    "threshold": 0.005,
+    "jumpVelocity": [
+      0.41999998688697815,
+      null,
+      null
+    ],
+    "sneak": [
+      false,
+      false,
+      false
+    ],
+    "contacts": [
+      {
+        "state": 1,
+        "plane": 1.2000000476837158,
+        "direction": 1
+      },
+      {
+        "state": 3,
+        "plane": 1,
+        "direction": -1
+      }
+    ]
+  },
+  "startYaw": 0.0,
+  "seconds": 10.0,
+  "stopOnFeasible": false,
+  "maxIterations": 10000
+}

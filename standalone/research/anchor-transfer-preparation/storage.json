@@ -1,0 +1,14 @@
+[
+  {
+    "file": "combined-300s-2026-11-04/combined.json.gz",
+    "uncompressedSha256": "b8abb6abfed6afec867f60eeb939f17040440f33ab30af3a734ad1c2d0305ab5",
+    "beforeBytes": 94565543,
+    "afterBytes": 64983180
+  },
+  {
+    "file": "initial0-90s-2026-11-04/initial0.json.gz",
+    "uncompressedSha256": "73ad2d7b3997924383bdc856ec3f88b7e03bf4a380d663e548a27c83adc21aa6",
+    "beforeBytes": 66857458,
+    "afterBytes": 48011222
+  }
+]

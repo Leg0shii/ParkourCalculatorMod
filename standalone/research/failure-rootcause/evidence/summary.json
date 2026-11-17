@@ -1,0 +1,1396 @@
+{
+  "sources": {
+    "generation": "d953a5bed9ac2ba3e1d321df392aded400855fc1",
+    "warm": "d953a5bed9ac2ba3e1d321df392aded400855fc1",
+    "verification": "d953a5bed9ac2ba3e1d321df392aded400855fc1",
+    "repair": "5d8b811a368ad562e65320e6173097c78ee2325e",
+    "scalar": "abae5ece441d5ca9247e9192430894d102b6b726"
+  },
+  "generation": [
+    {
+      "name": "ceiling",
+      "policy": "shortest",
+      "canonical": false,
+      "firstCompleteExpanded": 16,
+      "expanded": 140,
+      "completed": 8,
+      "proposalTicks": [
+        12,
+        13,
+        13,
+        14,
+        14,
+        15,
+        16,
+        17
+      ],
+      "completeOffered": 8,
+      "completeDropped": 0,
+      "metadataDuplicates": 0
+    },
+    {
+      "name": "grind-or-run",
+      "policy": "shortest",
+      "canonical": false,
+      "firstCompleteExpanded": null,
+      "expanded": 512,
+      "completed": 0,
+      "proposalTicks": [],
+      "completeOffered": 146,
+      "completeDropped": 115,
+      "metadataDuplicates": 0
+    },
+    {
+      "name": "multi-support",
+      "policy": "shortest",
+      "canonical": false,
+      "firstCompleteExpanded": 77,
+      "expanded": 144,
+      "completed": 12,
+      "proposalTicks": [
+        14,
+        15,
+        15,
+        15,
+        15,
+        15,
+        16,
+        16,
+        16,
+        16,
+        16,
+        17
+      ],
+      "completeOffered": 80,
+      "completeDropped": 9,
+      "metadataDuplicates": 0
+    },
+    {
+      "name": "open",
+      "policy": "shortest",
+      "canonical": false,
+      "firstCompleteExpanded": 14,
+      "expanded": 101,
+      "completed": 6,
+      "proposalTicks": [
+        12,
+        13,
+        14,
+        15,
+        16,
+        17
+      ],
+      "completeOffered": 6,
+      "completeDropped": 0,
+      "metadataDuplicates": 0
+    },
+    {
+      "name": "step-or-jump",
+      "policy": "shortest",
+      "canonical": false,
+      "firstCompleteExpanded": 103,
+      "expanded": 252,
+      "completed": 12,
+      "proposalTicks": [
+        13,
+        13,
+        14,
+        14,
+        14,
+        14,
+        15,
+        15,
+        15,
+        15,
+        15,
+        16
+      ],
+      "completeOffered": 17,
+      "completeDropped": 0,
+      "metadataDuplicates": 0
+    },
+    {
+      "name": "turn-blockage",
+      "policy": "shortest",
+      "canonical": false,
+      "firstCompleteExpanded": 14,
+      "expanded": 101,
+      "completed": 6,
+      "proposalTicks": [
+        12,
+        13,
+        14,
+        15,
+        16,
+        17
+      ],
+      "completeOffered": 6,
+      "completeDropped": 0,
+      "metadataDuplicates": 0
+    },
+    {
+      "name": "extra-run-up",
+      "policy": "shortest",
+      "canonical": false,
+      "firstCompleteExpanded": 34,
+      "expanded": 132,
+      "completed": 12,
+      "proposalTicks": [
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        24,
+        25,
+        25,
+        25
+      ],
+      "completeOffered": 61,
+      "completeDropped": 0,
+      "metadataDuplicates": 0
+    },
+    {
+      "name": "extra-remote-supports",
+      "policy": "shortest",
+      "canonical": false,
+      "firstCompleteExpanded": 14,
+      "expanded": 102,
+      "completed": 12,
+      "proposalTicks": [
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23
+      ],
+      "completeOffered": 17,
+      "completeDropped": 0,
+      "metadataDuplicates": 0
+    },
+    {
+      "name": "extra-grind",
+      "policy": "shortest",
+      "canonical": false,
+      "firstCompleteExpanded": 27,
+      "expanded": 113,
+      "completed": 12,
+      "proposalTicks": [
+        5,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        7,
+        7,
+        7,
+        7
+      ],
+      "completeOffered": 254,
+      "completeDropped": 132,
+      "metadataDuplicates": 0
+    },
+    {
+      "name": "extra-repeat-ceiling",
+      "policy": "shortest",
+      "canonical": false,
+      "firstCompleteExpanded": null,
+      "expanded": 444,
+      "completed": 0,
+      "proposalTicks": [],
+      "completeOffered": 228,
+      "completeDropped": 228,
+      "metadataDuplicates": 12
+    },
+    {
+      "name": "ceiling",
+      "policy": "shortest",
+      "canonical": true,
+      "firstCompleteExpanded": 16,
+      "expanded": 140,
+      "completed": 8,
+      "proposalTicks": [
+        12,
+        13,
+        13,
+        14,
+        14,
+        15,
+        16,
+        17
+      ],
+      "completeOffered": 8,
+      "completeDropped": 0,
+      "metadataDuplicates": 0
+    },
+    {
+      "name": "grind-or-run",
+      "policy": "shortest",
+      "canonical": true,
+      "firstCompleteExpanded": null,
+      "expanded": 512,
+      "completed": 0,
+      "proposalTicks": [],
+      "completeOffered": 146,
+      "completeDropped": 115,
+      "metadataDuplicates": 0
+    },
+    {
+      "name": "multi-support",
+      "policy": "shortest",
+      "canonical": true,
+      "firstCompleteExpanded": 77,
+      "expanded": 144,
+      "completed": 12,
+      "proposalTicks": [
+        14,
+        15,
+        15,
+        15,
+        15,
+        15,
+        16,
+        16,
+        16,
+        16,
+        16,
+        17
+      ],
+      "completeOffered": 80,
+      "completeDropped": 9,
+      "metadataDuplicates": 0
+    },
+    {
+      "name": "open",
+      "policy": "shortest",
+      "canonical": true,
+      "firstCompleteExpanded": 14,
+      "expanded": 101,
+      "completed": 6,
+      "proposalTicks": [
+        12,
+        13,
+        14,
+        15,
+        16,
+        17
+      ],
+      "completeOffered": 6,
+      "completeDropped": 0,
+      "metadataDuplicates": 0
+    },
+    {
+      "name": "step-or-jump",
+      "policy": "shortest",
+      "canonical": true,
+      "firstCompleteExpanded": 103,
+      "expanded": 252,
+      "completed": 12,
+      "proposalTicks": [
+        13,
+        13,
+        14,
+        14,
+        14,
+        14,
+        15,
+        15,
+        15,
+        15,
+        15,
+        16
+      ],
+      "completeOffered": 17,
+      "completeDropped": 0,
+      "metadataDuplicates": 0
+    },
+    {
+      "name": "turn-blockage",
+      "policy": "shortest",
+      "canonical": true,
+      "firstCompleteExpanded": 14,
+      "expanded": 101,
+      "completed": 6,
+      "proposalTicks": [
+        12,
+        13,
+        14,
+        15,
+        16,
+        17
+      ],
+      "completeOffered": 6,
+      "completeDropped": 0,
+      "metadataDuplicates": 0
+    },
+    {
+      "name": "extra-run-up",
+      "policy": "shortest",
+      "canonical": true,
+      "firstCompleteExpanded": 34,
+      "expanded": 132,
+      "completed": 12,
+      "proposalTicks": [
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        24,
+        25,
+        25,
+        25
+      ],
+      "completeOffered": 61,
+      "completeDropped": 0,
+      "metadataDuplicates": 0
+    },
+    {
+      "name": "extra-remote-supports",
+      "policy": "shortest",
+      "canonical": true,
+      "firstCompleteExpanded": 14,
+      "expanded": 102,
+      "completed": 12,
+      "proposalTicks": [
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23
+      ],
+      "completeOffered": 17,
+      "completeDropped": 0,
+      "metadataDuplicates": 0
+    },
+    {
+      "name": "extra-grind",
+      "policy": "shortest",
+      "canonical": true,
+      "firstCompleteExpanded": 27,
+      "expanded": 113,
+      "completed": 12,
+      "proposalTicks": [
+        5,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        7,
+        7,
+        7,
+        7
+      ],
+      "completeOffered": 254,
+      "completeDropped": 132,
+      "metadataDuplicates": 0
+    },
+    {
+      "name": "extra-repeat-ceiling",
+      "policy": "shortest",
+      "canonical": true,
+      "firstCompleteExpanded": null,
+      "expanded": 444,
+      "completed": 0,
+      "proposalTicks": [],
+      "completeOffered": 228,
+      "completeDropped": 228,
+      "metadataDuplicates": 12
+    },
+    {
+      "name": "ceiling",
+      "policy": "complete_first",
+      "canonical": true,
+      "firstCompleteExpanded": 2,
+      "expanded": 140,
+      "completed": 8,
+      "proposalTicks": [
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        13,
+        14
+      ],
+      "completeOffered": 8,
+      "completeDropped": 0,
+      "metadataDuplicates": 0
+    },
+    {
+      "name": "grind-or-run",
+      "policy": "complete_first",
+      "canonical": true,
+      "firstCompleteExpanded": 5,
+      "expanded": 43,
+      "completed": 12,
+      "proposalTicks": [
+        14,
+        15,
+        15,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        17,
+        17,
+        17
+      ],
+      "completeOffered": 12,
+      "completeDropped": 0,
+      "metadataDuplicates": 0
+    },
+    {
+      "name": "multi-support",
+      "policy": "complete_first",
+      "canonical": true,
+      "firstCompleteExpanded": 5,
+      "expanded": 28,
+      "completed": 12,
+      "proposalTicks": [
+        15,
+        15,
+        17,
+        16,
+        16,
+        18,
+        17,
+        17,
+        17,
+        19,
+        18,
+        18
+      ],
+      "completeOffered": 12,
+      "completeDropped": 0,
+      "metadataDuplicates": 0
+    },
+    {
+      "name": "open",
+      "policy": "complete_first",
+      "canonical": true,
+      "firstCompleteExpanded": 2,
+      "expanded": 101,
+      "completed": 6,
+      "proposalTicks": [
+        12,
+        13,
+        14,
+        15,
+        16,
+        17
+      ],
+      "completeOffered": 6,
+      "completeDropped": 0,
+      "metadataDuplicates": 0
+    },
+    {
+      "name": "step-or-jump",
+      "policy": "complete_first",
+      "canonical": true,
+      "firstCompleteExpanded": 3,
+      "expanded": 30,
+      "completed": 12,
+      "proposalTicks": [
+        13,
+        14,
+        14,
+        14,
+        15,
+        15,
+        15,
+        15,
+        15,
+        13,
+        16,
+        16
+      ],
+      "completeOffered": 12,
+      "completeDropped": 0,
+      "metadataDuplicates": 0
+    },
+    {
+      "name": "turn-blockage",
+      "policy": "complete_first",
+      "canonical": true,
+      "firstCompleteExpanded": 2,
+      "expanded": 101,
+      "completed": 6,
+      "proposalTicks": [
+        12,
+        13,
+        14,
+        15,
+        16,
+        17
+      ],
+      "completeOffered": 6,
+      "completeDropped": 0,
+      "metadataDuplicates": 0
+    },
+    {
+      "name": "extra-run-up",
+      "policy": "complete_first",
+      "canonical": true,
+      "firstCompleteExpanded": 7,
+      "expanded": 29,
+      "completed": 12,
+      "proposalTicks": [
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        24,
+        25,
+        25,
+        25
+      ],
+      "completeOffered": 12,
+      "completeDropped": 0,
+      "metadataDuplicates": 0
+    },
+    {
+      "name": "extra-remote-supports",
+      "policy": "complete_first",
+      "canonical": true,
+      "firstCompleteExpanded": 2,
+      "expanded": 24,
+      "completed": 12,
+      "proposalTicks": [
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23
+      ],
+      "completeOffered": 12,
+      "completeDropped": 0,
+      "metadataDuplicates": 0
+    },
+    {
+      "name": "extra-grind",
+      "policy": "complete_first",
+      "canonical": true,
+      "firstCompleteExpanded": 2,
+      "expanded": 17,
+      "completed": 12,
+      "proposalTicks": [
+        12,
+        13,
+        13,
+        5,
+        13,
+        14,
+        14,
+        14,
+        15,
+        15,
+        6,
+        6
+      ],
+      "completeOffered": 12,
+      "completeDropped": 0,
+      "metadataDuplicates": 0
+    },
+    {
+      "name": "extra-repeat-ceiling",
+      "policy": "complete_first",
+      "canonical": true,
+      "firstCompleteExpanded": 2,
+      "expanded": 38,
+      "completed": 12,
+      "proposalTicks": [
+        12,
+        13,
+        14,
+        14,
+        15,
+        15,
+        15,
+        16,
+        16,
+        16,
+        16,
+        16
+      ],
+      "completeOffered": 12,
+      "completeDropped": 0,
+      "metadataDuplicates": 0
+    },
+    {
+      "name": "ceiling",
+      "policy": "tick_fair",
+      "canonical": true,
+      "firstCompleteExpanded": 2,
+      "expanded": 140,
+      "completed": 8,
+      "proposalTicks": [
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        13,
+        14
+      ],
+      "completeOffered": 8,
+      "completeDropped": 0,
+      "metadataDuplicates": 0
+    },
+    {
+      "name": "grind-or-run",
+      "policy": "tick_fair",
+      "canonical": true,
+      "firstCompleteExpanded": 4,
+      "expanded": 30,
+      "completed": 12,
+      "proposalTicks": [
+        14,
+        17,
+        20,
+        11,
+        12,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21
+      ],
+      "completeOffered": 12,
+      "completeDropped": 0,
+      "metadataDuplicates": 0
+    },
+    {
+      "name": "multi-support",
+      "policy": "tick_fair",
+      "canonical": true,
+      "firstCompleteExpanded": 5,
+      "expanded": 56,
+      "completed": 12,
+      "proposalTicks": [
+        15,
+        15,
+        16,
+        17,
+        18,
+        21,
+        24,
+        23,
+        24,
+        17,
+        16,
+        17
+      ],
+      "completeOffered": 12,
+      "completeDropped": 0,
+      "metadataDuplicates": 0
+    },
+    {
+      "name": "open",
+      "policy": "tick_fair",
+      "canonical": true,
+      "firstCompleteExpanded": 2,
+      "expanded": 101,
+      "completed": 6,
+      "proposalTicks": [
+        12,
+        13,
+        14,
+        15,
+        16,
+        17
+      ],
+      "completeOffered": 6,
+      "completeDropped": 0,
+      "metadataDuplicates": 0
+    },
+    {
+      "name": "step-or-jump",
+      "policy": "tick_fair",
+      "canonical": true,
+      "firstCompleteExpanded": 3,
+      "expanded": 106,
+      "completed": 12,
+      "proposalTicks": [
+        13,
+        14,
+        15,
+        16,
+        14,
+        15,
+        16,
+        14,
+        15,
+        16,
+        15,
+        16
+      ],
+      "completeOffered": 12,
+      "completeDropped": 0,
+      "metadataDuplicates": 0
+    },
+    {
+      "name": "turn-blockage",
+      "policy": "tick_fair",
+      "canonical": true,
+      "firstCompleteExpanded": 2,
+      "expanded": 101,
+      "completed": 6,
+      "proposalTicks": [
+        12,
+        13,
+        14,
+        15,
+        16,
+        17
+      ],
+      "completeOffered": 6,
+      "completeDropped": 0,
+      "metadataDuplicates": 0
+    },
+    {
+      "name": "extra-run-up",
+      "policy": "tick_fair",
+      "canonical": true,
+      "firstCompleteExpanded": 7,
+      "expanded": 29,
+      "completed": 12,
+      "proposalTicks": [
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28
+      ],
+      "completeOffered": 12,
+      "completeDropped": 0,
+      "metadataDuplicates": 0
+    },
+    {
+      "name": "extra-remote-supports",
+      "policy": "tick_fair",
+      "canonical": true,
+      "firstCompleteExpanded": 2,
+      "expanded": 24,
+      "completed": 12,
+      "proposalTicks": [
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23
+      ],
+      "completeOffered": 12,
+      "completeDropped": 0,
+      "metadataDuplicates": 0
+    },
+    {
+      "name": "extra-grind",
+      "policy": "tick_fair",
+      "canonical": true,
+      "firstCompleteExpanded": 2,
+      "expanded": 17,
+      "completed": 12,
+      "proposalTicks": [
+        12,
+        13,
+        13,
+        5,
+        14,
+        15,
+        15,
+        6,
+        7,
+        7,
+        6,
+        16
+      ],
+      "completeOffered": 12,
+      "completeDropped": 0,
+      "metadataDuplicates": 0
+    },
+    {
+      "name": "extra-repeat-ceiling",
+      "policy": "tick_fair",
+      "canonical": true,
+      "firstCompleteExpanded": 2,
+      "expanded": 34,
+      "completed": 12,
+      "proposalTicks": [
+        12,
+        14,
+        17,
+        20,
+        22,
+        22,
+        24,
+        26,
+        28,
+        29,
+        31,
+        34
+      ],
+      "completeOffered": 12,
+      "completeDropped": 0,
+      "metadataDuplicates": 0
+    }
+  ],
+  "warm": [
+    {
+      "mode": "baseline",
+      "known": 28,
+      "knownFeasible": 25,
+      "perturbed": 8,
+      "perturbedInitialValid": 0,
+      "perturbedRecovered": 6,
+      "replays": 31
+    },
+    {
+      "mode": "preserve",
+      "known": 28,
+      "knownFeasible": 28,
+      "perturbed": 8,
+      "perturbedInitialValid": 0,
+      "perturbedRecovered": 6,
+      "replays": 34
+    },
+    {
+      "mode": "feasibility_first",
+      "known": 28,
+      "knownFeasible": 28,
+      "perturbed": 8,
+      "perturbedInitialValid": 0,
+      "perturbedRecovered": 6,
+      "replays": 34
+    },
+    {
+      "mode": "two_channel",
+      "known": 28,
+      "knownFeasible": 28,
+      "perturbed": 8,
+      "perturbedInitialValid": 0,
+      "perturbedRecovered": 6,
+      "replays": 34
+    }
+  ],
+  "verified": [
+    {
+      "name": "grind-or-run",
+      "policy": "shortest",
+      "bestTicks": null,
+      "calls": 0
+    },
+    {
+      "name": "multi-support",
+      "policy": "shortest",
+      "bestTicks": 14,
+      "calls": 12
+    },
+    {
+      "name": "turn-blockage",
+      "policy": "shortest",
+      "bestTicks": null,
+      "calls": 9
+    },
+    {
+      "name": "extra-grind",
+      "policy": "shortest",
+      "bestTicks": 5,
+      "calls": 12
+    },
+    {
+      "name": "extra-repeat-ceiling",
+      "policy": "shortest",
+      "bestTicks": null,
+      "calls": 0
+    },
+    {
+      "name": "grind-or-run",
+      "policy": "complete_first",
+      "bestTicks": null,
+      "calls": 12
+    },
+    {
+      "name": "multi-support",
+      "policy": "complete_first",
+      "bestTicks": 15,
+      "calls": 12
+    },
+    {
+      "name": "turn-blockage",
+      "policy": "complete_first",
+      "bestTicks": null,
+      "calls": 9
+    },
+    {
+      "name": "extra-grind",
+      "policy": "complete_first",
+      "bestTicks": 5,
+      "calls": 12
+    },
+    {
+      "name": "extra-repeat-ceiling",
+      "policy": "complete_first",
+      "bestTicks": null,
+      "calls": 12
+    },
+    {
+      "name": "grind-or-run",
+      "policy": "tick_fair",
+      "bestTicks": 11,
+      "calls": 39
+    },
+    {
+      "name": "multi-support",
+      "policy": "tick_fair",
+      "bestTicks": 15,
+      "calls": 12
+    },
+    {
+      "name": "turn-blockage",
+      "policy": "tick_fair",
+      "bestTicks": null,
+      "calls": 9
+    },
+    {
+      "name": "extra-grind",
+      "policy": "tick_fair",
+      "bestTicks": 5,
+      "calls": 15
+    },
+    {
+      "name": "extra-repeat-ceiling",
+      "policy": "tick_fair",
+      "bestTicks": null,
+      "calls": 14
+    }
+  ],
+  "repair": [
+    {
+      "name": "turn-blockage",
+      "ticks": 12,
+      "variant": "raw",
+      "cap": 4,
+      "status": "unknown",
+      "calls": 2
+    },
+    {
+      "name": "turn-blockage",
+      "ticks": 12,
+      "variant": "raw",
+      "cap": 16,
+      "status": "unknown",
+      "calls": 2
+    },
+    {
+      "name": "turn-blockage",
+      "ticks": 12,
+      "variant": "raw",
+      "cap": 32,
+      "status": "unknown",
+      "calls": 2
+    },
+    {
+      "name": "turn-blockage",
+      "ticks": 16,
+      "variant": "raw",
+      "cap": 4,
+      "status": "unknown",
+      "calls": 1
+    },
+    {
+      "name": "turn-blockage",
+      "ticks": 16,
+      "variant": "raw",
+      "cap": 16,
+      "status": "unknown",
+      "calls": 1
+    },
+    {
+      "name": "turn-blockage",
+      "ticks": 16,
+      "variant": "raw",
+      "cap": 32,
+      "status": "unknown",
+      "calls": 1
+    },
+    {
+      "name": "turn-blockage",
+      "ticks": 16,
+      "variant": "learned_rows_no_yaw_seed",
+      "cap": 4,
+      "status": "feasible",
+      "calls": 1
+    },
+    {
+      "name": "turn-blockage",
+      "ticks": 16,
+      "variant": "learned_rows_no_yaw_seed",
+      "cap": 16,
+      "status": "feasible",
+      "calls": 1
+    },
+    {
+      "name": "turn-blockage",
+      "ticks": 16,
+      "variant": "learned_rows_no_yaw_seed",
+      "cap": 32,
+      "status": "feasible",
+      "calls": 1
+    },
+    {
+      "name": "grind-or-run",
+      "ticks": 11,
+      "variant": "raw",
+      "cap": 4,
+      "status": "feasible",
+      "calls": 1
+    },
+    {
+      "name": "grind-or-run",
+      "ticks": 11,
+      "variant": "raw",
+      "cap": 16,
+      "status": "feasible",
+      "calls": 1
+    },
+    {
+      "name": "grind-or-run",
+      "ticks": 11,
+      "variant": "raw",
+      "cap": 32,
+      "status": "feasible",
+      "calls": 1
+    },
+    {
+      "name": "multi-support",
+      "ticks": 14,
+      "variant": "raw",
+      "cap": 4,
+      "status": "feasible",
+      "calls": 1
+    },
+    {
+      "name": "multi-support",
+      "ticks": 14,
+      "variant": "raw",
+      "cap": 16,
+      "status": "feasible",
+      "calls": 1
+    },
+    {
+      "name": "multi-support",
+      "ticks": 14,
+      "variant": "raw",
+      "cap": 32,
+      "status": "feasible",
+      "calls": 1
+    },
+    {
+      "name": "extra-grind",
+      "ticks": 5,
+      "variant": "raw",
+      "cap": 4,
+      "status": "feasible",
+      "calls": 1
+    },
+    {
+      "name": "extra-grind",
+      "ticks": 5,
+      "variant": "raw",
+      "cap": 16,
+      "status": "feasible",
+      "calls": 1
+    },
+    {
+      "name": "extra-grind",
+      "ticks": 5,
+      "variant": "raw",
+      "cap": 32,
+      "status": "feasible",
+      "calls": 1
+    },
+    {
+      "name": "extra-repeat-ceiling",
+      "ticks": 12,
+      "variant": "raw",
+      "cap": 4,
+      "status": "unknown",
+      "calls": 1
+    },
+    {
+      "name": "extra-repeat-ceiling",
+      "ticks": 12,
+      "variant": "raw",
+      "cap": 16,
+      "status": "unknown",
+      "calls": 1
+    },
+    {
+      "name": "extra-repeat-ceiling",
+      "ticks": 12,
+      "variant": "raw",
+      "cap": 32,
+      "status": "unknown",
+      "calls": 1
+    }
+  ],
+  "scalar": [
+    {
+      "name": "synthetic-X-1",
+      "mode": "initial_only",
+      "status": "unknown",
+      "workerStatus": "Infeasible_Problem_Detected",
+      "phaseSeeds": [
+        "initial"
+      ]
+    },
+    {
+      "name": "synthetic-X-1",
+      "mode": "declared_fallback",
+      "status": "unknown",
+      "workerStatus": "Infeasible_Problem_Detected",
+      "phaseSeeds": [
+        "initial"
+      ]
+    },
+    {
+      "name": "synthetic-X-1",
+      "mode": "fallback_as_initial",
+      "status": "feasible",
+      "workerStatus": "Solve_Succeeded",
+      "phaseSeeds": [
+        "initial"
+      ]
+    },
+    {
+      "name": "synthetic-X-4",
+      "mode": "initial_only",
+      "status": "unknown",
+      "workerStatus": "Infeasible_Problem_Detected",
+      "phaseSeeds": [
+        "initial"
+      ]
+    },
+    {
+      "name": "synthetic-X-4",
+      "mode": "declared_fallback",
+      "status": "unknown",
+      "workerStatus": "Infeasible_Problem_Detected",
+      "phaseSeeds": [
+        "initial"
+      ]
+    },
+    {
+      "name": "synthetic-X-4",
+      "mode": "fallback_as_initial",
+      "status": "feasible",
+      "workerStatus": "Solve_Succeeded",
+      "phaseSeeds": [
+        "initial"
+      ]
+    },
+    {
+      "name": "synthetic-X-12",
+      "mode": "initial_only",
+      "status": "unknown",
+      "workerStatus": "Infeasible_Problem_Detected",
+      "phaseSeeds": [
+        "initial"
+      ]
+    },
+    {
+      "name": "synthetic-X-12",
+      "mode": "declared_fallback",
+      "status": "unknown",
+      "workerStatus": "Infeasible_Problem_Detected",
+      "phaseSeeds": [
+        "initial"
+      ]
+    },
+    {
+      "name": "synthetic-X-12",
+      "mode": "fallback_as_initial",
+      "status": "feasible",
+      "workerStatus": "Solve_Succeeded",
+      "phaseSeeds": [
+        "initial"
+      ]
+    },
+    {
+      "name": "synthetic-Z-1",
+      "mode": "initial_only",
+      "status": "feasible",
+      "workerStatus": "Solve_Succeeded",
+      "phaseSeeds": [
+        "initial"
+      ]
+    },
+    {
+      "name": "synthetic-Z-1",
+      "mode": "declared_fallback",
+      "status": "feasible",
+      "workerStatus": "Solve_Succeeded",
+      "phaseSeeds": [
+        "initial"
+      ]
+    },
+    {
+      "name": "synthetic-Z-1",
+      "mode": "fallback_as_initial",
+      "status": "feasible",
+      "workerStatus": "Solve_Succeeded",
+      "phaseSeeds": [
+        "initial"
+      ]
+    },
+    {
+      "name": "synthetic-Z-4",
+      "mode": "initial_only",
+      "status": "feasible",
+      "workerStatus": "Solve_Succeeded",
+      "phaseSeeds": [
+        "initial"
+      ]
+    },
+    {
+      "name": "synthetic-Z-4",
+      "mode": "declared_fallback",
+      "status": "feasible",
+      "workerStatus": "Solve_Succeeded",
+      "phaseSeeds": [
+        "initial"
+      ]
+    },
+    {
+      "name": "synthetic-Z-4",
+      "mode": "fallback_as_initial",
+      "status": "feasible",
+      "workerStatus": "Solve_Succeeded",
+      "phaseSeeds": [
+        "initial"
+      ]
+    },
+    {
+      "name": "synthetic-Z-12",
+      "mode": "initial_only",
+      "status": "feasible",
+      "workerStatus": "Solve_Succeeded",
+      "phaseSeeds": [
+        "initial"
+      ]
+    },
+    {
+      "name": "synthetic-Z-12",
+      "mode": "declared_fallback",
+      "status": "feasible",
+      "workerStatus": "Solve_Succeeded",
+      "phaseSeeds": [
+        "initial"
+      ]
+    },
+    {
+      "name": "synthetic-Z-12",
+      "mode": "fallback_as_initial",
+      "status": "feasible",
+      "workerStatus": "Solve_Succeeded",
+      "phaseSeeds": [
+        "initial"
+      ]
+    },
+    {
+      "name": "captured-turn-16",
+      "mode": "initial_only",
+      "status": "unknown",
+      "workerStatus": "Infeasible_Problem_Detected",
+      "phaseSeeds": [
+        "initial"
+      ]
+    },
+    {
+      "name": "captured-turn-16",
+      "mode": "declared_fallback",
+      "status": "unknown",
+      "workerStatus": "Infeasible_Problem_Detected",
+      "phaseSeeds": [
+        "initial"
+      ]
+    },
+    {
+      "name": "captured-turn-16",
+      "mode": "fallback_as_initial",
+      "status": "feasible",
+      "workerStatus": "Solve_Succeeded",
+      "phaseSeeds": [
+        "initial"
+      ]
+    }
+  ],
+  "independentReplays": 171,
+  "allReplaysPassed": true,
+  "equivalentProfileChecks": 16,
+  "runCounts": {
+    "generation": 40,
+    "warm": 144,
+    "verification": 15,
+    "repair": 21,
+    "scalar": 21
+  }
+}

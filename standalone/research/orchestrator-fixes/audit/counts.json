@@ -1,0 +1,34 @@
+{
+  "programs": 7,
+  "mainBranches": 227,
+  "mainWorkerCalls": 172,
+  "spatialProgramEvaluations": 19,
+  "spatialWorkerCalls": 36,
+  "totalWorkerCalls": 208,
+  "mainWorkerStatuses": {
+    "feasible": 172
+  },
+  "preDispatchStatuses": {
+    "unknown": 18,
+    "blocked": 37
+  },
+  "recordedPostResults": {
+    "accepted_prefix": 108,
+    "corridor_signature": 62,
+    "search_exhausted": 55
+  },
+  "missingContactRecords": 2,
+  "mainWorkerElapsedSeconds": 47.41090389713645,
+  "wallSeconds": 910.1300782933831,
+  "corridorPhysicalReplay": {
+    "True": 62
+  },
+  "emittedReady": 20,
+  "symbolicFrontier": 16,
+  "generationExclusions": 57,
+  "generationExclusionReasons": {
+    "interval_reach_contradiction": 29,
+    "descending_without_any_first_floor_contact": 25,
+    "norm_reach_contradiction": 3
+  }
+}

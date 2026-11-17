@@ -1,0 +1,161 @@
+{
+  "request": {
+    "version": 1,
+    "sceneModel": "collision_boxes",
+    "geometryBounds": [
+      -10,
+      -5,
+      -10,
+      12,
+      12,
+      10
+    ],
+    "initial": {
+      "position": [
+        0.5,
+        1,
+        0.5
+      ],
+      "velocity": [
+        0.25,
+        -0.0784000015258789,
+        0
+      ],
+      "yaw": -90
+    },
+    "startBlock": "start",
+    "goalBlock": "goal",
+    "maxRunTicksPerJump": 0,
+    "maxTotalRunTicks": 0,
+    "maxFlightInputs": 40,
+    "maxContactCombinations": 0,
+    "maxWallHits": 0,
+    "blocks": [
+      {
+        "id": "start",
+        "boxes": [
+          [
+            -4,
+            0,
+            -3,
+            5,
+            1,
+            3
+          ]
+        ]
+      },
+      {
+        "id": "ceiling",
+        "boxes": [
+          [
+            0.85,
+            2.9,
+            -2,
+            4,
+            4,
+            3
+          ]
+        ]
+      },
+      {
+        "id": "goal",
+        "boxes": [
+          [
+            5.5,
+            0,
+            -1,
+            6.5,
+            1,
+            2
+          ]
+        ]
+      }
+    ],
+    "movementSearch": {
+      "types": [
+        "ceiling",
+        "normal",
+        "stepping"
+      ],
+      "maxInputs": 32,
+      "maxPrefixes": 512,
+      "maxQueuedPrefixes": 384,
+      "maxChoicesPerType": 12
+    }
+  },
+  "spatialPoints": [
+    [
+      0.5,
+      1,
+      0.5
+    ],
+    [
+      6,
+      1,
+      0.5
+    ]
+  ],
+  "settings": {
+    "seconds": 20,
+    "max_candidates": 20,
+    "beam_width": 8,
+    "unknown_slots": 1,
+    "max_solver_calls": 128,
+    "score_call_limit": 4,
+    "score_seconds": 2,
+    "candidate_seconds": 0.7,
+    "final_call_limit": 24,
+    "cluster_gap": 1,
+    "fair_parents": true
+  },
+  "opportunities": [
+    {
+      "id": "launches",
+      "inputs": [
+        0,
+        8
+      ],
+      "kinds": [
+        "jump"
+      ]
+    },
+    {
+      "id": "ceiling-chain",
+      "inputs": [
+        0,
+        8
+      ],
+      "kinds": [
+        "ceiling"
+      ]
+    },
+    {
+      "id": "ground-contacts",
+      "inputs": [
+        1,
+        9
+      ],
+      "kinds": [
+        "landing"
+      ]
+    },
+    {
+      "id": "finish",
+      "inputs": [
+        10,
+        24
+      ],
+      "kinds": [
+        "landing"
+      ]
+    }
+  ],
+  "legacyCheckpoints": [
+    {
+      "tick": 3
+    },
+    {
+      "tick": 7
+    }
+  ]
+}

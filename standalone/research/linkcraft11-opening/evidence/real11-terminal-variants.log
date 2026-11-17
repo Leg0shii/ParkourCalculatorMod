@@ -1,0 +1,6 @@
+{"seed": [0], "jump": true, "status": "feasible", "termination": "contact_branch_limit", "calls": 30, "z": -1093.2675533415547, "replay": true}
+{"seed": [0], "jump": false, "status": "unknown", "termination": "deadline", "calls": 27, "z": null, "replay": null}
+{"seed": [8], "jump": true, "status": "feasible", "termination": "contact_search_exhausted", "calls": 13, "z": -1094.5795836939562, "replay": true}
+{"seed": [8], "jump": false, "status": "unknown", "termination": "contact_search_exhausted", "calls": 5, "z": null, "replay": null}
+{"seed": [9], "jump": true, "status": "feasible", "termination": "contact_branch_limit", "calls": 30, "z": -1094.113303740301, "replay": true}
+{"seed": [9], "jump": false, "status": "unknown", "termination": "contact_search_exhausted", "calls": 5, "z": null, "replay": null}

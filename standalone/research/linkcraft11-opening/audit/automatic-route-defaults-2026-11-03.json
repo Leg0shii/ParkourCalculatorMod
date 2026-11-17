@@ -1,0 +1,2668 @@
+{
+  "sourceRevision": "6bfc20b817ebfeae533cdd2540e1053c1d15fbcc",
+  "runtimeRevision": "93652150",
+  "purpose": "Existing enumerate_routes defaults: max_routes=50, max_expansions=5000, max_steps=64, max_visits=2; geometry-only, deadline10s",
+  "geometryCaveat": "Stored B6 does not include reported rightward extension; no revised geometry inferred.",
+  "elapsedSeconds": 0.15037208423018456,
+  "routeGeneration": {
+    "termination": "route_limit",
+    "expanded": 810,
+    "remaining": 2604,
+    "dominanceDrops": 834,
+    "visitDrops": 0,
+    "depthDrops": 0,
+    "groupedDuplicates": 6,
+    "routes": 50,
+    "maxRoutes": 50,
+    "maxExpansions": 5000,
+    "maxSteps": 64,
+    "maxVisits": 2,
+    "coverageProven": false,
+    "missingStart": false,
+    "missingGoal": false
+  },
+  "suppliedSignature": [
+    [
+      5,
+      -1,
+      0
+    ],
+    [
+      4,
+      -1,
+      0
+    ],
+    [
+      3,
+      -1,
+      0
+    ],
+    [
+      2,
+      -1,
+      0
+    ],
+    [
+      0,
+      -1,
+      0
+    ],
+    [
+      1,
+      -1,
+      -1
+    ]
+  ],
+  "routes": [
+    {
+      "id": 0,
+      "signature": [
+        [
+          5,
+          -1,
+          0
+        ],
+        [
+          4,
+          -1,
+          -1
+        ],
+        [
+          3,
+          -1,
+          -1
+        ],
+        [
+          2,
+          -1,
+          -1
+        ],
+        [
+          0,
+          -1,
+          -1
+        ],
+        [
+          1,
+          -1,
+          -1
+        ]
+      ],
+      "geometricLength": 33.17150794204507,
+      "variants": 1,
+      "cells": [
+        31,
+        29,
+        24,
+        22,
+        19,
+        17,
+        14,
+        12,
+        5,
+        2,
+        4
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 1,
+      "signature": [
+        [
+          5,
+          -1,
+          -1
+        ],
+        [
+          4,
+          -1,
+          -1
+        ],
+        [
+          3,
+          -1,
+          -1
+        ],
+        [
+          2,
+          -1,
+          -1
+        ],
+        [
+          0,
+          -1,
+          -1
+        ],
+        [
+          1,
+          -1,
+          -1
+        ]
+      ],
+      "geometricLength": 34.276742328220855,
+      "variants": 1,
+      "cells": [
+        31,
+        27,
+        29,
+        24,
+        22,
+        19,
+        17,
+        14,
+        12,
+        5,
+        2,
+        4
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 2,
+      "signature": [
+        [
+          5,
+          -1,
+          1
+        ],
+        [
+          4,
+          -1,
+          1
+        ],
+        [
+          3,
+          -1,
+          1
+        ],
+        [
+          2,
+          -1,
+          1
+        ],
+        [
+          0,
+          -1,
+          -1
+        ],
+        [
+          1,
+          -1,
+          -1
+        ]
+      ],
+      "geometricLength": 38.611847490472385,
+      "variants": 1,
+      "cells": [
+        31,
+        26,
+        22,
+        21,
+        17,
+        16,
+        12,
+        8,
+        4
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 3,
+      "signature": [
+        [
+          5,
+          -1,
+          1
+        ],
+        [
+          4,
+          -1,
+          1
+        ],
+        [
+          3,
+          -1,
+          1
+        ],
+        [
+          2,
+          -1,
+          1
+        ],
+        [
+          0,
+          -1,
+          1
+        ],
+        [
+          1,
+          -1,
+          1
+        ]
+      ],
+      "geometricLength": 39.60437879726824,
+      "variants": 1,
+      "cells": [
+        31,
+        26,
+        22,
+        21,
+        17,
+        16,
+        12,
+        7,
+        4
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 4,
+      "signature": [
+        [
+          5,
+          -1,
+          0
+        ],
+        [
+          4,
+          -1,
+          -1
+        ],
+        [
+          3,
+          -1,
+          -1
+        ],
+        [
+          2,
+          -1,
+          -1
+        ],
+        [
+          0,
+          -1,
+          1
+        ],
+        [
+          1,
+          -1,
+          1
+        ]
+      ],
+      "geometricLength": 39.942515231769576,
+      "variants": 1,
+      "cells": [
+        31,
+        29,
+        24,
+        22,
+        19,
+        17,
+        14,
+        12,
+        7,
+        4
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 5,
+      "signature": [
+        [
+          5,
+          -1,
+          -1
+        ],
+        [
+          4,
+          -1,
+          -1
+        ],
+        [
+          3,
+          -1,
+          -1
+        ],
+        [
+          2,
+          -1,
+          -1
+        ],
+        [
+          0,
+          -1,
+          1
+        ],
+        [
+          1,
+          -1,
+          1
+        ]
+      ],
+      "geometricLength": 41.04774961794537,
+      "variants": 1,
+      "cells": [
+        31,
+        27,
+        29,
+        24,
+        22,
+        19,
+        17,
+        14,
+        12,
+        7,
+        4
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 6,
+      "signature": [
+        [
+          5,
+          -1,
+          0
+        ],
+        [
+          4,
+          -1,
+          1
+        ],
+        [
+          3,
+          -1,
+          1
+        ],
+        [
+          2,
+          -1,
+          1
+        ],
+        [
+          0,
+          -1,
+          -1
+        ],
+        [
+          1,
+          -1,
+          -1
+        ]
+      ],
+      "geometricLength": 41.810790089477116,
+      "variants": 1,
+      "cells": [
+        31,
+        29,
+        26,
+        22,
+        21,
+        17,
+        16,
+        12,
+        8,
+        4
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 7,
+      "signature": [
+        [
+          5,
+          -1,
+          1
+        ],
+        [
+          4,
+          -1,
+          -1
+        ],
+        [
+          3,
+          -1,
+          -1
+        ],
+        [
+          2,
+          -1,
+          -1
+        ],
+        [
+          0,
+          -1,
+          -1
+        ],
+        [
+          1,
+          -1,
+          -1
+        ]
+      ],
+      "geometricLength": 42.42106125183888,
+      "variants": 1,
+      "cells": [
+        31,
+        28,
+        23,
+        24,
+        22,
+        19,
+        17,
+        14,
+        12,
+        5,
+        2,
+        4
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 8,
+      "signature": [
+        [
+          5,
+          -1,
+          -1
+        ],
+        [
+          4,
+          -1,
+          1
+        ],
+        [
+          3,
+          -1,
+          1
+        ],
+        [
+          2,
+          -1,
+          1
+        ],
+        [
+          0,
+          -1,
+          -1
+        ],
+        [
+          1,
+          -1,
+          -1
+        ]
+      ],
+      "geometricLength": 43.28284871318408,
+      "variants": 1,
+      "cells": [
+        31,
+        27,
+        29,
+        26,
+        22,
+        21,
+        17,
+        16,
+        12,
+        8,
+        4
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 9,
+      "signature": [
+        [
+          5,
+          -1,
+          0
+        ],
+        [
+          4,
+          -1,
+          1
+        ],
+        [
+          3,
+          -1,
+          1
+        ],
+        [
+          2,
+          -1,
+          1
+        ],
+        [
+          0,
+          -1,
+          1
+        ],
+        [
+          1,
+          -1,
+          1
+        ]
+      ],
+      "geometricLength": 42.80332139627298,
+      "variants": 1,
+      "cells": [
+        31,
+        29,
+        26,
+        22,
+        21,
+        17,
+        16,
+        12,
+        7,
+        4
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 10,
+      "signature": [
+        [
+          5,
+          -1,
+          1
+        ],
+        [
+          4,
+          -1,
+          1
+        ],
+        [
+          3,
+          -1,
+          1
+        ],
+        [
+          2,
+          -1,
+          1
+        ],
+        [
+          0,
+          -1,
+          0
+        ],
+        [
+          1,
+          -1,
+          -1
+        ]
+      ],
+      "geometricLength": 43.569006562681736,
+      "variants": 1,
+      "cells": [
+        31,
+        26,
+        22,
+        21,
+        17,
+        16,
+        12,
+        10,
+        6,
+        4
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 11,
+      "signature": [
+        [
+          5,
+          -1,
+          -1
+        ],
+        [
+          4,
+          -1,
+          1
+        ],
+        [
+          3,
+          -1,
+          1
+        ],
+        [
+          2,
+          -1,
+          1
+        ],
+        [
+          0,
+          -1,
+          1
+        ],
+        [
+          1,
+          -1,
+          1
+        ]
+      ],
+      "geometricLength": 44.275380019979934,
+      "variants": 1,
+      "cells": [
+        31,
+        27,
+        29,
+        26,
+        22,
+        21,
+        17,
+        16,
+        12,
+        7,
+        4
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 12,
+      "signature": [
+        [
+          5,
+          -1,
+          0
+        ],
+        [
+          4,
+          -1,
+          -1
+        ],
+        [
+          3,
+          -1,
+          -1
+        ],
+        [
+          2,
+          -1,
+          1
+        ],
+        [
+          0,
+          -1,
+          1
+        ],
+        [
+          1,
+          -1,
+          1
+        ]
+      ],
+      "geometricLength": 44.8318193954437,
+      "variants": 1,
+      "cells": [
+        31,
+        29,
+        24,
+        22,
+        19,
+        17,
+        15,
+        12,
+        7,
+        4
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 13,
+      "signature": [
+        [
+          5,
+          -1,
+          -1
+        ],
+        [
+          4,
+          -1,
+          -1
+        ],
+        [
+          3,
+          -1,
+          -1
+        ],
+        [
+          2,
+          -1,
+          1
+        ],
+        [
+          0,
+          -1,
+          1
+        ],
+        [
+          1,
+          -1,
+          1
+        ]
+      ],
+      "geometricLength": 45.9370537816195,
+      "variants": 1,
+      "cells": [
+        31,
+        27,
+        29,
+        24,
+        22,
+        19,
+        17,
+        15,
+        12,
+        7,
+        4
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 14,
+      "signature": [
+        [
+          5,
+          -1,
+          0
+        ],
+        [
+          4,
+          -1,
+          -1
+        ],
+        [
+          3,
+          -1,
+          1
+        ],
+        [
+          2,
+          -1,
+          1
+        ],
+        [
+          0,
+          -1,
+          1
+        ],
+        [
+          1,
+          -1,
+          1
+        ]
+      ],
+      "geometricLength": 46.035027883226306,
+      "variants": 1,
+      "cells": [
+        31,
+        29,
+        24,
+        22,
+        20,
+        17,
+        15,
+        12,
+        7,
+        4
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 15,
+      "signature": [
+        [
+          5,
+          -1,
+          0
+        ],
+        [
+          4,
+          -1,
+          1
+        ],
+        [
+          3,
+          -1,
+          1
+        ],
+        [
+          2,
+          -1,
+          1
+        ],
+        [
+          0,
+          -1,
+          0
+        ],
+        [
+          1,
+          -1,
+          -1
+        ]
+      ],
+      "geometricLength": 46.76794916168646,
+      "variants": 1,
+      "cells": [
+        31,
+        29,
+        26,
+        22,
+        21,
+        17,
+        16,
+        12,
+        10,
+        6,
+        4
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 16,
+      "signature": [
+        [
+          5,
+          -1,
+          -1
+        ],
+        [
+          4,
+          -1,
+          -1
+        ],
+        [
+          3,
+          -1,
+          1
+        ],
+        [
+          2,
+          -1,
+          1
+        ],
+        [
+          0,
+          -1,
+          1
+        ],
+        [
+          1,
+          -1,
+          1
+        ]
+      ],
+      "geometricLength": 47.1402622694021,
+      "variants": 1,
+      "cells": [
+        31,
+        27,
+        29,
+        24,
+        22,
+        20,
+        17,
+        15,
+        12,
+        7,
+        4
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 17,
+      "signature": [
+        [
+          5,
+          -1,
+          -1
+        ],
+        [
+          4,
+          -1,
+          1
+        ],
+        [
+          3,
+          -1,
+          1
+        ],
+        [
+          2,
+          -1,
+          1
+        ],
+        [
+          0,
+          -1,
+          0
+        ],
+        [
+          1,
+          -1,
+          -1
+        ]
+      ],
+      "geometricLength": 48.240007785393416,
+      "variants": 1,
+      "cells": [
+        31,
+        27,
+        29,
+        26,
+        22,
+        21,
+        17,
+        16,
+        12,
+        10,
+        6,
+        4
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 18,
+      "signature": [
+        [
+          5,
+          -1,
+          1
+        ],
+        [
+          4,
+          -1,
+          -1
+        ],
+        [
+          3,
+          -1,
+          -1
+        ],
+        [
+          2,
+          -1,
+          -1
+        ],
+        [
+          0,
+          -1,
+          1
+        ],
+        [
+          1,
+          -1,
+          1
+        ]
+      ],
+      "geometricLength": 49.19206854156339,
+      "variants": 1,
+      "cells": [
+        31,
+        28,
+        23,
+        24,
+        22,
+        19,
+        17,
+        14,
+        12,
+        7,
+        4
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 19,
+      "signature": [
+        [
+          5,
+          -1,
+          0
+        ],
+        [
+          4,
+          -1,
+          -1
+        ],
+        [
+          3,
+          -1,
+          -1
+        ],
+        [
+          2,
+          -1,
+          1
+        ],
+        [
+          0,
+          -1,
+          -1
+        ],
+        [
+          1,
+          -1,
+          -1
+        ]
+      ],
+      "geometricLength": 50.53644894432939,
+      "variants": 2,
+      "cells": [
+        2,
+        4,
+        5,
+        8,
+        12,
+        15,
+        17,
+        19,
+        22,
+        24,
+        29,
+        31
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 20,
+      "signature": [
+        [
+          5,
+          -1,
+          -1
+        ],
+        [
+          4,
+          -1,
+          -1
+        ],
+        [
+          3,
+          -1,
+          -1
+        ],
+        [
+          2,
+          -1,
+          1
+        ],
+        [
+          0,
+          -1,
+          -1
+        ],
+        [
+          1,
+          -1,
+          -1
+        ]
+      ],
+      "geometricLength": 51.641683330505174,
+      "variants": 2,
+      "cells": [
+        2,
+        4,
+        5,
+        8,
+        12,
+        15,
+        17,
+        19,
+        22,
+        24,
+        27,
+        29,
+        31
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 21,
+      "signature": [
+        [
+          5,
+          -1,
+          0
+        ],
+        [
+          4,
+          -1,
+          -1
+        ],
+        [
+          3,
+          -1,
+          1
+        ],
+        [
+          2,
+          -1,
+          1
+        ],
+        [
+          0,
+          -1,
+          -1
+        ],
+        [
+          1,
+          -1,
+          -1
+        ]
+      ],
+      "geometricLength": 51.739657432112,
+      "variants": 2,
+      "cells": [
+        2,
+        4,
+        5,
+        8,
+        12,
+        15,
+        17,
+        20,
+        22,
+        24,
+        29,
+        31
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 22,
+      "signature": [
+        [
+          5,
+          -1,
+          1
+        ],
+        [
+          4,
+          -1,
+          1
+        ],
+        [
+          3,
+          -1,
+          1
+        ],
+        [
+          2,
+          -1,
+          -1
+        ],
+        [
+          0,
+          -1,
+          -1
+        ],
+        [
+          1,
+          -1,
+          -1
+        ]
+      ],
+      "geometricLength": 51.93683658583109,
+      "variants": 1,
+      "cells": [
+        31,
+        26,
+        22,
+        21,
+        17,
+        16,
+        14,
+        12,
+        5,
+        2,
+        4
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 23,
+      "signature": [
+        [
+          5,
+          -1,
+          1
+        ],
+        [
+          4,
+          -1,
+          1
+        ],
+        [
+          3,
+          -1,
+          -1
+        ],
+        [
+          2,
+          -1,
+          -1
+        ],
+        [
+          0,
+          -1,
+          -1
+        ],
+        [
+          1,
+          -1,
+          -1
+        ]
+      ],
+      "geometricLength": 52.27386874830957,
+      "variants": 1,
+      "cells": [
+        31,
+        26,
+        22,
+        21,
+        19,
+        17,
+        14,
+        12,
+        5,
+        2,
+        4
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 24,
+      "signature": [
+        [
+          5,
+          -1,
+          0
+        ],
+        [
+          4,
+          -1,
+          -1
+        ],
+        [
+          3,
+          -1,
+          -1
+        ],
+        [
+          2,
+          -1,
+          -1
+        ],
+        [
+          0,
+          -1,
+          0
+        ],
+        [
+          1,
+          -1,
+          -1
+        ]
+      ],
+      "geometricLength": 51.6349636166607,
+      "variants": 1,
+      "cells": [
+        31,
+        29,
+        24,
+        22,
+        19,
+        17,
+        14,
+        12,
+        10,
+        6,
+        4
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 25,
+      "signature": [
+        [
+          5,
+          -1,
+          -1
+        ],
+        [
+          4,
+          -1,
+          -1
+        ],
+        [
+          3,
+          -1,
+          1
+        ],
+        [
+          2,
+          -1,
+          1
+        ],
+        [
+          0,
+          -1,
+          -1
+        ],
+        [
+          1,
+          -1,
+          -1
+        ]
+      ],
+      "geometricLength": 52.84489181828778,
+      "variants": 2,
+      "cells": [
+        2,
+        4,
+        5,
+        8,
+        12,
+        15,
+        17,
+        20,
+        22,
+        24,
+        27,
+        29,
+        31
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 26,
+      "signature": [
+        [
+          5,
+          -1,
+          -1
+        ],
+        [
+          4,
+          -1,
+          -1
+        ],
+        [
+          3,
+          -1,
+          -1
+        ],
+        [
+          2,
+          -1,
+          -1
+        ],
+        [
+          0,
+          -1,
+          0
+        ],
+        [
+          1,
+          -1,
+          -1
+        ]
+      ],
+      "geometricLength": 52.74019800283648,
+      "variants": 1,
+      "cells": [
+        31,
+        27,
+        29,
+        24,
+        22,
+        19,
+        17,
+        14,
+        12,
+        10,
+        6,
+        4
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 27,
+      "signature": [
+        [
+          5,
+          -1,
+          1
+        ],
+        [
+          4,
+          -1,
+          0
+        ],
+        [
+          3,
+          -1,
+          -1
+        ],
+        [
+          2,
+          -1,
+          -1
+        ],
+        [
+          0,
+          -1,
+          -1
+        ],
+        [
+          1,
+          -1,
+          -1
+        ]
+      ],
+      "geometricLength": 53.82822151182542,
+      "variants": 1,
+      "cells": [
+        31,
+        26,
+        24,
+        22,
+        19,
+        17,
+        14,
+        12,
+        5,
+        2,
+        4
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 28,
+      "signature": [
+        [
+          5,
+          -1,
+          0
+        ],
+        [
+          4,
+          -1,
+          -1
+        ],
+        [
+          3,
+          -1,
+          1
+        ],
+        [
+          2,
+          -1,
+          -1
+        ],
+        [
+          0,
+          -1,
+          -1
+        ],
+        [
+          1,
+          -1,
+          -1
+        ]
+      ],
+      "geometricLength": 53.92742319073227,
+      "variants": 1,
+      "cells": [
+        31,
+        29,
+        24,
+        22,
+        20,
+        17,
+        14,
+        12,
+        5,
+        2,
+        4
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 29,
+      "signature": [
+        [
+          5,
+          -1,
+          1
+        ],
+        [
+          4,
+          -1,
+          -1
+        ],
+        [
+          3,
+          -1,
+          -1
+        ],
+        [
+          2,
+          -1,
+          1
+        ],
+        [
+          0,
+          -1,
+          1
+        ],
+        [
+          1,
+          -1,
+          1
+        ]
+      ],
+      "geometricLength": 54.08137270523751,
+      "variants": 1,
+      "cells": [
+        31,
+        28,
+        23,
+        24,
+        22,
+        19,
+        17,
+        15,
+        12,
+        7,
+        4
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 30,
+      "signature": [
+        [
+          5,
+          -1,
+          -1
+        ],
+        [
+          4,
+          -1,
+          -1
+        ],
+        [
+          3,
+          -1,
+          1
+        ],
+        [
+          2,
+          -1,
+          -1
+        ],
+        [
+          0,
+          -1,
+          -1
+        ],
+        [
+          1,
+          -1,
+          -1
+        ]
+      ],
+      "geometricLength": 55.03265757690805,
+      "variants": 1,
+      "cells": [
+        31,
+        27,
+        29,
+        24,
+        22,
+        20,
+        17,
+        14,
+        12,
+        5,
+        2,
+        4
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 31,
+      "signature": [
+        [
+          5,
+          -1,
+          0
+        ],
+        [
+          4,
+          -1,
+          1
+        ],
+        [
+          3,
+          -1,
+          1
+        ],
+        [
+          2,
+          -1,
+          -1
+        ],
+        [
+          0,
+          -1,
+          -1
+        ],
+        [
+          1,
+          -1,
+          -1
+        ]
+      ],
+      "geometricLength": 55.135779184835826,
+      "variants": 1,
+      "cells": [
+        31,
+        29,
+        26,
+        22,
+        21,
+        17,
+        16,
+        14,
+        12,
+        5,
+        2,
+        4
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 32,
+      "signature": [
+        [
+          5,
+          -1,
+          0
+        ],
+        [
+          4,
+          -1,
+          1
+        ],
+        [
+          3,
+          -1,
+          -1
+        ],
+        [
+          2,
+          -1,
+          -1
+        ],
+        [
+          0,
+          -1,
+          -1
+        ],
+        [
+          1,
+          -1,
+          -1
+        ]
+      ],
+      "geometricLength": 55.472811347314305,
+      "variants": 1,
+      "cells": [
+        31,
+        29,
+        26,
+        22,
+        21,
+        19,
+        17,
+        14,
+        12,
+        5,
+        2,
+        4
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 33,
+      "signature": [
+        [
+          5,
+          -1,
+          1
+        ],
+        [
+          4,
+          -1,
+          -1
+        ],
+        [
+          3,
+          -1,
+          1
+        ],
+        [
+          2,
+          -1,
+          1
+        ],
+        [
+          0,
+          -1,
+          1
+        ],
+        [
+          1,
+          -1,
+          1
+        ]
+      ],
+      "geometricLength": 55.28458119302012,
+      "variants": 1,
+      "cells": [
+        31,
+        28,
+        23,
+        24,
+        22,
+        20,
+        17,
+        15,
+        12,
+        7,
+        4
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 34,
+      "signature": [
+        [
+          5,
+          -1,
+          -1
+        ],
+        [
+          4,
+          -1,
+          1
+        ],
+        [
+          3,
+          -1,
+          1
+        ],
+        [
+          2,
+          -1,
+          -1
+        ],
+        [
+          0,
+          -1,
+          -1
+        ],
+        [
+          1,
+          -1,
+          -1
+        ]
+      ],
+      "geometricLength": 56.60783780854278,
+      "variants": 1,
+      "cells": [
+        31,
+        27,
+        29,
+        26,
+        22,
+        21,
+        17,
+        16,
+        14,
+        12,
+        5,
+        2,
+        4
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 35,
+      "signature": [
+        [
+          5,
+          -1,
+          -1
+        ],
+        [
+          4,
+          -1,
+          1
+        ],
+        [
+          3,
+          -1,
+          -1
+        ],
+        [
+          2,
+          -1,
+          -1
+        ],
+        [
+          0,
+          -1,
+          -1
+        ],
+        [
+          1,
+          -1,
+          -1
+        ]
+      ],
+      "geometricLength": 56.94486997102126,
+      "variants": 1,
+      "cells": [
+        31,
+        27,
+        29,
+        26,
+        22,
+        21,
+        19,
+        17,
+        14,
+        12,
+        5,
+        2,
+        4
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 36,
+      "signature": [
+        [
+          5,
+          -1,
+          1
+        ],
+        [
+          4,
+          -1,
+          1
+        ],
+        [
+          3,
+          -1,
+          1
+        ],
+        [
+          2,
+          -1,
+          -1
+        ],
+        [
+          0,
+          -1,
+          1
+        ],
+        [
+          1,
+          -1,
+          1
+        ]
+      ],
+      "geometricLength": 58.7078438755556,
+      "variants": 1,
+      "cells": [
+        31,
+        26,
+        22,
+        21,
+        17,
+        16,
+        14,
+        12,
+        7,
+        4
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 37,
+      "signature": [
+        [
+          5,
+          -1,
+          1
+        ],
+        [
+          4,
+          -1,
+          1
+        ],
+        [
+          3,
+          -1,
+          -1
+        ],
+        [
+          2,
+          -1,
+          -1
+        ],
+        [
+          0,
+          -1,
+          1
+        ],
+        [
+          1,
+          -1,
+          1
+        ]
+      ],
+      "geometricLength": 59.044876038034076,
+      "variants": 1,
+      "cells": [
+        31,
+        26,
+        22,
+        21,
+        19,
+        17,
+        14,
+        12,
+        7,
+        4
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 38,
+      "signature": [
+        [
+          5,
+          -1,
+          1
+        ],
+        [
+          4,
+          -1,
+          -1
+        ],
+        [
+          3,
+          -1,
+          -1
+        ],
+        [
+          2,
+          -1,
+          1
+        ],
+        [
+          0,
+          -1,
+          -1
+        ],
+        [
+          1,
+          -1,
+          -1
+        ]
+      ],
+      "geometricLength": 59.78600225412319,
+      "variants": 2,
+      "cells": [
+        2,
+        4,
+        5,
+        8,
+        12,
+        15,
+        17,
+        19,
+        22,
+        23,
+        24,
+        28,
+        31
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 39,
+      "signature": [
+        [
+          5,
+          -1,
+          1
+        ],
+        [
+          4,
+          -1,
+          -1
+        ],
+        [
+          3,
+          -1,
+          1
+        ],
+        [
+          2,
+          -1,
+          1
+        ],
+        [
+          0,
+          -1,
+          -1
+        ],
+        [
+          1,
+          -1,
+          -1
+        ]
+      ],
+      "geometricLength": 60.989210741905794,
+      "variants": 2,
+      "cells": [
+        2,
+        4,
+        5,
+        8,
+        12,
+        15,
+        17,
+        20,
+        22,
+        23,
+        24,
+        28,
+        31
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 40,
+      "signature": [
+        [
+          5,
+          -1,
+          1
+        ],
+        [
+          4,
+          -1,
+          0
+        ],
+        [
+          3,
+          -1,
+          -1
+        ],
+        [
+          2,
+          -1,
+          -1
+        ],
+        [
+          0,
+          -1,
+          1
+        ],
+        [
+          1,
+          -1,
+          1
+        ]
+      ],
+      "geometricLength": 60.59922880154993,
+      "variants": 1,
+      "cells": [
+        31,
+        26,
+        24,
+        22,
+        19,
+        17,
+        14,
+        12,
+        7,
+        4
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 41,
+      "signature": [
+        [
+          5,
+          -1,
+          0
+        ],
+        [
+          4,
+          -1,
+          -1
+        ],
+        [
+          3,
+          -1,
+          1
+        ],
+        [
+          2,
+          -1,
+          -1
+        ],
+        [
+          0,
+          -1,
+          1
+        ],
+        [
+          1,
+          -1,
+          1
+        ]
+      ],
+      "geometricLength": 60.69843048045678,
+      "variants": 1,
+      "cells": [
+        31,
+        29,
+        24,
+        22,
+        20,
+        17,
+        14,
+        12,
+        7,
+        4
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 42,
+      "signature": [
+        [
+          5,
+          -1,
+          1
+        ],
+        [
+          4,
+          -1,
+          -1
+        ],
+        [
+          3,
+          -1,
+          -1
+        ],
+        [
+          2,
+          -1,
+          -1
+        ],
+        [
+          0,
+          -1,
+          0
+        ],
+        [
+          1,
+          -1,
+          -1
+        ]
+      ],
+      "geometricLength": 60.88451692645451,
+      "variants": 1,
+      "cells": [
+        31,
+        28,
+        23,
+        24,
+        22,
+        19,
+        17,
+        14,
+        12,
+        10,
+        6,
+        4
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 43,
+      "signature": [
+        [
+          5,
+          -1,
+          -1
+        ],
+        [
+          4,
+          -1,
+          -1
+        ],
+        [
+          3,
+          -1,
+          1
+        ],
+        [
+          2,
+          -1,
+          -1
+        ],
+        [
+          0,
+          -1,
+          1
+        ],
+        [
+          1,
+          -1,
+          1
+        ]
+      ],
+      "geometricLength": 61.80366486663256,
+      "variants": 1,
+      "cells": [
+        31,
+        27,
+        29,
+        24,
+        22,
+        20,
+        17,
+        14,
+        12,
+        7,
+        4
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 44,
+      "signature": [
+        [
+          5,
+          -1,
+          0
+        ],
+        [
+          4,
+          -1,
+          1
+        ],
+        [
+          3,
+          -1,
+          1
+        ],
+        [
+          2,
+          -1,
+          -1
+        ],
+        [
+          0,
+          -1,
+          1
+        ],
+        [
+          1,
+          -1,
+          1
+        ]
+      ],
+      "geometricLength": 61.906786474560334,
+      "variants": 1,
+      "cells": [
+        31,
+        29,
+        26,
+        22,
+        21,
+        17,
+        16,
+        14,
+        12,
+        7,
+        4
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 45,
+      "signature": [
+        [
+          5,
+          -1,
+          0
+        ],
+        [
+          4,
+          -1,
+          1
+        ],
+        [
+          3,
+          -1,
+          -1
+        ],
+        [
+          2,
+          -1,
+          -1
+        ],
+        [
+          0,
+          -1,
+          1
+        ],
+        [
+          1,
+          -1,
+          1
+        ]
+      ],
+      "geometricLength": 62.243818637038814,
+      "variants": 1,
+      "cells": [
+        31,
+        29,
+        26,
+        22,
+        21,
+        19,
+        17,
+        14,
+        12,
+        7,
+        4
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 46,
+      "signature": [
+        [
+          5,
+          -1,
+          1
+        ],
+        [
+          4,
+          -1,
+          -1
+        ],
+        [
+          3,
+          -1,
+          1
+        ],
+        [
+          2,
+          -1,
+          -1
+        ],
+        [
+          0,
+          -1,
+          -1
+        ],
+        [
+          1,
+          -1,
+          -1
+        ]
+      ],
+      "geometricLength": 63.17697650052608,
+      "variants": 1,
+      "cells": [
+        31,
+        28,
+        23,
+        24,
+        22,
+        20,
+        17,
+        14,
+        12,
+        5,
+        2,
+        4
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 47,
+      "signature": [
+        [
+          5,
+          -1,
+          -1
+        ],
+        [
+          4,
+          -1,
+          1
+        ],
+        [
+          3,
+          -1,
+          1
+        ],
+        [
+          2,
+          -1,
+          -1
+        ],
+        [
+          0,
+          -1,
+          1
+        ],
+        [
+          1,
+          -1,
+          1
+        ]
+      ],
+      "geometricLength": 63.37884509826729,
+      "variants": 1,
+      "cells": [
+        31,
+        27,
+        29,
+        26,
+        22,
+        21,
+        17,
+        16,
+        14,
+        12,
+        7,
+        4
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 48,
+      "signature": [
+        [
+          5,
+          -1,
+          -1
+        ],
+        [
+          4,
+          -1,
+          1
+        ],
+        [
+          3,
+          -1,
+          -1
+        ],
+        [
+          2,
+          -1,
+          -1
+        ],
+        [
+          0,
+          -1,
+          1
+        ],
+        [
+          1,
+          -1,
+          1
+        ]
+      ],
+      "geometricLength": 63.71587726074577,
+      "variants": 1,
+      "cells": [
+        31,
+        27,
+        29,
+        26,
+        22,
+        21,
+        19,
+        17,
+        14,
+        12,
+        7,
+        4
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    },
+    {
+      "id": 49,
+      "signature": [
+        [
+          5,
+          -1,
+          1
+        ],
+        [
+          4,
+          -1,
+          1
+        ],
+        [
+          3,
+          -1,
+          -1
+        ],
+        [
+          2,
+          -1,
+          1
+        ],
+        [
+          0,
+          -1,
+          1
+        ],
+        [
+          1,
+          -1,
+          1
+        ]
+      ],
+      "geometricLength": 63.9341802017082,
+      "variants": 1,
+      "cells": [
+        31,
+        26,
+        22,
+        21,
+        19,
+        17,
+        15,
+        12,
+        7,
+        4
+      ],
+      "matchesSuppliedSignature": false,
+      "referenceAccepted": false
+    }
+  ]
+}

@@ -1,0 +1,882 @@
+{
+  "coldSource": "d9cffafc5777b0ce43e17bad9333f9926d4f2b1c",
+  "diagnosticSource": "d9cffafc5777b0ce43e17bad9333f9926d4f2b1c",
+  "coldRuns": 54,
+  "diagnosticRuns": 54,
+  "independentReplays": 402,
+  "allReplaysPassed": true,
+  "cold": [
+    {
+      "scene": "ceiling",
+      "gap": null,
+      "repeats": 3,
+      "feasible": 3,
+      "ticks": [
+        12
+      ],
+      "medianSeconds": 4.309548705816269,
+      "minSeconds": 4.293161042034626,
+      "maxSeconds": 4.604852702468634,
+      "calls": 29,
+      "expandedPrefixes": 47,
+      "retained": [
+        8
+      ],
+      "outsideBand": 0,
+      "scoredCapDrops": 0
+    },
+    {
+      "scene": "ceiling",
+      "gap": 0.25,
+      "repeats": 3,
+      "feasible": 3,
+      "ticks": [
+        13
+      ],
+      "medianSeconds": 4.119358245283365,
+      "minSeconds": 4.060751751065254,
+      "maxSeconds": 5.081310000270605,
+      "calls": 27,
+      "expandedPrefixes": 39,
+      "retained": [
+        2
+      ],
+      "outsideBand": 4,
+      "scoredCapDrops": 0
+    },
+    {
+      "scene": "ceiling",
+      "gap": 0.5,
+      "repeats": 3,
+      "feasible": 3,
+      "ticks": [
+        12
+      ],
+      "medianSeconds": 4.268339663743973,
+      "minSeconds": 4.239878121763468,
+      "maxSeconds": 4.373662706464529,
+      "calls": 29,
+      "expandedPrefixes": 43,
+      "retained": [
+        4
+      ],
+      "outsideBand": 2,
+      "scoredCapDrops": 0
+    },
+    {
+      "scene": "grind-or-run",
+      "gap": null,
+      "repeats": 3,
+      "feasible": 0,
+      "ticks": [],
+      "medianSeconds": 4.214340414851904,
+      "minSeconds": 4.182243540883064,
+      "maxSeconds": 4.429638374596834,
+      "calls": 0,
+      "expandedPrefixes": 512,
+      "retained": [],
+      "outsideBand": 0,
+      "scoredCapDrops": 0
+    },
+    {
+      "scene": "grind-or-run",
+      "gap": 0.25,
+      "repeats": 3,
+      "feasible": 0,
+      "ticks": [],
+      "medianSeconds": 4.496700000017881,
+      "minSeconds": 4.193623628467321,
+      "maxSeconds": 5.108219586312771,
+      "calls": 0,
+      "expandedPrefixes": 512,
+      "retained": [],
+      "outsideBand": 0,
+      "scoredCapDrops": 0
+    },
+    {
+      "scene": "grind-or-run",
+      "gap": 0.5,
+      "repeats": 3,
+      "feasible": 0,
+      "ticks": [],
+      "medianSeconds": 4.349815584719181,
+      "minSeconds": 4.18721816316247,
+      "maxSeconds": 4.536082502454519,
+      "calls": 0,
+      "expandedPrefixes": 512,
+      "retained": [],
+      "outsideBand": 0,
+      "scoredCapDrops": 0
+    },
+    {
+      "scene": "multi-support",
+      "gap": null,
+      "repeats": 3,
+      "feasible": 3,
+      "ticks": [
+        14
+      ],
+      "medianSeconds": 3.666766583919525,
+      "minSeconds": 3.637517124414444,
+      "maxSeconds": 3.961759250611067,
+      "calls": 24,
+      "expandedPrefixes": 78,
+      "retained": [
+        8,
+        0
+      ],
+      "outsideBand": 0,
+      "scoredCapDrops": 0
+    },
+    {
+      "scene": "multi-support",
+      "gap": 0.25,
+      "repeats": 3,
+      "feasible": 3,
+      "ticks": [
+        14
+      ],
+      "medianSeconds": 3.7026039138436317,
+      "minSeconds": 3.673699412494898,
+      "maxSeconds": 3.7589769139885902,
+      "calls": 24,
+      "expandedPrefixes": 75,
+      "retained": [
+        5,
+        0
+      ],
+      "outsideBand": 0,
+      "scoredCapDrops": 0
+    },
+    {
+      "scene": "multi-support",
+      "gap": 0.5,
+      "repeats": 3,
+      "feasible": 3,
+      "ticks": [
+        14
+      ],
+      "medianSeconds": 3.7139949202537537,
+      "minSeconds": 3.7045156247913837,
+      "maxSeconds": 3.7850918360054493,
+      "calls": 24,
+      "expandedPrefixes": 75,
+      "retained": [
+        5,
+        0
+      ],
+      "outsideBand": 0,
+      "scoredCapDrops": 0
+    },
+    {
+      "scene": "open",
+      "gap": null,
+      "repeats": 3,
+      "feasible": 3,
+      "ticks": [
+        12
+      ],
+      "medianSeconds": 3.702785834670067,
+      "minSeconds": 3.6029708310961723,
+      "maxSeconds": 3.7294281236827374,
+      "calls": 21,
+      "expandedPrefixes": 42,
+      "retained": [
+        8
+      ],
+      "outsideBand": 0,
+      "scoredCapDrops": 0
+    },
+    {
+      "scene": "open",
+      "gap": 0.25,
+      "repeats": 3,
+      "feasible": 3,
+      "ticks": [
+        12
+      ],
+      "medianSeconds": 3.6152096688747406,
+      "minSeconds": 3.4871793314814568,
+      "maxSeconds": 3.7769978307187557,
+      "calls": 21,
+      "expandedPrefixes": 40,
+      "retained": [
+        6
+      ],
+      "outsideBand": 0,
+      "scoredCapDrops": 0
+    },
+    {
+      "scene": "open",
+      "gap": 0.5,
+      "repeats": 3,
+      "feasible": 3,
+      "ticks": [
+        12
+      ],
+      "medianSeconds": 3.5648893751204014,
+      "minSeconds": 3.5297559201717377,
+      "maxSeconds": 3.5966392904520035,
+      "calls": 21,
+      "expandedPrefixes": 40,
+      "retained": [
+        6
+      ],
+      "outsideBand": 0,
+      "scoredCapDrops": 0
+    },
+    {
+      "scene": "step-or-jump",
+      "gap": null,
+      "repeats": 3,
+      "feasible": 3,
+      "ticks": [
+        13
+      ],
+      "medianSeconds": 5.818186290562153,
+      "minSeconds": 5.768628045916557,
+      "maxSeconds": 5.914220079779625,
+      "calls": 36,
+      "expandedPrefixes": 95,
+      "retained": [
+        8
+      ],
+      "outsideBand": 0,
+      "scoredCapDrops": 1
+    },
+    {
+      "scene": "step-or-jump",
+      "gap": 0.25,
+      "repeats": 3,
+      "feasible": 3,
+      "ticks": [
+        14
+      ],
+      "medianSeconds": 5.548673462122679,
+      "minSeconds": 5.4715052507817745,
+      "maxSeconds": 5.6037475019693375,
+      "calls": 35,
+      "expandedPrefixes": 87,
+      "retained": [
+        3
+      ],
+      "outsideBand": 6,
+      "scoredCapDrops": 0
+    },
+    {
+      "scene": "step-or-jump",
+      "gap": 0.5,
+      "repeats": 3,
+      "feasible": 3,
+      "ticks": [
+        14
+      ],
+      "medianSeconds": 5.686913665384054,
+      "minSeconds": 5.531910039484501,
+      "maxSeconds": 5.890417501330376,
+      "calls": 35,
+      "expandedPrefixes": 87,
+      "retained": [
+        3
+      ],
+      "outsideBand": 6,
+      "scoredCapDrops": 0
+    },
+    {
+      "scene": "turn-blockage",
+      "gap": null,
+      "repeats": 3,
+      "feasible": 0,
+      "ticks": [],
+      "medianSeconds": 8.597004245966673,
+      "minSeconds": 8.31632712110877,
+      "maxSeconds": 8.751790501177311,
+      "calls": 63,
+      "expandedPrefixes": 99,
+      "retained": [
+        8
+      ],
+      "outsideBand": 0,
+      "scoredCapDrops": 0
+    },
+    {
+      "scene": "turn-blockage",
+      "gap": 0.25,
+      "repeats": 3,
+      "feasible": 0,
+      "ticks": [],
+      "medianSeconds": 7.377382583916187,
+      "minSeconds": 7.3615092523396015,
+      "maxSeconds": 7.622131373733282,
+      "calls": 57,
+      "expandedPrefixes": 42,
+      "retained": [
+        1
+      ],
+      "outsideBand": 0,
+      "scoredCapDrops": 0
+    },
+    {
+      "scene": "turn-blockage",
+      "gap": 0.5,
+      "repeats": 3,
+      "feasible": 0,
+      "ticks": [],
+      "medianSeconds": 7.352080292999744,
+      "minSeconds": 7.278185416013002,
+      "maxSeconds": 7.952749956399202,
+      "calls": 57,
+      "expandedPrefixes": 42,
+      "retained": [
+        1
+      ],
+      "outsideBand": 0,
+      "scoredCapDrops": 0
+    }
+  ],
+  "diagnosticComparisons": [
+    {
+      "name": "ceiling",
+      "h": 7,
+      "bestKnownTicks": 12,
+      "gaps": [
+        {
+          "label": "early_jump",
+          "gap": 0.21031133460602724,
+          "ticks": 12,
+          "prefixKey": "329e029c2e132ad70f68ad22b843fc4580f490018ff411121a689103cbd40b3d"
+        },
+        {
+          "label": "late_jump",
+          "gap": 0.0,
+          "ticks": 13,
+          "prefixKey": "f9063c4b860c27a2efca769d8e53ec2401e10c8f4936f95866de950393850c01"
+        }
+      ],
+      "greedyTicks": 13,
+      "bands": [
+        {
+          "epsilon": 0.05,
+          "retained": [
+            "late_jump"
+          ],
+          "keepsBestKnown": false
+        },
+        {
+          "epsilon": 0.25,
+          "retained": [
+            "early_jump",
+            "late_jump"
+          ],
+          "keepsBestKnown": true
+        },
+        {
+          "epsilon": 0.5,
+          "retained": [
+            "early_jump",
+            "late_jump"
+          ],
+          "keepsBestKnown": true
+        },
+        {
+          "epsilon": 1.0,
+          "retained": [
+            "early_jump",
+            "late_jump"
+          ],
+          "keepsBestKnown": true
+        }
+      ]
+    },
+    {
+      "name": "ceiling",
+      "h": 9,
+      "bestKnownTicks": 12,
+      "gaps": [
+        {
+          "label": "early_jump",
+          "gap": 0.29151380359264056,
+          "ticks": 12,
+          "prefixKey": "e740fbbad051f5e1ade0f15138277b75e58a24a1b5264dbe115e44ee98fda988"
+        },
+        {
+          "label": "late_jump",
+          "gap": 0.0,
+          "ticks": 13,
+          "prefixKey": "bcd8e2e08d30a55855ea455b7cebac29dd2b6e7efdcf6f5994f102bac58de3c5"
+        }
+      ],
+      "greedyTicks": 13,
+      "bands": [
+        {
+          "epsilon": 0.05,
+          "retained": [
+            "late_jump"
+          ],
+          "keepsBestKnown": false
+        },
+        {
+          "epsilon": 0.25,
+          "retained": [
+            "late_jump"
+          ],
+          "keepsBestKnown": false
+        },
+        {
+          "epsilon": 0.5,
+          "retained": [
+            "early_jump",
+            "late_jump"
+          ],
+          "keepsBestKnown": true
+        },
+        {
+          "epsilon": 1.0,
+          "retained": [
+            "early_jump",
+            "late_jump"
+          ],
+          "keepsBestKnown": true
+        }
+      ]
+    },
+    {
+      "name": "ceiling",
+      "h": 11,
+      "bestKnownTicks": 12,
+      "gaps": [
+        {
+          "label": "early_jump",
+          "gap": 0.3587575720363625,
+          "ticks": 12,
+          "prefixKey": "bef8086fe0e6878f6bd571de68ac3b00784853f59c112d9d1896349b4ce22bb6"
+        },
+        {
+          "label": "late_jump",
+          "gap": 0.0,
+          "ticks": 13,
+          "prefixKey": "b380c635dd6f489bc47346af7db9d22a0f640569175e67753bb0ef94b364f6ff"
+        }
+      ],
+      "greedyTicks": 13,
+      "bands": [
+        {
+          "epsilon": 0.05,
+          "retained": [
+            "late_jump"
+          ],
+          "keepsBestKnown": false
+        },
+        {
+          "epsilon": 0.25,
+          "retained": [
+            "late_jump"
+          ],
+          "keepsBestKnown": false
+        },
+        {
+          "epsilon": 0.5,
+          "retained": [
+            "early_jump",
+            "late_jump"
+          ],
+          "keepsBestKnown": true
+        },
+        {
+          "epsilon": 1.0,
+          "retained": [
+            "early_jump",
+            "late_jump"
+          ],
+          "keepsBestKnown": true
+        }
+      ]
+    },
+    {
+      "name": "grind-or-run",
+      "h": 3,
+      "bestKnownTicks": 11,
+      "gaps": [
+        {
+          "label": "chain_13",
+          "gap": 0.19740001067214097,
+          "ticks": 13,
+          "prefixKey": "4ddfaf7583ceda9caf68b3d34a52bd69bb4feab1be8666f7025af0c00ef82e29"
+        },
+        {
+          "label": "chain_11",
+          "gap": 0.0,
+          "ticks": 11,
+          "prefixKey": "01457d7ccfa5fefffc349d9add1f8356bec799b1afdf1765b68e77cdf00e840e"
+        }
+      ],
+      "greedyTicks": 11,
+      "bands": [
+        {
+          "epsilon": 0.05,
+          "retained": [
+            "chain_11"
+          ],
+          "keepsBestKnown": true
+        },
+        {
+          "epsilon": 0.25,
+          "retained": [
+            "chain_13",
+            "chain_11"
+          ],
+          "keepsBestKnown": true
+        },
+        {
+          "epsilon": 0.5,
+          "retained": [
+            "chain_13",
+            "chain_11"
+          ],
+          "keepsBestKnown": true
+        },
+        {
+          "epsilon": 1.0,
+          "retained": [
+            "chain_13",
+            "chain_11"
+          ],
+          "keepsBestKnown": true
+        }
+      ]
+    },
+    {
+      "name": "grind-or-run",
+      "h": 7,
+      "bestKnownTicks": 11,
+      "gaps": [
+        {
+          "label": "chain_13",
+          "gap": 0.45797704994008237,
+          "ticks": 13,
+          "prefixKey": "e18a75a19dd775e51bd5abb1e421c550e4ce1ba7474e7c38bda8f96bc46b01b6"
+        },
+        {
+          "label": "chain_11",
+          "gap": 0.0,
+          "ticks": 11,
+          "prefixKey": "7122294aa3b928a0c89ed5fda13bf1790697df476340ba06df0c4453f2987732"
+        }
+      ],
+      "greedyTicks": 11,
+      "bands": [
+        {
+          "epsilon": 0.05,
+          "retained": [
+            "chain_11"
+          ],
+          "keepsBestKnown": true
+        },
+        {
+          "epsilon": 0.25,
+          "retained": [
+            "chain_11"
+          ],
+          "keepsBestKnown": true
+        },
+        {
+          "epsilon": 0.5,
+          "retained": [
+            "chain_13",
+            "chain_11"
+          ],
+          "keepsBestKnown": true
+        },
+        {
+          "epsilon": 1.0,
+          "retained": [
+            "chain_13",
+            "chain_11"
+          ],
+          "keepsBestKnown": true
+        }
+      ]
+    },
+    {
+      "name": "grind-or-run",
+      "h": 10,
+      "bestKnownTicks": 11,
+      "gaps": [
+        {
+          "label": "chain_13",
+          "gap": 0.5740857506593953,
+          "ticks": 13,
+          "prefixKey": "56a276bbb3c02cfe25bfecf77cc0eae37d3adcc79825baca4bbb626733c2aca8"
+        },
+        {
+          "label": "chain_11",
+          "gap": 0.0,
+          "ticks": 11,
+          "prefixKey": "ef05aa6449d958560618023b89c2caa7b8208b5d1bcd898e60dbbbefe56e6f2d"
+        }
+      ],
+      "greedyTicks": 11,
+      "bands": [
+        {
+          "epsilon": 0.05,
+          "retained": [
+            "chain_11"
+          ],
+          "keepsBestKnown": true
+        },
+        {
+          "epsilon": 0.25,
+          "retained": [
+            "chain_11"
+          ],
+          "keepsBestKnown": true
+        },
+        {
+          "epsilon": 0.5,
+          "retained": [
+            "chain_11"
+          ],
+          "keepsBestKnown": true
+        },
+        {
+          "epsilon": 1.0,
+          "retained": [
+            "chain_13",
+            "chain_11"
+          ],
+          "keepsBestKnown": true
+        }
+      ]
+    },
+    {
+      "name": "step-or-jump",
+      "h": 4,
+      "bestKnownTicks": 13,
+      "gaps": [
+        {
+          "label": "normal_step",
+          "gap": 0.382581496137945,
+          "ticks": 13,
+          "prefixKey": "d9428b37b70b2798b25e8a231c17a5f58014e1839d61538782a685fcdf59b79b"
+        },
+        {
+          "label": "slab_boost",
+          "gap": 0.0,
+          "ticks": 14,
+          "prefixKey": "39b4c8636794fed2dcb9013ebc5edf6057a92af322b96f535488d4281a2464ea"
+        }
+      ],
+      "greedyTicks": 14,
+      "bands": [
+        {
+          "epsilon": 0.05,
+          "retained": [
+            "slab_boost"
+          ],
+          "keepsBestKnown": false
+        },
+        {
+          "epsilon": 0.25,
+          "retained": [
+            "slab_boost"
+          ],
+          "keepsBestKnown": false
+        },
+        {
+          "epsilon": 0.5,
+          "retained": [
+            "normal_step",
+            "slab_boost"
+          ],
+          "keepsBestKnown": true
+        },
+        {
+          "epsilon": 1.0,
+          "retained": [
+            "normal_step",
+            "slab_boost"
+          ],
+          "keepsBestKnown": true
+        }
+      ]
+    },
+    {
+      "name": "step-or-jump",
+      "h": 7,
+      "bestKnownTicks": 13,
+      "gaps": [
+        {
+          "label": "normal_step",
+          "gap": 0.5293373897736537,
+          "ticks": 13,
+          "prefixKey": "9d2e0e4e667d8d1278c5960cf6702ac9092bc771fd803bcec3796439b8d85c57"
+        },
+        {
+          "label": "slab_boost",
+          "gap": 0.0,
+          "ticks": 14,
+          "prefixKey": "ddb9898a7a26f20d07868b68c6e186cb4e818c9e9f1787c28fe6b2ebf723b867"
+        }
+      ],
+      "greedyTicks": 14,
+      "bands": [
+        {
+          "epsilon": 0.05,
+          "retained": [
+            "slab_boost"
+          ],
+          "keepsBestKnown": false
+        },
+        {
+          "epsilon": 0.25,
+          "retained": [
+            "slab_boost"
+          ],
+          "keepsBestKnown": false
+        },
+        {
+          "epsilon": 0.5,
+          "retained": [
+            "slab_boost"
+          ],
+          "keepsBestKnown": false
+        },
+        {
+          "epsilon": 1.0,
+          "retained": [
+            "normal_step",
+            "slab_boost"
+          ],
+          "keepsBestKnown": true
+        }
+      ]
+    },
+    {
+      "name": "step-or-jump",
+      "h": 10,
+      "bestKnownTicks": 13,
+      "gaps": [
+        {
+          "label": "normal_step",
+          "gap": 0.6399283848582478,
+          "ticks": 13,
+          "prefixKey": "575e4c24783792d1cdc6b4207af088537d2addfc49d1d782bc0f4e7a81ca4fa7"
+        },
+        {
+          "label": "slab_boost",
+          "gap": 0.0,
+          "ticks": 14,
+          "prefixKey": "2a7855e9919a307e28c7db882f4e5ca7050a7664ece49a4819f21c4a3db593e7"
+        }
+      ],
+      "greedyTicks": 14,
+      "bands": [
+        {
+          "epsilon": 0.05,
+          "retained": [
+            "slab_boost"
+          ],
+          "keepsBestKnown": false
+        },
+        {
+          "epsilon": 0.25,
+          "retained": [
+            "slab_boost"
+          ],
+          "keepsBestKnown": false
+        },
+        {
+          "epsilon": 0.5,
+          "retained": [
+            "slab_boost"
+          ],
+          "keepsBestKnown": false
+        },
+        {
+          "epsilon": 1.0,
+          "retained": [
+            "normal_step",
+            "slab_boost"
+          ],
+          "keepsBestKnown": true
+        }
+      ]
+    }
+  ],
+  "recordedForwardDominance": [
+    {
+      "scene": "ceiling",
+      "h": 11,
+      "commonClearTicks": [
+        8,
+        9,
+        10,
+        11
+      ],
+      "faster": "early_jump",
+      "slower": "late_jump",
+      "fasterTicks": 12,
+      "slowerTicks": 13,
+      "slowerAheadAndFasterAtEveryRecordedCommonTick": true,
+      "endpoints": [
+        {
+          "label": "early_jump",
+          "tick": 11,
+          "progress": 3.145539101335716,
+          "forwardVelocity": 0.23012793580267663,
+          "lateralVelocity": 0.0,
+          "y": 1.1212968405391892,
+          "vy": -0.4448259643949201,
+          "onGround": false
+        },
+        {
+          "label": "late_jump",
+          "tick": 11,
+          "progress": 3.5042966733720786,
+          "forwardVelocity": 0.2592821594117265,
+          "lateralVelocity": 0.0,
+          "y": 1.5858406727282714,
+          "vy": -0.30431682745754424,
+          "onGround": false
+        }
+      ]
+    },
+    {
+      "scene": "step-or-jump",
+      "h": 10,
+      "commonClearTicks": [
+        7,
+        8,
+        9,
+        10
+      ],
+      "faster": "normal_step",
+      "slower": "slab_boost",
+      "fasterTicks": 13,
+      "slowerTicks": 14,
+      "slowerAheadAndFasterAtEveryRecordedCommonTick": true,
+      "endpoints": [
+        {
+          "label": "normal_step",
+          "tick": 10,
+          "progress": 3.897603631336292,
+          "forwardVelocity": 0.27659943253514047,
+          "lateralVelocity": 0.0,
+          "y": 2.296735600668692,
+          "vy": -0.30153472366278034,
+          "onGround": false
+        },
+        {
+          "label": "slab_boost",
+          "tick": 10,
+          "progress": 4.53753201619454,
+          "forwardVelocity": 0.30703592927056395,
+          "lateralVelocity": 0.0,
+          "y": 2.52442408821368,
+          "vy": -0.22768848754498797,
+          "onGround": false
+        }
+      ]
+    }
+  ]
+}

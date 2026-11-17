@@ -1,0 +1,80 @@
+[
+  {
+    "first": 0,
+    "last": 15,
+    "cells": [
+      31
+    ]
+  },
+  {
+    "first": 16,
+    "last": 20,
+    "cells": [
+      26
+    ]
+  },
+  {
+    "first": 21,
+    "last": 21,
+    "cells": [
+      25,
+      26
+    ]
+  },
+  {
+    "first": 22,
+    "last": 25,
+    "cells": [
+      22
+    ]
+  },
+  {
+    "first": 26,
+    "last": 30,
+    "cells": [
+      21
+    ]
+  },
+  {
+    "first": 31,
+    "last": 38,
+    "cells": [
+      17
+    ]
+  },
+  {
+    "first": 39,
+    "last": 42,
+    "cells": [
+      16
+    ]
+  },
+  {
+    "first": 43,
+    "last": 51,
+    "cells": [
+      12
+    ]
+  },
+  {
+    "first": 52,
+    "last": 57,
+    "cells": [
+      8
+    ]
+  },
+  {
+    "first": 58,
+    "last": 63,
+    "cells": [
+      4
+    ]
+  },
+  {
+    "first": 64,
+    "last": 64,
+    "cells": [
+      3
+    ]
+  }
+]

@@ -1,0 +1,34 @@
+{
+  "source": "072a11116b485f2ca9f5c02e2a7cc6ae80b442a5",
+  "kind": "current generator on archived physical contexts; new cursors, not exact historical resumption",
+  "secondsPerItem": 3,
+  "items": [
+    {
+      "program": "P06",
+      "solidIndex": 1,
+      "resourceDistinctOptions": 338,
+      "distinctRowSets": 162,
+      "exhausted": true,
+      "visitedNodes": 7483,
+      "elapsedSeconds": 0.5774047076702118
+    },
+    {
+      "program": "P07",
+      "solidIndex": 1,
+      "resourceDistinctOptions": 504,
+      "distinctRowSets": 235,
+      "exhausted": true,
+      "visitedNodes": 11097,
+      "elapsedSeconds": 0.8352819606661797
+    },
+    {
+      "program": "P07",
+      "solidIndex": 2,
+      "resourceDistinctOptions": 56,
+      "distinctRowSets": 11,
+      "exhausted": true,
+      "visitedNodes": 9893,
+      "elapsedSeconds": 0.8113439977169037
+    }
+  ]
+}

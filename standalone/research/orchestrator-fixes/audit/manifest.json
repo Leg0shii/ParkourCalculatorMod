@@ -1,0 +1,66 @@
+{
+  "worker-calls.csv": {
+    "bytes": 38776,
+    "sha256": "8d2adf116a16f1a7be6d88688acaf63c661734c9cef13b6792914ef2f94ec3fb"
+  },
+  "candidate-ledger.json.gz": {
+    "bytes": 2253694,
+    "sha256": "5434517296b39c4b71526abf628d61c0bcc24da8d9bc42720ba836163728c493"
+  },
+  "counts.json": {
+    "bytes": 806,
+    "sha256": "50a3edf69e0281184fb7f2c1e7728d7693bc638b22c56c2f56aa17a8bcad0be8"
+  },
+  "tests.log": {
+    "bytes": 101,
+    "sha256": "21237b7b94be38e7481f6cf577a77772d11287e7c8830cf1fc2e6c9e723e7661"
+  },
+  "WORKER_CALLS.md": {
+    "bytes": 38361,
+    "sha256": "5bc31b86b328674e340c51351d83f837093d3327d7ecc5d2cfe7bfb9e36f33b7"
+  },
+  "CANDIDATE_AUDIT.md": {
+    "bytes": 98666,
+    "sha256": "96e89583398937e84c66b9fba3a8a0bf8b974df5332a183d7ed2e8b191170294"
+  },
+  "generator": {
+    "path": "standalone/autonomy/experiments/orchestrator-fixes/audit_candidates.py",
+    "sha256": "a88b5d914129f3b24306206d189e7378dfe017138fdbaa63437d9cfdb7108725"
+  },
+  "PRUNING_FOLLOWUP.md": {
+    "bytes": 13197,
+    "sha256": "852ffcf00150d6753be7074285cad415484cbbdc269d7aaf9c74beb7836f98a8"
+  },
+  "program-inclusion.json": {
+    "bytes": 503,
+    "sha256": "5b4da77e1625c0cce8bb1a59db3f5f7a68bfcd9c79162a07d7b29e6fc9bd5591"
+  },
+  "generation-detail.json": {
+    "bytes": 60639,
+    "sha256": "5a923795623a9541677d6c3bca7a9313ac0ecc70931e595d9b7e6b1fdb036fb5"
+  },
+  "audit_candidates.py": {
+    "path": "standalone/autonomy/experiments/orchestrator-fixes/audit_candidates.py",
+    "sha256": "c6d2c79ff0a8feee2ebfa4f57bac62573aa25f10ee4d5848b4cda4a2a2d27954"
+  },
+  "audit_generation.py": {
+    "path": "standalone/autonomy/experiments/orchestrator-fixes/audit_generation.py",
+    "sha256": "d9b63286f0232ceea07fef6cf35907b41b45a4db55db567e54f3d5d5657b27eb"
+  },
+  "p04-p05-provenance.json.gz": {
+    "bytes": 3894,
+    "sha256": "6cad107962ef1cb1cc6951aff000afe10ca86309a90bc6764d5eb47c9559ccb6"
+  },
+  "b4-prefix-relevance.json": {
+    "bytes": 18872,
+    "sha256": "08eb9895807da4ad29734619def1acc6b98f3dbaf3bfe2aa169db2cde8353f71"
+  },
+  "CANDIDATE_QUESTIONS.md": {
+    "bytes": 13650,
+    "sha256": "7e3a5a11c7eb0f1b7a55b1716f8907b0f112059cb014dc068e8918907029a4fa"
+  },
+  "question-evidence.json": {
+    "bytes": 1177,
+    "sha256": "cd519260a88cf04178f323abbf477122da9b46b6d8f8eb2b964bb5aa0e2b8544"
+  }
+}

@@ -1,0 +1,221 @@
+{
+  "guideSource": "fixtures/clock64-event-priority.json:spatialPoints",
+  "helper": "cell_routes.checkpoints.horizontal_segments",
+  "localHorizontalGuideSegments": [
+    {
+      "start": [
+        746.5,
+        5,
+        -1104.5
+      ],
+      "end": [
+        742.1,
+        5,
+        -1104.8
+      ],
+      "firstPoint": 0,
+      "lastPoint": 1,
+      "direction": [
+        -0.9976836926815407,
+        -0.06802388813736782
+      ]
+    },
+    {
+      "start": [
+        742.1,
+        7.2,
+        -1104.8
+      ],
+      "end": [
+        741.5,
+        7.2,
+        -1103.5
+      ],
+      "firstPoint": 2,
+      "lastPoint": 3,
+      "direction": [
+        -0.4190581774617721,
+        0.9079593845004401
+      ]
+    },
+    {
+      "start": [
+        741.5,
+        8.3,
+        -1103.5
+      ],
+      "end": [
+        738.5,
+        8.3,
+        -1100.5
+      ],
+      "firstPoint": 5,
+      "lastPoint": 6,
+      "direction": [
+        -0.7071067811865476,
+        0.7071067811865476
+      ]
+    },
+    {
+      "start": [
+        738.5,
+        9,
+        -1100.5
+      ],
+      "end": [
+        734.5,
+        9,
+        -1099.5
+      ],
+      "firstPoint": 8,
+      "lastPoint": 9,
+      "direction": [
+        -0.9701425001453319,
+        0.24253562503633297
+      ]
+    },
+    {
+      "start": [
+        734.5,
+        9,
+        -1099.5
+      ],
+      "end": [
+        730.5,
+        9,
+        -1095.7
+      ],
+      "firstPoint": 11,
+      "lastPoint": 12,
+      "direction": [
+        -0.7249994335944179,
+        0.6887494619146888
+      ]
+    },
+    {
+      "start": [
+        730.5,
+        6,
+        -1095.7
+      ],
+      "end": [
+        728.9,
+        6,
+        -1095.7
+      ],
+      "firstPoint": 13,
+      "lastPoint": 14,
+      "direction": [
+        -1.0,
+        0.0
+      ]
+    },
+    {
+      "start": [
+        728.9,
+        7.2,
+        -1095.7
+      ],
+      "end": [
+        728.9,
+        7.2,
+        -1088
+      ],
+      "firstPoint": 15,
+      "lastPoint": 17,
+      "direction": [
+        0.0,
+        1.0
+      ]
+    }
+  ],
+  "actualClockDirections": [
+    {
+      "tick": 10,
+      "direction": [
+        -0.8715755371245493,
+        0.49026123963255896
+      ],
+      "anchor": [
+        746.5,
+        5,
+        -1104.5
+      ],
+      "referenceEnd": [
+        730.5,
+        6,
+        -1095.5
+      ]
+    },
+    {
+      "tick": 28,
+      "direction": [
+        -0.8715755371245493,
+        0.49026123963255896
+      ],
+      "anchor": [
+        746.5,
+        5,
+        -1104.5
+      ],
+      "referenceEnd": [
+        730.5,
+        6,
+        -1095.5
+      ]
+    },
+    {
+      "tick": 44,
+      "direction": [
+        -0.8715755371245493,
+        0.49026123963255896
+      ],
+      "anchor": [
+        746.5,
+        5,
+        -1104.5
+      ],
+      "referenceEnd": [
+        730.5,
+        6,
+        -1095.5
+      ]
+    },
+    {
+      "tick": 55,
+      "direction": [
+        0.0,
+        1.0
+      ],
+      "anchor": [
+        746.5,
+        5,
+        -1104.5
+      ],
+      "referenceEnd": [
+        730.5,
+        6,
+        -1095.5
+      ]
+    },
+    {
+      "tick": 64,
+      "direction": [
+        0,
+        1
+      ],
+      "anchor": [
+        746.5,
+        5,
+        -1104.5
+      ],
+      "referenceEnd": [
+        728.9,
+        7.2,
+        -1088
+      ]
+    }
+  ],
+  "construction": "normalize horizontal waypoint displacement; zero-horizontal-length segments skipped; adjacent collinear directions merged",
+  "status": "extracted without numerical solving; actual pilot clock scoring uses coarse explicit overrides"
+}

@@ -1,0 +1,164 @@
+{
+  "interpretation": "Local time/progress exclusion loses the best tested complete continuation. This does not prove a global optimum or that other continuations of the retained histories cannot improve.",
+  "comparisonSource": "evidence/real11-clock64-event-priority.json.gz",
+  "continuationSource": "evidence/real11-terminal-variants.json.gz",
+  "candidates": [
+    {
+      "initialTakeoff": 0,
+      "candidateId": "e52273dc6e0b48379e8eeea36fbec573ddb7b4d727f672f5f01b969950cb4b86",
+      "retention": {
+        "reason": "markedly_worse",
+        "peer": "7146760ea770c92a3e2fee5017dd248c6f14faabeee67d7a488821a5c6950971"
+      },
+      "clock10": [
+        {
+          "status": "feasible",
+          "objective": 2.3926512670823836
+        }
+      ],
+      "spatialB2": [
+        {
+          "status": "feasible",
+          "ticks": 21,
+          "minimumProven": false
+        }
+      ],
+      "acceptedStages": [
+        {
+          "target": "b3",
+          "extraGroundInputs": 0,
+          "tick": 30
+        },
+        {
+          "target": "b4",
+          "extraGroundInputs": 0,
+          "tick": 40
+        },
+        {
+          "target": "b5",
+          "extraGroundInputs": 0,
+          "tick": 55
+        }
+      ],
+      "completeTick64Objective": -1093.2675533415547,
+      "completeReplay": {
+        "passed": true,
+        "scalarFeasible": true,
+        "supports": true,
+        "geometry": {
+          "feasible": true,
+          "ticks": 64
+        },
+        "exactHorizontalReplay": true,
+        "ticks": 64,
+        "threshold": 0.0,
+        "objective": -1093.2675533415547,
+        "objectiveHasY": false
+      }
+    },
+    {
+      "initialTakeoff": 8,
+      "candidateId": "7146760ea770c92a3e2fee5017dd248c6f14faabeee67d7a488821a5c6950971",
+      "retention": {
+        "reason": "retained"
+      },
+      "clock10": [
+        {
+          "status": "feasible",
+          "objective": 2.7210580043446644
+        }
+      ],
+      "spatialB2": [
+        {
+          "status": "feasible",
+          "ticks": 17,
+          "minimumProven": false
+        }
+      ],
+      "acceptedStages": [
+        {
+          "target": "b3",
+          "extraGroundInputs": 2,
+          "tick": 28
+        },
+        {
+          "target": "b4",
+          "extraGroundInputs": 2,
+          "tick": 40
+        },
+        {
+          "target": "b5",
+          "extraGroundInputs": 3,
+          "tick": 58
+        }
+      ],
+      "completeTick64Objective": -1094.5795836939562,
+      "completeReplay": {
+        "passed": true,
+        "scalarFeasible": true,
+        "supports": true,
+        "geometry": {
+          "feasible": true,
+          "ticks": 64
+        },
+        "exactHorizontalReplay": true,
+        "ticks": 64,
+        "threshold": 0.0,
+        "objective": -1094.5795836939562,
+        "objectiveHasY": false
+      }
+    },
+    {
+      "initialTakeoff": 9,
+      "candidateId": "cfea148bf3325d6be1e5a5287ff855983d9c344f04c3c84bc5e8574768100080",
+      "retention": {
+        "reason": "retained"
+      },
+      "clock10": [
+        {
+          "status": "feasible",
+          "objective": 2.7172775609748037
+        }
+      ],
+      "spatialB2": [
+        {
+          "status": "feasible",
+          "ticks": 18,
+          "minimumProven": false
+        }
+      ],
+      "acceptedStages": [
+        {
+          "target": "b3",
+          "extraGroundInputs": 0,
+          "tick": 27
+        },
+        {
+          "target": "b4",
+          "extraGroundInputs": 3,
+          "tick": 40
+        },
+        {
+          "target": "b5",
+          "extraGroundInputs": 1,
+          "tick": 56
+        }
+      ],
+      "completeTick64Objective": -1094.113303740301,
+      "completeReplay": {
+        "passed": true,
+        "scalarFeasible": true,
+        "supports": true,
+        "geometry": {
+          "feasible": true,
+          "ticks": 64
+        },
+        "exactHorizontalReplay": true,
+        "ticks": 64,
+        "threshold": 0.0,
+        "objective": -1094.113303740301,
+        "objectiveHasY": false
+      }
+    }
+  ]
+}

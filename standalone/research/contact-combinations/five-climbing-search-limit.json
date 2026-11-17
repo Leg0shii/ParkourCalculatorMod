@@ -1,0 +1,58 @@
+{
+  "fixture": "fixtures/five-climbing-ladders.json",
+  "fixtureSha256": "a79b1420750054fd403e090caa555e24521762884d76e48218a68b9b139afdef",
+  "status": "unknown",
+  "termination": "context_limit",
+  "elapsedSeconds": 131.17973616719246,
+  "budgetSeconds": 180,
+  "routeBudgetSeconds": 120,
+  "ladderSearch": {
+    "requireLadder": true,
+    "maxEntryInputs": 7,
+    "maxInputs": 128,
+    "entryDelay": 0,
+    "maxSkeletons": 4096,
+    "maxSchedules": 2000,
+    "maxMaskWork": 60000,
+    "maxRanked": 128,
+    "maxNumericalSchedules": 128,
+    "maxOrdinaryPaths": 1,
+    "maxSuffixPaths": 1,
+    "maxRouteContexts": 1,
+    "maxInteractions": 5,
+    "minClimbInputs": 2,
+    "maxContactVariants": 0,
+    "maxTransferPrograms": 8,
+    "maxTransferPrefixes": 128,
+    "maxTransferQueuedPrefixes": 512
+  },
+  "attempts": [
+    {
+      "prefix": [
+        "start"
+      ],
+      "target": "a",
+      "column": "(0, 0, 0)",
+      "transferWindows": [
+        [
+          3,
+          []
+        ]
+      ],
+      "numericalAttempts": 0,
+      "attemptsByInteractions": {},
+      "statuses": {},
+      "transferGeneration": [
+        {
+          "termination": "deadline",
+          "expandedPrefixes": 20,
+          "remainingPrefixes": 381,
+          "queueDrops": 0,
+          "generated": 12800
+        }
+      ]
+    }
+  ],
+  "minimumTicksProven": false,
+  "objectiveOptimalityProven": false
+}

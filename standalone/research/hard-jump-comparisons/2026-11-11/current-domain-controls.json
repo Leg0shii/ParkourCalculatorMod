@@ -1,0 +1,108 @@
+{
+  "sourceRevision": "5d54f02b590355f5548b7b089b27349c7f79c800",
+  "scope": "Existing scalar/generator/structure helpers only; no new NLP solve, scene replay or automatic duration certificate.",
+  "contextSHA256": "ff936368470423cbe9067fbf3508c85f973e8f24a7911c8c6693b3251a98833f",
+  "real11Spans": [
+    {
+      "source": "b1",
+      "target": "b2",
+      "ordinaryDuration": 9,
+      "possibleAscendingUndersides": [],
+      "launchStepOrCancelGeometry": []
+    },
+    {
+      "source": "b2",
+      "target": "b3",
+      "ordinaryDuration": 9,
+      "possibleAscendingUndersides": [],
+      "launchStepOrCancelGeometry": []
+    },
+    {
+      "source": "b3",
+      "target": "b4",
+      "ordinaryDuration": 10,
+      "possibleAscendingUndersides": [],
+      "launchStepOrCancelGeometry": [
+        {
+          "higher": "b4",
+          "horizontalGap": 2.399999976158142,
+          "oneInputMovementBound": 0.7211454499486403,
+          "excludedByDistance": true
+        }
+      ]
+    },
+    {
+      "source": "b4",
+      "target": "b5",
+      "ordinaryDuration": 15,
+      "possibleAscendingUndersides": [],
+      "launchStepOrCancelGeometry": []
+    },
+    {
+      "source": "b5",
+      "target": "b7",
+      "ordinaryDuration": 9,
+      "possibleAscendingUndersides": [],
+      "launchStepOrCancelGeometry": []
+    }
+  ],
+  "genericSteppingControlsOutsideHardDomain": [
+    {
+      "case": "corner_jump_cancel",
+      "inputs": 2,
+      "transfer": {
+        "version": 3,
+        "valid": false,
+        "reason": "stepping_during_hard_transfer",
+        "source": "start",
+        "target": "goal",
+        "spanStart": 0,
+        "preparationThrough": 0,
+        "preparationJumps": [],
+        "transferJumps": [
+          0
+        ],
+        "arrival": 2,
+        "transferSteppingInputs": [
+          0
+        ],
+        "assumption": "hard_transfer_without_stepping"
+      },
+      "fixture": "autonomy/fixtures/stepping/corner_jump_cancel.json",
+      "fixtureSHA256": "23666916feb65561891b7b079926b36707605322f4c4551df32d3e65fd120c1d",
+      "ordinaryDuration": 12
+    },
+    {
+      "case": "slab_boost",
+      "inputs": 2,
+      "transfer": {
+        "version": 3,
+        "valid": false,
+        "reason": "stepping_during_hard_transfer",
+        "source": "start",
+        "target": "goal",
+        "spanStart": 0,
+        "preparationThrough": 0,
+        "preparationJumps": [],
+        "transferJumps": [
+          0
+        ],
+        "arrival": 2,
+        "transferSteppingInputs": [
+          0
+        ],
+        "assumption": "hard_transfer_without_stepping"
+      },
+      "fixture": "autonomy/fixtures/stepping/slab_boost.json",
+      "fixtureSHA256": "85f480f939d088d539b79015f83d433b7af76071b7d278b4b927237606756ec3",
+      "ordinaryDuration": 10
+    }
+  ],
+  "localArrivalTradeoff": {
+    "initial8B2": 17,
+    "initial0B2": 21,
+    "initial8Finish": 67,
+    "initial0Finish": 64,
+    "evidence": "../anchor-transfer-preparation/README.md"
+  }
+}

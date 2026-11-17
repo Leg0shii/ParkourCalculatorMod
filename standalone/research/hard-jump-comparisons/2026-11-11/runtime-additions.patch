@@ -1,0 +1,298 @@
+diff --git a/standalone/autonomy/candidate_comparison.py b/standalone/autonomy/candidate_comparison.py
+new file mode 100644
+index 00000000..8f7b8654
+--- /dev/null
++++ b/standalone/autonomy/candidate_comparison.py
+@@ -0,0 +1,155 @@
++"""Shared intermediate movement ordering and recoverable comparison policy.
++
++This module owns count/peer/bound predicates. Callers own geometry, validated
++evidence, queues and recovery. Terminal objective ranking is separate.
++"""
++
++POLICY_VERSION = 1
++TOLERANCE = 1e-7
++
++
++def comparison_label(program, *, start=0, through=None, identity='', mode='ordinary',
++                     context=None, evidence=None):
++    p = program.get('profile', {})
++    n = p.get('airtime', 0)
++    end = n if through is None else through
++    if not 0 <= start <= end <= n:
++        raise ValueError('Comparison interval lies outside the program')
++    mode = 'turnaround' if mode is True else 'ordinary' if mode is False else mode
++    if mode not in ('ordinary', 'turnaround'):
++        raise ValueError('Comparison mode must be ordinary or turnaround')
++    ground, jump = p.get('grounded', []), p.get('jump', [])
++    schedule = None
++    if len(ground) >= end and len(jump) >= end:
++        schedule = ['J' if ground[t] and jump[t] else 'R' if ground[t] else 'A'
++                    for t in range(start, end)]
++    result = dict(id=identity, T=end, through=end, start=start, mode=mode,
++                  J=schedule.count('J') if schedule is not None else None,
++                  R=schedule.count('R') if schedule is not None else None,
++                  A=schedule.count('A') if schedule is not None else None,
++                  schedule=schedule)
++    result['tickCost'] = result['A'] if mode == 'turnaround' else result['R']
++    result.update(context or {})
++    if evidence:
++        result.update(evidence)
++    return result
++
++
++def priority_key(label, identity=None):
++    """One deterministic key; unavailable counts may order, never prune."""
++    return (label['T'], -(label.get('J') or 0), label.get('tickCost') or 0,
++            label.get('id', '') if identity is None else identity)
++
++
++def _count_protections(candidate, peer):
++    reasons = []
++    if candidate['J'] > peer['J']:
++        reasons.append('more_jump_inputs')
++    if candidate['tickCost'] < peer['tickCost']:
++        reasons.append('fewer_air_inputs' if candidate['mode'] == 'turnaround' else 'fewer_run_inputs')
++    return reasons
++
++
++def measurements(record):
++    times = {k:v['ticks'] for k,v in record.get('spatial_results', {}).items()
++             if v.get('status') == 'feasible' and v.get('ticks') is not None}
++    progress = {k:v['objective'] for k,v in record.get('clock_results', {}).items()
++                if v.get('status') == 'feasible' and v.get('objective') is not None}
++    return times, progress
++
++
++def _clock_protections(candidate, peer, margin):
++    reasons = []
++    for key in candidate.get('required_clocks', candidate.get('clock_results', {})):
++        c, b = candidate.get('clock_results', {}).get(key, {}), peer.get('clock_results', {}).get(key, {})
++        cs, bs = c.get('state'), b.get('state')
++        if (not cs or not bs or not cs.get('motion') or not bs.get('motion') or
++                any(s.get(k) is None for s in (cs,bs) for k in ('forwardVelocity','speed')) or
++                c.get('objective') is None or b.get('objective') is None):
++            reasons.append('missing_state_metadata')
++            continue
++        cm, bm = cs['motion'], bs['motion']
++        if cm['schedule'] != bm['schedule']:
++            reasons.append('incomparable_schedules')
++            labels = [dict(J=m['jumps'], tickCost=m['runs'], mode='ordinary') for m in (cm, bm)]
++            reasons += ['more_effective_jumps' if r == 'more_jump_inputs' else r
++                        for r in _count_protections(*labels)]
++            continue
++        if cm['phase'] != bm['phase'] or cs.get('scope') != bs.get('scope'):
++            reasons.append('incompatible_phase_or_scope')
++            continue
++        if c['objective'] >= b['objective']-margin-TOLERANCE:
++            reasons.append('position_close_or_ahead')
++        if cs['forwardVelocity'] > bs['forwardVelocity']+TOLERANCE:
++            reasons.append('higher_forward_velocity')
++        if cs['speed'] > bs['speed']+TOLERANCE:
++            reasons.append('higher_horizontal_speed')
++    return sorted(set(reasons))
++
++
++def _clock_decision(candidate, peer, context):
++    reasons = _clock_protections(candidate, peer, context.get('progressMargin', .25))
++    ct, cp = measurements(candidate)
++    pt, pp = measurements(peer)
++    complete = (bool(ct and cp) and ct.keys() <= pt.keys() and cp.keys() <= pp.keys() and
++                set(candidate.get('required_spatial', ct)) <= ct.keys() and
++                set(candidate.get('required_clocks', cp)) <= cp.keys())
++    worse = (complete and not reasons and
++             all(pt[k] <= v for k,v in ct.items()) and
++             all(pp[k] >= v-TOLERANCE for k,v in cp.items()) and
++             (any(v-pt[k] > context.get('timeMargin', 1) for k,v in ct.items()) or
++              any(pp[k]-v > context.get('progressMargin', .25)+TOLERANCE for k,v in cp.items())))
++    return dict(version=POLICY_VERSION, action='defer_preparation' if worse else 'keep',
++                candidateId=candidate.get('id'), peerId=peer.get('id'),
++                protectionReasons=reasons, peerLookupAllowed=True)
++
++
++def compare_candidates(candidate, peer=None, *, context=None, incumbent=None):
++    """Return a pure decision; every peer-based heuristic uses this entry point."""
++    context = context or {}
++    if context.get('purpose') == 'common_clock' and peer is not None:
++        return _clock_decision(candidate, peer, context)
++    result = dict(version=POLICY_VERSION, action='keep', candidateId=candidate.get('id'),
++                  peerId=peer.get('id') if peer else None, contextId=context.get('comparisonContextId'),
++                  priorityKey=list(priority_key(candidate)), protectionReasons=[],
++                  peerLookupAllowed=False, elapsedT=candidate['T'])
++    remaining = candidate.get('remainingFinishBound') or {}
++    optimistic = candidate['T']+remaining.get('ticks', remaining.get('remainingTicks', 0))
++    if incumbent is not None and not context.get('fixedTerminal'):
++        tick = incumbent.get('T', incumbent.get('plan', {}).get('ticks'))
++        if tick is not None:
++            result.update(optimisticFinish=optimistic, incumbentT=tick,
++                          boundProofIds=remaining.get('proofIds', []))
++            if optimistic > tick:
++                result.update(action='exclude_bound', reason='elapsed_inputs_exceed_incumbent_finish'
++                              if candidate['T'] > tick else 'optimistic_remaining_time_exceeds_incumbent')
++                return result
++    enabled = context.get('localDeferralEnabled', False)
++    if context.get('backend') == 'automatic_anchor' and not context.get('hardLatched'):
++        enabled = False
++    if not enabled:
++        return result
++    available = all(candidate.get(k) is not None for k in ('J','R','A','tickCost'))
++    available &= candidate.get('basis') != 'open_prefix'
++    result['peerLookupAllowed'] = available
++    if peer is None:
++        return result
++    compatible = available and all(peer.get(k) is not None for k in ('J','R','A','tickCost'))
++    compatible &= peer.get('validated', False)
++    compatible &= candidate.get('mode') == peer.get('mode')
++    compatible &= candidate.get('comparisonContext') == peer.get('comparisonContext')
++    for key in ('scope','milestone','landingPhase'):
++        compatible &= candidate.get(key) == peer.get(key)
++    if not compatible:
++        result.update(action='keep_incomparable', compatibilityReason='different_or_unavailable_comparison_context')
++        return result
++    reasons = _count_protections(candidate, peer)
++    result.update(candidateCounts={k:candidate[k] for k in ('T','J','R','A')},
++                  peerCounts={k:peer[k] for k in ('T','J','R','A')}, protectionReasons=reasons)
++    if reasons:
++        result['action'] = 'keep_protected'
++    elif candidate['T'] == peer['T']:
++        result['action'] = 'keep_equal_time'
++    elif peer['T'] < candidate['T']:
++        result['action'] = 'defer_preparation'
++    return result
+diff --git a/standalone/autonomy/cell_routes/preparation_deferrals.py b/standalone/autonomy/cell_routes/preparation_deferrals.py
+new file mode 100644
+index 00000000..6a2b74fe
+--- /dev/null
++++ b/standalone/autonomy/cell_routes/preparation_deferrals.py
+@@ -0,0 +1,28 @@
++"""Peer-index ownership and decision orchestration; no comparison arithmetic."""
++import json
++
++from ..candidate_comparison import compare_candidates, priority_key
++
++
++def remember_peer(peers, label):
++    key=json.dumps([label.get(k) for k in ('comparisonContext','mode','landingPhase','J','tickCost')])
++    old=peers.get(key)
++    chosen=label if old is None else min((old,label),key=priority_key)
++    # Actual physical programs/variants stay in the owning frame records.
++    peers[key]={k:v for k,v in chosen.items() if k!='schedule'}
++    return peers[key]!=old
++
++
++def assess(label, peers, context):
++    decision=compare_candidates(label,context=context)
++    if not decision['peerLookupAllowed']:
++        return decision
++    protected=None;checks=0
++    for peer in peers.values():
++        checks+=1
++        checked=compare_candidates(label,peer,context=context)
++        if checked['action']=='defer_preparation':
++            return dict(checked,peerChecks=checks)
++        if checked['action']=='keep_protected':
++            protected=checked
++    return dict(protected or decision,peerChecks=checks)
+diff --git a/standalone/autonomy/cell_routes/transfer_time_bounds.py b/standalone/autonomy/cell_routes/transfer_time_bounds.py
+new file mode 100644
+index 00000000..ea907650
+--- /dev/null
++++ b/standalone/autonomy/cell_routes/transfer_time_bounds.py
+@@ -0,0 +1,97 @@
++"""Conditional flight minima: hard transfers exclude stepping by declaration.
++
++Ordinary vertical clocks are useful only when shortening ceilings are absent.
++Unknown ceilings return zero; no extra numerical solve or witness seam is used.
++"""
++import math
++
++from standalone.ipopt.ladder import REST_CARRY
++from ..block_profiles import ordinary_jump_profile
++from ..interactions import query_interaction
++from ..movement_composition import empty_program, append_choice
++from ..open_movement import event_choice
++from ..obstacle_geometry import BODY_HEIGHT
++from ..solve_spec import digest
++
++
++POLICY_VERSION = 1
++ASSUMPTION = 'hard_transfer_without_stepping'
++
++
++def state_covers(guides, name, motion):
++    """Enclose post-landing position, including a pre-overlap input's motion."""
++    covers=guides['covers'].get(name,[])
++    if not covers:return []
++    pad=0.
++    if guides.get('coverPhase','post')!='post':
++        pad=motion.get('movementAfterSupportCheck',0.)
++        if not math.isfinite(pad) or pad<=0:return []
++    return [[b[0]-pad,b[1],b[2]-pad,b[3]+pad,b[4],b[5]+pad] for b in covers]
++
++
++def transfer_bound(scene, guides, source, target, motion, service, *, threshold=0., check=None):
++    by_id={b['id']:b for b in scene['blocks']}
++    a,b=by_id[source],by_id[target]
++    record=dict(version=POLICY_VERSION,source=source,target=target,sourceTop=a['top'],
++                sourceBox=scene['collisionScene']['solids'][a['solidIndex']],threshold=threshold,
++                assumption=ASSUMPTION,ticks=0,status='unknown',proofIds=[],ceilings=[])
++    profile=ordinary_jump_profile(a['top'],b['top'],threshold=threshold)
++    if profile is None:return dict(record,reason='no_ordinary_profile')
++    duration=profile['airtime'];record['ordinaryTicks']=duration
++    # All relevant first ceiling changes must happen before the ordinary arrival.
++    possible=[]
++    for i,box in enumerate(scene['collisionScene']['solids']):
++        if check:check()
++        plane=box[1]-BODY_HEIGHT
++        for t in range(duration-1):
++            if profile['position'][t]<=plane<profile['position'][t+1]:
++                possible.append((i,box,t));break
++    types=scene.get('movementSearch',{}).get('types',('normal','ceiling','stepping'))
++    if 'ceiling' not in types or not scene.get('ceilingHits',True):
++        possible=[];record['ceilingDomain']='disabled'
++    if not possible:
++        return dict(record,ticks=duration,status='bounded',reason='no_shortening_ceiling_height_window')
++    covers=state_covers(guides,source,motion)
++    speed=motion.get('storedSpeedNorm')
++    if not covers or speed is None or not math.isfinite(speed):
++        return dict(record,reason='unknown_launch_enclosure')
++    if not callable(getattr(service.compiler,'compile',None)):
++        return dict(record,reason='unknown_compiler')
++    for cover in covers:
++        if check:check()
++        initial=dict(scene['initial'],position=[(a['bounds'][0]+a['bounds'][1])/2,a['top'],
++                                               (a['bounds'][2]+a['bounds'][3])/2],
++                     velocity=[0.,REST_CARRY,0.])
++        family_scene=dict(scene,initial=initial,startBlock=source,goalBlock=target)
++        prefix=empty_program(initial,threshold=threshold);prefix['terminalSupport']=source
++        context=dict(scene=family_scene,program=prefix,maxInputs=duration,threshold=threshold)
++        choice=event_choice(context,'normal',initial,duration,jumping=True)
++        if choice is None:return dict(record,reason='unknown_scalar_approach')
++        program=append_choice(prefix,choice)
++        prepared=service.prepare(program,scene=family_scene)
++        if prepared is None:return dict(record,reason='unknown_scalar_approach')
++        intervals=[[cover[0],cover[2]],[cover[3],cover[5]],[-speed,-speed],[speed,speed]]
++        analysis=service.analyze_model(prepared['route'],prepared['plan'],prepared['vertical'],
++                                      open_terminal=True,initial_intervals=intervals)
++        for solid,box,t in possible:
++            if check:check()
++            proof=query_interaction(dict(box=box,role='approach_prerequisite',interior=False,
++                owner=solid,windows=[dict(tick=t,phase='Y')]),dict(envelopes=analysis['envelopes']))
++            record['ceilings'].append(dict(solid=solid,input=t,status=proof['status'],proof=proof['id']))
++            record['proofIds'].append(proof['id'])
++            if proof['status']!='absent':return dict(record,reason='shortening_ceiling_not_excluded')
++    record.update(ticks=duration,status='bounded',reason='shortening_ceilings_unreachable')
++    return record
++
++
++def transfer_bounds(scene, guides, motion, service, *, saved=None, threshold=0., check=None):
++    """Commit each completed pair separately, so a timeout retains earlier work."""
++    saved={} if saved is None else saved
++    for source,target in zip(guides['anchors'],guides['anchors'][1:]):
++        key=source+'→'+target
++        if key not in saved:
++            if check:check()
++            result=transfer_bound(scene,guides,source,target,motion,service,threshold=threshold,check=check)
++            result['id']='transfer-time:'+digest(result)
++            saved[key]=result
++    return saved

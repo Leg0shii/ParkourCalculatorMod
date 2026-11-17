@@ -1,0 +1,6 @@
+{'ticks': 12, 'mode': 'restart', 'status': 'unknown', 'calls': 12, 'resumed': [{'requested': False, 'compatible': False, 'exact': False, 'resumedBranches': 0}, {'requested': False, 'compatible': False, 'exact': False, 'resumedBranches': 0}, {'requested': False, 'compatible': False, 'exact': False, 'resumedBranches': 0}]}
+{'ticks': 12, 'mode': 'resume', 'status': 'feasible', 'calls': 7, 'resumed': [{'requested': False, 'compatible': False, 'exact': False, 'resumedBranches': 0}, {'requested': True, 'compatible': True, 'exact': True, 'resumedBranches': 7}]}
+{'ticks': 12, 'mode': 'single', 'status': 'feasible', 'calls': 6, 'resumed': [{'requested': False, 'compatible': False, 'exact': False, 'resumedBranches': 0}]}
+{'ticks': 16, 'mode': 'restart', 'status': 'feasible', 'calls': 4, 'resumed': [{'requested': False, 'compatible': False, 'exact': False, 'resumedBranches': 0}]}
+{'ticks': 16, 'mode': 'resume', 'status': 'feasible', 'calls': 4, 'resumed': [{'requested': False, 'compatible': False, 'exact': False, 'resumedBranches': 0}]}
+{'ticks': 16, 'mode': 'single', 'status': 'feasible', 'calls': 12, 'resumed': [{'requested': False, 'compatible': False, 'exact': False, 'resumedBranches': 0}]}

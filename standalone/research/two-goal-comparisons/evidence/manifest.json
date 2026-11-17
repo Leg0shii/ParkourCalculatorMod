@@ -1,0 +1,150 @@
+{
+  "codeSource": "1b0edc66e87dbde472482ce96c0032724645f4a7",
+  "branch": "research/ipopt-cell-routes",
+  "python": "3.12.2 (v3.12.2:6abddd9f6a, Feb  6 2024, 17:02:06) [Clang 13.0.0 (clang-1300.0.29.30)]",
+  "platform": "macOS-15.7.1-arm64-arm-64bit",
+  "packages": {
+    "casadi": "3.8.1",
+    "numpy": "2.5.4",
+    "scipy": "1.18.1"
+  },
+  "threads": {
+    "OPENBLAS_NUM_THREADS": 1,
+    "OMP_NUM_THREADS": 1
+  },
+  "model": "normal momentum, zero velocity thresholds, original full initial state, all facings variable; unchanged IPOPT and shared Java physics",
+  "measurements": {
+    "originalSearch": "1306f0e5",
+    "originalAudit": "689345e7",
+    "separatedSearchAndAudit": "3e31e732",
+    "competitiveFollowup": "448588b2",
+    "metadataCorrection": "current code recursively accounts for capped parent generation and spatial probes; it changes no per-history completeness outcomes in archived audits",
+    "referenceFailureAccounting": "1b0edc66; worker errors/cancellation remain unresolved, never a completed reference"
+  },
+  "tests": {
+    "focused": {
+      "total": 86,
+      "skipped": 0,
+      "source": "448588b2"
+    },
+    "autonomy": {
+      "total": 418,
+      "skipped": 87,
+      "source": "1b0edc66e87dbde472482ce96c0032724645f4a7",
+      "excluded": [
+        "test_ladder_composition.LadderRegionTests.test_repeated_ladder_ceiling_events_regenerate_the_complete_schedule"
+      ]
+    },
+    "finalContracts": {
+      "total": 24,
+      "skipped": 0,
+      "source": "1b0edc66e87dbde472482ce96c0032724645f4a7"
+    }
+  },
+  "sourceHashes": {
+    "standalone/autonomy/cell_routes/checkpoint_search.py": "154e2571c185a6ecec6a2a2f628d26d2ab9fd986d3c23af59293430a8d8f6336",
+    "standalone/autonomy/cell_routes/checkpoints.py": "fd93e64dcdd9dc3af9144eb99cc5feff5fd5648a6fb54256d329a78935606820",
+    "standalone/autonomy/cell_routes/comparison_goals.py": "889ec54ae9eacd7e958dd5ddce6f0e7ed574b653d8ecdfe6434692997d624730",
+    "standalone/autonomy/cell_routes/comparison_audit.py": "df7ee8b72f95845264400255c5d66766361f9e7dc5727421d23040c9e76de2a3",
+    "standalone/autonomy/cell_routes/time_progress.py": "054dfaabeab685e18e3e7834d2f88d61b43f442e66316555e511ce6859e14c0c",
+    "standalone/autonomy/cell_routes/two_goal_experiment.py": "8cb1efeb1f7315b923c3412ab8d6c805225c6df88ca248ce571fe0435de75f3b"
+  },
+  "fixtureHashes": {
+    "standalone/autonomy/experiments/decision-windows/fixtures/ceiling.json": "3da1f968efad9d436427c2c82ff47f75ce1038ee05a0782b6e0ca4b45bc5868e",
+    "standalone/autonomy/experiments/decision-windows/fixtures/grind-or-run.json": "0309cbd70d3fcf8daa9b9e5f66757b6e527b35d35188cd4897f292630937fa94",
+    "standalone/autonomy/experiments/decision-windows/fixtures/multi-support.json": "c04078e93f6763dd68622defd839790929f95b0c6b1a1b78c2c144ac3b39585a",
+    "standalone/autonomy/experiments/decision-windows/fixtures/open.json": "0e30868c719aa811b777cbc5e32b74395093f2c1c90e3f3a06ad4afee55e1141",
+    "standalone/autonomy/experiments/decision-windows/fixtures/step-or-jump.json": "474a2d7e464afc44476d87f626303c757c70dc42ad82401ad4aa8284f75676a9",
+    "standalone/autonomy/experiments/decision-windows/fixtures/turn-blockage.json": "1435bed597a0c422c0977f570552b70b87e2295ead63f5218fc1a9e7689995d0",
+    "standalone/autonomy/experiments/two-goal-comparisons/fixtures/separated-two-jumps-reverse.json": "937bc4a707a3ebd4ca374ece09b6d641ce4931f004270398731ae895002f89b5",
+    "standalone/autonomy/experiments/two-goal-comparisons/fixtures/separated-two-jumps.json": "8a8fc0a347c0cd8083fb400beb05c1239962f150063b5bf480f32e3c1285d99a"
+  },
+  "compilerConfig": {
+    "command": [
+      "/Library/Java/JavaVirtualMachines/jdk-21.jdk/Contents/Home/bin/java",
+      "-cp",
+      "/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/standalone/autonomy/build/classes:/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/core/build/classes/java/main:/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/core/build/resources/main:/Users/arvindmurty/.gradle/caches/modules-2/files-2.1/org.apache.commons/commons-math3/3.6.1/e4ba98f1d4b3c80ec46392f25e094a6a2e58fcbf/commons-math3-3.6.1.jar:/Users/arvindmurty/.gradle/caches/modules-2/files-2.1/com.google.code.gson/gson/2.8.0/c4ba5371a29ac9b2ad6129b1d39ea38750043eff/gson-2.8.0.jar:/Users/arvindmurty/.gradle/caches/modules-2/files-2.1/junit/junit/4.13.2/8ac9e16d933b6fb43bc7f576336b8f4d7eb5ba12/junit-4.13.2.jar:/Users/arvindmurty/.gradle/caches/modules-2/files-2.1/io.github.spair/imgui-java-binding/1.86.12/a13fa049c952f68753b7f7a3a38facea59f390be/imgui-java-binding-1.86.12.jar:/Users/arvindmurty/.gradle/caches/modules-2/files-2.1/org.hamcrest/hamcrest-core/1.3/42a25dc3219429f0e5d060061f71acb49bf010a0/hamcrest-core-1.3.jar:/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/forge-core/build/classes/java/main:/Users/arvindmurty/CS/ParkourCalculatorMod-ipopt-cell-routes/forge-core/build/resources/main",
+      "de.legoshi.parkourcalc.autonomy.CompileRunTicksPhysics"
+    ]
+  },
+  "compiledClassTrees": {
+    "standalone/autonomy/build/classes": {
+      "classes": 5,
+      "sha256": "47cd0d9c3bf71bbff71a41c8358ff08eb486f651240aece5fdc5600b953172ac"
+    },
+    "core/build/classes/java/main": {
+      "classes": 611,
+      "sha256": "3c1b55fe721563440b2655b46b05cfe828298c9bf07ad6d216748e6cc5161306"
+    },
+    "forge-core/build/classes/java/main": {
+      "classes": 18,
+      "sha256": "ee6d74ced5ec256486fb6809b9f0ff746e1d727fb121876b1522bc3dcc9a430b"
+    }
+  },
+  "artifacts": {
+    "summary.json": {
+      "bytes": 19026,
+      "sha256": "728f33f349fe8e3582743ed09f27209f608c6762f2030db0424d5d48577dd9d1"
+    },
+    "two-goal-audit.json.gz": {
+      "bytes": 4243430,
+      "sha256": "4cab27c4ad576711228beaf00203d7ddad64a731fa84d32de47e6b6f7a53747c"
+    },
+    "two-goal-audit.log": {
+      "bytes": 43874,
+      "sha256": "1221fa0750200e48f723f509da5e56f256da01ebf1528d461d6279ca3259fbe6"
+    },
+    "two-goal-autonomy-final.log": {
+      "bytes": 532,
+      "sha256": "1ecd724e24b6d72b4b075bc49b3638499c56bf3c285ee7d82b3bc06823daaf80"
+    },
+    "two-goal-competitive-audit.json.gz": {
+      "bytes": 33417,
+      "sha256": "5a7ce51bcdfd3ead4391199817200295ea8606b3d78fe4c2bd570abbad960819"
+    },
+    "two-goal-competitive-audit.log": {
+      "bytes": 2919,
+      "sha256": "317bdf0ebd20584c33cc52cb4fbe6f1f3d9d81da324da134a3cdfaca4f6611f1"
+    },
+    "two-goal-contract-final.log": {
+      "bytes": 98,
+      "sha256": "c9969c06c8b64ce41ecbf96d10272fdd7cbe65a6ab233a234a36b89ffbad4b32"
+    },
+    "two-goal-focused-final.log": {
+      "bytes": 99,
+      "sha256": "4553987e95d111257541441b62dc52d2494c97d342782878da2da7c3f8f08cb6"
+    },
+    "two-goal-search-concurrent-tests.json.gz": {
+      "bytes": 1318566,
+      "sha256": "c9d08a2a8febbe44740f0cc6f34fd140be411aeb81f8f147e4204c6a25450eb9"
+    },
+    "two-goal-search-concurrent-tests.log": {
+      "bytes": 1844,
+      "sha256": "ec3135f4329129294f93e0d4227fd35da3e168816b0e356ca0528ea799e97292"
+    },
+    "two-goal-search.json.gz": {
+      "bytes": 1318528,
+      "sha256": "a9cbc9b44b810d43345c878dde9b7483bbd9ab539def46949c0882a4e126b3e8"
+    },
+    "two-goal-search.log": {
+      "bytes": 1846,
+      "sha256": "1c5d99f1946cb2e4d57a9877c7ed42c8ca207867e95f802b3605537c4d8b8cea"
+    },
+    "two-goal-separated-audit.json.gz": {
+      "bytes": 347246,
+      "sha256": "62098119bfbb4634739b3f47986465c979590769e28d17a2bd1c4cb0d2d6cbbf"
+    },
+    "two-goal-separated-audit.log": {
+      "bytes": 20424,
+      "sha256": "65d6618ab0c6ccea2438793b23fd9ea597e0717d454a6afb0e3cb06baa1178b0"
+    },
+    "two-goal-separated-search.json.gz": {
+      "bytes": 1051068,
+      "sha256": "a2ef7e61ff0b7fde7683825963eaccf5dbc634da56b334de18d1a6969571cfae"
+    },
+    "two-goal-separated-search.log": {
+      "bytes": 645,
+      "sha256": "6e3a38501dea6203c67056f96f32ff4d4b99ce38756812505a5a7b486b42d65c"
+    }
+  }
+}

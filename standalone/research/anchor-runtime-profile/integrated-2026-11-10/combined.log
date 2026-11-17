@@ -1,0 +1,15 @@
+{"elapsedSeconds": 0.1701713316142559, "ticks": null, "expanded": 0, "sessions": 1}
+{"elapsedSeconds": 11.260362330824137, "ticks": null, "expanded": 20, "sessions": 2}
+{"elapsedSeconds": 22.912852458655834, "ticks": 67, "expanded": 21, "sessions": 3}
+{"elapsedSeconds": 32.93718645721674, "ticks": 67, "expanded": 40, "sessions": 16}
+{"elapsedSeconds": 42.94520766660571, "ticks": 67, "expanded": 40, "sessions": 80}
+{"elapsedSeconds": 52.96296937391162, "ticks": 67, "expanded": 40, "sessions": 146}
+{"elapsedSeconds": 62.9646454975009, "ticks": 67, "expanded": 40, "sessions": 212}
+{"elapsedSeconds": 72.99311504140496, "ticks": 67, "expanded": 40, "sessions": 277}
+{"elapsedSeconds": 83.02841570600867, "ticks": 67, "expanded": 40, "sessions": 343}
+{"elapsedSeconds": 93.03403070569038, "ticks": 67, "expanded": 40, "sessions": 408}
+{"elapsedSeconds": 103.03459491580725, "ticks": 67, "expanded": 40, "sessions": 473}
+{"elapsedSeconds": 113.04625920578837, "ticks": 67, "expanded": 40, "sessions": 535}
+{"elapsedSeconds": 123.0879214592278, "ticks": 67, "expanded": 40, "sessions": 599}
+{"elapsedSeconds": 133.0880076214671, "ticks": 67, "expanded": 40, "sessions": 662}
+{"ticks": 67, "objective": -1093.823129063534, "firstFullSolutionSeconds": 14.780152961611748, "searchSeconds": 134.28401803970337, "work": {"solverCalls": 17, "workerLaunches": 13, "feasibleSeedReturns": 4, "maxSolverCalls": 1024}, "expandedPrefixes": 40, "termination": "cancelled", "runDeferrals": 9, "runRestorations": 0, "validatedWitnesses": 12, "allReplaysPassed": true, "sourceUnchanged": true}

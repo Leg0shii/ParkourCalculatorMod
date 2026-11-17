@@ -1,0 +1,166 @@
+{
+  "request": {
+    "version": 1,
+    "sceneModel": "collision_boxes",
+    "geometryBounds": [
+      -10,
+      -10,
+      -10,
+      20,
+      20,
+      20
+    ],
+    "initial": {
+      "position": [
+        0.5,
+        1,
+        0.5
+      ],
+      "velocity": [
+        0,
+        -0.0784000015258789,
+        0
+      ],
+      "yaw": 0
+    },
+    "startBlock": "start",
+    "goalBlock": "goal",
+    "blocks": [
+      {
+        "id": "start",
+        "boxes": [
+          [
+            0,
+            0,
+            0,
+            1,
+            1,
+            1
+          ]
+        ]
+      },
+      {
+        "id": "wall",
+        "boxes": [
+          [
+            1.7,
+            0,
+            0.25,
+            2,
+            4,
+            0.75
+          ]
+        ]
+      },
+      {
+        "id": "goal",
+        "boxes": [
+          [
+            3,
+            0,
+            0,
+            4,
+            1,
+            1
+          ]
+        ]
+      }
+    ],
+    "maxJumps": 1,
+    "maxRunTicksPerJump": 0,
+    "maxTotalRunTicks": 0,
+    "maxContactBranches": 24,
+    "maxPassageCandidates": 128,
+    "maxWallHits": 0,
+    "maxContactCombinations": 0,
+    "movementSearch": {
+      "types": [
+        "normal"
+      ],
+      "maxInputs": 25,
+      "maxPrefixes": 512,
+      "maxQueuedPrefixes": 384,
+      "maxChoicesPerType": 16
+    }
+  },
+  "spatialPoints": [
+    [
+      0.5,
+      1,
+      0.5
+    ],
+    [
+      0.8,
+      1,
+      -0.3
+    ],
+    [
+      2.5,
+      1,
+      -0.3
+    ],
+    [
+      3.5,
+      1,
+      0.5
+    ]
+  ],
+  "settings": {
+    "seconds": 20,
+    "max_candidates": 20,
+    "beam_width": 8,
+    "unknown_slots": 1,
+    "max_solver_calls": 128,
+    "score_call_limit": 4,
+    "score_seconds": 2,
+    "candidate_seconds": 0.7,
+    "final_call_limit": 24,
+    "cluster_gap": 1,
+    "fair_parents": true
+  },
+  "opportunities": [
+    {
+      "id": "launch",
+      "inputs": [
+        0,
+        5
+      ],
+      "kinds": [
+        "jump"
+      ]
+    },
+    {
+      "id": "blockage",
+      "inputs": [
+        5,
+        8
+      ],
+      "kinds": [
+        "passage"
+      ],
+      "segment": 2
+    },
+    {
+      "id": "finish",
+      "inputs": [
+        10,
+        24
+      ],
+      "kinds": [
+        "landing"
+      ]
+    }
+  ],
+  "legacyCheckpoints": [
+    {
+      "tick": 6,
+      "segment": 1,
+      "region": [
+        0.8,
+        2.5,
+        -0.28,
+        -0.07
+      ]
+    }
+  ]
+}

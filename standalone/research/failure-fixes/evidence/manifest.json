@@ -1,0 +1,94 @@
+{
+  "source": "bc7659b8fabbebd1f9adb3856305cc9f30b0682a",
+  "physics": "normal momentum carry; threshold zero in cell-route experiments",
+  "python": "3.12.2",
+  "dependencies": {
+    "casadi": "3.8.1",
+    "numpy": "2.5.4"
+  },
+  "numericalThreads": {
+    "OPENBLAS_NUM_THREADS": 1,
+    "OMP_NUM_THREADS": 1
+  },
+  "limitations": [
+    "Single current run per condition; historical reference has its own recorded repeats.",
+    "One pre-existing ladder test excluded from wider autonomy suite; 83 environment skips.",
+    "Offline proposal-pool validation is separate from actual online window searches.",
+    "No global-optimality, completeness, Minecraft replay or score-improvement claim."
+  ],
+  "tests": {
+    "focused": {
+      "total": 59,
+      "skipped": 0
+    },
+    "ipoptNumerical": {
+      "total": 54,
+      "skipped": 0
+    },
+    "autonomy": {
+      "total": 384,
+      "skipped": 83,
+      "excluded": [
+        "test_ladder_composition.LadderRegionTests.test_repeated_ladder_ceiling_events_regenerate_the_complete_schedule"
+      ]
+    }
+  },
+  "artifacts": {
+    "fix-autonomy-final.log": {
+      "sha256": "ca8c625342a886204d614bb49bb0c6709af8a9371d42b97eef6d9bb7b2a90959",
+      "bytes": 498
+    },
+    "fix-focused-final.log": {
+      "sha256": "1b9e497df39b532b114d16961f4a1ef08122e46699aa850641ca0ebf0ef81862",
+      "bytes": 99
+    },
+    "fix-generation.json.gz": {
+      "sha256": "8d3d44b4726d8e5bd7cd5641f679d29b1ffb53d76082ddef59165d8893d08053",
+      "bytes": 62866
+    },
+    "fix-generation.log": {
+      "sha256": "17dde3be4cb205affd7d98fd033f04275022c5bb4250d027bffbabf14f20ca9d",
+      "bytes": 1635
+    },
+    "fix-ipopt-numerical.log": {
+      "sha256": "0091412bf3c4e178bc71c4bc4027013c37d728488cbf5be2149a144d2917e61f",
+      "bytes": 664
+    },
+    "fix-scalar.json.gz": {
+      "sha256": "47e651582e5610ac8f7e8b8e5fdf37b0b16a12bd508b4bf7605d47b87ca55d7a",
+      "bytes": 14483
+    },
+    "fix-scalar.log": {
+      "sha256": "a8b7b0ab153336c13fb7ff9a5bacac0d8cd48c1095141d6f0e3185a34d9916db",
+      "bytes": 3041
+    },
+    "fix-verify.json.gz": {
+      "sha256": "9f2735b78009ad419f7872089efc84319efac65e592230544fd7ae106e55f8f4",
+      "bytes": 123880
+    },
+    "fix-verify.log": {
+      "sha256": "86de648723f0326222fd4f38084369294abb97534677140f8ebba168e958517a",
+      "bytes": 377
+    },
+    "fix-warm.json.gz": {
+      "sha256": "9dc2c07e0e966b2d09687de273000d2c56c207eeef7237a832e742524eb6a2ed",
+      "bytes": 216851
+    },
+    "fix-warm.log": {
+      "sha256": "3b5ac708d070092669763b14111df688d79bc2a7c2e645dc7db3c16d4c8954d3",
+      "bytes": 6262
+    },
+    "fix-windows.json.gz": {
+      "sha256": "4f4e6b554d718b5cf5fccc12dd07204aae695ff5890e5c988a4dacf0079388a5",
+      "bytes": 316059
+    },
+    "fix-windows.log": {
+      "sha256": "ef74de4fb58295dde11fe29c4df6195bcc8c3f0e5b90057aa7352d0571cf7ba0",
+      "bytes": 2441
+    },
+    "summary.json": {
+      "sha256": "78e8fcc88bd60c2a9bd8b9019ea2e657a969f07c7437897d42599ee484f6b659",
+      "bytes": 8000
+    }
+  }
+}

@@ -1,0 +1,109 @@
+{
+  "route": {
+    "version": 1,
+    "sceneModel": "open_air_supports",
+    "initial": {
+      "position": [
+        0.5,
+        1,
+        0.5
+      ],
+      "velocity": [
+        0,
+        -0.0784000015258789,
+        0
+      ],
+      "yaw": -90
+    },
+    "blocks": [
+      {
+        "id": "0",
+        "bounds": [
+          0,
+          2,
+          0,
+          1
+        ],
+        "top": 1
+      },
+      {
+        "id": "1",
+        "bounds": [
+          3,
+          5,
+          0,
+          1
+        ],
+        "top": 1
+      },
+      {
+        "id": "2",
+        "bounds": [
+          6,
+          8,
+          0,
+          1
+        ],
+        "top": 1
+      },
+      {
+        "id": "3",
+        "bounds": [
+          9,
+          11,
+          0,
+          1
+        ],
+        "top": 1
+      },
+      {
+        "id": "4",
+        "bounds": [
+          12,
+          14,
+          0,
+          1
+        ],
+        "top": 1
+      },
+      {
+        "id": "5",
+        "bounds": [
+          15,
+          17,
+          0,
+          1
+        ],
+        "top": 1
+      }
+    ],
+    "runBounds": [
+      [
+        0,
+        1
+      ],
+      [
+        0,
+        1
+      ],
+      [
+        0,
+        1
+      ],
+      [
+        0,
+        1
+      ],
+      [
+        0,
+        1
+      ]
+    ],
+    "maxTotalRunTicks": 2,
+    "inputs": {
+      "force45": false
+    }
+  },
+  "ticks": 62,
+  "name": "five-jump-control"
+}

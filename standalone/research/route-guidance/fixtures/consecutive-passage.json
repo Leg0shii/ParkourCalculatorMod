@@ -1,0 +1,116 @@
+{
+  "route": {
+    "version": 1,
+    "sceneModel": "open_air_supports",
+    "initial": {
+      "position": [
+        0.5,
+        1,
+        -0.5
+      ],
+      "velocity": [
+        0.12,
+        -0.0784000015258789,
+        0
+      ],
+      "yaw": -90
+    },
+    "blocks": [
+      {
+        "id": "0",
+        "bounds": [
+          0,
+          1,
+          -1,
+          0
+        ],
+        "top": 1
+      },
+      {
+        "id": "1",
+        "bounds": [
+          3,
+          4,
+          0.2,
+          1.2
+        ],
+        "top": 1
+      }
+    ],
+    "runBounds": [
+      [
+        0,
+        0
+      ]
+    ],
+    "maxTotalRunTicks": 0,
+    "inputs": {
+      "force45": false
+    }
+  },
+  "ticks": 12,
+  "avoidances": [
+    {
+      "id": "corner",
+      "leg": 0,
+      "faces": [
+        {
+          "axis": "Z",
+          "direction": -1,
+          "plane": -0.30000001192092896
+        },
+        {
+          "axis": "X",
+          "direction": 1,
+          "plane": 2.400000011920929
+        }
+      ],
+      "choices": [
+        4,
+        5,
+        6,
+        7
+      ]
+    }
+  ],
+  "name": "consecutive-passage",
+  "collisionScene": {
+    "version": 1,
+    "profile": "minecraft-1.8.9",
+    "bounds": [
+      -20,
+      -10,
+      -20,
+      30,
+      12,
+      20
+    ],
+    "solids": [
+      [
+        0,
+        0,
+        -1,
+        1,
+        1,
+        0
+      ],
+      [
+        3,
+        0,
+        0.2,
+        4,
+        1,
+        1.2
+      ],
+      [
+        1.6,
+        0,
+        0,
+        2.1,
+        4,
+        1
+      ]
+    ],
+    "stepHeight": 0.6
+  }
+}
