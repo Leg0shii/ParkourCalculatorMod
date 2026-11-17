@@ -172,7 +172,7 @@ class BookkeepingProfileTests(unittest.TestCase):
         self.assertEqual(len(runtime.buckets), 3)
 
     def test_stop_report_links_unknown_requests_to_live_routes(self):
-        from tools.profiling.run import request_owners, stop_report
+        from tools.profiling.trace import request_owners, stop_report
         def record(name, status, node, attempts, unresolved=()):
             return dict(id=name, status=status, nodeFeasibility=dict(status=node),
                         program=dict(repairState=dict(attemptLog=[dict(problemHash=h) for h in attempts],
@@ -198,7 +198,7 @@ class BookkeepingProfileTests(unittest.TestCase):
 
     def test_route_trace_links_alternatives_solves_and_inherited_rows(self):
         import json
-        from tools.profiling.run import route_trace
+        from tools.profiling.trace import route_trace
         landing = dict(mode='X', t1=3, cmp='GE', rhs=1., name='normal:landing')
         avoid = dict(mode='Z', t1=2, cmp='LE', rhs=-2., name='avoidance')
         def record(name, key, rows, repair=None, witness=None):
@@ -212,12 +212,12 @@ class BookkeepingProfileTests(unittest.TestCase):
                           metrics=dict(excludedFaces=2), encounterLog=[dict(solidIndex=0, owner='b6', segment=[0, 2], possiblePhases=[[1, 'X']],
                               faces=[dict(axis='X', direction=-1), dict(axis='X', direction=1)], coveredPhases=[[3, [0]]],
                               excludedFaces=[[4, 1]], verticalClear=[], uncertain=[])],
-                          droppedOptions=[dict(solidIndex=0, reason='dominated', rows=[])],
+                          droppedOptions=[dict(solidIndex=0, segment=[0, 2], reason='dominated', rows=[avoid])],
                           screenExclusions=[dict(rowsHash='r', proof=dict(ruledOut=True, state=2, axis=1,
                               reason='interval_reach_contradiction'), item=0, optionRows=[avoid], passage=None)]))
-        parent = record('p', 'k0', [landing], repair, dict(problemHash='h1', plan=dict(walls=[
+        parent = record('p', 'k0', [landing], repair, dict(problemHash='h1', candidate=dict(objective=-2.), plan=dict(ticks=4, walls=[
             dict(avoid, t2=2), dict(mode='F', t1=0, cmp='GE', rhs=0.), dict(landing, name='checkpoint_probe:x')])))
-        sibling = record('s', 'k0', [landing], witness=dict(problemHash='h1'))
+        sibling = record('s', 'k0', [landing], witness=dict(problemHash='h1', candidate=dict(objective=-2.), plan=dict(ticks=4)))
         child = record('c', 'k1', [landing, dict(avoid, t2=2)])
         state = dict(dfs=dict(frames=[dict(id=0, goal=dict(block='b2'), parent=None, records=[parent, sibling]),
                                       dict(id=1, goal=dict(block='b3'), parent=dict(frame=0, candidate='p'), records=[child])]))
@@ -235,6 +235,15 @@ class BookkeepingProfileTests(unittest.TestCase):
         self.assertEqual(routes['s']['acceptedAlternative'], [[0, 2, 'Z', 'LE', -2.]])
         self.assertEqual((routes['c']['parent'], routes['c']['inheritedRows'], routes['c']['seededFacings']),
                          ('p', [dict(avoid, t2=2)], True))
+        from tools.profiling.trace import render, stop_report
+        requests = [dict(index=1, fingerprint='h1', status='feasible', workerStatus='Solve_Succeeded')]
+        report = dict(result=dict(best=None, termination='exhausted', elapsedSeconds=1., work=dict(solverCalls=1, workerLaunches=1),
+                                  expandedPrefixes=2, searchState=state))
+        markdown = render(report, requests, list(routes.values()), stop_report(state, requests))
+        self.assertIn('- Frame 0 → b2: 2 routes (2 feasible)\n  - Frame 1 → b3: 1 route (1 feasible), from route `p`', markdown)
+        self.assertIn('| 1 | b6 t0-2 | Z ≤ -2.000 at t2 | interval reachability | empty Z interval at state 2 |', markdown)
+        self.assertIn('| 1 | Z ≤ -2.000 at t2 | feasible | passed | request 1 feasible, IPOPT Solve_Succeeded |', markdown)
+        self.assertIn('| b6 | 0-2 | 1X | 1 | X+ at 1X | none | none |', markdown)
 
 
 class EnumerationProfileTests(unittest.TestCase):

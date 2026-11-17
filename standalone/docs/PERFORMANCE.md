@@ -17,16 +17,9 @@ output directory and single-threaded BLAS:
 
 `--profile-mode enumeration` attributes constraint-enumeration work instead.
 Reports record source revision and hashes, fixture, interpreter, native
-descriptor, the request ledger and independent retained-witness replays.
-Each `requests.json` row lists as `owners` the routes whose repair log holds its
-problem hash (empty when no saved route kept that solve). The summary's `stop`
-lists suspended frames with their unresolved and pending alternatives,
-oracle-rejected routes and the owners of every `unknown` request. `routes.json`
-traces every partial route: its parent route, the rows and seed facings it
-inherited, the alternative accepted for it, and, on the route that owns its
-program's repair run, the obstacle encounters, screen rejections with their
-reason, every avoidance alternative with its solves and outcome, and the
-unresolved or pending alternatives.
+descriptor, the request ledger and independent retained-witness replays; the
+per-route report and the other outputs are described in
+[solve reports](RESULTS_AND_DEBUGGING.md#solve-reports).
 Self times subtract instrumented children; inclusive categories overlap; hook
 overhead is included. Keep profiler hooks in `tools/profiling/`, never in
 production code.

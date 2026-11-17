@@ -2,7 +2,7 @@
 
 For current physical-anchor search use the [execution reference](ANCHOR_SEARCH_EXECUTION_REFERENCE.md). It separates a consumed proposal, admitted program, constraint variant, evaluation, solver wrapper and worker launch; these counters must not be interchanged. A strict finish-bound exclusion is different from a recoverable peer deferral, a resource cap, an analytical absence proof, exact operational oracle rejection or suspended work.
 
-Current saved evidence: `DFS.transferTimeBounds`, `timeBoundExclusions`, `comparisonWork`, `comparisonDecisions` and the single `minimumRunExclusions` compatibility table; frame-local `tickPeers`; `interactionGate.metrics`; and the profiled arms' `requests.json` invocation fingerprints/stop/worker status/owning routes and `summary.json` `stop` report ([performance](PERFORMANCE.md#measuring)). Use [matched results](../research/hard-jump-comparisons/README.md) for source provenance. A common-case rejection before side fan-out creates no side programs/workers. A rejected unused tail cannot label its valid owned anchor prefix infeasible.
+Current saved evidence: `DFS.transferTimeBounds`, `timeBoundExclusions`, `comparisonWork`, `comparisonDecisions` and the single `minimumRunExclusions` compatibility table; frame-local `tickPeers`; `interactionGate.metrics`; and the profiled arms' `requests.json` invocation fingerprints/stop/worker status/owning routes and `summary.json` `stop` report ([solve reports](#solve-reports)). Use [matched results](../research/hard-jump-comparisons/README.md) for source provenance. A common-case rejection before side fan-out creates no side programs/workers. A rejected unused tail cannot label its valid owned anchor prefix infeasible.
 
 Start with [architecture](ARCHITECTURE.md) for call flow, [runbook](RUNBOOK.md) for execution, and [Real11 guide](REAL11_GUIDE.md) for the existing corpus. Do not launch a new long solve just to answer a question already logged.
 
@@ -54,6 +54,40 @@ PY
 ```
 
 Do not dump complete multi-MB reports to the conversation. Use tables/counters and link exact provenance. Resume snapshots repeat history; count identity deltas, not list lengths summed across files. Logs do not always align one-to-one: the saved Real11 corpus has two missing post-validation records with ambiguous possible branch placements. Preserve that ambiguity.
+
+## Solve reports
+
+A profiled run (commands in the [runbook](RUNBOOK.md#run-a-solve-and-report-it))
+writes these files to its output directory:
+
+| File | Contents |
+| --- | --- |
+| `report.md` | The readable report: outcome, why the search stopped, the route tree, and one section per partial route. |
+| `routes.json` | The same per-route trace as data. |
+| `summary.json` | Best route, timings, work counters, replay verdicts and the `stop` report. |
+| `requests.json` | Every solver request with its fingerprint, status, IPOPT status and `owners`. |
+| `report.json.gz` | The full saved search state; read it with `read_report` (paired `.store.sqlite3`). |
+| `provenance.json`, `profile.json`, `bookkeeping.json` | Source revision and hashes, fixture, interpreter; timing buckets. |
+
+Each partial route in `report.md` and `routes.json` has:
+
+- its parent route, the constraint rows inherited from the parent's solved route
+  (what `retain_prefix` copies) and whether its starting facings were seeded from it;
+- the avoidance alternative accepted for it. Routes from one movement program share
+  a single repair run, kept on the first route of that program;
+- on that route: every prepared obstacle encounter (possible phases, already-clear
+  phases, the faces ruled out at each phase, vertical-clear and uncertain phases);
+  every option rejected before solving, with its obstacle, rows, the check
+  (interval, travel-distance, single-row or linear-relaxation reachability) and
+  where it failed; duplicate and dominated options; every alternative sent to the
+  solver with its solves (request number, status, IPOPT status) and scene
+  validation; and the unresolved or pending alternatives.
+
+A request's `owners` are the routes whose repair log holds its problem hash; an
+empty list means no saved route kept that solve. The `stop` report lists suspended
+frames with their unresolved and pending alternatives, the routes closed as
+oracle-rejected, and the owners of every `unknown` request. The trace is a pure
+function of the saved search state, so regenerating it never changes a run.
 
 ## Failure investigation workflow
 

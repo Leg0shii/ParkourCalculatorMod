@@ -97,6 +97,30 @@ includes each face's normal, plane, exact rectangle cover and source parts. The
 preserve original member regions, internal-face clipping, holes and catalog
 identity. These physical covers are separate from the player-expanded bounds.
 
+## Run a solve and report it
+
+Set the environment above, then run the profiled solve into a new directory. It
+writes `report.md` (the readable per-route report) next to its JSON outputs:
+
+```sh
+"$PKC_IPOPT_PYTHON" -B -m tools.profiling.run \
+  --input cases/real11/physical-anchors.json --output runs/<new-name> \
+  --seconds 300 --profile-mode bookkeeping
+```
+
+Regenerate `report.md` and `routes.json` for a finished profiled run, or write
+them for a saved report from `python -m parkour_solver`:
+
+```sh
+"$PKC_IPOPT_PYTHON" -B -m tools.profiling.trace runs/<run-name>
+"$PKC_IPOPT_PYTHON" -B -m tools.profiling.trace /path/to/report.json.gz --output /path/to/dir
+```
+
+A report written from a bare solve report has no request numbers or IPOPT
+statuses, which only the profiler records. [Results and debugging](RESULTS_AND_DEBUGGING.md#solve-reports)
+explains every output. `runs/` is ignored by git; copy evidence worth keeping
+into `research/` with its provenance.
+
 ## Current physical-anchor solve, profile and resume
 
 [Execution reference](ANCHOR_SEARCH_EXECUTION_REFERENCE.md) describes current

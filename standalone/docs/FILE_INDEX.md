@@ -20,13 +20,13 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 
 | File | Bytes |
 | --- | ---: |
-| [AGENTS.md](../AGENTS.md) | 6184 |
+| [AGENTS.md](../AGENTS.md) | 6530 |
 
 ## CLAUDE.md
 
 | File | Bytes |
 | --- | ---: |
-| [CLAUDE.md](../CLAUDE.md) | 6184 |
+| [CLAUDE.md](../CLAUDE.md) | 6530 |
 
 ## README.md
 
@@ -62,23 +62,23 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/ANCHOR_SEARCH_EXECUTION_REFERENCE.md](ANCHOR_SEARCH_EXECUTION_REFERENCE.md) | 27834 |
 | [docs/ARCHITECTURE.md](ARCHITECTURE.md) | 16878 |
 | [docs/CHECKPOINT_STORAGE.md](CHECKPOINT_STORAGE.md) | 6832 |
-| [docs/CODE_MAP.md](CODE_MAP.md) | 24922 |
+| [docs/CODE_MAP.md](CODE_MAP.md) | 25061 |
 | [docs/CURRENT_STATE.md](CURRENT_STATE.md) | 10667 |
 | [docs/DECISIONS_AND_PLANS.md](DECISIONS_AND_PLANS.md) | 8449 |
 | [docs/DEFERRED_WORK.md](DEFERRED_WORK.md) | 18113 |
 | [docs/DEVELOPMENT.md](DEVELOPMENT.md) | 11359 |
 | [docs/DOC_INDEX.md](DOC_INDEX.md) | 25664 |
-| [docs/FILE_INDEX.md](FILE_INDEX.md) | 203797 |
+| [docs/FILE_INDEX.md](FILE_INDEX.md) | 203798 |
 | [docs/FUNCTION_INDEX.md](FUNCTION_INDEX.md) | 67695 |
 | [docs/IPOPT_CONSTRAINT_REDUCTION.md](IPOPT_CONSTRAINT_REDUCTION.md) | 5578 |
 | [docs/IPOPT_FEASIBILITY_MODE.md](IPOPT_FEASIBILITY_MODE.md) | 4781 |
 | [docs/LAYOUT.md](LAYOUT.md) | 6162 |
 | [docs/MOD_REFERENCES.md](MOD_REFERENCES.md) | 4996 |
-| [docs/PERFORMANCE.md](PERFORMANCE.md) | 8900 |
+| [docs/PERFORMANCE.md](PERFORMANCE.md) | 8370 |
 | [docs/REAL11_EXTENDED_GEOMETRY.md](REAL11_EXTENDED_GEOMETRY.md) | 12248 |
 | [docs/REAL11_GUIDE.md](REAL11_GUIDE.md) | 20362 |
-| [docs/RESULTS_AND_DEBUGGING.md](RESULTS_AND_DEBUGGING.md) | 11375 |
-| [docs/RUNBOOK.md](RUNBOOK.md) | 11318 |
+| [docs/RESULTS_AND_DEBUGGING.md](RESULTS_AND_DEBUGGING.md) | 13456 |
+| [docs/RUNBOOK.md](RUNBOOK.md) | 12284 |
 | [docs/TESTING.md](TESTING.md) | 15517 |
 | [docs/design/ANCHOR_POLICY_DECISIONS.md](design/ANCHOR_POLICY_DECISIONS.md) | 27544 |
 | [docs/design/AVOIDANCE_PASSAGES.md](design/AVOIDANCE_PASSAGES.md) | 9923 |
@@ -1473,7 +1473,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [tests/integration/test_movement_contacts.py](../tests/integration/test_movement_contacts.py) | 11400 |
 | [tests/integration/test_orchestrator_continuation.py](../tests/integration/test_orchestrator_continuation.py) | 19182 |
 | [tests/integration/test_package_layout.py](../tests/integration/test_package_layout.py) | 4032 |
-| [tests/integration/test_profiling.py](../tests/integration/test_profiling.py) | 18728 |
+| [tests/integration/test_profiling.py](../tests/integration/test_profiling.py) | 20149 |
 | [tests/integration/test_repair_resume.py](../tests/integration/test_repair_resume.py) | 14925 |
 | [tests/integration/test_shared_contacts.py](../tests/integration/test_shared_contacts.py) | 4275 |
 | [tests/research/__init__.py](../tests/research/__init__.py) | 0 |
@@ -1606,7 +1606,8 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [tools/profiling/enumeration.py](../tools/profiling/enumeration.py) | 5419 |
 | [tools/profiling/enumeration_calibrate.py](../tools/profiling/enumeration_calibrate.py) | 4476 |
 | [tools/profiling/enumeration_compare.py](../tools/profiling/enumeration_compare.py) | 3565 |
-| [tools/profiling/run.py](../tools/profiling/run.py) | 16785 |
+| [tools/profiling/run.py](../tools/profiling/run.py) | 11402 |
 | [tools/profiling/runtime.py](../tools/profiling/runtime.py) | 9235 |
+| [tools/profiling/trace.py](../tools/profiling/trace.py) | 21829 |
 | [tools/validate_layout.py](../tools/validate_layout.py) | 1433 |
 | [tools/witness_bound_audit.py](../tools/witness_bound_audit.py) | 2779 |

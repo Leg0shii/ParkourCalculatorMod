@@ -18,6 +18,7 @@ import threading
 import time
 
 from tools.profiling.runtime import RuntimeProfile, instrument
+from tools.profiling.trace import write as write_trace
 from parkour_solver.scene.normalize import prepare_scene
 from parkour_solver.bridge.compiler import JavaCompiler
 from parkour_solver.io.checkpoint_store import CheckpointStore, read_report
@@ -39,116 +40,6 @@ def witnesses(state):
                     if key not in seen:
                         seen.add(key)
                         yield best
-
-
-def frames(state):
-    seen = set()
-    for group in ('stack','suspended','refinements','goalQueue','frames'):
-        for frame in state['dfs'].get(group,[]):
-            if frame['id'] not in seen:
-                seen.add(frame['id'])
-                yield frame
-
-
-def route(frame, record):
-    return dict(frame=frame['id'],goal=frame['goal'].get('block'),record=record['id'],
-                recordStatus=record['status'],node=(record.get('nodeFeasibility') or {}).get('status'))
-
-
-def request_owners(state):
-    owners = {}
-    for frame in frames(state):
-        for record in frame['records']:
-            for attempt in record['program'].get('repairState',{}).get('attemptLog',[]):
-                rows = owners.setdefault(attempt['problemHash'],[])
-                owner = route(frame,record)
-                if owner not in rows:
-                    rows.append(owner)
-    return owners
-
-
-def stop_report(state, requests):
-    suspended = []
-    for frame in state['dfs'].get('suspended',[]):
-        repairs = [r['program'].get('repairState',{}) for r in frame['records']]
-        suspended.append(dict(frame=frame['id'],goal=frame['goal'].get('block'),records=len(frame['records']),
-            unresolvedBranches=sum(len(r.get('unresolved') or []) for r in repairs),
-            pendingBranches=sum(len(r.get('pending') or []) for r in repairs),
-            deferredNodes=len(frame['generation'].get('continuation',{}).get('deferredNodes') or [])))
-    rejected = [route(frame,record) for frame in frames(state) for record in frame['records']
-                if (record.get('nodeFeasibility') or {}).get('status') == 'oracle_rejected']
-    unknown = [dict(index=r['index'],workerStatus=r.get('workerStatus'),owners=r.get('owners',[]))
-               for r in requests if r.get('status') == 'unknown']
-    return dict(suspendedFrames=suspended,oracleRejectedRoutes=rejected,unknownRequests=unknown)
-
-
-def encounter_trace(entry):
-    from parkour_solver.constraints.encounters import PHASES
-    def face(i):
-        f = entry['faces'][i]
-        return f['axis']+('+' if f['direction'] > 0 else '-')
-    def phase(at):
-        return [at//3,PHASES[at%3]]
-    return dict(owner=entry['owner'],solidIndex=entry['solidIndex'],segment=entry['segment'],
-                possiblePhases=entry['possiblePhases'],
-                coveredPhases=[dict(phase=phase(at),certainFaces=[face(i) for i in certain])
-                               for at,certain in entry['coveredPhases']],
-                excludedFaces=[dict(phase=phase(at),face=face(i)) for at,i in entry['excludedFaces']],
-                verticalClear=[dict(phase=phase(at),face=face(i)) for at,i in entry['verticalClear']],
-                uncertain=[phase(at) for at in entry['uncertain']])
-
-
-def repair_trace(repair):
-    generation = repair.get('constraintGeneration') or {}
-    attempts = {a['problemHash']:dict(status=a['status'],reason=(a.get('certificate') or {}).get('reason'))
-                for a in repair.get('attemptLog',[])}
-    items = generation.get('items',[])
-    return dict(
-        encounters=[dict(owner=i['owner'],box=i['box'],begin=i['begin'],end=i['end'])
-                    for i in items if 'box' in i],
-        contactChecks=sum('contactCheck' in i for i in items),
-        generatorMetrics=generation.get('metrics',{}),
-        preparedEncounters=[encounter_trace(e) for e in generation.get('encounterLog',[])],
-        droppedOptions=generation.get('droppedOptions',[]),
-        screenRejections=[dict(rowsHash=e['rowsHash'],**e['proof'],
-                               **(dict(encounter=items[e['item']].get('owner'),segment=[items[e['item']].get('begin'),
-                                   items[e['item']].get('end')],optionRows=e['optionRows'],passage=e['passage'])
-                                  if 'item' in e else {}))
-                          for e in generation.get('screenExclusions',[])],
-        alternatives=[dict(rows=json.loads(c['branch'])[0],status=c['status'],validation=c.get('validationStatus'),
-                           solves=[dict(problemHash=h,**attempts.get(h,{})) for h in c.get('problemHashes',[])])
-                      for c in repair.get('completed',[])],
-        unresolved=[b['rows'] for b in repair.get('unresolved') or []],
-        pending=[b['rows'] for b in repair.get('pending') or []])
-
-
-def route_trace(state):
-    records = {record['id']:record for frame in frames(state) for record in frame['records']}
-    routes = []
-    for frame in sorted(frames(state),key=lambda f:f['id']):
-        owners, accepted = {}, {}
-        for record in frame['records']:
-            repair = record['program'].get('repairState',{})
-            if repair.get('completed') and record['candidateKey'] not in owners:
-                owners[record['candidateKey']] = record
-                for c in repair['completed']:
-                    for h in c.get('problemHashes',[]):
-                        accepted[h] = json.loads(c['branch'])[0]
-        parent = records.get((frame.get('parent') or {}).get('candidate'))
-        walls = (parent.get('witness') or {}).get('plan',{}).get('walls',[]) if parent else []
-        retained = [{k:v for k,v in w.items() if k in ('mode','t1','t2','op','cmp','rhs','name')} for w in walls
-                    if w['mode'] != 'F' and not w.get('name','').startswith('checkpoint_probe:')]
-        for record in frame['records']:
-            rows = record['program']['profile']['positionConstraints']
-            witness = record.get('witness')
-            owner = owners.get(record['candidateKey'])
-            routes.append(dict(route(frame,record),parent=parent['id'] if parent else None,
-                ticks=record.get('ticks'),repairOwner=owner['id'] if owner else None,
-                acceptedAlternative=accepted.get(witness['problemHash']) if witness else None,
-                inheritedRows=[r for r in retained if r in rows],
-                seededFacings='guideSeedYaw' in record['program'],
-                repair=repair_trace(record['program']['repairState']) if record is owner else None))
-    return routes
 
 
 class DurableProgress:
@@ -269,15 +160,14 @@ def main():
                 checkpoint.metadata['independentReplays'] = replays
                 profile.call('postrun.durable_finish',checkpoint.finish,result,validation)
         best = result['best'];dfs = result['searchState']['dfs']
-        owners = request_owners(result['searchState'])
-        for request in profile.requests:
-            request['owners'] = owners.get(request['fingerprint'],[])
+        report = dict(provenance=provenance,result=result,validation=validation,independentReplays=replays)
+        stop = write_trace(args.output,report,profile.requests)
         deferrals = dfs.get('minimumRunExclusions',[])
         summary = dict(ticks=best['plan']['ticks'] if best else None,
             objective=best['candidate']['objective'] if best else None,
             firstFullSolutionSeconds=dfs.get('firstFullSolutionSeconds'),
             searchSeconds=result['elapsedSeconds'],work=result['work'],expandedPrefixes=result['expandedPrefixes'],
-            termination=result['termination'],stop=stop_report(result['searchState'],profile.requests),
+            termination=result['termination'],stop=stop,
             runDeferrals=len(deferrals),
             runRestorations=sum(bool(v.get('restored')) for v in deferrals),
             deferredNodes=result.get('anchorSearch',{}).get('deferredNodes',0),
@@ -289,11 +179,9 @@ def main():
             sourceUnchanged=source==source_hashes(),sessions=profile.sessions,
             resume=result.get('resume'),profileMode=args.profile_mode,durable=args.durable)
         save(args.output/'summary.json',summary)
-        save(args.output/'routes.json',route_trace(result['searchState']))
         if not args.durable:
             with CheckpointStore(args.output/'report.json.gz') as store:
-                profile.call('postrun.shared_report_write',store.save,
-                             dict(provenance=provenance,result=result,validation=validation,independentReplays=replays))
+                profile.call('postrun.shared_report_write',store.save,report)
                 profile.call('postrun.shared_report_compact',store.compact)
         print(json.dumps({k:v for k,v in summary.items() if k!='sessions'}),flush=True)
         return int(not summary['sourceUnchanged'] or not summary['allReplaysPassed'])
