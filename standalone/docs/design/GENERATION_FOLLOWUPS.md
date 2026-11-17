@@ -1,6 +1,6 @@
 # Generation follow-ups (proposed)
 
-Work found while tracing Real11 solve reports. Not approved; see the
+Work found while tracing Real11 solve reports. Status per item is in the
 [deferred-work register](../DEFERRED_WORK.md) (P1, P2, P3).
 
 ## 1. Encounter prescreen
