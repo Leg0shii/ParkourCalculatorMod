@@ -41,6 +41,47 @@ def witnesses(state):
                         yield best
 
 
+def frames(state):
+    seen = set()
+    for group in ('stack','suspended','refinements','goalQueue','frames'):
+        for frame in state['dfs'].get(group,[]):
+            if frame['id'] not in seen:
+                seen.add(frame['id'])
+                yield frame
+
+
+def route(frame, record):
+    return dict(frame=frame['id'],goal=frame['goal'].get('block'),record=record['id'],
+                recordStatus=record['status'],node=(record.get('nodeFeasibility') or {}).get('status'))
+
+
+def request_owners(state):
+    owners = {}
+    for frame in frames(state):
+        for record in frame['records']:
+            for attempt in record['program'].get('repairState',{}).get('attemptLog',[]):
+                rows = owners.setdefault(attempt['problemHash'],[])
+                owner = route(frame,record)
+                if owner not in rows:
+                    rows.append(owner)
+    return owners
+
+
+def stop_report(state, requests):
+    suspended = []
+    for frame in state['dfs'].get('suspended',[]):
+        repairs = [r['program'].get('repairState',{}) for r in frame['records']]
+        suspended.append(dict(frame=frame['id'],goal=frame['goal'].get('block'),records=len(frame['records']),
+            unresolvedBranches=sum(len(r.get('unresolved') or []) for r in repairs),
+            pendingBranches=sum(len(r.get('pending') or []) for r in repairs),
+            deferredNodes=len(frame['generation'].get('continuation',{}).get('deferredNodes') or [])))
+    rejected = [route(frame,record) for frame in frames(state) for record in frame['records']
+                if (record.get('nodeFeasibility') or {}).get('status') == 'oracle_rejected']
+    unknown = [dict(index=r['index'],workerStatus=r.get('workerStatus'),owners=r.get('owners',[]))
+               for r in requests if r.get('status') == 'unknown']
+    return dict(suspendedFrames=suspended,oracleRejectedRoutes=rejected,unknownRequests=unknown)
+
+
 class DurableProgress:
     """Keep the production callback protocol while timing each boundary."""
     def __init__(self, checkpoint, profile):
@@ -159,12 +200,16 @@ def main():
                 checkpoint.metadata['independentReplays'] = replays
                 profile.call('postrun.durable_finish',checkpoint.finish,result,validation)
         best = result['best'];dfs = result['searchState']['dfs']
+        owners = request_owners(result['searchState'])
+        for request in profile.requests:
+            request['owners'] = owners.get(request['fingerprint'],[])
         deferrals = dfs.get('minimumRunExclusions',[])
         summary = dict(ticks=best['plan']['ticks'] if best else None,
             objective=best['candidate']['objective'] if best else None,
             firstFullSolutionSeconds=dfs.get('firstFullSolutionSeconds'),
             searchSeconds=result['elapsedSeconds'],work=result['work'],expandedPrefixes=result['expandedPrefixes'],
-            termination=result['termination'],runDeferrals=len(deferrals),
+            termination=result['termination'],stop=stop_report(result['searchState'],profile.requests),
+            runDeferrals=len(deferrals),
             runRestorations=sum(bool(v.get('restored')) for v in deferrals),
             deferredNodes=result.get('anchorSearch',{}).get('deferredNodes',0),
             comparisonWork=dfs.get('comparisonWork',{}),interactionMetrics=result.get('interactionGate',{}).get('metrics',{}),

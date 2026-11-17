@@ -63,7 +63,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/ARCHITECTURE.md](ARCHITECTURE.md) | 16878 |
 | [docs/CHECKPOINT_STORAGE.md](CHECKPOINT_STORAGE.md) | 6832 |
 | [docs/CODE_MAP.md](CODE_MAP.md) | 24922 |
-| [docs/CURRENT_STATE.md](CURRENT_STATE.md) | 10623 |
+| [docs/CURRENT_STATE.md](CURRENT_STATE.md) | 10667 |
 | [docs/DECISIONS_AND_PLANS.md](DECISIONS_AND_PLANS.md) | 8449 |
 | [docs/DEFERRED_WORK.md](DEFERRED_WORK.md) | 18113 |
 | [docs/DEVELOPMENT.md](DEVELOPMENT.md) | 11359 |
@@ -74,10 +74,10 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/IPOPT_FEASIBILITY_MODE.md](IPOPT_FEASIBILITY_MODE.md) | 4781 |
 | [docs/LAYOUT.md](LAYOUT.md) | 6162 |
 | [docs/MOD_REFERENCES.md](MOD_REFERENCES.md) | 4996 |
-| [docs/PERFORMANCE.md](PERFORMANCE.md) | 8164 |
+| [docs/PERFORMANCE.md](PERFORMANCE.md) | 8550 |
 | [docs/REAL11_EXTENDED_GEOMETRY.md](REAL11_EXTENDED_GEOMETRY.md) | 12248 |
 | [docs/REAL11_GUIDE.md](REAL11_GUIDE.md) | 20362 |
-| [docs/RESULTS_AND_DEBUGGING.md](RESULTS_AND_DEBUGGING.md) | 11286 |
+| [docs/RESULTS_AND_DEBUGGING.md](RESULTS_AND_DEBUGGING.md) | 11375 |
 | [docs/RUNBOOK.md](RUNBOOK.md) | 11318 |
 | [docs/TESTING.md](TESTING.md) | 15517 |
 | [docs/design/ANCHOR_POLICY_DECISIONS.md](design/ANCHOR_POLICY_DECISIONS.md) | 27544 |
@@ -814,13 +814,14 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [research/geometry-passages/2026-11-16/baseline-summary.json](../research/geometry-passages/2026-11-16/baseline-summary.json) | 3861 |
 | [research/geometry-passages/2026-11-16/cold-provenance.json](../research/geometry-passages/2026-11-16/cold-provenance.json) | 20894 |
 | [research/geometry-passages/2026-11-16/cold-requests.json](../research/geometry-passages/2026-11-16/cold-requests.json) | 13226 |
+| [research/geometry-passages/2026-11-16/cold-stop.json](../research/geometry-passages/2026-11-16/cold-stop.json) | 2314 |
 | [research/geometry-passages/2026-11-16/cold-summary.json](../research/geometry-passages/2026-11-16/cold-summary.json) | 3877 |
 | [research/geometry-passages/2026-11-16/fixed-bookkeeping.json](../research/geometry-passages/2026-11-16/fixed-bookkeeping.json) | 8770 |
 | [research/geometry-passages/2026-11-16/fixed-profile.json](../research/geometry-passages/2026-11-16/fixed-profile.json) | 775 |
 | [research/geometry-passages/2026-11-16/fixed-report.json](../research/geometry-passages/2026-11-16/fixed-report.json) | 131941 |
 | [research/geometry-passages/2026-11-16/native-report.json](../research/geometry-passages/2026-11-16/native-report.json) | 18723 |
 | [research/geometry-passages/2026-11-16/native-tests.log](../research/geometry-passages/2026-11-16/native-tests.log) | 122215 |
-| [research/geometry-passages/README.md](../research/geometry-passages/README.md) | 3891 |
+| [research/geometry-passages/README.md](../research/geometry-passages/README.md) | 4217 |
 | [research/geometry-passages/benchmark.py](../research/geometry-passages/benchmark.py) | 4026 |
 | [research/hard-jump-comparisons/2026-11-11/artifact-manifest.json](../research/hard-jump-comparisons/2026-11-11/artifact-manifest.json) | 22398 |
 | [research/hard-jump-comparisons/2026-11-11/baseline-combined/instrumentation/profile_run.py](../research/hard-jump-comparisons/2026-11-11/baseline-combined/instrumentation/profile_run.py) | 6996 |
@@ -1472,7 +1473,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [tests/integration/test_movement_contacts.py](../tests/integration/test_movement_contacts.py) | 11400 |
 | [tests/integration/test_orchestrator_continuation.py](../tests/integration/test_orchestrator_continuation.py) | 19182 |
 | [tests/integration/test_package_layout.py](../tests/integration/test_package_layout.py) | 4032 |
-| [tests/integration/test_profiling.py](../tests/integration/test_profiling.py) | 13545 |
+| [tests/integration/test_profiling.py](../tests/integration/test_profiling.py) | 15531 |
 | [tests/integration/test_repair_resume.py](../tests/integration/test_repair_resume.py) | 14925 |
 | [tests/integration/test_shared_contacts.py](../tests/integration/test_shared_contacts.py) | 4275 |
 | [tests/research/__init__.py](../tests/research/__init__.py) | 0 |
@@ -1605,7 +1606,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [tools/profiling/enumeration.py](../tools/profiling/enumeration.py) | 5419 |
 | [tools/profiling/enumeration_calibrate.py](../tools/profiling/enumeration_calibrate.py) | 4476 |
 | [tools/profiling/enumeration_compare.py](../tools/profiling/enumeration_compare.py) | 3565 |
-| [tools/profiling/run.py](../tools/profiling/run.py) | 11266 |
+| [tools/profiling/run.py](../tools/profiling/run.py) | 13416 |
 | [tools/profiling/runtime.py](../tools/profiling/runtime.py) | 9235 |
 | [tools/validate_layout.py](../tools/validate_layout.py) | 1433 |
 | [tools/witness_bound_audit.py](../tools/witness_bound_audit.py) | 2779 |

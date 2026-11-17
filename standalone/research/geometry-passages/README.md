@@ -49,11 +49,16 @@ Cold 300-second Real11 controls, `--profile-mode bookkeeping`:
 | [Geometry passages](2026-11-16/cold-summary.json) | 64 | -1093.2381026602418 | 14.1 s | 25.1 s | numerical_unknown | 53 / 49 | 37 | 47/47 |
 
 The new run ends well before its deadline. `numerical_unknown` means the DFS
-stack emptied while suspended nodes remained (`search/dfs.py`). Five of its 53
+stack emptied while a suspended frame remained (`search/dfs.py`). Five of its 53
 requests returned `unknown` with IPOPT status `Infeasible_Problem_Detected`
-([request ledger](2026-11-16/cold-requests.json)). A local IPOPT infeasibility is
-not a certificate, so those nodes stay suspended for explicit unknown retries.
-The run therefore does not establish exhaustive coverage or optimality.
+([request ledger](2026-11-16/cold-requests.json)); the
+[stop report](2026-11-16/cold-stop.json) links each to its route. Two closed
+B3 and B5 routes as oracle-rejected under the anchor policy, one was a rejected
+alternative on a feasible B5 route, and two were final optimizations of one
+avoidance alternative on a feasible B7 route. That alternative stayed unresolved,
+which suspends the B7 frame and gives the termination label. Explicit unknown
+retries are the only remaining work. The run therefore does not establish
+exhaustive coverage or optimality.
 
 ## Reproduction
 

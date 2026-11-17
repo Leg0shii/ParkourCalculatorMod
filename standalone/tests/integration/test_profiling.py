@@ -171,6 +171,31 @@ class BookkeepingProfileTests(unittest.TestCase):
         checkpoint.repair_progress.assert_called_once_with(state)
         self.assertEqual(len(runtime.buckets), 3)
 
+    def test_stop_report_links_unknown_requests_to_live_routes(self):
+        from tools.profiling.run import request_owners, stop_report
+        def record(name, status, node, attempts, unresolved=()):
+            return dict(id=name, status=status, nodeFeasibility=dict(status=node),
+                        program=dict(repairState=dict(attemptLog=[dict(problemHash=h) for h in attempts],
+                                                      unresolved=list(unresolved), pending=[])))
+        rejected = dict(id=1, goal=dict(block='b3'), generation={}, records=[record('a','unknown','oracle_rejected',['h1'])])
+        finish = dict(id=4, goal=dict(block='b7'), generation=dict(continuation=dict(deferredNodes=[])),
+                      records=[record('b','feasible','feasible',['h2','h3'],[dict(score=-1.)])])
+        stale = dict(finish, records=[record('b','feasible','feasible',['h2'])])
+        state = dict(dfs=dict(frames=[rejected, stale], stack=[], suspended=[finish]))
+        owners = request_owners(state)
+        requests = [dict(index=1, fingerprint='h1', status='unknown', workerStatus='Infeasible_Problem_Detected'),
+                    dict(index=2, fingerprint='h3', status='unknown', workerStatus='Infeasible_Problem_Detected'),
+                    dict(index=3, fingerprint='h4', status='feasible')]
+        for request in requests:
+            request['owners'] = owners.get(request['fingerprint'], [])
+        report = stop_report(state, requests)
+        self.assertEqual(report['suspendedFrames'], [dict(frame=4, goal='b7', records=1, unresolvedBranches=1,
+                                                          pendingBranches=0, deferredNodes=0)])
+        self.assertEqual([r['record'] for r in report['oracleRejectedRoutes']], ['a'])
+        self.assertEqual([(r['index'], [o['record'] for o in r['owners']]) for r in report['unknownRequests']],
+                         [(1, ['a']), (2, ['b'])])
+        self.assertEqual(requests[2]['owners'], [])
+
 
 class EnumerationProfileTests(unittest.TestCase):
     def test_repeated_contexts_share_report_rows_without_losing_counts(self):

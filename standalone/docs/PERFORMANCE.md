@@ -18,6 +18,10 @@ output directory and single-threaded BLAS:
 `--profile-mode enumeration` attributes constraint-enumeration work instead.
 Reports record source revision and hashes, fixture, interpreter, native
 descriptor, the request ledger and independent retained-witness replays.
+Each `requests.json` row lists as `owners` the routes whose repair log holds its
+problem hash (empty when no saved route kept that solve). The summary's `stop`
+lists suspended frames with their unresolved and pending alternatives,
+oracle-rejected routes and the owners of every `unknown` request.
 Self times subtract instrumented children; inclusive categories overlap; hook
 overhead is included. Keep profiler hooks in `tools/profiling/`, never in
 production code.
@@ -33,8 +37,9 @@ production code.
 | `e266785c` | geometry-driven avoidance passages | 64 | -1093.2381026602418 | 53 / 49 | 37 | 47/47 | [geometry passages](../research/geometry-passages/README.md) |
 
 The geometry-passages run finds T64 at 14.1 s and stops at 25.1 s with
-`numerical_unknown`: the DFS ran out of runnable work while five nodes stayed
-suspended on IPOPT `Infeasible_Problem_Detected` results. A local IPOPT
+`numerical_unknown`: the DFS ran out of runnable work while the B7 frame stayed
+suspended on one unresolved avoidance alternative of a feasible route, whose
+final optimizations IPOPT ended with `Infeasible_Problem_Detected`. A local IPOPT
 infeasibility is not a certificate, so the run claims no exhaustive coverage.
 
 ## Measured hotspots
