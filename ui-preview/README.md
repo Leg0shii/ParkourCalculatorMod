@@ -14,6 +14,8 @@ ui-preview/preview --view AngleSolver --shot build/ui-preview/solver.png
 
 The launcher builds the module with `-PcoreOnly` (only `core`, `forge-core`, `gpu` and `ui-preview` are configured, so no Fabric, Forge or Minecraft download is needed) and starts it with every argument passed through. `./gradlew -PcoreOnly :ui-preview:run --args="..."` works too.
 
+When Gradle cannot start (a cloud container that cannot reach the Gradle Plugin Portal fails on the Stonecutter plugin), `ui-preview/preview` falls back to plain `javac`: it downloads the ten jars it needs from Maven Central into `~/.cache/pkc-ui-preview/libs` (or the folder in `PKC_PREVIEW_LIBS`), compiles `core` and `ui-preview` into `ui-preview/build/nogradle` and runs from there. It recompiles only when a source file changed. `PKC_PREVIEW_NO_GRADLE=1` skips the Gradle attempt.
+
 On Linux without a `DISPLAY` the preview restarts itself under `xvfb-run` with Mesa's software renderer and runs headless, so the same command works in a cloud container. `--headless` forces that mode anywhere: no visible window, the script runs, then the program exits. Without a script a headless run saves `build/ui-preview/preview.png`.
 
 By default it loads a bundled TAS (HPK j315 as captured, with its solver result), opens the main window and keeps all data (settings, saves, undo history) in a fresh temp folder, so nothing on the machine is touched. `--settings` starts from a copy of a real `parkourcalculator.json`, `--tas` loads any TAS save, `--ini` starts from an ImGui layout such as the game's `parkourcalculator.ini`, so windows sit where they sit in game. Each of these is copied first; the original files are never written.
