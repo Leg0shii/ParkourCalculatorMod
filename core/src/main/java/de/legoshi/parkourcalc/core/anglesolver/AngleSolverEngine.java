@@ -1815,6 +1815,13 @@ public final class AngleSolverEngine {
         }
     }
 
+    public void moveStart(double x, double z) {
+        TickState s0 = boxes.getState(0);
+        double y = s0 != null && s0.position != null ? s0.position.y : 0.0;
+        Vec3dCore start = new Vec3dCore(x, y, z);
+        if (startMoved(start)) onStartMoved.accept(start);
+    }
+
     private boolean startMoved(Vec3dCore start) {
         TickState s0 = boxes.getState(0);
         if (s0 == null || s0.position == null) return true;

@@ -65,12 +65,25 @@ public class SenseFinderTest {
     @Test
     public void j703CarriedWindowSitsOnTheLowerEdgeAndIsBelowOnePixel() throws Exception {
         SenseFinder.Turn turn = loadJ703();
-        SenseFinder.Window w = SenseFinder.carriedWindow(turn);
+        SenseFinder.Turn pinned = turn.at(turn.startX(), turn.startZ());
+        assertFalse(pinned.freeStart());
+        SenseFinder.Window w = SenseFinder.carriedWindow(pinned);
         assertNotNull(w);
         assertFalse(w.solved);
         assertEquals(turn.jumpFacing(), w.lo, 1.0e-3);
         assertEquals(0.0655, w.width(), 2.0e-3);
         assertTrue(w.width() < TurnProfile.pixelDeg(0.5f));
+    }
+
+    @Test
+    public void j703StartBoxWidensTheCarriedWindow() throws Exception {
+        SenseFinder.Turn turn = loadJ703();
+        assertTrue("j703 solves from a start box", turn.freeStart());
+        SenseFinder.Window pinned = SenseFinder.carriedWindow(turn.at(turn.startX(), turn.startZ()));
+        SenseFinder.Window free = SenseFinder.carriedWindow(turn);
+        assertNotNull(free);
+        assertTrue(free.lo <= pinned.lo + 1.0e-9 && free.hi >= pinned.hi - 1.0e-9);
+        assertTrue(free.width() > 3.0 * pinned.width());
     }
 
     @Test
@@ -86,15 +99,23 @@ public class SenseFinderTest {
         double sec = (System.nanoTime() - t0) / 1e9;
         assertFalse("some sense must make the rounded turn land", found.isEmpty());
         boolean low = false;
+        boolean moved = false;
         for (SenseFinder.Candidate c : found) {
             assertEquals(turn.angles(), c.pixels.length);
             assertEquals(c.offset, SenseFinder.offsetOf(turn, c.yaws), 1.0e-12);
             assertTrue(c.sens >= 0f && c.sens <= 1f);
             assertTrue(c.sensLo <= c.sens && c.sens <= c.sensHi);
-            assertTrue(c.below[0] >= 0.0 && c.above[0] >= 0.0);
+            assertTrue(c.startX >= turn.freeBox.pxLo && c.startX <= turn.freeBox.pxHi);
+            assertTrue(c.startZ >= turn.freeBox.pzLo && c.startZ <= turn.freeBox.pzHi);
+            assertEquals(c.offset, SenseFinder.offsetOf(turn.at(c), c.yaws), 1.0e-12);
+            boolean atTasStart = c.startX == turn.startX() && c.startZ == turn.startZ();
+            double fromTas = SenseFinder.offsetOf(turn.at(turn.startX(), turn.startZ()), c.yaws);
+            assertEquals(atTasStart, !Double.isNaN(fromTas));
+            moved |= !atTasStart;
             low |= c.sens < 0.5f;
         }
         assertTrue("the range reaches below 100%", low);
+        assertTrue("some row only lands from another start in the box", moved);
         for (SenseFinder.Mode mode : SenseFinder.Mode.values()) {
             List<SenseFinder.Candidate> ranked = SenseFinder.ranked(found, mode);
             for (int i = 1; i < ranked.size(); i++) {
@@ -103,6 +124,16 @@ public class SenseFinderTest {
                 if (mode == SenseFinder.Mode.SENSE) assertTrue(a.sens >= b.sens);
                 if (mode == SenseFinder.Mode.MARGIN) assertTrue(a.totalTarget() >= b.totalTarget() - 2.0e-5);
                 if (mode == SenseFinder.Mode.FURTHEST) assertTrue(a.offset >= b.offset - 1.0e-6);
+            }
+        }
+        for (int k = 0; k < turn.angles(); k++) {
+            List<SenseFinder.Candidate> ranked = SenseFinder.ranked(found, SenseFinder.Mode.MARGIN, k);
+            for (int i = 1; i < ranked.size(); i++) {
+                SenseFinder.Candidate a = ranked.get(i - 1);
+                SenseFinder.Candidate b = ranked.get(i);
+                if (!b.hasMargin(k)) continue;
+                assertTrue(a.hasMargin(k));
+                assertTrue(a.target(k) >= b.target(k) - 2.0e-5);
             }
         }
         System.out.println(String.format(Locale.ROOT, "j703 carried sweep: %d rows in %.2f s", found.size(), sec));

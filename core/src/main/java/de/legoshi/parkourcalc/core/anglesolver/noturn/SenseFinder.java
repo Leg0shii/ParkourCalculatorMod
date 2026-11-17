@@ -13,6 +13,8 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Objective;
+import de.legoshi.parkourcalc.core.anglesolver.solver.PathTranslation;
+import de.legoshi.parkourcalc.core.anglesolver.solver.StartBox;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -86,10 +88,11 @@ public final class SenseFinder {
         public final double startYaw;
         public final int[] turnTicks;
         public final double[] deltas;
+        public final StartBox freeBox;
 
         Turn(ExactJumpModel model, JumpPhysicsInputs scenario, List<JumpConstraint> constraints,
              JumpConstraintCompiler.Compiled compiled, Objective objective, JumpConstraint goalWall, double[] yaws,
-             double startYaw, int[] turnTicks, double[] deltas) {
+             double startYaw, int[] turnTicks, double[] deltas, StartBox freeBox) {
             this.model = model;
             this.scenario = scenario;
             this.constraints = constraints;
@@ -100,6 +103,30 @@ public final class SenseFinder {
             this.startYaw = startYaw;
             this.turnTicks = turnTicks;
             this.deltas = deltas;
+            this.freeBox = freeBox;
+        }
+
+        public boolean freeStart() {
+            return freeBox != null;
+        }
+
+        public double startX() {
+            return scenario.startPos.x;
+        }
+
+        public double startZ() {
+            return scenario.startPos.z;
+        }
+
+        public Turn at(double x, double z) {
+            if (freeBox == null && x == startX() && z == startZ()) return this;
+            JumpPhysicsInputs sc = scenario.pinnedAt(x, z);
+            JumpConstraintCompiler.Compiled c = JumpConstraintCompiler.compile(new JumpSpec(sc, constraints, objective));
+            return new Turn(model, sc, constraints, c, objective, goalWall, yaws, startYaw, turnTicks, deltas, null);
+        }
+
+        public Turn at(Candidate c) {
+            return at(c.startX, c.startZ);
         }
 
         public int angles() {
@@ -179,9 +206,12 @@ public final class SenseFinder {
         public final boolean[] scoped;
         public final double[] below;
         public final double[] above;
+        public final double startX;
+        public final double startZ;
 
         Candidate(float sens, float sensLo, float sensHi, double pixelDeg, int[] pixels, double offset, double[] yaws,
-                  double startYaw, int[] ticks, boolean[] scoped, double jumpBelow, double jumpAbove) {
+                  double startYaw, int[] ticks, boolean[] scoped, double jumpBelow, double jumpAbove,
+                  double startX, double startZ) {
             this.sens = sens;
             this.sensLo = sensLo;
             this.sensHi = sensHi;
@@ -192,6 +222,8 @@ public final class SenseFinder {
             this.startYaw = startYaw;
             this.ticks = ticks;
             this.scoped = scoped;
+            this.startX = startX;
+            this.startZ = startZ;
             this.below = new double[pixels.length];
             this.above = new double[pixels.length];
             Arrays.fill(below, Double.NaN);
@@ -292,15 +324,18 @@ public final class SenseFinder {
 
     public static Turn turnOf(ExactJumpModel model, AngleSolverEngine.PathSnapshot snapshot) {
         JumpPhysicsInputs sc = snapshot.spec.asScenario();
-        return turnOf(model, snapshot.spec, snapshot.yaws, sc.startPos.x, sc.startPos.z, !snapshot.freeStartYaw);
+        StartBox box = sc.startBox != null && sc.startBox.startFree() ? sc.startBox : null;
+        double px = box == null ? sc.startPos.x : box.clampX(sc.startPos.x);
+        double pz = box == null ? sc.startPos.z : box.clampZ(sc.startPos.z);
+        return turnOf(model, snapshot.spec, snapshot.yaws, px, pz, !snapshot.freeStartYaw, box);
     }
 
     public static Turn turnOf(ExactJumpModel model, JumpSpec spec, double[] yawsAbs, double px, double pz) {
-        return turnOf(model, spec, yawsAbs, px, pz, true);
+        return turnOf(model, spec, yawsAbs, px, pz, true, null);
     }
 
     public static Turn turnOf(ExactJumpModel model, JumpSpec spec, double[] yawsAbs, double px, double pz,
-                              boolean turnsOnFirstTick) {
+                              boolean turnsOnFirstTick, StartBox freeBox) {
         JumpPhysicsInputs sc = spec.asScenario().pinnedAt(px, pz);
         List<JumpConstraint> kept = new ArrayList<>();
         for (JumpConstraint c : spec.constraints) if (c.mode != JumpConstraint.Mode.F) kept.add(c);
@@ -322,7 +357,8 @@ public final class SenseFinder {
             tt[i] = ticks.get(i);
             dd[i] = deltas.get(i);
         }
-        return new Turn(model, sc, kept, compiled, spec.objective, wall, yaws, startYaw, tt, dd);
+        StartBox box = freeBox != null && freeBox.startFree() ? freeBox : null;
+        return new Turn(model, sc, kept, compiled, spec.objective, wall, yaws, startYaw, tt, dd, box);
     }
 
     static double facingBefore(double[] yaws, double startYaw, int tick) {
@@ -345,20 +381,56 @@ public final class SenseFinder {
         return out;
     }
 
-    public static double offsetOf(Turn turn, double[] yawsAbs) {
+    public static final class Landing {
+        public final double offset;
+        public final double violation;
+        public final double x;
+        public final double z;
+
+        Landing(double offset, double violation, double x, double z) {
+            this.offset = offset;
+            this.violation = violation;
+            this.x = x;
+            this.z = z;
+        }
+
+        public boolean lands() {
+            return !Double.isNaN(offset);
+        }
+    }
+
+    public static Landing landing(Turn turn, double[] yawsAbs) {
         double[] gf = turn.scenario.toGameFacings(Angles.wrapAll(yawsAbs));
         ForwardPath fp = turn.model.forward(turn.scenario, gf);
         double viol = turn.compiled.maxViolation(gf, fp);
-        if (viol > 0.0) return Double.NaN;
+        double x0 = turn.startX();
+        double z0 = turn.startZ();
+        if (viol <= 0.0) return new Landing(offsetOn(turn, fp), 0.0, x0, z0);
+        if (turn.freeBox == null) return new Landing(Double.NaN, viol, x0, z0);
+        StartBox box = turn.freeBox;
+        PathTranslation.Trans tr = PathTranslation.bestTranslation(turn.compiled, gf, fp,
+                box.pxLo - x0, box.pxHi - x0, box.pzLo - z0, box.pzHi - z0);
+        if (tr.viol > 0.0) return new Landing(Double.NaN, Math.min(viol, tr.viol), x0, z0);
+        double x = x0 + tr.tx;
+        double z = z0 + tr.tz;
+        ForwardPath moved = turn.model.forward(turn.scenario.pinnedAt(x, z), gf);
+        double movedViol = turn.compiled.maxViolation(gf, moved);
+        if (movedViol > 0.0) return new Landing(Double.NaN, Math.min(viol, movedViol), x0, z0);
+        return new Landing(offsetOn(turn, moved), 0.0, x, z);
+    }
+
+    private static double offsetOn(Turn turn, ForwardPath fp) {
         return NoTurnRanking.offset(turn.goalWall, turn.objective, fp.getPos(turn.objective.tick, turn.objective.axis));
     }
 
+    public static double offsetOf(Turn turn, double[] yawsAbs) {
+        return landing(turn, yawsAbs).offset;
+    }
+
     private static double score(Turn turn, int[] pixels, double pixelDeg) {
-        double[] gf = turn.scenario.toGameFacings(quantizedYaws(turn, pixels, pixelDeg));
-        ForwardPath fp = turn.model.forward(turn.scenario, gf);
-        double viol = turn.compiled.maxViolation(gf, fp);
-        if (viol > 0.0) return -MISS_PENALTY - viol;
-        return NoTurnRanking.offset(turn.goalWall, turn.objective, fp.getPos(turn.objective.tick, turn.objective.axis));
+        Landing l = landing(turn, quantizedYaws(turn, pixels, pixelDeg));
+        if (!l.lands()) return -MISS_PENALTY - l.violation;
+        return l.offset;
     }
 
     private static boolean lands(double score) {
@@ -515,6 +587,14 @@ public final class SenseFinder {
         ForwardPath fp = turn.model.forward(sc, gf);
         JumpPhysicsInputs slice = sc.slice(from, fp.posX[from], sc.startPos.y, fp.posZ[from], fp.velX[from], 0.0,
                 fp.velZ[from], (float) gf[tick]);
+        if (turn.freeBox != null && mode == CertifiedBnb.Mode.FIRST_FEASIBLE) {
+            StartBox box = turn.freeBox;
+            double dx = fp.posX[from] - sc.startPos.x;
+            double dz = fp.posZ[from] - sc.startPos.z;
+            slice.startBox = new StartBox(fp.posX[from], fp.posZ[from], fp.velX[from], fp.velZ[from],
+                    box.pxLo + dx, box.pxHi + dx, box.pzLo + dz, box.pzHi + dz,
+                    fp.velX[from], fp.velX[from], fp.velZ[from], fp.velZ[from]);
+        }
         List<JumpConstraint> rest = new ArrayList<>();
         for (JumpConstraint c : turn.constraints) {
             if (c.t1 < from || (c.t2 != null && c.t2 < from)) continue;
@@ -831,17 +911,22 @@ public final class SenseFinder {
     private static Candidate candidate(Turn turn, float sens, float landLo, float landHi, int[] pixels,
                                        Window window, boolean[] scope) {
         double p = TurnProfile.pixelDeg(sens);
-        double offset = score(turn, pixels, p);
-        if (!lands(offset)) return null;
         double[] yaws = quantizedYaws(turn, pixels, p);
+        Landing l = landing(turn, yaws);
+        if (!l.lands()) return null;
         double facing = unwrapNear(yaws[turn.jumpTick()], window.center());
         double below = Math.max(0.0, facing - window.lo);
         double above = Math.max(0.0, window.hi - facing);
-        return new Candidate(sens, landLo, landHi, p, pixels.clone(), offset, yaws, turn.startYaw,
-                turn.turnTicks, scope, below, above);
+        if (turn.freeBox != null) {
+            below = Double.NaN;
+            above = Double.NaN;
+        }
+        return new Candidate(sens, landLo, landHi, p, pixels.clone(), l.offset, yaws, turn.startYaw,
+                turn.turnTicks, scope, below, above, l.x, l.z);
     }
 
-    static double carriedTarget(Turn turn, Candidate c) {
+    static double carriedTarget(Turn free, Candidate c) {
+        Turn turn = free.at(c);
         double sum = 0.0;
         for (int k = 0; k < c.pixels.length; k++) {
             if (!c.scoped[k]) continue;
@@ -857,7 +942,8 @@ public final class SenseFinder {
         return sum;
     }
 
-    public static void fillMargins(Turn turn, Candidate c, long probeNanos, AtomicBoolean cancel) {
+    public static void fillMargins(Turn free, Candidate c, long probeNanos, AtomicBoolean cancel) {
+        Turn turn = free.at(c);
         for (int k = 0; k < c.pixels.length; k++) {
             if (!c.scoped[k] || c.hasMargin(k)) continue;
             if (cancel != null && cancel.get()) return;
@@ -938,19 +1024,34 @@ public final class SenseFinder {
         };
     }
 
+    public static Comparator<Candidate> byTick(int k) {
+        return (a, b) -> {
+            boolean ha = k < a.pixels.length && a.hasMargin(k);
+            boolean hb = k < b.pixels.length && b.hasMargin(k);
+            if (ha != hb) return ha ? -1 : 1;
+            int c = ha ? compareMargin(a.target(k), b.target(k)) : 0;
+            if (c != 0) return c;
+            c = compareOffset(a, b);
+            if (c != 0) return c;
+            return Float.compare(b.sens, a.sens);
+        };
+    }
+
     private static int compareMargin(double ma, double mb) {
-        if (Math.abs(ma - mb) <= MARGIN_TIE) return 0;
-        return ma > mb ? -1 : 1;
+        return Double.compare(Math.floor(mb / MARGIN_TIE), Math.floor(ma / MARGIN_TIE));
     }
 
     private static int compareOffset(Candidate a, Candidate b) {
-        if (Math.abs(a.offset - b.offset) <= OFFSET_TIE) return 0;
-        return a.offset > b.offset ? -1 : 1;
+        return Double.compare(Math.floor(b.offset / OFFSET_TIE), Math.floor(a.offset / OFFSET_TIE));
     }
 
     public static List<Candidate> ranked(List<Candidate> list, Mode mode) {
+        return ranked(list, mode, -1);
+    }
+
+    public static List<Candidate> ranked(List<Candidate> list, Mode mode, int tick) {
         List<Candidate> copy = new ArrayList<>(list);
-        copy.sort(by(mode));
+        copy.sort(tick >= 0 ? byTick(tick) : by(mode));
         return Collections.unmodifiableList(copy);
     }
 }
