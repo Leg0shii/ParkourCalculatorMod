@@ -85,7 +85,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/design/BRANCH_SCHEDULING_INVESTIGATION.md](design/BRANCH_SCHEDULING_INVESTIGATION.md) | 34072 |
 | [docs/design/CONTACT_COMBINATIONS.md](design/CONTACT_COMBINATIONS.md) | 9112 |
 | [docs/design/FACE_MERGING_IMPLEMENTATION_PLAN.md](design/FACE_MERGING_IMPLEMENTATION_PLAN.md) | 22013 |
-| [docs/design/GENERATION_FOLLOWUPS.md](design/GENERATION_FOLLOWUPS.md) | 4865 |
+| [docs/design/GENERATION_FOLLOWUPS.md](design/GENERATION_FOLLOWUPS.md) | 5295 |
 | [docs/design/GENERATION_RELEVANCE_PLAN.md](design/GENERATION_RELEVANCE_PLAN.md) | 11545 |
 | [docs/design/GENERIC_COMPOSITION.md](design/GENERIC_COMPOSITION.md) | 7205 |
 | [docs/design/HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md](design/HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md) | 66368 |
