@@ -1,0 +1,55 @@
+{
+  "files": {
+    "summary.json": {
+      "bytes": 21880,
+      "sha256": "fd0e0510ef0dcf25f77c80e9640d9c25abb33d2e8e00b52ac6083ab5a1929cfe"
+    },
+    "history-D-options.json.gz": {
+      "bytes": 1979,
+      "sha256": "b79567afc2073ea2e6e10d54d2614dad70179b4d2e566b9662870c5c8776f6ed"
+    },
+    "history-C-options.json.gz": {
+      "bytes": 1385,
+      "sha256": "edae9064f80db9e7223be03c178995fdf3cb6b857ab46de872d0c3c853bda9b1"
+    },
+    "history-B-input.json.gz": {
+      "bytes": 28603,
+      "sha256": "78622cb49642a82c407d83e9126b27a5c6941d54bb0de2700bd09161614ec878"
+    },
+    "history-B-options.json.gz": {
+      "bytes": 7406,
+      "sha256": "3547c579f692b434dbc4f46648bc6a9c97aa685c934ffd49618128de17d68443"
+    },
+    "history-A-input.json.gz": {
+      "bytes": 403365,
+      "sha256": "e493283960c57c36be7456765b61fc57e1a81aba432dccd7dd0de5a62c40549f"
+    },
+    "history-D-input.json.gz": {
+      "bytes": 15525,
+      "sha256": "8fe3a30045c6a3569403bedf271a64377a0136f8465aa2b1fae5046d907d2805"
+    },
+    "history-C-input.json.gz": {
+      "bytes": 9783,
+      "sha256": "3740ba4ed1581340d0477d33c85b0816bfaa36acf3a35e866a53cc56f8a785d9"
+    },
+    "events.jsonl.gz": {
+      "bytes": 28429,
+      "sha256": "e7c9bb8d4ef0a06457bd0efd9f3522b45bd8c36a9e078b30d67625daadcdb406"
+    },
+    "history-A-options.json.gz": {
+      "bytes": 13806,
+      "sha256": "e2b6ce1c90c9abe95668f86a690151916819e8ca79f15b35a93ebdaeecd61ff4"
+    }
+  },
+  "rawRun": "/private/tmp/pkc-bookkeeping-performance/standalone/runs/b6-options-ledger-v3",
+  "sourceRevision": "732624f575b90c5bfb8345e6bdb8515350e3242a",
+  "driverSHA256": "37398e4f714699979b938af8ced7591bee8c3005fd05d8207e367d073169f9eb",
+  "verifiedOptions": 482,
+  "recordedOriginalDecisionsVerified": 316,
+  "generatedAndCheckedEvents": 964,
+  "inconclusiveOptions": [
+    "A228",
+    "A233"
+  ],
+  "angleSolverWorkersLaunched": 0
+}

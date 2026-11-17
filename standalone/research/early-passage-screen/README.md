@@ -32,6 +32,14 @@ nominal transition counts stay unchanged; inactive-phase aliases are separate.
 
 ## Validation
 
+The ongoing [B6 questions and answers](B6_QUESTIONS_AND_ANSWERS.md) records the
+user's follow-up questions and answers checked against the option evidence.
+
+The [complete B6 option ledger](B6_OPTIONS.md) contains482 freshly logged options
+across all four B6 catalogue contexts, with row-level rejection reasons. It
+distinguishes the316 recorded-run options from166 replay-only options, verifies
+all316 historical decisions, and marks two inconclusive LP checks explicitly.
+
 The captured B6 model rebuilt with `InteractionGate` matches all saved horizontal
 masks. The new production check rejects **237 of277 descriptions before B7
 expansion**:108 travel contradictions,90 interval contradictions and39 linear

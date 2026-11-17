@@ -1,0 +1,310 @@
+{
+  "digests": {
+    "parkour_solver.reachability.service:analyze_model:135": {
+      "calls": 4,
+      "samples": 4,
+      "bodySeconds": 0.00045274943113327026,
+      "payloadBytes": 28238,
+      "maxPayloadBytes": 7480,
+      "diagnosticSeconds": 0.0003722943365573883,
+      "sampledDistinct": 3,
+      "sampledRepeated": 1,
+      "topSampledValues": [
+        [
+          "648aa9cb23767825e2149ec69ba90f7f466207f887cfd0855bc5e2907e173f66",
+          2
+        ],
+        [
+          "adfd41f67d6ddae0822378f0e17315da684d670073fd4fa49f4c9c72dadce0ca",
+          1
+        ],
+        [
+          "407140245689e4539899ff1eef8356cc8fbe8b40b132e7dd469bc5aca16261b6",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.reachability.service:interaction_context_key:20": {
+      "calls": 8,
+      "samples": 8,
+      "bodySeconds": 0.0066649168729782104,
+      "payloadBytes": 424164,
+      "maxPayloadBytes": 78376,
+      "diagnosticSeconds": 0.006554462015628815,
+      "sampledDistinct": 8,
+      "sampledRepeated": 0,
+      "topSampledValues": [
+        [
+          "17f43cc55f6cb4616f29fc062c634d57c42cafdae86e2230c6886e90e77b5c81",
+          1
+        ],
+        [
+          "c8e8c366cbc494106d00e05595431b3c03de75d0e904395ecbeec7650fef7cea",
+          1
+        ],
+        [
+          "7fab11d9c4ff02e63e7cea0fad68c4c2cf52b61de5bd23e60c38e5cf390fc8af",
+          1
+        ],
+        [
+          "83bae790311d469f8198c2c9d30fa6bff70a02a85da9ba3081b552c33640537a",
+          1
+        ],
+        [
+          "e4d5ee987079c2ac80c3bf6d43987e06a48ae48b93264ed61da8fbafb161f429",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.reachability.service:build:145": {
+      "calls": 4,
+      "samples": 4,
+      "bodySeconds": 0.0006504952907562256,
+      "payloadBytes": 42504,
+      "maxPayloadBytes": 11378,
+      "diagnosticSeconds": 0.0006265006959438324,
+      "sampledDistinct": 3,
+      "sampledRepeated": 1,
+      "topSampledValues": [
+        [
+          "23d89f8ac019f838f82a291b6d6c9136372ecf3c1b48e8fb4c6405c206a99714",
+          2
+        ],
+        [
+          "388bfe488bc8ce72ac8ed326cfbff8a47c94e1c2e510e9684675beec752f3079",
+          1
+        ],
+        [
+          "66a4ee1dd4f8acb2878de9ff9f7b921d88c9fb9ce777464bcf1964e5cb459729",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.constraints.variants:__init__:53": {
+      "calls": 4,
+      "samples": 4,
+      "bodySeconds": 0.002575967460870743,
+      "payloadBytes": 227141,
+      "maxPayloadBytes": 61339,
+      "diagnosticSeconds": 0.002472415566444397,
+      "sampledDistinct": 4,
+      "sampledRepeated": 0,
+      "topSampledValues": [
+        [
+          "55226ff398f20bd54b0004c9ab4c99d1fda65daf2348829090ee3093b3fdf676",
+          1
+        ],
+        [
+          "c1f8c7761a685c157279f8e054efdd3dbc01972d85c9afd9fa84f25fd1248dfd",
+          1
+        ],
+        [
+          "ec17daf8a1a70591142c7a9566fc5d239eba532c2b10c7d928bab0fa8d1b1dbc",
+          1
+        ],
+        [
+          "013df9bc3d315cf3dfe329e401350f463909f3e249d9c3b92e192664cfd64eff",
+          1
+        ]
+      ]
+    },
+    "parkour_solver.constraints.variants:effective_key:127": {
+      "calls": 12294,
+      "samples": 512,
+      "bodySeconds": 0.0029387660324573517,
+      "payloadBytes": 126515,
+      "maxPayloadBytes": 405,
+      "diagnosticSeconds": 0.003047395497560501,
+      "sampledDistinct": 52,
+      "sampledRepeated": 460,
+      "topSampledValues": [
+        [
+          "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          102
+        ],
+        [
+          "618d850708fc9daa8b740547f5c9d28cee724ad315e07f7565c44e2455bc4346",
+          34
+        ],
+        [
+          "3ec3e0518c316fb2c4474a09dba5fa0fe9afedaee01632c556a67c0180e8047d",
+          33
+        ],
+        [
+          "8b7fbcb11727864f8ce5675f639d69aae0dcf5bc61d92283cba25d432cf7c51a",
+          30
+        ],
+        [
+          "0d8c5d67d4c9774f1c06d96d6c007172d51f6180e3495c4d85b26edaf045090f",
+          24
+        ]
+      ]
+    },
+    "parkour_solver.constraints.variants:_next_variant:282": {
+      "calls": 88,
+      "samples": 88,
+      "bodySeconds": 0.000268787145614624,
+      "payloadBytes": 8826,
+      "maxPayloadBytes": 137,
+      "diagnosticSeconds": 0.0003195814788341522,
+      "sampledDistinct": 63,
+      "sampledRepeated": 25,
+      "topSampledValues": [
+        [
+          "4ad273ba88067e85d310c507fb4ca543f4beba8952fc67e558a4801364245ec1",
+          2
+        ],
+        [
+          "afa0598ea3fbaf2457dbf9403bf4f9a6845e0ab9274f9911392bd3581fd81ea0",
+          2
+        ],
+        [
+          "f72bda61d388efc588c6813c0c0a489c715f6892b74cec92935aaa103dfdef35",
+          2
+        ],
+        [
+          "2e13b85676cc5df949e7867ceb51cc3f044be3e7bfa3352c2477cad0efc7c3ac",
+          2
+        ],
+        [
+          "e7ecf9adeedfd4a79daa74620578d7cf41f36bcdc43329ded4e399f646cd2331",
+          2
+        ]
+      ]
+    },
+    "parkour_solver.constraints.encounters:encounter_option:264": {
+      "calls": 11403,
+      "samples": 512,
+      "bodySeconds": 0.0011259019374847412,
+      "payloadBytes": 41833,
+      "maxPayloadBytes": 83,
+      "diagnosticSeconds": 0.001334749162197113,
+      "sampledDistinct": 137,
+      "sampledRepeated": 375,
+      "topSampledValues": [
+        [
+          "29a32c7197d6dd888ca0d6a30cc4c5435e37bf7b75d1b4fc2d6f54e28cdb1d14",
+          14
+        ],
+        [
+          "497241f4b2c025761ca62b5bc608b8f5ad80abe5b45d16f577f150d97dd46c58",
+          14
+        ],
+        [
+          "0b6f05d9f8572cc645d226aa9bc18aae3da1cd139a2f3dfe14ecde6f33dac9d6",
+          13
+        ],
+        [
+          "7c0b580935028d5fd8aa01eec6fa8f9a039f35545706c49ce7ba0fbb4bca6645",
+          11
+        ],
+        [
+          "44991295b8f92c8b0350d4a3795d73ba18348c1dfdd6f679474e6fc877fa5fe6",
+          11
+        ]
+      ]
+    },
+    "parkour_solver.constraints.variants:excluded:151": {
+      "calls": 103,
+      "samples": 103,
+      "bodySeconds": 0.0024537555873394012,
+      "payloadBytes": 118379,
+      "maxPayloadBytes": 1209,
+      "diagnosticSeconds": 0.002090621739625931,
+      "sampledDistinct": 60,
+      "sampledRepeated": 43,
+      "topSampledValues": [
+        [
+          "de090b6c6b7530849e2af22b8f679d4f6c63266cf45584beca5cb99c1d402cc9",
+          2
+        ],
+        [
+          "5cd6db1d7063487087d0716126401088f29600487dc9641b456cd062ce6f568e",
+          2
+        ],
+        [
+          "44fb3e37ee86b473a6d0a071c13eda6157c4fd915fed7f331d6576f4a64ffadd",
+          2
+        ],
+        [
+          "cdc2594b791f86aaefdd4b20f51647245d6a46eec20abcef0d2f3a06e5fb6317",
+          2
+        ],
+        [
+          "f02727e319b9ebbfbb5f49c3da0020a9c047f770cf1c16230c835497f30ed23f",
+          2
+        ]
+      ]
+    }
+  },
+  "copies": {
+    "parkour_solver.constraints.variants:__init__:85": {
+      "calls": 4,
+      "bodySeconds": 6.582587957382202e-06,
+      "maxSeconds": 1.7508864402770996e-06,
+      "samples": 4,
+      "payloadBytes": 16,
+      "maxPayloadBytes": 4,
+      "diagnosticSeconds": 1.892074942588806e-05,
+      "allocations": []
+    },
+    "parkour_solver.constraints.variants:choose_item:213": {
+      "calls": 77,
+      "bodySeconds": 0.00032343342900276184,
+      "maxSeconds": 9.000301361083984e-06,
+      "samples": 16,
+      "payloadBytes": 1519,
+      "maxPayloadBytes": 96,
+      "diagnosticSeconds": 9.226799011230469e-05,
+      "allocations": []
+    }
+  },
+  "caches": {
+    "coefficient": {
+      "calls": 4,
+      "hits": 0,
+      "misses": 4,
+      "bodySeconds": 0.15360238030552864,
+      "keyTrackingTruncated": false,
+      "maxCacheEntries": 1,
+      "distinctKeys": 3,
+      "repeatedKeys": 1
+    },
+    "analysis": {
+      "calls": 4,
+      "hits": 0,
+      "misses": 4,
+      "bodySeconds": 0.010294117033481598,
+      "keyTrackingTruncated": false,
+      "maxCacheEntries": 2,
+      "distinctKeys": 4,
+      "repeatedKeys": 0
+    }
+  },
+  "functions": {
+    "variants.analyze": {
+      "calls": 474,
+      "samples": 474,
+      "bodySeconds": 0.4762645773589611
+    },
+    "variants.effective_key": {
+      "calls": 12294,
+      "samples": 512,
+      "bodySeconds": 0.008242223411798477
+    },
+    "variants.choose_item": {
+      "calls": 268,
+      "samples": 268,
+      "bodySeconds": 0.00594567134976387
+    },
+    "variants.prepare_item": {
+      "calls": 345,
+      "samples": 345,
+      "bodySeconds": 0.004696346819400787
+    }
+  },
+  "sampleEvery": 1,
+  "sampleLimitPerSite": 512,
+  "allocationSamplesPerCopySite": 0,
+  "accounting": "Call counts exact; digest body time, bytes and repeats sampled. Copy body times inclusive/overlapping. JSON bytes are not heap bytes. Allocation samples repeat copies separately. Diagnostics and hooks add overhead; no recoverable-speedup claim."
+}
