@@ -110,9 +110,10 @@ public final class SenseFinderWindow implements RenderInterface {
             + " the jump while the rest adapts. Hover a cell for its width in degrees and the row's own turn. Orange is"
             + " the row's narrowest turn range. Click to sort by this tick's turn range, widest first.";
     private static final String COL_START = "Start";
-    private static final String START_TIP = "Where to stand. A row that lands from the TAS start keeps it. A row that"
-            + " only lands from another start in the start box gets the middle of the starts that land. The offset"
-            + " and the turn ranges hold from this start, and a row click moves the TAS start here.";
+    private static final String START_TIP = "Where to stand, as the X and Z shift from the TAS start. A row that lands"
+            + " from the TAS start keeps it (TAS). A row that only lands from another start in the start box gets the"
+            + " middle of the starts that land. The offset and the turn ranges hold from this start, and a row click"
+            + " moves the TAS start there. Hover a cell for the coordinates.";
 
     private final Host host;
     private final Settings settings;
@@ -284,7 +285,7 @@ public final class SenseFinderWindow implements RenderInterface {
         ImGui.tableSetupColumn(COL_OFFSET, fixed, ThemeManager.tableNumericColumnWidth(COL_OFFSET, offW) + mark);
         ImGui.tableSetupColumn(COL_MARGIN, fixed, ThemeManager.tableNumericColumnWidth(COL_MARGIN, marginW) + mark);
         if (start) {
-            float startW = ImGui.calcTextSize(startText(-29999999.999, -29999999.999)).x;
+            float startW = ImGui.calcTextSize(shiftText(-9.99999, -9.99999)).x;
             ImGui.tableSetupColumn(COL_START, fixed, ThemeManager.tableNumericColumnWidth(COL_START, startW));
         }
         int startTick = host.startTick();
@@ -332,7 +333,7 @@ public final class SenseFinderWindow implements RenderInterface {
         TooltipUtil.onHover(SenseFinder.Mode.MARGIN.hint);
         if (lead > 4) {
             ImGui.tableSetColumnIndex(4);
-            ThemeManager.tableHeader(COL_START);
+            ThemeManager.tableHeaderRight(COL_START);
             TooltipUtil.onHover(START_TIP);
         }
         for (int k = 0; k < ticks; k++) {
@@ -378,7 +379,12 @@ public final class SenseFinderWindow implements RenderInterface {
         ThemeManager.textRight(c.weakestTick() < 0 ? "-" : c.marginsComplete() ? marginText(c.totalTarget()) : "...");
         if (lead > 4) {
             ImGui.tableSetColumnIndex(4);
-            ThemeManager.textRight(startText(c.startX, c.startZ));
+            double dx = c.startX - turn.startX();
+            double dz = c.startZ - turn.startZ();
+            boolean tas = dx == 0.0 && dz == 0.0;
+            if (tas && !game) ThemeManager.pushTextColor(ThemeManager.textMutedColor());
+            ThemeManager.textRight(tas ? "TAS" : shiftText(dx, dz));
+            if (tas && !game) ThemeManager.popTextColor();
             TooltipUtil.onHover(String.format(Locale.ROOT, "X %.6f%nZ %.6f", c.startX, c.startZ));
         }
         if (game) ThemeManager.popTextColor();
@@ -435,8 +441,8 @@ public final class SenseFinderWindow implements RenderInterface {
         return "[" + range[0] + ", " + range[1] + "]";
     }
 
-    private static String startText(double x, double z) {
-        return String.format(Locale.ROOT, "%.3f %.3f", x, z);
+    private static String shiftText(double dx, double dz) {
+        return String.format(Locale.ROOT, "%+.5f %+.5f", dx, dz);
     }
 
     private static String marginText(double target) {
