@@ -38,6 +38,44 @@ retained witnesses replay; compatible durable continuation also passes.
 
 Active follow-up investigations: [bookkeeping performance](BOOKKEEPING_PERFORMANCE_AGENT_HANDOFF.md) is handed to another agent/worktree; [branch scheduling](BRANCH_SCHEDULING_INVESTIGATION.md) remains in this session. Both start from `a11b9b18`; this handoff adds no runtime or pruning change. The current code still descends by DFS, while the proposal makes retained continuations compete earlier by optimistic finish.
 
+2026-11-16 user deferral: **pause further longer Real11 trials until the other
+agent finishes the solver improvements**. Preserve the fixed-B5 fixture and
+latest manifest/SQLite pair; do not start another solve as background follow-up.
+The [experiment resume checklist](../research/real11-long-solve/README.md#status-and-resumption)
+records the integration review, compatibility and validation checks required
+before returning. The other agent's assignment remains active independently.
+
+2026-11-15 longer Real11 trial: [new task and fixed-B5 experiment](../research/real11-long-solve/README.md)
+add required B7/B20 and terminal B22. Existing initial-program support fixes
+initial-0 decisions through B5@55 while all earlier facings remain free. The first
+300s trial reached unit B7@64, then exposed an empty-exhausted-constraint outcome
+bug; that exact node now backtracks without a numerical infeasibility claim.
+Pending/interrupted alternatives remain suspended. The611-test native gate passes
+without skips. Corrected300s+120s exact continuations backtrack eight exhausted
+nodes but have not reached B20/B22; latest work is constraint enumeration for
+an optional B11@68 candidate. Prefix audits preserve all55 decisions, while the
+B7 witness changes all55 earlier facings. Full evidence and latest saved resume
+path are in the experiment README.
+
+2026-11-15 geometry follow-up: [longer Real11 input and bounds](REAL11_EXTENDED_GEOMETRY.md)
+record B8–B22, original unit B6 (latest user correction), unit B7 and the B13 stair.
+The geometry-only input stays separate from the explicit longer task above.
+The existing extended-B7 benchmark and its measurements below retain their
+original input.
+The [implemented face-merging contract](design/FACE_MERGING_IMPLEMENTATION_PLAN.md) has exactly
+two parts: detect adjacent coplanar faces across all six orientations, and
+represent their exact unions with original block/solid membership for later
+decisions. It includes physical-boundary exposure, partial
+occlusion, component-specific contributions, stable IDs and catalog queries.
+Both parts are complete: immutable catalog queries/serialization and
+`tools.geometry_bounds --faces` are available, with54 focused/compatibility/package
+checks. Real11 has102 merged faces from144 source faces; source-specific static
+validation is in the [record](../research/real11-extension/face-catalog-validation.json).
+The catalog is available for later decision integration; current generators still
+use their existing geometry contracts.
+
+Follow-up status2026-11-15: the user has **deferred interleaving/scheduler implementation**. The [preserved plan](BRANCH_SCHEDULING_INVESTIGATION.md) retains the existing tick priority, work-category/outcome clarifications, ownership/cost analysis and resumption checks; none is implemented by this documentation. Current code remains DFS. The separate [bookkeeping performance handoff](BOOKKEEPING_PERFORMANCE_AGENT_HANDOFF.md) is not paused by this request. Use the [deferred-work register](DEFERRED_WORK.md) for other preserved follow-ups and their actual status.
+
 On `research/bookkeeping-performance`, [already-visited child suppression](../research/enumeration-reduction/README.md)
 now removes duplicate constraint queue visits while preserving ordered unique
 options and legacy cursor compatibility. Its fixed-work enumeration improves
@@ -117,17 +155,13 @@ src/parkour_solver ladder/climbable/vine/movement-entry modules. No mod build/ga
 new native-helper rebuild was needed. See [testing](TESTING.md).
 
 The wall guards ended both runs; global minimum T/Z and actual-world executable
-replay are not established. B6 remains the stored box because replacement bounds
-for its reported rightward extension have not been supplied. Current controls do
+replay are not established. The latest user correction confirms unit B6; the
+longer-course geometry above is separate from these measured controls. They do
 not cover unknown world geometry.
 
 ## Deferred work
 
-Inter-block revisits/repeated anchors have a [preserved future plan](design/REVISIT_DISCOVERY_DEFERRED_PLAN.md).
-Intentional wall hits, cadence2/4 comparison, turnaround-margin tuning, root-service
-fairness changes, remaining bookkeeping optimization and actual-world/export
-acceptance are separate work. Hard-latch/count policy intentionally narrows or
-orders a bounded search; it is not a global completeness/optimality theorem.
+The [central deferred-work register](DEFERRED_WORK.md) links the preserved scheduler plan, revisit design, intentional wall hits, water, cadence/turn tuning, inertia follow-up, proposed research and outstanding acceptance/input work. It distinguishes user deferrals from unapproved ideas and completed source-era backlog claims. Bookkeeping optimization is separately assigned, not deferred by the scheduling pause. Hard-latch/count policy remains a bounded heuristic/domain policy, not a global optimality theorem.
 
 ## Source-era history
 

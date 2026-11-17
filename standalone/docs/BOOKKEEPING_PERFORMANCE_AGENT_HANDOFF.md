@@ -3,8 +3,7 @@
 2026-11-15. User requested a separate agent, branch and worktree for this work.
 This is the controlling handoff for **performance-preserving implementation**:
 investigate repeated hashing, model preparation and snapshots while preserving
-exact resume and ownership behavior. Branch scheduling is separate work in the
-original session; do not combine policy changes with bookkeeping optimization.
+exact resume and ownership behavior. Branch scheduling is separate work; the user has now [deferred its implementation](BRANCH_SCHEDULING_INVESTIGATION.md). This does not pause/cancel the bookkeeping assignment. Do not combine policy changes with bookkeeping optimization.
 
 Setup/measurement record (2026-11-15): steps 1–2 completed on the isolated
 `research/bookkeeping-performance` branch, based on `0f6b873c`. See the
@@ -35,8 +34,7 @@ Read [AGENTS](../AGENTS.md), [development workflow](DEVELOPMENT.md),
 [layout](LAYOUT.md), [current state](CURRENT_STATE.md) and the specific source below.
 Do not treat historical plans as a new implementation request.
 
-The original session keeps investigating traversal/branch selection. Its likely
-edit area is `search/dfs.py`, branch/frontier scheduling, `search/events/engine.py`,
+If scheduling is resumed, its likely shared edit area is `search/dfs.py`, branch/frontier scheduling, `search/events/engine.py`,
 and scheduling-specific tests and policy identity. This agent owns bookkeeping
 inside identity/model-preparation/repair-snapshot/persistence services. Report
 necessary changes to a shared file before a broad rewrite. In particular, do not

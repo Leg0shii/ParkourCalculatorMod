@@ -64,11 +64,38 @@ From `standalone/` with the environment above:
 ```
 
 The explicit gate maintains the selected native module scope plus package,
-profiling and avoidance-generation/continuation controls. Full discovery additionally includes dedicated ladder/climbable/vine
+profiling and avoidance-generation/continuation controls; added regressions
+increase the total. Full discovery additionally includes dedicated ladder/climbable/vine
 capabilities and their recorded baseline; it is a different scope. Native
 variables absent means skips, not native acceptance. See [testing](TESTING.md).
 Use a new gate directory; its report records source hashes, source stability,
 counts, skips, exclusions and evidence-integrity results.
+
+## Static player bounds without a solve
+
+The [geometry bounds tool](../tools/geometry_bounds.py) accepts a collision scene
+or a task fixture's `request`, uses existing spatial geometry, and reports exact
+expanded obstacles plus exposed landing covers. No native bridge or numerical
+dependencies are needed; install the package first. Use a fresh output path:
+
+```sh
+../.venv-guidance/bin/python -B -m tools.geometry_bounds \
+  --input cases/real11/extended-geometry.json \
+  --output runs/real11-bounds-new/player-bounds.json \
+  --markdown runs/real11-bounds-new/player-bounds.md
+```
+
+The [extended Real11 report](REAL11_EXTENDED_GEOMETRY.md) explains coordinate
+conventions, body-overlap endpoints, neighbor cuts and standing headroom.
+Static geometry is not a jump/replay check. That input is geometry-only; the
+existing runnable benchmark below remains a distinct task.
+
+Add `--faces` to the bounds command to include merged physical faces in all six
+orientations. JSON adds `faceCatalog` and `faceStatistics`; optional Markdown
+includes each face's normal, plane, exact rectangle cover and source parts. The
+[face catalog API and implementation](design/FACE_MERGING_IMPLEMENTATION_PLAN.md)
+preserve original member regions, internal-face clipping, holes and catalog
+identity. These physical covers are separate from the player-expanded bounds.
 
 ## Current physical-anchor solve, profile and resume
 
@@ -128,6 +155,22 @@ report = read_report('/tmp/real11-new.json.gz')
 
 Do not treat raw gzip JSON as a fully expanded shared-store report. Write new
 experiments to fresh output paths; preserve dated evidence and source hashes.
+
+## Fixed movement prefix with free continuous facings
+
+The existing `find_checkpoint_route(initial_programs=[program])` starts movement
+generation after a supplied original-state program. Fixtures may pass that
+argument as `settings.initial_programs`. The [longer Real11 experiment](../research/real11-long-solve/README.md)
+uses a validated initial-0 root through B5@55. The next unmet anchors are B7/B20,
+then terminal B22. Its first55 input/contact decisions are fixed; all facings
+remain variables in each original-state continuous solve. Warm yaw values are
+initial guesses, not equalities. Preserve actual physical rows and phase/clock
+metadata, strip stale node/repair/comparison state, and validate the root against
+the new full scene. This is a seeded new task, not an exact old-task resume.
+
+The profiler or ordinary CLI commands above can consume that experiment fixture.
+The ordinary CLI saves durable progress and supports its usual matching-context
+resume. A different geometry/task/root requires a new search context.
 
 ## Fixed numerical problem and replay/export
 

@@ -1,5 +1,22 @@
 # Real11 finite physical-anchor case
 
+The new [extended anchor task](extended-anchors.json) uses the supplied longer
+course, original unit B6/B7, B7/B20 additional intermediate anchors and terminal
+B22. The [fixed-B5 experiment](../../research/real11-long-solve/README.md) retains
+the initial-0 movement decisions through B5@55 while re-solving all facings from
+the original B1 state. The trials validate B7@64; corrected continuations are
+saved with B11@68 constraint work pending, without a B20/B22 finish.
+
+The longer-course [extended geometry](extended-geometry.json) and
+[bounds report](../../docs/REAL11_EXTENDED_GEOMETRY.md) are now recorded separately.
+They keep B6 at its original unit footprint, restore unit B7 and add B8–B22
+(including B9a/B9b and the compound B13 stair). This file is geometry-only;
+the geometry file itself does not supply a task. The extended anchor task above
+now records the selected milestones and finish with the existing horizon/caps.
+It can be inspected with `python -m tools.geometry_bounds`.
+Add `--faces` to include the merged physical-face catalog; the existing bounds
+remain available in the same report.
+
 `physical-anchors.json` derives from
 [the recorded anchor-feasibility fixture](../../research/anchor-feasibility/real11-anchors.json).
 It declares ordered anchors, finite extended B7, original state, movement domain
@@ -33,8 +50,9 @@ found T64 with only0/8 receiving first-anchor feasibility work;9–12 were saved
 as recoverable alternatives without numerical calls. This is observed behavior
 in that run, not a new generic `[0,8]` rule.
 
-The fixture retains stored B6; the reported wider B6 still lacks replacement
-coordinates and is not silently inferred. Use the [runbook](../../docs/RUNBOOK.md)
+The benchmark fixture retains stored B6 and extended B7. The latest longer-course
+input explicitly keeps unit B6 and unit B7; do not apply old benchmark claims to
+that revised geometry. Use the [runbook](../../docs/RUNBOOK.md)
 with an installed solver and native compiler. For local budget/domain experiments
 copy the case to a new path and record the change. Old restricted checkpoints
 require their original domain for exact resume; the unrestricted domain has a

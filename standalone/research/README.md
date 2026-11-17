@@ -21,6 +21,7 @@ revision and use its recorded patch/configuration. Current controls belong in
 
 | Current tool | Purpose |
 | --- | --- |
+| `python -m tools.geometry_bounds` | Static player collision/landing-cover report; `--faces` adds the production catalog of merged exposed physical faces across all six orientations. |
 | `python -m tools.profiling.run` | Cold current task run, scoped bookkeeping timings, source/config hashes and retained-witness replays. |
 | [Bookkeeping setup and measurements](bookkeeping-measurement/README.md) | Isolated baseline, sampled digest/preparation/copy measurements, hook calibration and durable resume; no production optimization. |
 | [Enumeration attribution](enumeration-attribution/README.md) | Exact block/side-chain/exit counters and fixed-work option replay identify duplicate internal states around B7; production search unchanged. |
@@ -36,6 +37,15 @@ revision and use its recorded patch/configuration. Current controls belong in
 protected hashes. `python -m tools.validate_layout` verifies the902 protected
 files. Keep report manifests and companion SQLite databases together and decode
 with `parkour_solver.io.checkpoint_store.read_report`.
+
+[Real11 extension](real11-extension/README.md) is new geometry evidence, separate
+from the frozen relocated bundles: unit B6/B7, supplied continuation and exact
+player-bounds output. The later solver trials are recorded separately below.
+
+[Longer Real11 fixed-prefix trials](real11-long-solve/README.md) supply B7/B20
+additional anchors and terminal B22, retain initial-0 decisions through B5@55,
+and keep original-state facings free. They validate B7@64, fix an exhausted-empty
+node retry loop and persist the unfinished B11@68 constraint search for resumption.
 
 For a new experiment use a named topic, a README describing the question,
 `driver.py`, `configs/`, and new `runs/<run-id>/` directories. Local bulky outputs

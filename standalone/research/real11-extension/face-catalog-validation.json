@@ -1,0 +1,66 @@
+{
+  "validationScope": "Static physical geometry, exact member queries and catalog round-trip; no longer-course trajectory solve/replay",
+  "sourceParentRevision": "753cfd2acfbc2803d9d4e32890186f9ba1b6dd05",
+  "sourceFiles": {
+    "src/parkour_solver/spatial/faces.py": "c1570eb09fafc1f85a4aad46f680f60e7c5ee103c086ec903bfc27ef62155cb4",
+    "tools/geometry_bounds.py": "4b2c13003af9fcb2e4b4a2e0a4e35243678d5ab4d49e8e967fda191b4503ce21"
+  },
+  "input": {
+    "path": "cases/real11/extended-geometry.json",
+    "sha256": "a7f7222770dae9e909ec7052f9fadc385bda0c0ff890eb7200d05a4fdaf408d5"
+  },
+  "sceneKey": "face-scene:df1e036b923dad50341220ecd2f4604002167b3698fb746e6f00727b6513c350",
+  "catalogId": "face-catalog:f02107d9535782766c542bd73b12abe7599c5234ce3c01c8b7e6e634e8dfd2a5",
+  "statistics": {
+    "solids": 24,
+    "rawFaces": 144,
+    "fullyHiddenSourceFaces": 15,
+    "partiallyHiddenSourceFaces": 16,
+    "exposedRectangleContributions": 138,
+    "mergedFaces": 102,
+    "coverRectangles": 147
+  },
+  "checks": {
+    "roundTrip": true,
+    "originalBoundsReportUnchanged": true,
+    "allSixOrientationsPresent": true,
+    "b9SharedUnderside": {
+      "faceId": "merged-face:25a41ea9c86c0fe31a8b96b0b65e26b2003432298a62afa86f28badb8be1bfe8",
+      "plane": 9.0,
+      "cover": [
+        [
+          730.0,
+          -1093.0,
+          731.0,
+          -1090.0
+        ]
+      ],
+      "members": [
+        "b10",
+        "b9a",
+        "b9b"
+      ]
+    },
+    "b9bOnlyQuery": {
+      "point": [
+        730.5,
+        -1091.5
+      ],
+      "members": [
+        "b9b"
+      ]
+    },
+    "b9aPartialSideCover": [
+      [
+        730.0,
+        9.5,
+        731.0,
+        10.5
+      ]
+    ]
+  },
+  "localReport": {
+    "path": "runs/real11-six-face-catalog-2026-11-15/report.json",
+    "sha256": "56fc25b9076e7807bf82453fd200ab0344d7f03089f8f515b9f297a3d73577ce"
+  }
+}

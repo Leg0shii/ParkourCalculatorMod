@@ -16,6 +16,44 @@ The supplied-window planner remains live compatibility code until that replaceme
 
 2026-11-15 parallel work: [bookkeeping performance handoff](BOOKKEEPING_PERFORMANCE_AGENT_HANDOFF.md) assigns behavior-preserving hashing/preparation/snapshot optimization to a separate branch/worktree. This session investigates [branch scheduling](BRANCH_SCHEDULING_INVESTIGATION.md): earlier service for promising protected alternatives, with switching distinct from proof-based exclusion. That scheduler is proposed, not implemented; current DFS/comparison semantics remain the runtime baseline.
 
+2026-11-16 user decision: defer further longer Real11 fixture experiments until
+the other agent completes the solver improvements. Keep the fixed run-0 decisions
+through B5@55, original-state free facings, extended geometry and B7/B20/B22
+arrivals. Review the returned commits before integration, then follow the
+[saved experiment checklist](../research/real11-long-solve/README.md#status-and-resumption).
+Do not silently resume an incompatible checkpoint or restart the deferred
+scheduler work. This deferral does not pause the separate agent.
+
+2026-11-15 longer-task decision: [extended Real11](../cases/real11/extended-anchors.json)
+uses B2/B3/B4/B5/B7/B20 and terminal B22. The [seeded experiment](../research/real11-long-solve/README.md)
+retains the run-0 movement/contact schedule through B5@55 and free original-state
+facings. A narrow correction classifies an empty, exhausted constraint generator
+with no remaining repair work as exhausted rather than suspended. This fixes a
+measured exact-node retry loop; it does not implement the broader deferred
+scheduler/outcome restructuring or change physical feasibility policy.
+
+2026-11-15 user-directed scope: the [single face-merging plan](design/FACE_MERGING_IMPLEMENTATION_PLAN.md)
+implements exactly two parts: detecting adjacent coplanar faces in any of the six
+orientations, and representing exact merged covers with source membership for
+later decisions. It replaces the former ceiling-only/integration/bug-fix plan;
+that extra work has been removed from this task. Both parts, catalog queries,
+serialization and `--faces` reporting are implemented and tested.
+The implementation clips internal/buried face portions before
+grouping, while retaining raw source faces, and specifies geometric IDs,
+component-specific provenance and the physical/player-coordinate distinction.
+
+2026-11-15 longer-course geometry: use [extended Real11 geometry and bounds](REAL11_EXTENDED_GEOMETRY.md)
+for the newly supplied B8–B22. The final user correction withdraws the proposed
+B6 extension: B6 remains physical X[730,731]. B7 returns to unit size. B9's two
+entries are temporarily named B9a/B9b without renumbering other blocks; B13 is
+a two-box stair. The later explicit longer task above now supplies its mandatory
+anchors and finish; the original geometry-only file remains separate. The existing extended-B7 task and
+all its evidence remain separate; prior missing/wider-B6 notes are historical.
+
+2026-11-15 user deferral: interleaving implementation is paused. The [single preserved solver plan](BRANCH_SCHEDULING_INVESTIGATION.md) retains the confirmed existing tick priority, ordinary versus recovery-only distinction, normalized oracle-outcome proposal, ownership/overhead analysis and open details. It is a scheduling change intended to cover the same ordinary work, except existing exclusions/deferrals may act earlier; it does not add solves merely for switching. Current runtime remains DFS. Work-category/outcome clarifications are recorded but unimplemented, not an instruction to start them automatically.
+
+The [deferred-work register](DEFERRED_WORK.md) indexes all known deferred/unimplemented follow-ups with source links and status, including completed/superseded exceptions. The [bookkeeping performance handoff](BOOKKEEPING_PERFORMANCE_AGENT_HANDOFF.md) remains assigned separately to another agent/worktree; this scheduler deferral does not cancel it.
+
 2026-11-15 initial-domain decision: remove the explicit `[0,8]` whitelist from the maintained Real11 case; let existing producers/screens, hard-arrival comparisons and finish bounds select work. [Unrestricted evidence](../research/initial-domain-selection/README.md) confirms first0/8 numerical preparation and recoverable9–12 deferral. [Configuration/CI audit](INITIAL_DOMAIN_AND_CONFIG_AUDIT.md) records remaining supplied inputs and policies. Archived fixtures and generic explicit-domain controls remain unchanged; no new route/pruning policy is introduced.
 
 The approved standalone structure refactor is implemented: [layout](LAYOUT.md), [implementation ledger](STANDALONE_REFACTOR_IMPLEMENTATION.md). This changes file ownership/entrypoints, preserves all physical and decision policy versions, and leaves revisit/other deferred work deferred. The inventory/review is now a source-era proposal record, not a new pending task.
@@ -93,7 +131,7 @@ The [corridor handoff](CORRIDOR_AGENT_HANDOFF.md) through `61355976` is imported
 | Layering | Preserve physical contacts/passages and movement alternatives in the existing shared DFS. The current engine makes decisions in coupled required-anchor spans, uses backward guide objectives with early stopping, and retains recoverable alternatives. Spatial geometry does not specify jump timing or constant edge weights. |
 | Spatial route identity, clarified | Support occurrences and3D passages remain meaningful. Current generation excludes returning to a departed physical owner after another block; consecutive same-block setup hops remain supported. Revisit design is preserved for later. Required milestones/global hard latches still apply. |
 | Real11 task correction | Latest requested task extends physical B7 one block +Z to `[729,0,-1095,730,7,-1093]`, actual B7 landing, least T then MAXZ, guide +Z physical edge/X midpoint `(729.5,7,-1093)`. No old virtual/X<729.7 extra task rows in the new fixture. New task evidence is separate from the preserved original-box virtual results. |
-| Real11 route/support discovery | The current engine accepts caller-declared ordered required anchors B2/B3/B4/B5, while movement choices and permitted optional supports remain search decisions. The completed baseline discovers dynamic support/contact choices without that mandatory list. Reuse existing geometry/movement/contact helpers; do not make required anchors a fixture-specific generic algorithm rule. Preserve meaningful B1 setup hops. B6’s reported rightward extension still lacks exact replacement bounds. Intentional wall hits stay deferred. |
+| Real11 route/support discovery | The current engine accepts caller-declared ordered required anchors B2/B3/B4/B5 in the measured benchmark, while movement choices and permitted optional supports remain search decisions. The completed baseline discovers dynamic support/contact choices without that mandatory list. Reuse existing geometry/movement/contact helpers; do not make required anchors a fixture-specific generic algorithm rule. Preserve meaningful B1 setup hops. Latest longer-course input keeps unit B6 and unit B7; its new anchors/finish are not inferred. Intentional wall hits stay deferred. |
 | Local guidance | Restore backward nearest-point guide inference and continuous progress objective with stop-on-feasible. Progress is not a discrete key/pruning rule; no slack. Re-solve all earlier facings from original state so later constraints may change the path. |
 | Comparing alternatives | Compare only at required anchors/final task; optional movement inside a span is coupled. Slower compatible unprotected hard arrivals are recoverably deferred, not global infeasibility proofs; open prefixes and unlatched spans do not receive that local suppression. Full terminal incumbents minimize achieved T then real objective at equal T; current elapsed-time bound remains distinct. |
 | Retention | Compatible slower hard arrivals defer only without more J OR fewer R normally / fewer A in turnaround. This generalizes the older ordinary latest-jump run rule; exact saved work remains recoverable. Direct feasibility anywhere permanently latches that anchor transition to single-jump structure for the solve, even after changed incoming histories; source-local setup hops remain eligible, while recovery cannot introduce intermediate supports into the hard transfer. Keep actual run/source/repair ownership and earlier admissible preparation. |

@@ -1,0 +1,72 @@
+{
+  "sourceBase": "c241ac57",
+  "scope": "Direct helper calls only; not a cold solve or a trajectory replay",
+  "plane": 7.200000047683716,
+  "rows": [
+    {
+      "inputBoxes": [
+        [
+          730,
+          9,
+          -1093,
+          731,
+          10.5,
+          -1092
+        ],
+        [
+          730,
+          9,
+          -1092,
+          731,
+          9.5,
+          -1091
+        ]
+      ],
+      "rawOpportunities": 2,
+      "singleEventCombinations": 1,
+      "retainedBox": [
+        730,
+        9,
+        -1093,
+        731,
+        10.5,
+        -1092
+      ]
+    },
+    {
+      "inputBoxes": [
+        [
+          730,
+          9,
+          -1092,
+          731,
+          9.5,
+          -1091
+        ],
+        [
+          730,
+          9,
+          -1093,
+          731,
+          10.5,
+          -1092
+        ]
+      ],
+      "rawOpportunities": 2,
+      "singleEventCombinations": 1,
+      "retainedBox": [
+        730,
+        9,
+        -1092,
+        731,
+        9.5,
+        -1091
+      ]
+    }
+  ],
+  "missingCoverageExample": {
+    "centerX": 730.5,
+    "centerZ": -1091.5,
+    "description": "Body overlaps B9b underside but not B9a underside; retaining B9a alone does not cover this ceiling contact."
+  }
+}

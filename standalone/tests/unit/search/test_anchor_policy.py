@@ -149,6 +149,26 @@ class AnchorPolicyTests(unittest.TestCase):
         q['solveScope']={'purpose':'preliminary'}
         self.assertNotEqual(node_identity(p,'ctx'),node_identity(q,'ctx'))
 
+    def test_empty_exhausted_constraint_domain_backtracks_without_solver_rejection(self):
+        policy=policy_spec(dict(purpose='node',oracleRejection=True),first_witness=True)
+        result=dict(status='unknown',best=None,termination='contact_search_exhausted',repairState=dict(
+            completed=[],pending=[],unresolved=[],inFlight=None,
+            constraintGeneration=dict(exhausted=True,emitted=0,pending=[])))
+        original=copy.deepcopy(result)
+        verdict=outcome(result,'empty-node',policy)
+        self.assertEqual(verdict['status'],'exhausted')
+        self.assertEqual(verdict['rejectedAlternatives'],[])
+        self.assertEqual(verdict['model'],'empty-node')
+        self.assertEqual(result,original)
+        restored=json.loads(json.dumps(result))
+        self.assertEqual(outcome(restored,'empty-node',policy),verdict)
+        for field,value in (('pending',[{}]),('unresolved',[{}]),('inFlight',dict(branch='unfinished')),
+                            ('constraintGeneration',dict(exhausted=False))):
+            unfinished=copy.deepcopy(result);unfinished['repairState'][field]=value
+            self.assertEqual(outcome(unfinished,'empty-node',policy)['status'],'suspended')
+        no_evidence=dict(status='unknown',best=None,repairState=dict(completed=[]))
+        self.assertEqual(outcome(no_evidence,'unqueried',policy)['status'],'suspended')
+
     def test_ceiling_and_corner_cancel_are_impulses_without_invented_support_visits(self):
         s=scene();p=history(s,['start']);p['terminalSupport']=None
         p['profile']['contactEvents']=[]

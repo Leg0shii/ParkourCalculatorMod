@@ -1,0 +1,177 @@
+{
+  "sourceRevision": "b535224cee8ff238129e3cbc502b1a90314b6ac4",
+  "scope": "Planning-only exploratory calculation of the recommended exposed-physical-boundary rule; not production face merging or a solver run",
+  "input": {
+    "path": "cases/real11/extended-geometry.json",
+    "sha256": "a7f7222770dae9e909ec7052f9fadc385bda0c0ff890eb7200d05a4fdaf408d5"
+  },
+  "sourceFiles": {
+    "src/parkour_solver/scene/geometry.py": "773566bc50f6177673c52007ec11a8f9cdc0844a931e2355877b627e0545b69e",
+    "src/parkour_solver/spatial/cells.py": "372d67383d6085e17543e57c10841d52e4928cc94d2cc54dacb4341f393e766d",
+    "src/parkour_solver/spatial/regions.py": "f08f23ffbcf3e9e99633782b23d5e5bb9a9762dfade8b23a3438471025ea1e5d"
+  },
+  "method": [
+    "Enumerate physical six faces from existing normalize_geometry",
+    "Select outward blockers with min <= plane < max for +normal and min < plane <= max for -normal",
+    "Clip projected source rectangles with existing subtract_open embedded at Y0 and cutter Y[-1,1]",
+    "Retain positive-area pieces, canonicalize with existing canonical_cover",
+    "Group exact axis/normal/plane buckets by positive-length shared edge or area overlap, then canonicalize"
+  ],
+  "counts": {
+    "solids": 24,
+    "rawFaces": 144,
+    "fullyHiddenSourceFaces": 15,
+    "partiallyHiddenSourceFaces": 16,
+    "exposedRectangleContributions": 138,
+    "mergedFaces": 102,
+    "finalCoverRectangles": 147
+  },
+  "examples": {
+    "b9Underside": [
+      {
+        "axis": "Y",
+        "normalSign": -1,
+        "plane": 9,
+        "parts": [
+          "b10",
+          "b9a",
+          "b9b"
+        ],
+        "cover": [
+          [
+            730,
+            -1093,
+            731,
+            -1090
+          ]
+        ]
+      }
+    ],
+    "hiddenB9Faces": [
+      {
+        "partId": "b9a",
+        "axis": "Z",
+        "normalSign": -1,
+        "plane": -1093,
+        "rawTangentRect": [
+          730,
+          9,
+          731,
+          10.5
+        ],
+        "exposedTangentCover": []
+      },
+      {
+        "partId": "b9b",
+        "axis": "Z",
+        "normalSign": -1,
+        "plane": -1092,
+        "rawTangentRect": [
+          730,
+          9,
+          731,
+          9.5
+        ],
+        "exposedTangentCover": []
+      },
+      {
+        "partId": "b9b",
+        "axis": "Z",
+        "normalSign": 1,
+        "plane": -1091,
+        "rawTangentRect": [
+          730,
+          9,
+          731,
+          9.5
+        ],
+        "exposedTangentCover": []
+      },
+      {
+        "partId": "b10",
+        "axis": "Z",
+        "normalSign": 1,
+        "plane": -1090,
+        "rawTangentRect": [
+          730,
+          9,
+          731,
+          10
+        ],
+        "exposedTangentCover": []
+      }
+    ],
+    "partialB9Faces": [
+      {
+        "partId": "b9a",
+        "axis": "Z",
+        "normalSign": 1,
+        "plane": -1092,
+        "rawTangentRect": [
+          730,
+          9,
+          731,
+          10.5
+        ],
+        "exposedTangentCover": [
+          [
+            730,
+            9.5,
+            731,
+            10.5
+          ]
+        ]
+      },
+      {
+        "partId": "b10",
+        "axis": "Z",
+        "normalSign": -1,
+        "plane": -1091,
+        "rawTangentRect": [
+          730,
+          9,
+          731,
+          10
+        ],
+        "exposedTangentCover": [
+          [
+            730,
+            9.5,
+            731,
+            10
+          ]
+        ]
+      }
+    ]
+  },
+  "touchingSeamPrimitive": {
+    "face": [
+      1,
+      0,
+      0,
+      1,
+      1,
+      1
+    ],
+    "neighbor": [
+      1,
+      0,
+      0,
+      2,
+      1,
+      1
+    ],
+    "directPhysicalSubtractResult": [
+      [
+        1,
+        0,
+        0,
+        1,
+        1,
+        1
+      ]
+    ],
+    "plannedOutwardBoundaryResult": [],
+    "reason": "Direct open-box subtraction does not remove a face on the neighbor boundary; outward-side classification is necessary."
+  }
+}

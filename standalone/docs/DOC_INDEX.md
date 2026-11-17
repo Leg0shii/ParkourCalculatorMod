@@ -6,21 +6,24 @@ control work; inclusion here is not authorization to implement a historical plan
 | Document | Status / purpose |
 | --- | --- |
 | [AGENTS.md](../AGENTS.md) | Current navigation / implementation or evidence record: Standalone agent entry point |
+| [CLAUDE.md](../CLAUDE.md) | Current navigation / implementation or evidence record: Standalone agent entry point |
 | [CONSOLIDATION.md](../CONSOLIDATION.md) | Current navigation / implementation or evidence record: Standalone branch consolidation |
 | [README.md](../README.md) | Current navigation / implementation or evidence record: Standalone parkour solver |
 | [cases/real11/README.md](../cases/real11/README.md) | Current navigation / implementation or evidence record: Real11 finite physical-anchor case |
+| [docs/AGENT_SETUP.md](AGENT_SETUP.md) | Current navigation / implementation or evidence record: Shared Codex and Claude Code setup |
 | [docs/ANCHOR_IMPLEMENTATION_RESUME.md](ANCHOR_IMPLEMENTATION_RESUME.md) | Current navigation / implementation or evidence record: Anchor search: current resume state |
 | [docs/ANCHOR_SEARCH_EXECUTION_REFERENCE.md](ANCHOR_SEARCH_EXECUTION_REFERENCE.md) | Current navigation / implementation or evidence record: Anchor search: combinations, pruning and IPOPT dispatch |
 | [docs/ANCHOR_SEARCH_INTEGRATION.md](ANCHOR_SEARCH_INTEGRATION.md) | Current navigation / implementation or evidence record: Anchor search and solver integration |
 | [docs/ARCHITECTURE.md](ARCHITECTURE.md) | Current navigation / implementation or evidence record: Architecture and execution flow |
 | [docs/BOOKKEEPING_PERFORMANCE_AGENT_HANDOFF.md](BOOKKEEPING_PERFORMANCE_AGENT_HANDOFF.md) | Current navigation / implementation or evidence record: Agent handoff: measured bookkeeping costs |
-| [docs/BRANCH_SCHEDULING_INVESTIGATION.md](BRANCH_SCHEDULING_INVESTIGATION.md) | Current navigation / implementation or evidence record: Branch scheduling: recognize stronger continuations before finishing a subtree |
+| [docs/BRANCH_SCHEDULING_INVESTIGATION.md](BRANCH_SCHEDULING_INVESTIGATION.md) | Current navigation / implementation or evidence record: Concrete solver-orchestration improvements |
 | [docs/CHECKPOINT_STORAGE.md](CHECKPOINT_STORAGE.md) | Current navigation / implementation or evidence record: Search checkpoint storage |
 | [docs/CODE_MAP.md](CODE_MAP.md) | Current navigation / implementation or evidence record: Production code map |
 | [docs/CORRIDOR_AGENT_HANDOFF.md](CORRIDOR_AGENT_HANDOFF.md) | Current navigation / implementation or evidence record: Handoff: changes since the standalone AGENTS consolidation |
 | [docs/CORRIDOR_IMPLEMENTATION_RESUME.md](CORRIDOR_IMPLEMENTATION_RESUME.md) | Current navigation / implementation or evidence record: Resume authorized anchor implementation and completed event baseline |
 | [docs/CURRENT_STATE.md](CURRENT_STATE.md) | Current navigation / implementation or evidence record: Current standalone state |
 | [docs/DECISIONS_AND_PLANS.md](DECISIONS_AND_PLANS.md) | Current navigation / implementation or evidence record: Decisions and plan authority |
+| [docs/DEFERRED_WORK.md](DEFERRED_WORK.md) | Current navigation / implementation or evidence record: Deferred work and unimplemented follow-ups |
 | [docs/DEVELOPMENT.md](DEVELOPMENT.md) | Current navigation / implementation or evidence record: Writing code and fixes |
 | [docs/DOC_INDEX.md](DOC_INDEX.md) | Current navigation / implementation or evidence record: Documentation index |
 | [docs/FILE_INDEX.md](FILE_INDEX.md) | Current navigation / implementation or evidence record: Tracked standalone file index |
@@ -32,6 +35,7 @@ control work; inclusion here is not authorization to implement a historical plan
 | [docs/LAYOUT.md](LAYOUT.md) | Current navigation / implementation or evidence record: Standalone ownership and package layout |
 | [docs/MOD_REFERENCES.md](MOD_REFERENCES.md) | Current navigation / implementation or evidence record: Reusing the broader Parkour Calculator |
 | [docs/README.md](README.md) | Current navigation / implementation or evidence record: Standalone documentation guide |
+| [docs/REAL11_EXTENDED_GEOMETRY.md](REAL11_EXTENDED_GEOMETRY.md) | Current navigation / implementation or evidence record: Real11 extended geometry and player bounds |
 | [docs/REAL11_GUIDE.md](REAL11_GUIDE.md) | Current navigation / implementation or evidence record: Linkcraft Real11 opening: agent guide |
 | [docs/RESULTS_AND_DEBUGGING.md](RESULTS_AND_DEBUGGING.md) | Current navigation / implementation or evidence record: Results, terminology and debugging |
 | [docs/RUNBOOK.md](RUNBOOK.md) | Current navigation / implementation or evidence record: Standalone runbook |
@@ -41,7 +45,7 @@ control work; inclusion here is not authorization to implement a historical plan
 | [docs/TESTING.md](TESTING.md) | Current navigation / implementation or evidence record: Tests and fixtures |
 | [docs/design/ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md](design/ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Plan: anchor DFS, global hard latches and observable binary turn heuristics |
 | [docs/design/ANCHOR_POLICY_DECISIONS.md](design/ANCHOR_POLICY_DECISIONS.md) | Design contract; check decisions index for implemented/deferred scope: Anchor search decisions: DFS, binary turns and observability |
-| [docs/design/AVOIDANCE_PASSAGE_GENERATION_PLAN.md](design/AVOIDANCE_PASSAGE_GENERATION_PLAN.md) | Implementation-ready plan, not implemented: geometry-driven passages, conditional generation, profiling and staged acceptance |
+| [docs/design/AVOIDANCE_PASSAGES.md](design/AVOIDANCE_PASSAGES.md) | Design contract; check decisions index for implemented/deferred scope: Geometry-driven avoidance passages |
 | [docs/design/BLOCK_ROUTE_SEARCH.md](design/BLOCK_ROUTE_SEARCH.md) | Design contract; check decisions index for implemented/deferred scope: Block-route selection prototype |
 | [docs/design/BLOCK_SOLVER_PLAN.md](design/BLOCK_SOLVER_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Block solver: continuous-model orchestration |
 | [docs/design/CELL_ROUTE_EXPERIMENT_PLAN.md](design/CELL_ROUTE_EXPERIMENT_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Cell-route experiment plan |
@@ -52,6 +56,7 @@ control work; inclusion here is not authorization to implement a historical plan
 | [docs/design/CORRIDOR_CONSTRAINT_FIX_PLAN.md](design/CORRIDOR_CONSTRAINT_FIX_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Corridor and constraint scope fix |
 | [docs/design/DFS_INTERACTION_IMPLEMENTATION_PLAN.md](design/DFS_INTERACTION_IMPLEMENTATION_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Consolidated plan: depth-first decisions and shared interaction eligibility |
 | [docs/design/DYNAMIC_CONTACT_DECISIONS.md](design/DYNAMIC_CONTACT_DECISIONS.md) | Design contract; check decisions index for implemented/deferred scope: Ceiling and stepping decisions change the transition law |
+| [docs/design/FACE_MERGING_IMPLEMENTATION_PLAN.md](design/FACE_MERGING_IMPLEMENTATION_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Adjacent-face merging: implementation plan |
 | [docs/design/GENERATION_PERFORMANCE_PLAN.md](design/GENERATION_PERFORMANCE_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Schedule-generation performance follow-ups |
 | [docs/design/GENERATION_RELEVANCE_PLAN.md](design/GENERATION_RELEVANCE_PLAN.md) | Design contract; check decisions index for implemented/deferred scope: Preliminary plan: generate only relevant, distinct interaction models |
 | [docs/design/GENERIC_COMPOSITION.md](design/GENERIC_COMPOSITION.md) | Design contract; check decisions index for implemented/deferred scope: Generic movement programs |
@@ -115,9 +120,9 @@ control work; inclusion here is not authorization to implement a historical plan
 | [research/anchor-candidate-audit/README.md](../research/anchor-candidate-audit/README.md) | Frozen source-era evidence; use research guide for reproduction: Real11 candidate inventory |
 | [research/anchor-feasibility/README.md](../research/anchor-feasibility/README.md) | Frozen source-era evidence; use research guide for reproduction: Anchor DFS and physical Real11 finish |
 | [research/anchor-initial0-audit-2026-11-04/README.md](../research/anchor-initial0-audit-2026-11-04/README.md) | Frozen source-era evidence; use research guide for reproduction: Why the anchor run missed initial-0 / T64 |
-| [research/anchor-run-budget/B6_PASSAGE_CHECKS.md](../research/anchor-run-budget/B6_PASSAGE_CHECKS.md) | Current implementation or investigation: B6 passage choices and pre-solver rejection |
+| [research/anchor-run-budget/B6_PASSAGE_CHECKS.md](../research/anchor-run-budget/B6_PASSAGE_CHECKS.md) | Frozen source-era evidence; use research guide for reproduction: B6 passage choices and pre-solver rejection |
 | [research/anchor-run-budget/README.md](../research/anchor-run-budget/README.md) | Frozen source-era evidence; use research guide for reproduction: Continuous anchor search under the run budget |
-| [research/anchor-run-budget/RUN8_CANDIDATE_AUDIT.md](../research/anchor-run-budget/RUN8_CANDIDATE_AUDIT.md) | Current implementation or investigation: Additional run-8 candidates |
+| [research/anchor-run-budget/RUN8_CANDIDATE_AUDIT.md](../research/anchor-run-budget/RUN8_CANDIDATE_AUDIT.md) | Frozen source-era evidence; use research guide for reproduction: Additional run-8 candidates |
 | [research/anchor-runtime-profile/README.md](../research/anchor-runtime-profile/README.md) | Frozen source-era evidence; use research guide for reproduction: Coordinated anchor/solver integration and runtime profiling |
 | [research/anchor-transfer-preparation/README.md](../research/anchor-transfer-preparation/README.md) | Frozen source-era evidence; use research guide for reproduction: Hard transfer with source-local preparation |
 | [research/automatic-corridors/README.md](../research/automatic-corridors/README.md) | Frozen source-era evidence; use research guide for reproduction: Automatic semantic corridors on the stored Real11 scene |
@@ -136,7 +141,9 @@ control work; inclusion here is not authorization to implement a historical plan
 | [research/decision-windows/RESULTS.md](../research/decision-windows/RESULTS.md) | Frozen source-era evidence; use research guide for reproduction: Joint windows: what survives later comparison |
 | [research/dfs-interactions/CALLS.md](../research/dfs-interactions/CALLS.md) | Frozen source-era evidence; use research guide for reproduction: DFS cold/resume worker calls |
 | [research/dfs-interactions/README.md](../research/dfs-interactions/README.md) | Frozen source-era evidence; use research guide for reproduction: Goal-aware DFS and early interaction eligibility |
-| [research/early-passage-screen/README.md](../research/early-passage-screen/README.md) | Current implementation or investigation: Screen accumulated passage constraints before extension |
+| [research/early-passage-screen/B6_OPTIONS.md](../research/early-passage-screen/B6_OPTIONS.md) | Frozen source-era evidence; use research guide for reproduction: Every generated B6 option: logged replay |
+| [research/early-passage-screen/B6_QUESTIONS_AND_ANSWERS.md](../research/early-passage-screen/B6_QUESTIONS_AND_ANSWERS.md) | Frozen source-era evidence; use research guide for reproduction: B6 questions and answers |
+| [research/early-passage-screen/README.md](../research/early-passage-screen/README.md) | Frozen source-era evidence; use research guide for reproduction: Screen accumulated passage constraints before extension |
 | [research/enumeration-attribution/README.md](../research/enumeration-attribution/README.md) | Frozen source-era evidence; use research guide for reproduction: Why collision-avoidance enumeration visits millions of entries |
 | [research/enumeration-reduction/README.md](../research/enumeration-reduction/README.md) | Frozen source-era evidence; use research guide for reproduction: Suppress already-visited constraint children before queueing |
 | [research/event-route-discovery/README.md](../research/event-route-discovery/README.md) | Frozen source-era evidence; use research guide for reproduction: Event route discovery implementation evidence |
@@ -176,6 +183,8 @@ control work; inclusion here is not authorization to implement a historical plan
 | [research/orchestrator-fixes/audit/CANDIDATE_QUESTIONS.md](../research/orchestrator-fixes/audit/CANDIDATE_QUESTIONS.md) | Frozen source-era evidence; use research guide for reproduction: Real11 candidate questions, answered in order |
 | [research/orchestrator-fixes/audit/PRUNING_FOLLOWUP.md](../research/orchestrator-fixes/audit/PRUNING_FOLLOWUP.md) | Frozen source-era evidence; use research guide for reproduction: Follow-up: what can actually be pruned |
 | [research/orchestrator-fixes/audit/WORKER_CALLS.md](../research/orchestrator-fixes/audit/WORKER_CALLS.md) | Frozen source-era evidence; use research guide for reproduction: Every cold Real11 worker-call slot |
+| [research/real11-extension/README.md](../research/real11-extension/README.md) | Frozen source-era evidence; use research guide for reproduction: Real11 extension: geometry evidence |
+| [research/real11-long-solve/README.md](../research/real11-long-solve/README.md) | Frozen source-era evidence; use research guide for reproduction: Longer Real11 with fixed initial-0 decisions through B5 |
 | [research/route-guidance/README.md](../research/route-guidance/README.md) | Frozen source-era evidence; use research guide for reproduction: Route-guidance model comparison |
 | [research/route_guidance/README.md](../research/route_guidance/README.md) | Research evidence / prototype; see research guide: Experimental route guidance |
 | [research/runoff-profiles/README.md](../research/runoff-profiles/README.md) | Frozen source-era evidence; use research guide for reproduction: Automatically selected run-off profiles |

@@ -1,0 +1,163 @@
+{
+  "scope": "Seeded B1-B5 decisions; original-state/free-facing continuous solves. Timing includes native gate running alongside the 300s continuation; not a controlled performance comparison.",
+  "runs": [
+    {
+      "sourceRevision": "4ace2b8a6e425f6e356657813ae2d2cb2ef22507",
+      "sourceUnchanged": true,
+      "path": "runs/real11-long-fixed-b5-corrected-2026-11-15/report.json.gz",
+      "status": "unknown",
+      "termination": "deadline",
+      "elapsedSeconds": 303.70323691889644,
+      "work": {
+        "solverCalls": 1,
+        "workerLaunches": 1,
+        "feasibleSeedReturns": 0,
+        "maxSolverCalls": 1024
+      },
+      "expandedPrefixes": 3,
+      "exactResume": true,
+      "outerSession": 2,
+      "anchorArrivals": [
+        {
+          "block": "b7",
+          "tick": 64
+        }
+      ],
+      "nodeOutcomes": {
+        "feasible": 1,
+        "exhausted": 8,
+        "oracle_rejected": 0,
+        "suspended": 1,
+        "error": 0
+      },
+      "generation": {
+        "generated": 413,
+        "expanded": 4,
+        "emitted": 0,
+        "screened": 302,
+        "policyRejections": 27,
+        "exhausted": false
+      },
+      "inFlight": {
+        "ticks": 68,
+        "terminalSupport": "b11",
+        "constraintGeneration": {
+          "exhausted": false,
+          "emitted": 7,
+          "duplicateVariants": 2552,
+          "preparationSteps": 7826
+        }
+      },
+      "fixedPrefixAudit": {
+        "passed": true,
+        "programObjectsChecked": 102,
+        "inputs": 55,
+        "jumpInputs": [
+          0,
+          12,
+          21,
+          30,
+          40
+        ],
+        "selectedPhysicalRowsPreserved": true,
+        "noFacingEqualityRows": true
+      },
+      "independentRetainedReplays": [
+        {
+          "passed": true,
+          "scalarFeasible": true,
+          "supports": true,
+          "geometry": {
+            "feasible": true,
+            "ticks": 64
+          },
+          "exactHorizontalReplay": true,
+          "ticks": 64,
+          "threshold": 0.0,
+          "objective": -337.6606951185284,
+          "objectiveHasY": false
+        }
+      ],
+      "sourceHashesSha256": "426fe9ae5690f31df3fd93a50b079fe96e8544d6fc4683839c33d14b8a5f71e9"
+    },
+    {
+      "sourceRevision": "4ace2b8a6e425f6e356657813ae2d2cb2ef22507",
+      "sourceUnchanged": true,
+      "path": "runs/real11-long-fixed-b5-resume120-2026-11-15/report.json.gz",
+      "status": "unknown",
+      "termination": "deadline",
+      "elapsedSeconds": 125.86834612488747,
+      "work": {
+        "solverCalls": 0,
+        "workerLaunches": 0,
+        "feasibleSeedReturns": 0,
+        "maxSolverCalls": 1024
+      },
+      "expandedPrefixes": 0,
+      "exactResume": true,
+      "outerSession": 3,
+      "anchorArrivals": [
+        {
+          "block": "b7",
+          "tick": 64
+        }
+      ],
+      "nodeOutcomes": {
+        "feasible": 1,
+        "exhausted": 8,
+        "oracle_rejected": 0,
+        "suspended": 1,
+        "error": 0
+      },
+      "generation": {
+        "generated": 413,
+        "expanded": 4,
+        "emitted": 0,
+        "screened": 302,
+        "policyRejections": 27,
+        "exhausted": false
+      },
+      "inFlight": {
+        "ticks": 68,
+        "terminalSupport": "b11",
+        "constraintGeneration": {
+          "exhausted": false,
+          "emitted": 48,
+          "duplicateVariants": 55256,
+          "preparationSteps": 7826
+        }
+      },
+      "fixedPrefixAudit": {
+        "passed": true,
+        "programObjectsChecked": 102,
+        "inputs": 55,
+        "jumpInputs": [
+          0,
+          12,
+          21,
+          30,
+          40
+        ],
+        "selectedPhysicalRowsPreserved": true,
+        "noFacingEqualityRows": true
+      },
+      "independentRetainedReplays": [
+        {
+          "passed": true,
+          "scalarFeasible": true,
+          "supports": true,
+          "geometry": {
+            "feasible": true,
+            "ticks": 64
+          },
+          "exactHorizontalReplay": true,
+          "ticks": 64,
+          "threshold": 0.0,
+          "objective": -337.6606951185284,
+          "objectiveHasY": false
+        }
+      ],
+      "sourceHashesSha256": "426fe9ae5690f31df3fd93a50b079fe96e8544d6fc4683839c33d14b8a5f71e9"
+    }
+  ]
+}
