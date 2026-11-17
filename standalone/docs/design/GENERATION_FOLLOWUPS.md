@@ -46,20 +46,21 @@ block-to-block reach table is the coarser alternative.
 Real11's B5 landing offers a second landing-cover rectangle,
 `X [731.3, 731.3] × Z [-1095.3, -1094.7]`: the line where the player stands on B5
 exactly touching B6's +X face. It costs a decision branch and a screen rejection
-in every B5 frame. It is not float error: `canonical_cover`
+in every B5 frame. `canonical_cover`
 ([`spatial/regions.py`](../../src/parkour_solver/spatial/regions.py), "Preserve
-lower-dimensional free strata") keeps zero-width pieces on purpose, and
-`contact_regions`
+lower-dimensional free strata", from commit `f9aa0d96`) keeps zero-width pieces,
+and `contact_regions`
 ([`search/events/adapter.py`](../../src/parkour_solver/search/events/adapter.py))
 turns every cover piece into a landing option.
 
-- Proposed: drop cover pieces narrower than the minimum gap between blocks
-  (0.012) from landing covers, or from `canonical_cover` itself.
-- Remove such strata everywhere they show up, not only in landing covers: every
-  `canonical_cover` consumer (support components, surface groups, route guards,
-  guides) and the avoidance sides of section 3.
-- First read the originating commit `f9aa0d96` for why strata are kept, and
-  check other `canonical_cover` consumers (route guards, guides).
+Decision (user, 2026-11-17): no free piece narrower than 0.012, the minimum gap
+between blocks in this Minecraft version, can exist. Do not keep zero-width or
+sub-0.012 strata.
+
+- Remove them everywhere they appear: `canonical_cover` and its consumers (support
+  components, surface groups, route guards, guides), landing covers and the
+  avoidance sides of section 3.
+- Update the tests that pin the old strata behaviour to the new rule.
 - Estimated effort: a width filter plus one test; runtime cost negligible.
 
 ## 3. Sides covered by an adjacent block
