@@ -372,6 +372,8 @@ def render(report, requests, routes, stop):
               'where it can, so a side must be chosen. **Faces ruled out**: sides the player cannot be on at that phase. '
               '**Vertical clear**: phases where the player is certainly above or below it. **Uncertain**: phases decided '
               'by a named step or grind contact the model cannot settle, left to replay.',
+              '- **Sides** (`X+`, `Z-`, `over`, `under`) are sides of each solid\'s own box that keep the player clear of '
+              'it. They ignore neighbouring blocks, so a side covered by an adjacent block can still appear.',
               '- **Decision**: one thing to choose, either the sides to keep around one obstacle or which landing-cover '
               'rectangle of the goal block to land in. **Option**: one choice for one decision. **Alternative**: one '
               'surviving option per decision, combined; each is solved, and each feasible one becomes a route.',
