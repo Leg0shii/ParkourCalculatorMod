@@ -1,0 +1,66 @@
+plugins {
+	id 'application'
+}
+
+java {
+	sourceCompatibility = JavaVersion.VERSION_1_8
+	targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+tasks.withType(JavaCompile).configureEach {
+	options.release = 8
+	options.encoding = 'UTF-8'
+	options.compilerArgs << '-Xlint:-options'
+}
+
+repositories {
+	mavenCentral()
+}
+
+def osName = System.getProperty('os.name').toLowerCase(Locale.ROOT)
+def osArch = System.getProperty('os.arch').toLowerCase(Locale.ROOT)
+def arm = osArch.contains('aarch64') || osArch.contains('arm')
+def isMac = osName.contains('mac')
+def isWindows = osName.contains('win')
+def lwjglNatives = isWindows ? 'natives-windows' : isMac ? (arm ? 'natives-macos-arm64' : 'natives-macos') : (arm ? 'natives-linux-arm64' : 'natives-linux')
+def imguiNatives = isWindows ? 'imgui-java-natives-windows' : isMac ? 'imgui-java-natives-macos' : 'imgui-java-natives-linux'
+def imguiVersion = '1.86.12'
+
+dependencies {
+	implementation project(':core')
+	implementation "io.github.spair:imgui-java-binding:$imguiVersion"
+	implementation "io.github.spair:imgui-java-lwjgl3:$imguiVersion"
+	runtimeOnly "io.github.spair:$imguiNatives:$imguiVersion"
+	implementation 'com.google.code.gson:gson:2.8.0'
+	implementation platform('org.lwjgl:lwjgl-bom:3.3.4')
+	implementation 'org.lwjgl:lwjgl'
+	implementation 'org.lwjgl:lwjgl-glfw'
+	implementation 'org.lwjgl:lwjgl-opengl'
+	runtimeOnly "org.lwjgl:lwjgl::$lwjglNatives"
+	runtimeOnly "org.lwjgl:lwjgl-glfw::$lwjglNatives"
+	runtimeOnly "org.lwjgl:lwjgl-opengl::$lwjglNatives"
+}
+
+processResources {
+	from('../loader-fabric/src/client/resources/assets/parkourcalculatormod/fonts') {
+		into 'assets/parkourcalculatormod/fonts'
+	}
+}
+
+application {
+	mainClass = 'de.legoshi.parkourcalc.preview.UiPreview'
+	if (isMac) applicationDefaultJvmArgs = ['-XstartOnFirstThread']
+}
+
+tasks.named('run', JavaExec) {
+	group = 'application'
+	description = 'Opens the PKC UI outside Minecraft. Pass options with --args, see ui-preview/README.md.'
+	workingDir = rootProject.projectDir
+	standardInput = System.in
+}
+
+tasks.register('printClasspath') {
+	doLast {
+		println sourceSets.main.runtimeClasspath.asPath
+	}
+}

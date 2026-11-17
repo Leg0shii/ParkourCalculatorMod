@@ -26,8 +26,9 @@ rootProject.name = 'parkourcalculator'
 include 'core'
 include 'forge-core'
 include 'gpu'
+include 'ui-preview'
 
-stonecutter {
+if (!providers.gradleProperty('coreOnly').isPresent()) stonecutter {
 	create('loader-fabric') {
 		versions '26.3', '1.21.3', '1.20.4'
 		vcsVersion = '26.3'

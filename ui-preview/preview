@@ -1,0 +1,6 @@
+#!/bin/sh
+set -e
+root="$(cd "$(dirname "$0")/.." && pwd)"
+jdk="${JAVA_HOME:-$(dirname "$(dirname "$(readlink -f "$(command -v java)")")")}"
+(cd "$root" && ./gradlew -q -PcoreOnly -Dorg.gradle.java.home="$jdk" :ui-preview:installDist)
+exec "$root/ui-preview/build/install/ui-preview/bin/ui-preview" "$@"
