@@ -365,7 +365,8 @@ def render(report, requests, routes, stop):
             repair = owner['repair']
             members = [r for r in group if r['repairOwner'] == owner['record']]
             lines += [f'#### Movement: {movement_text(owner["movement"])}','',
-                      f'{plural(len(members),"route")} share this movement and differ only in how they avoid obstacles.','']
+                      ('This movement produced one route.' if len(members) == 1 else
+                       f'{len(members)} routes use this movement: same jumps and landings, different sides of the obstacles.'),'']
             lines += table(['Route','Outcome','Solved ticks','Objective','Obstacles passed','Accepted avoidance rows'],
                 [[numbers[r['record']],r['node'],r['solvedTicks'] if r['solvedTicks'] is not None else '-',
                   number(r['objective']) if r['objective'] is not None else '-',
@@ -396,7 +397,9 @@ def render(report, requests, routes, stop):
                 lines += table(['#','Obstacle','Ticks','Reason','Option'],
                     [[i,d['owner'] or f'solid {d["solidIndex"]}',f'{d["segment"][0]}-{d["segment"][1]}',d['reason'],rows_text(d['rows'])]
                      for i,d in enumerate(dropped,1)])
-            lines += [f'Alternatives sent to the solver: {len(repair["alternatives"])}.','']
+            lines += [f'Avoidance alternatives solved: {len(repair["alternatives"])}. An alternative picks a side for every '
+                      'obstacle in reach; each feasible one becomes a route.'+
+                      ('' if interacting else ' No obstacle is in reach, so the only alternative adds no avoidance rows.'),'']
             lines += table(['#','Rows the alternative adds','Outcome','Scene validation','Solves'],
                 [[i,alternative_text(a['rows']),a['status'],a['validation'] or '-',
                   '; '.join((f'request {request_index[s["problemHash"]]["index"]} ' if s['problemHash'] in request_index else '')+
