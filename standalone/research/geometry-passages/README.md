@@ -54,11 +54,12 @@ requests returned `unknown` with IPOPT status `Infeasible_Problem_Detected`
 ([request ledger](2026-11-16/cold-requests.json)); the
 [stop report](2026-11-16/cold-stop.json) links each to its route. Two closed
 B3 and B5 routes as oracle-rejected under the anchor policy, one was a rejected
-alternative on a feasible B5 route, and two were final optimizations of one
-avoidance alternative on a feasible B7 route. That alternative stayed unresolved,
-which suspends the B7 frame and gives the termination label. Explicit unknown
-retries are the only remaining work. The run therefore does not establish
-exhaustive coverage or optimality.
+alternative on a feasible B5 route, and two were rejected alternatives on a
+feasible B7 route. Separately, one B7 alternative (pass B6 on its +X side, then
++Z, then back to X ≤ 729.7) was blocked by the linear control relaxation
+before any IPOPT solve and stayed unresolved, which suspends the B7 frame and
+gives the termination label. Explicit unknown retries are the only remaining
+work. The run therefore does not establish exhaustive coverage or optimality.
 
 ## Reproduction
 

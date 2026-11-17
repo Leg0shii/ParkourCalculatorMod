@@ -18,7 +18,7 @@ everything not being worked on is in the [deferred-work register](DEFERRED_WORK.
   641 tests, no failures or skips. See [testing](TESTING.md).
 - Latest cold Real11 control on the PR: T64 at 14.1 s, then the DFS runs out of
   runnable work at 25.1 s with one avoidance alternative of a feasible B7 route
-  unresolved after IPOPT unknowns. See
+  unresolved after the linear control relaxation blocked it. See
   [performance](PERFORMANCE.md) for the full series of controls.
 - Longer Real11 trials are paused until the PR's solver changes settle. The saved
   fixed-B5 checkpoints predate constraint policy8/state3, so the next trial starts

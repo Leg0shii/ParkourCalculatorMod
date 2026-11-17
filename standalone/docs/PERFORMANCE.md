@@ -36,9 +36,10 @@ production code.
 
 The geometry-passages run finds T64 at 14.1 s and stops at 25.1 s with
 `numerical_unknown`: the DFS ran out of runnable work while the B7 frame stayed
-suspended on one unresolved avoidance alternative of a feasible route, whose
-final optimizations IPOPT ended with `Infeasible_Problem_Detected`. A local IPOPT
-infeasibility is not a certificate, so the run claims no exhaustive coverage.
+suspended on one avoidance alternative that the linear control relaxation
+blocked before any IPOPT solve. Five IPOPT solves ended
+`Infeasible_Problem_Detected`; a local IPOPT infeasibility is not a certificate,
+so the run claims no exhaustive coverage.
 
 ## Measured hotspots
 
