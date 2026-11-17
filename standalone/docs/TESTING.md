@@ -1,34 +1,33 @@
 # Tests and fixtures
 
-The geometry-driven avoidance gate passes640 tests with zero failures/errors/skips
-and unchanged runtime hashes. See the [full evidence and declared module scope](../research/geometry-passages/README.md).
-New controls cover finite entry geometry, conditional clear-side bridges, stronger
-joint propagation, exact timing siblings and cursor/source persistence beyond the
-removed32/128 limits. Archived evidence/fixture hashes remain unchanged.
+## Current gate
 
-Latest longer-Real11 correction at `4ace2b8a`: [611 selected native tests](../research/real11-long-solve/native-gate-summary.json)
-pass with no failures/errors/skips and unchanged sources. The added regression
-covers empty exhausted constraint generation, pending-work counterexamples and
-JSON-restored outcomes. The [trial record](../research/real11-long-solve/README.md)
-separates fixed-prefix/replay checks from the unfinished full-course search.
+`tools/native_gate.py` (commands in the [runbook](RUNBOOK.md)) on `7e4d85d4`, the merge
+of `main` into `perf/early-passage-screen`: **641 tests, no failures, errors or skips**,
+source unchanged during the run, layout validation passed. A first run of the same
+commit failed two real-worker tests (`test_checkpoint_guidance` and
+`test_integration`, results `unknown` and `error`) that passed in isolation and on
+the full rerun; treat a repeat as real. The gate keeps its declared module scope:
+dedicated ladder, climbable, vine and movement-entry modules are excluded, generic
+mixed-ladder controls and all numerical modules are included.
 
-Layout acceptance at `9c79e741`: [610 native-enabled tests](validation/layout-final/report.json), no failures/errors/skips, unchanged source during the run and902 preserved evidence/fixture hashes. This is the exact earlier600-test module scope plus10 package/profiler regressions. The current gate is `python tools/native_gate.py --output /new/path` from `standalone/`; [runbook](RUNBOOK.md) supplies install/environment steps. Shared builders/harnesses are in `tests/support`, with no test→test imports. The [layout guide](LAYOUT.md) explains archive regression data and preserved capabilities.
+Avoidance controls (`tests/unit/constraints/test_encounters.py` and the updated
+variant, option-key and movement tests) cover finite entry geometry, conditional
+clear-side bridges, joint propagation, exact timing siblings and cursor and source
+persistence without the removed 32/128 limits.
 
-Current `dd738c98` acceptance: [600 native-enabled tests](../research/hard-jump-comparisons/2026-11-11/native-gate/report.json), no failures/errors/skips and unchanged runtime hashes. [Evidence](../research/hard-jump-comparisons/README.md) also records131 archived-witness prefix-bound checks and80 updated retained-witness scene replays. The [execution reference](ANCHOR_SEARCH_EXECUTION_REFERENCE.md) maps each combination/pruning/query policy to its current module. The frozen feature gate describes its recorded source era; use `tools/native_gate.py` for the maintained equivalent scope plus packaging checks.
+## Gate history
 
-Focused additions are `test_candidate_comparison`, `test_proposal_analysis` and `test_transfer_time_bounds`, plus updated anchor DFS/policy and continuation tests. Coverage includes independent count protections, equality/strict bounds, explicit recovery, source hops, ceilings/unknowns, owned-tail isolation, JSON projection flags and resumed raw ordinals. Dedicated src/parkour_solver ladder/climbable/vine/movement-entry modules remain outside the selected scope; generic mixed-ladder controls and all IPOPT modules are included. Documentation-only follow-ups need link/status/source-consistency checks, not repeated cold numerical runs.
+| Source | Tests | Evidence |
+| --- | ---: | --- |
+| `e266785c` geometry passages | 640 | [report](../research/geometry-passages/2026-11-16/native-report.json) |
+| `4ace2b8a` longer Real11 correction | 611 | [summary](../research/real11-long-solve/native-gate-summary.json) |
+| `9c79e741` layout refactor | 610 | [report](validation/layout-final/report.json) |
+| `dd738c98` hard-jump comparisons | 600 | [report](../research/hard-jump-comparisons/2026-11-11/native-gate/report.json) |
+| 2026-11-10 solver integration | 571 | [report](../research/anchor-runtime-profile/integrated-2026-11-10/native-final/report.json) |
 
-Lazy queue time-bound follow-up: [51 focused checks](../research/anchor-runtime-profile/lazy-bounds-2026-11-10/report.json)
-pass with native dependencies/no skips. They cover selected-only arrival and
-refinement checks, equality, original-state DFS, external resume and persistence.
-
-Current integration acceptance (2026-11-10): [571 native-enabled selected tests](../research/anchor-runtime-profile/integrated-2026-11-10/native-final/report.json)
-pass with zero failures/errors/skips and105 runtime hashes matching the cold
-profile. Five additional profiler tests pass. The selected non-ladder src/parkour_solver
-scope and full IPOPT module list are explicit in the report; this is not an
-all-mod/game test claim. [Integration contract](ARCHITECTURE.md)
-and [cold results](../research/anchor-runtime-profile/README.md)
-record nested persistence, unknown retention, recovery and time-bound checks.
+Each count is for its own source and module scope; counts are not comparable across
+scope changes.
 
 ## Anchor DFS and finite terminal task
 
@@ -44,6 +43,7 @@ Run the [new native driver and matched finite-task measurement](../research/anch
 
 | Area changed | Focused modules under `tests/` |
 | --- | --- |
+| Avoidance passages and encounters | `test_encounters`, `test_option_keys`, `test_obstacles`, `test_movement_composition` |
 | Cells/corridors and bounds | `test_cell_geometry`, `test_cell_routes`, `test_corridor_guards`, `test_cell_local`, `test_cell_experiment` |
 | Schedule composition/full original state | `test_movement_composition`, `test_movement_units`, `test_movement_generation`, `test_generic_composition`, `test_shared_contacts` |
 | Reachability/scope/retention/persistent generation | `test_orchestrator_continuation`, `test_search_fixes`, `test_screen` |
@@ -94,7 +94,7 @@ Known baseline: `test_ladder_composition.LadderRegionTests.test_repeated_ladder_
 For new runs record source revision plus dirty diff, Python/runtime/compiler context, command, wall time, counts/skips/failures, full acceptance tier and limits. Increasing budgets is useful for accuracy, but is not a substitute for explaining an exclusion or generation defect. Unknown outcomes remain in the audit. Documentation changes need local navigation/inventory validation, not solver reruns.
 
 
-Current DFS acceptance: [results and logs](../research/dfs-interactions/README.md) record368/368 selected non-ladder numerical autonomy tests,54/54 IPOPT tests and25/25 post-logging repair/terminal tests passing. The previous broader466-test process exposed two grind/blip regressions, corrected by retaining named-probe uncertainty; both pass in the final non-ladder gate. The pre-existing ladder baseline remains. Current cold/resume reports reconcile14 worker calls, zero repeated completed requests and all independent witness replays. The final affected-scope pass intentionally excludes dedicated ladder/climbable/vine tests and is not an all-suite green claim.
+DFS acceptance at `498c054c`: [results and logs](../research/dfs-interactions/README.md) record368/368 selected non-ladder numerical autonomy tests,54/54 IPOPT tests and25/25 post-logging repair/terminal tests passing. The previous broader466-test process exposed two grind/blip regressions, corrected by retaining named-probe uncertainty; both pass in the final non-ladder gate. The pre-existing ladder baseline remains. Current cold/resume reports reconcile14 worker calls, zero repeated completed requests and all independent witness replays. The final affected-scope pass intentionally excludes dedicated ladder/climbable/vine tests and is not an all-suite green claim.
 
 ## Virtual terminal goals
 

@@ -1,7 +1,6 @@
 # Deferred work and unimplemented follow-ups
 
-Status reviewed2026-11-16; search policy remains `a11b9b18`, with the completed
-physical face-catalog feature recorded below. This is the central **index**, not another implementation
+Status reviewed 2026-11-16 against `perf/early-passage-screen`. This is the central **index**, not another implementation
 plan. It links detailed designs and records why an item is not current work.
 User instructions and [current state](CURRENT_STATE.md) control authorization.
 Do not start an item just because an older document says "next" or "pending".
@@ -17,7 +16,8 @@ and current state rather than leaving a second active plan.
 
 | ID | Topic / status | Detailed record | Scope and condition for returning |
 | --- | --- | --- | --- |
-| E1 | **Longer Real11 fixture trials — user deferred pending the other agent's solver improvements** | [Experiment and resume checklist](../research/real11-long-solve/README.md#status-and-resumption) | Preserve fixed initial-0 decisions through B5@55 and the latest manifest/SQLite pair. B7@64 is validated; B20/B22 remain unachieved. Review and integrate the other agent's completed improvements before returning, revalidate the prefix and B7 witness, and verify exact-resume compatibility. No further trial is currently running or requested. This does not pause that agent or activate S1. |
+| E1 | **Longer Real11 fixture trials: user deferred until the current solver changes (PR #3) settle** | [Experiment and resume checklist](../research/real11-long-solve/README.md#status-and-resumption) | Keep the fixed initial-0 decisions through B5@55. B7@64 is validated; B20/B22 remain unachieved. The saved checkpoints predate constraint policy8/state3, so the next trial starts cold; revalidate the prefix and the B7 witness. No trial is running or requested. |
+| G1 | **Automatic grouping and commitment of close movement decisions: user deferred** | [Pruning backlog](design/PRUNING_IMPROVEMENTS_BACKLOG.md#automatic-close-decision-grouping-and-commitment-2026-11-16) | Infer dependent decision groups automatically, unify checking, retention and commitment, and remove the supplied-window and commit paths it replaces. Until then cadence, comparison and retained inter-movement constraints stay as they are. |
 | S1 | **Interleaved ordinary-continuation scheduling — user deferred now** | [Concrete orchestration plan](design/BRANCH_SCHEDULING_INVESTIGATION.md) | Preserve the existing absolute T/−J/R-or-A key, logically interleave meaningful work, and keep bounds as selected-work exclusions. No priority-by-optimistic-finish rewrite. Resume only when the user requests it; no runtime scheduler change has been made. |
 | S2 | Work eligibility/lifecycle and feasibility-outcome cleanup — clarified, unimplemented; no implementation scheduled | [Same orchestration plan](design/BRANCH_SCHEDULING_INVESTIGATION.md#1-simplify-work-categories-and-keep-execution-state-separate), [outcome mapping](design/BRANCH_SCHEDULING_INVESTIGATION.md#2-normalize-feasibility-outcomes-at-one-boundary) | Ordinary/recovery-only/excluded eligibility; paused versus completed/error execution state; normally completed failed oracle check rejects its exact model under the agreed assumption. Remaining work after a feasible witness is ordinary. Preserve these clarifications for resumption; current `unresolved`/`refinements` implementation still exists. These details may be scoped independently later, not assumed part of a bookkeeping patch. The narrow empty-exhausted-domain retry fix in the longer Real11 trial is implemented separately; it does not implement this larger restructuring. |
 | S3 | Separate terminal landing feasibility from subsequent MAXZ optimization — unapproved option | [Remaining decisions](design/BRANCH_SCHEDULING_INVESTIGATION.md#remaining-decisions-before-implementation) | Not necessary merely to unify ordinary work. Current terminal solve intent remains configured optimization. Requires a measured benefit, explicit user decision, identity/version changes and equal-T objective tests. |
@@ -50,17 +50,6 @@ user deferrals and are not automatically the next task.
 | R3 | Convex/mixed-decision guidance and generic mixed-integer backends — experimental/unapproved | Convex guidance scope, continuous decision relaxation, no-threshold prototype proposal, dynamic transitions, route MIP, [generic backend research](research/MIXED_INTEGER_RESEARCH.md) | The disk/SOCP research prototype exists separately from production. Its proposed model updates, mixed step/ceiling transitions and alternative backend comparisons are not the active anchor solver. Verify one-hot/model inclusion, domain parity and independent replay before interpreting any relaxed result as a bound or feasible route. |
 | R4 | Multiplier/active-set/face-based schedule pruning and specialized exact-Y caching — historical research, not a selected new policy | [Generation performance proposal](PERFORMANCE.md), [pruning research](research/PRUNING_RESEARCH.md), [ladder completion scope](design/MOVEMENT_UNITS.md) | Do not use a local multiplier or one witness's Y/active face to eliminate other histories without a justified model. Ordinary identical-content preparation caching belongs to the separate bookkeeping task; do not confuse that performance work with new pruning or a new ladder-specific cache design. |
 
-## Separate assigned work: not deferred by the scheduler pause
-
-| Topic | Owner/status | Detailed handoff |
-| --- | --- | --- |
-| Measured repeated hashing, model preparation and snapshot costs | User assigned another agent, branch and worktree. The handoff exists; this register does not assert its implementation progress. The scheduling deferral does **not** pause/cancel that assignment. | [Bookkeeping performance handoff](PERFORMANCE.md), [raw baseline profiles](../research/bookkeeping-baseline/README.md) |
-
-That task must preserve current policy and exact resume/ownership. It should not
-implement S1–S4 or import pending outcome/scheduler changes as "performance" fixes.
-If the user resumes scheduling later, review bookkeeping commits and shared-file
-interfaces first rather than overwriting either branch.
-
 ## Completed or superseded: do not revive as backlog
 
 | Old pending claim / idea | Current resolution / reference |
@@ -72,22 +61,17 @@ interfaces first rather than overwriting either branch.
 | All remaining-time reasoning is deferred | Strict elapsed/remaining bounds and conditional hard-flight minima are implemented. Stronger proofs only are indexed at S7. |
 | Same-block setup jumps or stepping/ladder mechanics need to be introduced from scratch | Same-source setup hops, stepping generators and existing ladder/vine mechanics are implemented. Inter-block revisits/new ladder route coverage are M1/M4. |
 | Current generic routing needs authored raw-cell walks/guide containment or automatic support-top/guide helpers are still missing | Generic domain/geometry and anchor guides are implemented. [Current state](CURRENT_STATE.md). Old authored corridor controls remain explicit compatibility evidence. |
-| Numerical row dedup/bound extraction or large full-report callback rewrite is entirely unimplemented | Numerical row reduction, monitor compatibility and shared dispatch-root patches shipped. [Numerical reduction](IPOPT_CONSTRAINT_REDUCTION.md), [storage](CHECKPOINT_STORAGE.md). Remaining measured bookkeeping costs are separately assigned. |
-| Standalone package/folder cleanup remains a proposal | Implemented and validated. [Layout](LAYOUT.md), [refactor ledger](LAYOUT.md). |
+| Numerical row dedup/bound extraction or large full-report callback rewrite is entirely unimplemented | Numerical row reduction, monitor compatibility and shared dispatch-root patches shipped. [Numerical reduction](IPOPT_CONSTRAINT_REDUCTION.md), [storage](CHECKPOINT_STORAGE.md). Remaining measured bookkeeping costs are in [performance](PERFORMANCE.md). |
+| Standalone package/folder cleanup remains a proposal | Implemented and validated. [Layout](LAYOUT.md). |
 | Restore fixed state64, first comparison at10, blended/uncertain turn labels, discrete progress/slack ranking or constant-zero intermediate objective as current defaults | Superseded/rejected decisions, not deferred implementation tasks. Preserve current physical landing objective, binary turn labels, tick ordering and guided early-stop policy. [Decisions](DECISIONS_AND_PLANS.md), [execution reference](ANCHOR_SEARCH_EXECUTION_REFERENCE.md). |
 
 ## Resuming an item
 
 1. Have the user select the item/scope. Read its linked detail and current code;
    historical commands, branch names and "next" instructions are source-era data.
-2. Identify related implemented helpers and the active owners/parallel work. Keep
+2. Identify related implemented helpers and current owners. Keep
    one implementation plan; do not append contradictory instructions to a second.
 3. Confirm unresolved choices, domain and acceptance checks. Record the selected
    baseline, branch/worktree, source/settings and validation scope.
 4. Update this register, current state and decisions when work is activated,
    implemented, rejected or newly deferred. Preserve historical evidence.
-
-For the latest scheduling deferral, the full resumption details and acceptance
-checks are retained in [S1's plan](design/BRANCH_SCHEDULING_INVESTIGATION.md). No production
-source, solver behavior, policy identity or checkpoint schema changes in this
-registry/documentation pass.
