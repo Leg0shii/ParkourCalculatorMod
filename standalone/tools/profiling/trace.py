@@ -397,10 +397,11 @@ def render(report, requests, routes, stop):
                 lines += table(['#','Obstacle','Ticks','Reason','Option'],
                     [[i,d['owner'] or f'solid {d["solidIndex"]}',f'{d["segment"][0]}-{d["segment"][1]}',d['reason'],rows_text(d['rows'])]
                      for i,d in enumerate(dropped,1)])
+            choice = interacting or any(a['rows'] for a in repair['alternatives'])
             lines += [f'Avoidance alternatives solved: {len(repair["alternatives"])}. An alternative picks a side for every '
-                      'obstacle in reach; each feasible one becomes a route.'+
-                      ('' if interacting else ' No obstacle is in reach, so the only alternative adds no avoidance rows.'),'']
-            lines += table(['#','Rows the alternative adds','Outcome','Scene validation','Solves'],
+                      'obstacle in reach; each feasible one becomes a route.' if choice else
+                      'No obstacle is in reach, so there is no avoidance choice: the movement was solved once as is.','']
+            lines += table(['#','Rows the alternative adds' if choice else 'Rows added','Outcome','Scene validation','Solves'],
                 [[i,alternative_text(a['rows']),a['status'],a['validation'] or '-',
                   '; '.join((f'request {request_index[s["problemHash"]]["index"]} ' if s['problemHash'] in request_index else '')+
                             s.get('status','?')+
