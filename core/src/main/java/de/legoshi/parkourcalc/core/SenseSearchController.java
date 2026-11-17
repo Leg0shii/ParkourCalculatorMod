@@ -46,6 +46,7 @@ public final class SenseSearchController implements SenseFinderWindow.Host {
     private volatile float gameRowSens = Float.NaN;
     private volatile SenseFinder.Candidate selected;
     private volatile SenseFinder.Mode rankMode = SenseFinder.Mode.MARGIN;
+    private volatile int rankTick = -1;
     private volatile SenseFinder.Window window;
     private volatile SenseFinder.Turn searched;
     private volatile String applied = "";
@@ -179,8 +180,21 @@ public final class SenseSearchController implements SenseFinderWindow.Host {
 
     @Override
     public void setRankMode(SenseFinder.Mode mode) {
-        if (mode == null || mode == rankMode) return;
+        if (mode == null || (mode == rankMode && rankTick < 0)) return;
         rankMode = mode;
+        rankTick = -1;
+        rerank();
+    }
+
+    @Override
+    public int rankTick() {
+        return rankTick;
+    }
+
+    @Override
+    public void setRankTick(int k) {
+        if (k < 0 || k == rankTick) return;
+        rankTick = k;
         rerank();
     }
 
@@ -317,6 +331,7 @@ public final class SenseSearchController implements SenseFinderWindow.Host {
         if (c == null || t == null || engine.isSolving()) return;
         if (searchedStartTick < 0 || searchedStartTick >= inputData.size()) return;
         selected = c;
+        if (t.freeStart() && searchedStartTick == 0) engine.moveStart(c.startX, c.startZ);
         engine.writeYaws(inputData.getRows(), searchedStartTick, c.yaws, searchedFreeStartYaw);
         onUserChange.accept(searchedStartTick);
         applied = String.format(java.util.Locale.ROOT, "Wrote the %.2f%% row into the TAS, lands %+.5f", c.percent(), c.offset);
@@ -382,7 +397,7 @@ public final class SenseSearchController implements SenseFinderWindow.Host {
             ranked = Collections.emptyList();
             return;
         }
-        ranked = SenseFinder.ranked(found, rankMode);
+        ranked = SenseFinder.ranked(found, rankMode, rankTick);
     }
 
     private static String countText(int n) {
