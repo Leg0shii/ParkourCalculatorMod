@@ -82,6 +82,22 @@ def stop_report(state, requests):
     return dict(suspendedFrames=suspended,oracleRejectedRoutes=rejected,unknownRequests=unknown)
 
 
+def encounter_trace(entry):
+    from parkour_solver.constraints.encounters import PHASES
+    def face(i):
+        f = entry['faces'][i]
+        return f['axis']+('+' if f['direction'] > 0 else '-')
+    def phase(at):
+        return [at//3,PHASES[at%3]]
+    return dict(owner=entry['owner'],solidIndex=entry['solidIndex'],segment=entry['segment'],
+                possiblePhases=entry['possiblePhases'],
+                coveredPhases=[dict(phase=phase(at),certainFaces=[face(i) for i in certain])
+                               for at,certain in entry['coveredPhases']],
+                excludedFaces=[dict(phase=phase(at),face=face(i)) for at,i in entry['excludedFaces']],
+                verticalClear=[dict(phase=phase(at),face=face(i)) for at,i in entry['verticalClear']],
+                uncertain=[phase(at) for at in entry['uncertain']])
+
+
 def repair_trace(repair):
     generation = repair.get('constraintGeneration') or {}
     attempts = {a['problemHash']:dict(status=a['status'],reason=(a.get('certificate') or {}).get('reason'))
@@ -92,7 +108,7 @@ def repair_trace(repair):
                     for i in items if 'box' in i],
         contactChecks=sum('contactCheck' in i for i in items),
         generatorMetrics=generation.get('metrics',{}),
-        preparedEncounters=generation.get('encounterLog',[]),
+        preparedEncounters=[encounter_trace(e) for e in generation.get('encounterLog',[])],
         droppedOptions=generation.get('droppedOptions',[]),
         screenRejections=[dict(rowsHash=e['rowsHash'],**e['proof'],
                                **(dict(encounter=items[e['item']].get('owner'),segment=[items[e['item']].get('begin'),
