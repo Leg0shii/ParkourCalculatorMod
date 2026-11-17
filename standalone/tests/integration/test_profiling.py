@@ -212,7 +212,7 @@ class BookkeepingProfileTests(unittest.TestCase):
                       attemptLog=[dict(status='feasible', problemHash='h1')],
                       constraintGeneration=dict(items=[dict(owner='b6', box=[0]*6, begin=0, end=2), dict(contactCheck={})],
                           metrics=dict(excludedFaces=2), encounterLog=[dict(solidIndex=0, owner='b6', segment=[0, 2], possiblePhases=[[1, 'X']],
-                              faces=[dict(axis='X', direction=-1), dict(axis='X', direction=1)], coveredPhases=[[3, [0]]],
+                              faces=[dict(axis='X', direction=-1, plane=0.), dict(axis='X', direction=1, plane=1.)], coveredPhases=[[3, [0]]],
                               excludedFaces=[[4, 1]], verticalClear=[], uncertain=[])],
                           droppedOptions=[dict(solidIndex=0, segment=[0, 2], reason='dominated', rows=[avoid])],
                           screenExclusions=[dict(rowsHash='r', proof=dict(ruledOut=True, state=2, axis=1,
@@ -248,6 +248,9 @@ class BookkeepingProfileTests(unittest.TestCase):
         self.assertIn('| 1 | B6 sides t0-2 | Z ≤ -2.000 at t2 | interval reachability | empty Z interval at state 2 |', markdown)
         self.assertIn('| 1 | Z ≤ -2.000 at t2 | feasible | passed | request 1 feasible, IPOPT Solve_Succeeded |', markdown)
         self.assertIn('| b6 | 0-2 | 1X | 1 | X+ at 1X | none | none |', markdown)
+        from tools.profiling.trace import rows_text
+        self.assertEqual(rows_text([dict(mode='X', t1=1, cmp='GE', rhs=1.000001)], [('B6', 'X', 'GE', 1.), ('B7', 'X', 'GE', 1.)]),
+                         'B6/B7: X ≥ 1.000 at t1')
 
 
 class EnumerationProfileTests(unittest.TestCase):

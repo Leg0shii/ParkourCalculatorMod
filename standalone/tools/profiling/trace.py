@@ -92,6 +92,9 @@ def repair_trace(repair):
                              options=i['rows']) for i in items if i.get('role') == 'required_contact'],
         generatorMetrics=generation.get('metrics',{}),
         preparedEncounters=[encounter_trace(e) for e in generation.get('encounterLog',[])],
+        faceOwners=sorted({(e['owner'],f['axis'],'GE' if f['direction'] > 0 else 'LE',f['plane'])
+                           for e in generation.get('encounterLog',[]) if e['possiblePhases']
+                           for f in e['faces'] if f['axis'] != 'Y'}),
         droppedOptions=[dict(d,owner=next((i['owner'] for i in items if i.get('solidIndex') == d['solidIndex']),None))
                         for d in generation.get('droppedOptions',[])],
         screenRejections=[dict(rowsHash=e['rowsHash'],**e['proof'],
@@ -187,7 +190,7 @@ def number(value):
     return f'{value:.3f}' if isinstance(value,(int,float)) else str(value)
 
 
-def rows_text(rows):
+def rows_text(rows, owners=()):
     parts = {}
     for row in rows:
         if isinstance(row,(list,tuple)):
@@ -197,13 +200,15 @@ def rows_text(rows):
         parts.setdefault((axis,cmp,rhs),[]).append(tick)
     text = []
     for (axis,cmp,rhs),ticks in sorted(parts.items(),key=lambda kv:min(kv[1])):
+        names = sorted({o for o,a,c,plane in owners if a == axis and c == cmp and abs(plane-rhs) < 1e-4})
         ticks = sorted(set(ticks))
         spans, start = [], ticks[0]
         for previous, tick in zip(ticks,ticks[1:]+[None]):
             if tick != previous+1:
                 spans.append(f't{start}' if start == previous else f't{start}-{previous}')
                 start = tick
-        text.append(f'{axis} {"≥" if cmp == "GE" else "≤" if cmp == "LE" else "="} {rhs:.3f} at {", ".join(spans)}')
+        text.append(('/'.join(names)+': ' if names else '')+
+                    f'{axis} {"≥" if cmp == "GE" else "≤" if cmp == "LE" else "="} {rhs:.3f} at {", ".join(spans)}')
     return '; '.join(text) or 'none'
 
 
@@ -286,10 +291,19 @@ def passages_text(passages):
                      for p in passages) or 'no obstacle in reach'
 
 
-def alternative_text(rows):
+def row_owners(repair, goal, passages=None):
+    used = {(p['block'],side) for p in passages or () for side in p['sides']}
+    faces = [(o.upper(),a,c,plane) for o,a,c,plane in repair['faceOwners']
+             if passages is None or (o,a+('+' if c == 'GE' else '-')) in used]
+    landing = [(f'{goal} landing',r['mode'],r['cmp'],r['rhs']) for region in repair['landingRegions']
+               for option in region['options'] for r in option]
+    return faces+landing
+
+
+def alternative_text(rows, owners=()):
     if rows is None:
         return '-'
-    return rows_text(rows) if rows else 'no avoidance rows'
+    return rows_text(rows,owners) if rows else 'no avoidance rows'
 
 
 def render(report, requests, routes, stop):
@@ -363,7 +377,9 @@ def render(report, requests, routes, stop):
               'How to read the sections below:','',
               '- **Movement**: the fixed part of a route, its jumps and landings. Routes sharing a movement differ only in '
               'which side of each obstacle they pass.',
-              '- **Rows** read `axis ≥/≤ value at ticks`, on the player position at the start of each tick.',
+              '- **Rows** read `obstacle: axis ≥/≤ value at ticks`, on the player\'s centre at the start of each tick, so a '
+              'block edge appears shifted by the 0.3 half-width (B7\'s +X face at 730 is `X ≥ 730.3`). '
+              'The prefix names the obstacle whose side the row keeps; a plane shared by two boxes names both.',
               '- **Obstacle check**: every solid is paired with every landing segment (the ticks from one landing or jump '
               'to the next). A ground tick on a block is its own segment.',
               '- **Phase**: one sweep of one tick. Minecraft moves the player along Y, then X, then Z each tick and checks '
@@ -391,16 +407,17 @@ def render(report, requests, routes, stop):
         for owner in (r for r in group if r['repair']):
             repair = owner['repair']
             members = [r for r in group if r['repairOwner'] == owner['record']]
+            goal = first['goal'].upper()
             lines += [f'#### Movement: {movement_text(owner["movement"])}','',
                       ('This movement produced one route.' if len(members) == 1 else
                        f'{len(members)} routes use this movement: same jumps and landings, different sides of the obstacles.'),'']
             lines += table(['Route','Outcome','Solved ticks','Objective','Obstacles passed','Accepted avoidance rows'],
                 [[numbers[r['record']],r['node'],r['solvedTicks'] if r['solvedTicks'] is not None else '-',
                   number(r['objective']) if r['objective'] is not None else '-',
-                  passages_text(r['passages']),alternative_text(r['acceptedAlternative'])] for r in members])
+                  passages_text(r['passages']),
+                  alternative_text(r['acceptedAlternative'],row_owners(repair,goal,r['passages']))] for r in members])
             prepared = repair['preparedEncounters']
             interacting = [e for e in prepared if e['possiblePhases']]
-            goal = first['goal'].upper()
             lines += [f'Obstacle checks: {len(prepared)}; {len(prepared)-len(interacting)} cannot touch the player anywhere in '
                       f'their segment. A check is repeated when the rows chosen so far change what is reachable.','']
             lines += table(['Obstacle','Segment ticks','Possible phases','Already clear','Faces ruled out','Vertical clear','Uncertain'],
@@ -423,7 +440,7 @@ def render(report, requests, routes, stop):
                 [[i,(f'{goal} landing region' if e['encounter'] == 'landing region' else f'{e["encounter"].upper()} sides')+
                     (f' t{e["segment"][0]}' if e['segment'][0] == e['segment'][1] else f' t{e["segment"][0]}-{e["segment"][1]}')
                   if e.get('segment') else e.get('encounter','whole branch'),
-                  (region_text(e['optionRows']) if e['encounter'] == 'landing region' else rows_text(e['optionRows']))
+                  (region_text(e['optionRows']) if e['encounter'] == 'landing region' else rows_text(e['optionRows'],row_owners(repair,goal)))
                   if 'optionRows' in e else 'the rows already selected',
                   CHECKS.get(e['reason'],e['reason']),proof_text(e)] for i,e in enumerate(rejected,1)])
             dropped = repair['droppedOptions']
@@ -432,14 +449,14 @@ def render(report, requests, routes, stop):
                           ', '.join(f'{n} {k}' for k,n in Counter(d['reason'] for d in dropped).most_common())+').','']
                 lines += table(['#','Decision','Reason','Option'],
                     [[i,f'{(d["owner"] or "solid "+str(d["solidIndex"])).upper()} sides t{d["segment"][0]}-{d["segment"][1]}',
-                      d['reason'],rows_text(d['rows'])]
+                      d['reason'],rows_text(d['rows'],row_owners(repair,goal))]
                      for i,d in enumerate(dropped,1)])
             choice = interacting or any(a['rows'] for a in repair['alternatives'])
             lines += [f'Alternatives solved: {len(repair["alternatives"])}. Each combines one surviving option per decision; '
                       'each feasible one becomes a route.' if choice else
                       'No obstacle is in reach, so there is no avoidance choice: the movement was solved once as is.','']
             lines += table(['#','Rows the alternative adds' if choice else 'Rows added','Outcome','Scene validation','Solves'],
-                [[i,alternative_text(a['rows']),a['status'],a['validation'] or '-',
+                [[i,alternative_text(a['rows'],row_owners(repair,goal)),a['status'],a['validation'] or '-',
                   '; '.join((f'request {request_index[s["problemHash"]]["index"]} ' if s['problemHash'] in request_index else '')+
                             s.get('status','?')+
                             (f' ({s["reason"]})' if s.get('reason') else '')+
@@ -449,7 +466,7 @@ def render(report, requests, routes, stop):
                  for i,a in enumerate(repair['alternatives'],1)])
             for label, branches in (('Unresolved',repair['unresolved']),('Pending',repair['pending'])):
                 if branches:
-                    lines += [f'{label} alternatives (kept for an explicit retry):','']+[f'- {rows_text(b)}' for b in branches]+['']
+                    lines += [f'{label} alternatives (kept for an explicit retry):','']+[f'- {rows_text(b,row_owners(repair,goal))}' for b in branches]+['']
         follow = sorted(children.get(fid,[]))
         if follow:
             lines += ['Next partial solves built from this frame: '+
