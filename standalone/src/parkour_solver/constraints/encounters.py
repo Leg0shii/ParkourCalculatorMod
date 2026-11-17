@@ -85,7 +85,8 @@ def prepare_encounter(owner, item, envelopes):
     """Prepare atomically: a deadline leaves the unprocessed item resumable."""
     if 'phases' in item:
         return
-    result = dict(item, faces=faces(item['box']), phases=[], verticalClear=[], coveredPhases=[], uncertain=[])
+    result = dict(item, faces=faces(item['box']), phases=[], verticalClear=[], coveredPhases=[], uncertain=[],
+                  excludedFaces=[])
     result['entryFaces'] = support_faces(owner, result, envelopes, item['begin'])
     result['exitFaces'] = support_faces(owner, result, envelopes, item['end'])
     uncertain = {e.get('input', e.get('offset')) for e in owner.profile.get('caseEvents', [])}
@@ -123,6 +124,7 @@ def prepare_encounter(owner, item, envelopes):
                 rows = [owner.face_row(face, t) for t in indices[face['axis']]]
                 if interaction_reachability(envelopes, rows)['ruledOut']:
                     owner.metric('excludedFaces')
+                    result['excludedFaces'].append([at, i])
                     continue
                 options[str(i)] = rows
                 costs[str(i)] = sum(max(0., face['direction']*(row['rhs']-owner.coordinate(face['axis'], row['t1'], envelopes)))**2
@@ -143,6 +145,10 @@ def prepare_encounter(owner, item, envelopes):
         record = dict(solidIndex=item['solidIndex'], segment=[item['begin'], item['end']], phases=result['uncertain'])
         if record not in owner.state['uncertainInteractions']:
             owner.state['uncertainInteractions'].append(record)
+    owner.state['encounterLog'].append(dict(
+        solidIndex=item['solidIndex'], owner=item.get('owner'), segment=[item['begin'], item['end']],
+        faces=result['faces'], possiblePhases=result['possiblePhases'], coveredPhases=result['coveredPhases'],
+        excludedFaces=result['excludedFaces'], verticalClear=result['verticalClear'], uncertain=result['uncertain']))
     owner.metric('preparedEncounters')
 
 
@@ -219,11 +225,15 @@ def encounter_option(owner, item, cursor, envelopes):
             owner.metric('optionLeaves')
             if key in cursor['completed']:
                 owner.metric('duplicateOptions')
+                owner.state['droppedOptions'].append(dict(solidIndex=item['solidIndex'], segment=[item['begin'], item['end']],
+                                                          reason='duplicate', rows=rows))
                 continue
             # Same remaining capabilities: a completed weaker cover subsumes a
             # stricter description. Never use this rule on unfinished walks.
             if any(rows_entailed(envelopes, rows, weaker) for weaker in cursor.get('covers', [])):
                 owner.metric('dominatedOptions')
+                owner.state['droppedOptions'].append(dict(solidIndex=item['solidIndex'], segment=[item['begin'], item['end']],
+                                                          reason='dominated', rows=rows))
                 continue
             cursor['completed'].append(key)
             cursor.setdefault('covers', []).append(rows)

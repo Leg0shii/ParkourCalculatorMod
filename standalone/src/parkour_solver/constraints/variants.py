@@ -85,6 +85,8 @@ class ConstraintVariants:
             exhausted=False, reference=copy.deepcopy(reference), preparationSteps=0, duplicateVariants=0,
             metrics={}, uncertainInteractions=[], timings=dict(preparationSeconds=0., variantGenerationSeconds=0.,
                                      conditionalAnalysisSeconds=0.))
+        self.state.setdefault('encounterLog', [])
+        self.state.setdefault('droppedOptions', [])
         self.items, self.exclusions = self.state['items'], self.state['exclusions']
         self.reference = self.state['reference']
         self.seen, self.partial_seen = set(self.state['seen']), set(self.state['partialSeen'])
@@ -147,8 +149,11 @@ class ConstraintVariants:
     def _screen(self, rows):
         return self.analyze(rows)['proof']
 
-    def excluded(self, rows, proof):
-        self.state['screenExclusions'].append(dict(rowsHash=digest(rows), proof=proof))
+    def excluded(self, rows, proof, item=None, option=None):
+        entry = dict(rowsHash=digest(rows), proof=proof)
+        if option is not None:
+            entry.update(item=item, optionRows=option['rows'], passage=option.get('passage'))
+        self.state['screenExclusions'].append(entry)
         self.metric('screenExclusions')
 
     def prepare_item(self, item):
@@ -271,7 +276,7 @@ class ConstraintVariants:
             rows = canonical_rows(node['rows']+option['rows'])
             child_analysis = self.analyze(rows)
             if child_analysis['proof']['ruledOut']:
-                self.excluded(rows, child_analysis['proof'])
+                self.excluded(rows, child_analysis['proof'], node['chosenItem'], option)
                 del node['selected']
                 continue
             child = dict(item=0, remaining=[i for i in remaining if i != node['chosenItem']], rows=rows,

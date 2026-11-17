@@ -69,7 +69,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/DEVELOPMENT.md](DEVELOPMENT.md) | 11359 |
 | [docs/DOC_INDEX.md](DOC_INDEX.md) | 25664 |
 | [docs/FILE_INDEX.md](FILE_INDEX.md) | 203797 |
-| [docs/FUNCTION_INDEX.md](FUNCTION_INDEX.md) | 67693 |
+| [docs/FUNCTION_INDEX.md](FUNCTION_INDEX.md) | 67695 |
 | [docs/IPOPT_CONSTRAINT_REDUCTION.md](IPOPT_CONSTRAINT_REDUCTION.md) | 5578 |
 | [docs/IPOPT_FEASIBILITY_MODE.md](IPOPT_FEASIBILITY_MODE.md) | 4781 |
 | [docs/LAYOUT.md](LAYOUT.md) | 6162 |
@@ -81,7 +81,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/RUNBOOK.md](RUNBOOK.md) | 11318 |
 | [docs/TESTING.md](TESTING.md) | 15517 |
 | [docs/design/ANCHOR_POLICY_DECISIONS.md](design/ANCHOR_POLICY_DECISIONS.md) | 27544 |
-| [docs/design/AVOIDANCE_PASSAGES.md](design/AVOIDANCE_PASSAGES.md) | 9538 |
+| [docs/design/AVOIDANCE_PASSAGES.md](design/AVOIDANCE_PASSAGES.md) | 9923 |
 | [docs/design/BRANCH_SCHEDULING_INVESTIGATION.md](design/BRANCH_SCHEDULING_INVESTIGATION.md) | 34072 |
 | [docs/design/CONTACT_COMBINATIONS.md](design/CONTACT_COMBINATIONS.md) | 9112 |
 | [docs/design/FACE_MERGING_IMPLEMENTATION_PLAN.md](design/FACE_MERGING_IMPLEMENTATION_PLAN.md) | 22013 |
@@ -1276,10 +1276,10 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [src/parkour_solver/constraints/__init__.py](../src/parkour_solver/constraints/__init__.py) | 0 |
 | [src/parkour_solver/constraints/avoidance.py](../src/parkour_solver/constraints/avoidance.py) | 8145 |
 | [src/parkour_solver/constraints/contacts.py](../src/parkour_solver/constraints/contacts.py) | 4235 |
-| [src/parkour_solver/constraints/encounters.py](../src/parkour_solver/constraints/encounters.py) | 14350 |
+| [src/parkour_solver/constraints/encounters.py](../src/parkour_solver/constraints/encounters.py) | 15256 |
 | [src/parkour_solver/constraints/hit_events.py](../src/parkour_solver/constraints/hit_events.py) | 9533 |
 | [src/parkour_solver/constraints/route_guards.py](../src/parkour_solver/constraints/route_guards.py) | 11591 |
-| [src/parkour_solver/constraints/variants.py](../src/parkour_solver/constraints/variants.py) | 15576 |
+| [src/parkour_solver/constraints/variants.py](../src/parkour_solver/constraints/variants.py) | 15877 |
 | [src/parkour_solver/io/__init__.py](../src/parkour_solver/io/__init__.py) | 0 |
 | [src/parkour_solver/io/capture.py](../src/parkour_solver/io/capture.py) | 6352 |
 | [src/parkour_solver/io/checkpoint_store.py](../src/parkour_solver/io/checkpoint_store.py) | 10851 |
@@ -1473,7 +1473,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [tests/integration/test_movement_contacts.py](../tests/integration/test_movement_contacts.py) | 11400 |
 | [tests/integration/test_orchestrator_continuation.py](../tests/integration/test_orchestrator_continuation.py) | 19182 |
 | [tests/integration/test_package_layout.py](../tests/integration/test_package_layout.py) | 4032 |
-| [tests/integration/test_profiling.py](../tests/integration/test_profiling.py) | 18200 |
+| [tests/integration/test_profiling.py](../tests/integration/test_profiling.py) | 18728 |
 | [tests/integration/test_repair_resume.py](../tests/integration/test_repair_resume.py) | 14925 |
 | [tests/integration/test_shared_contacts.py](../tests/integration/test_shared_contacts.py) | 4275 |
 | [tests/research/__init__.py](../tests/research/__init__.py) | 0 |
@@ -1505,7 +1505,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [tests/support/time_progress.py](../tests/support/time_progress.py) | 575 |
 | [tests/unit/__init__.py](../tests/unit/__init__.py) | 0 |
 | [tests/unit/constraints/__init__.py](../tests/unit/constraints/__init__.py) | 51 |
-| [tests/unit/constraints/test_encounters.py](../tests/unit/constraints/test_encounters.py) | 9506 |
+| [tests/unit/constraints/test_encounters.py](../tests/unit/constraints/test_encounters.py) | 10515 |
 | [tests/unit/constraints/test_option_keys.py](../tests/unit/constraints/test_option_keys.py) | 4788 |
 | [tests/unit/io/__init__.py](../tests/unit/io/__init__.py) | 0 |
 | [tests/unit/io/test_checkpoint_store.py](../tests/unit/io/test_checkpoint_store.py) | 14870 |
@@ -1606,7 +1606,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [tools/profiling/enumeration.py](../tools/profiling/enumeration.py) | 5419 |
 | [tools/profiling/enumeration_calibrate.py](../tools/profiling/enumeration_calibrate.py) | 4476 |
 | [tools/profiling/enumeration_compare.py](../tools/profiling/enumeration_compare.py) | 3565 |
-| [tools/profiling/run.py](../tools/profiling/run.py) | 16349 |
+| [tools/profiling/run.py](../tools/profiling/run.py) | 16785 |
 | [tools/profiling/runtime.py](../tools/profiling/runtime.py) | 9235 |
 | [tools/validate_layout.py](../tools/validate_layout.py) | 1433 |
 | [tools/witness_bound_audit.py](../tools/witness_bound_audit.py) | 2779 |

@@ -209,8 +209,10 @@ class BookkeepingProfileTests(unittest.TestCase):
         repair = dict(completed=[dict(branch=branch, status='feasible', validationStatus='passed', problemHashes=['h1'])],
                       attemptLog=[dict(status='feasible', problemHash='h1')],
                       constraintGeneration=dict(items=[dict(owner='b6', box=[0]*6, begin=0, end=2), dict(contactCheck={})],
-                          metrics=dict(excludedFaces=2), screenExclusions=[dict(rowsHash='r', proof=dict(
-                              ruledOut=True, state=2, axis=1, reason='interval_reach_contradiction'))]))
+                          metrics=dict(excludedFaces=2), encounterLog=[dict(solidIndex=0, excludedFaces=[[4, 1]])],
+                          droppedOptions=[dict(solidIndex=0, reason='dominated', rows=[])],
+                          screenExclusions=[dict(rowsHash='r', proof=dict(ruledOut=True, state=2, axis=1,
+                              reason='interval_reach_contradiction'), item=0, optionRows=[avoid], passage=None)]))
         parent = record('p', 'k0', [landing], repair, dict(problemHash='h1', plan=dict(walls=[
             dict(avoid, t2=2), dict(mode='F', t1=0, cmp='GE', rhs=0.), dict(landing, name='checkpoint_probe:x')])))
         sibling = record('s', 'k0', [landing], witness=dict(problemHash='h1'))
@@ -221,7 +223,10 @@ class BookkeepingProfileTests(unittest.TestCase):
         trace = routes['p']['repair']
         self.assertEqual([e['owner'] for e in trace['encounters']], ['b6'])
         self.assertEqual(trace['contactChecks'], 1)
-        self.assertEqual(trace['screenRejections'][0]['reason'], 'interval_reach_contradiction')
+        self.assertEqual({k: trace['screenRejections'][0][k] for k in ('reason', 'encounter', 'segment', 'optionRows')},
+                         dict(reason='interval_reach_contradiction', encounter='b6', segment=[0, 2], optionRows=[avoid]))
+        self.assertEqual((trace['preparedEncounters'][0]['excludedFaces'], trace['droppedOptions'][0]['reason']),
+                         ([[4, 1]], 'dominated'))
         self.assertEqual(trace['alternatives'][0]['solves'], [dict(problemHash='h1', status='feasible', reason=None)])
         self.assertEqual((routes['s']['repairOwner'], routes['s']['repair']), ('p', None))
         self.assertEqual(routes['s']['acceptedAlternative'], [[0, 2, 'Z', 'LE', -2.]])

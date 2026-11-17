@@ -134,6 +134,22 @@ class EncounterTests(unittest.TestCase):
         self.assertEqual(list(owner), [])
         self.assertTrue(owner.state['screenExclusions'])
 
+    def test_rejected_faces_options_and_screened_alternatives_are_logged_with_their_counts(self):
+        owner = source(3)
+        list(owner)
+        state, metrics = owner.state, owner.state['metrics']
+        self.assertEqual(len(state['encounterLog']), metrics['preparedEncounters'])
+        self.assertEqual(sum(len(e['excludedFaces']) for e in state['encounterLog']), metrics['excludedFaces'])
+        self.assertEqual(sum(len(e['coveredPhases']) for e in state['encounterLog']), metrics['excludedPhases'])
+        reasons = [d['reason'] for d in state['droppedOptions']]
+        self.assertEqual((reasons.count('duplicate'), reasons.count('dominated')),
+                         (metrics['duplicateOptions'], metrics['dominatedOptions']))
+        screened = [e for e in state['screenExclusions'] if 'item' in e]
+        self.assertTrue(screened)
+        for entry in screened:
+            self.assertEqual(owner.items[entry['item']]['solidIndex'], 0)
+            self.assertTrue(entry['optionRows'])
+
     def test_legacy_local_cap_fields_are_removed_from_normalized_policy(self):
         request = dict(flat_scene(), maxContactBranches=1, maxPassageCandidates=1,
                        maxBlockagesPerObstacle=0, maxHorizontalBlockagesPerObstacle=0,

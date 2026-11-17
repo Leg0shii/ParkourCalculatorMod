@@ -86,12 +86,19 @@ def repair_trace(repair):
     generation = repair.get('constraintGeneration') or {}
     attempts = {a['problemHash']:dict(status=a['status'],reason=(a.get('certificate') or {}).get('reason'))
                 for a in repair.get('attemptLog',[])}
+    items = generation.get('items',[])
     return dict(
         encounters=[dict(owner=i['owner'],box=i['box'],begin=i['begin'],end=i['end'])
-                    for i in generation.get('items',[]) if 'box' in i],
-        contactChecks=sum('contactCheck' in i for i in generation.get('items',[])),
+                    for i in items if 'box' in i],
+        contactChecks=sum('contactCheck' in i for i in items),
         generatorMetrics=generation.get('metrics',{}),
-        screenRejections=[dict(rowsHash=e['rowsHash'],**e['proof']) for e in generation.get('screenExclusions',[])],
+        preparedEncounters=generation.get('encounterLog',[]),
+        droppedOptions=generation.get('droppedOptions',[]),
+        screenRejections=[dict(rowsHash=e['rowsHash'],**e['proof'],
+                               **(dict(encounter=items[e['item']].get('owner'),segment=[items[e['item']].get('begin'),
+                                   items[e['item']].get('end')],optionRows=e['optionRows'],passage=e['passage'])
+                                  if 'item' in e else {}))
+                          for e in generation.get('screenExclusions',[])],
         alternatives=[dict(rows=json.loads(c['branch'])[0],status=c['status'],validation=c.get('validationStatus'),
                            solves=[dict(problemHash=h,**attempts.get(h,{})) for h in c.get('problemHashes',[])])
                       for c in repair.get('completed',[])],

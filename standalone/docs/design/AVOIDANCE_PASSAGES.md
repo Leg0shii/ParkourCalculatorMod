@@ -133,6 +133,11 @@ compiler/validation contract.
 
 `ConstraintVariants.state.metrics` records actual phase checks/exclusions,
 meaningful nodes/children/options, duplicates/dominance and analysis cache work.
+The state also lists what those counts summarize: `encounterLog` holds each
+prepared encounter's possible, covered and vertical-clear phases and the faces its
+reachability screen excluded at each phase; `droppedOptions` holds each duplicate
+or dominated cover with its rows; a `screenExclusions` entry for a rejected option
+names the item it assigned, the option rows and the passage.
 Timings distinguish preparation, generation and conditional analysis; inclusive
 times overlap. `avoidanceMetrics` combines completed/pending sources, and legacy
 support-search `obstacleSearch` exposes these counters and accepted kinds.
