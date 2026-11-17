@@ -1,7 +1,7 @@
 # Generation follow-ups (proposed)
 
 Work found while tracing Real11 solve reports. Not approved; see the
-[deferred-work register](../DEFERRED_WORK.md) (P1, P2).
+[deferred-work register](../DEFERRED_WORK.md) (P1, P2, P3).
 
 ## 1. Encounter prescreen
 
@@ -55,8 +55,29 @@ turns every cover piece into a landing option.
 
 - Proposed: drop cover pieces narrower than the minimum gap between blocks
   (0.012) from landing covers, or from `canonical_cover` itself.
+- Remove such strata everywhere they show up, not only in landing covers: every
+  `canonical_cover` consumer (support components, surface groups, route guards,
+  guides) and the avoidance sides of section 3.
 - First read the originating commit `f9aa0d96` for why strata are kept, and
   check other `canonical_cover` consumers (route guards, guides).
 - Estimated effort: a width filter plus one test; runtime cost negligible.
+
+## 3. Sides covered by an adjacent block
+
+B7's +X side (X = 730) is offered as an avoidance side although B6 sits flush
+against it: the gap between them is the same zero-width stratum as section 2. The
+generator takes all six sides of each solid's own box (`faces(item['box'])` in
+[`constraints/encounters.py`](../../src/parkour_solver/constraints/encounters.py))
+and never consults neighbours; the exposed-face catalog
+([`spatial/faces.py`](../../src/parkour_solver/spatial/faces.py)) is not used by any
+generator. "B7 X+" plus B6's Z- rows names the same free region as "B7 Z-", so the
+alternatives duplicate: on the Real11 cold run, frame 4 solved 18 routes with 5
+distinct results and frame 8 solved 21 with 9.
+
+- Proposed: offer only sides with an exposed face of positive width, after
+  section 2 removes zero-width strata.
+- Estimated effort: map each solid's sides to the face catalog in
+  `prepare_encounter`, plus one test with two flush blocks; saves the duplicate
+  IPOPT solves (13 of 18 in frame 4).
 
 Related: [obstacle relevance](OBSTACLE_RELEVANCE.md), [avoidance passages](AVOIDANCE_PASSAGES.md).

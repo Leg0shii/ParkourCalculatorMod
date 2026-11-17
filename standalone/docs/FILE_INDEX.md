@@ -20,13 +20,13 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 
 | File | Bytes |
 | --- | ---: |
-| [AGENTS.md](../AGENTS.md) | 6569 |
+| [AGENTS.md](../AGENTS.md) | 6542 |
 
 ## CLAUDE.md
 
 | File | Bytes |
 | --- | ---: |
-| [CLAUDE.md](../CLAUDE.md) | 6569 |
+| [CLAUDE.md](../CLAUDE.md) | 6542 |
 
 ## README.md
 
@@ -65,10 +65,10 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/CODE_MAP.md](CODE_MAP.md) | 25061 |
 | [docs/CURRENT_STATE.md](CURRENT_STATE.md) | 10693 |
 | [docs/DECISIONS_AND_PLANS.md](DECISIONS_AND_PLANS.md) | 8449 |
-| [docs/DEFERRED_WORK.md](DEFERRED_WORK.md) | 18718 |
+| [docs/DEFERRED_WORK.md](DEFERRED_WORK.md) | 19022 |
 | [docs/DEVELOPMENT.md](DEVELOPMENT.md) | 11359 |
 | [docs/DOC_INDEX.md](DOC_INDEX.md) | 25844 |
-| [docs/FILE_INDEX.md](FILE_INDEX.md) | 203945 |
+| [docs/FILE_INDEX.md](FILE_INDEX.md) | 203947 |
 | [docs/FUNCTION_INDEX.md](FUNCTION_INDEX.md) | 67695 |
 | [docs/IPOPT_CONSTRAINT_REDUCTION.md](IPOPT_CONSTRAINT_REDUCTION.md) | 5578 |
 | [docs/IPOPT_FEASIBILITY_MODE.md](IPOPT_FEASIBILITY_MODE.md) | 4781 |
@@ -85,7 +85,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/design/BRANCH_SCHEDULING_INVESTIGATION.md](design/BRANCH_SCHEDULING_INVESTIGATION.md) | 34072 |
 | [docs/design/CONTACT_COMBINATIONS.md](design/CONTACT_COMBINATIONS.md) | 9112 |
 | [docs/design/FACE_MERGING_IMPLEMENTATION_PLAN.md](design/FACE_MERGING_IMPLEMENTATION_PLAN.md) | 22013 |
-| [docs/design/GENERATION_FOLLOWUPS.md](design/GENERATION_FOLLOWUPS.md) | 3299 |
+| [docs/design/GENERATION_FOLLOWUPS.md](design/GENERATION_FOLLOWUPS.md) | 4526 |
 | [docs/design/GENERATION_RELEVANCE_PLAN.md](design/GENERATION_RELEVANCE_PLAN.md) | 11545 |
 | [docs/design/GENERIC_COMPOSITION.md](design/GENERIC_COMPOSITION.md) | 7205 |
 | [docs/design/HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md](design/HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md) | 66368 |
@@ -1609,6 +1609,6 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [tools/profiling/enumeration_compare.py](../tools/profiling/enumeration_compare.py) | 3565 |
 | [tools/profiling/run.py](../tools/profiling/run.py) | 11402 |
 | [tools/profiling/runtime.py](../tools/profiling/runtime.py) | 9235 |
-| [tools/profiling/trace.py](../tools/profiling/trace.py) | 28225 |
+| [tools/profiling/trace.py](../tools/profiling/trace.py) | 28460 |
 | [tools/validate_layout.py](../tools/validate_layout.py) | 1433 |
 | [tools/witness_bound_audit.py](../tools/witness_bound_audit.py) | 2779 |
