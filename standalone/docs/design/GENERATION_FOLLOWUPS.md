@@ -75,8 +75,12 @@ generator. "B7 X+" plus B6's Z- rows names the same free region as "B7 Z-", so t
 alternatives duplicate: on the Real11 cold run, frame 4 solved 18 routes with 5
 distinct results and frame 8 solved 21 with 9.
 
-- Proposed: offer only sides with an exposed face of positive width, after
-  section 2 removes zero-width strata.
+- In player-centre space the expanded boxes overlap: B6 `X [729.7, 731.3] × Z [-1095.3, -1093.7]`,
+  B7 `X [728.7, 730.3] × Z [-1095.3, -1092.7]`. Along B6's Z length, `X ≥ 730.3` lies inside
+  B6; B7's X = 730.3 boundary is real only for Z in [-1093.7, -1092.7]. There the
+  usable X side is B6's (`X ≤ 729.7` once over B7, or `X ≥ 731.3`).
+- Proposed: derive sides from the exposed boundary of the union of expanded boxes,
+  piecewise along the other axis, after section 2 removes zero-width strata.
 - Estimated effort: map each solid's sides to the face catalog in
   `prepare_encounter`, plus one test with two flush blocks; saves the duplicate
   IPOPT solves (13 of 18 in frame 4).

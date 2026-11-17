@@ -85,7 +85,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/design/BRANCH_SCHEDULING_INVESTIGATION.md](design/BRANCH_SCHEDULING_INVESTIGATION.md) | 34072 |
 | [docs/design/CONTACT_COMBINATIONS.md](design/CONTACT_COMBINATIONS.md) | 9112 |
 | [docs/design/FACE_MERGING_IMPLEMENTATION_PLAN.md](design/FACE_MERGING_IMPLEMENTATION_PLAN.md) | 22013 |
-| [docs/design/GENERATION_FOLLOWUPS.md](design/GENERATION_FOLLOWUPS.md) | 4465 |
+| [docs/design/GENERATION_FOLLOWUPS.md](design/GENERATION_FOLLOWUPS.md) | 4865 |
 | [docs/design/GENERATION_RELEVANCE_PLAN.md](design/GENERATION_RELEVANCE_PLAN.md) | 11545 |
 | [docs/design/GENERIC_COMPOSITION.md](design/GENERIC_COMPOSITION.md) | 7205 |
 | [docs/design/HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md](design/HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md) | 66368 |
@@ -1474,7 +1474,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [tests/integration/test_movement_contacts.py](../tests/integration/test_movement_contacts.py) | 11400 |
 | [tests/integration/test_orchestrator_continuation.py](../tests/integration/test_orchestrator_continuation.py) | 19182 |
 | [tests/integration/test_package_layout.py](../tests/integration/test_package_layout.py) | 4032 |
-| [tests/integration/test_profiling.py](../tests/integration/test_profiling.py) | 20615 |
+| [tests/integration/test_profiling.py](../tests/integration/test_profiling.py) | 20872 |
 | [tests/integration/test_repair_resume.py](../tests/integration/test_repair_resume.py) | 14925 |
 | [tests/integration/test_shared_contacts.py](../tests/integration/test_shared_contacts.py) | 4275 |
 | [tests/research/__init__.py](../tests/research/__init__.py) | 0 |
@@ -1609,6 +1609,6 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [tools/profiling/enumeration_compare.py](../tools/profiling/enumeration_compare.py) | 3565 |
 | [tools/profiling/run.py](../tools/profiling/run.py) | 11402 |
 | [tools/profiling/runtime.py](../tools/profiling/runtime.py) | 9235 |
-| [tools/profiling/trace.py](../tools/profiling/trace.py) | 28460 |
+| [tools/profiling/trace.py](../tools/profiling/trace.py) | 29776 |
 | [tools/validate_layout.py](../tools/validate_layout.py) | 1433 |
 | [tools/witness_bound_audit.py](../tools/witness_bound_audit.py) | 2779 |
