@@ -102,7 +102,31 @@ def repair_trace(repair):
         pending=[b['rows'] for b in repair.get('pending') or []])
 
 
-def route_trace(state):
+def block_names(scene):
+    return {tuple(box):block['id'] for block in (scene or {}).get('blocks',[]) for box in block.get('boxes',[])}
+
+
+def movement(profile, names):
+    def where(event):
+        return dict(block=event.get('blockId') or names.get(tuple(event.get('box') or ()),'unnamed box'),
+                    tick=event.get('offset'))
+    events = profile.get('contactEvents',[])
+    return dict(jumps=[t for t,jump in enumerate(profile.get('jump',[])) if jump],
+                landings=[where(e) for e in events if e.get('role') == 'landing'],
+                ceilings=[where(e) for e in events if e.get('role') == 'ceiling'],
+                walls=[dict(where(e),side=e['axis']+('+' if e['direction'] > 0 else '-'))
+                       for e in events if e.get('role') == 'contact'],
+                cases=[dict(case=e.get('case'),tick=e.get('input',e.get('offset'))) for e in profile.get('caseEvents',[])])
+
+
+def side(face):
+    if face['axis'] == 'Y':
+        return 'over' if face['direction'] > 0 else 'under'
+    return face['axis']+('+' if face['direction'] > 0 else '-')
+
+
+def route_trace(state, scene=None):
+    names = block_names(scene)
     records = {record['id']:record for frame in frames(state) for record in frame['records']}
     routes = []
     for frame in sorted(frames(state),key=lambda f:f['id']):
@@ -128,6 +152,9 @@ def route_trace(state):
                 objective=witness['candidate'].get('objective') if witness else None,
                 acceptedAlternative=accepted.get(witness['problemHash']) if witness else None,
                 inheritedRows=[r for r in retained if r in rows],
+                movement=movement(record['program']['profile'],names),
+                passages=[dict(block=p['blockId'],ticks=p['segment'],sides=[side(f) for f in p['faces']],kind=p['kind'])
+                          for p in witness.get('passages',[])] if witness else None,
                 seededFacings='guideSeedYaw' in record['program'],
                 repair=repair_trace(record['program']['repairState']) if record is owner else None))
     return routes
@@ -150,10 +177,6 @@ CHECKS = dict(
 
 def plural(count, noun):
     return f'{count} {noun}' if count == 1 else f'{count} {noun}s'
-
-
-def short(value):
-    return value[:8] if value else '-'
 
 
 def number(value):
@@ -218,6 +241,38 @@ def table(header, rows):
             ['| '+' | '.join(str(c).replace('|','\\|') for c in row)+' |' for row in rows]+[''])
 
 
+def support_text(landings):
+    spans = []
+    for l in landings:
+        if spans and spans[-1][0] == l['block'] and spans[-1][2] == l['tick']-1:
+            spans[-1][2] = l['tick']
+        else:
+            spans.append([l['block'],l['tick'],l['tick']])
+    text = []
+    for block, start, end in spans:
+        verb = 'starts on' if start == 0 else 'lands'
+        text.append(f'{verb} {block.upper()} t{start}'+(f', runs to t{end}' if end > start else ''))
+    return '; '.join(text) or 'no landing'
+
+
+def movement_text(m):
+    parts = ['jumps at t'+', t'.join(map(str,m['jumps'])) if m['jumps'] else 'no jump',support_text(m['landings'])]
+    parts.append('hits the ceiling of '+', '.join(f'{c["block"].upper()} t{c["tick"]}' for c in m['ceilings'])
+                 if m['ceilings'] else 'no ceiling hit')
+    if m['walls']:
+        parts.append('touches '+', '.join(f'{w["block"].upper()} {w["side"]} t{w["tick"]}' for w in m['walls']))
+    if m['cases']:
+        parts.append(', '.join(f'{c["case"]} t{c["tick"]}' for c in m['cases']))
+    return '; '.join(parts)
+
+
+def passages_text(passages):
+    if passages is None:
+        return '-'
+    return '; '.join(f'{p["block"].upper()}: '+' then '.join(p['sides'])+f' (t{p["ticks"][0]}-{p["ticks"][1]})'
+                     for p in passages) or 'no obstacle in reach'
+
+
 def alternative_text(rows):
     if rows is None:
         return '-'
@@ -234,6 +289,15 @@ def render(report, requests, routes, stop):
     for r in routes:
         by_frame.setdefault(r['frame'],[]).append(r)
     route_frame = {r['record']:r['frame'] for r in routes}
+    numbers = {}
+    for fid, group in by_frame.items():
+        for i, r in enumerate(group,1):
+            numbers[r['record']] = f'{fid}.{i}'
+    by_record = {r['record']:r for r in routes}
+    def name(record):
+        r = by_record[record]
+        landed = r['movement']['landings']
+        return f'route {numbers[record]} (lands '+(f'{landed[-1]["block"].upper()} t{landed[-1]["tick"]}' if landed else 'nowhere')+')'
     children = {}
     for fid, group in by_frame.items():
         parent = group[0]['parent']
@@ -265,19 +329,19 @@ def render(report, requests, routes, stop):
     if stop['unknownRequests']:
         lines += ['Solver requests that came back `unknown`:','']
         lines += table(['Request','IPOPT status','Owning routes'],
-                       [[r['index'],r['workerStatus'],', '.join(f'frame {o["frame"]} {o["goal"]} `{short(o["record"])}` ({o["node"]})'
+                       [[r['index'],r['workerStatus'],', '.join(f'{name(o["record"])}, {o["node"]}'
                                                               for o in r['owners']) or 'none kept']
                         for r in stop['unknownRequests']])
     if stop['oracleRejectedRoutes']:
         lines += ['Routes closed as oracle-rejected (IPOPT reported every alternative infeasible): '+
-                  ', '.join(f'frame {o["frame"]} {o["goal"]} `{short(o["record"])}`' for o in stop['oracleRejectedRoutes'])+'.','']
-    lines += ['## Route tree','','Each frame extends one parent route to the next anchor.','']
+                  ', '.join(name(o['record']) for o in stop['oracleRejectedRoutes'])+'.','']
+    lines += ['## Route tree','','Each frame extends one parent route to the next anchor. Route `F.N` is route N of frame F.','']
     def tree(fid, depth):
         group = by_frame[fid]
         counts = Counter(r['node'] for r in group)
-        lines.append('  '*depth+f'- Frame {fid} → {group[0]["goal"]}: {plural(len(group),"route")} ('+
+        lines.append('  '*depth+f'- Frame {fid} → {group[0]["goal"].upper()}: {plural(len(group),"route")} ('+
                      ', '.join(f'{n} {k}' for k,n in counts.items())+')'+
-                     (f', from route `{short(group[0]["parent"])}`' if group[0]['parent'] else ''))
+                     (f', from {name(group[0]["parent"])}' if group[0]['parent'] in by_record else ''))
         for child in sorted(children.get(fid,[])):
             tree(child, depth+1)
     for fid in sorted(f for f,g in by_frame.items() if g[0]['parent'] is None or route_frame.get(g[0]['parent']) is None):
@@ -290,21 +354,22 @@ def render(report, requests, routes, stop):
     for fid in sorted(by_frame):
         group = by_frame[fid]
         first = group[0]
-        lines += [f'### Frame {fid}: reach {first["goal"]}'+
-                  (f' from route `{short(first["parent"])}` (frame {route_frame.get(first["parent"])})' if first['parent'] else ' from the start'),'']
+        lines += [f'### Frame {fid}: reach {first["goal"].upper()}'+
+                  (f' from {name(first["parent"])}' if first['parent'] in by_record else ' from the start'),'']
         if first['parent']:
             names = Counter(r.get('name','') for r in first['inheritedRows'])
             lines += [f'Inherited {plural(len(first["inheritedRows"]),"constraint row")} from the parent\'s solved route ('+
                       ', '.join(f'{n} {k or "unnamed"}' for k,n in names.most_common())+
                       f'); starting facings seeded from it: {"yes" if first["seededFacings"] else "no"}.','']
-        lines += table(['Route','Outcome','Solved ticks','Objective','Accepted alternative','Repair run'],
-            [[f'`{short(r["record"])}`',r['node'],r['solvedTicks'] if r['solvedTicks'] is not None else '-',
-              number(r['objective']) if r['objective'] is not None else '-',
-              alternative_text(r['acceptedAlternative']),
-              f'`{short(r["repairOwner"])}`' if r['repairOwner'] else '-'] for r in group])
         for owner in (r for r in group if r['repair']):
             repair = owner['repair']
-            lines += [f'#### Repair run on route `{short(owner["record"])}`','']
+            members = [r for r in group if r['repairOwner'] == owner['record']]
+            lines += [f'#### Movement: {movement_text(owner["movement"])}','',
+                      f'{plural(len(members),"route")} share this movement and differ only in how they avoid obstacles.','']
+            lines += table(['Route','Outcome','Solved ticks','Objective','Obstacles passed','Accepted avoidance rows'],
+                [[numbers[r['record']],r['node'],r['solvedTicks'] if r['solvedTicks'] is not None else '-',
+                  number(r['objective']) if r['objective'] is not None else '-',
+                  passages_text(r['passages']),alternative_text(r['acceptedAlternative'])] for r in members])
             prepared = repair['preparedEncounters']
             interacting = [e for e in prepared if e['possiblePhases']]
             lines += [f'Obstacle encounters prepared: {len(prepared)}; {len(prepared)-len(interacting)} were never reachable '
@@ -322,7 +387,7 @@ def render(report, requests, routes, stop):
                       (' ('+', '.join(f'{n} {CHECKS.get(k,k)}' for k,n in Counter(e['reason'] for e in rejected).most_common())+')' if rejected else '')+'.','']
             lines += table(['#','Obstacle','Option','Check','Detail'],
                 [[i,f'{e["encounter"]} t{e["segment"][0]}-{e["segment"][1]}' if e.get('segment') else e.get('encounter','whole branch'),
-                  rows_text(e['optionRows']) if 'optionRows' in e else f'rows `{short(e["rowsHash"])}`',
+                  rows_text(e['optionRows']) if 'optionRows' in e else 'the rows already selected',
                   CHECKS.get(e['reason'],e['reason']),proof_text(e)] for i,e in enumerate(rejected,1)])
             dropped = repair['droppedOptions']
             if dropped:
@@ -347,7 +412,7 @@ def render(report, requests, routes, stop):
         follow = sorted(children.get(fid,[]))
         if follow:
             lines += ['Next partial solves built from this frame: '+
-                      ', '.join(f'frame {c} from route `{short(by_frame[c][0]["parent"])}`' for c in follow)+'.','']
+                      ', '.join(f'frame {c} from {name(by_frame[c][0]["parent"])}' for c in follow)+'.','']
     return '\n'.join(lines)+'\n'
 
 
@@ -356,7 +421,7 @@ def write(directory, report, requests):
     owners = request_owners(state)
     for request in requests:
         request['owners'] = owners.get(request['fingerprint'],[])
-    routes = route_trace(state)
+    routes = route_trace(state,report.get('result',report).get('effectiveRequest'))
     stop = stop_report(state,requests)
     save(Path(directory)/'routes.json',routes)
     (Path(directory)/'report.md').write_text(render(report,requests,routes,stop))

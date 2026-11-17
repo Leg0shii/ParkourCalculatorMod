@@ -69,6 +69,10 @@ writes these files to its output directory:
 | `report.json.gz` | The full saved search state; read it with `read_report` (paired `.store.sqlite3`). |
 | `provenance.json`, `profile.json`, `bookkeeping.json` | Source revision and hashes, fixture, interpreter; timing buckets. |
 
+`report.md` names routes by what they do, never by hash: route `F.N` is route N of
+frame F, grouped under its movement (jump ticks, the blocks it starts on, lands on
+and runs across, ceiling hits, wall touches and named cases), and each route lists
+the obstacles it passes with the sides taken (for example `B6: Z- then X- then Z+`).
 Each partial route in `report.md` and `routes.json` has:
 
 - its parent route, the constraint rows inherited from the parent's solved route

@@ -203,7 +203,9 @@ class BookkeepingProfileTests(unittest.TestCase):
         avoid = dict(mode='Z', t1=2, cmp='LE', rhs=-2., name='avoidance')
         def record(name, key, rows, repair=None, witness=None):
             return dict(id=name, candidateKey=key, status='feasible', ticks=4, nodeFeasibility=dict(status='feasible'),
-                        witness=witness, program=dict(profile=dict(positionConstraints=rows), guideSeedYaw=[1.],
+                        witness=witness, program=dict(profile=dict(positionConstraints=rows, jump=[True, False, False, False],
+                            contactEvents=[dict(offset=3, axis='Y', direction=-1, box=[0, 0, 0, 1, 1, 1], role='landing')]),
+                            guideSeedYaw=[1.],
                                                       repairState=repair or {}))
         branch = json.dumps([[[0, 2, 'Z', 'LE', -2.]], [], []])
         repair = dict(completed=[dict(branch=branch, status='feasible', validationStatus='passed', problemHashes=['h1'])],
@@ -221,7 +223,7 @@ class BookkeepingProfileTests(unittest.TestCase):
         child = record('c', 'k1', [landing, dict(avoid, t2=2)])
         state = dict(dfs=dict(frames=[dict(id=0, goal=dict(block='b2'), parent=None, records=[parent, sibling]),
                                       dict(id=1, goal=dict(block='b3'), parent=dict(frame=0, candidate='p'), records=[child])]))
-        routes = {r['record']: r for r in route_trace(state)}
+        routes = {r['record']: r for r in route_trace(state, dict(blocks=[dict(id='b2', boxes=[[0, 0, 0, 1, 1, 1]])]))}
         trace = routes['p']['repair']
         self.assertEqual([e['owner'] for e in trace['encounters']], ['b6'])
         self.assertEqual(trace['contactChecks'], 1)
@@ -240,7 +242,9 @@ class BookkeepingProfileTests(unittest.TestCase):
         report = dict(result=dict(best=None, termination='exhausted', elapsedSeconds=1., work=dict(solverCalls=1, workerLaunches=1),
                                   expandedPrefixes=2, searchState=state))
         markdown = render(report, requests, list(routes.values()), stop_report(state, requests))
-        self.assertIn('- Frame 0 → b2: 2 routes (2 feasible)\n  - Frame 1 → b3: 1 route (1 feasible), from route `p`', markdown)
+        self.assertIn('- Frame 0 → B2: 2 routes (2 feasible)\n  - Frame 1 → B3: 1 route (1 feasible), from route 0.1 (lands B2 t3)', markdown)
+        self.assertIn('#### Movement: jumps at t0; lands B2 t3; no ceiling hit', markdown)
+        self.assertIn('| 0.2 | feasible | 4 | -2.000 | no obstacle in reach | Z ≤ -2.000 at t2 |', markdown)
         self.assertIn('| 1 | b6 t0-2 | Z ≤ -2.000 at t2 | interval reachability | empty Z interval at state 2 |', markdown)
         self.assertIn('| 1 | Z ≤ -2.000 at t2 | feasible | passed | request 1 feasible, IPOPT Solve_Succeeded |', markdown)
         self.assertIn('| b6 | 0-2 | 1X | 1 | X+ at 1X | none | none |', markdown)
