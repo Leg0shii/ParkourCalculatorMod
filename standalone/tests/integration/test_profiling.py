@@ -245,7 +245,7 @@ class BookkeepingProfileTests(unittest.TestCase):
         self.assertIn('- Frame 0 → B2: 2 routes (2 feasible)\n  - Frame 1 → B3: 1 route (1 feasible), from route 0.1 (lands B2 t3)', markdown)
         self.assertIn('#### Movement: jumps at t0; lands B2 t3; no ceiling hit', markdown)
         self.assertIn('| 0.2 | feasible | 4 | -2.000 | no obstacle in reach | Z ≤ -2.000 at t2 |', markdown)
-        self.assertIn('| 1 | b6 t0-2 | Z ≤ -2.000 at t2 | interval reachability | empty Z interval at state 2 |', markdown)
+        self.assertIn('| 1 | B6 sides t0-2 | Z ≤ -2.000 at t2 | interval reachability | empty Z interval at state 2 |', markdown)
         self.assertIn('| 1 | Z ≤ -2.000 at t2 | feasible | passed | request 1 feasible, IPOPT Solve_Succeeded |', markdown)
         self.assertIn('| b6 | 0-2 | 1X | 1 | X+ at 1X | none | none |', markdown)
 

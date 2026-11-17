@@ -81,7 +81,9 @@ Each partial route in `report.md` and `routes.json` has:
   a single repair run, kept on the first route of that program;
 - on that route: every prepared obstacle encounter (possible phases, already-clear
   phases, the faces ruled out at each phase, vertical-clear and uncertain phases);
-  every option rejected before solving, with its obstacle, rows, the check
+  the decisions to make (the sides to keep around each obstacle in reach, and which
+  landing-cover rectangle of the goal block to land in); every option rejected
+  before solving, with its decision, rows, the check
   (interval, travel-distance, single-row or linear-relaxation reachability) and
   where it failed; duplicate and dominated options; every alternative sent to the
   solver with its solves (request number, status, IPOPT status) and scene

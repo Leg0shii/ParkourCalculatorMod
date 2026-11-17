@@ -74,6 +74,8 @@ def item_label(item):
     rows = [r for option in item.get('rows',[]) for r in option]
     ticks = [r.get('t1',r.get('offset')) for r in rows]
     name = rows[0].get('name','') if rows else ''
+    if item.get('role') == 'required_contact':
+        name = 'landing region'
     return (name.split(':')[1] if name.startswith('event:') else name or 'route guard'), [min(ticks),max(ticks)] if ticks else None
 
 
@@ -86,6 +88,8 @@ def repair_trace(repair):
         encounters=[dict(owner=i['owner'],box=i['box'],begin=i['begin'],end=i['end'])
                     for i in items if 'box' in i],
         contactChecks=sum('contactCheck' in i for i in items),
+        landingRegions=[dict(ticks=sorted({r.get('t1',r.get('offset')) for option in i['rows'] for r in option}),
+                             options=i['rows']) for i in items if i.get('role') == 'required_contact'],
         generatorMetrics=generation.get('metrics',{}),
         preparedEncounters=[encounter_trace(e) for e in generation.get('encounterLog',[])],
         droppedOptions=[dict(d,owner=next((i['owner'] for i in items if i.get('solidIndex') == d['solidIndex']),None))
@@ -201,6 +205,15 @@ def rows_text(rows):
                 start = tick
         text.append(f'{axis} {"≥" if cmp == "GE" else "≤" if cmp == "LE" else "="} {rhs:.3f} at {", ".join(spans)}')
     return '; '.join(text) or 'none'
+
+
+def region_text(rows):
+    bounds = {}
+    for row in rows:
+        bounds.setdefault(row['mode'],{})[row['cmp']] = row['rhs']
+    if set(bounds) != {'X','Z'} or any(set(v) != {'GE','LE'} for v in bounds.values()):
+        return rows_text(rows)
+    return ' × '.join(f'{axis} [{bounds[axis]["GE"]:.3f}, {bounds[axis]["LE"]:.3f}]' for axis in ('X','Z'))
 
 
 def phases_text(phases):
@@ -347,10 +360,22 @@ def render(report, requests, routes, stop):
     for fid in sorted(f for f,g in by_frame.items() if g[0]['parent'] is None or route_frame.get(g[0]['parent']) is None):
         tree(fid, 0)
     lines += ['','## Partial routes','',
-              'Rows read `axis ≥/≤ value at ticks`, on the player position at the start of each tick. A phase is a tick '
-              'plus the sweep within it (`58Z` is the Z sweep of input 58; sweeps run Y, X, Z). Possible phases are where '
-              'the obstacle can still be touched; already clear counts phases where it cannot; a face ruled out cannot be '
-              'kept at that phase. Request numbers index `requests.json`.','']
+              'How to read the sections below:','',
+              '- **Movement**: the fixed part of a route, its jumps and landings. Routes sharing a movement differ only in '
+              'which side of each obstacle they pass.',
+              '- **Rows** read `axis ≥/≤ value at ticks`, on the player position at the start of each tick.',
+              '- **Obstacle check**: every solid is paired with every landing segment (the ticks from one landing or jump '
+              'to the next). A ground tick on a block is its own segment.',
+              '- **Phase**: one sweep of one tick. Minecraft moves the player along Y, then X, then Z each tick and checks '
+              'collisions per sweep, so `56X` is the X sweep of input 56.',
+              '- **Already clear**: phases where the player\'s reach box cannot touch the obstacle. **Possible phases**: '
+              'where it can, so a side must be chosen. **Faces ruled out**: sides the player cannot be on at that phase. '
+              '**Vertical clear**: phases where the player is certainly above or below it. **Uncertain**: phases decided '
+              'by a named step or grind contact the model cannot settle, left to replay.',
+              '- **Decision**: one thing to choose, either the sides to keep around one obstacle or which landing-cover '
+              'rectangle of the goal block to land in. **Option**: one choice for one decision. **Alternative**: one '
+              'surviving option per decision, combined; each is solved, and each feasible one becomes a route.',
+              '- Request numbers index `requests.json`.','']
     for fid in sorted(by_frame):
         group = by_frame[fid]
         first = group[0]
@@ -373,33 +398,43 @@ def render(report, requests, routes, stop):
                   passages_text(r['passages']),alternative_text(r['acceptedAlternative'])] for r in members])
             prepared = repair['preparedEncounters']
             interacting = [e for e in prepared if e['possiblePhases']]
-            lines += [f'Obstacle encounters prepared: {len(prepared)}; {len(prepared)-len(interacting)} were never reachable '
-                      f'(every phase already clear); {plural(repair["contactChecks"],"contact check")}. An obstacle is listed once '
-                      'per constraint context it was prepared under.','']
-            lines += table(['Obstacle','Ticks','Possible phases','Already clear','Faces ruled out','Vertical clear','Uncertain'],
+            goal = first['goal'].upper()
+            lines += [f'Obstacle checks: {len(prepared)}; {len(prepared)-len(interacting)} cannot touch the player anywhere in '
+                      f'their segment. A check is repeated when the rows chosen so far change what is reachable.','']
+            lines += table(['Obstacle','Segment ticks','Possible phases','Already clear','Faces ruled out','Vertical clear','Uncertain'],
                 [[e['owner'],f'{e["segment"][0]}-{e["segment"][1]}',phases_text(e['possiblePhases']) or 'none',
                   len(e['coveredPhases']),
                   '; '.join(f'{f} at {phases_text([x["phase"] for x in e["excludedFaces"] if x["face"] == f])}'
                             for f in sorted({x['face'] for x in e['excludedFaces']})) or 'none',
                   phases_text([x['phase'] for x in e['verticalClear']]) or 'none',
                   phases_text(e['uncertain']) or 'none'] for e in interacting])
+            decisions = sorted({(e['owner'],e['segment'][0],e['segment'][1]) for e in interacting})
+            regions = [r for r in repair['landingRegions'] if len(r['options']) > 1]
+            if decisions or regions:
+                lines += ['Decisions:','']+[f'- which sides of {o.upper()} to keep (segment t{a}-{b})' for o,a,b in decisions]+[
+                    f'- which of {goal}\'s {len(r["options"])} landing-cover rectangles to land in at '
+                    f't{", t".join(map(str,r["ticks"]))}: '+' or '.join(region_text(o) for o in r['options']) for r in regions]+['']
             rejected = repair['screenRejections']
             lines += [f'Options rejected before solving: {len(rejected)}'+
                       (' ('+', '.join(f'{n} {CHECKS.get(k,k)}' for k,n in Counter(e['reason'] for e in rejected).most_common())+')' if rejected else '')+'.','']
-            lines += table(['#','Obstacle','Option','Check','Detail'],
-                [[i,f'{e["encounter"]} t{e["segment"][0]}-{e["segment"][1]}' if e.get('segment') else e.get('encounter','whole branch'),
-                  rows_text(e['optionRows']) if 'optionRows' in e else 'the rows already selected',
+            lines += table(['#','Decision','Option','Check','Detail'],
+                [[i,(f'{goal} landing region' if e['encounter'] == 'landing region' else f'{e["encounter"].upper()} sides')+
+                    (f' t{e["segment"][0]}' if e['segment'][0] == e['segment'][1] else f' t{e["segment"][0]}-{e["segment"][1]}')
+                  if e.get('segment') else e.get('encounter','whole branch'),
+                  (region_text(e['optionRows']) if e['encounter'] == 'landing region' else rows_text(e['optionRows']))
+                  if 'optionRows' in e else 'the rows already selected',
                   CHECKS.get(e['reason'],e['reason']),proof_text(e)] for i,e in enumerate(rejected,1)])
             dropped = repair['droppedOptions']
             if dropped:
                 lines += [f'Options dropped without solving: {len(dropped)} ('+
                           ', '.join(f'{n} {k}' for k,n in Counter(d['reason'] for d in dropped).most_common())+').','']
-                lines += table(['#','Obstacle','Ticks','Reason','Option'],
-                    [[i,d['owner'] or f'solid {d["solidIndex"]}',f'{d["segment"][0]}-{d["segment"][1]}',d['reason'],rows_text(d['rows'])]
+                lines += table(['#','Decision','Reason','Option'],
+                    [[i,f'{(d["owner"] or "solid "+str(d["solidIndex"])).upper()} sides t{d["segment"][0]}-{d["segment"][1]}',
+                      d['reason'],rows_text(d['rows'])]
                      for i,d in enumerate(dropped,1)])
             choice = interacting or any(a['rows'] for a in repair['alternatives'])
-            lines += [f'Avoidance alternatives solved: {len(repair["alternatives"])}. An alternative picks a side for every '
-                      'obstacle in reach; each feasible one becomes a route.' if choice else
+            lines += [f'Alternatives solved: {len(repair["alternatives"])}. Each combines one surviving option per decision; '
+                      'each feasible one becomes a route.' if choice else
                       'No obstacle is in reach, so there is no avoidance choice: the movement was solved once as is.','']
             lines += table(['#','Rows the alternative adds' if choice else 'Rows added','Outcome','Scene validation','Solves'],
                 [[i,alternative_text(a['rows']),a['status'],a['validation'] or '-',
