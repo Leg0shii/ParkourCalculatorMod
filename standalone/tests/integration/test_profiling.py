@@ -196,6 +196,24 @@ class BookkeepingProfileTests(unittest.TestCase):
                          [(1, ['a']), (2, ['b'])])
         self.assertEqual(requests[2]['owners'], [])
 
+    def test_alternatives_without_a_solution_name_the_check_that_proved_them_infeasible(self):
+        from tools.profiling.trace import alternative_outcome, repair_trace, solve_text
+        certificate = dict(reason='linear_control_relaxation_infeasible')
+        repair = dict(attemptLog=[dict(problemHash='p', status='blocked', certificate=certificate),
+                                  dict(problemHash='i', status='unknown'), dict(problemHash='r', status='unknown')],
+                      completed=[dict(branch='[[], [], []]', status='unknown', proven=True, certificates=[certificate],
+                                      problemHashes=['p']),
+                                 dict(branch='[[], [], []]', status='unknown', oracleRejected=True, problemHashes=['i']),
+                                 dict(branch='[[], [], []]', status='unknown', problemHashes=['r'])])
+        requests = dict(i=dict(index=8, workerStatus='Infeasible_Problem_Detected', seconds=.37),
+                        r=dict(index=9, workerStatus='Maximum_CpuTime_Exceeded'))
+        proven, local, kept = repair_trace(repair)['alternatives']
+        self.assertEqual([alternative_outcome(a, requests) for a in (proven, local, kept)],
+                         ['infeasible (linear control relaxation)', 'infeasible (IPOPT local)', 'unknown'])
+        self.assertEqual(solve_text(proven['solves'][0], requests), 'infeasible (linear control relaxation)')
+        self.assertEqual(solve_text(local['solves'][0], requests),
+                         'request 8 infeasible (IPOPT local), IPOPT Infeasible_Problem_Detected, 0.37 s')
+
     def test_route_trace_links_alternatives_solves_and_inherited_rows(self):
         import json
         from tools.profiling.trace import route_trace, side as label

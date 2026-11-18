@@ -151,6 +151,25 @@ class AnchorSearchTests(unittest.TestCase):
         self.assertFalse(limited['completed'][0]['oracleRejected'])
         self.assertEqual(len(limited['unresolved']),1)
 
+    def test_pre_solve_proofs_complete_an_alternative_without_ipopt(self):
+        from parkour_solver.search.feasibility import outcome, policy_spec
+        certificate=dict(reason='linear_control_relaxation_infeasible')
+        def invoke(termination):
+            response=dict(status='unknown',best=None,termination=termination,
+                          attempts=[dict(status='blocked',certificate=certificate)])
+            with patch('parkour_solver.search.repair.find_route',return_value=response):
+                return solve_contact_branches(route(),[],[],object(),seconds=1,candidate_seconds=.1,retries=0,
+                    oracle_rejection=True)
+        proven=invoke('search_exhausted')
+        completed,=proven['repairState']['completed']
+        self.assertEqual((completed['proven'],completed['oracleRejected'],completed['certificates']),(True,False,[certificate]))
+        self.assertEqual(proven['repairState']['unresolved'],[])
+        policy=policy_spec(dict(purpose='node',oracleRejection=True),first_witness=True)
+        self.assertEqual(outcome(proven,'model',policy)['status'],'oracle_rejected')
+        interrupted=invoke('deadline')['repairState']
+        self.assertFalse(interrupted['completed'][0]['proven'])
+        self.assertEqual(len(interrupted['unresolved']),1)
+
     def test_actual_landing_clock_binds_before_unused_suffix_and_drops_owned_future_rows(self):
         from parkour_solver.movement.normal import event_choice
         from parkour_solver.movement.program import boundary_state

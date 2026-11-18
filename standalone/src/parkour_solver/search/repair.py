@@ -501,14 +501,18 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
             result.update(attempts=inner_attempts, contactAttempts=attempts)
             return finish(result)
         if result['best'] is None:
-            diagnostics = [d for a in result.get('attempts', []) for d in a.get('diagnostics', [])]
+            tried = result.get('attempts', [])
+            certificates = [a['certificate'] for a in tried if a.get('status') == 'blocked']
+            proven = (result.get('termination') == 'search_exhausted' and bool(tried) and
+                      len(certificates) == len(tried))
+            diagnostics = [d for a in tried for d in a.get('diagnostics', [])]
             oracle_completed = oracle_rejection and diagnostics and all(
                 d.get('status') == 'unknown' and d.get('termination') == 'worker_finished' and
                 d.get('workerStatus') in ('Infeasible_Problem_Detected','Search_Direction_Becomes_Too_Small',
                                          'Restoration_Failed','Solve_Succeeded','Solved_To_Acceptable_Level')
                 for d in diagnostics)
-            completion['oracleRejected'] = bool(oracle_completed)
-            if result['status'] == 'unknown' and not oracle_completed:
+            completion.update(oracleRejected=bool(oracle_completed), proven=proven, certificates=certificates)
+            if result['status'] == 'unknown' and not oracle_completed and not proven:
                 unresolved.append(save_branch(score, rows, passages, hits, proposal_yaw, meta))
             continue
         if not conflicts:

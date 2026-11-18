@@ -39,7 +39,9 @@ production code.
 The switch-climb run finds T64 at 6.1 s and stops at 10.0 s with
 `numerical_unknown`: the DFS ran out of runnable work while the B7 frame stayed
 suspended on one avoidance alternative that the linear control relaxation
-blocked before any IPOPT solve. Four IPOPT solves ended
+blocked before any IPOPT solve. Such a blocked alternative now keeps its proof and counts
+as infeasible, so the current control (`1ea2bb1f` plus that change) ends `exhausted` with the
+same T64, objective and 18 requests. Four IPOPT solves ended
 `Infeasible_Problem_Detected`; a local IPOPT infeasibility is not a certificate,
 so the run claims no exhaustive coverage. The B7 frames solve 4 and 3 alternatives
 instead of 7 each (21 before obstacle clusters); every anchor leg now optimizes

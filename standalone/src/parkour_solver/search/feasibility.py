@@ -41,7 +41,7 @@ def outcome(result, model, policy):
     elif (policy['oracleRejection'] and complete and
           not repair.get('pending') and not repair.get('repairSources') and not repair.get('inFlight') and not repair.get('unresolved') and
           (repair.get('constraintGeneration') is None or repair['constraintGeneration'].get('exhausted')) and
-          all(c.get('oracleRejected') or c.get('status') == 'blocked' for c in complete)):
+          all(c.get('oracleRejected') or c.get('proven') for c in complete)):
         status = 'oracle_rejected'
     elif ((complete or generation is not None and generation.get('exhausted'))
           and not repair.get('pending') and not repair.get('repairSources') and not repair.get('inFlight') and not repair.get('unresolved')
@@ -54,7 +54,7 @@ def outcome(result, model, policy):
         status = 'suspended'
     return dict(version=1, status=status, model=model, policy=copy.deepcopy(policy),
                 termination=result.get('termination'),
-                rejectedAlternatives=[c['branch'] for c in complete if c.get('oracleRejected')])
+                rejectedAlternatives=[c['branch'] for c in complete if c.get('oracleRejected') or c.get('proven')])
 
 
 def meaningful_choice(choice):

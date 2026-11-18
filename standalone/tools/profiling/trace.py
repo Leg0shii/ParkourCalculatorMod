@@ -122,6 +122,8 @@ def repair_trace(repair, final=False):
                                   if 'item' in e else {}))
                           for e in generation.get('screenExclusions',[])],
         alternatives=[dict(branch=c['branch'],rows=json.loads(c['branch'])[0],status=c['status'],validation=c.get('validationStatus'),
+                           oracleRejected=c.get('oracleRejected',False),proven=c.get('proven',False),
+                           certificates=[e['reason'] for e in c.get('certificates',[])],
                            solves=[dict(problemHash=h,**attempts.get(h,{})) for h in c.get('problemHashes',[])])
                       for c in repair.get('completed',[])],
         families=[dict(sides=family_sides(repair.get('interactionChoices',{}),f,
@@ -205,10 +207,37 @@ CHECKS = dict(
     interval_reach_contradiction='interval reachability',
     norm_reach_contradiction='travel-distance reachability',
     linear_control_relaxation_infeasible='linear control relaxation',
+    passage_timing='passage timing',
+    vertical_schedule='vertical schedule',
     interaction_row_unreachable='single-row reachability',
     interaction_region_unreachable='region reachability',
     interaction_distance_unreachable='distance reachability',
     contact_reach_contradiction='contact reachability')
+
+
+def solve_text(solve, request_index):
+    request = request_index.get(solve['problemHash'], {})
+    if solve.get('status') == 'blocked':
+        verdict = f'infeasible ({CHECKS.get(solve.get("reason"), solve.get("reason"))})'
+    elif request.get('workerStatus') == 'Infeasible_Problem_Detected':
+        verdict = 'infeasible (IPOPT local)'
+    else:
+        verdict = solve.get('status', '?')
+    return ((f'request {request["index"]} ' if request else '')+verdict+
+            (f', IPOPT {request["workerStatus"]}' if request.get('workerStatus') else '')+
+            (f', {request["seconds"]:.2f} s' if request.get('seconds') is not None else ''))
+
+
+def alternative_outcome(alternative, request_index):
+    """An alternative without a solution is infeasible when every attempt was proved infeasible or IPOPT
+    reported local infeasibility for all of them; the search then does not retry it."""
+    if alternative['proven']:
+        return 'infeasible ('+', '.join(sorted({CHECKS.get(r, r) for r in alternative['certificates']}))+')'
+    if alternative['oracleRejected']:
+        statuses = sorted({request_index[s['problemHash']]['workerStatus'] for s in alternative['solves']
+                           if request_index.get(s['problemHash'], {}).get('workerStatus')})
+        return 'infeasible (IPOPT local)' if statuses == ['Infeasible_Problem_Detected'] else 'rejected (IPOPT '+', '.join(statuses)+')'
+    return alternative['status']
 
 
 def plural(count, noun):
@@ -383,13 +412,14 @@ def render(report, requests, routes, stop):
     else:
         lines += ['No frame was left suspended.','']
     if stop['unknownRequests']:
-        lines += ['Solver requests that came back `unknown`:','']
-        lines += table(['Request','IPOPT status','Owning routes'],
-                       [[r['index'],r['workerStatus'],', '.join(f'{name(o["record"])}, {o["node"]}'
-                                                              for o in r['owners']) or 'none kept']
+        lines += ['Solver requests without a solution:','']
+        lines += table(['Request','IPOPT status','Counted as','Owning routes'],
+                       [[r['index'],r['workerStatus'],
+                         'infeasible (IPOPT local)' if r['workerStatus'] == 'Infeasible_Problem_Detected' else 'unknown',
+                         ', '.join(f'{name(o["record"])}, {o["node"]}' for o in r['owners']) or 'none kept']
                         for r in stop['unknownRequests']])
     if stop['oracleRejectedRoutes']:
-        lines += ['Routes closed as oracle-rejected (IPOPT reported every alternative infeasible): '+
+        lines += ['Routes closed because every alternative is infeasible (IPOPT local or a pre-solve proof): '+
                   ', '.join(name(o['record']) for o in stop['oracleRejectedRoutes'])+'.','']
     lines += ['## Route tree','','Each frame extends one parent route to the next anchor. Route `F.N` is route N of frame F.','']
     def tree(fid, depth):
@@ -494,15 +524,8 @@ def render(report, requests, routes, stop):
                       'the best feasible one is kept.' if choice else
                       'No obstacle is in reach, so there is no avoidance choice: the movement was solved once as is.','']
             lines += table(['#','Rows the alternative adds' if choice else 'Rows added','Outcome','Scene validation','Solves'],
-                [[i,alternative_text(a['rows'],row_owners(repair,goal)),a['status'],a['validation'] or '-',
-                  '; '.join((f'request {request_index[s["problemHash"]]["index"]} ' if s['problemHash'] in request_index else '')+
-                            s.get('status','?')+
-                            (f' ({s["reason"]})' if s.get('reason') else '')+
-                            (f', IPOPT {request_index[s["problemHash"]]["workerStatus"]}'
-                             if request_index.get(s['problemHash'],{}).get('workerStatus') else '')+
-                            (f', {request_index[s["problemHash"]]["seconds"]:.2f} s'
-                             if request_index.get(s['problemHash'],{}).get('seconds') is not None else '')
-                            for s in a['solves'])]
+                [[i,alternative_text(a['rows'],row_owners(repair,goal)),alternative_outcome(a,request_index),a['validation'] or '-',
+                  '; '.join(solve_text(s,request_index) for s in a['solves'])]
                  for i,a in enumerate(repair['alternatives'],1)])
             timed = [request_index[h]['seconds'] for h in {s['problemHash'] for a in repair['alternatives'] for s in a['solves']}
                      if request_index.get(h,{}).get('seconds') is not None]

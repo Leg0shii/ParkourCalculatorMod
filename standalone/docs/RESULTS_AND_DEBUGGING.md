@@ -87,8 +87,12 @@ Each partial route in `report.md` and `routes.json` has:
   before solving, with its decision, rows, the check
   (interval, travel-distance, single-row or linear-relaxation reachability) and
   where it failed; duplicate and dominated options; every alternative sent to the
-  solver with its solves (request number, status, IPOPT status, seconds) and scene
-  validation; the movement's total solver seconds; a families table (the
+  solver with its outcome, its solves (request number, status, IPOPT status, seconds)
+  and scene validation; an alternative without a solution is `infeasible (<check>)`
+  when the pre-solve check on its compiled problem proved every attempt infeasible,
+  `infeasible (IPOPT local)` when IPOPT reported local infeasibility for every solve
+  (the search counts both as infeasible and never retries them) and `unknown` only when
+  it is kept for a retry; the movement's total solver seconds; a families table (the
   alternatives that differ only in when they switch obstacle sides, each switch
   named by its input, with the switches the climb solved, the best one and how many
   were never solved); the kept alternative and its fallbacks (the last leg keeps
@@ -96,8 +100,8 @@ Each partial route in `report.md` and `routes.json` has:
 
 A request's `owners` are the routes whose repair log holds its problem hash; an
 empty list means no saved route kept that solve. The `stop` report lists suspended
-frames with their unresolved and pending alternatives, the routes closed as
-oracle-rejected, and the owners of every `unknown` request. The trace is a pure
+frames with their unresolved and pending alternatives, the routes closed because
+every alternative is infeasible, and the owners of every request without a solution. The trace is a pure
 function of the saved search state, so regenerating it never changes a run.
 
 ## Failure investigation workflow
