@@ -57,7 +57,8 @@ class ConstraintVariants:
             routeGuards=route_guards.context if route_guards is not None else None,
             requiredAlternatives=required_alternatives))
         if state is not None and (state.get('version') != STATE_VERSION or state.get('context') != context):
-            raise ValueError('Incompatible constraint-generation continuation (policy9/state5)')
+            raise ValueError('Incompatible constraint-generation continuation (policy%d/state%d)'
+                             % (GENERATION_POLICY, STATE_VERSION))
         self.proof_context = context
         self.events = [dict(plan['events'][0], landing=self.through)]
         self.route_rows = []

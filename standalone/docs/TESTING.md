@@ -2,10 +2,10 @@
 
 ## Current gate
 
-`tools/native_gate.py` (commands in the [runbook](RUNBOOK.md)) on the switch-climb
-change over `6b964cb0`: **659 tests, no failures, errors or skips**, source unchanged
-during the run, layout validation passed ([report](../research/switch-climb/2026-11-17/native-report.json)).
-A run of the same source under a load average of 5.5 failed
+`tools/native_gate.py` (commands in the [runbook](RUNBOOK.md)) on `2ef4d01e` plus the
+face-catalog and footprint modules: **686 tests, no failures, errors or skips**, source
+unchanged during the run, layout validation passed.
+A run of the switch-climb source (`55e3beef`) under a load average of 5.5 failed
 `test_prescribed_points_do_not_remove_remote_free_space` (its two 2 s arms
 enumerated 856 and 830 choices); it passed in isolation and on the rerun. Earlier,
 `test_checkpoint_guidance` and `test_integration` failed once the same way. Treat a
@@ -22,6 +22,7 @@ persistence without the removed 32/128 limits.
 
 | Source | Tests | Evidence |
 | --- | ---: | --- |
+| `2ef4d01e` + face and footprint modules | 686 | not archived |
 | `6b964cb0` + switch climb | 659 | [report](../research/switch-climb/2026-11-17/native-report.json) |
 | `b2977e0f` + obstacle clusters | 646 | [report](../research/obstacle-clusters/2026-11-17/native-report.json) |
 | `7e4d85d4` merge of `main` into the PR | 641 | not archived |

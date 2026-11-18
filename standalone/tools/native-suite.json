@@ -49,6 +49,8 @@
     "tests.unit.search.test_terminal_goals",
     "tests.unit.search.test_time_progress",
     "tests.unit.spatial.test_event_domain",
+    "tests.unit.spatial.test_faces",
+    "tests.unit.spatial.test_footprints",
     "tests.unit.spatial.test_event_routes",
     "tests.unit.reachability.test_interaction_normalization",
     "tests.unit.spatial.test_guide_progress",

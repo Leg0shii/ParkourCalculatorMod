@@ -13,6 +13,7 @@ from parkour_solver.search.goals import goal_spec, goal_key, region_arrival, _la
 from parkour_solver.search.virtual_goals import KIND, bind_goal, satisfied
 from parkour_solver.search.compat.minimum_runs import POLICY_VERSION, latest_jump, remember, exclusion
 from parkour_solver.search.anchors.policy import semantic_settings
+from parkour_solver.constraints.variants import GENERATION_POLICY
 from parkour_solver.search.comparison import comparison_label, priority_key, compare_candidates, POLICY_VERSION as COMPARISON_POLICY_VERSION
 
 
@@ -86,7 +87,7 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
     if any(not accepted_program(p) for p in roots):
         raise ValueError('DFS roots violate the decision domain')
     schema = 8 if anchor_route else 7 if event_route else 6 if typed_route else 5
-    context = digest(dict(version=schema, kind='ordered_goal_dfs', movementGenerationPolicy=3,constraintGenerationPolicy=8,
+    context = digest(dict(version=schema, kind='ordered_goal_dfs', movementGenerationPolicy=3,constraintGenerationPolicy=GENERATION_POLICY,
         scene={k:v for k,v in scene.items() if k!='movementSearch'},
         domain={k:v for k,v in cfg.items() if k not in ('maxPrefixes','maxQueuedPrefixes','maxChoicesPerType','expansionsPerProposal')},
         roots=[program_search_key(p) for p in roots], goals=goal_list,
