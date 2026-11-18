@@ -143,6 +143,53 @@ class ExposedTopTests(unittest.TestCase):
         self.assertIn(reached[0], regions)
         self.assertGreaterEqual(reached[0][0], 742.3)
 
+    @unittest.skipUnless(__import__('os').environ.get('PKC_RUN_TICKS_COMPILER'), 'Requires coefficient compiler')
+    def test_one_long_approach_answers_every_shorter_approach_exactly(self):
+        import json, os
+        from pathlib import Path
+        from unittest.mock import patch
+        from tools.paths import STANDALONE_ROOT
+        from parkour_solver.bridge.compiler import JavaCompiler
+        from parkour_solver.movement import normal
+        from parkour_solver.movement.program import append_choice, boundary_state, empty_program
+        from parkour_solver.reachability.service import InteractionGate
+        from parkour_solver.scene.normalize import prepare_scene
+        scene = prepare_scene(json.loads((STANDALONE_ROOT/'cases/real11/physical-anchors.json').read_text())['request'])
+        root = empty_program(scene['initial'], threshold=0.)
+        horizon = 24
+        def context(program):
+            return dict(mode='open', scene=scene, program=program, state=boundary_state(program), maxInputs=horizon,
+                        threshold=0.)
+        with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:
+            gate = InteractionGate(scene, compiler)
+            landed = next(c for c in normal.normal_choices(context(root)) if c.get('terminalSupport') == 'b1')
+            prefixes = [root, append_choice(root, landed)]
+            for prefix in prefixes:
+                start = prefix['profile']['airtime']
+                for jumping in (False, True):
+                    ctx = context(prefix)
+                    def envelope(inputs):
+                        return gate.envelopes(append_choice(prefix, normal.event_choice(ctx, 'normal', ctx['state'], inputs,
+                                                                                         jumping=jumping)))
+                    long = envelope(horizon)
+                    for inputs in (1, 5, 12, horizon-1):
+                        short = envelope(inputs)
+                        end = start+inputs
+                        self.assertEqual(short['states'], long['states'][:end+1])
+                        self.assertEqual(short['phases'], long['phases'][:end])
+                        self.assertEqual(short['radii'], long['radii'][:end+1])
+            ctx = dict(context(root), interactionGate=gate)
+            far = [10000., 0., 10000., 10001., 1., 10001.]
+            self.assertTrue(gate.query(ctx, far, 3, label=dict(owner='far', role='test'), jumping=True)['ruledOut'])
+            self.assertNotIn('approachFallbacks', gate.metrics)
+            original = normal.event_choice
+            def no_long(context, kind, state, inputs, **kwargs):
+                return original(context, kind, state, inputs, **kwargs) if inputs == 4 else None
+            with patch('parkour_solver.movement.normal.event_choice', side_effect=no_long):
+                fresh = dict(context(root), interactionGate=gate)
+                self.assertTrue(gate.query(fresh, far, 3, label=dict(owner='far', role='test'), jumping=True)['ruledOut'])
+            self.assertEqual(gate.metrics['approachFallbacks'], 1)
+
     def test_exact_height_slot_keeps_its_floor(self):
         from parkour_solver.movement.contact_combinations import scene_contact_options
         from parkour_solver.scene.geometry import BODY_HEIGHT

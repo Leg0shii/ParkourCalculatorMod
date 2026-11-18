@@ -213,19 +213,32 @@ class InteractionGate:
 
     def query(self, context, bounds, tick, *, label, jumping=False, phases=('Y', 'X', 'Z')):
         from parkour_solver.movement.program import append_choice, program_physics_key
-        from parkour_solver.movement.normal import event_choice
+        from parkour_solver.movement.normal import approaches, event_choice, first_descent
         from parkour_solver.search.identity import digest
         # Prefix inputs and free approach inputs are known; the proposed interaction
         # has not changed the post-movement height/ground state yet. Use its horizontal
         # envelope, keeping Y unconstrained for stepping and ceiling outcomes.
         prefix = context['program']
-        key = (digest(program_physics_key(prefix)), jumping, tick)
+        prefix_key = digest(program_physics_key(prefix))
         cache = context.setdefault('_interactionApproaches', {})
-        if key not in cache:
-            choice = event_choice(context, 'normal', context['state'], tick+1, jumping=jumping)
-            p = append_choice(prefix, choice) if choice is not None else None
-            cache[key] = self.envelopes(p) if p is not None else None
-        envelope = cache[key]
+        def approach(inputs):
+            key = (prefix_key, jumping, inputs)
+            if key not in cache:
+                choice = event_choice(context, 'normal', context['state'], inputs, jumping=jumping)
+                p = append_choice(prefix, choice) if choice is not None else None
+                cache[key] = self.envelopes(p) if p is not None else None
+            return cache[key]
+        horizon_key = (prefix_key, jumping, 'horizon')
+        if horizon_key not in cache:
+            lowest = min(b['top'] for b in context['scene']['blocks'])
+            trace = next((t for _, j, t in approaches(context) if j == jumping), None)
+            landing = first_descent(trace, lowest) if trace is not None else None
+            cache[horizon_key] = context.get('maxInputs', 0) if landing is None else min(landing+2, context.get('maxInputs', 0))
+        horizon = cache[horizon_key]
+        envelope = approach(horizon) if tick < horizon else None
+        if envelope is None:
+            self.metrics['approachFallbacks'] = self.metrics.get('approachFallbacks', 0)+1
+            envelope = approach(tick+1)
         if envelope is None:
             return dict(ruledOut=False, reason='unknown_approach')
         at = prefix['profile']['airtime']+tick

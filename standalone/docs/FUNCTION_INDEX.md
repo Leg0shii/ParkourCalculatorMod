@@ -590,9 +590,9 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 | `InteractionGate.sequence` | [176](../src/parkour_solver/reachability/service.py#L176) | function |
 | `InteractionGate.check_program` | [189](../src/parkour_solver/reachability/service.py#L189) | function |
 | `InteractionGate.query` | [214](../src/parkour_solver/reachability/service.py#L214) | function |
-| `InteractionGate.required` | [242](../src/parkour_solver/reachability/service.py#L242) | function |
-| `InteractionGate.context` | [263](../src/parkour_solver/reachability/service.py#L263) | function |
-| `InteractionGate.summary` | [266](../src/parkour_solver/reachability/service.py#L266) | function |
+| `InteractionGate.required` | [255](../src/parkour_solver/reachability/service.py#L255) | function |
+| `InteractionGate.context` | [276](../src/parkour_solver/reachability/service.py#L276) | function |
+| `InteractionGate.summary` | [279](../src/parkour_solver/reachability/service.py#L279) | function |
 
 ## reachability/viability.py
 

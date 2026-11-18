@@ -52,6 +52,13 @@ instead of stopping at its first feasible point, so feasibility-only solves rema
 only in decision checks. Fewer replays reflect the dropped sibling routes, not
 lost coverage of the kept routes.
 
+Reading every generator reachability query from one approach per prefix and start
+(instead of one per queried tick) cut the Real11 control's coefficient compiles from
+213 to 156 and `analyze_model` self time from 0.82 s to 0.71 s, with an identical
+report. An approach as long as the scene's 200-input limit cost more than the short
+ones it replaced (2.14 s), so the shared approach stops at the last tick a generator
+can query.
+
 ## Measured hotspots
 
 Unrestricted 300 s profile at `bbb375cf`
