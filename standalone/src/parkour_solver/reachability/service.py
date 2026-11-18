@@ -85,8 +85,12 @@ def block_interaction(envelopes, box, tick, phases=('Y', 'X', 'Z'), *, interior=
 
 
 def interaction_allowed(context, box, tick, *, jumping=False, phases=('Y', 'X', 'Z')):
+    return bounds_allowed(context, expanded_box(box), tick, jumping=jumping, phases=phases)
+
+
+def bounds_allowed(context, bounds, tick, *, jumping=False, phases=('Y', 'X', 'Z')):
     gate = context.get('interactionGate')
-    return gate is None or not gate.query(context, box, tick, jumping=jumping, phases=phases)['ruledOut']
+    return gate is None or not gate.query(context, bounds, tick, jumping=jumping, phases=phases)['ruledOut']
 
 
 class InteractionGate:
@@ -196,7 +200,7 @@ class InteractionGate:
             return {k:v for k,v in checked.items() if k!='ruledOut'} if checked['ruledOut'] else None
         return self._cached(('screen',analysis['key']),build,'screen')
 
-    def query(self, context, box, tick, *, jumping=False, phases=('Y', 'X', 'Z')):
+    def query(self, context, bounds, tick, *, jumping=False, phases=('Y', 'X', 'Z')):
         from parkour_solver.movement.program import append_choice, program_physics_key
         from parkour_solver.movement.normal import event_choice
         from parkour_solver.search.identity import digest
@@ -214,13 +218,13 @@ class InteractionGate:
         if envelope is None:
             return dict(ruledOut=False, reason='unknown_approach')
         at = prefix['profile']['airtime']+tick
-        bounds = expanded_box(box)
+        bounds = list(bounds)
         bounds[1], bounds[4] = -float('inf'), float('inf')
         proof = interaction_reachability(envelope, dict(alternatives=[dict(regions=[
             dict(tick=at, phase=phase, bounds=bounds)]) for phase in phases]))
         self.checked += 1
         if proof['ruledOut']:
-            self.exclusions.append(dict(box=list(box), input=at, proof=proof))
+            self.exclusions.append(dict(horizontal=[bounds[0], bounds[2], bounds[3], bounds[5]], input=at, proof=proof))
         return proof
 
     def required(self, program):

@@ -168,6 +168,10 @@ and the line costs a decision and a screen rejection in every B5 frame.
 
 ## 3. Obstacle footprints: one player-space representation
 
+The stages below are history: `spatial/surfaces.py` now replaces the footprints
+and the face catalog for every consumer
+([contract](FACE_MERGING_IMPLEMENTATION_PLAN.md)).
+
 ### What exists
 
 | Code | Space | Builds | Solver use |

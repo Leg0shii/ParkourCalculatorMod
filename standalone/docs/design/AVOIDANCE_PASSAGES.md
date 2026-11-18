@@ -105,7 +105,10 @@ Guide preferences, timeouts and inconclusive LP results never establish exclusio
 
 A finite contact on a face of several rectangles (a merged ceiling, a top split by a
 taller neighbour) is one generator choice with a `regionChoices` entry in its
-profile. `ConstraintVariants` adds one `contact_region` item per entry inside the
+profile. Inside the DFS the generator first drops every rectangle the shared
+`InteractionGate` approach envelope cannot reach at the contact tick
+(`contact_combinations.reachable_option`); a choice left with one rectangle has no
+entry, and one left with none is not generated. `ConstraintVariants` adds one `contact_region` item per entry inside the
 scope, before the cluster items, and walks it first.
 Each rectangle is its own family, so the switch climb never mixes them, and a
 rectangle is screened jointly with every later item. A repair source refines one
@@ -204,8 +207,8 @@ replay remain different claims.
 
 Current movement cadence1, anchor comparisons and inter-movement retention remain.
 [Automatic grouping](PRUNING_IMPROVEMENTS_BACKLOG.md#automatic-grouping-joint-constraint-solving)
-means solving coupled constraints together and is under design discussion;
-this fixed-program generator already assembles them jointly.
+means solving coupled constraints together; this generator already does so for
+one fixed program.
 [Commitment](PRUNING_IMPROVEMENTS_BACKLOG.md#commitment-deferred) remains deferred.
 The supplied-window planner remains live compatibility code until its callers are
 migrated; it is not wired into this generator. The remembered authored two-tick

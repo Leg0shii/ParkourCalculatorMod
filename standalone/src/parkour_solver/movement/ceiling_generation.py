@@ -3,8 +3,8 @@ import copy
 from parkour_solver.physics.vertical import f32
 from parkour_solver.movement.cases import case_profile, exposed_side, outside_row
 from parkour_solver.movement.ceiling_profiles import ceiling_profile, ceiling_sequence
-from parkour_solver.movement.contact_combinations import (bounding_region, contact_event, finite_rows, region_choices,
-                                                          scene_contact_options)
+from parkour_solver.movement.contact_combinations import (bounding_region, contact_event, finite_rows, reachable_option,
+                                                          region_choices, scene_contact_options)
 from parkour_solver.movement.units import profile_program, shifted_unit
 
 
@@ -17,6 +17,9 @@ def grind_options(context, feet, allowed=None):
             context['checkBudget']()
         clearance = option.plane - feet
         if not 0 <= clearance < f32(.42) or allowed is not None and not any(allowed(list(box)) for box in option.boxes):
+            continue
+        option = reachable_option(context, option, 1, jumping=True)
+        if option is None:
             continue
         under = [dict(r, name='case:finite') for r in finite_rows(1, bounding_region(option.regions), t1=1)]
         owner = '+'.join(sorted(blocks[i]['id'] for i in option.members))
@@ -97,9 +100,10 @@ def open_ceiling_choices(context):
                         if move > 0 and trace['position'][t] <= plane < trace['position'][t + 1]), None)
             if hit is None:
                 continue
-            if not any(interaction_allowed(context, list(box), hit, jumping=jumping, phases=('Y',)) for box in option.boxes):
+            reached = reachable_option(context, option, hit, jumping=jumping)
+            if reached is None:
                 continue
-            event = contact_event(option, 'Y', 1, hit, 'ceiling', blockId=owner)
+            event = contact_event(reached, 'Y', 1, hit, 'ceiling', blockId=owner)
             choice = event_choice(context, 'ceiling', state, hit + 1, jumping=jumping, finite=[event],
                                   vertical=[dict(state=hit + 1, plane=plane, direction=1)],
                                   region_choices=region_choices(context, event, owner))

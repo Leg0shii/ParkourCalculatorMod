@@ -2,11 +2,10 @@
 
 ## Automatic close-decision grouping and commitment (2026-11-16)
 
-2026-11-17 clarification: these are separate workstreams. The user defines
-automatic grouping as solving coupled constraints together and has requested an
-implementation suggestion. Commitment remains explicitly deferred. See G1/G2
-in the [register](../DEFERRED_WORK.md); no runtime implementation is authorized
-by this discussion.
+These are separate workstreams. Automatic grouping infers groups of nearby,
+dependent movement decisions and solves each group's coupled constraints
+together; it is re-planned on the shared scene geometry. Commitment remains
+deferred (G2 in the [register](../DEFERRED_WORK.md)).
 
 ### Automatic grouping: joint constraint solving
 
@@ -18,12 +17,11 @@ See [assembly](../../src/parkour_solver/search/engine.py),
 [joint traversal](../../src/parkour_solver/constraints/variants.py) and
 [three-way conflict control](../../tests/unit/constraints/test_encounters.py).
 
-The remaining design discussion must identify a concrete consumer that still
-separates coupled requirements, or a distinct need to assemble several movement
-choices before a query. Shared momentum/facings mean separated encounter windows
-are not proof of independent models. Preserve original-state joint solves;
-grouping alone does not change solve cadence, select winning alternatives or
-fix intermediate states.
+Every interaction type now reads one `SceneGeometry`; every surface records its
+avoidance cluster and every region alternative is a walk item, so the re-plan
+starts from one geometry and one joint iterator. Shared momentum/facings mean
+separated encounter windows are not proof of independent models. Grouping alone
+changes neither solve cadence nor commitment.
 
 ### Commitment: deferred
 

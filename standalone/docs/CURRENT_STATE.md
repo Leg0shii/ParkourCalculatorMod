@@ -55,10 +55,10 @@ everything not being worked on is in the [deferred-work register](DEFERRED_WORK.
    the canonical comparison rule, `InteractionGate` semantics, duration certificate.
 4. [Branch scheduling](design/BRANCH_SCHEDULING_INVESTIGATION.md) (deferred): when work runs
    and when it is excluded.
-5. [Pruning backlog](design/PRUNING_IMPROVEMENTS_BACKLOG.md): automatic grouping as
-   joint constraint solving is under discussion; commitment stays deferred.
-   Fixed-program joint assembly exists; remaining consumers and pruning gaps
-   need concrete scope before implementation.
+5. [Automatic grouping](design/PRUNING_IMPROVEMENTS_BACKLOG.md#automatic-grouping-joint-constraint-solving):
+   every interaction type now reads one [shared scene geometry](design/FACE_MERGING_IMPLEMENTATION_PLAN.md)
+   (`spatial/surfaces.py`); grouping itself is to be re-planned on it. Commitment
+   and cadence stay deferred. Other pruning gaps stay in the backlog.
 6. [Pruning research](research/PRUNING_RESEARCH.md): "why one best arrival fails",
    "how branch and bound could help", "candidate pruning and reuse mechanisms" and
    "schedule-gated comparison, run/jump protection and exact processing order".

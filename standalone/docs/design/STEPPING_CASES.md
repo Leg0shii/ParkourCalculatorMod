@@ -108,7 +108,8 @@ outside and wall options exist only on a side face exposed at the feet height (a
 flush against a neighbour yields none; feet exactly on a flush neighbour's top touch
 the face above it), corner cases only at convex corners whose two side faces are both
 exposed at the corner (a flush seam is not a corner), and target, lower and higher
-regions are the blocks' exposed tops, one choice per disconnected piece. Grind uses each
+regions are the blocks' exposed tops, one choice per disconnected piece, keeping only the
+rectangles the approach can reach at that state. Grind uses each
 low merged underside, with outside rows on its members' exposed sides. Exposure never
 rejects a step trigger: the trigger check uses the event's `boxes`, and uncertain probes
 keep the `InteractionGate` unknown path.

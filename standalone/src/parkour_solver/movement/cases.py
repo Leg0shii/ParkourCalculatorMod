@@ -2,8 +2,8 @@ import copy
 
 from parkour_solver.physics.vertical import REST_CARRY, f32
 from parkour_solver.movement.vertical_profiles import trace_ladder_schedule
-from parkour_solver.movement.contact_combinations import (bounding_region, contact_event, finite_rows, region_offset,
-                                                          scene_contact_options)
+from parkour_solver.movement.contact_combinations import (bounding_region, contact_event, finite_rows, reachable_option,
+                                                          region_offset, scene_contact_options)
 from parkour_solver.scene.geometry import expanded_box
 from parkour_solver.spatial.surfaces import scene_geometry
 from parkour_solver.movement.units import profile_program
@@ -64,13 +64,16 @@ def convex_corner(scene, block, x_direction, z_escape, y):
             and any(r[1] <= y < r[3] and r[0] <= x <= r[2] for o in _faces(scene, block, 'Z', z_escape) for r in o.regions))
 
 
-def top_choices(context, block, state, name='case:region'):
-    """(rows, regionChoices) per exposed piece of the block's top at `state`."""
+def top_choices(context, block, state, name='case:region', *, jumping):
+    """(rows, regionChoices) per exposed piece of the block's top that the approach can reach at `state`."""
     scene = context['scene']
     if 'collisionScene' not in scene:
         return [(region_rows(block, state, name), [])]
     result = []
     for option in scene_contact_options(scene, 1, 1, members=[block['solidIndex']]):
+        option = reachable_option(context, option, state, jumping=jumping)
+        if option is None:
+            continue
         rows = [dict(r, name=name) for r in finite_rows(1, bounding_region(option.regions), t1=state)]
         choices = [dict(offset=state, surface=option.surface, owner=block['id'],
                         options=[[dict(r, name=name) for r in finite_rows(1, region, leg=0, offset=state)]

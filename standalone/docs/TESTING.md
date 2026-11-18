@@ -2,8 +2,8 @@
 
 ## Current gate
 
-`tools/native_gate.py` (commands in the [runbook](RUNBOOK.md)) on the exposed-case
-change over `8505b18c`: **707 tests, no failures, errors or skips**, source unchanged
+`tools/native_gate.py` (commands in the [runbook](RUNBOOK.md)) on the per-rectangle
+reachability change over `ff4bc6b3`: **708 tests, no failures, errors or skips**, source unchanged
 during the run, layout validation passed.
 A run of the switch-climb source (`55e3beef`) under a load average of 5.5 failed
 `test_prescribed_points_do_not_remove_remote_free_space` (its two 2 s arms
@@ -22,6 +22,7 @@ persistence without the removed 32/128 limits.
 
 | Source | Tests | Evidence |
 | --- | ---: | --- |
+| `ff4bc6b3` + per-rectangle reachability of tops and undersides | 708 | not archived |
 | `8505b18c` + exposed step, corner and grind geometry | 707 | not archived |
 | `d44bab94` + exposed landing regions and floor checks | 705 | not archived |
 | `20e58192` + contact regions on merged faces | 702 | not archived |

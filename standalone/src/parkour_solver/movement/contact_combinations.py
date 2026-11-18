@@ -1,4 +1,5 @@
 import copy
+import dataclasses
 import itertools
 
 from parkour_solver.schema import integer, number
@@ -115,6 +116,14 @@ def region_choices(context, event, owner):
     offset, axis = region_offset(event), 'XYZ'.index(event['axis'])
     return [dict(offset=offset, surface=event['surface'], owner=owner,
                  options=[finite_rows(axis, r, leg=0, offset=offset) for r in event['regions']])]
+
+
+def reachable_option(context, option, tick, *, jumping):
+    """The top or underside option keeping only the rectangles the approach can reach at `tick`, or None."""
+    from parkour_solver.reachability.service import bounds_allowed
+    regions = tuple(r for r in option.regions
+                    if bounds_allowed(context, [r[0], 0, r[1], r[2], 0, r[3]], tick, jumping=jumping, phases=('Y',)))
+    return dataclasses.replace(option, regions=regions) if regions else None
 
 
 def bounding_region(regions):

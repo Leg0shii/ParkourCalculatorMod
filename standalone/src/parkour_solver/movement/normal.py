@@ -55,7 +55,8 @@ def named_choice(context, kind, initial, event, *, jumping=False, constraints=()
 
 
 def normal_choices(context):
-    from parkour_solver.movement.contact_combinations import contact_event, region_choices, scene_contact_options
+    from parkour_solver.movement.contact_combinations import (contact_event, reachable_option, region_choices,
+                                                              scene_contact_options)
     for initial, jumping, trace in approaches(context):
         for block in context['scene']['blocks']:
             if context.get('checkBudget'):
@@ -65,11 +66,10 @@ def normal_choices(context):
             t = first_descent(trace, block['top'])
             if t is None:
                 continue
-            box = context['scene']['collisionScene']['solids'][block['solidIndex']]
-            from parkour_solver.reachability.service import interaction_allowed
-            if not interaction_allowed(context, box, t, jumping=jumping, phases=('Y',)):
-                continue
             for option in scene_contact_options(context['scene'], 1, 1, members=[block['solidIndex']]):
+                option = reachable_option(context, option, t, jumping=jumping)
+                if option is None:
+                    continue
                 event = contact_event(option, 'Y', -1, t, 'landing')
                 choice = event_choice(context, 'normal', initial, t + 1, jumping=jumping,
                     vertical=[dict(state=t + 1, direction=-1, plane=block['top'])], finite=[event],

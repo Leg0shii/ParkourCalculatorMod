@@ -106,6 +106,35 @@ class ExposedTopTests(unittest.TestCase):
             self.assertEqual(choice['profile']['positionConstraints'], [])
         self.assertTrue(all('regionChoices' not in c['profile'] for c in self.landings(scene)))
 
+    @unittest.skipUnless(__import__('os').environ.get('PKC_RUN_TICKS_COMPILER'), 'Requires coefficient compiler')
+    def test_real11_run_tick_landing_drops_the_rectangle_it_cannot_reach(self):
+        import json, os
+        from pathlib import Path
+        from tools.paths import STANDALONE_ROOT
+        from parkour_solver.bridge.compiler import JavaCompiler
+        from parkour_solver.movement.normal import normal_choices
+        from parkour_solver.movement.program import boundary_state, empty_program
+        from parkour_solver.reachability.service import InteractionGate
+        from parkour_solver.scene.normalize import prepare_scene
+        scene = prepare_scene(json.loads((STANDALONE_ROOT/'cases/real11/physical-anchors.json').read_text())['request'])
+        program = empty_program(scene['initial'])
+        def b1(gate=None):
+            context = dict(mode='open', scene=scene, program=program, state=boundary_state(program), maxInputs=8,
+                           threshold=0., regionItems=True)
+            if gate is not None:
+                gate.context(context)
+            choice, = [c for c in normal_choices(context) if c.get('terminalSupport') == 'b1']
+            event, = choice['profile']['contactEvents']
+            return event['regions'], choice['profile'].get('regionChoices', [])
+        regions, items = b1()
+        self.assertEqual((len(regions), len(items)), (2, 1))
+        with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:
+            reached, items = b1(InteractionGate(scene, compiler))
+        self.assertEqual(items, [])
+        self.assertEqual(len(reached), 1)
+        self.assertIn(reached[0], regions)
+        self.assertGreaterEqual(reached[0][0], 742.3)
+
     def test_exact_height_slot_keeps_its_floor(self):
         from parkour_solver.movement.contact_combinations import scene_contact_options
         from parkour_solver.scene.geometry import BODY_HEIGHT
