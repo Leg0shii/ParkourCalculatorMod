@@ -7,7 +7,7 @@ from pathlib import Path
 from parkour_solver.scene.geometry import BODY_HEIGHT, expanded_box, normalize_geometry
 from parkour_solver.scene.route import HALF_WIDTH, supports
 from parkour_solver.spatial.cells import decompose, intersection
-from parkour_solver.spatial.faces import merge_faces
+from parkour_solver.spatial.surfaces import merge_faces
 from parkour_solver.spatial.regions import canonical_cover, support_components
 
 

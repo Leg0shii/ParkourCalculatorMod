@@ -13,7 +13,7 @@ An airborne ceiling query does not begin a new landing segment. A later selected
 landing can introduce another encounter with the same obstacle.
 
 Each obstacle cluster receives a cover for its potentially interacting phases in
-the segment. A cluster (`spatial.footprints`) is a set of solids whose expanded
+the segment. A cluster (`spatial.surfaces`) is a set of solids whose expanded
 boxes overlap or touch, so the player cannot pass between them; Real11's B5, B6
 and B7 are one cluster. At each phase the cluster's members active at the
 player's height (open Y overlap) form a union of rectangles, and its sides are

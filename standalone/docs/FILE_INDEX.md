@@ -20,13 +20,13 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 
 | File | Bytes |
 | --- | ---: |
-| [AGENTS.md](../AGENTS.md) | 6542 |
+| [AGENTS.md](../AGENTS.md) | 6545 |
 
 ## CLAUDE.md
 
 | File | Bytes |
 | --- | ---: |
-| [CLAUDE.md](../CLAUDE.md) | 6542 |
+| [CLAUDE.md](../CLAUDE.md) | 6545 |
 
 ## README.md
 
@@ -60,32 +60,32 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | --- | ---: |
 | [docs/AGENT_SETUP.md](AGENT_SETUP.md) | 3731 |
 | [docs/ANCHOR_SEARCH_EXECUTION_REFERENCE.md](ANCHOR_SEARCH_EXECUTION_REFERENCE.md) | 28177 |
-| [docs/ARCHITECTURE.md](ARCHITECTURE.md) | 17022 |
+| [docs/ARCHITECTURE.md](ARCHITECTURE.md) | 17061 |
 | [docs/CHECKPOINT_STORAGE.md](CHECKPOINT_STORAGE.md) | 6832 |
-| [docs/CODE_MAP.md](CODE_MAP.md) | 25225 |
-| [docs/CURRENT_STATE.md](CURRENT_STATE.md) | 11106 |
-| [docs/DECISIONS_AND_PLANS.md](DECISIONS_AND_PLANS.md) | 10759 |
-| [docs/DEFERRED_WORK.md](DEFERRED_WORK.md) | 26398 |
+| [docs/CODE_MAP.md](CODE_MAP.md) | 25103 |
+| [docs/CURRENT_STATE.md](CURRENT_STATE.md) | 11254 |
+| [docs/DECISIONS_AND_PLANS.md](DECISIONS_AND_PLANS.md) | 10802 |
+| [docs/DEFERRED_WORK.md](DEFERRED_WORK.md) | 26612 |
 | [docs/DEVELOPMENT.md](DEVELOPMENT.md) | 11359 |
 | [docs/DOC_INDEX.md](DOC_INDEX.md) | 26623 |
-| [docs/FILE_INDEX.md](FILE_INDEX.md) | 205194 |
-| [docs/FUNCTION_INDEX.md](FUNCTION_INDEX.md) | 69371 |
+| [docs/FILE_INDEX.md](FILE_INDEX.md) | 205316 |
+| [docs/FUNCTION_INDEX.md](FUNCTION_INDEX.md) | 70049 |
 | [docs/IPOPT_CONSTRAINT_REDUCTION.md](IPOPT_CONSTRAINT_REDUCTION.md) | 5578 |
 | [docs/IPOPT_FEASIBILITY_MODE.md](IPOPT_FEASIBILITY_MODE.md) | 4956 |
 | [docs/LAYOUT.md](LAYOUT.md) | 6162 |
 | [docs/MOD_REFERENCES.md](MOD_REFERENCES.md) | 4996 |
 | [docs/PERFORMANCE.md](PERFORMANCE.md) | 9046 |
-| [docs/REAL11_EXTENDED_GEOMETRY.md](REAL11_EXTENDED_GEOMETRY.md) | 12346 |
+| [docs/REAL11_EXTENDED_GEOMETRY.md](REAL11_EXTENDED_GEOMETRY.md) | 12349 |
 | [docs/REAL11_GUIDE.md](REAL11_GUIDE.md) | 20362 |
 | [docs/RESULTS_AND_DEBUGGING.md](RESULTS_AND_DEBUGGING.md) | 14342 |
 | [docs/RUNBOOK.md](RUNBOOK.md) | 12284 |
-| [docs/TESTING.md](TESTING.md) | 15942 |
+| [docs/TESTING.md](TESTING.md) | 15976 |
 | [docs/design/ANCHOR_POLICY_DECISIONS.md](design/ANCHOR_POLICY_DECISIONS.md) | 27544 |
-| [docs/design/AVOIDANCE_PASSAGES.md](design/AVOIDANCE_PASSAGES.md) | 12671 |
+| [docs/design/AVOIDANCE_PASSAGES.md](design/AVOIDANCE_PASSAGES.md) | 12781 |
 | [docs/design/BRANCH_SCHEDULING_INVESTIGATION.md](design/BRANCH_SCHEDULING_INVESTIGATION.md) | 34072 |
 | [docs/design/CONTACT_COMBINATIONS.md](design/CONTACT_COMBINATIONS.md) | 9112 |
-| [docs/design/FACE_MERGING_IMPLEMENTATION_PLAN.md](design/FACE_MERGING_IMPLEMENTATION_PLAN.md) | 22090 |
-| [docs/design/GENERATION_FOLLOWUPS.md](design/GENERATION_FOLLOWUPS.md) | 41282 |
+| [docs/design/FACE_MERGING_IMPLEMENTATION_PLAN.md](design/FACE_MERGING_IMPLEMENTATION_PLAN.md) | 23050 |
+| [docs/design/GENERATION_FOLLOWUPS.md](design/GENERATION_FOLLOWUPS.md) | 41767 |
 | [docs/design/GENERATION_RELEVANCE_PLAN.md](design/GENERATION_RELEVANCE_PLAN.md) | 11545 |
 | [docs/design/GENERIC_COMPOSITION.md](design/GENERIC_COMPOSITION.md) | 7205 |
 | [docs/design/HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md](design/HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md) | 66368 |
@@ -96,7 +96,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/design/OBSTACLE_RELEVANCE.md](design/OBSTACLE_RELEVANCE.md) | 10757 |
 | [docs/design/OBSTACLE_SEARCH.md](design/OBSTACLE_SEARCH.md) | 11808 |
 | [docs/design/ORCHESTRATOR_CONTRACT.md](design/ORCHESTRATOR_CONTRACT.md) | 2449 |
-| [docs/design/PRUNING_IMPROVEMENTS_BACKLOG.md](design/PRUNING_IMPROVEMENTS_BACKLOG.md) | 3634 |
+| [docs/design/PRUNING_IMPROVEMENTS_BACKLOG.md](design/PRUNING_IMPROVEMENTS_BACKLOG.md) | 3849 |
 | [docs/design/REVISIT_DISCOVERY_DEFERRED_PLAN.md](design/REVISIT_DISCOVERY_DEFERRED_PLAN.md) | 10265 |
 | [docs/design/SEARCH_OBJECTIVE.md](design/SEARCH_OBJECTIVE.md) | 6702 |
 | [docs/design/STEPPING_CASES.md](design/STEPPING_CASES.md) | 10618 |
@@ -1231,7 +1231,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [research/switch-climb/2026-11-17/cold-report.md](../research/switch-climb/2026-11-17/cold-report.md) | 52281 |
 | [research/switch-climb/2026-11-17/cold-summary.json](../research/switch-climb/2026-11-17/cold-summary.json) | 6030 |
 | [research/switch-climb/2026-11-17/native-report.json](../research/switch-climb/2026-11-17/native-report.json) | 18942 |
-| [research/switch-climb/README.md](../research/switch-climb/README.md) | 3256 |
+| [research/switch-climb/README.md](../research/switch-climb/README.md) | 3416 |
 | [research/ticks-and-objective/summary.json](../research/ticks-and-objective/summary.json) | 4209 |
 | [research/two-goal-comparisons/README.md](../research/two-goal-comparisons/README.md) | 14085 |
 | [research/two-goal-comparisons/evidence/manifest.json](../research/two-goal-comparisons/evidence/manifest.json) | 7897 |
@@ -1287,10 +1287,10 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [src/parkour_solver/constraints/__init__.py](../src/parkour_solver/constraints/__init__.py) | 0 |
 | [src/parkour_solver/constraints/avoidance.py](../src/parkour_solver/constraints/avoidance.py) | 8174 |
 | [src/parkour_solver/constraints/contacts.py](../src/parkour_solver/constraints/contacts.py) | 4235 |
-| [src/parkour_solver/constraints/encounters.py](../src/parkour_solver/constraints/encounters.py) | 18105 |
+| [src/parkour_solver/constraints/encounters.py](../src/parkour_solver/constraints/encounters.py) | 18110 |
 | [src/parkour_solver/constraints/hit_events.py](../src/parkour_solver/constraints/hit_events.py) | 9533 |
 | [src/parkour_solver/constraints/route_guards.py](../src/parkour_solver/constraints/route_guards.py) | 11591 |
-| [src/parkour_solver/constraints/variants.py](../src/parkour_solver/constraints/variants.py) | 16783 |
+| [src/parkour_solver/constraints/variants.py](../src/parkour_solver/constraints/variants.py) | 16893 |
 | [src/parkour_solver/io/__init__.py](../src/parkour_solver/io/__init__.py) | 0 |
 | [src/parkour_solver/io/capture.py](../src/parkour_solver/io/capture.py) | 6352 |
 | [src/parkour_solver/io/checkpoint_store.py](../src/parkour_solver/io/checkpoint_store.py) | 10851 |
@@ -1303,8 +1303,8 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [src/parkour_solver/movement/ceiling_contacts.py](../src/parkour_solver/movement/ceiling_contacts.py) | 69 |
 | [src/parkour_solver/movement/ceiling_generation.py](../src/parkour_solver/movement/ceiling_generation.py) | 5426 |
 | [src/parkour_solver/movement/ceiling_profiles.py](../src/parkour_solver/movement/ceiling_profiles.py) | 4005 |
-| [src/parkour_solver/movement/contact_combinations.py](../src/parkour_solver/movement/contact_combinations.py) | 7976 |
-| [src/parkour_solver/movement/contact_profiles.py](../src/parkour_solver/movement/contact_profiles.py) | 4758 |
+| [src/parkour_solver/movement/contact_combinations.py](../src/parkour_solver/movement/contact_combinations.py) | 8078 |
+| [src/parkour_solver/movement/contact_profiles.py](../src/parkour_solver/movement/contact_profiles.py) | 4775 |
 | [src/parkour_solver/movement/contacts.py](../src/parkour_solver/movement/contacts.py) | 9577 |
 | [src/parkour_solver/movement/generation.py](../src/parkour_solver/movement/generation.py) | 11879 |
 | [src/parkour_solver/movement/ladder/__init__.py](../src/parkour_solver/movement/ladder/__init__.py) | 0 |
@@ -1367,7 +1367,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [src/parkour_solver/search/compat/time_progress.py](../src/parkour_solver/search/compat/time_progress.py) | 5140 |
 | [src/parkour_solver/search/completion.py](../src/parkour_solver/search/completion.py) | 436 |
 | [src/parkour_solver/search/deferrals.py](../src/parkour_solver/search/deferrals.py) | 1105 |
-| [src/parkour_solver/search/dfs.py](../src/parkour_solver/search/dfs.py) | 66214 |
+| [src/parkour_solver/search/dfs.py](../src/parkour_solver/search/dfs.py) | 66296 |
 | [src/parkour_solver/search/domain.py](../src/parkour_solver/search/domain.py) | 959 |
 | [src/parkour_solver/search/engine.py](../src/parkour_solver/search/engine.py) | 22018 |
 | [src/parkour_solver/search/entry.py](../src/parkour_solver/search/entry.py) | 10609 |
@@ -1396,10 +1396,9 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [src/parkour_solver/spatial/compat/corridors.py](../src/parkour_solver/spatial/compat/corridors.py) | 24908 |
 | [src/parkour_solver/spatial/compat/progress.py](../src/parkour_solver/spatial/compat/progress.py) | 8165 |
 | [src/parkour_solver/spatial/event_routes.py](../src/parkour_solver/spatial/event_routes.py) | 16579 |
-| [src/parkour_solver/spatial/faces.py](../src/parkour_solver/spatial/faces.py) | 15579 |
-| [src/parkour_solver/spatial/footprints.py](../src/parkour_solver/spatial/footprints.py) | 4578 |
 | [src/parkour_solver/spatial/guides.py](../src/parkour_solver/spatial/guides.py) | 6494 |
 | [src/parkour_solver/spatial/regions.py](../src/parkour_solver/spatial/regions.py) | 18576 |
+| [src/parkour_solver/spatial/surfaces.py](../src/parkour_solver/spatial/surfaces.py) | 24370 |
 | [src/parkour_solver/validation/__init__.py](../src/parkour_solver/validation/__init__.py) | 0 |
 | [src/parkour_solver/validation/numerical.py](../src/parkour_solver/validation/numerical.py) | 7428 |
 | [src/parkour_solver/validation/scene.py](../src/parkour_solver/validation/scene.py) | 1952 |
@@ -1480,7 +1479,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [tests/integration/test_block_route_witnesses.py](../tests/integration/test_block_route_witnesses.py) | 10494 |
 | [tests/integration/test_full_route_witness.py](../tests/integration/test_full_route_witness.py) | 1854 |
 | [tests/integration/test_generic_composition.py](../tests/integration/test_generic_composition.py) | 17778 |
-| [tests/integration/test_geometry_bounds.py](../tests/integration/test_geometry_bounds.py) | 5429 |
+| [tests/integration/test_geometry_bounds.py](../tests/integration/test_geometry_bounds.py) | 5432 |
 | [tests/integration/test_integration.py](../tests/integration/test_integration.py) | 27321 |
 | [tests/integration/test_movement_contacts.py](../tests/integration/test_movement_contacts.py) | 11400 |
 | [tests/integration/test_orchestrator_continuation.py](../tests/integration/test_orchestrator_continuation.py) | 19182 |
@@ -1527,7 +1526,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [tests/unit/movement/test_block_profiles.py](../tests/unit/movement/test_block_profiles.py) | 8387 |
 | [tests/unit/movement/test_ceiling_contacts.py](../tests/unit/movement/test_ceiling_contacts.py) | 5796 |
 | [tests/unit/movement/test_climbable_search.py](../tests/unit/movement/test_climbable_search.py) | 9441 |
-| [tests/unit/movement/test_contact_combinations.py](../tests/unit/movement/test_contact_combinations.py) | 19147 |
+| [tests/unit/movement/test_contact_combinations.py](../tests/unit/movement/test_contact_combinations.py) | 19950 |
 | [tests/unit/movement/test_contacts.py](../tests/unit/movement/test_contacts.py) | 3249 |
 | [tests/unit/movement/test_feasibility_mode.py](../tests/unit/movement/test_feasibility_mode.py) | 3489 |
 | [tests/unit/movement/test_hanging_vines.py](../tests/unit/movement/test_hanging_vines.py) | 7309 |
@@ -1586,13 +1585,12 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [tests/unit/spatial/test_corridor_guards.py](../tests/unit/spatial/test_corridor_guards.py) | 5108 |
 | [tests/unit/spatial/test_event_domain.py](../tests/unit/spatial/test_event_domain.py) | 4532 |
 | [tests/unit/spatial/test_event_routes.py](../tests/unit/spatial/test_event_routes.py) | 4072 |
-| [tests/unit/spatial/test_faces.py](../tests/unit/spatial/test_faces.py) | 17128 |
-| [tests/unit/spatial/test_footprints.py](../tests/unit/spatial/test_footprints.py) | 4457 |
 | [tests/unit/spatial/test_guide_progress.py](../tests/unit/spatial/test_guide_progress.py) | 2415 |
 | [tests/unit/spatial/test_route_guards.py](../tests/unit/spatial/test_route_guards.py) | 2854 |
 | [tests/unit/spatial/test_route_progress.py](../tests/unit/spatial/test_route_progress.py) | 5156 |
 | [tests/unit/spatial/test_route_regions.py](../tests/unit/spatial/test_route_regions.py) | 8528 |
 | [tests/unit/spatial/test_semantic_routes.py](../tests/unit/spatial/test_semantic_routes.py) | 4695 |
+| [tests/unit/spatial/test_surfaces.py](../tests/unit/spatial/test_surfaces.py) | 25821 |
 
 ## tools
 
@@ -1602,11 +1600,11 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [tools/audit_candidates.py](../tools/audit_candidates.py) | 47063 |
 | [tools/check_docs.py](../tools/check_docs.py) | 1545 |
 | [tools/docs_index.py](../tools/docs_index.py) | 6567 |
-| [tools/geometry_bounds.py](../tools/geometry_bounds.py) | 6291 |
+| [tools/geometry_bounds.py](../tools/geometry_bounds.py) | 6294 |
 | [tools/layout-extractions.json](../tools/layout-extractions.json) | 6510 |
 | [tools/layout-migration.json](../tools/layout-migration.json) | 363149 |
 | [tools/layout-test-support.json](../tools/layout-test-support.json) | 3356 |
-| [tools/native-suite.json](../tools/native-suite.json) | 3704 |
+| [tools/native-suite.json](../tools/native-suite.json) | 3744 |
 | [tools/native_gate.py](../tools/native_gate.py) | 1698 |
 | [tools/paths.py](../tools/paths.py) | 567 |
 | [tools/plotting/__init__.py](../tools/plotting/__init__.py) | 69 |

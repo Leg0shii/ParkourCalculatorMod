@@ -1,4 +1,9 @@
-"""Physical face unions checked against source geometry and an occupancy oracle."""
+"""Scene surfaces: physical face unions, player surfaces and obstacle clusters.
+
+Physical faces are checked against source geometry and an occupancy oracle;
+clusters against their maximal free rectangles; player surfaces against the cell
+decomposition's contact patches.
+"""
 import copy
 from dataclasses import FrozenInstanceError
 from fractions import Fraction
@@ -8,8 +13,11 @@ import math
 import random
 import unittest
 
-from parkour_solver.spatial.faces import FaceCatalog, TANGENT_AXES, merge_faces
-from parkour_solver.spatial.regions import geometry_key
+from parkour_solver.scene.geometry import BODY_HEIGHT, expanded_box
+from parkour_solver.spatial.cells import decompose
+from parkour_solver.spatial.regions import canonical_cover, geometry_key
+from parkour_solver.spatial.surfaces import (FaceCatalog, TANGENT_AXES, free_rectangles, merge_faces, nested,
+                                             scene_geometry)
 from tests.support.cell_geometry import scene_for
 
 
@@ -309,5 +317,163 @@ class FaceRepresentationTests(unittest.TestCase):
         self.assertNotEqual(catalog.catalog_id, other.catalog_id)
 
 
-if __name__ == '__main__':
-    unittest.main()
+
+B5 = [730, 0, -1096, 731, 6, -1095]
+B6 = [730, 0, -1095, 731, 20, -1094]
+B7 = [729, 0, -1095, 730, 7, -1093]
+
+
+def sides(geometry, cluster, y):
+    return {s.bounds: tuple(sorted(set().union(*s.owners))) for s in geometry.sides(cluster, geometry.active(cluster, y, y))}
+
+
+def interior(box, x, z):
+    return box[0] < x < box[3] and box[2] < z < box[5]
+
+
+def within(region, x, z):
+    return region[0] <= x <= region[2] and region[1] <= z <= region[3]
+
+
+class ClusterTests(unittest.TestCase):
+    def test_real11_flush_blocks_form_one_cluster_with_shared_sides(self):
+        geometry = scene_geometry(dict(solids=[B5, B6, B7]))
+        cluster, = geometry.clusters([0, 1, 2])
+        self.assertEqual(cluster.members, (0, 1, 2))
+        b6, b7 = expanded_box(B6), expanded_box(B7)
+        self.assertEqual(sides(geometry, cluster, 6.5), {
+            (('Z', -1, b6[2]),): (1, 2),
+            (('X', 1, b6[3]),): (1,),
+            (('X', -1, b7[0]),): (2,),
+            (('Z', 1, b7[5]),): (2,),
+            (('X', 1, b7[3]), ('Z', 1, b6[5])): (1, 2)})
+        self.assertEqual(sides(geometry, cluster, 7.5), {
+            (('Z', -1, b6[2]),): (1,),
+            (('X', 1, b6[3]),): (1,),
+            (('X', -1, b6[0]),): (1,),
+            (('Z', 1, b6[5]),): (1,)})
+        self.assertEqual(geometry.active(cluster, 7., 7.2), (1,))
+        self.assertEqual(geometry.active(cluster, 5.5, 6.), (0, 1, 2))
+
+    def test_lower_and_upper_sides_on_one_side_are_nested(self):
+        geometry = scene_geometry(dict(solids=[B6, B7]))
+        cluster, = geometry.clusters([0, 1])
+        low = {s.bounds: s for s in geometry.sides(cluster, (0, 1))}
+        high = {s.bounds: s for s in geometry.sides(cluster, (0,))}
+        west_low = low[(('X', -1, expanded_box(B7)[0]),)]
+        west_high = high[(('X', -1, expanded_box(B6)[0]),)]
+        self.assertTrue(nested(west_low.region, west_high.region))
+        for side in low.values():
+            self.assertTrue(any(nested(side.region, other.region) for other in high.values()))
+
+    def test_ring_encloses_one_bounded_pocket(self):
+        ring = [(0, 0, 0, 3, 1, 1), (0, 0, 2, 3, 1, 3), (0, 0, 0, 1, 1, 3), (2, 0, 0, 3, 1, 3)]
+        self.assertIn((1, 1, 2, 2), free_rectangles(ring))
+        self.assertEqual(sum(all(math.isfinite(v) for v in r) for r in free_rectangles(ring)), 1)
+
+    def test_blocks_a_real_gap_apart_are_separate_clusters(self):
+        geometry = scene_geometry(dict(solids=[[0, 0, 0, 1, 2, 1], [1.612, 0, 0, 2.612, 2, 1]]))
+        self.assertEqual([c.members for c in geometry.clusters([0, 1])], [(0,), (1,)])
+        geometry = scene_geometry(dict(solids=[[0, 0, 0, 1, 2, 1], [1.5, 0, 0, 2.5, 2, 1]]))
+        self.assertEqual([c.members for c in geometry.clusters([0, 1])], [(0, 1)])
+
+    def test_out_of_scope_solids_are_ignored(self):
+        geometry = scene_geometry(dict(solids=[B5, B6, B7]))
+        self.assertEqual([c.members for c in geometry.clusters([1])], [(1,)])
+
+    def test_random_unions_are_covered_exactly_by_maximal_sides(self):
+        rng = random.Random(7)
+        for _ in range(60):
+            boxes = []
+            for _ in range(rng.randint(1, 5)):
+                x, z = rng.randint(0, 6)/2, rng.randint(0, 6)/2
+                boxes.append((x, 0, z, x+rng.randint(1, 4)/2, 1, z+rng.randint(1, 4)/2))
+            rects = free_rectangles(boxes)
+            for _ in range(300):
+                x, z = rng.uniform(-1, 6), rng.uniform(-1, 6)
+                free = not any(interior(b, x, z) for b in boxes)
+                self.assertEqual(any(within(r, x, z) for r in rects), free, (boxes, x, z))
+            for r in rects:
+                self.assertFalse(any(b[0] < r[2] and r[0] < b[3] and b[2] < r[3] and r[1] < b[5] for b in boxes))
+                for i, step in ((0, -1e-6), (1, -1e-6), (2, 1e-6), (3, 1e-6)):
+                    if math.isinf(r[i]):
+                        continue
+                    grown = list(r)
+                    grown[i] += step
+                    self.assertTrue(any(b[0] < grown[2] and grown[0] < b[3] and b[2] < grown[3] and grown[1] < b[5]
+                                        for b in boxes), (boxes, r, i))
+
+
+
+def planar(rects):
+    return canonical_cover((r[0], 0, r[1], r[2], 0, r[3]) for r in rects)
+
+
+class PlayerSurfaceTests(unittest.TestCase):
+    def tops(self, geometry, indices=None):
+        return [s for s in geometry.player_surfaces(indices) if s.axis == 1 and s.sign == 1]
+
+    def test_taller_neighbour_clips_a_top_into_an_l(self):
+        geometry = scene_geometry(dict(solids=[B5, B6, B7]))
+        b5, b6, b7 = expanded_box(B5), expanded_box(B6), expanded_box(B7)
+        tops = {s.plane: s for s in self.tops(geometry)}
+        self.assertEqual(tops[6].cover, ((b5[0], b5[2], b5[3], b6[2]),))
+        self.assertEqual(tops[7].cover, ((b7[0], b7[2], b6[0], b7[5]), (b6[0], b6[5], b7[3], b7[5])))
+        self.assertEqual((tops[7].members, tops[7].cluster), ((2,), 0))
+
+    def test_modeled_subset_ignores_unmodeled_neighbours(self):
+        geometry = scene_geometry(dict(solids=[B5, B6, B7]))
+        b5 = expanded_box(B5)
+        top, = self.tops(geometry, [0])
+        self.assertEqual(top.cover, ((b5[0], b5[2], b5[3], b5[5]),))
+        self.assertEqual(top.cluster, 0)
+        self.assertEqual([s.cluster for s in self.tops(geometry, [1, 2])], [1, 1])
+
+    def test_touching_coplanar_boxes_form_one_surface_with_both_members(self):
+        boxes = [[0, 3, 0, 1, 4, 1], [1, 3, 0, 2, 4, 1]]
+        geometry = scene_geometry(dict(solids=boxes))
+        a, b = expanded_box(boxes[0]), expanded_box(boxes[1])
+        bottom, = [s for s in geometry.player_surfaces() if s.axis == 1 and s.sign == -1]
+        self.assertEqual((bottom.plane, bottom.members), (a[1], (0, 1)))
+        self.assertEqual(bottom.cover, ((a[0], a[2], b[3], b[5]),))
+        self.assertEqual(len(bottom.contributions), 2)
+
+    def test_exact_height_slot_keeps_both_faces(self):
+        floor = [0, 0, 0, 1, 1, 1]
+        ceiling = [0, 1+BODY_HEIGHT, 0, 1, 3, 1]
+        self.assertEqual(expanded_box(ceiling)[1], 1)
+        surfaces = scene_geometry(dict(solids=[floor, ceiling])).player_surfaces()
+        at = {(s.sign, s.members) for s in surfaces if s.axis == 1 and s.plane == 1}
+        self.assertEqual(at, {(1, (0,)), (-1, (1,))})
+
+    def test_ring_top_keeps_its_hole(self):
+        ring = [[0, 0, 0, 3, 1, 1], [0, 0, 2, 3, 1, 3], [0, 0, 0, 1, 1, 3], [2, 0, 0, 3, 1, 3]]
+        top, = self.tops(scene_geometry(dict(solids=ring)))
+        self.assertEqual(top.members, (0, 1, 2, 3))
+        self.assertFalse(any(r[0] <= 1.5 <= r[2] and r[1] <= 1.5 <= r[3] for r in top.cover))
+        self.assertTrue(any(r[0] <= 1.2 <= r[2] and r[1] <= 1.5 <= r[3] for r in top.cover))
+
+    def test_covers_match_the_cell_contact_patches(self):
+        rng = random.Random(20261117)
+        for trial in range(30):
+            boxes = []
+            for _ in range(rng.randint(1, 4)):
+                low = [rng.randint(-8, 5)/4 for _ in range(3)]
+                boxes.append(low + [v+rng.randint(1, 8)/4 for v in low])
+            scene = scene_for(boxes, bounds=(-8, -8, -8, 8, 8, 8))
+            expected, by_solid = {}, {}
+            for patch in decompose(scene).contacts:
+                u, v = TANGENT_AXES[patch.axis]
+                plane = patch.bounds[patch.axis]
+                rect = patch.bounds[u], patch.bounds[v], patch.bounds[u+3], patch.bounds[v+3]
+                expected.setdefault((patch.axis, patch.side, plane), []).append(rect)
+                by_solid.setdefault((patch.solid, patch.axis, patch.side), []).append(rect)
+            actual, contributed = {}, {}
+            for surface in scene_geometry(scene['collisionScene']).player_surfaces():
+                actual.setdefault((surface.axis, surface.sign, surface.plane), []).extend(surface.cover)
+                for solid, cover in surface.contributions:
+                    contributed.setdefault((solid, surface.axis, surface.sign), []).extend(cover)
+            self.assertEqual({k: planar(r) for k, r in actual.items()},
+                             {k: planar(r) for k, r in expected.items() if planar(r)}, (trial, boxes))
+            self.assertEqual({k: planar(r) for k, r in contributed.items()},
+                             {k: planar(r) for k, r in by_solid.items() if planar(r)}, (trial, boxes))

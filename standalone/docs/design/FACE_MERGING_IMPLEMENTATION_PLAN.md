@@ -1,13 +1,13 @@
 # Adjacent-face merging: implementation plan
 
 2026-11-15. Status: **both parts implemented** in
-[spatial/faces.py](../../src/parkour_solver/spatial/faces.py) and the optional
+[spatial/surfaces.py](../../src/parkour_solver/spatial/surfaces.py) and the optional
 `tools.geometry_bounds --faces` report. Inspected planning
 baseline `b535224c`. Scope remains exactly two parts: detecting adjacent faces
 across all six orientations, and representing them for later decisions.
 
-Owner: `src/parkour_solver/spatial/faces.py` and focused tests in
-`tests/unit/spatial/test_faces.py`. The representation is geometric:
+Owner: `src/parkour_solver/spatial/surfaces.py` and focused tests in
+`tests/unit/spatial/test_surfaces.py`. The representation is geometric:
 it does not classify blocks by anchor span or assign ceiling/wall/landing roles.
 The two existing contact-dedup findings remain evidence, not additional work in
 this plan. No movement-generator, numerical model or DFS rewrite is included.
@@ -152,7 +152,7 @@ Real11 boundary examples from direct geometry inspection:
 records the exploratory boundary calculation. It is not production implementation
 or evidence that a player can execute a route on these faces.
 
-Detection tests belong in `tests/unit/spatial/test_faces.py`:
+Detection tests belong in `tests/unit/spatial/test_surfaces.py`:
 
 | Case | Required result |
 | --- | --- |
@@ -289,7 +289,7 @@ The catalog is independent of player width/height. Current
 [expanded_box](../../src/parkour_solver/scene/geometry.py) and contact builders
 already transform physical boxes into player-feet collision coordinates. Keep
 that transformation with those consumers rather than embedding a second physics
-implementation in `spatial/faces.py`.
+implementation in the physical catalog.
 
 A point-player physical surface and its player-expanded contact domain are not
 interchangeable. Body expansion can bridge a physical gap between two catalog
@@ -305,6 +305,21 @@ and member geometry; plane-only dedup does not preserve that coverage. These are
 representation contracts, not a restored generator-integration or bug-fix phase.
 Likewise, geometric merging does not assert equal friction, contact behavior or
 block-specific obligations if later APIs introduce such properties.
+
+### 2.4.1 Player surfaces
+
+`scene_geometry(collision_scene)` returns the memoized `SceneGeometry` of
+`scene['collisionScene']` (solids and optional bounds); it never rides inside the
+scene dict. Besides obstacle clusters and sides, it serves
+`player_surfaces(indices=None)`: for each modeled solid, the six faces of its
+expanded box, clipped to the player-space coverage bounds when present, minus the
+open tangent interior of every other modeled expanded box whose open interior
+contains the plane. The pieces are unioned per plane with `canonical_cover` and
+split into edge-connected `Surface`s (`key`, `axis`, `sign`, `plane`,
+`tangent_axes`, `cover`, per-solid `contributions`, `members`, `cluster`). Thin
+pieces are dropped; a floor and an underside on one exact-height plane both
+survive; holes and concavities are never filled. Over the whole scene the covers
+equal the cell decomposition's contact patches per plane and per solid.
 
 ### 2.5 Serialization, inspectability and acceptance
 
@@ -352,7 +367,7 @@ that the current solver has started consuming merged faces.
 Implemented usage (normalized collision geometry only):
 
 ```python
-from parkour_solver.spatial.faces import FaceCatalog, merge_faces
+from parkour_solver.spatial.surfaces import FaceCatalog, merge_faces
 
 catalog = merge_faces(scene)
 for face_id in catalog.faces_for_block('b9b'):

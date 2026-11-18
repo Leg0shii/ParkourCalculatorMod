@@ -189,7 +189,7 @@ fixture with a `request` object. From `standalone/`, with the package installed:
 Add `--faces` to the command to include the physical-face catalog and statistics
 in JSON, plus an all-orientation face/member table in Markdown. The default
 bounds-only report is unchanged. Face coordinates are physical surfaces; they
-do not include player expansion. The [face API](../src/parkour_solver/spatial/faces.py)
+do not include player expansion. The [face API](../src/parkour_solver/spatial/surfaces.py)
 also supports exact source contribution queries and validated catalog loading.
 
 [Exact report](../research/real11-extension/player-bounds.json) retains all

@@ -65,7 +65,7 @@ Each fact has one owner; other docs link to it instead of restating it:
 | `movement/ladder/`, movement units | [movement units](docs/design/MOVEMENT_UNITS.md) |
 | `numerics/` | [numerical solver](docs/reference/NUMERICAL_SOLVER.md) |
 | `io/` checkpoints | [checkpoint storage](docs/CHECKPOINT_STORAGE.md) |
-| `scene/`, `spatial/faces.py`, package layout | [layout](docs/LAYOUT.md), [architecture](docs/ARCHITECTURE.md) |
+| `scene/`, `spatial/surfaces.py`, package layout | [layout](docs/LAYOUT.md), [architecture](docs/ARCHITECTURE.md) |
 | `cases/real11/` | [Real11 guide](docs/REAL11_GUIDE.md) |
 
 Write docs as current statements, not dated status paragraphs; dated results belong

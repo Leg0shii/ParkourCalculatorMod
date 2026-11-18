@@ -1,15 +1,26 @@
-"""Exact exposed physical faces, merged across coplanar neighboring solids."""
+"""Scene surfaces: the physical face catalog, player-space surfaces and obstacle clusters.
+
+One `SceneGeometry` per collision scene serves every interaction type. The
+physical catalog merges exposed world faces across coplanar neighbours. Player
+surfaces do the same for the faces the player centre touches. A cluster is a set
+of expanded solids the player cannot pass between; at a given height its active
+members' X/Z rectangles form a union, and the sides are every maximal empty
+rectangle of the plane outside that union. Every free position lies in some side,
+and a face two flush solids share is one side, not two.
+"""
+import functools
+import itertools
+import math
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import ClassVar
 
-from parkour_solver.scene.geometry import box_bounds
+from parkour_solver.scene.geometry import BODY_HEIGHT, box_bounds, expanded_box, thin
+from parkour_solver.scene.route import HALF_WIDTH
 from parkour_solver.schema import number
 from parkour_solver.spatial.cells import subtract_open
 from parkour_solver.spatial.regions import canonical_cover, geometry_key
-
-
 VERSION = 1
 COORDINATE_SPACE = 'physical_world_faces'
 TANGENT_AXES = ((1, 2), (0, 2), (0, 1))
@@ -300,6 +311,30 @@ def _source_faces(solids, check_budget):
     return tuple(result)
 
 
+def _components(fragments, check_budget=None):
+    """Edge-connected groups of (owner, rect) fragments on one plane, as owner -> rects."""
+    pending, result = set(range(len(fragments))), []
+    while pending:
+        _check(check_budget)
+        first = min(pending)
+        pending.remove(first)
+        work, component = [first], []
+        while work:
+            at = work.pop()
+            component.append(at)
+            for other in sorted(pending):
+                _check(check_budget)
+                if _adjacent(fragments[at][1], fragments[other][1]):
+                    pending.remove(other)
+                    work.append(other)
+        members = {}
+        for index in component:
+            key, rect = fragments[index]
+            members.setdefault(key, []).append(rect)
+        result.append((_cover(fragments[i][1] for i in component), members))
+    return result
+
+
 def _merged_faces(sources, check_budget):
     buckets = {}
     for source in sources:
@@ -308,25 +343,7 @@ def _merged_faces(sources, check_budget):
             (source.key, rect) for rect in source.exposed_cover)
     result = []
     for (axis, sign, plane), fragments in sorted(buckets.items()):
-        pending = set(range(len(fragments)))
-        while pending:
-            _check(check_budget)
-            first = min(pending)
-            pending.remove(first)
-            work, component = [first], []
-            while work:
-                at = work.pop()
-                component.append(at)
-                for other in sorted(pending):
-                    _check(check_budget)
-                    if _adjacent(fragments[at][1], fragments[other][1]):
-                        pending.remove(other)
-                        work.append(other)
-            members = {}
-            for index in component:
-                key, rect = fragments[index]
-                members.setdefault(key, []).append(rect)
-            cover = _cover(fragments[i][1] for i in component)
+        for cover, members in _components(fragments, check_budget):
             contributions = tuple(FaceContribution(key, _cover(rects))
                                   for key, rects in sorted(members.items()))
             identity = 'merged-face:' + geometry_key([VERSION, axis, sign, plane, cover])
@@ -352,3 +369,191 @@ def merge_faces(scene, *, check_budget=None):
     catalog = FaceCatalog(scene_key, solids, sources, faces)
     _check(check_budget)
     return catalog
+
+
+@dataclass(frozen=True)
+class Cluster:
+    id: int
+    members: tuple
+    solids: tuple
+    boxes: tuple
+
+
+@dataclass(frozen=True)
+class Side:
+    bounds: tuple
+    owners: tuple  # per bound: the solid indices whose expanded edge lies on its plane
+    region: tuple
+
+    @property
+    def key(self):
+        return self.bounds
+
+
+def nested(a, b):
+    """Whether one (x_lo, z_lo, x_hi, z_hi) region contains the other."""
+    def contains(outer, inner):
+        return outer[0] <= inner[0] and outer[1] <= inner[1] and inner[2] <= outer[2] and inner[3] <= outer[3]
+    return contains(a, b) or contains(b, a)
+
+
+def intersects(a, b):
+    return all(max(a[i], b[i]) <= min(a[i+2], b[i+2]) for i in (0, 1))
+
+
+def free_rectangles(boxes):
+    """Maximal closed rectangles disjoint from the open X/Z rectangles of boxes."""
+    xs = [-math.inf]+sorted({b[a] for b in boxes for a in (0, 3)})+[math.inf]
+
+    def empty(x0, x1, z0, z1):
+        return not any(b[0] < x1 and x0 < b[3] and b[2] < z1 and z0 < b[5] for b in boxes)
+
+    result = []
+    for i, j in itertools.combinations(range(len(xs)), 2):
+        xa, xb = xs[i], xs[j]
+        if thin(xb-xa):
+            continue
+        start, free = -math.inf, []
+        for lo, hi in sorted((b[2], b[5]) for b in boxes if b[0] < xb and xa < b[3]):
+            if lo > start:
+                free.append((start, lo))
+            start = max(start, hi)
+        free.append((start, math.inf))
+        for za, zb in free:
+            if thin(zb-za):
+                continue
+            if i > 0 and empty(xs[i-1], xb, za, zb) or j < len(xs)-1 and empty(xa, xs[j+1], za, zb):
+                continue
+            result.append((xa, za, xb, zb))
+    return result
+
+
+@dataclass(frozen=True)
+class Surface:
+    key: str
+    axis: int
+    sign: int
+    plane: float
+    tangent_axes: tuple
+    cover: tuple
+    contributions: tuple  # (solid index, cover) per member
+    members: tuple
+    cluster: int
+
+
+class SceneGeometry:
+    """Player-space geometry of one collision scene, for any modeled subset of its solids."""
+
+    def __init__(self, solids, bounds=None):
+        self.solids = solids
+        self.boxes = tuple(tuple(expanded_box(s)) for s in solids)
+        self.bounds = None if bounds is None else (
+            bounds[0] + HALF_WIDTH, bounds[1], bounds[2] + HALF_WIDTH,
+            bounds[3] - HALF_WIDTH, bounds[4] - BODY_HEIGHT, bounds[5] - HALF_WIDTH)
+        self._clusters, self._sides, self._surfaces = {}, {}, {}
+
+    def clusters(self, indices):
+        return tuple(self._cluster_map(indices).values())
+
+    def cluster(self, cluster_id, indices):
+        return self._cluster_map(indices)[cluster_id]
+
+    def _cluster_map(self, indices):
+        indices = tuple(sorted(indices))
+        if indices not in self._clusters:
+            boxes = self.boxes
+            parent = {i: i for i in indices}
+
+            def root(i):
+                while parent[i] != i:
+                    parent[i] = parent[parent[i]]
+                    i = parent[i]
+                return i
+            for a, b in itertools.combinations(indices, 2):
+                if all(thin(max(boxes[a][k], boxes[b][k])-min(boxes[a][k+3], boxes[b][k+3])) for k in range(3)):
+                    parent[root(b)] = root(a)
+            groups = {}
+            for i in indices:
+                groups.setdefault(root(i), []).append(i)
+            self._clusters[indices] = {
+                min(m): Cluster(min(m), tuple(m), tuple(self.solids[i] for i in m), tuple(boxes[i] for i in m))
+                for m in sorted(groups.values())}
+        return self._clusters[indices]
+
+    def active(self, cluster, y_lo, y_hi):
+        return tuple(k for k, b in enumerate(cluster.boxes) if b[1] < y_hi and y_lo < b[4])
+
+    def sides(self, cluster, active):
+        key = (cluster.members, tuple(active))
+        if key not in self._sides:
+            boxes = [cluster.boxes[k] for k in active]
+            sides = []
+            for region in free_rectangles(boxes):
+                bounds = []
+                for axis, edge, direction, plane in (('X', 3, 1, region[0]), ('X', 0, -1, region[2]),
+                                                     ('Z', 5, 1, region[1]), ('Z', 2, -1, region[3])):
+                    if math.isinf(plane):
+                        continue
+                    other = (2, 5, 1, 3) if axis == 'X' else (0, 3, 0, 2)
+                    owners = tuple(cluster.members[k] for k, b in zip(active, boxes) if b[edge] == plane
+                                   and b[other[0]] <= region[other[3]] and region[other[2]] <= b[other[1]])
+                    bounds.append(((axis, direction, plane), owners))
+                bounds.sort()
+                sides.append(Side(tuple(b for b, _ in bounds), tuple(o for _, o in bounds), region))
+            self._sides[key] = tuple(sorted(sides, key=lambda s: s.bounds))
+        return self._sides[key]
+
+    def player_surfaces(self, indices=None):
+        """Exposed expanded faces of the modeled solids, merged per plane into connected surfaces.
+
+        A face loses the tangent interior of every other modeled expanded box
+        whose open interior contains its plane, so an exact-height slot stays.
+        """
+        indices = tuple(range(len(self.solids))) if indices is None else tuple(sorted(indices))
+        if indices not in self._surfaces:
+            boxes, bounds, buckets = self.boxes, self.bounds, {}
+            for i in indices:
+                box = boxes[i]
+                for axis, (u, v) in enumerate(TANGENT_AXES):
+                    rect = box[u], box[v], box[u+3], box[v+3]
+                    if bounds is not None:
+                        rect = _overlap(rect, (bounds[u], bounds[v], bounds[u+3], bounds[v+3]))
+                        if rect is None:
+                            continue
+                    for sign in (-1, 1):
+                        plane = box[axis if sign < 0 else axis+3]
+                        if bounds is not None and not bounds[axis] <= plane <= bounds[axis+3]:
+                            continue
+                        pieces = [_embed(rect)]
+                        for j in indices:
+                            other = boxes[j]
+                            cut = other[u], other[v], other[u+3], other[v+3]
+                            if not other[axis] < plane < other[axis+3] or _overlap(rect, cut) is None:
+                                continue
+                            cutter = cut[0], -1.0, cut[1], cut[2], 1.0, cut[3]
+                            pieces = [b for piece in pieces for b in subtract_open(piece, cutter)
+                                      if b[0] < b[3] and b[2] < b[5]]
+                        buckets.setdefault((axis, sign, plane), []).extend(
+                            (i, r) for r in _cover(_project(b) for b in pieces))
+            clusters = self._cluster_map(indices)
+            owner = {i: c.id for c in clusters.values() for i in c.members}
+            result = []
+            for (axis, sign, plane), fragments in sorted(buckets.items()):
+                for cover, members in _components(fragments):
+                    result.append(Surface('surface:' + geometry_key([axis, sign, plane, cover]), axis, sign, plane,
+                        TANGENT_AXES[axis], cover, tuple((i, _cover(r)) for i, r in sorted(members.items())),
+                        tuple(sorted(members)), owner[min(members)]))
+            self._surfaces[indices] = tuple(result)
+        return self._surfaces[indices]
+
+
+@functools.lru_cache(maxsize=8)
+def _scene_geometry(solids, bounds):
+    return SceneGeometry(solids, bounds)
+
+
+def scene_geometry(collision_scene):
+    """The shared geometry of `scene['collisionScene']`, memoized; it never rides inside the scene dict."""
+    bounds = collision_scene.get('bounds')
+    return _scene_geometry(tuple(tuple(s) for s in collision_scene['solids']),
+                           None if bounds is None else tuple(bounds))

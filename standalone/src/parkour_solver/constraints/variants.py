@@ -9,7 +9,7 @@ from parkour_solver.reachability.service import interaction_context_key
 from parkour_solver.reachability.intervals import interaction_reachability
 from parkour_solver.reachability.screen import condition_envelopes
 from parkour_solver.search.identity import digest
-from parkour_solver.spatial.footprints import Footprints
+from parkour_solver.spatial.surfaces import scene_geometry
 
 
 GENERATION_POLICY = 9
@@ -75,12 +75,12 @@ class ConstraintVariants:
             items.append(dict(rows=required_alternatives, role='required_contact'))
         # Temporal order is a traversal preference. All items share the original
         # model; neither overlap nor scene order declares independent subproblems.
-        self.footprints = Footprints(geometry, scope['solidIndices'])
+        self.geometry, self.scope_indices = scene_geometry(geometry), scope['solidIndices']
         names = {i: owners[i] if owners is not None else 'solid:'+str(i) for i in scope['solidIndices']}
         for begin, end in landing_segments(profile, self.through):
             items.extend(dict(clusterId=c.id, members=list(c.members), names=[names[i] for i in c.members],
                               begin=begin, end=end, owner='+'.join(sorted({names[i] for i in c.members})))
-                         for c in self.footprints.clusters)
+                         for c in self.geometry.clusters(self.scope_indices))
         items += [dict(contactCheck=check) for check in checks
                   if check['block']['solidIndex'] in scope['solidIndices'] and check['offset'] <= self.through]
         self.state = copy.deepcopy(state) if state is not None else dict(

@@ -60,7 +60,7 @@ IPOPT dominates: 53 calls, 9.77 s of a 26.6 s search (`profile.json`,
   (`spatial/regions.py`) unions support patches with `canonical_cover`;
   `event_routes` publishes them as `surface['cover']`; `contact_regions`
   (`search/events/adapter.py`) turns each cover rectangle into one landing option.
-- **Unused:** the physical face catalog `merge_faces` (`spatial/faces.py`), used only
+- **Unused:** the physical face catalog `merge_faces` (`spatial/surfaces.py`), used only
   by `tools/geometry_bounds` and tests.
 
 ## Rules every step keeps
@@ -174,22 +174,22 @@ and the line costs a decision and a screen rejection in every B5 frame.
 |---|---|---|---|
 | `decompose`, `contact_patches` (`spatial/cells.py`) | player | free cells, strata, per-solid patches | landing covers |
 | `canonical_cover` (`spatial/regions.py`) | X/Z plane | exact rectangle union | under the row above |
-| `merge_faces` (`spatial/faces.py`) | physical | exposed faces merged across touching solids | none |
+| `merge_faces` (`spatial/surfaces.py`) | physical | exposed faces merged across touching solids | none |
 | `faces` (`constraints/avoidance.py`) | player | six faces of one box | avoidance |
 | `contact_opportunities` (`movement/contact_profiles.py`), `wall_hit_options` (`constraints/hit_events.py`), `movement/ceiling_generation.py`, `movement/cases.py`, `constraints/contacts.py` | player | contacts from raw faces | movement programs |
 
-### Stage A (step 1): `spatial/footprints.py`
+### Stage A (step 1): obstacle clusters, `spatial/surfaces.py`
 
-New module; pure geometry, standard library only. Step 1 also adds to
+Pure geometry, standard library only; one memoized `SceneGeometry` per collision scene. Step 1 also adds to
 `scene/geometry.py`: `MIN_FREE_WIDTH = 0.012` and `thin(width)` (`width <
 MIN_FREE_WIDTH/2`, see the rules above). API:
 
 ```python
-Footprints(geometry, solid_indices)                     # built per ConstraintVariants; O(n²) clustering, n ≤ 64 solids
-Footprints.clusters -> tuple[Cluster]                   # Cluster(id=min(members), members=tuple(solid indices), solids=raw boxes, boxes=expanded boxes)
-Footprints.cluster(cluster_id) -> Cluster
-Footprints.active(cluster, y_lo, y_hi) -> tuple[int]    # positions k into cluster.members
-Footprints.sides(cluster, active) -> tuple[Side]        # cached per (cluster id, active)
+scene_geometry(geometry) -> SceneGeometry              # memoized per collision scene; O(n²) clustering, n ≤ 64 solids
+SceneGeometry.clusters(solid_indices) -> tuple[Cluster] # Cluster(id=min(members), members=tuple(solid indices), solids=raw boxes, boxes=expanded boxes)
+SceneGeometry.cluster(cluster_id, solid_indices) -> Cluster
+SceneGeometry.active(cluster, y_lo, y_hi) -> tuple[int] # positions k into cluster.members
+SceneGeometry.sides(cluster, active) -> tuple[Side]     # cached per (cluster members, active)
 Side(key, bounds, owners, region)                       # frozen dataclass
 #   bounds: tuple of (axis 'X'|'Z', direction ±1, plane), 1 to 4 entries, sorted
 #   owners: solid indices whose expanded edges lie on the bounds' planes
@@ -227,7 +227,7 @@ nested(a, b) -> bool                                    # one side's region cont
   `Z ≤ -1095.3` (owners B6, B7), `X ≥ 731.3` (B6), `X ≤ 728.7` (B7),
   `Z ≥ -1092.7` (B7), `X ≥ 730.3 ∧ Z ≥ -1093.7` (B7, B6). B6 alone above Y 7:
   `Z ≤ -1095.3`, `X ≥ 731.3`, `X ≤ 729.7`, `Z ≥ -1093.7`.
-- Tests (`tests/unit/spatial/test_footprints.py`): the Real11 sides above; a ring of
+- Tests (`tests/unit/spatial/test_surfaces.py`): the Real11 sides above; a ring of
   four boxes with an enclosed pocket (one bounded side); two boxes 0.7 apart
   physically (two clusters); random box sets checked by sampling points: every point
   outside the cross-section lies in some side, no side point lies inside a member's
@@ -247,9 +247,7 @@ consumer's current input and replacement, before starting.
 ### Stage C (later)
 
 Rebuild `decompose`'s free volume from height bands (the height-sweep construction
-in [spatial route research](../research/SPATIAL_ROUTE_RESEARCH.md)); retire
-`spatial/faces.py` and move `tools/geometry_bounds --faces` onto footprints, as its
-own dead-code commit.
+in [spatial route research](../research/SPATIAL_ROUTE_RESEARCH.md)).
 
 ## 4. Avoidance on obstacle clusters
 
@@ -258,8 +256,9 @@ cluster's sides.
 
 ### `constraints/variants.py`
 
-- `__init__`: `self.footprints = Footprints(geometry, scope['solidIndices'])` (not
-  serialized; rebuilt from geometry). Items become `dict(clusterId=c.id,
+- `__init__`: `self.geometry = scene_geometry(geometry)` and
+  `self.scope_indices = scope['solidIndices']` (not serialized; rebuilt from
+  geometry). Items become `dict(clusterId=c.id,
   members=list(c.members), begin, end, owner='+'.join(sorted unique owners[i] for i
   in members))` per cluster and landing segment (owner falls back to `solid:i`),
   replacing the per-solid `dict(solidIndex=i, box=...)` items.
@@ -280,11 +279,11 @@ safe: infinite region ends are stored as `None`. `face_row(bound, t)` already
 accepts a bound dict.
 
 - `prepare_encounter(owner, item, envelopes)`:
-  - `cluster = owner.footprints.cluster(item['clusterId'])`; `result['sides']` is a
+  - `cluster = owner.geometry.cluster(item['clusterId'], owner.scope_indices)`; `result['sides']` is a
     list of side dicts, unique by key (owners unioned when a key recurs in another
     active set); every index below is into it.
   - Per tick and phase, `bounds = envelopes['phases'][tick][phase]`, `active =
-    footprints.active(cluster, *bounds['Y'])`.
+    owner.geometry.active(cluster, *bounds['Y'])`.
   - None active: record `verticalClear` with a pseudo-side: direction +1 and plane
     = max member top when `bounds['Y'][0]` ≥ every member's top, else direction -1
     and plane = min member expanded bottom. The phase is also covered (`certain` =
@@ -304,7 +303,7 @@ accepts a bound dict.
     per-bound test against the support region or state bounds; the pseudo-side
     when nothing is active there.
 - `same(item, a, b)`: `a == b` or the two sides' regions are nested
-  (`footprints.nested`). Sides of different active sets describe the same place when
+  (`surfaces.nested`). Sides of different active sets describe the same place when
   nested: west of B7 below Y 7 (`X ≤ 728.7`) lies inside west of B6 above it
   (`X ≤ 729.7`). Removing members only grows empty rectangles and adding members
   only shrinks them, so every side of one active set is nested with some side of

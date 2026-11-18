@@ -1,7 +1,7 @@
 """Lazy phase covers for one obstacle-cluster encounter in a selected landing segment.
 
 A cluster's sides at each phase are the maximal free rectangles around its members
-active at that height (spatial/footprints); Minecraft's Y/X/Z sweeps remain
+active at that height (spatial/surfaces); Minecraft's Y/X/Z sweeps remain
 authoritative in avoidance/geometry/reachability. This module chooses only
 effective horizontal requirements; fixed vertical clearance is a gap, never a side.
 """
@@ -11,7 +11,7 @@ from parkour_solver.constraints.avoidance import blockage_counts, passage_kind, 
 from parkour_solver.reachability.service import block_interaction
 from parkour_solver.reachability.intervals import interaction_reachability
 from parkour_solver.search.identity import digest
-from parkour_solver.spatial.footprints import intersects, nested
+from parkour_solver.spatial.surfaces import intersects, nested
 
 
 PHASES = ('Y', 'X', 'Z')
@@ -113,8 +113,8 @@ def prepare_encounter(owner, item, envelopes):
     """Prepare atomically: a deadline leaves the unprocessed item resumable."""
     if 'phases' in item:
         return
-    footprints = owner.footprints
-    cluster = footprints.cluster(item['clusterId'])
+    geometry = owner.geometry
+    cluster = geometry.cluster(item['clusterId'], owner.scope_indices)
     result = dict(item, sides=[], phases=[], verticalClear=[], coveredPhases=[], uncertain=[], excludedFaces=[])
     indices = {}
 
@@ -131,11 +131,11 @@ def prepare_encounter(owner, item, envelopes):
         return indices[key]
 
     def sides(active):
-        return [index(side_dict(s)) for s in footprints.sides(cluster, active)]
+        return [index(side_dict(s)) for s in geometry.sides(cluster, active)]
 
     def boundary(tick):
         bounds = support_region(owner, envelopes, tick)
-        active = footprints.active(cluster, *bounds['Y'])
+        active = geometry.active(cluster, *bounds['Y'])
         if not active:
             return [index(vertical_side(cluster, bounds['Y'][0]))]
         return [i for i in sides(active) if reaches(result['sides'][i], bounds)]
@@ -151,7 +151,7 @@ def prepare_encounter(owner, item, envelopes):
             owner.metric('phaseChecks')
             at = 3*tick+PHASES.index(phase)
             bounds = envelopes['phases'][tick][phase]
-            active = footprints.active(cluster, *bounds['Y'])
+            active = geometry.active(cluster, *bounds['Y'])
             if not active:
                 vertical = index(vertical_side(cluster, bounds['Y'][0]))
                 result['verticalClear'].append([at, vertical])
