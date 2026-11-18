@@ -62,14 +62,14 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/ANCHOR_SEARCH_EXECUTION_REFERENCE.md](ANCHOR_SEARCH_EXECUTION_REFERENCE.md) | 28808 |
 | [docs/ARCHITECTURE.md](ARCHITECTURE.md) | 17062 |
 | [docs/CHECKPOINT_STORAGE.md](CHECKPOINT_STORAGE.md) | 6832 |
-| [docs/CODE_MAP.md](CODE_MAP.md) | 25144 |
+| [docs/CODE_MAP.md](CODE_MAP.md) | 25154 |
 | [docs/CURRENT_STATE.md](CURRENT_STATE.md) | 11255 |
 | [docs/DECISIONS_AND_PLANS.md](DECISIONS_AND_PLANS.md) | 10802 |
 | [docs/DEFERRED_WORK.md](DEFERRED_WORK.md) | 26612 |
 | [docs/DEVELOPMENT.md](DEVELOPMENT.md) | 11359 |
 | [docs/DOC_INDEX.md](DOC_INDEX.md) | 26623 |
 | [docs/FILE_INDEX.md](FILE_INDEX.md) | 205220 |
-| [docs/FUNCTION_INDEX.md](FUNCTION_INDEX.md) | 71964 |
+| [docs/FUNCTION_INDEX.md](FUNCTION_INDEX.md) | 71878 |
 | [docs/IPOPT_CONSTRAINT_REDUCTION.md](IPOPT_CONSTRAINT_REDUCTION.md) | 5578 |
 | [docs/IPOPT_FEASIBILITY_MODE.md](IPOPT_FEASIBILITY_MODE.md) | 4956 |
 | [docs/LAYOUT.md](LAYOUT.md) | 6162 |
@@ -79,13 +79,13 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/REAL11_GUIDE.md](REAL11_GUIDE.md) | 20362 |
 | [docs/RESULTS_AND_DEBUGGING.md](RESULTS_AND_DEBUGGING.md) | 14361 |
 | [docs/RUNBOOK.md](RUNBOOK.md) | 12285 |
-| [docs/TESTING.md](TESTING.md) | 16173 |
+| [docs/TESTING.md](TESTING.md) | 16248 |
 | [docs/design/ANCHOR_POLICY_DECISIONS.md](design/ANCHOR_POLICY_DECISIONS.md) | 27544 |
 | [docs/design/AVOIDANCE_PASSAGES.md](design/AVOIDANCE_PASSAGES.md) | 13300 |
 | [docs/design/BRANCH_SCHEDULING_INVESTIGATION.md](design/BRANCH_SCHEDULING_INVESTIGATION.md) | 34072 |
 | [docs/design/CONTACT_COMBINATIONS.md](design/CONTACT_COMBINATIONS.md) | 9705 |
 | [docs/design/FACE_MERGING_IMPLEMENTATION_PLAN.md](design/FACE_MERGING_IMPLEMENTATION_PLAN.md) | 23894 |
-| [docs/design/GENERATION_FOLLOWUPS.md](design/GENERATION_FOLLOWUPS.md) | 41774 |
+| [docs/design/GENERATION_FOLLOWUPS.md](design/GENERATION_FOLLOWUPS.md) | 41689 |
 | [docs/design/GENERATION_RELEVANCE_PLAN.md](design/GENERATION_RELEVANCE_PLAN.md) | 11545 |
 | [docs/design/GENERIC_COMPOSITION.md](design/GENERIC_COMPOSITION.md) | 7205 |
 | [docs/design/HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md](design/HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md) | 66368 |
@@ -1285,7 +1285,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [src/parkour_solver/cli/ordered_route.py](../src/parkour_solver/cli/ordered_route.py) | 2058 |
 | [src/parkour_solver/cli/solve.py](../src/parkour_solver/cli/solve.py) | 2814 |
 | [src/parkour_solver/constraints/__init__.py](../src/parkour_solver/constraints/__init__.py) | 0 |
-| [src/parkour_solver/constraints/avoidance.py](../src/parkour_solver/constraints/avoidance.py) | 8174 |
+| [src/parkour_solver/constraints/avoidance.py](../src/parkour_solver/constraints/avoidance.py) | 7914 |
 | [src/parkour_solver/constraints/contacts.py](../src/parkour_solver/constraints/contacts.py) | 4985 |
 | [src/parkour_solver/constraints/encounters.py](../src/parkour_solver/constraints/encounters.py) | 18089 |
 | [src/parkour_solver/constraints/hit_events.py](../src/parkour_solver/constraints/hit_events.py) | 9862 |
@@ -1506,6 +1506,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [tests/support/minimum_runs.py](../tests/support/minimum_runs.py) | 769 |
 | [tests/support/movement_contacts.py](../tests/support/movement_contacts.py) | 493 |
 | [tests/support/numerical_model.py](../tests/support/numerical_model.py) | 465 |
+| [tests/support/obstacle_faces.py](../tests/support/obstacle_faces.py) | 332 |
 | [tests/support/ordered_route.py](../tests/support/ordered_route.py) | 408 |
 | [tests/support/paths.py](../tests/support/paths.py) | 980 |
 | [tests/support/proposal_analysis.py](../tests/support/proposal_analysis.py) | 313 |
@@ -1517,7 +1518,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [tests/support/time_progress.py](../tests/support/time_progress.py) | 575 |
 | [tests/unit/__init__.py](../tests/unit/__init__.py) | 0 |
 | [tests/unit/constraints/__init__.py](../tests/unit/constraints/__init__.py) | 51 |
-| [tests/unit/constraints/test_encounters.py](../tests/unit/constraints/test_encounters.py) | 16542 |
+| [tests/unit/constraints/test_encounters.py](../tests/unit/constraints/test_encounters.py) | 16534 |
 | [tests/unit/constraints/test_option_keys.py](../tests/unit/constraints/test_option_keys.py) | 4788 |
 | [tests/unit/io/__init__.py](../tests/unit/io/__init__.py) | 0 |
 | [tests/unit/io/test_checkpoint_store.py](../tests/unit/io/test_checkpoint_store.py) | 14870 |
@@ -1542,7 +1543,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [tests/unit/movement/test_movement_entry.py](../tests/unit/movement/test_movement_entry.py) | 12594 |
 | [tests/unit/movement/test_movement_generation.py](../tests/unit/movement/test_movement_generation.py) | 6178 |
 | [tests/unit/movement/test_movement_units.py](../tests/unit/movement/test_movement_units.py) | 6720 |
-| [tests/unit/movement/test_obstacles.py](../tests/unit/movement/test_obstacles.py) | 11021 |
+| [tests/unit/movement/test_obstacles.py](../tests/unit/movement/test_obstacles.py) | 11061 |
 | [tests/unit/movement/test_runoff.py](../tests/unit/movement/test_runoff.py) | 3527 |
 | [tests/unit/movement/test_stepping_cases.py](../tests/unit/movement/test_stepping_cases.py) | 21911 |
 | [tests/unit/numerics/__init__.py](../tests/unit/numerics/__init__.py) | 0 |
@@ -1568,7 +1569,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [tests/unit/search/test_candidate_comparison.py](../tests/unit/search/test_candidate_comparison.py) | 6042 |
 | [tests/unit/search/test_comparison_goals.py](../tests/unit/search/test_comparison_goals.py) | 8730 |
 | [tests/unit/search/test_decision_windows.py](../tests/unit/search/test_decision_windows.py) | 8519 |
-| [tests/unit/search/test_depth_first.py](../tests/unit/search/test_depth_first.py) | 15040 |
+| [tests/unit/search/test_depth_first.py](../tests/unit/search/test_depth_first.py) | 15088 |
 | [tests/unit/search/test_event_search.py](../tests/unit/search/test_event_search.py) | 9407 |
 | [tests/unit/search/test_fixed_clock_goal.py](../tests/unit/search/test_fixed_clock_goal.py) | 8330 |
 | [tests/unit/search/test_minimum_runs.py](../tests/unit/search/test_minimum_runs.py) | 9972 |

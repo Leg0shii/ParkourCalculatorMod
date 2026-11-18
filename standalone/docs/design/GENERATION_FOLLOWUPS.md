@@ -175,7 +175,6 @@ and the line costs a decision and a screen rejection in every B5 frame.
 | `decompose`, `contact_patches` (`spatial/cells.py`) | player | free cells, strata, per-solid patches | landing covers |
 | `canonical_cover` (`spatial/regions.py`) | X/Z plane | exact rectangle union | under the row above |
 | `merge_faces` (`spatial/surfaces.py`) | physical | exposed faces merged across touching solids | none |
-| `faces` (`constraints/avoidance.py`) | player | six faces of one box | avoidance |
 | `contact_opportunities` (`movement/contact_profiles.py`), `wall_hit_options` (`constraints/hit_events.py`), `movement/ceiling_generation.py`, `movement/cases.py`, `constraints/contacts.py` | player | contacts from raw faces | movement programs |
 
 ### Stage A (step 1): obstacle clusters, `spatial/surfaces.py`

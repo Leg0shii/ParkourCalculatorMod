@@ -144,7 +144,8 @@ class InteractionOwnershipTests(unittest.TestCase):
 
 class VariantCoverageTests(unittest.TestCase):
     def test_distinct_options_cover_small_exhaustible_clear_trajectories(self):
-        from parkour_solver.constraints.avoidance import consecutive, faces
+        from parkour_solver.constraints.avoidance import consecutive
+        from tests.support.obstacle_faces import faces
         from parkour_solver.scene.geometry import expanded_box
         box=[0.,0.,-.2,1.,3.,.2];n=2
         model=dict(ticks=n,position=[-1.,0.],velocity=[0.,0.],magnitude=[1.]*n,friction=[.9]*n,walls=[])

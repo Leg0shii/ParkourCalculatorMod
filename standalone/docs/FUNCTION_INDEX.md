@@ -67,20 +67,19 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 
 | Symbol | Line | Kind |
 | --- | ---: | --- |
-| `consecutive` | [11](../src/parkour_solver/constraints/avoidance.py#L11) | function |
-| `phase_states` | [15](../src/parkour_solver/constraints/avoidance.py#L15) | function |
-| `faces` | [24](../src/parkour_solver/constraints/avoidance.py#L24) | function |
-| `outside` | [30](../src/parkour_solver/constraints/avoidance.py#L30) | function |
-| `passage_kind` | [34](../src/parkour_solver/constraints/avoidance.py#L34) | function |
-| `blockage_counts` | [39](../src/parkour_solver/constraints/avoidance.py#L39) | function |
-| `block_key` | [44](../src/parkour_solver/constraints/avoidance.py#L44) | function |
-| `blockage_usage` | [48](../src/parkour_solver/constraints/avoidance.py#L48) | function |
-| `gate_timeline` | [57](../src/parkour_solver/constraints/avoidance.py#L57) | function |
-| `intervals` | [89](../src/parkour_solver/constraints/avoidance.py#L89) | function |
-| `validate_passages` | [103](../src/parkour_solver/constraints/avoidance.py#L103) | function |
-| `face_clearance` | [130](../src/parkour_solver/constraints/avoidance.py#L130) | function |
-| `compile_passages` | [143](../src/parkour_solver/constraints/avoidance.py#L143) | function |
-| `passage_y_valid` | [166](../src/parkour_solver/constraints/avoidance.py#L166) | function |
+| `consecutive` | [9](../src/parkour_solver/constraints/avoidance.py#L9) | function |
+| `phase_states` | [13](../src/parkour_solver/constraints/avoidance.py#L13) | function |
+| `outside` | [22](../src/parkour_solver/constraints/avoidance.py#L22) | function |
+| `passage_kind` | [26](../src/parkour_solver/constraints/avoidance.py#L26) | function |
+| `blockage_counts` | [31](../src/parkour_solver/constraints/avoidance.py#L31) | function |
+| `block_key` | [36](../src/parkour_solver/constraints/avoidance.py#L36) | function |
+| `blockage_usage` | [40](../src/parkour_solver/constraints/avoidance.py#L40) | function |
+| `gate_timeline` | [49](../src/parkour_solver/constraints/avoidance.py#L49) | function |
+| `intervals` | [81](../src/parkour_solver/constraints/avoidance.py#L81) | function |
+| `validate_passages` | [95](../src/parkour_solver/constraints/avoidance.py#L95) | function |
+| `face_clearance` | [122](../src/parkour_solver/constraints/avoidance.py#L122) | function |
+| `compile_passages` | [135](../src/parkour_solver/constraints/avoidance.py#L135) | function |
+| `passage_y_valid` | [158](../src/parkour_solver/constraints/avoidance.py#L158) | function |
 
 ## constraints/contacts.py
 

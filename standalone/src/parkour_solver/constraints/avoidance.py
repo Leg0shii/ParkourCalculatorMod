@@ -1,7 +1,5 @@
 import math
 
-from parkour_solver.scene.geometry import expanded_box
-
 
 AXES = ('X', 'Y', 'Z')
 ORDER = {'Y': 0, 'X': 1, 'Z': 2}
@@ -19,12 +17,6 @@ def phase_states(tick, phase, axis):
     if axis == 'Z':
         return [tick, tick+1] if phase == 'Z' else [tick]
     return [tick, tick+1] if phase == 'Y' else [tick+1]
-
-
-def faces(box):
-    bounds = expanded_box(box)
-    return [{'axis': axis, 'direction': sign, 'plane': bounds[i + (3 if sign > 0 else 0)]}
-            for i, axis in enumerate(AXES) for sign in (-1, 1)]
 
 
 def outside(face, point, clearance=0):

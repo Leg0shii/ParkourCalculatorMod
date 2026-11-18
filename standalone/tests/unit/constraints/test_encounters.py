@@ -8,7 +8,7 @@ import unittest
 from parkour_solver.constraints.encounters import landing_segments
 from parkour_solver.movement.contact_combinations import expanded_face
 from parkour_solver.constraints.variants import ConstraintVariants
-from parkour_solver.constraints.avoidance import faces
+from tests.support.obstacle_faces import faces
 from parkour_solver.reachability.intervals import reachable_envelopes
 from parkour_solver.reachability.screen import condition_envelopes
 from parkour_solver.scene.normalize import prepare_scene
