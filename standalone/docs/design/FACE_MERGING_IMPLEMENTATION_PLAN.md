@@ -102,8 +102,9 @@ with synthetic Y extent[−1,1], subtract, project back, and keep positive-area
 pieces. These synthetic coordinates are only a 2D algorithm encoding.
 
 Standalone lines/points are not face components. Retain the closures of surviving
-area patches so their edges are represented. This rule does not remove boundary
-strata from the existing cell decomposition or change its contact semantics.
+area patches so their edges are represented. The shared `canonical_cover` drops
+lines, points and slivers narrower than the minimum free width, and the cell
+decomposition keeps only strata whose two largest extents are not that thin.
 
 ### 1.4 Adjacency, exact cover and deterministic groups
 

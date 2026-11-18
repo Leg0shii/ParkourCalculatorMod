@@ -1022,9 +1022,9 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 | `contact_patches` | [144](../src/parkour_solver/spatial/cells.py#L144) | function |
 | `refine_support_cells` | [160](../src/parkour_solver/spatial/cells.py#L160) | function |
 | `decompose` | [198](../src/parkour_solver/spatial/cells.py#L198) | function |
-| `box_segment_interval` | [247](../src/parkour_solver/spatial/cells.py#L247) | function |
-| `segment_intervals` | [261](../src/parkour_solver/spatial/cells.py#L261) | function |
-| `segment_covered` | [273](../src/parkour_solver/spatial/cells.py#L273) | function |
+| `box_segment_interval` | [250](../src/parkour_solver/spatial/cells.py#L250) | function |
+| `segment_intervals` | [264](../src/parkour_solver/spatial/cells.py#L264) | function |
+| `segment_covered` | [276](../src/parkour_solver/spatial/cells.py#L276) | function |
 
 ## spatial/checkpoints.py
 
@@ -1168,20 +1168,20 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 
 | Symbol | Line | Kind |
 | --- | ---: | --- |
-| `geometry_key` | [18](../src/parkour_solver/spatial/regions.py#L18) | function |
-| `canonical_cover` | [24](../src/parkour_solver/spatial/regions.py#L24) | function |
-| `SupportComponent` | [89](../src/parkour_solver/spatial/regions.py#L89) | class |
-| `support_components` | [99](../src/parkour_solver/spatial/regions.py#L99) | function |
-| `RouteRegion` | [128](../src/parkour_solver/spatial/regions.py#L128) | class |
-| `RouteTransition` | [140](../src/parkour_solver/spatial/regions.py#L140) | class |
-| `RouteGraph` | [154](../src/parkour_solver/spatial/regions.py#L154) | class |
-| `RouteGraph.to_dict` | [165](../src/parkour_solver/spatial/regions.py#L165) | function |
-| `RouteGraph.neighbors` | [168](../src/parkour_solver/spatial/regions.py#L168) | function |
-| `free_transit_cover` | [175](../src/parkour_solver/spatial/regions.py#L175) | function |
-| `build_route_graph` | [230](../src/parkour_solver/spatial/regions.py#L230) | function |
-| `build_geometry_graph` | [240](../src/parkour_solver/spatial/regions.py#L240) | function |
-| `_incidence_graph` | [252](../src/parkour_solver/spatial/regions.py#L252) | function |
-| `annotate_normal_proposals` | [344](../src/parkour_solver/spatial/regions.py#L344) | function |
+| `geometry_key` | [19](../src/parkour_solver/spatial/regions.py#L19) | function |
+| `canonical_cover` | [25](../src/parkour_solver/spatial/regions.py#L25) | function |
+| `SupportComponent` | [59](../src/parkour_solver/spatial/regions.py#L59) | class |
+| `support_components` | [69](../src/parkour_solver/spatial/regions.py#L69) | function |
+| `RouteRegion` | [98](../src/parkour_solver/spatial/regions.py#L98) | class |
+| `RouteTransition` | [110](../src/parkour_solver/spatial/regions.py#L110) | class |
+| `RouteGraph` | [124](../src/parkour_solver/spatial/regions.py#L124) | class |
+| `RouteGraph.to_dict` | [135](../src/parkour_solver/spatial/regions.py#L135) | function |
+| `RouteGraph.neighbors` | [138](../src/parkour_solver/spatial/regions.py#L138) | function |
+| `free_transit_cover` | [145](../src/parkour_solver/spatial/regions.py#L145) | function |
+| `build_route_graph` | [200](../src/parkour_solver/spatial/regions.py#L200) | function |
+| `build_geometry_graph` | [210](../src/parkour_solver/spatial/regions.py#L210) | function |
+| `_incidence_graph` | [222](../src/parkour_solver/spatial/regions.py#L222) | function |
+| `annotate_normal_proposals` | [314](../src/parkour_solver/spatial/regions.py#L314) | function |
 
 ## validation/numerical.py
 
