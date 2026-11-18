@@ -238,7 +238,7 @@ class BookkeepingProfileTests(unittest.TestCase):
         self.assertEqual((routes['c']['parent'], routes['c']['inheritedRows'], routes['c']['seededFacings']),
                          ('p', [dict(avoid, t2=2)], True))
         from tools.profiling.trace import render, stop_report
-        requests = [dict(index=1, fingerprint='h1', status='feasible', workerStatus='Solve_Succeeded')]
+        requests = [dict(index=1, fingerprint='h1', status='feasible', workerStatus='Solve_Succeeded', seconds=.25)]
         report = dict(result=dict(best=None, termination='exhausted', elapsedSeconds=1., work=dict(solverCalls=1, workerLaunches=1),
                                   expandedPrefixes=2, searchState=state))
         markdown = render(report, requests, list(routes.values()), stop_report(state, requests))
@@ -246,7 +246,8 @@ class BookkeepingProfileTests(unittest.TestCase):
         self.assertIn('#### Movement: jumps at t0; lands B2 t3; no ceiling hit', markdown)
         self.assertIn('| 0.2 | feasible | 4 | -2.000 | no obstacle in reach | Z ≤ -2.000 at t2 |', markdown)
         self.assertIn('| 1 | B6 sides t0-2 | Z ≤ -2.000 at t2 | interval reachability | empty Z interval at state 2 |', markdown)
-        self.assertIn('| 1 | Z ≤ -2.000 at t2 | feasible | passed | request 1 feasible, IPOPT Solve_Succeeded |', markdown)
+        self.assertIn('| 1 | Z ≤ -2.000 at t2 | feasible | passed | request 1 feasible, IPOPT Solve_Succeeded, 0.25 s |', markdown)
+        self.assertIn('Solver time for this movement: 0.25 s over 1 request.', markdown)
         self.assertIn('| b6 | 0-2 | 1X | 1 | X+ at 1X | none | none |', markdown)
         from tools.profiling.trace import rows_text
         self.assertEqual(rows_text([dict(mode='X', t1=1, cmp='GE', rhs=1.000001)], [('B6', 'X', 'GE', 1.), ('B7', 'X', 'GE', 1.)]),

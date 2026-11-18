@@ -185,7 +185,7 @@ def instrument(profile):
             profile.runtime.requests.append(row)
             result = profile.runtime.call('solver.invoke',original_solve,problem,**kwargs)
             row.update(status=result['status'],workerLaunched=result.get('workerLaunched'),
-                workerStatus=result.get('workerStatus'))
+                workerStatus=result.get('workerStatus'),seconds=result.get('elapsedSeconds'))
             return result
         replace(ordered_route, 'solve', solve)
         aliases(identity.digest, 'digest', profile.digest(identity.digest))

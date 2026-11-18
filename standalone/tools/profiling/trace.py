@@ -461,9 +461,15 @@ def render(report, requests, routes, stop):
                             s.get('status','?')+
                             (f' ({s["reason"]})' if s.get('reason') else '')+
                             (f', IPOPT {request_index[s["problemHash"]]["workerStatus"]}'
-                             if request_index.get(s['problemHash'],{}).get('workerStatus') else '')
+                             if request_index.get(s['problemHash'],{}).get('workerStatus') else '')+
+                            (f', {request_index[s["problemHash"]]["seconds"]:.2f} s'
+                             if request_index.get(s['problemHash'],{}).get('seconds') is not None else '')
                             for s in a['solves'])]
                  for i,a in enumerate(repair['alternatives'],1)])
+            timed = [request_index[h]['seconds'] for h in {s['problemHash'] for a in repair['alternatives'] for s in a['solves']}
+                     if request_index.get(h,{}).get('seconds') is not None]
+            if timed:
+                lines += [f'Solver time for this movement: {sum(timed):.2f} s over {plural(len(timed),"request")}.','']
             for label, branches in (('Unresolved',repair['unresolved']),('Pending',repair['pending'])):
                 if branches:
                     lines += [f'{label} alternatives (kept for an explicit retry):','']+[f'- {rows_text(b,row_owners(repair,goal))}' for b in branches]+['']

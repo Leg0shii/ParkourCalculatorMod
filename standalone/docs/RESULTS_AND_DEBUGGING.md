@@ -65,7 +65,7 @@ writes these files to its output directory:
 | `report.md` | The readable report: outcome, why the search stopped, the route tree, and one section per partial route. |
 | `routes.json` | The same per-route trace as data. |
 | `summary.json` | Best route, timings, work counters, replay verdicts and the `stop` report. |
-| `requests.json` | Every solver request with its fingerprint, status, IPOPT status and `owners`. |
+| `requests.json` | Every solver request with its fingerprint, status, IPOPT status, wall seconds and `owners`. |
 | `report.json.gz` | The full saved search state; read it with `read_report` (paired `.store.sqlite3`). |
 | `provenance.json`, `profile.json`, `bookkeeping.json` | Source revision and hashes, fixture, interpreter; timing buckets. |
 
@@ -86,8 +86,9 @@ Each partial route in `report.md` and `routes.json` has:
   before solving, with its decision, rows, the check
   (interval, travel-distance, single-row or linear-relaxation reachability) and
   where it failed; duplicate and dominated options; every alternative sent to the
-  solver with its solves (request number, status, IPOPT status) and scene
-  validation; and the unresolved or pending alternatives.
+  solver with its solves (request number, status, IPOPT status, seconds) and scene
+  validation; the movement's total solver seconds; and the unresolved or pending
+  alternatives.
 
 A request's `owners` are the routes whose repair log holds its problem hash; an
 empty list means no saved route kept that solve. The `stop` report lists suspended
