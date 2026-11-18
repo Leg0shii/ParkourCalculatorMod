@@ -122,7 +122,7 @@ class AnchorPolicyTests(unittest.TestCase):
         view=adapter.for_goal(requests[0],cursor)
         p=history(s,['start'])
         node=view.for_node().bind_program(p)
-        self.assertIsNone(node.contact_regions(p,1))
+        self.assertFalse(hasattr(node,'contact_regions'))
         self.assertTrue(node.candidate({},dict(positions=[[.5,.5]]*2),{})['accepted'])
         self.assertFalse(view.bind_program(p).candidate({},dict(positions=[[.5,.5]]*2),{})['accepted'])
         ctx=dict(program=p);view.context(ctx)

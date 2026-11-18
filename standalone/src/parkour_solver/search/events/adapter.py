@@ -144,30 +144,6 @@ class EventGuideAdapter:
     def eligible(self, envelopes, through):
         return self
 
-    def contact_regions(self, program, through):
-        """Finite required-contact OR, independent of the chosen air witness.
-
-        Normal landing footprints apply at the Y phase's pre-X/Z position.
-        Named terminal support regions use their existing post-input convention.
-        No new probe-height model or waypoint clock is introduced.
-        """
-        goal=self.request['goal']
-        if through<program['profile']['airtime'] or goal['kind']!='landing' or 'surface' not in goal:
-            return None
-        surface=next(s for s in self.data['surfaces'] if s['id']==goal['surface'])
-        solids={b['solidIndex'] for b in self.scene['blocks'] if b['id'] in goal.get('blocks',[goal['block']])}
-        boxes={tuple(self.scene['collisionScene']['solids'][i]) for i in solids}
-        profile=program['profile']
-        # Landing contacts carry the goal block's exposed top as their own regions; only named cases need the item.
-        states={e['input']+1 for e in profile.get('caseEvents',[]) if any(tuple(b) in boxes for b in e.get('boxes',())) and
-                self.request['afterTick']<=e['input']<through}
-        if not states and any(e['axis']=='Y' and e.get('direction')==-1 and any(tuple(b) in boxes for b in e['boxes'])
-                              and self.request['afterTick']<=e['offset']<through for e in profile.get('contactEvents',[])):
-            return None
-        return [[dict(leg=0,offset=t,mode=axis,cmp=cmp,rhs=value,name='event:required_contact_region')
-                 for axis,a in (('X',0),('Z',2)) for cmp,value in (('GE',box[a]),('LE',box[a+3]))]
-                for t in sorted(states) for box in surface['cover']]
-
     def candidate(self, plan, candidate, vertical, *, partial=False):
         if self.program is None or self.request is None:
             raise ValueError('Event validation requires a physical program and goal request')

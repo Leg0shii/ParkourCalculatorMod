@@ -298,3 +298,33 @@ class SteppingNumericalTests(unittest.TestCase):
             graph = build_transition_graph(limited, compiler, seconds=6)
             self.assertTrue(any(not g['complete'] for g in graph['steppingGeneration']))
             self.assertTrue(graph['profileLimitReached'])
+
+
+class ExposureTests(unittest.TestCase):
+    def sides(self, solids, case):
+        from parkour_solver.movement.stepping import open_stepping_choices
+        from parkour_solver.physics.vertical import REST_CARRY
+        scene = dict(collisionScene=dict(solids=solids),
+                     blocks=[dict(id='b' + str(i), sourceBlock='b' + str(i), solidIndex=i, top=b[4]) for i, b in enumerate(solids)])
+        state = dict(position=1., velocity=REST_CARRY, onGround=True, previousHorizontalCollision=False)
+        found = set()
+        for choice in open_stepping_choices(dict(scene=scene, state=state, maxInputs=10, threshold=0., cases=[case])):
+            event, = choice['profile']['caseEvents']
+            if event['boxes'] == [solids[1]]:
+                found.add(tuple(sorted((r['mode'], r['cmp']) for r in choice['profile']['positionConstraints']
+                                       if r['name'] in ('case:outside', 'case:cross_x'))))
+        return found
+
+    def test_a_side_flush_against_a_neighbour_offers_no_step(self):
+        start, target, wall = [-2, 0, -2, 2, 1, 4], [2, 0, 0, 3, 1.5, 2], [2, 0, 2, 3, 1.5, 3]
+        open_sides = self.sides([start, target], 'normal_step')
+        flush = self.sides([start, target, wall], 'normal_step')
+        self.assertIn((('Z', 'GE'),), open_sides)
+        self.assertEqual(flush, open_sides - {(('Z', 'GE'),)})
+
+    def test_a_flush_seam_is_not_a_corner(self):
+        start, target, wall = [-2, 0, -2, 2, 1, 4], [2, 0, 0, 3, 1.5, 2], [2, 0, 2, 3, 1.5, 3]
+        open_corners = self.sides([start, target], 'corner_jump_cancel')
+        seam = self.sides([start, target, wall], 'corner_jump_cancel')
+        self.assertTrue(seam < open_corners)
+        self.assertFalse(any(('Z', 'GE') in rows for rows in seam))

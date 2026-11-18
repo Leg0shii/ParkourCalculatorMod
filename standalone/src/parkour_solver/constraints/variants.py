@@ -12,8 +12,8 @@ from parkour_solver.search.identity import digest
 from parkour_solver.spatial.surfaces import scene_geometry
 
 
-GENERATION_POLICY = 11
-STATE_VERSION = 7
+GENERATION_POLICY = 12
+STATE_VERSION = 8
 
 
 class ConstraintVariants:
@@ -46,7 +46,7 @@ class ConstraintVariants:
                    deadline=deadline, reference=candidate['positions'], owners=owners, budget=budget, cancel_event=cancel_event)
 
     def __init__(self, route, profile, plan, geometry, envelopes, scope, *, checks=(), gates=(), signature=(), state=None,
-                 deadline=None, reference=None, route_guards=None, required_alternatives=None, owners=None, budget=None, cancel_event=None):
+                 deadline=None, reference=None, route_guards=None, owners=None, budget=None, cancel_event=None):
         self.route, self.profile, self.plan = route, profile, plan
         self.envelopes, self.deadline, self.through = envelopes, deadline, scope['through']
         self.route_guards, self.budget = route_guards, budget
@@ -54,8 +54,7 @@ class ConstraintVariants:
         context = digest(dict(version=GENERATION_POLICY, route={k: v for k, v in route.items() if k != 'warmYaw'},
             profile=profile, scope=scope, gates=list(gates), signature=signature, checks=list(checks), geometry=geometry,
             envelope=interaction_context_key(envelopes), owners=owners,
-            routeGuards=route_guards.context if route_guards is not None else None,
-            requiredAlternatives=required_alternatives))
+            routeGuards=route_guards.context if route_guards is not None else None))
         if state is not None and (state.get('version') != STATE_VERSION or state.get('context') != context):
             raise ValueError('Incompatible constraint-generation continuation (policy%d/state%d)'
                              % (GENERATION_POLICY, STATE_VERSION))
@@ -71,8 +70,6 @@ class ConstraintVariants:
             self.route_rows.append(dict(leg=0, offset=self.through, mode='XYZ'[gate['axis']],
                 cmp='GE' if direction > 0 else 'LE', rhs=gate['plane'], name='route:crossing'))
         items = ([dict(routeGuard=True)] if route_guards is not None else [])
-        if required_alternatives is not None:
-            items.append(dict(rows=required_alternatives, role='required_contact'))
         items.extend(dict(rows=c['options'], role='contact_region', surface=c['surface'], owner=c['owner'])
                      for c in profile.get('regionChoices', []) if c['offset'] <= self.through)
         # Temporal order is a traversal preference. All items share the original
@@ -233,7 +230,7 @@ class ConstraintVariants:
                 rank = (phases[0]['at'] if phases else -1,
                         sum(len(p['options']) for p in phases), index)
             candidates.append((rank, index, item))
-            if item.get('routeGuard') or item.get('role') in ('required_contact', 'contact_region'):
+            if item.get('routeGuard') or item.get('role') == 'contact_region':
                 break
         _, index, item = min(candidates, key=lambda v: v[0])
         node['chosenItem'], node['prepared'] = index, item

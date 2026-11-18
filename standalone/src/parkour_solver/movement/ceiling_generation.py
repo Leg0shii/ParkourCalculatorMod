@@ -1,11 +1,36 @@
 import copy
 
 from parkour_solver.physics.vertical import f32
-from parkour_solver.movement.cases import case_profile, outside_row, tangent_rows
+from parkour_solver.movement.cases import case_profile, exposed_side, outside_row
 from parkour_solver.movement.ceiling_profiles import ceiling_profile, ceiling_sequence
-from parkour_solver.movement.contact_combinations import contact_event, region_choices, scene_contact_options
+from parkour_solver.movement.contact_combinations import (bounding_region, contact_event, finite_rows, region_choices,
+                                                          scene_contact_options)
 from parkour_solver.movement.units import profile_program, shifted_unit
-from parkour_solver.scene.geometry import BODY_HEIGHT
+
+
+def grind_options(context, feet, allowed=None):
+    """(event, rows, regionChoices) for each exposed side of a member under each low merged underside."""
+    scene = context['scene']
+    blocks = {b['solidIndex']: b for b in scene['blocks']}
+    for option in scene_contact_options(scene, 1, -1):
+        if context.get('checkBudget'):
+            context['checkBudget']()
+        clearance = option.plane - feet
+        if not 0 <= clearance < f32(.42) or allowed is not None and not any(allowed(list(box)) for box in option.boxes):
+            continue
+        under = [dict(r, name='case:finite') for r in finite_rows(1, bounding_region(option.regions), t1=1)]
+        owner = '+'.join(sorted(blocks[i]['id'] for i in option.members))
+        regions = [dict(offset=1, surface=option.surface, owner=owner,
+                        options=[[dict(r, name='case:finite') for r in finite_rows(1, region, leg=0, offset=1)]
+                                 for region in option.regions])] if len(option.regions) > 1 and context.get('regionItems') else []
+        for index in option.members:
+            box = scene['collisionScene']['solids'][index]
+            for axis in ('X', 'Z'):
+                for sign in (-1, 1):
+                    if exposed_side(scene, blocks[index], axis, sign, option.plane):
+                        event = dict(case='grind', input=0, plane=feet, clearance=clearance,
+                                     boxes=[list(b) for b in option.boxes], anchors={'beforeJump': 0, 'jump': 1})
+                        yield event, [outside_row(box, axis, sign, 0, 'grind:outside')] + under, regions
 
 
 def ceiling_profiles(context):
@@ -19,23 +44,10 @@ def ceiling_profiles(context):
         if ordinary:
             ordinary['generatedUnits'] = profile_program(ordinary)
             yield 'ceiling', ordinary
-    for block in scene['blocks']:
-        if context.get('checkBudget'):
-            context['checkBudget']()
-        box = scene['collisionScene']['solids'][block['solidIndex']]
-        clearance = box[1] - BODY_HEIGHT - source['top']
-        if not 0 <= clearance < f32(.42):
-            continue
-        for axis in ('X', 'Z'):
-            for sign in (-1, 1):
-                rows = [outside_row(box, axis, sign, 0, 'grind:outside')]
-                rows += tangent_rows(box, 'X', 1) + tangent_rows(box, 'Z', 1)
-                event = dict(case='grind', input=0, plane=source['top'], clearance=clearance,
-                             boxes=[box], anchors={'beforeJump': 0, 'jump': 1})
-                profile = case_profile(source['top'], target['top'], event,
-                                       max_inputs=context.get('maxInputs', 200), constraints=rows)
-                if profile:
-                    yield 'grind', profile
+    for event, rows, _ in grind_options(context, source['top']):
+        profile = case_profile(source['top'], target['top'], event, max_inputs=context.get('maxInputs', 200), constraints=rows)
+        if profile:
+            yield 'grind', profile
 
 
 class CeilingGenerator:
@@ -93,18 +105,10 @@ def open_ceiling_choices(context):
                                   region_choices=region_choices(context, event, owner))
             if choice:
                 yield choice
-    for block in scene['blocks']:
-        if context.get('checkBudget'):
-            context['checkBudget']()
-        box = scene['collisionScene']['solids'][block['solidIndex']]
-        clearance = box[1] - BODY_HEIGHT - initial['position']
-        if initial['onGround'] and 0 <= clearance < f32(.42) and interaction_allowed(context, box, 0, jumping=True):
-            for axis in ('X', 'Z'):
-                for sign in (-1, 1):
-                    event = dict(case='grind', input=0, plane=initial['position'], clearance=clearance,
-                                 boxes=[box], anchors={'beforeJump': 0, 'jump': 1})
-                    rows = [outside_row(box, axis, sign, 0, 'grind:outside')]
-                    rows += tangent_rows(box, 'X', 1) + tangent_rows(box, 'Z', 1)
-                    choice = named_choice(context, 'ceiling', initial, event, jumping=True, constraints=rows)
-                    if choice:
-                        yield choice
+    if not initial['onGround']:
+        return
+    allowed = lambda box: interaction_allowed(context, box, 0, jumping=True)
+    for event, rows, regions in grind_options(context, initial['position'], allowed):
+        choice = named_choice(context, 'ceiling', initial, event, jumping=True, constraints=rows, region_choices=regions)
+        if choice:
+            yield choice

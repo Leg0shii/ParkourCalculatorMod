@@ -280,7 +280,7 @@ class EncounterTests(unittest.TestCase):
         lo, hi = owner.envelopes['states'][4]['X']
         middle = (lo + hi) / 2
         rectangles = [[dict(leg=0, offset=4, mode='X', cmp='LE', rhs=middle)], [dict(leg=0, offset=4, mode='X', cmp='GE', rhs=middle)]]
-        owner.items.insert(0, dict(rows=rectangles, role='required_contact'))
+        owner.items.insert(0, dict(rows=rectangles, role='contact_region', surface='surface:test', owner='goal'))
         variants = list(owner)
         def implies(rows, r):
             return any(x['offset'] == 4 and x['mode'] == 'X' and x['cmp'] == r['cmp'] and

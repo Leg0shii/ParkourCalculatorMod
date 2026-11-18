@@ -58,8 +58,8 @@ IPOPT dominates: 53 calls, 9.77 s of a 26.6 s search (`profile.json`,
 - **Landing covers.** `decompose` (`spatial/cells.py`) builds player-space free cells
   and per-solid support/ceiling/wall `contact_patches`; `support_components`
   (`spatial/regions.py`) unions support patches with `canonical_cover`;
-  `event_routes` publishes them as `surface['cover']`; `contact_regions`
-  (`search/events/adapter.py`) turns each cover rectangle into one landing option.
+  `event_routes` publishes them as `surface['cover']` for guides and anchors; the
+  landing contact events carry their block's exposed top from `contact_options`.
 - **Unused:** the physical face catalog `merge_faces` (`spatial/surfaces.py`), used only
   by `tools/geometry_bounds` and tests.
 

@@ -103,8 +103,18 @@ Owners: `movement/cases.py` builds named case constraints on `movement/vertical_
 proposes ceiling and grind cases; `movement/ceiling_profiles.py` holds shared underside,
 profile and sequence helpers. `maxSteppingProfiles` defaults to 128 (`scene/normalize.py`).
 
-On L a blip's higher block is an ordinary finite obstacle: four outside-face and four
-real face-hit alternatives, a hit being a standard `role=contact` event. Blip-up also
+Case geometry follows the exposed scene surfaces (`movement/cases.py`): approach,
+outside and wall options exist only on a side face exposed at the feet height (a side
+flush against a neighbour yields none; feet exactly on a flush neighbour's top touch
+the face above it), corner cases only at convex corners whose two side faces are both
+exposed at the corner (a flush seam is not a corner), and target, lower and higher
+regions are the blocks' exposed tops, one choice per disconnected piece. Grind uses each
+low merged underside, with outside rows on its members' exposed sides. Exposure never
+rejects a step trigger: the trigger check uses the event's `boxes`, and uncertain probes
+keep the `InteractionGate` unknown path.
+
+On L a blip's higher block is an ordinary finite obstacle: outside-face and real face-hit
+alternatives on its exposed sides, a hit being a standard `role=contact` event. Blip-up also
 requires being outside the higher block on L, otherwise the Y-first resolver lands on it.
 Corner cases share X-approach and next-state Z-escape constraints.
 

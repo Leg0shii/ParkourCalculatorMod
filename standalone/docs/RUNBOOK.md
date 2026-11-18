@@ -157,7 +157,7 @@ service budgets. Changing these budgets does not change physical model identitie
 or invalidate compatible checkpoints; it can change work reached before timeout.
 
 Avoidance uses global budgets as well: obsolete local repair/passage fields are
-removed during normalization. Constraint policy11/state7 and repair assembly12
+removed during normalization. Constraint policy12/state8 and repair assembly13
 change the continuation context; old face-generator queues require their original
 source checkout. Current generated descriptions use phase spans and actual rows,
 as described in the [avoidance contract](design/AVOIDANCE_PASSAGES.md).

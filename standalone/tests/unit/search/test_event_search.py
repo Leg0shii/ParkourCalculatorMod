@@ -48,7 +48,6 @@ class EventSearchTests(unittest.TestCase):
         view=adapter.for_goal(request,cursor).bind_program(p)
         candidate=dict(positions=[[.5,.5],[.5,.5],[.5,.5]])
         self.assertFalse(view.candidate({},candidate,{})['accepted'])
-        self.assertIsNone(view.contact_regions(p,2))
         from parkour_solver.movement.contact_combinations import scene_contact_options
         pieces=scene_contact_options(scene,1,1,members=[0])
         self.assertEqual(len(pieces),2)

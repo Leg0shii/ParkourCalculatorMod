@@ -159,9 +159,7 @@ def evaluate_program(scene, program, compiler, adapter, work, motion_bound, *, c
         state=saved_repair.get('constraintGeneration') if saved_policy==policy else None, deadline=scoped.deadline, reference=reference,
         owners=owners, budget=scoped.check, cancel_event=cancel_event,
         route_guards=scoped_adapter.constraint_guards(program['profile'],envelopes,scope,scoped.deadline)
-        if hasattr(scoped_adapter,'constraint_guards') else None,
-        required_alternatives=scoped_adapter.contact_regions(program,scope['through'])
-        if hasattr(scoped_adapter,'contact_regions') else None)
+        if hasattr(scoped_adapter,'constraint_guards') else None)
     mark('eligibilityAndVariantConstruction')
     result = solve_contact_branches(route, profiles, checks,
         compiler, seconds=seconds, candidate_seconds=candidate_seconds, retries=0,
@@ -170,7 +168,7 @@ def evaluate_program(scene, program, compiler, adapter, work, motion_bound, *, c
         python_executable=python_executable, cancel_event=cancel_event, geometry=scene['collisionScene'],
         motion_bound=motion_bound, solid_blocks=owners, max_wall_hits=0,
         candidate_filter=candidate_filter, work=scoped, resume_state=program.get('repairState'),
-        repair_scope=dict(solveIdentity=identity, scope=scope, solvePolicy=policy, assemblyVersion=12),
+        repair_scope=dict(solveIdentity=identity, scope=scope, solvePolicy=policy, assemblyVersion=13),
         validation_scope=scope, initial_variants=variants, on_progress=on_progress, retry_unresolved=retry_unresolved)
     mark('physicalSearchAndValidation')
     diagnostics=[d for a in result.get('attempts',[]) for d in a.get('diagnostics',[])]

@@ -140,21 +140,21 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 | `ConstraintVariants` | [19](../src/parkour_solver/constraints/variants.py#L19) | class |
 | `ConstraintVariants.for_plan` | [21](../src/parkour_solver/constraints/variants.py#L21) | function |
 | `ConstraintVariants.__init__` | [48](../src/parkour_solver/constraints/variants.py#L48) | function |
-| `ConstraintVariants.metric` | [103](../src/parkour_solver/constraints/variants.py#L103) | function |
-| `ConstraintVariants.coordinate` | [107](../src/parkour_solver/constraints/variants.py#L107) | function |
-| `ConstraintVariants.check` | [112](../src/parkour_solver/constraints/variants.py#L112) | function |
-| `ConstraintVariants.face_row` | [120](../src/parkour_solver/constraints/variants.py#L120) | function |
-| `ConstraintVariants.effective_key` | [125](../src/parkour_solver/constraints/variants.py#L125) | function |
-| `ConstraintVariants.analyze` | [137](../src/parkour_solver/constraints/variants.py#L137) | function |
-| `ConstraintVariants._screen` | [155](../src/parkour_solver/constraints/variants.py#L155) | function |
-| `ConstraintVariants.excluded` | [158](../src/parkour_solver/constraints/variants.py#L158) | function |
-| `ConstraintVariants.prepare_item` | [165](../src/parkour_solver/constraints/variants.py#L165) | function |
-| `ConstraintVariants.option` | [187](../src/parkour_solver/constraints/variants.py#L187) | function |
-| `ConstraintVariants.entailed` | [199](../src/parkour_solver/constraints/variants.py#L199) | function |
-| `ConstraintVariants.__iter__` | [202](../src/parkour_solver/constraints/variants.py#L202) | function |
-| `ConstraintVariants.__next__` | [205](../src/parkour_solver/constraints/variants.py#L205) | function |
-| `ConstraintVariants.choose_item` | [213](../src/parkour_solver/constraints/variants.py#L213) | function |
-| `ConstraintVariants._next_variant` | [241](../src/parkour_solver/constraints/variants.py#L241) | function |
+| `ConstraintVariants.metric` | [100](../src/parkour_solver/constraints/variants.py#L100) | function |
+| `ConstraintVariants.coordinate` | [104](../src/parkour_solver/constraints/variants.py#L104) | function |
+| `ConstraintVariants.check` | [109](../src/parkour_solver/constraints/variants.py#L109) | function |
+| `ConstraintVariants.face_row` | [117](../src/parkour_solver/constraints/variants.py#L117) | function |
+| `ConstraintVariants.effective_key` | [122](../src/parkour_solver/constraints/variants.py#L122) | function |
+| `ConstraintVariants.analyze` | [134](../src/parkour_solver/constraints/variants.py#L134) | function |
+| `ConstraintVariants._screen` | [152](../src/parkour_solver/constraints/variants.py#L152) | function |
+| `ConstraintVariants.excluded` | [155](../src/parkour_solver/constraints/variants.py#L155) | function |
+| `ConstraintVariants.prepare_item` | [162](../src/parkour_solver/constraints/variants.py#L162) | function |
+| `ConstraintVariants.option` | [184](../src/parkour_solver/constraints/variants.py#L184) | function |
+| `ConstraintVariants.entailed` | [196](../src/parkour_solver/constraints/variants.py#L196) | function |
+| `ConstraintVariants.__iter__` | [199](../src/parkour_solver/constraints/variants.py#L199) | function |
+| `ConstraintVariants.__next__` | [202](../src/parkour_solver/constraints/variants.py#L202) | function |
+| `ConstraintVariants.choose_item` | [210](../src/parkour_solver/constraints/variants.py#L210) | function |
+| `ConstraintVariants._next_variant` | [238](../src/parkour_solver/constraints/variants.py#L238) | function |
 
 ## io/capture.py
 
@@ -222,22 +222,28 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 
 | Symbol | Line | Kind |
 | --- | ---: | --- |
-| `region_rows` | [13](../src/parkour_solver/movement/cases.py#L13) | function |
-| `outside_row` | [19](../src/parkour_solver/movement/cases.py#L19) | function |
-| `tangent_rows` | [25](../src/parkour_solver/movement/cases.py#L25) | function |
-| `corner_rows` | [31](../src/parkour_solver/movement/cases.py#L31) | function |
-| `case_profile` | [39](../src/parkour_solver/movement/cases.py#L39) | function |
-| `landing_wall_options` | [71](../src/parkour_solver/movement/cases.py#L71) | function |
-| `entry_possible` | [84](../src/parkour_solver/movement/cases.py#L84) | function |
+| `region_rows` | [16](../src/parkour_solver/movement/cases.py#L16) | function |
+| `outside_row` | [22](../src/parkour_solver/movement/cases.py#L22) | function |
+| `tangent_rows` | [28](../src/parkour_solver/movement/cases.py#L28) | function |
+| `_faces` | [34](../src/parkour_solver/movement/cases.py#L34) | function |
+| `_height` | [39](../src/parkour_solver/movement/cases.py#L39) | function |
+| `exposed_side` | [45](../src/parkour_solver/movement/cases.py#L45) | function |
+| `convex_corner` | [56](../src/parkour_solver/movement/cases.py#L56) | function |
+| `top_choices` | [67](../src/parkour_solver/movement/cases.py#L67) | function |
+| `corner_rows` | [82](../src/parkour_solver/movement/cases.py#L82) | function |
+| `case_profile` | [90](../src/parkour_solver/movement/cases.py#L90) | function |
+| `landing_wall_options` | [122](../src/parkour_solver/movement/cases.py#L122) | function |
+| `entry_possible` | [139](../src/parkour_solver/movement/cases.py#L139) | function |
 
 ## movement/ceiling_generation.py
 
 | Symbol | Line | Kind |
 | --- | ---: | --- |
-| `ceiling_profiles` | [11](../src/parkour_solver/movement/ceiling_generation.py#L11) | function |
-| `CeilingGenerator` | [41](../src/parkour_solver/movement/ceiling_generation.py#L41) | class |
-| `CeilingGenerator.generate` | [42](../src/parkour_solver/movement/ceiling_generation.py#L42) | function |
-| `open_ceiling_choices` | [70](../src/parkour_solver/movement/ceiling_generation.py#L70) | function |
+| `grind_options` | [11](../src/parkour_solver/movement/ceiling_generation.py#L11) | function |
+| `ceiling_profiles` | [36](../src/parkour_solver/movement/ceiling_generation.py#L36) | function |
+| `CeilingGenerator` | [53](../src/parkour_solver/movement/ceiling_generation.py#L53) | class |
+| `CeilingGenerator.generate` | [54](../src/parkour_solver/movement/ceiling_generation.py#L54) | function |
+| `open_ceiling_choices` | [82](../src/parkour_solver/movement/ceiling_generation.py#L82) | function |
 
 ## movement/ceiling_profiles.py
 
@@ -426,12 +432,14 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 
 | Symbol | Line | Kind |
 | --- | ---: | --- |
-| `box_for` | [9](../src/parkour_solver/movement/stepping.py#L9) | function |
-| `stepping_profiles` | [13](../src/parkour_solver/movement/stepping.py#L13) | function |
-| `SteppingGenerator` | [88](../src/parkour_solver/movement/stepping.py#L88) | class |
-| `SteppingGenerator.generate` | [89](../src/parkour_solver/movement/stepping.py#L89) | function |
-| `_sequence_allowed` | [121](../src/parkour_solver/movement/stepping.py#L121) | function |
-| `open_stepping_choices` | [132](../src/parkour_solver/movement/stepping.py#L132) | function |
+| `box_for` | [10](../src/parkour_solver/movement/stepping.py#L10) | function |
+| `stepping_profiles` | [14](../src/parkour_solver/movement/stepping.py#L14) | function |
+| `_flight_cases` | [73](../src/parkour_solver/movement/stepping.py#L73) | function |
+| `SteppingGenerator` | [105](../src/parkour_solver/movement/stepping.py#L105) | class |
+| `SteppingGenerator.generate` | [106](../src/parkour_solver/movement/stepping.py#L106) | function |
+| `_sequence_allowed` | [138](../src/parkour_solver/movement/stepping.py#L138) | function |
+| `open_stepping_choices` | [149](../src/parkour_solver/movement/stepping.py#L149) | function |
+| `_open_flight_cases` | [209](../src/parkour_solver/movement/stepping.py#L209) | function |
 
 ## movement/units.py
 
@@ -656,9 +664,8 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 | `AnchorAdapter.advance` | [69](../src/parkour_solver/search/anchors/adapter.py#L69) | function |
 | `AnchorAdapter.context` | [75](../src/parkour_solver/search/anchors/adapter.py#L75) | function |
 | `AnchorAdapter.program_allowed` | [85](../src/parkour_solver/search/anchors/adapter.py#L85) | function |
-| `AnchorAdapter.contact_regions` | [89](../src/parkour_solver/search/anchors/adapter.py#L89) | function |
-| `AnchorAdapter.candidate` | [92](../src/parkour_solver/search/anchors/adapter.py#L92) | function |
-| `AnchorAdapter.summary` | [102](../src/parkour_solver/search/anchors/adapter.py#L102) | function |
+| `AnchorAdapter.candidate` | [89](../src/parkour_solver/search/anchors/adapter.py#L89) | function |
+| `AnchorAdapter.summary` | [99](../src/parkour_solver/search/anchors/adapter.py#L99) | function |
 
 ## search/anchors/policy.py
 
@@ -839,8 +846,8 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 | `ScopedWork.accepted` | [51](../src/parkour_solver/search/engine.py#L51) | function |
 | `_motion_bound` | [55](../src/parkour_solver/search/engine.py#L55) | function |
 | `evaluate_program` | [63](../src/parkour_solver/search/engine.py#L63) | function |
-| `_key` | [204](../src/parkour_solver/search/engine.py#L204) | function |
-| `find_checkpoint_route` | [208](../src/parkour_solver/search/engine.py#L208) | function |
+| `_key` | [202](../src/parkour_solver/search/engine.py#L202) | function |
+| `find_checkpoint_route` | [206](../src/parkour_solver/search/engine.py#L206) | function |
 
 ## search/entry.py
 
@@ -867,9 +874,8 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 | `EventGuideAdapter.scoped` | [136](../src/parkour_solver/search/events/adapter.py#L136) | function |
 | `EventGuideAdapter.bind_program` | [140](../src/parkour_solver/search/events/adapter.py#L140) | function |
 | `EventGuideAdapter.eligible` | [144](../src/parkour_solver/search/events/adapter.py#L144) | function |
-| `EventGuideAdapter.contact_regions` | [147](../src/parkour_solver/search/events/adapter.py#L147) | function |
-| `EventGuideAdapter.candidate` | [171](../src/parkour_solver/search/events/adapter.py#L171) | function |
-| `EventGuideAdapter.summary` | [203](../src/parkour_solver/search/events/adapter.py#L203) | function |
+| `EventGuideAdapter.candidate` | [147](../src/parkour_solver/search/events/adapter.py#L147) | function |
+| `EventGuideAdapter.summary` | [179](../src/parkour_solver/search/events/adapter.py#L179) | function |
 
 ## search/events/engine.py
 

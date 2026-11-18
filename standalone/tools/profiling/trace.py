@@ -75,8 +75,6 @@ def item_label(item):
     rows = [r for option in item.get('rows',[]) for r in option]
     ticks = [r.get('t1',r.get('offset')) for r in rows]
     name = rows[0].get('name','') if rows else ''
-    if item.get('role') == 'required_contact':
-        name = 'landing region'
     if item.get('role') == 'contact_region':
         name = item['owner']+' region'
     return (name.split(':')[1] if name.startswith('event:') else name or 'route guard'), [min(ticks),max(ticks)] if ticks else None
@@ -108,8 +106,6 @@ def repair_trace(repair, final=False):
         encounters=[dict(owner=i['owner'],members=i['members'],begin=i['begin'],end=i['end'])
                     for i in items if 'clusterId' in i],
         contactChecks=sum('contactCheck' in i for i in items),
-        landingRegions=[dict(ticks=sorted({r.get('t1',r.get('offset')) for option in i['rows'] for r in option}),
-                             options=i['rows']) for i in items if i.get('role') == 'required_contact'],
         contactRegions=[dict(ticks=sorted({r['offset'] for option in i['rows'] for r in option}),owner=i['owner'],
                              surface=i['surface'],options=i['rows']) for i in items if i.get('role') == 'contact_region'],
         generatorMetrics=generation.get('metrics',{}),
@@ -328,9 +324,9 @@ def row_owners(repair, goal, passages=None):
     used = {(p['block'],side[i:i+2]) for p in passages or () for side in p['sides'] for i in range(0,len(side),2)}
     faces = [(name.upper(),a,c,plane) for cluster,name,a,c,plane in repair['faceOwners']
              if passages is None or (cluster,a+('+' if c == 'GE' else '-')) in used]
-    landing = [(f'{goal} landing',r['mode'],r['cmp'],r['rhs']) for region in repair['landingRegions']
+    regions = [(f'{region["owner"].upper()} region',r['mode'],r['cmp'],r['rhs']) for region in repair.get('contactRegions',[])
                for option in region['options'] for r in option]
-    return faces+landing
+    return faces+regions
 
 
 def alternative_text(rows, owners=()):
@@ -425,8 +421,9 @@ def render(report, requests, routes, stop):
               '- **Sides** (`X+`, `Z-`, a corner such as `X+Z+`, `over`, `under`) are the largest free rectangles around '
               'an obstacle at the player\'s height. A side never runs through a neighbouring block, and a face two flush '
               'blocks share is one side. Sides change when the player rises above or drops below one of the blocks.',
-              '- **Decision**: one thing to choose, either the sides to keep around one obstacle or which landing-cover '
-              'rectangle of the goal block to land in. **Option**: one choice for one decision. **Alternative**: one '
+              '- **Decision**: one thing to choose, either the sides to keep around one obstacle or which rectangle of a '
+              'contacted face to touch (a face a neighbour clips or two touching blocks merge into one can have '
+              'several). **Option**: one choice for one decision. **Alternative**: one '
               'surviving option per decision, combined. Each leg keeps only its best feasible alternative.',
               '- **Family**: alternatives that differ only in when the route switches sides of an obstacle. A switch is '
               'named by the input whose sweep first uses the new side, so that side\'s rows start at the next tick. '
@@ -468,12 +465,9 @@ def render(report, requests, routes, stop):
                   phases_text([x['phase'] for x in e['verticalClear']]) or 'none',
                   phases_text(e['uncertain']) or 'none'] for e in interacting])
             decisions = sorted({(e['owner'],e['segment'][0],e['segment'][1]) for e in interacting})
-            regions = [r for r in repair['landingRegions'] if len(r['options']) > 1]
             contact_regions = repair.get('contactRegions',[])
-            if decisions or regions or contact_regions:
+            if decisions or contact_regions:
                 lines += ['Decisions:','']+[f'- which sides of {o.upper()} to keep (segment t{a}-{b})' for o,a,b in decisions]+[
-                    f'- which of {goal}\'s {len(r["options"])} landing-cover rectangles to land in at '
-                    f't{", t".join(map(str,r["ticks"]))}: '+' or '.join(region_text(o) for o in r['options']) for r in regions]+[
                     f'- which of {r["owner"].upper()}\'s {len(r["options"])} face rectangles to touch at '
                     f't{", t".join(map(str,r["ticks"]))}: '+' or '.join(region_text(o) for o in r['options'])
                     for r in contact_regions]+['']
@@ -481,8 +475,7 @@ def render(report, requests, routes, stop):
             lines += [f'Options rejected before solving: {len(rejected)}'+
                       (' ('+', '.join(f'{n} {CHECKS.get(k,k)}' for k,n in Counter(e['reason'] for e in rejected).most_common())+')' if rejected else '')+'.','']
             lines += table(['#','Decision','Option','Check','Detail'],
-                [[i,(f'{goal} landing region' if e['encounter'] == 'landing region' else e['encounter'].upper()
-                     if e['encounter'].endswith(' region') else f'{e["encounter"].upper()} sides')+
+                [[i,(e['encounter'].upper() if e['encounter'].endswith(' region') else f'{e["encounter"].upper()} sides')+
                     (f' t{e["segment"][0]}' if e['segment'][0] == e['segment'][1] else f' t{e["segment"][0]}-{e["segment"][1]}')
                   if e.get('segment') else e.get('encounter','whole branch'),
                   (region_text(e['optionRows']) if e['encounter'].endswith('region') else rows_text(e['optionRows'],row_owners(repair,goal)))

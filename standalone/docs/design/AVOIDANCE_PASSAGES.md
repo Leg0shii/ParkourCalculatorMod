@@ -106,7 +106,7 @@ Guide preferences, timeouts and inconclusive LP results never establish exclusio
 A finite contact on a face of several rectangles (a merged ceiling, a top split by a
 taller neighbour) is one generator choice with a `regionChoices` entry in its
 profile. `ConstraintVariants` adds one `contact_region` item per entry inside the
-scope, before the cluster items, and walks it first, like the required goal region.
+scope, before the cluster items, and walks it first.
 Each rectangle is its own family, so the switch climb never mixes them, and a
 rectangle is screened jointly with every later item. A repair source refines one
 solved branch and adds no region items.
@@ -158,7 +158,7 @@ up to `FALLBACK_LIMIT` (2) others with the same ticks and an objective within
 if a later leg fails. The family state and held variants persist in the repair
 snapshot (version 3), so a resumed climb solves nothing twice.
 
-Constraint generation uses policy11/state7 and repair avoidancePolicy12 with assembly12. The DFS context
+Constraint generation uses policy12/state8 and repair avoidancePolicy13 with assembly13. The DFS context
 fingerprints the new policy. Old raw generator cursors reject; reproduce an old
 run with its original source and inputs. Source-era scene fields
 `maxContactBranches`, `maxPassageCandidates`, `maxBlockagesPerObstacle`,

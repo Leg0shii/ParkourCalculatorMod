@@ -86,9 +86,6 @@ class AnchorAdapter(EventGuideAdapter):
         return audit(self.scene,program,self.anchor_policy['anchors'],
                      reached=self.cursor['anchorIndex'])['accepted']
 
-    def contact_regions(self, program, through):
-        return None if self.node_query else super().contact_regions(program,through)
-
     def candidate(self, plan, candidate, vertical, *, partial=False):
         prior=audit(self.scene,self.program,self.anchor_policy['anchors'],
                     reached=self.cursor['anchorIndex'])
