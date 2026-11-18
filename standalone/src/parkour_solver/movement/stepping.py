@@ -149,7 +149,7 @@ def _sequence_allowed(context, initial, event, jumping, rows, support=None):
 def open_stepping_choices(context):
     from parkour_solver.reachability.service import interaction_allowed
     from parkour_solver.movement.program import scalar_initial
-    from parkour_solver.movement.normal import approaches, first_descent, named_choice
+    from parkour_solver.movement.normal import approaches, feet_allowed, first_descent, named_choice
     initial = scalar_initial(context['state'])
     scene = context['scene']
     y0 = initial['position']
@@ -158,11 +158,11 @@ def open_stepping_choices(context):
         return allowed is None or case in allowed
     if initial['onGround']:
         for block in scene['blocks']:
+            if not feet_allowed(context, block):
+                continue
             box = box_for(block, context)
             rise = block['top'] - y0
             for case, jumping in [('normal_step', False), ('slab_boost', True)]:
-                if not jumping and context.get('landingAllowed') is not None and not context['landingAllowed'](block):
-                    continue
                 if not enabled(case) or not 0 < rise <= f32(.6) or jumping and rise <= f32(.42):
                     continue
                 if not interaction_allowed(context, box, 0, jumping=jumping, label=dict(owner=block['id'], role=case)):
@@ -195,7 +195,7 @@ def open_stepping_choices(context):
         for lower in scene['blocks']:
             if context.get('checkBudget'):
                 context['checkBudget']()
-            if context.get('landingAllowed') is not None and not context['landingAllowed'](lower):
+            if not feet_allowed(context, lower):
                 continue
             landing = first_descent(trace, lower['top'])
             if landing is None:
@@ -210,16 +210,15 @@ def open_stepping_choices(context):
 
 def _open_flight_cases(context, initial, jumping, lower, lower_rows, lower_regions, landing, y, enabled):
     from parkour_solver.reachability.service import interaction_allowed
-    from parkour_solver.movement.normal import named_choice
+    from parkour_solver.movement.normal import feet_allowed, named_choice
     scene = context['scene']
     for higher in scene['blocks']:
-        if higher['top'] <= lower['top']:
+        if higher['top'] <= lower['top'] or not feet_allowed(context, higher):
             continue
         box = box_for(higher, context)
         if not interaction_allowed(context, box, landing, jumping=jumping, label=dict(owner=higher['id'], role='flight case')):
             continue
-        if (enabled('blip') and 0 <= higher['top'] - y <= f32(.6) and
-                (context.get('landingAllowed') is None or context['landingAllowed'](higher))):
+        if enabled('blip') and 0 <= higher['top'] - y <= f32(.6):
             for top, regions in top_choices(context, higher, landing + 1, jumping=jumping):
                 shared_event=dict(case='blip',input=landing,plane=higher['top'],lowerHeight=lower['top'],
                     higherHeight=higher['top'],boxes=[box],lowerBox=box_for(lower,context),

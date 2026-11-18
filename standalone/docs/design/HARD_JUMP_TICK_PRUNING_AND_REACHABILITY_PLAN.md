@@ -514,9 +514,11 @@ Their realized feet height is not a complete bound on both legacy step probes.
 This change must preserve the nearby blip/grind controls and five-input route.
 
 Preserve ownership distinctions: hard topology forbids an intermediate support,
-but touching a higher block's side as a case prerequisite is not necessarily a
-support visit. Do not apply `landingAllowed` indiscriminately to every physical
-box used by a case. Final visit/transfer audits remain authoritative.
+but touching a higher block as a case prerequisite is not a support visit, so it
+never advances the visit history. Every block a stepping case touches at the feet
+must still pass `feetAllowed`, and the final audit rejects a stepping touch of a
+departed owner ([stepping cases](STEPPING_CASES.md#implementation)). Final
+visit/transfer audits remain authoritative.
 
 For B3@28, the saved probe generated 8 blips and 4 corner blips; all failed the
 later screen. The shared lower-conditioned check should reject their common

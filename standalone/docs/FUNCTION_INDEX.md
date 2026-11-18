@@ -391,7 +391,8 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 | `first_descent` | [27](../src/parkour_solver/movement/normal.py#L27) | function |
 | `event_choice` | [34](../src/parkour_solver/movement/normal.py#L34) | function |
 | `named_choice` | [46](../src/parkour_solver/movement/normal.py#L46) | function |
-| `normal_choices` | [57](../src/parkour_solver/movement/normal.py#L57) | function |
+| `feet_allowed` | [57](../src/parkour_solver/movement/normal.py#L57) | function |
+| `normal_choices` | [62](../src/parkour_solver/movement/normal.py#L62) | function |
 
 ## movement/profiles.py
 
@@ -664,9 +665,9 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 | `AnchorAdapter.for_node` | [65](../src/parkour_solver/search/anchors/adapter.py#L65) | function |
 | `AnchorAdapter.advance` | [69](../src/parkour_solver/search/anchors/adapter.py#L69) | function |
 | `AnchorAdapter.context` | [75](../src/parkour_solver/search/anchors/adapter.py#L75) | function |
-| `AnchorAdapter.program_allowed` | [85](../src/parkour_solver/search/anchors/adapter.py#L85) | function |
-| `AnchorAdapter.candidate` | [89](../src/parkour_solver/search/anchors/adapter.py#L89) | function |
-| `AnchorAdapter.summary` | [99](../src/parkour_solver/search/anchors/adapter.py#L99) | function |
+| `AnchorAdapter.program_allowed` | [84](../src/parkour_solver/search/anchors/adapter.py#L84) | function |
+| `AnchorAdapter.candidate` | [88](../src/parkour_solver/search/anchors/adapter.py#L88) | function |
+| `AnchorAdapter.summary` | [98](../src/parkour_solver/search/anchors/adapter.py#L98) | function |
 
 ## search/anchors/policy.py
 
@@ -676,13 +677,14 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 | `semantic_settings` | [44](../src/parkour_solver/search/anchors/policy.py#L44) | function |
 | `owner` | [49](../src/parkour_solver/search/anchors/policy.py#L49) | function |
 | `visits` | [54](../src/parkour_solver/search/anchors/policy.py#L54) | function |
-| `visit_state` | [82](../src/parkour_solver/search/anchors/policy.py#L82) | function |
-| `audit` | [97](../src/parkour_solver/search/anchors/policy.py#L97) | function |
-| `local_counts` | [115](../src/parkour_solver/search/anchors/policy.py#L115) | function |
-| `priority` | [120](../src/parkour_solver/search/anchors/policy.py#L120) | function |
-| `within_caps` | [124](../src/parkour_solver/search/anchors/policy.py#L124) | function |
-| `transfer_structure` | [138](../src/parkour_solver/search/anchors/policy.py#L138) | function |
-| `single_jump_structure` | [177](../src/parkour_solver/search/anchors/policy.py#L177) | function |
+| `feet_touches` | [85](../src/parkour_solver/search/anchors/policy.py#L85) | function |
+| `visit_state` | [97](../src/parkour_solver/search/anchors/policy.py#L97) | function |
+| `audit` | [120](../src/parkour_solver/search/anchors/policy.py#L120) | function |
+| `local_counts` | [138](../src/parkour_solver/search/anchors/policy.py#L138) | function |
+| `priority` | [143](../src/parkour_solver/search/anchors/policy.py#L143) | function |
+| `within_caps` | [147](../src/parkour_solver/search/anchors/policy.py#L147) | function |
+| `transfer_structure` | [161](../src/parkour_solver/search/anchors/policy.py#L161) | function |
+| `single_jump_structure` | [200](../src/parkour_solver/search/anchors/policy.py#L200) | function |
 
 ## search/application.py
 

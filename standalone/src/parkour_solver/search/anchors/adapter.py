@@ -78,9 +78,8 @@ class AnchorAdapter(EventGuideAdapter):
         forbidden={owner(self.scene,a) for a in self.anchor_policy['anchors'][index+1:]}
         if index<len(self.anchor_policy['anchors']):
             forbidden.add(owner(self.scene,self.data['task']['block']))
-        context['supportAllowed']=lambda block: (owner(self.scene,block['id']) not in state['departed'] and
-                                                owner(self.scene,block['id']) not in forbidden)
-        context['landingAllowed']=context['supportAllowed']
+        context['feetAllowed']=lambda block: (owner(self.scene,block['id']) not in state['departed'] and
+                                             owner(self.scene,block['id']) not in forbidden)
 
     def program_allowed(self, program):
         return audit(self.scene,program,self.anchor_policy['anchors'],

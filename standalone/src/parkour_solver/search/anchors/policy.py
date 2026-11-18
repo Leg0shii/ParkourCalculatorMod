@@ -79,11 +79,33 @@ def visits(scene, program):
     return result
 
 
+FEET_CASES = frozenset(('normal_step', 'slab_boost', 'blip', 'blip_up', 'corner_jump_cancel', 'corner_blip_up'))
+
+
+def feet_touches(scene, program):
+    by_box = {tuple(scene['collisionScene']['solids'][b['solidIndex']]): owner(scene,b['id'])
+              for b in scene['blocks']}
+    result = []
+    for e in program['profile'].get('caseEvents', []):
+        if e.get('case') not in FEET_CASES:
+            continue
+        boxes = list(e.get('boxes') or ()) + ([e['lowerBox']] if e.get('lowerBox') is not None else [])
+        result.extend((e['input']+1, by_box[tuple(b)]) for b in boxes if tuple(b) in by_box)
+    return sorted(result)
+
+
 def visit_state(scene, program):
     current = None
     departed = set()
     valid = True
-    for _, name in visits(scene,program):
+    touches = feet_touches(scene,program)
+    def touch_until(tick):
+        nonlocal valid
+        while touches and (tick is None or touches[0][0] < tick):
+            if touches.pop(0)[1] in departed:
+                valid = False
+    for tick, name in visits(scene,program):
+        touch_until(tick)
         if name == current:
             continue
         if name in departed:
@@ -91,6 +113,7 @@ def visit_state(scene, program):
         if current is not None:
             departed.add(current)
         current = name
+    touch_until(None)
     return dict(version=1, current=current, departed=sorted(departed), valid=valid)
 
 

@@ -54,6 +54,11 @@ def named_choice(context, kind, initial, event, *, jumping=False, constraints=()
                         region_choices=region_choices)
 
 
+def feet_allowed(context, block):
+    allowed = context.get('feetAllowed')
+    return allowed is None or allowed(block)
+
+
 def normal_choices(context):
     from parkour_solver.movement.contact_combinations import (contact_event, reachable_option, region_choices,
                                                               scene_contact_options)
@@ -62,6 +67,8 @@ def normal_choices(context):
             if context.get('checkBudget'):
                 context['checkBudget']()
             if context.get('supportAllowed') is not None and not context['supportAllowed'](block):
+                continue
+            if not feet_allowed(context, block):
                 continue
             t = first_descent(trace, block['top'])
             if t is None:

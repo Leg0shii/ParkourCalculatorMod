@@ -322,6 +322,47 @@ class ExposureTests(unittest.TestCase):
         self.assertIn((('Z', 'GE'),), open_sides)
         self.assertEqual(flush, open_sides - {(('Z', 'GE'),)})
 
+    def test_a_departed_block_gets_no_feet_case_and_no_reachability_query(self):
+        from parkour_solver.movement.ceiling_generation import open_ceiling_choices
+        from parkour_solver.movement.program import boundary_state, empty_program
+        from parkour_solver.movement.stepping import open_stepping_choices
+
+        class Gate:
+            def __init__(self):
+                self.owners = []
+
+            def query(self, context, bounds, tick, *, label, jumping, phases):
+                self.owners.append(label['owner'])
+                return dict(ruledOut=False)
+
+        def run(name, block, reject):
+            scene = prepare_scene(fixture(name)['request'])
+            program = empty_program(scene['initial'], threshold=0.)
+            gate = Gate()
+            context = dict(mode='open', scene=scene, program=program, state=boundary_state(program), maxInputs=20,
+                           threshold=0., interactionGate=gate)
+            if reject:
+                context['feetAllowed'] = lambda b: b['id'] != block
+            solid = next(scene['collisionScene']['solids'][b['solidIndex']] for b in scene['blocks'] if b['id'] == block)
+            touched = {event['case'] for choice in open_stepping_choices(context)
+                       for event in choice['profile'].get('caseEvents', [])
+                       if solid in event.get('boxes', []) + [event.get('lowerBox')]}
+            return touched, gate.owners
+
+        for name, block, cases in [
+                ('blip', 'goal', {'normal_step', 'slab_boost', 'corner_jump_cancel', 'blip', 'corner_blip_up'}),
+                ('blip_up', 'higher', {'blip_up'}), ('blip_up', 'goal', {'blip_up'}),
+                ('corner_blip_up', 'higher', {'blip', 'corner_blip_up'})]:
+            self.assertEqual(run(name, block, False)[0], cases)
+            touched, owners = run(name, block, True)
+            self.assertEqual(touched, set())
+            self.assertNotIn(block, owners)
+        scene = prepare_scene(fixture('grind')['request'])
+        program = empty_program(scene['initial'], threshold=0.)
+        grinds = list(open_ceiling_choices(dict(mode='open', scene=scene, program=program, state=boundary_state(program),
+                                                maxInputs=20, threshold=0., feetAllowed=lambda block: False)))
+        self.assertEqual({e['case'] for c in grinds for e in c['profile']['caseEvents']}, {'grind'})
+
     def test_a_flush_seam_is_not_a_corner(self):
         start, target, wall = [-2, 0, -2, 2, 1, 4], [2, 0, 0, 3, 1.5, 2], [2, 0, 2, 3, 1.5, 3]
         open_corners = self.sides([start, target], 'corner_jump_cancel')

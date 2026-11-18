@@ -119,3 +119,10 @@ alternatives on its exposed sides, a hit being a standard `role=contact` event. 
 requires being outside the higher block on L, otherwise the Y-first resolver lands on it.
 Corner cases share X-approach and next-state Z-escape constraints.
 
+In the anchor search no stepping case touches a block whose owner the route has already
+left: the target, higher, corner and lower blocks of the six stepping cases all go through
+the context's `feetAllowed` predicate before any reachability query, and the emitted-program
+audit rejects a case event whose `boxes` or `lowerBox` belong to a departed owner. These
+touches never count as visits. Grind and ceiling hits are not at the feet and may touch a
+departed block.
+
