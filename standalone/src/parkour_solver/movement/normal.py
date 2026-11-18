@@ -67,7 +67,7 @@ def normal_choices(context):
             if t is None:
                 continue
             for option in scene_contact_options(context['scene'], 1, 1, members=[block['solidIndex']]):
-                option = reachable_option(context, option, t, jumping=jumping)
+                option = reachable_option(context, option, t, jumping=jumping, label=dict(owner=block['id'], role='landing'))
                 if option is None:
                     continue
                 event = contact_event(option, 'Y', -1, t, 'landing')

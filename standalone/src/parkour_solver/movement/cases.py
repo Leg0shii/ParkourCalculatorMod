@@ -71,7 +71,8 @@ def top_choices(context, block, state, name='case:region', *, jumping):
         return [(region_rows(block, state, name), [])]
     result = []
     for option in scene_contact_options(scene, 1, 1, members=[block['solidIndex']]):
-        option = reachable_option(context, option, state, jumping=jumping)
+        option = reachable_option(context, option, state, jumping=jumping,
+                                  label=dict(owner=block['id'], role='lower landing' if name == 'case:lower_landing' else 'top'))
         if option is None:
             continue
         rows = [dict(r, name=name) for r in finite_rows(1, bounding_region(option.regions), t1=state)]

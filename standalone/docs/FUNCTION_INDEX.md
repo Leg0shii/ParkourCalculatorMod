@@ -229,10 +229,10 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 | `exposed_side` | [45](../src/parkour_solver/movement/cases.py#L45) | function |
 | `convex_corner` | [56](../src/parkour_solver/movement/cases.py#L56) | function |
 | `top_choices` | [67](../src/parkour_solver/movement/cases.py#L67) | function |
-| `corner_rows` | [85](../src/parkour_solver/movement/cases.py#L85) | function |
-| `case_profile` | [93](../src/parkour_solver/movement/cases.py#L93) | function |
-| `landing_wall_options` | [125](../src/parkour_solver/movement/cases.py#L125) | function |
-| `entry_possible` | [142](../src/parkour_solver/movement/cases.py#L142) | function |
+| `corner_rows` | [86](../src/parkour_solver/movement/cases.py#L86) | function |
+| `case_profile` | [94](../src/parkour_solver/movement/cases.py#L94) | function |
+| `landing_wall_options` | [126](../src/parkour_solver/movement/cases.py#L126) | function |
+| `entry_possible` | [143](../src/parkour_solver/movement/cases.py#L143) | function |
 
 ## movement/ceiling_generation.py
 
@@ -266,12 +266,12 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 | `contact_event` | [105](../src/parkour_solver/movement/contact_combinations.py#L105) | function |
 | `region_choices` | [111](../src/parkour_solver/movement/contact_combinations.py#L111) | function |
 | `reachable_option` | [121](../src/parkour_solver/movement/contact_combinations.py#L121) | function |
-| `bounding_region` | [129](../src/parkour_solver/movement/contact_combinations.py#L129) | function |
-| `wall_heights` | [133](../src/parkour_solver/movement/contact_combinations.py#L133) | function |
-| `region_offset` | [138](../src/parkour_solver/movement/contact_combinations.py#L138) | function |
-| `finite_rows` | [143](../src/parkour_solver/movement/contact_combinations.py#L143) | function |
-| `compile_contact_events` | [149](../src/parkour_solver/movement/contact_combinations.py#L149) | function |
-| `contact_combinations` | [180](../src/parkour_solver/movement/contact_combinations.py#L180) | function |
+| `bounding_region` | [130](../src/parkour_solver/movement/contact_combinations.py#L130) | function |
+| `wall_heights` | [134](../src/parkour_solver/movement/contact_combinations.py#L134) | function |
+| `region_offset` | [139](../src/parkour_solver/movement/contact_combinations.py#L139) | function |
+| `finite_rows` | [144](../src/parkour_solver/movement/contact_combinations.py#L144) | function |
+| `compile_contact_events` | [150](../src/parkour_solver/movement/contact_combinations.py#L150) | function |
+| `contact_combinations` | [181](../src/parkour_solver/movement/contact_combinations.py#L181) | function |
 
 ## movement/contact_profiles.py
 
@@ -439,7 +439,7 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 | `SteppingGenerator.generate` | [106](../src/parkour_solver/movement/stepping.py#L106) | function |
 | `_sequence_allowed` | [138](../src/parkour_solver/movement/stepping.py#L138) | function |
 | `open_stepping_choices` | [149](../src/parkour_solver/movement/stepping.py#L149) | function |
-| `_open_flight_cases` | [209](../src/parkour_solver/movement/stepping.py#L209) | function |
+| `_open_flight_cases` | [211](../src/parkour_solver/movement/stepping.py#L211) | function |
 
 ## movement/units.py
 
@@ -575,20 +575,20 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 | `block_interaction` | [82](../src/parkour_solver/reachability/service.py#L82) | function |
 | `interaction_allowed` | [87](../src/parkour_solver/reachability/service.py#L87) | function |
 | `bounds_allowed` | [91](../src/parkour_solver/reachability/service.py#L91) | function |
-| `InteractionGate` | [96](../src/parkour_solver/reachability/service.py#L96) | class |
-| `InteractionGate.__init__` | [98](../src/parkour_solver/reachability/service.py#L98) | function |
-| `InteractionGate._cached` | [105](../src/parkour_solver/reachability/service.py#L105) | function |
-| `InteractionGate.prepare` | [118](../src/parkour_solver/reachability/service.py#L118) | function |
-| `InteractionGate.analyze_model` | [135](../src/parkour_solver/reachability/service.py#L135) | function |
-| `InteractionGate.analyze` | [153](../src/parkour_solver/reachability/service.py#L153) | function |
-| `InteractionGate.condition` | [159](../src/parkour_solver/reachability/service.py#L159) | function |
-| `InteractionGate.envelopes` | [167](../src/parkour_solver/reachability/service.py#L167) | function |
-| `InteractionGate.sequence` | [171](../src/parkour_solver/reachability/service.py#L171) | function |
-| `InteractionGate.check_program` | [184](../src/parkour_solver/reachability/service.py#L184) | function |
-| `InteractionGate.query` | [203](../src/parkour_solver/reachability/service.py#L203) | function |
-| `InteractionGate.required` | [230](../src/parkour_solver/reachability/service.py#L230) | function |
-| `InteractionGate.context` | [251](../src/parkour_solver/reachability/service.py#L251) | function |
-| `InteractionGate.summary` | [254](../src/parkour_solver/reachability/service.py#L254) | function |
+| `InteractionGate` | [97](../src/parkour_solver/reachability/service.py#L97) | class |
+| `InteractionGate.__init__` | [99](../src/parkour_solver/reachability/service.py#L99) | function |
+| `InteractionGate._cached` | [106](../src/parkour_solver/reachability/service.py#L106) | function |
+| `InteractionGate.prepare` | [119](../src/parkour_solver/reachability/service.py#L119) | function |
+| `InteractionGate.analyze_model` | [136](../src/parkour_solver/reachability/service.py#L136) | function |
+| `InteractionGate.analyze` | [154](../src/parkour_solver/reachability/service.py#L154) | function |
+| `InteractionGate.condition` | [160](../src/parkour_solver/reachability/service.py#L160) | function |
+| `InteractionGate.envelopes` | [168](../src/parkour_solver/reachability/service.py#L168) | function |
+| `InteractionGate.sequence` | [172](../src/parkour_solver/reachability/service.py#L172) | function |
+| `InteractionGate.check_program` | [185](../src/parkour_solver/reachability/service.py#L185) | function |
+| `InteractionGate.query` | [204](../src/parkour_solver/reachability/service.py#L204) | function |
+| `InteractionGate.required` | [232](../src/parkour_solver/reachability/service.py#L232) | function |
+| `InteractionGate.context` | [253](../src/parkour_solver/reachability/service.py#L253) | function |
+| `InteractionGate.summary` | [256](../src/parkour_solver/reachability/service.py#L256) | function |
 
 ## reachability/viability.py
 

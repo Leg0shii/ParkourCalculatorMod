@@ -264,6 +264,7 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
         stage_adapter(f).context(ctx)
         gate.context(ctx)
         ctx['regionItems'] = True
+        ctx['frameId'] = f['id']
 
     def time_bound(program,f=None):
         if state['best'] is None:return None

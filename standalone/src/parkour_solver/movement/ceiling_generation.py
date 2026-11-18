@@ -16,13 +16,13 @@ def grind_options(context, feet, allowed=None):
         if context.get('checkBudget'):
             context['checkBudget']()
         clearance = option.plane - feet
-        if not 0 <= clearance < f32(.42) or allowed is not None and not any(allowed(list(box)) for box in option.boxes):
+        owner = '+'.join(sorted(blocks[i]['id'] for i in option.members))
+        if not 0 <= clearance < f32(.42) or allowed is not None and not any(allowed(list(box), owner) for box in option.boxes):
             continue
-        option = reachable_option(context, option, 1, jumping=True)
+        option = reachable_option(context, option, 1, jumping=True, label=dict(owner=owner, role='grind'))
         if option is None:
             continue
         under = [dict(r, name='case:finite') for r in finite_rows(1, bounding_region(option.regions), t1=1)]
-        owner = '+'.join(sorted(blocks[i]['id'] for i in option.members))
         regions = [dict(offset=1, surface=option.surface, owner=owner,
                         options=[[dict(r, name='case:finite') for r in finite_rows(1, region, leg=0, offset=1)]
                                  for region in option.regions])] if len(option.regions) > 1 and context.get('regionItems') else []
@@ -100,7 +100,7 @@ def open_ceiling_choices(context):
                         if move > 0 and trace['position'][t] <= plane < trace['position'][t + 1]), None)
             if hit is None:
                 continue
-            reached = reachable_option(context, option, hit, jumping=jumping)
+            reached = reachable_option(context, option, hit, jumping=jumping, label=dict(owner=owner, role='ceiling'))
             if reached is None:
                 continue
             event = contact_event(reached, 'Y', 1, hit, 'ceiling', blockId=owner)
@@ -111,7 +111,7 @@ def open_ceiling_choices(context):
                 yield choice
     if not initial['onGround']:
         return
-    allowed = lambda box: interaction_allowed(context, box, 0, jumping=True)
+    allowed = lambda box, owner: interaction_allowed(context, box, 0, jumping=True, label=dict(owner=owner, role='grind'))
     for event, rows, regions in grind_options(context, initial['position'], allowed):
         choice = named_choice(context, 'ceiling', initial, event, jumping=True, constraints=rows, region_choices=regions)
         if choice:

@@ -84,13 +84,14 @@ def block_interaction(envelopes, box, tick, phases=('Y', 'X', 'Z'), *, interior=
         dict(tick=tick, phase=phase, bounds=expanded_box(box), interior=interior)]) for phase in phases]))
 
 
-def interaction_allowed(context, box, tick, *, jumping=False, phases=('Y', 'X', 'Z')):
-    return bounds_allowed(context, expanded_box(box), tick, jumping=jumping, phases=phases)
+def interaction_allowed(context, box, tick, *, label, jumping=False, phases=('Y', 'X', 'Z')):
+    return bounds_allowed(context, expanded_box(box), tick, label=label, jumping=jumping, phases=phases)
 
 
-def bounds_allowed(context, bounds, tick, *, jumping=False, phases=('Y', 'X', 'Z')):
+def bounds_allowed(context, bounds, tick, *, label, jumping=False, phases=('Y', 'X', 'Z')):
+    """`label` (owner, role) names the generator choice in the exclusion log."""
     gate = context.get('interactionGate')
-    return gate is None or not gate.query(context, bounds, tick, jumping=jumping, phases=phases)['ruledOut']
+    return gate is None or not gate.query(context, bounds, tick, label=label, jumping=jumping, phases=phases)['ruledOut']
 
 
 class InteractionGate:
@@ -177,7 +178,7 @@ class InteractionGate:
         proof=dict(reason='composition_rejected') if program is None else self.required(program)
         if proof:
             self.metrics['sequenceExclusions']=self.metrics.get('sequenceExclusions',0)+1
-            self.exclusions.append(dict(reason='joint_prerequisites_unreachable',proof=proof,
+            self.exclusions.append(dict(reason='joint_prerequisites_unreachable',proof=proof,frame=context.get('frameId'),
                 input=context['program']['profile']['airtime'],cases=choice['profile'].get('caseEvents',[])))
         return proof
 
@@ -200,7 +201,7 @@ class InteractionGate:
             return {k:v for k,v in checked.items() if k!='ruledOut'} if checked['ruledOut'] else None
         return self._cached(('screen',analysis['key']),build,'screen')
 
-    def query(self, context, bounds, tick, *, jumping=False, phases=('Y', 'X', 'Z')):
+    def query(self, context, bounds, tick, *, label, jumping=False, phases=('Y', 'X', 'Z')):
         from parkour_solver.movement.program import append_choice, program_physics_key
         from parkour_solver.movement.normal import event_choice
         from parkour_solver.search.identity import digest
@@ -224,7 +225,8 @@ class InteractionGate:
             dict(tick=at, phase=phase, bounds=bounds)]) for phase in phases]))
         self.checked += 1
         if proof['ruledOut']:
-            self.exclusions.append(dict(horizontal=[bounds[0], bounds[2], bounds[3], bounds[5]], input=at, proof=proof))
+            self.exclusions.append(dict(label, frame=context.get('frameId'), horizontal=[bounds[0], bounds[2], bounds[3], bounds[5]],
+                                        input=at, proof=proof))
         return proof
 
     def required(self, program):

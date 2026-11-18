@@ -214,6 +214,26 @@ class BookkeepingProfileTests(unittest.TestCase):
         self.assertEqual(solve_text(local['solves'][0], requests),
                          'request 8 infeasible (IPOPT local), IPOPT Infeasible_Problem_Detected, 0.37 s')
 
+    def test_generator_rejections_are_grouped_per_frame_with_their_innermost_proof(self):
+        from tools.profiling.trace import exclusion_lines, generator_exclusions
+        far = dict(ruledOut=True, reason='all_interaction_alternatives_excluded', alternatives=[dict(
+            ruledOut=True, reason='interaction_distance_unreachable', tick=t, phase='Y', gap=4.2, travelUpperBound=2.5)
+            for t in (3,)])
+        joint = dict(reason='required_interaction_unreachable', input=9, proof=dict(
+            ruledOut=True, reason='interval_reach_contradiction', state=9, axis=0))
+        result = dict(effectiveRequest=dict(blocks=[dict(id='b4', boxes=[[0, 0, 0, 1, 1, 1]])]), interactionGate=dict(exclusions=[
+            dict(owner='b1', role='landing', frame=0, horizontal=[1., 2., 3., 4.], input=t, proof=far) for t in (3, 4, 6)] + [
+            dict(reason='joint_prerequisites_unreachable', frame=2, input=5, proof=joint,
+                 cases=[dict(case='blip', boxes=[[0, 0, 0, 1, 1, 1]])])]))
+        frames = generator_exclusions(result)
+        landing, = frames[0]
+        self.assertEqual((landing['count'], landing['ticks'], landing['area']),
+                         (3, [3, 4, 6], 'X [1.000, 3.000] × Z [2.000, 4.000]'))
+        self.assertIn('| B1 landing | X [1.000, 3.000] × Z [2.000, 4.000] | t3-4, t6 | distance reachability | 3 | '
+                      'at tick 3 the nearest point is 4.200 blocks away, travel at most 2.500 |', exclusion_lines(frames[0]))
+        self.assertIn('| B4 blip (joint prerequisites) | - | t9 | required contact reachability | 1 | empty X interval at state 9 |',
+                      exclusion_lines(frames[2]))
+
     def test_route_trace_links_alternatives_solves_and_inherited_rows(self):
         import json
         from tools.profiling.trace import route_trace, side as label

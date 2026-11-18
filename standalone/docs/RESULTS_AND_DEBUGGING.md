@@ -78,6 +78,11 @@ Each partial route in `report.md` and `routes.json` has:
 
 - its parent route, the constraint rows inherited from the parent's solved route
   (what `retain_prefix` copies) and whether its starting facings were seeded from it;
+- the choices the movement generators ruled out by reachability before building them
+  (the `InteractionGate` exclusions, tagged with the frame and the generator's block and
+  contact kind): the choice, the player-centre area checked, the ticks, the check, how
+  often it was ruled out and the first reason; a frame whose generators built nothing
+  still gets this section;
 - the avoidance alternative accepted for it. Routes from one movement program share
   a single repair run, kept on the first route of that program;
 - on that route: every prepared obstacle encounter (possible phases, already-clear

@@ -212,7 +212,69 @@ CHECKS = dict(
     interaction_row_unreachable='single-row reachability',
     interaction_region_unreachable='region reachability',
     interaction_distance_unreachable='distance reachability',
+    required_interaction_unreachable='required contact reachability',
+    composition_rejected='composition',
     contact_reach_contradiction='contact reachability')
+
+
+def generator_exclusions(result):
+    """The movement generators' reachability rejections per DFS frame, one row per choice and check."""
+    names = block_names(result.get('effectiveRequest'))
+    grouped = {}
+    for entry in (result.get('interactionGate') or {}).get('exclusions', []):
+        proof = entry['proof']
+        if 'cases' in entry:
+            owner = '+'.join(sorted({names.get(tuple(box), 'unnamed box') for case in entry['cases']
+                                     for box in case.get('boxes', [])})) or 'unnamed box'
+            role = ' + '.join(case['case'] for case in entry['cases'])+' (joint prerequisites)'
+            ticks, area, example = [proof.get('input', entry['input'])], None, innermost(proof)
+        else:
+            owner, role, ticks = entry['owner'], entry['role'], [entry['input']]
+            proof = example = innermost(proof)
+            area = 'X [{:.3f}, {:.3f}] × Z [{:.3f}, {:.3f}]'.format(*(entry['horizontal'][i] for i in (0, 2, 1, 3)))
+        row = grouped.setdefault((entry.get('frame'), owner, role, area, proof.get('reason')),
+                                 dict(owner=owner, role=role, area=area, check=proof.get('reason'), ticks=set(), count=0,
+                                      example=example))
+        row['ticks'].update(t for t in ticks if t is not None)
+        row['count'] += 1
+    frames = {}
+    for (frame, *_), row in grouped.items():
+        frames.setdefault(frame, []).append(dict(row, ticks=sorted(row['ticks'])))
+    return frames
+
+
+def innermost(proof):
+    """The first concrete reason inside a nested reachability proof."""
+    while True:
+        if isinstance(proof.get('proof'), dict):
+            proof = proof['proof']
+        elif proof.get('phases'):
+            proof = proof['phases'][0]
+        elif proof.get('alternatives'):
+            proof = proof['alternatives'][0]
+        else:
+            return proof
+
+
+def exclusion_lines(rows):
+    if not rows:
+        return []
+    return ([f'Choices the movement generators ruled out by reachability before building them: {sum(r["count"] for r in rows)} '
+             '(a choice is checked once per approach, so one choice can be ruled out several times).','']+
+            table(['Choice','Player-centre area','Ticks','Check','Times','Example'],
+                  [[f'{r["owner"].upper()} {r["role"]}',r['area'] or '-',ticks_text(r['ticks']),CHECKS.get(r['check'],r['check']),
+                    r['count'],proof_text(r['example'])]
+                   for r in sorted(rows, key=lambda r: (r['owner'], r['role'], r['area'] or '', r['ticks']))]))
+
+
+def ticks_text(ticks):
+    runs, start = [], None
+    for i, t in enumerate(ticks):
+        start = t if start is None else start
+        if i+1 == len(ticks) or ticks[i+1] != t+1:
+            runs.append(f't{start}' if start == t else f't{start}-{t}')
+            start = None
+    return ', '.join(runs) or '-'
 
 
 def solve_text(solve, request_index):
@@ -306,6 +368,9 @@ def proof_text(entry):
                 f'reachable [{entry["reachable"][0]:.3f}, {entry["reachable"][1]:.3f}]')
     if reason == 'linear_control_relaxation_infeasible':
         return 'no input sequence satisfies the linearised dynamics and these rows'
+    if reason == 'interaction_distance_unreachable':
+        return (f'at tick {entry["tick"]} the nearest point is {entry["gap"]:.3f} blocks away, '
+                f'travel at most {entry["travelUpperBound"]:.3f}')
     return ', '.join(f'{k} {number(v)}' for k,v in entry.items()
                      if k in ('state','tick','phase','gap','travelUpperBound','dynamicsMargin','constraintMargin'))
 
@@ -461,6 +526,7 @@ def render(report, requests, routes, stop):
               f'never needed are counted as not solved. **Fallbacks**: up to {FALLBACK_LIMIT} other alternatives within '
               f'{FALLBACK_GAP} blocks of the best (same ticks), restored only if the route fails further on.',
               '- Request numbers index `requests.json`.','']
+    excluded = generator_exclusions(result)
     for fid in sorted(by_frame):
         group = by_frame[fid]
         first = group[0]
@@ -471,6 +537,7 @@ def render(report, requests, routes, stop):
             lines += [f'Inherited {plural(len(first["inheritedRows"]),"constraint row")} from the parent\'s solved route ('+
                       ', '.join(f'{n} {k or "unnamed"}' for k,n in names.most_common())+
                       f'); starting facings seeded from it: {"yes" if first["seededFacings"] else "no"}.','']
+        lines += exclusion_lines(excluded.get(fid, []))
         for owner in (r for r in group if r['repair']):
             repair = owner['repair']
             members = [r for r in group if r['repairOwner'] == owner['record']]
@@ -551,6 +618,10 @@ def render(report, requests, routes, stop):
         if follow:
             lines += ['Next partial solves built from this frame: '+
                       ', '.join(f'frame {c} from {name(by_frame[c][0]["parent"])}' for c in follow)+'.','']
+    goals = {f['id']: f['goal'].get('block') for f in frames(result['searchState'])}
+    for fid in sorted((f for f in excluded if f not in by_frame), key=lambda f: (f is None, f)):
+        lines += [f'### Frame {fid}: reach {(goals.get(fid) or "?").upper()}, no route' if fid is not None else
+                  '### Generator checks outside the frames','']+exclusion_lines(excluded[fid])
     return '\n'.join(lines)+'\n'
 
 

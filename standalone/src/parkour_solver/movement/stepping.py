@@ -165,7 +165,7 @@ def open_stepping_choices(context):
                     continue
                 if not enabled(case) or not 0 < rise <= f32(.6) or jumping and rise <= f32(.42):
                     continue
-                if not interaction_allowed(context, box, 0, jumping=jumping):
+                if not interaction_allowed(context, box, 0, jumping=jumping, label=dict(owner=block['id'], role=case)):
                     continue
                 for axis in ('X', 'Z'):
                     for direction in (-1, 1):
@@ -179,7 +179,8 @@ def open_stepping_choices(context):
                                                   support=block['id'] if not jumping else None, region_choices=regions)
                             if choice:
                                 yield choice
-            if enabled('corner_jump_cancel') and f32(.42) < rise <= f32(.6) and interaction_allowed(context, box, 0, jumping=True):
+            if (enabled('corner_jump_cancel') and f32(.42) < rise <= f32(.6) and
+                    interaction_allowed(context, box, 0, jumping=True, label=dict(owner=block['id'], role='corner_jump_cancel'))):
                 for xdir in (-1, 1):
                     for zdir in (-1, 1):
                         if not convex_corner(scene, block, xdir, zdir, y0):
@@ -199,7 +200,8 @@ def open_stepping_choices(context):
             landing = first_descent(trace, lower['top'])
             if landing is None:
                 continue
-            if not interaction_allowed(context, box_for(lower, context), landing, jumping=jumping):
+            if not interaction_allowed(context, box_for(lower, context), landing, jumping=jumping,
+                                       label=dict(owner=lower['id'], role='lower landing')):
                 continue
             y = trace['position'][landing]
             for lower_rows, lower_regions in top_choices(context, lower, landing, 'case:lower_landing', jumping=jumping):
@@ -214,7 +216,7 @@ def _open_flight_cases(context, initial, jumping, lower, lower_rows, lower_regio
         if higher['top'] <= lower['top']:
             continue
         box = box_for(higher, context)
-        if not interaction_allowed(context, box, landing, jumping=jumping):
+        if not interaction_allowed(context, box, landing, jumping=jumping, label=dict(owner=higher['id'], role='flight case')):
             continue
         if (enabled('blip') and 0 <= higher['top'] - y <= f32(.6) and
                 (context.get('landingAllowed') is None or context['landingAllowed'](higher))):
