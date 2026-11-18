@@ -574,9 +574,10 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 
 | Symbol | Line | Kind |
 | --- | ---: | --- |
-| `box_bounds` | [11](../src/parkour_solver/scene/geometry.py#L11) | function |
-| `normalize_geometry` | [21](../src/parkour_solver/scene/geometry.py#L21) | function |
-| `expanded_box` | [88](../src/parkour_solver/scene/geometry.py#L88) | function |
+| `thin` | [14](../src/parkour_solver/scene/geometry.py#L14) | function |
+| `box_bounds` | [19](../src/parkour_solver/scene/geometry.py#L19) | function |
+| `normalize_geometry` | [29](../src/parkour_solver/scene/geometry.py#L29) | function |
+| `expanded_box` | [96](../src/parkour_solver/scene/geometry.py#L96) | function |
 
 ## scene/ladders.py
 
@@ -1131,6 +1132,22 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 | `_source_faces` | [270](../src/parkour_solver/spatial/faces.py#L270) | function |
 | `_merged_faces` | [303](../src/parkour_solver/spatial/faces.py#L303) | function |
 | `merge_faces` | [338](../src/parkour_solver/spatial/faces.py#L338) | function |
+
+## spatial/footprints.py
+
+| Symbol | Line | Kind |
+| --- | ---: | --- |
+| `Cluster` | [16](../src/parkour_solver/spatial/footprints.py#L16) | class |
+| `Side` | [24](../src/parkour_solver/spatial/footprints.py#L24) | class |
+| `Side.key` | [30](../src/parkour_solver/spatial/footprints.py#L30) | function |
+| `nested` | [34](../src/parkour_solver/spatial/footprints.py#L34) | function |
+| `intersects` | [40](../src/parkour_solver/spatial/footprints.py#L40) | function |
+| `free_rectangles` | [44](../src/parkour_solver/spatial/footprints.py#L44) | function |
+| `Footprints` | [71](../src/parkour_solver/spatial/footprints.py#L71) | class |
+| `Footprints.__init__` | [72](../src/parkour_solver/spatial/footprints.py#L72) | function |
+| `Footprints.cluster` | [94](../src/parkour_solver/spatial/footprints.py#L94) | function |
+| `Footprints.active` | [97](../src/parkour_solver/spatial/footprints.py#L97) | function |
+| `Footprints.sides` | [100](../src/parkour_solver/spatial/footprints.py#L100) | function |
 
 ## spatial/guides.py
 
