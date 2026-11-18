@@ -260,7 +260,8 @@ def exclusion_lines(rows):
     if not rows:
         return []
     return ([f'Choices the movement generators ruled out by reachability before building them: {sum(r["count"] for r in rows)} '
-             '(a choice is checked once per approach, so one choice can be ruled out several times).','']+
+             '(a choice is checked again for every prefix the frame extends, for a jump and a no-jump start, and by every '
+             'generator that offers it, so one choice can be ruled out several times).','']+
             table(['Choice','Player-centre area','Ticks','Check','Times','Example'],
                   [[f'{r["owner"].upper()} {r["role"]}',r['area'] or '-',ticks_text(r['ticks']),CHECKS.get(r['check'],r['check']),
                     r['count'],proof_text(r['example'])]
