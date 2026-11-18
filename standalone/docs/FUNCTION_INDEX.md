@@ -909,12 +909,11 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 
 | Symbol | Line | Kind |
 | --- | ---: | --- |
-| `goal_spec` | [15](../src/parkour_solver/search/goals.py#L15) | function |
-| `goal_key` | [45](../src/parkour_solver/search/goals.py#L45) | function |
-| `region_arrival` | [50](../src/parkour_solver/search/goals.py#L50) | function |
-| `landing_satisfied` | [63](../src/parkour_solver/search/goals.py#L63) | function |
-| `_landing_prefixes` | [68](../src/parkour_solver/search/goals.py#L68) | function |
-| `probe_spatial` | [89](../src/parkour_solver/search/goals.py#L89) | function |
+| `goal_spec` | [9](../src/parkour_solver/search/goals.py#L9) | function |
+| `goal_key` | [39](../src/parkour_solver/search/goals.py#L39) | function |
+| `region_arrival` | [44](../src/parkour_solver/search/goals.py#L44) | function |
+| `landing_satisfied` | [57](../src/parkour_solver/search/goals.py#L57) | function |
+| `_landing_prefixes` | [62](../src/parkour_solver/search/goals.py#L62) | function |
 
 ## search/identity.py
 
