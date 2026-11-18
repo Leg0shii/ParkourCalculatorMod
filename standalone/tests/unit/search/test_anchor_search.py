@@ -25,7 +25,7 @@ class AnchorSearchTests(unittest.TestCase):
             continuation=continuation,threshold=0.,node_evaluator=evaluator,
             program_filter=lambda p:local_counts(p)['R']<=2 and (not latched or not latched() or
                 single_jump_structure(s,p,0,'start','goal',complete=p['terminalSupport']=='goal')),
-            policy_context=dict(version=1,span=0),deadline=time.monotonic()+3)
+            policy_context=dict(version=1,span=0),deadline=time.monotonic()+3,context_adapter=lambda c:c.update(interactionGate=None))
 
     def test_multiple_same_block_jumps_generated_and_no_solve_for_run_hold(self):
         calls=[]

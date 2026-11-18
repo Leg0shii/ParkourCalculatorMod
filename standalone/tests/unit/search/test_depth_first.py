@@ -241,7 +241,7 @@ class HistoricalInteractionTests(unittest.TestCase):
             saved=current_events(json.load(stream))
         original=next(p for p in saved['programs'] if p['label']=='P03')['record']['decision_program']
         p=truncate_program(original,21);p['terminalSupport']='b2'
-        ctx=dict(mode='open',scene=scene,program=p,state=boundary_state(p),maxInputs=43,threshold=0.)
+        ctx=dict(mode='open',scene=scene,program=p,state=boundary_state(p),maxInputs=43,threshold=0.,interactionGate=None)
         b4=scene['collisionScene']['solids'][next(b['solidIndex'] for b in scene['blocks'] if b['id']=='b4')]
         ungated=[c for c in open_stepping_choices(dict(ctx)) if any(b4 in e['boxes'] for e in c['profile']['caseEvents'])]
         self.assertTrue(ungated)

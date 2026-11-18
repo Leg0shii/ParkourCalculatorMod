@@ -92,7 +92,9 @@ def interaction_allowed(context, box, tick, *, label, jumping=False, phases=('Y'
 
 def bounds_allowed(context, bounds, tick, *, label, jumping=False, phases=('Y', 'X', 'Z')):
     """`label` (owner, role) names the generator choice in the exclusion log."""
-    gate = context.get('interactionGate')
+    if 'interactionGate' not in context:
+        raise ValueError('Generation needs an interactionGate; set it to None to run without reachability')
+    gate = context['interactionGate']
     return gate is None or not gate.query(context, bounds, tick, label=label, jumping=jumping, phases=phases)['ruledOut']
 
 

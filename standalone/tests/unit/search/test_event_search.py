@@ -63,7 +63,7 @@ class EventSearchTests(unittest.TestCase):
         requests,_,_=adapter.next_goals(cursor,[root])
         self.assertTrue(any(r['localSetupAlias'] for r in requests))
         view=adapter.for_goal(next(r for r in requests if r['terminal']),cursor)
-        ctx=dict(mode='open',scene=scene,program=root,state=boundary_state(root),maxInputs=20,threshold=0.)
+        ctx=dict(mode='open',scene=scene,program=root,state=boundary_state(root),maxInputs=20,threshold=0.,interactionGate=None)
         view.context(ctx)
         choices=list(generate_choices('normal',ctx))
         self.assertIn('start',[c['terminalSupport'] for c in choices])

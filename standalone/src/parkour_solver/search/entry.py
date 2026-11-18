@@ -97,7 +97,7 @@ def entry_contact_options(context, prefix=None, max_entry=14):
         seed = program_seed(prefix, cut + max_entry)
         return [[dict(c, offset=c['offset'] - cut) for c in choice['contactEvents']]
                 for choice in generate_choices('ceiling', dict(mode='timeline', schedule=seed,
-                    options=scene_contact_options(scene, 1, -1)), start=cut)]
+                    options=scene_contact_options(scene, 1, -1), interactionGate=None), start=cut)]
     route = context['route']
     top = route['blocks'][-2]['top']
     options = []

@@ -95,7 +95,7 @@ def build_transition_graph(scene, compiler, *, seconds=5):
             if scene['sceneModel'] == 'collision_boxes':
                 from parkour_solver.movement.generation import generate_choices
                 context = dict(scene=scene, source=source, target=target, maxInputs=scene['maxFlightInputs'],
-                               checkBudget=remaining, limit=scene['maxSteppingProfiles'])
+                               checkBudget=remaining, limit=scene['maxSteppingProfiles'], interactionGate=None)
                 available_profiles.extend((c['profileKind'], c['profile'], c['entryFace'])
                                           for c in generate_choices('stepping', context))
                 stepping_generation.append(dict(context['generation'], source=source['id'], target=target['id']))

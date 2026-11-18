@@ -252,9 +252,9 @@ class AnchorDFSTests(unittest.TestCase):
                     from parkour_solver.movement.normal import normal_choices
                     from parkour_solver.movement.program import empty_program, append_choice, boundary_state
                     parent=empty_program(base['initial'],threshold=0.);parent['terminalSupport']='start'
-                    options=normal_choices(dict(scene=base,state=boundary_state(parent),maxInputs=30,threshold=0.))
+                    options=normal_choices(dict(scene=base,state=boundary_state(parent),maxInputs=30,threshold=0.,interactionGate=None))
                     parent=append_choice(parent,next(c for c in options if c['terminalSupport']=='start' and c['profile']['jump'][0]))
-                    options=normal_choices(dict(scene=base,state=boundary_state(parent),maxInputs=30,threshold=0.))
+                    options=normal_choices(dict(scene=base,state=boundary_state(parent),maxInputs=30,threshold=0.,interactionGate=None))
                     choices.append(append_choice(parent,next(c for c in options if c['terminalSupport']=='goal' and c['profile']['jump'][0])))
             else:
                 # A restored fallback's child finishes one tick later, which the stub accepts.

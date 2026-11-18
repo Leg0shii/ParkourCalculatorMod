@@ -76,7 +76,8 @@ class GenericOpenGenerationTests(unittest.TestCase):
             data = fixture(name)
             scene = prepare_scene(data['request'])
             program = empty_program(scene['initial'])
-            context = dict(mode='open', scene=scene, program=program, state=boundary_state(program), maxInputs=40, cases=[data['case']])
+            context = dict(mode='open', scene=scene, program=program, state=boundary_state(program), maxInputs=40, cases=[data['case']],
+                           interactionGate=None)
             kind = 'ceiling' if name == 'grind' else 'stepping'
             choice = next(c for c in generate_choices(kind, context)
                           if any(e['case'] == data['case'] for e in c['profile']['caseEvents']))
@@ -198,7 +199,8 @@ ROOT = AUTONOMY_DATA
 
 
 def select(program, scene, kind, predicate):
-    context = dict(mode='open', scene=scene, program=program, state=boundary_state(program), maxInputs=100 - program['profile']['airtime'])
+    context = dict(mode='open', scene=scene, program=program, state=boundary_state(program), maxInputs=100 - program['profile']['airtime'],
+                   interactionGate=None)
     choice = next(choice for choice in generate_choices(kind, context) if predicate(choice))
     combined = append_choice(program, choice)
     if combined is None:

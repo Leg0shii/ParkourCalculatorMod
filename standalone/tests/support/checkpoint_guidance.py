@@ -16,4 +16,4 @@ def flat_scene():
 
 def programs(scene, tick):
     return list(itertools.islice(iter_movement_programs(scene, checkpoint_tick=tick, threshold=0.,
-                    deadline=time.monotonic()+3), 64))
+                    deadline=time.monotonic()+3, context_adapter=lambda c:c.update(interactionGate=None)), 64))

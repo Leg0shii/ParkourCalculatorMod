@@ -48,7 +48,7 @@ class OpenCeilingTests(unittest.TestCase):
         scene = dict(collisionScene=dict(solids=solids), ceilingHits=True,
                      blocks=[dict(id='c' + str(i), solidIndex=i) for i in range(len(solids))])
         state = dict(position=1., velocity=REST_CARRY, onGround=True, previousHorizontalCollision=False)
-        return [c for c in open_ceiling_choices(dict(scene=scene, state=state, maxInputs=20, threshold=0., **context))
+        return [c for c in open_ceiling_choices(dict(dict(scene=scene, state=state, maxInputs=20, threshold=0., interactionGate=None), **context))
                 if c['profile']['contactEvents']]
 
     def test_touching_coplanar_ceilings_are_one_choice_with_both_members(self):

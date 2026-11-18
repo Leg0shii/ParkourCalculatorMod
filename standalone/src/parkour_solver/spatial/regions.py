@@ -350,7 +350,7 @@ def annotate_normal_proposals(scene, graph, compiler, *, seconds):
         return flights[key]
     for source in graph.supports:
         state=dict(position=source.height,velocity=REST_CARRY,onGround=True,previousHorizontalCollision=False)
-        ctx=dict(mode='open',scene=scene,state=state,maxInputs=horizon,threshold=0.,checkBudget=remaining)
+        ctx=dict(mode='open',scene=scene,state=state,maxInputs=horizon,threshold=0.,checkBudget=remaining,interactionGate=None)
         air=dict(maxY=source.height,normalFinish=False,evidence='normal_proposal_only')
         for _,jumping,trace in approaches(ctx):
             air['maxY']=max(air['maxY'],max(trace['position']))

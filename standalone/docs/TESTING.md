@@ -2,8 +2,8 @@
 
 ## Current gate
 
-`tools/native_gate.py` (commands in the [runbook](RUNBOOK.md)) on one approach per prefix
-over `78ac35df`: **719 tests, no failures, errors or skips**, source unchanged
+`tools/native_gate.py` (commands in the [runbook](RUNBOOK.md)) on the mandatory generator gate
+over `4b16b0e6`: **720 tests, no failures, errors or skips**, source unchanged
 during the run, layout validation passed.
 A run of the switch-climb source (`55e3beef`) under a load average of 5.5 failed
 `test_prescribed_points_do_not_remove_remote_free_space` (its two 2 s arms
@@ -22,6 +22,7 @@ persistence without the removed 32/128 limits.
 
 | Source | Tests | Evidence |
 | --- | ---: | --- |
+| `4b16b0e6` + a missing generator gate is an error | 720 | not archived |
 | `78ac35df` + one reachability approach per prefix and start | 719 | not archived |
 | `d945ec52` + LP retry, native-status proofs, objective and counts | 718 | not archived |
 | `44e24348` + one travel recurrence and motion bound | 713 | not archived |

@@ -96,7 +96,7 @@ class DecisionWindowTests(unittest.TestCase):
         policy = DecisionPolicy(plan_windows([decision('launch',0,0,kinds=['jump']),
                                               decision('next',10,15,kinds=['landing'])]),scene)
         programs = list(itertools.islice(iter_movement_programs(scene,checkpoint_tick=4,threshold=0.,
-                            deadline=time.monotonic()+2),32))
+                            deadline=time.monotonic()+2,context_adapter=lambda c:c.update(interactionGate=None)),32))
         initial = next(p for p in programs if p['profile']['jump'][0])
         delayed = next(p for p in programs if not p['profile']['jump'][0] and any(p['profile']['jump']))
         self.assertTrue(policy(initial))

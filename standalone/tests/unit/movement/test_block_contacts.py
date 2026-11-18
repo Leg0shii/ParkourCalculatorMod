@@ -90,7 +90,7 @@ class ExposedTopTests(unittest.TestCase):
         from parkour_solver.movement.normal import normal_choices
         from parkour_solver.physics.vertical import REST_CARRY
         state = dict(position=1.2, velocity=REST_CARRY, onGround=True, previousHorizontalCollision=False)
-        return [c for c in normal_choices(dict(scene=scene, state=state, maxInputs=30, threshold=0., **context))
+        return [c for c in normal_choices(dict(dict(scene=scene, state=state, maxInputs=30, threshold=0., interactionGate=None), **context))
                 if c.get('terminalSupport') == 'floor']
 
     def test_landing_next_to_a_taller_neighbour_is_the_clipped_l(self):
@@ -105,6 +105,15 @@ class ExposedTopTests(unittest.TestCase):
             self.assertEqual((entry['owner'], len(entry['options'])), ('floor', 2))
             self.assertEqual(choice['profile']['positionConstraints'], [])
         self.assertTrue(all('regionChoices' not in c['profile'] for c in self.landings(scene)))
+
+    def test_generation_without_a_gate_key_is_an_error_and_none_opts_out(self):
+        from parkour_solver.movement.normal import normal_choices
+        from parkour_solver.physics.vertical import REST_CARRY
+        scene = box_scene([[0, 0, 0, 2, 1, 2], [2, 0, 1, 3, 3, 2]], [('floor', 1), ('pillar', 3)])
+        state = dict(position=1.2, velocity=REST_CARRY, onGround=True, previousHorizontalCollision=False)
+        with self.assertRaises(ValueError):
+            list(normal_choices(dict(scene=scene, state=state, maxInputs=30, threshold=0.)))
+        self.assertTrue(self.landings(scene))
 
     def test_a_departed_block_gets_no_landing_and_supports_still_filter(self):
         scene = box_scene([[0, 0, 0, 2, 1, 2], [2, 0, 1, 3, 3, 2]], [('floor', 1), ('pillar', 3)])
@@ -128,9 +137,7 @@ class ExposedTopTests(unittest.TestCase):
         program = empty_program(scene['initial'])
         def b1(gate=None):
             context = dict(mode='open', scene=scene, program=program, state=boundary_state(program), maxInputs=8,
-                           threshold=0., regionItems=True)
-            if gate is not None:
-                gate.context(context)
+                           threshold=0., regionItems=True, interactionGate=gate)
             choice, = [c for c in normal_choices(context) if c.get('terminalSupport') == 'b1']
             event, = choice['profile']['contactEvents']
             return event['regions'], choice['profile'].get('regionChoices', [])
@@ -159,7 +166,7 @@ class ExposedTopTests(unittest.TestCase):
         horizon = 24
         def context(program):
             return dict(mode='open', scene=scene, program=program, state=boundary_state(program), maxInputs=horizon,
-                        threshold=0.)
+                        threshold=0., interactionGate=None)
         with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:
             gate = InteractionGate(scene, compiler)
             landed = next(c for c in normal.normal_choices(context(root)) if c.get('terminalSupport') == 'b1')

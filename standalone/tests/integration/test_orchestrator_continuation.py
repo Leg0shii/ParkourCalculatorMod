@@ -166,11 +166,13 @@ class PersistentGenerationTests(unittest.TestCase):
         scene=flat_scene();cfg=dict(movement_settings(scene),maxPrefixes=1,types=['normal'])
         report={}
         def interrupted(p):raise TimeoutError('screen_deadline')
-        list(iter_movement_programs(scene,settings=cfg,checkpoint_tick=2,threshold=0.,persistent=True,report=report,screen=interrupted))
+        list(iter_movement_programs(scene,settings=cfg,checkpoint_tick=2,threshold=0.,persistent=True,report=report,screen=interrupted,
+                                    context_adapter=lambda c:c.update(interactionGate=None)))
         state=json.loads(json.dumps(report['continuation']))
         self.assertIn('choice',state['expansion'])
         resumed={}
-        values=list(iter_movement_programs(scene,settings=cfg,checkpoint_tick=2,threshold=0.,persistent=True,report=resumed,continuation=state))
+        values=list(iter_movement_programs(scene,settings=cfg,checkpoint_tick=2,threshold=0.,persistent=True,report=resumed,continuation=state,
+                                          context_adapter=lambda c:c.update(interactionGate=None)))
         self.assertTrue(values)
 
     def test_constraint_generation_cursor_survives_a_new_facing_guess(self):

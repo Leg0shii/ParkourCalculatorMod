@@ -71,7 +71,7 @@ class ProposalOwnershipTests(unittest.TestCase):
         from parkour_solver.search.comparison import comparison_label
         scene=flat_scene();arrival=flight(scene,0);n=arrival['profile']['airtime']
         hold=next(c for c in normal_choices(dict(scene=scene,state=boundary_state(arrival),
-            maxInputs=1,threshold=0.)) if c.get('terminalSupport')=='goal' and not c['profile']['jump'][0])
+            maxInputs=1,threshold=0.,interactionGate=None)) if c.get('terminalSupport')=='goal' and not c['profile']['jump'][0])
         full=append_choice(arrival,hold)
         full['profile']['positionConstraints'].append(dict(mode='X',t1=n+1,cmp='GE',rhs=10000.))
         full['profile']['constraintOwners'].append(n+1)

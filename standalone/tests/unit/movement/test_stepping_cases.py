@@ -25,7 +25,8 @@ def generated(data):
     scene = prepare_scene(data['request'])
     by_id = {b['id']: b for b in scene['blocks']}
     choices = list(generate_choices('ceiling' if data['case'] == 'grind' else 'stepping',
-        dict(scene=scene, source=by_id['start'], target=by_id['goal'], cases=[data['case']], maxInputs=40)))
+        dict(scene=scene, source=by_id['start'], target=by_id['goal'], cases=[data['case']], maxInputs=40,
+             interactionGate=None)))
     choice = choices[data['choice']]
     edge = dict(source='start', target='goal', profileKind=choice['profileKind'], profile=choice['profile'],
                 entryFace=choice.get('entryFace'), exitFace=None)
@@ -308,7 +309,8 @@ class ExposureTests(unittest.TestCase):
                      blocks=[dict(id='b' + str(i), sourceBlock='b' + str(i), solidIndex=i, top=b[4]) for i, b in enumerate(solids)])
         state = dict(position=1., velocity=REST_CARRY, onGround=True, previousHorizontalCollision=False)
         found = set()
-        for choice in open_stepping_choices(dict(scene=scene, state=state, maxInputs=10, threshold=0., cases=[case])):
+        for choice in open_stepping_choices(dict(scene=scene, state=state, maxInputs=10, threshold=0., cases=[case],
+                                                   interactionGate=None)):
             event, = choice['profile']['caseEvents']
             if event['boxes'] == [solids[1]]:
                 found.add(tuple(sorted((r['mode'], r['cmp']) for r in choice['profile']['positionConstraints']
@@ -360,7 +362,8 @@ class ExposureTests(unittest.TestCase):
         scene = prepare_scene(fixture('grind')['request'])
         program = empty_program(scene['initial'], threshold=0.)
         grinds = list(open_ceiling_choices(dict(mode='open', scene=scene, program=program, state=boundary_state(program),
-                                                maxInputs=20, threshold=0., feetAllowed=lambda block: False)))
+                                                maxInputs=20, threshold=0., feetAllowed=lambda block: False,
+                                                interactionGate=None)))
         self.assertEqual({e['case'] for c in grinds for e in c['profile']['caseEvents']}, {'grind'})
 
     def test_a_flush_seam_is_not_a_corner(self):

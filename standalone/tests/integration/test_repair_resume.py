@@ -64,7 +64,8 @@ class RepairResumeTests(RepairHarness, unittest.TestCase):
         parent=next(p for p in programs(scene,2) if p['profile']['jump'][0])
         parent['guideSeedYaw']=[12.,13.]
         parent['repairState']=dict(context=dict(scope=dict(solveIdentity='old-exact-problem')),pending=[dict(rows=[])])
-        generator=iter_movement_programs(scene,checkpoint_tick=4,threshold=0.,initial_programs=[parent])
+        generator=iter_movement_programs(scene,checkpoint_tick=4,threshold=0.,initial_programs=[parent],
+                                         context_adapter=lambda c:c.update(interactionGate=None))
         child=next(generator);generator.close()
         self.assertNotIn('repairState',child)
         self.assertEqual(child['guideSeedYaw'],[12.,13.])
@@ -235,7 +236,8 @@ class RepairResumeTests(RepairHarness, unittest.TestCase):
         retained=retain_unresolved(first,state)
         self.assertEqual(program_physics_key(first),program_physics_key(retained))
         self.assertEqual(_key(first),_key(retained))
-        generator=iter_movement_programs(scene,checkpoint_tick=4,threshold=0.,initial_programs=[retained],deadline=time.monotonic()+2)
+        generator=iter_movement_programs(scene,checkpoint_tick=4,threshold=0.,initial_programs=[retained],deadline=time.monotonic()+2,
+                                         context_adapter=lambda c:c.update(interactionGate=None))
         extended=next(generator);generator.close()
         self.assertEqual(extended['repairState'],state)
         self.assertEqual(extended['guideSeedYaw'],[1,2])
