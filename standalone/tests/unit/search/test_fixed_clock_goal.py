@@ -94,7 +94,8 @@ class FixedClockNumericalTests(unittest.TestCase):
         from parkour_solver.spatial.compat.corridors import corridor_for_points, landmarks
         from parkour_solver.validation.scoped_scene import CorridorAdapter
         from parkour_solver.search.work import SearchWork
-        from parkour_solver.search.engine import evaluate_program, _motion_bound
+        from parkour_solver.search.engine import evaluate_program
+        from parkour_solver.reachability.intervals import motion_bound
         from parkour_solver.movement.normal import event_choice
         from parkour_solver.movement.program import empty_program, append_choice
         request=flat_scene()
@@ -114,7 +115,7 @@ class FixedClockNumericalTests(unittest.TestCase):
             return original(checkpoint,candidate,gates)
         with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler, \
              patch.object(Checkpoint,'stage',stage):
-            result=evaluate_program(request,p,compiler,adapter,SearchWork(16),_motion_bound(request,compiler,2),
+            result=evaluate_program(request,p,compiler,adapter,SearchWork(16),motion_bound(request,compiler,2),
                 checkpoint=cp,seconds=5,candidate_seconds=.7,solver_calls=16,
                 python_executable=os.environ['PKC_IPOPT_PYTHON'])
             self.assertIsNotNone(result['best'],result['termination'])

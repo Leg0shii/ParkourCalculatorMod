@@ -67,7 +67,7 @@ class AnchorDFSTests(unittest.TestCase):
                 best['alternativeRows']=extra['alternativeRows']
             return dict(status='feasible',termination='done',best=best,work=dict(solverCalls=requests_per_evaluation),
                         fullSceneValidated=True,nodeFeasibility=dict(status='feasible',model=str(n)))
-        with patch('parkour_solver.search.engine._motion_bound',return_value={}), \
+        with patch('parkour_solver.search.engine.motion_bound',return_value={}), \
              patch('parkour_solver.search.dfs.iter_movement_programs',side_effect=generate), \
              patch('parkour_solver.search.engine.evaluate_program',side_effect=evaluate), \
              patch('parkour_solver.validation.witness.replay_witness',return_value=dict(passed=True)):
@@ -278,7 +278,7 @@ class AnchorDFSTests(unittest.TestCase):
             return dict(status='unknown' if rejected else 'feasible',termination='done',best=best,
                 nodeFeasibility=dict(status=('oracle_rejected' if oracle else 'suspended') if rejected else 'feasible',model=str(n)),
                 work=dict(solverCalls=1),fullSceneValidated=not rejected,repairState=repair)
-        with patch('parkour_solver.search.engine._motion_bound',return_value={}), \
+        with patch('parkour_solver.search.engine.motion_bound',return_value={}), \
              patch('parkour_solver.search.dfs.iter_movement_programs',side_effect=generate), \
              patch('parkour_solver.search.engine.evaluate_program',side_effect=evaluate):
             result=find_checkpoint_route(s,object(),anchor_search=dict(anchors=['goal']),seconds=3,max_solver_calls=20)

@@ -124,7 +124,7 @@ class MinimumRunDfsTests(unittest.TestCase):
                 plan=dict(ticks=n,walls=p['profile']['positionConstraints']),profiles=[p['profile']],allocation=[0],cost=0)
             return dict(status='feasible' if best else 'unknown',termination='done',best=best,
                 work=dict(solverCalls=1),repairState=dict(pending=[],unresolved=[],constraintGeneration=dict(exhausted=True)))
-        with patch('parkour_solver.search.engine._motion_bound',return_value={}), \
+        with patch('parkour_solver.search.engine.motion_bound',return_value={}), \
              patch('parkour_solver.search.dfs.iter_movement_programs',side_effect=generate), \
              patch('parkour_solver.search.dfs.generate_choices',side_effect=lambda *a,**kw:(v for v in ())), \
              patch('parkour_solver.search.engine.evaluate_program',side_effect=evaluate), \

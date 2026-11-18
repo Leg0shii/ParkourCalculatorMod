@@ -2,8 +2,8 @@
 
 ## Current gate
 
-`tools/native_gate.py` (commands in the [runbook](RUNBOOK.md)) on the no-return-at-the-feet
-change over `e7756dce`: **714 tests, no failures, errors or skips**, source unchanged
+`tools/native_gate.py` (commands in the [runbook](RUNBOOK.md)) on the shared travel recurrence
+over `44e24348`: **713 tests, no failures, errors or skips**, source unchanged
 during the run, layout validation passed.
 A run of the switch-climb source (`55e3beef`) under a load average of 5.5 failed
 `test_prescribed_points_do_not_remove_remote_free_space` (its two 2 s arms
@@ -22,6 +22,8 @@ persistence without the removed 32/128 limits.
 
 | Source | Tests | Evidence |
 | --- | ---: | --- |
+| `44e24348` + one travel recurrence and motion bound | 713 | not archived |
+| `c6d69997` + spatial goal probe removed | 712 | not archived |
 | `e7756dce` + no feet interaction with a departed block | 714 | not archived |
 | `7fa7adce` + generator reachability rejections in the solve report | 711 | not archived |
 | `1ea2bb1f` + pre-solve proofs complete alternatives | 710 | not archived |

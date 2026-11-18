@@ -2,6 +2,7 @@ import random
 import copy
 import unittest
 
+from parkour_solver.reachability.intervals import travel_radii
 from parkour_solver.reachability.screen import contradiction
 from parkour_solver.numerics import prepare, validate
 
@@ -73,6 +74,24 @@ class ScreenTests(unittest.TestCase):
                                        {'mode': axis, 't1': t, 'cmp': 'LE', 'rhs': value + 1e-5}])
             self.assertIsNone(contradiction(p))
 
+
+
+class TravelTests(unittest.TestCase):
+    def test_travel_radii_is_the_inlined_recurrence_bit_for_bit(self):
+        rng = random.Random(4417)
+        for _ in range(200):
+            n = rng.randint(0, 40)
+            speed = rng.uniform(0., .6)
+            magnitudes = [rng.uniform(0., .4) for _ in range(n)]
+            frictions = [rng.uniform(.5, .99) for _ in range(n)]
+            for margin in (0., 1e-8):
+                expected, total, carry = [0.], 0., speed
+                for m, f in zip(magnitudes, frictions):
+                    move = carry + m + margin if margin else carry + m
+                    total += move
+                    expected.append(total)
+                    carry = move * f
+                self.assertEqual(travel_radii(speed, magnitudes, frictions, margin=margin), expected)
 
 if __name__ == '__main__':
     unittest.main()

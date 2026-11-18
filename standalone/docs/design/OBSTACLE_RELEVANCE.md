@@ -50,6 +50,8 @@ R_(t+1) = R_t + D_t
 S_(t+1) = f_t * D_t
 ```
 
+`reachability.intervals.travel_radii` is the one implementation of this recurrence; the interval engine, the support graph, spatial proposal annotation, event ranking and the ladder-exit check all call it with their own start speed, input slice and padding. `reachability.intervals.motion_bound` is the one stored-speed cap (the largest `f*m/(1-f)` of a run-and-jump sample, or the original speed if larger).
+
 R_t bounds distance from the original horizontal position at state t. R_(t+1) also conservatively covers the horizontal movement phases during input t: an intermediate X-only displacement cannot exceed D_t. For a cheap axis test, enclose the disk in X0+/-R and Z0+/-R and compare that box against the expanded obstacle rectangle. If either axis is separated, the obstacle is irrelevant for that input. A disk-to-rectangle test can tighten this but is optional. Use outward numerical padding; tangency or an uncertain near-boundary comparison must retain the interaction.
 
 This follows triangle inequalities for the fixed continuous movement model. It carries all momentum and does not assume the player resets to rest on each jump/landing. It is an upper bound on possible travel, not an estimated objective or a global optimality bound. A loose envelope causes extra work, not loss of valid candidates.

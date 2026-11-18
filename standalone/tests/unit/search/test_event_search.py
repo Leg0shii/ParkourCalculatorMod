@@ -109,7 +109,7 @@ class EventSearchTests(unittest.TestCase):
             if chosen:
                 owner=next(d for d in dfs['discovery'].values() if d['parent'] and d['parent']['candidate']==chosen[-1]['candidate'])
                 published.append(owner['owner'])
-        with patch('parkour_solver.search.engine._motion_bound',return_value=dict(movementAfterSupportCheck=.5)), \
+        with patch('parkour_solver.search.engine.motion_bound',return_value=dict(movementAfterSupportCheck=.5)), \
              patch('parkour_solver.search.dfs.iter_movement_programs',side_effect=generate), \
              patch('parkour_solver.search.engine.evaluate_program',side_effect=evaluate):
             result=find_checkpoint_route(scene,object(),anchor_search=dict(anchors=['mid']),seconds=2,score_seconds=1,max_solver_calls=1,

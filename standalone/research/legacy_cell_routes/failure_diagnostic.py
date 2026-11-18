@@ -21,7 +21,7 @@ from parkour_solver.scene.route import prepare_route, schedule, supports
 import parkour_solver.search.ordered_route as search
 from parkour_solver.numerics import prepare, validate
 from parkour_solver.io.checkpoint_store import read_report
-from parkour_solver.search.engine import _motion_bound
+from parkour_solver.reachability.intervals import motion_bound
 from parkour_solver.spatial.checkpoints import checkpoint, retain_prefix
 from parkour_solver.search.compat.decision_windows import DecisionPolicy, plan_windows
 from research.legacy_cell_routes.generation_diagnostic import KeyAudit, QueueAudit, instrumented_generator, save
@@ -210,7 +210,7 @@ def run_warm(compiler, mode='baseline'):
                     solveSeconds=kwargs.get('seconds'),stopOnFeasible=kwargs.get('stop_on_feasible')))
                 return dict(result,status='feasible',feasible=True,candidate=seed) if fallback else result
             adapter = CorridorAdapter(scene,corridor,gates,decomposition=d)
-            motion = _motion_bound(scene,compiler,2)
+            motion = motion_bound(scene,compiler,2)
             work = SearchWork(4,deadline=time.monotonic()+3)
             with patch('parkour_solver.search.ordered_route.solve',traced):
                 result = solve_contact_branches(route,compiled['profiles'],audit.checks,compiler,seconds=3,
@@ -255,7 +255,7 @@ def verify_generation(path, compiler):
                 def candidate(self,*args,**kwargs):
                     return dict(accepted=True)
             adapter = NoCorridor()
-        motion = _motion_bound(scene,compiler,2)
+        motion = motion_bound(scene,compiler,2)
         work = SearchWork(48,deadline=time.monotonic()+20)
         trials,best = [],None
         for candidate in sorted(run['completed'],key=lambda c:c['ticks']):

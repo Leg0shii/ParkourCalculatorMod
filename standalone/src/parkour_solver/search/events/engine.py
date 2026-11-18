@@ -30,7 +30,7 @@ def discovery_settings(settings=None):
 
 
 def search_event_routes(request, compiler, *, task_goal=None, discovery=None, anchor_search=None, **options):
-    from parkour_solver.search.engine import _motion_bound
+    from parkour_solver.search.engine import motion_bound
     from parkour_solver.search.dfs import search_goals
     started=time.monotonic(); deadline=started+options['seconds']
     limits=discovery_settings(discovery)
@@ -86,7 +86,7 @@ def search_event_routes(request, compiler, *, task_goal=None, discovery=None, an
         state['best']=saved_best
     motion=state.get('motion')
     if motion is None:
-        motion=_motion_bound(scene,counted,max(.001,min(options['candidate_seconds'],deadline-time.monotonic())))
+        motion=motion_bound(scene,counted,max(.001,min(options['candidate_seconds'],deadline-time.monotonic())))
         state['motion']=motion
     adapter=EventGuideAdapter(state['domain'],state['graph'],motion=motion,compiler=counted,
                               candidate_seconds=options['candidate_seconds'])

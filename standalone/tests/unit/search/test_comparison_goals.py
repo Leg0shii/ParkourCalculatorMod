@@ -5,7 +5,8 @@ from pathlib import Path
 import time
 import unittest
 
-from parkour_solver.search.engine import _motion_bound, evaluate_program
+from parkour_solver.search.engine import evaluate_program
+from parkour_solver.reachability.intervals import motion_bound
 from parkour_solver.search.goals import goal_spec
 from parkour_solver.spatial.cells import decompose
 from parkour_solver.validation.scoped_scene import CorridorAdapter
@@ -69,7 +70,7 @@ class ComparisonGoalNumericalTests(unittest.TestCase):
         d,gates=decompose(scene),landmarks(scene)
         route=corridor_for_points(d,fixture['spatialPoints'],gates)
         adapter=CorridorAdapter(scene,route,gates,decomposition=d)
-        motion=_motion_bound(scene,self.compiler,2)
+        motion=motion_bound(scene,self.compiler,2)
         entries=[]
         for _,_,label,_,known in records:
             program=known['movementProgram'].copy()

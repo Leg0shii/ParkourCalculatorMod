@@ -549,8 +549,10 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 
 | Symbol | Line | Kind |
 | --- | ---: | --- |
-| `reachable_envelopes` | [6](../src/parkour_solver/reachability/intervals.py#L6) | function |
-| `interaction_reachability` | [119](../src/parkour_solver/reachability/intervals.py#L119) | function |
+| `travel_radii` | [6](../src/parkour_solver/reachability/intervals.py#L6) | function |
+| `motion_bound` | [15](../src/parkour_solver/reachability/intervals.py#L15) | function |
+| `reachable_envelopes` | [23](../src/parkour_solver/reachability/intervals.py#L23) | function |
+| `interaction_reachability` | [132](../src/parkour_solver/reachability/intervals.py#L132) | function |
 
 ## reachability/linear.py
 
@@ -712,15 +714,15 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 
 | Symbol | Line | Kind |
 | --- | ---: | --- |
-| `selected_edges` | [18](../src/parkour_solver/search/climbable.py#L18) | function |
-| `ordinary_paths` | [22](../src/parkour_solver/search/climbable.py#L22) | function |
-| `run_allocations` | [39](../src/parkour_solver/search/climbable.py#L39) | function |
-| `_prefix` | [57](../src/parkour_solver/search/climbable.py#L57) | function |
-| `entry_context` | [81](../src/parkour_solver/search/climbable.py#L81) | function |
-| `probe_entries` | [86](../src/parkour_solver/search/climbable.py#L86) | function |
-| `post_exit_reachable` | [96](../src/parkour_solver/search/climbable.py#L96) | function |
-| `first_hit_bounds` | [110](../src/parkour_solver/search/climbable.py#L110) | function |
-| `find_climbable_blocks` | [146](../src/parkour_solver/search/climbable.py#L146) | function |
+| `selected_edges` | [19](../src/parkour_solver/search/climbable.py#L19) | function |
+| `ordinary_paths` | [23](../src/parkour_solver/search/climbable.py#L23) | function |
+| `run_allocations` | [40](../src/parkour_solver/search/climbable.py#L40) | function |
+| `_prefix` | [58](../src/parkour_solver/search/climbable.py#L58) | function |
+| `entry_context` | [82](../src/parkour_solver/search/climbable.py#L82) | function |
+| `probe_entries` | [87](../src/parkour_solver/search/climbable.py#L87) | function |
+| `post_exit_reachable` | [97](../src/parkour_solver/search/climbable.py#L97) | function |
+| `first_hit_bounds` | [108](../src/parkour_solver/search/climbable.py#L108) | function |
+| `find_climbable_blocks` | [144](../src/parkour_solver/search/climbable.py#L144) | function |
 
 ## search/comparison.py
 
@@ -847,10 +849,9 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 | `ScopedWork.proposal` | [42](../src/parkour_solver/search/engine.py#L42) | function |
 | `ScopedWork.before_solve` | [46](../src/parkour_solver/search/engine.py#L46) | function |
 | `ScopedWork.accepted` | [51](../src/parkour_solver/search/engine.py#L51) | function |
-| `_motion_bound` | [55](../src/parkour_solver/search/engine.py#L55) | function |
-| `evaluate_program` | [63](../src/parkour_solver/search/engine.py#L63) | function |
-| `_key` | [202](../src/parkour_solver/search/engine.py#L202) | function |
-| `find_checkpoint_route` | [206](../src/parkour_solver/search/engine.py#L206) | function |
+| `evaluate_program` | [55](../src/parkour_solver/search/engine.py#L55) | function |
+| `_key` | [194](../src/parkour_solver/search/engine.py#L194) | function |
+| `find_checkpoint_route` | [198](../src/parkour_solver/search/engine.py#L198) | function |
 
 ## search/entry.py
 
@@ -864,21 +865,21 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 
 | Symbol | Line | Kind |
 | --- | ---: | --- |
-| `EventReference` | [16](../src/parkour_solver/search/events/adapter.py#L16) | class |
-| `EventReference.to_dict` | [21](../src/parkour_solver/search/events/adapter.py#L21) | function |
-| `EventGuideAdapter` | [25](../src/parkour_solver/search/events/adapter.py#L25) | class |
-| `EventGuideAdapter.__init__` | [28](../src/parkour_solver/search/events/adapter.py#L28) | function |
-| `EventGuideAdapter.initial_cursor` | [42](../src/parkour_solver/search/events/adapter.py#L42) | function |
-| `EventGuideAdapter.next_goals` | [45](../src/parkour_solver/search/events/adapter.py#L45) | function |
-| `EventGuideAdapter.for_goal` | [105](../src/parkour_solver/search/events/adapter.py#L105) | function |
-| `EventGuideAdapter.advance` | [123](../src/parkour_solver/search/events/adapter.py#L123) | function |
-| `EventGuideAdapter.context` | [126](../src/parkour_solver/search/events/adapter.py#L126) | function |
-| `EventGuideAdapter.program_allowed` | [133](../src/parkour_solver/search/events/adapter.py#L133) | function |
-| `EventGuideAdapter.scoped` | [136](../src/parkour_solver/search/events/adapter.py#L136) | function |
-| `EventGuideAdapter.bind_program` | [140](../src/parkour_solver/search/events/adapter.py#L140) | function |
-| `EventGuideAdapter.eligible` | [144](../src/parkour_solver/search/events/adapter.py#L144) | function |
-| `EventGuideAdapter.candidate` | [147](../src/parkour_solver/search/events/adapter.py#L147) | function |
-| `EventGuideAdapter.summary` | [179](../src/parkour_solver/search/events/adapter.py#L179) | function |
+| `EventReference` | [17](../src/parkour_solver/search/events/adapter.py#L17) | class |
+| `EventReference.to_dict` | [22](../src/parkour_solver/search/events/adapter.py#L22) | function |
+| `EventGuideAdapter` | [26](../src/parkour_solver/search/events/adapter.py#L26) | class |
+| `EventGuideAdapter.__init__` | [29](../src/parkour_solver/search/events/adapter.py#L29) | function |
+| `EventGuideAdapter.initial_cursor` | [43](../src/parkour_solver/search/events/adapter.py#L43) | function |
+| `EventGuideAdapter.next_goals` | [46](../src/parkour_solver/search/events/adapter.py#L46) | function |
+| `EventGuideAdapter.for_goal` | [104](../src/parkour_solver/search/events/adapter.py#L104) | function |
+| `EventGuideAdapter.advance` | [122](../src/parkour_solver/search/events/adapter.py#L122) | function |
+| `EventGuideAdapter.context` | [125](../src/parkour_solver/search/events/adapter.py#L125) | function |
+| `EventGuideAdapter.program_allowed` | [132](../src/parkour_solver/search/events/adapter.py#L132) | function |
+| `EventGuideAdapter.scoped` | [135](../src/parkour_solver/search/events/adapter.py#L135) | function |
+| `EventGuideAdapter.bind_program` | [139](../src/parkour_solver/search/events/adapter.py#L139) | function |
+| `EventGuideAdapter.eligible` | [143](../src/parkour_solver/search/events/adapter.py#L143) | function |
+| `EventGuideAdapter.candidate` | [146](../src/parkour_solver/search/events/adapter.py#L146) | function |
+| `EventGuideAdapter.summary` | [178](../src/parkour_solver/search/events/adapter.py#L178) | function |
 
 ## search/events/engine.py
 
@@ -940,9 +941,9 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 
 | Symbol | Line | Kind |
 | --- | ---: | --- |
-| `iter_movement_programs` | [15](../src/parkour_solver/search/movement.py#L15) | function |
-| `find_movement_blocks` | [212](../src/parkour_solver/search/movement.py#L212) | function |
-| `screen_program` | [281](../src/parkour_solver/search/movement.py#L281) | function |
+| `iter_movement_programs` | [14](../src/parkour_solver/search/movement.py#L14) | function |
+| `find_movement_blocks` | [211](../src/parkour_solver/search/movement.py#L211) | function |
+| `screen_program` | [277](../src/parkour_solver/search/movement.py#L277) | function |
 
 ## search/ordered_route.py
 
@@ -978,12 +979,12 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 
 | Symbol | Line | Kind |
 | --- | ---: | --- |
-| `minimum_distance` | [18](../src/parkour_solver/search/support_profiles.py#L18) | function |
-| `build_transition_graph` | [24](../src/parkour_solver/search/support_profiles.py#L24) | function |
-| `compile_block_path` | [208](../src/parkour_solver/search/support_profiles.py#L208) | function |
-| `search_block_paths` | [274](../src/parkour_solver/search/support_profiles.py#L274) | function |
-| `_find_blocks_normal` | [406](../src/parkour_solver/search/support_profiles.py#L406) | function |
-| `find_blocks` | [478](../src/parkour_solver/search/support_profiles.py#L478) | function |
+| `minimum_distance` | [19](../src/parkour_solver/search/support_profiles.py#L19) | function |
+| `build_transition_graph` | [25](../src/parkour_solver/search/support_profiles.py#L25) | function |
+| `compile_block_path` | [205](../src/parkour_solver/search/support_profiles.py#L205) | function |
+| `search_block_paths` | [271](../src/parkour_solver/search/support_profiles.py#L271) | function |
+| `_find_blocks_normal` | [403](../src/parkour_solver/search/support_profiles.py#L403) | function |
+| `find_blocks` | [475](../src/parkour_solver/search/support_profiles.py#L475) | function |
 
 ## search/virtual_goals.py
 

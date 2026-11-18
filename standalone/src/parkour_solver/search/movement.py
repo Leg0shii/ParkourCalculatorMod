@@ -2,7 +2,6 @@ from parkour_solver.movement.settings import movement_settings
 import copy
 import heapq
 import json
-import math
 import time
 
 from parkour_solver.schema import integer, number
@@ -226,11 +225,8 @@ def find_movement_blocks(request, compiler, *, seconds=60, candidate_seconds=2, 
     cfg = movement_settings(scene)
     started = time.monotonic()
     deadline = started + seconds
-    sample = compiler.compile(dict(scene, sharedMovement=True), dict(grounded=[True, True, False], jump=[False, True, False]), seconds)
-    speed = max(math.hypot(scene['initial']['velocity'][0], scene['initial']['velocity'][2]),
-                max(f * m / (1 - f) for m, f in zip(sample['magnitude'], sample['friction'])))
-    motion_bound = dict(storedSpeedNorm=speed + 1e-8, movementAfterSupportCheck=speed + max(sample['magnitude']) + 1e-8,
-                        groundMagnitude=sample['magnitude'][0])
+    from parkour_solver.reachability.intervals import motion_bound
+    motion = motion_bound(scene, compiler, seconds)
     owners = {b['solidIndex']: b['sourceBlock'] for b in scene['blocks']}
     report, attempts, best = {}, [], None
     from parkour_solver.reachability.service import InteractionGate
@@ -254,7 +250,7 @@ def find_movement_blocks(request, compiler, *, seconds=60, candidate_seconds=2, 
             retries=retries, improve=improve,
             rank_equal_cost=True, optimize_goal=True, python_executable=python_executable,
             cancel_event=cancel_event, geometry=scene['collisionScene'],
-            motion_bound=motion_bound,
+            motion_bound=motion,
             solid_blocks=[owners[i] for i in range(len(owners))], max_wall_hits=scene['maxWallHits'],
             max_wall_candidates=scene['maxWallHitCandidates'], candidate_filter=candidate_filter, work=work)
         attempt = dict(ticks=program['profile']['airtime'], status=result['status'], termination=result['termination'],

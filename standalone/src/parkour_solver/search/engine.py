@@ -18,7 +18,7 @@ from parkour_solver.bridge.counting import CountingCompiler; from parkour_solver
 from parkour_solver.spatial.compat.corridors import corridor_for_points, landmarks
 from parkour_solver.search.goals import goal_spec, landing_satisfied
 from parkour_solver.search.identity import solve_scope, solve_identity, validation_prefix
-from parkour_solver.reachability.intervals import reachable_envelopes
+from parkour_solver.reachability.intervals import motion_bound, reachable_envelopes
 from parkour_solver.constraints.variants import ConstraintVariants
 
 
@@ -50,14 +50,6 @@ class ScopedWork:
 
     def accepted(self, best):
         self.local.accepted(best)
-
-
-def _motion_bound(scene, compiler, seconds):
-    sample = compiler.compile(dict(scene, sharedMovement=True), dict(grounded=[True, True, False], jump=[False, True, False]), seconds)
-    speed = max(math.hypot(scene['initial']['velocity'][0], scene['initial']['velocity'][2]),
-                max(f*m/(1-f) for m, f in zip(sample['magnitude'], sample['friction'])))
-    return dict(storedSpeedNorm=speed+1e-8, movementAfterSupportCheck=speed+max(sample['magnitude'])+1e-8,
-                groundMagnitude=sample['magnitude'][0])
 
 
 def evaluate_program(scene, program, compiler, adapter, work, motion_bound, *, checkpoint=None,
@@ -316,7 +308,7 @@ def find_checkpoint_route(request, compiler, *, checkpoints=None, corridor=None,
         adapter = CorridorAdapter(scene, corridor, gates, decomposition=d)
     try:
         work.check()
-        motion = _motion_bound(scene, counted, max(.001,min(score_seconds,deadline-time.monotonic())))
+        motion = motion_bound(scene, counted, max(.001,min(score_seconds,deadline-time.monotonic())))
     except TimeoutError:
         return unfinished('deadline')
     from parkour_solver.search.dfs import search_goals

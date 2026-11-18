@@ -3,6 +3,23 @@ import math
 from parkour_solver.physics.vertical import clamp
 
 
+def travel_radii(speed, magnitudes, frictions, margin=0.):
+    radii = [0.]
+    for magnitude, friction in zip(magnitudes, frictions):
+        move = speed+magnitude+margin
+        radii.append(radii[-1]+move)
+        speed = friction*move
+    return radii
+
+
+def motion_bound(scene, compiler, seconds):
+    sample = compiler.compile(dict(scene, sharedMovement=True), dict(grounded=[True, True, False], jump=[False, True, False]), seconds)
+    speed = max(math.hypot(scene['initial']['velocity'][0], scene['initial']['velocity'][2]),
+                max(f*m/(1-f) for m, f in zip(sample['magnitude'], sample['friction'])))
+    return dict(storedSpeedNorm=speed+1e-8, movementAfterSupportCheck=speed+max(sample['magnitude'])+1e-8,
+                groundMagnitude=sample['magnitude'][0])
+
+
 def reachable_envelopes(problem, y=None):
     bounds = {}
     for row in problem.get('walls', []):
@@ -96,11 +113,7 @@ def reachable_envelopes(problem, y=None):
     speed = math.hypot(*problem['velocity'])
     if 'initialIntervals' in problem:
         speed = math.hypot(*(max(abs(a), abs(b)) for a,b in zip(problem['initialIntervals'][2],problem['initialIntervals'][3])))
-    radii = [0.]
-    for magnitude, friction in zip(problem['magnitude'], problem['friction']):
-        move = speed+magnitude+1e-8
-        radii.append(radii[-1]+move)
-        speed = friction*move
+    radii = travel_radii(speed, problem['magnitude'], problem['friction'], margin=1e-8)
     if contradiction is None:
         for j in range(1,len(states)):
             for i in range(j):

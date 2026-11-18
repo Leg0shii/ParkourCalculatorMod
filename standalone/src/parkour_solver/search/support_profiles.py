@@ -13,6 +13,7 @@ from parkour_solver.scene.geometry import normalize_geometry
 from parkour_solver.scene.route import prepare_route
 from parkour_solver.search.ranking import candidate_rank
 from parkour_solver.scene.objectives import objective_spec
+from parkour_solver.reachability.intervals import travel_radii
 
 
 def minimum_distance(a, b):
@@ -144,11 +145,7 @@ def build_transition_graph(scene, compiler, *, seconds=5):
                            or f * m > (1 - f) * speed
                            for m, f in zip(flight['magnitude'], flight['friction'])):
                         raise ValueError('Flight coefficients exceed the movement bound')
-                    travel, carry = 0.0, speed
-                    for m, f in zip(flight['magnitude'][:-1], flight['friction'][:-1]):
-                        move = carry + m
-                        travel += move
-                        carry = move * f
+                    travel = travel_radii(speed, flight['magnitude'][:-1], flight['friction'][:-1])[-1]
                     radius = travel + movement_after_support_check
                     padding = 1e-8 * (1 + radius) + 1e-12 * (1 + coordinate_scale) * (n + 1)
                     number(radius + padding, 'horizontal reach bound')

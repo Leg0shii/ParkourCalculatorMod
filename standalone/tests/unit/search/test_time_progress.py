@@ -71,7 +71,7 @@ class ComparisonAuditTests(unittest.TestCase):
         entries=[dict(id='error',selection='resource_cap',
             program=dict(terminalSupport=scene['goalBlock'],profile=dict(grounded=[True],airtime=12)))]
         failed=dict(status='error',termination='worker_failed',best=None,attempts=[],contactAttempts=[])
-        with patch('parkour_solver.search.engine._motion_bound',return_value={}), \
+        with patch('parkour_solver.search.engine.motion_bound',return_value={}), \
                 patch('parkour_solver.search.engine.evaluate_program',return_value=failed):
             audit=run_full_audit(scene,source,object(),candidate_entries=entries)
         self.assertTrue(audit['allCandidatesProcessed'])

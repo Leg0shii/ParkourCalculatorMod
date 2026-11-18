@@ -12,7 +12,8 @@ import unittest
 
 from parkour_solver.scene.normalize import prepare_scene
 from parkour_solver.spatial.checkpoints import checkpoint, horizontal_segments, retain_prefix
-from parkour_solver.search.engine import ScopedWork, evaluate_program, _motion_bound
+from parkour_solver.search.engine import ScopedWork, evaluate_program
+from parkour_solver.reachability.intervals import motion_bound
 from parkour_solver.spatial.cells import decompose
 from parkour_solver.validation.scoped_scene import CorridorAdapter
 from parkour_solver.search.work import SearchWork
@@ -176,7 +177,7 @@ class CheckpointNumericalTests(unittest.TestCase):
         result = solve_contact_branches(compiled['route'], compiled['profiles'],
             floor_checks(scene, [scene['startBlock'],scene['goalBlock']], compiled['profiles']), self.compiler,
             seconds=3, candidate_seconds=.7, retries=0, improve=True, rank_equal_cost=True, optimize_goal=True, python_executable=os.environ['PKC_IPOPT_PYTHON'],
-            geometry=scene['collisionScene'], motion_bound=_motion_bound(scene,self.compiler,2),
+            geometry=scene['collisionScene'], motion_bound=motion_bound(scene,self.compiler,2),
             solid_blocks=[b['sourceBlock'] for b in scene['blocks']], work=work,
             candidate_filter=lambda p,c,v:adapter.candidate(p,c,v,partial=True))
         self.assertIsNotNone(result['best'])
@@ -194,7 +195,7 @@ class CheckpointNumericalTests(unittest.TestCase):
         cp = checkpoint(corridor, gates, dict(tick=probe['checkpoint']['tick'], segment=probe['checkpoint']['segment']))
         work = SearchWork(4, deadline=time.monotonic()+3)
         result = evaluate_program(scene, probe['program'], self.compiler, adapter, work,
-            _motion_bound(scene, self.compiler, 2), checkpoint=cp, seconds=2, candidate_seconds=.7,
+            motion_bound(scene, self.compiler, 2), checkpoint=cp, seconds=2, candidate_seconds=.7,
             solver_calls=4, python_executable=os.environ['PKC_IPOPT_PYTHON'])
         self.assertEqual(result['status'], 'feasible', result)
         self.assertGreaterEqual(result['best']['candidate']['objective'], probe['knownPrefixWitness']['candidate']['objective']-1e-7)
@@ -211,7 +212,7 @@ class CheckpointNumericalTests(unittest.TestCase):
         chosen = [next(p for p in options if p['profile']['jump'][0]),
                   next(p for p in options if not any(p['profile']['jump']) and p['profile']['grounded'][-1])]
         work = SearchWork(12, deadline=time.monotonic()+10)
-        motion = _motion_bound(scene, self.compiler, 2)
+        motion = motion_bound(scene, self.compiler, 2)
         scores = []
         for p in chosen:
             result = evaluate_program(scene, p, self.compiler, adapter, work, motion, checkpoint=cp,
@@ -254,7 +255,7 @@ class CheckpointNumericalTests(unittest.TestCase):
         d, gates = decompose(scene), landmarks(scene)
         r = corridor_for_points(d, [[.5,1,.5],[5.5,1,.5]], gates)
         adapter = CorridorAdapter(scene,r,gates,decomposition=d)
-        motion = _motion_bound(scene,self.compiler,2)
+        motion = motion_bound(scene,self.compiler,2)
         work = SearchWork(12,deadline=time.monotonic()+10)
         first_program = next(p for p in programs(scene,2) if p['profile']['airtime']==2 and p['profile']['jump'][0])
         first = evaluate_program(scene,first_program,self.compiler,adapter,work,motion,

@@ -60,7 +60,7 @@ class DepthFirstHarness(unittest.TestCase):
             initial_jump_inputs=[0,8]
             checkpoint_identity=dict(initialJumpInputs=[0,8])
             def __call__(self,p):return True
-        with patch('parkour_solver.search.engine._motion_bound',return_value={}), \
+        with patch('parkour_solver.search.engine.motion_bound',return_value={}), \
              patch('parkour_solver.search.dfs.iter_movement_programs',side_effect=generate), \
              patch('parkour_solver.search.dfs.generate_choices',side_effect=lambda *args,**kwargs:(v for v in ())), \
              patch('parkour_solver.search.engine.evaluate_program',side_effect=evaluate), \

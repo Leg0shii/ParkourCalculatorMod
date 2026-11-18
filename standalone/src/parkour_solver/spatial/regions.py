@@ -324,14 +324,13 @@ def annotate_normal_proposals(scene, graph, compiler, *, seconds):
     from parkour_solver.movement.generation import generate_choices
     from parkour_solver.movement.settings import movement_settings
     from parkour_solver.movement.normal import approaches, first_descent
+    from parkour_solver.reachability.intervals import motion_bound, travel_radii
     deadline=time.monotonic()+seconds
     def remaining():
         if time.monotonic()>=deadline:
             raise TimeoutError('spatial_proposal_deadline')
         return deadline-time.monotonic()
-    sample=compiler.compile(dict(scene,sharedMovement=True),dict(grounded=[True,True,False],jump=[False,True,False]),remaining())
-    speed=max(math.hypot(*scene['initial']['velocity'][::2]),
-              max(f*m/(1-f) for m,f in zip(sample['magnitude'],sample['friction'])))+1e-8
+    speed=motion_bound(scene,compiler,remaining())['storedSpeedNorm']
     horizon=movement_settings(scene)['maxInputs']
     bounds={s.key:[(b[0],b[3],b[2],b[5]) for b in s.cover] for s in graph.supports}
     flights={}
@@ -346,9 +345,7 @@ def annotate_normal_proposals(scene, graph, compiler, *, seconds):
         key=(tuple(grounded),tuple(jump))
         if key not in flights:
             flight=compiler.compile(dict(scene,sharedMovement=True),dict(grounded=grounded,jump=jump),remaining())
-            radius=0.;carry=speed
-            for magnitude,friction in zip(flight['magnitude'],flight['friction']):
-                move=carry+magnitude;radius+=move;carry=move*friction
+            radius=travel_radii(speed,flight['magnitude'],flight['friction'])[-1]
             flights[key]=radius+1e-7*(1+radius)
         return flights[key]
     for source in graph.supports:

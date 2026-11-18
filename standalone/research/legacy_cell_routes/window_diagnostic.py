@@ -12,7 +12,8 @@ from parkour_solver.scene.normalize import prepare_scene
 from parkour_solver.bridge.compiler import JavaCompiler
 from parkour_solver.movement.program import truncate_program
 from research.legacy_cell_routes.checkpoint_experiment import brief, replay_witness
-from parkour_solver.search.engine import _key, _motion_bound, evaluate_program, find_checkpoint_route
+from parkour_solver.search.engine import _key, evaluate_program, find_checkpoint_route
+from parkour_solver.reachability.intervals import motion_bound
 from parkour_solver.spatial.checkpoints import checkpoint, retain_prefix
 from parkour_solver.search.compat.decision_windows import DecisionPolicy, plan_windows, score_features
 from parkour_solver.spatial.cells import decompose
@@ -81,7 +82,7 @@ def main():
                 d,gates = decompose(scene),landmarks(scene)
                 corridor = corridor_for_points(d,fixture['spatialPoints'],gates)
                 adapter = CorridorAdapter(scene,corridor,gates,decomposition=d)
-                motion = _motion_bound(scene,compiler,2)
+                motion = motion_bound(scene,compiler,2)
                 full = copy.deepcopy(known['movementProgram'])
                 policy = DecisionPolicy(plan_windows(fixture['opportunities'],gap=fixture['settings']['cluster_gap'],
                                                      max_inputs=scene['movementSearch']['maxInputs']),scene)

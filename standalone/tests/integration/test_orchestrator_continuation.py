@@ -243,7 +243,7 @@ class OuterResumeTests(unittest.TestCase):
                 fullSceneValidated=True,repairState=dict(pending=[],unresolved=[],constraintGeneration=dict(exhausted=True)))
         class Compiler:pass
         options=dict(terminal_checkpoint=cp,spatial_points=[[.5,1.,.5],[5.5,1.,.5]],seconds=3,rescue_passes=0)
-        with patch('parkour_solver.search.engine._motion_bound',return_value={}), \
+        with patch('parkour_solver.search.engine.motion_bound',return_value={}), \
              patch('parkour_solver.search.dfs.iter_movement_programs',side_effect=generated), \
              patch('parkour_solver.search.dfs.generate_choices',side_effect=lambda *args,**kwargs:(v for v in ())), \
              patch('parkour_solver.search.engine.evaluate_program',side_effect=evaluate), \
@@ -265,7 +265,8 @@ class ScopedNumericalTests(unittest.TestCase):
         from parkour_solver.spatial.compat.corridors import corridor_for_points, landmarks
         from parkour_solver.validation.scoped_scene import CorridorAdapter
         from parkour_solver.search.work import SearchWork
-        from parkour_solver.search.engine import evaluate_program, _motion_bound
+        from parkour_solver.search.engine import evaluate_program
+        from parkour_solver.reachability.intervals import motion_bound
         from research.legacy_cell_routes.checkpoint_experiment import replay_witness
         scene=flat_scene()
         scene['initial']['velocity'][0]=.4
@@ -278,7 +279,7 @@ class ScopedNumericalTests(unittest.TestCase):
         corridor=corridor_for_points(d,[[.5,1.,.5],[1.5,1.,-1.],[4.,1.,-1.],[4.5,1.,.5]],g)
         adapter=CorridorAdapter(scene,corridor,g,decomposition=d)
         with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:
-            motion=_motion_bound(scene,compiler,3)
+            motion=motion_bound(scene,compiler,3)
             preliminary=evaluate_program(scene,program,compiler,adapter,SearchWork(12),motion,
                 seconds=8,candidate_seconds=1,solver_calls=12,python_executable=os.environ['PKC_IPOPT_PYTHON'],
                 scope=dict(purpose='preliminary',modeledBlocks=['start','goal']))

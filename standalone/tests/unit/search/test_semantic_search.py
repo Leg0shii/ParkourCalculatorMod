@@ -37,7 +37,7 @@ class SemanticStageTests(unittest.TestCase):
                 plan=dict(ticks=n,walls=[]),profiles=[p['profile']],allocation=[0],cost=0)
             work.deadline=0.
             return dict(status='feasible',termination='done',best=best,work=dict(solverCalls=1),fullSceneValidated=True)
-        with patch('parkour_solver.search.engine._motion_bound',return_value={}), \
+        with patch('parkour_solver.search.engine.motion_bound',return_value={}), \
              patch('parkour_solver.search.dfs.iter_movement_programs',side_effect=generate), \
              patch('parkour_solver.search.engine.evaluate_program',side_effect=evaluate):
             result=find_checkpoint_route(scene,object(),corridor=route,seconds=3,max_solver_calls=8)
@@ -87,7 +87,7 @@ class SemanticStageTests(unittest.TestCase):
                                 'Published a tried arrival without its child execution owner')
         def interrupt(window):
             raise TimeoutError('suspend_at_promotion')
-        with patch('parkour_solver.search.engine._motion_bound',return_value={}), \
+        with patch('parkour_solver.search.engine.motion_bound',return_value={}), \
              patch('parkour_solver.search.dfs.iter_movement_programs',side_effect=generate), \
              patch('parkour_solver.search.engine.evaluate_program',side_effect=evaluate):
             result=find_checkpoint_route(scene,object(),corridor=route,seconds=3,max_solver_calls=8,

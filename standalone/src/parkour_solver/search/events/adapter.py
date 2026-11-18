@@ -10,6 +10,7 @@ from parkour_solver.spatial.event_routes import initial_cursor, next_goals, adva
 from parkour_solver.spatial.guides import guide_for, outgoing_objective, task_reference
 from parkour_solver.spatial.regions import geometry_key
 from parkour_solver.spatial.cells import contains
+from parkour_solver.reachability.intervals import travel_radii
 
 
 @dataclass(frozen=True)
@@ -79,10 +80,8 @@ class EventGuideAdapter:
                                     flight=self.compiler.compile(dict(self.scene,sharedMovement=True),
                                         dict(grounded=[ctx['state']['onGround']]+[False]*(n-1),jump=[jumping]+[False]*(n-1)),
                                         self.candidate_seconds)
-                                    speed=self.motion['storedSpeedNorm']; total=0.
-                                    for magnitude,friction in zip(flight['magnitude'],flight['friction']):
-                                        move=speed+magnitude;total+=move;speed=move*friction
-                                    self.flight_cache[key]=total
+                                    self.flight_cache[key]=travel_radii(self.motion['storedSpeedNorm'],
+                                        flight['magnitude'],flight['friction'])[-1]
                                 except TimeoutError:
                                     pass
                             radius=self.flight_cache.get(key,radius)

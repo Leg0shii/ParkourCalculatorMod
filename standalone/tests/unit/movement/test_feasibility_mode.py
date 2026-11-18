@@ -6,7 +6,8 @@ import time
 import unittest
 
 from parkour_solver.spatial.checkpoints import Checkpoint
-from parkour_solver.search.engine import evaluate_program, _motion_bound
+from parkour_solver.search.engine import evaluate_program
+from parkour_solver.reachability.intervals import motion_bound
 from research.legacy_cell_routes.checkpoint_experiment import replay_witness
 from parkour_solver.spatial.cells import decompose
 from parkour_solver.validation.scoped_scene import CorridorAdapter
@@ -28,7 +29,7 @@ class FeasibilityModeTests(unittest.TestCase):
         original = copy.deepcopy(program)
         clock = Checkpoint(4,-1,(1.,0.),(.5,1.,.5),(5.5,1.,.5),())
         with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:
-            motion = _motion_bound(scene,compiler,2)
+            motion = motion_bound(scene,compiler,2)
             def evaluate(p, first):
                 return evaluate_program(scene,p,compiler,adapter,SearchWork(16,deadline=time.monotonic()+8),motion,
                     checkpoint=clock,seconds=6,candidate_seconds=1.,solver_calls=8,

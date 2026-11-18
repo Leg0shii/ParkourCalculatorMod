@@ -9,7 +9,8 @@ import time
 from parkour_solver.scene.normalize import prepare_scene
 from parkour_solver.bridge.compiler import JavaCompiler
 from research.legacy_cell_routes.checkpoint_experiment import replay_witness
-from parkour_solver.search.engine import _motion_bound, evaluate_program
+from parkour_solver.search.engine import evaluate_program
+from parkour_solver.reachability.intervals import motion_bound
 from parkour_solver.spatial.checkpoints import retain_unresolved
 from research.legacy_cell_routes.failure_diagnostic import read
 from research.legacy_cell_routes.generation_diagnostic import save
@@ -34,7 +35,7 @@ def main():
                 scene=prepare_scene(source['request'])
                 d,gates=decompose(scene),landmarks(scene)
                 adapter=CorridorAdapter(scene,corridor_for_points(d,source['spatialPoints'],gates),gates,decomposition=d)
-                motion=_motion_bound(scene,compiler,2)
+                motion=motion_bound(scene,compiler,2)
                 work=SearchWork(12,deadline=time.monotonic()+12)
                 program=copy.deepcopy(candidate['program'])
                 attempts=[]
