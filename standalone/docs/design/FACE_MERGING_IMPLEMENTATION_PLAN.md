@@ -328,8 +328,12 @@ one `ContactOption(surface, plane, members, boxes, regions)` per connected surfa
 uses the top, +1; a ceiling hit the bottom, -1). Only `members` contribute, every
 solid of the scene clips (coverage bounds do not), and the union is eroded by the
 clearance along its horizontal tangent axes (the union of the shrunk maximal
-rectangles), so the seam between touching members stays inside one region. Ceiling
-generators pass the offered blocks' solids and merge across them.
+rectangles), so the seam between touching members stays inside one region; a
+clipping neighbour's edge stays exact, because touching it is allowed. Ceiling
+generators pass the offered blocks' solids and merge across them. A landing passes
+its own block, so it stays one choice per block (one per disconnected piece of its
+top) and its region excludes positions a taller neighbour blocks. Unwanted-floor
+checks use clearance 0, one check per exact exposed rectangle.
 
 ### 2.5 Serialization, inspectability and acceptance
 

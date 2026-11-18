@@ -45,7 +45,7 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
     settling = None
     policy = dict(stopOnFeasible=stop_on_feasible, optimizeGoal=optimize_goal,
                   rankEqualCost=rank_equal_cost, oracleRejection=oracle_rejection)
-    current_context = repair_context(route, profiles, geometry, dict(scope=repair_scope, solvePolicy=policy, avoidancePolicy=11))
+    current_context = repair_context(route, profiles, geometry, dict(scope=repair_scope, solvePolicy=policy, avoidancePolicy=12))
     resuming = (isinstance(resume_state, dict) and resume_state.get('version') == 3
                 and compatible(resume_state.get('context'), current_context))
     exact_resume = resuming and resume_state['context'] == current_context

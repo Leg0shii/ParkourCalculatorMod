@@ -158,10 +158,12 @@ class EventGuideAdapter:
         solids={b['solidIndex'] for b in self.scene['blocks'] if b['id'] in goal.get('blocks',[goal['block']])}
         boxes={tuple(self.scene['collisionScene']['solids'][i]) for i in solids}
         profile=program['profile']
-        states={e['offset'] for e in profile.get('contactEvents',[]) if e['axis']=='Y' and
-                e.get('direction')==-1 and any(tuple(b) in boxes for b in e['boxes']) and self.request['afterTick']<=e['offset']<through}
-        states.update(e['input']+1 for e in profile.get('caseEvents',[]) if any(tuple(b) in boxes for b in e.get('boxes',())) and
-                      self.request['afterTick']<=e['input']<through)
+        # Landing contacts carry the goal block's exposed top as their own regions; only named cases need the item.
+        states={e['input']+1 for e in profile.get('caseEvents',[]) if any(tuple(b) in boxes for b in e.get('boxes',())) and
+                self.request['afterTick']<=e['input']<through}
+        if not states and any(e['axis']=='Y' and e.get('direction')==-1 and any(tuple(b) in boxes for b in e['boxes'])
+                              and self.request['afterTick']<=e['offset']<through for e in profile.get('contactEvents',[])):
+            return None
         return [[dict(leg=0,offset=t,mode=axis,cmp=cmp,rhs=value,name='event:required_contact_region')
                  for axis,a in (('X',0),('Z',2)) for cmp,value in (('GE',box[a]),('LE',box[a+3]))]
                 for t in sorted(states) for box in surface['cover']]

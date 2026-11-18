@@ -2,7 +2,7 @@ import copy
 
 from parkour_solver.physics.vertical import REST_CARRY, f32
 from parkour_solver.movement.vertical_profiles import trace_ladder_schedule
-from parkour_solver.movement.contact_combinations import contact_clearance, expanded_face
+from parkour_solver.movement.contact_combinations import bounding_region, contact_clearance, expanded_face, finite_rows, region_offset
 from parkour_solver.movement.units import profile_program
 from parkour_solver.scene.route import HALF_WIDTH, center_bounds
 
@@ -83,7 +83,9 @@ def landing_wall_options(box, landing):
 
 def entry_possible(profile, bounds):
     intervals = {'X': bounds[:2], 'Z': bounds[2:]}
-    for row in profile.get('positionConstraints', []):
+    regions = [row for e in profile.get('contactEvents', [])
+               for row in finite_rows('XYZ'.index(e['axis']), bounding_region(e['regions']), t1=region_offset(e))]
+    for row in profile.get('positionConstraints', []) + regions:
         if row['t1'] != 0:
             continue
         interval = intervals[row['mode']]

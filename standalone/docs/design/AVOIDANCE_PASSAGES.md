@@ -158,7 +158,7 @@ up to `FALLBACK_LIMIT` (2) others with the same ticks and an objective within
 if a later leg fails. The family state and held variants persist in the repair
 snapshot (version 3), so a resumed climb solves nothing twice.
 
-Constraint generation uses policy10/state6 and repair avoidancePolicy11 with assembly11. The DFS context
+Constraint generation uses policy11/state7 and repair avoidancePolicy12 with assembly12. The DFS context
 fingerprints the new policy. Old raw generator cursors reject; reproduce an old
 run with its original source and inputs. Source-era scene fields
 `maxContactBranches`, `maxPassageCandidates`, `maxBlockagesPerObstacle`,

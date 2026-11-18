@@ -55,8 +55,7 @@ def named_choice(context, kind, initial, event, *, jumping=False, constraints=()
 
 
 def normal_choices(context):
-    from parkour_solver.movement.cases import region_rows
-    from parkour_solver.movement.contact_combinations import contact_clearance, expanded_face
+    from parkour_solver.movement.contact_combinations import contact_event, region_choices, scene_contact_options
     for initial, jumping, trace in approaches(context):
         for block in context['scene']['blocks']:
             if context.get('checkBudget'):
@@ -70,13 +69,13 @@ def normal_choices(context):
             from parkour_solver.reachability.service import interaction_allowed
             if not interaction_allowed(context, box, t, jumping=jumping, phases=('Y',)):
                 continue
-            finite = [dict(leg=0, offset=t, axis='Y', direction=-1, plane=block['top'], boxes=[box], surface=None,
-                           regions=[expanded_face(box, 1, 1, contact_clearance(context['scene']))], role='landing')]
-            choice = event_choice(context, 'normal', initial, t + 1, jumping=jumping,
-                vertical=[dict(state=t + 1, direction=-1, plane=block['top'])], finite=finite,
-                constraints=region_rows(block, t, 'normal:landing'), support=block['id'], landing_phase='pre')
-            if choice:
-                yield choice
+            for option in scene_contact_options(context['scene'], 1, 1, members=[block['solidIndex']]):
+                event = contact_event(option, 'Y', -1, t, 'landing')
+                choice = event_choice(context, 'normal', initial, t + 1, jumping=jumping,
+                    vertical=[dict(state=t + 1, direction=-1, plane=block['top'])], finite=[event],
+                    support=block['id'], landing_phase='pre', region_choices=region_choices(context, event, block['id']))
+                if choice:
+                    yield choice
         if context.get('normalGap', False):
             choice = event_choice(context, 'normal', initial, context.get('normalGapInputs', 1), jumping=jumping)
             if choice:

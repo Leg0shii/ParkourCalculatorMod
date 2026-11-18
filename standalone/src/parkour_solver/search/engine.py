@@ -170,7 +170,7 @@ def evaluate_program(scene, program, compiler, adapter, work, motion_bound, *, c
         python_executable=python_executable, cancel_event=cancel_event, geometry=scene['collisionScene'],
         motion_bound=motion_bound, solid_blocks=owners, max_wall_hits=0,
         candidate_filter=candidate_filter, work=scoped, resume_state=program.get('repairState'),
-        repair_scope=dict(solveIdentity=identity, scope=scope, solvePolicy=policy, assemblyVersion=11),
+        repair_scope=dict(solveIdentity=identity, scope=scope, solvePolicy=policy, assemblyVersion=12),
         validation_scope=scope, initial_variants=variants, on_progress=on_progress, retry_unresolved=retry_unresolved)
     mark('physicalSearchAndValidation')
     diagnostics=[d for a in result.get('attempts',[]) for d in a.get('diagnostics',[])]

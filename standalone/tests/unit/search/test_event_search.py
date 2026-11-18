@@ -48,13 +48,14 @@ class EventSearchTests(unittest.TestCase):
         view=adapter.for_goal(request,cursor).bind_program(p)
         candidate=dict(positions=[[.5,.5],[.5,.5],[.5,.5]])
         self.assertFalse(view.candidate({},candidate,{})['accepted'])
-        rows=view.contact_regions(p,2)
-        self.assertTrue(rows)
-        self.assertTrue(all(r['offset']==1 for option in rows for r in option))
+        self.assertIsNone(view.contact_regions(p,2))
+        from parkour_solver.movement.contact_combinations import scene_contact_options
+        pieces=scene_contact_options(scene,1,1,members=[0])
+        self.assertEqual(len(pieces),2)
+        right_piece,=[r for option in pieces for r in option.regions if r[0]>3]
         candidate['positions'][1]=[4.,.5]
         self.assertTrue(view.candidate({},candidate,{})['accepted'])
-        self.assertTrue(any(all((candidate['positions'][1][0 if r['mode']=='X' else 1]-r['rhs'])*
-            (1 if r['cmp']=='GE' else -1)>=0 for r in option) for option in rows))
+        self.assertTrue(right_piece[0]<4<right_piece[2] and right_piece[1]<.5<right_piece[3])
     def test_same_support_setup_is_local_without_removing_its_physical_choices(self):
         scene=flat_scene();data=build_route_domain(scene,dict(kind='landing',block='goal')).to_dict()
         adapter=EventGuideAdapter(data,build_event_graph(data))

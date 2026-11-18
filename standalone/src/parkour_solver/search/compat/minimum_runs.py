@@ -55,9 +55,7 @@ def latest_jump(program, scene):
         end=max(row['t1'],row.get('t2') if row.get('t2') is not None else row['t1'])
         if end<=ground and owner<=ground:continue
         if not owner or owner<=ground:return None # Unclassified task row across the preparation.
-        if owner<=takeoff:
-            if row.get('name')!='normal:landing':return None
-            continue # Ordinary finite-support hold, already identified above.
+        if owner<=takeoff:return None
         if row['t1']<takeoff or row.get('t2') is not None and row['t2']<takeoff:return None
         normalized={k:v for k,v in row.items() if k!='name'}
         for k in ('t1','t2'):

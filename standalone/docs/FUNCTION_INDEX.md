@@ -86,9 +86,10 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 
 | Symbol | Line | Kind |
 | --- | ---: | --- |
-| `floor_checks` | [7](../src/parkour_solver/constraints/contacts.py#L7) | function |
-| `contact_conflicts` | [50](../src/parkour_solver/constraints/contacts.py#L50) | function |
-| `avoid_contact_rows` | [60](../src/parkour_solver/constraints/contacts.py#L60) | function |
+| `exposed_tops` | [8](../src/parkour_solver/constraints/contacts.py#L8) | function |
+| `floor_checks` | [17](../src/parkour_solver/constraints/contacts.py#L17) | function |
+| `contact_conflicts` | [62](../src/parkour_solver/constraints/contacts.py#L62) | function |
+| `avoid_contact_rows` | [73](../src/parkour_solver/constraints/contacts.py#L73) | function |
 
 ## constraints/encounters.py
 
@@ -148,12 +149,12 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 | `ConstraintVariants._screen` | [155](../src/parkour_solver/constraints/variants.py#L155) | function |
 | `ConstraintVariants.excluded` | [158](../src/parkour_solver/constraints/variants.py#L158) | function |
 | `ConstraintVariants.prepare_item` | [165](../src/parkour_solver/constraints/variants.py#L165) | function |
-| `ConstraintVariants.option` | [188](../src/parkour_solver/constraints/variants.py#L188) | function |
-| `ConstraintVariants.entailed` | [200](../src/parkour_solver/constraints/variants.py#L200) | function |
-| `ConstraintVariants.__iter__` | [203](../src/parkour_solver/constraints/variants.py#L203) | function |
-| `ConstraintVariants.__next__` | [206](../src/parkour_solver/constraints/variants.py#L206) | function |
-| `ConstraintVariants.choose_item` | [214](../src/parkour_solver/constraints/variants.py#L214) | function |
-| `ConstraintVariants._next_variant` | [242](../src/parkour_solver/constraints/variants.py#L242) | function |
+| `ConstraintVariants.option` | [187](../src/parkour_solver/constraints/variants.py#L187) | function |
+| `ConstraintVariants.entailed` | [199](../src/parkour_solver/constraints/variants.py#L199) | function |
+| `ConstraintVariants.__iter__` | [202](../src/parkour_solver/constraints/variants.py#L202) | function |
+| `ConstraintVariants.__next__` | [205](../src/parkour_solver/constraints/variants.py#L205) | function |
+| `ConstraintVariants.choose_item` | [213](../src/parkour_solver/constraints/variants.py#L213) | function |
+| `ConstraintVariants._next_variant` | [241](../src/parkour_solver/constraints/variants.py#L241) | function |
 
 ## io/capture.py
 
@@ -750,8 +751,8 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 | --- | ---: | --- |
 | `_shift` | [12](../src/parkour_solver/search/compat/minimum_runs.py#L12) | function |
 | `latest_jump` | [21](../src/parkour_solver/search/compat/minimum_runs.py#L21) | function |
-| `remember` | [79](../src/parkour_solver/search/compat/minimum_runs.py#L79) | function |
-| `exclusion` | [86](../src/parkour_solver/search/compat/minimum_runs.py#L86) | function |
+| `remember` | [77](../src/parkour_solver/search/compat/minimum_runs.py#L77) | function |
+| `exclusion` | [84](../src/parkour_solver/search/compat/minimum_runs.py#L84) | function |
 
 ## search/compat/semantic_adapter.py
 
@@ -867,8 +868,8 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 | `EventGuideAdapter.bind_program` | [140](../src/parkour_solver/search/events/adapter.py#L140) | function |
 | `EventGuideAdapter.eligible` | [144](../src/parkour_solver/search/events/adapter.py#L144) | function |
 | `EventGuideAdapter.contact_regions` | [147](../src/parkour_solver/search/events/adapter.py#L147) | function |
-| `EventGuideAdapter.candidate` | [169](../src/parkour_solver/search/events/adapter.py#L169) | function |
-| `EventGuideAdapter.summary` | [201](../src/parkour_solver/search/events/adapter.py#L201) | function |
+| `EventGuideAdapter.candidate` | [171](../src/parkour_solver/search/events/adapter.py#L171) | function |
+| `EventGuideAdapter.summary` | [203](../src/parkour_solver/search/events/adapter.py#L203) | function |
 
 ## search/events/engine.py
 

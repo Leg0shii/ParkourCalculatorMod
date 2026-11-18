@@ -12,8 +12,8 @@ from parkour_solver.search.identity import digest
 from parkour_solver.spatial.surfaces import scene_geometry
 
 
-GENERATION_POLICY = 10
-STATE_VERSION = 6
+GENERATION_POLICY = 11
+STATE_VERSION = 7
 
 
 class ConstraintVariants:
@@ -169,14 +169,13 @@ class ConstraintVariants:
             if 'contactCheck' in item:
                 self.check()
                 from parkour_solver.constraints.contacts import avoid_contact_rows
-                from parkour_solver.scene.route import center_bounds
                 check = item['contactCheck']
-                b, t = center_bounds(check['block']), check['offset']
-                contact = dict(regions=[dict(tick=t, bounds=[b[0], -float('inf'), b[2], b[1], float('inf'), b[3]], interior=True)])
+                r, t = check['region'], check['offset']
+                contact = dict(regions=[dict(tick=t, bounds=[r[0], -float('inf'), r[1], r[2], float('inf'), r[3]], interior=True)])
                 if interaction_reachability(envelopes, contact)['ruledOut']:
                     item['rows'] = [[]]
                 else:
-                    point = self.reference[t] if self.reference is not None else [(b[0]+b[1])/2, (b[2]+b[3])/2]
+                    point = self.reference[t] if self.reference is not None else [(r[0]+r[2])/2, (r[1]+r[3])/2]
                     item['rows'] = [[row] for row in avoid_contact_rows(dict(check, position=point), self.route['supportClearance'])
                                     if not interaction_reachability(envelopes, [row])['ruledOut']]
                 del item['contactCheck']

@@ -79,5 +79,59 @@ class FloorContactTests(unittest.TestCase):
         self.assertEqual(scene, original)
 
 
+
+def box_scene(solids, tops):
+    return dict(collisionScene=dict(solids=solids),
+                blocks=[dict(id=name, sourceBlock=name, solidIndex=i, top=top) for i, (name, top) in enumerate(tops)])
+
+
+class ExposedTopTests(unittest.TestCase):
+    def landings(self, scene, **context):
+        from parkour_solver.movement.normal import normal_choices
+        from parkour_solver.physics.vertical import REST_CARRY
+        state = dict(position=1.2, velocity=REST_CARRY, onGround=True, previousHorizontalCollision=False)
+        return [c for c in normal_choices(dict(scene=scene, state=state, maxInputs=30, threshold=0., **context))
+                if c.get('terminalSupport') == 'floor']
+
+    def test_landing_next_to_a_taller_neighbour_is_the_clipped_l(self):
+        scene = box_scene([[0, 0, 0, 2, 1, 2], [2, 0, 1, 3, 3, 2]], [('floor', 1), ('pillar', 3)])
+        walk = self.landings(scene, regionItems=True)
+        self.assertTrue(walk)
+        for choice in walk:
+            event, = choice['profile']['contactEvents']
+            self.assertEqual((event['boxes'], event['role']), ([[0, 0, 0, 2, 1, 2]], 'landing'))
+            self.assertEqual(len(event['regions']), 2)
+            entry, = choice['profile']['regionChoices']
+            self.assertEqual((entry['owner'], len(entry['options'])), ('floor', 2))
+            self.assertEqual(choice['profile']['positionConstraints'], [])
+        self.assertTrue(all('regionChoices' not in c['profile'] for c in self.landings(scene)))
+
+    def test_exact_height_slot_keeps_its_floor(self):
+        from parkour_solver.movement.contact_combinations import scene_contact_options
+        from parkour_solver.scene.geometry import BODY_HEIGHT
+        scene = box_scene([[0, 0, 0, 1, 1, 1], [0, 1 + BODY_HEIGHT, 0, 1, 3, 1]], [('floor', 1), ('roof', 3)])
+        option, = scene_contact_options(scene, 1, 1, members=[0])
+        self.assertEqual(len(option.regions), 1)
+
+    def test_floor_checks_follow_each_exposed_rectangle_of_a_clipped_top(self):
+        scene = box_scene([[0, 0, 0, 2, 1, 2], [2, 0, 1, 3, 3, 2]], [('floor', 1), ('pillar', 3)])
+        profile = dict(airtime=2, position=[1.5, 1.2, .9], velocity=[-.1, -.2, -.3], jump=[False, False], sneak=[False, False])
+        start = dict(id='start', top=5)
+        checks = [c for c in floor_checks(dict(scene, blocks=scene['blocks'] + [start]), ['start', 'start'], [profile])
+                  if c['block']['id'] == 'floor' and c['reason'] == 'earlier_floor']
+        self.assertEqual(len(checks), 2)
+        plan = dict(events=[dict(jump=0)])
+        inside = dict(positions=[[0, 0], [1, 1.5], [0, 0]])
+        notch = dict(positions=[[0, 0], [2.0, 1.5], [0, 0]])
+        self.assertEqual(len(contact_conflicts(checks, plan, inside)), 1)
+        self.assertEqual(contact_conflicts(checks, plan, notch), [])
+        conflict, = contact_conflicts(checks, plan, inside)
+        rows = avoid_contact_rows(conflict, 1e-6)
+        region = conflict['region']
+        self.assertEqual({(r['mode'], r['cmp'], r['rhs']) for r in rows},
+                         {('X', 'LE', region[0] - 1e-6), ('X', 'GE', region[2] + 1e-6),
+                          ('Z', 'LE', region[1] - 1e-6), ('Z', 'GE', region[3] + 1e-6)})
+
+
 if __name__ == '__main__':
     unittest.main()
