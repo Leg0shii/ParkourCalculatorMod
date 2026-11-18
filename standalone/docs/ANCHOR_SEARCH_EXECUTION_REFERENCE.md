@@ -2,7 +2,7 @@
 
 Avoidance follow-up: [geometry-driven phase covers](design/AVOIDANCE_PASSAGES.md)
 replace full-horizon permutations and local repair/passage caps, carrying tightened
-bounds into downstream generation. Constraint policy8/state3 and repair assembly10
+bounds into downstream generation. Constraint policy9/state4 and repair assembly10
 are current. The measured source-era tables below retain their original settings;
 [replacement evidence](../research/geometry-passages/README.md) records the new run.
 

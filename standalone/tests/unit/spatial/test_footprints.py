@@ -13,7 +13,7 @@ B7 = [729, 0, -1095, 730, 7, -1093]
 
 
 def sides(footprints, cluster, y):
-    return {s.bounds: s.owners for s in footprints.sides(cluster, footprints.active(cluster, y, y))}
+    return {s.bounds: tuple(sorted(set().union(*s.owners))) for s in footprints.sides(cluster, footprints.active(cluster, y, y))}
 
 
 def inside(box, x, z):
@@ -51,9 +51,9 @@ class FootprintTests(unittest.TestCase):
         high = {s.bounds: s for s in footprints.sides(cluster, (0,))}
         west_low = low[(('X', -1, expanded_box(B7)[0]),)]
         west_high = high[(('X', -1, expanded_box(B6)[0]),)]
-        self.assertTrue(nested(west_low, west_high))
+        self.assertTrue(nested(west_low.region, west_high.region))
         for side in low.values():
-            self.assertTrue(any(nested(side, other) for other in high.values()))
+            self.assertTrue(any(nested(side.region, other.region) for other in high.values()))
 
     def test_ring_encloses_one_bounded_pocket(self):
         ring = [(0, 0, 0, 3, 1, 1), (0, 0, 2, 3, 1, 3), (0, 0, 0, 1, 1, 3), (2, 0, 0, 3, 1, 3)]

@@ -13,15 +13,30 @@ from parkour_solver.scene.normalize import prepare_scene
 from tests.support.checkpoint_guidance import flat_scene
 
 
-def source(n=3, *, y=None, position=(-1., 0.), walls=(), box=(0., 0., -.2, 1., 3., .2),
+def source(n=3, *, y=None, position=(-1., 0.), walls=(), box=(0., 0., -.2, 1., 3., .2), boxes=None,
            profile=None, magnitude=1., friction=.9):
     y = y or [1.]*(n+1)
+    boxes = boxes or [box]
     model = dict(ticks=n, position=list(position), velocity=[0., 0.], magnitude=[magnitude]*n,
                  friction=[friction]*n, walls=list(walls), threshold=0.)
     profile = dict(position=y, **(profile or {}))
     return ConstraintVariants(dict(supportClearance=0.), profile,
-        dict(events=[dict(jump=0, runTicks=0)]), dict(solids=[list(box)]), reachable_envelopes(model, y),
-        dict(through=n, solidIndices=[0]))
+        dict(events=[dict(jump=0, runTicks=0)]), dict(solids=[list(b) for b in boxes]), reachable_envelopes(model, y),
+        dict(through=n, solidIndices=list(range(len(boxes)))))
+
+
+def clear(boxes, y, positions):
+    for t in range(len(positions)-1):
+        a = [positions[t][0], y[t], positions[t][1]]
+        for axis in (1, 0, 2):
+            b = list(a)
+            b[axis] = y[t+1] if axis == 1 else positions[t+1][axis//2]
+            for box in boxes:
+                if not any(all(f['direction']*(p['XYZ'.index(f['axis'])]-f['plane']) >= -1e-9 for p in (a, b))
+                           for f in faces(box)):
+                    return False
+            a = b
+    return True
 
 
 def satisfies(rows, positions):
@@ -38,7 +53,7 @@ class EncounterTests(unittest.TestCase):
         item = owner.items[-1]
         owner.prepare_item(item)
         self.assertEqual(item['begin'], 1)
-        self.assertEqual([(item['faces'][i]['axis'], item['faces'][i]['direction'])
+        self.assertEqual([(item['sides'][i]['axis'], item['sides'][i]['direction'])
                           for i in item['entryFaces']], [('Z', -1)])
         options = []
         cursor = {}
@@ -47,7 +62,7 @@ class EncounterTests(unittest.TestCase):
         self.assertTrue(options)
         for option in options:
             if 'passage' in option:
-                self.assertEqual(option['passage']['faces'][0], item['faces'][4])
+                self.assertEqual(option['passage']['faces'][0]['key'], [['Z', -1, faces(box)[4]['plane']]])
                 self.assertTrue(all(row['t1'] >= item['begin'] for row in option['rows']))
                 self.assertTrue(all(f['axis'] != 'Y' for f in option['passage']['faces']))
 
@@ -67,7 +82,7 @@ class EncounterTests(unittest.TestCase):
             role='landing', box=[-2., 0., -2., 0., 1., 0.])]), magnitude=2.)
         item = owner.items[-1]
         owner.prepare_item(item)
-        self.assertTrue({'X', 'Z'} <= {item['faces'][i]['axis'] for i in item['entryFaces']})
+        self.assertTrue({'X', 'Z'} <= {item['sides'][i]['axis'] for i in item['entryFaces']})
 
     def test_meaningful_vertical_windows_can_exceed_old_switch_counts(self):
         owner = source(6, y=[1., 5., 1., 5., 1., 5., 1.])
@@ -147,7 +162,7 @@ class EncounterTests(unittest.TestCase):
         screened = [e for e in state['screenExclusions'] if 'item' in e]
         self.assertTrue(screened)
         for entry in screened:
-            self.assertEqual(owner.items[entry['item']]['solidIndex'], 0)
+            self.assertEqual(owner.items[entry['item']]['clusterId'], 0)
             self.assertTrue(entry['optionRows'])
 
     def test_legacy_local_cap_fields_are_removed_from_normalized_policy(self):
@@ -168,26 +183,44 @@ class EncounterTests(unittest.TestCase):
             owner = source(2, y=y, box=box, position=initial, magnitude=2., friction=0.)
             variants = list(owner)
             self.assertTrue(variants)
-            covered = 0
-            for angles in itertools.product(range(0, 360, 45), repeat=2):
-                positions = [initial]
-                for angle in angles:
-                    positions.append([positions[-1][0]+2*math.cos(math.radians(angle)),
-                                      positions[-1][1]+2*math.sin(math.radians(angle))])
-                clear = True
-                for t in range(2):
-                    a = [positions[t][0], y[t], positions[t][1]]
-                    for axis in (1, 0, 2):
-                        b = list(a)
-                        b[axis] = y[t+1] if axis == 1 else positions[t+1][axis//2]
-                        if not any(all(f['direction']*(p['XYZ'.index(f['axis'])]-f['plane']) >= -1e-9
-                                           for p in (a, b)) for f in faces(box)):
-                            clear = False
-                        a = b
-                if clear:
-                    covered += 1
-                    self.assertTrue(any(satisfies(v['rows'], positions) for v in variants), (box, y, positions))
-            self.assertGreater(covered, 0)
+            self.assertGreater(self.assert_paths_covered(variants, [box], y, initial), 0)
+
+    def assert_paths_covered(self, variants, boxes, y, initial):
+        covered = 0
+        for angles in itertools.product(range(0, 360, 45), repeat=2):
+            positions = [initial]
+            for angle in angles:
+                positions.append([positions[-1][0]+2*math.cos(math.radians(angle)),
+                                  positions[-1][1]+2*math.sin(math.radians(angle))])
+            if clear(boxes, y, positions):
+                covered += 1
+                self.assertTrue(any(satisfies(v['rows'], positions) for v in variants), (boxes, y, positions))
+        return covered
+
+    def test_flush_boxes_are_one_cluster_whose_paths_are_covered(self):
+        # A tall box with a lower one flush on its east side: one obstacle whose
+        # sides change when the player rises above the lower box.
+        boxes = [(0., 0., -.2, 1., 3., .2), (1., 0., -.6, 2., 1.5, .2)]
+        for y in ([1.]*3, [1., 2.5, 1.], [1., 2.5, 2.5], [2.5, 1., 2.5]):
+            for initial in ([-1., 0.], [2.5, -1.5]):
+                owner = source(2, y=y, boxes=boxes, position=initial, magnitude=2., friction=0.)
+                self.assertEqual(sum('clusterId' in i for i in owner.items), 1)
+                variants = list(owner)
+                self.assertGreater(self.assert_paths_covered(variants, boxes, y, initial), 0)
+                for v in variants:
+                    for p in v['selectedPassages']:
+                        self.assertEqual((p['members'], p['blockId']), ([0, 1], 'solid:0+solid:1'))
+
+    def test_staying_west_while_rising_over_the_lower_box_is_one_side(self):
+        # South, then west of the low box, above it (west of the tall one only),
+        # and back down: the nested west sides are one side, not a revisit.
+        boxes = [(0., 0., 0., 1., 3., 1.), (-1., 0., 0., 0., 1.5, 1.)]
+        y = [1., 1., 1., 2.5, 1.]
+        positions = [[-.5, -1.], [-2., -1.], [-2., .5], [-2., .5], [-2., .5]]
+        self.assertTrue(clear(boxes, y, positions))
+        owner = source(4, y=y, boxes=boxes, position=positions[0], magnitude=2., friction=0.)
+        variants = list(owner)
+        self.assertTrue(any(satisfies(v['rows'], positions) for v in variants))
 
 
 if __name__ == '__main__':

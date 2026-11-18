@@ -9,10 +9,11 @@ from parkour_solver.reachability.service import interaction_context_key
 from parkour_solver.reachability.intervals import interaction_reachability
 from parkour_solver.reachability.screen import condition_envelopes
 from parkour_solver.search.identity import digest
+from parkour_solver.spatial.footprints import Footprints
 
 
-GENERATION_POLICY = 8
-STATE_VERSION = 3
+GENERATION_POLICY = 9
+STATE_VERSION = 4
 
 
 class ConstraintVariants:
@@ -56,7 +57,7 @@ class ConstraintVariants:
             routeGuards=route_guards.context if route_guards is not None else None,
             requiredAlternatives=required_alternatives))
         if state is not None and (state.get('version') != STATE_VERSION or state.get('context') != context):
-            raise ValueError('Incompatible constraint-generation continuation (policy8/state3)')
+            raise ValueError('Incompatible constraint-generation continuation (policy9/state4)')
         self.proof_context = context
         self.events = [dict(plan['events'][0], landing=self.through)]
         self.route_rows = []
@@ -73,10 +74,12 @@ class ConstraintVariants:
             items.append(dict(rows=required_alternatives, role='required_contact'))
         # Temporal order is a traversal preference. All items share the original
         # model; neither overlap nor scene order declares independent subproblems.
+        self.footprints = Footprints(geometry, scope['solidIndices'])
+        names = {i: owners[i] if owners is not None else 'solid:'+str(i) for i in scope['solidIndices']}
         for begin, end in landing_segments(profile, self.through):
-            items.extend(dict(solidIndex=i, box=geometry['solids'][i], begin=begin, end=end,
-                              owner=owners[i] if owners is not None else 'solid:'+str(i))
-                         for i in scope['solidIndices'])
+            items.extend(dict(clusterId=c.id, members=list(c.members), names=[names[i] for i in c.members],
+                              begin=begin, end=end, owner='+'.join(sorted({names[i] for i in c.members})))
+                         for c in self.footprints.clusters)
         items += [dict(contactCheck=check) for check in checks
                   if check['block']['solidIndex'] in scope['solidIndices'] and check['offset'] <= self.through]
         self.state = copy.deepcopy(state) if state is not None else dict(
@@ -174,7 +177,7 @@ class ConstraintVariants:
                     item['rows'] = [[row] for row in avoid_contact_rows(dict(check, position=point), self.route['supportClearance'])
                                     if not interaction_reachability(envelopes, [row])['ruledOut']]
                 del item['contactCheck']
-            if 'solidIndex' in item:
+            if 'clusterId' in item:
                 prepare_encounter(self, item, envelopes)
         finally:
             self.state['timings']['preparationSeconds'] += time.monotonic()-started
@@ -221,7 +224,7 @@ class ConstraintVariants:
                     self.preparation_cache.pop(next(iter(self.preparation_cache)))
                 self.preparation_cache[key] = item
             item = self.preparation_cache[key]
-            if 'solidIndex' not in item:
+            if 'clusterId' not in item:
                 rank = (-1, index, 0)
             else:
                 phases = item['phases']

@@ -123,6 +123,8 @@ control work; inclusion here is not authorization to implement a historical plan
 | [research/linkcraft11-opening/audit/CORRIDOR_FAILURES.md](../research/linkcraft11-opening/audit/CORRIDOR_FAILURES.md) | Frozen source-era evidence; use research guide for reproduction: Exact Real11 corridor failures |
 | [research/linkcraft11-opening/audit/FINAL_REPAIRS.md](../research/linkcraft11-opening/audit/FINAL_REPAIRS.md) | Frozen source-era evidence; use research guide for reproduction: Winning terminal evaluation: every recorded repair attempt |
 | [research/obstacle-avoidance/README.md](../research/obstacle-avoidance/README.md) | Frozen source-era evidence; use research guide for reproduction: Finite obstacle avoidance results |
+| [research/obstacle-clusters/2026-11-17/cold-report.md](../research/obstacle-clusters/2026-11-17/cold-report.md) | Frozen source-era evidence; use research guide for reproduction: Solve report |
+| [research/obstacle-clusters/README.md](../research/obstacle-clusters/README.md) | Frozen source-era evidence; use research guide for reproduction: Avoidance on obstacle clusters |
 | [research/one-tick-contacts/README.md](../research/one-tick-contacts/README.md) | Frozen source-era evidence; use research guide for reproduction: One-input contact checkpoints |
 | [research/orchestrator-fixes/LEGACY_RESULTS.md](../research/orchestrator-fixes/LEGACY_RESULTS.md) | Frozen source-era evidence; use research guide for reproduction: Orchestrator coverage and continuation-state fixes |
 | [research/orchestrator-fixes/README.md](../research/orchestrator-fixes/README.md) | Frozen source-era evidence; use research guide for reproduction: Orchestrator fixes and regression results |

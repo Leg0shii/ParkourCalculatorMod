@@ -14,7 +14,7 @@ from tools.profiling.enumeration import EnumerationProfile, instrumented_option
 
 
 def measure(case, checks, observed):
-    if case.get('version') != 2:
+    if case.get('version') != 3:
         raise ValueError('Incompatible prepared option capture; reproduce historical captures in their source checkout')
     owner = ConstraintVariants.__new__(ConstraintVariants)
     owner.__dict__.update(copy.deepcopy(case['attributes']))

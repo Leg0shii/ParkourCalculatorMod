@@ -198,7 +198,13 @@ class BookkeepingProfileTests(unittest.TestCase):
 
     def test_route_trace_links_alternatives_solves_and_inherited_rows(self):
         import json
-        from tools.profiling.trace import route_trace
+        from tools.profiling.trace import route_trace, side as label
+        def side(axis, direction, plane):
+            bound = dict(axis=axis, direction=direction, plane=plane, owners=[0])
+            return dict(key=[[axis, direction, plane]], bounds=[bound], owners=[0], region=[None]*4,
+                        axis=axis, direction=direction, plane=plane)
+        corner = dict(side('X', 1, 1.), axis='XZ', bounds=[side('X', 1, 1.)['bounds'][0], side('Z', 1, 2.)['bounds'][0]])
+        self.assertEqual(label(corner), 'X+Z+')
         landing = dict(mode='X', t1=3, cmp='GE', rhs=1., name='normal:landing')
         avoid = dict(mode='Z', t1=2, cmp='LE', rhs=-2., name='avoidance')
         def record(name, key, rows, repair=None, witness=None):
@@ -210,11 +216,12 @@ class BookkeepingProfileTests(unittest.TestCase):
         branch = json.dumps([[[0, 2, 'Z', 'LE', -2.]], [], []])
         repair = dict(completed=[dict(branch=branch, status='feasible', validationStatus='passed', problemHashes=['h1'])],
                       attemptLog=[dict(status='feasible', problemHash='h1')],
-                      constraintGeneration=dict(items=[dict(owner='b6', box=[0]*6, begin=0, end=2), dict(contactCheck={})],
-                          metrics=dict(excludedFaces=2), encounterLog=[dict(solidIndex=0, owner='b6', segment=[0, 2], possiblePhases=[[1, 'X']],
-                              faces=[dict(axis='X', direction=-1, plane=0.), dict(axis='X', direction=1, plane=1.)], coveredPhases=[[3, [0]]],
-                              excludedFaces=[[4, 1]], verticalClear=[], uncertain=[])],
-                          droppedOptions=[dict(solidIndex=0, segment=[0, 2], reason='dominated', rows=[avoid])],
+                      constraintGeneration=dict(items=[dict(owner='b6', clusterId=0, members=[0], names=['b6'], begin=0, end=2),
+                                                       dict(contactCheck={})],
+                          metrics=dict(excludedFaces=2), encounterLog=[dict(clusterId=0, members=[0], names=['b6'], owner='b6',
+                              segment=[0, 2], possiblePhases=[[1, 'X']], sides=[side('X', -1, 0.), side('X', 1, 1.)],
+                              coveredPhases=[[3, [0]]], excludedFaces=[[4, 1]], verticalClear=[], uncertain=[])],
+                          droppedOptions=[dict(clusterId=0, members=[0], segment=[0, 2], reason='dominated', rows=[avoid])],
                           screenExclusions=[dict(rowsHash='r', proof=dict(ruledOut=True, state=2, axis=1,
                               reason='interval_reach_contradiction'), item=0, optionRows=[avoid], passage=None)]))
         parent = record('p', 'k0', [landing], repair, dict(problemHash='h1', candidate=dict(objective=-2.), plan=dict(ticks=4, walls=[

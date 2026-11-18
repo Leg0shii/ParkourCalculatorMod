@@ -33,13 +33,15 @@ production code.
 | `641c68b5` | anchor search under global run budgets | 67 | -1093.823129063534 | 49 / 47 | 21 | 41/41 | [run budgets](../research/anchor-run-budget/README.md) |
 | `e2b5e02c` | screen passage prefixes before extension, ceiling moves on | 67 | -1093.823129063534 | 59 / 57 | 21 | 50/50 | [early passage screen](../research/early-passage-screen/README.md) |
 | `e266785c` | geometry-driven avoidance passages | 64 | -1093.2381026602418 | 53 / 49 | 37 | 47/47 | [geometry passages](../research/geometry-passages/README.md) |
+| `b2977e0f` + step 2 | avoidance on obstacle clusters | 64 | -1093.2381026602416 | 25 / 21 | 37 | 20/20 | [obstacle clusters](../research/obstacle-clusters/README.md) |
 
-The geometry-passages run finds T64 at 14.1 s and stops at 25.1 s with
+The obstacle-clusters run finds T64 at 6.6 s and stops at 12.0 s with
 `numerical_unknown`: the DFS ran out of runnable work while the B7 frame stayed
 suspended on one avoidance alternative that the linear control relaxation
-blocked before any IPOPT solve. Five IPOPT solves ended
+blocked before any IPOPT solve. Four IPOPT solves ended
 `Infeasible_Problem_Detected`; a local IPOPT infeasibility is not a certificate,
-so the run claims no exhaustive coverage.
+so the run claims no exhaustive coverage. Each B7 frame now solves 7 alternatives
+instead of 21.
 
 ## Measured hotspots
 

@@ -53,11 +53,10 @@ def stop_report(state, requests):
 
 def encounter_trace(entry):
     def face(i):
-        f = entry['faces'][i]
-        return f['axis']+('+' if f['direction'] > 0 else '-')
+        return side(entry['sides'][i])
     def phase(at):
         return [at//3,PHASES[at%3]]
-    return dict(owner=entry['owner'],solidIndex=entry['solidIndex'],segment=entry['segment'],
+    return dict(owner=entry['owner'],members=entry['members'],segment=entry['segment'],
                 possiblePhases=entry['possiblePhases'],
                 coveredPhases=[dict(phase=phase(at),certainFaces=[face(i) for i in certain])
                                for at,certain in entry['coveredPhases']],
@@ -67,7 +66,7 @@ def encounter_trace(entry):
 
 
 def item_label(item):
-    if 'box' in item:
+    if 'clusterId' in item:
         return item.get('owner'), [item['begin'],item['end']]
     if 'contactCheck' in item:
         return 'contact check', [item['contactCheck']['offset']]*2
@@ -85,17 +84,18 @@ def repair_trace(repair):
                 for a in repair.get('attemptLog',[])}
     items = generation.get('items',[])
     return dict(
-        encounters=[dict(owner=i['owner'],box=i['box'],begin=i['begin'],end=i['end'])
-                    for i in items if 'box' in i],
+        encounters=[dict(owner=i['owner'],members=i['members'],begin=i['begin'],end=i['end'])
+                    for i in items if 'clusterId' in i],
         contactChecks=sum('contactCheck' in i for i in items),
         landingRegions=[dict(ticks=sorted({r.get('t1',r.get('offset')) for option in i['rows'] for r in option}),
                              options=i['rows']) for i in items if i.get('role') == 'required_contact'],
         generatorMetrics=generation.get('metrics',{}),
         preparedEncounters=[encounter_trace(e) for e in generation.get('encounterLog',[])],
-        faceOwners=sorted({(e['owner'],f['axis'],'GE' if f['direction'] > 0 else 'LE',f['plane'])
+        faceOwners=sorted({(e['owner'],name,b['axis'],'GE' if b['direction'] > 0 else 'LE',b['plane'])
                            for e in generation.get('encounterLog',[]) if e['possiblePhases']
-                           for f in e['faces'] if f['axis'] != 'Y'}),
-        droppedOptions=[dict(d,owner=next((i['owner'] for i in items if i.get('solidIndex') == d['solidIndex']),None))
+                           for s in e['sides'] for b in s['bounds']
+                           for name in {dict(zip(e['members'],e['names']))[o] for o in b['owners']}}),
+        droppedOptions=[dict(d,owner=next((i['owner'] for i in items if i.get('clusterId') == d['clusterId']),None))
                         for d in generation.get('droppedOptions',[])],
         screenRejections=[dict(rowsHash=e['rowsHash'],**e['proof'],
                                **(dict(zip(('encounter','segment'),item_label(items[e['item']])),
@@ -129,7 +129,7 @@ def movement(profile, names):
 def side(face):
     if face['axis'] == 'Y':
         return 'over' if face['direction'] > 0 else 'under'
-    return face['axis']+('+' if face['direction'] > 0 else '-')
+    return ''.join(b['axis']+('+' if b['direction'] > 0 else '-') for b in face.get('bounds') or [face])
 
 
 def route_trace(state, scene=None):
@@ -292,9 +292,9 @@ def passages_text(passages):
 
 
 def row_owners(repair, goal, passages=None):
-    used = {(p['block'],side) for p in passages or () for side in p['sides']}
-    faces = [(o.upper(),a,c,plane) for o,a,c,plane in repair['faceOwners']
-             if passages is None or (o,a+('+' if c == 'GE' else '-')) in used]
+    used = {(p['block'],side[i:i+2]) for p in passages or () for side in p['sides'] for i in range(0,len(side),2)}
+    faces = [(name.upper(),a,c,plane) for cluster,name,a,c,plane in repair['faceOwners']
+             if passages is None or (cluster,a+('+' if c == 'GE' else '-')) in used]
     landing = [(f'{goal} landing',r['mode'],r['cmp'],r['rhs']) for region in repair['landingRegions']
                for option in region['options'] for r in option]
     return faces+landing
@@ -380,7 +380,8 @@ def render(report, requests, routes, stop):
               '- **Rows** read `obstacle: axis ≥/≤ value at ticks`, on the player\'s centre at the start of each tick, so a '
               'block edge appears shifted by the 0.3 half-width (B7\'s +X face at 730 is `X ≥ 730.3`). '
               'The prefix names the obstacle whose side the row keeps; a plane shared by two boxes names both.',
-              '- **Obstacle check**: every solid is paired with every landing segment (the ticks from one landing or jump '
+              '- **Obstacle**: a group of touching blocks the player cannot pass between, named like `B6+B7`. '
+              '**Obstacle check**: every obstacle is paired with every landing segment (the ticks from one landing or jump '
               'to the next). A ground tick on a block is its own segment.',
               '- **Phase**: one sweep of one tick. Minecraft moves the player along Y, then X, then Z each tick and checks '
               'collisions per sweep, so `56X` is the X sweep of input 56.',
@@ -388,8 +389,9 @@ def render(report, requests, routes, stop):
               'where it can, so a side must be chosen. **Faces ruled out**: sides the player cannot be on at that phase. '
               '**Vertical clear**: phases where the player is certainly above or below it. **Uncertain**: phases decided '
               'by a named step or grind contact the model cannot settle, left to replay.',
-              '- **Sides** (`X+`, `Z-`, `over`, `under`) are sides of each solid\'s own box that keep the player clear of '
-              'it. They ignore neighbouring blocks, so a side covered by an adjacent block can still appear.',
+              '- **Sides** (`X+`, `Z-`, a corner such as `X+Z+`, `over`, `under`) are the largest free rectangles around '
+              'an obstacle at the player\'s height. A side never runs through a neighbouring block, and a face two flush '
+              'blocks share is one side. Sides change when the player rises above or drops below one of the blocks.',
               '- **Decision**: one thing to choose, either the sides to keep around one obstacle or which landing-cover '
               'rectangle of the goal block to land in. **Option**: one choice for one decision. **Alternative**: one '
               'surviving option per decision, combined; each is solved, and each feasible one becomes a route.',
@@ -448,7 +450,7 @@ def render(report, requests, routes, stop):
                 lines += [f'Options dropped without solving: {len(dropped)} ('+
                           ', '.join(f'{n} {k}' for k,n in Counter(d['reason'] for d in dropped).most_common())+').','']
                 lines += table(['#','Decision','Reason','Option'],
-                    [[i,f'{(d["owner"] or "solid "+str(d["solidIndex"])).upper()} sides t{d["segment"][0]}-{d["segment"][1]}',
+                    [[i,f'{(d["owner"] or "cluster "+str(d["clusterId"])).upper()} sides t{d["segment"][0]}-{d["segment"][1]}',
                       d['reason'],rows_text(d['rows'],row_owners(repair,goal))]
                      for i,d in enumerate(dropped,1)])
             choice = interacting or any(a['rows'] for a in repair['alternatives'])

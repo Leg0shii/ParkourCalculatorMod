@@ -64,10 +64,10 @@ def gate_timeline(passages, events):
                     reference = passage['phaseReferences'][i]
                     at = 3*(events[reference['leg']]['jump']+reference['offset'])+reference['phase']
                 previous = max(0, at-1)
-                timeline.append(dict(blockId=passage.get('blockId', 'solid:'+str(passage.get('solidIndex'))),
-                    solidIndex=passage.get('solidIndex'), leg=passage['leg'],
-                    firstState=max(phase_states(previous//3, phases[previous%3], first['axis'])),
-                    secondState=min(phase_states(at//3, phases[at%3], second['axis'])),
+                axes = lambda face: ('X', 'Z') if face['axis'] == 'XZ' else (face['axis'],)
+                timeline.append(dict(blockId=passage['blockId'], leg=passage['leg'],
+                    firstState=max(s for a in axes(first) for s in phase_states(previous//3, phases[previous%3], a)),
+                    secondState=min(s for a in axes(second) for s in phase_states(at//3, phases[at%3], a)),
                     phase=at, type=first['axis']+'->'+second['axis'],
                     kind='vertical' if 'Y' in (first['axis'], second['axis']) else 'horizontal'))
             continue

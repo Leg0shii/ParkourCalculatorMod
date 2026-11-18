@@ -23,7 +23,7 @@ class Cluster:
 @dataclass(frozen=True)
 class Side:
     bounds: tuple
-    owners: tuple
+    owners: tuple  # per bound: the solid indices whose expanded edge lies on its plane
     region: tuple
 
     @property
@@ -32,13 +32,14 @@ class Side:
 
 
 def nested(a, b):
+    """Whether one (x_lo, z_lo, x_hi, z_hi) region contains the other."""
     def contains(outer, inner):
         return outer[0] <= inner[0] and outer[1] <= inner[1] and inner[2] <= outer[2] and inner[3] <= outer[3]
-    return contains(a.region, b.region) or contains(b.region, a.region)
+    return contains(a, b) or contains(b, a)
 
 
 def intersects(a, b):
-    return all(max(a.region[i], b.region[i]) <= min(a.region[i+2], b.region[i+2]) for i in (0, 1))
+    return all(max(a[i], b[i]) <= min(a[i+2], b[i+2]) for i in (0, 1))
 
 
 def free_rectangles(boxes):
@@ -103,15 +104,16 @@ class Footprints:
             boxes = [cluster.boxes[k] for k in active]
             sides = []
             for region in free_rectangles(boxes):
-                bounds, owners = [], set()
+                bounds = []
                 for axis, edge, direction, plane in (('X', 3, 1, region[0]), ('X', 0, -1, region[2]),
                                                      ('Z', 5, 1, region[1]), ('Z', 2, -1, region[3])):
                     if math.isinf(plane):
                         continue
-                    bounds.append((axis, direction, plane))
                     other = (2, 5, 1, 3) if axis == 'X' else (0, 3, 0, 2)
-                    owners.update(cluster.members[k] for k, b in zip(active, boxes) if b[edge] == plane
-                                  and b[other[0]] <= region[other[3]] and region[other[2]] <= b[other[1]])
-                sides.append(Side(tuple(sorted(bounds)), tuple(sorted(owners)), region))
+                    owners = tuple(cluster.members[k] for k, b in zip(active, boxes) if b[edge] == plane
+                                   and b[other[0]] <= region[other[3]] and region[other[2]] <= b[other[1]])
+                    bounds.append(((axis, direction, plane), owners))
+                bounds.sort()
+                sides.append(Side(tuple(b for b, _ in bounds), tuple(o for _, o in bounds), region))
             self._sides[key] = tuple(sorted(sides, key=lambda s: s.bounds))
         return self._sides[key]

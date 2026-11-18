@@ -12,13 +12,28 @@ selected Y history and finite contact regions determine what needs avoiding.
 An airborne ceiling query does not begin a new landing segment. A later selected
 landing can introduce another encounter with the same obstacle.
 
-Each solid part receives a cover for its potentially interacting phases in the
-segment. Physical-owner metadata groups parts without a switch-count budget;
-all applicable part/obstacle requirements share the original motion model. The
-initial domain uses one encounter per box per segment, with simple horizontal
-face walks connected by fixed vertical clearance or already-owned separating
-requirements. An entry can be its exit. No independent encounter-revisit producer
-or arbitrary numerical switch-count cap is present.
+Each obstacle cluster receives a cover for its potentially interacting phases in
+the segment. A cluster (`spatial.footprints`) is a set of solids whose expanded
+boxes overlap or touch, so the player cannot pass between them; Real11's B5, B6
+and B7 are one cluster. At each phase the cluster's members active at the
+player's height (open Y overlap) form a union of rectangles, and its sides are
+every maximal free rectangle around that union: a half-plane such as `Z ≤ c`, or
+a corner or slot bounded by two to four planes. Every free sweep lies inside some
+side, a face two flush solids share is one side, and a side never runs through a
+neighbour (B7's `X+` plane against B6 is not offered on its own). Free pieces
+narrower than 0.012 are numerical artifacts and are dropped (see
+[decisions](../DECISIONS_AND_PLANS.md)).
+
+The domain uses one encounter per cluster per segment, with simple horizontal
+side walks connected by fixed vertical clearance or already-owned separating
+requirements. Sides of different active sets whose regions nest describe one
+place (west of B7 below its top lies inside west of B6 above it), so moving
+between them continues the same side rather than revisiting one. Two sides may
+follow each other directly only when their regions intersect, unless a
+vertical-clear phase lies between them (for one box this is the old opposite-face
+rule). An entry can be its exit. No independent encounter-revisit producer or
+arbitrary numerical switch-count cap is present. All cluster requirements share
+the original motion model.
 
 Infer entry/exit regions from finite support geometry. Ordinary landing overlap
 precedes that input's horizontal motion, so its next-state envelope may extend
@@ -43,9 +58,10 @@ produce more than the old three transitions; counts are descriptions, not resour
 | X at input t | t and t+1 | t |
 | Z at input t | t+1 | t and t+1 |
 
-`constraints.encounters` asks existing `block_interaction` about potential phases,
-builds separating-face requirements only there, and preserves known vertical-clear
-windows. It does not build full-horizon face permutations or switch labels on
+`constraints.encounters` asks existing `block_interaction` about each active
+member at potential phases, builds side requirements only there (one row per
+side bound and phase state), and preserves known vertical-clear windows, where
+no member is active. It does not build full-horizon face permutations or switch labels on
 inactive ticks. A known entry remains geometry metadata when its inequalities
 are already entailed.
 
@@ -114,7 +130,7 @@ envelopes are rebuilt. A saved source counts as pending in outcome classificatio
 Completed exact requests are not dispatched again unless explicitly retrying
 unresolved work under its own contract.
 
-Constraint generation uses policy8/state3 and repair assembly10. The DFS context
+Constraint generation uses policy9/state4 and repair assembly10. The DFS context
 fingerprints the new policy. Old raw generator cursors reject; reproduce an old
 run with its original source and inputs. Source-era scene fields
 `maxContactBranches`, `maxPassageCandidates`, `maxBlockagesPerObstacle`,
@@ -124,7 +140,10 @@ callers no longer pass deleted repair-limit keywords.
 
 ## Diagnostics and measurements
 
-Generated descriptions carry `phaseSpans` and `switchPhases`; repair adds
+Generated descriptions carry `clusterId`, `members`, `blockId` (the cluster's
+block names joined with `+`), side dicts as `faces` (`key`, `bounds` with
+per-bound owners, `region`, and `axis` `X`/`Z`, `XZ` for a corner or `Y` for a
+vertical-clear pseudo-side), `phaseSpans` with side keys and `switchPhases`; repair adds
 `phaseReferences` for retiming. Integer gates are convenient labels. These new
 phase covers are never fed to the authored full-leg passage compiler: actual rows
 are in the route constraints. `best.passages`, timeline and descriptive counts
@@ -134,8 +153,8 @@ compiler/validation contract.
 `ConstraintVariants.state.metrics` records actual phase checks/exclusions,
 meaningful nodes/children/options, duplicates/dominance and analysis cache work.
 The state also lists what those counts summarize: `encounterLog` holds each
-prepared encounter's possible, covered and vertical-clear phases and the faces its
-reachability screen excluded at each phase; `droppedOptions` holds each duplicate
+prepared encounter's sides, possible, covered and vertical-clear phases and the
+sides its reachability screen excluded at each phase; `droppedOptions` holds each duplicate
 or dominated cover with its rows; a `screenExclusions` entry for a rejected option
 names the item it assigned, the option rows and the passage.
 Timings distinguish preparation, generation and conditional analysis; inclusive

@@ -72,7 +72,8 @@ writes these files to its output directory:
 `report.md` names routes by what they do, never by hash: route `F.N` is route N of
 frame F, grouped under its movement (jump ticks, the blocks it starts on, lands on
 and runs across, ceiling hits, wall touches and named cases), and each route lists
-the obstacles it passes with the sides taken (for example `B6: Z- then X- then Z+`).
+the obstacles it passes with the sides taken (for example `B5+B6+B7: Z- then X-`; an obstacle is a
+cluster of touching blocks, and a corner side reads `X+Z+`).
 Each partial route in `report.md` and `routes.json` has:
 
 - its parent route, the constraint rows inherited from the parent's solved route
@@ -80,7 +81,7 @@ Each partial route in `report.md` and `routes.json` has:
 - the avoidance alternative accepted for it. Routes from one movement program share
   a single repair run, kept on the first route of that program;
 - on that route: every prepared obstacle encounter (possible phases, already-clear
-  phases, the faces ruled out at each phase, vertical-clear and uncertain phases);
+  phases, the sides ruled out at each phase, vertical-clear and uncertain phases);
   the decisions to make (the sides to keep around each obstacle in reach, and which
   landing-cover rectangle of the goal block to land in); every option rejected
   before solving, with its decision, rows, the check

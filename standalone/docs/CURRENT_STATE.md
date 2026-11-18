@@ -10,18 +10,19 @@ everything not being worked on is in the [deferred-work register](DEFERRED_WORK.
   geometry and bounds, the six-direction [face catalog](design/FACE_MERGING_IMPLEMENTATION_PLAN.md)
   (not yet consumed by any generator) and the [longer Real11 task](../research/real11-long-solve/README.md).
 - Active: `perf/early-passage-screen`, draft PR #3 into `main`. It adds
-  [geometry-driven avoidance passages](design/AVOIDANCE_PASSAGES.md), screening of
+  [geometry-driven avoidance passages](design/AVOIDANCE_PASSAGES.md) on obstacle
+  clusters (touching blocks are one obstacle; [evidence](../research/obstacle-clusters/README.md)), screening of
   accumulated passage prefixes before extension, anchor search under the global
   run budget instead of service-turn quotas, and ceiling moves in the Real11 case.
   The PR is a first test and is still under investigation, not ready to merge.
 - Native gate (`tools/native_gate.py`) on the merge of `main` into the PR, `7e4d85d4`:
   641 tests, no failures or skips. See [testing](TESTING.md).
-- Latest cold Real11 control on the PR: T64 at 14.1 s, then the DFS runs out of
-  runnable work at 25.1 s with one avoidance alternative of a feasible B7 route
-  unresolved after the linear control relaxation blocked it. See
+- Latest cold Real11 control on the PR: T64 at 6.6 s with 25 solver requests, then
+  the DFS runs out of runnable work at 12.0 s with one avoidance alternative of a
+  feasible B7 route unresolved after the linear control relaxation blocked it. See
   [performance](PERFORMANCE.md) for the full series of controls.
 - Longer Real11 trials are paused until the PR's solver changes settle. The saved
-  fixed-B5 checkpoints predate constraint policy8/state3, so the next trial starts
+  fixed-B5 checkpoints predate constraint policy9/state4, so the next trial starts
   cold from the [resume checklist](../research/real11-long-solve/README.md#status-and-resumption).
 
 ## Focus areas and where to read
@@ -89,7 +90,7 @@ Terminal actualT/objective ranking stays separate. Cells, portals and soft guide
 points are not discrete input clocks or fixed dynamic seams.
 
 Physical automatic continuation is outer schema2 / DFS8 / movement context4 /
-repair assembly10 / constraint policy8/state3. Hard3/search5/comparison1/guide2/proposal1 semantic identities
+repair assembly10 / constraint policy9/state4. Hard3/search5/comparison1/guide2/proposal1 semantic identities
 also matter; schema equality does not make old policy checkpoints compatible.
 Storage remains manifest/SQLite version1. Physical anchor DFS now uses the session's
 global deadline/call allowance continuously, without service-turn or per-program

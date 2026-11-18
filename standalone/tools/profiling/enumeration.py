@@ -17,13 +17,12 @@ class EnumerationProfile:
         self.active, self.source_hash = None, None
 
     def bind(self, owner, item):
-        key = (owner.state['context'], item['solidIndex'], item['begin'], item['end'])
+        key = (owner.state['context'], item['clusterId'], item['begin'], item['end'])
         if key not in self.by_key:
             if len(self.rows) >= self.max_rows:
                 raise RuntimeError('Enumeration diagnostic row cap exceeded; use a larger explicit cap')
-            active = self.active or dict(index=None, blocks={})
-            row = dict(context=key[0], solidIndex=key[1], segment=list(key[2:]), through=owner.through,
-                block=active['blocks'].get(key[1], str(key[1])), evaluations=[], counts={})
+            row = dict(context=key[0], clusterId=key[1], members=item['members'], segment=list(key[2:]),
+                through=owner.through, block=item['owner'], evaluations=[], counts={})
             self.rows.append(row)
             self.by_key[key] = row
         row = self.by_key[key]
@@ -33,11 +32,11 @@ class EnumerationProfile:
         return row
 
     def capture(self, owner, item):
-        if len(self.cases) >= self.max_cases or any(c['item']['box'] == item['box'] and
+        if len(self.cases) >= self.max_cases or any(c['item']['members'] == item['members'] and
                 c['item']['begin'] == item['begin'] and c['item']['end'] == item['end'] for c in self.cases):
             return
-        value = dict(version=2, metadata=dict(context=owner.state['context'], solidIndex=item['solidIndex'],
-            block=item.get('owner', str(item['solidIndex'])), through=owner.through), item=item,
+        value = dict(version=3, metadata=dict(context=owner.state['context'], clusterId=item['clusterId'],
+            block=item['owner'], through=owner.through), item=item,
             attributes={k: getattr(owner, k) for k in ('route', 'profile', 'through', 'events', 'reference')},
             envelopes=owner._active_envelopes or owner.envelopes)
         try:
@@ -63,7 +62,7 @@ def instrumented_option(original, profile):
     profile.source_hash = hashlib.sha256(inspect.getsource(original).encode()).hexdigest()
     @functools.wraps(original)
     def observed(owner, item, cursor):
-        if 'solidIndex' not in item:
+        if 'clusterId' not in item:
             return original(owner, item, cursor)
         row = profile.bind(owner, item)
         before = dict(owner.state['metrics'])

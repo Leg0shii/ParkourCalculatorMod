@@ -24,7 +24,9 @@ FIXTURES = AUTONOMY_DATA / 'fixtures'
 
 @unittest.skipUnless(CONFIG and RUNTIME, 'Set PKC_RUN_TICKS_COMPILER and PKC_IPOPT_PYTHON')
 class IntegrationTests(unittest.TestCase):
-    def test_obstacles_can_interleave_without_finishing_one_block_first(self):
+    def test_wall_and_ceiling_the_player_cannot_pass_between_are_one_obstacle(self):
+        # The wall and the overhanging ceiling are 0.14 apart, so one cluster's
+        # walk passes both, with a corner side bounded by each of them.
         request = json.loads((FIXTURES / 'obstacle-interleaved.json').read_text())
         request.update(ceilingHits=False, maxWallHits=0)
         with JavaCompiler(json.loads(Path(CONFIG).read_text())) as compiler:
@@ -34,16 +36,11 @@ class IntegrationTests(unittest.TestCase):
         best = result['best']
         self.assertEqual(best['plan']['ticks'], 12)
         self.assertTrue(best['geometryCheck']['feasible'])
+        passage = next(p for p in best['passages'] if p['blockId'] == 'ceiling+wall')
+        owners = [{o for b in f['bounds'] for o in b['owners']} for f in passage['faces']]
+        self.assertIn(set(passage['members']), owners)
         timeline = best['blockageTimeline']
-        wall = [i for i, gate in enumerate(timeline) if gate['blockId'] == 'wall']
-        self.assertGreaterEqual(len(wall), 1)
-        passage = next(p for p in best['passages'] if p['blockId'] == 'wall')
-        if 'phaseSpans' in passage:
-            begin = min(p[0] for p in passage['phaseSpans'])
-            end = max(p[1] for p in passage['phaseSpans'])
-            self.assertTrue(any(g['blockId'] == 'ceiling' and begin < g['phase'] < end for g in timeline))
-        else:
-            self.assertTrue(any(g['blockId'] == 'ceiling' for g in timeline[wall[0]+1:wall[-1]]))
+        self.assertTrue(timeline and all(g['blockId'] == 'ceiling+wall' for g in timeline))
         self.assertEqual(sum(u['total'] for u in best['blockageUsage']), len(timeline))
 
     def test_full_obstacle_geometry_finds_cross_and_wide_neos_and_checks_both_models(self):

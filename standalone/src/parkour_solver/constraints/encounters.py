@@ -1,13 +1,17 @@
-"""Lazy phase covers for one box encounter in a selected landing segment.
+"""Lazy phase covers for one obstacle-cluster encounter in a selected landing segment.
 
-The six separating faces and Minecraft's Y/X/Z sweeps remain authoritative in
-avoidance/geometry/reachability. This module chooses only effective horizontal
-requirements; fixed vertical clearance is a gap, never a face permutation.
+A cluster's sides at each phase are the maximal free rectangles around its members
+active at that height (spatial/footprints); Minecraft's Y/X/Z sweeps remain
+authoritative in avoidance/geometry/reachability. This module chooses only
+effective horizontal requirements; fixed vertical clearance is a gap, never a side.
 """
-from parkour_solver.constraints.avoidance import faces, blockage_counts, passage_kind, phase_states
+import math
+
+from parkour_solver.constraints.avoidance import blockage_counts, passage_kind, phase_states
 from parkour_solver.reachability.service import block_interaction
 from parkour_solver.reachability.intervals import interaction_reachability
 from parkour_solver.search.identity import digest
+from parkour_solver.spatial.footprints import intersects, nested
 
 
 PHASES = ('Y', 'X', 'Z')
@@ -50,19 +54,46 @@ def landing_segments(profile, through):
     return list(zip(sorted(cuts), sorted(cuts)[1:]))
 
 
-def boundary_faces(item, envelopes, tick):
-    state = envelopes['states'][tick]
-    result = []
-    for i, face in enumerate(item['faces']):
-        if face['axis'] not in state:
-            continue
-        lo, hi = state[face['axis']]
-        if (hi >= face['plane'] if face['direction'] > 0 else lo <= face['plane']):
-            result.append(i)
-    return result
+def region(side):
+    return tuple((-math.inf if i < 2 else math.inf) if v is None else v for i, v in enumerate(side['region']))
 
 
-def support_faces(owner, item, envelopes, tick):
+def same(item, a, b):
+    """Sides of different active sets describe one place when their regions nest."""
+    if a == b:
+        return True
+    first, second = item['sides'][a], item['sides'][b]
+    return 'Y' not in (first['axis'], second['axis']) and nested(region(first), region(second))
+
+
+def satisfied(side, bounds):
+    return all(bounds[b['axis']][0] >= b['plane'] if b['direction'] > 0 else bounds[b['axis']][1] <= b['plane']
+               for b in side['bounds'])
+
+
+def reaches(side, bounds):
+    return all(bounds[b['axis']][1] >= b['plane'] if b['direction'] > 0 else bounds[b['axis']][0] <= b['plane']
+               for b in side['bounds'])
+
+
+def side_dict(side):
+    bounds = [dict(axis=a, direction=d, plane=p, owners=list(o)) for (a, d, p), o in zip(side.bounds, side.owners)]
+    axes = {b['axis'] for b in bounds}
+    single = bounds[0] if len(bounds) == 1 else None
+    return dict(key=[list(b) for b in side.bounds], bounds=bounds, owners=sorted(set().union(*side.owners)),
+                region=[None if math.isinf(v) else v for v in side.region],
+                axis=axes.pop() if len(axes) == 1 else 'XZ', direction=single['direction'] if single else 0,
+                plane=single['plane'] if single else None)
+
+
+def vertical_side(cluster, y_lo):
+    below = [b[4] for b in cluster.boxes if b[4] <= y_lo]
+    direction, plane = (1, max(below)) if below else (-1, min(b[1] for b in cluster.boxes))
+    return dict(key=[['Y', direction, plane]], bounds=[], owners=[], region=[None]*4,
+                axis='Y', direction=direction, plane=plane)
+
+
+def support_region(owner, envelopes, tick):
     """The finite contact region precedes that input's horizontal movement.
 
     Keep it as entry/exit geometry, never as a new position pin at tick+1.
@@ -71,24 +102,45 @@ def support_faces(owner, item, envelopes, tick):
     event = next((e for e in owner.profile.get('contactEvents', []) if e.get('axis') == 'Y'
                   and e.get('direction') == -1 and e['offset']+1 == tick and 'box' in e), None)
     if event is None:
-        return boundary_faces(item, envelopes, tick)
+        return envelopes['states'][tick]
     from parkour_solver.scene.geometry import expanded_box
     b = expanded_box(event['box'])
     margin = max(owner.route['supportClearance'], 2e-7)
-    region = dict(X=[b[0]+margin, b[3]-margin], Z=[b[2]+margin, b[5]-margin],
-                  Y=[event['box'][4]]*2)
-    return [i for i, f in enumerate(item['faces']) if
-            (region[f['axis']][1] >= f['plane'] if f['direction'] > 0 else region[f['axis']][0] <= f['plane'])]
+    return dict(X=[b[0]+margin, b[3]-margin], Z=[b[2]+margin, b[5]-margin], Y=[event['box'][4]]*2)
 
 
 def prepare_encounter(owner, item, envelopes):
     """Prepare atomically: a deadline leaves the unprocessed item resumable."""
     if 'phases' in item:
         return
-    result = dict(item, faces=faces(item['box']), phases=[], verticalClear=[], coveredPhases=[], uncertain=[],
-                  excludedFaces=[])
-    result['entryFaces'] = support_faces(owner, result, envelopes, item['begin'])
-    result['exitFaces'] = support_faces(owner, result, envelopes, item['end'])
+    footprints = owner.footprints
+    cluster = footprints.cluster(item['clusterId'])
+    result = dict(item, sides=[], phases=[], verticalClear=[], coveredPhases=[], uncertain=[], excludedFaces=[])
+    indices = {}
+
+    def index(side):
+        key = json_key(side['key'])
+        if key not in indices:
+            indices[key] = len(result['sides'])
+            result['sides'].append(side)
+        else:
+            known = result['sides'][indices[key]]
+            known['owners'] = sorted(set(known['owners']) | set(side['owners']))
+            for bound, other in zip(known['bounds'], side['bounds']):
+                bound['owners'] = sorted(set(bound['owners']) | set(other['owners']))
+        return indices[key]
+
+    def sides(active):
+        return [index(side_dict(s)) for s in footprints.sides(cluster, active)]
+
+    def boundary(tick):
+        bounds = support_region(owner, envelopes, tick)
+        active = footprints.active(cluster, *bounds['Y'])
+        if not active:
+            return [index(vertical_side(cluster, bounds['Y'][0]))]
+        return [i for i in sides(active) if reaches(result['sides'][i], bounds)]
+    result['entryFaces'] = boundary(item['begin'])
+    result['exitFaces'] = boundary(item['end'])
     uncertain = {e.get('input', e.get('offset')) for e in owner.profile.get('caseEvents', [])}
     uncertain.update(c['state']-1 for c in envelopes.get('model', {}).get('vertical', {}).get('contacts', [])
                      if c.get('case'))
@@ -99,13 +151,16 @@ def prepare_encounter(owner, item, envelopes):
             owner.metric('phaseChecks')
             at = 3*tick+PHASES.index(phase)
             bounds = envelopes['phases'][tick][phase]
-            vertical = next((i for i, f in enumerate(result['faces']) if f['axis'] == 'Y' and
-                (bounds['Y'][0] >= f['plane'] if f['direction'] > 0 else bounds['Y'][1] <= f['plane'])), None)
-            if vertical is not None:
+            active = footprints.active(cluster, *bounds['Y'])
+            if not active:
+                vertical = index(vertical_side(cluster, bounds['Y'][0]))
                 result['verticalClear'].append([at, vertical])
-            if block_interaction(envelopes, item['box'], tick, (phase,), interior=True)['ruledOut']:
-                certain = [i for i, f in enumerate(result['faces']) if
-                    (bounds[f['axis']][0] >= f['plane'] if f['direction'] > 0 else bounds[f['axis']][1] <= f['plane'])]
+                result['coveredPhases'].append([at, [vertical]])
+                owner.metric('excludedPhases')
+                continue
+            if all(block_interaction(envelopes, cluster.solids[k], tick, (phase,), interior=True)['ruledOut']
+                   for k in active):
+                certain = [i for i in sides(active) if satisfied(result['sides'][i], bounds)]
                 result['coveredPhases'].append([at, certain])
                 owner.metric('excludedPhases')
                 continue
@@ -116,21 +171,20 @@ def prepare_encounter(owner, item, envelopes):
                 result['uncertain'].append(at)
                 owner.metric('uncertainPhases')
                 continue
-            indices = {axis: phase_states(tick, phase, axis) for axis in ('X', 'Z')}
+            states = {axis: phase_states(tick, phase, axis) for axis in ('X', 'Z')}
             options, costs = {}, {}
-            for i, face in enumerate(result['faces']):
-                if face['axis'] == 'Y':
-                    continue
-                rows = [owner.face_row(face, t) for t in indices[face['axis']]]
+            for i in sides(active):
+                rows = [owner.face_row(b, t) for b in result['sides'][i]['bounds'] for t in states[b['axis']]]
                 if interaction_reachability(envelopes, rows)['ruledOut']:
                     owner.metric('excludedFaces')
                     result['excludedFaces'].append([at, i])
                     continue
                 options[str(i)] = rows
-                costs[str(i)] = sum(max(0., face['direction']*(row['rhs']-owner.coordinate(face['axis'], row['t1'], envelopes)))**2
+                costs[str(i)] = sum(max(0., (1 if row['cmp'] == 'GE' else -1)*
+                                        (row['rhs']-owner.coordinate(row['mode'], row['t1'], envelopes)))**2
                                      for row in rows)
             for axis in required:
-                required[axis].update(indices[axis])
+                required[axis].update(states[axis])
             result['phases'].append(dict(at=at, options=options, costs=costs))
     result['required'] = {k: sorted(v) for k, v in required.items()}
     result['possiblePhases'] = [[p['at']//3, PHASES[p['at']%3]] for p in result['phases']]
@@ -142,29 +196,38 @@ def prepare_encounter(owner, item, envelopes):
     item.clear()
     item.update(result)
     if result['uncertain']:
-        record = dict(solidIndex=item['solidIndex'], segment=[item['begin'], item['end']], phases=result['uncertain'])
+        record = dict(clusterId=item['clusterId'], members=item['members'], segment=[item['begin'], item['end']],
+                      phases=result['uncertain'])
         if record not in owner.state['uncertainInteractions']:
             owner.state['uncertainInteractions'].append(record)
     owner.state['encounterLog'].append(dict(
-        solidIndex=item['solidIndex'], owner=item.get('owner'), segment=[item['begin'], item['end']],
-        faces=result['faces'], possiblePhases=result['possiblePhases'], coveredPhases=result['coveredPhases'],
+        clusterId=item['clusterId'], members=item['members'], names=item['names'], owner=item['owner'],
+        segment=[item['begin'], item['end']],
+        sides=result['sides'], possiblePhases=result['possiblePhases'], coveredPhases=result['coveredPhases'],
         excludedFaces=result['excludedFaces'], verticalClear=result['verticalClear'], uncertain=result['uncertain']))
     owner.metric('preparedEncounters')
 
 
-def _continuation(history, face):
-    """One encounter follows a simple face walk, with its entry allowed as exit.
+def json_key(key):
+    return tuple(tuple(bound) for bound in key)
+
+
+def _continuation(history, face, same):
+    """One encounter follows a simple side walk, with its entry allowed as exit.
 
     A repeated entry closes the encounter; it cannot start another bypass in the
-    same segment. Holding a side across a known vertical-clear gap is the same
-    walk. This is geometric ownership, not a per-obstacle switch-count budget.
+    same segment. Holding a side across a known vertical-clear gap, or into a
+    nested side of another active set, is the same walk. This is geometric
+    ownership, not a per-obstacle switch-count budget.
     """
-    if not history or history[-1] == face:
-        return history or [face]
-    if len(history) > 1 and history[-1] == history[0]:
+    if not history:
+        return [face]
+    if same(history[-1], face):
+        return history[:-1]+[face]
+    if len(history) > 1 and same(history[-1], history[0]):
         return None
-    if face in history:
-        return history+[face] if face == history[0] else None
+    if any(same(f, face) for f in history):
+        return history+[face] if same(face, history[0]) else None
     return history+[face]
 
 
@@ -173,7 +236,7 @@ def describe(item, spans):
     # labels for consumers that display a tick. Generated rows are never rebuilt
     # from these labels using the legacy full-leg passage compiler.
     timeline = [(p['at'], f) for a, b, f in spans for p in item['phases'] if a <= p['at'] <= b]
-    if spans and len(item['entryFaces']) == 1 and item['entryFaces'][0] != spans[0][2]:
+    if spans and len(item['entryFaces']) == 1 and not same(item, item['entryFaces'][0], spans[0][2]):
         # Geometric entry is already covered before the first emitted row.
         # Its phase is the selected landing, never an invented switch at zero.
         timeline.insert(0, (max(0, 3*item['begin']-1), item['entryFaces'][0]))
@@ -189,21 +252,23 @@ def describe(item, spans):
     timeline.sort()
     chosen, switches = [], []
     for at, face in timeline:
-        if not chosen or chosen[-1] != face:
+        if not chosen or not same(item, chosen[-1], face):
             chosen.append(face)
             switches.append(at)
-    fs = [item['faces'][i] for i in chosen]
-    return dict(leg=0, solidIndex=item['solidIndex'], blockId=item.get('owner', 'solid:'+str(item['solidIndex'])),
+    fs = [item['sides'][i] for i in chosen]
+    return dict(leg=0, clusterId=item['clusterId'], members=item['members'], blockId=item['owner'],
         segment=[item['begin'], item['end']], faces=fs, gates=[at//3 for at in switches[1:]],
-        switchPhases=switches[1:], phaseSpans=spans, entryFaces=[item['faces'][i] for i in item['entryFaces']],
-        exitFaces=[item['faces'][i] for i in item['exitFaces']],
+        switchPhases=switches[1:], phaseSpans=[[a, b, item['sides'][f]['key']] for a, b, f in spans],
+        entryFaces=[item['sides'][i] for i in item['entryFaces']],
+        exitFaces=[item['sides'][i] for i in item['exitFaces']],
         kind=passage_kind(fs), blockageCounts=blockage_counts(fs), blockageCount=max(0, len(fs)-1))
 
 
 def encounter_option(owner, item, cursor, envelopes):
     prepare_encounter(owner, item, envelopes)
     entry = item['entryFaces']
-    history = entry if len(entry) == 1 and item['faces'][entry[0]]['axis'] != 'Y' else []
+    history = entry if len(entry) == 1 and item['sides'][entry[0]]['axis'] != 'Y' else []
+    alike = lambda a, b: same(item, a, b)
     cursor.setdefault('pending', [dict(at=0, rows=[], history=history, spans=[])])
     cursor.setdefault('seen', [])
     cursor.setdefault('completed', [])
@@ -225,14 +290,16 @@ def encounter_option(owner, item, cursor, envelopes):
             owner.metric('optionLeaves')
             if key in cursor['completed']:
                 owner.metric('duplicateOptions')
-                owner.state['droppedOptions'].append(dict(solidIndex=item['solidIndex'], segment=[item['begin'], item['end']],
+                owner.state['droppedOptions'].append(dict(clusterId=item['clusterId'], members=item['members'],
+                                                          segment=[item['begin'], item['end']],
                                                           reason='duplicate', rows=rows))
                 continue
             # Same remaining capabilities: a completed weaker cover subsumes a
             # stricter description. Never use this rule on unfinished walks.
             if any(rows_entailed(envelopes, rows, weaker) for weaker in cursor.get('covers', [])):
                 owner.metric('dominatedOptions')
-                owner.state['droppedOptions'].append(dict(solidIndex=item['solidIndex'], segment=[item['begin'], item['end']],
+                owner.state['droppedOptions'].append(dict(clusterId=item['clusterId'], members=item['members'],
+                                                          segment=[item['begin'], item['end']],
                                                           reason='dominated', rows=rows))
                 continue
             cursor['completed'].append(key)
@@ -246,17 +313,18 @@ def encounter_option(owner, item, cursor, envelopes):
             bridges = [certain for p, certain in item['coveredPhases']
                        if previous_at < p < phases[at]['at']]
             if (any(previous_at < p < phases[at]['at'] for p in item['uncertain']) or
-                    any(not certain or any(not history or f != history[-1] for f in certain) for certain in bridges)):
+                    any(not certain or any(not history or not alike(f, history[-1]) for f in certain)
+                        for certain in bridges)):
                 # An already proved-clear gap may contain the intervening side
                 # (or unknown named probes). Its rows are already owned by this
                 # branch. Do not reject the next face because that implicit
                 # bridge was correctly omitted from the choice catalogue.
                 history = []
-            if history and history[-1] != face:
+            if history and not alike(history[-1], face):
                 gap = any(previous_at < a < phases[at]['at'] for a, _ in item['verticalClear'])
-                if item['faces'][history[-1]]['axis'] == item['faces'][face]['axis'] and not gap:
+                if not intersects(region(item['sides'][history[-1]]), region(item['sides'][face])) and not gap:
                     continue
-            following = _continuation(history, face)
+            following = _continuation(history, face, alike)
             if following is None:
                 continue
             rows, paid = list(node['rows']), 0.
