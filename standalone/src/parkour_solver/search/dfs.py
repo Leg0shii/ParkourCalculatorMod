@@ -421,7 +421,14 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
                     tickDeferralEnabled=minimum_run_pruning and latch_key(f) in state['hardLatches'],comparisonPolicy=COMPARISON_POLICY_VERSION))
         if result['best'] is not None:
             # Retain selected physical walls; never endpoint/velocity/yaw equalities.
-            updated=commit_arrival(program,result['best'])
+            # A decision check only prunes: the leg's own solve chooses the obstacle sides by optimizing.
+            from parkour_solver.scene.route import row_tick
+            witness=copy.deepcopy(result['best'])
+            events=witness['plan']['events']
+            chosen={(r['mode'],row_tick(events[r['leg']],r),r['cmp'],r['rhs'])
+                    for r in witness.get('alternativeRows',[]) if r['leg']<len(events)}
+            witness['plan']['walls']=[w for w in witness['plan']['walls'] if (w['mode'],w['t1'],w['cmp'],w['rhs']) not in chosen]
+            updated=commit_arrival(program,witness)
             for k in ('decisionNode','decisionParent','decisionDepth','priorityTurnaround','restoredRun'):
                 if k in program:updated[k]=program[k]
             updated['lastSolvedDepth']=depth
@@ -611,7 +618,7 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
             cancel_event=cancel_event,partial_corridor=not terminal(f),required_landing=landing,
             on_progress=progress,retry_unresolved=retry_unknown,first_witness=not final_frame(f),guide_objective=guidance,
             **(dict(solve_policy=dict(purpose='terminal' if final_frame(f) else 'anchor',
-                stopOnFeasible=not final_frame(f),rankEqualCost=final_frame(f),oracleRejection=True)) if anchor_route else {}))
+                stopOnFeasible=False,rankEqualCost=True,oracleRejection=True),climb_families=True) if anchor_route else {}))
         if anchor_route:
             from parkour_solver.observability.turns import record as observe, replay
             span,start=span_info(f)
@@ -687,29 +694,12 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
             f['records'][f['records'].index(old)] = record
         else:
             f['records'].append(record)
-        known_children = {candidate_key(r['child']) for r in f['records'] if r.get('child')}
-        for variant in (result.get('repairState',{}).get('acceptedVariants',[]) if not final_frame(f) or result.get('fullSceneValidated',True) else []):
-            best = copy.deepcopy(variant['best'])
-            if result.get('solveScope') is not None:
-                best['validationScope'] = result['solveScope']
-            at = region_arrival(best['candidate'],f['goal'],adapter) if f['goal'] and f['goal']['kind']=='region' else source_program['profile']['airtime']
-            if f['goal'] and f['goal']['kind']==KIND and not satisfied(source_program,best['candidate'],f['goal'],scene.get('supportClearance',1e-6)):
-                at=None
-            if at is None:
-                continue
-            variant_program = truncate_program(source_program,at) if at<source_program['profile']['airtime'] else source_program
-            child = commit_arrival(variant_program,best,source_program=source_program)
-            if anchor_route:
-                child.update(decisionPoint=best['candidate']['positions'][at],decisionPointTick=at,
-                    decisionPointSource='validated_anchor',lastSolvedDepth=source_program.get('decisionDepth',0))
-            key = candidate_key(child)
-            if key in known_children:
-                continue
-            known_children.add(key)
-            alternate = dict(record,id=digest([identity,key]),program=copy.deepcopy(child),child=child,
-                witness=best,tried=False,variantOf=identity,arrival=at,
-                value=best['candidate']['objective'])
-            f['records'].append(alternate)
+        # Anchor legs keep only their optimized best; close losers wait in repairState as fallbacks.
+        for variant in (result.get('repairState',{}).get('acceptedVariants',[])
+                        if not anchor_route and (not final_frame(f) or result.get('fullSceneValidated',True)) else []):
+            alternate = variant_record(f,record,variant)
+            if alternate is not None:
+                f['records'].append(alternate)
         final_validated = result.get('fullSceneValidated',True)
         if final_frame(f) and not final_validated and record.get('witness'):
             record['guidanceWitness'] = record.pop('witness')
@@ -756,6 +746,48 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
             raise TimeoutError(result['status'])
         return record
 
+    def variant_record(f, record, variant):
+        source_program = {k:v for k,v in record['program'].items() if k!='repairState'}
+        best = copy.deepcopy(variant['best'])
+        if record.get('solveScope') is not None:
+            best['validationScope'] = record['solveScope']
+        at = region_arrival(best['candidate'],f['goal'],adapter) if f['goal'] and f['goal']['kind']=='region' else source_program['profile']['airtime']
+        if f['goal'] and f['goal']['kind']==KIND and not satisfied(source_program,best['candidate'],f['goal'],scene.get('supportClearance',1e-6)):
+            at=None
+        if at is None:
+            return None
+        variant_program = truncate_program(source_program,at) if at<source_program['profile']['airtime'] else source_program
+        child = commit_arrival(variant_program,best,source_program=source_program)
+        if anchor_route:
+            child.update(decisionPoint=best['candidate']['positions'][at],decisionPointTick=at,
+                decisionPointSource='validated_anchor',lastSolvedDepth=source_program.get('decisionDepth',0))
+        key = candidate_key(child)
+        if key in {candidate_key(r['child']) for r in f['records'] if r.get('child')}:
+            return None
+        alternate = dict(record,id=digest([record['id'],key]),program=copy.deepcopy(child),child=child,
+            witness=best,tried=False,variantOf=record['id'],arrival=at,
+            value=best['candidate']['objective'])
+        alternate.pop('restoredFallbacks',None)
+        return alternate
+
+    def restore_fallback(f, recovery):
+        for candidate in f.get('failedCandidates',[]):
+            original = next((r for r in f['records'] if r['id']==candidate),None)
+            while original is not None and original.get('variantOf'):
+                original = next((r for r in f['records'] if r['id']==original['variantOf']),None)
+            if original is None:
+                continue
+            fallbacks = original['program'].get('repairState',{}).get('fallbackVariants',[])
+            while original.get('restoredFallbacks',0) < len(fallbacks):
+                variant = fallbacks[original.get('restoredFallbacks',0)]
+                original['restoredFallbacks'] = original.get('restoredFallbacks',0)+1
+                alternate = variant_record(f,original,variant)
+                if alternate is not None:
+                    f['records'].append(alternate)
+                    transition('restore_alternative',f,candidate=alternate['id'],recovery=recovery)
+                    return True
+        return False
+
     def close_frame(f, *, deferred=False):
         state['stack'].pop()
         old = next((v for v in state['frames'] if v['id']==f['id']),None)
@@ -768,6 +800,9 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
                 parent=next((v for v in state['stack'] if f['parent'] and v['id']==f['parent']['frame']),None)
                 if parent is not None:
                     parent['recoveryFailure']=dict(reason='required_descendant_oracle_rejected',frame=f['id'])
+                    failed=parent.setdefault('failedCandidates',[])
+                    if f['parent']['candidate'] not in failed:
+                        failed.append(f['parent']['candidate'])
         if not deferred and (any(numerical_pending(r) or r.get('program',{}).get('repairState',{}).get('unresolved') for r in f['records']) or
                              f['generation'].get('continuation',{}).get('deferredNodes')):
             state['suspended'].append(f)
@@ -948,6 +983,9 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
                 continue
             if anchor_route and f.get('recoveryFailure') and not f.get('validatedFinish'):
                 recovery=f.pop('recoveryFailure')
+                if restore_fallback(f,recovery):
+                    f['phase']='select'
+                    continue
                 deferred=[r for r in state['minimumRunExclusions'] if r['frame']==f['id'] and
                           not r.get('restored') and not r.get('retired')]
                 cached=False

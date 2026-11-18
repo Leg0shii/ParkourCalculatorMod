@@ -2,24 +2,42 @@
 
 ## Automatic close-decision grouping and commitment (2026-11-16)
 
-Deferred by the user while the [avoidance-generation plan](AVOIDANCE_PASSAGES.md)
-is developed. Future consolidation must:
+2026-11-17 clarification: these are separate workstreams. The user defines
+automatic grouping as solving coupled constraints together and has requested an
+implementation suggestion. Commitment remains explicitly deferred. See G1/G2
+in the [register](../DEFERRED_WORK.md); no runtime implementation is authorized
+by this discussion.
 
-- Infer nearby/dependent movement-decision groups automatically; require no
-  authored opportunity ranges or dependency lists. Define when a group is ready
-  for selection and what internal feasibility checks may run before then.
-- Unify checking, retaining alternatives and committing choices. Earlier continuous
-  values remain free; an early feasible side must not silently erase a sibling
-  needed by a later coupled decision. Audit the internal-success cache/repair-state
-  boundary and preserve original-state solves and resumable alternatives.
-- Replace the old supplied-window/commit paths with one maintained policy.
-  Migrate callers and useful tests; remove unused/superseded runtime code instead
-  of leaving parallel implementations or an unused compatibility mode. Preserve
-  frozen research evidence. The old planner began at `9556c38e`; provenance is
-  summarized in the avoidance plan.
+### Automatic grouping: joint constraint solving
 
-The required end state is settled; the grouping/commit details are deferred.
-Current solve cadence and anchor policy remain unchanged by this note.
+Use actual movement/contact/avoidance requirements, without authored opportunity
+ranges or dependency lists. The fixed-program path already assembles contact
+regions and avoidance alternatives in one `ConstraintVariants` iterator, conditions
+later items on accumulated rows and solves the complete joint alternative.
+See [assembly](../../src/parkour_solver/search/engine.py),
+[joint traversal](../../src/parkour_solver/constraints/variants.py) and
+[three-way conflict control](../../tests/unit/constraints/test_encounters.py).
+
+The remaining design discussion must identify a concrete consumer that still
+separates coupled requirements, or a distinct need to assemble several movement
+choices before a query. Shared momentum/facings mean separated encounter windows
+are not proof of independent models. Preserve original-state joint solves;
+grouping alone does not change solve cadence, select winning alternatives or
+fix intermediate states.
+
+### Commitment: deferred
+
+When choices become fixed, which alternatives remain open downstream, and how
+checking/retention/commitment are unified remain deferred. An early feasible
+side must not silently erase a sibling needed by a later coupled decision.
+Audit the internal-success cache/repair-state boundary and retain resumable work
+when this workstream is selected. Remaining P7 downstream-open choices belongs
+to this discussion, not automatic grouping alone.
+
+Replace supplied-window/commit paths when their replacements are implemented;
+migrate callers/useful tests and remove superseded runtime code. Preserve frozen
+evidence. The old planner began at `9556c38e`; provenance is in the avoidance
+plan. Current cadence, anchor comparison and retention remain unchanged.
 
 ## Known pruning gaps
 

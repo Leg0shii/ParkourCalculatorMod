@@ -63,7 +63,7 @@ def _motion_bound(scene, compiler, seconds):
 def evaluate_program(scene, program, compiler, adapter, work, motion_bound, *, checkpoint=None,
                      seconds=3, candidate_seconds=1, solver_calls=8, python_executable=None, cancel_event=None,
                      partial_corridor=False, required_landing=None, scope=None, on_progress=None, retry_unresolved=True, first_witness=False,
-                     guide_objective=None, solve_policy=None):
+                     guide_objective=None, solve_policy=None, climb_families=False):
     timings={}
     marked=time.monotonic()
     def mark(name):
@@ -166,7 +166,7 @@ def evaluate_program(scene, program, compiler, adapter, work, motion_bound, *, c
     result = solve_contact_branches(route, profiles, checks,
         compiler, seconds=seconds, candidate_seconds=candidate_seconds, retries=0,
         improve=True, rank_equal_cost=policy['rankEqualCost'], optimize_goal=True,
-        stop_on_feasible=policy['stopOnFeasible'], oracle_rejection=policy['oracleRejection'],
+        stop_on_feasible=policy['stopOnFeasible'], oracle_rejection=policy['oracleRejection'], climb_families=climb_families,
         python_executable=python_executable, cancel_event=cancel_event, geometry=scene['collisionScene'],
         motion_bound=motion_bound, solid_blocks=owners, max_wall_hits=0,
         candidate_filter=candidate_filter, work=scoped, resume_state=program.get('repairState'),

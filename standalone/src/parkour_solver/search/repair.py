@@ -3,6 +3,7 @@ from parkour_solver.constraints.contacts import floor_checks, contact_conflicts,
 import copy
 from collections import Counter
 import heapq
+import json
 import time
 
 from parkour_solver.numerics import prepare, validate
@@ -15,6 +16,9 @@ from parkour_solver.validation.scene import check_geometry
 from parkour_solver.constraints.hit_events import wall_hit_options
 from parkour_solver.search.repair_state import branch_key, compatible, context as repair_context
 
+# Close losers are kept only to recover when the route fails later; objectives are positions in blocks.
+FALLBACK_LIMIT = 2
+FALLBACK_GAP = 0.3
 
 def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candidate_seconds, retries,
                            improve=False, rank_equal_cost=False, optimize_goal=False,
@@ -22,7 +26,7 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
                            solid_blocks=None, max_wall_hits=0,
                            max_wall_candidates=24, candidate_filter=None, work=None, resume_state=None, repair_scope=None,
                            on_progress=None, validation_scope=None, initial_variants=None, retry_unresolved=True,
-                           stop_on_feasible=None, oracle_rejection=False):
+                           stop_on_feasible=None, oracle_rejection=False, climb_families=False):
     route = copy.deepcopy(route)
     if solid_blocks is not None:
         for passage in route.get('passages', []):
@@ -36,10 +40,13 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
     completed_source_metrics = Counter()
     choices = {}
     choice_alternatives = {}
+    climbing = climb_families and rank_equal_cost
+    families = {}
+    settling = None
     policy = dict(stopOnFeasible=stop_on_feasible, optimizeGoal=optimize_goal,
                   rankEqualCost=rank_equal_cost, oracleRejection=oracle_rejection)
-    current_context = repair_context(route, profiles, geometry, dict(scope=repair_scope, solvePolicy=policy, avoidancePolicy=9))
-    resuming = (isinstance(resume_state, dict) and resume_state.get('version') in (1, 2)
+    current_context = repair_context(route, profiles, geometry, dict(scope=repair_scope, solvePolicy=policy, avoidancePolicy=10))
+    resuming = (isinstance(resume_state, dict) and resume_state.get('version') == 3
                 and compatible(resume_state.get('context'), current_context))
     exact_resume = resuming and resume_state['context'] == current_context
     if exact_resume:
@@ -51,7 +58,11 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
     hit_pool = wall_hit_options(route, profiles, geometry, solid_blocks, motion_bound, max_wall_candidates) \
         if geometry is not None and max_wall_hits else {'options': [], 'generated': 0, 'candidateDrops': 0}
 
-    def offer(score, rows, passages, hits, warm_yaw=None, selected=None):
+    def point(meta):
+        family = families.get(meta['family']) if climbing and meta is not None else None
+        return family['points'].get(json.dumps(meta['switches'])) if family is not None else None
+
+    def offer(score, rows, passages, hits, warm_yaw=None, selected=None, meta=None):
         nonlocal serial
         key = branch_key(rows, passages, hits)
         if selected is not None:
@@ -64,13 +75,95 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
         seen.add(key)
         serial += 1
         heapq.heappush(queue, (score, serial, copy.deepcopy(rows), copy.deepcopy(passages), copy.deepcopy(hits),
-                              copy.deepcopy(warm_yaw)))
+                              copy.deepcopy(warm_yaw), copy.deepcopy(meta)))
+        member = point(meta)
+        if member is not None:
+            member.update(status='visited', pending=member['pending']+1)
+
+    def exhausted(family):
+        if family['source'] is None:
+            return source_exhausted
+        return not any(branch_key(r['rows'], r['passages'], r['hits']) == family['source'] for r in repair_sources)
+
+    def visit(member):
+        held, member['held'] = member['held'], []
+        member['status'] = 'visited'
+        for b in held:
+            offer(b['score'], b['rows'], b['passages'], b['hits'], b['warmYaw'], b['selected'], b['meta'])
+        if not member['pending']:
+            member['status'] = 'settled'
+
+    def advance(name):
+        # The objective is unimodal in each switch tick: climb from the best point to its held +-1 neighbours.
+        family = families[name]
+        points = family['points']
+        while True:
+            family['done'] = False
+            if any(p['pending'] for p in points.values()):
+                return
+            ranked = [p for p in points.values() if p['rank'] is not None]
+            if not ranked:
+                target = next((points[k] for k in family['order'] if points[k]['status'] == 'held'), None)
+                if target is None:
+                    family['done'] = exhausted(family)
+                    return
+                visit(target)
+                continue
+            best = min(ranked, key=lambda p: p['rank'])
+            neighbours = [json.dumps(best['switches'][:i]+[t+step]+best['switches'][i+1:])
+                          for i, t in enumerate(best['switches']) for step in (-1, 1)]
+            held = [points[k] for k in neighbours if k in points and points[k]['status'] == 'held']
+            if not held:
+                family['done'] = all(k in points for k in neighbours) or exhausted(family)
+                return
+            for member in held:
+                visit(member)
+
+    def advance_all():
+        for name in list(families):
+            advance(name)
+
+    def arrive(score, rows, passages, hits, warm_yaw, selected, meta, source=None):
+        if not climbing or meta is None:
+            offer(score, rows, passages, hits, warm_yaw, selected, meta)
+            return
+        family = families.get(meta['family'])
+        if family is None:
+            family = families[meta['family']] = dict(points={}, order=[], source=source, done=False)
+        name = json.dumps(meta['switches'])
+        member = family['points'].get(name)
+        if member is None:
+            member = family['points'][name] = dict(switches=meta['switches'], status='held', rank=None, objective=None,
+                                                   held=[], pending=0, keys=[])
+            family['order'].append(name)
+        member['keys'].append(branch_key(rows, passages, hits))
+        first = len(family['points']) == 1 and not member['held']
+        if first or member['status'] != 'held':
+            offer(score, rows, passages, hits, warm_yaw, selected, meta)
+            return
+        member['held'].append(dict(save_branch(score, rows, passages, hits, warm_yaw, meta), selected=copy.deepcopy(selected)))
+        advance(meta['family'])
+
+    def settle(done):
+        member = point(done['meta'])
+        if member is None:
+            return
+        member['pending'] -= 1
+        if done['rank'] is not None and (member['rank'] is None or done['rank'] < member['rank']):
+            member.update(rank=done['rank'], objective=done['objective'])
+        if not member['pending']:
+            member['status'] = 'settled'
+            advance(done['meta']['family'])
 
     if resuming:
         choices.update(copy.deepcopy(resume_state.get('interactionChoices', {})))
         choice_alternatives.update(copy.deepcopy(resume_state.get('interactionAlternatives', {})))
-        pending = (([resume_state['incumbent']] if resume_state.get('incumbent') is not None else [])
-                   if resume_state.get('version') == 1 else [])+resume_state.get('pending', [])
+        if climbing:
+            families.update(copy.deepcopy(resume_state.get('families', {})))
+            for family in families.values():
+                for member in family['points'].values():
+                    member['pending'] = 0
+        pending = resume_state.get('pending', [])
         deferred = (resume_state.get('unresolved', []) if retry_unresolved else [])+([resume_state['inFlight']] if resume_state.get('inFlight') else [])
         if not retry_unresolved:
             unresolved.extend(copy.deepcopy(resume_state.get('unresolved', [])))
@@ -83,24 +176,38 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
             restored.add(key)
             seen.discard(key)
             offer(saved['score'] if index < len(pending) else floor+saved['score'],
-                  saved['rows'], saved['passages'], saved['hits'], saved.get('warmYaw'))
+                  saved['rows'], saved['passages'], saved['hits'], saved.get('warmYaw'), meta=saved.get('meta'))
         resumed_branches = len(queue)
+        advance_all()
     if not exact_resume:
         if initial_variants is None:
             offer(min([b[0] for b in queue]+[0.])-1, [], route.get('passages', []), route.get('hitEvents', []), route.get('warmYaw'))
 
-    def save_branch(score, rows, passages, hits, warm_yaw):
-        return copy.deepcopy(dict(score=score, rows=rows, passages=passages, hits=hits, warmYaw=warm_yaw))
+    def save_branch(score, rows, passages, hits, warm_yaw, meta=None):
+        return copy.deepcopy(dict(score=score, rows=rows, passages=passages, hits=hits, warmYaw=warm_yaw,
+                                  **(dict(meta=meta) if meta is not None else {})))
+
+    def fallbacks():
+        if best_result is None or best_branch is None:
+            return []
+        top = candidate_rank(best_result['best'], route['objective'])
+        chosen = branch_key(best_branch['rows'], best_branch['passages'], best_branch['hits'])
+        close = sorted(((candidate_rank(v['best'], route['objective']), v) for v in accepted_variants
+                        if v['branch'] != chosen), key=lambda entry: entry[0])
+        return [copy.deepcopy(v) for rank, v in close
+                if rank[0] == top[0] and rank[1]-top[1] <= FALLBACK_GAP][:FALLBACK_LIMIT]
 
     def snapshot():
         saved_best = ({k: copy.deepcopy(v) for k, v in best_result.items()
                       if k not in ('repairState', 'repairResume', 'attempts', 'contactAttempts')}
                       if best_result is not None else None)
-        return dict(version=2, context=current_context, repairSources=copy.deepcopy(repair_sources),
+        return dict(version=3, context=current_context, repairSources=copy.deepcopy(repair_sources),
             sourcesCompletedMetrics=dict(completed_source_metrics),
-            pending=[save_branch(score, rows, passages, hits, yaw) for score, _, rows, passages, hits, yaw in sorted(queue)],
+            pending=[save_branch(score, rows, passages, hits, yaw, meta)
+                     for score, _, rows, passages, hits, yaw, meta in sorted(queue)],
             unresolved=copy.deepcopy(unresolved), seen=sorted(seen), incumbent=copy.deepcopy(best_branch),
-            acceptedVariants=copy.deepcopy(accepted_variants),
+            acceptedVariants=copy.deepcopy(accepted_variants), families=copy.deepcopy(families),
+            **(dict(fallbackVariants=fallbacks()) if rank_equal_cost else {}),
             acceptedResult=saved_best, inFlight=copy.deepcopy(in_flight), completed=copy.deepcopy(completed),
             referenceWarmYaw=copy.deepcopy(reference_yaw), interactionChoices=copy.deepcopy(choices),
             interactionAlternatives=copy.deepcopy(choice_alternatives),
@@ -120,7 +227,8 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
         metrics.update(getattr(variant_source, 'state', {}).get('metrics', {}))
         for record in repair_sources:
             metrics.update(record.get('state', {}).get('metrics', {}))
-        result['avoidanceMetrics'] = dict(metrics, generationIncomplete=bool(repair_sources or not source_exhausted))
+        result['avoidanceMetrics'] = dict(metrics, generationIncomplete=bool(repair_sources or not source_exhausted),
+            heldUnsolved=sum(len(p['held']) for f in families.values() for p in f['points'].values()))
         result['repairResume'] = dict(requested=resume_state is not None, compatible=resuming,
                                      exact=exact_resume, resumedBranches=resumed_branches)
         publish()
@@ -151,6 +259,9 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
             offer(-1, [], route.get('passages', []), route.get('hitEvents', []), route.get('warmYaw'))
     termination = 'contact_search_exhausted'
     while queue or not source_exhausted or repair_sources:
+        if settling is not None:
+            done, settling = settling, None
+            settle(done)
         in_flight = None
         publish()
         if cancel_event is not None and cancel_event.is_set():
@@ -188,12 +299,13 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
                 completed_source_metrics.update(record.get('state', {}).get('metrics', {}))
                 if record.get('state', {}).get('uncertainInteractions'):
                     unknown = save_branch(record['score'], record['rows'], record['passages'],
-                                          record['hits'], record['candidate']['yaw'])
+                                          record['hits'], record['candidate']['yaw'], record.get('meta'))
                     key = branch_key(unknown['rows'], unknown['passages'], unknown['hits'])
                     if not any(branch_key(b['rows'], b['passages'], b['hits']) == key for b in unresolved):
                         unresolved.append(unknown)
                 repair_sources.pop()
                 source_instances.pop(token, None)
+                advance_all()
                 continue
             except TimeoutError as error:
                 termination = str(error)
@@ -210,20 +322,26 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
                     for at in passage['switchPhases']:
                         leg = max(i for i, e in enumerate(record['plan']['events']) if e['landed'] <= at//3)
                         passage['phaseReferences'].append(dict(leg=leg, offset=at//3-record['plan']['events'][leg]['jump'], phase=at%3))
-                offer(record['score']+variant['score']*1e-9, record['rows']+converted, record['passages'],
-                      record['hits'], record['candidate']['yaw'], selected)
+                source = branch_key(record['rows'], record['passages'], record['hits'])
+                from parkour_solver.search.identity import digest
+                arrive(record['score']+variant['score']*1e-9, record['rows']+converted, record['passages'],
+                       record['hits'], record['candidate']['yaw'], selected,
+                       dict(family=digest([source, variant['family']]), switches=variant['switches'])
+                       if 'family' in variant else None, source)
             continue
         if variant_source is not None and not source_exhausted and not queue:
             try:
                 variant = next(variant_source)
             except StopIteration:
                 source_exhausted = True
+                advance_all()
             except TimeoutError as error:
                 termination = str(error)
                 break
             else:
-                offer(min([b[0] for b in queue]+[0.])-1, variant['rows'], variant.get('passages', []),
-                      route.get('hitEvents', []), reference_yaw or route.get('warmYaw'), variant.get('selectedPassages', []))
+                arrive(min([b[0] for b in queue]+[0.])-1, variant['rows'], variant.get('passages', []),
+                       route.get('hitEvents', []), reference_yaw or route.get('warmYaw'), variant.get('selectedPassages', []),
+                       dict(family=variant['family'], switches=variant['switches']) if 'family' in variant else None)
             if not queue:
                 continue
         # Generation can consume the remaining budget. Leave the next branch
@@ -237,8 +355,9 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
         if time.monotonic() >= deadline:
             termination = 'deadline'
             break
-        score, _, rows, passages, hits, proposal_yaw = heapq.heappop(queue)
-        in_flight = save_branch(score, rows, passages, hits, proposal_yaw)
+        score, _, rows, passages, hits, proposal_yaw, meta = heapq.heappop(queue)
+        in_flight = save_branch(score, rows, passages, hits, proposal_yaw, meta)
+        settling = dict(meta=meta, rank=None, objective=None) if point(meta) is not None else None
         publish()
         if len(hits) < max_wall_hits:
             for index, hit in enumerate(hit_pool['options']):
@@ -302,6 +421,7 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
             best = copy.deepcopy(best)
             selected = copy.deepcopy(choices.get(branch_key(rows, passages, hits), []))
             described = passages+[p for p in selected if p not in passages]
+            best['alternativeRows'] = copy.deepcopy(rows)
             best.update(route=best.get('route', branch), profiles=profiles, contactChecks=checks,
                 passages=described, hitEvents=hits, ceilingEvents=branch.get('ceilingEvents', []),
                 blockageTimeline=gate_timeline(described, best['plan']['events']),
@@ -330,7 +450,7 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
             if checked['accepted']:
                 accepted = enrich(best, checked)
                 reference_yaw = accepted['candidate']['yaw'][:]
-                best_branch = save_branch(score, rows, passages, hits, accepted['candidate']['yaw'])
+                best_branch = save_branch(score, rows, passages, hits, accepted['candidate']['yaw'], meta)
                 if work is not None:
                     work.accepted(accepted)
                     checked['reportedAcceptance'] = True
@@ -354,11 +474,11 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
             if checked is not None:
                 completion['validationStatus'] = 'accepted' if checked.get('accepted') else checked.get('reason','rejected')
         except TimeoutError:
-            unresolved.append(save_branch(score, rows, passages, hits, proposal_yaw))
+            unresolved.append(save_branch(score, rows, passages, hits, proposal_yaw, meta))
             termination = 'geometry_deadline'
             break
         except (ValueError, RuntimeError, OSError) as error:
-            unresolved.append(save_branch(score, rows, passages, hits, proposal_yaw))
+            unresolved.append(save_branch(score, rows, passages, hits, proposal_yaw, meta))
             if best_result is not None:
                 best_result.update(termination='geometry_error', error=str(error),
                                    attempts=inner_attempts, contactAttempts=attempts)
@@ -374,7 +494,7 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
                          'conflicts': [{'block': c['block']['id'], 'state': c['state'], 'reason': c['reason']}
                                        for c in conflicts], 'termination': result['termination']})
         if result['status'] in ('error', 'cancelled'):
-            unresolved.append(save_branch(score, rows, passages, hits, proposal_yaw))
+            unresolved.append(save_branch(score, rows, passages, hits, proposal_yaw, meta))
             if best_result is not None:
                 best_result.update(termination=result['status'], attempts=inner_attempts, contactAttempts=attempts)
                 return finish(best_result)
@@ -389,7 +509,7 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
                 for d in diagnostics)
             completion['oracleRejected'] = bool(oracle_completed)
             if result['status'] == 'unknown' and not oracle_completed:
-                unresolved.append(save_branch(score, rows, passages, hits, proposal_yaw))
+                unresolved.append(save_branch(score, rows, passages, hits, proposal_yaw, meta))
             continue
         if not conflicts:
             if 'verdict' in checked and candidate_filter is not None:
@@ -406,7 +526,7 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
             if 'reason' in checked:
                 attempts[-1].update(status='unknown', termination=checked['reason'])
                 for extra in checked.get('verdict', {}).get('alternatives', []):
-                    offer(score + 1, rows + extra, passages, hits, proposal_yaw)
+                    offer(score + 1, rows + extra, passages, hits, proposal_yaw, meta=meta)
                 continue
             audit_result = checked
             if geometry is not None:
@@ -421,7 +541,7 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
                     # Save construction inputs before any interruptible preparation.
                     # The shared builder assigns all applicable boxes jointly.
                     repair_sources.append(dict(route=branch, plan=plan, vertical=audit_result['vertical'],
-                        candidate=result['best']['candidate'], score=score, rows=rows, passages=passages, hits=hits))
+                        candidate=result['best']['candidate'], score=score, rows=rows, passages=passages, hits=hits, meta=meta))
                     continue
                 result['best']['geometryCheck'] = checked
             result['best'] = enrich(result['best'], audit_result)
@@ -433,21 +553,26 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
             if work is not None and not audit_result.get('reportedAcceptance'):
                 work.accepted(result['best'])
             result.update(attempts=inner_attempts, contactAttempts=attempts)
+            if settling is not None:
+                settling.update(rank=list(candidate_rank(result['best'], route['objective'])),
+                                objective=result['best']['candidate']['objective'])
             if not rank_equal_cost:
                 if best_result is not None and candidate_rank(best_result['best'], route['objective']) < candidate_rank(result['best'], route['objective']):
                     return finish(best_result)
-                best_branch = save_branch(score, rows, passages, hits, result['best']['candidate']['yaw'])
+                best_branch = save_branch(score, rows, passages, hits, result['best']['candidate']['yaw'], meta)
                 return finish(result)
             if best_result is None or candidate_rank(result['best'], route['objective']) <= candidate_rank(best_result['best'], route['objective']):
                 best_result = result
-                best_branch = save_branch(score, rows, passages, hits, result['best']['candidate']['yaw'])
+                best_branch = save_branch(score, rows, passages, hits, result['best']['candidate']['yaw'], meta)
                 reference_yaw = result['best']['candidate']['yaw'][:]
             continue
         conflict = conflicts[0]
         for row in avoid_contact_rows(conflict, max(route['supportClearance'], 2e-7)):
             new_rows = rows + [row]
             delta = abs(conflict['position'][0 if row['mode'] == 'X' else 1] - row['rhs'])
-            offer(score + delta, new_rows, passages, hits, proposal_yaw)
+            offer(score + delta, new_rows, passages, hits, proposal_yaw, meta=meta)
+    if settling is not None:
+        settle(settling)
     if best_result is not None:
         best_result.update(termination=termination, attempts=inner_attempts, contactAttempts=attempts)
         return finish(best_result)

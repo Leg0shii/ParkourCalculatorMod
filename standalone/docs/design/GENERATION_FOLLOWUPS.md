@@ -100,11 +100,11 @@ python -m tools.docs_index && python -m tools.validate_layout
 
 | Step | Section | Changes frames 4/8 |
 |---|---|---|
-| 0 | §0 per-request solve seconds | no (measurement) |
-| 1 | §3 obstacle footprints builder, plus `MIN_FREE_WIDTH`/`thin` | no (new module) |
-| 2 | §4 avoidance on obstacle clusters | yes: 21 → 6 and 7 alternatives expected |
-| 3 | §2 minimum width in the landing-cover path | yes: one fewer B5 landing option |
-| 4 | §7 switch-tick hill-climb (after the user confirms §7's open points) | yes: about 3 solves per family expected |
+| 0 | §0 per-request solve seconds | done, `ce32e7d9` |
+| 1 | §3 obstacle footprints builder, plus `MIN_FREE_WIDTH`/`thin` | done, `b2977e0f` |
+| 2 | §4 avoidance on obstacle clusters | done, `df1da7a6`: 21 → 7 alternatives in frames 4 and 8 |
+| 3 | §2 minimum width in the landing-cover path | done, `350064f6`: one B5 landing option |
+| 4 | §7 choose by optimizing, switch-tick climb, fallbacks | done: frame 4 solves 4 alternatives (3 IPOPT requests), frame 8 solves 3; 18 requests instead of 25 ([evidence](../../research/switch-climb/README.md)) |
 | later | §1, §3 stages B-C, §4b, §5, §6, §7b | deferred |
 
 ## 0. Per-request solve seconds
@@ -386,79 +386,260 @@ order clusters along them and fix sides once per sequence. Return only if §4 le
 waste, e.g. long windows where obstacle-blind envelopes make a far side look
 reachable.
 
-## 7. Switch-tick hill-climb with optimize calls
+## 7. Choose obstacle sides by optimizing, with a switch-tick climb
 
-Decision (user, 2026-11-17): the objective is unimodal in a switch tick. Group
-alternatives into families by how they pass each cluster, and climb each family's
-switch ticks with optimized solves instead of solving every tick.
+### Decisions (user, 2026-11-17)
 
-The earlier draft built neighbours inside the generator (shift a span, rebuild its
-rows, re-check every item's coverage). That is wrong: rows of items placed after the
-shifted cluster were chosen under the old conditioning, so the re-check can reject
-the real neighbour, which the walk later emits with adjusted rows and the climb then
-skips. The climb below uses only variants the walk emits, so every solved
-alternative is one the generator produces today.
+- Feasibility checks only establish what is possible: a branch with no feasible
+  alternative is dropped. They never choose between two alternatives.
+- Choosing between alternatives always optimizes. In every leg (an anchor-to-anchor
+  frame, which is today's decision cluster; inferring clusters automatically is
+  register G1), for each movement program: produce every alternative, optimize, keep
+  the best and move on.
+- Alternatives that differ only in when the route switches sides of an obstacle
+  form a family. The objective is unimodal in a switch tick, so each family is
+  climbed (solve a tick, then its ±1 neighbours, stop when neither improves) instead
+  of solving every tick. IPOPT unknown counts as infeasible for the climb.
+- Losers are not explored, except the best few close ones, kept as fallbacks and
+  restored only when the route fails further on, the way slower run-tick arrivals
+  are kept (`minimumRunExclusions`, restored on `recoveryFailure`).
+- Keeping several choices open until later legs is deferred (§7b); climbing for
+  stepping, ceiling and landing ticks is deferred (register P8).
+- The climb uses only alternatives the generator emits. (An earlier draft rebuilt
+  shifted neighbours by hand; rows of obstacles placed later were chosen under the
+  old conditioning, so it could reject the real neighbour.)
 
-### Generator side (`constraints/variants.py`)
+Fallback values (user, 2026-11-17): `FALLBACK_LIMIT = 2` (at most two fallbacks
+per movement program) and `FALLBACK_GAP = 0.3` blocks (a fallback's objective is at
+most 0.3 worse than the best; objectives are positions in blocks: progress along the
+guide direction in a leg, Z on the final leg). Fallbacks are kept only for legs
+before the last; the last leg's best competes directly for the final route.
 
-- Each child node records `choices = parent choices + [choice]`, where `choice =
-  dict(item=chosenItem, sides=<the passage's side keys after describe's collapse>,
-  switches=<passage switchPhases // 3>)` for a cluster option and `dict(item,
-  key=effective_key(option rows))` for any other item (landing region, route guard,
-  contact check), so a different landing rectangle is a different family.
-- Emitted variants add `family = digest(sorted [(item, sides or key)])` and
-  `switches = tuple(ticks of every cluster choice in item order)`. Nothing else
-  changes; the walk, dedupe and screening stay as they are.
+### What the code does today
 
-### Repair side (`search/repair.py`, `solve_contact_branches`)
+- `search/dfs.py:614` `score`: anchor legs other than the last use
+  `stopOnFeasible=True, rankEqualCost=False`; the last leg uses `False, True`.
+- `search/repair.py:436` `solve_contact_branches`: without `rank_equal_cost` it
+  returns at the first accepted alternative; with it, it solves every alternative and
+  keeps the best by `candidate_rank` (`search/ranking.py`: ticks, then objective).
+  Every accepted alternative is appended to `accepted_variants` (`repair.py:430`).
+- `search/dfs.py:691`: every entry of `repairState['acceptedVariants']` becomes a
+  sibling record (`variantOf`), explored by the DFS when it backtracks.
+- `search/dfs.py:401-424` `evaluate_node`: decision checks use `purpose='node',
+  stopOnFeasible=True, rankEqualCost=False`; on success `commit_arrival(program,
+  result['best'])` keeps every wall of the witness, including the rows of the
+  alternative that happened to be feasible first, so the continuing program inherits
+  that choice; the node is cached as feasible and never asked again.
+- `search/dfs.py:759-772` `close_frame`: a finished child leg with an oracle-rejected
+  record (or its own `recoveryFailure`) sets `parent['recoveryFailure']`.
+  `search/dfs.py:949-975`: a leg with `recoveryFailure` and no validated finish
+  restores one saved slower run-tick arrival.
+- Only the anchor search (`anchor_route`, `dfs.py:67`) is changed. The old
+  supplied-corridor path keeps its behaviour (register P9 removes it); node checks
+  keep `rankEqualCost=False`.
 
-- A point is `(family, switches)`. State `families = {family: dict(points={switches:
-  dict(rank, held=[saved branches], visited)}, done)}`, saved in `snapshot`
-  (version 3; resume accepts only 3). Variants from `repair_sources` get families
-  prefixed by their source record's branch key.
-- Arrival of a variant: if its point is visited, offer it (as today). Otherwise hold
-  it in its point. A family's first point is visited at once, except in
-  first-witness mode while another family is climbing: then it is held, and the next
-  family starts only after the current one is done (on a later call when the frame
-  is revisited).
-- Every family solve passes `stop_on_feasible=False` to `find_route` (optimize
-  calls, with the guide objective in intermediate frames).
-- After a solve, the point's `rank` = best `candidate_rank` of its accepted members,
-  `None` for infeasible, unknown, blocked or rejected (unknown also stays on the
-  unresolved retry path). If the family has no feasible point, visit the next held
-  point in arrival order (today's behaviour). Otherwise let `best` be the best
-  feasible point and visit its neighbours: points equal to `best` except one switch
-  ±1 tick. A neighbour not held yet is waited for: the loop keeps pulling from the
-  generator (it does so whenever the queue is empty). The family is done when every
-  neighbour of `best` is visited, or missing with the generator exhausted.
-- `acceptedVariants`: a family adds only its best member, when it is done (one
-  sibling route per family, `search/dfs.py`).
-- First-witness mode (`rank_equal_cost` false): return the family's best when the
-  family is done, instead of the first accepted alternative. With
-  `rank_equal_cost`: climb every family; the best across families wins as today.
+### 7.1 Generator tags families (`constraints/variants.py`)
 
-### Open points (user)
+- `_next_variant`, where the child is built (`variants.py:285`): add `choices =
+  node.get('choices', []) + [choice]` to the child, where `choice` is
+  `dict(item=node['chosenItem'], sides=[side['key'] for side in passage['faces']],
+  switches=[at//3 for at in passage['switchPhases']])` when the option has a
+  `passage`, else `dict(item=node['chosenItem'], key=self.effective_key(option['rows']))`
+  (landing rectangle, route guard, contact check, or an encounter needing no rows).
+  The pending root node starts with `choices=[]`. Items skipped as entailed
+  (`variants.py:265`) record no choice.
+- Emission (`variants.py:260`): with `ordered = sorted(node['choices'], key=lambda c:
+  c['item'])`, add `family=digest([[c['item'], c.get('sides', c.get('key'))] for c in
+  ordered])` and `switches=[t for c in ordered for t in c.get('switches', [])]`.
+  Nothing else changes: walk, screening and dedupe stay as they are.
+- `STATE_VERSION = 5` (pending nodes now carry `choices`); update the error text.
 
-1. Decision-node solves (`evaluate_node`, purpose `node`) are first-witness too, and
-   their rows are inherited (`commit_arrival` keeps selected walls). Recommendation:
-   do not climb there; they gate a decision, and anchor and goal frames climb.
-2. Waiting for a missing neighbour can drain the generator in an intermediate frame,
-   where today it stops at the first feasible alternative. Measure generation
-   seconds per frame after step 2 before deciding whether that matters.
+### 7.2 Repair climbs families (`search/repair.py`)
 
-### Report and tests
+Climbing runs only when the caller passes `climb_families=True` (new keyword of
+`solve_contact_branches` and `evaluate_program`; `dfs.py` `score` passes
+`anchor_route`) together with `rank_equal_cost`, and only for branches that carry a
+`family`. Other callers (`find_blocks` paths in `movement.py`, `climbable.py`,
+`support_profiles.py`, whose collision repairs also produce generator variants) and
+branches without a family (no generator, wall-hit offers) are offered as today.
 
-- `tools/profiling/trace.py`: per movement, a families table: family sides, switch
-  ticks tried with objective or "infeasible", chosen ticks.
-- Tests: variants carry `family`/`switches` (same family for two switch ticks,
-  different families for two landing rectangles); repair loop with a stub generator
-  and a stub solver whose objective is unimodal in the switch tick (climbs to the
-  peak, never solves the far ticks, treats unknown as infeasible, keeps only the best
-  in `acceptedVariants`, waits for a late neighbour).
-- Docs: [avoidance passages](AVOIDANCE_PASSAGES.md), [execution reference](../ANCHOR_SEARCH_EXECUTION_REFERENCE.md)
-  (intermediate frames optimize within a family), [performance](../PERFORMANCE.md).
-- Expected on Real11 (not measured): frame 4 solves t62 (start), t61 (unknown, so
-  infeasible) and t63 (worse) for the south/west family instead of six ticks.
+- Branch metadata: `offer(..., meta=None)` stores `meta = dict(family, switches)` as
+  a seventh queue-tuple element (`serial` keeps comparisons from reaching it) and in
+  `save_branch` (key `meta`), so it survives `snapshot` and resume. Branches derived
+  from a popped branch carry the same `meta`: the contact-conflict re-offers
+  (`repair.py:447`), the candidate-filter alternatives (`repair.py:408`) and the
+  `repair_sources` record (`repair_sources.append(..., meta=meta)`).
+- Variants from a `repair_sources` generator (`ConstraintVariants.for_plan`) get
+  `family = digest([record branch key, variant family])`, so they climb separately.
+- State: `families = {family: dict(points={json.dumps(switches): dict(switches,
+  status, rank, objective, held, pending, keys)}, order=[point keys in arrival
+  order], source=None or the repair record's branch key, done=False)}`.
+  `status` is `held`, `visited` or `settled`; `rank` is the best `candidate_rank` of
+  the point's accepted members (as a list, `None` if none) and `objective` that
+  member's candidate objective (for the report); `held` is a list of saved branches
+  (`save_branch` plus `meta`, `selected` and the arrival score); `pending` counts the
+  point's queued or in-flight branches; `keys` lists the branch keys of every member
+  (the report maps them to alternatives). A family's source is exhausted when it is
+  the main source and `source_exhausted`, or its repair record is no longer in
+  `repair_sources`. Visiting a held branch offers it with its arrival score.
+- Arrival (both sources, replacing the direct `offer` at `repair.py:212` and `repair.py:225`):
+  `arrive(branch, meta)`. Unknown family: create it, visit the point (offer it with
+  `min(queue scores) - 1`). Known family: if the point is `visited`, offer it;
+  otherwise append it to the point's `held` list and call `advance(family)`.
+- Completion: after a family branch is popped and settled (any outcome, including
+  unknown, rejected, blocked, error), decrement the point's `pending`; on an accepted
+  result set `rank = min(rank, candidate_rank)`. When `pending` is 0 mark it
+  `settled` and call `advance(family)`. Implement it like `in_flight`: remember the
+  popped branch's `meta` (and the rank when the accepted path at `repair.py:441`
+  runs) and settle it at the top of the next loop iteration, before `publish()`, so
+  every `continue` path is covered without re-indenting the loop body. Branches
+  re-offered from a popped branch (contact conflicts, candidate-filter alternatives)
+  increment the same point's `pending` before it settles.
+- `advance(family)`: return while any point has `pending > 0`. If no point has a
+  rank, visit the next held point in arrival order (today's order); if none is held,
+  the family is done once the source is exhausted. Otherwise let `best` be the point
+  with the smallest rank; its neighbours are its switch list with one entry changed by
+  ±1. Visit every neighbour that is held. The family is done when every neighbour is
+  visited or settled, or missing while its source is exhausted; otherwise it waits
+  (the loop pulls more variants whenever the queue is empty).
+- When `variant_source` raises `StopIteration` (`repair.py:219`) and when a
+  `repair_sources` record is popped (`repair.py:195`), call `advance` for every
+  family that is not done.
+- Held branches that are never visited are not solved. Count them in the avoidance
+  metrics as `heldUnsolved`.
+- Snapshot `version=3`, with `families`; resume accepts only version 3
+  (`repair.py:42`), and the version-1 incumbent handling in the resume block is
+  deleted. `repair_context(..., avoidancePolicy=10)`.
+- Resume (whenever `resuming`, since the generator cursor resumes too): restore
+  `families`, set every point's `pending` to 0, re-offer the saved pending, in-flight
+  and retried unresolved branches with their `meta` (each increments its point's
+  `pending` and marks it `visited`), then call `advance` for every family that is not
+  done.
+
+### 7.3 Best plus close fallbacks (`search/repair.py`)
+
+- Keep `accepted_variants` as the internal list of every accepted alternative, each
+  with its `rank`.
+- `fallbacks()`: the accepted alternatives other than the final best whose ticks
+  equal the best's and whose objective is within `FALLBACK_GAP` of it, sorted by
+  rank, at most `FALLBACK_LIMIT`. Constants at module top with a one-line why.
+- The snapshot keeps writing `acceptedVariants` (exact resume restores it) and, in
+  rank mode, also writes `fallbackVariants = fallbacks()` (each `dict(branch,
+  best)`). The final best is excluded by the branch key of `best_branch`.
+- `enrich` (`repair.py:301`) adds `best['alternativeRows'] = copy.deepcopy(rows)`,
+  the rows this alternative added to the route (used by 7.6).
+
+### 7.4 Legs optimize and keep only the best (`search/dfs.py`)
+
+- `score` (`dfs.py:613-614`): for `anchor_route`, non-final legs use
+  `dict(purpose='anchor', stopOnFeasible=False, rankEqualCost=True,
+  oracleRejection=True)`; the last leg is unchanged.
+- `dfs.py:691`: for `anchor_route`, do not create sibling records (on any leg; the
+  last leg's siblings were never explored past the terminal frame). The fallbacks
+  stay where the repair snapshot put them, `record['program']['repairState']
+  ['fallbackVariants']`, so they are not copied a second time. Non-anchor routes keep the sibling loop. Move
+  the sibling-record construction (the body of that loop) into a helper
+  `variant_record(f, record, variant)` that uses `record['program']` as the source
+  program and `record['solveScope']`, computes the known children from
+  `f['records']`, returns `None` for a missing arrival or a known child, and drops
+  `fallbacks`/`restoredFallbacks` from the copy; used by both the old loop and 7.5.
+
+### 7.5 Fallbacks restore on a later failure (`search/dfs.py`)
+
+- `close_frame` (`dfs.py:770`): besides setting the parent's `recoveryFailure`,
+  append `f['parent']['candidate']` to `parent['failedCandidates']` (no duplicates).
+  A frame can explore several records (one per movement program) whose children all
+  fail, and `recoveryFailure` keeps only the last, so the list is what lets every
+  failed record's fallbacks be restored.
+- Restore block (`dfs.py:949`): before restoring a slower run-tick arrival, walk
+  `f['failedCandidates']` in order, map each to its original record (follow
+  `variantOf`), and take the first fallback not yet restored
+  (`record['restoredFallbacks']` counts them) for which `variant_record` returns a
+  record; append it to `f['records']`, emit
+  `transition('restore_alternative', f, candidate=..., recovery=recovery)`, set
+  `f['phase'] = 'select'` and `continue`. Only when no fallback remains does the
+  existing run-tick restore run. Fallbacks keep the arrival tick, so they come
+  before slower runs.
+
+### 7.6 Decision checks keep no chosen rows (`search/dfs.py` `evaluate_node`)
+
+- Before `commit_arrival(program, result['best'])` (`dfs.py:424`), remove the
+  alternative's rows from the witness walls: a wall `w` is dropped when `(w['mode'],
+  w['t1'], w['cmp'], w['rhs'])` equals `(r['mode'], row_tick(events[r['leg']], r),
+  r['cmp'], r['rhs'])` for some `r` in `best['alternativeRows']`. `row_tick(event,
+  row)` is factored out of `scene/route.py` `schedule` (`landed + offset` for a
+  `run`-phase row, else `jump + offset`) so both use one mapping.
+  The check still marks the node feasible or rejected; the leg's own solve chooses
+  the sides by optimizing.
+
+### 7.7 Report (`tools/profiling/trace.py`)
+
+- `repair_trace` adds `families` (per family: sides from the first member's
+  passages, points with switch ticks, status and objective or `infeasible`) and
+  `fallbacks` (branch keys).
+- `render`, per movement after the alternatives table: a families table (`Family`,
+  `Switch ticks solved`, `Chosen`) and a line "Kept as fallbacks: alternatives #…" (or
+  none). Legend: a family is the alternatives that differ only in switch ticks; the
+  climb solves a tick and its neighbours; fallbacks are restored only if the route
+  fails later. The "Alternatives solved" sentence no longer says each feasible one
+  becomes a route: the best is kept, plus fallbacks.
+
+### 7.8 Tests
+
+- `tests/unit/constraints/test_encounters.py`: two emitted variants with different
+  switch ticks share a family and differ in `switches`; with
+  `required_alternatives` of two landing rectangles, variants with different
+  rectangles have different families.
+- `tests/integration/test_repair_resume.py` (use `RepairHarness.invoke`, which runs
+  with `rank_equal_cost=True`, passing `initial_variants=` a list of variant dicts
+  with `rows`, `selectedPassages=[]`, `family`, `switches`, `score`, and a stub
+  `find` whose objective depends on the switch tick):
+  - unimodal family over ticks 1..6 starting at 2: solves exactly 2, 1, 3 (peak 2);
+  - the first point unknown (stub returns `status='unknown'`): it moves to the next
+    held point and climbs from there; the unknown branch is still in `unresolved`;
+  - a neighbour emitted after the others is waited for and solved;
+  - two families both climbed, best across families wins;
+  - `fallbackVariants` keeps at most `FALLBACK_LIMIT`, only within `FALLBACK_GAP`;
+  - resume mid-climb from a JSON round-tripped snapshot solves nothing twice;
+  - with `rank_equal_cost=False`, or without `climb_families`, every branch is
+    offered as today (the first accepted alternative returns without rank mode).
+- `tests/unit/search/test_anchor_dfs.py:118`: non-final anchor legs now dispatch
+  `stopOnFeasible=False`. Add: a leg whose repair returns two `fallbackVariants`
+  creates no sibling records; a child leg with an oracle-rejected record restores the
+  first fallback before any slower run-tick arrival; when two records' children both
+  fail, the first record's fallbacks are still restored; a decision check's witness
+  walls lose the `alternativeRows` before `commit_arrival`.
+- `tests/integration/test_profiling.py`: fixture with `families` and
+  `fallbackVariants`; assert the families table and the fallback line.
+
+### 7.9 Docs
+
+- [Decisions](../DECISIONS_AND_PLANS.md): rewrite "Intermediate solves" (legs
+  optimize every alternative; decision checks stop at the first feasible point and
+  only prune) and "Switch ticks"; add "Feasibility never chooses".
+- [Execution reference](../ANCHOR_SEARCH_EXECUTION_REFERENCE.md) ("Guided
+  intermediate feasibility" row and the leg description), [feasibility
+  mode](../IPOPT_FEASIBILITY_MODE.md) table, [avoidance passages](AVOIDANCE_PASSAGES.md)
+  (families, climb), [results and debugging](../RESULTS_AND_DEBUGGING.md#solve-reports)
+  (families table, fallbacks), [performance](../PERFORMANCE.md) (new control row and
+  the line on feasibility-only solves), [current state](../CURRENT_STATE.md),
+  register P7.
+
+### 7.10 Verify
+
+Run the commands above; new run directory; native gate. Expected on Real11 (not
+measured; the generator emits each family's earliest switch first, see
+`runs/step3-min-width/report.md`): frame 4 solves t61 (unknown), t62 (best) and t63
+plus the east alternative (its own family, blocked before IPOPT), 4 alternatives
+and 3 IPOPT requests instead of 7 and 6; frame 8 solves t58 (best) and t59 for the
+south-then-west family plus the one south-west-north alternative, 3 instead of 7. Frames 4 and 8 are last legs, so they
+keep no fallbacks (with a 0.3 gap frame 4's runner-up, 0.34 behind, would not
+qualify anyway); Real11's earlier legs have one or two alternatives each, so few or
+no fallbacks are expected there. Intermediate legs now optimize their
+witnesses, so later legs can change; require T ≤ 64 and, at T64, Z ≥
+-1093.2381026602418 up to the last-digit noise seen at step 2; a worse result is a
+finding to report, not to tune away. Record the run in `research/obstacle-clusters/`
+(or a new `research/switch-climb/`) as step 2 did.
 
 ### 7b. Keep interactions open until downstream (deferred)
 

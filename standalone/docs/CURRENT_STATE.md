@@ -12,17 +12,19 @@ everything not being worked on is in the [deferred-work register](DEFERRED_WORK.
 - Active: `perf/early-passage-screen`, draft PR #3 into `main`. It adds
   [geometry-driven avoidance passages](design/AVOIDANCE_PASSAGES.md) on obstacle
   clusters (touching blocks are one obstacle; [evidence](../research/obstacle-clusters/README.md)), screening of
-  accumulated passage prefixes before extension, anchor search under the global
+  accumulated passage prefixes before extension, anchor legs that optimize their
+  alternatives with a switch-tick climb and keep close fallbacks
+  ([evidence](../research/switch-climb/README.md)), anchor search under the global
   run budget instead of service-turn quotas, and ceiling moves in the Real11 case.
   The PR is a first test and is still under investigation, not ready to merge.
 - Native gate (`tools/native_gate.py`) on the merge of `main` into the PR, `7e4d85d4`:
   641 tests, no failures or skips. See [testing](TESTING.md).
-- Latest cold Real11 control on the PR: T64 at 6.6 s with 25 solver requests, then
-  the DFS runs out of runnable work at 12.0 s with one avoidance alternative of a
+- Latest cold Real11 control on the PR: T64 at 6.1 s with 18 solver requests, then
+  the DFS runs out of runnable work at 10.0 s with one avoidance alternative of a
   feasible B7 route unresolved after the linear control relaxation blocked it. See
   [performance](PERFORMANCE.md) for the full series of controls.
 - Longer Real11 trials are paused until the PR's solver changes settle. The saved
-  fixed-B5 checkpoints predate constraint policy9/state4, so the next trial starts
+  fixed-B5 checkpoints predate constraint policy9/state5, so the next trial starts
   cold from the [resume checklist](../research/real11-long-solve/README.md#status-and-resumption).
 
 ## Focus areas and where to read
@@ -53,8 +55,10 @@ everything not being worked on is in the [deferred-work register](DEFERRED_WORK.
    the canonical comparison rule, `InteractionGate` semantics, duration certificate.
 4. [Branch scheduling](design/BRANCH_SCHEDULING_INVESTIGATION.md) (deferred): when work runs
    and when it is excluded.
-5. [Pruning backlog](design/PRUNING_IMPROVEMENTS_BACKLOG.md): deferred automatic grouping
-   and commitment of close decisions, plus named pruning gaps.
+5. [Pruning backlog](design/PRUNING_IMPROVEMENTS_BACKLOG.md): automatic grouping as
+   joint constraint solving is under discussion; commitment stays deferred.
+   Fixed-program joint assembly exists; remaining consumers and pruning gaps
+   need concrete scope before implementation.
 6. [Pruning research](research/PRUNING_RESEARCH.md): "why one best arrival fails",
    "how branch and bound could help", "candidate pruning and reuse mechanisms" and
    "schedule-gated comparison, run/jump protection and exact processing order".

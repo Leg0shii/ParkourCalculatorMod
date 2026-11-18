@@ -1,6 +1,7 @@
 """Geometry, joint propagation, and independent path coverage controls."""
 import copy
 import itertools
+import json
 import math
 import unittest
 
@@ -221,6 +222,32 @@ class EncounterTests(unittest.TestCase):
         owner = source(4, y=y, boxes=boxes, position=positions[0], magnitude=2., friction=0.)
         variants = list(owner)
         self.assertTrue(any(satisfies(v['rows'], positions) for v in variants))
+
+    def test_variants_differing_only_in_switch_ticks_share_a_family(self):
+        variants = list(source(4, magnitude=1., friction=0.))
+        sides = {}
+        for v in variants:
+            path = [[f['key'] for f in p['faces']] for p in v['selectedPassages']]
+            self.assertEqual(sides.setdefault(v['family'], path), path)
+            self.assertEqual(len(v['switches']), sum(len(p) - 1 for p in path))
+        self.assertEqual(len({json.dumps(p) for p in sides.values()}), len(sides))
+        self.assertTrue(any(len({json.dumps(v['switches']) for v in variants if v['family'] == f}) > 1 for f in sides))
+
+    def test_each_landing_rectangle_is_its_own_family(self):
+        owner = source(4, magnitude=1., friction=0.)
+        lo, hi = owner.envelopes['states'][4]['X']
+        middle = (lo + hi) / 2
+        rectangles = [[dict(leg=0, offset=4, mode='X', cmp='LE', rhs=middle)], [dict(leg=0, offset=4, mode='X', cmp='GE', rhs=middle)]]
+        owner.items.insert(0, dict(rows=rectangles, role='required_contact'))
+        variants = list(owner)
+        def implies(rows, r):
+            return any(x['offset'] == 4 and x['mode'] == 'X' and x['cmp'] == r['cmp'] and
+                       (x['rhs'] <= r['rhs'] if r['cmp'] == 'LE' else x['rhs'] >= r['rhs']) for x in rows)
+        chosen = [next(i for i, (r,) in enumerate(rectangles) if implies(v['rows'], r)) for v in variants]
+        self.assertEqual(set(chosen), {0, 1})
+        for a, b in itertools.combinations(range(len(variants)), 2):
+            if chosen[a] != chosen[b]:
+                self.assertNotEqual(variants[a]['family'], variants[b]['family'])
 
 
 if __name__ == '__main__':

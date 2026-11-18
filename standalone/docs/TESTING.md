@@ -2,12 +2,14 @@
 
 ## Current gate
 
-`tools/native_gate.py` (commands in the [runbook](RUNBOOK.md)) on `7e4d85d4`, the merge
-of `main` into `perf/early-passage-screen`: **641 tests, no failures, errors or skips**,
-source unchanged during the run, layout validation passed. A first run of the same
-commit failed two real-worker tests (`test_checkpoint_guidance` and
-`test_integration`, results `unknown` and `error`) that passed in isolation and on
-the full rerun; treat a repeat as real. The gate keeps its declared module scope:
+`tools/native_gate.py` (commands in the [runbook](RUNBOOK.md)) on the switch-climb
+change over `6b964cb0`: **659 tests, no failures, errors or skips**, source unchanged
+during the run, layout validation passed ([report](../research/switch-climb/2026-11-17/native-report.json)).
+A run of the same source under a load average of 5.5 failed
+`test_prescribed_points_do_not_remove_remote_free_space` (its two 2 s arms
+enumerated 856 and 830 choices); it passed in isolation and on the rerun. Earlier,
+`test_checkpoint_guidance` and `test_integration` failed once the same way. Treat a
+repeat as real. The gate keeps its declared module scope:
 dedicated ladder, climbable, vine and movement-entry modules are excluded, generic
 mixed-ladder controls and all numerical modules are included.
 
@@ -20,6 +22,9 @@ persistence without the removed 32/128 limits.
 
 | Source | Tests | Evidence |
 | --- | ---: | --- |
+| `6b964cb0` + switch climb | 659 | [report](../research/switch-climb/2026-11-17/native-report.json) |
+| `b2977e0f` + obstacle clusters | 646 | [report](../research/obstacle-clusters/2026-11-17/native-report.json) |
+| `7e4d85d4` merge of `main` into the PR | 641 | not archived |
 | `e266785c` geometry passages | 640 | [report](../research/geometry-passages/2026-11-16/native-report.json) |
 | `4ace2b8a` longer Real11 correction | 611 | [summary](../research/real11-long-solve/native-gate-summary.json) |
 | `9c79e741` layout refactor | 610 | [report](validation/layout-final/report.json) |

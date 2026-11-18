@@ -214,7 +214,17 @@ class BookkeepingProfileTests(unittest.TestCase):
                             guideSeedYaw=[1.],
                                                       repairState=repair or {}))
         branch = json.dumps([[[0, 2, 'Z', 'LE', -2.]], [], []])
-        repair = dict(completed=[dict(branch=branch, status='feasible', validationStatus='passed', problemHashes=['h1'])],
+        later = json.dumps([[[0, 3, 'Z', 'LE', -2.]], [], []])
+        point = dict(status='settled', held=[], pending=0)
+        repair = dict(completed=[dict(branch=branch, status='feasible', validationStatus='passed', problemHashes=['h1']),
+                                 dict(branch=later, status='feasible', validationStatus='accepted', problemHashes=[])],
+                      families=dict(f=dict(order=['[2]', '[3]', '[4]'], source=None, done=True, points={
+                          '[2]': dict(point, switches=[2], rank=[4, 2.], objective=-2., keys=[branch]),
+                          '[3]': dict(point, switches=[3], rank=[4, 2.1], objective=-2.1, keys=[later]),
+                          '[4]': dict(point, switches=[4], status='held', rank=None, objective=None, held=[{}], keys=['k4'])})),
+                      interactionChoices={branch: [dict(blockId='b6', faces=[side('Z', -1, -2.), side('X', -1, 0.)])]},
+                      fallbackVariants=[dict(branch=later, best={})],
+                      incumbent=dict(rows=[dict(leg=0, offset=2, mode='Z', cmp='LE', rhs=-2.)], passages=[], hits=[]),
                       attemptLog=[dict(status='feasible', problemHash='h1')],
                       constraintGeneration=dict(items=[dict(owner='b6', clusterId=0, members=[0], names=['b6'], begin=0, end=2),
                                                        dict(contactCheck={})],
@@ -255,6 +265,8 @@ class BookkeepingProfileTests(unittest.TestCase):
         self.assertIn('| 1 | B6 sides t0-2 | Z ≤ -2.000 at t2 | interval reachability | empty Z interval at state 2 |', markdown)
         self.assertIn('| 1 | Z ≤ -2.000 at t2 | feasible | passed | request 1 feasible, IPOPT Solve_Succeeded, 0.25 s |', markdown)
         self.assertIn('Solver time for this movement: 0.25 s over 1 request.', markdown)
+        self.assertIn('| B6: Z- then X- | input 2 (#1: -2.000); input 3 (#2: -2.100) | input 2 (#1: -2.000) | 1 |', markdown)
+        self.assertIn('Kept: alternative #1; fallbacks: alternative #2.', markdown)
         self.assertIn('| b6 | 0-2 | 1X | 1 | X+ at 1X | none | none |', markdown)
         from tools.profiling.trace import rows_text
         self.assertEqual(rows_text([dict(mode='X', t1=1, cmp='GE', rhs=1.000001)], [('B6', 'X', 'GE', 1.), ('B7', 'X', 'GE', 1.)]),

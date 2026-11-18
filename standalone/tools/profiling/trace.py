@@ -8,6 +8,8 @@ from pathlib import Path
 from parkour_solver.constraints.encounters import PHASES
 from parkour_solver.io.checkpoint_store import read_report
 from parkour_solver.io.reports import save
+from parkour_solver.search.repair import FALLBACK_GAP, FALLBACK_LIMIT
+from parkour_solver.search.repair_state import branch_key
 
 
 def frames(state):
@@ -78,7 +80,21 @@ def item_label(item):
     return (name.split(':')[1] if name.startswith('event:') else name or 'route guard'), [min(ticks),max(ticks)] if ticks else None
 
 
-def repair_trace(repair):
+def family_sides(choices, family):
+    first = family['points'][family['order'][0]]['keys'][0]
+    return '; '.join(f'{p["blockId"].upper()}: '+' then '.join(side(f) for f in p['faces'])
+                     for p in choices.get(first,[])) or 'no obstacle sides'
+
+
+def family_point(point, index):
+    ticks = plural(len(point['switches']),'input').split()[1]+' '+', '.join(map(str,point['switches'])) if point['switches'] else 'no switch'
+    solved = ', '.join(f'#{index[k]}' for k in point['keys'] if k in index)
+    outcome = (number(point['objective']) if point['rank'] is not None else
+               'infeasible' if point['status'] == 'settled' else 'not solved')
+    return f'{ticks} ({solved+": " if solved else ""}{outcome})'
+
+
+def repair_trace(repair, final=False):
     generation = repair.get('constraintGeneration') or {}
     attempts = {a['problemHash']:dict(status=a['status'],reason=(a.get('certificate') or {}).get('reason'))
                 for a in repair.get('attemptLog',[])}
@@ -102,9 +118,16 @@ def repair_trace(repair):
                                        optionRows=e['optionRows'],passage=e['passage'])
                                   if 'item' in e else {}))
                           for e in generation.get('screenExclusions',[])],
-        alternatives=[dict(rows=json.loads(c['branch'])[0],status=c['status'],validation=c.get('validationStatus'),
+        alternatives=[dict(branch=c['branch'],rows=json.loads(c['branch'])[0],status=c['status'],validation=c.get('validationStatus'),
                            solves=[dict(problemHash=h,**attempts.get(h,{})) for h in c.get('problemHashes',[])])
                       for c in repair.get('completed',[])],
+        families=[dict(sides=family_sides(repair.get('interactionChoices',{}),f),
+                       points=[dict({k:f['points'][n][k] for k in ('switches','status','rank','objective','keys')},
+                                    held=len(f['points'][n]['held'])) for n in f['order']])
+                  for f in (repair.get('families') or {}).values()],
+        kept=branch_key(repair['incumbent']['rows'],repair['incumbent']['passages'],repair['incumbent']['hits'])
+             if repair.get('incumbent') else None,
+        fallbacks=None if final else [v['branch'] for v in repair.get('fallbackVariants') or []],
         unresolved=[b['rows'] for b in repair.get('unresolved') or []],
         pending=[b['rows'] for b in repair.get('pending') or []])
 
@@ -163,7 +186,7 @@ def route_trace(state, scene=None):
                 passages=[dict(block=p['blockId'],ticks=p['segment'],sides=[side(f) for f in p['faces']],kind=p['kind'])
                           for p in witness.get('passages',[])] if witness else None,
                 seededFacings='guideSeedYaw' in record['program'],
-                repair=repair_trace(record['program']['repairState']) if record is owner else None))
+                repair=repair_trace(record['program']['repairState'],record.get('complete',False)) if record is owner else None))
     return routes
 
 
@@ -394,7 +417,12 @@ def render(report, requests, routes, stop):
               'blocks share is one side. Sides change when the player rises above or drops below one of the blocks.',
               '- **Decision**: one thing to choose, either the sides to keep around one obstacle or which landing-cover '
               'rectangle of the goal block to land in. **Option**: one choice for one decision. **Alternative**: one '
-              'surviving option per decision, combined; each is solved, and each feasible one becomes a route.',
+              'surviving option per decision, combined. Each leg keeps only its best feasible alternative.',
+              '- **Family**: alternatives that differ only in when the route switches sides of an obstacle. A switch is '
+              'named by the input whose sweep first uses the new side, so that side\'s rows start at the next tick. '
+              'The climb solves one switch input, then its neighbours, and stops when neither is better; the inputs it '
+              f'never needed are counted as not solved. **Fallbacks**: up to {FALLBACK_LIMIT} other alternatives within '
+              f'{FALLBACK_GAP} blocks of the best (same ticks), restored only if the route fails further on.',
               '- Request numbers index `requests.json`.','']
     for fid in sorted(by_frame):
         group = by_frame[fid]
@@ -455,7 +483,7 @@ def render(report, requests, routes, stop):
                      for i,d in enumerate(dropped,1)])
             choice = interacting or any(a['rows'] for a in repair['alternatives'])
             lines += [f'Alternatives solved: {len(repair["alternatives"])}. Each combines one surviving option per decision; '
-                      'each feasible one becomes a route.' if choice else
+                      'the best feasible one is kept.' if choice else
                       'No obstacle is in reach, so there is no avoidance choice: the movement was solved once as is.','']
             lines += table(['#','Rows the alternative adds' if choice else 'Rows added','Outcome','Scene validation','Solves'],
                 [[i,alternative_text(a['rows'],row_owners(repair,goal)),a['status'],a['validation'] or '-',
@@ -472,6 +500,19 @@ def render(report, requests, routes, stop):
                      if request_index.get(h,{}).get('seconds') is not None]
             if timed:
                 lines += [f'Solver time for this movement: {sum(timed):.2f} s over {plural(len(timed),"request")}.','']
+            if repair['families']:
+                index = {a['branch']:i for i,a in enumerate(repair['alternatives'],1)}
+                lines += table(['Family','Switches solved','Best','Not solved'],
+                    [[f['sides'],'; '.join(family_point(p,index) for p in f['points'] if p['status'] != 'held') or '-',
+                      next((family_point(p,index) for p in sorted((p for p in f['points'] if p['rank'] is not None),
+                                                                 key=lambda p:p['rank'])),'none feasible'),
+                      sum(p['held'] for p in f['points'])] for f in repair['families']])
+                kept = f'Kept: alternative #{index[repair["kept"]]}' if repair['kept'] in index else 'Kept: none'
+                if repair['fallbacks'] is None:
+                    lines += [kept+' (the last leg keeps no fallbacks).','']
+                else:
+                    lines += [kept+'; fallbacks: '+(', '.join(f'alternative #{index[b]}' for b in repair['fallbacks'] if b in index)
+                                                    or 'none')+'.','']
             for label, branches in (('Unresolved',repair['unresolved']),('Pending',repair['pending'])):
                 if branches:
                     lines += [f'{label} alternatives (kept for an explicit retry):','']+[f'- {rows_text(b,row_owners(repair,goal))}' for b in branches]+['']

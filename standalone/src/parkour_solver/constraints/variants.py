@@ -13,7 +13,7 @@ from parkour_solver.spatial.footprints import Footprints
 
 
 GENERATION_POLICY = 9
-STATE_VERSION = 4
+STATE_VERSION = 5
 
 
 class ConstraintVariants:
@@ -57,7 +57,7 @@ class ConstraintVariants:
             routeGuards=route_guards.context if route_guards is not None else None,
             requiredAlternatives=required_alternatives))
         if state is not None and (state.get('version') != STATE_VERSION or state.get('context') != context):
-            raise ValueError('Incompatible constraint-generation continuation (policy9/state4)')
+            raise ValueError('Incompatible constraint-generation continuation (policy9/state5)')
         self.proof_context = context
         self.events = [dict(plan['events'][0], landing=self.through)]
         self.route_rows = []
@@ -84,7 +84,7 @@ class ConstraintVariants:
                   if check['block']['solidIndex'] in scope['solidIndices'] and check['offset'] <= self.through]
         self.state = copy.deepcopy(state) if state is not None else dict(
             version=STATE_VERSION, context=context, items=items, exclusions=[], screenExclusions=[],
-            pending=[dict(item=0, rows=self.route_rows, passages=[])], seen=[], partialSeen=[], emitted=0,
+            pending=[dict(item=0, rows=self.route_rows, passages=[], choices=[])], seen=[], partialSeen=[], emitted=0,
             exhausted=False, reference=copy.deepcopy(reference), preparationSteps=0, duplicateVariants=0,
             metrics={}, uncertainInteractions=[], timings=dict(preparationSeconds=0., variantGenerationSeconds=0.,
                                      conditionalAnalysisSeconds=0.))
@@ -257,9 +257,11 @@ class ConstraintVariants:
                 self.seen.add(key)
                 self.state['seen'].append(key)
                 self.state['emitted'] += 1
+                ordered = sorted(node['choices'], key=lambda c: c['item'])
                 return dict(rows=[{k: v for k, v in r.items() if k != 't1'} for r in rows], passages=[],
                     selectedPassages=node['passages'], semanticObservations=[dict(p, kind='passage') for p in node['passages']],
-                    score=self.state['emitted'])
+                    score=self.state['emitted'], family=digest([[c['item'], c.get('sides', c.get('key'))] for c in ordered]),
+                    switches=[t for c in ordered for t in c.get('switches', [])])
             self.choose_item(node)
             item = node['prepared']
             if 'rows' in item and any(rows_entailed(analysis['envelopes'], [], rows) for rows in item['rows']):
@@ -282,8 +284,13 @@ class ConstraintVariants:
                 self.excluded(rows, child_analysis['proof'], node['chosenItem'], option)
                 del node['selected']
                 continue
+            passage = option.get('passage')
+            choice = (dict(item=node['chosenItem'], sides=[side['key'] for side in passage['faces']],
+                           switches=[at//3 for at in passage['switchPhases']]) if passage is not None
+                      else dict(item=node['chosenItem'], key=self.effective_key(option['rows'])))
             child = dict(item=0, remaining=[i for i in remaining if i != node['chosenItem']], rows=rows,
-                         passages=node['passages']+([option['passage']] if 'passage' in option else []))
+                         passages=node['passages']+([passage] if passage is not None else []),
+                         choices=node['choices']+[choice])
             # Counts and nominal face histories have no remaining resource
             # capability once an encounter is assigned. The unassigned item set
             # and exact original model are part of this iterator's context.

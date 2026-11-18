@@ -140,6 +140,8 @@ control work; inclusion here is not authorization to implement a historical plan
 | [research/stepping-mechanics/README.md](../research/stepping-mechanics/README.md) | Frozen source-era evidence; use research guide for reproduction: Legacy stepping investigation |
 | [research/stratfinder-review/README.md](../research/stratfinder-review/README.md) | Frozen source-era evidence; use research guide for reproduction: Stratfinder source-review probe |
 | [research/structure-audit/README.md](../research/structure-audit/README.md) | Frozen source-era evidence; use research guide for reproduction: Standalone structure audit |
+| [research/switch-climb/2026-11-17/cold-report.md](../research/switch-climb/2026-11-17/cold-report.md) | Frozen source-era evidence; use research guide for reproduction: Solve report |
+| [research/switch-climb/README.md](../research/switch-climb/README.md) | Frozen source-era evidence; use research guide for reproduction: Choosing obstacle sides by optimizing, with a switch-tick climb |
 | [research/two-goal-comparisons/README.md](../research/two-goal-comparisons/README.md) | Frozen source-era evidence; use research guide for reproduction: Separate spatial-time and fixed-clock comparisons |
 | [research/virtual-finish/CALLS.md](../research/virtual-finish/CALLS.md) | Frozen source-era evidence; use research guide for reproduction: Numerical request ledger |
 | [research/virtual-finish/PRUNING_AUDIT.md](../research/virtual-finish/PRUNING_AUDIT.md) | Frozen source-era evidence; use research guide for reproduction: Why these requests survived pruning |

@@ -1,7 +1,8 @@
 # Intermediate feasibility: objective, stopping and worker dispatch
 
-Current physical-anchor policy through `dd738c98` (2026-11-11): retain the configured
-onward objective and stop at an independently valid feasible witness. Objective
+Current physical-anchor policy: decision checks retain the configured onward
+objective and stop at an independently valid feasible witness; anchor legs and the
+final leg optimize, because choosing between alternatives needs their objectives. Objective
 selection and early stopping are separate settings. The [execution reference](ANCHOR_SEARCH_EXECUTION_REFERENCE.md)
 shows which generated decisions reach numerical preparation and why. The
 [integration contract](ARCHITECTURE.md) records how the earlier
@@ -11,8 +12,8 @@ solver-branch constant-zero default was replaced.
 
 | Purpose | `objectiveMode` | `stopOnFeasible` | Result / worker behavior |
 | --- | --- | --- | --- |
-| Selected internal completed decision | `configured` | `true` | Exact-node guided feasibility from original state, preserving earlier free facings; pending end-anchor predicate is absent. Valid seed can return without a worker. |
-| Required-anchor arrival | `configured` | `true` | Feasible actual anchor clock with onward E→N direction and physical validation. No intermediate objective-polishing drain is requested. |
+| Selected internal completed decision | `configured` | `true` | Exact-node guided feasibility from original state, preserving earlier free facings; pending end-anchor predicate is absent. Valid seed can return without a worker. Prunes only: its alternative's rows are not committed. |
+| Required-anchor arrival | `configured` | `false` | Optimize the onward E→N direction over the alternatives the switch-tick climb visits, rank them, keep the best plus up to two close fallbacks, with physical validation. |
 | Final physical landing | `configured` | `false` | Optimize real configured terminal objective for candidate T. Outer ranking minimizes actual T then maximizes objective at equal T. |
 | Explicit optional constant-zero control | `constant_zero` | `true` | Retained API mode: minimize0 under the same fixed movement/contact constraints. It is not the current anchor default. |
 

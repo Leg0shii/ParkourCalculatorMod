@@ -88,8 +88,11 @@ Each partial route in `report.md` and `routes.json` has:
   (interval, travel-distance, single-row or linear-relaxation reachability) and
   where it failed; duplicate and dominated options; every alternative sent to the
   solver with its solves (request number, status, IPOPT status, seconds) and scene
-  validation; the movement's total solver seconds; and the unresolved or pending
-  alternatives.
+  validation; the movement's total solver seconds; a families table (the
+  alternatives that differ only in when they switch obstacle sides, each switch
+  named by its input, with the switches the climb solved, the best one and how many
+  were never solved); the kept alternative and its fallbacks (the last leg keeps
+  none); and the unresolved or pending alternatives.
 
 A request's `owners` are the routes whose repair log holds its problem hash; an
 empty list means no saved route kept that solve. The `stop` report lists suspended

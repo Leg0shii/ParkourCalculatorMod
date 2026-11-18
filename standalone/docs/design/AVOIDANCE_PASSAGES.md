@@ -130,7 +130,25 @@ envelopes are rebuilt. A saved source counts as pending in outcome classificatio
 Completed exact requests are not dispatched again unless explicitly retrying
 unresolved work under its own contract.
 
-Constraint generation uses policy9/state4 and repair assembly10. The DFS context
+## Choosing among alternatives
+
+Each emitted variant carries a `family`, a digest of every chosen item with its
+side keys (or the effective key of a non-passage option such as a landing
+rectangle), and `switches`, the input of every side change in item order. Variants
+of one family differ only in when they switch. In rank mode with `climb_families`
+(anchor legs and the last leg of the anchor search) `solve_contact_branches`
+solves a family's first arrival, then the held variants one switch input away from
+its best point, until neither neighbour improves; a family without a feasible
+point visits its next held point in arrival order, and IPOPT unknown counts as
+infeasible. Variants never visited are counted as `heldUnsolved`. A family from a
+collision-repair source is keyed with that source and climbs separately. Every
+family is climbed, the best accepted alternative by `candidate_rank` is kept, and
+up to `FALLBACK_LIMIT` (2) others with the same ticks and an objective within
+`FALLBACK_GAP` (0.3 blocks) are saved as `fallbackVariants` for the DFS to restore
+if a later leg fails. The family state and held variants persist in the repair
+snapshot (version 3), so a resumed climb solves nothing twice.
+
+Constraint generation uses policy9/state5 and repair avoidancePolicy10 with assembly10. The DFS context
 fingerprints the new policy. Old raw generator cursors reject; reproduce an old
 run with its original source and inputs. Source-era scene fields
 `maxContactBranches`, `maxPassageCandidates`, `maxBlockagesPerObstacle`,
@@ -175,8 +193,10 @@ replay remain different claims.
 ## Deferred boundary
 
 Current movement cadence1, anchor comparisons and inter-movement retention remain.
-Automatic close-in-time grouping/commitment consolidation is
-[deferred](PRUNING_IMPROVEMENTS_BACKLOG.md#automatic-close-decision-grouping-and-commitment-2026-11-16).
+[Automatic grouping](PRUNING_IMPROVEMENTS_BACKLOG.md#automatic-grouping-joint-constraint-solving)
+means solving coupled constraints together and is under design discussion;
+this fixed-program generator already assembles them jointly.
+[Commitment](PRUNING_IMPROVEMENTS_BACKLOG.md#commitment-deferred) remains deferred.
 The supplied-window planner remains live compatibility code until its callers are
 migrated; it is not wired into this generator. The remembered authored two-tick
 clustering policy and its measured limitations remain in the

@@ -621,8 +621,9 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 | `prepare_route` | [12](../src/parkour_solver/scene/route.py#L12) | function |
 | `supports` | [149](../src/parkour_solver/scene/route.py#L149) | function |
 | `center_bounds` | [160](../src/parkour_solver/scene/route.py#L160) | function |
-| `schedule` | [174](../src/parkour_solver/scene/route.py#L174) | function |
-| `initial_guess` | [337](../src/parkour_solver/scene/route.py#L337) | function |
+| `row_tick` | [174](../src/parkour_solver/scene/route.py#L174) | function |
+| `schedule` | [178](../src/parkour_solver/scene/route.py#L178) | function |
+| `initial_guess` | [339](../src/parkour_solver/scene/route.py#L339) | function |
 
 ## schema.py
 
@@ -943,7 +944,7 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 
 | Symbol | Line | Kind |
 | --- | ---: | --- |
-| `solve_contact_branches` | [19](../src/parkour_solver/search/repair.py#L19) | function |
+| `solve_contact_branches` | [23](../src/parkour_solver/search/repair.py#L23) | function |
 
 ## search/repair_state.py
 
