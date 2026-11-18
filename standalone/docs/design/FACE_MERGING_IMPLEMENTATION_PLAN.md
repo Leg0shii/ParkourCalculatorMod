@@ -298,11 +298,10 @@ patch before union need not equal clearance applied to an entire merged cover.
 Member contributions preserve the information a later consumer needs to apply
 its actual rule. Nearby solids may further clip the player-valid region.
 
-Current movement events and full-scene checks still expect original `box`/`boxes`
-records. A MergedFace must not be passed into those APIs as a fictitious AABB or
-used through an arbitrary first-member box. Later use must account for the cover
-and member geometry; plane-only dedup does not preserve that coverage. These are
-representation contracts, not a restored generator-integration or bug-fix phase.
+Movement events and full-scene checks carry the member `boxes` of a contact; a
+merged face is never passed as a fictitious AABB or through an arbitrary first
+member. Plane-only dedup does not preserve coverage, so combination keys include
+the surface and regions.
 Likewise, geometric merging does not assert equal friction, contact behavior or
 block-specific obligations if later APIs introduce such properties.
 
@@ -320,6 +319,17 @@ split into edge-connected `Surface`s (`key`, `axis`, `sign`, `plane`,
 pieces are dropped; a floor and an underside on one exact-height plane both
 survive; holes and concavities are never filled. Over the whole scene the covers
 equal the cell decomposition's contact patches per plane and per solid.
+
+### 2.4.2 Contact options
+
+`contact_options(axis, sign, *, clearance, members)` gives finite contact domains,
+one `ContactOption(surface, plane, members, boxes, regions)` per connected surface.
+`sign` is the expanded face's outward normal, minus the motion direction (a landing
+uses the top, +1; a ceiling hit the bottom, -1). Only `members` contribute, every
+solid of the scene clips (coverage bounds do not), and the union is eroded by the
+clearance along its horizontal tangent axes (the union of the shrunk maximal
+rectangles), so the seam between touching members stays inside one region. Ceiling
+generators pass the offered blocks' solids and merge across them.
 
 ### 2.5 Serialization, inspectability and acceptance
 

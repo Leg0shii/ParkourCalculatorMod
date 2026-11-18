@@ -94,7 +94,7 @@ Terminal actualT/objective ranking stays separate. Cells, portals and soft guide
 points are not discrete input clocks or fixed dynamic seams.
 
 Physical automatic continuation is outer schema2 / DFS8 / movement context4 /
-repair assembly10 / constraint policy9/state4. Hard3/search5/comparison1/guide2/proposal1 semantic identities
+repair assembly11 / constraint policy10/state6. Hard3/search5/comparison1/guide2/proposal1 semantic identities
 also matter; schema equality does not make old policy checkpoints compatible.
 Storage remains manifest/SQLite version1. Physical anchor DFS now uses the session's
 global deadline/call allowance continuously, without service-turn or per-program

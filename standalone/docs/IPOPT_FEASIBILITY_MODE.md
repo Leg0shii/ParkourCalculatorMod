@@ -46,7 +46,7 @@ exhaustion, unknowns, timeouts, errors and unfinished construction remain distin
 
 Objective, stopping/ranking intent, node-versus-anchor scope and assembly policy
 participate in repair compatibility. Physical automatic search uses repair
-assembly10; source-era schema5/default instructions do not describe current exact
+assembly11; source-era schema5/default instructions do not describe current exact
 resume. The solver-call count may exceed worker launches because an early-stop
 feasible seed returns without IPOPT.
 

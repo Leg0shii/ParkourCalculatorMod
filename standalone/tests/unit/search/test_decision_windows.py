@@ -15,6 +15,7 @@ from parkour_solver.search.compat.decision_windows import DecisionPolicy, fair_p
 from parkour_solver.bridge.compiler import JavaCompiler
 from parkour_solver.search.movement import iter_movement_programs
 from tests.support.checkpoint_guidance import flat_scene
+from tests.support.archived_events import current_events
 
 
 def decision(name, lo, hi, **kwargs):
@@ -29,7 +30,7 @@ class DecisionWindowTests(unittest.TestCase):
             scene = prepare_scene(fixture['request'])
             plan = plan_windows(fixture['opportunities'],gap=fixture['settings']['cluster_gap'],
                                 max_inputs=scene['movementSearch']['maxInputs'])
-            audit = DecisionPolicy(plan,scene).audit(best['movementProgram'])
+            audit = DecisionPolicy(plan,scene).audit(current_events(best['movementProgram']))
             self.assertTrue(audit['accepted'],(name,label,audit['unmatched']))
             if name=='grind-or-run':
                 self.assertEqual(len(plan['clusters']),1)

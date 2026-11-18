@@ -26,7 +26,7 @@ def floor_checks(scene, block_ids, profiles, *, envelopes=None):
                         continue
                 top = block['top']
                 planned_floor = any(e['offset'] == offset and e.get('role') in ('landing', 'step')
-                                    and e['plane'] == top and e['box'] == scene['collisionScene']['solids'][block['solidIndex']]
+                                    and e['plane'] == top and scene['collisionScene']['solids'][block['solidIndex']] in e['boxes']
                                     for e in profile.get('contactEvents', []))
                 if next_y <= top <= y and not planned_floor and not (offset + 1 == profile['airtime'] and top == target_top):
                     checks.append({'leg': leg, 'offset': offset, 'block': copy.deepcopy(block), 'reason': 'earlier_floor'})
@@ -38,7 +38,7 @@ def floor_checks(scene, block_ids, profiles, *, envelopes=None):
                     continue
             selected_step = profile.get('profileKind') in ('stair', 'step') and block['id'] == block_ids[leg + 1]
             selected_step |= any(e['input'] == 0 and e['case'] in ('normal_step', 'slab_boost')
-                                 and e['box'] == scene['collisionScene']['solids'][block['solidIndex']]
+                                 and scene['collisionScene']['solids'][block['solidIndex']] in e['boxes']
                                  for e in profile.get('caseEvents', []))
             step_config = dict(config, contacts=[{'state': 1, 'plane': block['top'], 'direction': -1, 'step': True}])
             _, _, _, failures = vertical_step(step_config, 0, profile['position'][0], profile['velocity'][0], False, True, 0)

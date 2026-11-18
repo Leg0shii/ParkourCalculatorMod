@@ -24,6 +24,7 @@ from parkour_solver.search.movement import iter_movement_programs
 from parkour_solver.scene.route import prepare_route, schedule
 from tests.support.cell_routes import side_scene
 from tests.support.ordered_route import route
+from tests.support.archived_events import current_events
 
 
 ROOT = AUTONOMY_DATA
@@ -162,7 +163,7 @@ class CheckpointNumericalTests(unittest.TestCase):
         from parkour_solver.constraints.contacts import floor_checks
         from parkour_solver.search.repair import solve_contact_branches
         from research.legacy_cell_routes.checkpoint_experiment import replay_witness
-        records = json.loads(gzip.decompress((ROOT/'experiments/failure-fixes/evidence/fix-warm.json.gz').read_bytes()))['runs']
+        records = current_events(json.loads(gzip.decompress((ROOT/'experiments/failure-fixes/evidence/fix-warm.json.gz').read_bytes())))['runs']
         saved = next(r for r in records if r['name']=='turn-blockage-alternate_turn'
                      and r['direction']=='reverse' and r['seedKind']=='known')
         scene = prepare_scene(saved['request'])
@@ -185,7 +186,7 @@ class CheckpointNumericalTests(unittest.TestCase):
     def test_known_post_turn_seed_survives_polishing_and_replays(self):
         import gzip
         from research.legacy_cell_routes.checkpoint_experiment import replay_witness
-        probe = json.loads(gzip.decompress((ROOT/'experiments/decision-windows/evidence/turn-known-prefix-probe.json.gz').read_bytes()))
+        probe = current_events(json.loads(gzip.decompress((ROOT/'experiments/decision-windows/evidence/turn-known-prefix-probe.json.gz').read_bytes())))
         scene = prepare_scene(probe['fixture']['request'])
         d, gates = decompose(scene), landmarks(scene)
         corridor = corridor_for_points(d, probe['fixture']['spatialPoints'], gates)

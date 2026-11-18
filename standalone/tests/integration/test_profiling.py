@@ -210,7 +210,7 @@ class BookkeepingProfileTests(unittest.TestCase):
         def record(name, key, rows, repair=None, witness=None):
             return dict(id=name, candidateKey=key, status='feasible', ticks=4, nodeFeasibility=dict(status='feasible'),
                         witness=witness, program=dict(profile=dict(positionConstraints=rows, jump=[True, False, False, False],
-                            contactEvents=[dict(offset=3, axis='Y', direction=-1, box=[0, 0, 0, 1, 1, 1], role='landing')]),
+                            contactEvents=[dict(offset=3, axis='Y', direction=-1, boxes=[[0, 0, 0, 1, 1, 1]], role='landing')]),
                             guideSeedYaw=[1.],
                                                       repairState=repair or {}))
         branch = json.dumps([[[0, 2, 'Z', 'LE', -2.]], [], []])
@@ -271,6 +271,20 @@ class BookkeepingProfileTests(unittest.TestCase):
         from tools.profiling.trace import rows_text
         self.assertEqual(rows_text([dict(mode='X', t1=1, cmp='GE', rhs=1.000001)], [('B6', 'X', 'GE', 1.), ('B7', 'X', 'GE', 1.)]),
                          'B6/B7: X ≥ 1.000 at t1')
+
+    def test_contact_region_items_and_chosen_rectangles_are_named(self):
+        import json
+        from tools.profiling.trace import family_sides, item_label, repair_trace
+        options = [[dict(leg=0, offset=6, mode=m, cmp=c, rhs=v, name='contact:region') for m, c, v in rows]
+                   for rows in ([('X', 'GE', 728.7), ('X', 'LE', 729.7), ('Z', 'GE', -1095.3), ('Z', 'LE', -1092.7)],
+                                [('X', 'GE', 729.7), ('X', 'LE', 730.3), ('Z', 'GE', -1093.7), ('Z', 'LE', -1092.7)])]
+        item = dict(rows=options, role='contact_region', surface='surface:b7', owner='b7')
+        self.assertEqual(item_label(item), ('b7 region', [6, 6]))
+        trace = repair_trace(dict(constraintGeneration=dict(items=[item])))
+        self.assertEqual(trace['contactRegions'], [dict(ticks=[6], owner='b7', surface='surface:b7', options=options)])
+        from parkour_solver.search.repair_state import branch_key
+        family = dict(order=[0], points=[dict(keys=[branch_key(options[1], [], [])])])
+        self.assertEqual(family_sides({}, family, [item]), 'B7: X [729.700, 730.300] × Z [-1093.700, -1092.700]')
 
 
 class EnumerationProfileTests(unittest.TestCase):

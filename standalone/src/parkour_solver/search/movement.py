@@ -162,7 +162,7 @@ def iter_movement_programs(scene, *, settings=None, deadline=None, cancel_event=
                             box = scene['collisionScene']['solids'][goal['solidIndex']]
                             at = child['profile']['airtime']-1
                             events = child['profile']['contactEvents']+child['profile']['caseEvents']
-                            if any(e.get('offset', e.get('input')) == at and e.get('box') == box for e in events):
+                            if any(e.get('offset', e.get('input')) == at and box in e.get('boxes', ()) for e in events):
                                 child['terminalSupport'] = scene['goalBlock']
                     if child is None or not entry_possible(child['profile'], initial_bounds):
                         continue

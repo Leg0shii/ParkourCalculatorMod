@@ -223,7 +223,7 @@ class SteppingNumericalTests(unittest.TestCase):
                     candidate[key] = [row[::-1] for row in candidate[key]]
                 plan = copy.deepcopy(best['plan'])
                 for contact in plan['sceneContacts']:
-                    contact['box'] = swap_box(contact['box'])
+                    contact['boxes'] = [swap_box(box) for box in contact['boxes']]
                     if contact['axis'] in (0, 2):
                         contact['axis'] = 2 - contact['axis']
                 geometry = copy.deepcopy(scene['collisionScene'])

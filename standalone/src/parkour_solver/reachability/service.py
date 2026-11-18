@@ -234,14 +234,14 @@ class InteractionGate:
         context = dict(envelopes=envelope)
         context_key = interaction_context_key(context)
         for event in profile.get('contactEvents', [])+profile.get('caseEvents', []):
-            if 'box' not in event:
+            if 'boxes' not in event:
                 continue
             tick = event.get('offset', event.get('input'))
-            proof = query_interaction(dict(box=event['box'], role='required_contact',
+            proofs = [query_interaction(dict(box=box, role='required_contact',
                 windows=[dict(tick=tick, phase=p) for p in ('Y', 'X', 'Z')], interior=False),
-                context, context_key=context_key)
-            if proof['status'] == 'absent':
-                return dict(reason='required_interaction_unreachable', input=tick, box=event['box'], proof=proof)
+                context, context_key=context_key) for box in event['boxes']]
+            if all(proof['status'] == 'absent' for proof in proofs):
+                return dict(reason='required_interaction_unreachable', input=tick, boxes=event['boxes'], proof=proofs[0])
         return None
 
     def context(self, context):

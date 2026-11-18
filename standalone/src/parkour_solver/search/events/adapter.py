@@ -159,8 +159,8 @@ class EventGuideAdapter:
         boxes={tuple(self.scene['collisionScene']['solids'][i]) for i in solids}
         profile=program['profile']
         states={e['offset'] for e in profile.get('contactEvents',[]) if e['axis']=='Y' and
-                e.get('direction')==-1 and tuple(e['box']) in boxes and self.request['afterTick']<=e['offset']<through}
-        states.update(e['input']+1 for e in profile.get('caseEvents',[]) if tuple(e.get('box',())) in boxes and
+                e.get('direction')==-1 and any(tuple(b) in boxes for b in e['boxes']) and self.request['afterTick']<=e['offset']<through}
+        states.update(e['input']+1 for e in profile.get('caseEvents',[]) if any(tuple(b) in boxes for b in e.get('boxes',())) and
                       self.request['afterTick']<=e['input']<through)
         return [[dict(leg=0,offset=t,mode=axis,cmp=cmp,rhs=value,name='event:required_contact_region')
                  for axis,a in (('X',0),('Z',2)) for cmp,value in (('GE',box[a]),('LE',box[a+3]))]

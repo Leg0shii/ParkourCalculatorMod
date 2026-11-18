@@ -14,6 +14,7 @@ from parkour_solver.search.feasibility import node_identity, outcome, policy_spe
 from parkour_solver.observability.turns import record, replay, summary
 from parkour_solver.movement.program import empty_program
 from tests.support.checkpoint_guidance import flat_scene
+from tests.support.archived_events import current_events
 
 
 class AnchorPolicyTests(unittest.TestCase):
@@ -174,7 +175,7 @@ class AnchorPolicyTests(unittest.TestCase):
         p['profile']['contactEvents']=[]
         mid=next(b for b in s['blocks'] if b['id']=='mid')
         p['profile']['caseEvents']=[dict(input=0,case='corner_jump_cancel',
-            box=s['collisionScene']['solids'][mid['solidIndex']])]
+            boxes=[s['collisionScene']['solids'][mid['solidIndex']]])]
         p['profile']['grounded'][-1]=False
         state=visit_state(s,p)
         self.assertEqual(state['current'],'start')
@@ -239,7 +240,7 @@ class AnchorPolicyTests(unittest.TestCase):
         base=AUTONOMY_DATA/'experiments'
         fixture=json.loads((base/'anchor-feasibility/real11-anchors.json').read_text())
         s=prepare_scene(fixture['request'])
-        saved=json.loads(gzip.decompress((base/'virtual-finish/evidence/initial0-cold.json.gz').read_bytes()))
+        saved=current_events(json.loads(gzip.decompress((base/'virtual-finish/evidence/initial0-cold.json.gz').read_bytes())))
         program=saved['result']['best']['movementProgram']
         setup=truncate_program(program,12)
         self.assertTrue(single_jump_structure(s,setup,0,'b1','b2'))

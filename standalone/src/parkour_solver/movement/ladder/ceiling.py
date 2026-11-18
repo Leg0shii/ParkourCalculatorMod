@@ -37,7 +37,8 @@ def own_ceiling_contacts(contacts, units):
             contact.pop('ownerRegion', None)
         effect = dict(type='ladder_ceiling', case='ceiling_hit', start=tick, end=tick + 1,
                       successorType='ladder_climb', anchors={'hit': tick + 1, 'nextClimb': tick + 1},
-                      plane=contact['plane'], box=copy.deepcopy(contact['box']))
+                      plane=contact['plane'], boxes=copy.deepcopy(contact['boxes']),
+                      surface=contact.get('surface'), regions=copy.deepcopy(contact['regions']))
         if owner.get('region') is not None:
             effect['region'] = owner['region']
         owner.setdefault('effects', []).append(effect)
@@ -58,8 +59,8 @@ def own_schedule_ceilings(schedule, region_id=None):
     return result
 
 
-def predict_ceiling_sequences(schedule, box, *, start=0, end=None):
-    sequence = ceiling_sequence(schedule, box, start=start)
+def predict_ceiling_sequences(schedule, option, *, start=0, end=None):
+    sequence = ceiling_sequence(schedule, option, start=start)
     end = schedule['ticks'] if end is None else end
     phases = ladder_units(schedule) if 'entryState' in schedule else []
     selected = []

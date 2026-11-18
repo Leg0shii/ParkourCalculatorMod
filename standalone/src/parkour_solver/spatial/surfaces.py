@@ -450,7 +450,7 @@ class SceneGeometry:
         self.bounds = None if bounds is None else (
             bounds[0] + HALF_WIDTH, bounds[1], bounds[2] + HALF_WIDTH,
             bounds[3] - HALF_WIDTH, bounds[4] - BODY_HEIGHT, bounds[5] - HALF_WIDTH)
-        self._clusters, self._sides, self._surfaces = {}, {}, {}
+        self._clusters, self._sides, self._surfaces, self._options = {}, {}, {}, {}
 
     def clusters(self, indices):
         return tuple(self._cluster_map(indices).values())
@@ -545,6 +545,87 @@ class SceneGeometry:
                         tuple(sorted(members)), owner[min(members)]))
             self._surfaces[indices] = tuple(result)
         return self._surfaces[indices]
+
+
+    def contact_options(self, axis, sign, *, clearance, members):
+        """Finite contact domains on the faces of the member solids, one option per connected surface.
+
+        `sign` is the expanded face's outward normal (a landing uses +1 on Y, a
+        ceiling hit -1). Every solid of the scene clips; only members contribute.
+        The members' own union is eroded by the clearance along its horizontal
+        tangent axes (collision needs strict overlap there, and a seam between
+        touching members stays inside one region); a clipping neighbour's edge stays
+        exact, since touching it is allowed.
+        """
+        key = axis, sign, clearance, tuple(sorted(members))
+        if key not in self._options:
+            boxes, (u, v), buckets, faces = self.boxes, TANGENT_AXES[axis], {}, {}
+            for i in sorted(members):
+                box = boxes[i]
+                rect = box[u], box[v], box[u+3], box[v+3]
+                plane = box[axis if sign < 0 else axis+3]
+                faces.setdefault(plane, []).append(rect)
+                pieces = [_embed(rect)]
+                for other in boxes:
+                    cut = other[u], other[v], other[u+3], other[v+3]
+                    if not other[axis] < plane < other[axis+3] or _overlap(rect, cut) is None:
+                        continue
+                    cutter = cut[0], -1.0, cut[1], cut[2], 1.0, cut[3]
+                    pieces = [b for piece in pieces for b in subtract_open(piece, cutter) if b[0] < b[3] and b[2] < b[5]]
+                buckets.setdefault(plane, []).extend((i, r) for r in _cover(_project(b) for b in pieces))
+            shrink = tuple(0 if a == 1 else clearance for a in (u, v))
+            result = []
+            for plane, fragments in sorted(buckets.items()):
+                inner = _erode(_cover(faces[plane]), shrink)
+                for cover, contributors in _components(fragments):
+                    regions = _cover(o for a in inner for b in cover for o in [_overlap(a, b)] if o is not None)
+                    if regions:
+                        members = tuple(sorted(contributors))
+                        result.append(ContactOption('surface:' + geometry_key([axis, sign, plane, cover]), plane,
+                                                    members, tuple(self.solids[i] for i in members), regions))
+            self._options[key] = tuple(result)
+        return self._options[key]
+
+
+@dataclass(frozen=True)
+class ContactOption:
+    surface: str
+    plane: float
+    members: tuple
+    boxes: tuple
+    regions: tuple
+
+
+def _maximal_rectangles(cover):
+    """Every maximal axis-aligned rectangle inside a closed union of rectangles."""
+    us = sorted({r[0] for r in cover} | {r[2] for r in cover})
+    vs = sorted({r[1] for r in cover} | {r[3] for r in cover})
+    filled = [[any(r[0] <= (a+b)/2 <= r[2] and r[1] <= (c+d)/2 <= r[3] for r in cover)
+               for c, d in zip(vs, vs[1:])] for a, b in zip(us, us[1:])]
+
+    def runs(i0, i1):
+        rows, start = [], None
+        for j in range(len(vs) - 1):
+            if all(filled[i][j] for i in range(i0, i1)):
+                start = j if start is None else start
+            elif start is not None:
+                rows.append((start, j))
+                start = None
+        return rows + ([(start, len(vs) - 1)] if start is not None else [])
+
+    result = []
+    for i0, i1 in itertools.combinations(range(len(us)), 2):
+        for j0, j1 in runs(i0, i1):
+            wider = [i for i in (i0 - 1, i1) if 0 <= i < len(us) - 1]
+            if not any(all(filled[i][j] for j in range(j0, j1)) for i in wider):
+                result.append((us[i0], vs[j0], us[i1], vs[j1]))
+    return result
+
+
+def _erode(cover, shrink):
+    """The points whose shrink-sized neighbourhood stays inside the cover, as canonical rectangles."""
+    pieces = [(r[0]+shrink[0], r[1]+shrink[1], r[2]-shrink[0], r[3]-shrink[1]) for r in _maximal_rectangles(cover)]
+    return _cover(r for r in pieces if r[0] < r[2] and r[1] < r[3])
 
 
 @functools.lru_cache(maxsize=8)

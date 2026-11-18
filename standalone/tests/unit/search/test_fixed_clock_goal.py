@@ -130,7 +130,7 @@ class SupportOrderTests(unittest.TestCase):
         scene=flat_scene()
         policy=SupportOrder(scene,['goal'],8)
         goal=scene['collisionScene']['solids'][1]
-        program=dict(profile=dict(airtime=8,contactEvents=[dict(offset=4,axis='Y',direction=-1,box=goal)]))
+        program=dict(profile=dict(airtime=8,contactEvents=[dict(offset=4,axis='Y',direction=-1,boxes=[goal])]))
         self.assertTrue(policy(program))
 
         self.assertEqual(policy.audit(program)['observed'],[dict(tick=5,block='goal')])

@@ -152,7 +152,7 @@ def support_episodes(domain, profile, *, required_owners=()):
               if e['axis'] == 'Y' and e.get('direction') == -1]
     events += [(e['input'], 1, e) for e in profile.get('caseEvents', [])]
     for tick, named, event in sorted(events, key=lambda x: (x[0], x[1], _json(x[2]))):
-        blocks = by_box.get(tuple(event.get('box', ())), [])
+        blocks = [block for box in event.get('boxes', ()) for block in by_box.get(tuple(box), [])]
         owners = sorted({b.get('sourceBlock', b['id']) for b in blocks})
         solids = sorted({b['solidIndex'] for b in blocks})
         surfaces = sorted(s['id'] for s in groups if any(b['solidIndex'] in s['solids'] for b in blocks)

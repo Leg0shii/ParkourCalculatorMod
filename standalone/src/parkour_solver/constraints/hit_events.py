@@ -3,6 +3,7 @@ import math
 
 from parkour_solver.schema import integer, number
 from parkour_solver.scene.route import HALF_WIDTH, center_bounds
+from parkour_solver.movement.contact_combinations import bounding_region, finite_rows
 
 
 def validate_hits(route):
@@ -41,13 +42,21 @@ def validate_hits(route):
     for contact in ceilings:
         leg = integer(contact.get('leg'), 'ceiling leg', 0, len(route['airtimes']) - 1)
         integer(contact.get('offset'), 'ceiling input offset', 0, route['airtimes'][leg] - 2)
-        box = contact.get('box')
-        if not isinstance(box, list) or len(box) != 6 or contact.get('plane') != box[1] - float_height():
-            raise ValueError('Ceiling plane must match the actual underside')
-        for value in box:
-            number(value, 'ceiling box')
-        if any(box[i] >= box[i + 3] for i in range(3)):
-            raise ValueError('Invalid ceiling box')
+        boxes, regions = contact.get('boxes'), contact.get('regions')
+        if not isinstance(boxes, list) or not boxes or not isinstance(regions, list) or not regions:
+            raise ValueError('A ceiling needs its member boxes and regions')
+        for box in boxes:
+            if not isinstance(box, list) or len(box) != 6 or contact.get('plane') != box[1] - float_height():
+                raise ValueError('Ceiling plane must match the actual underside')
+            for value in box:
+                number(value, 'ceiling box')
+            if any(box[i] >= box[i + 3] for i in range(3)):
+                raise ValueError('Invalid ceiling box')
+        for region in regions:
+            if not isinstance(region, list) or len(region) != 4:
+                raise ValueError('A ceiling region must be a finite tangent rectangle')
+            for value in region:
+                number(value, 'ceiling region')
         if not route.get('sharedMovement'):
             raise ValueError('Selected ceilings require shared movement compilation')
 
@@ -75,7 +84,7 @@ def compile_hits(route, events):
         contact = {'state': tick + 1, 'axis': 0 if hit['axis'] == 'X' else 1,
                    'direction': hit['direction'], 'plane': hit['plane']}
         contacts.append(contact)
-        scene_contacts.append(dict(contact, axis=0 if hit['axis'] == 'X' else 2, box=hit['box']))
+        scene_contacts.append(dict(contact, axis=0 if hit['axis'] == 'X' else 2, boxes=[hit['box']]))
         tangent = 'Z' if hit['axis'] == 'X' else 'X'
         index = 2 if tangent == 'Z' else 0
         at = tick if hit['axis'] == 'X' else tick + 1
@@ -90,12 +99,8 @@ def compile_hits(route, events):
             continue
         tick = events[contact['leg']]['jump'] + contact['offset']
         scene_contacts.append({'state': tick + 1, 'axis': 1, 'plane': contact['plane'], 'direction': 1,
-                               'box': contact['box']})
-        for axis, index in [('X', 0), ('Z', 2)]:
-            rows.extend([{'mode': axis, 't1': tick, 'cmp': 'GE',
-                          'rhs': contact['box'][index] - HALF_WIDTH + margin, 'name': 'ceiling_hit:finite_lo'},
-                         {'mode': axis, 't1': tick, 'cmp': 'LE',
-                          'rhs': contact['box'][index + 3] + HALF_WIDTH - margin, 'name': 'ceiling_hit:finite_hi'}])
+                               'boxes': contact['boxes'], 'regions': contact['regions']})
+        rows.extend(finite_rows(1, bounding_region(contact['regions']), t1=tick))
         for choice in contact.get('avoidBefore', []):
             rows.append(dict(choice, t1=events[contact['leg']]['jump'] + choice['t1']))
     return contacts, scene_contacts, rows

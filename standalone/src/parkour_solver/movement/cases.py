@@ -2,6 +2,7 @@ import copy
 
 from parkour_solver.physics.vertical import REST_CARRY, f32
 from parkour_solver.movement.vertical_profiles import trace_ladder_schedule
+from parkour_solver.movement.contact_combinations import contact_clearance, expanded_face
 from parkour_solver.movement.units import profile_program
 from parkour_solver.scene.route import HALF_WIDTH, center_bounds
 
@@ -75,7 +76,8 @@ def landing_wall_options(box, landing):
         for direction in (-1,1):
             yield [outside_row(box,axis,direction,landing,'blip:wall_avoid')], []
             contact = dict(leg=0,offset=landing-1,axis=axis,direction=direction,
-                plane=box[a]-HALF_WIDTH if direction>0 else box[a+3]+HALF_WIDTH,box=box,role='contact')
+                plane=box[a]-HALF_WIDTH if direction>0 else box[a+3]+HALF_WIDTH,boxes=[box],surface=None,
+                regions=[expanded_face(box,a,-direction,contact_clearance({}))],role='contact')
             yield [outside_row(box,axis,-direction,landing-1,'blip:wall_approach')], [contact]
 
 

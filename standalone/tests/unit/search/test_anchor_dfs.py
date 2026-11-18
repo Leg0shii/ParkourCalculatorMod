@@ -20,7 +20,7 @@ def extend(s,parent,target,n,extra=False):
     p['profile']['contactEvents']=copy.deepcopy(parent['profile']['contactEvents'])
     b=next(b for b in s['blocks'] if b['id']==target)
     p['profile']['contactEvents'].append(dict(offset=n-1,axis='Y',direction=-1,
-        box=s['collisionScene']['solids'][b['solidIndex']]))
+        boxes=[s['collisionScene']['solids'][b['solidIndex']]]))
     p['terminalSupport']=target
     p['decisionDepth']=parent.get('decisionDepth',0)+1
     return p
@@ -41,7 +41,7 @@ class AnchorDFSTests(unittest.TestCase):
                     prepared['profile']['jump'][1]=True
                     start=next(b for b in s['blocks'] if b['id']=='start')
                     prepared['profile']['contactEvents'].insert(0,dict(offset=0,axis='Y',direction=-1,
-                        box=s['collisionScene']['solids'][start['solidIndex']]))
+                        boxes=[s['collisionScene']['solids'][start['solidIndex']]]))
                     choices.append(prepared)
             else:
                 # Certifying subtree learns the global hard latch. A later

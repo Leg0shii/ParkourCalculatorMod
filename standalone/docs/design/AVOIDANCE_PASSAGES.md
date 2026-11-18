@@ -101,6 +101,16 @@ nominal switch counts do not create another branch. Completed stronger covers
 can be omitted only when a weaker cover entails them under the same capabilities.
 Guide preferences, timeouts and inconclusive LP results never establish exclusions.
 
+## Contact regions
+
+A finite contact on a face of several rectangles (a merged ceiling, a top split by a
+taller neighbour) is one generator choice with a `regionChoices` entry in its
+profile. `ConstraintVariants` adds one `contact_region` item per entry inside the
+scope, before the cluster items, and walks it first, like the required goal region.
+Each rectangle is its own family, so the switch climb never mixes them, and a
+rectangle is screened jointly with every later item. A repair source refines one
+solved branch and adds no region items.
+
 ## Unknown probes and shared collision repair
 
 Named step/grind phases come from both the profile and shared model metadata.
@@ -148,7 +158,7 @@ up to `FALLBACK_LIMIT` (2) others with the same ticks and an objective within
 if a later leg fails. The family state and held variants persist in the repair
 snapshot (version 3), so a resumed climb solves nothing twice.
 
-Constraint generation uses policy9/state5 and repair avoidancePolicy10 with assembly10. The DFS context
+Constraint generation uses policy10/state6 and repair avoidancePolicy11 with assembly11. The DFS context
 fingerprints the new policy. Old raw generator cursors reject; reproduce an old
 run with its original source and inputs. Source-era scene fields
 `maxContactBranches`, `maxPassageCandidates`, `maxBlockagesPerObstacle`,

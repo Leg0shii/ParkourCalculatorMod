@@ -30,14 +30,14 @@ def decision_family(program, parents):
     start = min(p['profile']['airtime'] for p in parents)
     p = program['profile']
     jump = next((t for t in range(start,p['airtime']) if p['jump'][t] and p['grounded'][t]),None)
-    events = [(e['offset'],e['axis'],e.get('role'),e.get('box')) for e in p.get('contactEvents',[])
+    events = [(e['offset'],e['axis'],e.get('role'),e['boxes']) for e in p.get('contactEvents',[])
         if e['offset']>=start and not (e['axis']=='Y' and p['grounded'][e['offset']] and not p['jump'][e['offset']])]
-    events += [(e['input'],e['case'],e.get('box')) for e in p.get('caseEvents',[]) if e['input']>=start]
+    events += [(e['input'],e['case'],e.get('boxes')) for e in p.get('caseEvents',[]) if e['input']>=start]
     first = min(events,key=lambda e:e[0]) if events else None
     return digest([jump,first])
 
 
-def commit_arrival(program, best, *, source_program=None):
+def commit_arrival(program, best, *, source_program=None, keep_region_choices=False):
     best = copy.deepcopy(best)
     n = program['profile']['airtime']
     source = source_program if source_program is not None else program
@@ -54,6 +54,11 @@ def commit_arrival(program, best, *, source_program=None):
             len(result['profile']['positionConstraints'])-len(program['profile']['positionConstraints']))
     result.pop('repairState', None)
     result['guideSeedYaw'] = result['guideSeedYaw'][:n]
+    if not keep_region_choices:
+        # The solved rectangle's rows are in the plan's walls, now retained position constraints.
+        open_choices = [c for c in result['profile'].pop('regionChoices', []) if c['offset'] > n]
+        if open_choices:
+            result['profile']['regionChoices'] = open_choices
     return result
 
 
@@ -87,7 +92,7 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
     if any(not accepted_program(p) for p in roots):
         raise ValueError('DFS roots violate the decision domain')
     schema = 8 if anchor_route else 7 if event_route else 6 if typed_route else 5
-    context = digest(dict(version=schema, kind='ordered_goal_dfs', movementGenerationPolicy=3,constraintGenerationPolicy=GENERATION_POLICY,
+    context = digest(dict(version=schema, kind='ordered_goal_dfs', movementGenerationPolicy=4,constraintGenerationPolicy=GENERATION_POLICY,
         scene={k:v for k,v in scene.items() if k!='movementSearch'},
         domain={k:v for k,v in cfg.items() if k not in ('maxPrefixes','maxQueuedPrefixes','maxChoicesPerType','expansionsPerProposal')},
         roots=[program_search_key(p) for p in roots], goals=goal_list,
@@ -258,6 +263,7 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
     def configure(ctx, f):
         stage_adapter(f).context(ctx)
         gate.context(ctx)
+        ctx['regionItems'] = True
 
     def time_bound(program,f=None):
         if state['best'] is None:return None
@@ -429,7 +435,7 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
             chosen={(r['mode'],row_tick(events[r['leg']],r),r['cmp'],r['rhs'])
                     for r in witness.get('alternativeRows',[]) if r['leg']<len(events)}
             witness['plan']['walls']=[w for w in witness['plan']['walls'] if (w['mode'],w['t1'],w['cmp'],w['rhs']) not in chosen]
-            updated=commit_arrival(program,witness)
+            updated=commit_arrival(program,witness,keep_region_choices=True)
             for k in ('decisionNode','decisionParent','decisionDepth','priorityTurnaround','restoredRun'):
                 if k in program:updated[k]=program[k]
             updated['lastSolvedDepth']=depth

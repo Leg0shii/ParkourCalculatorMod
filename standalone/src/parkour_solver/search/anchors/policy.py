@@ -63,13 +63,13 @@ def visits(scene, program):
         # A cancel/grind touches geometry without landing on its owner. Keep
         # its requested impulse and physical case, but do not invent a visit.
         if e.get('lowerBox') is not None:
-            events.append((e['input'],1,dict(box=e['lowerBox'])))
-        box=e.get('box')
-        if box and profile['grounded'][t] and abs(profile['position'][t]-box[4])<=1e-7:
+            events.append((e['input'],1,dict(boxes=[e['lowerBox']])))
+        boxes=e.get('boxes')
+        if boxes and profile['grounded'][t] and abs(profile['position'][t]-max(b[4] for b in boxes))<=1e-7:
             events.append((e['input'],2,e))
     result = [(0, owner(scene,scene['startBlock']))]
     for tick, _, e in sorted(events, key=lambda x:(x[0],x[1],digest(x[2]))):
-        name = by_box.get(tuple(e.get('box', ())))
+        name = next((by_box[tuple(b)] for b in e.get('boxes', ()) if tuple(b) in by_box), None)
         if name is not None:
             result.append((tick+1, name))
     # Some named profiles report only terminalSupport. Include its physical

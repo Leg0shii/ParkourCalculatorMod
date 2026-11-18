@@ -104,12 +104,13 @@ def build_transition_graph(scene, compiler, *, seconds=5):
             if scene['sceneModel'] == 'collision_boxes' and scene['maxContactCombinations']:
                 combination_key = key + ('combinations',)
                 if combination_key not in profile_cache:
+                    from parkour_solver.movement.contact_combinations import wall_heights
                     from parkour_solver.movement.contact_profiles import contact_opportunities, generate_contact_profiles
                     horizon = max((p['airtime'] for _, p, _ in profile_cache[key]), default=0)
                     opportunities = [e for e in contact_opportunities(scene['collisionScene']['solids'], horizon,
                         block_ids=[solid_owners[i] for i in range(len(solid_owners))], ceilings=scene['ceilingHits'],
                         horizontal=scene['maxWallHits'] > 0)
-                        if e['axis'] == 'Y' or e['box'][4] > min(key)]
+                        if e['axis'] == 'Y' or max(wall_heights(r, e['axis'])[1] for r in e['regions']) > min(key)]
                     profile_cache[combination_key] = generate_contact_profiles(*key, opportunities,
                         max_inputs=scene['maxFlightInputs'], max_events=scene['maxCombinedEvents'],
                         limit=scene['maxContactCombinations'], max_horizontal=scene['maxWallHits'])['profiles']
@@ -227,7 +228,7 @@ def compile_block_path(scene, block_ids, transitions=None):
             if scene['sceneModel'] == 'collision_boxes' and transition['profileKind'] in ('stair', 'step') and not profile.get('caseEvents'):
                 from parkour_solver.movement.units import profile_program
                 profile['caseEvents'] = [dict(type='stepping', case='slab_boost' if transition['profileKind'] == 'stair' else 'normal_step',
-                    input=0, plane=blocks[leg + 1]['top'], box=scene['collisionScene']['solids'][by_id[block_ids[leg + 1]]['solidIndex']],
+                    input=0, plane=blocks[leg + 1]['top'], boxes=[scene['collisionScene']['solids'][by_id[block_ids[leg + 1]]['solidIndex']]],
                     anchors={'hit': 1})]
                 profile['generatedUnits'] = profile_program(profile)
             profile.update(sourceBlock=blocks[leg]['id'], targetBlock=blocks[leg + 1]['id'],

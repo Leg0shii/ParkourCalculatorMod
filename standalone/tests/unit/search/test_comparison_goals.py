@@ -19,6 +19,7 @@ from parkour_solver.scene.normalize import prepare_scene
 from parkour_solver.bridge.compiler import JavaCompiler
 from parkour_solver.movement.program import truncate_program
 from tests.support.checkpoint_guidance import flat_scene, programs
+from tests.support.archived_events import current_events
 
 
 class ComparisonGoalTests(unittest.TestCase):
@@ -65,7 +66,7 @@ class ComparisonGoalNumericalTests(unittest.TestCase):
     def test_landing_time_and_same_clock_progress_are_distinct(self):
         rows=[]
         root=RESEARCH_ROOT
-        for name,_,label,fixture,known in controls(root):
+        for name,_,label,fixture,known in ((*c[:4],current_events(c[4])) for c in controls(root)):
             if name!='ceiling':continue
             scene=prepare_scene(fixture['request'])
             d,gates=decompose(scene),landmarks(scene)
@@ -100,7 +101,7 @@ class ComparisonGoalNumericalTests(unittest.TestCase):
 
     def test_full_regression_continues_a_discarded_actual_faster_route(self):
         from research.legacy_cell_routes.comparison_audit import audit_pool
-        records=[r for r in controls(RESEARCH_ROOT) if r[0]=='ceiling']
+        records=[current_events(list(r)) for r in controls(RESEARCH_ROOT) if r[0]=='ceiling']
         fixture=records[0][3]
         scene=prepare_scene(fixture['request'])
         d,gates=decompose(scene),landmarks(scene)

@@ -70,7 +70,7 @@ def _landing_prefixes(scene,program,block_id, *, reuse_full=False):
     box=scene['collisionScene']['solids'][block['solidIndex']]
     p=program['profile']
     events=p.get('contactEvents',[])+p.get('caseEvents',[])
-    times={e.get('offset',e.get('input',-1))+1 for e in events if e.get('box')==box
+    times={e.get('offset',e.get('input',-1))+1 for e in events if box in e.get('boxes',())
            and (e.get('axis')=='Y' and e.get('direction')==-1 or e.get('case') in ('normal_step','blip'))}
     if program['terminalSupport']==block_id:times.add(p['airtime'])
     for tick in sorted(times):
@@ -78,7 +78,7 @@ def _landing_prefixes(scene,program,block_id, *, reuse_full=False):
             continue
         candidate=program if reuse_full and tick==p['airtime'] and program['terminalSupport']==block_id else truncate_program(program,tick)
         candidate['terminalSupport']=block_id
-        at=[e for e in events if e.get('box')==box and e.get('offset',e.get('input',-1))==tick-1]
+        at=[e for e in events if box in e.get('boxes',()) and e.get('offset',e.get('input',-1))==tick-1]
         if any(e.get('case') in ('normal_step','blip') for e in at):
             candidate['profile']['landingPhase']='post'
         elif any(e.get('axis')=='Y' and e.get('direction')==-1 for e in at):

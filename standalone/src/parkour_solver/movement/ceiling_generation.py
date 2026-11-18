@@ -3,22 +3,26 @@ import copy
 from parkour_solver.physics.vertical import f32
 from parkour_solver.movement.cases import case_profile, outside_row, tangent_rows
 from parkour_solver.movement.ceiling_profiles import ceiling_profile, ceiling_sequence
+from parkour_solver.movement.contact_combinations import contact_event, region_choices, scene_contact_options
 from parkour_solver.movement.units import profile_program, shifted_unit
 from parkour_solver.scene.geometry import BODY_HEIGHT
 
 
 def ceiling_profiles(context):
     source, target, scene = context['source'], context['target'], context['scene']
-    for block in scene['blocks']:
+    names = {b['solidIndex']: b['sourceBlock'] for b in scene['blocks']}
+    for option in scene_contact_options(scene, 1, -1):
         if context.get('checkBudget'):
             context['checkBudget']()
-        index = block['solidIndex']
-        box = scene['collisionScene']['solids'][index]
-        ordinary = ceiling_profile(source['top'], target['top'], box, index, block['sourceBlock'],
+        ordinary = ceiling_profile(source['top'], target['top'], option, '+'.join(sorted({names[i] for i in option.members})),
                                    max_inputs=context.get('maxInputs', 200))
         if ordinary:
             ordinary['generatedUnits'] = profile_program(ordinary)
             yield 'ceiling', ordinary
+    for block in scene['blocks']:
+        if context.get('checkBudget'):
+            context['checkBudget']()
+        box = scene['collisionScene']['solids'][block['solidIndex']]
         clearance = box[1] - BODY_HEIGHT - source['top']
         if not 0 <= clearance < f32(.42):
             continue
@@ -27,7 +31,7 @@ def ceiling_profiles(context):
                 rows = [outside_row(box, axis, sign, 0, 'grind:outside')]
                 rows += tangent_rows(box, 'X', 1) + tangent_rows(box, 'Z', 1)
                 event = dict(case='grind', input=0, plane=source['top'], clearance=clearance,
-                             box=box, anchors={'beforeJump': 0, 'jump': 1})
+                             boxes=[box], anchors={'beforeJump': 0, 'jump': 1})
                 profile = case_profile(source['top'], target['top'], event,
                                        max_inputs=context.get('maxInputs', 200), constraints=rows)
                 if profile:
@@ -41,8 +45,8 @@ class CeilingGenerator:
             return
         if context.get('mode') == 'timeline':
             schedule = context['schedule']
-            for box in context['solids']:
-                events = ceiling_sequence(schedule, box, start=start)
+            for option in context['options']:
+                events = ceiling_sequence(schedule, option, start=start)
                 events = [e for e in events if not schedule['ladderTicks'][e['offset']]
                           and not (schedule['ladderTicks'][e['offset'] + 1] and schedule['hit'][e['offset']])]
                 if events:
@@ -71,30 +75,34 @@ def open_ceiling_choices(context):
     scene = context['scene']
     if not scene.get('ceilingHits', True):
         return
-    for block in scene['blocks']:
+    names = {b['solidIndex']: b['id'] for b in scene['blocks']}
+    for option in scene_contact_options(scene, 1, -1):
         if context.get('checkBudget'):
             context['checkBudget']()
-        box = scene['collisionScene']['solids'][block['solidIndex']]
-        plane = box[1] - BODY_HEIGHT
+        plane, owner = option.plane, '+'.join(sorted(names[i] for i in option.members))
         for state, jumping, trace in approaches(context):
             hit = next((t for t, move in enumerate(trace['movement'])
                         if move > 0 and trace['position'][t] <= plane < trace['position'][t + 1]), None)
             if hit is None:
                 continue
-            if not interaction_allowed(context, box, hit, jumping=jumping, phases=('Y',)):
+            if not any(interaction_allowed(context, list(box), hit, jumping=jumping, phases=('Y',)) for box in option.boxes):
                 continue
-            finite = [dict(leg=0, offset=hit, axis='Y', direction=1, plane=plane, box=box,
-                           role='ceiling', blockId=block['id'], solidIndex=block['solidIndex'])]
-            choice = event_choice(context, 'ceiling', state, hit + 1, jumping=jumping, finite=finite,
-                                  vertical=[dict(state=hit + 1, plane=plane, direction=1)])
+            event = contact_event(option, 'Y', 1, hit, 'ceiling', blockId=owner)
+            choice = event_choice(context, 'ceiling', state, hit + 1, jumping=jumping, finite=[event],
+                                  vertical=[dict(state=hit + 1, plane=plane, direction=1)],
+                                  region_choices=region_choices(context, event, owner))
             if choice:
                 yield choice
-        clearance = plane - initial['position']
+    for block in scene['blocks']:
+        if context.get('checkBudget'):
+            context['checkBudget']()
+        box = scene['collisionScene']['solids'][block['solidIndex']]
+        clearance = box[1] - BODY_HEIGHT - initial['position']
         if initial['onGround'] and 0 <= clearance < f32(.42) and interaction_allowed(context, box, 0, jumping=True):
             for axis in ('X', 'Z'):
                 for sign in (-1, 1):
                     event = dict(case='grind', input=0, plane=initial['position'], clearance=clearance,
-                                 box=box, anchors={'beforeJump': 0, 'jump': 1})
+                                 boxes=[box], anchors={'beforeJump': 0, 'jump': 1})
                     rows = [outside_row(box, axis, sign, 0, 'grind:outside')]
                     rows += tangent_rows(box, 'X', 1) + tangent_rows(box, 'Z', 1)
                     choice = named_choice(context, 'ceiling', initial, event, jumping=True, constraints=rows)

@@ -47,7 +47,7 @@ def summary_program(program, boxes):
     p=program['profile'];n=p['airtime']
     contacts=collections.defaultdict(list)
     for event in p.get('contactEvents',[]):
-        name=boxes.get(tuple(event['box']),'unmapped')
+        name='+'.join(sorted({boxes.get(tuple(b),'unmapped') for b in (event['boxes'] if 'boxes' in event else [event['box']])}))
         contacts[(name,event['axis'],event['direction'])].append(event['offset']+1)
     return dict(id=_key(program),ticks=n,
         jumps=[t for t in range(n) if p['jump'][t] and p['grounded'][t]],

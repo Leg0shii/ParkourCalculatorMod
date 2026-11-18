@@ -83,7 +83,7 @@ def decision_events(program, goal_box=None):
             continue
         if event['direction'] > 0:
             result.append(dict(input=t,kind='ceiling'))
-        elif event.get('box') != goal_box and not (p['grounded'][t] and not p['jump'][t]
+        elif goal_box not in event['boxes'] and not (p['grounded'][t] and not p['jump'][t]
                 and abs(p['position'][t+1]-p['position'][t]) < 1e-7):
             result.append(dict(input=t,kind='landing'))
     return sorted(result,key=lambda event:(event['input'],event['kind']))

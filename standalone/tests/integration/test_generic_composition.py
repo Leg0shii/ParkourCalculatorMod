@@ -31,7 +31,7 @@ class GenericCompositionTests(unittest.TestCase):
             context = dict(state=boundary_state(program))
             y = context['state']['position']
             choice = named_choice(context, 'stepping', context['state'],
-                dict(case='normal_step', input=0, plane=y + .5, box=[0, y, 0, 1, y + .5, 1], anchors={'hit': 1}), support=str(index))
+                dict(case='normal_step', input=0, plane=y + .5, boxes=[[0, y, 0, 1, y + .5, 1]], anchors={'hit': 1}), support=str(index))
             program = append_choice(program, choice)
         self.assertEqual(program['profile']['position'], [1, 1.5, 2, 2.5, 3, 3.5])
         self.assertEqual([u['type'] for u in program['movementUnits']], ['stepping'] * 5)
@@ -42,7 +42,7 @@ class GenericCompositionTests(unittest.TestCase):
         program = empty_program(initial())
         context = dict(state=boundary_state(program))
         choice = named_choice(context, 'ceiling', context['state'],
-            dict(case='grind', input=0, plane=1, clearance=.1, box=[1, 2.9, 0, 2, 4, 1], anchors={'jump': 1}), jumping=True)
+            dict(case='grind', input=0, plane=1, clearance=.1, boxes=[[1, 2.9, 0, 2, 4, 1]], anchors={'jump': 1}), jumping=True)
         program = append_choice(program, choice)
         self.assertFalse(boundary_state(program)['onGround'])
         self.assertIsNone(program['terminalSupport'])
@@ -242,14 +242,14 @@ class GenericNumericalTests(unittest.TestCase):
     def test_repeated_ceiling_type_with_blip_and_ground_movement_between(self):
         scene = prepare_scene(json.loads((ROOT / 'fixtures/generic-repeat-ceiling.json').read_text()))
         program = empty_program(scene['initial'])
-        program = select(program, scene, 'ceiling', lambda c: any(e['case'] == 'grind' and e['box'][0] == .85
+        program = select(program, scene, 'ceiling', lambda c: any(e['case'] == 'grind' and e['boxes'][0][0] == .85
                                                                for e in c['profile']['caseEvents']))
         program = select(program, scene, 'stepping', lambda c: c.get('terminalSupport') == 'raised'
                          and c['profile']['caseEvents'][0]['case'] == 'blip')
         for _ in range(3):
             program = select(program, scene, 'normal', lambda c: c['profile']['airtime'] == 1
                              and not c['profile']['jump'][0] and c.get('terminalSupport') == 'raised')
-        program = select(program, scene, 'ceiling', lambda c: any(e['box'][1] == 2.85 for e in c['profile']['contactEvents']))
+        program = select(program, scene, 'ceiling', lambda c: any(e['boxes'][0][1] == 2.85 for e in c['profile']['contactEvents']))
         program = select(program, scene, 'normal', lambda c: not c['profile']['jump'][0] and c.get('terminalSupport') == 'goal')
         best = self.solve(scene, program)
         self.assertEqual(best['plan']['ticks'], 12)

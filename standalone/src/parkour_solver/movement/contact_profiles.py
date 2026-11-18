@@ -1,10 +1,8 @@
 import copy
 
 from parkour_solver.physics.vertical import REST_CARRY, f32
-from parkour_solver.movement.contact_combinations import contact_combinations
+from parkour_solver.movement.contact_combinations import contact_clearance, contact_combinations, contact_event, wall_heights
 from parkour_solver.movement.vertical_profiles import trace_ladder_schedule
-from parkour_solver.scene.geometry import BODY_HEIGHT
-from parkour_solver.scene.route import HALF_WIDTH
 
 
 def contact_profile(source_top, target_top, events, *, max_inputs=200, ladder=None, sneak=None,
@@ -36,10 +34,12 @@ def contact_profile(source_top, target_top, events, *, max_inputs=200, ladder=No
         return None
     if trace['status'] != ('simulated' if target_top is None else 'landed') or any(e['offset'] >= trace['ticks'] for e in events):
         return None
+    events = copy.deepcopy(events)
     for event in events:
         if event['axis'] != 'Y':
-            y, box = trace['position'][event['offset'] + 1], event['box']
-            if y >= box[4] or y + BODY_HEIGHT <= box[1]:
+            y = trace['position'][event['offset'] + 1]
+            event['regions'] = [r for r in event['regions'] if wall_heights(r, event['axis'])[0] < y < wall_heights(r, event['axis'])[1]]
+            if not event['regions']:
                 return None
     return {'airtime': trace['ticks'], 'landingPhase': 'pre', 'position': trace['position'],
             'velocity': trace['velocity'], 'grounded': trace['onGround'], 'contacts': trace['vertical']['contacts'],
@@ -49,21 +49,18 @@ def contact_profile(source_top, target_top, events, *, max_inputs=200, ladder=No
 
 
 def contact_opportunities(solids, horizon, *, block_ids=None, ceilings=True, horizontal=True):
+    """One event per merged face and tick over every solid."""
+    from parkour_solver.spatial.surfaces import scene_geometry
+    geometry = scene_geometry(dict(solids=list(solids)))
+    faces = [(a, d) for d in (1, -1) for a in ('X', 'Z', 'Y') if (a != 'Y' and horizontal) or a == 'Y' and ceilings and d > 0]
+    options = [(axis, direction, option) for axis, direction in faces
+               for option in geometry.contact_options('XYZ'.index(axis), -direction, clearance=contact_clearance({}),
+                                                      members=range(len(solids)))]
     for tick in range(horizon):
-        for index, box in enumerate(solids):
-            for axis, direction in [(a, d) for d in (1, -1) for a in ('X', 'Z', 'Y') if a != 'Y' or ceilings and d > 0]:
-                if axis != 'Y' and not horizontal:
-                    continue
-                if axis == 'Y':
-                    from parkour_solver.movement.ceiling_profiles import ceiling_contact
-                    yield ceiling_contact(box, tick, solid_index=index, block_id=block_ids[index] if block_ids else None)
-                    continue
-                a = 'XYZ'.index(axis)
-                plane = box[a] - (BODY_HEIGHT if axis == 'Y' else HALF_WIDTH) if direction > 0 else box[a + 3] + HALF_WIDTH
-                yield {'leg': 0, 'offset': tick, 'axis': axis, 'direction': direction, 'plane': plane,
-                       'box': copy.deepcopy(box), 'solidIndex': index,
-                       'blockId': block_ids[index] if block_ids else 'solid:' + str(index),
-                       'role': 'ceiling' if axis == 'Y' else 'contact'}
+        for axis, direction, option in options:
+            names = sorted({block_ids[i] if block_ids else 'solid:' + str(i) for i in option.members})
+            yield contact_event(option, axis, direction, tick, 'ceiling' if axis == 'Y' else 'contact',
+                                blockId='+'.join(names))
 
 
 def generate_contact_profiles(source_top, target_top, opportunities, *, max_inputs=200,
@@ -78,7 +75,8 @@ def generate_contact_profiles(source_top, target_top, opportunities, *, max_inpu
         profile = contact_profile(source_top, target_top, chosen, max_inputs=max_inputs, ladder=ladder, sneak=sneak)
         if profile is None:
             continue
-        key = tuple((e['offset'], e['axis'], e['direction'], e['plane'], tuple(e['box'])) for e in chosen)
+        key = tuple((e['offset'], e['axis'], e['direction'], e['plane'], e.get('surface'), tuple(map(tuple, e['regions'])))
+                    for e in chosen)
         if key not in seen:
             seen.add(key)
             profiles.append(profile)

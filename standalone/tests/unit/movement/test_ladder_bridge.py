@@ -53,7 +53,7 @@ class LadderBridgeTests(unittest.TestCase):
         scene = {'version': 1, 'profile': 'minecraft-1.8.9', 'bounds': [-5, -5, -5, 5, 10, 5],
                  'solids': [box], 'ladders': [[0, 1, 0], [0, 2, 0]]}
         positions = [[.6, 2, .5], [plane, 2, .5]]
-        contacts = [{'state': 1, 'axis': 0, 'plane': plane, 'direction': 1, 'box': box}]
+        contacts = [{'state': 1, 'axis': 0, 'plane': plane, 'direction': 1, 'boxes': [box]}]
         contract = {'ladderTicks': [True, True], 'sneak': [True],
                     'velocities': [[0, 0, 0], [0, (.2 - .08) * .9800000190734863, 0]], 'friction': [.91]}
         checked = self.compiler.check_scene(scene, positions, [[.15, 0, 0]], [False, False], 5,
@@ -89,13 +89,13 @@ class LadderBridgeTests(unittest.TestCase):
                  'solids': [lower, upper]}
         plane = 1 - HALF_WIDTH
         positions, movement = [[.6, 1.8, .5], [plane, 1.8, .5]], [[.15, 0, 0]]
-        contact = {'state': 1, 'axis': 0, 'plane': plane, 'direction': 1, 'box': upper}
+        contact = {'state': 1, 'axis': 0, 'plane': plane, 'direction': 1, 'boxes': [upper]}
         checked = self.compiler.check_scene(scene, positions, movement, [False, False], 5, contacts=[contact])
         self.assertTrue(checked['feasible'], checked)
         for wrong in ([2, 2, -1, 3, 4, 2], [1, 4, -1, 2, 5, 2], [1, 2, 3, 2, 4, 4]):
             with self.subTest(box=wrong):
                 checked = self.compiler.check_scene(scene, positions, movement, [False, False], 5,
-                                                     contacts=[dict(contact, box=wrong)])
+                                                     contacts=[dict(contact, boxes=[wrong])])
                 self.assertFalse(checked['feasible'])
 
     def test_ranked_pool_preserves_backups_and_does_not_change_schedules(self):

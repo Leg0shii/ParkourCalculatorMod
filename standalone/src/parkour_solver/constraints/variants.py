@@ -12,8 +12,8 @@ from parkour_solver.search.identity import digest
 from parkour_solver.spatial.surfaces import scene_geometry
 
 
-GENERATION_POLICY = 9
-STATE_VERSION = 5
+GENERATION_POLICY = 10
+STATE_VERSION = 6
 
 
 class ConstraintVariants:
@@ -73,6 +73,8 @@ class ConstraintVariants:
         items = ([dict(routeGuard=True)] if route_guards is not None else [])
         if required_alternatives is not None:
             items.append(dict(rows=required_alternatives, role='required_contact'))
+        items.extend(dict(rows=c['options'], role='contact_region', surface=c['surface'], owner=c['owner'])
+                     for c in profile.get('regionChoices', []) if c['offset'] <= self.through)
         # Temporal order is a traversal preference. All items share the original
         # model; neither overlap nor scene order declares independent subproblems.
         self.geometry, self.scope_indices = scene_geometry(geometry), scope['solidIndices']
@@ -232,7 +234,7 @@ class ConstraintVariants:
                 rank = (phases[0]['at'] if phases else -1,
                         sum(len(p['options']) for p in phases), index)
             candidates.append((rank, index, item))
-            if item.get('routeGuard') or item.get('role') == 'required_contact':
+            if item.get('routeGuard') or item.get('role') in ('required_contact', 'contact_region'):
                 break
         _, index, item = min(candidates, key=lambda v: v[0])
         node['chosenItem'], node['prepared'] = index, item

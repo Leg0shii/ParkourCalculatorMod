@@ -44,7 +44,7 @@ class EventSearchTests(unittest.TestCase):
         request=next(r for r in requests if r['goal'].get('surface')==right['id'])
         p=program(scene,2,2);p['terminalSupport']='floor'
         p['profile']['grounded']=[True,False,True]
-        p['profile']['contactEvents']=[dict(offset=1,axis='Y',direction=-1,box=scene['collisionScene']['solids'][0])]
+        p['profile']['contactEvents']=[dict(offset=1,axis='Y',direction=-1,boxes=[scene['collisionScene']['solids'][0]])]
         view=adapter.for_goal(request,cursor).bind_program(p)
         candidate=dict(positions=[[.5,.5],[.5,.5],[.5,.5]])
         self.assertFalse(view.candidate({},candidate,{})['accepted'])
@@ -95,7 +95,7 @@ class EventSearchTests(unittest.TestCase):
             p=program(s,n,n);p['terminalSupport']=s['goalBlock']
             target=next(b for b in s['blocks'] if b['id']==s['goalBlock'])
             p['profile']['position'][-1]=target['top']
-            p['profile']['contactEvents']=[dict(offset=n-1,axis='Y',direction=-1,box=s['collisionScene']['solids'][target['solidIndex']])]
+            p['profile']['contactEvents']=[dict(offset=n-1,axis='Y',direction=-1,boxes=[s['collisionScene']['solids'][target['solidIndex']]])]
             yield p
         def evaluate(s,p,compiler,adapter,work,motion,**kwargs):
             work.before_solve({});dispatched.append((p['terminalSupport'],p['profile']['airtime']))

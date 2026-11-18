@@ -154,12 +154,13 @@ class AnchorSearchTests(unittest.TestCase):
     def test_actual_landing_clock_binds_before_unused_suffix_and_drops_owned_future_rows(self):
         from parkour_solver.movement.normal import event_choice
         from parkour_solver.movement.program import boundary_state
+        from parkour_solver.movement.contact_combinations import expanded_face
         s=flat_scene();root=empty_program(s['initial'],threshold=0.);root['terminalSupport']='start'
         goal=next(b for b in s['blocks'] if b['id']=='goal')
         box=s['collisionScene']['solids'][goal['solidIndex']]
         choice=event_choice(dict(threshold=0.),'normal',boundary_state(root),13,jumping=True,
             vertical=[dict(state=12,plane=1.,direction=-1)],
-            finite=[dict(offset=11,axis='Y',direction=-1,box=box)],
+            finite=[dict(offset=11,axis='Y',direction=-1,boxes=[box],surface=None,regions=[expanded_face(box,1,1,1e-6)])],
             constraints=[dict(mode='X',t1=13,cmp='GE',rhs=100.,name='future-owned')])
         # The future row belongs to a later event, not the achieved landing.
         choice['profile']['constraintOwners']=[13]

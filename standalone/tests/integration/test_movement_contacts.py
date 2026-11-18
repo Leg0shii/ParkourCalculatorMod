@@ -22,6 +22,7 @@ from parkour_solver.constraints.contacts import floor_checks
 from parkour_solver.bridge.compiler import JavaCompiler
 from parkour_solver.numerics import prepare, validate
 from parkour_solver.physics.vertical import CLIMB_CARRY
+from parkour_solver.movement.contact_combinations import expanded_face
 
 
 ROOT = AUTONOMY_DATA
@@ -85,7 +86,8 @@ class MovementContactTests(unittest.TestCase):
         self.assertTrue(any({e['offset'] for e in v}=={0,1} for v in variants))
         for axis in ('X','Z'):
             self.assertTrue(any(any(e['axis']==axis and e['direction']==-1 for e in v) for v in variants))
-        events=[dict(leg=0,offset=t,axis=a,plane=0,direction=1,box=box) for t,a in [(0,'X'),(4,'Z')]]
+        events=[dict(leg=0,offset=t,axis=a,plane=0,direction=1,boxes=[box],surface=None,regions=[expanded_face(box,'XYZ'.index(a),-1,1e-6)])
+                for t,a in [(0,'X'),(4,'Z')]]
         self.assertFalse(any(len(v)==2 for v in contact_combinations(events,max_events=2)))
         self.assertTrue(any(len(v)==2 for v in contact_combinations(events,max_events=2,independent_events=True)))
 
@@ -111,7 +113,8 @@ class MovementContactTests(unittest.TestCase):
         self.assertAlmostEqual(changed['trace']['position'][26],3.07)
 
     def test_existing_contacts_are_retained_and_conflicting_normals_are_not_emitted(self):
-        event={'leg':0,'offset':0,'axis':'X','plane':-.3,'direction':1,'box':[0,0,0,1,1,1],'role':'contact'}
+        event={'leg':0,'offset':0,'axis':'X','plane':-.3,'direction':1,'boxes':[[0,0,0,1,1,1]],'surface':None,
+               'regions':[expanded_face([0,0,0,1,1,1],0,-1,1e-6)],'role':'contact'}
         result=contact_variants([[0,0,0,1,1,1]],2,existing=[event],max_variants=64)
         self.assertTrue(result['variants'])
         for selected in result['variants']:

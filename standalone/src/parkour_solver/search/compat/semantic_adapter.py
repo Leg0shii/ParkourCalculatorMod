@@ -109,7 +109,7 @@ class SemanticCorridorAdapter(CorridorAdapter):
             if event['axis']!='Y' or event.get('direction')!=-1:
                 continue
             indices={b['solidIndex'] for b in self.scene['blocks']
-                     if self.scene['collisionScene']['solids'][b['solidIndex']]==event['box']}
+                     if self.scene['collisionScene']['solids'][b['solidIndex']] in event['boxes']}
             def matches(key):
                 region=regions[key]
                 return bool(indices.intersection(region['solids']) and

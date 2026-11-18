@@ -28,7 +28,7 @@ def _vertical_remaining(guides, span, program, transfers, hard_latches):
                 reason='grounded_source'
             elif not p['grounded'][-1]:
                 source_contacts=[e['offset']+1 for e in p.get('contactEvents',[]) if
-                    e.get('axis')=='Y' and e.get('direction')==-1 and e.get('box')==r.get('sourceBox')]
+                    e.get('axis')=='Y' and e.get('direction')==-1 and r.get('sourceBox') in e['boxes']]
                 boundary=max(source_contacts,default=0)
                 launches=[t for t in range(boundary,n) if p['grounded'][t] and p['jump'][t]]
                 if len(launches)!=1:continue

@@ -100,13 +100,12 @@ def support_region(owner, envelopes, tick):
     Post-contact travel envelopes can extend beyond the support's footprint.
     """
     event = next((e for e in owner.profile.get('contactEvents', []) if e.get('axis') == 'Y'
-                  and e.get('direction') == -1 and e['offset']+1 == tick and 'box' in e), None)
+                  and e.get('direction') == -1 and e['offset']+1 == tick and 'regions' in e), None)
     if event is None:
         return envelopes['states'][tick]
-    from parkour_solver.scene.geometry import expanded_box
-    b = expanded_box(event['box'])
-    margin = max(owner.route['supportClearance'], 2e-7)
-    return dict(X=[b[0]+margin, b[3]-margin], Z=[b[2]+margin, b[5]-margin], Y=[event['box'][4]]*2)
+    regions = event['regions']
+    return dict(X=[min(r[0] for r in regions), max(r[2] for r in regions)],
+                Z=[min(r[1] for r in regions), max(r[3] for r in regions)], Y=[max(b[4] for b in event['boxes'])]*2)
 
 
 def prepare_encounter(owner, item, envelopes):

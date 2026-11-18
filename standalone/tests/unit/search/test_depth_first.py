@@ -11,12 +11,13 @@ from unittest.mock import patch
 
 from parkour_solver.search.engine import find_checkpoint_route
 from parkour_solver.spatial.checkpoints import Checkpoint
-from parkour_solver.movement.program import empty_program, append_choice, truncate_program
+from parkour_solver.movement.program import empty_program, append_choice, boundary_state, truncate_program
 from parkour_solver.movement.normal import event_choice
 from tests.support.checkpoint_guidance import flat_scene
 from parkour_solver.reachability.service import block_interaction
 from parkour_solver.reachability.intervals import reachable_envelopes
 from parkour_solver.constraints.variants import ConstraintVariants
+from tests.support.archived_events import current_events
 
 
 class DepthFirstTests(DepthFirstHarness):
@@ -82,7 +83,7 @@ class InteractionOwnershipTests(unittest.TestCase):
         scene=flat_scene();p=empty_program(scene['initial'],threshold=0.)
         context=dict(threshold=0.)
         choice=event_choice(context,'normal',p['initial'],3,jumping=True,
-            finite=[dict(leg=0,offset=2,axis='Y',direction=-1,plane=1.,box=scene['collisionScene']['solids'][1])],
+            finite=[dict(leg=0,offset=2,axis='Y',direction=-1,plane=1.,boxes=[scene['collisionScene']['solids'][1]])],
             constraints=[dict(mode='X',t1=1,cmp='GE',rhs=2.,name='approach')])
         full=append_choice(p,choice)
         full['profile']['positionConstraints'].append(dict(mode='Z',t1=1,cmp='LE',rhs=1.,name='task'))
@@ -97,6 +98,24 @@ class InteractionOwnershipTests(unittest.TestCase):
         self.assertEqual(len(committed['guideSeedYaw']),2)
         full['committedThrough']=3
         self.assertEqual(len(truncate_program(full,2)['profile']['positionConstraints']),2)
+
+    def test_region_choices_shift_truncate_and_close_when_their_leg_is_kept(self):
+        from parkour_solver.search.dfs import commit_arrival
+        scene=flat_scene();p=empty_program(scene['initial'],threshold=0.)
+        def rows(offset,rhs):
+            return [dict(leg=0,offset=offset,mode='X',cmp='LE',rhs=rhs,name='contact:region')]
+        first=event_choice(dict(threshold=0.),'normal',p['initial'],3,jumping=True,
+            region_choices=[dict(offset=2,surface='surface:test',owner='goal',options=[rows(2,1.),rows(2,2.)])])
+        program=append_choice(p,first)
+        second=event_choice(dict(threshold=0.),'normal',boundary_state(program),2,
+            region_choices=[dict(offset=1,surface='surface:test',owner='goal',options=[rows(1,3.),rows(1,4.)])])
+        program=append_choice(program,second)
+        self.assertEqual([(c['offset'],c['options'][0][0]['offset']) for c in program['profile']['regionChoices']],[(2,2),(4,4)])
+        self.assertEqual([c['offset'] for c in truncate_program(program,3)['profile']['regionChoices']],[2])
+        best=dict(plan=dict(walls=[dict(mode='X',t1=4,cmp='LE',rhs=3.,name='contact:region')]),candidate=dict(yaw=[0.]*5))
+        self.assertNotIn('regionChoices',commit_arrival(program,best)['profile'])
+        checked=commit_arrival(program,best,keep_region_choices=True)
+        self.assertEqual(checked['profile']['regionChoices'],program['profile']['regionChoices'])
 
     def test_shared_gate_distinguishes_swept_phase_and_keeps_unknown(self):
         e=reachable_envelopes(dict(ticks=1,position=[0.,0.],velocity=[2.,0.],magnitude=[0.],friction=[.9],walls=[]),[1.,1.])
@@ -218,12 +237,12 @@ class HistoricalInteractionTests(unittest.TestCase):
         fixture=json.loads((root/'experiments/linkcraft11-opening/fixtures/clock64-orchestrator.json').read_text())
         scene=prepare_scene(fixture['request'])
         with gzip.open(root/'experiments/orchestrator-fixes/audit/candidate-ledger.json.gz','rt') as stream:
-            saved=json.load(stream)
+            saved=current_events(json.load(stream))
         original=next(p for p in saved['programs'] if p['label']=='P03')['record']['decision_program']
         p=truncate_program(original,21);p['terminalSupport']='b2'
         ctx=dict(mode='open',scene=scene,program=p,state=boundary_state(p),maxInputs=43,threshold=0.)
         b4=scene['collisionScene']['solids'][next(b['solidIndex'] for b in scene['blocks'] if b['id']=='b4')]
-        ungated=[c for c in open_stepping_choices(dict(ctx)) if any(e['box']==b4 for e in c['profile']['caseEvents'])]
+        ungated=[c for c in open_stepping_choices(dict(ctx)) if any(b4 in e['boxes'] for e in c['profile']['caseEvents'])]
         self.assertTrue(ungated)
         with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:
             gate=InteractionGate(scene,compiler)

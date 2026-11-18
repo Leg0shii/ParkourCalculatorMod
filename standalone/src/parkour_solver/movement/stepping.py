@@ -23,7 +23,7 @@ def stepping_profiles(context):
         for axis in ('X','Z'):
             for direction in (-1,1):
                 rows=[outside_row(box,axis,-direction,0)] + region_rows(target,1)
-                e=dict(case='normal_step',input=0,plane=target_y,box=box,anchors={'hit':1})
+                e=dict(case='normal_step',input=0,plane=target_y,boxes=[box],anchors={'hit':1})
                 p=case_profile(source_y,target_y,e,jump_at_start=False,finish_at=1,constraints=rows)
                 if p:
                     yield 'step',p,None
@@ -34,7 +34,7 @@ def stepping_profiles(context):
             for axis in ('X','Z'):
                 for direction in (-1,1):
                     q=copy.deepcopy(p)
-                    q['caseEvents']=[dict(type='stepping',case='slab_boost',input=0,plane=target_y,box=box,anchors={'beforeJump':0,'jump':1})]
+                    q['caseEvents']=[dict(type='stepping',case='slab_boost',input=0,plane=target_y,boxes=[box],anchors={'beforeJump':0,'jump':1})]
                     q['generatedUnits']=profile_program(q)
                     yield 'stair',q,dict(axis=axis,direction=direction)
     for block in scene['blocks']:
@@ -44,7 +44,7 @@ def stepping_profiles(context):
         if enabled('corner_jump_cancel') and f32(.42)<block['top']-source_y<=f32(.6):
             for xdir in (-1,1):
                 for zdir in (-1,1):
-                    e=dict(case='corner_jump_cancel',input=0,plane=source_y,higherHeight=block['top'],box=box,anchors={'jump':1})
+                    e=dict(case='corner_jump_cancel',input=0,plane=source_y,higherHeight=block['top'],boxes=[box],anchors={'jump':1})
                     p=case_profile(source_y,target_y,e,max_inputs=horizon,constraints=corner_rows(box,0,1,xdir,zdir))
                     if p:
                         yield 'corner_jump_cancel',p,None
@@ -63,7 +63,7 @@ def stepping_profiles(context):
             box=box_for(target,context)
             for avoid,contacts in landing_wall_options(box,landing):
                 e=dict(case='blip',input=landing,plane=target_y,lowerHeight=lower['top'],higherHeight=target_y,
-                       box=box,lowerBox=box_for(lower,context),anchors={'landing':landing,'hit':hit})
+                       boxes=[box],lowerBox=box_for(lower,context),anchors={'landing':landing,'hit':hit})
                 p=case_profile(source_y,target_y,e,finish_at=hit,constraints=low_rows+avoid+region_rows(target,hit),contacts=contacts)
                 if p:
                     yield 'blip',p,None
@@ -79,7 +79,7 @@ def stepping_profiles(context):
                 for rows in conditions:
                     for jump_after in (None,hit):
                         e=dict(case=kind,input=landing,plane=y,lowerHeight=lower['top'],higherHeight=higher['top'],
-                               box=box,lowerBox=box_for(lower,context),anchors={'landing':landing,'hit':hit})
+                               boxes=[box],lowerBox=box_for(lower,context),anchors={'landing':landing,'hit':hit})
                         p=case_profile(source_y,target_y,e,max_inputs=horizon,jump_after=jump_after,constraints=rows)
                         if p:
                             yield kind,p,None
@@ -153,7 +153,7 @@ def open_stepping_choices(context):
                 for axis in ('X', 'Z'):
                     for direction in (-1, 1):
                         rows = [outside_row(box, axis, -direction, 0)] + region_rows(block, 1)
-                        event = dict(case=case, input=0, plane=block['top'], box=box,
+                        event = dict(case=case, input=0, plane=block['top'], boxes=[box],
                                      anchors={'beforeJump' if jumping else 'beforeStep': 0, 'jump' if jumping else 'hit': 1})
                         choice = named_choice(context, 'stepping', initial, event, jumping=jumping,
                                               constraints=rows, support=block['id'] if not jumping else None)
@@ -163,7 +163,7 @@ def open_stepping_choices(context):
                 for xdir in (-1, 1):
                     for zdir in (-1, 1):
                         event = dict(case='corner_jump_cancel', input=0, plane=y0, higherHeight=block['top'],
-                                     box=box, anchors={'beforeJump': 0, 'jump': 1})
+                                     boxes=[box], anchors={'beforeJump': 0, 'jump': 1})
                         choice = named_choice(context, 'stepping', initial, event, jumping=True,
                                               constraints=corner_rows(box, 0, 1, xdir, zdir))
                         if choice:
@@ -190,7 +190,7 @@ def open_stepping_choices(context):
                 if (enabled('blip') and 0 <= higher['top'] - y <= f32(.6) and
                         (context.get('landingAllowed') is None or context['landingAllowed'](higher))):
                     shared_event=dict(case='blip',input=landing,plane=higher['top'],lowerHeight=lower['top'],
-                        higherHeight=higher['top'],box=box,lowerBox=box_for(lower,context),
+                        higherHeight=higher['top'],boxes=[box],lowerBox=box_for(lower,context),
                         anchors={'landing':landing,'hit':landing+1})
                     options = ()
                     if _sequence_allowed(context,initial,shared_event,jumping,
@@ -200,7 +200,7 @@ def open_stepping_choices(context):
                             for axis in ('X', 'Z') for sign in (-1, 1))
                     for rows, finite in options:
                         event = dict(case='blip', input=landing, plane=higher['top'], lowerHeight=lower['top'],
-                            higherHeight=higher['top'], box=box, lowerBox=box_for(lower, context),
+                            higherHeight=higher['top'], boxes=[box], lowerBox=box_for(lower, context),
                             anchors={'landing': landing, 'hit': landing + 1})
                         choice = named_choice(context, 'stepping', initial, event, jumping=jumping,
                             constraints=lower_rows + rows + region_rows(higher, landing + 1), finite=finite, support=higher['id'])
@@ -210,7 +210,7 @@ def open_stepping_choices(context):
                     if not enabled(case) or not (y > higher['top'] if case == 'blip_up' else 0 <= higher['top'] - y <= f32(.6)):
                         continue
                     shared_event=dict(case=case,input=landing,plane=y,lowerHeight=lower['top'],higherHeight=higher['top'],
-                        box=box,lowerBox=box_for(lower,context),anchors={'landing':landing,'hit':landing+1})
+                        boxes=[box],lowerBox=box_for(lower,context),anchors={'landing':landing,'hit':landing+1})
                     shared_rows=lower_rows+(region_rows(higher,landing+1) if case=='blip_up' else [])
                     if not _sequence_allowed(context,initial,shared_event,jumping,shared_rows):
                         continue
@@ -219,7 +219,7 @@ def open_stepping_choices(context):
                             corner_rows(box, landing, landing + 1, xdir, zdir) for xdir in (-1, 1) for zdir in (-1, 1))
                     for constraint in rows:
                         event = dict(case=case, input=landing, plane=y, lowerHeight=lower['top'], higherHeight=higher['top'],
-                                     box=box, lowerBox=box_for(lower, context), anchors={'landing': landing, 'hit': landing + 1})
+                                     boxes=[box], lowerBox=box_for(lower, context), anchors={'landing': landing, 'hit': landing + 1})
                         choice = named_choice(context, 'stepping', initial, event, jumping=jumping,
                                               constraints=lower_rows + constraint)
                         if choice:

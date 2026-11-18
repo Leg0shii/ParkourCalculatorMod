@@ -77,13 +77,18 @@ def item_label(item):
     name = rows[0].get('name','') if rows else ''
     if item.get('role') == 'required_contact':
         name = 'landing region'
+    if item.get('role') == 'contact_region':
+        name = item['owner']+' region'
     return (name.split(':')[1] if name.startswith('event:') else name or 'route guard'), [min(ticks),max(ticks)] if ticks else None
 
 
-def family_sides(choices, family):
+def family_sides(choices, family, regions=()):
     first = family['points'][family['order'][0]]['keys'][0]
-    return '; '.join(f'{p["blockId"].upper()}: '+' then '.join(side(f) for f in p['faces'])
-                     for p in choices.get(first,[])) or 'no obstacle sides'
+    chosen = {tuple(r) for r in json.loads(first)[0]}
+    rectangles = [f'{item["owner"].upper()}: '+region_text(option) for item in regions for option in item['rows']
+                  if all((r['leg'],r['offset'],r['mode'],r['cmp'],r['rhs']) in chosen for r in option)]
+    return '; '.join([f'{p["blockId"].upper()}: '+' then '.join(side(f) for f in p['faces'])
+                      for p in choices.get(first,[])]+rectangles) or 'no obstacle sides'
 
 
 def family_point(point, index):
@@ -105,6 +110,8 @@ def repair_trace(repair, final=False):
         contactChecks=sum('contactCheck' in i for i in items),
         landingRegions=[dict(ticks=sorted({r.get('t1',r.get('offset')) for option in i['rows'] for r in option}),
                              options=i['rows']) for i in items if i.get('role') == 'required_contact'],
+        contactRegions=[dict(ticks=sorted({r['offset'] for option in i['rows'] for r in option}),owner=i['owner'],
+                             surface=i['surface'],options=i['rows']) for i in items if i.get('role') == 'contact_region'],
         generatorMetrics=generation.get('metrics',{}),
         preparedEncounters=[encounter_trace(e) for e in generation.get('encounterLog',[])],
         faceOwners=sorted({(e['owner'],name,b['axis'],'GE' if b['direction'] > 0 else 'LE',b['plane'])
@@ -121,7 +128,8 @@ def repair_trace(repair, final=False):
         alternatives=[dict(branch=c['branch'],rows=json.loads(c['branch'])[0],status=c['status'],validation=c.get('validationStatus'),
                            solves=[dict(problemHash=h,**attempts.get(h,{})) for h in c.get('problemHashes',[])])
                       for c in repair.get('completed',[])],
-        families=[dict(sides=family_sides(repair.get('interactionChoices',{}),f),
+        families=[dict(sides=family_sides(repair.get('interactionChoices',{}),f,
+                                          [i for i in items if i.get('role') == 'contact_region']),
                        points=[dict({k:f['points'][n][k] for k in ('switches','status','rank','objective','keys')},
                                     held=len(f['points'][n]['held'])) for n in f['order']])
                   for f in (repair.get('families') or {}).values()],
@@ -138,7 +146,9 @@ def block_names(scene):
 
 def movement(profile, names):
     def where(event):
-        return dict(block=event.get('blockId') or names.get(tuple(event.get('box') or ()),'unnamed box'),
+        boxes = event['boxes'] if 'boxes' in event else [event['box']] if 'box' in event else []  # reports before member boxes
+        members = sorted({names.get(tuple(box),'unnamed box') for box in boxes}) or ['unnamed box']
+        return dict(block=event.get('blockId') or '+'.join(members),
                     tick=event.get('offset'))
     events = profile.get('contactEvents',[])
     return dict(jumps=[t for t,jump in enumerate(profile.get('jump',[])) if jump],
@@ -239,9 +249,9 @@ def region_text(rows):
     bounds = {}
     for row in rows:
         bounds.setdefault(row['mode'],{})[row['cmp']] = row['rhs']
-    if set(bounds) != {'X','Z'} or any(set(v) != {'GE','LE'} for v in bounds.values()):
-        return rows_text(rows)
-    return ' × '.join(f'{axis} [{bounds[axis]["GE"]:.3f}, {bounds[axis]["LE"]:.3f}]' for axis in ('X','Z'))
+    if not bounds or not set(bounds) <= {'X','Z'} or any(set(v) != {'GE','LE'} for v in bounds.values()):
+        return rows_text(rows) if rows else ''
+    return ' × '.join(f'{axis} [{bounds[axis]["GE"]:.3f}, {bounds[axis]["LE"]:.3f}]' for axis in sorted(bounds))
 
 
 def phases_text(phases):
@@ -459,18 +469,23 @@ def render(report, requests, routes, stop):
                   phases_text(e['uncertain']) or 'none'] for e in interacting])
             decisions = sorted({(e['owner'],e['segment'][0],e['segment'][1]) for e in interacting})
             regions = [r for r in repair['landingRegions'] if len(r['options']) > 1]
-            if decisions or regions:
+            contact_regions = repair.get('contactRegions',[])
+            if decisions or regions or contact_regions:
                 lines += ['Decisions:','']+[f'- which sides of {o.upper()} to keep (segment t{a}-{b})' for o,a,b in decisions]+[
                     f'- which of {goal}\'s {len(r["options"])} landing-cover rectangles to land in at '
-                    f't{", t".join(map(str,r["ticks"]))}: '+' or '.join(region_text(o) for o in r['options']) for r in regions]+['']
+                    f't{", t".join(map(str,r["ticks"]))}: '+' or '.join(region_text(o) for o in r['options']) for r in regions]+[
+                    f'- which of {r["owner"].upper()}\'s {len(r["options"])} face rectangles to touch at '
+                    f't{", t".join(map(str,r["ticks"]))}: '+' or '.join(region_text(o) for o in r['options'])
+                    for r in contact_regions]+['']
             rejected = repair['screenRejections']
             lines += [f'Options rejected before solving: {len(rejected)}'+
                       (' ('+', '.join(f'{n} {CHECKS.get(k,k)}' for k,n in Counter(e['reason'] for e in rejected).most_common())+')' if rejected else '')+'.','']
             lines += table(['#','Decision','Option','Check','Detail'],
-                [[i,(f'{goal} landing region' if e['encounter'] == 'landing region' else f'{e["encounter"].upper()} sides')+
+                [[i,(f'{goal} landing region' if e['encounter'] == 'landing region' else e['encounter'].upper()
+                     if e['encounter'].endswith(' region') else f'{e["encounter"].upper()} sides')+
                     (f' t{e["segment"][0]}' if e['segment'][0] == e['segment'][1] else f' t{e["segment"][0]}-{e["segment"][1]}')
                   if e.get('segment') else e.get('encounter','whole branch'),
-                  (region_text(e['optionRows']) if e['encounter'] == 'landing region' else rows_text(e['optionRows'],row_owners(repair,goal)))
+                  (region_text(e['optionRows']) if e['encounter'].endswith('region') else rows_text(e['optionRows'],row_owners(repair,goal)))
                   if 'optionRows' in e else 'the rows already selected',
                   CHECKS.get(e['reason'],e['reason']),proof_text(e)] for i,e in enumerate(rejected,1)])
             dropped = repair['droppedOptions']

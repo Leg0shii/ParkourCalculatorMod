@@ -5,16 +5,16 @@ from collections import deque
 
 from parkour_solver.physics.vertical import f32
 from parkour_solver.schema import integer
-from parkour_solver.movement.contact_combinations import contact_combinations, merge_contacts
+from parkour_solver.movement.contact_combinations import contact_combinations, merge_contacts, wall_heights
 from parkour_solver.movement.contact_profiles import contact_opportunities
 from parkour_solver.movement.ladder.schedules import generate_ladder_schedules
 from parkour_solver.movement.vertical_profiles import trace_ladder_schedule
-from parkour_solver.scene.geometry import BODY_HEIGHT
 
 
 def contact_signature(events):
-    return tuple(sorted((e['offset'], e['axis'], e['direction'], e['plane'], tuple(e['box']),
-                         e.get('role', 'contact'), e.get('step', False)) for e in events))
+    return tuple(sorted((e['offset'], e['axis'], e['direction'], e['plane'], tuple(map(tuple, e['boxes'])),
+                         e.get('surface'), tuple(map(tuple, e['regions'])), e.get('role', 'contact'), e.get('step', False))
+                        for e in events))
 
 
 def interleave_families(values, key, *, within=None):
@@ -46,21 +46,21 @@ def contact_variants(solids, horizon, *, schedules=(), start=0, end=None, existi
         return {'variants': [], 'attempted': 0,
                 'termination': 'cancelled' if cancel_event is not None and cancel_event.is_set() else 'deadline',
                 'complete': False}
-    from parkour_solver.movement.ceiling_profiles import ceiling_opportunities
+    from parkour_solver.movement.ceiling_profiles import ceiling_opportunities, ceiling_options
     from parkour_solver.movement.ladder.ceiling import predict_ceiling_sequences
     schedules = list(schedules)
     predictions = []
     for s in schedules:
-        for box in solids:
-            if box_allowed is not None and not box_allowed(box):
+        for option in ceiling_options(solids):
+            if box_allowed is not None and not any(box_allowed(list(box)) for box in option.boxes):
                 continue
-            predictions.extend(predict_ceiling_sequences(s, box, start=start, end=end))
+            predictions.extend(predict_ceiling_sequences(s, option, start=start, end=end))
     opportunities = [e for e in contact_opportunities(solids, horizon, ceilings=False) if start <= e['offset'] < end]
     opportunities.extend(e for e in ceiling_opportunities(solids, horizon) if start <= e['offset'] < end)
     if box_allowed is not None:
-        opportunities = [e for e in opportunities if box_allowed(e['box'])]
+        opportunities = [e for e in opportunities if any(box_allowed(box) for box in e['boxes'])]
     def distance(event):
-        tick, box = event['offset'], event['box']
+        tick = event['offset']
         scores = []
         for s in schedules:
             trace = s['trace']
@@ -71,7 +71,8 @@ def contact_variants(solids, horizon, *, schedules=(), start=0, end=None, existi
             if event['axis'] == 'Y':
                 scores.append(0 if y <= event['plane'] < after else 1 + abs(event['plane'] - max(y, after)))
             else:
-                scores.append(max(0, after - box[4], box[1] - after - BODY_HEIGHT))
+                heights = [wall_heights(r, event['axis']) for r in event['regions']]
+                scores.append(min(max(0, after - hi, lo - after) for lo, hi in heights))
         return min(scores, default=0)
     opportunities.sort(key=distance)
     opportunities = list(interleave_families(opportunities, lambda e: e['axis']))

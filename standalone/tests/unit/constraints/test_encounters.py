@@ -6,6 +6,7 @@ import math
 import unittest
 
 from parkour_solver.constraints.encounters import landing_segments
+from parkour_solver.movement.contact_combinations import expanded_face
 from parkour_solver.constraints.variants import ConstraintVariants
 from parkour_solver.constraints.avoidance import faces
 from parkour_solver.reachability.intervals import reachable_envelopes
@@ -15,7 +16,7 @@ from tests.support.checkpoint_guidance import flat_scene
 
 
 def source(n=3, *, y=None, position=(-1., 0.), walls=(), box=(0., 0., -.2, 1., 3., .2), boxes=None,
-           profile=None, magnitude=1., friction=.9):
+           profile=None, magnitude=1., friction=.9, state=None):
     y = y or [1.]*(n+1)
     boxes = boxes or [box]
     model = dict(ticks=n, position=list(position), velocity=[0., 0.], magnitude=[magnitude]*n,
@@ -23,7 +24,7 @@ def source(n=3, *, y=None, position=(-1., 0.), walls=(), box=(0., 0., -.2, 1., 3
     profile = dict(position=y, **(profile or {}))
     return ConstraintVariants(dict(supportClearance=0.), profile,
         dict(events=[dict(jump=0, runTicks=0)]), dict(solids=[list(b) for b in boxes]), reachable_envelopes(model, y),
-        dict(through=n, solidIndices=list(range(len(boxes)))))
+        dict(through=n, solidIndices=list(range(len(boxes)))), state=state)
 
 
 def clear(boxes, y, positions):
@@ -48,8 +49,9 @@ def satisfies(rows, positions):
 class EncounterTests(unittest.TestCase):
     def test_known_entry_comes_from_finite_support_not_post_contact_travel(self):
         box = [0., 0., 0., 1., 20., 1.]
+        support = [0., 0., -1., 1., 1., 0.]
         profile = dict(contactEvents=[dict(axis='Y', direction=-1, offset=0, role='landing',
-            box=[0., 0., -1., 1., 1., 0.])])
+            boxes=[support], regions=[expanded_face(support, 1, 1, 1e-6)])])
         owner = source(4, position=(.5, -2.), box=box, profile=profile, magnitude=2.)
         item = owner.items[-1]
         owner.prepare_item(item)
@@ -79,8 +81,9 @@ class EncounterTests(unittest.TestCase):
         self.assertTrue(any(satisfies(v['rows'], positions) for v in variants))
 
     def test_ambiguous_support_entry_preserves_both_axes(self):
+        support = [-2., 0., -2., 0., 1., 0.]
         owner = source(3, profile=dict(contactEvents=[dict(axis='Y', direction=-1, offset=0,
-            role='landing', box=[-2., 0., -2., 0., 1., 0.])]), magnitude=2.)
+            role='landing', boxes=[support], regions=[expanded_face(support, 1, 1, 1e-6)])]), magnitude=2.)
         item = owner.items[-1]
         owner.prepare_item(item)
         self.assertTrue({'X', 'Z'} <= {item['sides'][i]['axis'] for i in item['entryFaces']})
@@ -149,6 +152,45 @@ class EncounterTests(unittest.TestCase):
         owner.items[:] = [dict(rows=[[r]]) for r in rows]
         self.assertEqual(list(owner), [])
         self.assertTrue(owner.state['screenExclusions'])
+
+    def test_region_item_comes_first_and_is_screened_jointly_with_later_items(self):
+        rows = [dict(leg=0, offset=t, mode=axis, cmp='GE', rhs=value, name='contact:region')
+                for t, axis, value in [(1, 'X', .8), (2, 'Z', 1.6), (3, 'X', 2.15)]]
+        near = dict(rows[0], cmp='LE')
+        region = dict(offset=1, surface='surface:test', owner='c', options=[[rows[0]], [near]])
+        owner = source(3, friction=0., position=(0., 0.), profile=dict(regionChoices=[region]))
+        item = next(i for i in owner.items if i.get('role') == 'contact_region')
+        self.assertLess(owner.items.index(item), min(k for k, i in enumerate(owner.items) if 'clusterId' in i))
+        self.assertFalse(owner.analyze([near] + rows[1:])['proof']['ruledOut'])
+        owner.items[:] = [item] + [dict(rows=[[r]]) for r in rows[1:]]
+        variant, = list(owner)
+        self.assertIn((1, 'X', 'LE', .8), {(r['offset'], r['mode'], r['cmp'], r['rhs']) for r in variant['rows']})
+        self.assertTrue(owner.state['screenExclusions'])
+
+    def test_walk_paused_inside_a_region_item_resumes_without_repeats(self):
+        options = [[dict(leg=0, offset=2, mode='X', cmp='LE', rhs=v, name='contact:region')] for v in (-.5, .5, 1.5)]
+        profile = dict(regionChoices=[dict(offset=2, surface='surface:test', owner='c', options=options)])
+        expected = list(source(3, profile=profile))
+        self.assertTrue(expected)
+        for stop in range(1, 60):
+            owner, calls = source(3, profile=profile), [0]
+            def check():
+                calls[0] += 1
+                if calls[0] == stop:
+                    raise TimeoutError('paused')
+            owner.check = check
+            actual = []
+            try:
+                actual.extend(owner)
+            except TimeoutError:
+                pass
+            restored = source(3, profile=profile, state=json.loads(json.dumps(owner.state, allow_nan=False)))
+            self.assertEqual(actual + list(restored), expected, stop)
+
+    def test_region_item_beyond_the_scope_is_left_for_a_later_leg(self):
+        region = dict(offset=4, surface='surface:test', owner='c', options=[[], []])
+        self.assertFalse(any(i.get('role') == 'contact_region'
+                             for i in source(3, profile=dict(regionChoices=[region])).items))
 
     def test_rejected_faces_options_and_screened_alternatives_are_logged_with_their_counts(self):
         owner = source(3)

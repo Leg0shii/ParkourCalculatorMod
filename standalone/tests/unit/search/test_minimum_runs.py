@@ -14,6 +14,7 @@ from parkour_solver.spatial.checkpoints import Checkpoint
 from parkour_solver.movement.program import empty_program, append_choice, boundary_state
 from parkour_solver.movement.normal import normal_choices, event_choice
 from tests.support.checkpoint_guidance import flat_scene
+from tests.support.archived_events import current_events
 
 
 class MinimumRunTests(unittest.TestCase):
@@ -48,12 +49,22 @@ class MinimumRunTests(unittest.TestCase):
 
     def test_interacting_or_unclassified_ground_preparation_is_retained(self):
         p=flight(self.scene,1)
-        p['profile']['contactEvents'].append(dict(offset=0,axis='X',direction=1,plane=1.,box=[1,0,0,2,3,1]))
+        p['profile']['contactEvents'].append(dict(offset=0,axis='X',direction=1,plane=1.,boxes=[[1,0,0,2,3,1]]))
         self.assertIsNone(latest_jump(p,self.scene))
         p=flight(self.scene,1)
         p['profile']['positionConstraints'].append(dict(mode='X',t1=1,cmp='GE',rhs=.6,name='task'))
         p['profile']['constraintOwners'].append(0)
         self.assertIsNone(latest_jump(p,self.scene))
+
+    def test_open_region_choices_join_the_suffix_or_disable_deferral_inside_the_hold(self):
+        p,q=flight(self.scene,1),flight(self.scene,1)
+        def entry(offset):
+            options=[[dict(leg=0,offset=offset,mode='X',cmp='LE',rhs=rhs,name='contact:region')] for rhs in (4.,5.)]
+            return dict(offset=offset,surface='surface:test',owner='goal',options=options)
+        p['profile']['regionChoices']=[entry(p['profile']['airtime']-1)]
+        self.assertNotEqual(latest_jump(p,self.scene)['pattern'],latest_jump(q,self.scene)['pattern'])
+        q['profile']['regionChoices']=[entry(latest_jump(q,self.scene)['groundState'])]
+        self.assertIsNone(latest_jump(q,self.scene))
 
     def test_changed_prior_decisions_do_not_share_a_representative(self):
         p=flight(self.scene,0);q=flight(self.scene,1)
@@ -69,7 +80,7 @@ class ArchivedMinimumRunTests(unittest.TestCase):
         base=AUTONOMY_DATA/'experiments/virtual-finish/evidence'
         cls.runs={}
         for name in ['cold','initial0-cold']:
-            raw=json.loads(gzip.decompress((base/(name+'.json.gz')).read_bytes()));s=raw['result']['searchState']
+            raw=current_events(json.loads(gzip.decompress((base/(name+'.json.gz')).read_bytes())));s=raw['result']['searchState']
             frames={f['id']:f for k in ['frames','stack','suspended','refinements'] for f in s[k]}
             order={t['candidate']:i for i,t in enumerate(s['transitions']) if t['kind']=='dispatch'}
             records=sorted((v for f in frames.values() for v in f['records'] if not v.get('variantOf')),key=lambda v:order.get(v['id'],-1))

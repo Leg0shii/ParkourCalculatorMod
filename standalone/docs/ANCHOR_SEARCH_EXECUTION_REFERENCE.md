@@ -2,7 +2,7 @@
 
 Avoidance follow-up: [geometry-driven phase covers](design/AVOIDANCE_PASSAGES.md)
 replace full-horizon permutations and local repair/passage caps, carrying tightened
-bounds into downstream generation. Constraint policy9/state4 and repair assembly10
+bounds into downstream generation. Constraint policy10/state6 and repair assembly11
 are current. The measured source-era tables below retain their original settings;
 [replacement evidence](../research/geometry-passages/README.md) records the new run.
 
@@ -176,7 +176,7 @@ keys or adding a pose constraint. No mixed or uncertainty mode exists.
 | [`event_search`](../src/parkour_solver/search/events/engine.py), [`anchor_adapter`](../src/parkour_solver/search/anchors/adapter.py) | Physical automatic dispatch, required-anchor frames, immutable stage objectives, continuous anchor DFS under the session budget. |
 | [`anchor_policy`](../src/parkour_solver/search/anchors/policy.py) | Owner visits, required order/caps, source preparation versus hard transfer; hard policy3. |
 | [`search.comparison`](../src/parkour_solver/search/comparison.py) | Sole intermediate count/key, OR-protection, peer verdict and strict-incumbent predicate owner; comparison policy1. |
-| [`depth_first`](../src/parkour_solver/search/dfs.py), [`search.deferrals`](../src/parkour_solver/search/deferrals.py) | Traversal, validated peer index, single `minimumRunExclusions` compatibility table, selected-only checks and recovery. |
+| [`depth_first`](../src/parkour_solver/search/dfs.py), [`search.deferrals`](../src/parkour_solver/search/deferrals.py) | Traversal, validated peer index, single `minimumRunExclusions` compatibility table, selected-only checks and recovery. Generator contexts set `regionItems`, so a contact on a face of several rectangles keeps the rectangle open as a `regionChoices` entry; a kept leg closes the entries it solved (their rows become retained constraints), a decision check keeps them open, and a restored fallback keeps its own rectangle. The run-tick deferral (`compat/minimum_runs`, policy3) never defers across an open entry in the ground hold and keys entries after takeoff into the pattern. |
 | [`movement.generation`](../src/parkour_solver/movement/generation.py), [`search.frontier`](../src/parkour_solver/search/frontier.py) | Shared composition/assessment, owned endpoints, raw ordinals, projected flag, queued nodes and `nodeInFlight`. |
 | [`reachability.service`](../src/parkour_solver/reachability/service.py), [`bridge.compiler`](../src/parkour_solver/bridge/compiler.py) | Disposable bounded session cache for preparation, canonical coefficient payloads, exact envelopes/screens and common-case eligibility; proof policy2. |
 | [`reachability.intervals`](../src/parkour_solver/reachability/intervals.py), [`reachability.linear`](../src/parkour_solver/reachability/linear.py) | Conservative phase envelopes and optional optimistic LP; named internal probe uncertainty retained. |
@@ -187,7 +187,7 @@ keys or adding a pose constraint. No mixed or uncertainty mode exists.
 | [`numerics.solver`](../src/parkour_solver/numerics/solver.py), [`search.ranking`](../src/parkour_solver/search/ranking.py) | Seed check/worker lifecycle/scalar validation; terminal actualT/objective ranking stays distinct from intermediate J/R/A policy. |
 
 Physical automatic continuation is outer schema2 / DFS8 / movement context4 /
-repair assembly10. Hard3/search5/comparison1/guide2/proposal1 semantics participate
+repair assembly11. Hard3/search5/comparison1/guide2/proposal1 semantics participate
 in the relevant context fingerprints. Matching schema numbers alone do not make
 an older checkpoint compatible. Old wrong-policy exact continuations reject;
 checkpoint storage format stays version1. Never redirect work to an old checkout
