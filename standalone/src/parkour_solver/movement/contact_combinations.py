@@ -111,7 +111,8 @@ def contact_combinations(opportunities, *, max_events=3, limit=1000, ladder_wind
     integer(limit, 'combination work limit', 1, 2000000)
     unique = {}
     for event in opportunities:
-        key = (event['leg'], event['offset'], event['axis'], event['plane'], event['direction'], event.get('role', 'contact'))
+        key = (event['leg'], event['offset'], event['axis'], event['plane'], event['direction'], event.get('role', 'contact'),
+               tuple(event['box']))
         unique.setdefault(key, event)
     pool, inspected = list(unique.values()), 0
     streams = [iter(itertools.combinations(pool, size)) for size in range(1, min(max_events, len(pool)) + 1)]
@@ -127,7 +128,7 @@ def contact_combinations(opportunities, *, max_events=3, limit=1000, ladder_wind
             inspected += 1
             legs = {e['leg'] for e in chosen}
             offsets = [e['offset'] for e in chosen]
-            if len(legs) != 1:
+            if len(legs) != 1 or len({(e['offset'], e['axis']) for e in chosen}) != len(chosen):
                 continue
             leg = chosen[0]['leg']
             if not independent_events and max(offsets) - min(offsets) > 1 and not any(

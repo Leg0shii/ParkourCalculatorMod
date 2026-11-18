@@ -69,6 +69,17 @@ class CombinationTests(unittest.TestCase):
                 merge_contacts([c, changed])
         self.assertEqual(len(list(contact_combinations([event('X'), event('X', direction=-1)], limit=100))), 2)
 
+    def test_coplanar_boxes_are_separate_alternatives_never_combined(self):
+        from parkour_solver.movement.ceiling_profiles import ceiling_opportunities
+        boxes = [[0, 3, 0, 1, 4, 1], [1, 3, 0, 2, 4, 1]]
+        opportunities = list(ceiling_opportunities(boxes, 12))
+        self.assertEqual(len(list(contact_combinations(opportunities, max_events=1))), 24)
+        profiles = generate_contact_profiles(0., 0., opportunities, max_events=1)['profiles']
+        self.assertEqual(sorted((e['offset'], e['box']) for p in profiles for e in p['contactEvents']),
+                         [(4, boxes[0]), (4, boxes[1])])
+        for chosen in contact_combinations(opportunities, max_events=2, limit=10000):
+            self.assertEqual(len({(e['offset'], e['axis']) for e in chosen}), len(chosen))
+
     def test_events_and_before_after_avoidance_follow_run_insertion(self):
         contacts = [event('X'), event('Z', 1), event('Y', 1)]
         for e in contacts:

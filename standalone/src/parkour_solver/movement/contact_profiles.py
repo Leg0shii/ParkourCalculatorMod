@@ -78,7 +78,7 @@ def generate_contact_profiles(source_top, target_top, opportunities, *, max_inpu
         profile = contact_profile(source_top, target_top, chosen, max_inputs=max_inputs, ladder=ladder, sneak=sneak)
         if profile is None:
             continue
-        key = tuple((e['offset'], e['axis'], e['direction'], e['plane']) for e in chosen)
+        key = tuple((e['offset'], e['axis'], e['direction'], e['plane'], tuple(e['box'])) for e in chosen)
         if key not in seen:
             seen.add(key)
             profiles.append(profile)
