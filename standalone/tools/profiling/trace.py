@@ -487,6 +487,12 @@ def render(report, requests, routes, stop):
     if stop['oracleRejectedRoutes']:
         lines += ['Routes closed because every alternative is infeasible (IPOPT local or a pre-solve proof): '+
                   ', '.join(name(o['record']) for o in stop['oracleRejectedRoutes'])+'.','']
+    linear = (result.get('interactionGate') or {}).get('linear')
+    if linear is not None:
+        total = lambda key: sum(counts.get(key, 0) for counts in linear.values())
+        lines += [f'Linear pre-checks: {total("solved")} solved ({total("cacheHits")} more from cache), '
+                  f'{total("infeasible")} proved infeasible, {total("undecided")} undecided by the LP solver and counted '
+                  f'as not ruled out; {total("ipmRetries")} needed the interior-point retry.','']
     lines += ['## Route tree','','Each frame extends one parent route to the next anchor. Route `F.N` is route N of frame F.','']
     def tree(fid, depth):
         group = by_frame[fid]

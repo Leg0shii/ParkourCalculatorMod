@@ -180,7 +180,9 @@ def interaction_reachability(envelopes, interaction, *, refine=False):
                             axis=axis, reachable=[lo, hi], required=[box[i], box[i+3]])
     if refine and envelopes.get('model') is not None:
         from parkour_solver.reachability.linear import linear_exclusion
-        excluded=linear_exclusion(envelopes['model'],interaction.get('rows',[]))
-        if excluded is not None:
-            return dict(ruledOut=True,**excluded)
+        checked=linear_exclusion(envelopes['model'],interaction.get('rows',[]))
+        if checked is not None and checked['outcome']=='infeasible':
+            return dict(ruledOut=True,**checked['proof'])
+        if checked is not None and checked['outcome']=='undecided':
+            return dict(ruledOut=False,reason='linear_undecided',status=checked['status'],message=checked['message'])
     return dict(ruledOut=False, reason='not_ruled_out')

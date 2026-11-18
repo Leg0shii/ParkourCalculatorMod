@@ -43,8 +43,11 @@ blocked before any IPOPT solve. Such a blocked alternative now keeps its proof a
 as infeasible, so the current control (`1ea2bb1f` plus that change) ends `exhausted` with the
 same T64, objective and 18 requests. Four IPOPT solves ended
 `Infeasible_Problem_Detected`; a local IPOPT infeasibility is not a certificate,
-so the run claims no exhaustive coverage. The B7 frames solve 4 and 3 alternatives
-instead of 7 each (21 before obstacle clusters); every anchor leg now optimizes
+so the run claims no exhaustive coverage. The B7 frames solve 3 alternatives each
+instead of 7 (21 before obstacle clusters): the fourth alternative of the first B7
+frame is now ruled out before solving, because the linear relaxation LP that HiGHS
+used to leave `Unknown` is resolved by the interior-point retry (132 LPs solved in
+that run, 15 proved infeasible, none undecided, one retry; requests unchanged); every anchor leg now optimizes
 instead of stopping at its first feasible point, so feasibility-only solves remain
 only in decision checks. Fewer replays reflect the dropped sibling routes, not
 lost coverage of the kept routes.

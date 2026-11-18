@@ -2,8 +2,8 @@
 
 ## Current gate
 
-`tools/native_gate.py` (commands in the [runbook](RUNBOOK.md)) on the shared travel recurrence
-over `44e24348`: **713 tests, no failures, errors or skips**, source unchanged
+`tools/native_gate.py` (commands in the [runbook](RUNBOOK.md)) on the sound linear relaxation
+check over `d945ec52`: **718 tests, no failures, errors or skips**, source unchanged
 during the run, layout validation passed.
 A run of the switch-climb source (`55e3beef`) under a load average of 5.5 failed
 `test_prescribed_points_do_not_remove_remote_free_space` (its two 2 s arms
@@ -22,6 +22,7 @@ persistence without the removed 32/128 limits.
 
 | Source | Tests | Evidence |
 | --- | ---: | --- |
+| `d945ec52` + LP retry, native-status proofs, objective and counts | 718 | not archived |
 | `44e24348` + one travel recurrence and motion bound | 713 | not archived |
 | `c6d69997` + spatial goal probe removed | 712 | not archived |
 | `e7756dce` + no feet interaction with a departed block | 714 | not archived |

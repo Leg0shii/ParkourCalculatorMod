@@ -294,9 +294,12 @@ class BookkeepingProfileTests(unittest.TestCase):
                          ('p', [dict(avoid, t2=2)], True))
         from tools.profiling.trace import render, stop_report
         requests = [dict(index=1, fingerprint='h1', status='feasible', workerStatus='Solve_Succeeded', seconds=.25)]
+        linear = dict(withObjective=dict(solved=2, infeasible=1, ipmRetries=1), zeroCost=dict(solved=3, cacheHits=4, undecided=1))
         report = dict(result=dict(best=None, termination='exhausted', elapsedSeconds=1., work=dict(solverCalls=1, workerLaunches=1),
-                                  expandedPrefixes=2, searchState=state))
+                                  expandedPrefixes=2, searchState=state, interactionGate=dict(linear=linear)))
         markdown = render(report, requests, list(routes.values()), stop_report(state, requests))
+        self.assertIn('Linear pre-checks: 5 solved (4 more from cache), 1 proved infeasible, 1 undecided by the LP solver '
+                      'and counted as not ruled out; 1 needed the interior-point retry.', markdown)
         self.assertIn('- Frame 0 → B2: 2 routes (2 feasible)\n  - Frame 1 → B3: 1 route (1 feasible), from route 0.1 (lands B2 t3)', markdown)
         self.assertIn('#### Movement: jumps at t0; lands B2 t3; no ceiling hit', markdown)
         self.assertIn('| 0.2 | feasible | 4 | -2.000 | no obstacle in reach | Z ≤ -2.000 at t2 |', markdown)

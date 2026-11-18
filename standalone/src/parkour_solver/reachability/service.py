@@ -1,3 +1,5 @@
+import collections
+
 from parkour_solver.scene.geometry import expanded_box
 from parkour_solver.reachability.intervals import interaction_reachability, reachable_envelopes
 
@@ -102,6 +104,8 @@ class InteractionGate:
         self.metrics = {}
         self.checked = 0
         self.exclusions = []
+        from parkour_solver.reachability.linear import STATS
+        self.linear_start = {kind: collections.Counter(counts) for kind, counts in STATS.items()}
 
     def _cached(self, key, build, kind):
         hit = key in self.cache
@@ -192,14 +196,20 @@ class InteractionGate:
                 return dict(reason='unselected_initial_floor')
         analysis=self.analyze(program)
         if analysis is None:return dict(reason='vertical_schedule')
+        undecided=False
         def build():
+            nonlocal undecided
             proof=self.required(program)
             if proof:return proof
             if self.scene.get('maxWallHits',0):return None
             self.metrics['linearChecks']=self.metrics.get('linearChecks',0)+1
             checked=interaction_reachability(analysis['envelopes'],{},refine=True)
+            undecided=checked['reason']=='linear_undecided'
             return {k:v for k,v in checked.items() if k!='ruledOut'} if checked['ruledOut'] else None
-        return self._cached(('screen',analysis['key']),build,'screen')
+        result=self._cached(('screen',analysis['key']),build,'screen')
+        if undecided:
+            self.cache.pop(('screen',analysis['key']))
+        return result
 
     def query(self, context, bounds, tick, *, label, jumping=False, phases=('Y', 'X', 'Z')):
         from parkour_solver.movement.program import append_choice, program_physics_key
@@ -254,4 +264,6 @@ class InteractionGate:
         context['interactionGate'] = self
 
     def summary(self):
-        return dict(checked=self.checked,excluded=len(self.exclusions),exclusions=self.exclusions,metrics=dict(self.metrics))
+        from parkour_solver.reachability.linear import STATS
+        return dict(checked=self.checked,excluded=len(self.exclusions),exclusions=self.exclusions,metrics=dict(self.metrics),
+                    linear={kind: dict(counts-self.linear_start[kind]) for kind, counts in STATS.items()})

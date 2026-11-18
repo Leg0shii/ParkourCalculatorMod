@@ -54,7 +54,7 @@ def search_event_routes(request, compiler, *, task_goal=None, discovery=None, an
     scene['movementSearch']=cfg
     context=digest(dict(policy=4 if anchor_policy else 3,comparisonPolicy=COMPARISON_POLICY_VERSION,
         **(dict(anchorPolicy=semantic_settings(anchor_policy)) if anchor_policy else {}),
-        constraintPolicy=12,scene={k:v for k,v in scene.items() if k!='movementSearch'},
+        constraintPolicy=13,scene={k:v for k,v in scene.items() if k!='movementSearch'},
         task=task,roots=roots,filter=getattr(policy,'checkpoint_identity',None),
         minimumRuns=options['minimum_run_pruning'],
         domain={k:v for k,v in cfg.items() if k not in

@@ -1,6 +1,11 @@
-import functools
+import collections
 import json
 import math
+import time
+
+STATS = dict(withObjective=collections.Counter(), zeroCost=collections.Counter())
+_DECIDED = {}
+_BUDGET = 1.
 
 
 def linear_exclusion(problem, extra_rows=()):
@@ -16,13 +21,49 @@ def linear_exclusion(problem, extra_rows=()):
         return None
     spec = {k:problem[k] for k in ('ticks','position','velocity','magnitude','friction')}
     spec.update(rows=sorted(set(rows),key=str),contacts=problem.get('contacts',[]),initialIntervals=problem.get('initialIntervals'))
+    if problem.get('objective') is not None and problem.get('objectiveMode') != 'constant_zero':
+        spec['objective'] = {k:problem['objective'].get(k) for k in ('tick','axis','sense','customYaw','type')}
+    encoded = json.dumps(spec,sort_keys=True)
+    stats = STATS['withObjective' if 'objective' in spec else 'zeroCost']
+    if encoded in _DECIDED:
+        stats['cacheHits'] += 1
+        return _DECIDED[encoded]
+    stats['solved'] += 1
     try:
-        return _check(json.dumps(spec,sort_keys=True))
-    except (ImportError,ValueError,RuntimeError):
-        return None
+        result = _check(encoded)
+    except (ImportError,ValueError,RuntimeError) as error:
+        result = dict(outcome='undecided',status=None,message=repr(error))
+    stats[result['outcome']] += 1
+    if result.pop('retried', False):
+        stats['ipmRetries'] += 1
+        if result['outcome'] != 'undecided':
+            stats['ipmResolved'] += 1
+    if result['outcome'] != 'undecided':
+        _DECIDED[encoded] = result
+        while len(_DECIDED) > 1024:
+            _DECIDED.pop(next(iter(_DECIDED)))
+    return result
 
 
-@functools.lru_cache(maxsize=1024)
+def _cost(p, width, pos):
+    import numpy as np
+    cost = np.zeros(2*width)
+    objective = p.get('objective')
+    if objective is None or not 0 <= objective['tick'] <= p['ticks']:
+        return cost
+    sign = -1. if objective['sense'] == 'MAX' else 1.
+    tick = objective['tick']
+    if objective.get('customYaw') is not None:
+        angle = math.radians(objective['customYaw'])
+        for axis, weight in enumerate((-math.sin(angle), math.cos(angle))):
+            cost[pos(axis,tick)] += sign*weight
+            if objective.get('type') == 'MOTION' and tick > 0:
+                cost[pos(axis,tick-1)] -= sign*weight
+    else:
+        cost[pos(0 if objective['axis'] == 'X' else 1,tick)] = sign
+    return cost
+
+
 def _check(encoded):
     import numpy as np
     from scipy.optimize import linprog
@@ -77,9 +118,19 @@ def _check(encoded):
         if cmp in ('GE','EQ'):
             row({k:-v for k,v in entries.items()},offset-value+2e-7)
     matrix=coo_matrix((values,(indices,columns)),shape=(len(rhs),2*width)).tocsr()
-    result=linprog(np.zeros(2*width),A_ub=matrix,b_ub=np.asarray(rhs),bounds=bounds,method='highs',
-                   options=dict(time_limit=1.,primal_feasibility_tolerance=1e-7,dual_feasibility_tolerance=1e-7))
-    if result.status==2:
-        return dict(reason='linear_control_relaxation_infeasible',relaxation='circumscribed_16_face_acceleration_polygon',
-                    dynamicsMargin=2e-8,constraintMargin=2e-7)
-    return None
+    options=dict(time_limit=_BUDGET,primal_feasibility_tolerance=1e-7,dual_feasibility_tolerance=1e-7)
+    problem=dict(c=_cost(p,width,pos),A_ub=matrix,b_ub=np.asarray(rhs),bounds=bounds)
+    started=time.perf_counter()
+    result=linprog(**problem,method='highs',options=options)
+    solver,retried='simplex',False
+    remaining=_BUDGET-(time.perf_counter()-started)
+    if result.status==4 and remaining>0:
+        result=linprog(**problem,method='highs-ipm',options=dict(options,time_limit=remaining))
+        solver,retried='ipm',True
+    if result.status==2 and '(HiGHS Status 8:' in result.message:
+        return dict(outcome='infeasible',retried=retried,proof=dict(reason='linear_control_relaxation_infeasible',
+                    relaxation='circumscribed_16_face_acceleration_polygon',dynamicsMargin=2e-8,constraintMargin=2e-7,
+                    solver=solver))
+    if result.status==0:
+        return dict(outcome='feasible',retried=retried)
+    return dict(outcome='undecided',retried=retried,status=int(result.status),message=result.message)
