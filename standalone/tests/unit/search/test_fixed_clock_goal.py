@@ -30,6 +30,14 @@ class FixedClockTests(unittest.TestCase):
         self.assertEqual(policy.audit(ordinary)['progress'],0)
         self.assertEqual(policy.audit(ranked)['progress'],1)
 
+    def test_archived_virtual_finish_settings_bind_to_the_search(self):
+        import inspect, json
+        from parkour_solver.search.application import task_settings
+        from tools.paths import RESEARCH_ROOT
+        fixture = json.loads((RESEARCH_ROOT / 'virtual-finish/fixture.json').read_text())
+        self.assertIn('fair_parents', fixture['settings'])
+        inspect.signature(find_checkpoint_route).bind(fixture['request'], None, **task_settings(fixture))
+
     def test_unknown_spatial_goal_is_rejected_before_compilation(self):
         scene=flat_scene()
         with self.assertRaisesRegex(ValueError,'Landing comparison requires'):

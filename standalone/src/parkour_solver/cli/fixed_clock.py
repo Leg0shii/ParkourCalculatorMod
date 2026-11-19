@@ -12,6 +12,7 @@ from parkour_solver.scene.normalize import prepare_scene
 from parkour_solver.bridge.compiler import open_compiler
 from parkour_solver.spatial.checkpoints import Checkpoint
 from parkour_solver.search.engine import find_checkpoint_route
+from parkour_solver.search.application import task_settings
 from parkour_solver.validation.witness import replay_witness
 from parkour_solver.spatial.cells import decompose
 from parkour_solver.spatial.compat.corridors import corridor_for_points, landmarks
@@ -45,7 +46,7 @@ def run(fixture,compiler,*,on_window=None,python_executable=None,initial_program
     terminal=None if virtual is not None else Checkpoint(fixture['terminalTick'],-1,direction,initial,tuple(corridor.points[-1]),corridor.signature)
     policy=SupportOrder(scene,fixture['requiredSupports'],None if virtual is not None else fixture['terminalTick'],
         fixture.get('initialJumpInputs'),max_inputs=request['movementSearch']['maxInputs'])
-    settings=copy.deepcopy(fixture['settings'])
+    settings=task_settings(fixture)
     if virtual is not None:
         goals=settings.pop('spatial_goals',[dict(kind='landing',block=b) for b in fixture['requiredSupports']])
         if not goals or goals[-1]!=virtual:goals.append(virtual)

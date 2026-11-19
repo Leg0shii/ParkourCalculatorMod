@@ -30,7 +30,7 @@ def main():
                 elapsedSeconds=time.monotonic()-started,layout=layout)
     (args.output/'report.json').write_text(json.dumps(report,indent=2,allow_nan=False)+'\n')
     print(json.dumps({k:v for k,v in report.items() if k not in ('sourceHashes','modules')},indent=2),flush=True)
-    return int(not result.wasSuccessful() or result.skipped or not report['sourceUnchanged'])
+    return int(not result.wasSuccessful() or bool(result.skipped) or not report['sourceUnchanged'])
 
 
 if __name__=='__main__':raise SystemExit(main())
