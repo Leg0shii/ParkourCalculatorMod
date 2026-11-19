@@ -106,7 +106,7 @@ Canonicalization includes remaining items and continuation capabilities. A row
 hash alone cannot merge unfinished face walks. Once an encounter is assigned,
 nominal switch counts do not create another branch. Completed stronger covers
 can be omitted only when a weaker cover entails them under the same capabilities.
-Guide preferences, timeouts and inconclusive LP results never establish exclusions.
+Guide preferences, timeouts and undecided relaxation results never establish exclusions.
 
 ## Contact regions
 
@@ -198,7 +198,7 @@ names the item it assigned, the option rows and the passage.
 Timings distinguish preparation, generation and conditional analysis; inclusive
 times overlap. `avoidanceMetrics` combines completed/pending sources, and legacy
 support-search `obstacleSearch` exposes these counters and accepted kinds.
-`tools.profiling` records conditional propagation/LP calls, copies/persistence,
+`tools.profiling` records conditional propagation/relaxation screen calls, copies/persistence,
 solver wrappers/workers and instrumentation overhead. Do not exhaust a lazy
 catalogue just to count its hypothetical size.
 

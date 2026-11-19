@@ -107,10 +107,10 @@ A request's `owners` are the routes whose repair log holds its problem hash; an
 empty list means no saved route kept that solve. The `stop` report lists suspended
 frames with their unresolved and pending alternatives, the routes closed because
 every alternative is infeasible, and the owners of every request without a solution.
-The `Linear pre-checks` line under it counts the linear control relaxation LPs of the
-run (`interactionGate.linear`, also `summary.json` `linearChecks`, split by whether the
-LP carried IPOPT's objective): solved, served from cache, proved infeasible, undecided
-by the LP solver (counted as not ruled out) and retried with interior point. The trace is a pure
+The `Disk-relaxation pre-checks` line under it counts the run's disk-relaxation screens
+(`interactionGate.relaxation.screen`, also `summary.json` `relaxationChecks`, which also
+holds the `candidate` counts): solved, served from cache, proved infeasible, and undecided
+by Clarabel (counted as not ruled out). The trace is a pure
 function of the saved search state, so regenerating it never changes a run.
 
 ## Failure investigation workflow

@@ -199,8 +199,9 @@ def instrument(profile):
             original = getattr(identity, name)
             aliases(original, name, profile.runtime.function('identity.'+name, original))
         replace(engine, 'evaluate_program', profile.runtime.function('numerical.evaluate', engine.evaluate_program))
-        from parkour_solver.reachability import screen, linear
-        for module, name in ((screen, 'condition_envelopes'), (linear, 'linear_exclusion')):
+        from parkour_solver.reachability import screen
+        from parkour_solver.numerics import disk
+        for module, name in ((screen, 'condition_envelopes'), (disk, 'screen')):
             original = getattr(module, name)
             aliases(original, name, profile.runtime.function('reachability.'+name, original))
         for name in ('prepare_item', 'effective_key', 'analyze', 'choose_item'):

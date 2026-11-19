@@ -111,7 +111,7 @@ ordered options. That is targeted enumeration work, not a whole-solver speedup.
   final solves optimize ([feasibility mode](IPOPT_FEASIBILITY_MODE.md)).
 - Content-addressed manifest plus SQLite checkpoints
   ([checkpoint storage](CHECKPOINT_STORAGE.md)).
-- Shared interaction screens before any solve: interval and LP reachability
+- Shared interaction screens before any solve: interval and disk-relaxation reachability
   ([obstacle relevance](design/OBSTACLE_RELEVANCE.md)), and accumulated passage
   rows screened before each extension ([avoidance passages](design/AVOIDANCE_PASSAGES.md)).
 - Bounded accelerator caches: interaction gate 512 entries

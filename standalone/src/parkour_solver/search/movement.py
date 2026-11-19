@@ -276,7 +276,7 @@ def find_movement_blocks(request, compiler, *, seconds=60, candidate_seconds=2, 
         validationLevel='continuous_movement_program_with_shared_scene_collision_checks')
 
 
-def screen_program(scene, program, compiler, seconds, *, gate=None):
+def screen_program(scene, program, compiler, seconds, *, gate=None, objective=None):
     """Compatibility entry point for the shared exact-proposal analysis."""
     from parkour_solver.reachability.service import InteractionGate
-    return (gate or InteractionGate(scene,compiler,seconds=seconds)).check_program(program)
+    return (gate or InteractionGate(scene,compiler,seconds=seconds)).check_program(program,objective)

@@ -228,6 +228,12 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
                 f['scoreContextKey'] = stage_views[key].score_context
         return stage_views[key]
 
+    def guide_objective(f):
+        """The stage's progress objective; a final frame keeps the scene objective (None)."""
+        if final_frame(f):
+            return None
+        return stage_adapter(f).objective if event_route else adapter.outgoing_objective(f['index']) if typed_route else None
+
     def span_info(f):
         view=stage_adapter(f)
         return view.cursor['anchorIndex'],view.cursor['spanStart']
@@ -376,7 +382,8 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
             return proof
         # Check the full proposal, including events beyond a diagnostic projection.
         return screen_program(scene,program,compiler,
-            max(.001,min(candidate_seconds,deadline-time.monotonic())),gate=gate)
+            max(.001,min(candidate_seconds,deadline-time.monotonic())),gate=gate,
+            objective=guide_objective(f) if f is not None else None)
 
     def numerical_pending(record):
         repair = record.get('program', {}).get('repairState', {})
@@ -619,7 +626,7 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
             f['inFlight']['program']['repairState'] = repair
             repair_progress()
         active_adapter = stage_adapter(f)
-        guidance=active_adapter.objective if event_route and not final_frame(f) else adapter.outgoing_objective(f['index']) if typed_route and not final_frame(f) else None
+        guidance=guide_objective(f)
         begin_repair(f['inFlight']['program'])
         result = evaluate_program(target_scene,program,compiler,active_adapter,work,motion,checkpoint=cp,
             seconds=max(.001,min(score_seconds,deadline-time.monotonic())),candidate_seconds=candidate_seconds,

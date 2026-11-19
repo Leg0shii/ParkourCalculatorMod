@@ -15,7 +15,7 @@ From `standalone/`, install into the existing numerical environment:
 For a fresh environment, pinned extras are available; see the [runbook](docs/RUNBOOK.md).
 Search needs only Python and the numerical extras: the movement bridge runs in
 process. The Java bridge is an optional differential oracle and owns replay/export.
-The parent API uses the standard library. Numerical/LP/plot dependencies load
+The parent API uses the standard library. Numerical, Clarabel and plot dependencies load
 only when needed. Install the package in both interpreters if the worker uses a
 separate Python environment.
 

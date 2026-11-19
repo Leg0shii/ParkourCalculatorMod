@@ -206,7 +206,7 @@ TERMINATIONS = dict(
 CHECKS = dict(
     interval_reach_contradiction='interval reachability',
     norm_reach_contradiction='travel-distance reachability',
-    linear_control_relaxation_infeasible='linear control relaxation',
+    disk_control_relaxation_infeasible='disk control relaxation',
     passage_timing='passage timing',
     vertical_schedule='vertical schedule',
     interaction_row_unreachable='single-row reachability',
@@ -367,8 +367,8 @@ def proof_text(entry):
     if reason == 'interaction_region_unreachable':
         return (f'{entry["axis"]} at tick {entry["tick"]} must lie in [{entry["required"][0]:.3f}, {entry["required"][1]:.3f}], '
                 f'reachable [{entry["reachable"][0]:.3f}, {entry["reachable"][1]:.3f}]')
-    if reason == 'linear_control_relaxation_infeasible':
-        return 'no input sequence satisfies the linearised dynamics and these rows'
+    if reason == 'disk_control_relaxation_infeasible':
+        return 'no input sequence satisfies the dynamics and these rows, even with acceleration relaxed to a disk'
     if reason == 'interaction_distance_unreachable':
         return (f'at tick {entry["tick"]} the nearest point is {entry["gap"]:.3f} blocks away, '
                 f'travel at most {entry["travelUpperBound"]:.3f}')
@@ -487,12 +487,12 @@ def render(report, requests, routes, stop):
     if stop['oracleRejectedRoutes']:
         lines += ['Routes closed because every alternative is infeasible (IPOPT local or a pre-solve proof): '+
                   ', '.join(name(o['record']) for o in stop['oracleRejectedRoutes'])+'.','']
-    linear = (result.get('interactionGate') or {}).get('linear')
-    if linear is not None:
-        total = lambda key: sum(counts.get(key, 0) for counts in linear.values())
-        lines += [f'Linear pre-checks: {total("solved")} solved ({total("cacheHits")} more from cache), '
-                  f'{total("infeasible")} proved infeasible, {total("undecided")} undecided by the LP solver and counted '
-                  f'as not ruled out; {total("ipmRetries")} needed the interior-point retry.','']
+    relaxation = (result.get('interactionGate') or {}).get('relaxation')
+    if relaxation is not None:
+        screens = relaxation.get('screen', {})
+        lines += [f'Disk-relaxation pre-checks: {screens.get("solved", 0)} solved ({screens.get("cacheHits", 0)} more from cache), '
+                  f'{screens.get("infeasible", 0)} proved infeasible, {screens.get("undecided", 0)} undecided by Clarabel and '
+                  f'counted as not ruled out.','']
     lines += ['## Route tree','','Each frame extends one parent route to the next anchor. Route `F.N` is route N of frame F.','']
     def tree(fid, depth):
         group = by_frame[fid]

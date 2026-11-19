@@ -6225,7 +6225,8 @@
       "old": "autonomy/linear_reachability.py",
       "new": "src/parkour_solver/reachability/linear.py",
       "originalSha256": "42ed9786ba3883a8a69369c26a9cc393ad7b68801e0251007b823eb693befa55",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-19"
     },
     {
       "old": "autonomy/linkcraft.py",

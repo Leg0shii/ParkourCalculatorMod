@@ -58,12 +58,12 @@ class InteractionReachabilityTests(unittest.TestCase):
         self.assertFalse(interaction_reachability(envelope,nearby)['ruledOut'])
         self.assertFalse(interaction_reachability(envelope,dict(alternatives=[distant,nearby]))['ruledOut'])
 
-    def test_linear_relaxation_rules_out_velocity_position_coupling(self):
+    def test_disk_relaxation_rules_out_velocity_position_coupling(self):
         model=dict(ticks=2,position=[0.,0.],velocity=[0.,0.],magnitude=[1.,0.],friction=[1.,1.],threshold=0.,
             walls=[dict(mode='X',t1=1,cmp='GE',rhs=.9),dict(mode='X',t1=2,cmp='LE',rhs=1.5)])
         envelope=reachable_envelopes(model)
         self.assertFalse(interaction_reachability(envelope,{})['ruledOut'])
-        self.assertEqual(interaction_reachability(envelope,{},refine=True)['reason'],'linear_control_relaxation_infeasible')
+        self.assertEqual(interaction_reachability(envelope,{},refine=True)['reason'],'disk_control_relaxation_infeasible')
         model['walls'][-1]['rhs']=2.1
         self.assertFalse(interaction_reachability(reachable_envelopes(model),{},refine=True)['ruledOut'])
 

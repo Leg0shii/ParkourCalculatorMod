@@ -12,7 +12,7 @@ from parkour_solver.search.identity import digest
 from parkour_solver.spatial.surfaces import scene_geometry
 
 
-GENERATION_POLICY = 13
+GENERATION_POLICY = 14
 STATE_VERSION = 9
 
 
@@ -43,12 +43,15 @@ class ConstraintVariants:
         envelope = reachable_envelopes(model, vertical['y'])
         scope = scope or dict(through=plan['ticks'], solidIndices=list(range(len(geometry['solids']))))
         return cls(absolute_route, profile, plan, geometry, envelope, scope, state=state,
-                   deadline=deadline, reference=candidate['positions'], owners=owners, budget=budget, cancel_event=cancel_event)
+                   deadline=deadline, reference=candidate['positions'], owners=owners, budget=budget, cancel_event=cancel_event,
+                   objective=route.get('guideObjective', route['objective']))
 
     def __init__(self, route, profile, plan, geometry, envelopes, scope, *, checks=(), gates=(), signature=(), state=None,
                  deadline=None, reference=None, route_guards=None, owners=None, budget=None, cancel_event=None,
-                 segment_solids=None):
+                 segment_solids=None, objective=None):
         self.route, self.profile, self.plan = route, profile, plan
+        # Relaxation screens optimize the configured progress objective at the plan horizon.
+        self.objective = objective
         self.envelopes, self.deadline, self.through = envelopes, deadline, scope['through']
         self.route_guards, self.budget = route_guards, budget
         self.cancel_event = cancel_event
@@ -144,7 +147,7 @@ class ConstraintVariants:
         started = time.monotonic()
         try:
             self.metric('analysisMisses')
-            result = condition_envelopes(self.envelopes, rows)
+            result = condition_envelopes(self.envelopes, rows, objective=self.objective)
             # A cache is disposable acceleration, not a retained-alternative cap.
             if len(self.analysis_cache) >= 128:
                 self.analysis_cache.pop(next(iter(self.analysis_cache)))

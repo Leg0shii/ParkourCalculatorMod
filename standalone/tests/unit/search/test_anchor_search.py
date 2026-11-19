@@ -152,7 +152,7 @@ class AnchorSearchTests(unittest.TestCase):
 
     def test_pre_solve_proofs_complete_an_alternative_without_ipopt(self):
         from parkour_solver.search.feasibility import outcome, policy_spec
-        certificate=dict(reason='linear_control_relaxation_infeasible')
+        certificate=dict(reason='disk_control_relaxation_infeasible')
         def invoke(termination):
             response=dict(status='unknown',best=None,termination=termination,
                           attempts=[dict(status='blocked',certificate=certificate)])

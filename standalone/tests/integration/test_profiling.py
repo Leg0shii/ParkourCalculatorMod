@@ -198,7 +198,7 @@ class BookkeepingProfileTests(unittest.TestCase):
 
     def test_alternatives_without_a_solution_name_the_check_that_proved_them_infeasible(self):
         from tools.profiling.trace import alternative_outcome, repair_trace, solve_text
-        certificate = dict(reason='linear_control_relaxation_infeasible')
+        certificate = dict(reason='disk_control_relaxation_infeasible')
         repair = dict(attemptLog=[dict(problemHash='p', status='blocked', certificate=certificate),
                                   dict(problemHash='i', status='unknown'), dict(problemHash='r', status='unknown')],
                       completed=[dict(branch='[[], [], []]', status='unknown', proven=True, certificates=[certificate],
@@ -209,8 +209,8 @@ class BookkeepingProfileTests(unittest.TestCase):
                         r=dict(index=9, workerStatus='Maximum_CpuTime_Exceeded'))
         proven, local, kept = repair_trace(repair)['alternatives']
         self.assertEqual([alternative_outcome(a, requests) for a in (proven, local, kept)],
-                         ['infeasible (linear control relaxation)', 'infeasible (IPOPT local)', 'unknown'])
-        self.assertEqual(solve_text(proven['solves'][0], requests), 'infeasible (linear control relaxation)')
+                         ['infeasible (disk control relaxation)', 'infeasible (IPOPT local)', 'unknown'])
+        self.assertEqual(solve_text(proven['solves'][0], requests), 'infeasible (disk control relaxation)')
         self.assertEqual(solve_text(local['solves'][0], requests),
                          'request 8 infeasible (IPOPT local), IPOPT Infeasible_Problem_Detected, 0.37 s')
 
@@ -294,12 +294,12 @@ class BookkeepingProfileTests(unittest.TestCase):
                          ('p', [dict(avoid, t2=2)], True))
         from tools.profiling.trace import render, stop_report
         requests = [dict(index=1, fingerprint='h1', status='feasible', workerStatus='Solve_Succeeded', seconds=.25)]
-        linear = dict(withObjective=dict(solved=2, infeasible=1, ipmRetries=1), zeroCost=dict(solved=3, cacheHits=4, undecided=1))
+        relaxation = dict(screen=dict(solved=5, cacheHits=4, infeasible=1, undecided=1), candidate=dict(solved=7))
         report = dict(result=dict(best=None, termination='exhausted', elapsedSeconds=1., work=dict(solverCalls=1, workerLaunches=1),
-                                  expandedPrefixes=2, searchState=state, interactionGate=dict(linear=linear)))
+                                  expandedPrefixes=2, searchState=state, interactionGate=dict(relaxation=relaxation)))
         markdown = render(report, requests, list(routes.values()), stop_report(state, requests))
-        self.assertIn('Linear pre-checks: 5 solved (4 more from cache), 1 proved infeasible, 1 undecided by the LP solver '
-                      'and counted as not ruled out; 1 needed the interior-point retry.', markdown)
+        self.assertIn('Disk-relaxation pre-checks: 5 solved (4 more from cache), 1 proved infeasible, 1 undecided by '
+                      'Clarabel and counted as not ruled out.', markdown)
         self.assertIn('- Frame 0 → B2: 2 routes (2 feasible)\n  - Frame 1 → B3: 1 route (1 feasible), from route 0.1 (lands B2 t3)', markdown)
         self.assertIn('#### Movement: jumps at t0; lands B2 t3; no ceiling hit', markdown)
         self.assertIn('| 0.2 | feasible | 4 | -2.000 | no obstacle in reach | Z ≤ -2.000 at t2 |', markdown)

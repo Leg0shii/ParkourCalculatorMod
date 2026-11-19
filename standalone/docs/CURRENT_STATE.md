@@ -34,7 +34,7 @@ everything not being worked on is in the [deferred-work register](DEFERRED_WORK.
    `constraints/encounters.py` and `constraints/variants.py`.
 2. [Generation relevance](design/GENERATION_RELEVANCE_PLAN.md): one shared eligibility
    gate; required versus unwanted interactions; screen the whole proposal before truncation.
-3. [Obstacle relevance](design/OBSTACLE_RELEVANCE.md): interval and LP reachability screens.
+3. [Obstacle relevance](design/OBSTACLE_RELEVANCE.md): interval and disk-relaxation reachability screens.
 4. [Obstacles and blockages](design/OBSTACLES_AND_BLOCKAGES.md): Y-X-Z overlap, blockage
    timing templates, wall-hit sprint loss, run-off sources.
 5. [Generic route discovery research](research/GENERIC_ROUTE_DISCOVERY_RESEARCH.md),

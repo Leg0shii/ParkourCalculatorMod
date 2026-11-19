@@ -175,7 +175,7 @@ def main():
             runRestorations=sum(bool(v.get('restored')) for v in deferrals),
             deferredNodes=result.get('anchorSearch',{}).get('deferredNodes',0),
             comparisonWork=dfs.get('comparisonWork',{}),interactionMetrics=result.get('interactionGate',{}).get('metrics',{}),
-            linearChecks=result.get('interactionGate',{}).get('linear',{}),
+            relaxationChecks=result.get('interactionGate',{}).get('relaxation',{}),
             transferTimeBounds=dfs.get('transferTimeBounds',{}),
             wrappers=len(profile.requests) if args.profile_mode != 'none' else None,
             workers=sum(bool(r.get('workerLaunched')) for r in profile.requests) if args.profile_mode != 'none' else None,
