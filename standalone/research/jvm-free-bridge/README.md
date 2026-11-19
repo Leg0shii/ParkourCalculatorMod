@@ -69,13 +69,27 @@ solve report records `sourceRevision: null` and the Python bridge. Fixed-clock r
 to its 300 s deadline with equal work counters (40 requests, 35 workers) and the same
 T67 best; the Java run's 67 retained-witness replays are a prefix of the Python
 run's 77. The virtual-finish fixture still sets `fair_parents`, which `1df37d63`
-removed from the search API, so both bridges reject it as committed; these runs drop
-that key.
+removed from the search API, so both bridges rejected it; these runs dropped that key.
+The task settings reader now drops it for every archived fixture.
+
+## Recorded requests from other runs
+
+An earlier note on the Java compiler recorded every coefficient request of one
+Real11 run at `7ab4080c` (186 requests, with magnitude and friction). All 186 give
+identical whole replies on both bridges and match the recorded arrays. Requests
+captured from the stepping, ladder, climbable, vine, movement-entry, shared-contact
+and hit-event suites (2,249 unique: horizontal contacts, sneak, ladder ticks,
+incoming sprint, scene checks and footprints) also match exactly. Ladder ticks need
+no table key: they change the movement medium, which no coefficient row reads.
 
 ## Test gates
 
 The native gate on `861390e1` passed 727 tests, and on the feature 742 tests (the
 new bridge module and package test added), both with no failures, errors or skips
-and unchanged sources. The excluded dedicated ladder, climbable, vine and
+and unchanged sources. After rebasing onto `88c462e3` (PR #3 merged) and adding the
+archived fixed-clock settings fix and the corridor queue policy fix, the gate passed
+744 tests with no failures, errors or skips, and the fixed-work opening and B22 runs
+again gave identical requests, records, best witnesses and all 252 and 664 bridge
+exchanges on both bridges. The excluded dedicated ladder, climbable, vine and
 movement-entry modules ran 99 tests on each side with the same 2 failures and 12
 errors, all pre-existing.

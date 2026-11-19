@@ -63,12 +63,12 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/ARCHITECTURE.md](ARCHITECTURE.md) | 17310 |
 | [docs/CHECKPOINT_STORAGE.md](CHECKPOINT_STORAGE.md) | 6832 |
 | [docs/CODE_MAP.md](CODE_MAP.md) | 26012 |
-| [docs/CURRENT_STATE.md](CURRENT_STATE.md) | 11334 |
+| [docs/CURRENT_STATE.md](CURRENT_STATE.md) | 11473 |
 | [docs/DECISIONS_AND_PLANS.md](DECISIONS_AND_PLANS.md) | 12691 |
 | [docs/DEFERRED_WORK.md](DEFERRED_WORK.md) | 27207 |
 | [docs/DEVELOPMENT.md](DEVELOPMENT.md) | 11612 |
 | [docs/DOC_INDEX.md](DOC_INDEX.md) | 26960 |
-| [docs/FILE_INDEX.md](FILE_INDEX.md) | 207424 |
+| [docs/FILE_INDEX.md](FILE_INDEX.md) | 207112 |
 | [docs/FUNCTION_INDEX.md](FUNCTION_INDEX.md) | 77520 |
 | [docs/IPOPT_CONSTRAINT_REDUCTION.md](IPOPT_CONSTRAINT_REDUCTION.md) | 5578 |
 | [docs/IPOPT_FEASIBILITY_MODE.md](IPOPT_FEASIBILITY_MODE.md) | 4956 |
@@ -79,7 +79,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/REAL11_GUIDE.md](REAL11_GUIDE.md) | 20362 |
 | [docs/RESULTS_AND_DEBUGGING.md](RESULTS_AND_DEBUGGING.md) | 15459 |
 | [docs/RUNBOOK.md](RUNBOOK.md) | 13451 |
-| [docs/TESTING.md](TESTING.md) | 17951 |
+| [docs/TESTING.md](TESTING.md) | 18187 |
 | [docs/design/ANCHOR_POLICY_DECISIONS.md](design/ANCHOR_POLICY_DECISIONS.md) | 27768 |
 | [docs/design/AVOIDANCE_PASSAGES.md](design/AVOIDANCE_PASSAGES.md) | 13915 |
 | [docs/design/BRANCH_SCHEDULING_INVESTIGATION.md](design/BRANCH_SCHEDULING_INVESTIGATION.md) | 34072 |
@@ -918,7 +918,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [research/interleaved-blockages/result.json](../research/interleaved-blockages/result.json) | 109546 |
 | [research/interleaved-blockages/summary.json](../research/interleaved-blockages/summary.json) | 1899 |
 | [research/jvm-free-bridge/2026-11-18/comparison.json](../research/jvm-free-bridge/2026-11-18/comparison.json) | 68536 |
-| [research/jvm-free-bridge/README.md](../research/jvm-free-bridge/README.md) | 4309 |
+| [research/jvm-free-bridge/README.md](../research/jvm-free-bridge/README.md) | 5313 |
 | [research/ladder-climbing-ceiling/README.md](../research/ladder-climbing-ceiling/README.md) | 3318 |
 | [research/ladder-climbing-ceiling/beginning-stop.json](../research/ladder-climbing-ceiling/beginning-stop.json) | 66355 |
 | [research/ladder-climbing-ceiling/both-stops.json](../research/ladder-climbing-ceiling/both-stops.json) | 59009 |

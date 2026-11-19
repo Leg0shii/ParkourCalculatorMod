@@ -9,19 +9,21 @@ everything not being worked on is in the [deferred-work register](DEFERRED_WORK.
 - Base branch: the fork's `main`. It contains the Real11 extension work: extended
   geometry and bounds, the six-direction [face catalog](design/FACE_MERGING_IMPLEMENTATION_PLAN.md)
   (not yet consumed by any generator) and the [longer Real11 task](../research/real11-long-solve/README.md).
-- Active: `perf/early-passage-screen`, draft PR #3 into `main`. It adds
+- Active: `feat/jvm-free-orchestrator`, draft PR into `main`. It makes search
+  JVM-free: the in-process Python movement bridge is the default and the Java
+  bridge an explicit oracle ([evidence](../research/jvm-free-bridge/README.md)).
+- Merged as PR #3 (`perf/early-passage-screen`): it adds
   [geometry-driven avoidance passages](design/AVOIDANCE_PASSAGES.md) on obstacle
   clusters (touching blocks are one obstacle; [evidence](../research/obstacle-clusters/README.md)), screening of
   accumulated passage prefixes before extension, anchor legs that optimize their
   alternatives with a switch-tick climb and keep close fallbacks
   ([evidence](../research/switch-climb/README.md)), anchor search under the global
   run budget instead of service-turn quotas, and ceiling moves in the Real11 case.
-  The PR is a first test and is still under investigation, not ready to merge.
 - Native gate (`tools/native_gate.py`): the current result is in [testing](TESTING.md).
-- Latest cold Real11 control on the PR: T64 at 5.9 s with 18 solver requests; the
+- Latest cold Real11 control from PR #3: T64 at 5.9 s with 18 solver requests; the
   DFS explores every runnable alternative and ends `exhausted` at 9.7 s. See
   [performance](PERFORMANCE.md) for the full series of controls.
-- Longer Real11 trials are paused until the PR's solver changes settle. The saved
+- Longer Real11 trials are paused until the solver changes settle. The saved
   fixed-B5 checkpoints predate constraint policy9/state5, so the next trial starts
   cold from the [resume checklist](../research/real11-long-solve/README.md#status-and-resumption).
 

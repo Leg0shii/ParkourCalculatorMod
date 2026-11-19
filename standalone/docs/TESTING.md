@@ -2,9 +2,10 @@
 
 ## Current gate
 
-`tools/native_gate.py` (commands in the [runbook](RUNBOOK.md)) on the JVM-free bridge over
-`861390e1`: **742 tests, no failures, errors or skips**, source unchanged
-during the run, layout validation passed ([evidence](../research/jvm-free-bridge/README.md#test-gates)).
+`tools/native_gate.py` (commands in the [runbook](RUNBOOK.md)) on the JVM-free bridge, archived
+fixed-clock settings and the corridor queue's shared constraint policy over `88c462e3`:
+**744 tests, no failures, errors or skips**, source unchanged during the run, layout
+validation passed ([evidence](../research/jvm-free-bridge/README.md#test-gates)).
 The gate fails on any skip, so it needs `PKC_RUN_TICKS_COMPILER` for the Java
 differential tests and the `research` extra for the route-guidance tests.
 A run of the switch-climb source (`55e3beef`) under a load average of 5.5 failed
@@ -24,6 +25,7 @@ persistence without the removed 32/128 limits.
 
 | Source | Tests | Evidence |
 | --- | ---: | --- |
+| `88c462e3` + JVM-free bridge, archived fixed-clock settings, corridor queue policy | 744 | [summary](../research/jvm-free-bridge/README.md#test-gates) |
 | `861390e1` + JVM-free bridge | 742 | [summary](../research/jvm-free-bridge/README.md#test-gates) |
 | `0ee47d9d` + corridor queue uses the shared constraint policy | 728 | not archived |
 | `3f869392` + shared approach cache, travel pairs to the last constrained state | 728 | not archived |
