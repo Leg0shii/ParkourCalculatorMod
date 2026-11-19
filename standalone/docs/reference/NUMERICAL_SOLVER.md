@@ -94,7 +94,7 @@ if result["feasible"]:
 
 `solve` also accepts `stop_on_feasible`, a `threading.Event` as `cancel_event`, and an `on_incumbent(candidate)` callback. The callback receives a copy; keep it short. It is called for valid objective improvements, allowing a caller to save incumbents while a solve continues. Invalid API requests raise `ValueError` before starting a process. Caller orchestration chooses input patterns, stores multiple candidates and splices selected spans.
 
-`from parkour_solver.numerics import attach_capture` provides the same capture attachment through `attach_capture(request, capture, start=None)`. It returns a prepared copy without changing either input.
+`from parkour_solver.io.capture import attach_capture` (also `parkour_solver.api.attach_capture`) provides the same capture attachment through `attach_capture(request, capture, start=None)`. It returns a prepared copy without changing either input.
 
 ## Problem format, version 1
 

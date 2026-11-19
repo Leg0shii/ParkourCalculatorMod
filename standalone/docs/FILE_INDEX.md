@@ -59,7 +59,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | File | Bytes |
 | --- | ---: |
 | [docs/AGENT_SETUP.md](AGENT_SETUP.md) | 3797 |
-| [docs/ANCHOR_SEARCH_EXECUTION_REFERENCE.md](ANCHOR_SEARCH_EXECUTION_REFERENCE.md) | 29138 |
+| [docs/ANCHOR_SEARCH_EXECUTION_REFERENCE.md](ANCHOR_SEARCH_EXECUTION_REFERENCE.md) | 29139 |
 | [docs/ARCHITECTURE.md](ARCHITECTURE.md) | 17310 |
 | [docs/CHECKPOINT_STORAGE.md](CHECKPOINT_STORAGE.md) | 6832 |
 | [docs/CODE_MAP.md](CODE_MAP.md) | 26030 |
@@ -68,7 +68,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/DEFERRED_WORK.md](DEFERRED_WORK.md) | 27678 |
 | [docs/DEVELOPMENT.md](DEVELOPMENT.md) | 11608 |
 | [docs/DOC_INDEX.md](DOC_INDEX.md) | 26960 |
-| [docs/FILE_INDEX.md](FILE_INDEX.md) | 207391 |
+| [docs/FILE_INDEX.md](FILE_INDEX.md) | 207290 |
 | [docs/FUNCTION_INDEX.md](FUNCTION_INDEX.md) | 77890 |
 | [docs/IPOPT_CONSTRAINT_REDUCTION.md](IPOPT_CONSTRAINT_REDUCTION.md) | 5578 |
 | [docs/IPOPT_FEASIBILITY_MODE.md](IPOPT_FEASIBILITY_MODE.md) | 4956 |
@@ -105,7 +105,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/history/dependencies/autonomy-route_guidance-requirements.txt](history/dependencies/autonomy-route_guidance-requirements.txt) | 63 |
 | [docs/history/dependencies/ipopt-requirements.txt](history/dependencies/ipopt-requirements.txt) | 27 |
 | [docs/reference/MOVEMENT_PORT.md](reference/MOVEMENT_PORT.md) | 12343 |
-| [docs/reference/NUMERICAL_SOLVER.md](reference/NUMERICAL_SOLVER.md) | 20819 |
+| [docs/reference/NUMERICAL_SOLVER.md](reference/NUMERICAL_SOLVER.md) | 20864 |
 | [docs/reference/REPLAY.md](reference/REPLAY.md) | 8680 |
 | [docs/research/GENERIC_ROUTE_DISCOVERY_RESEARCH.md](research/GENERIC_ROUTE_DISCOVERY_RESEARCH.md) | 67882 |
 | [docs/research/HEURISTIC_SOURCE_REVIEW.md](research/HEURISTIC_SOURCE_REVIEW.md) | 17131 |
@@ -1284,7 +1284,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | --- | ---: |
 | [src/parkour_solver/__init__.py](../src/parkour_solver/__init__.py) | 103 |
 | [src/parkour_solver/__main__.py](../src/parkour_solver/__main__.py) | 85 |
-| [src/parkour_solver/api.py](../src/parkour_solver/api.py) | 1404 |
+| [src/parkour_solver/api.py](../src/parkour_solver/api.py) | 1441 |
 | [src/parkour_solver/bridge/__init__.py](../src/parkour_solver/bridge/__init__.py) | 0 |
 | [src/parkour_solver/bridge/compiler.py](../src/parkour_solver/bridge/compiler.py) | 4585 |
 | [src/parkour_solver/bridge/counting.py](../src/parkour_solver/bridge/counting.py) | 1071 |
@@ -1334,7 +1334,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [src/parkour_solver/movement/stepping.py](../src/parkour_solver/movement/stepping.py) | 15638 |
 | [src/parkour_solver/movement/units.py](../src/parkour_solver/movement/units.py) | 10518 |
 | [src/parkour_solver/movement/vertical_profiles.py](../src/parkour_solver/movement/vertical_profiles.py) | 5468 |
-| [src/parkour_solver/numerics/__init__.py](../src/parkour_solver/numerics/__init__.py) | 178 |
+| [src/parkour_solver/numerics/__init__.py](../src/parkour_solver/numerics/__init__.py) | 107 |
 | [src/parkour_solver/numerics/builders.py](../src/parkour_solver/numerics/builders.py) | 4633 |
 | [src/parkour_solver/numerics/constraints.py](../src/parkour_solver/numerics/constraints.py) | 1410 |
 | [src/parkour_solver/numerics/continuation.py](../src/parkour_solver/numerics/continuation.py) | 4237 |
