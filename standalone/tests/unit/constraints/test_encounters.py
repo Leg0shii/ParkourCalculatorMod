@@ -302,7 +302,7 @@ class BlockTableEncounterTests(unittest.TestCase):
         from parkour_solver.search.engine import segment_solids
         dropped = 0
         with compiler() as java:
-            gate = InteractionGate(scene, java)
+            gate = InteractionGate(scene, java, seconds=10)
             for node in nodes(scene, roots, gate):
                 prepared = gate.prepare(node) if node['profile']['airtime'] else None
                 if prepared is None:

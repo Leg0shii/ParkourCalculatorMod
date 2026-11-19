@@ -21,6 +21,38 @@ class ScreenTests(unittest.TestCase):
         self.assertEqual(p,before)
         self.assertNotIn('t1',rows[0])
 
+    def test_travel_pairs_after_the_last_constrained_state_never_fire(self):
+        rng = random.Random(1118)
+        fired = 0
+        for _ in range(400):
+            n = rng.randint(2, 40)
+            magnitude, friction = [rng.uniform(.05, .7) for _ in range(n)], [rng.uniform(.5, .95) for _ in range(n)]
+            reach = travel_radii(0., magnitude, friction)
+            walls = []
+            for _ in range(rng.randint(0, 3)):
+                t = rng.randint(1, n)
+                a = rng.uniform(.5, .95)*reach[t]
+                walls += [dict(mode='X', t1=t, cmp='GE', rhs=a), dict(mode='Z', t1=t, cmp='GE', rhs=a)][:rng.randint(1, 2)]
+            p = dict(ticks=n, position=[0., 0.], velocity=[0., 0.], magnitude=magnitude, friction=friction,
+                     walls=walls, threshold=0.)
+            envelope = reachable_envelopes(p)
+            if envelope['contradiction'] is not None and envelope['contradiction']['reason'] != 'norm_reach_contradiction':
+                continue
+            states, radii, expected = envelope['states'], envelope['radii'], None
+            for j in range(1, len(states)):
+                for i in range(j):
+                    gap = math.hypot(*(max(0., states[j][a][0]-states[i][a][1], states[i][a][0]-states[j][a][1])
+                                       for a in ('X', 'Z')))
+                    if gap > radii[j]-radii[i]+1e-7:
+                        expected = dict(state=j, previousState=i, reason='norm_reach_contradiction',
+                                        gap=gap, travelUpperBound=radii[j]-radii[i])
+                        break
+                if expected is not None:
+                    break
+            self.assertEqual(envelope['contradiction'], expected, p)
+            fired += expected is not None
+        self.assertGreater(fired, 20)
+
     def test_unreachable_wall_is_rejected(self):
         p = {'ticks': 1, 'position': [0, 0], 'velocity': [0, 0], 'magnitude': [.1],
              'friction': [.91], 'walls': [{'mode': 'X', 't1': 1, 'cmp': 'GE', 'rhs': .2}]}

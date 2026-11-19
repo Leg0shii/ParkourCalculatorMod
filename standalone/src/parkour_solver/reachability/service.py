@@ -126,6 +126,7 @@ class InteractionGate:
         from parkour_solver.reachability.linear import STATS
         self.linear_start = {kind: collections.Counter(counts) for kind, counts in STATS.items()}
         self.block_table, self.jump_traces = {}, {}
+        self.approaches = {}
 
     def reachable_blocks(self, owner):
         if owner in self.block_table:
@@ -285,22 +286,28 @@ class InteractionGate:
         # has not changed the post-movement height/ground state yet. Use its horizontal
         # envelope, keeping Y unconstrained for stepping and ceiling outcomes.
         prefix = context['program']
-        prefix_key = digest(program_physics_key(prefix))
-        cache = context.setdefault('_interactionApproaches', {})
+        if '_prefixKey' not in context:
+            context['_prefixKey'] = (digest(program_physics_key(prefix)), context.get('threshold', .005))
+        prefix_key = context['_prefixKey']
+        def remember(key, build):
+            if key not in self.approaches:
+                self.approaches[key] = build()
+                while len(self.approaches) > 512:
+                    self.approaches.pop(next(iter(self.approaches)))
+            return self.approaches[key]
         def approach(inputs):
-            key = (prefix_key, jumping, inputs)
-            if key not in cache:
+            def build():
+                self.metrics['approachBuilds'] = self.metrics.get('approachBuilds', 0)+1
                 choice = event_choice(context, 'normal', context['state'], inputs, jumping=jumping)
                 p = append_choice(prefix, choice) if choice is not None else None
-                cache[key] = self.envelopes(p) if p is not None else None
-            return cache[key]
-        horizon_key = (prefix_key, jumping, 'horizon')
-        if horizon_key not in cache:
+                return self.envelopes(p) if p is not None else None
+            return remember((prefix_key, jumping, inputs), build)
+        def horizon():
             lowest = min(b['top'] for b in context['scene']['blocks'])
             trace = next((t for _, j, t in approaches(context) if j == jumping), None)
             landing = first_descent(trace, lowest) if trace is not None else None
-            cache[horizon_key] = context.get('maxInputs', 0) if landing is None else min(landing+2, context.get('maxInputs', 0))
-        horizon = cache[horizon_key]
+            return context.get('maxInputs', 0) if landing is None else min(landing+2, context.get('maxInputs', 0))
+        horizon = remember((prefix_key, jumping, 'horizon', context.get('maxInputs', 0)), horizon)
         envelope = approach(horizon) if tick < horizon else None
         if envelope is None:
             self.metrics['approachFallbacks'] = self.metrics.get('approachFallbacks', 0)+1

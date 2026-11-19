@@ -114,8 +114,9 @@ def reachable_envelopes(problem, y=None):
     if 'initialIntervals' in problem:
         speed = math.hypot(*(max(abs(a), abs(b)) for a,b in zip(problem['initialIntervals'][2],problem['initialIntervals'][3])))
     radii = travel_radii(speed, problem['magnitude'], problem['friction'], margin=1e-8)
+    constrained = max([t for t, _ in bounds]+[c['state'] for c in problem.get('contacts', [])], default=0)
     if contradiction is None:
-        for j in range(1,len(states)):
+        for j in range(1,min(constrained,len(states)-1)+1):
             for i in range(j):
                 gap = math.hypot(*(max(0.,states[j][axis][0]-states[i][axis][1],states[i][axis][0]-states[j][axis][1])
                                    for axis in ('X','Z')))

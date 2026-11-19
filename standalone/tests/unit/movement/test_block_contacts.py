@@ -189,13 +189,18 @@ class ExposedTopTests(unittest.TestCase):
             far = [10000., 0., 10000., 10001., 1., 10001.]
             self.assertTrue(gate.query(ctx, far, 3, label=dict(owner='far', role='test'), jumping=True)['ruledOut'])
             self.assertNotIn('approachFallbacks', gate.metrics)
+            builds = gate.metrics['approachBuilds']
+            other = dict(context(root), interactionGate=gate)
+            self.assertTrue(gate.query(other, far, 5, label=dict(owner='far', role='test'), jumping=True)['ruledOut'])
+            self.assertEqual(gate.metrics['approachBuilds'], builds)
             original = normal.event_choice
             def no_long(context, kind, state, inputs, **kwargs):
                 return original(context, kind, state, inputs, **kwargs) if inputs == 4 else None
             with patch('parkour_solver.movement.normal.event_choice', side_effect=no_long):
-                fresh = dict(context(root), interactionGate=gate)
-                self.assertTrue(gate.query(fresh, far, 3, label=dict(owner='far', role='test'), jumping=True)['ruledOut'])
-            self.assertEqual(gate.metrics['approachFallbacks'], 1)
+                fresh_gate = InteractionGate(scene, compiler)
+                fresh = dict(context(root), interactionGate=fresh_gate)
+                self.assertTrue(fresh_gate.query(fresh, far, 3, label=dict(owner='far', role='test'), jumping=True)['ruledOut'])
+            self.assertEqual(fresh_gate.metrics['approachFallbacks'], 1)
 
     def test_exact_height_slot_keeps_its_floor(self):
         from parkour_solver.movement.contact_combinations import scene_contact_options
@@ -239,7 +244,7 @@ class BlockTableTests(unittest.TestCase):
         from parkour_solver.search.anchors.policy import launch
         removed = 0
         with compiler() as java:
-            gate = InteractionGate(scene, java)
+            gate = InteractionGate(scene, java, seconds=10)
             for node in nodes(scene, roots, gate):
                 _, owner = launch(scene, node)
                 plain = [[(c['profile'], c.get('terminalSupport')) for c in kind]

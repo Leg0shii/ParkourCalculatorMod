@@ -69,6 +69,15 @@ obstacle checks from 600 to 380 with the same touchable checks and an identical 
 and keeps a synthetic route's avoidance items at 10 from 7 to 1,000 far solids (356.7 s
 without it at 100 solids, 0.012 s with it at 1,000; [evidence](../research/block-table/README.md)).
 
+The interval engine checks travel pairs only up to the last constrained state, and the gate
+shares one approach per prefix and start across a node's generators. On 54 Real11 approach
+programs of 50 to 199 ticks an envelope build fell from 24.7 ms to 4.3 ms with identical
+results (interleaved CPU timing, load average about 10). Real11 itself is unchanged: paired
+runs of `3f869392` and the change, with `candidate_seconds` 20 and `spatial_seconds` 50 to
+keep wall-clock budgets out of a loaded machine, give identical reports, 74 approach builds
+instead of 142 analysis-cache lookups, and 5.8 s of CPU on both sides, because its
+approaches are 10 to 79 ticks long.
+
 ## Measured hotspots
 
 Unrestricted 300 s profile at `bbb375cf`

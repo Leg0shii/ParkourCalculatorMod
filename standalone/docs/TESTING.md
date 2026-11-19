@@ -2,8 +2,8 @@
 
 ## Current gate
 
-`tools/native_gate.py` (commands in the [runbook](RUNBOOK.md)) on the block table for avoidance over
-`db7f8f61`: **727 tests, no failures, errors or skips**, source unchanged
+`tools/native_gate.py` (commands in the [runbook](RUNBOOK.md)) on the shared approach cache and
+shortened travel-pair check over `3f869392`: **728 tests, no failures, errors or skips**, source unchanged
 during the run, layout validation passed.
 A run of the switch-climb source (`55e3beef`) under a load average of 5.5 failed
 `test_prescribed_points_do_not_remove_remote_free_space` (its two 2 s arms
@@ -22,6 +22,7 @@ persistence without the removed 32/128 limits.
 
 | Source | Tests | Evidence |
 | --- | ---: | --- |
+| `3f869392` + shared approach cache, travel pairs to the last constrained state | 728 | not archived |
 | `db7f8f61` + block table for avoidance | 727 | not archived |
 | `1df37d63` + block table prefilter | 724 | not archived |
 | `cfc2a3ec` + unused `fair_parents` option removed | 719 | not archived |
