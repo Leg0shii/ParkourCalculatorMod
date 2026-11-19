@@ -56,3 +56,34 @@ cluster item the table drops under the route's unconditioned envelopes and requi
 possible or uncertain phase: 40 dropped items on Real11 nodes and 921 over 20 random box
 scenes. The drop itself rests on the table's flight bound; this check confirms it against
 the route's own reachability analysis.
+
+## Per-tick variant (evidence only, not adopted)
+
+`per_tick.py` builds, for each launch owner, the ticks after the launch visit at which
+each block can be touched: at tick t the radius covers states up to t+1
+(0.4 + 0.7 + 0.4 t) and the feet lie between the run-off and jump traces at t and t+1,
+with the same step and body-height allowance as the block table. It then runs Real11
+with every generator question and every avoidance item checked against it.
+
+```sh
+PKC_RUN_TICKS_COMPILER=$PWD/build/native/compiler.json OPENBLAS_NUM_THREADS=1 \
+  PYTHONPATH=src:. python research/block-table/per_tick.py <out>/per-tick.json
+```
+
+Results ([raw](2026-11-18/per-tick.json)), measured on `861390e1`:
+
+| Scenes | Owners | Block entries, table / per-tick | Block-tick entries | CPU ms, table / per-tick |
+| --- | ---: | ---: | ---: | ---: |
+| Real11 | 7 | 31 / 31 | 332 | 2.89 / 8.63 |
+| 20 random box scenes | 320 | 1,143 / 1,076 | 11,479 | 113.17 / 352.98 |
+
+In the instrumented Real11 run the per-tick table would have removed 52 of 514 route-based
+generator questions, and the route-based check had ruled out all 52 already, so no
+generator choice changes; at the measured 0.2 ms per question that saves about 10 ms. It
+would have removed 128 of 312 avoidance items the block table keeps; the Real11 report
+shows all but 6 of 380 obstacle checks already cannot touch the player. The run's
+machine was loaded (load average 7 to 13, a game client using two cores): it ended
+`numerical_unknown` after 37.5 s with T64, the same objective and 18 requests, and a
+plain control on the same source under the same load did the same (58.6 s), so the
+search explored more nodes than the 366-question control. The counts are per question
+and per item, so the ratios stand.
