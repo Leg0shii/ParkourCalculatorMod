@@ -223,11 +223,11 @@ class AnchorNativeTests(unittest.TestCase):
         self.assertTrue(result['best']['candidate']['onGround'][-1])
         self.assertEqual(result['searchState']['dfs']['version'],8)
         self.assertTrue(result['anchorSearch']['hardLatches'])
-        # Interim queries are relaxed; only the finalization launches IPOPT workers.
-        self.assertEqual(result['work']['workerLaunches'],0)
+        # Interim queries are relaxed; IPOPT runs only for alarm confirmations and the finalization.
+        self.assertEqual(result['work']['workerLaunches'],result['work']['confirmationIpoptCalls'])
         self.assertGreater(result['work']['conicCandidates'],0)
         self.assertGreaterEqual(result['work']['solverCalls'],result['work']['conicCandidates'])
-        self.assertGreater(result['work']['finalizationIpoptCalls'],0)
+        self.assertNotIn('model',result['best']['candidate'])
         self.assertTrue(result['anchorSearch']['nodes'])
         self.assertEqual(result['best']['route']['objective'],dict(axis='X',sense='MAX'))
 
@@ -249,8 +249,21 @@ class RelaxedAutomaticSearchTests(unittest.TestCase):
             result = find_checkpoint_route(scene, compiler, **settings)
             return scene, result, compiler
 
+    def test_alarms_are_the_only_interim_ipopt_and_the_published_route_is_physical(self):
+        from parkour_solver.bridge.python_compiler import PythonCompiler
+        from parkour_solver.scene.normalize import prepare_scene
+        from parkour_solver.validation.witness import replay_witness
+        _, result, _ = self.search()
+        work = result['work']
+        self.assertEqual(work['workerLaunches'], work['confirmationIpoptCalls'])
+        self.assertGreater(work['conicCandidates'], 0)
+        self.assertNotIn('model', result['best']['candidate'])
+        with PythonCompiler() as compiler:
+            self.assertTrue(replay_witness(prepare_scene(result['effectiveRequest']), result['best'], compiler)['passed'])
+
     def test_search_runs_on_the_relaxation_and_publishes_one_physical_finalization(self):
         from parkour_solver.bridge.python_compiler import PythonCompiler
+        from parkour_solver.numerics import disk
         from parkour_solver.scene.normalize import prepare_scene
         from parkour_solver.validation.witness import replay_witness
         from parkour_solver.search import engine
@@ -259,7 +272,9 @@ class RelaxedAutomaticSearchTests(unittest.TestCase):
             repairs.append((route, kwargs['initial_variants'], kwargs['repair_scope']['solvePolicy']))
             return original(route, *args, **kwargs)
         original = engine.solve_contact_branches
-        with patch.object(engine, 'solve_contact_branches', side_effect=recorded):
+        # Without the alarm the finish stays relaxed until the finalization.
+        with patch.object(engine, 'solve_contact_branches', side_effect=recorded), \
+             patch.object(disk, 'ALARM_FRACTION', 1.):
             _, result, _ = self.search()
         relaxed = result['searchState']['dfs']['best']
         # Finalization repairs the relaxed witness's own branch, warm-started from its facings.

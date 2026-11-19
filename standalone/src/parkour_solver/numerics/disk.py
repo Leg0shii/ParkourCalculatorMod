@@ -105,7 +105,9 @@ class RelaxedDispatch:
 
     IPOPT runs, with stock semantics, on requests outside the supported class,
     optimization requests of a promoted lineage, and relaxed points the scalar
-    validator rejects.
+    validator rejects. An optimization request whose relaxed optimum leaves more
+    than ALARM_FRACTION of some tick's acceleration unused is confirmed by IPOPT;
+    a confirmed score gap above MATERIAL_GAP promotes the lineage.
     """
     def __init__(self, *, promoted, gate):
         self.promoted, self.gate = promoted, gate
@@ -142,9 +144,46 @@ class RelaxedDispatch:
         peak, _, tick = deficits(problem, solved['controls'])
         relaxed.update(peakRelativeDeficit=peak, peakTick=tick)
         candidate['model'] = 'relaxed_disk'
+        if peak > ALARM_FRACTION and not stop_on_feasible:
+            return self.confirm(problem, candidate, relaxed, seconds=seconds, python_executable=python_executable,
+                                cancel_event=cancel_event, on_incumbent=on_incumbent)
         if on_incumbent is not None:
             on_incumbent(json.loads(json.dumps(candidate)))
         return _result(problem, started, 'feasible', candidate, 'disk_finished', solved['status'], relaxed)
+
+    def confirm(self, problem, relaxed_candidate, relaxed, *, seconds, python_executable, cancel_event, on_incumbent):
+        """Re-solve an alarmed request with IPOPT, whose outcome then governs it."""
+        from parkour_solver.numerics.model import fingerprint
+        from parkour_solver.numerics.solver import solve as full_solve
+        key = ('confirmation', fingerprint(problem))
+        cached = key in self.gate.cache
+        if cached:
+            result = dict(self.gate.cache[key], workerLaunched=False)
+        else:
+            # Disk directions seed the facings where the relaxed point uses (nearly)
+            # full strength; a short tick's direction is arbitrary (undefined at a
+            # zero vector) and can steer IPOPT to a false local infeasibility, so it
+            # keeps the request's own facing. The request's fallback stays.
+            _, shortfall, _ = deficits(problem, relaxed_candidate['controls'])
+            seed = [own if short > ALARM_FRACTION else disk for own, disk, short
+                    in zip(problem['yaw'], relaxed_candidate['yaw'], shortfall)]
+            result = full_solve(dict(problem, yaw=seed), seconds=seconds, stop_on_feasible=False,
+                                python_executable=python_executable, cancel_event=cancel_event)
+            if result['status'] == 'feasible' or result['status'] == 'unknown' and result['termination'] == 'worker_finished':
+                self.gate.cache[key] = result
+        confirmation = dict(peak=relaxed['peakRelativeDeficit'], tick=relaxed['peakTick'], cached=cached,
+                            diskObjective=relaxed_candidate['objective'], ipoptObjective=None, gap=None, material=False)
+        if result['status'] == 'feasible':
+            sense = 1 if problem['objective']['sense'] == 'MAX' else -1
+            gap = sense*(relaxed_candidate['objective']-result['candidate']['objective'])
+            confirmation.update(ipoptObjective=result['candidate']['objective'], gap=gap, material=gap > MATERIAL_GAP)
+            if confirmation['material']:
+                self.promoted = True
+                self.promotions.append(dict(problemHash=fingerprint(problem), gap=gap, peak=confirmation['peak'],
+                                            tick=confirmation['tick']))
+            if on_incumbent is not None:
+                on_incumbent(json.loads(json.dumps(result['candidate'])))
+        return dict(result, backend='ipopt', disk=relaxed, confirmation=confirmation)
 
 
 def _result(problem, started, status, candidate, termination, solver_status, relaxed):

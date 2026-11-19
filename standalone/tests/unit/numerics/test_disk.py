@@ -221,5 +221,97 @@ class DispatchTests(unittest.TestCase):
         self.assertEqual((result['backend'], result['fallback'], calls), ('ipopt', 'rejected_relaxed_point', [False]))
 
 
+def analytic(name):
+    """Detector controls with known answers (acceleration-detector study, c9deef4)."""
+    base = dict(version=1, position=[0., 0.], velocity=[0., 0.], friction=[.91]*2, base=[0.]*2, threshold=0.,
+                contacts=[], stopOnFeasible=False, seconds=5., objective=dict(axis='X', tick=2, sense='MAX'))
+    if name == 'true-gap':
+        # Z is pinned and X capped at 0: the disk optimum stands still, full strength must move backwards.
+        return prepare(dict(base, ticks=1, magnitude=[1.], friction=[.91], base=[0.], yaw=[180.],
+            walls=[dict(mode='Z', t1=1, cmp='EQ', rhs=0.), dict(mode='X', t1=1, cmp='LE', rhs=0.)],
+            objective=dict(axis='X', tick=1, sense='MAX')))
+    if name == 'false-alarm':
+        # The first tick's X is pinned; any Z acceleration scores the same.
+        return prepare(dict(base, ticks=2, magnitude=[1., 1.], yaw=[90., 0.],
+                            walls=[dict(mode='X', t1=1, cmp='EQ', rhs=0.)]))
+    return prepare(dict(base, ticks=2, magnitude=[1., 1.], yaw=[0., 0.], walls=[]))
+
+
+@unittest.skipUnless(RUNTIME, 'Set PKC_IPOPT_PYTHON to confirm alarms with IPOPT')
+class ConfirmationTests(unittest.TestCase):
+    def dispatch(self, problem, *, gate=None, stop_on_feasible=False):
+        import parkour_solver.numerics.solver as full
+        calls, incumbents = [], []
+        original = full.solve
+        def counted(request, **kwargs):
+            calls.append(kwargs['stop_on_feasible'])
+            return original(request, **dict(kwargs, python_executable=RUNTIME))
+        dispatch = disk.RelaxedDispatch(promoted=False, gate=gate or SimpleNamespace(cache={}))
+        with mock.patch.object(full, 'solve', side_effect=counted):
+            result = dispatch.solve(problem, seconds=5., stop_on_feasible=stop_on_feasible,
+                                    on_incumbent=incumbents.append)
+        return dispatch, result, calls, incumbents
+
+    def test_a_genuine_gap_is_confirmed_and_promotes_the_lineage(self):
+        dispatch, result, calls, incumbents = self.dispatch(analytic('true-gap'))
+        confirmation = result['confirmation']
+        self.assertEqual((result['backend'], result['status'], calls), ('ipopt', 'feasible', [False]))
+        self.assertNotIn('model', result['candidate'])
+        self.assertEqual(incumbents, [result['candidate']])
+        self.assertEqual(confirmation['ipoptObjective'], result['candidate']['objective'])
+        self.assertEqual(confirmation['gap'], confirmation['diskObjective']-result['candidate']['objective'])
+        self.assertGreater(confirmation['gap'], disk.MATERIAL_GAP)
+        self.assertTrue(confirmation['material'])
+        self.assertTrue(dispatch.promoted)
+        self.assertEqual([p['gap'] for p in dispatch.promotions], [confirmation['gap']])
+
+    def test_a_false_alarm_is_confirmed_without_promotion(self):
+        dispatch, result, calls, _ = self.dispatch(analytic('false-alarm'))
+        self.assertGreater(result['disk']['peakRelativeDeficit'], disk.ALARM_FRACTION)
+        self.assertEqual((result['backend'], result['status'], calls), ('ipopt', 'feasible', [False]))
+        self.assertLessEqual(result['confirmation']['gap'], disk.MATERIAL_GAP)
+        self.assertFalse(dispatch.promoted)
+
+    def test_full_strength_optima_and_feasibility_requests_never_call_ipopt(self):
+        _, result, calls, _ = self.dispatch(analytic('no-alarm'))
+        self.assertEqual((result['backend'], calls), ('clarabel', []))
+        dispatch, result, calls, _ = self.dispatch(analytic('true-gap'), stop_on_feasible=True)
+        self.assertEqual((result['backend'], result['candidate']['model'], calls), ('clarabel', 'relaxed_disk', []))
+        self.assertGreater(result['disk']['peakRelativeDeficit'], disk.ALARM_FRACTION)
+        self.assertFalse(dispatch.promoted)
+
+    def test_a_minimized_gap_keeps_its_sign(self):
+        p = analytic('true-gap')
+        p['walls'][1].update(cmp='GE')
+        p['objective']['sense'] = 'MIN'
+        p['yaw'] = [0.]
+        _, result, _, _ = self.dispatch(p)
+        confirmation = result['confirmation']
+        self.assertEqual(confirmation['gap'], result['candidate']['objective']-confirmation['diskObjective'])
+        self.assertTrue(confirmation['material'])
+
+    def test_a_repeated_alarm_is_confirmed_once_per_run(self):
+        gate = SimpleNamespace(cache={})
+        _, first, calls, _ = self.dispatch(analytic('false-alarm'), gate=gate)
+        _, second, more, incumbents = self.dispatch(analytic('false-alarm'), gate=gate)
+        self.assertEqual((calls, more), ([False], []))
+        self.assertEqual((first['confirmation']['cached'], second['confirmation']['cached']), (False, True))
+        self.assertFalse(second['workerLaunched'])
+        self.assertEqual(second['candidate'], first['candidate'])
+        self.assertEqual(incumbents, [second['candidate']])
+
+
+class RejectedConfirmationTests(unittest.TestCase):
+    def test_an_ipopt_rejection_governs_the_alarmed_request(self):
+        rejected = dict(status='unknown', feasible=False, candidate=None, termination='worker_finished',
+                        workerLaunched=True, workerStatus='Infeasible_Problem_Detected')
+        with mock.patch('parkour_solver.numerics.solver.solve', return_value=rejected):
+            dispatch = disk.RelaxedDispatch(promoted=False, gate=SimpleNamespace(cache={}))
+            result = dispatch.solve(analytic('true-gap'), seconds=1., stop_on_feasible=False)
+        self.assertEqual((result['status'], result['termination'], result['workerStatus'], result['candidate']),
+                         ('unknown', 'worker_finished', 'Infeasible_Problem_Detected', None))
+        self.assertEqual((result['confirmation']['gap'], dispatch.promoted), (None, False))
+
+
 if __name__ == '__main__':
     unittest.main()

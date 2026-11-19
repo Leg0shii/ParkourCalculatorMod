@@ -91,7 +91,12 @@ relaxation-infeasible request counts as oracle-rejected (`termination
 IPOPT answers, with stock semantics, requests outside the supported class
 (threshold, ladder, non-X/Z rows), optimization requests of a promoted lineage
 (program key `numericalPromoted`, inherited by descendants) and relaxed points the
-scalar validator rejects. The anchor `feasibilityPolicy` keeps its only value
+scalar validator rejects. An anchor or terminal optimization whose relaxed optimum
+leaves more than 1% of some tick's acceleration unused is confirmed by IPOPT
+before its score is used; a confirmed gap above `1e-4` sets `numericalPromoted` on
+the evaluated program, which its child, variants and later retries copy
+(`work`: `confirmations`, `confirmationIpoptCalls`, `materialGaps`, `promotions`).
+Decision checks are feasibility intent and never confirm. The anchor `feasibilityPolicy` keeps its only value
 `ipopt_oracle`; its oracle rejection now also accepts the Clarabel infeasible
 statuses.
 

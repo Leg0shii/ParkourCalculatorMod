@@ -191,8 +191,10 @@ def evaluate_program(scene, program, compiler, adapter, work, motion_bound, *, c
     parent_work=work
     while not hasattr(parent_work,'counts'):
         parent_work=parent_work.parent
+    counts=numerical_counts(diagnostics)
+    counts['promotions']+=len(result.get('numericalPromotion',[]))
     for counter in (parent_work.counts,scoped.local.counts):
-        counter.update(numerical_counts(diagnostics))
+        counter.update(counts)
     result['timings']=dict(timings,**variants.state['timings'])
     if result['best'] is not None:
         if checkpoint is not None and scope['purpose'] == 'complete':
@@ -220,9 +222,15 @@ def numerical_counts(diagnostics):
     for d in diagnostics:
         ipopt = d.get('backend', 'ipopt') == 'ipopt'
         counts['workerLaunches'] += d.get('workerLaunched') is True
-        counts['feasibleSeedReturns'] += ipopt and d.get('workerLaunched') is False and d.get('status') == 'feasible'
+        confirmation = d.get('confirmation')
+        counts['feasibleSeedReturns'] += (ipopt and confirmation is None and d.get('workerLaunched') is False
+                                          and d.get('status') == 'feasible')
         counts['conicCandidates'] += not ipopt and d.get('status') == 'feasible'
         counts['conicUndecided'] += not ipopt and d.get('termination') == 'disk_undecided'
+        if confirmation is not None:
+            counts['confirmations'] += 1
+            counts['confirmationIpoptCalls'] += not confirmation['cached']
+            counts['materialGaps'] += confirmation['material']
         if d.get('fallback'):
             counts['relaxedFallbacks'] += 1
             counts['relaxedFallback:'+d['fallback']] += 1

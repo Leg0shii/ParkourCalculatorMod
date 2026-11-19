@@ -197,7 +197,18 @@ request returns `unknown` with the Clarabel status in `workerStatus`, and an
 undecided one `termination: disk_undecided`. IPOPT answers, with `backend: ipopt`
 and a `fallback` reason, requests with no spec (`unsupported`), optimization
 requests of a promoted lineage (`promoted`) and relaxed points the validator
-rejects (`rejected_relaxed_point`). Search's use of it is in the
+rejects (`rejected_relaxed_point`). A relaxed optimum of an optimization request
+(`stop_on_feasible=False`) with some tick's relative acceleration shortfall above
+1% is confirmed: IPOPT re-solves the same request and its result replaces the
+relaxed one. The seed takes the disk direction on ticks where the relaxed point
+uses at least 99% of the acceleration and the request's own facing elsewhere (a
+short tick's direction is arbitrary, undefined at a zero vector, and steered IPOPT
+to a false local infeasibility on the analytic false-alarm case); the request's
+fallback facing stays. The result carries `confirmation`: the shortfall peak and
+tick, both objectives, `gap = sense*(disk - ipopt)` and `material` (`gap > 1e-4`).
+A material gap sets the dispatch's `promoted` and records the promotion. Decided
+confirmations are cached per run in the interaction gate's cache by problem
+fingerprint. Search's use of it is in the
 [execution reference](../ANCHOR_SEARCH_EXECUTION_REFERENCE.md#numerical-backend-and-finalization).
 
 ## Tests
