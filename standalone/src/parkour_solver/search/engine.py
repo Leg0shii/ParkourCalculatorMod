@@ -199,7 +199,7 @@ def find_checkpoint_route(request, compiler, *, checkpoints=None, corridor=None,
                           candidate_seconds=1, score_seconds=3, max_solver_calls=128,
                           max_candidates=24, beam_width=4, unknown_slots=1, score_call_limit=8,
                           final_call_limit=24, order='guided', python_executable=None, cancel_event=None,
-                          opportunities=None, cluster_gap=2, objective_gap=None, fair_parents=False,
+                          opportunities=None, cluster_gap=2, objective_gap=None,
                           initial_programs=None, comparison_policy='time_progress', spatial_goal=None,
                           spatial_seconds=1.5, spatial_calls=4, spatial_candidates=4, spatial_prefixes=64,
                           time_margin=1, progress_margin=None, rescue_passes=1, terminal_checkpoint=None, program_filter=None,
@@ -230,8 +230,6 @@ def find_checkpoint_route(request, compiler, *, checkpoints=None, corridor=None,
     integer(unknown_slots, 'unknown_slots', 0, beam_width)
     if order not in ('guided', 'generation'):
         raise ValueError('Ordering must be guided or generation')
-    if type(fair_parents) is not bool:
-        raise ValueError('fair_parents must be boolean')
     if objective_gap is not None and number(objective_gap,'objective_gap') < 0:
         raise ValueError('objective_gap must be nonnegative')
     if opportunities is not None and checkpoints is not None:

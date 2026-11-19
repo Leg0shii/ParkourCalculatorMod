@@ -50,9 +50,9 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | File | Bytes |
 | --- | ---: |
 | [cases/real11/README.md](../cases/real11/README.md) | 3916 |
-| [cases/real11/extended-anchors.json](../cases/real11/extended-anchors.json) | 7004 |
+| [cases/real11/extended-anchors.json](../cases/real11/extended-anchors.json) | 6978 |
 | [cases/real11/extended-geometry.json](../cases/real11/extended-geometry.json) | 4110 |
-| [cases/real11/physical-anchors.json](../cases/real11/physical-anchors.json) | 3659 |
+| [cases/real11/physical-anchors.json](../cases/real11/physical-anchors.json) | 3633 |
 
 ## docs
 
@@ -79,7 +79,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/REAL11_GUIDE.md](REAL11_GUIDE.md) | 20362 |
 | [docs/RESULTS_AND_DEBUGGING.md](RESULTS_AND_DEBUGGING.md) | 15459 |
 | [docs/RUNBOOK.md](RUNBOOK.md) | 12285 |
-| [docs/TESTING.md](TESTING.md) | 16983 |
+| [docs/TESTING.md](TESTING.md) | 17077 |
 | [docs/design/ANCHOR_POLICY_DECISIONS.md](design/ANCHOR_POLICY_DECISIONS.md) | 27768 |
 | [docs/design/AVOIDANCE_PASSAGES.md](design/AVOIDANCE_PASSAGES.md) | 13418 |
 | [docs/design/BRANCH_SCHEDULING_INVESTIGATION.md](design/BRANCH_SCHEDULING_INVESTIGATION.md) | 34072 |
@@ -970,7 +970,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [research/legacy_cell_routes/repair_resume_experiment.py](../research/legacy_cell_routes/repair_resume_experiment.py) | 3578 |
 | [research/legacy_cell_routes/scalar_seed_diagnostic.py](../research/legacy_cell_routes/scalar_seed_diagnostic.py) | 2872 |
 | [research/legacy_cell_routes/two_goal_experiment.py](../research/legacy_cell_routes/two_goal_experiment.py) | 5266 |
-| [research/legacy_cell_routes/window_diagnostic.py](../research/legacy_cell_routes/window_diagnostic.py) | 9013 |
+| [research/legacy_cell_routes/window_diagnostic.py](../research/legacy_cell_routes/window_diagnostic.py) | 8995 |
 | [research/legacy_cell_routes/window_experiment.py](../research/legacy_cell_routes/window_experiment.py) | 3758 |
 | [research/linkcraft11-j0-j16/README.md](../research/linkcraft11-j0-j16/README.md) | 4761 |
 | [research/linkcraft11-j0-j16/attempts.csv](../research/linkcraft11-j0-j16/attempts.csv) | 22997 |
@@ -1367,9 +1367,9 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [src/parkour_solver/search/compat/time_progress.py](../src/parkour_solver/search/compat/time_progress.py) | 5140 |
 | [src/parkour_solver/search/completion.py](../src/parkour_solver/search/completion.py) | 436 |
 | [src/parkour_solver/search/deferrals.py](../src/parkour_solver/search/deferrals.py) | 1105 |
-| [src/parkour_solver/search/dfs.py](../src/parkour_solver/search/dfs.py) | 66730 |
+| [src/parkour_solver/search/dfs.py](../src/parkour_solver/search/dfs.py) | 66712 |
 | [src/parkour_solver/search/domain.py](../src/parkour_solver/search/domain.py) | 959 |
-| [src/parkour_solver/search/engine.py](../src/parkour_solver/search/engine.py) | 21351 |
+| [src/parkour_solver/search/engine.py](../src/parkour_solver/search/engine.py) | 21235 |
 | [src/parkour_solver/search/entry.py](../src/parkour_solver/search/entry.py) | 10726 |
 | [src/parkour_solver/search/events/__init__.py](../src/parkour_solver/search/events/__init__.py) | 0 |
 | [src/parkour_solver/search/events/adapter.py](../src/parkour_solver/search/events/adapter.py) | 10037 |
@@ -1568,7 +1568,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [tests/unit/search/test_block_search.py](../tests/unit/search/test_block_search.py) | 16987 |
 | [tests/unit/search/test_candidate_comparison.py](../tests/unit/search/test_candidate_comparison.py) | 6042 |
 | [tests/unit/search/test_comparison_goals.py](../tests/unit/search/test_comparison_goals.py) | 5201 |
-| [tests/unit/search/test_decision_windows.py](../tests/unit/search/test_decision_windows.py) | 7633 |
+| [tests/unit/search/test_decision_windows.py](../tests/unit/search/test_decision_windows.py) | 7615 |
 | [tests/unit/search/test_depth_first.py](../tests/unit/search/test_depth_first.py) | 15109 |
 | [tests/unit/search/test_event_search.py](../tests/unit/search/test_event_search.py) | 9427 |
 | [tests/unit/search/test_fixed_clock_goal.py](../tests/unit/search/test_fixed_clock_goal.py) | 8553 |

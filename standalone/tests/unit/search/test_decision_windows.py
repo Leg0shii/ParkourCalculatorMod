@@ -110,7 +110,7 @@ class DecisionWindowNumericalTests(unittest.TestCase):
         scene = flat_scene()
         with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:
             result = find_checkpoint_route(scene,compiler,opportunities=[decision('launch',0,2,kinds=['jump']),
-                decision('finish',6,20,kinds=['landing'])],cluster_gap=1,objective_gap=.25,fair_parents=True,
+                decision('finish',6,20,kinds=['landing'])],cluster_gap=1,objective_gap=.25,
                 spatial_points=[[.5,1,.5],[5.5,1,.5]],seconds=12,max_candidates=12,beam_width=6,
                 max_solver_calls=48,score_call_limit=4,score_seconds=2,candidate_seconds=.7,
                 python_executable=os.environ['PKC_IPOPT_PYTHON'])

@@ -151,7 +151,6 @@
     "max_candidates": 20,
     "beam_width": 8,
     "unknown_slots": 1,
-    "fair_parents": true,
     "spatial_seconds": 5,
     "spatial_calls": 6,
     "spatial_candidates": 4,

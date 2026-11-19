@@ -117,7 +117,7 @@ def main():
                         continuation = find_checkpoint_route(scene,compiler,checkpoints=[],initial_programs=[retained],
                             spatial_points=fixture['spatialPoints'],seconds=args.continuation_seconds,
                             max_candidates=12,max_solver_calls=40,final_call_limit=24,score_seconds=3,
-                            candidate_seconds=.8,fair_parents=True,python_executable=args.python)
+                            candidate_seconds=.8,python_executable=args.python)
                         record['continuation'] = continuation
                         if continuation['best']:
                             completed.append(continuation['best'])
