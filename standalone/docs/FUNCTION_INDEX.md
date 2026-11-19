@@ -504,6 +504,17 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 | `Incumbent.pattern` | [28](../src/parkour_solver/numerics/continuation.py#L28) | function |
 | `run` | [34](../src/parkour_solver/numerics/continuation.py#L34) | function |
 
+## numerics/disk.py
+
+| Symbol | Line | Kind |
+| --- | ---: | --- |
+| `spec` | [31](../src/parkour_solver/numerics/disk.py#L31) | function |
+| `solve` | [60](../src/parkour_solver/numerics/disk.py#L60) | function |
+| `screen` | [81](../src/parkour_solver/numerics/disk.py#L81) | function |
+| `deficits` | [96](../src/parkour_solver/numerics/disk.py#L96) | function |
+| `_solve` | [103](../src/parkour_solver/numerics/disk.py#L103) | function |
+| `_cost` | [203](../src/parkour_solver/numerics/disk.py#L203) | function |
+
 ## numerics/model.py
 
 | Symbol | Line | Kind |
@@ -1285,6 +1296,8 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 | Symbol | Line | Kind |
 | --- | ---: | --- |
 | `validate` | [8](../src/parkour_solver/validation/numerical.py#L8) | function |
+| `validate_controls` | [21](../src/parkour_solver/validation/numerical.py#L21) | function |
+| `_replay` | [43](../src/parkour_solver/validation/numerical.py#L43) | function |
 
 ## validation/scene.py
 

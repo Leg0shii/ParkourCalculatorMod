@@ -167,6 +167,27 @@ The parent validator uses standard-library scalar arithmetic in world coordinate
 
 These are local optimizations and prescribed-contact continuous trajectories. They are not global optimality or infeasibility certificates, general collision detection, or byte-exact Minecraft validation. Small authored constraints can disagree with the continuous coefficients: the original full real11 route has a recorded mismatch near states 651/652. The solver keeps its tolerances and reports the failed search. Prefer the intended shorter spans and validate realized game behavior separately.
 
+## Disk relaxation
+
+`numerics.disk` solves the convex relaxation of a threshold-0 request with
+Clarabel (`reachability` extra): each tick's acceleration `|a[t]| == magnitude[t]`
+becomes `|a[t]| <= magnitude[t] + 1e-9`. Every other row is the worker's, with
+retained position/velocity/acceleration states: exact dynamics, fixed or interval
+starts, contact resets with the `1e-7` reach row, and X/Z walls. Equalities go in
+Clarabel's zero cone and each tick's disk in a 3-dimensional second-order cone.
+Settings are QDLDL, one thread, 200 iterations, a 0.1 s cap and `1e-9`
+feasibility/gap tolerances (`1e-8` infeasibility). Requests with an inertia
+threshold, ladder ticks, an inertia pattern or non-X/Z rows have no spec.
+
+`Solved`/`AlmostSolved` give a relaxed point, `PrimalInfeasible`/
+`AlmostPrimalInfeasible` exclude the full request (the disk contains the circle),
+and any other status is undecided. Decided results are cached process-wide by
+the canonical spec (1024 entries). `validation.numerical.validate_controls`
+replays the returned acceleration vectors through the same scalar checks as
+`validate` (which converts facings to full-strength vectors first) and also
+rejects a vector outside its disk by more than `1e-7`. `deficits` reports each
+tick's relative acceleration shortfall.
+
 ## Tests
 
 Standard-library tests need no CasADi installation:

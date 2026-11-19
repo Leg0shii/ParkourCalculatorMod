@@ -10,7 +10,7 @@ requires-python = ">=3.12"
 
 [project.optional-dependencies]
 numerics = ["casadi==3.8.1", "numpy==2.5.4"]
-reachability = ["numpy==2.5.4", "scipy==1.18.1"]
+reachability = ["numpy==2.5.4", "scipy==1.18.1", "clarabel==0.11.1"]
 research = ["casadi==3.8.1", "numpy==2.5.4", "scipy==1.18.1", "clarabel==0.11.1"]
 plot = ["matplotlib==3.11.2"]
 

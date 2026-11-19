@@ -62,14 +62,14 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/ANCHOR_SEARCH_EXECUTION_REFERENCE.md](ANCHOR_SEARCH_EXECUTION_REFERENCE.md) | 29151 |
 | [docs/ARCHITECTURE.md](ARCHITECTURE.md) | 17310 |
 | [docs/CHECKPOINT_STORAGE.md](CHECKPOINT_STORAGE.md) | 6832 |
-| [docs/CODE_MAP.md](CODE_MAP.md) | 26012 |
-| [docs/CURRENT_STATE.md](CURRENT_STATE.md) | 11473 |
+| [docs/CODE_MAP.md](CODE_MAP.md) | 26154 |
+| [docs/CURRENT_STATE.md](CURRENT_STATE.md) | 11455 |
 | [docs/DECISIONS_AND_PLANS.md](DECISIONS_AND_PLANS.md) | 12691 |
 | [docs/DEFERRED_WORK.md](DEFERRED_WORK.md) | 28187 |
 | [docs/DEVELOPMENT.md](DEVELOPMENT.md) | 11612 |
 | [docs/DOC_INDEX.md](DOC_INDEX.md) | 26960 |
 | [docs/FILE_INDEX.md](FILE_INDEX.md) | 207112 |
-| [docs/FUNCTION_INDEX.md](FUNCTION_INDEX.md) | 77520 |
+| [docs/FUNCTION_INDEX.md](FUNCTION_INDEX.md) | 78216 |
 | [docs/IPOPT_CONSTRAINT_REDUCTION.md](IPOPT_CONSTRAINT_REDUCTION.md) | 5578 |
 | [docs/IPOPT_FEASIBILITY_MODE.md](IPOPT_FEASIBILITY_MODE.md) | 4956 |
 | [docs/LAYOUT.md](LAYOUT.md) | 6299 |
@@ -78,7 +78,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/REAL11_EXTENDED_GEOMETRY.md](REAL11_EXTENDED_GEOMETRY.md) | 12332 |
 | [docs/REAL11_GUIDE.md](REAL11_GUIDE.md) | 20362 |
 | [docs/RESULTS_AND_DEBUGGING.md](RESULTS_AND_DEBUGGING.md) | 15459 |
-| [docs/RUNBOOK.md](RUNBOOK.md) | 13451 |
+| [docs/RUNBOOK.md](RUNBOOK.md) | 13501 |
 | [docs/TESTING.md](TESTING.md) | 18187 |
 | [docs/design/ANCHOR_POLICY_DECISIONS.md](design/ANCHOR_POLICY_DECISIONS.md) | 27768 |
 | [docs/design/AVOIDANCE_PASSAGES.md](design/AVOIDANCE_PASSAGES.md) | 13915 |
@@ -105,7 +105,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/history/dependencies/autonomy-route_guidance-requirements.txt](history/dependencies/autonomy-route_guidance-requirements.txt) | 63 |
 | [docs/history/dependencies/ipopt-requirements.txt](history/dependencies/ipopt-requirements.txt) | 27 |
 | [docs/reference/MOVEMENT_PORT.md](reference/MOVEMENT_PORT.md) | 12343 |
-| [docs/reference/NUMERICAL_SOLVER.md](reference/NUMERICAL_SOLVER.md) | 19522 |
+| [docs/reference/NUMERICAL_SOLVER.md](reference/NUMERICAL_SOLVER.md) | 20819 |
 | [docs/reference/REPLAY.md](reference/REPLAY.md) | 8680 |
 | [docs/research/GENERIC_ROUTE_DISCOVERY_RESEARCH.md](research/GENERIC_ROUTE_DISCOVERY_RESEARCH.md) | 67882 |
 | [docs/research/HEURISTIC_SOURCE_REVIEW.md](research/HEURISTIC_SOURCE_REVIEW.md) | 17131 |
@@ -152,7 +152,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 
 | File | Bytes |
 | --- | ---: |
-| [pyproject.toml](../pyproject.toml) | 860 |
+| [pyproject.toml](../pyproject.toml) | 880 |
 
 ## research
 
@@ -1338,6 +1338,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [src/parkour_solver/numerics/builders.py](../src/parkour_solver/numerics/builders.py) | 4633 |
 | [src/parkour_solver/numerics/constraints.py](../src/parkour_solver/numerics/constraints.py) | 1410 |
 | [src/parkour_solver/numerics/continuation.py](../src/parkour_solver/numerics/continuation.py) | 4237 |
+| [src/parkour_solver/numerics/disk.py](../src/parkour_solver/numerics/disk.py) | 10631 |
 | [src/parkour_solver/numerics/model.py](../src/parkour_solver/numerics/model.py) | 11687 |
 | [src/parkour_solver/numerics/solver.py](../src/parkour_solver/numerics/solver.py) | 8818 |
 | [src/parkour_solver/numerics/worker.py](../src/parkour_solver/numerics/worker.py) | 13786 |
@@ -1414,7 +1415,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [src/parkour_solver/spatial/regions.py](../src/parkour_solver/spatial/regions.py) | 18361 |
 | [src/parkour_solver/spatial/surfaces.py](../src/parkour_solver/spatial/surfaces.py) | 29459 |
 | [src/parkour_solver/validation/__init__.py](../src/parkour_solver/validation/__init__.py) | 0 |
-| [src/parkour_solver/validation/numerical.py](../src/parkour_solver/validation/numerical.py) | 7428 |
+| [src/parkour_solver/validation/numerical.py](../src/parkour_solver/validation/numerical.py) | 8788 |
 | [src/parkour_solver/validation/scene.py](../src/parkour_solver/validation/scene.py) | 1952 |
 | [src/parkour_solver/validation/scoped_scene.py](../src/parkour_solver/validation/scoped_scene.py) | 12203 |
 | [src/parkour_solver/validation/vertical.py](../src/parkour_solver/validation/vertical.py) | 2895 |
@@ -1480,6 +1481,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [tests/fixtures/movement/wall-ceiling-reversal.json](../tests/fixtures/movement/wall-ceiling-reversal.json) | 1201 |
 | [tests/fixtures/movement/wall-reversal.json](../tests/fixtures/movement/wall-reversal.json) | 632 |
 | [tests/fixtures/movement/xyz-contact-corner.json](../tests/fixtures/movement/xyz-contact-corner.json) | 1393 |
+| [tests/fixtures/numerics/disk-real11.json.gz](../tests/fixtures/numerics/disk-real11.json.gz) | 16685 |
 | [tests/fixtures/numerics/real11-200-ladders.json.gz](../tests/fixtures/numerics/real11-200-ladders.json.gz) | 6454 |
 | [tests/fixtures/numerics/real11-200.json.gz](../tests/fixtures/numerics/real11-200.json.gz) | 4422 |
 | [tests/fixtures/numerics/real11-400-ladders.json.gz](../tests/fixtures/numerics/real11-400-ladders.json.gz) | 10910 |
@@ -1567,6 +1569,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [tests/unit/numerics/test_capture.py](../tests/unit/numerics/test_capture.py) | 4383 |
 | [tests/unit/numerics/test_constraints.py](../tests/unit/numerics/test_constraints.py) | 3961 |
 | [tests/unit/numerics/test_continuation.py](../tests/unit/numerics/test_continuation.py) | 4844 |
+| [tests/unit/numerics/test_disk.py](../tests/unit/numerics/test_disk.py) | 8710 |
 | [tests/unit/numerics/test_integration.py](../tests/unit/numerics/test_integration.py) | 9197 |
 | [tests/unit/numerics/test_ladder_model.py](../tests/unit/numerics/test_ladder_model.py) | 6840 |
 | [tests/unit/numerics/test_model.py](../tests/unit/numerics/test_model.py) | 5256 |
@@ -1624,7 +1627,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [tools/layout-extractions.json](../tools/layout-extractions.json) | 6510 |
 | [tools/layout-migration.json](../tools/layout-migration.json) | 363149 |
 | [tools/layout-test-support.json](../tools/layout-test-support.json) | 3356 |
-| [tools/native-suite.json](../tools/native-suite.json) | 3790 |
+| [tools/native-suite.json](../tools/native-suite.json) | 3827 |
 | [tools/native_gate.py](../tools/native_gate.py) | 1704 |
 | [tools/paths.py](../tools/paths.py) | 567 |
 | [tools/plotting/__init__.py](../tools/plotting/__init__.py) | 69 |

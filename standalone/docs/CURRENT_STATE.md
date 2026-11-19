@@ -9,9 +9,9 @@ everything not being worked on is in the [deferred-work register](DEFERRED_WORK.
 - Base branch: the fork's `main`. It contains the Real11 extension work: extended
   geometry and bounds, the six-direction [face catalog](design/FACE_MERGING_IMPLEMENTATION_PLAN.md)
   (not yet consumed by any generator) and the [longer Real11 task](../research/real11-long-solve/README.md).
-- Active: `feat/jvm-free-orchestrator`, draft PR into `main`. It makes search
-  JVM-free: the in-process Python movement bridge is the default and the Java
-  bridge an explicit oracle ([evidence](../research/jvm-free-bridge/README.md)).
+- Merged as PR #4 (`feat/jvm-free-orchestrator`): search is JVM-free. The
+  in-process Python movement bridge is the default and the Java bridge an explicit
+  oracle ([evidence](../research/jvm-free-bridge/README.md)).
 - Merged as PR #3 (`perf/early-passage-screen`): it adds
   [geometry-driven avoidance passages](design/AVOIDANCE_PASSAGES.md) on obstacle
   clusters (touching blocks are one obstacle; [evidence](../research/obstacle-clusters/README.md)), screening of

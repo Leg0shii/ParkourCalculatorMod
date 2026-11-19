@@ -65,6 +65,7 @@
     "tests.unit.search.test_transfer_time_bounds",
     "tests.unit.numerics.test_capture",
     "tests.unit.numerics.test_constraints",
+    "tests.unit.numerics.test_disk",
     "tests.unit.numerics.test_continuation",
     "tests.unit.numerics.test_integration",
     "tests.unit.numerics.test_ladder_model",
