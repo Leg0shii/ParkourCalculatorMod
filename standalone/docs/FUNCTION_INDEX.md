@@ -57,8 +57,8 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 
 | Symbol | Line | Kind |
 | --- | ---: | --- |
-| `run` | [25](../src/parkour_solver/cli/fixed_clock.py#L25) | function |
-| `main` | [83](../src/parkour_solver/cli/fixed_clock.py#L83) | function |
+| `run` | [26](../src/parkour_solver/cli/fixed_clock.py#L26) | function |
+| `main` | [84](../src/parkour_solver/cli/fixed_clock.py#L84) | function |
 
 ## cli/numerical.py
 
@@ -759,7 +759,8 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 
 | Symbol | Line | Kind |
 | --- | ---: | --- |
-| `run` | [8](../src/parkour_solver/search/application.py#L8) | function |
+| `task_settings` | [10](../src/parkour_solver/search/application.py#L10) | function |
+| `run` | [17](../src/parkour_solver/search/application.py#L17) | function |
 
 ## search/bounds/flight.py
 
@@ -807,8 +808,8 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 
 | Symbol | Line | Kind |
 | --- | ---: | --- |
-| `collision_request` | [20](../src/parkour_solver/search/compat/corridor_queue.py#L20) | function |
-| `search_routes` | [41](../src/parkour_solver/search/compat/corridor_queue.py#L41) | function |
+| `collision_request` | [21](../src/parkour_solver/search/compat/corridor_queue.py#L21) | function |
+| `search_routes` | [42](../src/parkour_solver/search/compat/corridor_queue.py#L42) | function |
 
 ## search/compat/decision_windows.py
 

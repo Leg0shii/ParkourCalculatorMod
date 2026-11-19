@@ -25,6 +25,7 @@ persistence without the removed 32/128 limits.
 | Source | Tests | Evidence |
 | --- | ---: | --- |
 | `861390e1` + JVM-free bridge | 742 | [summary](../research/jvm-free-bridge/README.md#test-gates) |
+| `0ee47d9d` + corridor queue uses the shared constraint policy | 728 | not archived |
 | `3f869392` + shared approach cache, travel pairs to the last constrained state | 728 | not archived |
 | `db7f8f61` + block table for avoidance | 727 | not archived |
 | `1df37d63` + block table prefilter | 724 | not archived |
