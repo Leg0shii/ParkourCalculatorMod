@@ -5,9 +5,11 @@ import math
 import os
 import pathlib
 import unittest
+from types import SimpleNamespace
 from unittest import mock
 
 from parkour_solver.numerics import disk, prepare, solve, validate
+from parkour_solver.numerics.model import fingerprint
 from parkour_solver.physics.angles import wrap
 from parkour_solver.validation.numerical import validate_controls
 from tests.support.numerical_model import problem
@@ -170,6 +172,53 @@ class StartAndStatusTests(unittest.TestCase):
         self.assertIsNone(disk.spec(request(2, .1, walls=[dict(mode='F', t1=0, cmp='EQ', rhs=90.)]), strict=True))
         screened = disk.spec(request(2, .1, walls=[dict(mode='F', t1=0, cmp='EQ', rhs=90.)]), strict=False)
         self.assertEqual(screened['rows'], [])
+
+
+class DispatchTests(unittest.TestCase):
+    def dispatch(self, problem, *, promoted=False, stop_on_feasible=False):
+        calls, incumbents = [], []
+        def full(request, **kwargs):
+            calls.append(kwargs['stop_on_feasible'])
+            return dict(status='unknown', feasible=False, candidate=None, termination='worker_finished',
+                        workerLaunched=True, workerStatus='Solve_Succeeded')
+        with mock.patch('parkour_solver.numerics.solver.solve', side_effect=full):
+            result = disk.RelaxedDispatch(promoted=promoted, gate=SimpleNamespace(cache={})).solve(
+                problem, seconds=1., stop_on_feasible=stop_on_feasible, on_incumbent=incumbents.append)
+        return result, calls, incumbents
+
+    def test_a_relaxed_candidate_is_published_once_without_a_worker(self):
+        p = request(3, .2, walls=[dict(mode='Z', t1=2, cmp='LE', rhs=.1)])
+        result, calls, incumbents = self.dispatch(p)
+        self.assertEqual((result['status'], result['backend'], result['termination'], result['workerLaunched']),
+                         ('feasible', 'clarabel', 'disk_finished', False))
+        self.assertEqual(calls, [])
+        candidate = result['candidate']
+        self.assertEqual(candidate['model'], 'relaxed_disk')
+        self.assertEqual(candidate['positions'], validate_controls(p, candidate['controls'])['positions'])
+        self.assertEqual(incumbents, [candidate])
+        self.assertEqual(result['problemHash'], fingerprint(p))
+
+    def test_relaxed_infeasible_and_undecided_requests_are_unknown_without_ipopt(self):
+        result, calls, _ = self.dispatch(request(2, .1, walls=[dict(mode='X', t1=2, cmp='GE', rhs=5.)]))
+        self.assertEqual((result['status'], result['termination'], result['candidate'], calls),
+                         ('unknown', 'disk_finished', None, []))
+        self.assertIn(result['workerStatus'], disk.INFEASIBLE)
+        with mock.patch.object(disk, 'MAX_ITER', 1):
+            result, calls, _ = self.dispatch(request(4, .17, walls=[dict(mode='X', t1=3, cmp='LE', rhs=.6)]))
+        self.assertEqual((result['status'], result['termination'], calls), ('unknown', 'disk_undecided', []))
+
+    def test_ipopt_decides_unsupported_promoted_and_rejected_requests(self):
+        result, calls, _ = self.dispatch(request(2, .1, threshold=.005))
+        self.assertEqual((result['backend'], result['fallback'], calls), ('ipopt', 'unsupported', [False]))
+        result, calls, _ = self.dispatch(request(2, .1), promoted=True)
+        self.assertEqual((result['backend'], result['fallback'], calls), ('ipopt', 'promoted', [False]))
+        result, calls, _ = self.dispatch(request(2, .1), promoted=True, stop_on_feasible=True)
+        self.assertEqual((result['backend'], calls), ('clarabel', []))
+        outside = dict(status='Solved', outcome='feasible', controls=[[.2, 0.], [0., 0.]], objective=0., iterations=1,
+                       cached=False)
+        with mock.patch.object(disk, 'solve', return_value=outside):
+            result, calls, _ = self.dispatch(request(2, .1))
+        self.assertEqual((result['backend'], result['fallback'], calls), ('ipopt', 'rejected_relaxed_point', [False]))
 
 
 if __name__ == '__main__':

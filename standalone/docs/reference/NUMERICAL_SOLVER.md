@@ -188,6 +188,18 @@ replays the returned acceleration vectors through the same scalar checks as
 rejects a vector outside its disk by more than `1e-7`. `deficits` reports each
 tick's relative acceleration shortfall.
 
+`RelaxedDispatch(promoted=..., gate=...).solve` has `solve`'s signature and result
+shape and is what automatic discovery hands `find_route`. A feasible relaxed point
+that passes `validate_controls` returns `status: feasible` with the candidate
+(`model: relaxed_disk`, `controls`, derived facings as a seed), `backend:
+clarabel`, `termination: disk_finished` and `workerLaunched: false`; an infeasible
+request returns `unknown` with the Clarabel status in `workerStatus`, and an
+undecided one `termination: disk_undecided`. IPOPT answers, with `backend: ipopt`
+and a `fallback` reason, requests with no spec (`unsupported`), optimization
+requests of a promoted lineage (`promoted`) and relaxed points the validator
+rejects (`rejected_relaxed_point`). Search's use of it is in the
+[execution reference](../ANCHOR_SEARCH_EXECUTION_REFERENCE.md#numerical-backend-and-finalization).
+
 ## Tests
 
 Standard-library tests need no CasADi installation:

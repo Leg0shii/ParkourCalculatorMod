@@ -100,6 +100,69 @@ def deficits(problem, controls):
     return peak, values, values.index(peak) if values else None
 
 
+class RelaxedDispatch:
+    """`find_route`'s numerical callable: Clarabel unless IPOPT must decide.
+
+    IPOPT runs, with stock semantics, on requests outside the supported class,
+    optimization requests of a promoted lineage, and relaxed points the scalar
+    validator rejects.
+    """
+    def __init__(self, *, promoted, gate):
+        self.promoted, self.gate = promoted, gate
+        self.promotions = []
+
+    def solve(self, problem, *, seconds, stop_on_feasible, python_executable=None, cancel_event=None,
+              on_incumbent=None):
+        from parkour_solver.numerics.solver import solve as full_solve
+        from parkour_solver.validation.numerical import validate_controls
+
+        def full(reason, request=problem):
+            result = full_solve(request, seconds=seconds, stop_on_feasible=stop_on_feasible,
+                                python_executable=python_executable, cancel_event=cancel_event,
+                                on_incumbent=on_incumbent)
+            return dict(result, backend='ipopt', fallback=reason)
+
+        content = spec(problem, strict=True)
+        if content is None:
+            return full('unsupported')
+        if self.promoted and not stop_on_feasible:
+            return full('promoted')
+        started = time.monotonic()
+        if cancel_event is not None and cancel_event.is_set():
+            return _result(problem, started, 'cancelled', None, 'cancelled', None, None)
+        solved = solve(content, seconds=seconds)
+        relaxed = {k: solved[k] for k in ('status', 'outcome', 'iterations', 'cached')}
+        if solved['outcome'] == 'infeasible':
+            return _result(problem, started, 'unknown', None, 'disk_finished', solved['status'], relaxed)
+        if solved['outcome'] == 'undecided':
+            return _result(problem, started, 'unknown', None, 'disk_undecided', solved['status'], relaxed)
+        candidate = validate_controls(problem, solved['controls'])
+        if not candidate['feasible']:
+            return full('rejected_relaxed_point')
+        peak, _, tick = deficits(problem, solved['controls'])
+        relaxed.update(peakRelativeDeficit=peak, peakTick=tick)
+        candidate['model'] = 'relaxed_disk'
+        if on_incumbent is not None:
+            on_incumbent(json.loads(json.dumps(candidate)))
+        return _result(problem, started, 'feasible', candidate, 'disk_finished', solved['status'], relaxed)
+
+
+def _result(problem, started, status, candidate, termination, solver_status, relaxed):
+    """A `numerics.solver.solve`-shaped result for an answer Clarabel decided."""
+    from parkour_solver.numerics.model import fingerprint
+    from parkour_solver.schema import TOLERANCE
+    return {'version': 1, 'status': status, 'feasible': candidate is not None, 'candidate': candidate,
+            'objectiveMode': problem['objectiveMode'], 'problemHash': fingerprint(problem),
+            'elapsedSeconds': time.monotonic()-started,
+            'firstFeasibleSeconds': time.monotonic()-started if candidate is not None else None,
+            'problem': {'ticks': problem['ticks'], 'constraints': len(problem['walls']),
+                        'contacts': len(problem['contacts']), 'threshold': problem['threshold'],
+                        'objective': problem['objective'], 'source': problem.get('source')},
+            'termination': termination, 'workerStatus': solver_status, 'workerLaunched': False, 'error': None,
+            'tolerance': TOLERANCE, 'phases': [], 'backend': 'clarabel', 'disk': relaxed,
+            'diagnostics': {'rejectedCandidates': 0, 'lastRejection': None, 'stderr': []}}
+
+
 def _solve(content, time_limit):
     import clarabel
     import numpy as np

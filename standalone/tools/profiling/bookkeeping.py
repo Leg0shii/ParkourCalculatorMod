@@ -177,17 +177,23 @@ def instrument(profile):
                 replace(module, name, wrapped)
 
     try:
-        original_solve = ordered_route.solve
-        def solve(problem, **kwargs):
-            row = dict(index=len(profile.runtime.requests)+1,
-                fingerprint=ordered_route.fingerprint(problem), ticks=len(problem['magnitude']),
-                stopOnFeasible=kwargs.get('stop_on_feasible',False))
-            profile.runtime.requests.append(row)
-            result = profile.runtime.call('solver.invoke',original_solve,problem,**kwargs)
-            row.update(status=result['status'],workerLaunched=result.get('workerLaunched'),
-                workerStatus=result.get('workerStatus'),seconds=result.get('elapsedSeconds'))
-            return result
-        replace(ordered_route, 'solve', solve)
+        from parkour_solver.numerics.disk import RelaxedDispatch
+        def recorded(original):
+            # The relaxed dispatch answers find_route's requests itself, so both entry points are recorded.
+            def solve(*args, **kwargs):
+                problem = args[-1]
+                row = dict(index=len(profile.runtime.requests)+1,
+                    fingerprint=ordered_route.fingerprint(problem), ticks=len(problem['magnitude']),
+                    stopOnFeasible=kwargs.get('stop_on_feasible',False))
+                profile.runtime.requests.append(row)
+                result = profile.runtime.call('solver.invoke',original,*args,**kwargs)
+                row.update(status=result['status'],workerLaunched=result.get('workerLaunched'),
+                    workerStatus=result.get('workerStatus'),seconds=result.get('elapsedSeconds'),
+                    **{k: result[k] for k in ('backend', 'fallback', 'confirmation') if k in result})
+                return result
+            return solve
+        replace(ordered_route, 'solve', recorded(ordered_route.solve))
+        replace(RelaxedDispatch, 'solve', recorded(RelaxedDispatch.solve))
         aliases(identity.digest, 'digest', profile.digest(identity.digest))
         for name in ('program_physics_key', 'program_search_key', 'compile_program'):
             original = getattr(program, name)

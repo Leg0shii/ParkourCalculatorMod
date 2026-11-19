@@ -5,6 +5,7 @@ import time
 from parkour_solver.numerics import prepare, validate
 from parkour_solver.numerics import solve
 from parkour_solver.numerics.model import fingerprint
+from parkour_solver.validation.numerical import validate_controls
 from parkour_solver.schema import number
 from parkour_solver.scene.route import initial_guess, prepare_route, schedule, supports
 from parkour_solver.reachability.screen import contradiction
@@ -126,7 +127,8 @@ def search_allocations(route, evaluate, *, seconds=60, improve=False, rank_equal
 
 
 def find_route(request, compiler, *, seconds=60, candidate_seconds=2, retries=1, improve=False,
-               rank_equal_cost=False, optimize_goal=False, stop_on_feasible=None, python_executable=None, cancel_event=None, on_attempt=None, work=None, on_candidate=None):
+               rank_equal_cost=False, optimize_goal=False, stop_on_feasible=None, python_executable=None, cancel_event=None, on_attempt=None, work=None, on_candidate=None,
+               numerical=None):
     started = time.monotonic()
     route = prepare_route(request)
     if number(seconds, 'search seconds') <= 0:
@@ -224,8 +226,11 @@ def find_route(request, compiler, *, seconds=60, candidate_seconds=2, retries=1,
                     problem['yaw'], fallback = fallback, problem['yaw']
             if fallback != problem['yaw']:
                 problem['fallbackYaw'] = fallback
-            def checked_candidate(yaw, failures=None):
-                candidate = validate(problem, yaw)
+            def checked_candidate(returned, failures=None):
+                # A relaxed candidate is replayed from its acceleration vectors.
+                relaxed = 'controls' in returned
+                candidate = (validate_controls(problem, returned['controls']) if relaxed
+                             else validate(problem, returned['yaw']))
                 failed = [{'state': tick, 'block': index, 'kind': kind}
                           for tick, index, kind in plan['supportChecks']
                           if not supports(route['blocks'][index], *candidate['positions'][tick], kind=kind)]
@@ -236,11 +241,16 @@ def find_route(request, compiler, *, seconds=60, candidate_seconds=2, retries=1,
                     failures.extend(failed)
                 if not candidate['feasible'] or failed:
                     return None
-                candidate['rawMovement'] = [[(value if abs(value) >= problem['threshold'] else 0)
-                    + problem['magnitude'][t] * (math.cos(angle) if axis == 0 else math.sin(angle))
-                    for axis, value in enumerate(candidate['velocity'][t])]
-                    for t, yaw in enumerate(candidate['yaw'])
-                    for angle in [problem['base'][t] + math.radians(yaw)]]
+                if relaxed:
+                    candidate['model'] = returned['model']
+                    candidate['rawMovement'] = [[value + control for value, control in zip(velocity, controls)]
+                                                for velocity, controls in zip(candidate['velocity'], candidate['controls'])]
+                else:
+                    candidate['rawMovement'] = [[(value if abs(value) >= problem['threshold'] else 0)
+                        + problem['magnitude'][t] * (math.cos(angle) if axis == 0 else math.sin(angle))
+                        for axis, value in enumerate(candidate['velocity'][t])]
+                        for t, yaw in enumerate(candidate['yaw'])
+                        for angle in [problem['base'][t] + math.radians(yaw)]]
                 if 'movement' in problem:
                     candidate['movement'] = problem['movement']
                 candidate['friction'] = problem['friction']
@@ -249,7 +259,7 @@ def find_route(request, compiler, *, seconds=60, candidate_seconds=2, retries=1,
             def publish(candidate):
                 if on_candidate is None or stage != 'jump' or len(allocation) != len(route['airtimes']):
                     return
-                checked = checked_candidate(candidate['yaw'])
+                checked = checked_candidate(candidate)
                 if checked is not None:
                     on_candidate(dict(allocation=list(allocation), cost=sum(allocation), candidate=checked,
                         plan=copy.deepcopy(plan), problemHash=fingerprint(problem), route=copy.deepcopy(route),
@@ -267,7 +277,7 @@ def find_route(request, compiler, *, seconds=60, candidate_seconds=2, retries=1,
                     problem['yaw'] = fallback
                 if work is not None:
                     work.before_solve(problem)
-                result = solve(problem, seconds=budget, stop_on_feasible=early_stop,
+                result = (numerical or solve)(problem, seconds=budget, stop_on_feasible=early_stop,
                                python_executable=python_executable, cancel_event=cancel_event, on_incumbent=publish)
                 diagnostics.append({'status': result['status'], 'termination': result.get('termination'),
                                     'elapsedSeconds': result.get('elapsedSeconds'), 'error': result.get('error'),
@@ -275,12 +285,13 @@ def find_route(request, compiler, *, seconds=60, candidate_seconds=2, retries=1,
                                     'callOptions': dict(seconds=budget,stopOnFeasible=early_stop),
                                     'objectiveMode': 'configured',
                                     'workerLaunched': result.get('workerLaunched'),
-                                    'workerStatus': result.get('workerStatus')})
+                                    'workerStatus': result.get('workerStatus'),
+                                    **{k: result[k] for k in ('backend', 'disk', 'confirmation', 'fallback') if k in result}})
                 if result['status'] == 'cancelled':
                     return {'status': 'cancelled', 'diagnostics': diagnostics}
                 if result['feasible']:
                     failed = []
-                    candidate = checked_candidate(result['candidate']['yaw'], failed)
+                    candidate = checked_candidate(result['candidate'], failed)
                     diagnostics[-1]['supportFailures'] = failed
                     if candidate is not None:
                         return {'status': 'feasible', 'candidate': candidate, 'plan': plan,

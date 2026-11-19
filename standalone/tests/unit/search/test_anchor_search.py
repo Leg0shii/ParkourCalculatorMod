@@ -136,10 +136,24 @@ class AnchorSearchTests(unittest.TestCase):
         self.assertEqual(requested,[True,False])
         self.assertFalse(second['repairResume']['compatible'])
 
+    def test_a_relaxed_repair_state_never_resumes_under_ipopt(self):
+        from parkour_solver.search.feasibility import policy_spec
+        def invoke(backend,resume_state=None):
+            scope=dict(solvePolicy=policy_spec(dict(numerical=backend)))
+            with patch('parkour_solver.search.repair.find_route',return_value=outcome()), \
+                 patch('parkour_solver.search.repair.validate_vertical_schedule',return_value=VERTICAL):
+                return solve_contact_branches(route(),[],[],object(),seconds=1,candidate_seconds=.1,retries=0,
+                    repair_scope=scope,candidate_filter=lambda *a:dict(accepted=True),resume_state=resume_state)
+        relaxed=invoke('relaxed')
+        self.assertTrue(invoke('relaxed',relaxed['repairState'])['repairResume']['compatible'])
+        self.assertFalse(invoke('ipopt',relaxed['repairState'])['repairResume']['compatible'])
+        with self.assertRaises(ValueError):
+            policy_spec(dict(numerical='gurobi'))
+
     def test_completed_oracle_rejects_only_selected_model_and_limits_stay_pending(self):
-        def invoke(worker_status):
+        def invoke(worker_status,termination='worker_finished'):
             response=dict(status='unknown',best=None,termination='search_exhausted',attempts=[dict(diagnostics=[
-                dict(status='unknown',termination='worker_finished',workerStatus=worker_status)])])
+                dict(status='unknown',termination=termination,workerStatus=worker_status)])])
             with patch('parkour_solver.search.repair.find_route',return_value=response):
                 return solve_contact_branches(route(),[],[],object(),seconds=1,candidate_seconds=.1,retries=0,
                     oracle_rejection=True)
@@ -149,6 +163,9 @@ class AnchorSearchTests(unittest.TestCase):
         self.assertEqual(rejected['unresolved'],[])
         self.assertFalse(limited['completed'][0]['oracleRejected'])
         self.assertEqual(len(limited['unresolved']),1)
+        # A relaxation-infeasible request excludes the full model; an undecided one does not.
+        self.assertTrue(invoke('PrimalInfeasible','disk_finished')['repairState']['completed'][0]['oracleRejected'])
+        self.assertFalse(invoke('MaxIterations','disk_undecided')['repairState']['completed'][0]['oracleRejected'])
 
     def test_pre_solve_proofs_complete_an_alternative_without_ipopt(self):
         from parkour_solver.search.feasibility import outcome, policy_spec
@@ -206,10 +223,67 @@ class AnchorNativeTests(unittest.TestCase):
         self.assertTrue(result['best']['candidate']['onGround'][-1])
         self.assertEqual(result['searchState']['dfs']['version'],8)
         self.assertTrue(result['anchorSearch']['hardLatches'])
-        self.assertGreater(result['work']['workerLaunches'],0)
-        self.assertGreaterEqual(result['work']['solverCalls'],result['work']['workerLaunches'])
+        # Interim queries are relaxed; only the finalization launches IPOPT workers.
+        self.assertEqual(result['work']['workerLaunches'],0)
+        self.assertGreater(result['work']['conicCandidates'],0)
+        self.assertGreaterEqual(result['work']['solverCalls'],result['work']['conicCandidates'])
+        self.assertGreater(result['work']['finalizationIpoptCalls'],0)
         self.assertTrue(result['anchorSearch']['nodes'])
         self.assertEqual(result['best']['route']['objective'],dict(axis='X',sense='MAX'))
+
+
+@unittest.skipUnless(os.environ.get('PKC_IPOPT_PYTHON'), 'Set PKC_IPOPT_PYTHON for relaxed automatic search')
+class RelaxedAutomaticSearchTests(unittest.TestCase):
+    def search(self, **options):
+        from parkour_solver.bridge.python_compiler import PythonCompiler
+        from parkour_solver.search.domain import InitialJumpDomain
+        from parkour_solver.search.engine import find_checkpoint_route
+        from tests.support.checkpoint_guidance import flat_scene
+        scene = flat_scene()
+        scene['movementSearch'].update(maxInputs=28, maxPrefixes=64)
+        with PythonCompiler() as compiler:
+            settings = dict(anchor_search={}, seconds=12, score_seconds=4, max_solver_calls=40,
+                            program_filter=InitialJumpDomain([0], max_inputs=28),
+                            python_executable=os.environ['PKC_IPOPT_PYTHON'])
+            settings.update(options)
+            result = find_checkpoint_route(scene, compiler, **settings)
+            return scene, result, compiler
+
+    def test_search_runs_on_the_relaxation_and_publishes_one_physical_finalization(self):
+        from parkour_solver.bridge.python_compiler import PythonCompiler
+        from parkour_solver.scene.normalize import prepare_scene
+        from parkour_solver.validation.witness import replay_witness
+        from parkour_solver.search import engine
+        repairs = []
+        def recorded(route, *args, **kwargs):
+            repairs.append((route, kwargs['initial_variants'], kwargs['repair_scope']['solvePolicy']))
+            return original(route, *args, **kwargs)
+        original = engine.solve_contact_branches
+        with patch.object(engine, 'solve_contact_branches', side_effect=recorded):
+            _, result, _ = self.search()
+        relaxed = result['searchState']['dfs']['best']
+        # Finalization repairs the relaxed witness's own branch, warm-started from its facings.
+        (route, variants, policy), = [r for r in repairs if r[2]['numerical'] == 'ipopt']
+        self.assertIsNone(variants)
+        self.assertEqual(policy['rankEqualCost'], False)
+        self.assertEqual(route, dict(relaxed['route'], warmYaw=relaxed['candidate']['yaw']))
+        self.assertEqual(relaxed['candidate']['model'], 'relaxed_disk')
+        self.assertNotIn('model', result['best']['candidate'])
+        self.assertEqual(result['work']['workerLaunches'], 0)
+        self.assertGreater(result['work']['conicCandidates'], 0)
+        self.assertEqual(result['work']['finalizationIpoptCalls'], 1)
+        self.assertEqual(result['finalization']['stage'], 'complete')
+        with PythonCompiler() as compiler:
+            scene = prepare_scene(result['effectiveRequest'])
+            physical = replay_witness(scene, result['best'], compiler)
+            self.assertTrue(physical['passed'])
+            self.assertIsNone(physical['model'])
+            checked = replay_witness(scene, relaxed, compiler)
+            self.assertTrue(checked['passed'])
+            self.assertEqual(checked['model'], 'relaxed_disk')
+            perturbed = json.loads(json.dumps(relaxed))
+            perturbed['candidate']['controls'][3][0] *= .9
+            self.assertFalse(replay_witness(scene, perturbed, compiler)['passed'])
 
 
 if __name__=='__main__':unittest.main()

@@ -17,6 +17,7 @@ Start with [architecture](ARCHITECTURE.md) for call flow, [runbook](RUNBOOK.md) 
 | Constraint variant | One concrete hard row/contact alternative for a fixed program. A schedule can require many such trials. |
 | Branch | One handled constraint alternative. It may be screened or stopped before worker dispatch. |
 | Solver wrapper / worker launch | The Python solve API may return a validated feasible seed without IPOPT in early-stop mode. A worker launch starts a subprocess numerical solve. One worker can have multiple internal phases/iterations/callbacks. |
+| Relaxed candidate / finalization | Automatic discovery answers numerical requests with the Clarabel disk relaxation (no worker); its candidates carry `model: relaxed_disk`. One IPOPT finalization at the end turns the relaxed incumbent into the published physical witness. |
 | Repair search/state | Inner fixed-program enumeration/refinement and its resumable queues/logs. It is not an IPOPT mixed-integer mechanism. |
 | Spatial probe | Auxiliary arrival solve used to compare alternatives at a common spatial goal; does not by itself establish a complete route. |
 | Accepted prefix | Numerically and physically accepted for its recorded scope/horizon. Not a complete terminal incumbent. |
@@ -52,6 +53,17 @@ s = r.get('searchState', report.get('searchState', {}))
 print('continuation keys:', sorted(s))
 PY
 ```
+
+For automatic discovery, `best` is the physical witness from the IPOPT
+finalization, or `None` with `termination: finalization_failed`; the relaxed
+incumbent stays in `searchState.dfs.best`, and `provisionalBest` (ticks,
+objective, model) appears whenever the published route differs from it.
+`finalization` lists the attempts and stage. In `work`, `workerLaunches` and
+`feasibleSeedReturns` count interim IPOPT only; `conicCandidates`,
+`conicUndecided`, `relaxedFallbacks` (and `relaxedFallback:<reason>`: `unsupported`,
+`promoted`, `rejected_relaxed_point`) describe relaxed requests, and
+`finalizationIpoptCalls` the finalization's worker launches. The solve report
+labels each request's status with its solver and adds a `Finalization` row.
 
 Do not dump complete multi-MB reports to the conversation. Use tables/counters and link exact provenance. Resume snapshots repeat history; count identity deltas, not list lengths summed across files. Logs do not always align one-to-one: the saved Real11 corpus has two missing post-validation records with ambiguous possible branch placements. Preserve that ambiguity.
 

@@ -5,6 +5,7 @@ from parkour_solver.validation.scene import check_geometry
 from parkour_solver.scene.route import prepare_route, schedule, supports
 from parkour_solver.search.identity import full_witness
 from parkour_solver.numerics import prepare, validate
+from parkour_solver.validation.numerical import validate_controls
 
 
 def replay_witness(scene, best, compiler):
@@ -23,20 +24,27 @@ def replay_witness(scene, best, compiler):
         yaw=best['candidate']['yaw'], threshold=route.get('physicsThreshold', .005),
         walls=plan['walls'], contacts=plan['contacts'],
         objective=dict(route.get('guideObjective', route['objective']), tick=plan['ticks'])))
-    candidate = validate(problem, problem['yaw'])
+    model = best['candidate'].get('model')
+    if model == 'relaxed_disk':
+        # A relaxed search witness replays its own acceleration vectors.
+        candidate = validate_controls(problem, best['candidate']['controls'])
+        candidate['rawMovement'] = [[v + a for v, a in zip(velocity, controls)]
+                                    for velocity, controls in zip(candidate['velocity'], candidate['controls'])]
+    else:
+        candidate = validate(problem, problem['yaw'])
+        candidate['rawMovement'] = [[(v if abs(v) >= problem['threshold'] else 0) + problem['magnitude'][t]*q
+            for v, q in zip(candidate['velocity'][t], (math.cos(problem['base'][t]+math.radians(yaw)),
+                                                      math.sin(problem['base'][t]+math.radians(yaw))))]
+            for t, yaw in enumerate(problem['yaw'])]
     support_ok = all(supports(route['blocks'][index], *candidate['positions'][tick], kind=kind)
                      for tick, index, kind in plan['supportChecks'])
-    candidate['rawMovement'] = [[(v if abs(v) >= problem['threshold'] else 0) + problem['magnitude'][t]*q
-        for v, q in zip(candidate['velocity'][t], (math.cos(problem['base'][t]+math.radians(yaw)),
-                                                  math.sin(problem['base'][t]+math.radians(yaw))))]
-        for t, yaw in enumerate(problem['yaw'])]
     candidate['friction'] = problem['friction']
     checked = check_geometry(scene['collisionScene'], plan, candidate, vertical, compiler, 5)
     same = candidate['positions'] == best['candidate']['positions'] and candidate['velocity'] == best['candidate']['velocity']
     return dict(passed=candidate['feasible'] and support_ok and checked['feasible'] and same,
                 scalarFeasible=candidate['feasible'], supports=support_ok, geometry=checked,
                 exactHorizontalReplay=same, ticks=plan['ticks'], threshold=problem['threshold'],
-                objective=candidate['objective'], objectiveHasY=False)
+                objective=candidate['objective'], objectiveHasY=False, model=model)
 
 
 def witnesses(result):

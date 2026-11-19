@@ -28,7 +28,8 @@ def extend(s,parent,target,n,extra=False):
 
 class AnchorDFSTests(unittest.TestCase):
     def run_tree(self, *, logging=True, resume=None, calls=20, interval=1, setup=False, seconds=3,
-                 on_progress=None,cancel_event=None,requests_per_evaluation=1,advance=None,node_probe=None,node_best=None,**settings):
+                 on_progress=None,cancel_event=None,requests_per_evaluation=1,advance=None,node_probe=None,node_best=None,
+                 finishes=1,relaxed=False,final=None,**settings):
         s=scene();s['maxTotalRunTicks']=60;s['maxRunTicksPerJump']=60;dispatched=[]
         def generate(target_scene,*,report,initial_programs,continuation=None,node_evaluator,**kwargs):
             saved=copy.deepcopy(continuation) if continuation else dict(expanded=1,cursor=0,exhausted=False)
@@ -47,6 +48,10 @@ class AnchorDFSTests(unittest.TestCase):
                 # Certifying subtree learns the global hard latch. A later
                 # incoming history must not reopen a two-jump local structure.
                 choices=[extend(s,parent,'goal',20,extra=parent['profile']['airtime']==11)]
+                for _ in range(finishes-1):
+                    # An equally timed, lower-scoring finish (objective -1 per sneak input).
+                    choices.append(copy.deepcopy(choices[-1]))
+                    choices[-1]['profile']['sneak'][len(choices)-2]=True
             while saved['cursor']<len(choices):
                 p=choices[saved['cursor']];saved['cursor']+=1
                 if node_probe is not None and target=='mid':node_probe(node_evaluator,p)
@@ -59,8 +64,15 @@ class AnchorDFSTests(unittest.TestCase):
                 if advance is not None:advance()
             dispatched.append((p['terminalSupport'],p['profile']['airtime'],kwargs.get('solve_policy')))
             n=p['profile']['airtime']
-            candidate=dict(yaw=[0.]*n,positions=[[.5,.5]]*(n+1),velocity=[[0.,0.]]*(n+1),objective=0.)
-            best=dict(candidate=candidate,plan=dict(ticks=n,walls=[]),allocation=[0],cost=0)
+            candidate=dict(yaw=[0.]*n,positions=[[.5,.5]]*(n+1),velocity=[[0.,0.]]*(n+1),objective=-float(sum(p['profile']['sneak'])))
+            best=dict(candidate=candidate,plan=dict(ticks=n,walls=[]),allocation=[0],cost=0,route=dict(source='relaxed'))
+            if kwargs.get('final_route') is not None:
+                work.counts['workerLaunches']+=1
+                physical=final(p,kwargs)
+                return dict(status='feasible' if physical else 'unknown',termination='done',best=physical,
+                            work=dict(workerLaunches=1),fullSceneValidated=physical is not None)
+            if relaxed and p['terminalSupport']=='goal':
+                candidate.update(model='relaxed_disk',controls=[[0.,0.]]*n)
             if node_best is not None and (kwargs.get('solve_policy') or {}).get('purpose')=='node':
                 extra=node_best(n)
                 best['plan'].update(walls=extra['walls'],events=extra['events'])
@@ -294,6 +306,66 @@ class AnchorDFSTests(unittest.TestCase):
         self.assertEqual(calls.count(('goal',14)),0)
         self.assertIsNotNone(result['best'])
         self.assertTrue(all(r['program']['terminalSupport']=='goal' for r in dfs['minimumRunExclusions']))
+
+    def physical(self, p, objective):
+        n=p['profile']['airtime']
+        return dict(candidate=dict(yaw=[1.]*n,positions=[[.5,.6]]*(n+1),velocity=[[0.,0.]]*(n+1),objective=objective),
+                    plan=dict(ticks=n,walls=[]),allocation=[0],cost=0)
+
+    def test_physical_incumbent_needs_no_finalization_solve(self):
+        result,dispatched=self.run_tree()
+        self.assertEqual([a['status'] for a in result['finalization']['attempts']],['physical'])
+        self.assertEqual(result['work']['finalizationIpoptCalls'],0)
+        self.assertNotIn('provisionalBest',result)
+        self.assertEqual(result['best']['candidate'],result['searchState']['dfs']['best']['candidate'])
+        self.assertFalse(any(policy['numerical']=='ipopt' for _,_,policy in dispatched))
+
+    def test_relaxed_finish_is_published_only_through_its_ipopt_finalization(self):
+        calls=[]
+        def final(p,kwargs):
+            calls.append((kwargs['solve_policy'],kwargs['final_route']))
+            return self.physical(p,-.5)
+        result,_=self.run_tree(relaxed=True,final=final)
+        policy,route=calls[0]
+        self.assertEqual(len(calls),1)
+        self.assertEqual(policy,dict(purpose='terminal',stopOnFeasible=False,rankEqualCost=False,oracleRejection=True,
+                                     numerical='ipopt'))
+        self.assertEqual(route,dict(source='relaxed',warmYaw=[0.]*20))
+        self.assertEqual((result['status'],result['best']['candidate']['objective']),('feasible',-.5))
+        self.assertNotIn('model',result['best']['candidate'])
+        self.assertEqual(result['searchState']['dfs']['best']['candidate']['model'],'relaxed_disk')
+        self.assertEqual(result['provisionalBest'],dict(ticks=20,objective=0.,model='relaxed_disk'))
+        self.assertEqual((result['finalization']['stage'],result['work']['finalizationIpoptCalls']),('complete',1))
+
+    def test_failed_best_finish_falls_back_to_the_next_ranked_one(self):
+        result,_=self.run_tree(relaxed=True,finishes=2,
+                               final=lambda p,kwargs:self.physical(p,-1.5) if any(p['profile']['sneak']) else None)
+        self.assertEqual([a['status'] for a in result['finalization']['attempts']],['unknown','feasible'])
+        self.assertEqual(result['best']['candidate']['objective'],-1.5)
+        self.assertEqual(result['work']['finalizationIpoptCalls'],2)
+
+    def test_when_every_finalization_fails_no_route_is_published(self):
+        result,_=self.run_tree(relaxed=True,finishes=2,final=lambda p,kwargs:None)
+        self.assertIsNone(result['best'])
+        self.assertEqual((result['status'],result['termination']),('unknown','finalization_failed'))
+        self.assertEqual((result['finalization']['stage'],len(result['finalization']['attempts'])),('failed',2))
+        self.assertEqual(result['provisionalBest']['model'],'relaxed_disk')
+        self.assertEqual(result['searchState']['dfs']['best']['candidate']['model'],'relaxed_disk')
+
+    def test_resume_reuses_a_complete_finalization_and_reruns_an_interrupted_one(self):
+        calls=[]
+        def final(p,kwargs):
+            calls.append(p['profile']['airtime'])
+            return self.physical(p,-.5)
+        first,_=self.run_tree(relaxed=True,final=final)
+        saved=json.loads(json.dumps(first['searchState']))
+        resumed,_=self.run_tree(relaxed=True,final=final,resume=copy.deepcopy(saved))
+        self.assertEqual(len(calls),1)
+        self.assertEqual(resumed['best']['candidate'],first['best']['candidate'])
+        saved['dfs']['finalization']['stage']='running'
+        rerun,_=self.run_tree(relaxed=True,final=final,resume=saved)
+        self.assertEqual(len(calls),2)
+        self.assertEqual(rerun['finalization']['stage'],'complete')
 
     def test_more_jump_history_remains_first_class_after_an_earlier_finish_succeeds(self):
         result,calls=self.run_recovery_tree(reject_first=False,include_setup=True,finish_tick=50)

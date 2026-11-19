@@ -26,7 +26,7 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
                            solid_blocks=None, max_wall_hits=0,
                            max_wall_candidates=24, candidate_filter=None, work=None, resume_state=None, repair_scope=None,
                            on_progress=None, validation_scope=None, initial_variants=None, retry_unresolved=True,
-                           stop_on_feasible=None, oracle_rejection=False, climb_families=False):
+                           stop_on_feasible=None, oracle_rejection=False, climb_families=False, numerical=None):
     route = copy.deepcopy(route)
     if solid_blocks is not None:
         for passage in route.get('passages', []):
@@ -381,7 +381,10 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
         audit_cache, audit_errors = {}, []
 
         def audit(best):
-            key = (tuple(best['allocation']), best['plan']['ticks'], tuple(best['candidate']['yaw']))
+            from parkour_solver.search.identity import digest
+            # Equal facings with different relaxed accelerations are different trajectories.
+            key = (tuple(best['allocation']), best['plan']['ticks'], tuple(best['candidate']['yaw']),
+                   digest(best['candidate']['controls']) if 'controls' in best['candidate'] else None)
             if key in audit_cache:
                 return audit_cache[key]
             plan, candidate = best['plan'], best['candidate']
@@ -461,7 +464,7 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
         result = find_route(branch, compiler, seconds=remaining, candidate_seconds=candidate_seconds,
                             retries=retries, improve=improve, rank_equal_cost=rank_equal_cost,
                             optimize_goal=optimize_goal, stop_on_feasible=stop_on_feasible, python_executable=python_executable,
-                            cancel_event=cancel_event, work=work, on_candidate=retain)
+                            cancel_event=cancel_event, work=work, on_candidate=retain, numerical=numerical)
         inner_attempts.extend(result['attempts'])
         completion = dict(branch=branch_key(rows, passages, hits), status=result['status'],
             validationStatus='not_run' if result['best'] else 'no_candidate',
@@ -507,9 +510,11 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
                       len(certificates) == len(tried))
             diagnostics = [d for a in tried for d in a.get('diagnostics', [])]
             oracle_completed = oracle_rejection and diagnostics and all(
-                d.get('status') == 'unknown' and d.get('termination') == 'worker_finished' and
+                d.get('status') == 'unknown' and (d.get('termination') == 'worker_finished' and
                 d.get('workerStatus') in ('Infeasible_Problem_Detected','Search_Direction_Becomes_Too_Small',
                                          'Restoration_Failed','Solve_Succeeded','Solved_To_Acceptable_Level')
+                or d.get('termination') == 'disk_finished' and
+                d.get('workerStatus') in ('PrimalInfeasible', 'AlmostPrimalInfeasible'))
                 for d in diagnostics)
             completion.update(oracleRejected=bool(oracle_completed), proven=proven, certificates=certificates)
             if result['status'] == 'unknown' and not oracle_completed and not proven:

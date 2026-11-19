@@ -66,7 +66,8 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
                  accepted_program, program_filter, roots, resume_state, retry_unknown, deadline, started,
                  candidate_seconds, score_seconds, score_calls, final_calls, batch_size, python_executable,
                  cancel_event, on_progress, on_window, time_margin, progress_margin, route_report,
-                 window_plan, comparison_policy, minimum_run_pruning, _owned_state=False):
+                 window_plan, comparison_policy, minimum_run_pruning, numerical_backend='ipopt', finalize=False,
+                 _owned_state=False):
     from parkour_solver.search.engine import evaluate_program
     from parkour_solver.validation.witness import replay_witness
 
@@ -102,6 +103,7 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
         **({'eventStagePolicy':4 if anchor_route else 3} if event_route else {}),
         **({'anchorPolicy':semantic_settings(adapter.anchor_policy),'guidePlan':adapter.guide_plan['id']} if anchor_route else {}),
         minimumRunPolicy=POLICY_VERSION if minimum_run_pruning else None,comparisonPolicy=COMPARISON_POLICY_VERSION,
+        numericalBackend=numerical_backend,
         **({'routeStagePolicy':2,'routeCommitPolicy':1,'routeProposalPolicy':1} if typed_route else {})))
     if resume_state is not None and (resume_state.get('version') != schema or
             resume_state.get('kind') != 'ordered_goal_dfs' or resume_state.get('context') != context):
@@ -119,7 +121,8 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
         state.setdefault('nodeResults', {})
         state.setdefault('observations', dict(enabled=adapter.anchor_policy['observability'], decisions={}))
         state['observations']['enabled']=adapter.anchor_policy['observability']
-    state['session'] += 1
+    if not finalize:
+        state['session'] += 1
     prior_calls, initial_expanded = state['cumulativeCalls'], state['expanded']
     if resume_state and not _owned_state and state['best'] is not None and not replay_witness(scene,state['best'],compiler)['passed']:
         raise ValueError('Saved DFS incumbent no longer passes independent replay')
@@ -414,7 +417,7 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
             return dict(status='feasible',program=copy.deepcopy(saved['program']))
         if saved and saved.get('repairState') is not None:
             program['repairState']=saved['repairState']
-        policy=dict(purpose='node',stopOnFeasible=True,rankEqualCost=False,oracleRejection=True)
+        policy=dict(purpose='node',stopOnFeasible=True,rankEqualCost=False,oracleRejection=True,numerical=numerical_backend)
         t=time.monotonic()
         entry=dict(status='suspended',parent=program.get('decisionParent'),repairState=program.get('repairState'))
         nodes[identity]=entry
@@ -606,12 +609,8 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
         transition('generated_batch',f,count=len(f['ready']),exhausted=f['sourceExhausted'])
         return cp
 
-    def score(f, program, old=None):
-        source_program = program
-        identity = old['id'] if old else f['inFlight']['id'] if f['inFlight'] is not None else score_key(program,f)
-        work.counts['terminalEvaluations' if final_frame(f) else 'spatialGoalEvaluations'] += 1
-        f['inFlight'] = dict(id=identity,program=program)
-        transition('dispatch',f,candidate=identity,goal=f['goal'],inputs=program['profile']['airtime'])
+    def evaluation_args(f, program):
+        """evaluate_program's frame-dependent arguments, shared by scoring and finalization."""
         target_scene = dict(scene)
         cp = terminal_plan if terminal(f) else None
         landing = None
@@ -622,19 +621,83 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
             spec = f['goal']
             cp = Checkpoint(program['profile']['airtime'],-1,(1.,0.),tuple(scene['initial']['position']),
                 tuple(scene['initial']['position']),(),tuple(spec['region']))
+        active_adapter = stage_adapter(f)
+        guidance=guide_objective(f)
+        policy=(dict(purpose='terminal' if final_frame(f) else 'anchor',stopOnFeasible=False,rankEqualCost=True,
+                     oracleRejection=True,numerical=numerical_backend) if anchor_route else dict(numerical=numerical_backend))
+        return dict(scene=target_scene,adapter=active_adapter,checkpoint=cp,partial_corridor=not terminal(f),
+            required_landing=landing,first_witness=not final_frame(f),guide_objective=guidance,solve_policy=policy,
+            solver_calls=final_calls if final_frame(f) else score_calls,**(dict(climb_families=True) if anchor_route else {}))
+
+    def finalize_best():
+        """One IPOPT re-solve of the best relaxed finish through the repair loop."""
+        from parkour_solver.search.ranking import candidate_rank
+        source = digest(state['best'])
+        saved = state.get('finalization')
+        if saved is not None and saved['source'] == source and saved['stage'] == 'complete':
+            return
+        record = state['finalization'] = dict(version=1, source=source, stage='running', attempts=[], best=None)
+        publish()
+        frames = {f['id']:f for group in ('frames','suspended','refinements','stack') for f in state.get(group,[])}
+        # Every final-frame witness is a complete relaxed finish; a chosen
+        # variant can be the incumbent without a finalAttempts record.
+        candidates = sorted(((f,r) for f in frames.values() if final_frame(f) for r in f['records'] if r.get('witness')),
+                            key=lambda item: candidate_rank(item[1]['witness'],scene['objective']))
+        for f, r in candidates:
+            if time.monotonic() >= deadline or cancel_event is not None and cancel_event.is_set():
+                break
+            witness = r['witness']
+            program = {k:v for k,v in r['program'].items() if k!='repairState'}
+            began = time.monotonic()
+            if 'model' not in witness['candidate']:
+                best, child, attempt = witness, r['child'], dict(status='physical', termination=None, ipoptCalls=0)
+            else:
+                args = evaluation_args(f,program)
+                args['solve_policy'] = dict(purpose='terminal',stopOnFeasible=False,rankEqualCost=False,
+                                            oracleRejection=True,numerical='ipopt')
+                result = evaluate_program(args.pop('scene'),program,compiler,args.pop('adapter'),work,motion,
+                    seconds=max(.001,deadline-time.monotonic()),candidate_seconds=candidate_seconds,
+                    python_executable=python_executable,cancel_event=cancel_event,retry_unresolved=retry_unknown,
+                    final_route=dict(witness['route'],warmYaw=witness['candidate']['yaw']),**args)
+                best = result['best']
+                if best is not None and (not result.get('fullSceneValidated') or f['goal'] and f['goal']['kind']==KIND
+                        and not satisfied(program,best['candidate'],f['goal'],scene.get('supportClearance',1e-6))):
+                    best = None
+                child = commit_arrival(program,best,source_program=program) if best is not None else None
+                attempt = dict(status='feasible' if best is not None else result['status'],
+                               termination=result['termination'],ipoptCalls=result['work'].get('workerLaunches',0))
+            record['attempts'].append(dict(attempt,frame=f['id'],record=r['id'],seconds=time.monotonic()-began))
+            if best is not None:
+                published = copy.deepcopy(best)
+                published.update(movementProgram=child,blockIds=[scene['startBlock'],scene['goalBlock']])
+                record['best'] = published
+                break
+            publish()
+        if record['best'] is not None:
+            record['stage'] = 'complete'
+        elif cancel_event is None or not cancel_event.is_set():
+            record['stage'] = 'failed'
+        publish()
+
+    def score(f, program, old=None):
+        source_program = program
+        identity = old['id'] if old else f['inFlight']['id'] if f['inFlight'] is not None else score_key(program,f)
+        work.counts['terminalEvaluations' if final_frame(f) else 'spatialGoalEvaluations'] += 1
+        f['inFlight'] = dict(id=identity,program=program)
+        transition('dispatch',f,candidate=identity,goal=f['goal'],inputs=program['profile']['airtime'])
         def progress(repair):
             f['inFlight']['program']['repairState'] = repair
             repair_progress()
         active_adapter = stage_adapter(f)
-        guidance=guide_objective(f)
         begin_repair(f['inFlight']['program'])
-        result = evaluate_program(target_scene,program,compiler,active_adapter,work,motion,checkpoint=cp,
+        args = evaluation_args(f,program)
+        result = evaluate_program(args.pop('scene'),program,compiler,args.pop('adapter'),work,motion,
             seconds=max(.001,min(score_seconds,deadline-time.monotonic())),candidate_seconds=candidate_seconds,
-            solver_calls=final_calls if final_frame(f) else score_calls,python_executable=python_executable,
-            cancel_event=cancel_event,partial_corridor=not terminal(f),required_landing=landing,
-            on_progress=progress,retry_unresolved=retry_unknown,first_witness=not final_frame(f),guide_objective=guidance,
-            **(dict(solve_policy=dict(purpose='terminal' if final_frame(f) else 'anchor',
-                stopOnFeasible=False,rankEqualCost=True,oracleRejection=True),climb_families=True) if anchor_route else {}))
+            python_executable=python_executable,cancel_event=cancel_event,
+            on_progress=progress,retry_unresolved=retry_unknown,**args)
+        if result.get('numericalPromotion'):
+            # Promotion is lineage state: the record, child and variants copy it.
+            program['numericalPromoted'] = True
         if anchor_route:
             from parkour_solver.observability.turns import record as observe, replay
             span,start=span_info(f)
@@ -835,6 +898,10 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
         if restore_unknown_nodes(source,retry_unknown):
             f['sourceExhausted']=False
 
+    if finalize:
+        finalize_best()
+        return dict(status='feasible' if state['finalization']['best'] else 'unknown',termination='finalization',
+                    best=state['finalization']['best'],searchState=state,work=work.summary())
     if event_route:
         state['discoveryWork'] = dict(expansions=0,materializations=0)
     if not state['stack'] and state['nextFrame']==0 and not state.get('goalOwners'):

@@ -1,4 +1,5 @@
 import copy
+from collections import Counter
 import hashlib
 import math
 import time
@@ -69,7 +70,7 @@ def segment_solids(scene, program, profile, through, gate):
 def evaluate_program(scene, program, compiler, adapter, work, motion_bound, *, checkpoint=None,
                      seconds=3, candidate_seconds=1, solver_calls=8, python_executable=None, cancel_event=None,
                      partial_corridor=False, required_landing=None, scope=None, on_progress=None, retry_unresolved=True, first_witness=False,
-                     guide_objective=None, solve_policy=None, climb_families=False):
+                     guide_objective=None, solve_policy=None, climb_families=False, final_route=None):
     timings={}
     marked=time.monotonic()
     def mark(name):
@@ -168,7 +169,12 @@ def evaluate_program(scene, program, compiler, adapter, work, motion_bound, *, c
         route_guards=scoped_adapter.constraint_guards(program['profile'],envelopes,scope,scoped.deadline)
         if hasattr(scoped_adapter,'constraint_guards') else None)
     mark('eligibilityAndVariantConstruction')
-    result = solve_contact_branches(route, profiles, checks,
+    dispatch = None
+    if policy['numerical'] == 'relaxed':
+        from parkour_solver.numerics.disk import RelaxedDispatch
+        dispatch = RelaxedDispatch(promoted=program.get('numericalPromoted', False), gate=service)
+    # Finalization re-solves a relaxed witness's own branch route with IPOPT.
+    result = solve_contact_branches(route if final_route is None else final_route, profiles, checks,
         compiler, seconds=seconds, candidate_seconds=candidate_seconds, retries=0,
         improve=True, rank_equal_cost=policy['rankEqualCost'], optimize_goal=True,
         stop_on_feasible=policy['stopOnFeasible'], oracle_rejection=policy['oracleRejection'], climb_families=climb_families,
@@ -176,15 +182,17 @@ def evaluate_program(scene, program, compiler, adapter, work, motion_bound, *, c
         motion_bound=motion_bound, solid_blocks=owners, max_wall_hits=0,
         candidate_filter=candidate_filter, work=scoped, resume_state=program.get('repairState'),
         repair_scope=dict(solveIdentity=identity, scope=scope, solvePolicy=policy, assemblyVersion=13),
-        validation_scope=scope, initial_variants=variants, on_progress=on_progress, retry_unresolved=retry_unresolved)
+        validation_scope=scope, initial_variants=variants if final_route is None else None, on_progress=on_progress,
+        retry_unresolved=retry_unresolved, numerical=dispatch.solve if dispatch is not None else None)
     mark('physicalSearchAndValidation')
+    if dispatch is not None and dispatch.promotions:
+        result['numericalPromotion'] = dispatch.promotions
     diagnostics=[d for a in result.get('attempts',[]) for d in a.get('diagnostics',[])]
     parent_work=work
     while not hasattr(parent_work,'counts'):
         parent_work=parent_work.parent
     for counter in (parent_work.counts,scoped.local.counts):
-        counter['workerLaunches']+=sum(d.get('workerLaunched') is True for d in diagnostics)
-        counter['feasibleSeedReturns']+=sum(d.get('workerLaunched') is False and d.get('status')=='feasible' for d in diagnostics)
+        counter.update(numerical_counts(diagnostics))
     result['timings']=dict(timings,**variants.state['timings'])
     if result['best'] is not None:
         if checkpoint is not None and scope['purpose'] == 'complete':
@@ -204,6 +212,21 @@ def evaluate_program(scene, program, compiler, adapter, work, motion_bound, *, c
     if result['best'] is not None:
         result['best']['validationScope'] = scope
     return result
+
+
+def numerical_counts(diagnostics):
+    """Work counters for numerical requests; a Clarabel answer is never a worker or a seed."""
+    counts = Counter()
+    for d in diagnostics:
+        ipopt = d.get('backend', 'ipopt') == 'ipopt'
+        counts['workerLaunches'] += d.get('workerLaunched') is True
+        counts['feasibleSeedReturns'] += ipopt and d.get('workerLaunched') is False and d.get('status') == 'feasible'
+        counts['conicCandidates'] += not ipopt and d.get('status') == 'feasible'
+        counts['conicUndecided'] += not ipopt and d.get('termination') == 'disk_undecided'
+        if d.get('fallback'):
+            counts['relaxedFallbacks'] += 1
+            counts['relaxedFallback:'+d['fallback']] += 1
+    return counts
 
 
 def _key(program):

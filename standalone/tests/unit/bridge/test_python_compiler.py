@@ -334,11 +334,11 @@ class JavaOracleTests(unittest.TestCase):
         import threading
         from parkour_solver.io.checkpoint_store import CheckpointStore, read_report
         from parkour_solver.io.search_checkpoint import SearchCheckpoint
-        from parkour_solver.search import ordered_route
+        from parkour_solver.numerics.disk import RelaxedDispatch
         from parkour_solver.search.domain import InitialJumpDomain
         from parkour_solver.search.engine import find_checkpoint_route
         from tests.support.checkpoint_guidance import flat_scene
-        solve = ordered_route.solve
+        solve = RelaxedDispatch.solve
 
         def search(compiler, requests, path, stop_after=None, resume_state=None):
             # A wall in the flight path makes the search repair contacts across 20 requests.
@@ -348,13 +348,14 @@ class JavaOracleTests(unittest.TestCase):
             scene['blocks'].append(dict(id='wall', sourceBlock='wall', solidIndex=2, top=3., bounds=[3.5, 4., -.2, .2]))
             cancel = threading.Event()
 
-            def record(problem, **kwargs):
+            # Automatic search sends every numerical request through the relaxed dispatch.
+            def record(dispatch, problem, **kwargs):
                 requests.append(canonical(problem))
-                outcome = solve(problem, **kwargs)
+                outcome = solve(dispatch, problem, **kwargs)
                 if stop_after is not None and len(requests) >= stop_after:
                     cancel.set()
                 return outcome
-            with CheckpointStore(path) as store, mock.patch.object(ordered_route, 'solve', record):
+            with CheckpointStore(path) as store, mock.patch.object(RelaxedDispatch, 'solve', record):
                 writer = SearchCheckpoint(store, {})
                 # Generous budgets keep outcomes independent of host load across the compared runs.
                 result = find_checkpoint_route(scene, compiler, anchor_search={}, seconds=300, score_seconds=20,

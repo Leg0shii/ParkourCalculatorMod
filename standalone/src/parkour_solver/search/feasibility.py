@@ -9,12 +9,13 @@ from parkour_solver.movement.program import program_search_key
 def policy_spec(value=None, *, first_witness=False):
     defaults = dict(version=1, purpose='anchor' if first_witness else 'terminal',
                     stopOnFeasible=first_witness, rankEqualCost=not first_witness,
-                    oracleRejection=False)
+                    oracleRejection=False, numerical='ipopt')
     if value is not None:
         if set(value)-set(defaults):
             raise ValueError('Unknown solve policy field')
         defaults.update(value)
-    if defaults['version'] != 1 or defaults['purpose'] not in ('node', 'anchor', 'terminal'):
+    if (defaults['version'] != 1 or defaults['purpose'] not in ('node', 'anchor', 'terminal')
+            or defaults['numerical'] not in ('ipopt', 'relaxed')):
         raise ValueError('Unsupported solve policy')
     if any(type(defaults[k]) is not bool for k in ('stopOnFeasible', 'rankEqualCost', 'oracleRejection')):
         raise ValueError('Solve policy flags must be boolean')

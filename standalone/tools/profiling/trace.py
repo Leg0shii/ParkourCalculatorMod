@@ -48,7 +48,7 @@ def stop_report(state, requests):
             deferredNodes=len(frame['generation'].get('continuation',{}).get('deferredNodes') or [])))
     rejected = [route(frame,record) for frame in frames(state) for record in frame['records']
                 if (record.get('nodeFeasibility') or {}).get('status') == 'oracle_rejected']
-    unknown = [dict(index=r['index'],workerStatus=r.get('workerStatus'),owners=r.get('owners',[]))
+    unknown = [dict(index=r['index'],workerStatus=r.get('workerStatus'),backend=r.get('backend'),owners=r.get('owners',[]))
                for r in requests if r.get('status') == 'unknown']
     return dict(suspendedFrames=suspended,oracleRejectedRoutes=rejected,unknownRequests=unknown)
 
@@ -278,16 +278,24 @@ def ticks_text(ticks):
     return ', '.join(runs) or '-'
 
 
+def solver(request):
+    return 'Clarabel' if request.get('backend') == 'clarabel' else 'IPOPT'
+
+
+def counted_as(request):
+    if request.get('backend') == 'clarabel' and request.get('workerStatus') in ('PrimalInfeasible', 'AlmostPrimalInfeasible'):
+        return 'infeasible (disk relaxation)'
+    return 'infeasible (IPOPT local)' if request.get('workerStatus') == 'Infeasible_Problem_Detected' else None
+
+
 def solve_text(solve, request_index):
     request = request_index.get(solve['problemHash'], {})
     if solve.get('status') == 'blocked':
         verdict = f'infeasible ({CHECKS.get(solve.get("reason"), solve.get("reason"))})'
-    elif request.get('workerStatus') == 'Infeasible_Problem_Detected':
-        verdict = 'infeasible (IPOPT local)'
     else:
-        verdict = solve.get('status', '?')
+        verdict = counted_as(request) or solve.get('status', '?')
     return ((f'request {request["index"]} ' if request else '')+verdict+
-            (f', IPOPT {request["workerStatus"]}' if request.get('workerStatus') else '')+
+            (f', {solver(request)} {request["workerStatus"]}' if request.get('workerStatus') else '')+
             (f', {request["seconds"]:.2f} s' if request.get('seconds') is not None else ''))
 
 
@@ -297,8 +305,11 @@ def alternative_outcome(alternative, request_index):
     if alternative['proven']:
         return 'infeasible ('+', '.join(sorted({CHECKS.get(r, r) for r in alternative['certificates']}))+')'
     if alternative['oracleRejected']:
-        statuses = sorted({request_index[s['problemHash']]['workerStatus'] for s in alternative['solves']
-                           if request_index.get(s['problemHash'], {}).get('workerStatus')})
+        rows = [request_index[s['problemHash']] for s in alternative['solves']
+                if request_index.get(s['problemHash'], {}).get('workerStatus')]
+        if rows and all(r.get('backend') == 'clarabel' for r in rows):
+            return 'infeasible (disk relaxation)'
+        statuses = sorted({r['workerStatus'] for r in rows})
         return 'infeasible (IPOPT local)' if statuses == ['Infeasible_Problem_Detected'] else 'rejected (IPOPT '+', '.join(statuses)+')'
     return alternative['status']
 
@@ -465,6 +476,8 @@ def render(report, requests, routes, stop):
         ['First full solution',f'{dfs.get("firstFullSolutionSeconds"):.1f} s' if dfs.get('firstFullSolutionSeconds') is not None else 'none'],
         ['Search ended',f'{result["elapsedSeconds"]:.1f} s, `{termination}`'],
         ['Solver requests / worker launches',f'{result["work"].get("solverCalls")} / {result["work"].get("workerLaunches")}'],
+        *([['Finalization',f'{result["finalization"]["stage"]}, {len(result["finalization"]["attempts"])} attempts, '
+                           f'{result["work"].get("finalizationIpoptCalls", 0)} IPOPT calls']] if result.get('finalization') else []),
         ['Expanded prefixes',result.get('expandedPrefixes')],
         ['Independent replays',f'{sum(v["passed"] for v in replays)}/{len(replays)} passed' if replays else 'not run']])
     lines += [f'The search {TERMINATIONS.get(termination,"ended with `"+termination+"`")}. '
@@ -479,9 +492,9 @@ def render(report, requests, routes, stop):
         lines += ['No frame was left suspended.','']
     if stop['unknownRequests']:
         lines += ['Solver requests without a solution:','']
-        lines += table(['Request','IPOPT status','Counted as','Owning routes'],
-                       [[r['index'],r['workerStatus'],
-                         'infeasible (IPOPT local)' if r['workerStatus'] == 'Infeasible_Problem_Detected' else 'unknown',
+        lines += table(['Request','Solver status','Counted as','Owning routes'],
+                       [[r['index'],f'{solver(r)} {r["workerStatus"]}' if r['workerStatus'] else None,
+                         counted_as(r) or 'unknown',
                          ', '.join(f'{name(o["record"])}, {o["node"]}' for o in r['owners']) or 'none kept']
                         for r in stop['unknownRequests']])
     if stop['oracleRejectedRoutes']:
