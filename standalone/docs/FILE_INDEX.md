@@ -65,7 +65,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/CODE_MAP.md](CODE_MAP.md) | 26012 |
 | [docs/CURRENT_STATE.md](CURRENT_STATE.md) | 11473 |
 | [docs/DECISIONS_AND_PLANS.md](DECISIONS_AND_PLANS.md) | 12691 |
-| [docs/DEFERRED_WORK.md](DEFERRED_WORK.md) | 27207 |
+| [docs/DEFERRED_WORK.md](DEFERRED_WORK.md) | 28187 |
 | [docs/DEVELOPMENT.md](DEVELOPMENT.md) | 11612 |
 | [docs/DOC_INDEX.md](DOC_INDEX.md) | 26960 |
 | [docs/FILE_INDEX.md](FILE_INDEX.md) | 207112 |
