@@ -52,6 +52,20 @@ class ScopedWork:
         self.local.accepted(best)
 
 
+def segment_solids(scene, program, profile, through, gate):
+    from parkour_solver.constraints.encounters import landing_segments
+    from parkour_solver.search.anchors.policy import launch
+    result = {}
+    for begin, end in landing_segments(profile, through):
+        found = launch(scene, program, begin, end)
+        if found is None:
+            continue
+        table = gate.reachable_blocks(found[1])
+        if end-found[0] <= table['ticks']:
+            result[begin] = sorted(table['solids'])
+    return result
+
+
 def evaluate_program(scene, program, compiler, adapter, work, motion_bound, *, checkpoint=None,
                      seconds=3, candidate_seconds=1, solver_calls=8, python_executable=None, cancel_event=None,
                      partial_corridor=False, required_landing=None, scope=None, on_progress=None, retry_unresolved=True, first_witness=False,
@@ -147,7 +161,7 @@ def evaluate_program(scene, program, compiler, adapter, work, motion_bound, *, c
     saved_repair=program.get('repairState',{})
     saved_policy=(saved_repair.get('context',{}).get('scope') or {}).get('scope',{}).get('solvePolicy')
     variants = ConstraintVariants(route, profiles[0], plan, scene['collisionScene'], envelopes, scope,
-        checks=checks, gates=scoped_adapter.gates, signature=signature,
+        segment_solids=segment_solids(scene, program, profiles[0], scope['through'], service), checks=checks, gates=scoped_adapter.gates, signature=signature,
         state=saved_repair.get('constraintGeneration') if saved_policy==policy else None, deadline=scoped.deadline, reference=reference,
         owners=owners, budget=scoped.check, cancel_event=cancel_event,
         route_guards=scoped_adapter.constraint_guards(program['profile'],envelopes,scope,scoped.deadline)

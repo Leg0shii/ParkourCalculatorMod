@@ -129,8 +129,10 @@ route). Real11's B7 runs build 140, and clusters (step 2) reduce that.
   no possible or uncertain phase. Sound only if `condition_envelopes` never widens a
   bound; prove that first with a property test over Real11 envelopes and random row
   subsets.
-- 1b: a per-scene spatial index to discard far solids; worth it at thousands of
-  blocks.
+- 1b: implemented by the block table: a segment's encounters cover only clusters one
+  flight from its launch block can touch ([avoidance passages](AVOIDANCE_PASSAGES.md),
+  [evidence](../../research/block-table/README.md)). Items stay at 10 per run from 7 to
+  1,000 far solids on the synthetic route.
 
 ## 2. Minimum free width in the landing-cover path
 

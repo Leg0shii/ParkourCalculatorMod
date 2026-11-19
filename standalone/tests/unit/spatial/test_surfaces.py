@@ -403,6 +403,30 @@ class ClusterTests(unittest.TestCase):
                     self.assertTrue(any(b[0] < grown[2] and grown[0] < b[3] and b[2] < grown[3] and grown[1] < b[5]
                                         for b in boxes), (boxes, r, i))
 
+    def test_clusters_match_the_pairwise_definition_with_near_gaps(self):
+        rng = random.Random(13)
+        for _ in range(40):
+            solids = []
+            for _ in range(rng.randint(2, 25)):
+                x, z = 2.6*rng.randint(-4, 4)+rng.choice([0, 0, .005, .007]), 2.6*rng.randint(-4, 4)
+                solids.append([x, rng.randint(0, 2), z, x+2, rng.randint(3, 4), z+2])
+            geometry = scene_geometry(dict(solids=solids))
+            indices = sorted(rng.sample(range(len(solids)), rng.randint(1, len(solids))))
+            boxes = geometry.boxes
+            parent = {i: i for i in indices}
+            def root(i):
+                while parent[i] != i:
+                    i = parent[i]
+                return i
+            for a, b in itertools.combinations(indices, 2):
+                if all(max(boxes[a][k], boxes[b][k])-min(boxes[a][k+3], boxes[b][k+3]) < .006 for k in range(3)):
+                    parent[root(b)] = root(a)
+            groups = {}
+            for i in indices:
+                groups.setdefault(root(i), []).append(i)
+            self.assertEqual([c.members for c in geometry.clusters(indices)],
+                             [tuple(m) for m in sorted(groups.values())], solids)
+
     def test_near_matches_a_scan_on_cell_borders_and_long_boxes(self):
         rng = random.Random(11)
         for _ in range(40):

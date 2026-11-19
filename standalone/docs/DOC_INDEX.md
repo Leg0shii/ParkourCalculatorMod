@@ -75,6 +75,7 @@ control work; inclusion here is not authorization to implement a historical plan
 | [research/automatic-corridors/routing-review-2026-11-03/FULL_CORRIDORS.md](../research/automatic-corridors/routing-review-2026-11-03/FULL_CORRIDORS.md) | Frozen source-era evidence; use research guide for reproduction: Full saved corridors: every occurrence and portal |
 | [research/automatic-corridors/routing-review-2026-11-03/README.md](../research/automatic-corridors/routing-review-2026-11-03/README.md) | Frozen source-era evidence; use research guide for reproduction: Current routing and the cold-search bottleneck |
 | [research/block-route-search/README.md](../research/block-route-search/README.md) | Frozen source-era evidence; use research guide for reproduction: Fixed endpoints, variable intermediate supports |
+| [research/block-table/README.md](../research/block-table/README.md) | Frozen source-era evidence; use research guide for reproduction: Block table for avoidance |
 | [research/blockage-order/README.md](../research/blockage-order/README.md) | Frozen source-era evidence; use research guide for reproduction: Directed blockage timing checked against Minecraft |
 | [research/bookkeeping-baseline/README.md](../research/bookkeeping-baseline/README.md) | Frozen source-era evidence; use research guide for reproduction: Bookkeeping baseline evidence |
 | [research/bookkeeping-measurement/README.md](../research/bookkeeping-measurement/README.md) | Frozen source-era evidence; use research guide for reproduction: Bookkeeping setup and measurement |

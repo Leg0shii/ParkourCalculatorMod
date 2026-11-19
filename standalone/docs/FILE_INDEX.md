@@ -62,30 +62,30 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/ANCHOR_SEARCH_EXECUTION_REFERENCE.md](ANCHOR_SEARCH_EXECUTION_REFERENCE.md) | 29151 |
 | [docs/ARCHITECTURE.md](ARCHITECTURE.md) | 16949 |
 | [docs/CHECKPOINT_STORAGE.md](CHECKPOINT_STORAGE.md) | 6832 |
-| [docs/CODE_MAP.md](CODE_MAP.md) | 25168 |
+| [docs/CODE_MAP.md](CODE_MAP.md) | 25186 |
 | [docs/CURRENT_STATE.md](CURRENT_STATE.md) | 11043 |
 | [docs/DECISIONS_AND_PLANS.md](DECISIONS_AND_PLANS.md) | 12062 |
-| [docs/DEFERRED_WORK.md](DEFERRED_WORK.md) | 26854 |
+| [docs/DEFERRED_WORK.md](DEFERRED_WORK.md) | 27207 |
 | [docs/DEVELOPMENT.md](DEVELOPMENT.md) | 11359 |
-| [docs/DOC_INDEX.md](DOC_INDEX.md) | 26623 |
-| [docs/FILE_INDEX.md](FILE_INDEX.md) | 205303 |
-| [docs/FUNCTION_INDEX.md](FUNCTION_INDEX.md) | 72822 |
+| [docs/DOC_INDEX.md](DOC_INDEX.md) | 26788 |
+| [docs/FILE_INDEX.md](FILE_INDEX.md) | 206007 |
+| [docs/FUNCTION_INDEX.md](FUNCTION_INDEX.md) | 72899 |
 | [docs/IPOPT_CONSTRAINT_REDUCTION.md](IPOPT_CONSTRAINT_REDUCTION.md) | 5578 |
 | [docs/IPOPT_FEASIBILITY_MODE.md](IPOPT_FEASIBILITY_MODE.md) | 4956 |
 | [docs/LAYOUT.md](LAYOUT.md) | 6162 |
 | [docs/MOD_REFERENCES.md](MOD_REFERENCES.md) | 4996 |
-| [docs/PERFORMANCE.md](PERFORMANCE.md) | 10340 |
+| [docs/PERFORMANCE.md](PERFORMANCE.md) | 10838 |
 | [docs/REAL11_EXTENDED_GEOMETRY.md](REAL11_EXTENDED_GEOMETRY.md) | 12349 |
 | [docs/REAL11_GUIDE.md](REAL11_GUIDE.md) | 20362 |
 | [docs/RESULTS_AND_DEBUGGING.md](RESULTS_AND_DEBUGGING.md) | 15459 |
 | [docs/RUNBOOK.md](RUNBOOK.md) | 12285 |
-| [docs/TESTING.md](TESTING.md) | 17219 |
+| [docs/TESTING.md](TESTING.md) | 17261 |
 | [docs/design/ANCHOR_POLICY_DECISIONS.md](design/ANCHOR_POLICY_DECISIONS.md) | 27768 |
-| [docs/design/AVOIDANCE_PASSAGES.md](design/AVOIDANCE_PASSAGES.md) | 13418 |
+| [docs/design/AVOIDANCE_PASSAGES.md](design/AVOIDANCE_PASSAGES.md) | 13915 |
 | [docs/design/BRANCH_SCHEDULING_INVESTIGATION.md](design/BRANCH_SCHEDULING_INVESTIGATION.md) | 34072 |
 | [docs/design/CONTACT_COMBINATIONS.md](design/CONTACT_COMBINATIONS.md) | 9705 |
 | [docs/design/FACE_MERGING_IMPLEMENTATION_PLAN.md](design/FACE_MERGING_IMPLEMENTATION_PLAN.md) | 23894 |
-| [docs/design/GENERATION_FOLLOWUPS.md](design/GENERATION_FOLLOWUPS.md) | 41395 |
+| [docs/design/GENERATION_FOLLOWUPS.md](design/GENERATION_FOLLOWUPS.md) | 41608 |
 | [docs/design/GENERATION_RELEVANCE_PLAN.md](design/GENERATION_RELEVANCE_PLAN.md) | 11545 |
 | [docs/design/GENERIC_COMPOSITION.md](design/GENERIC_COMPOSITION.md) | 7205 |
 | [docs/design/HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md](design/HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md) | 66502 |
@@ -93,7 +93,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/design/MIXED_MOVEMENT_CONTACTS.md](design/MIXED_MOVEMENT_CONTACTS.md) | 5966 |
 | [docs/design/MOVEMENT_UNITS.md](design/MOVEMENT_UNITS.md) | 13672 |
 | [docs/design/OBSTACLES_AND_BLOCKAGES.md](design/OBSTACLES_AND_BLOCKAGES.md) | 25624 |
-| [docs/design/OBSTACLE_RELEVANCE.md](design/OBSTACLE_RELEVANCE.md) | 14739 |
+| [docs/design/OBSTACLE_RELEVANCE.md](design/OBSTACLE_RELEVANCE.md) | 14801 |
 | [docs/design/OBSTACLE_SEARCH.md](design/OBSTACLE_SEARCH.md) | 11808 |
 | [docs/design/ORCHESTRATOR_CONTRACT.md](design/ORCHESTRATOR_CONTRACT.md) | 2449 |
 | [docs/design/PRUNING_IMPROVEMENTS_BACKLOG.md](design/PRUNING_IMPROVEMENTS_BACKLOG.md) | 3528 |
@@ -399,6 +399,12 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [research/block-route-search/route-choice-result.json](../research/block-route-search/route-choice-result.json) | 19256 |
 | [research/block-route-search/route-choice-vertical.json](../research/block-route-search/route-choice-vertical.json) | 908 |
 | [research/block-route-search/summary.json](../research/block-route-search/summary.json) | 1578 |
+| [research/block-table/2026-11-18/benchmark-both.txt](../research/block-table/2026-11-18/benchmark-both.txt) | 803 |
+| [research/block-table/2026-11-18/benchmark-clustered.txt](../research/block-table/2026-11-18/benchmark-clustered.txt) | 700 |
+| [research/block-table/2026-11-18/benchmark-table.txt](../research/block-table/2026-11-18/benchmark-table.txt) | 100 |
+| [research/block-table/2026-11-18/load.txt](../research/block-table/2026-11-18/load.txt) | 131 |
+| [research/block-table/README.md](../research/block-table/README.md) | 3011 |
+| [research/block-table/benchmark.py](../research/block-table/benchmark.py) | 2317 |
 | [research/blockage-order/BlockageOrderProbe.java](../research/blockage-order/BlockageOrderProbe.java) | 3240 |
 | [research/blockage-order/README.md](../research/blockage-order/README.md) | 3365 |
 | [research/blockage-order/integration-reference.json](../research/blockage-order/integration-reference.json) | 676 |
@@ -1290,7 +1296,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [src/parkour_solver/constraints/encounters.py](../src/parkour_solver/constraints/encounters.py) | 18089 |
 | [src/parkour_solver/constraints/hit_events.py](../src/parkour_solver/constraints/hit_events.py) | 9862 |
 | [src/parkour_solver/constraints/route_guards.py](../src/parkour_solver/constraints/route_guards.py) | 11593 |
-| [src/parkour_solver/constraints/variants.py](../src/parkour_solver/constraints/variants.py) | 16798 |
+| [src/parkour_solver/constraints/variants.py](../src/parkour_solver/constraints/variants.py) | 17073 |
 | [src/parkour_solver/io/__init__.py](../src/parkour_solver/io/__init__.py) | 0 |
 | [src/parkour_solver/io/capture.py](../src/parkour_solver/io/capture.py) | 6352 |
 | [src/parkour_solver/io/checkpoint_store.py](../src/parkour_solver/io/checkpoint_store.py) | 10851 |
@@ -1351,7 +1357,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [src/parkour_solver/search/__init__.py](../src/parkour_solver/search/__init__.py) | 0 |
 | [src/parkour_solver/search/anchors/__init__.py](../src/parkour_solver/search/anchors/__init__.py) | 0 |
 | [src/parkour_solver/search/anchors/adapter.py](../src/parkour_solver/search/anchors/adapter.py) | 5199 |
-| [src/parkour_solver/search/anchors/policy.py](../src/parkour_solver/search/anchors/policy.py) | 9672 |
+| [src/parkour_solver/search/anchors/policy.py](../src/parkour_solver/search/anchors/policy.py) | 9793 |
 | [src/parkour_solver/search/application.py](../src/parkour_solver/search/application.py) | 1545 |
 | [src/parkour_solver/search/bounds/__init__.py](../src/parkour_solver/search/bounds/__init__.py) | 0 |
 | [src/parkour_solver/search/bounds/flight.py](../src/parkour_solver/search/bounds/flight.py) | 5267 |
@@ -1367,9 +1373,9 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [src/parkour_solver/search/compat/time_progress.py](../src/parkour_solver/search/compat/time_progress.py) | 5140 |
 | [src/parkour_solver/search/completion.py](../src/parkour_solver/search/completion.py) | 436 |
 | [src/parkour_solver/search/deferrals.py](../src/parkour_solver/search/deferrals.py) | 1105 |
-| [src/parkour_solver/search/dfs.py](../src/parkour_solver/search/dfs.py) | 66791 |
+| [src/parkour_solver/search/dfs.py](../src/parkour_solver/search/dfs.py) | 66800 |
 | [src/parkour_solver/search/domain.py](../src/parkour_solver/search/domain.py) | 959 |
-| [src/parkour_solver/search/engine.py](../src/parkour_solver/search/engine.py) | 21235 |
+| [src/parkour_solver/search/engine.py](../src/parkour_solver/search/engine.py) | 21848 |
 | [src/parkour_solver/search/entry.py](../src/parkour_solver/search/entry.py) | 10726 |
 | [src/parkour_solver/search/events/__init__.py](../src/parkour_solver/search/events/__init__.py) | 0 |
 | [src/parkour_solver/search/events/adapter.py](../src/parkour_solver/search/events/adapter.py) | 10037 |
@@ -1379,7 +1385,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [src/parkour_solver/search/goals.py](../src/parkour_solver/search/goals.py) | 4458 |
 | [src/parkour_solver/search/identity.py](../src/parkour_solver/search/identity.py) | 4491 |
 | [src/parkour_solver/search/ladder_ranking.py](../src/parkour_solver/search/ladder_ranking.py) | 5290 |
-| [src/parkour_solver/search/movement.py](../src/parkour_solver/search/movement.py) | 17831 |
+| [src/parkour_solver/search/movement.py](../src/parkour_solver/search/movement.py) | 17840 |
 | [src/parkour_solver/search/ordered_route.py](../src/parkour_solver/search/ordered_route.py) | 17733 |
 | [src/parkour_solver/search/ranking.py](../src/parkour_solver/search/ranking.py) | 3371 |
 | [src/parkour_solver/search/repair.py](../src/parkour_solver/search/repair.py) | 35213 |
@@ -1398,7 +1404,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [src/parkour_solver/spatial/event_routes.py](../src/parkour_solver/spatial/event_routes.py) | 16617 |
 | [src/parkour_solver/spatial/guides.py](../src/parkour_solver/spatial/guides.py) | 6494 |
 | [src/parkour_solver/spatial/regions.py](../src/parkour_solver/spatial/regions.py) | 18361 |
-| [src/parkour_solver/spatial/surfaces.py](../src/parkour_solver/spatial/surfaces.py) | 29258 |
+| [src/parkour_solver/spatial/surfaces.py](../src/parkour_solver/spatial/surfaces.py) | 29459 |
 | [src/parkour_solver/validation/__init__.py](../src/parkour_solver/validation/__init__.py) | 0 |
 | [src/parkour_solver/validation/numerical.py](../src/parkour_solver/validation/numerical.py) | 7428 |
 | [src/parkour_solver/validation/scene.py](../src/parkour_solver/validation/scene.py) | 1952 |
@@ -1497,6 +1503,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [tests/support/anchor_policy.py](../tests/support/anchor_policy.py) | 1292 |
 | [tests/support/archived_events.py](../tests/support/archived_events.py) | 2018 |
 | [tests/support/block_coefficients.py](../tests/support/block_coefficients.py) | 647 |
+| [tests/support/block_table.py](../tests/support/block_table.py) | 3420 |
 | [tests/support/cell_geometry.py](../tests/support/cell_geometry.py) | 311 |
 | [tests/support/cell_routes.py](../tests/support/cell_routes.py) | 732 |
 | [tests/support/checkpoint_guidance.py](../tests/support/checkpoint_guidance.py) | 1008 |
@@ -1518,13 +1525,13 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [tests/support/time_progress.py](../tests/support/time_progress.py) | 575 |
 | [tests/unit/__init__.py](../tests/unit/__init__.py) | 0 |
 | [tests/unit/constraints/__init__.py](../tests/unit/constraints/__init__.py) | 51 |
-| [tests/unit/constraints/test_encounters.py](../tests/unit/constraints/test_encounters.py) | 16534 |
+| [tests/unit/constraints/test_encounters.py](../tests/unit/constraints/test_encounters.py) | 19493 |
 | [tests/unit/constraints/test_option_keys.py](../tests/unit/constraints/test_option_keys.py) | 4788 |
 | [tests/unit/io/__init__.py](../tests/unit/io/__init__.py) | 0 |
 | [tests/unit/io/test_checkpoint_store.py](../tests/unit/io/test_checkpoint_store.py) | 14870 |
 | [tests/unit/io/test_linkcraft.py](../tests/unit/io/test_linkcraft.py) | 2170 |
 | [tests/unit/movement/__init__.py](../tests/unit/movement/__init__.py) | 0 |
-| [tests/unit/movement/test_block_contacts.py](../tests/unit/movement/test_block_contacts.py) | 20418 |
+| [tests/unit/movement/test_block_contacts.py](../tests/unit/movement/test_block_contacts.py) | 17132 |
 | [tests/unit/movement/test_block_profiles.py](../tests/unit/movement/test_block_profiles.py) | 8387 |
 | [tests/unit/movement/test_ceiling_contacts.py](../tests/unit/movement/test_ceiling_contacts.py) | 7856 |
 | [tests/unit/movement/test_climbable_search.py](../tests/unit/movement/test_climbable_search.py) | 9441 |
@@ -1592,7 +1599,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [tests/unit/spatial/test_route_progress.py](../tests/unit/spatial/test_route_progress.py) | 5156 |
 | [tests/unit/spatial/test_route_regions.py](../tests/unit/spatial/test_route_regions.py) | 8528 |
 | [tests/unit/spatial/test_semantic_routes.py](../tests/unit/spatial/test_semantic_routes.py) | 4695 |
-| [tests/unit/spatial/test_surfaces.py](../tests/unit/spatial/test_surfaces.py) | 26886 |
+| [tests/unit/spatial/test_surfaces.py](../tests/unit/spatial/test_surfaces.py) | 28122 |
 
 ## tools
 

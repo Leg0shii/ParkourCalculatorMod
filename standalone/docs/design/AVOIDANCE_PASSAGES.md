@@ -24,6 +24,13 @@ neighbour (B7's `X+` plane against B6 is not offered on its own). Free pieces
 narrower than 0.012 are numerical artifacts and are dropped (see
 [decisions](../DECISIONS_AND_PLANS.md)).
 
+A segment's encounters cover only clusters with a member in the block table of the
+segment's launch block ([obstacle relevance](OBSTACLE_RELEVANCE.md)): one flight from
+that block cannot touch any other solid. `search.engine.segment_solids` gives each
+segment its table solids; a segment after a ladder tick, or longer than the table's
+flight (an open terminal or free fall past every top), keeps every cluster. Clusters
+are built with `SceneGeometry.near` candidates instead of all solid pairs.
+
 The domain uses one encounter per cluster per segment, with simple horizontal
 side walks connected by fixed vertical clearance or already-owned separating
 requirements. Sides of different active sets whose regions nest describe one
@@ -161,7 +168,7 @@ up to `FALLBACK_LIMIT` (2) others with the same ticks and an objective within
 if a later leg fails. The family state and held variants persist in the repair
 snapshot (version 3), so a resumed climb solves nothing twice.
 
-Constraint generation uses policy12/state8 and repair avoidancePolicy13 with assembly13. The DFS context
+Constraint generation uses policy13/state9 and repair avoidancePolicy13 with assembly13. The DFS context
 fingerprints the new policy. Old raw generator cursors reject; reproduce an old
 run with its original source and inputs. Source-era scene fields
 `maxContactBranches`, `maxPassageCandidates`, `maxBlockagesPerObstacle`,

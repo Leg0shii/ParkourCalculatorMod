@@ -12,8 +12,8 @@ from parkour_solver.search.identity import digest
 from parkour_solver.spatial.surfaces import scene_geometry
 
 
-GENERATION_POLICY = 12
-STATE_VERSION = 8
+GENERATION_POLICY = 13
+STATE_VERSION = 9
 
 
 class ConstraintVariants:
@@ -46,7 +46,8 @@ class ConstraintVariants:
                    deadline=deadline, reference=candidate['positions'], owners=owners, budget=budget, cancel_event=cancel_event)
 
     def __init__(self, route, profile, plan, geometry, envelopes, scope, *, checks=(), gates=(), signature=(), state=None,
-                 deadline=None, reference=None, route_guards=None, owners=None, budget=None, cancel_event=None):
+                 deadline=None, reference=None, route_guards=None, owners=None, budget=None, cancel_event=None,
+                 segment_solids=None):
         self.route, self.profile, self.plan = route, profile, plan
         self.envelopes, self.deadline, self.through = envelopes, deadline, scope['through']
         self.route_guards, self.budget = route_guards, budget
@@ -54,6 +55,7 @@ class ConstraintVariants:
         context = digest(dict(version=GENERATION_POLICY, route={k: v for k, v in route.items() if k != 'warmYaw'},
             profile=profile, scope=scope, gates=list(gates), signature=signature, checks=list(checks), geometry=geometry,
             envelope=interaction_context_key(envelopes), owners=owners,
+            segmentSolids=None if segment_solids is None else sorted(segment_solids.items()),
             routeGuards=route_guards.context if route_guards is not None else None))
         if state is not None and (state.get('version') != STATE_VERSION or state.get('context') != context):
             raise ValueError('Incompatible constraint-generation continuation (policy%d/state%d)'
@@ -76,10 +78,12 @@ class ConstraintVariants:
         # model; neither overlap nor scene order declares independent subproblems.
         self.geometry, self.scope_indices = scene_geometry(geometry), scope['solidIndices']
         names = {i: owners[i] if owners is not None else 'solid:'+str(i) for i in scope['solidIndices']}
+        reachable = segment_solids or {}
         for begin, end in landing_segments(profile, self.through):
             items.extend(dict(clusterId=c.id, members=list(c.members), names=[names[i] for i in c.members],
                               begin=begin, end=end, owner='+'.join(sorted({names[i] for i in c.members})))
-                         for c in self.geometry.clusters(self.scope_indices))
+                         for c in self.geometry.clusters(self.scope_indices)
+                         if begin not in reachable or not set(c.members).isdisjoint(reachable[begin]))
         items += [dict(contactCheck=check) for check in checks
                   if check['block']['solidIndex'] in scope['solidIndices'] and check['offset'] <= self.through]
         self.state = copy.deepcopy(state) if state is not None else dict(

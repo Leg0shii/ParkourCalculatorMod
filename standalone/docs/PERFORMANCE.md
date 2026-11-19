@@ -35,6 +35,7 @@ production code.
 | `e266785c` | geometry-driven avoidance passages | 64 | -1093.2381026602418 | 53 / 49 | 37 | 47/47 | [geometry passages](../research/geometry-passages/README.md) |
 | `b2977e0f` + step 2 | avoidance on obstacle clusters | 64 | -1093.2381026602416 | 25 / 21 | 37 | 20/20 | [obstacle clusters](../research/obstacle-clusters/README.md) |
 | `6b964cb0` + step 4 | legs optimize, switch-tick climb, close fallbacks | 64 | -1093.2381026602416 | 18 / 17 | 37 | 10/10 | [switch climb](../research/switch-climb/README.md) |
+| `db7f8f61` + avoidance table | block table for generators and avoidance | 64 | -1093.2381026602416 | 18 / 17 | 37 | 10/10 | [block table](../research/block-table/README.md) |
 
 The switch-climb run finds T64 at 6.1 s and stops at 10.0 s with
 `numerical_unknown`: the DFS ran out of runnable work while the B7 frame stayed
@@ -63,7 +64,10 @@ The block table removes generator questions about blocks out of one flight's rea
 On the Real11 control (`1df37d63` plus the table, load average 6 to 7) it built 5 owner
 entries in 0.0008 s of CPU and cut route-based generator questions from 445 to 366, with the
 same 148 approach builds and an identical report apart from timings; the removed questions
-are the far B6 flight-case rejections.
+are the far B6 flight-case rejections. Applied to avoidance, the table cut Real11's
+obstacle checks from 600 to 380 with the same touchable checks and an identical report,
+and keeps a synthetic route's avoidance items at 10 from 7 to 1,000 far solids (356.7 s
+without it at 100 solids, 0.012 s with it at 1,000; [evidence](../research/block-table/README.md)).
 
 ## Measured hotspots
 

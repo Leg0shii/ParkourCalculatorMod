@@ -16,7 +16,7 @@ from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import ClassVar
 
-from parkour_solver.scene.geometry import BODY_HEIGHT, box_bounds, expanded_box, thin
+from parkour_solver.scene.geometry import BODY_HEIGHT, MIN_FREE_WIDTH, box_bounds, expanded_box, thin
 from parkour_solver.scene.route import HALF_WIDTH
 from parkour_solver.schema import number
 from parkour_solver.spatial.cells import subtract_open
@@ -488,9 +488,13 @@ class SceneGeometry:
                     parent[i] = parent[parent[i]]
                     i = parent[i]
                 return i
-            for a, b in itertools.combinations(indices, 2):
-                if all(thin(max(boxes[a][k], boxes[b][k])-min(boxes[a][k+3], boxes[b][k+3])) for k in range(3)):
-                    parent[root(b)] = root(a)
+            reach = MIN_FREE_WIDTH/2
+            for a in indices:
+                box = boxes[a]
+                for b in self.near([box[0]-reach, box[2]-reach, box[3]+reach, box[5]+reach]):
+                    if b > a and b in parent and all(
+                            thin(max(box[k], boxes[b][k])-min(box[k+3], boxes[b][k+3])) for k in range(3)):
+                        parent[root(b)] = root(a)
             groups = {}
             for i in indices:
                 groups.setdefault(root(i), []).append(i)

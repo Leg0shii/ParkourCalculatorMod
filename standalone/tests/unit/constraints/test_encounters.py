@@ -292,5 +292,54 @@ class EncounterTests(unittest.TestCase):
                 self.assertNotEqual(variants[a]['family'], variants[b]['family'])
 
 
+
+@unittest.skipUnless(__import__('os').environ.get('PKC_RUN_TICKS_COMPILER'), 'Requires coefficient compiler')
+class BlockTableEncounterTests(unittest.TestCase):
+    def assert_dropped_clusters_are_clear(self, scene, roots):
+        from tests.support.block_table import compiler, nodes
+        from parkour_solver.constraints.encounters import prepare_encounter
+        from parkour_solver.reachability.service import InteractionGate
+        from parkour_solver.search.engine import segment_solids
+        dropped = 0
+        with compiler() as java:
+            gate = InteractionGate(scene, java)
+            for node in nodes(scene, roots, gate):
+                prepared = gate.prepare(node) if node['profile']['airtime'] else None
+                if prepared is None:
+                    continue
+                route, profile, plan = prepared['route'], prepared['profiles'][0], prepared['plan']
+                envelopes = gate.analyze_model(route, plan, prepared['vertical'])['envelopes']
+                scope = dict(through=plan['ticks'], solidIndices=list(range(len(scene['collisionScene']['solids']))))
+                reachable = segment_solids(scene, node, profile, scope['through'], gate)
+                full = ConstraintVariants(route, profile, plan, scene['collisionScene'], envelopes, scope)
+                kept = ConstraintVariants(route, profile, plan, scene['collisionScene'], envelopes, scope,
+                                          segment_solids=reachable)
+                removed = [item for item in full.items if 'clusterId' in item and item['begin'] in reachable
+                           and set(item['members']).isdisjoint(reachable[item['begin']])]
+                self.assertEqual(len(full.items)-len(kept.items), len(removed))
+                for item in removed:
+                    prepare_encounter(full, item, envelopes)
+                    self.assertEqual((item['possiblePhases'], item['uncertain']), ([], []),
+                                     (item['members'], item['begin'], item['end']))
+                dropped += len(removed)
+        return dropped
+
+    def test_real11_clusters_the_table_drops_have_no_possible_phase(self):
+        from tests.support.block_table import real11_inputs
+        self.assertGreater(sum(self.assert_dropped_clusters_are_clear(scene, roots) for scene, roots in real11_inputs()), 0)
+
+    def test_random_scene_clusters_the_table_drops_have_no_possible_phase(self):
+        import random
+        from tests.support.block_table import random_box_request
+        from parkour_solver.movement.program import empty_program
+        rng = random.Random(20261118)
+        dropped = 0
+        for index in range(20):
+            with self.subTest(scene=index):
+                scene = prepare_scene(random_box_request(rng))
+                dropped += self.assert_dropped_clusters_are_clear(scene, [empty_program(scene['initial'], threshold=0.)])
+        self.assertGreater(dropped, 0)
+
+
 if __name__ == '__main__':
     unittest.main()

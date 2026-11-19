@@ -224,20 +224,6 @@ class ExposedTopTests(unittest.TestCase):
                           ('Z', 'LE', region[1] - 1e-6), ('Z', 'GE', region[3] + 1e-6)})
 
 
-def random_box_request(rng):
-    start = rng.randint(0, 10)
-    cells = rng.sample([(x, z) for x in range(-18, 20, 3) for z in range(-18, 20, 3) if (x, z) != (0, 0)], 15)
-    blocks = [dict(id='start', boxes=[[0, start-1, 0, 2, start, 2]])]
-    for k, (x, z) in enumerate(cells):
-        top, size = rng.randint(0, 10), rng.choice([1, 2])
-        blocks.append(dict(id='b%d' % k, boxes=[[x, top-1, z, x+size, top, z+size]]))
-    blocks[-1]['id'] = 'goal'
-    return dict(version=1, sceneModel='collision_boxes', geometryBounds=[-30, -20, -30, 30, 30, 30],
-                initial=dict(position=[1, start, 1], velocity=[0, -.0784000015258789, 0], yaw=-90),
-                startBlock='start', goalBlock='goal', maxRunTicksPerJump=0, maxTotalRunTicks=0, maxFlightInputs=40,
-                maxContactCombinations=0, maxWallHits=0, blocks=blocks)
-
-
 class BlockTableTests(unittest.TestCase):
     def test_far_block_is_excluded_and_an_adjacent_one_kept(self):
         from parkour_solver.reachability.service import InteractionGate
@@ -247,69 +233,28 @@ class BlockTableTests(unittest.TestCase):
         self.assertEqual(table['blocks'], {'start', 'near'})
         self.assertEqual(table['solids'], {0, 1})
 
-    def generated(self, scene, program, gate, owner):
-        from parkour_solver.movement.generation import generate_choices
-        from parkour_solver.movement.program import boundary_state
-        result = []
-        for kind in ('normal', 'stepping', 'ceiling'):
-            context = dict(mode='open', scene=scene, program=program, state=boundary_state(program), maxInputs=40,
-                           threshold=0., interactionGate=gate)
-            if owner is not None:
-                context['launchOwner'] = owner
-            result.append(list(generate_choices(kind, context)))
-        return result
-
     def assert_table_keeps_every_choice(self, scene, roots):
-        import json, os
-        from pathlib import Path
-        from parkour_solver.bridge.compiler import JavaCompiler
-        from parkour_solver.movement.program import append_choice, truncate_program
+        from tests.support.block_table import compiler, generated, nodes
         from parkour_solver.reachability.service import InteractionGate
-        from parkour_solver.search.anchors.policy import launch_owner
+        from parkour_solver.search.anchors.policy import launch
         removed = 0
-        with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:
-            gate = InteractionGate(scene, compiler)
-            nodes = []
-            for root in roots:
-                nodes.append(root)
-                start = root['profile']['airtime']
-                for kind in self.generated(scene, root, gate, None):
-                    for choice in kind[:3]:
-                        child = append_choice(root, choice)
-                        if child is None:
-                            continue
-                        nodes.append(child)
-                        ticks = child['profile']['airtime']
-                        if ticks >= start+4:
-                            nodes.append(truncate_program(child, start+(ticks-start)//2))
-            for node in nodes:
-                owner = launch_owner(scene, node)
-                self.assertIsNotNone(owner)
+        with compiler() as java:
+            gate = InteractionGate(scene, java)
+            for node in nodes(scene, roots, gate):
+                _, owner = launch(scene, node)
                 plain = [[(c['profile'], c.get('terminalSupport')) for c in kind]
-                         for kind in self.generated(scene, node, gate, None)]
+                         for kind in generated(scene, node, gate, None)]
                 tabled = [[(c['profile'], c.get('terminalSupport')) for c in kind]
-                          for kind in self.generated(scene, node, gate, owner)]
+                          for kind in generated(scene, node, gate, owner)]
                 self.assertEqual(tabled, plain, (owner, node['profile']['airtime']))
                 removed += len(scene['blocks'])-len(gate.reachable_blocks(owner)['blocks'])
         return removed
 
     @unittest.skipUnless(__import__('os').environ.get('PKC_RUN_TICKS_COMPILER'), 'Requires coefficient compiler')
     def test_table_keeps_every_real11_choice(self):
-        import gzip, json
-        from tools.paths import STANDALONE_ROOT
-        from tests.support.archived_events import current_events
-        from tests.support.paths import AUTONOMY_DATA
-        from parkour_solver.movement.program import empty_program, truncate_program
-        from parkour_solver.scene.normalize import prepare_scene
-        scene = prepare_scene(json.loads((STANDALONE_ROOT/'cases/real11/physical-anchors.json').read_text())['request'])
-        fixture = json.loads((AUTONOMY_DATA/'experiments/linkcraft11-opening/fixtures/clock64-orchestrator.json').read_text())
-        with gzip.open(AUTONOMY_DATA/'experiments/orchestrator-fixes/audit/candidate-ledger.json.gz', 'rt') as stream:
-            saved = current_events(json.load(stream))
-        original = next(p for p in saved['programs'] if p['label'] == 'P03')['record']['decision_program']
-        prefix = truncate_program(original, 21)
-        prefix['terminalSupport'] = 'b2'
-        self.assertGreater(self.assert_table_keeps_every_choice(scene, [empty_program(scene['initial'], threshold=0.)]), 0)
-        self.assertGreater(self.assert_table_keeps_every_choice(prepare_scene(fixture['request']), [prefix]), 0)
+        from tests.support.block_table import real11_inputs
+        for scene, roots in real11_inputs():
+            self.assertGreater(self.assert_table_keeps_every_choice(scene, roots), 0)
 
     @unittest.skipUnless(__import__('os').environ.get('PKC_RUN_TICKS_COMPILER'), 'Requires coefficient compiler')
     def test_table_keeps_every_stepping_fixture_choice(self):
@@ -324,6 +269,7 @@ class BlockTableTests(unittest.TestCase):
     @unittest.skipUnless(__import__('os').environ.get('PKC_RUN_TICKS_COMPILER'), 'Requires coefficient compiler')
     def test_table_keeps_every_choice_in_random_box_scenes(self):
         import random
+        from tests.support.block_table import random_box_request
         from parkour_solver.movement.program import empty_program
         from parkour_solver.scene.normalize import prepare_scene
         rng = random.Random(20261118)
@@ -333,7 +279,6 @@ class BlockTableTests(unittest.TestCase):
                 scene = prepare_scene(random_box_request(rng))
                 removed += self.assert_table_keeps_every_choice(scene, [empty_program(scene['initial'], threshold=0.)])
         self.assertGreater(removed, 0)
-
 
 if __name__ == '__main__':
     unittest.main()
