@@ -196,8 +196,8 @@ also supports exact source contribution queries and validated catalog loading.
 float-derived bounds and the full physical input per box. The older
 [Java footprint adapter](../research/linkcraft11-opening/PLAYER_BOUNDS.md)
 can derive one reference/facing-selected rectangle with neighbors; that is not
-a complete union report. The production JavaCompiler convenience footprint call
-currently omits neighbors. Use the spatial cover for the full set.
+a complete union report. The bridge convenience footprint call currently omits
+neighbors. Use the spatial cover for the full set.
 
 Focused checks cover both arms of a corner, overhead clearance, compound stairs
 and buried/tangent-only supports. No cold solve, dynamic jump validation or

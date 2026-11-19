@@ -5,7 +5,10 @@ from parkour_solver.search.domain import InitialJumpDomain
 from parkour_solver.validation.witness import replay_witness
 
 
-def run(fixture,compiler,*,python_executable=None,resume_state=None,on_progress=None,cancel_event=None):
+def run(fixture,compiler=None,*,python_executable=None,resume_state=None,on_progress=None,cancel_event=None):
+    if compiler is None:
+        from parkour_solver.bridge.python_compiler import PythonCompiler
+        compiler=PythonCompiler()
     request=fixture['request']
     if 'spatialSettings' in fixture:
         raise ValueError('Legacy spatialSettings is not event discovery; use discoverySettings version1')

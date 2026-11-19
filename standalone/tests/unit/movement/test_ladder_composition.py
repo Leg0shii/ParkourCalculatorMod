@@ -4,7 +4,6 @@ import copy
 import hashlib
 import json
 import os
-from pathlib import Path
 import random
 import time
 import unittest
@@ -17,7 +16,7 @@ from parkour_solver.scene.normalize import prepare_scene
 from parkour_solver.search.support_profiles import compile_block_path, find_blocks
 from parkour_solver.constraints.contacts import floor_checks
 from parkour_solver.search.repair import solve_contact_branches; from parkour_solver.validation.vertical import validate_vertical_schedule
-from parkour_solver.bridge.compiler import JavaCompiler
+from parkour_solver.bridge.python_compiler import PythonCompiler
 from parkour_solver.scene.route import prepare_route, schedule
 from parkour_solver.physics.vertical import REST_CARRY, CLIMB_CARRY, f32
 from parkour_solver.movement.ceiling_profiles import ceiling_options
@@ -107,15 +106,15 @@ class LadderRegionTests(unittest.TestCase):
         self.assertTrue(generated['schedules'])
 
 
-@unittest.skipUnless(os.environ.get('PKC_RUN_TICKS_COMPILER') and os.environ.get('PKC_IPOPT_PYTHON'),
-                     'Set PKC_RUN_TICKS_COMPILER and PKC_IPOPT_PYTHON')
+@unittest.skipUnless(os.environ.get('PKC_IPOPT_PYTHON'),
+                     'Set PKC_IPOPT_PYTHON')
 class LadderCompositionIntegrationTests(unittest.TestCase):
     def test_direct_airborne_transfer_solves_without_a_fictitious_landing(self):
         scene, episodes, program = airborne_case()
         edge = {'source': 'start', 'target': 'b', 'profileKind': 'ladder', 'profile': program['profile'],
                 'ladderEvents': program['ladderEvents'], 'entryFace': None, 'exitFace': None}
         compiled = compile_block_path(scene, ['start','b'], [edge])
-        with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:
+        with PythonCompiler() as compiler:
             result = solve_contact_branches(compiled['route'], compiled['profiles'], floor_checks(scene, ['start','b'], compiled['profiles']),
                 compiler, seconds=18, candidate_seconds=3, retries=1, geometry=scene['collisionScene'],
                 motion_bound={'storedSpeedNorm':2,'movementAfterSupportCheck':2}, python_executable=os.environ['PKC_IPOPT_PYTHON'])
@@ -132,7 +131,7 @@ class LadderCompositionIntegrationTests(unittest.TestCase):
                 request = json.loads((ROOT / ('fixtures/' + name + '.json')).read_text())
                 if name == 'two-ladders':
                     request['ladderSearch']['maxTransferPrograms'] = 0
-                with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:
+                with PythonCompiler() as compiler:
                     result = find_blocks(request, compiler, seconds=seconds, route_seconds=route_seconds,
                         candidate_seconds=1, retries=0, python_executable=os.environ['PKC_IPOPT_PYTHON'])
                 self.assertEqual(result['status'], 'feasible', result)
@@ -150,13 +149,12 @@ class LadderCompositionIntegrationTests(unittest.TestCase):
                     self.assertTrue(any(best['ladderSchedule']['hit']))
 
 
-@unittest.skipUnless(os.environ.get('PKC_RUN_TICKS_COMPILER'), 'Set PKC_RUN_TICKS_COMPILER')
 class CompositionEvidenceTests(unittest.TestCase):
     def test_saved_multiple_ladder_ceiling_transfer_and_contact_blockage_contracts(self):
         from parkour_solver.validation.scene import check_geometry
         from parkour_solver.constraints.avoidance import gate_timeline
         from parkour_solver.numerics import prepare, validate
-        with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:
+        with PythonCompiler() as compiler:
             for name in ('two-ladders','ladder-ceiling','airborne-transfer','automatic-airborne-transfer','contact-blockage'):
                 with self.subTest(name=name):
                     e = json.loads((ROOT / ('experiments/contact-combinations/' + name + '.json')).read_text())

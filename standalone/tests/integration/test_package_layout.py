@@ -75,3 +75,26 @@ assert r.get('workerLaunched'),r
             result = subprocess.run([sys.executable, '-I', '-c', script], cwd=cwd,
                                     capture_output=True, text=True, timeout=15)
         self.assertEqual(result.returncode, 0, result.stderr)
+
+    @unittest.skipUnless(os.environ.get('PKC_IPOPT_PYTHON'), 'Native IPOPT interpreter not configured')
+    def test_installed_task_solve_needs_no_java_bridge(self):
+        # Compiler omitted, no descriptor in the environment and no java on PATH.
+        script = '''
+import sys
+from parkour_solver.api import solve_task
+request = dict(version=1, sceneModel='collision_boxes', geometryBounds=[-10,-5,-10,20,12,10],
+    initial=dict(position=[.5,1,.5], velocity=[.25,-.0784000015258789,0], yaw=-90),
+    startBlock='start', goalBlock='goal', maxWallHits=0, maxContactCombinations=0,
+    blocks=[dict(id='start', boxes=[[-2,0,-2,3,1,2]]), dict(id='goal', boxes=[[5,0,-1,6,1,1]])],
+    movementSearch=dict(types=['normal'], maxInputs=30, maxPrefixes=96, maxQueuedPrefixes=128, maxChoicesPerType=16))
+fixture = dict(request=request, anchorSearch=dict(anchors=[]), settings=dict(seconds=8, max_solver_calls=20))
+result, validation = solve_task(fixture, python_executable=sys.argv[1])
+assert result['best'] is not None and validation[0]['passed'], result['termination']
+assert not any(m.split('.')[0] in ('research','tools','tests') for m in sys.modules)
+'''
+        environment = {key: value for key, value in os.environ.items() if key != 'PKC_RUN_TICKS_COMPILER'}
+        environment['PATH'] = str(Path(sys.executable).parent)
+        with tempfile.TemporaryDirectory() as cwd:
+            result = subprocess.run([sys.executable, '-I', '-c', script, os.environ['PKC_IPOPT_PYTHON']], cwd=cwd,
+                                    env=environment, capture_output=True, text=True, timeout=120)
+        self.assertEqual(result.returncode, 0, result.stderr)

@@ -4,7 +4,6 @@ import copy
 import itertools
 import json
 import os
-from pathlib import Path
 import unittest
 
 from parkour_solver.constraints.contacts import floor_checks
@@ -12,7 +11,7 @@ from parkour_solver.search.repair import solve_contact_branches; from parkour_so
 from parkour_solver.search.support_profiles import build_transition_graph, compile_block_path, find_blocks
 from parkour_solver.scene.normalize import prepare_scene
 from parkour_solver.movement.cases import case_profile, corner_rows, entry_possible
-from parkour_solver.bridge.compiler import JavaCompiler
+from parkour_solver.bridge.python_compiler import PythonCompiler
 from parkour_solver.movement.generation import generate_choices
 from parkour_solver.movement.units import compile_units, overlay_program, profile_program, shifted_unit
 from parkour_solver.validation.scene import check_geometry
@@ -170,11 +169,11 @@ class SteppingCaseTests(unittest.TestCase):
         self.assertEqual(profiles[1]['generatedUnits'][0]['type'], 'stepping')
 
 
-@unittest.skipUnless(os.environ.get('PKC_RUN_TICKS_COMPILER') and os.environ.get('PKC_IPOPT_PYTHON'),
-                     'Set PKC_RUN_TICKS_COMPILER and PKC_IPOPT_PYTHON')
+@unittest.skipUnless(os.environ.get('PKC_IPOPT_PYTHON'),
+                     'Set PKC_IPOPT_PYTHON')
 class SteppingNumericalTests(unittest.TestCase):
     def test_fresh_original_state_solves_for_every_case_and_both_blip_wall_choices(self):
-        with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:
+        with PythonCompiler() as compiler:
             for path in sorted(FIXTURES.glob('*.json')):
                 with self.subTest(fixture=path.name):
                     data = json.loads(path.read_text())
@@ -209,7 +208,7 @@ class SteppingNumericalTests(unittest.TestCase):
     def test_z_facing_corner_controls_do_not_inherit_x_facing_vertical_cancellation(self):
         def swap_box(box):
             return [box[2], box[1], box[0], box[5], box[4], box[3]]
-        with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:
+        with PythonCompiler() as compiler:
             for name in ['corner_jump_cancel', 'corner_blip_up']:
                 scene, edge = generated(fixture(name))
                 compiled = compile_block_path(scene, ['start', 'goal'], [edge])
@@ -240,7 +239,7 @@ class SteppingNumericalTests(unittest.TestCase):
         request['initial']['velocity'] = request['initial']['velocity'][::-1]
         for block in request['blocks']:
             block['boxes'] = [[b[2], b[1], b[0], b[5], b[4], b[3]] for b in block['boxes']]
-        with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:
+        with PythonCompiler() as compiler:
             result = find_blocks(request, compiler, seconds=10, route_seconds=3, candidate_seconds=1,
                                  retries=0, python_executable=os.environ['PKC_IPOPT_PYTHON'])
         self.assertEqual(result['status'], 'feasible', result)
@@ -254,7 +253,7 @@ class SteppingNumericalTests(unittest.TestCase):
         request['blocks'][-1]['boxes'][0][4] = .5
         scene, edge = generated(data)
         compiled = compile_block_path(scene, ['start', 'goal'], [edge])
-        with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:
+        with PythonCompiler() as compiler:
             result = solve_contact_branches(compiled['route'], compiled['profiles'],
                 floor_checks(scene, ['start', 'goal'], compiled['profiles']), compiler,
                 seconds=8, candidate_seconds=1, retries=0, geometry=scene['collisionScene'],
@@ -267,7 +266,7 @@ class SteppingNumericalTests(unittest.TestCase):
         self.assertGreater(result['best']['plan']['ticks'], 2)
 
     def test_cold_discovery_covers_the_catalogue_and_allows_composite_height_gain(self):
-        with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:
+        with PythonCompiler() as compiler:
             for name in ['blip', 'blip_up', 'corner_blip_up', 'corner_jump_cancel', 'grind']:
                 data = fixture(name)
                 graph = build_transition_graph(data['request'], compiler, seconds=6)
@@ -285,7 +284,7 @@ class SteppingNumericalTests(unittest.TestCase):
 
     def test_cold_geometry_discovers_normal_steps_and_exposes_generation_caps(self):
         data = fixture('normal_step')
-        with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:
+        with PythonCompiler() as compiler:
             graph = build_transition_graph(data['request'], compiler, seconds=6)
             edges = [graph['transitions'][e] for e in graph['edgeOptions']['start']['goal']]
             self.assertTrue(any(e['profileKind'] == 'step' for e in edges))

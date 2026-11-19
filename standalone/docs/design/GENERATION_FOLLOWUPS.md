@@ -88,11 +88,10 @@ Commands (from `standalone/`):
 
 ```sh
 export PKC_IPOPT_PYTHON=$PWD/../.venv-guidance/bin/python
-export PKC_RUN_TICKS_COMPILER=$PWD/build/native/compiler.json
 export OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1
 "$PKC_IPOPT_PYTHON" -B -m tools.profiling.run --input cases/real11/physical-anchors.json --output runs/<new> --seconds 300 --profile-mode bookkeeping
 PYTHONPATH=src:. "$PKC_IPOPT_PYTHON" -B -m unittest tests.unit.constraints.test_encounters tests.integration.test_profiling
-"$PKC_IPOPT_PYTHON" -B tools/native_gate.py --output /Users/arvindmurty/CS/pkc-archive/gates/<new>
+PKC_RUN_TICKS_COMPILER=$PWD/build/native/compiler.json "$PKC_IPOPT_PYTHON" -B tools/native_gate.py --output /Users/arvindmurty/CS/pkc-archive/gates/<new>
 python -m tools.docs_index && python -m tools.validate_layout
 ```
 

@@ -1,7 +1,6 @@
 import copy
 import json
 import os
-from pathlib import Path
 import time
 import unittest
 from unittest.mock import patch
@@ -194,14 +193,13 @@ class AnchorSearchTests(unittest.TestCase):
         self.assertEqual(p['profile']['positionConstraints'],[])
 
 
-@unittest.skipUnless(os.environ.get('PKC_RUN_TICKS_COMPILER'),'Native compiler required')
 class AnchorNativeTests(unittest.TestCase):
     def test_cold_finite_landing_with_observable_internal_queries(self):
-        from parkour_solver.bridge.compiler import JavaCompiler
+        from parkour_solver.bridge.python_compiler import PythonCompiler
         s=flat_scene()
         fixture=dict(request=s,anchorSearch=dict(anchors=[]),settings=dict(seconds=5,score_seconds=2,
             max_solver_calls=20,score_call_limit=4,max_candidates=4))
-        with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as c:
+        with PythonCompiler() as c:
             result,validation=run(fixture,c,python_executable=os.environ.get('PKC_IPOPT_PYTHON'))
         self.assertIsNotNone(result['best'])
         self.assertTrue(validation[0]['passed'])

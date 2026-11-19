@@ -85,6 +85,11 @@ everything not being worked on is in the [deferred-work register](DEFERRED_WORK.
 | Guide / turnaround | Backward nearest-point landing-cover guides, onward E→N objective, no discrete progress/slack score. >110° guide cue; one approach-facing physical/imaginary diagonal edge+0.3-block margin gives one frozen binary mode, with distances and replay flips logged. |
 | Visits / movement scope | Multiple current-owner hops supported; departed-owner returns and repeated mandatory anchors deferred. Intentional wall-hit generation deferred; required named-case contacts remain. Supplied corridors/virtual tasks keep separate compatibility paths. |
 
+Search needs only Python and the numerical extras: the default movement bridge
+(`bridge.python_compiler`) answers coefficient, footprint and scene requests in
+process with the Java bridge's replies, and the Java bridge is an explicit oracle
+([runbook](RUNBOOK.md#install-and-environment)).
+
 All intermediate comparison predicates live in `search.comparison`; callers
 normalize evidence and execute its verdict. Legacy `minimum_runs` family extraction
 and `time_progress` record APIs delegate rather than owning a second policy.

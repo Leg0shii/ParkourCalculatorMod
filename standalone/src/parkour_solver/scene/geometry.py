@@ -1,4 +1,7 @@
 import copy
+import math
+import struct
+import sys
 
 from parkour_solver.physics.vertical import clamp, f32, vertical_move
 from parkour_solver.schema import number
@@ -91,6 +94,64 @@ def normalize_geometry(scene):
         geometry['ladders'] = copy.deepcopy(cells)
         scene['climbableCells'] = copy.deepcopy(cells)
     return scene
+
+
+def _ordered(value):
+    bits = struct.unpack('<q', struct.pack('<d', value))[0]
+    return bits if bits >= 0 else -(bits & 0x7fffffffffffffff)
+
+
+def _unordered(key):
+    return struct.unpack('<d', struct.pack('<q', key if key >= 0 else -key | -0x8000000000000000))[0]
+
+
+def _first(predicate, guess):
+    """Least finite double satisfying a predicate monotone in its argument, or None."""
+    if predicate(guess) and not predicate(math.nextafter(guess, -math.inf)):
+        return guess
+    if not predicate(guess) and predicate(math.nextafter(guess, math.inf)):
+        return math.nextafter(guess, math.inf)
+    lo, hi = _ordered(-sys.float_info.max), _ordered(sys.float_info.max)
+    if not predicate(_unordered(hi)):
+        return None
+    while lo < hi:
+        middle = (lo + hi) // 2
+        if predicate(_unordered(middle)):
+            hi = middle
+        else:
+            lo = middle + 1
+    return _unordered(lo)
+
+
+def support_center_interval(lo, hi):
+    """First and last player center (doubles) strictly overlapping [lo, hi] on one axis.
+
+    This is the bridge's legacy footprint edge (`SupportOverlap.minCenter`/`maxCenter`).
+    Ordered search replaces its step-by-step walk, which never ends when the
+    analytic edge cancels to zero and the walk enters subnormal values.
+    """
+    lo, hi = float(lo), float(hi)
+    first = _first(lambda center: center + HALF_WIDTH > lo, lo - HALF_WIDTH)
+    after = _first(lambda center: not center - HALF_WIDTH < hi, hi + HALF_WIDTH)
+    last = math.nextafter(after, -math.inf) if after is not None else sys.float_info.max
+    if first is None or first > last:
+        raise ValueError('No player center overlaps the support interval')
+    return first, last
+
+
+def route_footprints(blocks, standing=False):
+    """Bridge footprints `[minX,maxX,minZ,maxZ]`: explicit centers, else exact support edges."""
+    if not isinstance(blocks, list) or len(blocks) < 2:
+        raise ValueError('Supply a route of support blocks')
+    footprints = []
+    for block in blocks:
+        bounds = block.get('standingBounds') if standing else None
+        if bounds is None and block.get('centerBounds') is not None:
+            footprints.append([float(value) for value in block['centerBounds']])
+            continue
+        x1, x2, z1, z2 = block['bounds'] if bounds is None else bounds
+        footprints.append([*support_center_interval(x1, x2), *support_center_interval(z1, z2)])
+    return footprints
 
 
 def expanded_box(box):

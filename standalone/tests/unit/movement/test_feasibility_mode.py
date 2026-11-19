@@ -1,7 +1,5 @@
 import copy
-import json
 import os
-from pathlib import Path
 import time
 import unittest
 
@@ -13,11 +11,11 @@ from parkour_solver.spatial.cells import decompose
 from parkour_solver.validation.scoped_scene import CorridorAdapter
 from parkour_solver.search.work import SearchWork
 from parkour_solver.spatial.compat.corridors import corridor_for_points, landmarks
-from parkour_solver.bridge.compiler import JavaCompiler
+from parkour_solver.bridge.python_compiler import PythonCompiler
 from tests.support.checkpoint_guidance import flat_scene, programs
 
 
-@unittest.skipUnless(os.environ.get('PKC_RUN_TICKS_COMPILER') and os.environ.get('PKC_IPOPT_PYTHON'),
+@unittest.skipUnless(os.environ.get('PKC_IPOPT_PYTHON'),
                      'Set compiler and IPOPT Python for intermediate feasibility tests')
 class FeasibilityModeTests(unittest.TestCase):
     def test_feasible_intermediate_and_optimized_comparison_use_distinct_repair_work(self):
@@ -28,7 +26,7 @@ class FeasibilityModeTests(unittest.TestCase):
         program = next(p for p in programs(scene,4) if p['profile']['jump'][0])
         original = copy.deepcopy(program)
         clock = Checkpoint(4,-1,(1.,0.),(.5,1.,.5),(5.5,1.,.5),())
-        with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:
+        with PythonCompiler() as compiler:
             motion = motion_bound(scene,compiler,2)
             def evaluate(p, first):
                 return evaluate_program(scene,p,compiler,adapter,SearchWork(16,deadline=time.monotonic()+8),motion,

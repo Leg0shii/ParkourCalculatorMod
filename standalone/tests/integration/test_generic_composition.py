@@ -121,7 +121,6 @@ class GenericOpenGenerationTests(unittest.TestCase):
 
     def test_five_existing_ladder_episodes_use_the_generic_composer(self):
         import json
-        from pathlib import Path
         from parkour_solver.movement.ladder.generation import ladder_event_choice
         evidence = json.loads((AUTONOMY_DATA / 'experiments/contact-combinations/five-airborne-ladders.json').read_text())
         program = empty_program(evidence['route']['initial'])
@@ -138,7 +137,6 @@ class GenericOpenGenerationTests(unittest.TestCase):
 class GenericQueueTests(unittest.TestCase):
     def test_new_registered_types_and_cost_order_need_no_pair_specific_queue_logic(self):
         import json
-        from pathlib import Path
         from parkour_solver.scene.normalize import prepare_scene
         from parkour_solver.search.movement import iter_movement_programs
         from parkour_solver.movement.settings import movement_settings
@@ -171,7 +169,6 @@ class GenericQueueTests(unittest.TestCase):
         import json
         import threading
         import time
-        from pathlib import Path
         from parkour_solver.scene.normalize import prepare_scene
         from parkour_solver.search.movement import iter_movement_programs
         scene = prepare_scene(json.loads((AUTONOMY_DATA / 'fixtures/generic-grind-blip.json').read_text()))
@@ -186,12 +183,11 @@ class GenericQueueTests(unittest.TestCase):
 
 import json
 import os
-from pathlib import Path
 from parkour_solver.constraints.contacts import floor_checks
 from parkour_solver.search.repair import solve_contact_branches
 from parkour_solver.scene.normalize import prepare_scene
 from parkour_solver.search.support_profiles import find_blocks
-from parkour_solver.bridge.compiler import JavaCompiler
+from parkour_solver.bridge.python_compiler import PythonCompiler
 from parkour_solver.movement.program import compile_program
 
 
@@ -208,11 +204,11 @@ def select(program, scene, kind, predicate):
     return combined
 
 
-@unittest.skipUnless(os.environ.get('PKC_RUN_TICKS_COMPILER') and os.environ.get('PKC_IPOPT_PYTHON'),
-                     'Set PKC_RUN_TICKS_COMPILER and PKC_IPOPT_PYTHON')
+@unittest.skipUnless(os.environ.get('PKC_IPOPT_PYTHON'),
+                     'Set PKC_IPOPT_PYTHON')
 class GenericNumericalTests(unittest.TestCase):
     def setUp(self):
-        self.compiler = JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text()))
+        self.compiler = PythonCompiler()
         self.addCleanup(self.compiler.close)
 
     def solve(self, scene, program):

@@ -1,7 +1,6 @@
 import copy
 import json
 import os
-from pathlib import Path
 import unittest
 from unittest.mock import patch
 
@@ -156,12 +155,12 @@ class SemanticStageTests(unittest.TestCase):
         self.assertTrue(domain(p))
 
 
-@unittest.skipUnless(os.environ.get('PKC_RUN_TICKS_COMPILER') and os.environ.get('PKC_IPOPT_PYTHON'),
+@unittest.skipUnless(os.environ.get('PKC_IPOPT_PYTHON'),
                      'Set compiler and IPOPT Python for semantic route solves')
 class SemanticNumericalTests(unittest.TestCase):
     def compiler(self):
-        from parkour_solver.bridge.compiler import JavaCompiler
-        return JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text()))
+        from parkour_solver.bridge.python_compiler import PythonCompiler
+        return PythonCompiler()
 
     def test_inferred_intermediate_support_uses_outgoing_guide_objective(self):
         from parkour_solver.search.engine import find_checkpoint_route

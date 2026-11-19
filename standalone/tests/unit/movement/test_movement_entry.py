@@ -2,7 +2,6 @@ from tests.support.paths import AUTONOMY_DATA
 import copy
 import json
 import os
-from pathlib import Path
 import threading
 import time
 import unittest
@@ -11,7 +10,7 @@ from unittest.mock import patch
 from parkour_solver.search.climbable import entry_context
 from parkour_solver.scene.normalize import prepare_scene
 from parkour_solver.movement.ladder.episodes import compose_ladder_episodes
-from parkour_solver.bridge.compiler import JavaCompiler
+from parkour_solver.bridge.python_compiler import PythonCompiler
 from parkour_solver.scene.ladders import entry_channels
 from parkour_solver.movement.ladder.transfers import append_ladder_programs, open_program
 from parkour_solver.search.entry import build_entry_problem, probe_region_entries, entry_contact_options
@@ -96,12 +95,12 @@ class MovementEntryTests(unittest.TestCase):
         self.assertEqual(result['entryProbes'],[{'status':'feasible','entryState':5}])
 
 
-@unittest.skipUnless(os.environ.get('PKC_RUN_TICKS_COMPILER') and os.environ.get('PKC_IPOPT_PYTHON'),
-                     'Set PKC_RUN_TICKS_COMPILER and PKC_IPOPT_PYTHON')
+@unittest.skipUnless(os.environ.get('PKC_IPOPT_PYTHON'),
+                     'Set PKC_IPOPT_PYTHON')
 class MovementEntryIntegrationTests(unittest.TestCase):
     def setUp(self):
         self.scene,self.episodes,self.program=airborne_case()
-        self.compiler=JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text()))
+        self.compiler=PythonCompiler()
         self.addCleanup(self.compiler.close)
 
     def root(self,runs=0):

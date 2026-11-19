@@ -3,8 +3,6 @@ import copy
 import importlib.util
 import json
 import math
-import os
-from pathlib import Path
 import unittest
 
 from parkour_solver.scene.route import center_bounds, schedule
@@ -180,12 +178,12 @@ class GuidanceNumericalTests(unittest.TestCase):
             solve_conic(family, {'departure:0': 0}, built=build_conic(family))
 
 
-@unittest.skipUnless(NUMERICAL and os.environ.get('PKC_RUN_TICKS_COMPILER'),
-                     'Install guidance dependencies and set PKC_RUN_TICKS_COMPILER')
+@unittest.skipUnless(NUMERICAL,
+                     'Install guidance dependencies')
 class GuidancePhysicalTests(unittest.TestCase):
     def setUp(self):
-        from parkour_solver.bridge.compiler import JavaCompiler
-        self.compiler = JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text()))
+        from parkour_solver.bridge.python_compiler import PythonCompiler
+        self.compiler = PythonCompiler()
         self.addCleanup(self.compiler.close)
 
     def test_edge_coefficients_match_complete_authoritative_schedules(self):

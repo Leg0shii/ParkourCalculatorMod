@@ -5,7 +5,6 @@ import itertools
 import json
 import math
 import os
-from pathlib import Path
 import time
 import threading
 import unittest
@@ -18,7 +17,7 @@ from parkour_solver.spatial.cells import decompose
 from parkour_solver.validation.scoped_scene import CorridorAdapter
 from parkour_solver.search.work import SearchWork
 from parkour_solver.spatial.compat.corridors import Corridor, audit_candidate, corridor_for_points, landmarks
-from parkour_solver.bridge.compiler import JavaCompiler
+from parkour_solver.bridge.python_compiler import PythonCompiler
 from parkour_solver.movement.program import append_choice, compile_program, empty_program, truncate_program
 from parkour_solver.movement.generation import generate_choices
 from parkour_solver.search.movement import iter_movement_programs
@@ -152,11 +151,11 @@ class CheckpointTests(unittest.TestCase):
         self.assertEqual(ordinary['vertical']['threshold'], .005)
 
 
-@unittest.skipUnless(os.environ.get('PKC_RUN_TICKS_COMPILER') and os.environ.get('PKC_IPOPT_PYTHON'),
+@unittest.skipUnless(os.environ.get('PKC_IPOPT_PYTHON'),
                      'Set compiler and IPOPT Python for numerical tests')
 class CheckpointNumericalTests(unittest.TestCase):
     def setUp(self):
-        self.compiler = JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text()))
+        self.compiler = PythonCompiler()
         self.addCleanup(self.compiler.close)
 
     def test_repair_does_not_replace_a_supplied_seed_with_a_rejected_proposal(self):

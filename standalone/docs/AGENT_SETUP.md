@@ -33,9 +33,10 @@ deliberately when a task touches the mod. See
 - The base branch is the fork's `main`. Each workstream gets its own branch and a
   worktree under `/Users/arvindmurty/CS/pkc-wt/<workstream>`; start sessions in its
   `standalone/` directory. Do not keep worktrees under `/private/tmp`, which is wiped.
-- Each worktree owns its environment and native build: create `../.venv-guidance`
-  and build the Java bridge per the [runbook](RUNBOOK.md); paths inside them are absolute,
-  so moving a worktree means rebuilding both.
+- Each worktree owns its environment: create `../.venv-guidance` per the
+  [runbook](RUNBOOK.md). Build the Java bridge there too when the work needs the oracle
+  tests, table regeneration or replay/export. Paths inside both are absolute, so moving
+  a worktree means rebuilding them.
 - Retired branches are kept as pushed annotated tags `archive/<branch>`.
 - Large HTTPS pushes to the fork can fail with HTTP 400; retry that push with
   `git -c http.version=HTTP/1.1 -c http.postBuffer=524288000 push ...`.

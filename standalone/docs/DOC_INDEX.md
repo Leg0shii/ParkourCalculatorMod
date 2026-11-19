@@ -103,6 +103,7 @@ control work; inclusion here is not authorization to implement a historical plan
 | [research/height-and-stairs/README.md](../research/height-and-stairs/README.md) | Frozen source-era evidence; use research guide for reproduction: Different heights and short stair profiles |
 | [research/initial-domain-selection/README.md](../research/initial-domain-selection/README.md) | Frozen source-era evidence; use research guide for reproduction: Initial-delay selection without a fixture whitelist |
 | [research/interleaved-blockages/README.md](../research/interleaved-blockages/README.md) | Frozen source-era evidence; use research guide for reproduction: Interleaved wall and ceiling blockages |
+| [research/jvm-free-bridge/README.md](../research/jvm-free-bridge/README.md) | Frozen source-era evidence; use research guide for reproduction: JVM-free movement bridge |
 | [research/ladder-climbing-ceiling/README.md](../research/ladder-climbing-ceiling/README.md) | Frozen source-era evidence; use research guide for reproduction: Climbing with ceiling contacts and endpoint stops |
 | [research/ladder-schedules/README.md](../research/ladder-schedules/README.md) | Frozen source-era evidence; use research guide for reproduction: Ladder schedule height checks |
 | [research/ladder-search/README.md](../research/ladder-search/README.md) | Frozen source-era evidence; use research guide for reproduction: Ladder/vine route search evidence |

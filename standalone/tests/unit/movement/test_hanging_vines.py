@@ -2,11 +2,10 @@ from tests.support.paths import AUTONOMY_DATA
 import hashlib
 import json
 import os
-from pathlib import Path
 import unittest
 
 from parkour_solver.search.support_profiles import find_blocks
-from parkour_solver.bridge.compiler import JavaCompiler
+from parkour_solver.bridge.python_compiler import PythonCompiler
 from parkour_solver.scene.ladders import entry_channels, movement_contexts, schedule_constraints
 from parkour_solver.movement.ladder.schedules import generate_ladder_schedules
 from parkour_solver.movement.ladder.transfers import append_ladder_programs, open_program
@@ -93,11 +92,11 @@ class HangingVineTests(unittest.TestCase):
             self.assertEqual(p['trace']['position'][:prefix['profile']['airtime']+1],prefix['trace']['position'])
 
 
-@unittest.skipUnless(os.environ.get('PKC_RUN_TICKS_COMPILER') and os.environ.get('PKC_IPOPT_PYTHON'),
-                     'Set PKC_RUN_TICKS_COMPILER and PKC_IPOPT_PYTHON')
+@unittest.skipUnless(os.environ.get('PKC_IPOPT_PYTHON'),
+                     'Set PKC_IPOPT_PYTHON')
 class HangingVineIntegrationTests(unittest.TestCase):
     def test_cold_discovery_solves_hanging_vines_without_a_climb_wall(self):
-        with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:
+        with PythonCompiler() as compiler:
             result=find_blocks(json.loads((ROOT/'fixtures/hanging-vines.json').read_text()),compiler,
                 seconds=45,route_seconds=18,candidate_seconds=1,retries=0,python_executable=os.environ['PKC_IPOPT_PYTHON'])
         self.assertEqual(result['status'],'feasible',{'termination':result.get('termination')})
@@ -123,7 +122,7 @@ class HangingVineIntegrationTests(unittest.TestCase):
         for key in ('positions','velocity','y','vy','onGround'):
             self.assertEqual(candidate[key],e['candidate'][key])
         vertical=dict(vertical=problem['vertical'],y=candidate['y'],vy=candidate['vy'],onGround=candidate['onGround'])
-        with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:
+        with PythonCompiler() as compiler:
             self.assertTrue(check_geometry(e['geometry'],e['plan'],e['candidate'],vertical,compiler,5)['feasible'])
 
 

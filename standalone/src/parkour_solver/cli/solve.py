@@ -4,7 +4,6 @@ from parkour_solver.search.application import run
 from parkour_solver.io.provenance import source_hashes, source_revision
 
 import argparse
-import os
 import gzip
 import hashlib
 import json
@@ -16,7 +15,7 @@ import threading
 import time
 
 from parkour_solver.scene.normalize import prepare_scene
-from parkour_solver.bridge.compiler import JavaCompiler
+from parkour_solver.bridge.compiler import open_compiler
 from parkour_solver.validation.witness import replay_witness
 from parkour_solver.search.engine import find_checkpoint_route
 from parkour_solver.search.domain import InitialJumpDomain
@@ -29,7 +28,7 @@ def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('--input',type=Path,required=True)
     parser.add_argument('--output',type=Path,required=True)
-    parser.add_argument('--compiler',type=Path,default=Path(os.environ.get('PKC_RUN_TICKS_COMPILER','build/native/compiler.json')))
+    parser.add_argument('--compiler',type=Path,help='Java bridge descriptor (default: PKC_RUN_TICKS_COMPILER, else Python)')
     parser.add_argument('--python',default=sys.executable)
     parser.add_argument('--resume',type=Path)
     args=parser.parse_args()
@@ -46,7 +45,8 @@ def main():
     root=Path.cwd()
     report=dict(sourceRevision=source_revision(),
         sourceHashes=source_hashes(),fixture=fixture)
-    with CheckpointStore(args.output) as store, JavaCompiler(json.loads(args.compiler.read_text())) as compiler:
+    with CheckpointStore(args.output) as store, open_compiler(args.compiler) as compiler:
+        report['bridge']=compiler.provenance()
         progress=SearchCheckpoint(store,report)
         result,validation=run(fixture,compiler,python_executable=args.python,resume_state=previous,
                               on_progress=progress,cancel_event=cancel)

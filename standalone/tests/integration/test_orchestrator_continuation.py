@@ -4,7 +4,6 @@ import itertools
 import math
 import os
 import random
-from pathlib import Path
 import unittest
 from unittest.mock import patch
 
@@ -259,10 +258,10 @@ class OuterResumeTests(unittest.TestCase):
         self.assertEqual(second['best']['candidate']['objective'],1.)
 
 
-@unittest.skipUnless(os.environ.get('PKC_RUN_TICKS_COMPILER') and os.environ.get('PKC_IPOPT_PYTHON'),'Requires standalone numerical bridge')
+@unittest.skipUnless(os.environ.get('PKC_IPOPT_PYTHON'),'Requires standalone numerical bridge')
 class ScopedNumericalTests(unittest.TestCase):
     def test_omitted_future_obstacle_does_not_reject_preliminary_guidance(self):
-        from parkour_solver.bridge.compiler import JavaCompiler
+        from parkour_solver.bridge.python_compiler import PythonCompiler
         from parkour_solver.spatial.cells import decompose
         from parkour_solver.spatial.compat.corridors import corridor_for_points, landmarks
         from parkour_solver.validation.scoped_scene import CorridorAdapter
@@ -280,7 +279,7 @@ class ScopedNumericalTests(unittest.TestCase):
         d=decompose(scene);g=landmarks(scene)
         corridor=corridor_for_points(d,[[.5,1.,.5],[1.5,1.,-1.],[4.,1.,-1.],[4.5,1.,.5]],g)
         adapter=CorridorAdapter(scene,corridor,g,decomposition=d)
-        with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:
+        with PythonCompiler() as compiler:
             motion=motion_bound(scene,compiler,3)
             preliminary=evaluate_program(scene,program,compiler,adapter,SearchWork(12),motion,
                 seconds=8,candidate_seconds=1,solver_calls=12,python_executable=os.environ['PKC_IPOPT_PYTHON'],

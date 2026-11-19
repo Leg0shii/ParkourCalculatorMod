@@ -1,7 +1,5 @@
 """Shared builders for the block table soundness checks in movement and constraint tests."""
 import json
-import os
-from pathlib import Path
 
 
 def random_box_request(rng):
@@ -19,8 +17,8 @@ def random_box_request(rng):
 
 
 def compiler():
-    from parkour_solver.bridge.compiler import JavaCompiler
-    return JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text()))
+    from parkour_solver.bridge.python_compiler import PythonCompiler
+    return PythonCompiler()
 
 
 def generated(scene, program, gate, owner):

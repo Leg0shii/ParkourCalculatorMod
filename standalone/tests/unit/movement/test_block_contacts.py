@@ -123,12 +123,10 @@ class ExposedTopTests(unittest.TestCase):
         self.assertEqual(self.landings(scene, supportAllowed=lambda block: block['id'] != 'floor',
                                        feetAllowed=lambda block: True), [])
 
-    @unittest.skipUnless(__import__('os').environ.get('PKC_RUN_TICKS_COMPILER'), 'Requires coefficient compiler')
     def test_real11_run_tick_landing_drops_the_rectangle_it_cannot_reach(self):
-        import json, os
-        from pathlib import Path
+        import json
         from tools.paths import STANDALONE_ROOT
-        from parkour_solver.bridge.compiler import JavaCompiler
+        from parkour_solver.bridge.python_compiler import PythonCompiler
         from parkour_solver.movement.normal import normal_choices
         from parkour_solver.movement.program import boundary_state, empty_program
         from parkour_solver.reachability.service import InteractionGate
@@ -143,20 +141,18 @@ class ExposedTopTests(unittest.TestCase):
             return event['regions'], choice['profile'].get('regionChoices', [])
         regions, items = b1()
         self.assertEqual((len(regions), len(items)), (2, 1))
-        with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:
+        with PythonCompiler() as compiler:
             reached, items = b1(InteractionGate(scene, compiler))
         self.assertEqual(items, [])
         self.assertEqual(len(reached), 1)
         self.assertIn(reached[0], regions)
         self.assertGreaterEqual(reached[0][0], 742.3)
 
-    @unittest.skipUnless(__import__('os').environ.get('PKC_RUN_TICKS_COMPILER'), 'Requires coefficient compiler')
     def test_one_long_approach_answers_every_shorter_approach_exactly(self):
-        import json, os
-        from pathlib import Path
+        import json
         from unittest.mock import patch
         from tools.paths import STANDALONE_ROOT
-        from parkour_solver.bridge.compiler import JavaCompiler
+        from parkour_solver.bridge.python_compiler import PythonCompiler
         from parkour_solver.movement import normal
         from parkour_solver.movement.program import append_choice, boundary_state, empty_program
         from parkour_solver.reachability.service import InteractionGate
@@ -167,7 +163,7 @@ class ExposedTopTests(unittest.TestCase):
         def context(program):
             return dict(mode='open', scene=scene, program=program, state=boundary_state(program), maxInputs=horizon,
                         threshold=0., interactionGate=None)
-        with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:
+        with PythonCompiler() as compiler:
             gate = InteractionGate(scene, compiler)
             landed = next(c for c in normal.normal_choices(context(root)) if c.get('terminalSupport') == 'b1')
             prefixes = [root, append_choice(root, landed)]
@@ -255,13 +251,11 @@ class BlockTableTests(unittest.TestCase):
                 removed += len(scene['blocks'])-len(gate.reachable_blocks(owner)['blocks'])
         return removed
 
-    @unittest.skipUnless(__import__('os').environ.get('PKC_RUN_TICKS_COMPILER'), 'Requires coefficient compiler')
     def test_table_keeps_every_real11_choice(self):
         from tests.support.block_table import real11_inputs
         for scene, roots in real11_inputs():
             self.assertGreater(self.assert_table_keeps_every_choice(scene, roots), 0)
 
-    @unittest.skipUnless(__import__('os').environ.get('PKC_RUN_TICKS_COMPILER'), 'Requires coefficient compiler')
     def test_table_keeps_every_stepping_fixture_choice(self):
         from tests.support.stepping_cases import FIXTURES, fixture
         from parkour_solver.movement.program import empty_program
@@ -271,7 +265,6 @@ class BlockTableTests(unittest.TestCase):
                 scene = prepare_scene(fixture(name)['request'])
                 self.assert_table_keeps_every_choice(scene, [empty_program(scene['initial'], threshold=0.)])
 
-    @unittest.skipUnless(__import__('os').environ.get('PKC_RUN_TICKS_COMPILER'), 'Requires coefficient compiler')
     def test_table_keeps_every_choice_in_random_box_scenes(self):
         import random
         from tests.support.block_table import random_box_request

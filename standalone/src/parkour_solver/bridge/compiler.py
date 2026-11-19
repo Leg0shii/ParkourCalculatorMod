@@ -1,6 +1,18 @@
+import hashlib
 import json
+import os
+from pathlib import Path
 import subprocess
 import threading
+
+
+def open_compiler(path=None):
+    """The movement bridge: Java for an explicit or `PKC_RUN_TICKS_COMPILER` descriptor, else Python."""
+    path = path or os.environ.get('PKC_RUN_TICKS_COMPILER')
+    if path:
+        return JavaCompiler(json.loads(Path(path).read_text()))
+    from parkour_solver.bridge.python_compiler import PythonCompiler
+    return PythonCompiler()
 
 
 def coefficient_request(route, plan):
@@ -40,6 +52,9 @@ class JavaCompiler:
 
     def compile(self, route, plan, seconds):
         return self._exchange(coefficient_request(route, plan), seconds)
+
+    def provenance(self):
+        return dict(bridge='java', command=hashlib.sha256(json.dumps(self.command).encode()).hexdigest())
 
     def derive_footprints(self, route, seconds):
         return self._exchange({'action': 'footprints', 'blocks': route['blocks']}, seconds)['footprints']

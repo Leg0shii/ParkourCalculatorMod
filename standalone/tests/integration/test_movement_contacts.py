@@ -3,7 +3,6 @@ from tests.support.paths import AUTONOMY_DATA
 import copy
 import json
 import os
-from pathlib import Path
 import threading
 import time
 import unittest
@@ -19,7 +18,7 @@ from parkour_solver.scene.normalize import prepare_scene
 from parkour_solver.search.support_profiles import compile_block_path
 from parkour_solver.search.repair import solve_contact_branches
 from parkour_solver.constraints.contacts import floor_checks
-from parkour_solver.bridge.compiler import JavaCompiler
+from parkour_solver.bridge.python_compiler import PythonCompiler
 from parkour_solver.numerics import prepare, validate
 from parkour_solver.physics.vertical import CLIMB_CARRY
 from parkour_solver.movement.contact_combinations import expanded_face
@@ -134,12 +133,12 @@ class MovementContactTests(unittest.TestCase):
         self.assertEqual(request,saved)
 
 
-@unittest.skipUnless(os.environ.get('PKC_RUN_TICKS_COMPILER') and os.environ.get('PKC_IPOPT_PYTHON'),
-                     'Set PKC_RUN_TICKS_COMPILER and PKC_IPOPT_PYTHON')
+@unittest.skipUnless(os.environ.get('PKC_IPOPT_PYTHON'),
+                     'Set PKC_IPOPT_PYTHON')
 class GeneratedMixedContactIntegrationTests(unittest.TestCase):
     def test_generated_contacts_on_approach_second_ladder_and_final_air_solve_jointly(self):
         _,episodes,base=airborne_case()
-        with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:
+        with PythonCompiler() as compiler:
             for name,offset,ticks in [('appended-air-ceiling',6,29),('appended-ladder-ceiling',20,29),('final-air-ceiling',25,27)]:
                 with self.subTest(name=name):
                     evidence=json.loads((ROOT/'experiments/contact-combinations'/(name+'.json')).read_text())

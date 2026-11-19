@@ -20,7 +20,8 @@ import time
 from tools.profiling.runtime import RuntimeProfile, instrument
 from tools.profiling.trace import write as write_trace
 from parkour_solver.scene.normalize import prepare_scene
-from parkour_solver.bridge.compiler import JavaCompiler
+from parkour_solver.bridge.compiler import open_compiler
+from parkour_solver.bridge.python_compiler import PythonCompiler
 from parkour_solver.io.checkpoint_store import CheckpointStore, read_report
 from parkour_solver.io.search_checkpoint import SearchCheckpoint
 from parkour_solver.search.application import run
@@ -68,9 +69,10 @@ def main():
     parser.add_argument('--allocation-samples',type=int,default=0)
     parser.add_argument('--durable',action='store_true')
     parser.add_argument('--resume',type=Path)
-    parser.add_argument('--compiler',type=Path,default=Path(os.environ.get('PKC_RUN_TICKS_COMPILER','build/native/compiler.json')))
+    parser.add_argument('--compiler',type=Path,help='Java bridge descriptor (default: PKC_RUN_TICKS_COMPILER, else Python)')
     parser.add_argument('--python',default=os.environ.get('PKC_IPOPT_PYTHON'))
     args = parser.parse_args()
+    compiler_path = args.compiler or os.environ.get('PKC_RUN_TICKS_COMPILER')
     args.output.mkdir(parents=True,exist_ok=False)
     (args.output/'instrumentation').mkdir()
     for script in Path(__file__).parent.glob('*.py'):
@@ -91,8 +93,9 @@ def main():
         fixture=fixture,command=__import__('sys').argv,
         instrumentationHashes={p.name:hashlib.sha256(p.read_bytes()).hexdigest()
                                for p in Path(__file__).parent.glob('*.py')},
-        compilerConfigHash=hashlib.sha256(args.compiler.read_bytes()).hexdigest(),
-        compilerConfigPath=str(args.compiler.resolve()),pythonExecutable=sys.executable,pythonVersion=sys.version,
+        bridge=dict(bridge='java') if compiler_path else PythonCompiler().provenance(),
+        compilerConfigHash=hashlib.sha256(Path(compiler_path).read_bytes()).hexdigest() if compiler_path else None,
+        compilerConfigPath=str(Path(compiler_path).resolve()) if compiler_path else None,pythonExecutable=sys.executable,pythonVersion=sys.version,
         dependencies={dist.metadata['Name']:dist.version for dist in importlib.metadata.distributions()
                       if dist.metadata['Name'].lower() in ('parkour-solver','casadi','numpy','scipy','clarabel')},
         threadEnvironment={name:os.environ.get(name) for name in ('OPENBLAS_NUM_THREADS','OMP_NUM_THREADS')},
@@ -142,7 +145,7 @@ def main():
     gc.callbacks.append(gc_event)
     try:
         with ExitStack() as resources:
-            compiler = resources.enter_context(JavaCompiler(json.loads(args.compiler.read_text())))
+            compiler = resources.enter_context(open_compiler(compiler_path))
             checkpoint = None
             callback = profile.function('callback.progress',progress)
             if args.durable:

@@ -7,14 +7,14 @@ import sys
 import threading
 
 from parkour_solver.search.support_profiles import find_blocks
-from parkour_solver.bridge.compiler import JavaCompiler
+from parkour_solver.bridge.compiler import open_compiler
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--input', required=True)
     parser.add_argument('--output', required=True)
-    parser.add_argument('--compiler', default=os.environ.get('PKC_RUN_TICKS_COMPILER','build/native/compiler.json'))
+    parser.add_argument('--compiler', help='Java bridge descriptor (default: PKC_RUN_TICKS_COMPILER, else Python)')
     parser.add_argument('--python', default=os.environ.get('PKC_IPOPT_PYTHON'))
     parser.add_argument('--seconds', type=float, default=60)
     parser.add_argument('--route-seconds', type=float, default=8)
@@ -33,11 +33,11 @@ def main():
             request.pop('movementSearch', None)
         elif request.get('sceneModel') == 'collision_boxes':
             request.setdefault('movementSearch', {})
-        config = json.loads(Path(args.compiler).read_text())
-        with JavaCompiler(config) as compiler:
+        with open_compiler(args.compiler) as compiler:
             result = find_blocks(request, compiler, seconds=args.seconds, route_seconds=args.route_seconds,
                                  candidate_seconds=args.candidate_seconds, retries=args.retries, improve=args.improve,
                                  python_executable=args.python, cancel_event=cancel)
+            result['bridge'] = compiler.provenance()
     except (ValueError, OSError, RuntimeError) as error:
         result = {'status': 'error', 'error': str(error)}
     output = Path(args.output)

@@ -1,14 +1,12 @@
 import copy
 import itertools
-import json
 import math
 import os
-from pathlib import Path
 import unittest
 
 from parkour_solver.movement.contact_combinations import contact_combinations, expanded_face, merge_contacts
 from parkour_solver.movement.contact_profiles import contact_profile, generate_contact_profiles
-from parkour_solver.bridge.compiler import JavaCompiler
+from parkour_solver.bridge.python_compiler import PythonCompiler
 from parkour_solver.movement.ladder.schedules import trace_ladder_schedule
 from parkour_solver.scene.route import HALF_WIDTH, prepare_route, schedule
 from parkour_solver.scene.geometry import BODY_HEIGHT
@@ -152,10 +150,9 @@ class MixedVerticalTests(unittest.TestCase):
         self.assertTrue(any({e['axis'] for e in p['contactEvents']} == {'X', 'Y', 'Z'} for p in generated['profiles']))
 
 
-@unittest.skipUnless(os.environ.get('PKC_RUN_TICKS_COMPILER'), 'Set PKC_RUN_TICKS_COMPILER')
 class CombinationSceneTests(unittest.TestCase):
     def setUp(self):
-        self.compiler = JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text()))
+        self.compiler = PythonCompiler()
         self.addCleanup(self.compiler.close)
 
     def test_adjacent_ladder_parts_use_exact_finite_face_alternatives(self):
@@ -250,8 +247,8 @@ class CombinationSceneTests(unittest.TestCase):
                 [[.8, REST_CARRY, .8]], [True, True], 5, contacts=missing)['feasible'])
 
 
-@unittest.skipUnless(os.environ.get('PKC_RUN_TICKS_COMPILER') and os.environ.get('PKC_IPOPT_PYTHON'),
-                     'Set PKC_RUN_TICKS_COMPILER and PKC_IPOPT_PYTHON')
+@unittest.skipUnless(os.environ.get('PKC_IPOPT_PYTHON'),
+                     'Set PKC_IPOPT_PYTHON')
 class StepCombinationIntegrationTests(unittest.TestCase):
     def test_ipopt_step_and_two_wall_contacts_share_one_movement(self):
         from parkour_solver.scene.normalize import prepare_scene
@@ -271,7 +268,7 @@ class StepCombinationIntegrationTests(unittest.TestCase):
         scene = prepare_scene(r)
         compiled = compile_block_path(scene,['floor','stair'],[{'source':'floor','target':'stair',
             'profileKind':'step','profile':p,'entryFace':None,'exitFace':None}])
-        with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:
+        with PythonCompiler() as compiler:
             result = solve_contact_branches(compiled['route'],compiled['profiles'],floor_checks(scene,['floor','stair'],compiled['profiles']),
                 compiler,seconds=10,candidate_seconds=2,retries=0,geometry=scene['collisionScene'],
                 motion_bound={'storedSpeedNorm':2,'movementAfterSupportCheck':2},python_executable=os.environ['PKC_IPOPT_PYTHON'])
@@ -298,7 +295,7 @@ class StepCombinationIntegrationTests(unittest.TestCase):
         scene = prepare_scene(request)
         compiled = compile_block_path(scene,['floor','goal'],[{'source':'floor','target':'goal','profileKind':'contacts',
             'profile':profile,'entryFace':None,'exitFace':None}])
-        with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:
+        with PythonCompiler() as compiler:
             result = solve_contact_branches(compiled['route'],compiled['profiles'],floor_checks(scene,['floor','goal'],compiled['profiles']),
                 compiler,seconds=12,candidate_seconds=2,retries=1,geometry=scene['collisionScene'],
                 motion_bound={'storedSpeedNorm':2,'movementAfterSupportCheck':2},python_executable=os.environ['PKC_IPOPT_PYTHON'])

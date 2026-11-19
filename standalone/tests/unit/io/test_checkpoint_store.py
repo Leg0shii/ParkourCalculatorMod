@@ -206,11 +206,11 @@ class SearchCheckpointTests(StoreCase):
         self.assertEqual(second['status'],'feasible')
 
 
-@unittest.skipUnless(os.environ.get('PKC_RUN_TICKS_COMPILER') and os.environ.get('PKC_IPOPT_PYTHON'),
-                     'Set compiler and IPOPT Python for native persistence checks')
+@unittest.skipUnless(os.environ.get('PKC_IPOPT_PYTHON'),
+                     'Set PKC_IPOPT_PYTHON for native persistence checks')
 class NativeCheckpointTests(StoreCase):
     def test_nested_anchor_and_internal_node_repair_publications_match_live_state(self):
-        from parkour_solver.bridge.compiler import JavaCompiler
+        from parkour_solver.bridge.python_compiler import PythonCompiler
         from parkour_solver.search.engine import find_checkpoint_route
         from parkour_solver.search.domain import InitialJumpDomain
         from tests.support.checkpoint_guidance import flat_scene
@@ -224,7 +224,7 @@ class NativeCheckpointTests(StoreCase):
                 super().repair_progress(state)
                 testcase.assertEqual(read_report(testcase.path)['searchState'],json.loads(json.dumps(state)))
                 checked.append(True)
-        with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler, CheckpointStore(self.path) as store:
+        with PythonCompiler() as compiler, CheckpointStore(self.path) as store:
             writer=CheckedWriter(store,{})
             result=find_checkpoint_route(scene,compiler,anchor_search={},seconds=8,score_seconds=2,
                 max_solver_calls=20,program_filter=InitialJumpDomain([0],max_inputs=28),
@@ -235,7 +235,7 @@ class NativeCheckpointTests(StoreCase):
         self.assertIn(True,owners,'No internal-node checkpoint was exercised')
 
     def test_every_native_repair_publication_round_trips_before_completion(self):
-        from parkour_solver.bridge.compiler import JavaCompiler
+        from parkour_solver.bridge.python_compiler import PythonCompiler
         from parkour_solver.search.engine import find_checkpoint_route
         from research.legacy_cell_routes.checkpoint_experiment import replay_witness
         from parkour_solver.search.compat.support_order import SupportOrder
@@ -252,7 +252,7 @@ class NativeCheckpointTests(StoreCase):
                 super().repair_progress(state)
                 testcase.assertEqual(read_report(testcase.path)['searchState'],json.loads(json.dumps(state)))
                 checked.append(True)
-        with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler, \
+        with PythonCompiler() as compiler, \
              CheckpointStore(self.path) as store:
             writer = CheckedWriter(store,{})
             result = find_checkpoint_route(scene,compiler,spatial_points=[[.5,1,.5],[8.,3,.5]],
